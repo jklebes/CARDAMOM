@@ -6,7 +6,7 @@ for (n=0;n<ne;n++){meanP=meanP+P[n];}
 return meanP/(double)ne;
 
 
-
+// test for git
 }
 
 
