@@ -29,7 +29,8 @@ public :: data_type, DATAin, emulator_parameters ,emulator_pars
                                           ,Cbranch_stock     & ! time specific estimate of branch carbon (gC.m-2)
                                           ,Ccoarseroot_stock & ! time specific estimate of coarse root carbon (gC.m-2)
                                           ,Cfolmax_stock     & ! maximum annual foliar stock (gC.m-2)
-                                          ,Evap                ! Evapotranspiration (kg.m-2.day-1)
+                                          ,Evap              & ! Evapotranspiration (kg.m-2.day-1)
+                                          ,SWE                 ! Snow Water Equivalent (mm.day-1)
 
       ! OBS uncertainties: obv these must be pared with OBS above
       double precision, allocatable, dimension(:) :: GPP_unc     & ! (gC.m-2.day-1)
@@ -47,7 +48,8 @@ public :: data_type, DATAin, emulator_parameters ,emulator_pars
                                           ,Cbranch_stock_unc     & ! (%)
                                           ,Ccoarseroot_stock_unc & ! (%)
                                           ,Cfolmax_stock_unc     & ! (%)
-                                          ,Evap_unc                ! (kg.m-2.day-1)
+                                          ,Evap_unc              & ! (kg.m-2.day-1)
+                                          ,SWE_unc               & ! (mm.day-1)
 
       ! location of observations in the data stream
       integer, allocatable, dimension(:) :: gpppts               & ! gpppts vector used in deriving ngpp
@@ -59,13 +61,14 @@ public :: data_type, DATAin, emulator_parameters ,emulator_pars
                                            ,Cwood_stockpts       & ! smae for Cwood
                                            ,Croots_stockpts      & ! same for Croots
                                            ,Csom_stockpts        & ! same for Csom
-                                           ,Cagb_stockpts        & ! same 
+                                           ,Cagb_stockpts        & ! same
                                            ,Clit_stockpts        & ! same for Clitter
                                            ,Cstem_stockpts       & ! same for Csom
-                                           ,Cbranch_stockpts     & ! same 
+                                           ,Cbranch_stockpts     & ! same
                                            ,Ccoarseroot_stockpts & ! same for Clitter
                                            ,Cfolmax_stockpts     & !
-                                           ,Evappts
+                                           ,Evappts              &
+                                           ,SWEpts
 
       ! counters for the number of observations per data stream
       integer :: ngpp               & ! number of GPP observations
@@ -79,16 +82,17 @@ public :: data_type, DATAin, emulator_parameters ,emulator_pars
                 ,nCsom_stock        & ! number of Csom obervations
                 ,nCagb_stock        & !
                 ,nClit_stock        & ! number of Clitter observations
-                ,nCstem_stock       & ! 
+                ,nCstem_stock       & !
                 ,nCbranch_stock     & !
                 ,nCcoarseroot_stock & !
                 ,nCfolmax_stock     & !
-                ,nEvap
+                ,nEvap              &
+                ,nSWE
 
       ! saving computational speed by allocating memory to model output
-      double precision, allocatable, dimension(:) :: M_GPP    & ! 
+      double precision, allocatable, dimension(:) :: M_GPP    & !
                                           ,M_NEE    & !
-                                          ,M_LAI      ! 
+                                          ,M_LAI      !
       ! timing variable
       double precision, allocatable, dimension(:) :: deltat ! time step (decimal day)
 
@@ -112,7 +116,7 @@ public :: data_type, DATAin, emulator_parameters ,emulator_pars
 
       ! binary file mcmc options (need to add all options HERE except
       ! inout files)
-      integer :: edc_random_search ! 
+      integer :: edc_random_search !
 
       ! priors
       double precision, dimension(100) :: parpriors     & ! prior values
@@ -129,7 +133,7 @@ public :: data_type, DATAin, emulator_parameters ,emulator_pars
                   dim_2, & ! dimension 2 of response surface
               nos_trees, & ! number of trees in randomForest
              nos_inputs    ! number of driver inputs
- 
+
     double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daughter for forest
                                                         rightDaughter, & ! right daughter for forets
                                                            nodestatus, & ! nodestatus for forests

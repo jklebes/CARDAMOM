@@ -191,9 +191,8 @@ class CARDAMOM_F(object):
             f.close()
 
 
-    def setup(self,lat,lon,drivers,obs,obsunc, \
-    parprior,parpriorunc,otherprior,otherpriorunc, \
-    EDCs = True, PFT = False):
+    def setup(self, lat, lon, drivers, obs, obsunc, parprior, parpriorunc, \
+    otherprior, otherpriorunc, EDCs = True, PFT = False):
         """
         This method is a wrapper to the function used to setup the project.
         Arguments are:
@@ -214,29 +213,26 @@ class CARDAMOM_F(object):
         """
 
         # first store data
-        self.lat = latitude
-        self.lon = longitude
-        self.drivers = drivers
-        self.obs = obs
+        self.lat            = latitude
+        self.lon            = longitude
+        self.drivers        = drivers
+        self.obs            = obs
 
         # MCMC specific values
-        self.parprior = parprior
-        self.parpriorunc = parpriorunc
-        self.otherprior = otherprior
-        self.otherpriorunc = otherpriorunc
+        self.parprior       = parprior
+        self.parpriorunc    = parpriorunc
+        self.otherprior     = otherprior
+        self.otherpriorunc  = otherpriorunc
 
         # a couple of options
-        self.EDCs = int(EDCs)
-        self.PFT = int(PFT)
+        self.edcs           = int(EDCs)
+        self.pft            = int(PFT)
 
-
-        # check that all arrays have proper dimensions
-        warning = 0
-        #get the number of time steps
-        self.npts = drivers.shape[0]
-        self.nsteps = drivers.shape[1]
-        self.ndrivers = drivers.shape[2]
-        self.nobs = obs.shape[2]
+        #get the number of pixels, time steps, drivers and obs
+        self.npts           = drivers.shape[0]
+        self.nsteps         = drivers.shape[1]
+        self.ndrivers       = drivers.shape[2]
+        self.nobs           = obs.shape[2]
 
         print "Project data succesfully loaded, now saving...   ",
         self.save_project()
@@ -257,43 +253,42 @@ class CARDAMOM_F(object):
 
         print "Now creating input data in \"%s\" for project \"%s\" with type \"%s\"" % (path2data,self.project_name,self.project_type)
 
-        for ii in xrange(self.details["no_pts"]):
-            #create an empty array to store data to be written
-            towrite=np.zeros(300+self.details["tsteps"]*(self.details["met_fields"]+self.details["obs_fields"]),dtype="d")-9999.
+        for ii in xrange(self.npts):
+            # create an empty array to store data to be written
+            towrite=np.zeros(500+self.nsteps*(self.ndrivers+self.nobs*2),dtype="d")-9999.
 
-            #provide fixed values
-            towrite[0]=self.modelid                       # pixel number
-            towrite[2]=self.details["tsteps"]        # no of time steps
-            towrite[3]=self.details["met_fields"]    # no of met fields
-            towrite[4]=self.details["obs_fields"]    # no of obs fields
-            towrite[5]=self.details["EDCs"]          # use EDCs? 1: Yes / 0: No
-           # towrite[6]=self.details["unc"]           # is uncertainty of obs provided
-            #provide priors and met data
+            # provide fixed values in first 100
+            towrite[0] = self.modelid
+            towrite[1] = self.lat[ii]       # pixel number
+            towrite[2] = self.nsteps        # no of time steps
+            towrite[3] = self.ndrivers      # no of met fields
+            towrite[4] = self.nobs*2          # no of obs fields * 2 with UC
+            towrite[5] = self.edcs          # use EDCs? 1: Yes / 0: No
+            towrite[6] = self.pft           # crop site?
 
-            #assign dummies to make code easier to read
-            parprior = self.parprior[ii]
-            parpriorunc = self.parpriorunc[ii]
-            otherprior = self.otherprior[ii]
-            otherpriorunc = self.otherpriorunc[ii]
+            # now get priors and uncertainty - 100 for each following Luke
+            towrite[200:200+self.parprior.shape[1]]=self.parprior[ii]
+            towrite[300:300+self.parpriorunc.shape[1]]=self.parpriorunc[ii]
+            towrite[400:400+len(self.otherprior.shape[1])]=self.otherprior[ii]
+            towrite[500:500+len(self.otherpriorunc.shape[1])]=self.otherpriorunc[ii]
 
-            else:
-                towrite[1]=self.lat[ii]  # pixel latitude
-
-                towrite[100:100+len(parprior[ii])]=parprior[ii]
-                towrite[150:150+len(parpriorunc[ii])]=parpriorunc[ii]
-                towrite[200:200+len(otherprior[ii])]=otherprior[ii]
-                towrite[250:250+len(otherpriorunc[ii])]=otherpriorunc[ii]
-
-                metobs=np.hstack([self.details["drivers"][ii],self.details["observations"][ii]])
-
-            towrite[300:]=metobs.flatten()
+            #loop over time steps to extract drivers, obs and uncertainty
+            metobs = np.zeros([self.nsteps,self.ndrivers+2*self.nobs])
+            for nn in xrange(self.nsteps):
+                # store the met drivers of the corresponding time step
+                metobs[nn,:self.ndrivers] = self.drivers[ii,nn]
+                # store observations and corresponding uncertainty
+                for oo in xrange(self.nobs):
+                    metobs[nn,self.ndrivers+(oo*2)]   = self.obs[ii,nn]
+                    metobs[nn,self.ndrivers+(oo*2)+1] = self.obsunc[ii,nn]
+            towrite[500:]=metobs.flatten()
 
             #create binary data
             f=file(path2data+"%s_%05i.bin" % (self.project_name,ii+1),'wb')
             f.write(struct.pack(len(towrite)*'d',*towrite))
             f.close()
 
-        print "Written a total of %i/%i input file" % (ii+1,self.details["no_pts"])
+        print "Written input file for %i sites" % self.npts)
 
     def backup_source(self):
         """
