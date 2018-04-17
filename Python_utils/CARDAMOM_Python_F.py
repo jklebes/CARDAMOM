@@ -6,22 +6,22 @@ code
 """
 
 #load modules
-import os, cPickle, time, struct         
-import datetime as dt       
+import os, cPickle, time, struct
+import datetime as dt
 import numpy as np
 from netCDF4 import Dataset
 import shutil, socket
 
 class CARDAMOM_F(object):
-    
+
     def __init__(self, **kwargs):
         """
-        Defines the CARDAMOM object 
+        Defines the CARDAMOM object
         """
-       
+
         #set the paths for the current project
         self.set_paths()
- 
+
         if 'path2projects' in kwargs:
             self.paths['projects'] = kwargs['path2projects']
 
@@ -30,16 +30,16 @@ class CARDAMOM_F(object):
             self.project_name = kwargs['project_name']
         else:
             self.project_name = raw_input('Enter project name: ')
-      
+
         # load if project exists
-        
-        if self.project_name in os.listdir(self.paths["projects"]): 
+
+        if self.project_name in os.listdir(self.paths["projects"]):
             if self.project_name+".pData" in os.listdir('/'.join([self.paths["projects"],self.project_name])):
-                print "Project \"%s\" found" % self.project_name          
+                print "Project \"%s\" found" % self.project_name
                 self.load_project()
             else:
                 print "Project directory found but file %s.pData could not be found" % self.project_name
-                self.new_project() 
+                self.new_project()
         else:
             os.mkdir('/'.join([self.paths["projects"],self.project_name]))
             self.new_project(**kwargs)
@@ -48,47 +48,39 @@ class CARDAMOM_F(object):
         """
         This method creates the variables needed by CARDAMOM but not yet set to definite values:
         - nPoints.............. the number of points to run CARDAMOM on
-        - latitude............. a sequence of length nPoints with the latitude 
+        - latitude............. a sequence of length nPoints with the latitude
         - longitude............ a sequence of length nPoints with the longitude
         - drivers.............. an array of dimensions [nPoints, nTsteps, nDrivers]
         - observations......... an array of dimensions [nPoints, nTsteps, nObs]
 
-        nPoints, nTsteps and nObs will be defined automatically from the shape of 
+        nPoints, nTsteps and nObs will be defined automatically from the shape of
 
         """
-        
+
         # This is initialized here but will contain a dictionary will all the project details
-        self.details = {}
+        types = ['ACM','DALEC_CDEA','DALEC_GSI_BUCKET','AT_DALEC', \
+                'AT_DALEC_CROP','DALEC_CDEA_FR','DALEC_GSI_FR',
+                'DALEC_GSI_FR_DBio','DALEC_GSI_MFOL_FR','DALEC_GSI_FR_LABILE', \
+                'DALECN_GSI_FR','DALEC_GSI_DFOL_FR','DALEC_GSI_DFOL_FROOT_FR', \
+                'DALEC_GSI_DFOL_LABILE_FR','DALECN_GSI_DFOL_LABILE_FR', \
+                'DALECN_GSI_DFOL_LABILE_FROOT_FR','DALEC_GSI_DFOL_CWD_FR', \
+                'DALECN_GSI_BUCKET']
+
         if 'project_type' in kwargs:
             self.project_type = kwargs['project_type']
+            if self.project_type not in types:
+                print "Warning - Unrecognized model version"
         else:
-            projtype=raw_input("Enter project number of type: \n1\tDALEC_GSI\n2\tDALEC_CDEA_LU_FIRES\n3\tDALEC_GSI_newalloc\n4\tDALEC_CDEA_LU_FIRES_LIU\n5\tDALEC_GSI_LIU\n6\tDALEC_CDEA_LU_FIRES_ET\n7\tDALEC_CDEA_CWD_LU_FIRES\n8\tDALEC_GSI_GLEAM\n9\tDALEC_CDEA_GLEAM\n10\tDALEC_CDEA_HBV\n")
-            if projtype != "":       
-                self.project_type=projtype
-                if self.project_type == "1":
-                    self.project_type = "DALEC_GSI"
-                elif self.project_type == "2":
-                    self.project_type = "DALEC_CDEA_LU_FIRES"
-                elif self.project_type == "3":
-                    self.project_type = "DALEC_GSI_newalloc"
-                elif self.project_type == "4":
-                    self.project_type = "DALEC_CDEA_LU_FIRES_LIU"
-                elif self.project_type == "5":
-                    self.project_type = "DALEC_GSI_LIU"
-                elif self.project_type == "6":
-                    self.project_type = "DALEC_CDEA_LU_FIRES_ET"
-                elif self.project_type == "7":
-                    self.project_type = "DALEC_CDEA_CWD_LU_FIRES"
-                elif self.project_type == "8":
-                    self.project_type = "DALEC_GSI_GLEAM"
-                elif self.project_type == "9":
-                    self.project_type = "DALEC_CDEA_GLEAM"
-                elif self.project_type == "10":
-                    self.project_type = "DALEC_CDEA_LU_FIRES_HBV"
-
+            print "Available model types"
+            for mm,modname in enumerate(types):
+                print '%02i - %s' % (mm,modname)
+            projtype=raw_input("Choose model type from list above")
+            if projtype != "":
+                self.project_type = types[int(projtype)]
+                self.modelid = int(projtype)
 
             else:
-                self.project_type="CARDAMOM_LU"
+                print "Unknown project type"
 
         self.save_project()
 
@@ -96,8 +88,8 @@ class CARDAMOM_F(object):
     def save_project(self):
         """
         Saves the object attributes in a file named <project_name>.pData
-        """   
-    
+        """
+
         f = open('/'.join([self.paths["projects"],self.project_name,self.project_name+".pData"]),"wb")
         cPickle.dump(self.__dict__,f,2)
         f.close()
@@ -106,7 +98,7 @@ class CARDAMOM_F(object):
         """
         Copies the project into a <newproject>
         """
-        
+
         keep_name = self.project_name
         self.project_name = newproject
         if newproject not in os.listdir(self.paths["projects"]):
@@ -161,9 +153,9 @@ class CARDAMOM_F(object):
 
         hostname = socket.gethostname()
         self.paths = {}
-        
+
         keepcurrent = raw_input("Keep current directory (%s) as root one <y/n>? " % os.getcwd())
-        
+
         if keepcurrent == 'y':
             self.paths["CARDAMOM"] = os.getcwd()+"/"
         else:
@@ -190,70 +182,68 @@ class CARDAMOM_F(object):
             self.paths["cluster_directory"] = raw_input("Enter cluster working directory (full path or leave blank for default): ")
             if self.paths["cluster_directory"] == "":
                 self.paths["cluster_directory"] = "/exports/work/scratch/jexbraya/"
-            
+
         savedefault = raw_input("Save current paths as default ones for this machine <y/n>? ")
-        
+
         if savedefault == 'y':
             f = open("default_paths_%s.pData" % hostname,"w")
             cPickle.dump(self.paths,f)
             f.close()
 
 
-    def setup(self,latitude,longitude,drivers,observations,parprior,parpriorunc,otherprior,otherpriorunc):
+    def setup(self,lat,lon,drivers,obs,obsunc, \
+    parprior,parpriorunc,otherprior,otherpriorunc, \
+    EDCs = True, PFT = False):
         """
-        This method is a wrapper to the function used to setup the project
+        This method is a wrapper to the function used to setup the project.
+        Arguments are:
+        - lat: a 1D array with pixels latitude
+        - lon: a 1D array with pixels longitude
+        - drivers: a 3D array [pixel, timestep, variable] containing drivers
+        - obs: a 3D array containing time resolved observational constraints
+            (-9999. for missing values)
+        - obsunc: a 3D array containing the uncertainty in obs
+        - parprior: a 3D array containing parameters prior values (-9999. for
+            missing values)
+        - parpriorunc: a 3D array containing the uncertainty around parameter
+            priors (-9999. for missing values)
+        - otherprior: a 3D array containing other priors (eg total vegetation C)
+            (-9999. for missing values)
+        - otherpriorunc: a 3D array containing the uncertainty of these other
+            priors
         """
-        # pixel data
-     
-        self.details["latitude"] = latitude
-        self.details["longitude"] = longitude
-        self.details["drivers"] = drivers
-        self.details["observations"] = observations
+
+        # first store data
+        self.lat = latitude
+        self.lon = longitude
+        self.drivers = drivers
+        self.obs = obs
 
         # MCMC specific values
-        self.details["parprior"] = parprior
-        self.details["parpriorunc"] = parpriorunc
-        self.details["otherprior"] = otherprior
-        self.details["otherpriorunc"] = otherpriorunc
+        self.parprior = parprior
+        self.parpriorunc = parpriorunc
+        self.otherprior = otherprior
+        self.otherpriorunc = otherpriorunc
 
-        # technical options
-        EDCs = raw_input("Use EDCs <y/n>? ")
-        if EDCs == 'y':
-            self.details["EDCs"] = True
+        # a couple of options
+        self.EDCs = int(EDCs)
+        self.PFT = int(PFT)
 
+
+        # check that all arrays have proper dimensions
         warning = 0
         #get the number of time steps
-        if drivers.ndim == 2:
-            self.details["no_pts"] = 1
-            self.details["met_fields"] = drivers.shape[1]
-            self.details["obs_fields"] = observations.shape[1]
-            if drivers.shape[0] != observations.shape[0]:
-                print " /!\ Warning: dimensions of drivers and observations arrays do not agree on the number of time steps /!\ "           
-                warning += 1
-            else:
-                self.details["tsteps"] = drivers.shape[0]
-                 
-        else:
-            self.details["no_pts"] = drivers.shape[0]
-            self.details["met_fields"] = drivers.shape[2]
-            self.details["obs_fields"] = observations.shape[2]
-            if drivers.shape[1] != observations.shape[1]:
-                print " /!\ Warning: dimensions of drivers and observations arrays do not agree on the number of time steps /!\ "
-                warning += 1
-            else:
-                self.details["tsteps"] = drivers.shape[1]
+        self.npts = drivers.shape[0]
+        self.nsteps = drivers.shape[1]
+        self.ndrivers = drivers.shape[2]
+        self.nobs = obs.shape[2]
 
-            if drivers.shape[0] != latitude.shape[0]:
-                print " /!\ Warning: dimensions of drivers and latitude arrays do not agree on the number of sites /!\ "  
-                warning += 1
-    
-        #assign the number of met fields
-        if warning == 0:
-            print "Saving project before writing binary files...   ",
-            self.save_project()
-            print "OK"
+        print "Project data succesfully loaded, now saving...   ",
+        self.save_project()
+        print "DONE"
 
-            #write input data      
+"""
+            #write input data
             self.createInput()
             #copy the source code
             self.backup_source()
@@ -267,10 +257,10 @@ class CARDAMOM_F(object):
                 print "Compiling local code"
                 self.backup_source()
                 self.compile_local_code()
-                
+
 
             cluster = raw_input("Send project files on the cluster <y/n>? ")
-            
+
             if cluster == "y":
                 self.details["cluster"] = True
                 #copy data on cluster
@@ -281,17 +271,17 @@ class CARDAMOM_F(object):
                 self.compile_cluster()
 
         else:
-            print "Too many warning raised... please check input data according to previous messages" 
+            print "Too many warning raised... please check input data according to previous messages"
 
 
-
+"""
 
     def createInput(self):
         """
         This method writes the input files in the local directory
         """
 
-        # Defines where the input files will be written        
+        # Defines where the input files will be written
         path2project = '/'.join([self.paths["projects"],self.project_name])
         path2data = path2project+"/data/"
 
@@ -301,37 +291,12 @@ class CARDAMOM_F(object):
 
         print "Now creating input data in \"%s\" for project \"%s\" with type \"%s\"" % (path2data,self.project_name,self.project_type)
 
-
-
-        if self.project_type == "DALEC_GSI":
-            modelid = 1
-        elif self.project_type == "DALEC_CDEA_LU_FIRES":
-            modelid = 2
-        elif self.project_type == "DALEC_GSI_newalloc":
-            modelid = 3 
-        elif self.project_type == "DALEC_CDEA_LU_FIRES_LIU":
-            modelid = 4 
-        elif self.project_type == "DALEC_GSI_LIU":
-            modelid = 5 
-        elif self.project_type == "DALEC_CDEA_LU_FIRES_ET":
-            modelid = 6
-        elif self.project_type == "DALEC_CDEA_CWD_LU_FIRES":
-            modelid = 7
-        elif self.project_type == "DALEC_GSI_GLEAM":
-            modelid = 8
-        elif self.project_type == "DALEC_CDEA_GLEAM":
-            modelid = 9
-        elif self.project_type == "DALEC_CDEA_LU_FIRES_HBV":
-            modelid = 10
-
         for ii in xrange(self.details["no_pts"]):
             #create an empty array to store data to be written
             towrite=np.zeros(300+self.details["tsteps"]*(self.details["met_fields"]+self.details["obs_fields"]),dtype="d")-9999.
-                    
+
             #provide fixed values
-
-
-            towrite[0]=modelid                       # pixel number           
+            towrite[0]=self.modelid                       # pixel number
             towrite[2]=self.details["tsteps"]        # no of time steps
             towrite[3]=self.details["met_fields"]    # no of met fields
             towrite[4]=self.details["obs_fields"]    # no of obs fields
@@ -340,23 +305,13 @@ class CARDAMOM_F(object):
             #provide priors and met data
 
             #assign dummies to make code easier to read
-            parprior = self.details["parprior"]
-            parpriorunc = self.details["parpriorunc"]
-            otherprior = self.details["otherprior"]
-            otherpriorunc = self.details["otherpriorunc"]
-
-            if self.details["no_pts"] == 1:           
-                towrite[1]=self.details["latitude"]  # pixel latitude
-
-                towrite[100:100+len(parprior)]=parprior
-                towrite[150:150+len(parpriorunc)]=parpriorunc
-                towrite[200:200+len(otherprior)]=otherprior
-                towrite[250:250+len(otherpriorunc)]=otherpriorunc
-
-                metobs=np.hstack([self.details["drivers"],self.details["observations"]])
+            parprior = self.parprior[ii]
+            parpriorunc = self.parpriorunc[ii]
+            otherprior = self.otherprior[ii]
+            otherpriorunc = self.otherpriorunc[ii]
 
             else:
-                towrite[1]=self.details["latitude"][ii]  # pixel latitude
+                towrite[1]=self.lat[ii]  # pixel latitude
 
                 towrite[100:100+len(parprior[ii])]=parprior[ii]
                 towrite[150:150+len(parpriorunc[ii])]=parpriorunc[ii]
@@ -388,7 +343,7 @@ class CARDAMOM_F(object):
 
     def update_source_cluster(self):
         """
-        This method backs up the source code in a project sub-directory and sends it to 
+        This method backs up the source code in a project sub-directory and sends it to
         the cluster
         """
         self.backup_source()
@@ -412,18 +367,18 @@ class CARDAMOM_F(object):
             os.mkdir(self.paths["projects"]+self.project_name+"/exec")
         #compile directly in good directory
         os.system("gcc -O3 %s/general/cardamom_main.c --include %s -o %s.exe -lm" % (path2source,path2include,path2exe+self.project_name))
-                 
 
-        
+
+
     def send_to_cluster(self):
         """
         This method sends the whole project to the cluster
-        """ 
+        """
 
         dest=self.paths["cluster_username"]+"@"+self.paths["cluster_address"]+":"+self.paths["cluster_directory"]+"/"+self.project_name
         print "Copying binary files to remote destination \"%s\" " % dest
         os.system("ssh %s@%s mkdir %s/%s" % (self.paths["cluster_username"],self.paths["cluster_address"],self.paths["cluster_directory"],self.project_name))
- 
+
         os.system("scp -r %s %s" % (self.paths["projects"]+self.project_name+"/data", dest))
         os.system("scp -r %s %s" % (self.paths["projects"]+self.project_name+"/src", dest))
         os.system("scp -r %s %s" % (self.paths["projects"]+self.project_name+"/exec", dest))
@@ -434,7 +389,7 @@ class CARDAMOM_F(object):
         """
         This method compiles the code on the cluster
         """
-        
+
         path2cluster = self.paths["cluster_address"]
         path2source = self.paths["cluster_directory"]+self.project_name+"/src/"
         path2include = "%s/models/%s/likelihood/MODEL_LIKELIHOOD.c" % (path2source,self.project_type)
@@ -467,14 +422,14 @@ class CARDAMOM_F(object):
         """
         This method downloads the results from the cluster
         """
-        
+
         print "Preparing to download data from \"%s\"" % self.paths["cluster_address"]
 
         cluster_details = "%s@%s" % (self.paths["cluster_username"],self.paths["cluster_address"])
 
         src = "%s/%s/output/*" % (self.paths["cluster_directory"],self.project_name)
-        
-        #create the output folder 
+
+        #create the output folder
         if "output" not in os.listdir("%s/%s" % (self.paths["projects"],self.project_name)):
             os.mkdir("%s/%s/output" % (self.paths["projects"],self.project_name))
 
@@ -502,7 +457,7 @@ class CARDAMOM_F(object):
                     os.system("scp -r %s:%s %s" % (cluster_details,src,dst))
             else:
                 os.system("scp -r %s:%s %s" % (cluster_details,src,dst))
-      
+
 
 if __name__ == "__main__":
 
@@ -513,16 +468,16 @@ if __name__ == "__main__":
     for dd in FORMA.variables["time"][1:-1]:
         dates.append(d0+dt.timedelta(float(dd)))
 
-    simlength=len(dates)  
+    simlength=len(dates)
 
     degradation = FORMA.variables["FORMA"][:].data
     degradation[degradation==-9999.]=0.
-    
+
     #test will use the pixel in the AMAZON with the most deforestation since 1 Jan 2006
     #we start from time step 1 rather than 0, :360 is to limit to south-western hemisphere
     selec=np.where(np.nansum(degradation[1:,180:,:360],0)==np.nanmax(np.nansum(degradation[1:,180:,:360],0)))
-    
-    latitude = FORMA.variables["latitude"][selec[0]+180][0]  
+
+    latitude = FORMA.variables["latitude"][selec[0]+180][0]
     longitude= FORMA.variables["longitude"][selec[1]][0]
 
     # met drivers are:
@@ -535,7 +490,7 @@ if __name__ == "__main__":
     obs=np.zeros([simlength,3])-9999.
 
     #get removal time series
-    print "Extracting FORMA data...   ",     
+    print "Extracting FORMA data...   ",
     removal=FORMA.variables["FORMA"][2:,selec[0]+180,selec[1]].data #FORMA dates correspond to end of time step
     print "OK"
 
@@ -546,11 +501,11 @@ if __name__ == "__main__":
     #ref day 0 for day of simulation
     dayref0=dt.datetime(2005,12,31)
 
-    #add a last date 
+    #add a last date
     dates.append(dates[-1]+dt.timedelta(days=8))
     for ii in xrange(len(dates)-1):
-        
-        tsteps.append((dates[ii+1]-dates[ii]).days)    
+
+        tsteps.append((dates[ii+1]-dates[ii]).days)
         dayref=dt.datetime(dates[ii].year-1,12,31)
         dayofyear.append((dates[ii]-dayref).days+(tsteps[-1]-1)/2.)
         dayofsim.append((dates[ii]-dayref0).days+(tsteps[-1]-1)/2.)
@@ -560,33 +515,33 @@ if __name__ == "__main__":
         if lastday.year==firstday.year:
             print "Getting ERA-Interim data for timestep starting on %02i/%02i/%4i" % (firstday.day,firstday.month,firstday.year)
             erai=Dataset("../data/ERA-Interim/0.5deg/ERA-Interim_%4i.nc" % firstday.year)
-            
+
             #get index of first time step
             first_step = ((firstday-dayref).days-1)*2
             last_step  = first_step+(lastday-firstday).days*2
-    
+
             #get coordinates of points
             latid=erai.variables["latitude"]==latitude
 
-            #longitude starts from GMT in ERA-Interim data            
+            #longitude starts from GMT in ERA-Interim data
             lonid=erai.variables["longitude"]==longitude+360
-          
+
             #extract the fields - mean daily rad in MJ m-2 d-1 (transformed from MJ m-2 per 12 hours)
             rad.append(1e-6*erai.variables['ssrd'][first_step:last_step,latid,lonid].sum()/(0.5*(last_step-first_step)))
 
-            #for each day in the era data, get the min and max             
+            #for each day in the era data, get the min and max
             tmpmn,tmpmx=[],[]
             for dd in range(tsteps[-1]-1):
-                tmpmn.append(erai.variables['mn2t'][first_step+dd*2:first_step+(dd+1)*2,latid,lonid].min(0))            
+                tmpmn.append(erai.variables['mn2t'][first_step+dd*2:first_step+(dd+1)*2,latid,lonid].min(0))
                 tmpmx.append(erai.variables['mx2t'][first_step+dd*2:first_step+(dd+1)*2,latid,lonid].max(0))
             tmn.append(np.mean(tmpmn)-273.15);tmx.append(np.mean(tmpmx)-273.15)
 
             erai.close()
 
     # add data to drivers' array
-    met[:,0] = np.array(dayofsim); 
+    met[:,0] = np.array(dayofsim);
     met[:,1] = np.array(tmn)
-    met[:,2] = np.array(tmx)   
+    met[:,2] = np.array(tmx)
     met[:,3] = np.array(rad);
     met[:,4] = np.zeros(simlength)+385.
     met[:,5] = np.array(dayofyear)
@@ -611,12 +566,12 @@ if __name__ == "__main__":
     saatchi.close()
 
     #get MODIS LAI observations
-    
+
 
     path2modis="../data/MODIS/LAI/0.5deg/"
     lai=np.zeros(simlength)
-    
-    for ii,dat in enumerate(dates): 
+
+    for ii,dat in enumerate(dates):
         print "Getting MODIS LAI data on %02i/%02i/%4i" % (dat.day,dat.month,dat.year)
         #leap years with day after 28/2
         if dat.year %4 == 0 and dat.month >=3:
@@ -633,7 +588,7 @@ if __name__ == "__main__":
     print "OK"
 
     lai[lai==99999]=-9999.
-    obs[:,1]=lai  
+    obs[:,1]=lai
 
     #define priors
 
@@ -643,7 +598,7 @@ if __name__ == "__main__":
     parprior[9]=0.03;parpriorunc[9]=1.15 # temp_rate (Mahecha 2010)
     parprior[16]=70;parpriorunc[16]=2 #LMA - Kattge 2011
     #parprior[10]=20;parpriorunc[10]=1.5 #Ameriflux GPP & LAI assimilated data
-    parprior[22]=som;parpriorunc[22]=1.5 
+    parprior[22]=som;parpriorunc[22]=1.5
     parprior[20]=max(agb,100.);parpriorunc[20]=1.5 #saatchi agb for woody
 
     #
@@ -659,12 +614,3 @@ if __name__ == "__main__":
     otherpriorunc=np.zeros(50)-9999.;otherpriorunc[0]=2
 
 ### now that data is loaded - setup CARDAMOM
-
-    
-    
-
-
-
-
-
-
