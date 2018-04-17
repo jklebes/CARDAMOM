@@ -242,40 +242,6 @@ class CARDAMOM_F(object):
         self.save_project()
         print "DONE"
 
-"""
-            #write input data
-            self.createInput()
-            #copy the source code
-            self.backup_source()
-
-            #create a directory for the executable
-            if "exec" not in os.listdir(self.paths["projects"]+self.project_name):
-                os.mkdir(self.paths["projects"]+self.project_name+"/exec")
-
-            compile_code = raw_input("Compile local code <y/n>? ")
-            if compile_code == "y":
-                print "Compiling local code"
-                self.backup_source()
-                self.compile_local_code()
-
-
-            cluster = raw_input("Send project files on the cluster <y/n>? ")
-
-            if cluster == "y":
-                self.details["cluster"] = True
-                #copy data on cluster
-                self.send_to_cluster()
-
-            cluster = raw_input("Compile code on the cluster <y/n>? ")
-            if cluster == "y":
-                self.compile_cluster()
-
-        else:
-            print "Too many warning raised... please check input data according to previous messages"
-
-
-"""
-
     def createInput(self):
         """
         This method writes the input files in the local directory
