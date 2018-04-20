@@ -32,7 +32,6 @@ class CARDAMOM_F(object):
             self.project_name = raw_input('Enter project name: ')
 
         # load if project exists
-
         if self.project_name in os.listdir(self.paths["projects"]):
             if self.project_name+".pData" in os.listdir('/'.join([self.paths["projects"],self.project_name])):
                 print "Project \"%s\" found" % self.project_name
@@ -78,7 +77,6 @@ class CARDAMOM_F(object):
             if projtype != "":
                 self.model = types[int(projtype)]
                 self.modelid = int(projtype)
-
             else:
                 print "Unknown project type"
 
@@ -177,11 +175,11 @@ class CARDAMOM_F(object):
 
             self.paths["cluster_address"] = raw_input("Enter address of cluster (leave blank for eddie): ")
             if self.paths["cluster_address"] == "":
-                self.paths["cluster_address"] = "eddie.ecdf.ed.ac.uk"
+                self.paths["cluster_address"] = "eddie3.ecdf.ed.ac.uk"
 
             self.paths["cluster_directory"] = raw_input("Enter cluster working directory (full path or leave blank for default): ")
             if self.paths["cluster_directory"] == "":
-                self.paths["cluster_directory"] = "/exports/work/scratch/jexbraya/"
+                self.paths["cluster_directory"] = "/exports/csce/eddie/geos/groups/gcel/"
 
         savedefault = raw_input("Save current paths as default ones for this machine <y/n>? ")
 
@@ -298,7 +296,7 @@ class CARDAMOM_F(object):
 
         if "src" not in os.listdir(self.paths["projects"]+self.project_name):
             os.mkdir(self.paths["projects"]+self.project_name+"/src")
-        os.system("cp -r %s/* %s/%s/src" % (self.paths["library"],self.paths["projects"],self.project_name))
+        os.system("cp -r %s/* %s/%s/src/" % (self.paths["library"],self.paths["projects"],self.project_name))
 
         print 'Copied source code from repository %s to local project %s/%s/src/' % (self.paths['library'],self.paths["projects"],self.project_name)
 
@@ -322,10 +320,9 @@ class CARDAMOM_F(object):
         with optimization flags by default.
         """
 
-        # create folder to hold exec if missing
+        # create folder to hold exec
         if "exec" not in os.listdir(self.paths["projects"]+self.project_name):
             os.mkdir(self.paths["projects"]+self.project_name+"/exec")
-
 
         #define path to library, model version and path to exec
         path2lib = '%s/%s/src/' % (self.paths["projects"],self.project_name)
@@ -355,7 +352,7 @@ class CARDAMOM_F(object):
 
     def send_to_cluster(self):
         """
-        This method sends the whole project to the cluster
+        This method sends the necessary parts of the project to the cluster
         """
 
         dest=self.paths["cluster_username"]+"@"+self.paths["cluster_address"]+":"+self.paths["cluster_directory"]+"/"+self.project_name
@@ -372,13 +369,32 @@ class CARDAMOM_F(object):
         """
         This method compiles the code on the cluster
         """
+        
+        path2lib = '%s/%s/src/' % (self.paths["projects"],self.project_name)
+        path2lib_hpc = '%s/%s/src/' % (self.paths['cluster_directory'],self.project_name)
+        model = self.model
+        #executable bears the name of the project
+        path2exe_hpc = '%s/%s/exec/%s.exe' % (self.paths["cluster_directory"],self.project_name,self.project_name)
 
-        path2cluster = self.paths["cluster_address"]
-        path2source = self.paths["cluster_directory"]+self.project_name+"/src/"
-        path2include = "%s/models/%s/likelihood/MODEL_LIKELIHOOD.c" % (path2source,self.project_type)
-        path2exe = self.paths["cluster_directory"]+self.project_name+"/exec/"
+        #set compiler and options in the command
+        cmd = '%s %s' % (compiler, flags)
 
-        os.system("ssh %s 'gcc -O3 %s/general/cardamom_main.c --include %s -o %s.exe -lm'" % (path2cluster,path2source,path2include,path2exe+self.project_name))
+        # copied file order from Luke's        
+        cmd += ' %s/misc/math_functions.f90 %s/misc/oksofar.f90' % (path2lib_hpc,path2lib_hpc)  # helpful functions
+        cmd += ' %s/model/%s/src/%s.f90' % (path2lib_hpc,model,model)                           # the model itself
+        if model+'_CROP.f90' in os.listdir('%s/model/%s/src/' % (path2lib,model)):
+            cmd += ' %s/model/%s/src/%s_CROP.f90' % (path2lib_hpc,model,model)                  # the crop model if it exists
+        cmd += ' %s/general/cardamom_structures.f90' % (path2lib_hpc)                           # structure definition
+        cmd += ' %s/method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90' % (path2lib_hpc)              # MCMC specific structures
+        cmd += ' %s/model/%s/src/%s_PARS.f90' % (path2lib_hpc,model,model)                      # the file holding boundary values of parameters
+        cmd += ' %s/general/cardamom_io.f90' % (path2lib_hpc)                                   # the file with the IO functions
+        cmd += ' %s/method/MHMCMC/MCMC_FUN/MHMCMC.f90' % (path2lib_hpc)                         # the actual MCMC function
+        cmd += ' %s/model/%s/likelihood/MODEL_LIKELIHOOD.f90' % (path2lib_hpc,model)            # the likelihood files / includes EDCs        
+        cmd += ' %s/general/cardamom_main.f90' % (path2lib_hpc)                                 # the main file
+        cmd += ' -o %s' % path2exe_hpc
+
+        print cmd
+        os.system("ssh %s@%s '%s'" % (self.paths['cluster_username'],self.paths['cluster_directory'],cmd)
 
     def resetup(self):
         """
