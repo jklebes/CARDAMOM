@@ -473,7 +473,7 @@ module cardamom_io
               ,finish     &
               ,input_unit & ! unit number assigned to the input binary
               ,totcol     & ! total number of columns (met + obs)
-              ,totread    & ! total number of records already read
+              ,totread      ! total number of records already read
 
     double precision, dimension(:), allocatable :: statdat & ! static data input
                                         ,mettemp & ! met data input

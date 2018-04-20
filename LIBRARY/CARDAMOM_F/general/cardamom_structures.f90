@@ -49,7 +49,7 @@ public :: data_type, DATAin, emulator_parameters ,emulator_pars
                                           ,Ccoarseroot_stock_unc & ! (%)
                                           ,Cfolmax_stock_unc     & ! (%)
                                           ,Evap_unc              & ! (kg.m-2.day-1)
-                                          ,SWE_unc               & ! (mm.day-1)
+                                          ,SWE_unc                 ! (mm.day-1)
 
       ! location of observations in the data stream
       integer, allocatable, dimension(:) :: gpppts               & ! gpppts vector used in deriving ngpp

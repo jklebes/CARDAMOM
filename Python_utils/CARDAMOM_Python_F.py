@@ -66,9 +66,9 @@ class CARDAMOM_F(object):
                 'DALECN_GSI_DFOL_LABILE_FROOT_FR','DALEC_GSI_DFOL_CWD_FR', \
                 'DALECN_GSI_BUCKET']
 
-        if 'project_type' in kwargs:
-            self.project_type = kwargs['project_type']
-            if self.project_type not in types:
+        if 'model' in kwargs:
+            self.model = kwargs['model']
+            if self.model not in types:
                 print "Warning - Unrecognized model version"
         else:
             print "Available model types"
@@ -76,7 +76,7 @@ class CARDAMOM_F(object):
                 print '%02i - %s' % (mm,modname)
             projtype=raw_input("Choose model type from list above")
             if projtype != "":
-                self.project_type = types[int(projtype)]
+                self.model = types[int(projtype)]
                 self.modelid = int(projtype)
 
             else:
@@ -217,6 +217,7 @@ class CARDAMOM_F(object):
         self.lon            = longitude
         self.drivers        = drivers
         self.obs            = obs
+        self.obsunc         = obsunc
 
         # MCMC specific values
         self.parprior       = parprior
@@ -251,7 +252,7 @@ class CARDAMOM_F(object):
             print "Directory \"%s\" not found... creating" % path2data
             os.mkdir(path2data)
 
-        print "Now creating input data in \"%s\" for project \"%s\" with type \"%s\"" % (path2data,self.project_name,self.project_type)
+        print "Now creating input data in \"%s\" for project \"%s\" with type \"%s\"" % (path2data,self.project_name,self.model)
 
         for ii in xrange(self.npts):
             # create an empty array to store data to be written
@@ -292,15 +293,15 @@ class CARDAMOM_F(object):
 
     def backup_source(self):
         """
-        This method copies the source code in a project sub-directory
+        This method copies the source code in a project sub-directory.
         """
+
         if "src" not in os.listdir(self.paths["projects"]+self.project_name):
             os.mkdir(self.paths["projects"]+self.project_name+"/src")
         os.system("cp -r %s/* %s/%s/src" % (self.paths["library"],self.paths["projects"],self.project_name))
 
-        recompile_local = raw_input("Recompile local code <y/n>? ")
-        if recompile_local=="y":
-            self.compile_local_code()
+        print 'Copied source code from repository %s to local project %s/%s/src/' % (self.paths['library'],self.paths["projects"],self.project_name)
+
 
     def update_source_cluster(self):
         """
@@ -315,21 +316,42 @@ class CARDAMOM_F(object):
         if recompile_cluster == "y":
             self.compile_cluster()
 
-    def compile_local_code(self):
+    def compile_local(self,compiler ='ifort', flags ='-O2'):
         """
-        This method compiles the code and saves a backup
+        This method compiles the code locally, using ifort 
+        with optimization flags by default.
         """
 
-        path2source=self.paths["projects"]+self.project_name+"/src/"
-        path2include="%s/models/%s/likelihood/MODEL_LIKELIHOOD.c" % (path2source,self.project_type)
-        path2exe = self.paths["projects"]+self.project_name+"/exec/"
-
+        # create folder to hold exec if missing
         if "exec" not in os.listdir(self.paths["projects"]+self.project_name):
             os.mkdir(self.paths["projects"]+self.project_name+"/exec")
-        #compile directly in good directory
-        os.system("gcc -O3 %s/general/cardamom_main.c --include %s -o %s.exe -lm" % (path2source,path2include,path2exe+self.project_name))
 
 
+        #define path to library, model version and path to exec
+        path2lib = '%s/%s/src/' % (self.paths["projects"],self.project_name)
+        model = self.model
+        #executable bears the name of the project
+        path2exe = '%s/%s/exec/%s.exe' % (self.paths["projects"],self.project_name,self.project_name)
+
+        #set compiler and options in the command
+        cmd = '%s %s' % (compiler, flags)
+
+        # copied file order from Luke's        
+        cmd += ' %s/misc/math_functions.f90 %s/misc/oksofar.f90' % (path2lib,path2lib)  # helpful functions
+        cmd += ' %s/model/%s/src/%s.f90' % (path2lib,model,model)                       # the model itself
+        if model+'_CROP.f90' in os.listdir('%s/model/%s/src/' % (path2lib,model)):
+            cmd += ' %s/model/%s/src/%s_CROP.f90' % (path2lib,model,model)              # the crop model if it exists
+        cmd += ' %s/general/cardamom_structures.f90' % (path2lib)                       # structure definition
+        cmd += ' %s/method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90' % (path2lib)          # MCMC specific structures
+        cmd += ' %s/model/%s/src/%s_PARS.f90' % (path2lib,model,model)                  # the file holding boundary values of parameters
+        cmd += ' %s/general/cardamom_io.f90' % (path2lib)                               # the file with the IO functions
+        cmd += ' %s/method/MHMCMC/MCMC_FUN/MHMCMC.f90' % (path2lib)                     # the actual MCMC function
+        cmd += ' %s/model/%s/likelihood/MODEL_LIKELIHOOD.f90' % (path2lib,model)        # the likelihood files / includes EDCs        
+        cmd += ' %s/general/cardamom_main.f90' % (path2lib)                             # the main file
+        cmd += ' -o %s' % path2exe
+
+        print cmd
+        os.system(cmd)
 
     def send_to_cluster(self):
         """
@@ -363,20 +385,24 @@ class CARDAMOM_F(object):
         Redo the setup with attributes of the object
         """
 
-        latitude      =  self.details["latitude"]
-        longitude     =  self.details["longitude"]
-        drivers       =  self.details["drivers"]
-        observations  =  self.details["observations"]
+        lat             =   self.lat
+        lon             =   self.lon
+        drivers         =   self.drivers
+        obs             =   self.obs
+        obsunc          =   self.obsunc
 
         # MCMC specific values
-        parprior      =  self.details["parprior"]
-        parpriorunc   =  self.details["parpriorunc"]
-        otherprior    =  self.details["otherprior"]
-        otherpriorunc =  self.details["otherpriorunc"]
+        parprior        =   self.parprior
+        parpriorunc     =   self.parpriorunc
+        otherprior      =   self.otherprior
+        otherpriorunc   =   self.otherpriorunc
+
+        edcs            =   self.edcs
+        pft             =   self.pft
 
         print "Starting setup for project "+self.project_name
 
-        self.setup(latitude,longitude,drivers,observations,parprior,parpriorunc,otherprior,otherpriorunc)
+        self.setup(lat,lon,drivers,obs,obsunc,parprior,parpriorunc,otherprior,otherpriorunc,edcs,pft)
 
 
     def download_cluster(self, **kwargs):
