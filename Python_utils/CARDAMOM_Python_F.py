@@ -167,17 +167,17 @@ class CARDAMOM_F(object):
         if self.paths["library"] == "":
             self.paths["library"] = self.paths["CARDAMOM"]+"/library/"
 
-        usehpc = raw_input("Will you run this project on a hpc <y/n>? ")
+        usehpc = raw_input("Will you run this project on a HPC <y/n>? ")
         if usehpc == "y":
             self.paths["hpc_username"] = raw_input("Enter your username (leave blank for default): ")
             if self.paths["hpc_username"] == "":
                 self.paths["hpc_username"] = "jexbraya"
 
-            self.paths["hpc_address"] = raw_input("Enter address of hpc (leave blank for eddie): ")
+            self.paths["hpc_address"] = raw_input("Enter address of HPC (leave blank for eddie): ")
             if self.paths["hpc_address"] == "":
                 self.paths["hpc_address"] = "eddie3.ecdf.ed.ac.uk"
 
-            self.paths["hpc_directory"] = raw_input("Enter hpc working directory (full path or leave blank for default): ")
+            self.paths["hpc_directory"] = raw_input("Enter HPC working directory (full path or leave blank for default): ")
             if self.paths["hpc_directory"] == "":
                 self.paths["hpc_directory"] = "/exports/csce/eddie/geos/groups/gcel/"
 
@@ -304,13 +304,13 @@ class CARDAMOM_F(object):
     def update_source_hpc(self):
         """
         This method backs up the source code in a project sub-directory and sends it to
-        the hpc
+        the HPC
         """
         self.backup_source()
         dest = self.paths["hpc_username"]+"@"+self.paths["hpc_address"]+":"+self.paths["hpc_directory"]+"/"+self.project_name
         os.system("scp -r %s/%s/src %s" % (self.paths["projects"],self.project_name,dest))
 
-        recompile_hpc = raw_input("Recompile on hpc <y/n>? ")
+        recompile_hpc = raw_input("Recompile on HPC <y/n>? ")
         if recompile_hpc == "y":
             self.compile_hpc()
 
@@ -365,7 +365,7 @@ class CARDAMOM_F(object):
 
         print "Successfully copied the data on the hpc"
 
-    def compile_hpc(self):
+    def compile_hpc(self,compiler ='ifort', flags ='-O2'):
         """
         This method compiles the code on the hpc
         """
@@ -423,7 +423,7 @@ class CARDAMOM_F(object):
 
     def download_hpc(self, **kwargs):
         """
-        This method downloads the results from the hpc
+        This method downloads the results from the HPC
         """
 
         print "Preparing to download data from \"%s\"" % self.paths["hpc_address"]
