@@ -167,19 +167,19 @@ class CARDAMOM_F(object):
         if self.paths["library"] == "":
             self.paths["library"] = self.paths["CARDAMOM"]+"/library/"
 
-        usecluster = raw_input("Will you run this project on a cluster <y/n>? ")
-        if usecluster == "y":
-            self.paths["cluster_username"] = raw_input("Enter your username (leave blank for default): ")
-            if self.paths["cluster_username"] == "":
-                self.paths["cluster_username"] = "jexbraya"
+        usehpc = raw_input("Will you run this project on a hpc <y/n>? ")
+        if usehpc == "y":
+            self.paths["hpc_username"] = raw_input("Enter your username (leave blank for default): ")
+            if self.paths["hpc_username"] == "":
+                self.paths["hpc_username"] = "jexbraya"
 
-            self.paths["cluster_address"] = raw_input("Enter address of cluster (leave blank for eddie): ")
-            if self.paths["cluster_address"] == "":
-                self.paths["cluster_address"] = "eddie3.ecdf.ed.ac.uk"
+            self.paths["hpc_address"] = raw_input("Enter address of hpc (leave blank for eddie): ")
+            if self.paths["hpc_address"] == "":
+                self.paths["hpc_address"] = "eddie3.ecdf.ed.ac.uk"
 
-            self.paths["cluster_directory"] = raw_input("Enter cluster working directory (full path or leave blank for default): ")
-            if self.paths["cluster_directory"] == "":
-                self.paths["cluster_directory"] = "/exports/csce/eddie/geos/groups/gcel/"
+            self.paths["hpc_directory"] = raw_input("Enter hpc working directory (full path or leave blank for default): ")
+            if self.paths["hpc_directory"] == "":
+                self.paths["hpc_directory"] = "/exports/csce/eddie/geos/groups/gcel/"
 
         savedefault = raw_input("Save current paths as default ones for this machine <y/n>? ")
 
@@ -301,18 +301,18 @@ class CARDAMOM_F(object):
         print 'Copied source code from repository %s to local project %s/%s/src/' % (self.paths['library'],self.paths["projects"],self.project_name)
 
 
-    def update_source_cluster(self):
+    def update_source_hpc(self):
         """
         This method backs up the source code in a project sub-directory and sends it to
-        the cluster
+        the hpc
         """
         self.backup_source()
-        dest = self.paths["cluster_username"]+"@"+self.paths["cluster_address"]+":"+self.paths["cluster_directory"]+"/"+self.project_name
+        dest = self.paths["hpc_username"]+"@"+self.paths["hpc_address"]+":"+self.paths["hpc_directory"]+"/"+self.project_name
         os.system("scp -r %s/%s/src %s" % (self.paths["projects"],self.project_name,dest))
 
-        recompile_cluster = raw_input("Recompile on cluster <y/n>? ")
-        if recompile_cluster == "y":
-            self.compile_cluster()
+        recompile_hpc = raw_input("Recompile on hpc <y/n>? ")
+        if recompile_hpc == "y":
+            self.compile_hpc()
 
     def compile_local(self,compiler ='ifort', flags ='-O2'):
         """
@@ -350,31 +350,31 @@ class CARDAMOM_F(object):
         print cmd
         os.system(cmd)
 
-    def send_to_cluster(self):
+    def send_to_hpc(self):
         """
-        This method sends the necessary parts of the project to the cluster
+        This method sends the necessary parts of the project to the hpc
         """
 
-        dest=self.paths["cluster_username"]+"@"+self.paths["cluster_address"]+":"+self.paths["cluster_directory"]+"/"+self.project_name
+        dest=self.paths["hpc_username"]+"@"+self.paths["hpc_address"]+":"+self.paths["hpc_directory"]+"/"+self.project_name
         print "Copying binary files to remote destination \"%s\" " % dest
-        os.system("ssh %s@%s mkdir %s/%s" % (self.paths["cluster_username"],self.paths["cluster_address"],self.paths["cluster_directory"],self.project_name))
+        os.system("ssh %s@%s mkdir %s/%s" % (self.paths["hpc_username"],self.paths["hpc_address"],self.paths["hpc_directory"],self.project_name))
 
         os.system("scp -r %s %s" % (self.paths["projects"]+self.project_name+"/data", dest))
         os.system("scp -r %s %s" % (self.paths["projects"]+self.project_name+"/src", dest))
         os.system("scp -r %s %s" % (self.paths["projects"]+self.project_name+"/exec", dest))
 
-        print "Successfully copied the data on the cluster"
+        print "Successfully copied the data on the hpc"
 
-    def compile_cluster(self):
+    def compile_hpc(self):
         """
-        This method compiles the code on the cluster
+        This method compiles the code on the hpc
         """
         
         path2lib = '%s/%s/src/' % (self.paths["projects"],self.project_name)
-        path2lib_hpc = '%s/%s/src/' % (self.paths['cluster_directory'],self.project_name)
+        path2lib_hpc = '%s/%s/src/' % (self.paths['hpc_directory'],self.project_name)
         model = self.model
         #executable bears the name of the project
-        path2exe_hpc = '%s/%s/exec/%s.exe' % (self.paths["cluster_directory"],self.project_name,self.project_name)
+        path2exe_hpc = '%s/%s/exec/%s.exe' % (self.paths["hpc_directory"],self.project_name,self.project_name)
 
         #set compiler and options in the command
         cmd = '%s %s' % (compiler, flags)
@@ -394,7 +394,7 @@ class CARDAMOM_F(object):
         cmd += ' -o %s' % path2exe_hpc
 
         print cmd
-        os.system("ssh %s@%s '%s'" % (self.paths['cluster_username'],self.paths['cluster_directory'],cmd)
+        os.system("ssh %s@%s '%s'" % (self.paths['hpc_username'],self.paths['hpc_directory'],cmd)
 
     def resetup(self):
         """
@@ -421,16 +421,16 @@ class CARDAMOM_F(object):
         self.setup(lat,lon,drivers,obs,obsunc,parprior,parpriorunc,otherprior,otherpriorunc,edcs,pft)
 
 
-    def download_cluster(self, **kwargs):
+    def download_hpc(self, **kwargs):
         """
-        This method downloads the results from the cluster
+        This method downloads the results from the hpc
         """
 
-        print "Preparing to download data from \"%s\"" % self.paths["cluster_address"]
+        print "Preparing to download data from \"%s\"" % self.paths["hpc_address"]
 
-        cluster_details = "%s@%s" % (self.paths["cluster_username"],self.paths["cluster_address"])
+        hpc_details = "%s@%s" % (self.paths["hpc_username"],self.paths["hpc_address"])
 
-        src = "%s/%s/output/*" % (self.paths["cluster_directory"],self.project_name)
+        src = "%s/%s/output/*" % (self.paths["hpc_directory"],self.project_name)
 
         #create the output folder
         if "output" not in os.listdir("%s/%s" % (self.paths["projects"],self.project_name)):
@@ -450,16 +450,16 @@ class CARDAMOM_F(object):
         dst = "%s/%s/output/run_%03i/" % (self.paths["projects"],self.project_name,runid)
         if "run_%03i" % runid not in runlist:
             os.mkdir(dst)
-            print "scp -r %s:%s %s" % (cluster_details,src,dst)
-            os.system("scp -r %s:%s %s" % (cluster_details,src,dst))
+            print "scp -r %s:%s %s" % (hpc_details,src,dst)
+            os.system("scp -r %s:%s %s" % (hpc_details,src,dst))
         else:
             if len(os.listdir(dst)) != 0.:
                 notempty = raw_input("Destination folder \"%s\" not empty... continue <y/n>?" % dst)
                 if notempty == "y":
                     print "Downloading data in \"%s\"" % dst
-                    os.system("scp -r %s:%s %s" % (cluster_details,src,dst))
+                    os.system("scp -r %s:%s %s" % (hpc_details,src,dst))
             else:
-                os.system("scp -r %s:%s %s" % (cluster_details,src,dst))
+                os.system("scp -r %s:%s %s" % (hpc_details,src,dst))
 
 
 if __name__ == "__main__":
