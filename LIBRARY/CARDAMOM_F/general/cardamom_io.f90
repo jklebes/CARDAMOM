@@ -569,6 +569,7 @@ module cardamom_io
             ,DATAin%Ccoarseroot_stock(DATAin%nodays),DATAin%Ccoarseroot_stock_unc(DATAin%nodays) &
             ,DATAin%Cfolmax_stock(DATAin%nodays),DATAin%Cfolmax_stock_unc(DATAin%nodays)         &
             ,DATAin%Evap(DATAin%nodays),DATAin%Evap_unc(DATAin%nodays)                           &
+            ,DATAin%SWE(DATAin%nodays),DATAin%SWE_unc(DATAin%nodays)                           &
             ,mettemp(DATAin%nomet),obstemp(DATAin%noobs))
 
     ! zero all variables
@@ -605,7 +606,8 @@ module cardamom_io
     DATAin%nEvap = 0
     DATAin%nSWE = 0
 
-    ! work out some key variables
+    ! work out some key variables 
+    ! DATAin%noobs corresponds to observations and uncertainties
     totcol = DATAin%nomet*DATAin%noobs
     totread = 500+1
 

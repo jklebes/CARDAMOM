@@ -73,7 +73,7 @@ class CARDAMOM_F(object):
             print "Available model types"
             for mm,modname in enumerate(types):
                 print '%02i - %s' % (mm,modname)
-            projtype=raw_input("Choose model type from list above")
+            projtype=raw_input("Choose model type from list above\n> ")
             if projtype != "":
                 self.model = types[int(projtype)]
                 self.modelid = int(projtype)
@@ -211,8 +211,8 @@ class CARDAMOM_F(object):
         """
 
         # first store data
-        self.lat            = latitude
-        self.lon            = longitude
+        self.lat            = lat
+        self.lon            = lon
         self.drivers        = drivers
         self.obs            = obs
         self.obsunc         = obsunc
@@ -261,15 +261,15 @@ class CARDAMOM_F(object):
             towrite[1] = self.lat[ii]       # pixel number
             towrite[2] = self.nsteps        # no of time steps
             towrite[3] = self.ndrivers      # no of met fields
-            towrite[4] = self.nobs*2          # no of obs fields * 2 with UC
+            towrite[4] = self.nobs*2        # no of obs fields * 2 with UC
             towrite[5] = self.edcs          # use EDCs? 1: Yes / 0: No
             towrite[6] = self.pft           # crop site?
 
             # now get priors and uncertainty - 100 for each following Luke
             towrite[200:200+self.parprior.shape[1]]=self.parprior[ii]
             towrite[300:300+self.parpriorunc.shape[1]]=self.parpriorunc[ii]
-            towrite[400:400+len(self.otherprior.shape[1])]=self.otherprior[ii]
-            towrite[500:500+len(self.otherpriorunc.shape[1])]=self.otherpriorunc[ii]
+            towrite[400:400+self.otherprior.shape[1]]=self.otherprior[ii]
+            towrite[500:500+self.otherpriorunc.shape[1]]=self.otherpriorunc[ii]
 
             #loop over time steps to extract drivers, obs and uncertainty
             metobs = np.zeros([self.nsteps,self.ndrivers+2*self.nobs])
@@ -278,8 +278,8 @@ class CARDAMOM_F(object):
                 metobs[nn,:self.ndrivers] = self.drivers[ii,nn]
                 # store observations and corresponding uncertainty
                 for oo in xrange(self.nobs):
-                    metobs[nn,self.ndrivers+(oo*2)]   = self.obs[ii,nn]
-                    metobs[nn,self.ndrivers+(oo*2)+1] = self.obsunc[ii,nn]
+                    metobs[nn,self.ndrivers+(oo*2)]   = self.obs[ii,nn,oo]
+                    metobs[nn,self.ndrivers+(oo*2)+1] = self.obsunc[ii,nn,oo]
             towrite[500:]=metobs.flatten()
 
             #create binary data
@@ -287,7 +287,7 @@ class CARDAMOM_F(object):
             f.write(struct.pack(len(towrite)*'d',*towrite))
             f.close()
 
-        print "Written input file for %i sites" % self.npts)
+        print "Written input file for %i sites" % (self.npts)
 
     def backup_source(self):
         """
@@ -394,7 +394,7 @@ class CARDAMOM_F(object):
         cmd += ' -o %s' % path2exe_hpc
 
         print cmd
-        os.system("ssh %s@%s '%s'" % (self.paths['hpc_username'],self.paths['hpc_directory'],cmd)
+        os.system("ssh %s@%s '%s'" % (self.paths['hpc_username'],self.paths['hpc_directory'],cmd))
 
     def resetup(self):
         """
@@ -464,156 +464,51 @@ class CARDAMOM_F(object):
 
 if __name__ == "__main__":
 
-    # First associate a variable to the CARDAMOM object that holds / will hold the data
-    FORMA=Dataset("../data/CARDAMOM_GLOBAL/FORMA_0.5_ERA-Interim_361x720.nc")
-    d0 = dt.datetime(2005,12,19)
-    dates=[]
-    for dd in FORMA.variables["time"][1:-1]:
-        dates.append(d0+dt.timedelta(float(dd)))
+    import pandas as pd
+    # example project using data in drivers.csv file
+    data                = pd.read_csv('drivers.csv',parse_dates = True, index_col = 'date')
 
-    simlength=len(dates)
+    # get drivers and reshape as 3D array
+    drivers             = data.get_values()[-365:,:-1]
+    drivers             = np.expand_dims(drivers,0)
 
-    degradation = FORMA.variables["FORMA"][:].data
-    degradation[degradation==-9999.]=0.
+    #get observations and reshape as 3D array
+    obs                 = np.zeros([drivers.shape[1],17])-9999.
+    obs[:,1]            = data.LAI.get_values()[-365:]
+    obs                 = np.expand_dims(obs,0)
 
-    #test will use the pixel in the AMAZON with the most deforestation since 1 Jan 2006
-    #we start from time step 1 rather than 0, :360 is to limit to south-western hemisphere
-    selec=np.where(np.nansum(degradation[1:,180:,:360],0)==np.nanmax(np.nansum(degradation[1:,180:,:360],0)))
+    #define observations uncertainty and reshape as 3D array
+    obsunc              = np.zeros(obs.shape)-9999.
+    obsunc[obs!=-9999.] = 2.
 
-    latitude = FORMA.variables["latitude"][selec[0]+180][0]
-    longitude= FORMA.variables["longitude"][selec[1]][0]
+    # define lat / lon
+    lat                 = np.array([-12.75])
+    lon                 = np.array([131.25])
 
-    # met drivers are:
-    # day of simulation, Tmn (C), Tmx (C), radation (MJ d-1), CO2 (ppmv), doy
-    # newly added for LU: removal (fraction of AGB), timestep length
-    met=np.zeros([simlength,8])-9999.
+    # define parpriors for allocation to autotrophic respiration
+    # and canopy efficiency
+    parprior            = np.zeros([1,100])-9999.
+    parprior[:,1]       = 0.5
+    parprior[:,10]      = 17.5
 
-    #observations are:
-    # nee; LAI; GPP
-    obs=np.zeros([simlength,3])-9999.
+    # define their uncertainty
+    parpriorunc         = np.zeros([1,100])-9999.
+    parpriorunc[:,1]    = 1.2
+    parpriorunc[:,10]   = 1.2
 
-    #get removal time series
-    print "Extracting FORMA data...   ",
-    removal=FORMA.variables["FORMA"][2:,selec[0]+180,selec[1]].data #FORMA dates correspond to end of time step
-    print "OK"
+    #define otherprior and their uncertainty
+    otherprior          = np.zeros([1,100])-9999.
+    otherpriorunc       = np.zeros([1,100])-9999.
 
-    # get time step length
-    tsteps=[];dayofsim=[];dayofyear=[]
-    # get met drivers
-    tmn=[];tmx=[];rad=[]
-    #ref day 0 for day of simulation
-    dayref0=dt.datetime(2005,12,31)
+    #create / load project
+    prj = CARDAMOM_F(project_name='fortran_test')
 
-    #add a last date
-    dates.append(dates[-1]+dt.timedelta(days=8))
-    for ii in xrange(len(dates)-1):
+    # setup / store data in object
+    prj.setup(lat,lon,drivers,obs,obsunc,parprior,parpriorunc,otherprior,otherpriorunc)
 
-        tsteps.append((dates[ii+1]-dates[ii]).days)
-        dayref=dt.datetime(dates[ii].year-1,12,31)
-        dayofyear.append((dates[ii]-dayref).days+(tsteps[-1]-1)/2.)
-        dayofsim.append((dates[ii]-dayref0).days+(tsteps[-1]-1)/2.)
+    # write binary files
+    prj.createInput()
 
-        #get first and last day of timestep
-        firstday=dates[ii];lastday=dates[ii+1]-dt.timedelta(days=1)
-        if lastday.year==firstday.year:
-            print "Getting ERA-Interim data for timestep starting on %02i/%02i/%4i" % (firstday.day,firstday.month,firstday.year)
-            erai=Dataset("../data/ERA-Interim/0.5deg/ERA-Interim_%4i.nc" % firstday.year)
-
-            #get index of first time step
-            first_step = ((firstday-dayref).days-1)*2
-            last_step  = first_step+(lastday-firstday).days*2
-
-            #get coordinates of points
-            latid=erai.variables["latitude"]==latitude
-
-            #longitude starts from GMT in ERA-Interim data
-            lonid=erai.variables["longitude"]==longitude+360
-
-            #extract the fields - mean daily rad in MJ m-2 d-1 (transformed from MJ m-2 per 12 hours)
-            rad.append(1e-6*erai.variables['ssrd'][first_step:last_step,latid,lonid].sum()/(0.5*(last_step-first_step)))
-
-            #for each day in the era data, get the min and max
-            tmpmn,tmpmx=[],[]
-            for dd in range(tsteps[-1]-1):
-                tmpmn.append(erai.variables['mn2t'][first_step+dd*2:first_step+(dd+1)*2,latid,lonid].min(0))
-                tmpmx.append(erai.variables['mx2t'][first_step+dd*2:first_step+(dd+1)*2,latid,lonid].max(0))
-            tmn.append(np.mean(tmpmn)-273.15);tmx.append(np.mean(tmpmx)-273.15)
-
-            erai.close()
-
-    # add data to drivers' array
-    met[:,0] = np.array(dayofsim);
-    met[:,1] = np.array(tmn)
-    met[:,2] = np.array(tmx)
-    met[:,3] = np.array(rad);
-    met[:,4] = np.zeros(simlength)+385.
-    met[:,5] = np.array(dayofyear)
-    met[:,6] = removal[:,0]
-    met[:,7] = np.array(tsteps)
-
-    #remove last date from list
-    dates=dates[:-1]
-
-    #get HWSD
-    hwsd=Dataset("../data/CARDAMOM_GLOBAL/HWSD_OC_0.5deg_ERA-Interim_361x720.nc")
-    latid=hwsd.variables["latitude"]==latitude
-    lonid=hwsd.variables["longitude"]==longitude
-    som=hwsd.variables["orgC"][:].data[latid,lonid][0]
-    hwsd.close()
-
-    #get woody biomass
-    saatchi=Dataset("../data/CARDAMOM_GLOBAL/Saatchi_0.5deg_ERA-Interim_361x720.nc")
-    latid=saatchi.variables["latitude"]==latitude
-    lonid=saatchi.variables["longitude"]==longitude
-    agb=saatchi.variables["AGB"][:].data[latid,lonid][0]*.5 # 0.5 for biomass to C
-    saatchi.close()
-
-    #get MODIS LAI observations
-
-
-    path2modis="../data/MODIS/LAI/0.5deg/"
-    lai=np.zeros(simlength)
-
-    for ii,dat in enumerate(dates):
-        print "Getting MODIS LAI data on %02i/%02i/%4i" % (dat.day,dat.month,dat.year)
-        #leap years with day after 28/2
-        if dat.year %4 == 0 and dat.month >=3:
-            tmpdat=dat+dt.timedelta(days=1)
-            dateascii = "%4i-%02i-%02i" % (tmpdat.year,tmpdat.month,tmpdat.day)
-        #leap year
-        else:
-            dateascii = "%4i-%02i-%02i" % (dat.year,dat.month,dat.day)
-        #print ii, dateascii,
-        modisfile = "MOD15A2_E_LAI_%s_rgb_720x360.CSV" % dateascii
-        if modisfile in os.listdir(path2modis):
-            #print ' ok'
-            lai[ii] = np.loadtxt(path2modis+"MOD15A2_E_LAI_%s_rgb_720x360.CSV" % dateascii,delimiter=',')[selec[0]+180,selec[1]]
-    print "OK"
-
-    lai[lai==99999]=-9999.
-    obs[:,1]=lai
-
-    #define priors
-
-    parprior=np.zeros(50)-9999.;parpriorunc=np.zeros(50)-9999.
-    #commonly used priors (from AAB code)
-    parprior[1]=0.5;parpriorunc[1]=1.2
-    parprior[9]=0.03;parpriorunc[9]=1.15 # temp_rate (Mahecha 2010)
-    parprior[16]=70;parpriorunc[16]=2 #LMA - Kattge 2011
-    #parprior[10]=20;parpriorunc[10]=1.5 #Ameriflux GPP & LAI assimilated data
-    parprior[22]=som;parpriorunc[22]=1.5
-    parprior[20]=max(agb,100.);parpriorunc[20]=1.5 #saatchi agb for woody
-
-    #
-    parprior[4]=max(lai) / (max(lai)-min(lai[lai>0.]))
-    parpriorunc[4]=1.2;
-
-    #leaf onset & leaf fall dates priors
-    if np.abs(latitude)>45:
-        parprior[11]=120+365.25;parpriorunc[11]=1.1
-        parprior[14]=270+365.25;parpriorunc[14]=1.1
-
-    otherprior=np.zeros(50)-9999.;otherprior[0]=1
-    otherpriorunc=np.zeros(50)-9999.;otherpriorunc[0]=2
-
-### now that data is loaded - setup CARDAMOM
+    # backup source and compile
+    prj.backup_source()
+    prj.compile_local(flags='-g -traceback')
