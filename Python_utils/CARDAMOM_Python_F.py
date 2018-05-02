@@ -266,10 +266,10 @@ class CARDAMOM_F(object):
             towrite[6] = self.pft           # crop site?
 
             # now get priors and uncertainty - 100 for each following Luke
-            towrite[200:200+self.parprior.shape[1]]=self.parprior[ii]
-            towrite[300:300+self.parpriorunc.shape[1]]=self.parpriorunc[ii]
-            towrite[400:400+self.otherprior.shape[1]]=self.otherprior[ii]
-            towrite[500:500+self.otherpriorunc.shape[1]]=self.otherpriorunc[ii]
+            towrite[100:100+self.parprior.shape[1]]=self.parprior[ii]
+            towrite[200:200+self.parpriorunc.shape[1]]=self.parpriorunc[ii]
+            towrite[300:300+self.otherprior.shape[1]]=self.otherprior[ii]
+            towrite[400:400+self.otherpriorunc.shape[1]]=self.otherpriorunc[ii]
 
             #loop over time steps to extract drivers, obs and uncertainty
             metobs = np.zeros([self.nsteps,self.ndrivers+2*self.nobs])
@@ -469,12 +469,12 @@ if __name__ == "__main__":
     data                = pd.read_csv('drivers.csv',parse_dates = True, index_col = 'date')
 
     # get drivers and reshape as 3D array
-    drivers             = data.get_values()[-365:,:-1]
+    drivers             = data.get_values()[:365,:-1]
     drivers             = np.expand_dims(drivers,0)
 
     #get observations and reshape as 3D array
     obs                 = np.zeros([drivers.shape[1],17])-9999.
-    obs[:,1]            = data.LAI.get_values()[-365:]
+    obs[:,1]            = data.LAI.get_values()[:365]
     obs                 = np.expand_dims(obs,0)
 
     #define observations uncertainty and reshape as 3D array
@@ -511,4 +511,4 @@ if __name__ == "__main__":
 
     # backup source and compile
     prj.backup_source()
-    prj.compile_local(flags='-g -traceback')
+    prj.compile_local(flags='-O2')

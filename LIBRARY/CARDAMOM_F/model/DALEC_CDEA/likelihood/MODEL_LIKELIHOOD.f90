@@ -739,7 +739,6 @@ module model_likelihood_module
      
     ! set initial value
     likelihood_p = 0.
-  
     ! now loop through defined parameters for their uncertainties
     do n = 1, npars
        ! if there is actually a value
@@ -794,7 +793,7 @@ module model_likelihood_module
          dn=DATAin%laipts(n)
          ! if zero or greater allow calculation with min condition to prevent
          ! errors of zero LAI which occur in managed systems
-         if (DATAin%M_LAI(dn) >= 0.) then
+         if (DATAin%M_LAI(dn) >= 0.) then           
              ! note that division is the uncertainty
              tot_exp=tot_exp+(log(max(0.001,DATAin%M_LAI(dn))/max(0.001,DATAin%LAI(dn)))/log(DATAin%LAI_unc(dn)))**2
          endif
