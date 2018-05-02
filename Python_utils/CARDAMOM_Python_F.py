@@ -468,7 +468,7 @@ if __name__ == "__main__":
     # example project using data in drivers.csv file
     data                = pd.read_csv('drivers.csv',parse_dates = True, index_col = 'date')
 
-    # get drivers and reshape as 3D array
+    # get drivers and reshape as 3D array - only 1st year
     drivers             = data.get_values()[:365,:-1]
     drivers             = np.expand_dims(drivers,0)
 
