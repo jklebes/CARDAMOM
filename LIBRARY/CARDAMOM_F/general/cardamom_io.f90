@@ -162,6 +162,11 @@ module cardamom_io
            DATAin%nopars = 37
            DATAin%nofluxes = 21
         endif
+    else if (DATAin%ID == 18) then
+        ! DALEC_CDEA_LU_FIRES_ET - added 03/05/2018 JFE
+        DATAin%nopools = 6
+        DATAin%nopars = 23
+        DATAin%nofluxes = 28
     else
        write(*,*) "Oh dear... model ID cannot be found"
        stop
