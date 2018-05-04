@@ -63,7 +63,7 @@ class CARDAMOM_F(object):
                 'DALECN_GSI_FR','DALEC_GSI_DFOL_FR','DALEC_GSI_DFOL_FROOT_FR', \
                 'DALEC_GSI_DFOL_LABILE_FR','DALECN_GSI_DFOL_LABILE_FR', \
                 'DALECN_GSI_DFOL_LABILE_FROOT_FR','DALEC_GSI_DFOL_CWD_FR', \
-                'DALECN_GSI_BUCKET']
+                'DALECN_GSI_BUCKET','DALEC_CDEA_LU_FIRES']
 
         if 'model' in kwargs:
             self.model = kwargs['model']
@@ -469,7 +469,7 @@ if __name__ == "__main__":
     data                = pd.read_csv('drivers.csv',parse_dates = True, index_col = 'date')
 
     # get drivers and reshape as 3D array - only 1st year
-    drivers             = data.get_values()[:365,:-1]
+    drivers             = data.get_values()[:365,:-1] 
     drivers             = np.expand_dims(drivers,0)
 
     #get observations and reshape as 3D array
