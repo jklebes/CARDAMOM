@@ -355,13 +355,13 @@ class CARDAMOM_F(object):
         This method sends the necessary parts of the project to the hpc
         """
 
-        dest=self.paths["hpc_username"]+"@"+self.paths["hpc_address"]+":"+self.paths["hpc_directory"]+"/"+self.project_name
+        dest=self.paths["hpc_directory"]+"/"+self.paths['hpc_username']+'/'+self.project_name
         print "Copying binary files to remote destination \"%s\" " % dest
-        os.system("ssh %s@%s mkdir %s/%s" % (self.paths["hpc_username"],self.paths["hpc_address"],self.paths["hpc_directory"],self.project_name))
+        os.system("ssh %s@%s mkdir %s" % (self.paths["hpc_username"],self.paths["hpc_address"],dest))
 
-        os.system("scp -r %s %s" % (self.paths["projects"]+self.project_name+"/data", dest))
-        os.system("scp -r %s %s" % (self.paths["projects"]+self.project_name+"/src", dest))
-        os.system("scp -r %s %s" % (self.paths["projects"]+self.project_name+"/exec", dest))
+        os.system("scp -r %s %s@%s:%s" % (self.paths["projects"]+self.project_name+"/data/", self.paths["hpc_username"],self.paths["hpc_address"],dest))
+        os.system("scp -r %s %s@%s:%s" % (self.paths["projects"]+self.project_name+"/src/", self.paths["hpc_username"],self.paths["hpc_address"],dest))
+        os.system("scp -r %s %s@%s:%s" % (self.paths["projects"]+self.project_name+"/exec/", self.paths["hpc_username"],self.paths["hpc_address"],dest))
 
         print "Successfully copied the data on the hpc"
 
@@ -371,10 +371,10 @@ class CARDAMOM_F(object):
         """
         
         path2lib = '%s/%s/src/' % (self.paths["projects"],self.project_name)
-        path2lib_hpc = '%s/%s/src/' % (self.paths['hpc_directory'],self.project_name)
+        path2lib_hpc = '%s/%s/%s/src/' % (self.paths['hpc_directory'],self.paths['hpc_username'],self.project_name)
         model = self.model
         #executable bears the name of the project
-        path2exe_hpc = '%s/%s/exec/%s.exe' % (self.paths["hpc_directory"],self.project_name,self.project_name)
+        path2exe_hpc = '%s/%s/%s/exec/%s.exe' % (self.paths["hpc_directory"],self.paths['hpc_username'],self.project_name,self.project_name)
 
         #set compiler and options in the command
         cmd = '%s %s' % (compiler, flags)
@@ -393,8 +393,10 @@ class CARDAMOM_F(object):
         cmd += ' %s/general/cardamom_main.f90' % (path2lib_hpc)                                 # the main file
         cmd += ' -o %s' % path2exe_hpc
 
-        print cmd
-        os.system("ssh %s@%s '%s'" % (self.paths['hpc_username'],self.paths['hpc_directory'],cmd))
+        if compiler == 'ifort':
+            cmd = 'module load intel && '+cmd
+
+        os.system("ssh %s@%s '%s'" % (self.paths['hpc_username'],self.paths["hpc_address"],cmd))
 
     def resetup(self):
         """
