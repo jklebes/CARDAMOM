@@ -88,7 +88,9 @@ contains
     double precision :: gpppars(12)            & ! ACM inputs (LAI+met)
              ,constants(10)          & ! parameters for ACM
              ,wf,wl,ff,fl,osf,osl,sf & ! phenological controls
-             ,pi,ml
+             ,pi,ml                   
+    ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
+    double precision :: cf(6),rfac            
 
     integer :: p,f,nxp,n
 
@@ -99,6 +101,8 @@ contains
     ! 4th Radiation (MJ.m-2.day-1)
     ! 5th CO2 (ppm)
     ! 6th DOY
+    ! 7th removed fraction
+    ! 8th burned fraction 
 
     ! POOLS are:
     ! 1 = labile
@@ -217,6 +221,17 @@ contains
     ! scaling to biyearly sine curve
     sf=365.25/pi
 
+    ! JFE added 4 May 2018 - define fire constants
+    cf(1) = 0.1         ! labile combustion efficiency
+    cf(2) = 0.9         ! foliar combustion efficiency
+    cf(3) = 0.1         ! roots combustion efficiency
+    cf(4) = 0.1         ! wood combustion efficiency
+    cf(5) = 0.5         ! litter combustion efficiency
+    cf(6) = 0.01        ! som combustion efficency
+
+    rfac = 0.5          ! resilience factor
+
+
     ! 
     ! Begin looping through each time step
     ! 
@@ -299,6 +314,15 @@ contains
       ! som pool
       POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)-FLUXES(n,14)+FLUXES(n,11))*deltat(n)
 
+    
+      ! JFE added 4 May 2018 - remove biomass if necessary
+      if (met(7,n) > 0.) then
+          POOLS(n+1,1) = POOLS(n+1,1)*(1.-met(7,n)) ! remove labile
+          POOLS(n+1,2) = POOLS(n+1,2)*(1.-met(7,n)) ! remove foliar
+          POOLS(n+1,4) = POOLS(n+1,4)*(1.-met(7,n)) ! remove wood
+      end if
+
+      ! fire bit 
 
     end do ! nodays loop
 
