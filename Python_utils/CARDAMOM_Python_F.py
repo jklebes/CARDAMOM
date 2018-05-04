@@ -11,6 +11,7 @@ import datetime as dt
 import numpy as np
 from netCDF4 import Dataset
 import shutil, socket
+import sys
 
 class CARDAMOM_F(object):
 
@@ -314,7 +315,7 @@ class CARDAMOM_F(object):
         if recompile_hpc == "y":
             self.compile_hpc()
 
-    def compile_local(self,compiler ='ifort', flags ='-O2'):
+    def compile_local(self, compiler ='ifort', flags ='-O2'):
         """
         This method compiles the code locally, using ifort 
         with optimization flags by default.
@@ -349,6 +350,27 @@ class CARDAMOM_F(object):
 
         print cmd
         os.system(cmd)
+
+    def compile_f2py(self, fcompiler = 'intelem', opt ='-O2'):
+        """
+        This method compiles the f2py version of the source code that should exist in the 
+        same folder as the code
+        """
+        path2lib = '%s/%s/src/' % (self.paths["projects"],self.project_name)
+        model = self.model
+        #first check that there is an f2py version - by convention it should be name <model>_f2py.f90
+        if model+'_f2py.f90' in os.listdir('%s/model/%s/src/' % (path2lib,model)):
+            path2src = '%s/model/%s/src/%s_f2py.f90' % (path2lib,model,model)
+    
+            cmd = 'f2py -c -m f2py_%s --fcompiler="%s" --opt="%s" %s' % (model,fcompiler,opt,path2src)
+
+            print cmd
+            # compile and copy
+            os.system(cmd)
+            os.system('mv f2py_%s.so %s/%s/exec/' % (model,self.paths["projects"],self.project_name) )
+        else:
+            print 'No f2py source file found'
+
 
     def send_to_hpc(self):
         """
@@ -396,6 +418,7 @@ class CARDAMOM_F(object):
         if compiler == 'ifort':
             cmd = 'module load intel && '+cmd
 
+        print cmd
         os.system("ssh %s@%s '%s'" % (self.paths['hpc_username'],self.paths["hpc_address"],cmd))
 
     def resetup(self):
@@ -422,6 +445,12 @@ class CARDAMOM_F(object):
 
         self.setup(lat,lon,drivers,obs,obsunc,parprior,parpriorunc,otherprior,otherpriorunc,edcs,pft)
 
+    def submit_hpc(self):
+        """
+        This method submits the jobs on the cluster, with string of options
+        """
+
+    
 
     def download_hpc(self, **kwargs):
         """
