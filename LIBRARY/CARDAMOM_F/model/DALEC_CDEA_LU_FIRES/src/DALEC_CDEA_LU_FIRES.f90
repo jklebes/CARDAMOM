@@ -92,7 +92,7 @@ contains
     ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
     double precision :: cf(6),rfac            
 
-    integer :: p,f,nxp,n
+    integer :: p,f,n,ii ! JFE added ii to loop over fluxes
 
     ! met drivers are:
     ! 1st run day
@@ -322,7 +322,45 @@ contains
           POOLS(n+1,4) = POOLS(n+1,4)*(1.-met(7,n)) ! remove wood
       end if
 
-      ! fire bit 
+      ! calculate fire emissions and litter transfer
+      if (met(8,n) > 0.) then
+          ! first calculate combustion / emissions fluxes in g C m-2 d-1
+          FLUXES(n,18) = POOLS(n+1,1)*met(8,n)*cf(1)/deltat(n) ! labile
+          FLUXES(n,19) = POOLS(n+1,2)*met(8,n)*cf(2)/deltat(n) ! foliar
+          FLUXES(n,20) = POOLS(n+1,3)*met(8,n)*cf(3)/deltat(n) ! roots
+          FLUXES(n,21) = POOLS(n+1,4)*met(8,n)*cf(4)/deltat(n) ! wood
+          FLUXES(n,22) = POOLS(n+1,5)*met(8,n)*cf(5)/deltat(n) ! litter
+          FLUXES(n,23) = POOLS(n+1,6)*met(8,n)*cf(6)/deltat(n) ! som
+      
+          ! second calculate litter transfer fluxes in g C m-2 d-1, all pools except som
+          FLUXES(n,24) = POOLS(n+1,1)*met(8,n)*(1-cf(1))*(1-rfac)/deltat(n) ! labile into litter
+          FLUXES(n,25) = POOLS(n+1,2)*met(8,n)*(1-cf(2))*(1-rfac)/deltat(n) ! foliar into litter
+          FLUXES(n,26) = POOLS(n+1,3)*met(8,n)*(1-cf(3))*(1-rfac)/deltat(n) ! roots into litter
+          FLUXES(n,27) = POOLS(n+1,4)*met(8,n)*(1-cf(4))*(1-rfac)/deltat(n) ! wood into som
+          FLUXES(n,28) = POOLS(n+1,5)*met(8,n)*(1-cf(5))*(1-rfac)/deltat(n) ! litter into som
+
+          ! update pools - first remove burned vegetation
+          POOLS(n+1,1) = POOLS(n+1,1) - (FLUXES(n,18) + FLUXES(n,24)) * deltat(n) ! labile
+          POOLS(n+1,2) = POOLS(n+1,2) - (FLUXES(n,19) + FLUXES(n,25)) * deltat(n) ! foliar
+          POOLS(n+1,3) = POOLS(n+1,3) - (FLUXES(n,20) + FLUXES(n,26)) * deltat(n) ! roots
+          POOLS(n+1,4) = POOLS(n+1,4) - (FLUXES(n,21) + FLUXES(n,27)) * deltat(n) ! wood
+          ! update pools - add litter transfer
+          POOLS(n+1,5) = POOLS(n+1,5) + (FLUXES(n,24) + FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22) - FLUXES(n,28)) * deltat(n)
+          POOLS(n+1,6) = POOLS(n+1,6) + (FLUXES(n,27) + FLUXES(n,28) - FLUXES(n,23)) * deltat(n)
+
+          ! calculate ecosystem emissions
+          FLUXES(n,17) = FLUXES(n,18)+FLUXES(n,19)+FLUXES(n,20)+FLUXES(n,21)+FLUXES(n,22)+FLUXES(n,23)
+      else 
+          ! set fluxes to zero
+          FLUXES(n,17) = 0.
+          FLUXES(n,18) = 0.
+          FLUXES(n,18) = 0.
+          FLUXES(n,20) = 0.
+          FLUXES(n,21) = 0.
+          FLUXES(n,22) = 0.
+          FLUXES(n,23) = 0.
+      end if
+
 
     end do ! nodays loop
 
