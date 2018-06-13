@@ -939,8 +939,8 @@ module model_likelihood_module
     ! The initial leaf life span parameter should not be too far away from the
     ! MTT of the analysis itself
     tmp1 = pars(47)**(-1d0)
-    if ((EDC2 == 1 .or. DIAG == 1) .and. (tmp1 > torfol*2d0 &
-                                    .or.  tmp1 < torfol*0.5d0 ) ) then
+    if ((EDC2 == 1 .or. DIAG == 1) .and. (tmp1 > torfol*1.5d0 &
+                                    .or.  tmp1 < torfol*0.75d0 ) ) then
 !         EDC2 = 0 ;
          EDCD%PASSFAIL(30) = 0
     endif

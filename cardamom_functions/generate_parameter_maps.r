@@ -153,7 +153,7 @@ generate_parameter_maps<-function(PROJECT) {
 		par_array_tmp=array(par_array_tmp,dim=c((length(par_array_tmp)/dim(par_array_median_normalised)[3]),dim(par_array_median_normalised)[3]))
 
 		tmp = 0
-                # Looping to find preference_input, the preferenceRange() returns 2 values, the first of which minises the number of clusters, 
+                # Looping to find preference_input, the preferenceRange() returns 2 values, the first of which minimises the number of clusters, 
                 # while the seconds would return as many clusters as there are observations. 
                 # It is the responsibility of the user to ensure the most appropriate use of these information to result in an appropriate number of clusters for error propagation
 #		for (i in seq(1,100)) {

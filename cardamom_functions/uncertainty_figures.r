@@ -338,7 +338,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 	    # add the data on top if there is any
 	    if (length(which(is.na(nee_obs))) != length(nee_obs) ) {
 		points(nee_obs, pch=16, cex=0.8)
-		if (length(which(is.na(nee_obs)))/length(nee_obs) > 0.75) {
+		if (length(which(is.na(nee_obs)))/length(nee_obs) > 0.01) {
 		    plotCI(nee_obs,gap=0,uiw=abs(nee_obs*nee_obs_unc), col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
 		}
 	    }

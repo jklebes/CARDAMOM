@@ -385,7 +385,7 @@ double precision, dimension(:), allocatable ::    deltat_1, & ! inverse of decim
                                  Croot_labile_release_coef, & ! time series of labile release to root
                                                soilwatermm, &
                                                  wSWP_time
-
+double precision :: leaf_marginal
 save
 
 contains
@@ -1167,10 +1167,16 @@ contains
 
       ! if 12 months has gone by, update the leaf lifespan variable
       if (n /= 1 .and. met(6,n) < met(6,n-1)) then
-          tmp = sum(FLUXES((n-1-steps_per_year):(n-1),10)+FLUXES((n-1-steps_per_year):(n-1),23))
-          tmp = (tmp / dble(steps_per_year))**(-dble_one)
-          tmp = tmp * leaf_life_weighting
-          leaf_life = tmp + (leaf_life * (dble_one - leaf_life_weighting))
+         ! determine the turnover fraction across the year
+         tmp = sum(FLUXES((n-1-steps_per_year):(n-1),10) + FLUXES((n-1-steps_per_year):(n-1),23)) &
+             / sum(POOLS((n-1-steps_per_year):(n-1),2))
+         ! i.e. we cannot / should not update the leaf lifespan if there has
+         ! been no turnover and / or there is no foliar pool.
+         if (tmp > dble_zero) then
+             tmp = tmp ** (-dble_one)
+             tmp = tmp * leaf_life_weighting
+             leaf_life = tmp + (leaf_life * (dble_one - leaf_life_weighting))
+         end if
       endif
 
       !!!!!!!!!!
@@ -1323,10 +1329,10 @@ contains
                               * soil_loss_frac(harvest_management)
 
               ! Update living pools directly
-               POOLS(n+1,1) = max(dble_zero,POOLS(n+1,1)-labile_loss)
-               POOLS(n+1,2) = max(dble_zero,POOLS(n+1,2)-foliar_loss)
-               POOLS(n+1,3) = max(dble_zero,POOLS(n+1,3)-roots_loss)
-               POOLS(n+1,4) = max(dble_zero,POOLS(n+1,4)-wood_loss)
+              POOLS(n+1,1) = max(dble_zero,POOLS(n+1,1)-labile_loss)
+              POOLS(n+1,2) = max(dble_zero,POOLS(n+1,2)-foliar_loss)
+              POOLS(n+1,3) = max(dble_zero,POOLS(n+1,3)-roots_loss)
+              POOLS(n+1,4) = max(dble_zero,POOLS(n+1,4)-wood_loss)
 
               ! Set burn related values
               FLUXES(n,17) = dble_zero
@@ -3055,7 +3061,7 @@ contains
              ! growth?
 
              if (((deltaGPP-deltaRm)*leaf_life) - leaf_cost < dble_zero) leaf_growth = dble_zero
-
+leaf_marginal = ((deltaGPP-deltaRm)*leaf_life) - leaf_cost
           else if (gradient < lab_turn_crit .and. gradient > fol_turn_crit .and. &
                    deltaWP < dble_zero ) then
 
@@ -3097,7 +3103,7 @@ contains
                 ! less than increase in maintenance respiration and C required to
                 ! growth?
                 if (((deltaGPP-deltaRm)*leaf_life) - leaf_cost < dble_zero) leaf_growth = dble_zero
-
+leaf_marginal = ((deltaGPP-deltaRm)*leaf_life) - leaf_cost
              else ! just grown or not
 
                 ! we are in the space between environmental change but we have just
@@ -3133,7 +3139,7 @@ contains
                 ! the leaves adjusted for the lost of regrowing the leaves should
                 ! this choice be reversed at a later date.
                 if (((deltaGPP-deltaRm)*leaf_life) - leaf_cost < dble_zero) leaf_fall = dble_zero
-
+leaf_marginal = ((deltaGPP-deltaRm)*leaf_life) - leaf_cost
              end if ! Just grown?
 
           endif ! gradient choice
