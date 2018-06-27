@@ -500,12 +500,13 @@ if __name__ == "__main__":
     data                = pd.read_csv('drivers.csv',parse_dates = True, index_col = 'date')
 
     # get drivers and reshape as 3D array - only 1st year
-    drivers             = data.get_values()[:365,:-1] 
+    drivers             = np.zeros([data.shape[0],8])
+    drivers[:,:-2]      = data.get_values()[:,:-1] 
     drivers             = np.expand_dims(drivers,0)
 
     #get observations and reshape as 3D array
     obs                 = np.zeros([drivers.shape[1],17])-9999.
-    obs[:,1]            = data.LAI.get_values()[:365]
+    obs[:,1]            = data.LAI.get_values()
     obs                 = np.expand_dims(obs,0)
 
     #define observations uncertainty and reshape as 3D array
@@ -532,7 +533,7 @@ if __name__ == "__main__":
     otherpriorunc       = np.zeros([1,100])-9999.
 
     #create / load project
-    prj = CARDAMOM_F(project_name='fortran_test')
+    prj = CARDAMOM_F(project_name='fortran_test_cdea_lu_fires')
 
     # setup / store data in object
     prj.setup(lat,lon,drivers,obs,obsunc,parprior,parpriorunc,otherprior,otherpriorunc)

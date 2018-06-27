@@ -359,6 +359,11 @@ contains
           FLUXES(n,21) = 0.
           FLUXES(n,22) = 0.
           FLUXES(n,23) = 0.
+          FLUXES(n,24) = 0.
+          FLUXES(n,25) = 0.
+          FLUXES(n,26) = 0.
+          FLUXES(n,27) = 0.
+          FLUXES(n,28) = 0.
       end if
 
 
