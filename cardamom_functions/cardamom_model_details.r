@@ -10,8 +10,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
 	# Number of met parameters
 	# Number of model parameters to be optimised
 	nopools=array(2,dim=c(length(ctessel_pft)))
-	nopars=array(18,dim=c(length(ctessel_pft)))
-	nofluxes=array(3,dim=c(length(ctessel_pft)))
+	nopars=array(22,dim=c(length(ctessel_pft)))
+	nofluxes=array(4,dim=c(length(ctessel_pft)))
 	cardamom_model_details=list(name="ACM",nopools=nopools,nofluxes=nofluxes,nomet=19+4,nopars=nopars)
     } else if (modelname == "DALEC_CDEA") {
 	# information contains is
@@ -29,7 +29,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
         # Number of model parameters to be optimised
         nopools=array(8,dim=c(length(ctessel_pft)))
         nopars=array(40,dim=c(length(ctessel_pft)))
-        nofluxes=array(21,dim=c(length(ctessel_pft)))
+        nofluxes=array(25,dim=c(length(ctessel_pft)))
 	if (specific_pft == "pft_specific") {nopars[which(ctessel_pft == 1)]=35+2 ; nofluxes[which(ctessel_pft == 1)]=21 ; nopools[which(ctessel_pft == 1)]=9}
         cardamom_model_details=list(name="DALEC_GSI_BUCKET",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
    } else if (modelname == "DALECN_GSI_BUCKET") {
@@ -42,6 +42,16 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
         nofluxes=array(25,dim=c(length(ctessel_pft)))
 	if (specific_pft == "pft_specific") {nopars[which(ctessel_pft == 1)]=35+2 ; nofluxes[which(ctessel_pft == 1)]=21 ; nopools[which(ctessel_pft == 1)]=9}
         cardamom_model_details=list(name="DALECN_GSI_BUCKET",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+   } else if (modelname == "DALECN_BUCKET") {
+	# information contains is 
+	# The model name
+        # Number of met parameters
+        # Number of model parameters to be optimised
+        nopools=array(8,dim=c(length(ctessel_pft)))
+        nopars=array(41,dim=c(length(ctessel_pft)))
+        nofluxes=array(25,dim=c(length(ctessel_pft)))
+	if (specific_pft == "pft_specific") {nopars[which(ctessel_pft == 1)]=35+2 ; nofluxes[which(ctessel_pft == 1)]=21 ; nopools[which(ctessel_pft == 1)]=9}
+        cardamom_model_details=list(name="DALECN_BUCKET",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
     } else if (modelname == "AT_DALEC") {
 	# information contains is
 	# The model name

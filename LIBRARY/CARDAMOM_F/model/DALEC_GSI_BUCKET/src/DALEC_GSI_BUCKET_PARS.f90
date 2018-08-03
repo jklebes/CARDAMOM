@@ -132,13 +132,13 @@ module MODEL_PARAMETERS
 !       PI%parmin(26)=0.1  
 !       PI%parmax(26)=75.0 !100.0 
 
-       ! GSI min deltaWP threshold (MPa)
-       PI%parmin(25)=-2.0
-       PI%parmax(25)= -1e-4
+       ! GSI min VPD threshold (Pa)
+       PI%parmin(25)=1d0
+       PI%parmax(25)=5500d0 
 
-       ! GSI max deltaWP threshold (MPa)
-       PI%parmin(26)=-2.0
-       PI%parmax(26)= -1e-4
+       ! GSI max VPD threshold (Pa)
+       PI%parmin(26)=1d0
+       PI%parmax(26)=5500d0
 
        ! critical GPP for LAI increase (fraction)
        PI%parmin(27)=1e-8

@@ -127,7 +127,7 @@ module model_likelihood_module
 
     ! declare local variables
     integer ::  n
-    double precision :: tot_exp, ML, exp_orig, decay_coef, EDC1, EDC2, infini
+    double precision :: tot_exp, ML, EDC1, EDC2, infini
 
     ! set initial values
     EDCD%DIAG = 1
@@ -352,8 +352,7 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n, DIAG, no_years, nn
-    double precision :: mean_pools(nopools), G, decay_coef, meangpp, EQF, PEDC, infi
-    double precision, dimension(:), allocatable :: mean_annual_pools
+    double precision :: mean_pools(nopools), decay_coef, meangpp, EQF, PEDC, infi
     double precision :: fauto & ! Fractions of GPP to autotrophic respiration
              ,ffol  & ! Fraction of GPP to foliage
              ,flab  & ! Fraction of GPP to labile pool
@@ -368,8 +367,8 @@ module model_likelihood_module
     flab=sum(M_FLUXES(:,5))/(sum(M_FLUXES(:,1))*fauto)
     froot=sum(M_FLUXES(:,6))/(sum(M_FLUXES(:,1))*fauto)
     fwood=sum(M_FLUXES(:,7))/(sum(M_FLUXES(:,1))*fauto)
-    fsom=fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(10))
-    flit=(froot+flab+ffol)
+    fsom = fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(10))
+    flit = (froot+flab+ffol)
     ! length of time step in hours..
     ts_length = 24d0
     ! initial value
@@ -387,18 +386,22 @@ module model_likelihood_module
     meangpp=sum(M_GPP(1:nodays))/dble(nodays)
 
     ! EDC 11 - SOM steady state within order magnitude of initial conditions
-    if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*fsom)/(pars(10)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) > (pars(23)*EQF)) then
+    if ((EDC2 == 1 .or. DIAG == 1) .and. & 
+       ((meangpp*fsom)/(pars(10)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) > (pars(23)*EQF)) then
        EDC2 = 0 ; EDCD%PASSFAIL(14) = 0
     end if
-    if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*fsom)/(pars(10)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) < (pars(23)/EQF)) then
+    if ((EDC2 == 1 .or. DIAG == 1) .and. &
+       ((meangpp*fsom)/(pars(10)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) < (pars(23)/EQF)) then
        EDC2 = 0 ; EDCD%PASSFAIL(15) = 0
     endif
 
     ! EDC 12 - Litter steady state assumptions
-    if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*flit)/(pars(9)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) > (pars(22)*EQF)) then
+    if ((EDC2 == 1 .or. DIAG == 1) .and. &
+       ((meangpp*flit)/(pars(9)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) > (pars(22)*EQF)) then
         EDC2 = 0 ; EDCD%PASSFAIL(16) = 0
     endif
-    if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*flit)/(pars(9)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) < (pars(22)/EQF)) then
+    if ((EDC2 == 1 .or. DIAG == 1) .and. &
+       ((meangpp*flit)/(pars(9)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) < (pars(22)/EQF)) then
         EDC2 = 0 ; EDCD%PASSFAIL(17) = 0
     endif
 
@@ -449,7 +452,6 @@ module model_likelihood_module
     ! Function to calculate the gradient of a linear model for a given depentent
     ! variable (y) based on predictive variable (x). The typical use of this
     ! function will in fact be to assume that x is time.
-
 
     !
     ! EDCs done, below are additional fault detection conditions
@@ -521,7 +523,7 @@ module model_likelihood_module
     !
     ! begin checking EDCs
     !
-
+ 
     ! calculate temperature response of decomposition processes
     temp_response = exp(pars(10)*meantemp)
 
@@ -682,15 +684,6 @@ module model_likelihood_module
 !       EDC1 = 0 ;
        EDCD%PASSFAIL(22) = 0
     endif
-    ! The inclusion of the Reich model has proven to be one of the most
-    ! computationally challenging components to include due to the substantial
-    ! dimensionality of 6 additional parameters. Experience has suggested that
-    ! the sum of the baseline values should not exceed 3.5
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(42) + pars(44) + pars(46)) > 3.5d0) then
-!!       EDC1 = 0 ;
-!       EDCD%PASSFAIL(23) = 0
-!    endif
-
     ! --------------------------------------------------------------------
     ! could always add more / remove some
 
@@ -702,7 +695,6 @@ module model_likelihood_module
                       ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
                       ,meantemp,EDC2)
 
-    use cardamom_structures, only: DATAin
     use CARBON_MODEL_MOD, only: linear_model_gradient, &
                                 disturbance_residue_to_litter, &
                                 disturbance_residue_to_cwd, &
@@ -739,18 +731,14 @@ module model_likelihood_module
 
     ! declare local variables
     logical :: found
-    integer :: n, DIAG, no_years, y, PEDC, nn, num_EDC, max_location(1) &
-              ,i, exp_adjust, no_years_adjust, disturb_year, replant_year &
+    integer :: n, DIAG, no_years,i, exp_adjust, no_years_adjust &
               ,disturb_begin,disturb_end
-    double precision :: mean_pools(nopools), G, decay_coef, meangpp &
+    double precision :: mean_pools(nopools), decay_coef, meangpp &
                        ,sumgpp, sumnpp, model_living_C &
-                       ,target_living_C(2),hold,infi, steps_per_year,tmp1
+                       ,infi, steps_per_year,tmp1
     double precision, dimension(nodays) :: mean_ratio, resid_fol,resid_lab
     integer, dimension(nodays) :: hak ! variable to determine number of NaN in foliar residence time calculation
-    double precision, dimension(:), allocatable :: mean_annual_pools,tmp
-    double precision :: max_wood    & !
-                       ,root_reach  & !
-                       ,in_out_root &
+    double precision :: in_out_root &
                        ,in_out_root_disturb &
                        ,in_out_wood &
                        ,in_out_wood_disturb &
@@ -758,7 +746,6 @@ module model_likelihood_module
                        ,in_out_cwd  &
                        ,in_out_som  &
                        ,in_out_dead &
-                       ,resid_time  &
                        ,torfol      & ! yearly average turnover
                        ,torlab      & !
                        ,sumrauto    &
@@ -770,19 +757,15 @@ module model_likelihood_module
                        ,wNPP        & ! fraction of NPP to wood
                        ,fauto       & ! Fractions of GPP to autotrophic respiration
                        ,ffol        & ! Fraction of GPP to foliage
-                       ,flab        & ! Fraction of GPP to labile pool
-                       ,froot       & ! Fraction of GPP to root
-                       ,fwood       & ! Fraction of GPP to wood
-                       ,fsom        & ! fraction of GPP som under equilibrium conditions
-                       ,fcwd        & ! fraciion of GPP cwd under equilibrium
-                       ,flit        & ! fraction of GPP to litter under equilibrium condition
-                       ,delta_gsi
+                       ,froot         ! Fraction of GPP to root
+
+
     ! Steady State Attractor:
     ! Log ratio difference between inputs and outputs of the system.
-    double precision, parameter :: EQF2=log(2d0),   & ! 10.0 = order magnitude; 2 = double and half
-                                   EQF5=log(5d0),   &
-                                   EQF10=log(10d0), &
-                                   EQF20=log(20d0)
+    double precision, parameter :: EQF2 = log(2d0),   & ! 10.0 = order magnitude; 2 = double and half
+                                   EQF5 = log(5d0),   &
+                                   EQF10 = log(10d0), &
+                                   EQF20 = log(20d0)
 
     ! set equal to zero to allow for infinity checks (i.e. log(0) == -infinity)
     infi = 0d0
@@ -1048,8 +1031,8 @@ module model_likelihood_module
     ! EDC 8
     ! assesses the exponential decay of specific pools
 
-    ! loop vegetation foliar, roots, wood, litter, som and cwd.
-    ! NOTE: excluding labile and water
+    ! loop vegetation roots, wood, litter, som and cwd.
+    ! NOTE: excluding labile, foliar, and water
     if (EDC2 == 1 .or. DIAG == 1) then
         do n = 3, 7 !2, nopools
            decay_coef=expdecay2(M_POOLS(exp_adjust:(nodays+1),:),n,deltat(exp_adjust:nodays) &
@@ -1075,34 +1058,6 @@ module model_likelihood_module
            end if ! EDC conditions
         enddo
     endif
-
-    ! EDC 19 - Constrain the initial condition of wood stocks to that consistent
-    ! with forestry age~yeild curves. UK forestry commission yield curves for
-    ! evergreen species lowest yield and largest yield at year 60 is similar bound to those used above,
-    ! so for generality these yield curves will be used here in broadest sense
-
-!    ! can only do this is we have age information
-!    if ((EDC2 == 1 .or. DIAG == 1) .and. DATAin%age > -1) then
-!        ! we will do this for the beginning of the simulation only.
-!        ! calculate sum pools (gC.m-2)
-!        model_living_C=M_POOLS(1,4) !M_POOLS(1,2)+M_POOLS(1,3)+M_POOLS(1,4)
-!        ! find out how many years into the simulation this is
-!        max_location=1
-!        ! call for empirical approximation of C accumulation curvies from
-!        ! forestry commissions
-!        call UK_forestry_commission_growth_curves(target_living_C,max_location)
-!        ! yield curve approximations result in unrealistic values early in
-!        ! the rotation so only assess if these values are sensible.
-!        ! This assumption means that the lower value may be negative which means its
-!        ! condition will always be passed but that the upper value must not be
-!        ! negative and of forest reasonable size
-!        if (target_living_C(2) > 100d0) then
-!            if (model_living_C < (target_living_C(1)) .or. model_living_C > (target_living_C(2))) then
-!!                EDC2 = 0 ;
-!                EDCD%PASSFAIL(41) = 0
-!             end if
-!        end if
-!    endif ! EDC2 .or. DIAG .and. age
 
     ! this is a big set of arrays to run through so only do so when we have
     ! reached this point and still need them
@@ -1278,68 +1233,67 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine UK_forestry_commission_growth_curves(target_living_C,max_location)
-    use cardamom_structures, only: DATAin
-
-    ! subroutine uses PFT and yield classification to generate an estimate of
-    ! expected living C accumulated at a given age. Equation generated Mg.ha-1
-    ! we need to correct this to gC.m-2 for the model
-
-    implicit none
-
-    ! declare input / output variables
-    double precision, intent(out) :: target_living_C(2) ! (gC.m-2)
-    integer, intent(in) :: max_location(1) ! additional years from initial
-
-    ! local variables
-    double precision :: adjusted_age, tmp1(2),tmp2(2)
-    integer :: i
-
-    ! calculate adjusted age from initial conditions to max point
-    adjusted_age=DATAin%age+max_location(1)
-
-    ! set initial value for output
-    target_living_C = 0d0
-
-    ! loop through to get the minimum (1) and maximum estimates (2)
-    ! which will be passed back to the model
-
-    ! if we have an age (therefore it is a forest but we don't know even
-    ! if it is evergreen or deciduos) we will assume the most generous
-    ! range of values possible
-
-    ! broadleaf
-    tmp1(1) = 2.07956043460835d-05*adjusted_age**3d0 &
-            + (-0.0141108480550955d0)*adjusted_age**2d0 &
-            + 3.14928740556523d0*adjusted_age
-    tmp1(2) = 0.000156065120683174d0*adjusted_age**3d0 &
-            + (-0.0629544794948499d0)*adjusted_age**2d0 &
-            + 8.30163202577001d0*adjusted_age
-    ! evergreen
-    tmp2(1) =  8.8519973125961d-06*adjusted_age**3d0 &
-            + (-0.00822909089061558d0)*adjusted_age**2d0 &
-            + 1.98952585135788d0*adjusted_age
-    tmp2(2) = 0.00014916728414466d0*adjusted_age**3d0 &
-            + (-0.0662815983372182d0)*adjusted_age**2d0 &
-            + 9.55519207729034d0*adjusted_age
-    ! work out which to use
-    ! use smallest
-    if (tmp1(1) < tmp2(1)) then
-        target_living_C(1) = tmp1(1)*0.70d0
-    else
-        target_living_C(1) = tmp2(1)*0.70d0
-    endif
-    ! use biggest
-    if (tmp1(2) > tmp2(2)) then
-        target_living_C(2) = tmp1(2)*1.30d0
-    else
-        target_living_C(2) = tmp2(2)*1.30d0
-    endif
-
-    ! correct units from MgC.ha-1 to gC.m-2
-    target_living_C=target_living_C*1d2
-
-  end subroutine UK_forestry_commission_growth_curves
+!  subroutine UK_forestry_commission_growth_curves(target_living_C,max_location)
+!    use cardamom_structures, only: DATAin
+!
+!    ! subroutine uses PFT and yield classification to generate an estimate of
+!    ! expected living C accumulated at a given age. Equation generated Mg.ha-1
+!    ! we need to correct this to gC.m-2 for the model
+!
+!    implicit none
+!
+!    ! declare input / output variables
+!    double precision, intent(out) :: target_living_C(2) ! (gC.m-2)
+!    integer, intent(in) :: max_location(1) ! additional years from initial
+!
+!    ! local variables
+!    double precision :: adjusted_age, tmp1(2),tmp2(2)
+!
+!    ! calculate adjusted age from initial conditions to max point
+!    adjusted_age=DATAin%age+max_location(1)
+!
+!    ! set initial value for output
+!    target_living_C = 0d0
+!
+!    ! loop through to get the minimum (1) and maximum estimates (2)
+!    ! which will be passed back to the model
+!
+!    ! if we have an age (therefore it is a forest but we don't know even
+!    ! if it is evergreen or deciduos) we will assume the most generous
+!    ! range of values possible
+!
+!    ! broadleaf
+!    tmp1(1) = 2.07956043460835d-05*adjusted_age**3d0 &
+!            + (-0.0141108480550955d0)*adjusted_age**2d0 &
+!            + 3.14928740556523d0*adjusted_age
+!    tmp1(2) = 0.000156065120683174d0*adjusted_age**3 &
+!            + (-0.0629544794948499d0)*adjusted_age**2 &
+!            + 8.30163202577001d0*adjusted_age
+!    ! evergreen
+!    tmp2(1) =  8.8519973125961d-06*adjusted_age**3 &
+!            + (-0.00822909089061558d0)*adjusted_age**2 &
+!            + 1.98952585135788d0*adjusted_age
+!    tmp2(2) = 0.00014916728414466d0*adjusted_age**3 &
+!            + (-0.0662815983372182d0)*adjusted_age**2 &
+!            + 9.55519207729034d0*adjusted_age
+!    ! work out which to use
+!    ! use smallest
+!    if (tmp1(1) < tmp2(1)) then
+!        target_living_C(1) = tmp1(1)*0.70d0
+!    else
+!        target_living_C(1) = tmp2(1)*0.70d0
+!    endif
+!    ! use biggest
+!    if (tmp1(2) > tmp2(2)) then
+!        target_living_C(2) = tmp1(2)*1.30d0
+!    else
+!        target_living_C(2) = tmp2(2)*1.30d0
+!    endif
+!
+!    ! correct units from MgC.ha-1 to gC.m-2
+!    target_living_C=target_living_C*100d0
+!
+!  end subroutine UK_forestry_commission_growth_curves
   !
   !------------------------------------------------------------------
   !
@@ -1356,9 +1310,6 @@ module model_likelihood_module
                           ,averaging_period   !
 
     double precision,dimension(averaging_period,nopools), intent (in) :: pools
-
-    ! declare local variables
-    integer :: c
 
     ! initial conditions
     cal_mean_pools=0d0
@@ -1390,7 +1341,7 @@ module model_likelihood_module
                          ,interval((averaging_period-1))      ! model time step in decimal days
 
     ! declare local variables
-    integer :: startday, endday, c
+    integer :: startday, endday
 
     ! initialise the output variable
     cal_mean_annual_pools = 0d0
@@ -1426,7 +1377,7 @@ module model_likelihood_module
                          ,interval((averaging_period-1))      ! model time step in decimal days
 
     ! declare local variables
-    integer :: startday, endday, c
+    integer :: startday, endday
 
     ! initialise the output variable
     cal_max_annual_pools=0d0
@@ -1462,14 +1413,13 @@ module model_likelihood_module
 
    ! declare local variables
    integer :: n
-   double precision :: P0    & ! initial pool value
-            ,os,aw &
-            ,MP0   & ! mean pool (year 1 to year end-2)
-            ,MP1   & ! mean pool (year 2 to year end-1)
-            ,MP0os & ! mean pool (year 1+os to year end-2+os)
-            ,MP1os & ! mean pool (year 2+os to year end-2+os)
-            ,dcdt1 & ! gradient of exponential over time in second year
-            ,dcdt0   ! gradient of exponential over time in first year
+   double precision :: os,aw &
+                      ,MP0   & ! mean pool (year 1 to year end-2)
+                      ,MP1   & ! mean pool (year 2 to year end-1)
+                      ,MP0os & ! mean pool (year 1+os to year end-2+os)
+                      ,MP1os & ! mean pool (year 2+os to year end-2+os)
+                      ,dcdt1 & ! gradient of exponential over time in second year
+                      ,dcdt0   ! gradient of exponential over time in first year
 
    ! declare initial values / constants
    os = 1d0 ! offset in days
@@ -1543,13 +1493,13 @@ module model_likelihood_module
     double precision, intent(inout) :: ML_out ! output variables for log-likelihood
 
     ! declare local variables
-    integer :: n
     double precision :: EDC,EDC1,EDC2
 
     ! initial values
     ML_out = 0d0
-!TLS    EDCD%DIAG = 0
-    EDCD%DIAG = 1
+    ! if == 0 EDCs are checked only until the first failure occurs
+    ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
+    EDCD%DIAG = 1 
 
     if (DATAin%PFT == 1) then
        ! then we are crops so run these EDCs instead
@@ -1696,7 +1646,7 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n, dn, no_years, y
-    double precision :: tot_exp, pool_dynamics, tmp_var, infini
+    double precision :: tot_exp, tmp_var, infini
     double precision, allocatable :: mean_annual_pools(:)
 
     ! initial value

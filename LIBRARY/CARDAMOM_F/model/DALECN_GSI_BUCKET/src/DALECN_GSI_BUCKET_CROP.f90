@@ -145,29 +145,27 @@ contains
                        ,GPP_out,stock_seed_labile,DS_shoot,DS_root,fol_frac    &
                        ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT)
 
-    use CARBON_MODEL_MOD, only: arrhenious,acm_gpp,acm_et,acm_albedo_gc,calculate_update_soil_water &
-                               ,drythick,vsmall,co2_half_saturation,co2_compensation_point,freeze   &
-                               ,daylength_hours,daylength_seconds,co2comp_saturation                &
-                               ,co2comp_half_sat_conc,daylength_in_hours,kc_saturation              &
-                               ,kc_half_sat_conc,dble_zero,dble_one,calculate_Rtot                  &
-                               ,calculate_aerodynamic_conductance,saxton_parameters,initialise_soils&
-                               ,min_drythick,soil_frac_clay,soil_frac_sand,seconds_per_day          &
-                               ,seconds_per_step,root_biomass,top_soil_depth,root_reach,min_root    &
-                               ,max_depth,root_k,nos_soil_layers,soil_depth,previous_depth          &
-                               ,nos_root_layers,wSWP,SWP,SWP_initial,deltat_1,water_flux,soilwatermm&
-                               ,wSWP_time,layer_thickness,waterloss,watergain,potA,potB,cond1,cond2 &
-                               ,cond3,soil_conductivity,minlwp,soil_waterfrac,soil_waterfrac_initial&
-                               ,porosity,porosity_initial,field_capacity,field_capacity_initial     &
-                               ,meant,meant_K,stomatal_conductance,avN,iWUE,NUE,pn_max_temp         &
-                               ,pn_opt_temp,pn_kurtosis,e0,co2_half_sat,co2_comp_point              &
-                               ,max_lai_lwrad_absorption,lai_half_lwrad_absorption                  &
-                               ,max_lai_nir_absorption,lai_half_nir_absorption                      &
-                               ,max_lai_par_absorption,lai_half_par_absorption                      &
-                               ,max_lai_swrad_reflected,lai_half_swrad_reflected                    &
-                               ,lai_half_lwrad_to_sky,soil_swrad_absorption,max_lai_lwrad_release   &
-                               ,lai_half_lwrad_release,mint,maxt,swrad,co2,doy,rainfall,wind_spd    &
-                               ,vpd_pa,lai,days_per_step,days_per_step_1,dayl_seconds,dayl_hours    &
-                               ,canopy_storage,intercepted_rainfall,min_layer,mid_soil_depth
+    use CARBON_MODEL_MOD, only: arrhenious,acm_gpp,calculate_transpiration,calculate_soil_evaporation     &
+                               ,calculate_wetcanopy_evaporation,acm_meteorological_constants,acm_albedo_gc&
+                               ,calculate_update_soil_water,calculate_daylength,drythick,vsmall           &
+                               ,co2_half_saturation,co2_compensation_point,freeze,co2comp_saturation      &
+                               ,co2comp_half_sat_conc,kc_saturation,kc_half_sat_conc,dble_zero,dble_one   &
+                               ,calculate_Rtot,calculate_aerodynamic_conductance,saxton_parameters        &
+                               ,initialise_soils,min_drythick,soil_frac_clay,soil_frac_sand,dayl_hours    &
+                               ,seconds_per_day,seconds_per_step,root_biomass,top_soil_depth              &
+                               ,mid_soil_depth,root_reach,min_root,max_depth,root_k,previous_depth        &
+                               ,min_layer,wSWP,SWP,SWP_initial,deltat_1,water_flux,soilwatermm,wSWP_time  &
+                               ,layer_thickness,minlwp,soil_waterfrac,soil_waterfrac_initial              &
+                               ,porosity,porosity_initial,field_capacity,field_capacity_initial,meant     &
+                               ,meant_K,stomatal_conductance,avN,iWUE,NUE,pn_max_temp,pn_opt_temp         &
+                               ,pn_kurtosis,e0,co2_half_sat,co2_comp_point,max_lai_lwrad_transmitted      &
+                               ,lai_half_lwrad_transmitted,max_lai_nir_reflection,lai_half_nir_reflection &
+                               ,max_lai_par_reflection,lai_half_par_reflection,max_lai_par_transmitted    &
+                               ,lai_half_par_transmitted,max_lai_nir_transmitted,lai_half_nir_transmitted &
+                               ,max_lai_lwrad_reflected,lai_half_lwrad_reflected,soil_swrad_absorption    & 
+                               ,max_lai_lwrad_release,lai_half_lwrad_release,mint,maxt,swrad,co2,doy      &
+                               ,rainfall,wind_spd,vpd_pa,lai,days_per_step,days_per_step_1,canopy_storage &
+                               ,intercepted_rainfall,snow_storage,snow_melt,airt_zero_fraction,snowfall 
 
     ! DALEC crop model modified from Sus et al., (2010)
 
@@ -211,16 +209,16 @@ contains
     ! declare local variables
     double precision :: airt_weighting(3) &
                                       ,ET & ! Evapotranspiration (kg.m-2.day-1)
-                          ,wetcanopy_evap &
+                        ,pot_actual_ratio &
                            ,transpiration &
-                                ,soilevap &
+                         ,soilevaporation &
+                          ,wetcanopy_evap &
+                        ,snow_sublimation &
                                  ,deltaWP & !
                                     ,Rtot &
-                                    ,infi & ! used to calculate infinity for diagnositc
-                       ,declin,sinld,cosld,aob
+                                    ,infi   ! used to calculate infinity for diagnositc
 
-    integer :: p,f,nxp,n
-    character(20) :: t
+    integer :: nxp,n
 
     ! met drivers are:
     ! 1st run day
@@ -302,27 +300,31 @@ contains
     Rtot = dble_one ! totaly hydraulic resistance ! p12 from ACM recal (updated)
 
     ! load ACM-GPP-ET parameters
-    NUE                       = 1.635430e+01  ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
-                                              ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
-    pn_max_temp               = 5.931833e+01  ! Maximum temperature for photosynthesis (oC)
-    pn_opt_temp               = 3.276343e+01  ! Optimum temperature for photosynthesis (oC)
-    pn_kurtosis               = 1.854926e-01  ! Kurtosis of photosynthesis temperature response
-    e0                        = 4.390066e+00  ! Quantum yield gC/MJ/m2/day PAR
-    max_lai_lwrad_absorption  = 9.815629e-01  ! Max fraction of LW from sky absorbed by canopy
-    lai_half_lwrad_absorption = 5.012767e-01  ! LAI at which canopy LW absorption = 50 %
-    max_lai_nir_absorption    = 7.058557e-01  ! Max fraction of NIR absorbed by canopy
-    lai_half_nir_absorption   = 1.707789e+00  ! LAI at which canopy NIR absorption = 50 %
-    minlwp                    = -1.994232e+00 ! minimum leaf water potential (MPa)
-    max_lai_par_absorption    = 8.981069e-01  ! Max fraction of PAR absorbed by canopy
-    lai_half_par_absorption   = 2.173575e-02  ! LAI at which canopy PAR absorption = 50 %
-    lai_half_lwrad_to_sky     = 6.811579e-01  ! LAI at which 50 % LW is reflected back to sky
-    iWUE                      = 2.173575e-02  ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
-    soil_swrad_absorption     = 9.015340e-01  ! Fraction of SW rad absorbed by soil
-    max_lai_swrad_reflected   = 5.217833e-02  ! Max fraction of SW reflected back to sky
-    lai_half_swrad_reflected  = (lai_half_nir_absorption+lai_half_par_absorption) * 0.5d0
-    max_lai_lwrad_release     = 2.390430e-01  ! Max fraction of LW emitted from canopy to be released
-    lai_half_lwrad_release    = 2.474232e+00  ! LAI at which LW emitted from canopy to be released at 50 %
-
+    NUE                        = 1.424234d+01  ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
+                                               ! ,unlimited by CO2, light and
+                                               ! photoperiod (gC/gN/m2leaf/day)
+    pn_max_temp                = 4.772427d+01  ! Maximum temperature for photosynthesis (oC)
+    pn_opt_temp                = 3.241907d+01  ! Optimum temperature for photosynthesis (oC)
+    pn_kurtosis                = 1.412502d-01  ! Kurtosis of photosynthesis temperature response 
+    e0                         = 6.895808d+00  ! Quantum yield gC/MJ/m2/day PAR
+    max_lai_lwrad_transmitted  = 6.636301d-01  ! Max fractional reduction of LW from sky transmitted through canopy
+    lai_half_lwrad_transmitted = 1.014790d+00  ! LAI at which canopy LW transmittance reduction = 50 %
+    max_lai_nir_reflection     = 2.141106d-01  ! Max fraction of NIR reflected by canopy
+    lai_half_nir_reflection    = 9.070301d-01  ! LAI at which canopy NIR reflected = 50 %
+    minlwp                     =-2.002699d+00  ! minimum leaf water potential (MPa)
+    max_lai_par_reflection     = 1.423063d-01  ! Max fraction of PAR reflected by canopy
+    lai_half_par_reflection    = 2.314545d+00  ! LAI at which canopy PAR reflected = 50 %
+    lai_half_lwrad_reflected   = 1.050068d+00  ! LAI at which 50 % LW is reflected back to sky
+    iWUE                       = 2.901203d-07  ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
+    soil_swrad_absorption      = 6.155656d-01  ! Fraction of SW rad absorbed by soil
+    max_lai_par_transmitted    = 5.995337d-01  ! Max fractional reduction in PAR transmittance by canopy
+    lai_half_par_transmitted   = 1.732624d+00  ! LAI at which PAR transmittance reduction = 50 %
+    max_lai_nir_transmitted    = 5.344348d-01  ! Max fractional reduction in NIR transmittance by canopy
+    lai_half_nir_transmitted   = 2.210447d+00  ! LAI at which NIR transmittance reduction = 50 %
+    max_lai_lwrad_release      = 9.896515d-01  ! Max fraction of LW emitted (1-par) from canopy to be released
+    lai_half_lwrad_release     = 4.193762d-02  ! LAI at which LW emitted from canopy to be released at 50 %
+    max_lai_lwrad_reflected    = 6.602782d-01  ! LAI at which 50 % LW is reflected back to sky
+         
     ! plus ones being calibrated
     root_k = pars(36) ; max_depth = pars(37)
 
@@ -416,18 +418,13 @@ contains
         if (.not.allocated(deltat_1)) then
 
            allocate(deltat_1(nodays),soilwatermm(nodays),wSWP_time(nodays), &
-                    co2_compensation_point(nodays),co2_half_saturation(nodays), &
-                    daylength_hours(nodays),daylength_seconds(nodays))
+                    co2_compensation_point(nodays),co2_half_saturation(nodays))
            do n = 1, nodays
-              ! calculate day length as invarient between iterations
-              daylength_hours(n)=daylength_in_hours(met(6,n)-(deltat(n)*0.5d0),lat)
               ! Temperature adjustments for Michaelis-Menten coefficients
               ! for CO2 (kc) and O2 (ko) and CO2 compensation point.
               co2_compensation_point(n) = arrhenious(co2comp_saturation,co2comp_half_sat_conc,met(3,n))
               co2_half_saturation(n) = arrhenious(kc_saturation,kc_half_sat_conc,met(3,n))
            end do
-           ! generate daylength per seconds
-           daylength_seconds=daylength_hours * sec_in_hour
            deltat_1 = deltat**(-dble_one)
            ! zero variables not done elsewhere
            water_flux = dble_zero
@@ -467,11 +464,12 @@ contains
         layer_thickness(1) = top_soil_depth ; layer_thickness(2) = mid_soil_depth
         layer_thickness(3) = max(min_layer,root_reach-sum(layer_thickness(1:2)))
         layer_thickness(4) = max_depth - sum(layer_thickness(1:3))
+        layer_thickness(5) = top_soil_depth
         previous_depth = max(top_soil_depth,root_reach)
         ! needed to initialise soils
         call calculate_Rtot(Rtot)
         ! used to initialise soils
-        ET = calculate_update_soil_water(dble_zero,dble_zero,dble_zero) ! assume no evap or rainfall
+        call calculate_update_soil_water(dble_zero,dble_zero,dble_zero,ET) ! assume no evap or rainfall
         ! store soil water content of the rooting zone (mm)
         POOLS(1,8) = 1d3*soil_waterfrac(1)*layer_thickness(1)
 
@@ -483,7 +481,7 @@ contains
     endif ! start == 1
 
     ! reset values
-    intercepted_rainfall = dble_zero ; canopy_storage = dble_zero
+    intercepted_rainfall = dble_zero ; canopy_storage = dble_zero ; snow_storage = dble_zero
 
     infi = 0d0
 
@@ -506,6 +504,7 @@ contains
       rainfall = max(dble_zero,met(7,n)) ! rainfall (kgH2O/m2/s)
       meant = (maxt+mint) * 0.5d0   ! mean air temperature (oC)
       meant_K = meant + freeze
+      airt_zero_fraction = (maxt-dble_zero) / (maxt-mint) ! fraction of temperture period above freezing
       wind_spd = met(15,n) ! wind speed (m/s)
       vpd_pa = met(16,n)  ! Vapour pressure deficit (Pa)
 
@@ -519,12 +518,43 @@ contains
       co2_half_sat   = co2_half_saturation(n)
       co2_comp_point = co2_compensation_point(n)
 
+      ! calculate daylength in hours and seconds
+      call calculate_daylength((doy-(deltat(n)*0.5d0)),lat)
       ! extract timing related values
-      dayl_hours = daylength_hours(n)
-      dayl_seconds = daylength_seconds(n)
       seconds_per_step = seconds_per_day * deltat(n)
       days_per_step = deltat(n)
       days_per_step_1 = deltat_1(n)
+
+      ! snowing or not...?
+      snow_melt = dble_zero ; snowfall = dble_zero
+      if (mint < dble_zero .and. maxt > dble_zero) then
+          ! if minimum temperature is below freezing point then we weight the
+          ! rainfall into snow or rain based on proportion of temperature below
+          ! freezing
+          snowfall = dble_one - airt_zero_fraction
+          snowfall = rainfall * snowfall ; rainfall = rainfall - snowfall
+          ! Add rainfall to the snowpack and clear rainfall variable
+          snow_storage = snow_storage + (snowfall*seconds_per_step)
+      elseif (maxt < dble_zero) then
+          ! if whole day is below freezing then we should assume that all
+          ! precipitation is snowfall
+          snowfall = rainfall ; rainfall = dble_zero
+          ! Add rainfall to the snowpack and clear rainfall variable
+          snow_storage = snow_storage + (snowfall*seconds_per_step)
+      end if
+
+      ! now if there is snow and some of the day is above freezing point assume
+      ! that some melting occurs
+      if (maxt > dble_zero .and. mint < dble_zero) then
+          snow_melt = airt_zero_fraction
+          ! otherwise we assume snow is melting at 10 % per day light hour
+          snow_melt = min(snow_storage, snow_melt * snow_storage * dayl_hours * 0.1d0 * deltat(n))
+          snow_storage = snow_storage - snow_melt
+      else if (mint > dble_zero) then
+          ! otherwise we assume snow is melting at 10 % per day light hour
+          snow_melt = min(snow_storage, snow_storage * dayl_hours * 0.1d0 * deltat(n))
+          snow_storage = snow_storage - snow_melt
+      end if
 
       ! calculate the minimum soil & root hydraulic resistance based on total
       ! fine root mass ! *2*2 => *RS*C->Bio
@@ -536,15 +566,13 @@ contains
       ! current weighted soil WP
       wSWP_time(n) = wSWP ; deltaWP = min(dble_zero,minlwp-wSWP)
 
-      ! calculate aerodynamic resistance (1/conductance) using consistent
-      ! approach with SPA
-      call calculate_aerodynamic_conductance
-
-      ! calculate stomatal conductance of water
+      ! calculate some temperature dependent meteorologial properties
+      call acm_meteorological_constants(maxt)
+      ! calculate radiation absorption and estimate stomatal conductance
       call acm_albedo_gc(abs(deltaWP),Rtot)
 
       ! reallocate for crop model timings
-      doy=met(6,n)
+      doy = met(6,n)
 
       ! GPP (gC.m-2.day-1)
       if (stomatal_conductance > vsmall) then
@@ -555,15 +583,29 @@ contains
       ! load GPP for crop model daily rate to total
       gpp_acm = GPP_out(n) * deltat(n)
 
-      ! Potential latent energy (kg.m-2.day-1)
-      call acm_et(wetcanopy_evap,transpiration,soilevap)
+      ! Canopy transpiration (kgH2O/m2/day)
+      call calculate_transpiration(transpiration)
+      ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
+      call calculate_wetcanopy_evaporation(wetcanopy_evap,pot_actual_ratio,canopy_storage,transpiration)
+      ! Soil surface (kgH2O.m-2.day-1)
+      call calculate_soil_evaporation(soilevaporation)
+      ! restrict transpiration to positive only
+      transpiration = max(dble_zero,transpiration)
 
+      ! if snow present assume that soilevaporation is sublimation of soil first
+      snow_sublimation = dble_zero
+      if (snow_storage > dble_zero) then
+          snow_sublimation = soilevaporation
+          if (snow_sublimation*deltat(n) > snow_storage) snow_sublimation = snow_storage * deltat_1(n)
+          soilevaporation = soilevaporation - snow_sublimation
+          snow_storage = snow_storage - (snow_sublimation * deltat(n))
+      end if
+
+      ! add any snow melt to the rainfall now that we have already dealt with the canopy interception
+      rainfall = rainfall + (snow_melt / seconds_per_step)
       ! do mass balance (i.e. is there enough water to support ET)
-      FLUXES(n,19) = calculate_update_soil_water(transpiration*days_per_step,soilevap*days_per_step, &
-                                          ((rainfall-intercepted_rainfall)*seconds_per_step))
-
-      ! now reverse the time correction (step -> day)
-      FLUXES(n,19) = FLUXES(n,19) * deltat_1(n)
+      call calculate_update_soil_water(transpiration,soilevaporation,((rainfall-intercepted_rainfall)*seconds_per_day) &
+                                      ,FLUXES(n,19))
       ! now that soil mass balance has been updated we can add the wet canopy
       ! evaporation (kg.m-2.day-1)
       FLUXES(n,19) = FLUXES(n,19) + wetcanopy_evap
@@ -917,7 +959,6 @@ contains
                                                       root_frac    !
 
     ! local variables..
-    integer :: organ
     double precision,dimension(:),allocatable :: frac_shoot, frac_root
 
     if ( sown ) then ! after sowing
@@ -1289,14 +1330,16 @@ contains
 
     implicit none
 
-    ! arguments..
-    integer,intent(in)             :: row
-    double precision,intent(in)                :: x
-    double precision,dimension(row),intent(in) :: reference_x , reference_y
+    ! arguments.. 
+    integer, intent(in)                          :: row
+    double precision, intent(in)                 :: x
+    double precision, dimension(row), intent(in) :: reference_x , reference_y
 
     ! local variables..
     integer::i
 
+    ! provide initial value
+    interpolate = -9999d0
     do i = 1 , row
 
        if ( x .le. reference_x(1) ) then
@@ -1322,6 +1365,9 @@ contains
        endif
 
     enddo
+
+    ! explicit return to ser
+    return
 
   end function interpolate
 !

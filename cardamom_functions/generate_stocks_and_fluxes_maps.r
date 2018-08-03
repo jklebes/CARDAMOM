@@ -483,7 +483,7 @@ generate_stocks_and_fluxes_maps<-function(PROJECT) {
 	    # create array we will be filling here if we have not already
 	    if (exists("states_array_median") == FALSE) {
 		# dimension info
-		max_pars = 500 ; no_pools = 7
+		max_pars = 200 ; no_pools = 7
 		pixel_dims = c(max_pars,length(timestep_days)) ; pixel_vars = length(in_file_names)
 		# spatial / not cluster related values
 		states_array_median = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,pixel_vars+nos_extra))
@@ -653,7 +653,15 @@ generate_stocks_and_fluxes_maps<-function(PROJECT) {
 	    image.plot(mean_rooting_depth,col=colour_choices, main=paste("Median root depth (m)",sep=""),zlim=z_axis,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
 	    contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
 	    dev.off()
-	}
+	} else if (PROJECT$model$name == "DALECN_BUCKET") {
+	    jpeg(file=paste(PROJECT$figpath,"median_root_depth_maps_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+	    par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
+	    mean_rooting_depth = par_array_median[,,35] * (states_array_median[,,10]*2) / (par_array_median[,,34] + (states_array_median[,,10]*2))
+	    z_axis=c(min(as.vector(mean_rooting_depth),na.rm=TRUE),max(as.vector(mean_rooting_depth),na.rm=TRUE))
+	    image.plot(mean_rooting_depth,col=colour_choices, main=paste("Median root depth (m)",sep=""),zlim=z_axis,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+	    contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+	    dev.off()
+        }
 	# generate GSI dominent control plots in bespoke fashion
 	## GSI_itemp component with dominent control
 	z_axis=c(0,100)

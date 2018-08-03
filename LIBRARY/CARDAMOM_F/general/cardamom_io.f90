@@ -48,8 +48,8 @@ module cardamom_io
         ! ID = 0 - ACM/ACM-ET
         ! DALEC_CDEA - 6 pools
         DATAin%nopools = 2
-        DATAin%nopars = 18
-        DATAin%nofluxes = 3
+        DATAin%nopars = 22
+        DATAin%nofluxes = 4
     else if (DATAin%ID == 1) then
         ! ID = 1 - DALEC_CDEA
         ! DALEC_CDEA - 6 pools
@@ -61,7 +61,7 @@ module cardamom_io
         ! DALEC_BUCKET - 8 pools currently
         DATAin%nopools = 8
         DATAin%nopars = 40
-        DATAin%nofluxes = 21
+        DATAin%nofluxes = 25
         if (DATAin%PFT == 1) then
            ! then actually this is a crop pixel
            DATAin%nopools = 9
@@ -162,6 +162,18 @@ module cardamom_io
            DATAin%nopars = 37
            DATAin%nofluxes = 21
         endif
+    else if (DATAin%ID == 18) then
+        ! ID = 2 - DALECN_BUCKET
+        ! DALEC_BUCKET - 8 pools currently
+        DATAin%nopools = 8
+        DATAin%nopars = 41
+        DATAin%nofluxes = 25
+        if (DATAin%PFT == 1) then
+           ! then actually this is a crop pixel
+           DATAin%nopools = 9
+           DATAin%nopars = 37
+           DATAin%nofluxes = 21
+        endif
     else
        write(*,*) "Oh dear... model ID cannot be found"
        stop
@@ -210,8 +222,7 @@ module cardamom_io
         else
             ! or the file exists but is empty so treat it as a fresh start
             restart_flag=.false.
-            print*,"the *PAR and *STEP files exist however they are empty so &
-                   treat as a new job"
+            print*,"the *PAR and *STEP files exist however they are empty so treat as a new job"
         endif
         ! either way we open the file up later on so now we need to close them
         call close_output_files
@@ -778,8 +789,8 @@ module cardamom_io
   !
   !------------------------------------------------------------------
   !
-  subroutine READ_PARI_DATA (PI, MCOUT, infile)
-    use MCMCOPT, only: MCMC_OUTPUT, PARAMETER_INFO, initialise_mcmc_output
+  subroutine READ_PARI_DATA (PI, infile)
+    use MCMCOPT, only: PARAMETER_INFO, initialise_mcmc_output
     use MODEL_PARAMETERS, only: pars_info
     use cardamom_structures, only: DATAin
 
@@ -790,7 +801,6 @@ module cardamom_io
 
     ! declare input variables
     type ( parameter_info ), intent(inout) :: PI
-    type ( mcmc_output ), intent(inout) :: MCOUT
     character(350), intent(in) :: infile
 
     ! declare local variables
@@ -854,8 +864,8 @@ module cardamom_io
 
     ! defining hardcoded MCMC options
     MCO%append = 1
-    MCO%nADAPT = 500
-    MCO%fADAPT = 1d0 !TLS:0.5
+    MCO%nADAPT = 100
+    MCO%fADAPT = 0.5d0
     MCO%randparini = .false.
     MCO%returnpars = .false.
     MCO%fixedpars  = .false.
@@ -976,15 +986,15 @@ module cardamom_io
   !
   !------------------------------------------------------------------
   !
-  subroutine write_results (pars,prob,PI,MCO)
-    use MCMCOPT, only: PARAMETER_INFO, MCMC_OPTIONS
+  subroutine write_results (pars,prob,PI)
+    use MCMCOPT, only: PARAMETER_INFO
+
     ! subroutine writes MCMC accepted parameters and step values to binary files
 
     implicit none
 
     ! declare input variables
     type ( parameter_info ), intent(in) :: PI
-    type ( mcmc_options ), intent(in) :: MCO
     double precision, dimension(PI%npars), intent(in) :: pars
     double precision, intent(in) :: prob
 

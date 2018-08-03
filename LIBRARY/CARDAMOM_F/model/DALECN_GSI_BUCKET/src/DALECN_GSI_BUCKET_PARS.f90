@@ -123,13 +123,13 @@ module MODEL_PARAMETERS
        PI%parmin(24)=3600d0*6d0  ! 6 hours
        PI%parmax(24)=3600d0*18d0 ! 18 hours
 
-       ! GSI min wSWP threshold (MPa)
-       PI%parmin(25)=-2d0
-       PI%parmax(25)=-0.01d0
+       ! GSI min VPD threshold (Pa)
+       PI%parmin(25)=1d0
+       PI%parmax(25)=5500d0
 
-       ! GSI max wSWP threshold (MPa)
-       PI%parmin(26)=-2d0
-       PI%parmax(26)=-0.01d0
+       ! GSI max VPD threshold (Pa)
+       PI%parmin(26)=1d0
+       PI%parmax(26)=5500d0
 
        ! CN_wood (gC/gN; Kattge et al., 2011)
        PI%parmin(27)=169.5d0

@@ -45,6 +45,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
 	modelid=2
     } else if (modelname == "DALECN_GSI_BUCKET"){
 	modelid=17
+    } else if (modelname == "DALECN_BUCKET"){
+	modelid=18
     } else if (modelname == "AT_DALEC" & parameter_type == "pft_specific" & ctessel_pft == 1){
 	# i.e. crop model
 	modelid=4
@@ -172,7 +174,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     # pft=static_data[7]; CTESSEL plant functional type, only used by ACM_TESSEL
 
     # if force_random_search == 1 then CARDAMOM ignores parameter priors even if present in the file during the EDC initialisation
-    force_random_search = -9999
+    force_random_search = -9999 #; OBS$age = -9999
     # pass static information
     static_data = rep(-9999.0,length.out=100)
     tmp = c(modelid,latlon_in[1],dim(MET)[1],dim(MET)[2],dim(OBSMAT)[2],EDC,ctessel_pft,OBS$yield_class,OBS$age,nopars,force_random_search,
@@ -350,6 +352,23 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
 	      } # Crop or not
         PARPRIORS[22]=OBS$Clit_initial          ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=2.0} # Clitter prior
         PARPRIORS[23]=OBS$SOM                   ; if (OBS$SOM != -9999) {PARPRIORUNC[23]=2.0} # Csom prior
+    } else if (modelname == "DALECN_BUCKET") {
+        PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
+	      if (parameter_type == "pft_specific" & ctessel_pft == 1) {
+	          PARPRIORS[12]=OBS$plant         ; PARPRIORUNC[12]=1.1
+	          PARPRIORS[15]=OBS$harvest       ; PARPRIORUNC[15]=1.1
+	          #PARPRIORS[36]=50	            ; PARPRIORUNC[36]=1.4 # Croot to half max depth (gbio.m-2)
+	          #PARPRIORS[37]=1	            ; PARPRIORUNC[37]=1.4 # Max rooting depth (m)
+	      } else {
+	          PARPRIORS[2]=51.70631   ; PARPRIORUNC[2]=0.53905 # C:N root (gC/gN) Kattge et al., (2011)
+	          PARPRIORS[15]=416.6667  ; PARPRIORUNC[15]=6.277688 # C:N wood (gC/gN) Kattge et al., (2011)
+	          PARPRIORS[21]=OBS$Cwood_initial ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+	          PARPRIORS[36]=1.639     ; PARPRIORUNC[36]=0.125*3 # Rm_leaf N**exponent (gC/gN) Reich et al., (2008)
+	          PARPRIORS[38]=1.352     ; PARPRIORUNC[38]=0.150*3 # Rm_root N**exponent (gC/gN) Reich et al., (2008)
+	          PARPRIORS[40]=1.344     ; PARPRIORUNC[40]=0.150*3 # Rm_wood N**exponent (gC/gN) Reich et al., (2008)
+	      } # Crop or not
+        PARPRIORS[22]=OBS$Clit_initial          ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=2.0} # Clitter prior
+        PARPRIORS[23]=OBS$SOM                   ; if (OBS$SOM != -9999) {PARPRIORUNC[23]=2.0} # Csom prior
     } else if (modelname == "ACM") {
 
     # For ACM_GPP_ET
@@ -364,7 +383,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
 #    PARPRIORS[4] = 0.185912 ; PARPRIORUNC[4] = 0.05
     # p(10) = Maximum (most negative) leaf-soil WP difference (MPa) (i.e. minLWP)
 #    PARPRIORS[10] = -2.0 ; PARPRIORUNC[10] = 0.1
-
+    # p(15) = Soil SW absorption (fraction)
+#    PARPRIORS[15] = 0.972 ; PARPRIORUNC[15] = 0.05 
 	# for GPP temperature optimum = 30oC (Default)
         # CO2 compensation point and half saturation
 #    PARPRIORS[3] = 45.29614 ; PARPRIORUNC[3] = 20.54073

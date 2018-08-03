@@ -3,7 +3,6 @@ program cardamom_framework
 
  use math_functions, only: idum, randn, rnstrt
  use MCMCOPT, only: MCO, MCOUT, PI, initialise_mcmc_output
- use cardamom_structures, only: DATAin
  use cardamom_io, only: read_pari_data, read_options, open_output_files, &
                         check_for_exisiting_output_files,restart_flag,   &
                         update_for_restart_simulation
@@ -26,7 +25,7 @@ program cardamom_framework
 
  ! declare local variables
  character(350) :: infile, outfile, solution_wanted_char, freq_print_char, freq_write_char
- integer :: solution_wanted, freq_print, freq_write, time1, time2, time3, i
+ integer :: solution_wanted, freq_print, freq_write, time1, time2, time3
 
  ! user update
  write(*,*)"Beginning read of the command line"
@@ -54,7 +53,7 @@ program cardamom_framework
  call rnstrt(nint(idum))
 
  ! read input data (DATAin located in module)
- call READ_PARI_DATA(PI,MCOUT,infile)
+ call READ_PARI_DATA(PI,infile)
 
  ! load module variables needed for restart check
  call read_options(MCO,solution_wanted,freq_print,freq_write,outfile)

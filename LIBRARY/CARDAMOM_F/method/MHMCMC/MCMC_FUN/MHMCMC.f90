@@ -27,7 +27,6 @@ contains
     use MCMCOPT, only: MCMC_OUTPUT, MCMC_OPTIONS, PARAMETER_INFO, COUNTERS
     use math_functions, only: randn, random_uniform
     use cardamom_io, only: write_results,restart_flag,accepted_so_far
-    use cardamom_structures, only: DATAin
     implicit none
 
     !/* ***********INPUTS************
@@ -166,7 +165,8 @@ contains
            ! and reset uniform counter
            uniform = 1
        endif
-!print*,"P = ",P," P0 = ",P0!," U = ",crit," Acpt = ",N%ACC
+!print*,"P = ",P," P0 = ",P0," U = ",crit," Acpt = ",N%ACC
+!print*," U = ",crit
        if ((P-P0) > crit) then
 !print*,"P = ",P
           ! store accepted parameter solutions
@@ -183,7 +183,7 @@ contains
           P0 = P
           ! write out parameter, log-likelihood and step if appropriate
           if (MCO%nWRITE > 0 .and. mod(N%ACC,MCO%nWRITE) == 0) then
-             call write_results(PARS,P,PI,MCO)
+             call write_results(PARS,P,PI)
           end if ! write or not to write
        endif ! accept or reject condition
 
@@ -194,14 +194,14 @@ contains
        if (mod(N%ITER,MCO%nADAPT) == 0) then
            ! work out local acceptance rate (i.e. since last adapt)
            N%ACCRATE=dble(N%ACCLOC)/dble(MCO%nADAPT)
-!           print*,"...Local Acceptance rate = ",N%ACCRATE
+!print*,"...Local Acceptance rate = ",N%ACCRATE,(MCO%fADAPT*dble(MCO%nOUT)) > dble(N%ACC)
            ! have few enough parameters been accepted to consider adapting
            if ((MCO%fADAPT*dble(MCO%nOUT)) > dble(N%ACC)) then
 !print*,"P",P
                call adapt_step_size(PARSALL,PI,N,MCO)
            end if !  have enough parameter been accepted
            ! resets to local counter
-           N%ACCLOC=0
+           N%ACCLOC = 0
        end if ! time to adapt?
 
        ! should I be write(*,*)ing to screen or not?
@@ -226,7 +226,7 @@ contains
   !
   !------------------------------------------------------------------
   !
-  subroutine ADAPT_STEP_SIZE(PARSALL,PI,N,MCO)
+  subroutine adapt_step_size(PARSALL,PI,N,MCO)
     use MCMCOPT, only: MCMC_OPTIONS, COUNTERS, PARAMETER_INFO
     use math_functions, only: std
 
@@ -245,20 +245,21 @@ contains
     double precision minstepsize         & ! minimum step size
                     ,norparstd           & ! normalised parameter value standard deviation
                     ,norparvec(N%ACCLOC)   ! normaised parameter values
-    double precision, parameter :: fac = 2d0, & ! factor used to determine whether to reduce step size
+    double precision, parameter :: fac = 2d0,   & ! factor used to determine whether to reduce step size
                                  fac_1 = 0.5d0, & ! ...and its inverse
                               adaptfac = 1.5d0, & ! fraction applied to reduce / increase step size...
                             adaptfac_1 = 0.6666667d0, & ! ...and its inverse
                          sqrt_adaptfac = 1.224745d0
 
+
     ! calculate constants
     minstepsize = 10000d0/dble(N%ITER)
-    if (minstepsize > 0.01d0) minstepsize = 0.01d0
+    if (minstepsize > 0.001d0) minstepsize = 0.005d0 ! was 0.01 ! TLS
     ! determine local acceptance rate
     N%ACCRATE = dble(N%ACCLOC)/dble(MCO%nADAPT)
-!print*,"N%ACCRATE",N%ACCRATE
+!print*,"N%ACCRATE",N%ACCRATE,N%ACCLOC,N%ACCRATE < 0.23d0,N%ACCRATE > 0.44d0
     ! default stepize increment
-    if (N%ACCRATE < 0.23d0) then
+    if (N%ACCLOC > 0 .and. N%ACCRATE < 0.23d0) then
         ! make step size smaller
         PI%stepsize = PI%stepsize * adaptfac_1
     else if (N%ACCRATE > 0.44d0) then
@@ -307,7 +308,7 @@ contains
     ! if stepsize still below minimum allowed value then set to minimum
     where (PI%stepsize < minstepsize) PI%stepsize = minstepsize
 
-  end subroutine ADAPT_STEP_SIZE
+  end subroutine adapt_step_size
   !
   !------------------------------------------------------------------
   !

@@ -1624,7 +1624,7 @@ contains
     double precision, parameter :: min_wind = 0.01d0 ! minimum wind speed at canopy top
 
     ! Log law decay
-    canopy_wind = (ustar / vonkarman) * log(displacement / roughl)
+    canopy_wind = (ustar / vonkarman) * log((canopy_height-displacement) / roughl)
 
     ! Set minimum value for wind speed at canopy top (m.s-1)
     canopy_wind = max(min_wind,canopy_wind)

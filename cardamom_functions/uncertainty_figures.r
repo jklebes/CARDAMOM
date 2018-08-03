@@ -33,7 +33,10 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 		if (PROJECT$ctessel_pft[n] == 1) {
 		    # parameter numbers adjusted for crop model
 		    var=as.vector(parameters[37,,]) * (var*2) / (as.vector(parameters[36,,]) + (var*2))
-		} else {
+		} else if(PROJECT$model$name == "DALECN_BUCKET") {
+		    # Now estimate the rooting depth based on the equation imbedded in DALECN_BUCKET
+		    var=as.vector(parameters[35,,]) * (var*2) / (as.vector(parameters[34,,]) + (var*2))
+                } else {
 		    # Now estimate the rooting depth based on the equation imbedded in DALEC_GSI_BUCKET
 		    var=as.vector(parameters[40,,]) * (var*2) / (as.vector(parameters[39,,]) + (var*2))
 		}
@@ -987,6 +990,26 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 	    lines(apply(harvestC_var[1:(dim(harvestC_var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
 
 	    dev.off()
+
+	} else if (which_plot == 23) {
+
+	    # structure needed by function is dim=c(time,iter)
+	    # flip it to get the right shape
+	    canopyage_var=t(states_all$canopyage)
+                                       
+	    ymax=quantile(as.vector(canopyage_var), prob=c(0.999), na.rm=TRUE)
+	    jpeg(file=paste(PROJECT$figpath,"timeseries_CanopyAge_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
+	    # now create the plotting area
+	    par(mfrow=c(1,1), mar=c(5,5,3,1))
+	    plot(rep(-9999,dim(canopyage_var)[1]),xaxt="n", pch=16, ylim=c(0,ymax), cex=0.8,ylab="Mean Canopy Age (days)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8, main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+	    axis(1, at=time_vector[seq(1,length(time_vector),interval)],labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
+	    # add the confidence intervals
+	    plotconfidence(canopyage_var)
+	    # calculate and draw the median values, could be mean instead or other
+	    lines(apply(canopyage_var[1:(dim(canopyage_var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+
+	    dev.off()
+
 
 	} else {
 	    print("have requested a figure which we have not actually scripted yet")

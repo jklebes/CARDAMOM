@@ -50,7 +50,7 @@ module MODEL_PARAMETERS
 
     ! max temperature for photosynthesis (oC)
     PI%parmin(2)=45d0
-    PI%parmax(2)=70d0
+    PI%parmax(2)=60d0
     ! optimum temperature for photosynthesis (oC)
     PI%parmin(3)=20d0
     PI%parmax(3)=40d0
@@ -65,27 +65,26 @@ module MODEL_PARAMETERS
     PI%parmax(5)=7d0  !7.19298+(0.9*7.19298)
 
     !
-    ! Canopy longwave radiation absorption
+    ! Canopy longwave radiation transmittance
     !
 
-    ! maximum absorbed radiation fraction
-    PI%parmin(6)=0.90d0
-    PI%parmax(6)=0.99d0
-
-    ! LAI at which radiation absorption is half saturation (m2/m2)
-    PI%parmin(7)=0.5d0
+    ! max reduction in longwave transmitted by canopy (fraction)
+    PI%parmin(6)=0.5d0
+    PI%parmax(6)=1d0
+    ! LAI at which 50 % of reduction has occured (m2/m2)
+    PI%parmin(7)=0.01d0
     PI%parmax(7)=2.5d0
 
     !
-    ! Canopy NIR shortwave radiation absorption
+    ! Canopy NIR shortwave radiation reflectance
     !
 
-    ! maximum absorbed radiation (fraction)
-    PI%parmin(8)=0.50d0
-    PI%parmax(8)=0.90d0
+    ! maximum reflectance radiation (fraction)
+    PI%parmin(8)=0.10d0
+    PI%parmax(8)=0.99d0
     ! LAI at which radiation absorption is at half saturation (m2/m2)
     ! SPA's radiative transfer scheme absorbs 50 % of shortwave at lai == ~1.65
-    PI%parmin(9)=0.5d0
+    PI%parmin(9)=0.1d0
     PI%parmax(9)=2.5d0
 
     !
@@ -97,14 +96,14 @@ module MODEL_PARAMETERS
     PI%parmax(10)=-1.99d0 !-1.0
 
     !
-    ! Canopy PAR shortwave radiation absorption
+    ! Canopy PAR shortwave radiation reflectance
     !
 
-    ! maximum absorbed
-    PI%parmin(11)=0.60d0
-    PI%parmax(11)=0.90d0
+    ! maximum reflectance
+    PI%parmin(11)=0.10d0
+    PI%parmax(11)=0.99d0
     ! LAI at which radiation absorption is at half saturation
-    PI%parmin(12)=0.5d0
+    PI%parmin(12)=0.1d0
     PI%parmax(12)=2.5d0
 
     !
@@ -112,36 +111,59 @@ module MODEL_PARAMETERS
     !
 
     ! lai at which longwave returned to sky by canopy is half saturation
-    PI%parmin(13)=0.5d0
-    PI%parmax(13)=1.0d0
+    PI%parmin(13)=0.75d0
+    PI%parmax(13)=1.5d0
 
     !
     ! GPP / transpiration optimisation
     !
 
-    ! iWUE (gC/m2leaf/day/mmolH2Ogs)
-    PI%parmin(14)=1d-3
-    PI%parmax(14)=0.1d0
+    ! iWUE (gC/m2leaf/s/mmolH2Ogs)
+    ! Actual value used in SPA is 8.4e-8
+    PI%parmin(14)=1d-10  
+    PI%parmax(14)=0.0001d0
 
     !
     ! Soil shortwave radiation absorption
     !
 
     ! soil sw radiation absorption (fraction)
-    PI%parmin(15)=0.90d0!0.50d0 !0.10d0 !0.50
+    PI%parmin(15)=0.50d0
     PI%parmax(15)=0.99d0
 
-    ! max sw radiation returned to sky by canopy (fraction)
-    PI%parmin(16)=0.05d0
-    PI%parmax(16)=0.50d0
+    !
+    ! Canopy shortwave transmittance
+    !
+
+    ! max reduction in par transmitted by canopy (fraction)
+    PI%parmin(16)=0.5d0
+    PI%parmax(16)=1d0
+    ! LAI at which 50 % occurs
+    PI%parmin(17)=0.1d0
+    PI%parmax(17)=2.5d0
+
+    ! max reduction in nir transmitted by canopy (fraction)
+    PI%parmin(18)=0.5d0
+    PI%parmax(18)=1d0
+    ! LAI at which 50 % occurs
+    PI%parmin(19)=0.1d0
+    PI%parmax(19)=2.5d0
+
+    !
+    ! Canopy longwave escape from canopy
+    !
 
     ! max fraction of longwave release from canopy (0.20:0.30)
-    PI%parmin(17)=0.20d0
-    PI%parmax(17)=0.30d0
+    PI%parmin(20)=0.01d0
+    PI%parmax(20)=0.99d0
 
     ! lai adjustment for long wave release from canopy (1:3)
-    PI%parmin(18)=0.5d0
-    PI%parmax(18)=2.5d0
+    PI%parmin(21)=0.01d0
+    PI%parmax(21)=3.0d0
+
+    ! max fraction longwave reflected back to sky by canopy
+    PI%parmin(22)=0.01d0
+    PI%parmax(22)=1d0
 
   end subroutine pars_info
   !

@@ -5,7 +5,7 @@ subroutine rdalecngsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
                           ,nodays,deltat,nos_iter,soil_frac_clay_in,soil_frac_sand_in &
                           ,exepath,pathlength)
 
-  use CARBON_MODEL_MOD, only: CARBON_MODEL, extracted_C, itemp, ivpd, iphoto &
+  use CARBON_MODEL_MOD, only: CARBON_MODEL, itemp, ivpd, iphoto &
                              ,soil_frac_clay, soil_frac_sand &
                              ,nos_soil_layers, wSWP_time
   use CARBON_MODEL_CROP_MOD, only: CARBON_MODEL_CROP
@@ -100,8 +100,8 @@ subroutine rdalecngsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
   if (allocated(itemp)) deallocate(itemp,ivpd,iphoto)
   allocate(itemp(nodays),ivpd(nodays),iphoto(nodays))
   ! update soil parameters
-  soil_frac_clay=soil_frac_clay_in
-  soil_frac_sand=soil_frac_sand_in
+  soil_frac_clay = soil_frac_clay_in
+  soil_frac_sand = soil_frac_sand_in
 
   ! generate deltat step from input data
   deltat(1) = met(1,1)
@@ -116,6 +116,9 @@ subroutine rdalecngsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
                                                 ,exepath,pathlength)
   ! begin iterations
   do i = 1, nos_iter
+
+     ! Clear at the beginning of every loop just in case
+     lai = 0d0 ; GPP = 0d0 ; NEE = 0d0 ; POOLS = 0d0 ; FLUXES = 0d0
 
      ! call the models
      if (pft == 1) then

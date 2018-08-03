@@ -10,13 +10,12 @@ submit_processes_to_eddie<-function (PROJECT_in) {
 
     # create the new file name in the correct location
     outfile=paste(PROJECT_in$exepath,"CARDAMOM_ECDF_EXECUTABLES_LIST.txt",sep="")
-
+#bob=read.table("~/Desktop/age_hack_list.txt", header=TRUE)
     # begin writing out the file contents
     # construct the file now
     first_pass=TRUE
     for (n in seq(1, PROJECT_in$nosites)) {
-#bob=read_binary_file_format(paste(PROJECT_in$datapath,PROJECT_in$name,"_",PROJECT_in$sites[n],".bin",sep=""))
-#if (max(bob$met[,8]) > 0) {
+#if (length(which(n == bob$loc)) > 0) {
 	for (c in seq(1, PROJECT_in$nochains)) {
 	    infile=paste(PROJECT_in$edatapath,PROJECT_in$name,"_",PROJECT_in$sites[n],".bin",sep="")
 	    output=paste(PROJECT_in$eresultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_",c,"_",sep="")
@@ -26,9 +25,9 @@ submit_processes_to_eddie<-function (PROJECT_in) {
 	    } else {
 		write(paste(PROJECT_in$eexepath,PROJECT_in$exe," ",infile," ",output," ",as.integer(PROJECT_in$nsamples)," 0 ",as.integer(PROJECT_in$samplerate),sep=""),sep=" ", ncolumn=1,file=outfile,append="T")
 	    }
-	}
-#} # management hack
-    }
+	} # chain no
+#} # management_kacl
+    } # nosite
 #    for (c in seq(1, PROJECT_in$nochains)) {
 #	for (n in seq(1, PROJECT_in$nosites)) {
 #	    infile=paste(PROJECT_in$edatapath,PROJECT_in$name,"_",PROJECT_in$sites[n],".bin",sep="")
