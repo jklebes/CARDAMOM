@@ -23,7 +23,7 @@ module math_functions
 
   ! FORTRAN 77 version of "ran_array"
   ! from Seminumerical Algorithms by D E Knuth, 3rd edition (1997)
-  !       including the MODifICATIONS made in the 9th printing (2002)
+  !       including the MODIFICATIONS made in the 9th printing (2002)
   ! ********* see the book for explanations and caveats! *********
   ! Author: Steve Kifowit
   ! http://ourworld.compuserve.com/homepages/steve_kifowit

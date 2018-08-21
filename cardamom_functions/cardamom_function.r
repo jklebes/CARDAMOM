@@ -200,10 +200,8 @@ if (stage == 1) {
     loaded_all=FALSE ; met_all = 0 ; lai_all = 0 ; Csom_all = 0 ; forest_all = 0 ; Cwood_all = 0 
     # load to PROJECT for perminent use
     timestep_days=PROJECT$model$timestep_days
-bob=read.table("~/Desktop/age_hack_list.txt", header=TRUE)
     # start looping through sites to create site specific files of obs and met
     for (n in seq(1, PROJECT$nosites)) {
-if (length(which(n == bob$loc)) > 0) { # plant age hack
 	if (n == 1 & cardamom_type == "grid") {
 	    print("Determining number / locations of grid points for this run ...")
 	    output=determine_lat_long_needed(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution,PROJECT$grid_type,PROJECT$waterpixels) 
@@ -253,7 +251,6 @@ if (length(which(n == bob$loc)) > 0) { # plant age hack
 	    # write out the relevant binary files
 	    binary_data(met,obs,filename,PROJECT$edc,latlon[n,],PROJECT$ctessel_pft[n],PROJECT$model$name,PROJECT$parameter_type,PROJECT$model$nopars[n])
 	}
-} # hack planting age
     } # site loop
 
     # clean up to remove large drains on computer memeory

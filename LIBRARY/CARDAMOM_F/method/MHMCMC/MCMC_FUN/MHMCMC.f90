@@ -138,8 +138,10 @@ contains
     PARS0(1:PI%npars) = PI%parini(1:PI%npars)
     BESTPARS(1:PI%npars) = PI%parini(1:PI%npars)
 
-    ! calculate the initial probability / log likelihood
-    call model_likelihood_option(PI, PI%parini,P0)
+    ! calculate the initial probability / log likelihood.
+    ! NOTE: passing P0 -> P is needed during the EDC searching phase where we
+    ! could read an EDC consistent parameter set in the first instance
+    call model_likelihood_option(PI, PI%parini,P0) ; P = P0
     write(*,*) "Starting likelihood = ",P0
 
     ! appropriate warning
@@ -150,7 +152,7 @@ contains
     endif
 
     ! begin the main MHMCMC loop
-    do while (N%ACC < MCO%nOUT .and. (P < 0d0 .or. MCO%nWRITE > 0 .or. N%ACC == 0))
+    do while (N%ACC < MCO%nOUT .and. (P < 0d0 .or. MCO%nWRITE > 0))
        ! take a step in parameter space
        call step(PARS0,PARS,PI)
        ! calculate the model likelihood
@@ -172,14 +174,13 @@ contains
           ! store accepted parameter solutions
           do i = 1, PI%npars
              ! keep record of all parameters accepted since step adaption
-             PARSALL((N%ACCLOC*PI%npars)+i)=PARS(i)
-             PARS0(i)=PARS(i)
-!             if (P > P0) BESTPARS(i)=PARS(i)
+             PARSALL((N%ACCLOC*PI%npars)+i) = PARS(i)
+             PARS0(i) = PARS(i)
           end do ! pars
           if (P > P0) BESTPARS = PARS
           ! keep track of how many accepted solutions (global and local)
           N%ACC = N%ACC+1 ; N%ACCLOC = N%ACCLOC+1
-!          if (mod(N%ACC,1) == 0) print*,"Total Accepted = ",N%ACC,P-P0,crit
+ !         if (mod(N%ACC,1) == 0) print*,"Total Accepted = ",N%ACC,P0,N%ITER
           P0 = P
           ! write out parameter, log-likelihood and step if appropriate
           if (MCO%nWRITE > 0 .and. mod(N%ACC,MCO%nWRITE) == 0) then
@@ -194,7 +195,7 @@ contains
        if (mod(N%ITER,MCO%nADAPT) == 0) then
            ! work out local acceptance rate (i.e. since last adapt)
            N%ACCRATE=dble(N%ACCLOC)/dble(MCO%nADAPT)
-!print*,"...Local Acceptance rate = ",N%ACCRATE,(MCO%fADAPT*dble(MCO%nOUT)) > dble(N%ACC)
+!print*,"...Local Acceptance rate = ",N%ACCRATE,(MCO%fADAPT*dble(MCO%nOUT)) > dble(N%ACC),P,P0
            ! have few enough parameters been accepted to consider adapting
            if ((MCO%fADAPT*dble(MCO%nOUT)) > dble(N%ACC)) then
 !print*,"P",P
@@ -254,7 +255,7 @@ contains
 
     ! calculate constants
     minstepsize = 10000d0/dble(N%ITER)
-    if (minstepsize > 0.001d0) minstepsize = 0.005d0 ! was 0.01 ! TLS
+    if (minstepsize > 0.01d0) minstepsize = 0.01d0 ! TLS
     ! determine local acceptance rate
     N%ACCRATE = dble(N%ACCLOC)/dble(MCO%nADAPT)
 !print*,"N%ACCRATE",N%ACCRATE,N%ACCLOC,N%ACCRATE < 0.23d0,N%ACCRATE > 0.44d0
@@ -268,7 +269,7 @@ contains
     end if ! conditional if acceptance rate low or high
 
     ! next do dimension / parameter specific adjustments
-    ! this is the adaptive part (Bloom et al., 2015)
+    ! this is the adaptive part (Bloom & Williams 2015)
     ! NOTE: original value was > 3, however this result in a biased estimate of
     ! the standard deviation to a lower value.
     if (N%ACCLOC > 10 .and. N%ACCRATE < 0.23d0) then
@@ -299,10 +300,10 @@ contains
     ! if we have failed to accept any steps for 10000 iterations then reset
     ! step size of all parameters to a large value. Here we assume that we are
     ! have wandered into a EDC inconsistent place and gotten lost
-    if (N%ACCLOC == 0 .and. N%ACCLOC_ZEROS*MCO%nADAPT > 1000) then
-        where (PI%stepsize <= minstepsize) PI%stepsize = 0.04d0
-        N%ACCLOC_ZEROS = 0
-    end if
+!    if (N%ACCLOC == 0 .and. N%ACCLOC_ZEROS*MCO%nADAPT > 10) then
+!        PI%stepsize = 0.05d0
+!        N%ACCLOC_ZEROS = 0
+!    end if
     ! if stepsize below minimum allowed value increase
     where (PI%stepsize < minstepsize) PI%stepsize = PI%stepsize * adaptfac
     ! if stepsize still below minimum allowed value then set to minimum
@@ -356,7 +357,7 @@ contains
   !
   !------------------------------------------------------------------
   !
-  subroutine STEP (pars0,pars,PI)
+  subroutine step (pars0,pars,PI)
     use math_functions, only: randn, random_normal
     use MCMCOPT, only: PARAMETER_INFO
 
@@ -394,7 +395,7 @@ contains
       end do ! while conditions
     end do ! parameter loop
 
-  end subroutine STEP
+  end subroutine step
   !
   !------------------------------------------------------------------
   !

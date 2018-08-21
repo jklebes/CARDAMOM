@@ -384,7 +384,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     # p(10) = Maximum (most negative) leaf-soil WP difference (MPa) (i.e. minLWP)
 #    PARPRIORS[10] = -2.0 ; PARPRIORUNC[10] = 0.1
     # p(15) = Soil SW absorption (fraction)
-#    PARPRIORS[15] = 0.972 ; PARPRIORUNC[15] = 0.05 
+    PARPRIORS[15] = 0.972 ; PARPRIORUNC[15] = 0.05 
 	# for GPP temperature optimum = 30oC (Default)
         # CO2 compensation point and half saturation
 #    PARPRIORS[3] = 45.29614 ; PARPRIORUNC[3] = 20.54073

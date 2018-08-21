@@ -27,29 +27,33 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
 		    converged=have_chains_converged(parameters)
 		    # if log-likelihood has passed then we are not interested
 		    if (converged[length(converged)] == "FAIL") {
-			notconv = TRUE ; i=1 ; max_likelihood=rep(NA, length.out=dim(parameters)[3]) ; CI90=rep(NA,length.out=c(2))
+			notconv = TRUE ; i = 1 ; max_likelihood = rep(NA, length.out=dim(parameters)[3]) ; CI90 = rep(NA,length.out=c(2))
 			while (notconv){
 			    max_likelihood[i] = max(parameters[dim(parameters)[1],,i])
-			    converged=have_chains_converged(parameters[,,-i]) ; i = i+1
+			    converged = have_chains_converged(parameters[,,-i]) ; i = i + 1
 			    # if removing one of the chains get convergence then great
 			    if (converged[length(converged)] == "PASS") {
 				# but we need to check for the possibility that the chain we have removed is actually better than the others
 				CI90[1] = quantile(parameters[dim(parameters)[1],,(i-1)], prob=c(0.10)) ; CI90[2] = quantile(parameters[dim(parameters)[1],,-(i-1)], prob=c(0.90))
 				# if the rejected chain is significantly better (at 90 % CI) than the converged chains then we have a problem
 				if (CI90[1] > CI90[2]) {
-				    # we we do nothing and allow the analysis to continue moving on
+				    # rejected chain (while others converge) is actually better and the others have gotten stuck in a local minima.
+                                    # we will now assume that we use the single good chain instead...
+                                    parameters = array(parameters[,,(i-1)],dim=c(dim(parameters)[1:2],2))
+                                    notconv = FALSE ; i = (i-1) * -1
 				} else {
 				    # if the non-converged chain is worse or just the same in likelihood terms as the others then we will ditch it
-				    notconv=FALSE ; i=i-1 # converged now?
+				    notconv = FALSE ; i = i-1 # converged now?
 				}
 			    }
 			    # if we have tried removing each chain and we still have not converged then give up anyway
 			    #if (i > dim(parameters)[3] & notconv) {notconv=FALSE ; i=-9999}
 			    # or actually just remove the lowest average likelihood chain
 			    if (i > dim(parameters)[3] & notconv) {notconv=FALSE ; i=which(max_likelihood == min(max_likelihood)) ; i=i[1]}
-			} # for removing chains
+			} # while to removing chains
 			# if we successfully found only chain to remove then remove it from the rest of the analysis.
-			if (i != -9999) {parameters=parameters[,,-i] ; print(paste("chain rejected = ",i,sep=""))}
+			if (i > 0) {parameters=parameters[,,-i] ; print(paste("chain rejected = ",i,sep=""))}
+                        if (i < 0) {print(paste("chain ",i*-1," only has been accepted",sep=""))}
 		    } # if likelihood not converged
 		} # if more than 2 chains
 

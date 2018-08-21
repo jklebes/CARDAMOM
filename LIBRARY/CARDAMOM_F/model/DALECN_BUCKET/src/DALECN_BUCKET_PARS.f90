@@ -58,11 +58,11 @@ module MODEL_PARAMETERS
        PI%parmax(2)=192.31d0
 
        ! Days past optimum at which canopy NUE = 0
-       PI%parmin(3)=60d0
+       PI%parmin(3)=30d0
        PI%parmax(3)=365.25d0*8d0
 
        ! Max labile turnover (fraction) to roots
-       PI%parmin(4)=0.0001368925d0 ! 20 years
+       PI%parmin(4)=2d0*0.0001368925d0 ! 20->10 years
        PI%parmax(4)=0.05d0         ! 20 days
 
        ! Max leaf turnover (fraction)
@@ -131,9 +131,9 @@ module MODEL_PARAMETERS
        PI%parmin(26)= 3d0 ! 11.0
        PI%parmax(26)=40d0 ! 12.0
 
-       ! Empty Space
+       ! Averaging period for marginal return on leaf growth (days)
        PI%parmin(27)=1d0
-       PI%parmax(27)=2d0
+       PI%parmax(27)=21d0
 
        ! fraction of Cwood which is branch
        PI%parmin(28)=0.05d0
@@ -216,7 +216,7 @@ module MODEL_PARAMETERS
 
        ! C CWD
        PI%parmin(24)=1d0
-       PI%parmax(24)=10000d0
+       PI%parmax(24)=7500d0
 
        !
        ! Replanting pools (gC/m2) values

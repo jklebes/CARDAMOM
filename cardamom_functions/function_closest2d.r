@@ -52,7 +52,7 @@ closest2d <- function (id,lat,long,lat_in,long_in,nos_dim) {
 	    }
 	} # j loop
 	if (d_old > 10) {print(paste("id = ",id," Minimum distance found (",round(d_old,digits=1),") is greater than 10 km from actual location"))}
-	rm(i,d_old)
+	rm(d_old)
     }
 
     # clean up

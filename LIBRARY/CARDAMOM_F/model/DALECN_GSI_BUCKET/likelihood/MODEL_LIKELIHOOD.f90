@@ -1493,7 +1493,7 @@ module model_likelihood_module
     double precision, intent(inout) :: ML_out ! output variables for log-likelihood
 
     ! declare local variables
-    double precision :: EDC,EDC1,EDC2
+    double precision :: EDC,EDC1,EDC2,EDC_ML
 
     ! initial values
     ML_out = 0d0
@@ -1567,9 +1567,9 @@ module model_likelihood_module
        end if
 
        ! extra checks to ensure correct running of the model
-       if (sum(DATAin%M_LAI) /= sum(DATAin%M_LAI) .or. sum(DATAin%M_GPP) /= sum(DATAin%M_GPP)) then
-           EDC = 0
-       end if
+!       if (sum(DATAin%M_LAI) /= sum(DATAin%M_LAI) .or. sum(DATAin%M_GPP) /= sum(DATAin%M_GPP)) then
+!           EDC = 0
+!       end if
 
        ! add EDC2 log-likelihood
        ML_out=ML_out+log(EDC)
@@ -1577,10 +1577,11 @@ module model_likelihood_module
        ! calculate final model likelihood when compared to obs
        ML_out=ML_out+likelihood(PI%npars,PARS)
 
-       ! TLS: development test, add EDC fails to the liklihood calculation to
+       ! TLS: development test, add EDC fails to the likelihood calculation to
        ! driver the analysis. NOTE: that the EDCs checking for NaN or negative
        ! pools retain the ability to reject the parameter set outright!
-       ML_out = ML_out + (-0.5d0*(sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))*10d0)*DATAin%EDC)
+       EDC_ML = (sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))*DATAin%EDC)
+       if (EDC_ML > 0d0) ML_out = ML_out * EDC_ML
 
     end if ! EDC == 1
 

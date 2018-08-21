@@ -1354,7 +1354,7 @@ module model_likelihood_module
     double precision, intent(inout) :: ML_out ! output variables for log-likelihood
 
     ! declare local variables
-    double precision :: EDC,EDC1,EDC2
+    double precision :: EDC,EDC1,EDC2,EDC_ML
  
     ! initial values
     ML_out = 0d0
@@ -1425,10 +1425,10 @@ module model_likelihood_module
            EDC = 1
        end if
 
-       ! extra checks to ensure correct running of the model
-       if (sum(DATAin%M_LAI) /= sum(DATAin%M_LAI) .or. sum(DATAin%M_GPP) /= sum(DATAin%M_GPP)) then
-           EDC=0
-       end if 
+!       ! extra checks to ensure correct running of the model
+!       if (sum(DATAin%M_LAI) /= sum(DATAin%M_LAI) .or. sum(DATAin%M_GPP) /= sum(DATAin%M_GPP)) then
+!           EDC=0
+!       end if 
 
        ! add EDC2 log-likelihood
        ML_out=ML_out+log(EDC)

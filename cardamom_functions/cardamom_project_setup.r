@@ -132,7 +132,7 @@ cardamom_project_setup <- function (paths,PROJECT) {
 		  # compiler options 
 		  compiler_options=""#"-xhost -ipo -no-ftz"
 		  if (timing) {compiler_options=paste(compiler_options," -pg",sep="")}
-		  if (debug) {compiler_options=paste(compiler_options," -debug",sep="")}
+		  if (debug) {compiler_options=paste(compiler_options," -debug -backtrace",sep="")}
 		  commands=append(commands,c(paste("rm -r ",ecdf_source,"CARDAMOM_F_BKP",sep="")
 			    ,paste("mv ",ecdf_source,"CARDAMOM_F ",ecdf_source,"CARDAMOM_F_BKP",sep="")
 			    ,paste("scp -r ",username,"@",home_computer,":",paths$cardamom,"LIBRARY/CARDAMOM_F ",ecdf_source,sep="")
