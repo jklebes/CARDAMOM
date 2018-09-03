@@ -166,7 +166,10 @@ contains
            ! and reset uniform counter
            uniform = 1
        endif
-!print*,"P = ",P," P0 = ",P0!," U = ",crit," Acpt = ",N%ACC
+!print*,"P = ",P," P0 = ",P0," U = ",crit," Acpt = ",N%ACC
+  ! do i = 1, PI%npars
+  !  print *, PARS0(i)
+  !  end do
        if ((P-P0) > crit) then
 !print*,"P = ",P
           ! store accepted parameter solutions
@@ -254,6 +257,7 @@ contains
     ! calculate constants
     minstepsize = 10000d0/dble(N%ITER)
     if (minstepsize > 0.01d0) minstepsize = 0.01d0
+ !   if (minstepsize > 0.001d0) minstepsize = 0.001d0 !JFE minstepsize to 1e-3
     ! determine local acceptance rate
     N%ACCRATE = dble(N%ACCLOC)/dble(MCO%nADAPT)
 !print*,"N%ACCRATE",N%ACCRATE
@@ -298,14 +302,17 @@ contains
     ! if we have failed to accept any steps for 10000 iterations then reset
     ! step size of all parameters to a large value. Here we assume that we are
     ! have wandered into a EDC inconsistent place and gotten lost
-    if (N%ACCLOC == 0 .and. N%ACCLOC_ZEROS*MCO%nADAPT > 1000) then
-        where (PI%stepsize <= minstepsize) PI%stepsize = 0.04d0
-        N%ACCLOC_ZEROS = 0
-    end if
+        if (N%ACCLOC == 0 .and. N%ACCLOC_ZEROS*MCO%nADAPT > 1000) then !MCO%nADAPT > 1000) then
+           where (PI%stepsize <= minstepsize) PI%stepsize = 0.04d0
+           N%ACCLOC_ZEROS = 0
+        end if
+
     ! if stepsize below minimum allowed value increase
     where (PI%stepsize < minstepsize) PI%stepsize = PI%stepsize * adaptfac
     ! if stepsize still below minimum allowed value then set to minimum
     where (PI%stepsize < minstepsize) PI%stepsize = minstepsize
+
+!    print *, 'stepsize = ', maxval(PI%stepsize)
 
   end subroutine ADAPT_STEP_SIZE
   !

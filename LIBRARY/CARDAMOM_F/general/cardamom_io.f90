@@ -903,8 +903,8 @@ module cardamom_io
 
     ! defining hardcoded MCMC options
     MCO%append = 1
-    MCO%nADAPT = 500
-    MCO%fADAPT = 1d0 !TLS:0.5
+    MCO%nADAPT = 500 !JFE put back 100 instead of 500
+    MCO%fADAPT = 1d0 !TLS:0.5 ! JFE replaced 1d0 by 0.5
     MCO%randparini = .false.
     MCO%returnpars = .false.
     MCO%fixedpars  = .false.

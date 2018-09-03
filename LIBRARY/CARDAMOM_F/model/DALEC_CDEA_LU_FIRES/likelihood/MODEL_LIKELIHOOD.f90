@@ -238,28 +238,28 @@ module model_likelihood_module
     ! Turnover of litter faster than turnover of som
 
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(9) > pars(8))) then
-        EDC1=0 ; EDCD%PASSFAIL(1)=0
+        EDC1 = 0 ; EDCD%PASSFAIL(1)=0
     endif
 
     ! litter2som greater than som to atm rate
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(1) < pars(9))) then
-       EDC1=0 ; EDCD%PASSFAIL(2)=0
+       EDC1 = 0 ; EDCD%PASSFAIL(2)=0
     endif
 
     ! turnover of foliage faster than turnover of wood
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(6) > torfol) then
-       EDC1=0 ; EDCD%PASSFAIL(3)=0
+       EDC1 = 0 ; EDCD%PASSFAIL(3)=0
     end if
 
     ! root turnover greater than som turnover at mean temperature
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(7) < (pars(9)*exp(pars(10)*meantemp)))) then
-       EDC1=0 ; EDCD%PASSFAIL(4)=0
+       EDC1 = 0 ; EDCD%PASSFAIL(4)=0
     endif
 
     ! GPP allocation to foliage and labile cannot be 5 orders of magnitude
     ! difference from GPP allocation to roots
     if ((EDC1 == 1 .or. DIAG == 1) .and. ((ffol+flab) > (5.*froot) .or. ((ffol+flab)*5.) < froot)) then
-       EDC1=0 ; EDCD%PASSFAIL(5)=0
+       EDC1 = 0 ; EDCD%PASSFAIL(5)=0
     endif
 
     ! could always add more / remove some
@@ -301,7 +301,7 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, DIAG, no_years, y, PEDC, nn, num_EDC
     double precision :: mean_pools(nopools), G, decay_coef, meangpp, EQF
-    double precision, dimension(:), allocatable :: mean_annual_pools
+    double precision, dimension(:,:), allocatable :: mean_annual_pools ! FE - 29/06/2018 changed dimensions to keep
     double precision :: fauto & ! Fractions of GPP to autotrophic respiration
              ,ffol  & ! Fraction of GPP to foliage
              ,flab  & ! Fraction of GPP to labile pool
@@ -327,6 +327,7 @@ module model_likelihood_module
     fsom=fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(8))
     flit=(froot+flab+ffol)
 
+
     ! derive mean pools
     do n = 1, nopools
        mean_pools(n)=cal_mean_pools(M_POOLS,n,nodays+1,nopools)
@@ -347,7 +348,7 @@ module model_likelihood_module
     ! allowed
     no_years=int(floor(sum(deltat)/365d0))
     G=0.1
-    allocate(mean_annual_pools(no_years))
+    allocate(mean_annual_pools(no_years,nopools)) ! JFE - 29/06/2018 changed allocated dimensions
 
     ! generate mean annual pool values
     do n = 1, nopools
@@ -355,16 +356,17 @@ module model_likelihood_module
        ! over N years. Rapid decay is dealth with in a later EDC
        do y = 1, no_years
           ! derive mean annual pools
-          mean_annual_pools(y)=cal_mean_annual_pools(M_POOLS,y,n,nopools,deltat,nodays+1)
+          mean_annual_pools(y,n)=cal_mean_annual_pools(M_POOLS,y,n,nopools,deltat,nodays+1)
+      !    print *, y,n, mean_annual_pools(y,n)
        end do ! year loop
        ! now check the growth rate
-       if ((EDC2 == 1 .or. DIAG == 1) .and. ((mean_annual_pools(no_years)/mean_annual_pools(1)) > (1.+G*real(no_years)))) then
+       if ((EDC2 == 1 .or. DIAG == 1) .and. ((mean_annual_pools(no_years,n)/mean_annual_pools(1,n)) > (1.+G*real(no_years)))) then
           EDC2=0 ; EDCD%PASSFAIL(7)=0
        endif
     end do ! pool loop
 
     ! done now so clean up
-    deallocate(mean_annual_pools)
+    !deallocate(mean_annual_pools)
 
     ! EDC 8
     ! assesses the exponential decay of each model pool
@@ -465,12 +467,19 @@ module model_likelihood_module
     
     do n = 1, nopools
         Sprox  = Fin(n) / Fout(n)
-        Sprox0 = Sprox * (mean_pools(n) / M_POOLS(1,n))
-       ! print *, n, Sprox, Sprox0
+        !Sprox0 = Sprox * (mean_pools(n) / M_POOLS(1,n))
+        ! JFE - 29/06/2018 perform check on first year rather than first time step
+         Sprox0 = Sprox * (mean_pools(n) / mean_annual_pools(1,n))
+      !  print *, n, Sprox, Sprox0
         if (abs(Sprox-Sprox0) > fin_fout_lim) then
             EDC2 = 0 ; EDCD%PASSFAIL(8+n) = 0
         end if
     end do
+
+ !   print *, "EDCs"
+ !   do n = 1, 14
+ !       print *, n, EDCD%PASSFAIL(n)
+ !   end do
 
     !
     ! EDCs done, below are additional fault detection conditions
@@ -506,7 +515,7 @@ module model_likelihood_module
     if (DIAG == 1) then
        do n = 1, num_EDC
           if (EDCD%PASSFAIL(n) == 0) then
-              EDC2=0
+              EDC2 = 0
           endif
        end do
     endif
@@ -515,6 +524,9 @@ module model_likelihood_module
    ! do n = 1, 14
    !     print*, n, EDCD%PASSFAIL(n)
    ! end do
+   
+    !JFE - 29/06/2018 now deallocate mean_annual_pools
+    deallocate(mean_annual_pools)
 
   end subroutine EDC2_CDEA_LU_FIRES
   !
@@ -753,6 +765,7 @@ module model_likelihood_module
                       ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
                       ,DATAin%M_GPP)
 
+        
        ! check edc2
        call EDC2_CDEA_LU_FIRES(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
@@ -781,6 +794,7 @@ module model_likelihood_module
 
     end if ! EDC == 1
 
+   
   end subroutine model_likelihood
   !
   !------------------------------------------------------------------
@@ -812,7 +826,7 @@ module model_likelihood_module
        end if
     end do
 
-    ! dont for get to return
+      ! dont for get to return
     return
 
   end function likelihood_p
@@ -852,6 +866,7 @@ module model_likelihood_module
 
     ! LAI log-likelihood
     tot_exp = 0.
+  !  print *, 'max modelled lai = ', maxval(DATAin%M_LAI)
     if (DATAin%nlai > 0) then
        ! loop split to allow vectorisation
        do n = 1, DATAin%nlai
@@ -1056,6 +1071,7 @@ module model_likelihood_module
        likelihood=log(infini)
     end if
     ! don't forget to return
+
     return
 
   end function likelihood

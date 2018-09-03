@@ -100,7 +100,7 @@ contains
     ! 3rd max daily temp (oC)
     ! 4th Radiation (MJ.m-2.day-1)
     ! 5th CO2 (ppm)
-    ! 6th DOY
+    ! 6th DOY at end of time step
     ! 7th removed fraction
     ! 8th burned fraction 
 
@@ -247,6 +247,7 @@ contains
       gpppars(3)=met(2,n) ! min temp
       gpppars(5)=met(5,n) ! co2
       gpppars(6)=ceiling(met(6,n)-(deltat(n)*0.5)) ! doy
+!      gpppars(6)=met(6,n)
       gpppars(8)=met(4,n) ! radiation
 
       ! GPP (gC.m-2.day-1)
@@ -354,7 +355,7 @@ contains
           ! set fluxes to zero
           FLUXES(n,17) = 0.
           FLUXES(n,18) = 0.
-          FLUXES(n,18) = 0.
+          FLUXES(n,19) = 0.
           FLUXES(n,20) = 0.
           FLUXES(n,21) = 0.
           FLUXES(n,22) = 0.
@@ -365,7 +366,6 @@ contains
           FLUXES(n,27) = 0.
           FLUXES(n,28) = 0.
       end if
-
 
     end do ! nodays loop
 
