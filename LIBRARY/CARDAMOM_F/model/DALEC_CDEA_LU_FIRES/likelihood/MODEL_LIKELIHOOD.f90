@@ -314,7 +314,7 @@ module model_likelihood_module
     double precision :: FT(nofluxes), Fin(nopools), Fout(nopools)
     double precision :: fin_fout_lim, Sprox, Sprox0
     integer :: nd, fl
-    
+
 
     ! update initial values
     DIAG=EDCD%DIAG
@@ -424,7 +424,7 @@ module model_likelihood_module
     !    EDC2 = 0 ; EDCD%PASSFAIL(12) = 0
     !endif
 
-    ! 27/06/2018 - JFE new EDC 8 to replace 9-12 to avoid dismissing simulations with early 
+    ! 27/06/2018 - JFE new EDC 8 to replace 9-12 to avoid dismissing simulations with early
     ! fires that could lead to exponential regrowth / decay (see Bloom et al PNAS 2016 SI)
 
     ! first calculate total flux for the whole simulation period
@@ -465,12 +465,12 @@ module model_likelihood_module
     ! 27/06/2018 - JFE new EDC 9 to check steady-state proximity
     ! see Bloom et al PNAS 2016 SI eq. S3, S4 and S5
     fin_fout_lim = 0.05
-    
+
     do n = 1, nopools
         Sprox  = Fin(n) / Fout(n)
-        Sprox0 = Sprox * (mean_pools(n) / M_POOLS(1,n))
+        !Sprox0 = Sprox * (mean_pools(n) / M_POOLS(1,n))
         ! JFE - 29/06/2018 perform check on first year rather than first time step
-       ! Sprox0 = Sprox * (mean_pools(n) / mean_annual_pools(1,n))
+        Sprox0 = Sprox * (mean_pools(n) / mean_annual_pools(1,n))
       !  print *, n, Sprox, Sprox0
         if (abs(Sprox-Sprox0) > fin_fout_lim) then
             EDC2 = 0 ; EDCD%PASSFAIL(8+n) = 0
@@ -525,7 +525,7 @@ module model_likelihood_module
     !do n = 1, 14
    !     print*, n, EDCD%PASSFAIL(n)
    ! end do
-   
+
     !JFE - 29/06/2018 now deallocate mean_annual_pools
     deallocate(mean_annual_pools)
 
@@ -766,7 +766,7 @@ module model_likelihood_module
                       ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
                       ,DATAin%M_GPP)
 
-        
+
        ! check edc2
        call EDC2_CDEA_LU_FIRES(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
@@ -795,7 +795,7 @@ module model_likelihood_module
 
     end if ! EDC == 1
 
-   
+
   end subroutine model_likelihood
   !
   !------------------------------------------------------------------
@@ -862,7 +862,7 @@ module model_likelihood_module
          ! note that division is the uncertainty
          tot_exp=tot_exp+((DATAin%M_GPP(dn)-DATAin%GPP(dn))/DATAin%GPP_unc(dn))**2
        end do
-       likelihood=likelihood-0.5*tot_exp
+       likelihood=likelihood-0.5*tot_exp/DATAin%ngpp
     endif
 
     ! LAI log-likelihood
@@ -889,7 +889,7 @@ module model_likelihood_module
              tot_exp=tot_exp+(-log(infini))
          endif
        end do
-       likelihood=likelihood-0.5*tot_exp
+       likelihood=likelihood-0.5*tot_exp/DATAin%nlai
     endif
 
     ! NEE likelihood
@@ -900,7 +900,7 @@ module model_likelihood_module
          ! note that division is the uncertainty
          tot_exp=tot_exp+((DATAin%M_NEE(dn)-DATAin%NEE(dn))/DATAin%NEE_unc(dn))**2
        end do
-       likelihood=likelihood-0.5*tot_exp
+       likelihood=likelihood-0.5*tot_exp/DATAin%nnee
     endif
 
     ! Reco likelihood
@@ -912,7 +912,7 @@ module model_likelihood_module
          ! note that we calculate the Ecosystem resp from GPP and NEE
          tot_exp=tot_exp+((tmp_var-DATAin%Reco(dn))/DATAin%Reco_unc(dn))**2
        end do
-       likelihood=likelihood-0.5*tot_exp
+       likelihood=likelihood-0.5*tot_exp/DATAin%nreco
     endif
 
     ! Cwood increment log-likelihood
@@ -924,7 +924,7 @@ module model_likelihood_module
          tot_exp=tot_exp+(log((DATAin%M_POOLS(dn,4)-DATAin%M_POOLS(dn-365,4)) &
                           / DATAin%WOO(dn))/log(DATAin%WOO_unc(dn)))**2
        end do
-       likelihood=likelihood-0.5*tot_exp
+       likelihood=likelihood-0.5*tot_exp/DATAin%nwoo
     endif
 
     ! Cfoliage log-likelihood
@@ -937,7 +937,7 @@ module model_likelihood_module
          tot_exp=tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) &
                           / (DATAin%Cfol_stock(dn)*DATAin%Cfol_stock_unc(dn)))**2
        end do
-       likelihood=likelihood-0.5*tot_exp
+       likelihood=likelihood-0.5*tot_exp/DATAin%nCfol_stock
     endif
 
     ! Annual foliar maximum
@@ -963,7 +963,7 @@ module model_likelihood_module
          tot_exp=tot_exp+((tmp_var-DATAin%Cfolmax_stock(dn)) &
                           / (DATAin%Cfolmax_stock(dn)*DATAin%Cfolmax_stock_unc(dn)))**2
        end do
-       likelihood=likelihood-0.5*tot_exp
+       likelihood=likelihood-0.5*tot_exp/DATAin%nCfolmax_stock
     endif
 
     ! Cwood log-likelihood (i.e. branch, stem and CR)
@@ -976,7 +976,7 @@ module model_likelihood_module
 !         tot_exp=tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/(DATAin%Cwood_stock(dn)*0.20))**2.
          tot_exp=tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/(DATAin%Cwood_stock(dn)*DATAin%Cwood_stock_unc(dn)))**2
        end do
-       likelihood=likelihood-0.5*tot_exp
+       likelihood=likelihood-0.5*tot_exp/DATAin%nCwood_stock
     endif
 
     ! Cagb log-likelihood
@@ -988,7 +988,7 @@ module model_likelihood_module
          tmp_var = DATAin%M_POOLS(dn,4)-(DATAin%M_POOLS(dn,4)*pars(29))
          tot_exp=tot_exp+((tmp_var-DATAin%Cagb_stock(dn))/(DATAin%Cagb_stock(dn)*DATAin%Cagb_stock_unc(dn)))**2
        end do
-       likelihood=likelihood-0.5*tot_exp
+       likelihood=likelihood-0.5*tot_exp/DATAin%nCagb_stock
     endif
 
     ! Cstem log-likelihood
@@ -1000,7 +1000,7 @@ module model_likelihood_module
          tmp_var = DATAin%M_POOLS(dn,4)-( (DATAin%M_POOLS(dn,4)*pars(29))+((DATAin%M_POOLS(dn,4)*pars(28))) )
          tot_exp=tot_exp+((tmp_var-DATAin%Cstem_stock(dn))/(DATAin%Cstem_stock(dn)*DATAin%Cstem_stock_unc(dn)))**2
        end do
-       likelihood=likelihood-0.5*tot_exp
+       likelihood=likelihood-0.5*tot_exp/DATAin%nCstem_stock
     endif
 
     ! Cbranch log-likelihood
@@ -1012,7 +1012,7 @@ module model_likelihood_module
          tmp_var = DATAin%M_POOLS(dn,4)*pars(28)
          tot_exp=tot_exp+((tmp_var-DATAin%Cbranch_stock(dn))/(DATAin%Cbranch_stock(dn)*DATAin%Cbranch_stock_unc(dn)))**2
        end do
-       likelihood=likelihood-0.5*tot_exp
+       likelihood=likelihood-0.5*tot_exp/DATAin%nCbranch_stock
     endif
 
     ! Ccoarseroot log-likelihood
@@ -1024,7 +1024,7 @@ module model_likelihood_module
          tmp_var = DATAin%M_POOLS(dn,4)*pars(29)
          tot_exp=tot_exp+((tmp_var-DATAin%Ccoarseroot_stock(dn))/(DATAin%Ccoarseroot_stock(dn)*DATAin%Ccoarseroot_stock_unc(dn)))**2
        end do
-       likelihood=likelihood-0.5*tot_exp
+       likelihood=likelihood-0.5*tot_exp/DATAin%nCcoarseroot_stock
     endif
 
     ! Croots log-likelihood
@@ -1037,7 +1037,7 @@ module model_likelihood_module
          tot_exp=tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) &
                          / (DATAin%Croots_stock(dn)*DATAin%Croots_stock_unc(dn)))**2
        end do
-       likelihood=likelihood-0.5*tot_exp
+       likelihood=likelihood-0.5*tot_exp/DATAin%nCroots_stock
     endif
 
     ! Clitter log-likelihood
@@ -1052,7 +1052,7 @@ module model_likelihood_module
          tot_exp=tot_exp+(((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
                            *(DATAin%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/(DATAin%Clit_stock(dn)*DATAin%Clit_stock_unc(dn)))**2
       end do
-       likelihood=likelihood-0.5*tot_exp
+       likelihood=likelihood-0.5*tot_exp/DATAin%nClit_stock
     endif
 
     ! Csom log-likelihood
@@ -1064,7 +1064,7 @@ module model_likelihood_module
 !         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,6)/DATAin%Csom_stock(dn))/log(2.))**2.
          tot_exp=tot_exp+((DATAin%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/(DATAin%Csom_stock(dn)*DATAin%Csom_stock_unc(dn)))**2
        end do
-       likelihood=likelihood-0.5*tot_exp
+       likelihood=likelihood-0.5*tot_exp/DATAin%nCsom_stock
     endif
 
     ! check that log-likelihood is an actual number

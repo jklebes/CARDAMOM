@@ -256,8 +256,8 @@ contains
 
     ! calculate constants
     minstepsize = 10000d0/dble(N%ITER)
-  !  if (minstepsize > 0.01d0) minstepsize = 0.01d0
-    if (minstepsize > 0.001d0) minstepsize = 0.001d0 !JFE minstepsize to 1e-3
+    if (minstepsize > 0.01d0) minstepsize = 0.01d0
+  !  if (minstepsize > 0.001d0) minstepsize = 0.001d0 !JFE minstepsize to 1e-3
     ! determine local acceptance rate
     N%ACCRATE = dble(N%ACCLOC)/dble(MCO%nADAPT)
 !print*,"N%ACCRATE",N%ACCRATE
