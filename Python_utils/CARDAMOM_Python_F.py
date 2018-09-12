@@ -497,7 +497,7 @@ if __name__ == "__main__":
 
     import pandas as pd
     # example project using data in drivers.csv file
-    data                = pd.read_csv('drivers.csv',parse_dates = True, index_col = 'date').iloc[:730]
+    data                = pd.read_csv('drivers.csv',parse_dates = True, index_col = 'date')['2000-01-01':'2009-12-31']
 
     # get drivers and reshape as 3D array - only 1st year
     drivers             = np.zeros([data.shape[0],8])

@@ -468,9 +468,9 @@ module model_likelihood_module
     
     do n = 1, nopools
         Sprox  = Fin(n) / Fout(n)
-       ! Sprox0 = Sprox * (mean_pools(n) / M_POOLS(1,n))
+        Sprox0 = Sprox * (mean_pools(n) / M_POOLS(1,n))
         ! JFE - 29/06/2018 perform check on first year rather than first time step
-        Sprox0 = Sprox * (mean_pools(n) / mean_annual_pools(1,n))
+       ! Sprox0 = Sprox * (mean_pools(n) / mean_annual_pools(1,n))
       !  print *, n, Sprox, Sprox0
         if (abs(Sprox-Sprox0) > fin_fout_lim) then
             EDC2 = 0 ; EDCD%PASSFAIL(8+n) = 0
