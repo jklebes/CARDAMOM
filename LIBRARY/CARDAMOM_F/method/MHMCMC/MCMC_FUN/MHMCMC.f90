@@ -256,8 +256,8 @@ contains
 
     ! calculate constants
     minstepsize = 10000d0/dble(N%ITER)
-    if (minstepsize > 0.01d0) minstepsize = 0.01d0
- !   if (minstepsize > 0.001d0) minstepsize = 0.001d0 !JFE minstepsize to 1e-3
+  !  if (minstepsize > 0.01d0) minstepsize = 0.01d0
+    if (minstepsize > 0.001d0) minstepsize = 0.001d0 !JFE minstepsize to 1e-3
     ! determine local acceptance rate
     N%ACCRATE = dble(N%ACCLOC)/dble(MCO%nADAPT)
 !print*,"N%ACCRATE",N%ACCRATE
@@ -274,7 +274,7 @@ contains
     ! this is the adaptive part (Bloom et al., 2015)
     ! NOTE: original value was > 3, however this result in a biased estimate of
     ! the standard deviation to a lower value.
-    if (N%ACCLOC > 10 .and. N%ACCRATE < 0.23d0) then
+    if (N%ACCLOC > 3 .and. N%ACCRATE < 0.23d0) then ! JFE replaced 10 by 3
         do p = 1, PI%npars
            do i = 1, N%ACCLOC
               norparvec(i) = par2nor(PARSALL((PI%npars*(i-1))+p),PI%parmin(p),PI%parmax(p))

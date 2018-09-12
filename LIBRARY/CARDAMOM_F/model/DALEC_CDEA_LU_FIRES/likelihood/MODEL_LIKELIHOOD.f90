@@ -331,6 +331,7 @@ module model_likelihood_module
     ! derive mean pools
     do n = 1, nopools
        mean_pools(n)=cal_mean_pools(M_POOLS,n,nodays+1,nopools)
+    !   print *, n, mean_pools(n),M_POOLS(1,n)
     end do
 
     !
@@ -467,9 +468,9 @@ module model_likelihood_module
     
     do n = 1, nopools
         Sprox  = Fin(n) / Fout(n)
-        !Sprox0 = Sprox * (mean_pools(n) / M_POOLS(1,n))
+       ! Sprox0 = Sprox * (mean_pools(n) / M_POOLS(1,n))
         ! JFE - 29/06/2018 perform check on first year rather than first time step
-         Sprox0 = Sprox * (mean_pools(n) / mean_annual_pools(1,n))
+        Sprox0 = Sprox * (mean_pools(n) / mean_annual_pools(1,n))
       !  print *, n, Sprox, Sprox0
         if (abs(Sprox-Sprox0) > fin_fout_lim) then
             EDC2 = 0 ; EDCD%PASSFAIL(8+n) = 0
@@ -521,7 +522,7 @@ module model_likelihood_module
     endif
 
     !JFE to print EDCs
-   ! do n = 1, 14
+    !do n = 1, 14
    !     print*, n, EDCD%PASSFAIL(n)
    ! end do
    

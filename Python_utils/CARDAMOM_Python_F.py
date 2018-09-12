@@ -317,7 +317,7 @@ class CARDAMOM_F(object):
 
     def compile_local(self, compiler ='ifort', flags ='-O2'):
         """
-        This method compiles the code locally, using ifort 
+        This method compiles the code locally, using ifort
         with optimization flags by default.
         """
 
@@ -334,7 +334,7 @@ class CARDAMOM_F(object):
         #set compiler and options in the command
         cmd = '%s %s' % (compiler, flags)
 
-        # copied file order from Luke's        
+        # copied file order from Luke's
         cmd += ' %s/misc/math_functions.f90 %s/misc/oksofar.f90' % (path2lib,path2lib)  # helpful functions
         cmd += ' %s/model/%s/src/%s.f90' % (path2lib,model,model)                       # the model itself
         if model+'_CROP.f90' in os.listdir('%s/model/%s/src/' % (path2lib,model)):
@@ -344,7 +344,7 @@ class CARDAMOM_F(object):
         cmd += ' %s/model/%s/src/%s_PARS.f90' % (path2lib,model,model)                  # the file holding boundary values of parameters
         cmd += ' %s/general/cardamom_io.f90' % (path2lib)                               # the file with the IO functions
         cmd += ' %s/method/MHMCMC/MCMC_FUN/MHMCMC.f90' % (path2lib)                     # the actual MCMC function
-        cmd += ' %s/model/%s/likelihood/MODEL_LIKELIHOOD.f90' % (path2lib,model)        # the likelihood files / includes EDCs        
+        cmd += ' %s/model/%s/likelihood/MODEL_LIKELIHOOD.f90' % (path2lib,model)        # the likelihood files / includes EDCs
         cmd += ' %s/general/cardamom_main.f90' % (path2lib)                             # the main file
         cmd += ' -o %s' % path2exe
 
@@ -353,7 +353,7 @@ class CARDAMOM_F(object):
 
     def compile_f2py(self, fcompiler = 'intelem', opt ='-O2'):
         """
-        This method compiles the f2py version of the source code that should exist in the 
+        This method compiles the f2py version of the source code that should exist in the
         same folder as the code
         """
         path2lib = '%s/%s/src/' % (self.paths["projects"],self.project_name)
@@ -361,7 +361,7 @@ class CARDAMOM_F(object):
         #first check that there is an f2py version - by convention it should be name <model>_f2py.f90
         if model+'_f2py.f90' in os.listdir('%s/model/%s/src/' % (path2lib,model)):
             path2src = '%s/model/%s/src/%s_f2py.f90' % (path2lib,model,model)
-    
+
             cmd = 'f2py -c -m f2py_%s --fcompiler="%s" --opt="%s" %s' % (model,fcompiler,opt,path2src)
 
             print cmd
@@ -391,7 +391,7 @@ class CARDAMOM_F(object):
         """
         This method compiles the code on the hpc
         """
-        
+
         path2lib = '%s/%s/src/' % (self.paths["projects"],self.project_name)
         path2lib_hpc = '%s/%s/%s/src/' % (self.paths['hpc_directory'],self.paths['hpc_username'],self.project_name)
         model = self.model
@@ -401,7 +401,7 @@ class CARDAMOM_F(object):
         #set compiler and options in the command
         cmd = '%s %s' % (compiler, flags)
 
-        # copied file order from Luke's        
+        # copied file order from Luke's
         cmd += ' %s/misc/math_functions.f90 %s/misc/oksofar.f90' % (path2lib_hpc,path2lib_hpc)  # helpful functions
         cmd += ' %s/model/%s/src/%s.f90' % (path2lib_hpc,model,model)                           # the model itself
         if model+'_CROP.f90' in os.listdir('%s/model/%s/src/' % (path2lib,model)):
@@ -411,7 +411,7 @@ class CARDAMOM_F(object):
         cmd += ' %s/model/%s/src/%s_PARS.f90' % (path2lib_hpc,model,model)                      # the file holding boundary values of parameters
         cmd += ' %s/general/cardamom_io.f90' % (path2lib_hpc)                                   # the file with the IO functions
         cmd += ' %s/method/MHMCMC/MCMC_FUN/MHMCMC.f90' % (path2lib_hpc)                         # the actual MCMC function
-        cmd += ' %s/model/%s/likelihood/MODEL_LIKELIHOOD.f90' % (path2lib_hpc,model)            # the likelihood files / includes EDCs        
+        cmd += ' %s/model/%s/likelihood/MODEL_LIKELIHOOD.f90' % (path2lib_hpc,model)            # the likelihood files / includes EDCs
         cmd += ' %s/general/cardamom_main.f90' % (path2lib_hpc)                                 # the main file
         cmd += ' -o %s' % path2exe_hpc
 
@@ -450,7 +450,7 @@ class CARDAMOM_F(object):
         This method submits the jobs on the cluster, with string of options
         """
 
-    
+
 
     def download_hpc(self, **kwargs):
         """
@@ -497,11 +497,11 @@ if __name__ == "__main__":
 
     import pandas as pd
     # example project using data in drivers.csv file
-    data                = pd.read_csv('drivers.csv',parse_dates = True, index_col = 'date')
+    data                = pd.read_csv('drivers.csv',parse_dates = True, index_col = 'date').iloc[:730]
 
     # get drivers and reshape as 3D array - only 1st year
     drivers             = np.zeros([data.shape[0],8])
-    drivers[:,:-2]      = data.get_values()[:,:-1] 
+    drivers[:,:-2]      = data.get_values()[:,:-1]
     drivers             = np.expand_dims(drivers,0)
 
     #get observations and reshape as 3D array
