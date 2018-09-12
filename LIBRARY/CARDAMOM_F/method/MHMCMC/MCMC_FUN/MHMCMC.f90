@@ -274,7 +274,7 @@ contains
     ! this is the adaptive part (Bloom et al., 2015)
     ! NOTE: original value was > 3, however this result in a biased estimate of
     ! the standard deviation to a lower value.
-    if (N%ACCLOC > 3 .and. N%ACCRATE < 0.23d0) then ! JFE replaced 10 by 3
+    if (N%ACCLOC > 10 .and. N%ACCRATE < 0.23d0) then
         do p = 1, PI%npars
            do i = 1, N%ACCLOC
               norparvec(i) = par2nor(PARSALL((PI%npars*(i-1))+p),PI%parmin(p),PI%parmax(p))
