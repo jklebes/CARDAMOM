@@ -526,6 +526,15 @@ class CARDAMOM_F(object):
 
         return pd.DataFrame(parsets)
 
+    def rerun_pixel(self, run=1, pixel=1, chain=1, burnin = 0.5):
+        """
+        This method reruns the output for a defined pixel using parameter sets
+        stored in the corresponding file. The burnin option indicates the fraction
+        of the parameter sets that should be disregarded as burn in of the MCMC
+        """
+
+        
+
 if __name__ == "__main__":
 
 
