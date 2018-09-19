@@ -607,7 +607,7 @@ if __name__ == "__main__":
 
     #define observations uncertainty and reshape as 3D array
     obsunc              = np.zeros(obs.shape)-9999.
-    obsunc[obs!=-9999.] = 2.
+    obsunc[obs!=-9999.] = .5
 
     # define lat / lon
     lat                 = np.array([-12.75])
