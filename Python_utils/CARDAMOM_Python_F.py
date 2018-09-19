@@ -94,9 +94,9 @@ class CARDAMOM_F(object):
         nfluxes= (3, 16, 21, 16, 16, 18, 18, 28, 18, 20, 21, 18, 19, 19, 21,
                     21, 24, 25, 28)
 
-        self.nofluxes = nfluxes[self.modelid]
-        self.nopars   = npars[self.modelid]
-        self.nopools  = npools[self.modelid]
+        self.nfluxes = nfluxes[self.modelid]
+        self.npars   = npars[self.modelid]
+        self.npools  = npools[self.modelid]
 
         self.save_project()
 
@@ -379,12 +379,12 @@ class CARDAMOM_F(object):
         if model+'_f2py.f90' in os.listdir('%s/model/%s/src/' % (path2lib,model)):
             path2src = '%s/model/%s/src/%s_f2py.f90' % (path2lib,model,model)
 
-            cmd = 'f2py -c -m f2py_%s --fcompiler="%s" --opt="%s" %s' % (model,fcompiler,opt,path2src)
+            cmd = 'f2py -c -m f2py_model --fcompiler="%s" --opt="%s" %s' % (fcompiler,opt,path2src)
 
             print cmd
             # compile and copy
             os.system(cmd)
-            os.system('mv f2py_%s.so %s/%s/exec/' % (model,self.paths["projects"],self.project_name) )
+            os.system('mv f2py_model.so %s/%s/exec/' % (self.paths["projects"],self.project_name) )
         else:
             print 'No f2py source file found'
 
@@ -509,11 +509,14 @@ class CARDAMOM_F(object):
             else:
                 os.system("scp -r %s:%s %s" % (hpc_details,src,dst))
 
-    def read_output(self, run=1, pixel=1, chain=1):
+    def read_output(self, run=1, pixel=1, chain=1, burnin = 0.5):
         """
         This method reads output files for a specified pixel and run and returns
         it in a pandas DataFrame. Output files have to be stored under
         self.
+        The burnin option indicate the fraction of the output file to be
+        disregarded as the MCMC burnin. If burnin < 1., the method disregards a
+        fraction of the file, else it ignores the number of parameter sets specified.
         """
 
         #first define the path to the file
@@ -521,10 +524,18 @@ class CARDAMOM_F(object):
         path += self.project_name+'_%05i_%i_PARS' % (pixel,chain)
 
         #get the number of parameters from the object
-        npar = self.nopars
+        npar = self.npars
         fpars=file(path,'rb')
         content=fpars.read()
         parsets=np.array(struct.unpack((len(content)/8)*'d',content)).reshape([len(content)/(8*(npar+1)),npar+1])
+
+
+        if burnin < 1:
+            keep = int(parsets.shape[0]*burnin)
+        elif burnin > 1:
+            keep = burnin
+
+        parsets = parsets[keep:]
 
         return pd.DataFrame(parsets)
 
@@ -535,7 +546,48 @@ class CARDAMOM_F(object):
         of the parameter sets that should be disregarded as burn in of the MCMC
         """
 
-        
+        # first reads the parameters
+        parsets = self.read_output(run=run,pixel=pixel,chain=chain, burnin=burnin).values[:,:-1]
+        nparsets= parsets.shape[0]
+        #add path to f2py compiled module to sys
+        path2f2py = "%s/%s/exec/" % (self.paths["projects"],self.project_name)
+        if path2f2py not in sys.path:
+            sys.path.append(path2f2py)
+        # import the f2py module
+        if 'f2py_model.so' in os.listdir(path2f2py):
+            from f2py_model import carbon_model
+            print('Loaded f2py_model.so')
+        else:
+            print('Module f2py_model.so not found, use method compile_f2py')
+            return None
+
+        #### now entering the actual running phase
+        # first get the pixel's general info -
+        # /!\ pixels are indexed from 0, but files start at 1
+        pixid   = pixel-1
+        #create / load invariant parameters
+        start   = 1
+        finish  = self.nsteps
+        met     = self.drivers[pixid].T
+        #create the deltat time series
+        deltat  = np.append([self.drivers[pixid,0,0]],np.diff(self.drivers[pixid,:,0]))
+        lat     = self.lat[pixid]
+        #now create arrays that will store the output
+        lai     = np.empty([nparsets,self.nsteps])
+        nee     = np.empty([nparsets,self.nsteps])
+        fluxes  = np.empty([nparsets,self.nsteps,self.nfluxes])
+        pools   = np.empty([nparsets,self.nsteps+1,self.nfluxes])
+        gpp     = np.empty([nparsets,self.nsteps])
+
+        #now loop over the parameter sets
+        for pp,pars in enumerate(parsets):
+            lai[pp],nee[pp],fluxes[pp],pools[pp],gpp[pp] = carbon_model(start,finish,
+                                                                        met,pars,deltat,
+                                                                        lat,lai[pp],
+                                                                        nee[pp],fluxes[pp],
+                                                                        pools[pp],gpp[pp])
+
+        return dict(lai=lai,nee=nee,fluxes=fluxes,pools=pools,gpp=gpp)
 
 if __name__ == "__main__":
 
