@@ -478,7 +478,7 @@ class CARDAMOM_F(object):
 
         hpc_details = "%s@%s" % (self.paths["hpc_username"],self.paths["hpc_address"])
 
-        src = "%s/%s/output/*" % (self.paths["hpc_directory"],self.project_name)
+        src = "%s/%s/%s/output/*" % (self.paths["hpc_directory"],self.paths["hpc_username"],self.project_name)
 
         #create the output folder
         if "output" not in os.listdir("%s/%s" % (self.paths["projects"],self.project_name)):
