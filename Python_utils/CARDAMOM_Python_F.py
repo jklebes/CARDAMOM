@@ -1,7 +1,9 @@
 """
 19 September 2018 - JFE
-Added a method to read output files and return them directly as a pandas
+Added:
+- a method to read output files and return them directly as a pandas
 DataFrame
+- a method to rerun a pixel with parameter sets stored in an output file
 
 17 April 2018 - JFE
 This file is an adaptation of CARDAMOM_Python_C.py and contains the

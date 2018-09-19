@@ -1,50 +1,4 @@
 
-module CARBON_MODEL_MOD
-
-implicit none
-
-! make all private
-private
-
-! explicit publics
-public :: CARBON_MODEL     &
-         ,soil_frac_clay   &
-         ,soil_frac_sand   &
-         ,nos_soil_layers  &
-         ,extracted_C      &
-         ,dim_1,dim_2      &
-         ,nos_trees        &
-         ,nos_inputs       &
-         ,leftDaughter     &
-         ,rightDaughter    &
-         ,nodestatus       &
-         ,xbestsplit       &
-         ,nodepred         &
-         ,bestvar
-
-! forest rotation specific info
-double precision, allocatable, dimension(:) :: extracted_C
-
-! arrays for the emulator, just so we load them once and that is it cos they be
-! massive
-integer ::    dim_1, & ! dimension 1 of response surface
-              dim_2, & ! dimension 2 of response surface
-          nos_trees, & ! number of trees in randomForest
-         nos_inputs    ! number of driver inputs
-
-double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daughter for forest
-                                                    rightDaughter, & ! right daughter for forets
-                                                       nodestatus, & ! nodestatus for forests
-                                                       xbestsplit, & ! for forest
-                                                         nodepred, & ! prediction value for each tree
-                                                          bestvar    ! for randomForests
-
-! for consisteny between requirements of different models
-integer, parameter :: nos_root_layers = 2, nos_soil_layers = nos_root_layers + 1
-double precision, dimension(nos_soil_layers) :: soil_frac_clay,soil_frac_sand
-
-contains
-!
 !--------------------------------------------------------------------
 !
   subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,lai,NEE,FLUXES,POOLS &
@@ -80,13 +34,19 @@ contains
                          ,pars(nopars)      & ! number of parameters
                          ,lat                 ! site latitude (degrees)
 
+!f2py intent(in) :: met,deltat,pars,lat
+
     double precision, dimension(nodays), intent(inout) :: lai & ! leaf area index
                                                ,GPP & ! Gross primary productivity
                                                ,NEE   ! net ecosystem exchange of CO2
+!f2py intent(in,out) :: lai, GPP, NEE
 
     double precision, dimension((nodays+1),nopools), intent(inout) :: POOLS ! vector of ecosystem pools
+!f2py intent(in,out) :: POOLS
 
     double precision, dimension(nodays,nofluxes), intent(inout) :: FLUXES ! vector of ecosystem fluxes
+!f2py intent(in,out) :: FLUXES
+
 
     ! declare local variables
     double precision :: gpppars(12)            & ! ACM inputs (LAI+met)
@@ -219,8 +179,11 @@ contains
     ml=1.001
 
     ! offset for labile and leaf turnovers
-    osf=ospolynomial(pars(5),wf)
-    osl=ospolynomial(ml,wl)
+    ! osf=ospolynomial(pars(5),wf)
+    ! osl=ospolynomial(ml,wl)
+    ! JFE replaced by subroutine for f2py compatiblity
+    call ospolynomial(osf,pars(5),wf)
+    call ospolynomial(osl,ml,wl)
 
     ! scaling to biyearly sine curve
     sf=365.25/pi
@@ -255,7 +218,10 @@ contains
       gpppars(8)=met(4,n) ! radiation
 
       ! GPP (gC.m-2.day-1)
-      FLUXES(n,1) = acm(gpppars,constants)
+      !FLUXES(n,1) = acm(gpppars,constants)
+      ! JFE replaced by subroutine for f2py compatiblity
+      call acm(FLUXES(n,1),gpppars,constants)
+
       ! temprate (i.e. temperature modified rate of metabolic activity))
       FLUXES(n,2) = exp(pars(10)*0.5*(met(3,n)+met(2,n)))
       ! autotrophic respiration (gC.m-2.day-1)
@@ -376,14 +342,17 @@ contains
   end subroutine CARBON_MODEL
   !
   !------------------------------------------------------------------
-  !
-  double precision function acm(drivers,constants)
+  ! change from function to subroutine for f2py
+  subroutine acm(gpp,drivers,constants)
 
     ! the Aggregated Canopy Model, is a Gross Primary Productivity (i.e.
     ! Photosyntheis) emulator which operates at a daily time step. ACM can be
     ! paramaterised to provide reasonable results for most ecosystems.
 
     implicit none
+
+    ! JFE declare inout
+    double precision, intent(inout) :: gpp
 
     ! declare input variables
     double precision, intent(in) :: drivers(12) & ! acm input requirements
@@ -463,21 +432,24 @@ contains
     ! calculate combined light and CO2 limited photosynthesis
     cps=e0*radiation*pd/(e0*radiation+pd)
     ! correct for day length variation
-    acm=cps*(dayl_coef*dayl+dayl_const)
+    gpp=cps*(dayl_coef*dayl+dayl_const)
 
     ! don't forget to return
     return
 
-  end function acm
+end subroutine acm !JFE end subroutine 19/09/2018
   !
   !------------------------------------------------------------------
   !
-  double precision function ospolynomial(L,w)
+  subroutine ospolynomial(osp,L,w)
 
     ! Function calculates the day offset for Labile release and leaf turnover
     ! functions
 
     implicit none
+
+    ! JFE - define osp
+    double precision, intent(inout) :: osp
 
     ! declare input variables
     double precision, intent(in) ::  L, w ! polynomial coefficients and scaling factor
@@ -498,12 +470,12 @@ contains
     LLog=log(L-1.)
 
     ! calculate the polynomial function
-    ospolynomial=(mxc(1)*LLog**6. + mxc(2)*LLog**5. + &
+    osp = (mxc(1)*LLog**6. + mxc(2)*LLog**5. + &
                   mxc(3)*LLog**4. + mxc(4)*LLog**3. + &
                   mxc(5)*LLog**2. + mxc(6)*LLog     + mxc(7))*w
 
-  end function ospolynomial
+  end subroutine ospolynomial
 !
 !--------------------------------------------------------------------
 !
-end module CARBON_MODEL_MOD
+!end module CARBON_MODEL_MOD
