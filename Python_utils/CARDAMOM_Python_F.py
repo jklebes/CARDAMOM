@@ -81,6 +81,16 @@ class CARDAMOM_F(object):
             else:
                 print "Unknown project type"
 
+        npools = (2, 6, 8, 6, 8, 6, 6, 10, 7, 7, 10, 6, 9, 9, 12, 12, 7, 8, 6)
+        npars  = (20, 23, 40, 22, 34, 23, 33, 53, 36, 37, 49, 36, 46, 44, 57,
+                    61, 38, 48, 23)
+        nfluxes= (3, 16, 21, 16, 16, 18, 18, 28, 18, 20, 21, 18, 19, 19, 21,
+                    21, 24, 25, 28)
+
+        self.nofluxes = nfluxes[self.modelid]
+        self.nopars   = npars[self.modelid]
+        self.nopools  = npools[self.modelid]
+
         self.save_project()
 
 
