@@ -1,4 +1,8 @@
 """
+19 September 2018 - JFE
+Added a method to read output files and return them directly as a pandas
+DataFrame
+
 17 April 2018 - JFE
 This file is an adaptation of CARDAMOM_Python_C.py and contains the
 CARDAMOM_F class to store CARDAMOM projects running with the Fortran
@@ -12,6 +16,7 @@ import numpy as np
 from netCDF4 import Dataset
 import shutil, socket
 import sys
+import pandas as pd
 
 class CARDAMOM_F(object):
 
@@ -502,10 +507,28 @@ class CARDAMOM_F(object):
             else:
                 os.system("scp -r %s:%s %s" % (hpc_details,src,dst))
 
+    def read_output(self, run=1, pixel=1, chain=1):
+        """
+        This method reads output files for a specified pixel and run and returns
+        it in a pandas DataFrame. Output files have to be stored under
+        self.
+        """
+
+        #first define the path to the file
+        path = self.paths['projects'] + self.project_name + '/output/run_%03i/' % (run)
+        path += self.project_name+'_%05i_%i_PARS' % (pixel,chain)
+
+        #get the number of parameters from the object
+        npar = self.nopars
+        fpars=file(path,'rb')
+        content=fpars.read()
+        parsets=np.array(struct.unpack((len(content)/8)*'d',content)).reshape([len(content)/(8*(npar+1)),npar+1])
+
+        return pd.DataFrame(parsets)
 
 if __name__ == "__main__":
 
-    import pandas as pd
+
     # example project using data in drivers.csv file
     data                = pd.read_csv('drivers.csv',parse_dates = True, index_col = 'date')
 
