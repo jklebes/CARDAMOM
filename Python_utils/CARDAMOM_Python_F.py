@@ -576,7 +576,7 @@ class CARDAMOM_F(object):
         lai     = np.empty([nparsets,self.nsteps])
         nee     = np.empty([nparsets,self.nsteps])
         fluxes  = np.empty([nparsets,self.nsteps,self.nfluxes])
-        pools   = np.empty([nparsets,self.nsteps+1,self.nfluxes])
+        pools   = np.empty([nparsets,self.nsteps+1,self.npools])
         gpp     = np.empty([nparsets,self.nsteps])
 
         #now loop over the parameter sets
@@ -588,6 +588,7 @@ class CARDAMOM_F(object):
                                                                         pools[pp],gpp[pp])
 
         return dict(lai=lai,nee=nee,fluxes=fluxes,pools=pools,gpp=gpp)
+
 
 if __name__ == "__main__":
 
