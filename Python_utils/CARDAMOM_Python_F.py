@@ -42,10 +42,10 @@ class CARDAMOM_F(object):
         # load if project exists
         if self.project_name in os.listdir(self.paths["projects"]):
             if self.project_name+".pData" in os.listdir('/'.join([self.paths["projects"],self.project_name])):
-                print "Project \"%s\" found" % self.project_name
+                print("Project \"%s\" found" % self.project_name)
                 self.load_project()
             else:
-                print "Project directory found but file %s.pData could not be found" % self.project_name
+                print("Project directory found but file %s.pData could not be found" % self.project_name)
                 self.new_project()
         else:
             os.mkdir('/'.join([self.paths["projects"],self.project_name]))
@@ -76,17 +76,17 @@ class CARDAMOM_F(object):
         if 'model' in kwargs:
             self.model = kwargs['model']
             if self.model not in types:
-                print "Warning - Unrecognized model version"
+                print("Warning - Unrecognized model version")
         else:
-            print "Available model types"
+            print("Available model types")
             for mm,modname in enumerate(types):
-                print '%02i - %s' % (mm,modname)
+                print('%02i - %s' % (mm,modname))
             projtype=raw_input("Choose model type from list above\n> ")
             if projtype != "":
                 self.model = types[int(projtype)]
                 self.modelid = int(projtype)
             else:
-                print "Unknown project type"
+                print("Unknown project type")
 
         npools = (2, 6, 8, 6, 8, 6, 6, 10, 7, 7, 10, 6, 9, 9, 12, 12, 7, 8, 6)
         npars  = (20, 23, 40, 22, 34, 23, 33, 53, 36, 37, 49, 36, 46, 44, 57,
@@ -146,9 +146,9 @@ class CARDAMOM_F(object):
 
         hostname = socket.gethostname()
         if "paths" in dir(self):
-            print "Paths found in project"
+            print("Paths found in project")
         else:
-            print "Paths need to be defined"
+            print("Paths need to be defined")
             if "default_paths_%s.pData" % (hostname) in os.listdir(os.getcwd()):
                 usedefault = raw_input("Use default paths <y/n>? ")
                 if usedefault == 'y':
@@ -158,7 +158,7 @@ class CARDAMOM_F(object):
                 else:
                     self.define_paths()
             else:
-                print "No default paths found... defining paths now"
+                print("No default paths found... defining paths now")
                 self.define_paths()
 
     def define_paths(self):
@@ -251,9 +251,9 @@ class CARDAMOM_F(object):
         self.ndrivers       = drivers.shape[2]
         self.nobs           = obs.shape[2]
 
-        print "Project data succesfully loaded, now saving...   ",
+        print("Project data succesfully loaded, now saving...   ",)
         self.save_project()
-        print "DONE"
+        print("DONE")
 
     def createInput(self):
         """
@@ -265,10 +265,10 @@ class CARDAMOM_F(object):
         path2data = path2project+"/data/"
 
         if "data" not in os.listdir(path2project):
-            print "Directory \"%s\" not found... creating" % path2data
+            print("Directory \"%s\" not found... creating" % path2data)
             os.mkdir(path2data)
 
-        print "Now creating input data in \"%s\" for project \"%s\" with type \"%s\"" % (path2data,self.project_name,self.model)
+        print("Now creating input data in \"%s\" for project \"%s\" with type \"%s\"" % (path2data,self.project_name,self.model))
 
         for ii in xrange(self.npts):
             # create an empty array to store data to be written
@@ -305,7 +305,7 @@ class CARDAMOM_F(object):
             f.write(struct.pack(len(towrite)*'d',*towrite))
             f.close()
 
-        print "Written input file for %i sites" % (self.npts)
+        print("Written input file for %i sites" % (self.npts))
 
     def backup_source(self):
         """
@@ -316,7 +316,7 @@ class CARDAMOM_F(object):
             os.mkdir(self.paths["projects"]+self.project_name+"/src")
         os.system("cp -r %s/* %s/%s/src/" % (self.paths["library"],self.paths["projects"],self.project_name))
 
-        print 'Copied source code from repository %s to local project %s/%s/src/' % (self.paths['library'],self.paths["projects"],self.project_name)
+        print('Copied source code from repository %s to local project %s/%s/src/' % (self.paths['library'],self.paths["projects"],self.project_name))
 
 
     def update_source_hpc(self):
@@ -365,7 +365,7 @@ class CARDAMOM_F(object):
         cmd += ' %s/general/cardamom_main.f90' % (path2lib)                             # the main file
         cmd += ' -o %s' % path2exe
 
-        print cmd
+        print(cmd)
         os.system(cmd)
 
     def compile_f2py(self, fcompiler = 'intelem', opt ='-O2'):
@@ -381,12 +381,12 @@ class CARDAMOM_F(object):
 
             cmd = 'f2py -c -m f2py_model --fcompiler="%s" --opt="%s" %s' % (fcompiler,opt,path2src)
 
-            print cmd
+            print(cmd)
             # compile and copy
             os.system(cmd)
             os.system('mv f2py_model.so %s/%s/exec/' % (self.paths["projects"],self.project_name) )
         else:
-            print 'No f2py source file found'
+            print('No f2py source file found')
 
 
     def send_to_hpc(self):
@@ -395,14 +395,14 @@ class CARDAMOM_F(object):
         """
 
         dest=self.paths["hpc_directory"]+"/"+self.paths['hpc_username']+'/'+self.project_name
-        print "Copying binary files to remote destination \"%s\" " % dest
+        print("Copying binary files to remote destination \"%s\" " % dest)
         os.system("ssh %s@%s mkdir %s" % (self.paths["hpc_username"],self.paths["hpc_address"],dest))
 
         os.system("scp -r %s %s@%s:%s" % (self.paths["projects"]+self.project_name+"/data/", self.paths["hpc_username"],self.paths["hpc_address"],dest))
         os.system("scp -r %s %s@%s:%s" % (self.paths["projects"]+self.project_name+"/src/", self.paths["hpc_username"],self.paths["hpc_address"],dest))
         os.system("scp -r %s %s@%s:%s" % (self.paths["projects"]+self.project_name+"/exec/", self.paths["hpc_username"],self.paths["hpc_address"],dest))
 
-        print "Successfully copied the data on the hpc"
+        print("Successfully copied the data on the hpc")
 
     def compile_hpc(self,compiler ='ifort', flags ='-O2'):
         """
@@ -435,7 +435,7 @@ class CARDAMOM_F(object):
         if compiler == 'ifort':
             cmd = 'module load intel && '+cmd
 
-        print cmd
+        print(cmd)
         os.system("ssh %s@%s '%s'" % (self.paths['hpc_username'],self.paths["hpc_address"],cmd))
 
     def resetup(self):
@@ -458,7 +458,7 @@ class CARDAMOM_F(object):
         edcs            =   self.edcs
         pft             =   self.pft
 
-        print "Starting setup for project "+self.project_name
+        print("Starting setup for project "+self.project_name)
 
         self.setup(lat,lon,drivers,obs,obsunc,parprior,parpriorunc,otherprior,otherpriorunc,edcs,pft)
 
@@ -474,7 +474,7 @@ class CARDAMOM_F(object):
         This method downloads the results from the HPC
         """
 
-        print "Preparing to download data from \"%s\"" % self.paths["hpc_address"]
+        print("Preparing to download data from \"%s\"" % self.paths["hpc_address"])
 
         hpc_details = "%s@%s" % (self.paths["hpc_username"],self.paths["hpc_address"])
 
@@ -498,13 +498,13 @@ class CARDAMOM_F(object):
         dst = "%s/%s/output/run_%03i/" % (self.paths["projects"],self.project_name,runid)
         if "run_%03i" % runid not in runlist:
             os.mkdir(dst)
-            print "scp -r %s:%s %s" % (hpc_details,src,dst)
+            print("scp -r %s:%s %s" % (hpc_details,src,dst))
             os.system("scp -r %s:%s %s" % (hpc_details,src,dst))
         else:
             if len(os.listdir(dst)) != 0.:
                 notempty = raw_input("Destination folder \"%s\" not empty... continue <y/n>?" % dst)
                 if notempty == "y":
-                    print "Downloading data in \"%s\"" % dst
+                    print("Downloading data in \"%s\"" % dst)
                     os.system("scp -r %s:%s %s" % (hpc_details,src,dst))
             else:
                 os.system("scp -r %s:%s %s" % (hpc_details,src,dst))
