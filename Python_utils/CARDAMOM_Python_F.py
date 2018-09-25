@@ -20,6 +20,7 @@ import shutil, socket
 import sys
 import pandas as pd
 from itertools import combinations
+import xarray as xr
 
 class CARDAMOM_F(object):
 
@@ -623,7 +624,7 @@ class CARDAMOM_F(object):
         return vartheta/W
 
     def check_convergence(self, run=1, pixel=1, chains=[1,2,3], burnin = 0.5,
-                            thresh = 1.2, output_pars = False):
+                            thresh = 1.2, output_pars = True):
         """
         This method checks whether convergence has been reached between specified
         chains for a specified run, pixel according to a threshold for the
@@ -671,6 +672,54 @@ class CARDAMOM_F(object):
                     pars = pd.concat([pars,self.read_output(run=run,pixel=pixel,chain=chainid,burnin=burnin)])
             pars.index = np.arange(pars.shape[0])
             return pars
+
+    def get_parameter_maps(self,run=1,chains=[1,2,3], burnin = 0.5,thresh=1.2,
+                        percentiles=[2.5,5.,25.,50.,75.,95.,97.5],save=True):
+        """
+        This method returns a map of the parameters as xarray.
+        """
+
+        #first define the grid by extracting the lat and lon res
+        dlon = np.abs(self.lon.max()-self.lon); reslon = dlon[dlon!=0.].min()
+        dlat = np.abs(self.lat.max()-self.lat); reslat = dlat[dlat!=0.].min()
+        #define the lat/lon of the grid...
+        longrid = np.arange(self.lon.min(),self.lon.max()+reslon,reslon)
+        latgrid = np.arange(self.lat.max(),self.lat.min()-reslat,-reslat)
+        #create the xarray.Dataset that will hold all the parameters
+        #specify data_vars
+        dummy = np.zeros([len(percentiles),latgrid.size,longrid.size])-9999.
+        data_vars = {}
+        for ii in range(self.npars):
+            data_vars['parameter_%02i' % (ii)] = (['percentile','lat','lon'],dummy.copy(),{'_FillValue':-9999.})
+        data_vars['likelihood'] = (['percentile','lat','lon'],dummy.copy(),{'_FillValue':-9999.})
+        coords = {'percentile': (['percentile'],percentiles,{'units':'%'}),
+                     'lat': (['lat'],latgrid,{'units':'degrees_north'}),
+                     'lon': (['lon'],longrid,{'units':'degrees_east'})}
+
+        self.parameter_maps = xr.Dataset(data_vars=data_vars,coords=coords)
+        #iterate over parameters
+        for pp in np.arange(self.npts):
+            print '\rGetting parameter sets for pixel %05i / %05i' % (pp+1,self.npts),
+            latid = np.where(latgrid==self.lat[pp])[0][0]
+            lonid = np.where(longrid==self.lon[pp])[0][0]
+            pars = self.check_convergence(run=run,pixel=pp+1,chains=chains,
+                                            thresh=thresh, output_pars=True)
+            pct = np.percentile(pars,percentiles,axis=0)
+            for ii in range(self.npars):
+                self.parameter_maps['parameter_%02i' % (ii)][:,latid,lonid] = pct[:,ii]
+            self.parameter_maps['likelihood'][:,latid,lonid] = pct[:,-1]
+
+        print 'Done extracting parameters'
+        #now check whether it has to be save
+        if save:
+            dst = self.paths["projects"]+self.project_name+'/post/'+self.project_name+'_run_%03i_parameters.nc' % run
+            print 'Saving parameter maps as netCDF at '+dst
+            if 'post' not in os.listdir(self.paths["projects"]+self.project_name):
+                os.mkdir(self.paths["projects"]+self.project_name+'/post/')
+
+            self.parameter_maps.to_netcdf(dst,'w')
+
+
 
 
 if __name__ == "__main__":
