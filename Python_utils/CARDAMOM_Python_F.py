@@ -19,6 +19,7 @@ from netCDF4 import Dataset
 import shutil, socket
 import sys
 import pandas as pd
+from itertools import combinations
 
 class CARDAMOM_F(object):
 
@@ -588,6 +589,88 @@ class CARDAMOM_F(object):
                                                                         pools[pp],gpp[pp])
 
         return dict(lai=lai,nee=nee,fluxes=fluxes,pools=pools,gpp=gpp)
+
+    def GR(self,chains):
+        """
+        This method returns the Gelman-Rubin convergence criterion between
+        parameter distributions stored in chains
+        """
+        n = len(chains[0]) # number of draws per chain
+        m = len(chains)    # number of chains
+
+        # calculate the within chain variance W: mean of the variance of each chain
+        W = 0.
+        for cc in range(m):
+
+            sj2 = np.var(chains[cc],ddof=1)
+            W += sj2
+        W = W / m
+
+        # calculate the between chain variance B: variance of chains means
+        theta = 0.
+        for cc in range(m):
+            theta += np.mean(chains[cc])
+        theta = theta*1./m
+
+        B = 0.
+        for cc in range(m):
+            B += (np.mean(chains[cc])-theta)**2
+        B = B*n/(m+1)
+
+        # estimate variance
+        vartheta = (1.-1./n)*W+B/n
+
+        return vartheta/W
+
+    def check_convergence(self, run=1, pixel=1, chains=[1,2,3], burnin = 0.5,
+                            thresh = 1.2, output_pars = False):
+        """
+        This method checks whether convergence has been reached between specified
+        chains for a specified run, pixel according to a threshold for the
+        Gelman-Rubin convergence metric.
+        """
+
+        # define the number of chains
+        nchains = len(chains)
+
+        #define the possible combinations of 2+ chains
+        chain_combinations = []
+        for n in range(nchains,1,-1):
+            chain_combinations += list(combinations(chains,n))
+
+        conv = np.zeros(len(chain_combinations),dtype='bool')
+        #loop over the possible combinations until criterion met
+        for cc,combi in enumerate(chain_combinations):
+            pars = []
+            for ch in combi:
+                pars.append(self.read_output(run=run,pixel=pixel,chain=ch,burnin=burnin).values[:,-1])
+            crit = self.GR(pars)
+            if crit < thresh:
+                conv[cc] = True
+
+        zipped_res = zip(chain_combinations,conv)
+        if not output_pars:
+            #output the results of the convergence test
+            return zipped_res
+        else:
+            #output the parameter sets
+            for combi in zipped_res:
+                if combi[1] == True:
+                    for ch,chainid in enumerate(combi[0]):
+                        if ch == 0:
+                            pars = self.read_output(run=run,pixel=pixel,chain=chainid,burnin=burnin)
+                        else:
+                            pars = pd.concat([pars,self.read_output(run=run,pixel=pixel,chain=chainid,burnin=burnin)])
+                    pars.index = np.arange(pars.shape[0])
+                    return pars
+            # if none as converged, output them all...
+            for ch,chainid in enumerate(chains):
+                if ch == 0:
+                    pars = self.read_output(run=run,pixel=pixel,chain=chainid,burnin=burnin)
+                else:
+                    pars = pd.concat([pars,self.read_output(run=run,pixel=pixel,chain=chainid,burnin=burnin)])
+            pars.index = np.arange(pars.shape[0])
+            return pars
 
 
 if __name__ == "__main__":
