@@ -706,7 +706,7 @@ class CARDAMOM_F(object):
                                             thresh=thresh, output_pars=True)
             pct = np.percentile(pars,percentiles,axis=0)
             for ii in range(self.npars):
-                self.parameter_maps['parameter_%02i' % (ii)][:,latid,lonid] = pct[:,ii]
+                self.parameter_maps['p%02i' % (ii)][:,latid,lonid] = pct[:,ii]
             self.parameter_maps['likelihood'][:,latid,lonid] = pct[:,-1]
 
         print 'Done extracting parameters'
