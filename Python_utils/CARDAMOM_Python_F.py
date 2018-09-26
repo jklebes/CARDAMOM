@@ -834,6 +834,49 @@ class CARDAMOM_F(object):
 
         self.fluxes_maps.to_netcdf(dst,'w')
 
+    def save_pools_to_netcdf(self,start='2000-01-01',freq='M',poolnames=['Clab','Cleaf','Croot','Cwood','Clitter','Csom','Cfol','Cveg','Cdom','Ctot']):
+        """
+        This method outputs the pools array created with rerun_all_pixels into
+        a netcdf file.
+        """
+        #first define the grid by extracting the lat and lon res
+        dlon = np.abs(self.lon.max()-self.lon); reslon = dlon[dlon!=0.].min()
+        dlat = np.abs(self.lat.max()-self.lat); reslat = dlat[dlat!=0.].min()
+        #define the lat/lon of the grid...
+        longrid = np.arange(self.lon.min(),self.lon.max()+reslon,reslon)
+        latgrid = np.arange(self.lat.max(),self.lat.min()-reslat,-reslat)
+        #define the date_range
+        dates = pd.date_range(start=start,freq=freq,periods=self.nsteps)
+
+        dummy = np.zeros([len(dates),len(self.percentiles_rerun),latgrid.size,longrid.size])-9999.
+
+        attrs = {'_FillValue':-9999.,'units':'g C m-2'}
+        data_vars = {}
+        for ii,poolname in enumerate(poolnames):
+            data_vars[poolname] = (['time','percentile','lat','lon'],dummy.copy(),attrs)
+
+        coords = {'time': (['time'],dates),
+                  'percentile': (['percentile'],self.percentiles_rerun,{'units':'%'}),
+                  'lat': (['lat'],latgrid,{'units':'degrees_north'}),
+                  'lon': (['lon'],longrid,{'units':'degrees_east'})}
+
+        self.pools_maps = xr.Dataset(data_vars=data_vars,coords=coords)
+
+        #loop over pixels to save in a map
+        for pp in np.arange(self.npts):
+            #get the pixel indexes on the lat/lon grid
+            latid = np.where(latgrid==self.lat[pp])[0][0]
+            lonid = np.where(longrid==self.lon[pp])[0][0]
+            #loop over the pools
+            for ii in range(self.pools_rerun.shape[-1]):
+                poolname = poolnames[ii]
+                #transpose as the output array saved percentile dim before time dim
+                #for pools, remove the first time step
+                self.pools_maps[poolname][:,:,latid,lonid] = self.pools_rerun[pp,:,1:,ii].T
+
+        dst = self.paths["projects"]+self.project_name+'/post/'+self.project_name+'_run_%03i_pools.nc' % self.rerun_id
+
+        self.pools_maps.to_netcdf(dst,'w')
 
 if __name__ == "__main__":
 
