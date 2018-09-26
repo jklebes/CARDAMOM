@@ -759,17 +759,17 @@ class CARDAMOM_F(object):
 
         #create arrays to store output
         if keep_fluxes == 'all':
-            all_fluxes = np.empty([self.npts,len(percentiles),self.nsteps,self.nfluxes])
+            all_fluxes = np.zeros([self.npts,len(percentiles),self.nsteps,self.nfluxes])-9999.
         else:
-            all_fluxes = np.empty([self.npts,len(percentiles),self.nsteps,len(keep_fluxes)])
+            all_fluxes = np.zeros([self.npts,len(percentiles),self.nsteps,len(keep_fluxes)])-9999.
 
         if keep_pools == 'all':
-            all_pools   = np.empty([self.npts,len(percentiles),self.nsteps+1,self.npools])
+            all_pools   = np.zeros([self.npts,len(percentiles),self.nsteps+1,self.npools])-9999.
         else:
-            all_pools   = np.empty([self.npts,len(percentiles),self.nsteps+1,len(keep_pools)])
+            all_pools   = np.zeros([self.npts,len(percentiles),self.nsteps+1,len(keep_pools)])-9999.
 
         #loop over pixels rerun the model and store output
-        for pixel in range(1,self.npts+1):
+        for pixel in range(1,self.npts+1)[:100]:
             print '\rRerunning pixel %05i / %05i' % (pixel,self.npts),
             lai,nee,fluxes,pools,gpp = self.rerun_pixel(run=run,pixel=pixel,chains=chains,thresh=thresh,burnin=burnin)
             if keep_fluxes == 'all':
@@ -784,10 +784,55 @@ class CARDAMOM_F(object):
                 for ii, method in enumerate(keep_pools):
                     all_pools[pixel-1,:,:,ii] = np.percentile(compound(method,pools),percentiles,axis=0)
 
-        self.all_fluxes = all_fluxes
-        self.all_pools = all_pools
+        #save the rerun fluxes and pools
+        self.fluxes_rerun = all_fluxes
+        self.pools_rerun = all_pools
+        #save the pctiles and run id
+        self.percentiles_rerun = percentiles
+        self.rerun_id = run
 
+    def save_fluxes_to_netcdf(self,start='2000-01-01',freq='M',fluxnames=['gpp','ra','npp','rh','reco','nee','fire','nbe']):
+        """
+        This method outputs the fluxes array created with rerun_all_pixels into
+        a netcdf file.
+        """
+        #first define the grid by extracting the lat and lon res
+        dlon = np.abs(self.lon.max()-self.lon); reslon = dlon[dlon!=0.].min()
+        dlat = np.abs(self.lat.max()-self.lat); reslat = dlat[dlat!=0.].min()
+        #define the lat/lon of the grid...
+        longrid = np.arange(self.lon.min(),self.lon.max()+reslon,reslon)
+        latgrid = np.arange(self.lat.max(),self.lat.min()-reslat,-reslat)
+        #define the date_range
+        dates = pd.date_range(start=start,freq=freq,periods=self.nsteps)
 
+        dummy = np.zeros([len(dates),len(self.percentiles_rerun),latgrid.size,longrid.size])-9999.
+
+        attrs = {'_FillValue':-9999.,'units':'g C m-2 d-1'}
+        data_vars = {}
+        for ii,fluxname in enumerate(fluxnames):
+            data_vars[fluxname] = (['time','percentile','lat','lon'],dummy.copy(),attrs)
+
+        coords = {'time': (['time'],dates),
+                  'percentile': (['percentile'],self.percentiles_rerun,{'units':'%'}),
+                  'lat': (['lat'],latgrid,{'units':'degrees_north'}),
+                  'lon': (['lon'],longrid,{'units':'degrees_east'})}
+
+        self.fluxes_maps = xr.Dataset(data_vars=data_vars,coords=coords)
+
+        #loop over pixels to save in a map
+        for pp in np.arange(self.npts):
+            #get the pixel indexes on the lat/lon grid
+            latid = np.where(latgrid==self.lat[pp])[0][0]
+            lonid = np.where(longrid==self.lon[pp])[0][0]
+            #loop over the fluxes
+            for ii in range(self.fluxes_rerun.shape[-1]):
+                fluxname = fluxnames[ii]
+                #transpose as the output array saved percentile dim before time dim
+                self.fluxes_maps[fluxname][:,:,latid,lonid] = self.fluxes_rerun[pp,:,:,ii].T
+
+        dst = self.paths["projects"]+self.project_name+'/post/'+self.project_name+'_run_%03i_fluxes.nc' % self.rerun_id
+
+        self.fluxes_maps.to_netcdf(dst,'w')
 
 
 if __name__ == "__main__":
