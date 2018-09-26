@@ -623,7 +623,7 @@ class CARDAMOM_F(object):
 
         return vartheta/W
 
-    def check_convergence(self, run=1, pixel=1, chains=[1,2,3], burnin = 0.5,
+    def get_converged_parameters(self, run=1, pixel=1, chains=[1,2,3], burnin = 0.5,
                             thresh = 1.2, output_pars = True):
         """
         This method checks whether convergence has been reached between specified
@@ -702,7 +702,7 @@ class CARDAMOM_F(object):
             print '\rGetting parameter sets for pixel %05i / %05i' % (pp+1,self.npts),
             latid = np.where(latgrid==self.lat[pp])[0][0]
             lonid = np.where(longrid==self.lon[pp])[0][0]
-            pars = self.check_convergence(run=run,pixel=pp+1,chains=chains,
+            pars = self.get_converged_parameters(run=run,pixel=pp+1,chains=chains,
                                             thresh=thresh, output_pars=True)
             pct = np.percentile(pars,percentiles,axis=0)
             for ii in range(self.npars):
