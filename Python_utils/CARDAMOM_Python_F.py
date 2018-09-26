@@ -21,6 +21,7 @@ import sys
 import pandas as pd
 from itertools import combinations
 import xarray as xr
+import re
 
 class CARDAMOM_F(object):
 
@@ -549,12 +550,12 @@ class CARDAMOM_F(object):
         """
 
         # first reads the parameters - either a single file or get_converged_parameters
-        if type(chains) == 'int':
-            parsets = self.read_output(run=run,pixel=pixel,chain=chain, burnin=burnin)
-        else:
-            parsets = self.get_converged_parameters(run=run,pixel=pixel,chains=chains,
+        if type(chains) == int:
+            chains=[chains]
+
+        parsets = self.get_converged_parameters(run=run,pixel=pixel,chains=chains,
                                                 burnin=burnin,thresh=thresh,output_pars=True)
-        #read_output and get_converged_parameters output pandas, now transform
+        #read_output and get_converged_parameters outpustrip()t pandas, now transform
         #to array while removing the last column
         parsets = parsets.values[:,:-1]
         nparsets= parsets.shape[0]
@@ -565,7 +566,7 @@ class CARDAMOM_F(object):
         # import the f2py module
         if 'f2py_model.so' in os.listdir(path2f2py):
             from f2py_model import carbon_model
-            print('Loaded f2py_model.so')
+    #        print('Loaded f2py_model.so')
         else:
             print('Module f2py_model.so not found, use method compile_f2py')
             return None
@@ -596,7 +597,7 @@ class CARDAMOM_F(object):
                                                                         nee[pp],fluxes[pp],
                                                                         pools[pp],gpp[pp])
 
-        return dict(lai=lai,nee=nee,fluxes=fluxes,pools=pools,gpp=gpp)
+        return lai,nee,fluxes,pools,gpp
 
     def GR(self,chains):
         """
@@ -637,6 +638,9 @@ class CARDAMOM_F(object):
         chains for a specified run, pixel according to a threshold for the
         Gelman-Rubin convergence metric.
         """
+
+        if type(chains) == int:
+            chains = [chains]
 
         # define the number of chains
         nchains = len(chains)
@@ -726,7 +730,64 @@ class CARDAMOM_F(object):
 
             self.parameter_maps.to_netcdf(dst,'w')
 
-    #def rerun_all_pixels()
+    def rerun_all_pixels(self, run=1, chains=[1,2,3], thresh=1.2, burnin = 0.5,
+                            percentiles=[2.5,5.,25.,50.,75.,95.,97.5],save=True,
+                            keep_fluxes=['0','2','0-2','12+13','2+12+13','2+12+13-0','16','2+12+13+16-0'],
+                            keep_pools=['0','1','2','3','4','5','0+1','0+1+2+3','4+5','0+1+2+3+4+5']):
+        """
+        This methods runs all pixels and stores the output in two large arrays.
+        If other_fluxes is defined, the method returns specified fluxes with possible
+        combinations.
+        """
+
+        #create a function to understand the content of keep_fluxes
+        def compound(method,array):
+            meth = method.replace(' ','')
+            indexes = re.split('[+-]',meth)
+            if len(indexes) == 1:
+                return array[:,:,int(meth)]
+            else:
+                operators = re.findall('[+-]',meth)
+                operators = [np.add if ops == '+' else np.subtract for ops in operators]
+                #print operators
+                for oo, ops in enumerate(operators):
+                    if oo == 0:
+                        tmp = operators[0](array[:,:,int(indexes[0])],array[:,:,int(indexes[1])])
+                    else:
+                        tmp = operators[oo](tmp,array[:,:,int(indexes[oo+1])])
+                return tmp
+
+        #create arrays to store output
+        if keep_fluxes == 'all':
+            all_fluxes = np.empty([self.npts,len(percentiles),self.nsteps,self.nfluxes])
+        else:
+            all_fluxes = np.empty([self.npts,len(percentiles),self.nsteps,len(keep_fluxes)])
+
+        if keep_pools == 'all':
+            all_pools   = np.empty([self.npts,len(percentiles),self.nsteps+1,self.npools])
+        else:
+            all_pools   = np.empty([self.npts,len(percentiles),self.nsteps+1,len(keep_pools)])
+
+        #loop over pixels rerun the model and store output
+        for pixel in range(1,self.npts+1):
+            print '\rRerunning pixel %05i / %05i' % (pixel,self.npts),
+            lai,nee,fluxes,pools,gpp = self.rerun_pixel(run=run,pixel=pixel,chains=chains,thresh=thresh,burnin=burnin)
+            if keep_fluxes == 'all':
+                all_fluxes[pixel-1] = np.percentile(fluxes,percentiles,axis=0)
+            else:
+                for ii,method in enumerate(keep_fluxes):
+                    all_fluxes[pixel-1,:,:,ii] = np.percentile(compound(method,fluxes),percentiles,axis=0)
+
+            if keep_pools == 'all':
+                all_pools[pixel-1] = np.percentile(fluxes,percentiles,axis=0)
+            else:
+                for ii, method in enumerate(keep_pools):
+                    all_pools[pixel-1,:,:,ii] = np.percentile(compound(method,pools),percentiles,axis=0)
+
+        self.all_fluxes = all_fluxes
+        self.all_pools = all_pools
+
+
 
 
 if __name__ == "__main__":
