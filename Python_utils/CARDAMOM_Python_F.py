@@ -541,15 +541,22 @@ class CARDAMOM_F(object):
 
         return pd.DataFrame(parsets)
 
-    def rerun_pixel(self, run=1, pixel=1, chain=1, burnin = 0.5):
+    def rerun_pixel(self, run=1, pixel=1, chains=1, thresh=1.2, burnin = 0.5):
         """
         This method reruns the output for a defined pixel using parameter sets
         stored in the corresponding file. The burnin option indicates the fraction
         of the parameter sets that should be disregarded as burn in of the MCMC
         """
 
-        # first reads the parameters
-        parsets = self.read_output(run=run,pixel=pixel,chain=chain, burnin=burnin).values[:,:-1]
+        # first reads the parameters - either a single file or get_converged_parameters
+        if type(chains) == 'int':
+            parsets = self.read_output(run=run,pixel=pixel,chain=chain, burnin=burnin)
+        else:
+            parsets = self.get_converged_parameters(run=run,pixel=pixel,chains=chains,
+                                                burnin=burnin,thresh=thresh,output_pars=True)
+        #read_output and get_converged_parameters output pandas, now transform
+        #to array while removing the last column
+        parsets = parsets.values[:,:-1]
         nparsets= parsets.shape[0]
         #add path to f2py compiled module to sys
         path2f2py = "%s/%s/exec/" % (self.paths["projects"],self.project_name)
@@ -690,7 +697,7 @@ class CARDAMOM_F(object):
         dummy = np.zeros([len(percentiles),latgrid.size,longrid.size])-9999.
         data_vars = {}
         for ii in range(self.npars):
-            data_vars['parameter_%02i' % (ii)] = (['percentile','lat','lon'],dummy.copy(),{'_FillValue':-9999.})
+            data_vars['p%02i' % (ii)] = (['percentile','lat','lon'],dummy.copy(),{'_FillValue':-9999.})
         data_vars['likelihood'] = (['percentile','lat','lon'],dummy.copy(),{'_FillValue':-9999.})
         coords = {'percentile': (['percentile'],percentiles,{'units':'%'}),
                      'lat': (['lat'],latgrid,{'units':'degrees_north'}),
@@ -719,7 +726,7 @@ class CARDAMOM_F(object):
 
             self.parameter_maps.to_netcdf(dst,'w')
 
-
+    #def rerun_all_pixels()
 
 
 if __name__ == "__main__":
