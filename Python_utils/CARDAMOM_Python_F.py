@@ -769,7 +769,7 @@ class CARDAMOM_F(object):
             all_pools   = np.zeros([self.npts,len(percentiles),self.nsteps+1,len(keep_pools)])-9999.
 
         #loop over pixels rerun the model and store output
-        for pixel in range(1,self.npts+1)[:100]:
+        for pixel in range(1,self.npts+1):
             print '\rRerunning pixel %05i / %05i' % (pixel,self.npts),
             lai,nee,fluxes,pools,gpp = self.rerun_pixel(run=run,pixel=pixel,chains=chains,thresh=thresh,burnin=burnin)
             if keep_fluxes == 'all':
