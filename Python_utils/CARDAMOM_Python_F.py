@@ -731,7 +731,7 @@ class CARDAMOM_F(object):
             self.parameter_maps.to_netcdf(dst,'w')
 
     def rerun_all_pixels(self, run=1, chains=[1,2,3], thresh=1.2, burnin = 0.5,
-                            percentiles=[2.5,5.,25.,50.,75.,95.,97.5],save=True,
+                            percentiles=[2.5,5.,25.,50.,75.,95.,97.5],
                             keep_fluxes=['0','2','0-2','12+13','2+12+13','2+12+13-0','16','2+12+13+16-0'],
                             keep_pools=['0','1','2','3','4','5','0+1','0+1+2+3','4+5','0+1+2+3+4+5']):
         """
@@ -791,7 +791,7 @@ class CARDAMOM_F(object):
         self.percentiles_rerun = percentiles
         self.rerun_id = run
 
-    def save_fluxes_to_netcdf(self,start='2000-01-01',freq='M',fluxnames=['gpp','ra','npp','rh','reco','nee','fire','nbe']):
+    def save_fluxes_to_netcdf(self,start='2000-01-01',freq='M',fluxnames=['gpp','ra','npp','rh','reco','nee','fire','nbe'],dest=None):
         """
         This method outputs the fluxes array created with rerun_all_pixels into
         a netcdf file.
@@ -830,11 +830,14 @@ class CARDAMOM_F(object):
                 #transpose as the output array saved percentile dim before time dim
                 self.fluxes_maps[fluxname][:,:,latid,lonid] = self.fluxes_rerun[pp,:,:,ii].T
 
-        dst = self.paths["projects"]+self.project_name+'/post/'+self.project_name+'_run_%03i_fluxes.nc' % self.rerun_id
+        if dest == None:
+            dst = self.paths["projects"]+self.project_name+'/post/'+self.project_name+'_run_%03i_fluxes.nc' % self.rerun_id
+        else:
+            dst = dest
 
         self.fluxes_maps.to_netcdf(dst,'w')
 
-    def save_pools_to_netcdf(self,start='2000-01-01',freq='M',poolnames=['Clab','Cleaf','Croot','Cwood','Clitter','Csom','Cfol','Cveg','Cdom','Ctot']):
+    def save_pools_to_netcdf(self,start='2000-01-01',freq='M',poolnames=['Clab','Cleaf','Croot','Cwood','Clitter','Csom','Cfol','Cveg','Cdom','Ctot'],dest=None):
         """
         This method outputs the pools array created with rerun_all_pixels into
         a netcdf file.
@@ -875,6 +878,11 @@ class CARDAMOM_F(object):
                 self.pools_maps[poolname][:,:,latid,lonid] = self.pools_rerun[pp,:,1:,ii].T
 
         dst = self.paths["projects"]+self.project_name+'/post/'+self.project_name+'_run_%03i_pools.nc' % self.rerun_id
+
+        if dest == None:
+            dst = self.paths["projects"]+self.project_name+'/post/'+self.project_name+'_run_%03i_fluxes.nc' % self.rerun_id
+        else:
+            dst = dest
 
         self.pools_maps.to_netcdf(dst,'w')
 
