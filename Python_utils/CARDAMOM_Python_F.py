@@ -22,6 +22,7 @@ import pandas as pd
 from itertools import combinations
 import xarray as xr
 import re
+import subprocess
 
 class CARDAMOM_F(object):
 
@@ -399,8 +400,11 @@ class CARDAMOM_F(object):
 
         dest=self.paths["hpc_directory"]+"/"+self.paths['hpc_username']+'/'+self.project_name
         print("Copying binary files to remote destination \"%s\" " % dest)
+        #create the directory
         os.system("ssh %s@%s mkdir %s" % (self.paths["hpc_username"],self.paths["hpc_address"],dest))
-
+        #create the directory to store log files
+        os.system("ssh %s@%s mkdir %s/log" % (self.paths["hpc_username"],self.paths["hpc_address"],dest))
+        #copy data, source and exec
         os.system("scp -r %s %s@%s:%s" % (self.paths["projects"]+self.project_name+"/data/", self.paths["hpc_username"],self.paths["hpc_address"],dest))
         os.system("scp -r %s %s@%s:%s" % (self.paths["projects"]+self.project_name+"/src/", self.paths["hpc_username"],self.paths["hpc_address"],dest))
         os.system("scp -r %s %s@%s:%s" % (self.paths["projects"]+self.project_name+"/exec/", self.paths["hpc_username"],self.paths["hpc_address"],dest))
@@ -465,13 +469,50 @@ class CARDAMOM_F(object):
 
         self.setup(lat,lon,drivers,obs,obsunc,parprior,parpriorunc,otherprior,otherpriorunc,edcs,pft)
 
-    def submit_hpc(self):
+    def submit_hpc(self, nchains=3, nsims = 1000000, nout = 1000, runtime = '06:00:00'):
         """
-        This method submits the jobs on the cluster, with string of options
+        This method submits the jobs on the cluster, with string of options.
         """
 
+        #basic logic is to create a submittable script, upload to eddie and run it
+        #this way the script can get the SGE_TASK_ID env variable to run on
+        #arrays of jobs
 
+        #get different paths
+        path2proj = "%s/%s/%s/" % (self.paths["hpc_directory"],self.paths["hpc_username"],self.project_name)
+        path2log  = path2proj+'log/'
+        path2exec = path2proj+'exec/%s.exe' % (self.project_name)
+        hpc_username = self.paths['hpc_username']
+        hpc_address = self.paths['hpc_address']
 
+        #define header
+        header = '#!/usr/bin/python\n'
+        header+= '#$ -l h_rt=%s\n' % (runtime)
+        header+= '#$ -o %s\n' % path2log
+        header+= '#$ -e %s\n\n' % path2log
+        header+= 'import os\n'
+        header+= 'taskid=int(os.environ["SGE_TASK_ID"])\n\n' #get the task id of element in array
+
+        for ch in range(1,1+nchains):
+            print("Writing script.sub for chain ", ch)
+            script = header
+            script+= 'os.system("rm %s/output/%s_%%05i_%i_*" %% (taskid))\n\n' % (path2proj,self.project_name,ch)
+            script+= 'os.system("%s/exec/%s.exe ' % (path2proj,self.project_name)
+            script+= '%s/data/%s_%%05i.bin ' % (path2proj,self.project_name)
+            script+= '%s/output/%s_%%05i_%i_ %i 0 %i" %% (taskid,taskid))\n\n' % (path2proj,self.project_name,ch,nsims,nout)
+
+            #write the script
+            file('script_%s_%i.sub' % (self.project_name,ch),'w').write(script)
+
+            #upload the script in the home directory of the hpc
+            os.system('scp script_%s_%i.sub %s@%s:' % (self.project_name,ch,hpc_username,hpc_address))
+            #submit the script
+            os.system('ssh %s@%s qsub -t %i-%i -N %s_%i script.sub' % (hpc_username,hpc_address,1,min(self.npts,10000),self.project_name,ch))
+            #submit an additional job if more than 10000 pts
+            if self.npts > 10000:
+                os.system('ssh %s@%s qsub -t %i-%i -N %s_%i_ script.sub' % (hpc_username,hpc_address,10001,self.npts,self.project_name,ch))
+
+                
     def download_hpc(self, **kwargs):
         """
         This method downloads the results from the HPC
