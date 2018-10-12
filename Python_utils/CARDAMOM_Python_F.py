@@ -402,6 +402,8 @@ class CARDAMOM_F(object):
         print("Copying binary files to remote destination \"%s\" " % dest)
         #create the directory
         os.system("ssh %s@%s mkdir %s" % (self.paths["hpc_username"],self.paths["hpc_address"],dest))
+        #create directory for the output
+        os.system("ssh %s@%s mkdir %s/output" % (self.paths["hpc_username"],self.paths["hpc_address"],dest))
         #create the directory to store log files
         os.system("ssh %s@%s mkdir %s/log" % (self.paths["hpc_username"],self.paths["hpc_address"],dest))
         #copy data, source and exec
@@ -494,7 +496,7 @@ class CARDAMOM_F(object):
         header+= 'taskid=int(os.environ["SGE_TASK_ID"])\n\n' #get the task id of element in array
 
         for ch in range(1,1+nchains):
-            print("Writing script.sub for chain ", ch)
+            print("Writing script for chain ", ch)
             script = header
             script+= 'os.system("rm %s/output/%s_%%05i_%i_*" %% (taskid))\n\n' % (path2proj,self.project_name,ch)
             script+= 'os.system("%s/exec/%s.exe ' % (path2proj,self.project_name)
