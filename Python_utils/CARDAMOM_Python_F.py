@@ -502,17 +502,18 @@ class CARDAMOM_F(object):
             script+= '%s/output/%s_%%05i_%i_ %i 0 %i" %% (taskid,taskid))\n\n' % (path2proj,self.project_name,ch,nsims,nout)
 
             #write the script
-            file('script_%s_%i.sub' % (self.project_name,ch),'w').write(script)
+            scriptname = 'script_%s_%i.sub' % (self.project_name,ch)
+            file(scriptname,'w').write(script)
 
             #upload the script in the home directory of the hpc
-            os.system('scp script_%s_%i.sub %s@%s:' % (self.project_name,ch,hpc_username,hpc_address))
+            os.system('scp %s %s@%s:' % (scriptname,hpc_username,hpc_address))
             #submit the script
-            os.system('ssh %s@%s qsub -t %i-%i -N %s_%i script.sub' % (hpc_username,hpc_address,1,min(self.npts,10000),self.project_name,ch))
+            os.system('ssh %s@%s qsub -t %i-%i -N %s_%i %s' % (hpc_username,hpc_address,1,min(self.npts,10000),self.project_name,ch,scriptname))
             #submit an additional job if more than 10000 pts
             if self.npts > 10000:
-                os.system('ssh %s@%s qsub -t %i-%i -N %s_%i_ script.sub' % (hpc_username,hpc_address,10001,self.npts,self.project_name,ch))
+                os.system('ssh %s@%s qsub -t %i-%i -N %s_%i_ %s' % (hpc_username,hpc_address,10001,self.npts,self.project_name,ch,scriptname))
 
-                
+
     def download_hpc(self, **kwargs):
         """
         This method downloads the results from the HPC
@@ -918,10 +919,8 @@ class CARDAMOM_F(object):
                 #for pools, remove the first time step
                 self.pools_maps[poolname][:,:,latid,lonid] = self.pools_rerun[pp,:,1:,ii].T
 
-        dst = self.paths["projects"]+self.project_name+'/post/'+self.project_name+'_run_%03i_pools.nc' % self.rerun_id
-
         if dest == None:
-            dst = self.paths["projects"]+self.project_name+'/post/'+self.project_name+'_run_%03i_fluxes.nc' % self.rerun_id
+            dst = self.paths["projects"]+self.project_name+'/post/'+self.project_name+'_run_%03i_pools.nc' % self.rerun_id
         else:
             dst = dest
 
