@@ -60,6 +60,8 @@ program cardamom_framework
  ! check whether this is a restart?
  call check_for_exisiting_output_files(MCO%outfile,MCO%stepfile)
 
+ write(*,*) "Running model version ", DATAin%ID
+
  ! begin search for initial conditions
  write(*,*) "Beginning search for initial parameter conditions"
  ! Determine initial values, this requires using the MHMCMC

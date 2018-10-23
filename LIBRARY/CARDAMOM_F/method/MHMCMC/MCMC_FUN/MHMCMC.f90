@@ -171,6 +171,7 @@ contains
        endif
 
        ! determine accept or reject
+       ! changed accept / reject during merge - 23/10/18
        if (((P-P0)/N%likelihood_scaler) > crit) then
 
           ! store accepted parameter solutions
@@ -256,7 +257,9 @@ contains
 
     ! calculate constants
     minstepsize = 10000d0/dble(N%ITER)
+
     if (minstepsize > 0.01d0) minstepsize = 0.01d0 ! TLS
+
     ! determine local acceptance rate
     N%ACCRATE = dble(N%ACCLOC)/dble(MCO%nADAPT)
 
@@ -312,6 +315,7 @@ contains
     where (PI%stepsize < minstepsize) PI%stepsize = minstepsize
 
   end subroutine adapt_step_size
+
   !
   !------------------------------------------------------------------
   !
