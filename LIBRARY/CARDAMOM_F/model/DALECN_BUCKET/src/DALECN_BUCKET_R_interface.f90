@@ -120,7 +120,7 @@ subroutine rdalecnbucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
   do i = 1, nos_iter
 
      ! Clear at the beginning of every loop just in case
-     lai = 0d0 ; GPP = 0d0 ; NEE = 0d0 ; POOLS = 0d0 ; FLUXES = 0d0
+     lai = 0d0 ; GPP = 0d0 ; NEE = 0d0 ; POOLS = 0d0 ; FLUXES = 0d0 ; resid_fol = 0d0
 
      ! call the models
      if (pft == 1) then
@@ -227,7 +227,7 @@ subroutine rdalecnbucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
          where ( POOLS(1:nodays,2) == 0d0 )
                 hak = 1 ; resid_fol(1:nodays) = 0d0
          end where
-         out_var2(i,4) = sum(resid_fol) /dble(nodays-sum(hak))
+         out_var2(i,4) = sum(resid_fol) / dble(nodays-sum(hak))
 
          ! wood
          resid_fol(1:nodays)   = FLUXES(1:nodays,11) + FLUXES(1:nodays,25)
@@ -272,15 +272,6 @@ subroutine rdalecnbucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
   out_var2(1:nos_iter,6) = (out_var2(1:nos_iter,6)*365.25d0)**(-1d0) ! root
   out_var2(1:nos_iter,7) = (out_var2(1:nos_iter,7)*365.25d0)**(-1d0) ! som
   out_var2(1:nos_iter,8) = (out_var2(1:nos_iter,8)*365.25d0)**(-1d0) ! CWD + Litter
-
-  ! tidy up all allocatable variables
-!  deallocate(disturbance_residue_to_litter,disturbance_residue_to_cwd             &
-!            ,disturbance_residue_to_som,disturbance_loss_from_litter              &
-!            ,disturbance_loss_from_cwd,disturbance_loss_from_som                  &
-!            ,Cwood_labile_release_coef,Croot_labile_release_coef,deltat_1         &
-!            ,wSWP_time,soilwatermm,daylength_hours,daylength_seconds,meant_time   &
-!            ,rainfall_time,co2_half_saturation,co2_compensation_point,canopy_days &
-!            ,canopy_age_vector)
 
   ! return back to the subroutine then
   return

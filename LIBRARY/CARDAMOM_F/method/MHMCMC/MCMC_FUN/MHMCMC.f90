@@ -75,9 +75,9 @@ contains
            implicit none
            ! declare input variables
            type ( parameter_info ), intent(inout) :: param_info
-           double precision, dimension(param_info%npars), intent(inout)    :: param_vector
+           double precision, dimension(param_info%npars), intent(inout) :: param_vector
            ! output
-           double precision,intent(inout)   :: prob_out
+           double precision,intent(inout) :: prob_out
       end subroutine model_likelihood_option
     end interface
 
@@ -103,6 +103,7 @@ contains
     P = -1d0 ; uniform = 1
     N%ACC = 0 ; N%ITER = 0
     N%ACCLOC = 0 ; N%ACCRATE = 0d0
+    N%likelihood_scaler = 1d0
 
     ! calculate initial vector of uniform random values
     allocate(uniform_random_vector(MCO%nOUT))
@@ -145,7 +146,6 @@ contains
     write(*,*) "Starting likelihood = ",P0
 
     ! appropriate warning
-!TLS    if (ieee_class(P0) == ieee_negative_inf ) then
     infini = 0d0
     if (P0 == log(infini)) then
         write(*,*) "WARNING! P0 = ",P0," - MHMCMC may get stuck, if so please check initial conditins"
@@ -153,10 +153,12 @@ contains
 
     ! begin the main MHMCMC loop
     do while (N%ACC < MCO%nOUT .and. (P < 0d0 .or. MCO%nWRITE > 0))
+
        ! take a step in parameter space
        call step(PARS0,PARS,PI)
        ! calculate the model likelihood
        call model_likelihood_option(PI, PARS,P)
+
        ! accept or reject, draw uniform distribution (0,1)
        crit = log(uniform_random_vector(uniform)) !crit=log(randn(0))
        uniform = uniform + 1
@@ -167,10 +169,10 @@ contains
            ! and reset uniform counter
            uniform = 1
        endif
-!print*,"P = ",P," P0 = ",P0," U = ",crit," Acpt = ",N%ACC
-!print*," U = ",crit
-       if ((P-P0) > crit) then
-!print*,"P = ",P
+
+       ! determine accept or reject
+       if (((P-P0)/N%likelihood_scaler) > crit) then
+
           ! store accepted parameter solutions
           do i = 1, PI%npars
              ! keep record of all parameters accepted since step adaption
@@ -179,26 +181,24 @@ contains
           end do ! pars
           if (P > P0) BESTPARS = PARS
           ! keep track of how many accepted solutions (global and local)
-          N%ACC = N%ACC+1 ; N%ACCLOC = N%ACCLOC+1
- !         if (mod(N%ACC,1) == 0) print*,"Total Accepted = ",N%ACC,P0,N%ITER
-          P0 = P
+          N%ACC = N%ACC+1 ; N%ACCLOC = N%ACCLOC+1 ; P0 = P
+
           ! write out parameter, log-likelihood and step if appropriate
           if (MCO%nWRITE > 0 .and. mod(N%ACC,MCO%nWRITE) == 0) then
              call write_results(PARS,P,PI)
           end if ! write or not to write
+
        endif ! accept or reject condition
 
        ! continue counting on
-       N%ITER = N%ITER+1
+       N%ITER = N%ITER + 1
 
        ! time to adapt?
        if (mod(N%ITER,MCO%nADAPT) == 0) then
            ! work out local acceptance rate (i.e. since last adapt)
            N%ACCRATE=dble(N%ACCLOC)/dble(MCO%nADAPT)
-!print*,"...Local Acceptance rate = ",N%ACCRATE,(MCO%fADAPT*dble(MCO%nOUT)) > dble(N%ACC),P,P0
            ! have few enough parameters been accepted to consider adapting
            if ((MCO%fADAPT*dble(MCO%nOUT)) > dble(N%ACC)) then
-!print*,"P",P
                call adapt_step_size(PARSALL,PI,N,MCO)
            end if !  have enough parameter been accepted
            ! resets to local counter
@@ -220,6 +220,7 @@ contains
     MCOUT%complete = 1
     ! tidy up
     deallocate(uniform_random_vector)
+
     ! completed MHMCMC loop
     write(*,*)"MHMCMC loop completed, next please..."
 
@@ -258,7 +259,7 @@ contains
     if (minstepsize > 0.01d0) minstepsize = 0.01d0 ! TLS
     ! determine local acceptance rate
     N%ACCRATE = dble(N%ACCLOC)/dble(MCO%nADAPT)
-!print*,"N%ACCRATE",N%ACCRATE,N%ACCLOC,N%ACCRATE < 0.23d0,N%ACCRATE > 0.44d0
+
     ! default stepize increment
     if (N%ACCLOC > 0 .and. N%ACCRATE < 0.23d0) then
         ! make step size smaller
@@ -268,7 +269,7 @@ contains
         PI%stepsize = PI%stepsize * adaptfac
     end if ! conditional if acceptance rate low or high
 
-    ! next do dimension / parameter specific adjustments
+    ! Next do dimension / parameter specific adjustments
     ! this is the adaptive part (Bloom & Williams 2015)
     ! NOTE: original value was > 3, however this result in a biased estimate of
     ! the standard deviation to a lower value.
@@ -295,15 +296,16 @@ contains
     ! carry out final checks
     !!!!!!!
 
+    ! if the minimum step size has been hit
+    ! and we are still falling outside of the acceptance rate adjust likelihood scaler
+    if (minval(PI%stepsize) <= minstepsize .and. N%ACCRATE < 0.23d0 .and. N%likelihood_scaler < 100d0) then
+        N%likelihood_scaler = N%likelihood_scaler + 0.075d0
+    elseif (N%likelihood_scaler > 1d0 .and. N%ACCRATE > 0.23d0) then
+        N%likelihood_scaler = N%likelihood_scaler - 0.075d0
+    end if
+
     ! step size can't be greater than 1
     where (PI%stepsize > 1d0) PI%stepsize = PI%stepsize * adaptfac_1
-    ! if we have failed to accept any steps for 10000 iterations then reset
-    ! step size of all parameters to a large value. Here we assume that we are
-    ! have wandered into a EDC inconsistent place and gotten lost
-!    if (N%ACCLOC == 0 .and. N%ACCLOC_ZEROS*MCO%nADAPT > 10) then
-!        PI%stepsize = 0.05d0
-!        N%ACCLOC_ZEROS = 0
-!    end if
     ! if stepsize below minimum allowed value increase
     where (PI%stepsize < minstepsize) PI%stepsize = PI%stepsize * adaptfac
     ! if stepsize still below minimum allowed value then set to minimum

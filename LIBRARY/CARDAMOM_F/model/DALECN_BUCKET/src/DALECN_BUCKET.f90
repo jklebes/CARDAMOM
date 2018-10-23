@@ -161,7 +161,8 @@ double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daug
 !!!!!!!!!
 
 ! useful technical parameters
-logical :: do_iWUE = .true.
+logical :: do_iWUE = .true., & ! Use iWUE or WUE for stomatal optimisation
+ do_energy_balance = .false.   ! Calculate steady-state energy balance for GPP~Transpiration
 double precision, parameter :: dble_zero = 0d0    &
                               ,dble_one = 1d0     &
                               ,vsmall = tiny(0d0)
@@ -197,10 +198,10 @@ double precision, parameter :: pi = 3.1415927d0,  &
 
 ! photosynthesis / respiration parameters
 double precision, parameter :: &
-                    kc_saturation = 310d0,        & ! CO2 half saturation, saturation value
-                 kc_half_sat_conc = 23.956d0,     & ! CO2 half sat, half sat
-               co2comp_saturation = 36.5d0,       & ! CO2 compensation point, saturation
-            co2comp_half_sat_conc = 9.46d0,       & ! CO2 comp point, half sat
+                    kc_saturation = 310d0,        & ! CO2 half saturation, at reference temperature (298.15 K)
+                 kc_half_sat_conc = 23.956d0,     & ! CO2 half sat, sensitivity coefficient
+               co2comp_saturation = 36.5d0,       & ! CO2 compensation point, at reference temperature (298.15 K)
+            co2comp_half_sat_conc = 9.46d0,       & ! CO2 comp point, sensitivity coefficient
                                                     ! Each of these are temperature
                                                     ! sensitivty
               leaf_life_weighting = 1d0/2d0,      & ! inverse of averaging period of lagged effects
@@ -256,6 +257,9 @@ double precision, parameter :: &
 ! local variables for GSI phenology model
 double precision :: SLA & ! Specific leaf area
                    ,avail_labile,Rg_from_labile    &
+                   ,NUE_decay_acceleration         &
+                   ,Cfol_turnover_gradient         &
+                   ,Cfol_turnover_half_saturation  &
                    ,Cwood_labile_release_gradient  &
                    ,Cwood_labile_half_saturation   &
                    ,Croot_labile_release_gradient  &
@@ -265,8 +269,8 @@ double precision :: SLA & ! Specific leaf area
                    ,Cwood_hydraulic_limit          &
                    ,tmp,gradient
 
-double precision, allocatable, dimension(:) :: canopy_age_vector, canopy_days,&
-                                               leaf_marginal_gain_history,    &
+double precision, allocatable, dimension(:) :: canopy_age_vector, canopy_days, NUE_vector,&
+                                               leaf_gpp_gain_history,     &
                                                disturbance_residue_to_litter, &
                                                disturbance_residue_to_som,    &
                                                disturbance_residue_to_cwd,    &
@@ -278,6 +282,7 @@ double precision, allocatable, dimension(:) :: canopy_age_vector, canopy_days,&
 ! See source below for details of these variables
 integer :: oldest_leaf,leaf_grow_period
 double precision :: deltaGPP, deltaRm, Rm_deficit, &
+                    Q10_adjustment, &
                     Rm_deficit_leaf_loss, &
                     Rm_deficit_root_loss, &
                     Rm_deficit_wood_loss, &
@@ -286,6 +291,8 @@ double precision :: deltaGPP, deltaRm, Rm_deficit, &
                     root_cost,root_life,       &
                     leaf_cost,leaf_life,       &
                     wood_cost,canopy_age,      &
+                    leaf_life_max,             &
+                    canopy_optimum_period,     &
                     canopy_zero_efficiency,    &
                     canopy_maturation_lag
 
@@ -328,6 +335,8 @@ double precision :: root_reach, root_biomass, &
                 max_supply, & ! maximum water supply (mmolH2O/m2/day)
                      meant, & ! mean air temperature (oC)
                    meant_K, & ! mean air temperature (K)
+                 maxt_lag1, &
+                     leafT, & ! canopy temperature (oC)
           mean_annual_temp, &
         canopy_swrad_MJday, & ! canopy_absorbed shortwave radiation (MJ.m-2.day-1)
           canopy_par_MJday, & ! canopy_absorbed PAR radiation (MJ.m-2.day-1)
@@ -335,6 +344,7 @@ double precision :: root_reach, root_biomass, &
           canopy_lwrad_Wm2, & ! canopy absorbed longwave radiation (W.m-2)
             soil_lwrad_Wm2, & ! soil absorbed longwave radiation (W.m-2)
              sky_lwrad_Wm2, & ! sky absorbed longwave radiation (W.m-2)
+                 ci_global, & ! internal CO2 concentration (ppm or umol/mol)
       stomatal_conductance, & ! maximum stomatal conductance (mmolH2O.m-2.s-1)
    aerodynamic_conductance, & ! bulk surface layer conductance (m.s-1)
           soil_conductance, & ! soil surface conductance (m.s-1)
@@ -411,9 +421,10 @@ double precision, dimension(:), allocatable ::    deltat_1, & ! inverse of decim
                                     co2_compensation_point, & ! (ppm)
                                  Cwood_labile_release_coef, & ! time series of labile release to wood
                                  Croot_labile_release_coef, & ! time series of labile release to root
+                                        Cfol_turnover_coef, &
                                                soilwatermm, &
                                                  wSWP_time
-double precision :: leaf_marginal_gain, leaf_marginal_loss
+double precision :: marginal_output, gradient_output
 save
 
 contains
@@ -462,18 +473,19 @@ contains
 
     ! declare general local variables
     double precision ::  infi &
-              ,Q10_adjustment &
-            ,pot_actual_ratio &
                ,transpiration &
              ,soilevaporation &
               ,wetcanopy_evap &
             ,snow_sublimation &
                     ,loss_adj &
                      ,deltaWP & ! deltaWP (MPa) minlwp-soilWP
+               ,act_pot_ratio &
+                  ,isothermal &
+            ,deltaR,deltaTemp &
                         ,loss &
                         ,Rtot   ! Total hydraulic resistance (MPa.s-1.m-2.mmol-1)
 
-    integer :: nxp,n,test,m,a
+    integer :: nxp,n,test,m,a,base_age
 
     ! local fire related variables
     double precision :: burnt_area &
@@ -634,7 +646,7 @@ contains
 !real :: Rtot_track_time = 0, aero_time = 0, soilwater_time = 0 , acm_et_time = 0 , Rm_time = 0
 !call cpu_time(begin)
 !call cpu_time(done)
-
+!print*,"2h"
     ! infinity check requirement
     infi = 0d0
 
@@ -642,27 +654,27 @@ contains
     NUE_optimum                = pars(26)      ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
                                                ! ,unlimited by CO2, light and
                                                ! photoperiod (gC/gN/m2leaf/day)
-    pn_max_temp                = 4.772427d+01  ! Maximum temperature for photosynthesis (oC)
-    pn_opt_temp                = 3.241907d+01  ! Optimum temperature for photosynthesis (oC)
-    pn_kurtosis                = 1.412502d-01  ! Kurtosis of photosynthesis temperature response
-    e0                         = 6.895808d+00  ! Quantum yield gC/MJ/m2/day PAR
-    max_lai_lwrad_transmitted  = 6.636301d-01  ! Max fractional reduction of LW from sky transmitted through canopy
-    lai_half_lwrad_transmitted = 1.014790d+00  ! LAI at which canopy LW transmittance reduction = 50 %
-    max_lai_nir_reflection     = 2.141106d-01  ! Max fraction of NIR reflected by canopy
-    lai_half_nir_reflection    = 9.070301d-01  ! LAI at which canopy NIR reflected = 50 %
-    minlwp                     =-2.002699d+00  ! minimum leaf water potential (MPa)
-    max_lai_par_reflection     = 1.423063d-01  ! Max fraction of PAR reflected by canopy
-    lai_half_par_reflection    = 2.314545d+00  ! LAI at which canopy PAR reflected = 50 %
-    lai_half_lwrad_reflected   = 1.050068d+00  ! LAI at which 50 % LW is reflected back to sky
-    iWUE                       = 2.901203d-07  ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
-    soil_swrad_absorption      = 6.155656d-01  ! Fraction of SW rad absorbed by soil
-    max_lai_par_transmitted    = 5.995337d-01  ! Max fractional reduction in PAR transmittance by canopy
-    lai_half_par_transmitted   = 1.732624d+00  ! LAI at which PAR transmittance reduction = 50 %
-    max_lai_nir_transmitted    = 5.344348d-01  ! Max fractional reduction in NIR transmittance by canopy
-    lai_half_nir_transmitted   = 2.210447d+00  ! LAI at which NIR transmittance reduction = 50 %
-    max_lai_lwrad_release      = 9.896515d-01  ! Max fraction of LW emitted (1-par) from canopy to be released
-    lai_half_lwrad_release     = 4.193762d-02  ! LAI at which LW emitted from canopy to be released at 50 %
-    max_lai_lwrad_reflected    = 6.602782d-01  ! LAI at which 50 % LW is reflected back to sky
+    pn_max_temp                = 5.357174d+01  ! Maximum temperature for photosynthesis (oC)
+    pn_opt_temp                = 3.137242d+01  ! Optimum temperature for photosynthesis (oC)
+    pn_kurtosis                = 1.927458d-01  ! Kurtosis of photosynthesis temperature response
+    e0                         = 5.875662d+00  ! Quantum yield gC/MJ/m2/day PAR
+    max_lai_lwrad_transmitted  = 7.626683d-01  ! Max fractional reduction of LW from sky transmitted through canopy
+    lai_half_lwrad_transmitted = 7.160363d-01  ! LAI at which canopy LW transmittance reduction = 50 %
+    max_lai_nir_reflection     = 4.634860d-01  ! Max fraction of NIR reflected by canopy
+    lai_half_nir_reflection    = 1.559148d+00  ! LAI at which canopy NIR reflected = 50 %
+    minlwp                     =-1.996830d+00  ! minimum leaf water potential (MPa)
+    max_lai_par_reflection     = 1.623013d-01  ! Max fraction of PAR reflected by canopy
+    lai_half_par_reflection    = 1.114360d+00  ! LAI at which canopy PAR reflected = 50 %
+    lai_half_lwrad_reflected   = 1.126214d+00  ! LAI at which 50 % LW is reflected back to sky
+    iWUE                       = 1.602503d-06  ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
+    soil_swrad_absorption      = 6.643079d-01  ! Fraction of SW rad absorbed by soil
+    max_lai_par_transmitted    = 8.079519d-01  ! Max fractional reduction in PAR transmittance by canopy
+    lai_half_par_transmitted   = 9.178784d-01  ! LAI at which PAR transmittance reduction = 50 %
+    max_lai_nir_transmitted    = 8.289803d-01  ! Max fractional reduction in NIR transmittance by canopy
+    lai_half_nir_transmitted   = 1.961831d+00  ! LAI at which NIR transmittance reduction = 50 %
+    max_lai_lwrad_release      = 9.852855d-01  ! Max fraction of LW emitted (1-par) from canopy to be released
+    lai_half_lwrad_release     = 7.535450d-01  ! LAI at which LW emitted from canopy to be released at 50 %
+    max_lai_lwrad_reflected    = 1.955832d-02  ! LAI at which 50 % LW is reflected back to sky
 
     ! mean number of model steps per year
     mean_days_per_step = sum(deltat) ! sum nos days
@@ -676,7 +688,9 @@ contains
     Rtot = dble_one                  ! Reset Total hydraulic resistance to 1
     canopy_zero_efficiency = pars(3) ! canopy age (days) past peak at which NUE = 0
     canopy_maturation_lag = pars(14) ! canopy age (days) before peak NUE
-    leaf_grow_period = ceiling(nint(pars(27))/mean_days_per_step) 
+    canopy_optimum_period = 7d0      ! period of time the canopy is at optimum NUE
+    leaf_grow_period = ceiling(pars(5)/dble(mean_days_per_step))
+
     ! Root biomass to reach 50% (root_k) of maximum rooting depth (max_depth)
     root_k = pars(34) ; max_depth = pars(35)
 
@@ -685,11 +699,13 @@ contains
     !!!!!!!!!!!!
 
     SLA = pars(17)**(-dble_one)
-    root_cost = dble_zero ; leaf_cost = dble_zero
+    root_cost = dble_zero ; leaf_cost = dble_zero ; wood_cost = dble_zero
     ! calculate root life spans (days)
     root_life = pars(7)**(-dble_one)
     ! Assign initial leaf lifespan used in marginal return calculations
-    leaf_life = pars(25) !pars(3) + pars(14) !pars(25)
+    leaf_life = pars(27)
+    ! Determine the maximum possible leaf life span
+    leaf_life_max = canopy_zero_efficiency + canopy_maturation_lag + canopy_optimum_period
     call estimate_mean_NUE
 
     !!!!!!
@@ -848,16 +864,16 @@ contains
                     disturbance_residue_to_som(nodays),disturbance_loss_from_litter(nodays),  &
                     disturbance_loss_from_cwd(nodays),disturbance_loss_from_som(nodays),      &
                     Cwood_labile_release_coef(nodays),Croot_labile_release_coef(nodays),      &
-                    deltat_1(nodays),wSWP_time(nodays),soilwatermm(nodays),                   &
-                    daylength_hours(nodays),daylength_seconds(nodays),meant_time(nodays),     &
-                    rainfall_time(nodays),co2_half_saturation(nodays),co2_compensation_point(nodays))
+                    Cfol_turnover_coef(nodays),deltat_1(nodays),wSWP_time(nodays),            &
+                    soilwatermm(nodays),daylength_hours(nodays),daylength_seconds(nodays),    &
+                    meant_time(nodays),rainfall_time(nodays),co2_half_saturation(nodays),co2_compensation_point(nodays))
 
-           ! then those independent of the time period, 10 years used to provide
+           ! then those independent of the time period, 15 years used to provide
            ! buffer for maximum value at which leaves become photosynthetically
            ! useless
-           allocate(canopy_age_vector(nint(3650/mean_days_per_step)),canopy_days(nint(3650/mean_days_per_step)),&
-                    leaf_marginal_gain_history(31))
-           canopy_age_vector = dble_zero ; canopy_days = dble_zero ; leaf_marginal_gain_history = dble_zero
+           allocate(canopy_age_vector(5480),canopy_days(5480), NUE_vector(5480),leaf_gpp_gain_history(31))
+           canopy_age_vector = dble_zero ; canopy_days = dble_zero ; leaf_gpp_gain_history = dble_zero
+           NUE_vector = dble_zero
 
            !
            ! Timing variables which are needed first
@@ -882,8 +898,8 @@ contains
 
            ! then those independent of the time period (8yr*365days + 90days; accounting for pre and post peak NUE )
            do n = 1, size(canopy_days)
-              ! estimate cumulative age in days or use in age model
-              canopy_days(n) = mean_days_per_step * n
+              ! estimate cumulative age in days
+              canopy_days(n) = n
            end do
 
            !
@@ -962,15 +978,48 @@ contains
         seconds_per_step = deltat(1) * seconds_per_day
         days_per_step =  deltat(1)
         meant = meant_time(1)
+        maxt_lag1 = maxt
+        leafT = maxt
+
+        ! Calculate logistic temperature response function of leaf turnover
+        Cfol_turnover_gradient = 0.5d0 ; Cfol_turnover_half_saturation = pars(42)
+        Cfol_turnover_coef = (dble_one+exp(Cfol_turnover_gradient*(met(2,:)-Cfol_turnover_half_saturation)))**(-dble_one)
+        NUE_decay_acceleration = pars(43) ! acceleration (days) of NUE decay due to environmental effects (func(temperature))
 
         ! initialise foliage age distribution
-        ! NOTE: this is a bad idea but for now allocate uniformly
-        canopy_age_vector = dble_zero ; leaf_marginal_gain_history = dble_zero
-        oldest_leaf = nint(leaf_life / mean_days_per_step) ! number of steps to cover initial leaf life span (NOT age)
-        canopy_age_vector(1:oldest_leaf) = POOLS(1,2) / dble(oldest_leaf) ! uniformly spread at the moment...
+        canopy_age_vector = dble_zero ; leaf_gpp_gain_history = dble_zero
+        oldest_leaf = nint(leaf_life) ! number of days to cover initial leaf life span
+        ! determine the vector position at which mean canopy age is located
+        canopy_age = min(dble(oldest_leaf-1),pars(25))
+        ! set lower bound to prevent errors in array selection
+        canopy_age = max(canopy_age,1d0) ; oldest_leaf = max(oldest_leaf,1)
+
+        ! estimate gradient needed using the integral of 0-canopy age (2 comes re-arranging the integral of the linear equation)
+        ! to assign 50% (i.e. 0.5) of the canopy. Note that this must be scalable for simulations at different time steps
+        tmp = ((0.5d0 * 2d0) / canopy_age ** 2)
+        ! assign foliar biomass to first half of the distribution
+        do n = 1, nint(canopy_age), 1
+           canopy_age_vector(n) = POOLS(1,2) * dble(n) * tmp
+        end do
+
+        ! now repeat the process for the second part of the distribution
+        tmp = ((0.5d0 * 2d0) / (dble(oldest_leaf) - canopy_age) ** 2)
+        do n = nint(canopy_age+1d0), oldest_leaf, 1
+           canopy_age_vector(n) = POOLS(1,2) * (dble(oldest_leaf)-n) * tmp
+        end do
+
+        ! check / adjust mass balance
+        tmp = POOLS(1,2) / sum(canopy_age_vector(1:oldest_leaf))
+        canopy_age_vector(1:oldest_leaf) = canopy_age_vector(1:oldest_leaf) * tmp
         ! we have leaves therefore there must be an age
         canopy_age = sum(canopy_age_vector(1:oldest_leaf) * canopy_days(1:oldest_leaf)) &
                    / sum(canopy_age_vector(1:oldest_leaf))
+
+        ! estimate canopy age class specific NUE
+        do n = 1, size(canopy_days)
+           NUE_vector(n) = age_dependent_NUE(canopy_days(n),NUE_optimum &
+                                            ,canopy_maturation_lag,canopy_optimum_period,canopy_zero_efficiency)
+        end do
 
         ! reset disturbance
         disturbance_residue_to_litter = dble_zero ; disturbance_loss_from_litter = dble_zero
@@ -1015,9 +1064,15 @@ contains
       ! assign drivers and update some prognostic variables
       !!!!!!!!!!
 
+      ! set lag information using previous time step value for temperature
+      maxt_lag1 = maxt
+      ! to by pass precision error development in the canopy pool, here is a hack!
+      POOLS(n,2) = sum(canopy_age_vector(1:oldest_leaf))
+
       ! Incoming drivers
       mint = met(2,n)  ! minimum temperature (oC)
       maxt = met(3,n)  ! maximum temperature (oC)
+      leafT = maxt     ! initial canopy temperature (oC)
       swrad = met(4,n) ! incoming short wave radiation (MJ/m2/day)
       co2 = met(5,n)   ! CO2 (ppm)
       doy = met(6,n)   ! Day of year
@@ -1053,7 +1108,7 @@ contains
       ! output canopy age for later diagnostics
       FLUXES(n,18) = canopy_age
       ! estimate the new NUE as function of canopy age
-      NUE = age_dependent_NUE(canopy_age,NUE_optimum,canopy_maturation_lag,canopy_zero_efficiency)
+      NUE = canopy_aggregate_NUE(1,oldest_leaf)
 
       ! calculate daylength in hours and seconds
       call calculate_daylength((doy-(deltat(n)*0.5d0)),lat)
@@ -1066,7 +1121,6 @@ contains
       ! snowing or not...?
       snow_melt = dble_zero ; snowfall = dble_zero
       if (mint < dble_zero .and. maxt > dble_zero) then
-
           ! if minimum temperature is below freezing point then we weight the
           ! rainfall into snow or rain based on proportion of temperature below
           ! freezing
@@ -1080,21 +1134,16 @@ contains
           ! otherwise we assume snow is melting at 10 % per day light hour
           snow_melt = min(snow_storage, snow_melt * snow_storage * dayl_hours * 0.1d0 * deltat(n))
           snow_storage = snow_storage - snow_melt
-
       elseif (maxt < dble_zero) then
-
           ! if whole day is below freezing then we should assume that all
           ! precipitation is snowfall
           snowfall = rainfall ; rainfall = dble_zero
           ! Add rainfall to the snowpack and clear rainfall variable
           snow_storage = snow_storage + (snowfall*seconds_per_step)
-
       else if (mint > dble_zero) then
-
           ! otherwise we assume snow is melting at 10 % per day light hour
           snow_melt = min(snow_storage, snow_storage * dayl_hours * 0.1d0 * deltat(n))
           snow_storage = snow_storage - snow_melt
-
       end if
 
       !!!!!!!!!!
@@ -1117,20 +1166,40 @@ contains
 
       ! calculate some temperature dependent meteorologial properties
       call acm_meteorological_constants(maxt)
+      ! calculate aerodynamic using consistent approach with SPA
+      call calculate_aerodynamic_conductance
+
+      !!!!!!!!!!
+      ! Determine net shortwave and isothermal longwave energy balance
+      !!!!!!!!!!
+
+      call calculate_shortwave_balance
+      call calculate_longwave_isothermal(leafT,maxt)
+
+      !!!!!!!!!!
+      ! Estimate approximate wet canopy evaporation and impact on energy balance
+      !!!!!!!!!!
+
+      ! if desired calculate the steady-state energy balance
+      if (do_energy_balance) then
+          isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * seconds_per_day_1)
+          call update_net_radiation(isothermal,leafT,lai,dble_one &
+                                   ,dble_zero,aerodynamic_conductance,vpd_pa &
+                                   ,deltaTemp,deltaR)
+          ! update long wave and canopy temperature based on potential canopy surface flux
+          canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
+          leafT = leafT + deltaTemp
+          ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
+          call calculate_wetcanopy_evaporation(wetcanopy_evap,act_pot_ratio,canopy_storage,dble_zero)
+          ! restore temperature and radiation values
+          leafT = leafT - deltaTemp ; canopy_lwrad_Wm2 = canopy_lwrad_Wm2 - deltaR
+      else
+          ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
+          call calculate_wetcanopy_evaporation(wetcanopy_evap,act_pot_ratio,canopy_storage,dble_zero)
+      endif ! do energy balance
+
       ! calculate radiation absorption and estimate stomatal conductance
       call acm_albedo_gc(abs(deltaWP),Rtot)
-
-      !!!!!!!!!!
-      ! GPP (gC.m-2.day-1)
-      !!!!!!!!!!
-
-      if (stomatal_conductance > dble_zero) then
-          FLUXES(n,1) = max(dble_zero,acm_gpp(stomatal_conductance))
-      else
-          FLUXES(n,1) = dble_zero
-      endif
-      ! labile production (gC.m-2.day-1)
-      FLUXES(n,5) = FLUXES(n,1)
 
       !!!!!!!!!!
       ! Evaptranspiration (kgH2O.m-2.day-1)
@@ -1138,8 +1207,6 @@ contains
 
       ! Canopy transpiration (kgH2O/m2/day)
       call calculate_transpiration(transpiration)
-      ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
-      call calculate_wetcanopy_evaporation(wetcanopy_evap,pot_actual_ratio,canopy_storage,transpiration)
       ! Soil surface (kgH2O.m-2.day-1)
       call calculate_soil_evaporation(soilevaporation)
       ! restrict transpiration to positive only
@@ -1156,6 +1223,20 @@ contains
 
       ! Note that soil mass balance will be calculated after phenology
       ! adjustments
+
+      !!!!!!!!!!
+      ! GPP (gC.m-2.day-1)
+      !!!!!!!!!!
+
+      ! reset output variable
+      ci_global = dble_zero
+      if (lai > vsmall .and. stomatal_conductance > vsmall) then
+          FLUXES(n,1) = max(dble_zero,acm_gpp(stomatal_conductance))
+      else
+          FLUXES(n,1) = dble_zero
+      endif
+      ! labile production (gC.m-2.day-1)
+      FLUXES(n,5) = FLUXES(n,1)
 
       !!!!!!!!!!
       ! calculate maintenance respiration demands and mass balance
@@ -1231,14 +1312,16 @@ contains
       ! Determine leaf growth and turnover based on marginal return calculations
       ! NOTE: that turnovers will be bypassed in favour of mortality turnover
       ! should available labile be exhausted
-      call calculate_leaf_dynamics(n,deltat,nodays,pars(5),pars(12) &
+      call calculate_leaf_dynamics(n,deltat,nodays,pars(12),pars(36),pars(37) &
                                   ,deltaWP,Rtot,FLUXES(n,1),Rm_leaf &
                                   ,POOLS(n,2),FLUXES(n,9),FLUXES(n,16))
+      ! call calculate_leaf_dynamics(n,deltat,nodays,pars(5),pars(12),pars(36),pars(37) &
+      !                             ,deltaWP,Rtot,FLUXES(n,1),Rm_leaf &
+      !                             ,POOLS(n,2),FLUXES(n,9),FLUXES(n,16))
+
 
       ! Total labile release to foliage
       FLUXES(n,8) = avail_labile*(dble_one-(dble_one-FLUXES(n,16))**deltat(n))*deltat_1(n)
-      ! Retrict based on available labile stores
-      FLUXES(n,8) = min(avail_labile*deltat_1(n),FLUXES(n,8))
       ! Update available labile supply for fine roots and wood
       avail_labile = avail_labile - (FLUXES(n,8)*deltat(n))
 
@@ -1257,15 +1340,15 @@ contains
       if (Rm_deficit_leaf_loss > dble_zero .or. &
           Rm_deficit_wood_loss > dble_zero .or. &
           Rm_deficit_root_loss > dble_zero) then
- 
+
           ! C starvation turnover has occured, mortality turnover will now occur
- 
+
           ! Special case with foliage as we may already have a portion committed to turnover based on marginal returns.
           ! The age model must take this into account...
           FLUXES(n,10) = POOLS(n,2)*(dble_one-(dble_one-FLUXES(n,9))**deltat(n))*deltat_1(n)
           ! we have some work to do if the canopy needs to lose more leaf than expected...
           if (FLUXES(n,10) < Rm_deficit_leaf_loss) then
- 
+
               ! determine the deficit between what is already committed to loss and what is needed
               tmp = Rm_deficit_leaf_loss - FLUXES(n,10)
               ! scale the the full model time step
@@ -1279,11 +1362,14 @@ contains
                  ! if we have found enough carbon to remove then exit the loop
                  if (loss >= tmp) exit
               end do
+              ! if the loop extended to its finish a = 0 which we don't want
+              a = max(1,a)
+
               ! if based on age class we now allocate more leaf to turnover than wanted we must adjust this...
               if (loss > tmp) then
                   ! ...by adding the difference back into the profile...
                   loss_adj = loss - tmp
-                  ! ...add one more to the 
+                  ! ...add one more to the
                   loss = loss - loss_adj
               endif
               ! remove the biomass from the canopy age vector
@@ -1291,7 +1377,7 @@ contains
               ! add the difference between target and actual back to the final age class if available.
               canopy_age_vector(a) = loss_adj
               ! update the new oldest leaf age, accounting for indexing used above in "while" statement
-              oldest_leaf = a 
+              oldest_leaf = a
               ! if we have ran out of leaf area we cannot have zero age
               if (oldest_leaf <= 0) oldest_leaf = 1
               ! update FLX10 for leaf loss
@@ -1302,11 +1388,10 @@ contains
           ! update root & wood losses based on C starvation
           FLUXES(n,11) = Rm_deficit_wood_loss
           FLUXES(n,12) = Rm_deficit_root_loss
- 
-      else
- 
-          ! C starvation turnover not occuring so turnovers progress as normal
 
+      else
+
+          ! C starvation turnover not occuring so turnovers progress as normal
           ! total leaf litter production
           FLUXES(n,10) = POOLS(n,2)*(dble_one-(dble_one-FLUXES(n,9))**deltat(n))*deltat_1(n)
           ! total wood litter production
@@ -1587,10 +1672,10 @@ contains
 !              NEE(n)=NEE(n)+FLUXES(n,17)
               ! determine the as daily rate impact on live tissues for use in EDC and
               ! MTT calculations
-              FLUXES(n,22) = FLUXES(n,22) + ((CFF(1) + NCFF(1)) * deltat_1(n))
-              FLUXES(n,23) = FLUXES(n,23) + ((CFF(2) + NCFF(2)) * deltat_1(n))
-              FLUXES(n,24) = FLUXES(n,24) + ((CFF(3) + NCFF(3)) * deltat_1(n))
-              FLUXES(n,25) = FLUXES(n,25) + ((CFF(4) + NCFF(4)) * deltat_1(n))
+              FLUXES(n,22) = FLUXES(n,22) + ((CFF(1) + NCFF(1)) * deltat_1(n)) ! labile
+              FLUXES(n,23) = FLUXES(n,23) + ((CFF(2) + NCFF(2)) * deltat_1(n)) ! foliar
+              FLUXES(n,24) = FLUXES(n,24) + ((CFF(3) + NCFF(3)) * deltat_1(n)) ! root
+              FLUXES(n,25) = FLUXES(n,25) + ((CFF(4) + NCFF(4)) * deltat_1(n)) ! wood
 
               !// update pools
               !/*Adding all fire pool transfers here*/
@@ -1601,6 +1686,7 @@ contains
               POOLS(n+1,5)=max(dble_zero,POOLS(n+1,5)-CFF(5)-NCFF(5)+NCFF(1)+NCFF(2)+NCFF(3))
               POOLS(n+1,6)=max(dble_zero,POOLS(n+1,6)+NCFF(4)+NCFF(5)+NCFF(7))
               POOLS(n+1,7)=max(dble_zero,POOLS(n+1,7)-CFF(7)-NCFF(7))
+
               ! update corresponding canopy vector
               if (sum(canopy_age_vector(1:oldest_leaf)) > dble_zero) then
                   canopy_age_vector(1:oldest_leaf) = canopy_age_vector(1:oldest_leaf) &
@@ -1632,6 +1718,18 @@ contains
 
       ! Check that foliar pool in bulk and age specific are balanced
       if (canopy_age /= canopy_age .or. sum(canopy_age_vector(1:oldest_leaf)) - POOLS(n+1,2) > 1d-8) then
+          ! Estimate the current canopy NUE as a function of age
+          if (sum(canopy_age_vector(1:oldest_leaf)) == dble_zero ) then
+              ! if all the leaves have gone zero the age
+              canopy_age = dble_one
+              ! and the oldest leaf (don't forget that the earlier sections can be
+              ! empty if no leaves have been allocated)
+              oldest_leaf = 1
+          else
+              ! we have leaves therefore there must be an age
+              canopy_age = sum(canopy_age_vector(1:oldest_leaf) * canopy_days(1:oldest_leaf)) &
+                         / sum(canopy_age_vector(1:oldest_leaf))
+          endif
           print*,"Mass balance error or canopy_age == NaN"
           print*,"step",n
           print*,"met",met(:,n)
@@ -1642,7 +1740,7 @@ contains
           print*,"WetCan_evap",wetcanopy_evap,"transpiration",transpiration,"soilevap",soilevaporation
           print*,"waterfrac",soil_waterfrac
           print*,"Rm_loss",Rm_deficit_leaf_loss,Rm_deficit_root_loss,Rm_deficit_wood_loss
-          print*,"Canopy_age",canopy_age,"Oldest_leaf",oldest_leaf
+          print*,"Canopy_age",canopy_age,"Oldest_leaf",oldest_leaf,"oldest_age",canopy_days(oldest_leaf)
           print*,"Canopy_age_vector",sum(canopy_age_vector(1:oldest_leaf))
           print*,"Vector-Bulk Foliar Residual",sum(canopy_age_vector(1:oldest_leaf))-POOLS(n+1,2)
           stop
@@ -1707,9 +1805,9 @@ contains
           enddo
 
       end if ! vectorised check for NaN or negatives
-!print*,leaf_marginal
-!FLUXES(n,21) = leaf_marginal_gain
-!FLUXES(n,17) = leaf_marginal_loss
+
+!FLUXES(n,17) = FLUXES(n,8) ! NUE_mean!marginal_output
+!FLUXES(n,21) = FLUXES(n,10)!gradient_output
     end do ! nodays loop
 
     !!!!!!!!!!
@@ -1722,6 +1820,7 @@ contains
                         +FLUXES(1:nodays,17)  ! fire
     ! load GPP
     GPP_out(1:nodays) = FLUXES(1:nodays,1)
+
 !call cpu_time(done) ; print*,"Total",done-begin
   end subroutine CARBON_MODEL
   !
@@ -1742,11 +1841,13 @@ contains
     double precision :: pn, pd, pp, qq, ci, mult, pl &
                        ,gc ,gs_mol, gb_mol
 
-    ! Temperature adjustments for Michaelis-Menten coefficients
-    ! for CO2 (kc) and O2 (ko) and CO2 compensation point
-    ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
-!    co2_half_sat   = arrhenious(kc_saturation,kc_half_sat_conc,maxt)
-!    co2_comp_point = arrhenious(co2comp_saturation,co2comp_half_sat_conc,maxt)
+    if (do_energy_balance) then
+        ! Temperature adjustments for Michaelis-Menten coefficients
+        ! for CO2 (kc) and O2 (ko) and CO2 compensation point
+        ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
+        co2_half_sat   = arrhenious(kc_saturation,kc_half_sat_conc,leafT)
+        co2_comp_point = arrhenious(co2comp_saturation,co2comp_half_sat_conc,leafT)
+    endif
 
     !
     ! Metabolic limited photosynthesis
@@ -1754,7 +1855,7 @@ contains
 
     ! maximum rate of temperature and nitrogen (canopy efficiency) limited
     ! photosynthesis (gC.m-2.day-1)
-    pn = lai*avN*NUE*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,maxt)
+    pn = lai*avN*NUE*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
 
     !
     ! Diffusion limited photosynthesis
@@ -1779,7 +1880,7 @@ contains
     mult = co2+qq-pp
     ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
     ci = min(ci,co2) ! C3 can't have more CO2 than is in the atmosphere
-
+    ci_global = ci
     ! calculate CO2 limited rate of photosynthesis (gC.m-2.day-1)
     pd = (gc * (co2-ci)) * umol_to_gC
     ! scale to day light period as this is then consistent with the light
@@ -1818,6 +1919,8 @@ contains
     double precision, intent(in) :: gs_in
 
     ! local variables
+    double precision :: tmp,airt_save,lw_save, &
+                        isothermal,deltaTemp,deltaR
     double precision :: gs_high, gs_store, &
                         gpp_high, gpp_low, &
                         evap_high, evap_low
@@ -1828,16 +1931,42 @@ contains
         ! Optimise intrinsic water use efficiency
         !!!!!!!!!!
 
+        ! if desired calculate the steady-state energy balance
+        if (do_energy_balance) then
+            ! save values which will need to be reset
+            airt_save = leafT ; lw_save = canopy_lwrad_Wm2
+            ! estimate energy balance without wet evaporation effects
+            isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
+            call update_net_radiation(isothermal,leafT,lai,dble_one &
+                                     ,gs_in,aerodynamic_conductance,vpd_pa &
+                                     ,deltaTemp,deltaR)
+            ! note that both the leafT and canopy LW have an implicit day -> day length correction
+            canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
+            leafT = leafT + deltaTemp
+        endif
         ! estimate photosynthesis with current estimate of gs
         gpp_low = acm_gpp(gs_in)
 
         ! Increment gs
         gs_high = gs_in + delta_gs
+        ! if desired calculate the steady-state energy balance
+        if (do_energy_balance) then
+            leafT = airt_save ; canopy_lwrad_Wm2 = lw_save
+            ! estimate energy balance without wet evaporation effects
+            isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
+            call update_net_radiation(isothermal,leafT,lai,dble_one &
+                                     ,gs_in,aerodynamic_conductance,vpd_pa &
+                                     ,deltaTemp,deltaR)
+            ! note that both the leafT and canopy LW have an implicit day -> day length correction
+            canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
+            leafT = leafT + deltaTemp
+        endif
         ! estimate photosynthesis with incremented gs
         gpp_high = acm_gpp(gs_high)
 
         ! determine impact of gs increment on pd and how far we are from iWUE
         find_gs = iWUE - ((gpp_high - gpp_low)/lai)
+!        find_gs = iWUE - (gpp_high - gpp_low)
 
     else ! iWUE = .true. / .false.
 
@@ -1849,7 +1978,18 @@ contains
         gs_store = stomatal_conductance
         ! now assign the current estimate
         stomatal_conductance = gs_in
-
+        if (do_energy_balance) then
+            ! save values which will need to be reset
+            airt_save = leafT ; lw_save = canopy_lwrad_Wm2
+            ! estimate energy balance without wet evaporation effects
+            isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
+            call update_net_radiation(isothermal,leafT,lai,dble_one &
+                                     ,gs_in,aerodynamic_conductance,vpd_pa &
+                                     ,deltaTemp,deltaR)
+            ! note that both the leafT and canopy LW have an implicit day -> day length correction
+            canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
+            leafT = leafT + deltaTemp
+        endif
         ! estimate photosynthesis with current estimate of gs
         gpp_low = acm_gpp(gs_in)
         call calculate_transpiration(evap_low)
@@ -1858,18 +1998,36 @@ contains
         gs_high = gs_in + delta_gs
         ! now assign the incremented estimate
         stomatal_conductance = gs_high
+        ! if desired calculate the steady-state energy balance
+        if (do_energy_balance) then
+            leafT = airt_save ; canopy_lwrad_Wm2 = lw_save
+            ! estimate energy balance without wet evaporation effects
+            isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
+            call update_net_radiation(isothermal,leafT,lai,dble_one &
+                                     ,gs_in,aerodynamic_conductance,vpd_pa &
+                                     ,deltaTemp,deltaR)
+            ! note that both the leafT and canopy LW have an implicit day -> day length correction
+            canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
+            leafT = leafT + deltaTemp
+        endif
         ! estimate photosynthesis with incremented gs
         gpp_high = acm_gpp(gs_high)
         call calculate_transpiration(evap_high)
 
         ! estimate marginal return on GPP for water loss, less water use efficiency criterion (gC.kgH2O-1.m-2.s-1)
         find_gs = ((gpp_high - gpp_low)/(evap_high - evap_low)) / lai
+!        find_gs = ((gpp_high - gpp_low)/(evap_high - evap_low))
         find_gs = find_gs - iWUE
 
         ! return original stomatal value back into memory
         stomatal_conductance = gs_store
 
     end if ! iWUE = .true. / .false.
+
+    ! now if I have been changing these drivers, best put them back to normal
+    if (do_energy_balance) then
+        leafT = airt_save ; canopy_lwrad_Wm2 = lw_save
+    endif
 
     ! remember to return back to the user
     return
@@ -1891,20 +2049,10 @@ contains
                                        Rtot    ! total hydraulic resistance (MPa.s-1.m-2.mmol-1)
 
     ! local variables
-    double precision :: denom
+    double precision :: denom, isothermal, deltaTemp, deltaR
     double precision, parameter :: max_gs = 2500d0, & ! mmolH2O.m-2.s-1
-                                   min_gs = 0.1d0,  & !
-                                   tol_gs = 4d0
-
-    ! calculate aerodynamic using consistent approach with SPA
-    call calculate_aerodynamic_conductance
-
-    !!!!!!!!!!
-    ! Determine net shortwave and isothermal longwave energy balance
-    !!!!!!!!!!
-
-    call calculate_shortwave_balance
-    call calculate_longwave_isothermal(maxt,maxt)
+                                   min_gs = 0.0001d0, & !
+                                   tol_gs = 4d0!4d0       !
 
     !!!!!!!!!!
     ! Calculate stomatal conductance under H2O and CO2 limitations
@@ -1918,24 +2066,25 @@ contains
        max_supply = vsmall
     end if
 
-    ! reset
-    stomatal_conductance = dble_zero
-    if (lai > dble_zero) then
+    if (lai > vsmall) then
+
+        ! there is lai therefore we have have stomatal conductance
+
         ! Invert Penman-Monteith equation to give gs (m.s-1) needed to meet
         ! maximum possible evaporation for the day.
         ! This will then be reduced based on CO2 limits for diffusion based
         ! photosynthesis
         denom = slope * ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2) &
-                + (air_density_kg * cpair * vpd_pa * 1d-3 * aerodynamic_conductance)
+              + (air_density_kg * cpair * vpd_pa * 1d-3 * aerodynamic_conductance)
         denom = (denom / (lambda * max_supply * mmol_to_kg_water * dayl_seconds_1)) - slope
         denom = denom / psych
         stomatal_conductance = aerodynamic_conductance / denom
- 
+
         ! convert m.s-1 to mmolH2O.m-2.s-1
         stomatal_conductance = stomatal_conductance * 1d3 * convert_ms1_mol_1
         ! if conditions are dew forming then set conductance to maximum as we are not going to be limited by water demand
         if (stomatal_conductance <= dble_zero .or. stomatal_conductance > max_gs) stomatal_conductance = max_gs
- 
+
         ! if we are potentially limited by stomatal conductance or we are using instrinsic water use efficiency (rather than WUE)
         ! then iterate to find optimum gs otherwise just go with the max...
         if (stomatal_conductance /= max_gs .or. do_iWUE ) then
@@ -1943,7 +2092,24 @@ contains
             delta_gs = 1d-3*lai ! mmolH2O/m2leaf/day
             stomatal_conductance = zbrent('acm_albedo_gc:find_gs',find_gs,min_gs,stomatal_conductance,tol_gs)
         end if
-    endif ! if lai
+
+        ! if desired calculate the steady-state energy balance
+        if (do_energy_balance) then
+            isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
+            call update_net_radiation(isothermal,leafT,lai,dble_one &
+                                     ,stomatal_conductance,aerodynamic_conductance,vpd_pa &
+                                     ,deltaTemp,deltaR)
+            ! note that both the leafT and canopy LW have an implicit day -> day length correction
+            canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
+            leafT = leafT + deltaTemp
+        endif
+
+    else
+
+        ! if no LAI then there can be no stomatal conductance
+        stomatal_conductance = dble_zero
+
+    endif ! if LAI > vsmall
 
   end subroutine acm_albedo_gc
   !
@@ -2002,49 +2168,43 @@ contains
                            ,water_supply & ! Potential water supply to canopy from soil (kgH2O.m-2.day-1)
                                   ,gs,gb   ! stomatal and boundary layer conductance (m.s-1)
 
-    if (lai <= dble_zero) then
-        transpiration = dble_zero
-    else
+    !!!!!!!!!!
+    ! Estimate energy radiation balance (W.m-2)
+    !!!!!!!!!!
 
-        !!!!!!!!!!
-        ! Estimate energy radiation balance (W.m-2)
-        !!!!!!!!!!
+    ! Absorbed shortwave radiation MJ.m-2.day-1 -> J.m-2.s-1
+    canopy_radiation = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
 
-        ! Absorbed shortwave radiation MJ.m-2.day-1 -> J.m-2.s-1
-        canopy_radiation = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
+    !!!!!!!!!!
+    ! Calculate canopy conductance (to water vapour)
+    !!!!!!!!!!
 
-        !!!!!!!!!!
-        ! Calculate canopy conductance (to water vapour)
-        !!!!!!!!!!
+    ! calculate potential water supply (kgH2O.m-2.day-1)
+    ! provided potential upper bound on evaporation
+    water_supply = max_supply * mmol_to_kg_water
 
-        ! calculate potential water supply (kgH2O.m-2.day-1)
-        ! provided potential upper bound on evaporation
-        water_supply = max_supply * mmol_to_kg_water
+    ! Change units of potential stomatal conductance
+    ! (mmolH2O.m-2.s-1 -> m.s-1).
+    ! Note assumption of sea surface pressure only
+    gs = stomatal_conductance / (convert_ms1_mol_1 * 1d3)
+    ! Combine in series stomatal conductance with boundary layer
+    gb = aerodynamic_conductance
 
-        ! Change units of potential stomatal conductance
-        ! (mmolH2O.m-2.s-1 -> m.s-1).
-        ! Note assumption of sea surface pressure only
-        gs = stomatal_conductance / (convert_ms1_mol_1 * 1d3)
-        ! Combine in series stomatal conductance with boundary layer
-        gb = aerodynamic_conductance
- 
-        !!!!!!!!!!
-        ! Calculate canopy evaporative fluxes (kgH2O/m2/day)
-        !!!!!!!!!!
+    !!!!!!!!!!
+    ! Calculate canopy evaporative fluxes (kgH2O/m2/day)
+    !!!!!!!!!!
 
-        ! Calculate numerator of Penman Montheith (kg.m-2.day-1)
-        transpiration = (slope*canopy_radiation) + (air_density_kg*cpair*vpd_pa*1d-3*gb)
-        ! Calculate the transpiration flux and restrict by potential water supply
-        ! over the day
-        transpiration = min(water_supply,(transpiration / (lambda*(slope+(psych*(dble_one+gb/gs)))))*dayl_seconds)
-
-    endif ! lai > 0
+    ! Calculate numerator of Penman Montheith (kg.m-2.day-1)
+    transpiration = (slope*canopy_radiation) + (air_density_kg*cpair*vpd_pa*1d-3*gb)
+    ! Calculate the transpiration flux and restrict by potential water supply
+    ! over the day
+    transpiration = min(water_supply,(transpiration / (lambda*(slope+(psych*(dble_one+gb/gs)))))*dayl_seconds)
 
   end subroutine calculate_transpiration
   !
   !------------------------------------------------------------------
   !
-  subroutine calculate_wetcanopy_evaporation(wetcanopy_evap,pot_actual_ratio,storage,transpiration)
+  subroutine calculate_wetcanopy_evaporation(wetcanopy_evap,act_pot_ratio,storage,transpiration)
 
     ! Estimates evaporation of canopy intercepted rainfall based on the Penman-Monteith model of
     ! evapotranspiration used to estimate SPA's daily evapotranspiration flux
@@ -2056,11 +2216,12 @@ contains
     double precision, intent(in) :: transpiration      ! kgH2O/m2/day
     double precision, intent(inout) :: storage         ! canopy water storage kgH2O/m2
     double precision, intent(out) :: wetcanopy_evap, & ! kgH2O.m-2.day-1
-                                   pot_actual_ratio    ! Ratio of potential evaporation to actual
+                                      act_pot_ratio    ! Ratio of potential evaporation to actual
 
     ! local variables
-    double precision :: canopy_radiation & ! isothermal net radiation (W/m2)
-                                     ,gb   ! stomatal and boundary layer conductance (m.s-1)
+    double precision :: day, night
+    double precision :: canopy_radiation, & ! isothermal net radiation (W/m2)
+                                      gb   ! stomatal and boundary layer conductance (m.s-1)
 
     !!!!!!!!!!
     ! Calculate canopy conductance (to water vapour)
@@ -2075,6 +2236,7 @@ contains
 
     ! Absorbed shortwave radiation MJ.m-2.day-1 -> J.m-2.s-1
     canopy_radiation = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * seconds_per_day_1)
+!    canopy_radiation = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
 
     !!!!!!!!!!
     ! Calculate canopy evaporative fluxes (kgH2O/m2/day)
@@ -2084,28 +2246,34 @@ contains
     wetcanopy_evap = (slope*canopy_radiation) + (air_density_kg*cpair*vpd_pa*1d-3*gb)
     ! Calculate the potential wet canopy evaporation, limited by energy used for
     ! transpiration
-    wetcanopy_evap = (wetcanopy_evap / (lambda*(slope+psych))) * seconds_per_day
+    wetcanopy_evap = (wetcanopy_evap / (lambda*(slope+psych))) * seconds_per_day !dayl_seconds
+    ! substract transpiration from potential surface evaporation
+    wetcanopy_evap = wetcanopy_evap - transpiration
 
     ! dew is unlikely to occur (if we had energy balance) if mint > 0
-    if (wetcanopy_evap < dble_zero .and. mint > dble_one) wetcanopy_evap = dble_zero
+    if (wetcanopy_evap < dble_zero .and. mint > dble_zero) wetcanopy_evap = dble_zero
     ! Sublimation is unlikely to occur (if we had energy balance) if maxt < 0
-    if (wetcanopy_evap > dble_zero .and. maxt < dble_one) wetcanopy_evap = dble_zero
+    if (wetcanopy_evap > dble_zero .and. maxt < dble_zero) wetcanopy_evap = dble_zero
 
     ! Remember potential evaporation to later calculation of the potential
     ! actual ratio
-    pot_actual_ratio = wetcanopy_evap
+    act_pot_ratio = wetcanopy_evap
 
     ! assuming there is any rainfall, currently water on the canopy or dew formation
     if (rainfall > dble_zero .or. storage > dble_zero .or. wetcanopy_evap < dble_zero) then
-       ! Update based on canopy water storage
-       call canopy_interception_and_storage(wetcanopy_evap,storage,transpiration)
+        ! Update based on canopy water storage
+        call canopy_interception_and_storage(wetcanopy_evap,storage)
     else
-       ! there is no water movement possible
-       intercepted_rainfall = dble_zero ; wetcanopy_evap = dble_zero
+        ! there is no water movement possible
+        intercepted_rainfall = dble_zero ; wetcanopy_evap = dble_zero
     endif
 
     ! now calculate the ratio of potential to actual evaporation
-!    pot_actual_ratio = -9999d0abs(wetcanopy_evap / pot_actual_ratio)
+    if (act_pot_ratio == dble_zero) then
+        act_pot_ratio = dble_zero
+    else
+        act_pot_ratio = abs(wetcanopy_evap / act_pot_ratio)
+    endif
 
   end subroutine calculate_wetcanopy_evaporation
   !
@@ -2127,7 +2295,8 @@ contains
                       ,water_diffusion & ! Diffusion of water through soil matrix (m.s-1)
                                 ,esurf & ! see code below
                                  ,esat & ! soil air space saturation vapour pressure
-                                  ,gws   ! water vapour conductance through soil air space (m.s-1)
+                                  ,gws & ! water vapour conductance through soil air space (m.s-1)
+                                   ,Qc
 
     !!!!!!!!!!
     ! Estimate energy radiation balance (W.m-2)
@@ -2135,6 +2304,10 @@ contains
 
     ! Absorbed shortwave radiation MJ.m-2.day-1 -> J.m-2.s-1
     soil_radiation = soil_lwrad_Wm2 + (soil_swrad_MJday * 1d6 * dayl_seconds_1)
+    ! estimate ground heat flux from statistical approximation, positive if energy moving up profile
+    ! NOTE: linear coefficient estimates from SPA simulations
+    Qc = -0.4108826d0 * (maxt - maxt_lag1)
+    soil_radiation = soil_radiation + Qc
 
     !!!!!!!!!!
     ! Calculate soil evaporative fluxes (kgH2O/m2/day)
@@ -2155,16 +2328,15 @@ contains
     ! now difference in vapour pressure between soil and canopy air spaces
     esurf = esurf - air_vapour_pressure
 
-    ! generate final output
     ! Estimate potential soil evaporation flux (kgH2O.m-2.day-1)
     soilevap = (slope*soil_radiation) + (air_density_kg*cpair*esurf*soil_conductance)
     soilevap = soilevap / (lambda*(slope+(psych*(dble_one+soil_conductance/gws))))
     soilevap = soilevap * dayl_seconds
 
     ! dew is unlikely to occur (if we had energy balance) if mint > 0
-    if (soilevap < dble_zero .and. mint > dble_one) soilevap = dble_zero
+!    if (soilevap < dble_zero .and. mint > dble_one) soilevap = dble_zero
     ! Sublimation is unlikely to occur (if we had energy balance) if maxt < 0
-    if (soilevap > dble_zero .and. maxt < dble_one) soilevap = dble_zero
+!    if (soilevap > dble_zero .and. maxt < dble_one) soilevap = dble_zero
 
   end subroutine calculate_soil_evaporation
   !
@@ -2527,8 +2699,8 @@ contains
     ! Update soil reflectance based on snow cover
     if (snow_storage > dble_zero) then
         fsnow = dble_one - exp( - snow_storage * 1d-2 )  ! fraction of snow cover on the ground
-        absorbed_par_fraction_soil = (dble_one - fsnow) * soil_swrad_absorption + fsnow * newsnow_par_abs
-        absorbed_nir_fraction_soil = (dble_one - fsnow) * soil_swrad_absorption + fsnow * newsnow_nir_abs
+        absorbed_par_fraction_soil = ((dble_one - fsnow) * soil_swrad_absorption) + (fsnow * newsnow_par_abs)
+        absorbed_nir_fraction_soil = ((dble_one - fsnow) * soil_swrad_absorption) + (fsnow * newsnow_nir_abs)
     else
         absorbed_par_fraction_soil = soil_swrad_absorption
         absorbed_nir_fraction_soil = soil_swrad_absorption
@@ -2729,7 +2901,7 @@ contains
   !
   !-----------------------------------------------------------------
   !
-  subroutine canopy_interception_and_storage(potential_evaporation,storage,transpiration)
+  subroutine canopy_interception_and_storage(potential_evaporation,storage)
 
     ! Simple daily time step integration of canopy rainfall interception, runoff
     ! and rainfall (kgH2O.m-2.s-1). NOTE: it is possible for intercepted rainfall to be
@@ -2739,211 +2911,125 @@ contains
     implicit none
 
     ! arguments
-    double precision, intent(in) :: transpiration ! transpiration (kgH2O/m2/day)
     double precision, intent(inout) :: storage, & ! canopy water storage (kgH2O/m2)
                          potential_evaporation    ! wet canopy evaporation (kgH2O.m-2.day-1),
                                                   ! enters as potential but leaves as water balance adjusted
     ! local variables
-    integer :: i, hr, start_rain, finish_rain, start, finish
-    double precision :: through_fall, max_storage, max_storage_1, daily_addition, wetcanopy_evaporation &
-                       ,drain_rate, evap_rate, initial_canopy, dayl_evap_coef, solar_integral, gradient, half_day
-    double precision, parameter :: rainfall_period = 3d0 ! hours over which rain occurs see FLUXNET2015 meteorology.
+    integer :: i, hr
+    double precision :: a, through_fall, max_storage, max_storage_1, daily_addition, wetcanopy_evaporation &
+                       ,potential_drainage_rate ,drain_rate, evap_rate, initial_canopy, co_mass_balance, dx, tmp1, tmp2, tmp3
+    ! local parameters
+    double precision, parameter :: CanIntFrac = -0.5d0,  & ! Coefficient scaling rainfall interception fraction with LAI
+                                  CanStorFrac = 0.1d0,   & ! Coefficient scaling canopy water storage with LAI
+                                 RefDrainRate = 0.002d0, & ! Reference drainage rate (mm/min; Rutter et al 1975)
+                                  RefDrainLAI = 1.05d0,  & ! Reference drainage LAI (m2/m2; Rutter et al 1975)
+                                 RefDrainCoef = 3.7d0,   & ! Reference drainage Coefficient (Rutter et al 1975)
+                               RefDrainCoef_1 = RefDrainCoef ** (-dble_one)
 
     ! hold initial canopy storage in memory
     initial_canopy = storage
     ! determine maximum canopy storage & through fall fraction
-    through_fall = max(min_throughfall,exp(-0.5d0*lai))
+    through_fall = max(min_throughfall,exp(CanIntFrac*lai))
     ! maximum canopy storage (mm); minimum is applied to prevent errors in
     ! drainage calculation. Assume minimum capacity due to wood
-    max_storage = max(min_storage,0.1d0*lai) ; max_storage_1 = max_storage**(-dble_one)
+    max_storage = max(min_storage,CanStorFrac*lai) ; max_storage_1 = max_storage**(-dble_one)
     ! potential intercepted rainfall (kgH2O.m-2.s-1)
     intercepted_rainfall = rainfall * (dble_one - through_fall)
 
-    ! estimate start and finish points for rainfall assumed to center at
-    ! sunrise at the moment...
-    start_rain = sunrise - nint(rainfall_period*0.5d0) ; start_rain = max(1, start)
-    finish_rain = start_rain + nint(rainfall_period) - 1 ; finish_rain = min(24,finish)
+    ! calculate drainage coefficients (Rutter et al 1975); Corsican Pine
+    ! 0.002 is canopy specific coefficient modified by 0.002*(max_storage/1.05)
+    ! where max_storage is the canopy maximum capacity (mm) (LAI based) and
+    ! 1.05 is the original canopy capacitance
+    a = log( RefDrainRate * ( max_storage / RefDrainLAI ) ) - RefDrainCoef * max_storage
 
     ! average rainfall intercepted by canopy (kgH2O.m-2.day-1)
     daily_addition = intercepted_rainfall * seconds_per_day
 
+    ! reset cumulative variables
     through_fall = dble_zero ; wetcanopy_evaporation = dble_zero
     drain_rate = dble_zero ; evap_rate = dble_zero
-    ! determine dew forming or evaporative conditions?
-    if (potential_evaporation > dble_zero) then
 
-        !
-        ! evaporative conditions
-        !
+    ! deal with rainfall additions first
+    do i = 1, int(days_per_step)
 
-        ! do we need to iterate in the first place?
-        if (daily_addition + storage < max_storage) then
+       ! add rain to the canopy and overflow as needed
+       storage = storage + daily_addition
 
-           ! guess not...
+       if (storage > max_storage) then
 
-           ! add all the rain to the canopy
-           storage = storage + daily_addition
-           ! scale potential evaporation by wet surface, substract transpiraion and limit to available water supply
-           evap_rate = potential_evaporation * min(dble_one,storage * max_storage_1)
-!           evap_rate = max(dble_zero,evap_rate - transpiration)
-           wetcanopy_evaporation = min(storage,evap_rate)
+           if (potential_evaporation > dble_zero) then
 
-           ! update canopy
-           storage = storage - wetcanopy_evaporation
+               ! assume co-access to available water above max_storage by both drainage and
+               ! evaporation. Water below max_storage is accessable by evaporation only.
 
-           ! no further throughfall as there is no risk of overflow
-           through_fall = dble_zero
+               ! Trapezium rule for approximating integral of drainage rate.
+               ! Allows estimation of the mean drainage rate between starting point and max_storage,
+               ! thus the time period appropriate for co-access can be quantified
+               dx = storage - ((storage + max_storage)*0.5d0)
+               tmp1 = exp(a + (RefDrainCoef * storage))
+               tmp2 = exp(a + (RefDrainCoef * max_storage))
+               tmp3 = exp(a + (RefDrainCoef * (storage+dx)))
+               potential_drainage_rate = 0.5d0 * dx * ((tmp1 + tmp2) + 2d0 * tmp3)
+               potential_drainage_rate = potential_drainage_rate * 1440d0
 
-           ! assume the same happens each day and scale up evaporative component
-           wetcanopy_evaporation = wetcanopy_evaporation * days_per_step
+               ! restrict evaporation and drainage to the quantity above max_storage
+               evap_rate = potential_evaporation ; drain_rate = min(potential_drainage_rate,storage-max_storage)
 
-        else
+               ! limit based on available water if total demand is greater than excess
+               co_mass_balance = ((storage-max_storage) / (evap_rate + drain_rate))
+               evap_rate = evap_rate * co_mass_balance ; drain_rate = drain_rate * co_mass_balance
 
-           ! must now iterate...
+               ! estimate evaporation from remaining water, less that already removed from storage and evaporation energy used
+               evap_rate = evap_rate + min(potential_evaporation - evap_rate, storage - evap_rate - drain_rate)
 
-           ! adjust to rainfall period
-           daily_addition = daily_addition * (dble_one / dble(finish_rain - start_rain + 1))
+           else
 
-           ! estimate the linear approximation of the solar angle across the day
-           ! and use this to distribute the evaporative potential.
-           ! NOTE: that this integral has been simplifed to cancel out divide by 2
-           ! (from the inegral) and the 2 sides of the linear curve
-           half_day = dble(12 - sunrise)
-           gradient = cos_solar_zenith_angle / half_day
-           solar_integral = gradient * half_day ** 2
+               ! load dew formation to the current local evap_rate variable
+               evap_rate = potential_evaporation
+               ! restrict drainage the quantity above max_storage, adding dew formation too
+               drain_rate = (storage - evap_rate) - max_storage
 
-           ! set start and end of the daily loop needed
-           start = min(start_rain,sunrise) ; finish = 24
+           endif
 
-           ! intergrate over canopy for each day
-           do i = 1, int(days_per_step)
+       else
+           ! no drainage just apply evaporation / dew formation fluxes directly
+           evap_rate = potential_evaporation
+           drain_rate = dble_zero
+           if (evap_rate > dble_zero) then
+               ! evaporation restricted by fraction of surface actually covered
+               ! in water
+               evap_rate = evap_rate * min(dble_one,storage * max_storage_1)
+               ! and the total amount of water
+               evap_rate = min(evap_rate,storage)
+           else
+               ! then dew formation has occurred, if this pushes storage > max_storage add it to drainage
+               drain_rate = max(dble_zero,(storage - evap_rate) - max_storage)
+           endif ! evap_rate > 0
+       endif ! storage > max_storage
 
-              do hr = start, finish
+       ! update canopy storage with water flux
+       storage = max(dble_zero,storage - evap_rate - drain_rate)
+       wetcanopy_evaporation = wetcanopy_evaporation + evap_rate
+       through_fall = through_fall + drain_rate
 
-                  ! add new rain to the canopy
-                  if (hr >= start_rain .and. hr <= finish_rain) storage = storage + daily_addition
-
-                  ! estimate rate of drainage from store (mm per hour)
-                  if (storage > max_storage) then
-                      drain_rate = storage-max_storage
-                      ! update through fall with the new drainage
-                      through_fall = through_fall + drain_rate
-                      ! update storage
-                      storage = storage - drain_rate
-                  endif ! storage > max_storage
-
-                  ! we this is the night time then we assume dew is forming
-                  if (hr >= sunrise .and. hr < sunset) then
-                      ! estimate the solar correction for the specific hour of the day
-                      dayl_evap_coef = (gradient * dble((12 - sunrise) - abs(hr - 12))) / solar_integral
-                      ! estimate evaporation rate adjusted for available water supply and day length
-                      evap_rate = potential_evaporation * min(dble_one,storage * max_storage_1) * dayl_evap_coef
-                      ! substract equivalent assumed transpiration
-!                      evap_rate = max(dble_zero,evap_rate - (transpiration * dayl_evap_coef))
-                      ! and limit by available canopy surface water
-                      evap_rate = min(storage,evap_rate)
-                      ! update evaporation with new evaporation
-                      wetcanopy_evaporation = wetcanopy_evaporation + evap_rate
-                      ! remove drainage from canopy but not below the max_storage value
-                      storage = storage - evap_rate
-                  endif
-
-                  ! add escape condition
-                  if (hr > finish_rain .and. canopy_storage == dble_zero) exit
-
-              end do ! 24 hours
-
-           end do ! day looping
-
-        end if ! daily_addition + storage < max_storage
-
-    else ! dew forming or evaporative
-
-        !
-        ! dew forming conditions
-        !
-
-        ! do we need to iterate in the first place?
-        if (daily_addition + storage - potential_evaporation < max_storage) then
-
-           ! guess not...
-
-           ! add all the rain to the canopy
-           storage = storage + daily_addition
-           ! nope just substract the potential evaporation from the rainfall
-           wetcanopy_evaporation = max(potential_evaporation,-(max_storage-storage))
-           ! update canopy
-           storage = storage - wetcanopy_evaporation
-
-           ! no further throughfall as there is no risk of overflow
-           through_fall = dble_zero
-
-           ! assume the same happens each day and scale up evaporative component
-           wetcanopy_evaporation = wetcanopy_evaporation * days_per_step
-
-        else
-
-           ! must iterate...
-
-           ! estimate day length corrections,
-           ! we assume dew fall is most likely to occur at the same time as rainfall is likely to occur
-           dayl_evap_coef = (dble_one / dble(finish_rain - start_rain + 1))
-
-           ! set start and end of the daily loop needed
-           start = 1 ; finish = 24
-
-           ! intergrate over canopy for each day
-           do i = 1, int(days_per_step)
-
-              do hr = start, finish
-
-                  ! we this is the night time then we assume dew is forming
-                  if (hr >= start_rain .and. hr <= finish_rain) then
-                      ! add new rain to the canopy
-                      storage = storage + daily_addition
-                      ! estimate evaporation rate
-                      evap_rate = potential_evaporation * dayl_evap_coef
-                      ! negative sign due to the fact that this is a negative flux...
-                      evap_rate = max(evap_rate,-max(dble_zero,max_storage-storage))
-                      ! update evaporation with new evaporation
-                      wetcanopy_evaporation = wetcanopy_evaporation + evap_rate
-                      ! remove drainage from canopy but not below the max_storage value
-                      storage = storage - evap_rate
-                  end if
-
-                  ! estimate rate of drainage from store (mm per hour)
-                  if (storage > max_storage) then
-                      drain_rate = storage-max_storage
-                      ! update through fall with the new drainage
-                      through_fall = through_fall + drain_rate
-                      ! update storage
-                      storage = storage - drain_rate
-                  endif ! storage > max_storage
-
-              end do ! 24 hours
-
-           end do ! day looping
-
-        end if ! daily_addition + storage - wetcanopy_evaporation < max_storage
-
-    end if ! dew forming or evaporative
+    end do ! days
 
     ! correct intercepted rainfall rate to kgH2O.m-2.s-1
     intercepted_rainfall = intercepted_rainfall - ((through_fall * days_per_step_1) * seconds_per_day_1)
 
     ! sanity checks; note 1e-8 prevents precision errors causing flags
-!    if (intercepted_rainfall > rainfall .or. storage < dble_zero &
-!   .or. (wetcanopy_evaporation * days_per_step_1) > (1d-8 + initial_canopy + (rainfall*seconds_per_day)) ) then
-!       print*,"Condition 1",intercepted_rainfall > rainfall
-!       print*,"Condition 2",storage < dble_zero
-!       print*,"Condition 3",(wetcanopy_evaporation * days_per_step_1) > (1d-8 + initial_canopy + (rainfall*seconds_per_day))
-!       print*,"storage (kgH2O/m2)",storage,"max_storage (kgH2O/m2)",max_storage,"initial storage (kgH2O/m2)", initial_canop!y
-!       print*,"rainfall (kgH2O/m2/day)", rainfall*seconds_per_day, "through_fall (kgH2O/m2/day)", (through_fall * days_per_step_1)
-!       print*,"through_fall_total (kgH2O/m2/step)",through_fall
-!       print*,"potential_evaporation (kgH2O/m2/day)",potential_evaporation
-!       print*,"actual evaporation    (kgH2O/m2/day)",wetcanopy_evaporation * days_per_step_1
-!       stop
-!    endif
+    if (intercepted_rainfall > rainfall .or. storage < dble_zero &
+   .or. (wetcanopy_evaporation * days_per_step_1) > (1d-8 + initial_canopy + (rainfall*seconds_per_day)) ) then
+       print*,"Condition 1",intercepted_rainfall > rainfall
+       print*,"Condition 2",storage < dble_zero
+       print*,"Condition 3",(wetcanopy_evaporation * days_per_step_1) > (1d-8 + initial_canopy + (rainfall*seconds_per_day))
+       print*,"storage (kgH2O/m2)",storage,"max_storage (kgH2O/m2)",max_storage,"initial storage (kgH2O/m2)", initial_canopy
+       print*,"rainfall (kgH2O/m2/day)", rainfall*seconds_per_day, "through_fall (kgH2O/m2/day)", (through_fall * days_per_step_1)
+       print*,"through_fall_total (kgH2O/m2/step)",through_fall
+       print*,"potential_evaporation (kgH2O/m2/day)",potential_evaporation
+       print*,"actual evaporation    (kgH2O/m2/day)",wetcanopy_evaporation * days_per_step_1
+       stop
+    endif
 
     ! average evaporative flux to daily rate (kgH2O/m2/day)
     potential_evaporation = wetcanopy_evaporation * days_per_step_1
@@ -2952,261 +3038,6 @@ contains
     if (storage < 10d0*vsmall) storage = dble_zero
 
   end subroutine canopy_interception_and_storage
-  !
-  !-----------------------------------------------------------------
-  !
-  ! subroutine canopy_interception_and_storage(potential_evaporation,storage)
-  !
-  !   ! Simple daily time step integration of canopy rainfall interception, runoff
-  !   ! and rainfall (kgH2O.m-2.s-1). NOTE: it is possible for intercepted rainfall to be
-  !   ! negative if stored water running off into the soil is greater than
-  !   ! rainfall (i.e. when leaves have died between steps)
-  !
-  !   implicit none
-  !
-  !   ! arguments
-  !   double precision, intent(inout) :: storage, &
-  !                        potential_evaporation    ! wet canopy evaporation (kgH2O.m-2.day-1),
-  !                                                 ! enters as potential but leaves as water balance adjusted
-  !   ! local variables
-  !   integer :: i, d, hr, start_rain, finish_rain, start, finish
-  !   double precision :: local_storage, local_drain, nos_integrate, nos_minutes, tmp, through_fall, max_storage, max_storage_1 &
-  !                      ,daily_addition, wetcanopy_evaporation, a, b  &
-  !                      ,drain_rate, evap_rate, initial_canopy, dayl_evap_coef, solar_integral, gradient, half_day
-  !   double precision, parameter :: rainfall_period = 3d0 ! hours over which rain occurs see FLUXNET2015 meteorology.
-  !
-  !   ! hold initial canopy storage in memory
-  !   initial_canopy = storage
-  !   ! determine maximum canopy storage & through fall fraction
-  !   through_fall = max(min_throughfall,exp(-0.5d0*lai))
-  !   ! maximum canopy storage (mm); minimum is applied to prevent errors in
-  !   ! drainage calculation. Assume minimum capacity due to wood
-  !   max_storage = max(min_storage,0.1d0*lai) ; max_storage_1 = max_storage**(-dble_one)
-  !   ! potential intercepted rainfall (kgH2O.m-2.s-1)
-  !   intercepted_rainfall = rainfall * (dble_one - through_fall)
-  !
-  !   ! estimate start and finish points for rainfall assumed to center at
-  !   ! sunrise at the moment...
-  !   start_rain = sunrise - nint(rainfall_period*0.5d0) ; start_rain = max(1, start)
-  !   finish_rain = start_rain + nint(rainfall_period) - 1 ; finish_rain = min(24,finish)
-  !   start_rain = 6 ; finish_rain = 10
-  !
-  !   ! average rainfall intercepted by canopy (kgH2O.m-2.day-1)
-  !   daily_addition = intercepted_rainfall * seconds_per_day
-  !
-  !   ! calculate drainage coefficients (Rutter et al 1975); Corsican Pine
-  !   ! 0.002 is canopy specific coefficient modified by 0.002*(max_storage/1.05)
-  !   ! where max_storage is the canopy maximum capacity (mm) (LAI based) and
-  !   ! 1.05 is the original canopy capacitance
-  !   a = log( 0.002d0 * ( max_storage / 1.05d0 ) ) - 3.7d0 * max_storage
-  !
-  !   through_fall = dble_zero ; wetcanopy_evaporation = dble_zero
-  !   tmp = dble_zero ; drain_rate = dble_zero ; evap_rate = dble_zero
-  !   ! determine dew forming or evaporative conditions?
-  !   if (potential_evaporation > dble_zero) then
-  !
-  !       !
-  !       ! evaporative conditions
-  !       !
-  !
-  !       ! do we need to iterate in the first place?
-  !       if (daily_addition + storage < max_storage) then
-  !
-  !          ! guess not...
-  !
-  !          ! add all the rain to the canopy
-  !          storage = storage + daily_addition
-  !          ! nope just substract the potential evaporation from the rainfall
-  !          wetcanopy_evaporation = min(storage,potential_evaporation * min(dble_one,storage * max_storage_1))
-  !          ! update canopy
-  !          storage = storage - wetcanopy_evaporation
-  !
-  !          ! no further throughfall as there is no risk of overflow
-  !          through_fall = dble_zero
-  !
-  !          ! assume the same happens each day and scale up evaporative component
-  !          wetcanopy_evaporation = wetcanopy_evaporation * days_per_step
-  !
-  !       else
-  !
-  !          ! must now iterate...
-  !
-  !          ! adjust to rainfall period
-  !          daily_addition = daily_addition * (dble_one / dble(finish_rain - start_rain + 1))
-  !
-  !          ! estimate the linear approximation of the solar angle across the day
-  !          ! and use this to distribute the evaporative potential.
-  !          ! NOTE: that this integral has been simplifed to cancel out divide by 2
-  !          ! (from the inegral) and the 2 sides of the linear curve
-  !          half_day = dble(12 - sunrise)
-  !          gradient = cos_solar_zenith_angle / half_day
-  !          solar_integral = gradient * half_day ** 2
-  !
-  !          ! set start and end of the daily loop needed
-  !          start = min(start_rain,sunrise) ; finish = sunset
-  !
-  !          ! intergrate over canopy for each day
-  !          do i = 1, int(days_per_step)
-  !
-  !             do hr = start, finish
-  !
-  !                 ! add new rain to the canopy
-  !                 if (hr >= start_rain .and. hr <= finish_rain) storage = storage + daily_addition
-  !
-  !                 ! reset drainage calculation
-  !                 drain_rate = dble_zero
-  !                 ! estimate rate of drainage from store (mm per hour)
-  !                 if (storage > max_storage) then
-  !                     nos_minutes = 10d0
-  !                     d = 1 ; nos_integrate = 60d0 / nos_minutes
-  !                     drain_rate = dble_zero ; local_drain = dble_zero ; local_storage = storage
-  !                     do while (d <= nint(nos_integrate) .and. local_storage > max_storage)
-  !                        ! estimate drainage rate over the hour but in small increments
-  !                        local_drain = exp( a + 3.7d0 * local_storage ) * nos_minutes
-  !                        local_storage = local_storage - local_drain
-  !                        drain_rate = drain_rate + local_drain
-  !                        d = d + 1
-  !                     end do ! integrate over the canopy
-  !                     drain_rate = min(storage,drain_rate)
-  !                     ! update through fall with the new drainage
-  !                     through_fall = through_fall + drain_rate
-  !                     ! update storage
-  !                     storage = storage - drain_rate
-  !                 endif ! storage > max_storage
-  !
-  !                 ! reset evaporation
-  !                 evap_rate = dble_zero
-  !                 ! we this is the night time then we assume dew is forming
-  !                 if (hr >= sunrise .and. hr < sunset) then
-  !                     ! estimate the solar correction for the specific hour of the day
-  !                     dayl_evap_coef = (gradient * dble((12 - sunrise) - abs(hr - 12))) / solar_integral
-  !                     ! estimate evaporation rate adjusted for available water supply and day length
-  !                     evap_rate = potential_evaporation * min(dble_one,storage * max_storage_1) * dayl_evap_coef
-  !                     evap_rate = min(storage,evap_rate)
-  !                     ! update evaporation with new evaporation
-  !                     wetcanopy_evaporation = wetcanopy_evaporation + evap_rate
-  !                     ! remove drainage from canopy but not below the max_storage value
-  !                     storage = storage - evap_rate
-  !                 endif
-  !
-  !                 ! add escape condition
-  !                 if (hr > finish_rain .and. canopy_storage == dble_zero) exit
-  !
-  !             end do ! 24 hours
-  !
-  !          end do ! day looping
-  !
-  !       end if ! daily_addition + storage < max_storage
-  !
-  !   else ! dew forming or evaporative
-  !
-  !       !
-  !       ! dew forming conditions
-  !       !
-  !
-  !       ! do we need to iterate in the first place?
-  !       if (daily_addition + storage - potential_evaporation < max_storage) then
-  !
-  !          ! guess not...
-  !
-  !          ! add all the rain to the canopy
-  !          storage = storage + daily_addition
-  !          ! nope just substract the potential evaporation from the rainfall
-  !          wetcanopy_evaporation = max(potential_evaporation,-(max_storage-storage))
-  !          ! update canopy
-  !          storage = storage - wetcanopy_evaporation
-  !
-  !          ! no further throughfall as there is no risk of overflow
-  !          through_fall = dble_zero
-  !
-  !          ! assume the same happens each day and scale up evaporative component
-  !          wetcanopy_evaporation = wetcanopy_evaporation * days_per_step
-  !
-  !       else
-  !
-  !          ! must iterate...
-  !
-  !          ! estimate day length corrections,
-  !          ! we assume dew fall is most likely to occur at the same time as rainfall is likely to occur
-  !          dayl_evap_coef = (dble_one / dble(finish_rain - start_rain + 1))
-  !
-  !          ! set start and end of the daily loop needed
-  !          start = 1 ; finish = 24
-  !
-  !          ! intergrate over canopy for each day
-  !          do i = 1, int(days_per_step)
-  !
-  !             do hr = start, finish
-  !
-  !                 ! reset evaporation
-  !                 evap_rate = dble_zero
-  !                 ! we this is the night time then we assume dew is forming
-  !                 if (hr >= start_rain .and. hr <= finish_rain) then
-  !                     ! add new rain to the canopy
-  !                     storage = storage + daily_addition
-  !                     ! estimate evaporation rate
-  !                     evap_rate = potential_evaporation * dayl_evap_coef
-  !                     ! negative sign due to the fact that this is a negative flux...
-  !                     evap_rate = max(evap_rate,-max(dble_zero,max_storage-storage))
-  !                     ! update evaporation with new evaporation
-  !                     wetcanopy_evaporation = wetcanopy_evaporation + evap_rate
-  !                     ! remove drainage from canopy but not below the max_storage value
-  !                     storage = storage - evap_rate
-  !                 end if
-  !
-  !                 ! reset drainage calculation
-  !                 drain_rate = dble_zero
-  !                 ! estimate rate of drainage from store (mm per hour)
-  !                 if (storage > max_storage) then
-  !                     nos_minutes = 10d0
-  !                     d = 1 ; nos_integrate = 60d0 / nos_minutes
-  !                     drain_rate = dble_zero ; local_drain = dble_zero ; local_storage = storage
-  !                     do while (d <= nint(nos_integrate) .and. local_storage > max_storage)
-  !                        ! estimate drainage rate over the hour but in small increments
-  !                        local_drain = exp( a + 3.7d0 * local_storage ) * nos_minutes
-  !                        local_storage = local_storage - local_drain
-  !                        drain_rate = drain_rate + local_drain
-  !                        d = d + 1
-  !                     end do ! integrate over the canopy
-  !                     drain_rate = min(storage,drain_rate)
-  !                     ! update through fall with the new drainage
-  !                     through_fall = through_fall + drain_rate
-  !                     ! update storage
-  !                     storage = storage - drain_rate
-  !                 endif
-  !
-  !             end do ! 24 hours
-  !
-  !          end do ! day looping
-  !
-  !       end if ! daily_addition + storage - wetcanopy_evaporation < max_storage
-  !
-  !   end if ! dew forming or evaporative
-  !
-  !   ! correct intercepted rainfall rate to kgH2O.m-2.s-1
-  !   intercepted_rainfall = intercepted_rainfall - ((through_fall * days_per_step_1) * seconds_per_day_1)
-  !
-  !   ! sanity checks; note 1e-8 prevents precision errors causing flags
-  !   if (intercepted_rainfall > rainfall .or. storage < dble_zero &
-  !  .or. (wetcanopy_evaporation * days_per_step_1) > (1d-8 + initial_canopy + (rainfall*seconds_per_day)) ) then
-  !      print*,"Condition 1",intercepted_rainfall > rainfall
-  !      print*,"Condition 2",storage < dble_zero
-  !      print*,"Condition 3",(wetcanopy_evaporation * days_per_step_1) > (1d-8 + initial_canopy + (rainfall*seconds_per_day))
-  !      print*,"storage (kgH2O/m2)",storage,"max_storage (kgH2O/m2)",max_storage,"initial storage (kgH2O/m2)", initial_canopy
-  !      print*,"rainfall (kgH2O/m2/day)", rainfall*seconds_per_day, "through_fall (kgH2O/m2/day)", (through_fall * days_per_step_1)
-  !      print*,"through_fall_total (kgH2O/m2/step)",through_fall
-  !      print*,"potential_evaporation (kgH2O/m2/day)",potential_evaporation
-  !      print*,"actual evaporation    (kgH2O/m2/day)",wetcanopy_evaporation * days_per_step_1
-  !      stop
-  !   endif
-  !
-  !   ! average evaporative flux to daily rate (kgH2O/m2/day)
-  !   potential_evaporation = wetcanopy_evaporation * days_per_step_1
-  !
-  !   ! final clearance of canopy storage of version small values at the level of system precision
-  !   if (storage < 10d0*vsmall) storage = dble_zero
-  !
-  ! end subroutine canopy_interception_and_storage
   !
   !------------------------------------------------------------------
   !
@@ -3458,7 +3289,7 @@ contains
       ,iceprop(nos_soil_layers)
 
     ! local parameters
-    integer, parameter :: nos_minutes = 360
+    integer, parameter :: nos_hours_per_day = 1440, nos_minutes = 360
 
     ! calculate soil ice proportion; at the moment
     ! assume everything liquid
@@ -3482,7 +3313,7 @@ contains
           unsat = max( dble_zero , ( porosity( soil_layer+1 ) - soil_waterfrac( soil_layer+1 ) ) &
                              * layer_thickness( soil_layer+1 ) / layer_thickness( soil_layer ) )
 
-          d = 1 ; nos_integrate = 1440 / nos_minutes
+          d = 1 ; nos_integrate = nos_hours_per_day / nos_minutes
           drainage = dble_zero ; local_drain = dble_zero
           do while (d <= nos_integrate .and. liquid > drainlayer)
               ! estimate drainage rate (m/s)
@@ -3707,81 +3538,83 @@ contains
   !
   !------------------------------------------------------------------
   !
-!  subroutine update_net_radiation(isothermal,tempC,area_scaling,pot_actual_ratio &
-!                                 ,sfc_exchange,aero_exchange,vapour_gradient,deltaTemp,deltaR)
-!
-!    ! Use steady state solution of evaporation, convective (sensible) and radiative heat loss
-!    ! to update isothermal net radiation to net.
-!    ! Area scaling (e.g. lai) is an input to allow for common useage for soil (neglecting ground heat) and canopy
-!
-!    ! arguments
-!    double precision, intent(in) ::      tempC, &
-!                                    isothermal, & ! isothermal net radiation (SW+LW; W/m2)
-!                                  area_scaling, & ! area scaling to apply (m2/m2)
-!                              pot_actual_ratio, & ! ratio of potential to actual evaporation
-!                                  sfc_exchange, & ! surface exchange conductance (m/s; e.g. stomatal conductance)
-!                                 aero_exchange, & ! aerodynamic exchange conductance (m/s; e.g. aerodynamic conductance)
-!                               vapour_gradient    ! vapour pressure gradient (Pa; either VPD or between air and soil)
-!    double precision, intent(out) :: deltaTemp, & ! surface temperature difference (K)
-!                                     deltaR    ! surface longwave radiation difference (W/m2); subtract from isothermal longwave
-!
-!    ! local variables
-!    double precision ::  tempK, & ! ambient temperature as K
-!          heat_loss_resistance, & ! resistance to heat loss from radiative and convection (s/m)
-!        aerodynamic_resistance, & ! aerodynamic resistance to water or heat exchangce (s/m)
-!           stomatal_resistance, & ! stomatal resistance to water exchangce (s/m)
-!              water_resistance, & ! serial combination of resistances to water evaporation
-! thermal_gains, thermal_losses
-!
-!    ! ambient temperature C -> K
-!    tempK = tempC + freeze
-!
-!    !
-!    ! Calculate resistance to heat loss (s/m)
-!    !
-!
-!    ! First estimate radiative loss term, initially calculated as conductance)
-!    heat_loss_resistance = 4d0 * emissivity * boltz * tempK ** 3 / (air_density_kg * cpair)
-!    ! Combine in parallel with convective conductances with area correction
-!    heat_loss_resistance = heat_loss_resistance + (aero_exchange / area_scaling)
-!    ! convert from conductance m/s to s/m
-!    heat_loss_resistance = heat_loss_resistance ** (-1d0)
-!
-!    !
-!    ! Convert aerodynamic and stomatal conductances to resistance
-!    !
-!
-!    aerodynamic_resistance = (aero_exchange/area_scaling) ** (-1d0)
-!    if (sfc_exchange == dble_zero) then
-!        stomatal_resistance = dble_zero
-!    else
-!        stomatal_resistance = (sfc_exchange/area_scaling) ** (-1d0)
-!    endif
-!
-!    !
-!    ! Estimate thermal gains and losses (K) to calculate temperature difference
-!    !
-!
-!    water_resistance = (aerodynamic_resistance + stomatal_resistance)
-!    thermal_gains = (heat_loss_resistance * water_resistance * psych * (isothermal/area_scaling)) &
-!                  / (air_density_kg * cpair * ((psych*water_resistance) + (slope*heat_loss_resistance)))
-!    thermal_losses = (heat_loss_resistance * vapour_gradient * 1d-3) &
-!                   / ((psych*water_resistance) + (slope*heat_loss_resistance))
-!    ! determine surface temperature difference (K); should be added to the canopy temperature
-!    deltaTemp = thermal_gains - thermal_losses
-!    ! apply actual potential ratio to scale wet surface evaporation when the
-!    ! supply of water is limited
-!    deltaTemp = deltaTemp * pot_actual_ratio
-!
-!    ! estimate update between isothermal to net radiation (W/m2), including area correction
-!    ! note that this MUST be added from the longwave component outside of this function
-!    deltaR = -4d0 * emissivity * boltz * tempK ** 3 * ( deltaTemp )
-!    deltaR = deltaR * area_scaling
-!
-!    ! return to user
-!    return
-!
-!  end subroutine update_net_radiation
+  subroutine update_net_radiation(isothermal,tempC,area_scaling,act_pot_ratio &
+                                 ,sfc_exchange,aero_exchange,vapour_gradient,deltaTemp,deltaR)
+
+    ! Use steady state solution of evaporation, convective (sensible) and radiative heat loss
+    ! to update isothermal net radiation to net.
+    ! Area scaling (e.g. lai) is an input to allow for common useage for soil (neglecting ground heat) and canopy
+
+    ! arguments
+    double precision, intent(in) ::      tempC, & ! input surface / air temperature (oC)
+                                    isothermal, & ! isothermal net radiation (SW+LW; W/m2)
+                                  area_scaling, & ! area scaling to apply (m2/m2)
+                                 act_pot_ratio, & ! ratio of potential to actual evaporation, i.e. (avail / potenial)
+                                  sfc_exchange, & ! surface exchange conductance (m/s; e.g. stomatal conductance)
+                                 aero_exchange, & ! aerodynamic exchange conductance (m/s; e.g. aerodynamic conductance)
+                               vapour_gradient    ! vapour pressure gradient (Pa; either VPD or between air and soil)
+    double precision, intent(out) :: deltaTemp, & ! surface temperature difference (K)
+                                     deltaR    ! surface longwave radiation difference (W/m2); subtract from isothermal longwave
+
+    ! local variables
+    double precision ::  tempK, & ! ambient temperature as K
+          heat_loss_resistance, & ! resistance to heat loss from radiative and convection (s/m)
+        aerodynamic_resistance, & ! aerodynamic resistance to water or heat exchangce (s/m)
+           stomatal_resistance, & ! stomatal resistance to water exchangce (s/m)
+              water_resistance, & ! serial combination of resistances to water evaporation
+ thermal_gains, thermal_losses
+
+    ! ambient temperature C -> K
+    tempK = tempC + freeze
+
+    !
+    ! Calculate resistance to heat loss (s/m)
+    !
+
+    ! First estimate radiative loss term, initially calculated as conductance)
+    heat_loss_resistance = 4d0 * emissivity * boltz * tempK ** 3 / (air_density_kg * cpair)
+    ! Combine in parallel with convective conductances with area correction
+    heat_loss_resistance = heat_loss_resistance + (2d0 * aero_exchange / area_scaling)
+    ! convert from conductance m/s to s/m
+    heat_loss_resistance = heat_loss_resistance ** (-1d0)
+
+    !
+    ! Convert aerodynamic and stomatal conductances to reisistance of water flux
+    !
+
+    aerodynamic_resistance = (aero_exchange/area_scaling) ** (-1d0)
+    if (sfc_exchange == dble_zero) then
+        ! if being used for surface water flux
+        stomatal_resistance = dble_zero
+    else
+        ! if used for transpiration
+        stomatal_resistance = (sfc_exchange/area_scaling) ** (-1d0)
+    endif
+
+    !
+    ! Estimate thermal gains and losses (K) to calculate temperature difference
+    !
+
+    water_resistance = (aerodynamic_resistance + stomatal_resistance)
+    thermal_gains = (heat_loss_resistance * water_resistance * psych * (isothermal/area_scaling)) &
+                  / (air_density_kg * cpair * ((psych*water_resistance) + (slope*heat_loss_resistance)))
+    thermal_losses = (heat_loss_resistance * vapour_gradient * 1d-3) &
+                   / ((psych*water_resistance) + (slope*heat_loss_resistance))
+    ! determine surface temperature difference (K); should be added to the canopy temperature
+    deltaTemp = thermal_gains - thermal_losses
+    ! apply actual potential ratio to scale wet surface evaporation when the
+    ! supply of water is limited
+    deltaTemp = deltaTemp * act_pot_ratio
+
+    ! estimate update between isothermal to net radiation (W/m2), including area correction
+    ! note that this MUST be added from the longwave component outside of this function
+    deltaR = -4d0 * emissivity * boltz * tempK ** 3 * ( deltaTemp )
+    deltaR = deltaR * area_scaling
+
+    ! return to user
+    return
+
+  end subroutine update_net_radiation
   !
   !------------------------------------------------------------------
   !
@@ -3838,10 +3671,9 @@ contains
   !
   !------------------------------------------------------------------
   !
-  subroutine calculate_leaf_dynamics(current_step,deltat,nodays &
-                                    ,pot_leaf_fall,pot_leaf_growth        &
-                                    ,deltaWP,Rtot,GPP_current,Rm_leaf     &
-                                    ,foliage,leaf_fall,leaf_growth)
+  subroutine calculate_leaf_dynamics(current_step,deltat,nodays,pot_leaf_growth &
+                                    ,Rm_exponent,Rm_baseline,deltaWP,Rtot       &
+                                    ,GPP_current,Rm_leaf,foliage,leaf_fall,leaf_growth)
 
       ! Subroutine determines whether leaves are growing or dying.
       ! 1) Update canopy mean age and the impact on PNUE
@@ -3861,7 +3693,8 @@ contains
       integer, intent(in) :: nodays, current_step
       double precision, intent(in) :: deltat(nodays) & !
                                     ,pot_leaf_growth & !
-                                      ,pot_leaf_fall & !
+                                        ,Rm_exponent &
+                                        ,Rm_baseline &
                                         ,GPP_current & !
                                             ,foliage & !
                                             ,Rm_leaf & !
@@ -3871,20 +3704,23 @@ contains
       double precision, intent(inout) :: leaf_fall,leaf_growth
 
       ! declare local variables
-      integer :: a, d
+      integer :: a, b, c, d, escape_point, age_by, age_by_time, age_by_met
       double precision :: infi      &
                          ,tmp       &
                          ,loss      &
                          ,loss_adj  &
                          ,leaf_cost &
+                         ,life_remain &
                          ,deltaGPP  &
                          ,deltaRm   &
+                         ,deltaC    &
                          ,old_GPP   &
                          ,alt_GPP   &
                          ,leaf_fall_dead &
                          ,marginal_gain &
                          ,marginal_loss &
-                         ,gradient  &
+                         ,growth_marginal_sum &
+                         ,death_gradient &
                          ,NUE_save  &
                          ,lai_save  &
                          ,canopy_lw_save &
@@ -3908,9 +3744,8 @@ contains
 
       ! first assume that nothing is happening
       marginal_gain = dble_zero ; marginal_loss = dble_zero
-      leaf_marginal_gain = dble_zero ; leaf_marginal_loss = dble_zero
-      loss = dble_zero ; loss_adj = dble_zero ; tmp = dble_zero
-      leaf_fall_dead = dble_zero
+      loss = dble_zero ; tmp = dble_zero
+      leaf_fall_dead = dble_zero ; deltaC = dble_zero
       leaf_fall = dble_zero   ! leaf turnover
       leaf_growth = dble_zero ! leaf growth
 
@@ -3918,38 +3753,69 @@ contains
       ! Increment the age of the existing canopy
       !
 
-      if (oldest_leaf == size(canopy_age_vector)) then
+      ! how many days in the current time step
+      age_by_time = nint(deltat(current_step))
+      ! include the environmental stress acceleration to NUE decline (i.e. leaf aging)
+      age_by_met = nint(NUE_decay_acceleration * Cfol_turnover_coef(current_step))
+      age_by = age_by_time + age_by_met
 
-          ! accumulate the oldest carbon in the oldest age clash
-          canopy_age_vector(oldest_leaf) = canopy_age_vector(oldest_leaf) + canopy_age_vector(oldest_leaf-1)
-          ! now shift the age of the rest of the profile. NOTE: -2 corrects for
-          ! not moving further down the age vector (as we have hit the end) but
-          ! also the fact that we deal with the oldest leaves specifically
-          do a = oldest_leaf-2, 1, -1
-             canopy_age_vector(a+1) = canopy_age_vector(a)
-          end do ; a = 0
-          ! oldest leaf gets no older
-          oldest_leaf = oldest_leaf
-          
-      else
+      ! reset counters
+      b = 0 ; c = 0 ; d = 0
+      ! is there space at the end of the age vector?
+      if (oldest_leaf+age_by > size(canopy_age_vector)) then
 
-          ! shift along the canopy age space for the marginal return
-          ! calculations...
+          ! calculate needed vector location information
+          d = size(canopy_age_vector) ; b = (oldest_leaf+age_by) - d ; c = 1
+          ! accumulate the over spill in the final age class
+          canopy_age_vector(d) = sum(canopy_age_vector((oldest_leaf-b):oldest_leaf))
+          ! empty the previous days
+          canopy_age_vector((oldest_leaf-b):oldest_leaf) = dble_zero
+
+      endif ! oldest_leaf+age_by > size(canopy_age_vector)
+
+      if (oldest_leaf >= canopy_maturation_lag) then
+          ! oldest leaf will be incremented subject to both time and temperature
+          ! effects
+          d = oldest_leaf + age_by - b
+          ! now we are ready to iterate the remaining age classes as normal
+          ! i.e. starting a day back from the period we just adjusted
+          do a = oldest_leaf - b - c, nint(canopy_maturation_lag), -1
+             canopy_age_vector(a+age_by) = canopy_age_vector(a)
+          end do
+          ! clear the age classes between the end point and the last shift point
+          ! - 1
+          canopy_age_vector(nint(canopy_maturation_lag):(nint(canopy_maturation_lag)+age_by-1)) = dble_zero
+          ! ...only apply the temperature enhanced aging to the mature canopy
+          do a = nint(canopy_maturation_lag)-1, 1, -1
+             canopy_age_vector(a+age_by_time) = canopy_age_vector(a)
+          end do ; a = 1
+
+      else ! oldest_leaf >= canopy_maturation_lag
+
+          ! oldest_leaf < canopy_maturation_lag, so we assume that time effects
+          ! alone at at play
+          d = oldest_leaf + age_by_time
+
+          ! now we are ready to iterate the remaining age classes as normal
+          ! i.e. starting a day back from the period we just adjusted...
+          ! ...only apply the temperature enhanced aging to the mature canopy
           do a = oldest_leaf, 1, -1
-             canopy_age_vector(a+1) = canopy_age_vector(a)
-          end do ; a = 0
-          ! ...as is oldest leaf
-          oldest_leaf = oldest_leaf + 1
+             canopy_age_vector(a+age_by_time) = canopy_age_vector(a)
+          end do ; a = 1
 
-      end if ! oldest_leaf >= size(canopy_age_vector)
+      endif ! oldest_leaf is within which period?
 
+      ! oldest leaf now at the end of the vector
+      oldest_leaf = d
       ! finally the newest space must now be cleared for potential new growth
-      canopy_age_vector(1) = dble_zero
+      canopy_age_vector(1:age_by_time) = dble_zero
 
       ! shift marginal return history in preparation for the new estimate
       do a = leaf_grow_period, 1, -1
-         leaf_marginal_gain_history(a+1) = leaf_marginal_gain_history(a)
-      end do ; a = 0 
+         leaf_gpp_gain_history(a+1) = leaf_gpp_gain_history(a)
+      end do ; a = 1
+      ! set current timestep o zero before entering calculations below
+      leaf_gpp_gain_history(1) = dble_zero
 
       !
       ! Marginal return of leaf loss
@@ -3959,78 +3825,90 @@ contains
       if (foliage > dble_zero) then
 
           !
-          ! First lose any leaves older than zero NUE point
-          ! 
-
-          if (oldest_leaf > nint(canopy_zero_efficiency+canopy_maturation_lag)) then
-
-              ! how many leaves are NUE = 0 
-              leaf_fall_dead = sum(canopy_age_vector(nint(canopy_zero_efficiency+canopy_maturation_lag):oldest_leaf))
-              ! clear these from memory
-              canopy_age_vector(nint(canopy_zero_efficiency+canopy_maturation_lag):oldest_leaf) = dble_zero
-              ! update oldest_leaf
-              oldest_leaf = nint(canopy_zero_efficiency+canopy_maturation_lag) - 1
-              ! create correction factor to the canopy turnover variable (gC/step -> frac/day)
-              leaf_fall_dead = leaf_fall_dead * deltat_1(current_step)
-              leaf_fall_dead = dble_one - (dble_one-((leaf_fall_dead/foliage) * deltat(current_step)))**deltat_1(current_step)
-
-          endif ! oldest_leaf > canopy_zero_efficiency
-
+          ! lose leaves with negative marginal return
           !
-          ! Second lose any leaves with negative marginal return
-          !           
 
-          ! we are in a decending condition so foliar turnover
-          ! NOTE: that leaf_fall_dead subtracted here to avoid possible loss of whole canopy...
-          leaf_fall = max(dble_zero,pot_leaf_fall - leaf_fall_dead) !* (dble_one-Croot_labile_release_coef(current_step))
-          ! calculate potential C loss from leaves
-          tmp = foliage * (dble_one-(dble_one-leaf_fall)**deltat(current_step))*deltat_1(current_step)
-          ! foliar biomass lost (daily->step)
-          tmp = tmp * deltat(current_step)
-
-          ! calculate Rm of the potentially lost leaves
-          deltaRm = Rm_leaf * (tmp/foliage)
-          ! calculate leaf area of the leaf to be assessed
-          lai = tmp * SLA
-          ! increment age profiles, remove old leaf...
-          loss = dble_zero
+          ! loop through the canopy age classes for which NUE is declining and determine whether they are paying for themselves
           do a = oldest_leaf, nint(canopy_maturation_lag), -1
-             loss = sum(canopy_age_vector(a:oldest_leaf))
-             ! if we have found enough carbon to remove then exit the loop
-             if (loss >= tmp) exit
-          end do
-          ! if based on age class we now allocate more leaf to turnover than wanted we must adjust this...
-          if (loss > tmp) then
-              ! ...by adding the difference back into the profile...
-              loss_adj = loss - tmp
-              ! ...add one more to the 
-          else
-              ! we must not have achieved the target loss, as occurs when the whole canopy is lost...
-              ! Update for consistency with the bulk mass balance calculations
-              leaf_fall = leaf_fall * (loss/tmp)
-          endif
-          ! calculate mean canopy age of those considered for loss, weighted by the mass at each age point
-          canopy_age = sum(canopy_age_vector(a:oldest_leaf) * canopy_days(a:oldest_leaf)) / sum(canopy_age_vector(a:oldest_leaf)) 
-          ! update NUE as function of age
-          NUE = age_dependent_NUE(canopy_age,NUE_optimum,canopy_maturation_lag,canopy_zero_efficiency)
-          ! use proportional scaling of radiation, stomatal conductance and aerodynamics conductances
-          stomatal_conductance = stomatal_conductance * (lai / lai_save) 
-          aerodynamic_conductance = aerodynamic_conductance * (lai / lai_save)
-          canopy_par_MJday = canopy_par_MJday * (lai / lai_save)
-          if (lai > vsmall .and. stomatal_conductance > vsmall) then
-              deltaGPP = acm_gpp(stomatal_conductance)
-          else
-              deltaGPP = dble_zero
-          endif
-          ! is the photosynthetic activity of the targetted leaf section great or less than its associated costs
-          marginal_loss = deltaRm-deltaGPP
+
+              ! set current possible escape point (age class)
+              escape_point = a
+              ! how much C is there to lose in the current age class?
+              deltaC = canopy_age_vector(a)
+
+              ! assess marginal return of there is LAI available
+              if (deltaC > dble_zero) then
+
+                  ! calculate Rm of the potentially lost leaves
+                  deltaRm = Rm_leaf * (deltaC/foliage)
+                  ! calculate leaf area of the leaf to be assessed
+                  lai = deltaC * SLA
+! CURRENTLY ESTIMATING SINGLE AGE CLASSES AT ATIME SO THIS COULD BE
+! SIMPLIFIED....
+                  ! calculate mean canopy age of those considered for loss, weighted by the mass at each age point
+                  !canopy_age = (canopy_age_vector(a) * canopy_days(a)) / canopy_age_vector(a)
+                  canopy_age = canopy_days(a)
+                  ! update NUE as function of age
+                  !NUE = canopy_aggregate_NUE(a,a)
+                  NUE = NUE_vector(a)
+                  ! use proportional scaling of radiation, stomatal conductance and aerodynamics conductances
+                  stomatal_conductance = gs_save * (lai / lai_save)
+                  aerodynamic_conductance = ga_save * (lai / lai_save)
+                  canopy_par_MJday = canopy_par_save * (lai / lai_save)
+                  if (lai > vsmall .and. stomatal_conductance > vsmall) then
+                      deltaGPP = acm_gpp(stomatal_conductance)
+                  else
+                      deltaGPP = dble_zero
+                  endif
+                  ! Estimate marginal return of leaf loss vs cost of regrowth, scaled by expected remaining leaf life span
+                  life_remain = leaf_life_max - canopy_age ! how much longer is the leaf expected to be live for?
+                  if (life_remain > dble_zero) then
+                      ! if we are within the mean age consider trade off
+                      ! including replacement cost
+                      marginal_loss = (deltaRm-deltaGPP)*life_remain ! costs of continued life
+                      marginal_loss = marginal_loss - ((deltaC*(life_remain / leaf_life_max))/one_Rg_fraction) ! less recontruction costs
+                      marginal_loss = marginal_loss / deltaC ! scaled to per gC/m2
+                  else
+                      ! outside of the mean life expectancy, just consider
+                      ! instant marginal return
+                      marginal_loss = (deltaRm-deltaGPP) / deltaC
+                  end if
+
+                  ! escape condition
+                  if (marginal_loss <= dble_zero) then
+
+                      ! the current position must be net loss of uptake to lose,
+                      ! adjust the 'a' counter so that we do not include this age class.
+                      escape_point = min(oldest_leaf,escape_point+1)
+
+                      ! assuming that our escape leaf is not the oldest leaf in the canopy,
+                      ! calculate the total loss. Otherwise we keep the whole canopy
+                      if (escape_point /= oldest_leaf) then
+                          ! estimate the total removal and convert into turnover fraction
+                          leaf_fall = sum(canopy_age_vector(escape_point:oldest_leaf))
+                          if (leaf_fall > dble_zero) then
+                              leaf_fall = leaf_fall * deltat_1(current_step)
+                              leaf_fall = dble_one - (dble_one-((leaf_fall/foliage) * deltat(current_step)))**deltat_1(current_step)
+                          endif ! leaf_fall > dble_zero
+                      end if ! a /= oldest_leaf
+
+                      ! Finally escape the current loop
+                      exit
+
+                  end if ! marginal_loss <= dble_zero
+
+              end if ! if there is leaf area in the current age class
+
+          end do ! from oldest leaf back to NUE decline phases
+          ! if the loop extended to its finish a = 0 which we don't want
+          a = max(1,escape_point)
 
           ! restore original value back from memory
           lai = lai_save ; NUE = NUE_save ; canopy_age = canopy_age_save
           canopy_lwrad_Wm2 = canopy_lw_save ; soil_lwrad_Wm2 = soil_lw_save
           canopy_swrad_MJday = canopy_sw_save ; canopy_par_MJday = canopy_par_save
           soil_swrad_MJday = soil_sw_save ; stomatal_conductance = gs_save
-          aerodynamic_conductance = ga_save 
+          aerodynamic_conductance = ga_save
 
       endif ! foliage > 0
 
@@ -4047,24 +3925,40 @@ contains
           ! we are in an assending condition so labile turnover
           leaf_growth = pot_leaf_growth*Croot_labile_release_coef(current_step)
           ! calculate potential C allocation to leaves
-          tmp = avail_labile * (dble_one-(dble_one-leaf_growth)**deltat(current_step))*deltat_1(current_step)
+          deltaC = avail_labile * (dble_one-(dble_one-leaf_growth)**deltat(current_step))*deltat_1(current_step)
           ! C spent on growth
-          leaf_cost = tmp * deltat(current_step)
+          deltaC = deltaC * deltat(current_step)
+          if (deltaC > avail_labile) then
+              leaf_growth = leaf_growth * (avail_labile / deltaC)
+              avail_labile = avail_labile * (avail_labile / deltaC)
+          endif
           ! C to new growth
-          tmp = leaf_cost * (one_Rg_fraction)
+          tmp = deltaC * (one_Rg_fraction)
           ! calculate new Rm...
-          deltaRm = Rm_leaf * ((foliage+tmp)/foliage)
+          if (Rm_leaf > dble_zero) then
+              ! if we have exisiting estimat of Rm_leaf then scale accordingly...
+              deltaRm = Rm_leaf * ((foliage+tmp)/foliage)
+          else
+              !...if not then we will have to calculate the Rm cost directly
+              deltaRm = Rm_reich_N(Q10_adjustment,CN_leaf,Rm_exponent,Rm_baseline)*umol_to_gC*seconds_per_day*(foliage+tmp)
+          endif
           ! ...and its marginal return
           deltaRm = deltaRm - Rm_leaf
           ! overwrite current age specific NUE with the leaf lifetime NUE
           NUE = NUE_mean
           ! and estimate the equivalent GPP for current LAI
-          old_GPP = acm_gpp(stomatal_conductance)
+          if (lai > vsmall .and. stomatal_conductance > vsmall) then
+              old_GPP = acm_gpp(stomatal_conductance)
+          else
+              old_GPP = dble_zero
+          endif
           ! calculate new leaf area
           lai = (foliage+tmp) * SLA
           ! then add new
           canopy_age_vector(1) = tmp
-          ! calculate stomatal conductance of water
+          ! calculate updated canopy states for new leaf area
+          call calculate_aerodynamic_conductance
+          call calculate_shortwave_balance ; call calculate_longwave_isothermal(leafT,maxt)
           call acm_albedo_gc(abs(deltaWP),Rtot)
           ! now estimate GPP with new LAI
           if (lai > vsmall .and. stomatal_conductance > vsmall) then
@@ -4076,305 +3970,53 @@ contains
           ! is the marginal return for GPP (over the mean life of leaves)
           ! less than increase in maintenance respiration and C required to
           ! growth (Rg+tissue)?
-          marginal_gain = ((deltaGPP-deltaRm)*leaf_life) - leaf_cost
-          ! scale to per m2 leaf area
-          marginal_gain = marginal_gain !/ (tmp * SLA)
+          marginal_gain = ((deltaGPP-deltaRm)*leaf_life) - deltaC
+          ! scale to per m2 leaf area, as the gradient requires comparable adjustment magnitudes
+          marginal_gain = marginal_gain / deltaC
 
-      endif ! avail_labile > 0 
-!leaf_marginal_gain = marginal_gain
-!leaf_marginal_loss = marginal_loss
-      ! remember history variable for later
-      leaf_marginal_gain_history(1) = marginal_gain
-      gradient = linear_model_gradient(canopy_days(1:leaf_grow_period),leaf_marginal_gain_history(1:leaf_grow_period) &
-                                      ,leaf_grow_period)
-      ! Now flip the gradient because we have filled the array in such a way as to reverse the time axis...
-      gradient = gradient * (-dble_one)
+          ! base growth on the mean / sum marginal return over parameterised
+          ! sensitivity period
+          leaf_gpp_gain_history(1) = marginal_gain
 
+!marginal_output = marginal_gain !deltaGPP
+!gradient_output = deltaGPP
+      endif ! avail_labile > 0
+
+      ! accumulate marginal return information
+      growth_marginal_sum = sum(leaf_gpp_gain_history(1:leaf_grow_period))
+
+!marginal_output = marginal_loss
+!gradient_output = marginal_gain
       ! no positives of growing new leaves so don't
-      if (marginal_gain <= dble_zero .or. gradient <= dble_zero) leaf_growth = dble_zero
-      ! no positive of losing old leaves so don't
-      if (marginal_loss <= dble_zero) leaf_fall = dble_zero
-! possible interplay of trajectories of these two marginal returns?
-
-      ! positives for gaining and losing leaves
-!      if (marginal_gain > dble_zero) leaf_fall = dble_zero
-!      if (marginal_loss > dble_zero) leaf_growth = dble_zero
+      if (growth_marginal_sum < dble_zero .or. marginal_gain < dble_zero) leaf_growth = dble_zero
+      ! if leaf fall is indeed happening, prevent leaf growth
+!      if (leaf_fall > dble_zero) leaf_growth = dble_zero
 
       ! marginal suggest that we are losing leaves, therefore we must finish updating age model
       ! Don't forget that the mass-balance here may have also been updated with NEW leaves
       if (leaf_fall > dble_zero) then
           ! remove the biomass from the canopy age vector
           canopy_age_vector(a:oldest_leaf) = dble_zero
-          ! add the difference between target and actual back to the final age class if available.
-          ! NOTE: this makes the actual "loss" estimates with the while loop consistent with the "leaf_fall" rate
-          canopy_age_vector(a) = loss_adj
           ! update the new oldest leaf age
           oldest_leaf = a
           ! cannot have oldest leaf at position less than 1
           if (oldest_leaf <= 0) oldest_leaf = 1
       endif
+
       ! apply leaves lost because NUE = 0 on top of the current estimate
       leaf_fall = leaf_fall + leaf_fall_dead
 
       ! marginal suggest that we are not gaining leaves therefore we must update the age model
-      if (leaf_growth == dble_zero) canopy_age_vector(1) = dble_zero
+      if (leaf_growth <= dble_zero) canopy_age_vector(1) = dble_zero
 
       ! restore original value back from memory
       lai = lai_save ; NUE = NUE_save ; canopy_age = canopy_age_save
       canopy_lwrad_Wm2 = canopy_lw_save ; soil_lwrad_Wm2 = soil_lw_save
       canopy_swrad_MJday = canopy_sw_save ; canopy_par_MJday = canopy_par_save
       soil_swrad_MJday = soil_sw_save ; stomatal_conductance = gs_save
-      aerodynamic_conductance = ga_save 
+      aerodynamic_conductance = ga_save
 
   end subroutine calculate_leaf_dynamics
-  !
-  !------------------------------------------------------------------
-  !
-!  subroutine calculate_leaf_dynamics(current_step,deltat,nodays &
-!                                    ,pot_leaf_fall,pot_leaf_growth        &
-!                                    ,deltaWP,Rtot,GPP_current,Rm_leaf     &
-!                                    ,foliage,leaf_fall,leaf_growth)
-! 
-!      ! Subroutine determines whether leaves are growing or dying.
-!      ! 1) Update canopy mean age and the impact on PNUE
-!      ! 2) Performes marginal return calculation, including mean age updates
-! 
-!      ! Thomas & Williams (2014):
-!      ! A model using marginal efficiency of investment to analyze carbon and nitrogen interactions in terrestrial ecosystems
-!      ! (ACONITE Version 1), Geoscientific Model Development, doi: 10.5194/gmd-7-2015-2014
-!      !
-!      ! Xu et al., (2017):
-!      ! Variations of leaf longevity in tropical moist forests predicted by a trait-driven carbon optimality model,
-!      ! Ecology Letters, doi: 10.1111/ele.12804
-! 
-!      implicit none
-! 
-!      ! declare arguments
-!      integer, intent(in) :: nodays, current_step
-!      double precision, intent(in) :: deltat(nodays) & !
-!                                    ,pot_leaf_growth & !
-!                                      ,pot_leaf_fall & !
-!                                        ,GPP_current & !
-!                                            ,foliage & !
-!                                            ,Rm_leaf & !
-!                                            ,deltaWP & !
-!                                               ,Rtot
-! 
-!      double precision, intent(inout) :: leaf_fall,leaf_growth
-! 
-!      ! declare local variables
-!      integer :: a, d
-!      double precision :: infi      &
-!                         ,tmp       &
-!                         ,loss      &
-!                         ,loss_adj  &
-!                         ,leaf_cost &
-!                         ,deltaGPP  &
-!                         ,deltaRm   &
-!                         ,old_GPP   &
-!                         ,alt_GPP   &
-!                         ,marginal_gain &
-!                         ,marginal_loss &
-!                         ,NUE_save  &
-!                         ,lai_save  &
-!                         ,canopy_lw_save &
-!                         ,canopy_sw_save &
-!                         ,canopy_par_save &
-!                         ,soil_lw_save &
-!                         ,soil_sw_save &
-!                         ,gs_save      &
-!                         ,canopy_age_save
-! 
-!      ! save original values for re-allocation later
-!      canopy_lw_save = canopy_lwrad_Wm2 ; soil_lw_save  = soil_lwrad_Wm2
-!      canopy_sw_save = canopy_swrad_MJday ; canopy_par_save  = canopy_par_MJday
-!      soil_sw_save = soil_swrad_MJday ; gs_save = stomatal_conductance
-!      lai_save = lai ; NUE_save = NUE ; canopy_age_save = canopy_age
-! 
-!      ! for infinity checks
-!      infi = 0d0
-! 
-!      ! first assume that nothing is happening
-!      marginal_gain = dble_zero ; marginal_loss = dble_zero
-!      leaf_marginal_gain = dble_zero ; leaf_marginal_loss = dble_zero
-!      loss = dble_zero ; loss_adj = dble_zero ; tmp = dble_zero
-!      leaf_fall = dble_zero   ! leaf turnover
-!      leaf_growth = dble_zero ! leaf growth
-! 
-!      !
-!      ! Increment the age of the existing canopy
-!      !
-! 
-!      if (oldest_leaf == size(canopy_age_vector)) then
-! 
-!          ! accumulate the oldest carbon in the oldest age clash
-!          canopy_age_vector(oldest_leaf) = canopy_age_vector(oldest_leaf) + canopy_age_vector(oldest_leaf-1)
-!          ! now shift the age of the rest of the profile. NOTE: -2 corrects for
-!          ! not moving further down the age vector (as we have hit the end) but
-!          ! also the fact that we deal with the oldest leaves specifically
-!          do a = oldest_leaf-2, 1, -1
-!             canopy_age_vector(a+1) = canopy_age_vector(a)
-!          end do ; a = 0
-!          ! oldest leaf gets no older
-!          oldest_leaf = oldest_leaf
-!          
-!      else
-!
-!          ! shift along the canopy age space for the marginal return
-!          ! calculations...
-!          do a = oldest_leaf, 1, -1
-!             canopy_age_vector(a+1) = canopy_age_vector(a)
-!          end do ; a = 0
-!          ! ...as is oldest leaf
-!          oldest_leaf = oldest_leaf + 1
-!
-!      end if ! oldest_leaf >= size(canopy_age_vector)
-!
-!      ! finally the newest space must now be cleared for potential new growth
-!      canopy_age_vector(1) = dble_zero
-!
-!      !
-!      ! Marginal return of leaf loss
-!      !
-!
-!      ! can't quantify leaf loss if there are no leaves...
-!      if (foliage > dble_zero) then
-!
-!          ! we are in a decending condition so foliar turnover
-!          leaf_fall = pot_leaf_fall !* (dble_one-Croot_labile_release_coef(current_step))
-!          ! calculate potential C loss from leaves
-!          tmp = foliage * (dble_one-(dble_one-leaf_fall)**deltat(current_step))*deltat_1(current_step)
-!          ! foliar biomass lost (daily->step)
-!          tmp = tmp * deltat(current_step)
-!
-!          ! remainder is Rg cost
-!!          leaf_cost = (tmp / one_Rg_fraction) * Rg_fraction
-!!          ! combine the two components then we have full cost
-!!          leaf_cost = leaf_cost + tmp
-!          ! calculate new Rm...
-!          deltaRm = Rm_leaf * ((foliage-tmp)/foliage)
-!          ! ...and its marginal return
-!          deltaRm = deltaRm - Rm_leaf
-!          ! calculate new leaf area, GPP and marginal return
-!          lai = (foliage-tmp) * SLA
-!          ! increment age profiles, remove old leaf...
-!          loss = dble_zero
-!          do a = oldest_leaf, 1, -1
-!             loss = sum(canopy_age_vector(a:oldest_leaf))
-!             ! if we have found enough carbon to remove then exit the loop
-!             if (loss >= tmp) exit
-!          end do
-!          ! if based on age class we now allocate more leaf to turnover than wanted we must adjust this...
-!          if (loss > tmp) then
-!              ! ...by adding the difference back into the profile...
-!              loss_adj = loss - tmp
-!              ! ...add one more to the 
-!          else
-!              ! we must not have achieved the target loss, as occurs when the whole canopy is lost...
-!              ! Update for consistency with the bulk mass balance calculations
-!              leaf_fall = leaf_fall * (loss/tmp)
-!          endif
-!          ! calculate mean canopy age, weighted by the mass at each age point
-!          if (a == 1) then
-!              ! when we have come back to the beginning of the profile
-!              canopy_age = dble_one
-!          else
-!              canopy_age = sum(canopy_age_vector(1:a) * canopy_days(1:a)) / sum(canopy_age_vector(1:a)) 
-!          endif
-!          ! update NUE as function of age
-!          NUE = age_dependent_NUE(canopy_age,NUE_optimum,canopy_maturation_lag,canopy_zero_efficiency)
-!          ! calculate stomatal conductance of water
-!          call acm_albedo_gc(abs(deltaWP),Rtot)
-!          if (lai > vsmall .and. stomatal_conductance > vsmall) then
-!              alt_GPP = acm_gpp(stomatal_conductance)
-!          else
-!              alt_GPP = dble_zero
-!          endif
-!          deltaGPP = alt_GPP - GPP_current
-!          ! is the reduction in Rm > reduction in GPP over the mean life of
-!          ! the leaves adjusted for the cost of re-growing the leaves should
-!          ! this choice be reversed at a later date.
-!!          marginal_loss = ((deltaGPP-deltaRm)*leaf_life) - leaf_cost
-!          marginal_loss = deltaGPP-deltaRm
-! 
-!      endif ! foliage > 0
-! 
-!      !
-!      ! Marginal return of leaf growth
-!      !
-! 
-!      ! If there is not labile available no growth can occur moreover we should not consider growing more leaves if
-!      ! there is a positive marginal return on losing leaf area.
-!      ! NOTE: that C shortage linked mortality was calculated earlier in the code
-!      ! should have been managed else where as mortality
-!      if (avail_labile > dble_zero) then
-!
-!          ! we are in an assending condition so labile turnover
-!          leaf_growth = pot_leaf_growth*Croot_labile_release_coef(current_step)
-!          ! calculate potential C allocation to leaves
-!          tmp = avail_labile * (dble_one-(dble_one-leaf_growth)**deltat(current_step))*deltat_1(current_step)
-!          ! C spent on growth
-!          leaf_cost = tmp * deltat(current_step)
-!          ! C to new growth
-!          tmp = leaf_cost * (one_Rg_fraction)
-!          ! calculate new Rm...
-!          deltaRm = Rm_leaf * ((foliage+tmp)/foliage)
-!          ! ...and its marginal return
-!          deltaRm = deltaRm - Rm_leaf
-!          ! overwrite current age specific NUE with the leaf lifetime NUE
-!          NUE = NUE_mean
-!          ! and estimate the equivalent GPP for current LAI
-!          old_GPP = acm_gpp(stomatal_conductance)
-!          ! calculate new leaf area
-!          lai = (foliage+tmp) * SLA
-!          ! then add new
-!          canopy_age_vector(1) = tmp
-!          ! calculate stomatal conductance of water
-!          call acm_albedo_gc(abs(deltaWP),Rtot)
-!          ! now estimate GPP with new LAI
-!          if (lai > vsmall .and. stomatal_conductance > vsmall) then
-!              alt_GPP = acm_gpp(stomatal_conductance)
-!          else
-!              alt_GPP = dble_zero
-!          endif
-!          deltaGPP = alt_GPP - old_GPP
-!          ! is the marginal return for GPP (over the mean life of leaves)
-!          ! less than increase in maintenance respiration and C required to
-!          ! growth (Rg+tissue)?
-!          marginal_gain = ((deltaGPP-deltaRm)*leaf_life) - leaf_cost
-!
-!      endif ! avail_labile > 0 .and. marginal_loss > 0
-!      ! no positives of growing new leaves so don't
-!      if (marginal_gain <= dble_zero) leaf_growth = dble_zero
-!      ! no positive of losing old leaves so don't
-!      if (marginal_loss <= dble_zero) leaf_fall = dble_zero
-!      ! positives for gaining and losing leaves
-!!      if (marginal_gain > dble_zero) leaf_fall = dble_zero
-!      if (marginal_loss > dble_zero) leaf_growth = dble_zero
-! 
-!      ! marginal suggest that we are losing leaves, therefore we must finish updating age model
-!      ! Don't forget that the mass-balance here may have also been updated with NEW leaves
-!      if (leaf_fall > dble_zero) then
-!          ! remove the biomass from the canopy age vector
-!          canopy_age_vector(a:oldest_leaf) = dble_zero
-!          ! add the difference between target and actual back to the final age class if available.
-!          ! NOTE: this makes the actual "loss" estimates with the while loop consistent with the "leaf_fall" rate
-!          canopy_age_vector(a) = loss_adj
-!          ! update the new oldest leaf age
-!          oldest_leaf = a
-!          ! cannot have oldest leaf at position less than 1
-!          if (oldest_leaf <= 0) oldest_leaf = 1
-!      endif
-!      ! marginal suggest that we are not gaining leaves therefore we must update the age model
-!      if (leaf_growth == dble_zero) canopy_age_vector(1) = dble_zero
-! 
-!      ! restore original value back from memory
-!      lai = lai_save ; NUE = NUE_save ; canopy_age = canopy_age_save
-!      canopy_lwrad_Wm2 = canopy_lw_save ; soil_lwrad_Wm2 = soil_lw_save
-!      canopy_swrad_MJday = canopy_sw_save ; canopy_par_MJday = canopy_par_save
-!      soil_swrad_MJday = soil_sw_save ; stomatal_conductance = gs_save
-! 
-!  end subroutine calculate_leaf_dynamics
   !
   !------------------------------------------------------------------
   !
@@ -4493,7 +4135,7 @@ contains
         wood_growth = lab_to_wood*Cwood_labile_release_coef(n)*Cwood_hydraulic_limit
         ! Estimate potential root allocation over time for potential root
         ! allocation
-        tmp = avail_labile*(dble_one-(dble_one-root_growth)**days_per_step)*days_per_step_1
+        tmp = avail_labile*(dble_one-(dble_one-wood_growth)**days_per_step)*days_per_step_1
         ! C spent on growth
         wood_cost = tmp*days_per_step
         ! C to new growth
@@ -4503,7 +4145,8 @@ contains
         ! C spend on maintenance
         deltaRm = Rm_wood*((Cwood+tmp)/Cwood)
         deltaRm = deltaRm - Rm_wood
-        if (current_gpp - Rm_wood - Rm_leaf - Rm_root - deltaRm < dble_zero) wood_cost = dble_zero
+        ! is current GPP less current maintenance costs sufficient to pay for Rg and new Rm?
+        if (current_gpp - Rm_wood - Rm_leaf - Rm_root - deltaRm - wood_cost < dble_zero) wood_growth = dble_zero
         ! estimate target woody C:N based on assumption that CN_wood increases
         ! logarithmically with increasing woody stock size.
 !       CN_wood_target = 10d0**(log10(pars(15)) + log10(Cwood)*pars(25))
@@ -4542,30 +4185,63 @@ contains
 
      implicit none
 
-     ! calculate mean NUE over the maturation period (i.e. half)
-     ! and weight by number of days this period covers (canopy_maturation_lag)
-     NUE_mean = canopy_maturation_lag + canopy_zero_efficiency
-     if (leaf_life > NUE_mean) then
+     ! local variables
+     double precision :: NUE_zero_days, day_zero
 
-         ! current mean leaf life span is greater than period NUE > 0
+     ! first estimate the total (parameterised) period for which NUE > 0
+     day_zero = canopy_maturation_lag + canopy_optimum_period + canopy_zero_efficiency
+     if (leaf_life > day_zero) then
+
+         ! current mean leaf life span is greater than period where NUE > 0
 
          ! estimate time period at which NUE = 0
-         NUE_mean = leaf_life - NUE_mean
-         NUE_mean = ((NUE_optimum * 0.5d0 * canopy_maturation_lag) + (NUE_optimum * 0.5d0 * canopy_zero_efficiency)) &
-                  / (canopy_maturation_lag+canopy_zero_efficiency+NUE_mean)
+         NUE_zero_days = leaf_life - day_zero
+         ! estimate weighted average over between the different canopy phases.
+         ! Note that 0.5 is because the mean NUE over the maturaing and aging phases is half the NUE_optimum
+         ! as they are bound by zero. Whereas the midphase is at the optimum itself
+         NUE_mean = (NUE_optimum * 0.5d0 * canopy_maturation_lag) &
+                  + (NUE_optimum * 0.5d0 * canopy_zero_efficiency) &
+                  + (NUE_optimum * canopy_optimum_period)
+         NUE_mean = NUE_mean / (canopy_maturation_lag+canopy_optimum_period+canopy_zero_efficiency+NUE_zero_days)
 
      else
 
-         ! current leaf life span is less than the period at which NUE > 0
+         ! current leaf life span is within the period where NUE > 0
 
          ! estimate NUE at expected end of leaf life
-         NUE_mean = age_dependent_NUE(leaf_life,NUE_optimum,canopy_maturation_lag,canopy_zero_efficiency)
-         ! find average for the mature period and apply timing weighting
-         NUE_mean = (NUE_optimum + NUE_mean) * 0.5d0 * (leaf_life-canopy_maturation_lag)
-         ! weight maturating period with the mature period
-         NUE_mean = ((NUE_optimum * 0.5d0 * canopy_maturation_lag) + NUE_mean) / leaf_life
+         NUE_mean = age_dependent_NUE(leaf_life,NUE_optimum, &
+                                      canopy_maturation_lag,canopy_optimum_period,canopy_zero_efficiency)
 
-     endif ! leaf_life > NUE_mean
+         if (leaf_life > canopy_maturation_lag + canopy_optimum_period) then
+
+             ! current leaf life span ends within NUE decay phase
+
+             ! find average for the mature period and apply timing weighting
+             NUE_mean = (NUE_optimum + NUE_mean) * 0.5d0 * (leaf_life-canopy_maturation_lag-canopy_optimum_period)
+             ! weight maturating and optimum periods with the mature period
+             NUE_mean = ((NUE_optimum * 0.5d0 * canopy_maturation_lag) + (NUE_optimum * canopy_optimum_period) + NUE_mean)
+             NUE_mean = NUE_mean / leaf_life
+
+         else if (leaf_life > canopy_maturation_lag) then
+
+             ! current leaf life span end within optimum phase
+
+             ! find average for the mature period and apply timing weighting
+             NUE_mean = (NUE_optimum + NUE_mean) * 0.5d0 * (leaf_life-canopy_maturation_lag)
+             ! weight maturating period with the optimum period
+             NUE_mean = (NUE_optimum * 0.5d0 * canopy_maturation_lag) + NUE_mean
+             NUE_mean = NUE_mean / leaf_life
+
+         else
+
+             ! current leaf life span must end within maturation phase...
+
+             ! weight maturating period with the mature period
+             NUE_mean = (NUE_mean * 0.5d0 * canopy_maturation_lag) / leaf_life
+
+         endif ! leaf_life ends in maturation, optimum or decaying phases?
+
+     endif ! leaf_life > day_zero
 
   end subroutine estimate_mean_NUE
   !
@@ -4705,10 +4381,11 @@ contains
   !
   !------------------------------------------------------------------
   !
-  double precision function age_dependent_NUE(age,optimum,pre_lag,post_lag)
+  double precision function age_dependent_NUE(age,optimum,pre_lag,opt_lag,post_lag)
 
     !
-    ! Estimate photosynthetic nitrogen use efficiency (gC/gN/m2leaf/day)
+    ! Estimate leaf age photosynthetic nitrogen use efficiency (gC/gN/m2leaf/day).
+    ! Modified version of Xu et al., (2017), using here a combination of 3 (instead of 2) linear equations governing NUE.
     !
     ! Xu et al., (2017):
     ! Variations of leaf longevity in tropical moist forests predicted by a trait-driven carbon optimality model,
@@ -4718,23 +4395,58 @@ contains
     implicit none
 
     ! arguments
-    double precision, intent(in) :: age, optimum, pre_lag, post_lag
+    double precision, intent(in) :: age, optimum, pre_lag, opt_lag, post_lag
 
     ! update NUE as function of age
     if (age < pre_lag) then
         ! canopy has not yet matured
         age_dependent_NUE = optimum * (dble_one - (pre_lag-age)/pre_lag)
-    else
+    else if (age >= pre_lag .and. age <= pre_lag+opt_lag) then
+        ! canopy is at optimum
+        age_dependent_NUE = optimum
+    else if (age > pre_lag+opt_lag) then
         ! canopy past optimum
-        age_dependent_NUE = optimum * (dble_one - (age-pre_lag)/post_lag)
+        age_dependent_NUE = optimum * (dble_one - (age-pre_lag-opt_lag)/post_lag)
+    else
+        ! we have missed something here...
+        print*,"Error in 'age_dependent_NUE'"
+        print*,"Current canopy age = ",age,"optimum NUE = ",optimum
+        print*,"pre_period = ",pre_lag,"opt_period = ",opt_lag,"post_period = ",post_lag
+        stop
     endif
 
-    ! cannot be negative 
+    ! cannot be negative
     age_dependent_NUE = max(dble_zero,age_dependent_NUE)
 
     return
 
   end function age_dependent_NUE
+  !
+  !------------------------------------------------------------------
+  !
+  double precision function canopy_aggregate_NUE(first_leaf,last_leaf)
+
+    !
+    ! Estimate photosynthetic nitrogen use efficiency (gC/gN/m2leaf/day)
+    ! aggregated across the canopy age distribution
+
+    !
+    ! Xu et al., (2017):
+    ! Variations of leaf longevity in tropical moist forests predicted by a trait-driven carbon optimality model,
+    ! Ecology Letters, doi: 10.1111/ele.12804
+
+    implicit none
+
+    ! arguments
+    integer, intent(in) :: first_leaf, last_leaf
+
+    ! weight the age specific NUE values by the amount of foliage biomass in each class
+    canopy_aggregate_NUE = sum(canopy_age_vector(first_leaf:last_leaf)*NUE_vector(first_leaf:last_leaf))
+    canopy_aggregate_NUE = canopy_aggregate_NUE / sum(canopy_age_vector(first_leaf:last_leaf))
+
+    return
+
+  end function canopy_aggregate_NUE
   !
   !------------------------------------------------------------------
   !

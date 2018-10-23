@@ -58,16 +58,16 @@ module MODEL_PARAMETERS
        PI%parmax(2)=192.31d0
 
        ! Days past optimum at which canopy NUE = 0
-       PI%parmin(3)=30d0
-       PI%parmax(3)=365.25d0*8d0
+       PI%parmin(3)=3d0
+       PI%parmax(3)=365.25d0*12d0
 
        ! Max labile turnover (fraction) to roots
        PI%parmin(4)=2d0*0.0001368925d0 ! 20->10 years
        PI%parmax(4)=0.05d0         ! 20 days
 
-       ! Max leaf turnover (fraction)
-       PI%parmin(5)=0.0006844627d0 ! 4 years 0.0003422313d0 !  8 years
-       PI%parmax(5)=0.10d0         ! 10 days
+       ! Leaf growth sensitivity period (days)
+       PI%parmin(5)=1.5d0
+       PI%parmax(5)=30d0
 
        ! Turnover fraction of wood
        PI%parmin(6)=0.000009d0 ! 300  years
@@ -83,7 +83,7 @@ module MODEL_PARAMETERS
 
        ! Turnover of som to Rhet (fraction; temperature adjusted)
        PI%parmin(9)=1.368925d-6 ! 2000 years
-       PI%parmax(9)=0.0005d0    ! ~ 5 years
+       PI%parmax(9)=0.0002737851d0    ! ~ 10 years
 
        ! Exponential coefficient for Rhet temperature response
        PI%parmin(10)=0.018d0
@@ -103,8 +103,8 @@ module MODEL_PARAMETERS
        PI%parmax(13)=0.05d0         ! 20 days
 
        ! Days between leaf emergence and peak NUE
-       PI%parmin(14)=7d0
-       PI%parmax(14)=60d0
+       PI%parmin(14)=3d0
+       PI%parmax(14)=90d0
 
        ! CN_wood (gC/gN; Kattge et al., 2011)
        PI%parmin(15)=169.5d0
@@ -123,17 +123,18 @@ module MODEL_PARAMETERS
        PI%parmin(17)=10d0
        PI%parmax(17)=180d0 !200d0
 
-       ! Initial leaf life span (days)
-       PI%parmin(25)=50d0
+       ! Initial mean canopy age (days)
+       PI%parmin(25)=3d0 !50d0
        PI%parmax(25)=365.25d0*8d0
 
        ! baseline NUE (gC/gN/m2/day-1)
-       PI%parmin(26)= 3d0 ! 11.0
-       PI%parmax(26)=40d0 ! 12.0
+       ! TRY database equivalent 2.5 % = 1.648512; 97.5 % = 19.906560
+       PI%parmin(26)= 1.0d0
+       PI%parmax(26)=25.0d0
 
-       ! Averaging period for marginal return on leaf growth (days)
-       PI%parmin(27)=1d0
-       PI%parmax(27)=21d0
+       ! initial leaf life span (MTTleaf; days)
+       PI%parmin(27)=30d0
+       PI%parmax(27)=365.25d0*8d0
 
        ! fraction of Cwood which is branch
        PI%parmin(28)=0.05d0
@@ -149,7 +150,7 @@ module MODEL_PARAMETERS
 
        ! BUCKET - maximum rooting depth (m)
        PI%parmin(35)=0.35d0
-       PI%parmax(35)=10d0 !15.0 !20.0
+       PI%parmax(35)=20d0 !60d0
 
        ! Reich - Leaf N linked respiration exponential coefficient
        PI%parmin(36)=0.935d0 ! 1.639-0.01
@@ -158,7 +159,7 @@ module MODEL_PARAMETERS
        ! Reich - Leaf N linked respiration intercept
        ! max/min values based on observed ranges from Reich et al (2008)
        ! Figure 1
-       PI%parmin(37)=0.01d0 !0.01 !0.645
+       PI%parmin(37)=0.10d0 !0.01 !0.645
        PI%parmax(37)=1.65d0 !1.25 !0.911
 
        ! Reich - root N linked respiration exponential coefficient
@@ -180,6 +181,16 @@ module MODEL_PARAMETERS
        ! Figure 1
        PI%parmin(41)=0.01d0 !0.01 !0.839
        PI%parmax(41)=1.90d0 !1.25 !1.053
+
+       ! Minimum daily temperature at which temperature related NUE decline acceleration reaches 50 %
+       ! determine by logistic function with sensitivity parameter (pars(43))
+       PI%parmin(42)=-10d0
+       PI%parmax(42)= 15d0
+
+       ! maximum number of NUE decline acceleration that can be applied (days)
+       PI%parmin(43)=1d0
+       PI%parmax(43)=14d0 ! 7d0
+
 
 !       ! CN_wood coefficient for increase due to C_wood (deltalCN per gC.m-2)
 !       ! NOTE: values in log scale

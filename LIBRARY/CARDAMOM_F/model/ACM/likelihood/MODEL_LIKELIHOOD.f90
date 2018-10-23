@@ -492,7 +492,7 @@ module model_likelihood_module
     integer :: n
 
     ! set initial value
-    likelihood_p = 0d0
+    likelihood_p = 0d0 
 
     ! now loop through defined parameters for their uncertainties
     do n = 1, npars

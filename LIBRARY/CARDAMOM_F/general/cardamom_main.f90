@@ -49,7 +49,7 @@ program cardamom_framework
  ! determine unique (sort of) seed value; based on system time
  call system_clock(time1,time2,time3)
  ! set seed value outside of the function, idum must be a negative number
- idum=dble(time1+time2+time3)
+ idum = dble(time1+time2+time3)
  call rnstrt(nint(idum))
 
  ! read input data (DATAin located in module)
@@ -65,7 +65,7 @@ program cardamom_framework
  ! Determine initial values, this requires using the MHMCMC
  call find_edc_initial_values(PI)
  ! reset stepsize
- PI%stepsize=0.02d0 ! 0.01
+ PI%stepsize = 0.02d0 ! 0.01
 
  ! initialise MCMC output
  call initialise_mcmc_output(PI,MCOUT)
