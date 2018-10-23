@@ -45,23 +45,23 @@ module model_likelihood_module
     call initialise_mcmc_output(PI,MCOUT)
 
     ! set MCMC options needed for EDC run
-    MCOPT%APPEND=0
-    MCOPT%nADAPT=20
-    MCOPT%fADAPT=0.5d0
-    MCOPT%nOUT=5000
-    MCOPT%nPRINT=0
-    MCOPT%nWRITE=0
+    MCOPT%APPEND = 0
+    MCOPT%nADAPT = 20
+    MCOPT%fADAPT = 0.5d0
+    MCOPT%nOUT = 5000
+    MCOPT%nPRINT = 0
+    MCOPT%nWRITE = 0
     ! the next two lines ensure that parameter inputs are either given or
     ! entered as -9999
-    MCOPT%randparini=.true.
-    MCOPT%returnpars=.true.
-    MCOPT%fixedpars=.false.
+    MCOPT%randparini = .true.
+    MCOPT%returnpars = .true.
+    MCOPT%fixedpars = .false.
 
     do n = 1, PI%npars
-       PI%stepsize(n)=0.02d0
-       PI%parini(n)=DATAin%parpriors(n)
+       PI%stepsize(n) = 0.02d0
+       PI%parini(n) = DATAin%parpriors(n)
        ! assume we need to find random parameters
-       PI%parfix(n)=0
+       PI%parfix(n) = 0
        ! if the prior is not missing and we have not told the edc to be random
        ! keep the value
        if (PI%parini(n) /= -9999d0 .and. DATAin%edc_random_search < 1) PI%parfix(n)=1
@@ -79,7 +79,7 @@ module model_likelihood_module
          call MHMCMC(EDC_MODEL_LIKELIHOOD,PI,MCOPT,MCOUT)
 
          ! store the best parameters from that loop
-         PI%parini(1:PI%npars)=MCOUT%best_pars(1:PI%npars)
+         PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
          ! turn off random selection for initial values
          MCOPT%randparini = .false.
 
@@ -90,7 +90,7 @@ module model_likelihood_module
          counter_local=counter_local+1
          ! periodically reset the initial conditions
          if (PEDC < 0 .and. mod(counter_local,3) == 0) then
-             PI%parini(1:PI%npars)=DATAin%parpriors(1:PI%npars)
+             PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
              ! reset to select random starting point
              MCOPT%randparini = .true.
          endif
@@ -98,7 +98,7 @@ module model_likelihood_module
     endif ! if for restart
 
     ! reset
-    PI%parfix(1:PI%npars)=0
+    PI%parfix(1:PI%npars) = 0
 
     ! clean up some memory
     deallocate(MCOUT%best_pars)
@@ -130,7 +130,7 @@ module model_likelihood_module
     double precision :: tot_exp, ML, exp_orig, decay_coef, prob_exp, EDC, EDC1, EDC2, infini
 
     ! set initial values
-    EDCD%DIAG=1
+    EDCD%DIAG = 1
 
     ! call EDCs which can be evaluated prior to running the model
     call EDC1_GSI(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
@@ -151,29 +151,29 @@ module model_likelihood_module
     ! combine results
     if (DATAin%EDC == 1 .and. (EDC1 == 0 .or. EDC2 == 0 .or. &
         sum(DATAin%M_LAI) /= sum(DATAin%M_LAI) .or. sum(DATAin%M_GPP) /= sum(DATAin%M_GPP))) then
-        EDC=0
+        EDC = 0
     else
-        EDC=1
+        EDC = 1
     end if
 
     ! calculate the likelihood
-    tot_exp=0d0
+    tot_exp = 0d0
     do n = 1, EDCD%nedc
-       tot_exp=tot_exp+(1d0-EDCD%PASSFAIL(n))
+       tot_exp = tot_exp+(1d0-EDCD%PASSFAIL(n))
 !       if (EDCD%PASSFAIL(n) /= 1) print*,"failed edcs are: ", n
     end do ! checking EDCs
     ! for testing purposes, stop the model when start achieved
 !    if (sum(EDCD%PASSFAIL) == 100) stop
 
     ! convert to a probability
-    prob_out=-0.5d0*(tot_exp*10d0)*DATAin%EDC
+    prob_out = -0.5d0*(tot_exp*10d0)*DATAin%EDC
 
     ! override probability if parameter set gives NaN or near -infinitiy output
     call model_likelihood(PI,PARS,ML)
 
-    infini=0d0
+    infini = 0d0
     if (DATAin%EDC == 0 .and. (ML /= ML .or. ML == log(infini) .or. ML == -log(infini) )) then
-       prob_out=prob_out-0.5d0*10d0
+       prob_out = prob_out-0.5d0*10d0
     end if
 
     ! prob_out is the Log-Likelihood
@@ -184,6 +184,11 @@ module model_likelihood_module
   !------------------------------------------------------------------
   !
   subroutine EDC1_GSI(PARS, npars, meantemp, meanrad, EDC1)
+
+    use cardamom_structures, only: DATAin
+    use CARBON_MODEL_MOD, only: sw_par_fraction, &
+                                opt_max_scaling, &
+                                     emissivity 
 
     ! subroutine assessed the current parameter sets for passing ecological and
     ! steady state contraints (modified from Bloom et al., 2014).
@@ -197,36 +202,78 @@ module model_likelihood_module
     double precision, intent(in) :: meantemp & ! mean temperature (k)
                                    ,meanrad    ! mean radiation (MJ.m-2.day-1)
 
+    ! declare local parameters
+    double precision, dimension(7), parameter :: lai = (/0.125d0,0.25d0,0.5d0,1d0,2.5d0,5d0,10d0/)
+
     ! declare local variables
-    integer :: n, DIAG, lai
-    double precision :: fauto & ! Fractions of GPP to autotrophic respiration
+    integer :: n, DIAG, i
+    double precision :: tmp, tmp1, tmp2 &
+             ,par_trans, par_refl, nir_trans, nir_refl, lw_trans, lw_refl &
+             ,fauto & ! Fractions of GPP to autotrophic respiration
              ,ffol  & ! Fraction of GPP to foliage
-             ,flab  & ! Fraction of GPP to la`bile pool
+             ,flab  & ! Fraction of GPP to labile pool
              ,froot & ! Fraction of GPP to root
              ,fwood & ! Fraction of GPP to wood
              ,fsom    ! fraction of GPP som under eqilibrium conditions
 
     ! set initial value
-    EDC1=1
-    DIAG=EDCD%DIAG
+    EDC1 = 1
+    DIAG = EDCD%DIAG
 
 
     ! set all EDCs to 1 (pass)
-    EDCD%nedc=100
-    EDCD%PASSFAIL(1:EDCD%nedc)=1
+    EDCD%nedc = 100
+    EDCD%PASSFAIL(1:EDCD%nedc) = 1
 
     !
     ! begin checking EDCs
     !
 
-    ! the absorption of NIR should always be less than PAR at all LAI values
-    do lai = 1,10
-       if ((EDC1 == 1 .or. DIAG == 1) .and. &
-           pars(8)*lai/(lai+pars(9)) >= pars(11)*lai/(lai+pars(12)) ) then
+
+    do i = 1,7
+
+       ! Canopy transmitted of PAR & NIR radiation towards the soil
+       par_trans = 1d0 - (lai(i)*pars(16)) / (lai(i)+pars(17))
+       nir_trans = 1d0 - (lai(i)*pars(18)) / (lai(i)+pars(19))
+       lw_trans = 1d0 - (lai(i)*pars(6)) / (lai(i)+pars(7))
+       ! Canopy reflected of near infrared and photosynthetically active radiation
+       nir_refl = (lai(i)*pars(8)) / (lai(i)+pars(9))
+       par_refl = (lai(i)*pars(11)) / (lai(i)+pars(12))
+       lw_refl = (lai(i)*pars(22)) / (lai(i)+pars(13))
+
+       ! the transmittance and reflection of LW radiation should be less than 1
+       if ((EDC1 == 1 .or. DIAG == 1) .and. lw_trans+lw_refl >= 1d0) then
            EDC1 = 0 ; EDCD%PASSFAIL(1) = 0
+       endif
+       ! the transmittance of NIR should always be > than PAR at all LAI values
+       if ((EDC1 == 1 .or. DIAG == 1) .and. nir_trans < par_trans) then
+           EDC1 = 0 ; EDCD%PASSFAIL(2) = 0
+       endif
+       ! reflectance and transmittance of NIR should always be < 1
+       if ((EDC1 == 1 .or. DIAG == 1) .and. nir_trans + nir_refl >= 1d0 ) then
+           EDC1 = 0 ; EDCD%PASSFAIL(3) = 0
+       endif
+       ! reflectance and transmittance of PAR should always be < 1
+       if ((EDC1 == 1 .or. DIAG == 1) .and. par_trans + par_refl >= 1d0 ) then
+           EDC1 = 0 ; EDCD%PASSFAIL(4) = 0
+       endif
+       ! reflectance should be greater for NIR than for PAR
+       if ((EDC1 == 1 .or. DIAG == 1) .and. nir_refl < par_refl) then
+           EDC1 = 0 ; EDCD%PASSFAIL(5) = 0
        endif
     enddo
 
+    ! maximum temperature for photosythesis cannot be smaller than optimum
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(3) > pars(2)) then
+        EDC1 = 0 ; EDCD%PASSFAIL(6) = 0
+    endif
+
+    ! assume that photosynthesis limitation at 0C should be between 10 % and 20 %
+    ! of potential. Fatchi et al (2013), New Phytologist, https://doi.org/10.1111/nph.12614 
+    tmp = opt_max_scaling(pars(2),pars(3),pars(4),0d0)
+    if ((EDC1 == 1 .or. DIAG == 1) .and. tmp > 0.20d0) then
+       EDC1 = 0 ; EDCD%PASSFAIL(7) = 0
+    endif
 
   end subroutine EDC1_GSI
   !
@@ -289,6 +336,23 @@ module model_likelihood_module
     ! EDCs done, below are additional fault detection conditions
     !
 
+    ! the maximum value for all fluxes must be greater than zero
+    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,1)) < 0.5d0) then
+         EDC2 = 0 ; EDCD%PASSFAIL(8) = 0
+    endif
+    ! the maximum value for all fluxes must be greater than zero
+    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,2)) < 0.5d0) then
+         EDC2 = 0 ; EDCD%PASSFAIL(9) = 0
+    endif
+    ! the maximum value for all fluxes must be greater than zero
+    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,3)) < 0.5d0) then
+         EDC2 = 0 ; EDCD%PASSFAIL(10) = 0
+    endif
+    ! the maximum value for all fluxes must be greater than zero
+    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,4)) < 0.5d0) then
+         EDC2 = 0 ; EDCD%PASSFAIL(11) = 0
+    endif
+
     ! additional faults can be stored in locations 35 - 40 of the PASSFAIL array
 
     ! ensure minimum pool values are >= 0 and /= NaN
@@ -299,7 +363,23 @@ module model_likelihood_module
           do while (nn <= (nodays+1) .and. PEDC == 1)
              ! now check conditions
              if (M_POOLS(nn,n) < 0d0 .or. M_POOLS(nn,n) /= M_POOLS(nn,n)) then
-                 EDC2=0 ; PEDC=0 ; EDCD%PASSFAIL(35+n)=0
+                 EDC2 = 0 ; PEDC = 0 ; EDCD%PASSFAIL(35+n) = 0
+             end if ! less than zero and is NaN condition
+          nn = nn + 1
+          end do ! nn < nodays .and. PEDC == 1
+          n = n + 1
+       end do ! for nopools .and. EDC .or. DIAG condition
+    end if ! min pool assessment
+
+    ! ensure FLUXES values are /= NaN
+    if (EDC2 == 1 .or. DIAG == 1) then
+       n=1
+       do while (n <= nofluxes .and. (EDC2 == 1 .or. DIAG == 1))
+          nn = 1 ; PEDC = 1
+          do while (nn <= (nodays+1) .and. PEDC == 1)
+             ! now check conditions
+             if (M_FLUXES(nn,n) /= M_FLUXES(nn,n)) then
+                 EDC2 = 0 ; PEDC = 0 ; EDCD%PASSFAIL(35+nopools+n) = 0
              end if ! less than zero and is NaN condition
           nn = nn + 1
           end do ! nn < nodays .and. PEDC == 1
@@ -334,8 +414,8 @@ module model_likelihood_module
     double precision :: EDC,EDC1,EDC2
 
     ! initial values
-    ML_out=0d0
-    EDCD%DIAG=0
+    ML_out = 0d0
+    EDCD%DIAG = 0
 
     ! call EDCs which can be evaluated prior to running the model
     call EDC1_GSI(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
@@ -347,13 +427,13 @@ module model_likelihood_module
     end if
 
     ! update effect to the probabity
-    ML_out=ML_out+log(EDC)
+    ML_out = ML_out+log(EDC)
 
     ! if first set of EDCs have been passed
     if (EDC == 1) then
        ! calculate parameter log likelihood (assumed we have estimate of
        ! uncertainty)
-       ML_out=ML_out+likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
+       ML_out = ML_out+likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
 
        ! run the dalec model
        call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat,DATAin%nodays  &
@@ -381,11 +461,11 @@ module model_likelihood_module
        end if
 
        ! add EDC2 log-likelihood
-       ML_out=ML_out+log(EDC)
+       ML_out = ML_out+log(EDC)
 
        ! calculate final model likelihood when compared to obs
        if (EDC == 1) then
-          ML_out=ML_out+likelihood(PI%npars,PARS)
+          ML_out = ML_out+likelihood(PI%npars,PARS)
        endif ! EDC still == 1
 
     end if ! EDC == 1
@@ -412,7 +492,7 @@ module model_likelihood_module
     integer :: n
 
     ! set initial value
-    likelihood_p = 0d0
+    likelihood_p = 0d0 
 
     ! now loop through defined parameters for their uncertainties
     do n = 1, npars
@@ -421,9 +501,9 @@ module model_likelihood_module
            if (n >= 1 .or. n <= 19) then
                ! Gaussian uncertainties for CO2 compensation and half saturation
                ! points
-               likelihood_p=likelihood_p-0.5d0*((pars(n)-parpriors(n))/parpriorunc(n))**2
+               likelihood_p = likelihood_p-0.5d0*((pars(n)-parpriors(n))/parpriorunc(n))**2
            else
-               likelihood_p=likelihood_p-0.5d0*(log(pars(n)/parpriors(n))/log(parpriorunc(n)))**2
+               likelihood_p = likelihood_p-0.5d0*(log(pars(n)/parpriors(n))/log(parpriorunc(n)))**2
            endif
        end if
     end do
@@ -453,45 +533,56 @@ module model_likelihood_module
     double precision, allocatable :: mean_annual_pools(:)
 
     ! initial value
-    likelihood=0d0 ; infini=0d0
+    likelihood = 0d0 ; infini = 0d0
 
     ! GPP Log-likelihood
     tot_exp = 0d0
     if (DATAin%ngpp > 0) then
-       do n = 1, DATAin%ngpp
-         dn=DATAin%gpppts(n)
-         ! note that division is the uncertainty
-         tot_exp=tot_exp+((DATAin%M_GPP(dn)-DATAin%GPP(dn))/DATAin%GPP_unc(dn))**2
-       end do
-       likelihood=likelihood-0.5d0*tot_exp
+        do n = 1, DATAin%ngpp
+          dn = DATAin%gpppts(n)
+          ! note that division is the uncertainty
+          tot_exp = tot_exp+((DATAin%M_GPP(dn)-DATAin%GPP(dn))/DATAin%GPP_unc(dn))**2
+        end do
+        likelihood = likelihood-0.5d0*tot_exp
     endif
 
-    ! Evapotranspiration (kg.m-2.day-1) Log-likelihood
+    ! Evapotranspiration (kgH2O.m-2.day-1) Log-likelihood
     ! in this case transpiration only
     tot_exp = 0d0
     if (DATAin%nEvap > 0) then
-       do n = 1, DATAin%nEvap
-        dn=DATAin%Evappts(n)
-         ! note that division is the uncertainty
-         tot_exp=tot_exp+((DATAin%M_FLUXES(dn,2)-DATAin%Evap(dn))/DATAin%Evap_unc(dn))**2
-       end do
-       likelihood=likelihood-0.5d0*tot_exp
+        do n = 1, DATAin%nEvap
+          dn = DATAin%Evappts(n)
+          ! note that division is the uncertainty
+          tot_exp = tot_exp+((DATAin%M_FLUXES(dn,2)-DATAin%Evap(dn))/DATAin%Evap_unc(dn))**2
+        end do
+        likelihood = likelihood-0.5d0*tot_exp
     endif
 
-    ! Borrowed wood increment to provide soil evaporation for ACM recal  (kg.m-2.day-1) Log-likelihood
+    ! Borrowed wood increment to provide soil evaporation for ACM recal  (kgH2O.m-2.day-1) Log-likelihood
     tot_exp = 0d0
     if (DATAin%nwoo > 0) then
-       do n = 1, DATAin%nwoo
-        dn=DATAin%woopts(n)
-         ! note that division is the uncertainty
-         tot_exp=tot_exp+((DATAin%M_FLUXES(dn,3)-DATAin%woo(dn))/DATAin%woo_unc(dn))**2
-       end do
-       likelihood=likelihood-0.5d0*tot_exp
+        do n = 1, DATAin%nwoo
+          dn = DATAin%woopts(n)
+          ! note that division is the uncertainty
+          tot_exp = tot_exp+((DATAin%M_FLUXES(dn,3)-DATAin%woo(dn))/DATAin%woo_unc(dn))**2
+        end do
+        likelihood = likelihood-0.5d0*tot_exp
+    endif
+
+    ! Borrowed Cfol_stock to provide wet canopy evaporation for ACM recal  (kgH2O.m-2.day-1) Log-likelihood
+    tot_exp = 0d0
+    if (DATAin%nCfol_stock > 0) then
+        do n = 1, DATAin%nCfol_stock
+          dn = DATAin%Cfol_stockpts(n)
+          ! note that division is the uncertainty
+          tot_exp = tot_exp+((DATAin%M_FLUXES(dn,4)-DATAin%Cfol_stock(dn))/DATAin%Cfol_stock_unc(dn))**2
+        end do
+        likelihood = likelihood-0.5d0*tot_exp
     endif
 
     ! check that log-likelihood is an actual number
     if (likelihood /= likelihood) then
-       likelihood=log(infini)
+        likelihood = log(infini)
     end if
     ! don't forget to return
     return

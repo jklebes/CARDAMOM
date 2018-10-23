@@ -54,7 +54,9 @@ module MCMCOPT
               ,ACCLOC_ZEROS ! number of consecutive adaption periods to pass
                             ! without any acceptance
 
-    double precision :: ACCRATE   ! local acceptance rate
+    double precision :: ACCRATE & ! local acceptance rate
+             ,likelihood_scaler = 1d0
+
   end type ! COUNTERS
   ! create counters type
 
@@ -87,20 +89,22 @@ module MCMCOPT
   !
   !------------------------------------------------------------------
   !
-  subroutine initialise_mcmc_output(PI,MCOUT)
+  subroutine initialise_mcmc_output(PI_in,MCOUT_in)
 
     ! subroutine allocated memory to the output arrays
 
     implicit none
     ! declare input variables
-    type ( mcmc_output ), intent(inout) :: MCOUT
-    type ( parameter_info ), intent(in) :: PI
+    type ( mcmc_output ), intent(inout) :: MCOUT_in
+    type ( parameter_info ), intent(in) :: PI_in
 
     ! define dimensions for output structure
-    allocate(MCOUT%best_pars(PI%npars))
+    allocate(MCOUT_in%best_pars(PI%npars))
 
     ! set to zero, will become 1 when MCMCM complete
-    MCOUT%complete=0
+    MCOUT_in%complete = 0
+    ! and clear initial memory
+    MCOUT_in%best_pars = 0d0
 
   end subroutine initialise_mcmc_output
   !

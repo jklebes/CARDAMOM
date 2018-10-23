@@ -1,13 +1,20 @@
 
 
-subroutine rdalecngsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
-                          ,nopars,nomet,nofluxes,nopools,pft,pft_specific &
-                          ,nodays,deltat,nos_iter,soil_frac_clay_in,soil_frac_sand_in &
-                          ,exepath,pathlength)
+subroutine rdalecnbucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
+                        ,nopars,nomet,nofluxes,nopools,pft,nodays,deltat   &
+                        ,nos_iter,soil_frac_clay_in,soil_frac_sand_in      &
+                        ,exepath,pathlength)
 
-  use CARBON_MODEL_MOD, only: CARBON_MODEL, itemp, ivpd, iphoto &
-                             ,soil_frac_clay, soil_frac_sand &
-                             ,nos_soil_layers, wSWP_time
+  use CARBON_MODEL_MOD, only: CARBON_MODEL &
+                             ,soil_frac_clay, soil_frac_sand,nos_soil_layers                       & 
+                             ,disturbance_residue_to_litter,disturbance_residue_to_cwd             &
+                             ,disturbance_residue_to_som,disturbance_loss_from_litter              &
+                             ,disturbance_loss_from_cwd,disturbance_loss_from_som                  &
+                             ,Cwood_labile_release_coef,Croot_labile_release_coef,deltat_1         &
+                             ,wSWP_time,soilwatermm,daylength_hours,daylength_seconds,meant_time   &
+                             ,rainfall_time,co2_half_saturation,co2_compensation_point,canopy_days &
+                             ,canopy_age_vector
+
   use CARBON_MODEL_CROP_MOD, only: CARBON_MODEL_CROP
 
   ! subroutine specificially deals with the calling of the fortran code model by
@@ -22,7 +29,7 @@ subroutine rdalecngsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
       ! declare inputs
       ! crop specific variables
       integer, intent(in) :: pathlength
-      character(pathlength),intent(in) :: exepath
+      character(255),intent(in) :: exepath
       double precision :: stock_seed_labile
       double precision, allocatable, dimension(:) :: DS_shoot, & !
                                                       DS_root, & !
@@ -35,18 +42,17 @@ subroutine rdalecngsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
                                                          LRRT
       ! local variables..
       integer :: columns, i, rows, input_crops_unit, ios
-      character(225) :: variables,filename
+      character(255) :: variables
     end subroutine crop_development_parameters
   end interface
 
   ! declare input variables
   integer, intent(in) :: pathlength
-  character(pathlength), intent(in) :: exepath
+  character(255), intent(in) :: exepath
   integer, intent(in) :: nopars         & ! number of paremeters in vector
                         ,output_dim     & !
                         ,aNPP_dim       & ! NPP allocation fraction variable dimension
                         ,pft            & ! plant functional type
-                        ,pft_specific   & !
                         ,nos_iter       & !
                         ,nomet          & ! number of meteorological fields
                         ,nofluxes       & ! number of model fluxes
@@ -93,12 +99,8 @@ subroutine rdalecngsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
                                                        LRRT
 
   ! zero initial conditions
-  lai = 0d0 ; GPP = 0d0 ; NEE = 0d0 ; POOLS = 0d0 ; FLUXES = 0d0
   out_var = 0d0 ; out_var2 = 0d0
 
-  ! update settings
-  if (allocated(itemp)) deallocate(itemp,ivpd,iphoto)
-  allocate(itemp(nodays),ivpd(nodays),iphoto(nodays))
   ! update soil parameters
   soil_frac_clay = soil_frac_clay_in
   soil_frac_sand = soil_frac_sand_in
@@ -118,7 +120,7 @@ subroutine rdalecngsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
   do i = 1, nos_iter
 
      ! Clear at the beginning of every loop just in case
-     lai = 0d0 ; GPP = 0d0 ; NEE = 0d0 ; POOLS = 0d0 ; FLUXES = 0d0
+     lai = 0d0 ; GPP = 0d0 ; NEE = 0d0 ; POOLS = 0d0 ; FLUXES = 0d0 ; resid_fol = 0d0
 
      ! call the models
      if (pft == 1) then
@@ -158,21 +160,21 @@ subroutine rdalecngsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
      if (pft /= 1) then
          out_var(i,1:nodays,13) = FLUXES(1:nodays,21) ! harvested material
      else
-         out_var(i,1:nodays,13) = FLUXES(1:nodays,21) !POOLS(1:nodays,8)! replace with crop model yield
+         out_var(i,1:nodays,13) = FLUXES(1:nodays,21) ! replace with crop model yield
      endif
      if (pft == 1) then
-        out_var(i,1:nodays,14) = 0d0
-        out_var(i,1:nodays,15) = 0d0 ! GSI temp component
-        out_var(i,1:nodays,16) = 0d0 ! GSI photoperiod component
-        out_var(i,1:nodays,17) = 0d0 ! GSI vpd component
+        out_var(i,1:nodays,14) = 0d0 ! No longer used
+        out_var(i,1:nodays,15) = 0d0 ! No longer used
+        out_var(i,1:nodays,16) = 0d0 ! No longer used
+        out_var(i,1:nodays,17) = 0d0 ! No longer used
      else
-        out_var(i,1:nodays,14) = FLUXES(1:nodays,18) ! GSI value
-        out_var(i,1:nodays,15) = itemp(1:nodays) ! GSI temp component
-        out_var(i,1:nodays,16) = iphoto(1:nodays) ! GSI photoperiod component
-        out_var(i,1:nodays,17) = ivpd(1:nodays) ! GSI vpd component
+        out_var(i,1:nodays,14) = FLUXES(1:nodays,18) ! mean canopy age (days)
+        out_var(i,1:nodays,15) = 0d0 ! No longer used
+        out_var(i,1:nodays,16) = 0d0 ! No longer used
+        out_var(i,1:nodays,17) = 0d0 ! No longer used
      endif
      out_var(i,1:nodays,18) = FLUXES(1:nodays,19) ! Evapotranspiration (kgH2O.m-2.day-1)
-     out_var(i,1:nodays,19) = POOLS(1:nodays,8) ! rootwater (kgH2O.m-2.rootdepth)
+     out_var(i,1:nodays,19) = POOLS(1:nodays,8)   ! rootwater (kgH2O.m-2.rootdepth)
      out_var(i,1:nodays,20) = wSWP_time(1:nodays) ! MPa weighted soil water potential
      if (pft == 1) then
         ! crop so...
@@ -225,7 +227,7 @@ subroutine rdalecngsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
          where ( POOLS(1:nodays,2) == 0d0 )
                 hak = 1 ; resid_fol(1:nodays) = 0d0
          end where
-         out_var2(i,4) = sum(resid_fol) /dble(nodays-sum(hak))
+         out_var2(i,4) = sum(resid_fol) / dble(nodays-sum(hak))
 
          ! wood
          resid_fol(1:nodays)   = FLUXES(1:nodays,11) + FLUXES(1:nodays,25)
@@ -271,13 +273,10 @@ subroutine rdalecngsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
   out_var2(1:nos_iter,7) = (out_var2(1:nos_iter,7)*365.25d0)**(-1d0) ! som
   out_var2(1:nos_iter,8) = (out_var2(1:nos_iter,8)*365.25d0)**(-1d0) ! CWD + Litter
 
-  ! deallocate harvested variable
-  deallocate(itemp,ivpd,iphoto)
-
   ! return back to the subroutine then
   return
 
-end subroutine rdalecngsibucket
+end subroutine rdalecnbucket
   !
   !--------------------------------------------------------------------------------------------------------------------------------!
   !
@@ -294,7 +293,7 @@ end subroutine rdalecngsibucket
     ! declare inputs
     ! crop specific variables
     integer, intent(in) :: pathlength
-    character(pathlength),intent(in) :: exepath
+    character(255),intent(in) :: exepath
     double precision :: stock_seed_labile
     double precision, allocatable, dimension(:) :: DS_shoot, & !
                                                     DS_root, & !
@@ -308,7 +307,7 @@ end subroutine rdalecngsibucket
 
     ! local variables..
     integer :: columns, i, rows, input_crops_unit, ios
-    character(225) :: variables,filename
+    character(255) :: variables
 
     ! file info needed
     input_crops_unit = 20 ; ios = 0

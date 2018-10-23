@@ -78,6 +78,7 @@ subroutine racm(output_dim,met,pars,out_var,lat,nopars,nomet &
      if (output_dim > 3) then
          out_var(i,1:nodays,4) = FLUXES(1:nodays,3) ! soil evap (kg.m-2.day-1)
          out_var(i,1:nodays,5) = wSWP_time(1:nodays)
+         out_var(i,1:nodays,6) = FLUXES(1:nodays,4) ! wet canopy evap (kg.m-2.day-1)
      endif
 
   end do ! nos_iter loop

@@ -48,8 +48,8 @@ module cardamom_io
         ! ID = 0 - ACM/ACM-ET
         ! DALEC_CDEA - 6 pools
         DATAin%nopools = 2
-        DATAin%nopars = 20
-        DATAin%nofluxes = 3
+        DATAin%nopars = 22
+        DATAin%nofluxes = 4
     else if (DATAin%ID == 1) then
         ! ID = 1 - DALEC_CDEA
         ! DALEC_CDEA - 6 pools
@@ -61,7 +61,7 @@ module cardamom_io
         ! DALEC_BUCKET - 8 pools currently
         DATAin%nopools = 8
         DATAin%nopars = 40
-        DATAin%nofluxes = 21
+        DATAin%nofluxes = 25
         if (DATAin%PFT == 1) then
            ! then actually this is a crop pixel
            DATAin%nopools = 9
@@ -163,10 +163,26 @@ module cardamom_io
            DATAin%nofluxes = 21
         endif
     else if (DATAin%ID == 18) then
+
         ! DALEC_CDEA_LU_FIRES_ET - added 03/05/2018 JFE
         DATAin%nopools = 6
         DATAin%nopars = 23
         DATAin%nofluxes = 28
+
+    !change ID code below to resolve conflict when merging with jeff = 23/10/18
+    else if (DATAin%ID == 19) then
+        ! ID = 2 - DALECN_BUCKET
+        ! DALEC_BUCKET - 8 pools currently
+        DATAin%nopools = 8
+        DATAin%nopars = 43
+        DATAin%nofluxes = 25
+        if (DATAin%PFT == 1) then
+           ! then actually this is a crop pixel
+           DATAin%nopools = 9
+           DATAin%nopars = 37
+           DATAin%nofluxes = 21
+        endif
+
     else
        write(*,*) "Oh dear... model ID cannot be found"
        stop
@@ -215,8 +231,7 @@ module cardamom_io
         else
             ! or the file exists but is empty so treat it as a fresh start
             restart_flag=.false.
-            print*,"the *PAR and *STEP files exist however they are empty so &
-                   treat as a new job"
+            print*,"the *PAR and *STEP files exist however they are empty so treat as a new job"
         endif
         ! either way we open the file up later on so now we need to close them
         call close_output_files
@@ -513,10 +528,10 @@ module cardamom_io
     DATAin%yield = -9999 !int(statdat(8))
     DATAin%age = int(statdat(9))
     nopars_dummy = int(statdat(10)) ! needed for next dev stage
-    soil_frac_sand(1) = statdat(12) ! top soil sand percentage
-    soil_frac_sand(2:nos_soil_layers) = statdat(13) ! bot
-    soil_frac_clay(1) = statdat(14) ! top soil clay percentage
-    soil_frac_clay(2:nos_soil_layers) = statdat(15) ! bot
+    soil_frac_sand(1:2) = statdat(12) ! top soil sand percentage
+    soil_frac_sand(3:nos_soil_layers) = statdat(13) ! bot
+    soil_frac_clay(1:2) = statdat(14) ! top soil clay percentage
+    soil_frac_clay(3:nos_soil_layers) = statdat(15) ! bot
 
     ! call for model specific values
     call cardamom_model_library
@@ -611,7 +626,7 @@ module cardamom_io
     DATAin%nEvap = 0
     DATAin%nSWE = 0
 
-    ! work out some key variables 
+    ! work out some key variables
     ! DATAin%noobs corresponds to observations and uncertainties
     totcol = DATAin%nomet*DATAin%noobs
     totread = 500+1
@@ -827,8 +842,8 @@ module cardamom_io
   !
   !------------------------------------------------------------------
   !
-  subroutine READ_PARI_DATA (PI, MCOUT, infile)
-    use MCMCOPT, only: MCMC_OUTPUT, PARAMETER_INFO, initialise_mcmc_output
+  subroutine READ_PARI_DATA (PI, infile)
+    use MCMCOPT, only: PARAMETER_INFO, initialise_mcmc_output
     use MODEL_PARAMETERS, only: pars_info
     use cardamom_structures, only: DATAin
 
@@ -839,7 +854,6 @@ module cardamom_io
 
     ! declare input variables
     type ( parameter_info ), intent(inout) :: PI
-    type ( mcmc_output ), intent(inout) :: MCOUT
     character(350), intent(in) :: infile
 
     ! declare local variables
@@ -903,8 +917,8 @@ module cardamom_io
 
     ! defining hardcoded MCMC options
     MCO%append = 1
-    MCO%nADAPT = 500 !JFE put back 100 instead of 500
-    MCO%fADAPT = 1d0 !TLS:0.5 ! JFE replaced 1d0 by 0.5
+    MCO%nADAPT = 100
+    MCO%fADAPT = 0.5d0
     MCO%randparini = .false.
     MCO%returnpars = .false.
     MCO%fixedpars  = .false.
@@ -1025,15 +1039,15 @@ module cardamom_io
   !
   !------------------------------------------------------------------
   !
-  subroutine write_results (pars,prob,PI,MCO)
-    use MCMCOPT, only: PARAMETER_INFO, MCMC_OPTIONS
+  subroutine write_results (pars,prob,PI)
+    use MCMCOPT, only: PARAMETER_INFO
+
     ! subroutine writes MCMC accepted parameters and step values to binary files
 
     implicit none
 
     ! declare input variables
     type ( parameter_info ), intent(in) :: PI
-    type ( mcmc_options ), intent(in) :: MCO
     double precision, dimension(PI%npars), intent(in) :: pars
     double precision, intent(in) :: prob
 

@@ -57,17 +57,17 @@ module MODEL_PARAMETERS
        PI%parmin(2)=13.85d0
        PI%parmax(2)=192.31d0
 
-       ! GSI sensitivity for leaf growth
-       PI%parmin(3)=1d0
-       PI%parmax(3)=1.02d0
+       ! Days past optimum at which canopy NUE = 0
+       PI%parmin(3)=3d0
+       PI%parmax(3)=365.25d0*12d0
 
        ! Max labile turnover (fraction) to roots
-       PI%parmin(4)=0.0001368925d0 ! 20 years
+       PI%parmin(4)=2d0*0.0001368925d0 ! 20->10 years
        PI%parmax(4)=0.05d0         ! 20 days
 
-       ! GSI max leaf turnover (fraction)
-       PI%parmin(5)=0.0003422313d0 !  8 years
-       PI%parmax(5)=0.10d0         ! 10 days
+       ! Leaf growth sensitivity period (days)
+       PI%parmin(5)=1.5d0
+       PI%parmax(5)=30d0
 
        ! Turnover fraction of wood
        PI%parmin(6)=0.000009d0 ! 300  years
@@ -83,7 +83,7 @@ module MODEL_PARAMETERS
 
        ! Turnover of som to Rhet (fraction; temperature adjusted)
        PI%parmin(9)=1.368925d-6 ! 2000 years
-       PI%parmax(9)=0.0005d0      ! ~ 5 years
+       PI%parmax(9)=0.0002737851d0    ! ~ 10 years
 
        ! Exponential coefficient for Rhet temperature response
        PI%parmin(10)=0.018d0
@@ -95,49 +95,46 @@ module MODEL_PARAMETERS
        PI%parmax(11)= 0.5563025d0
 
        ! Max labile turnover fraction to foliage
-       PI%parmin(12)=0.0001368925d0 ! 20 years
+       PI%parmin(12)=0.0006844627d0 ! 4 years 0.0001368925d0 ! 20 years
        PI%parmax(12)=0.05d0         ! 20 days
 
        ! Max labile turnover fraction to wood
-       PI%parmin(13)=0.0001368925d0 ! 20 years
+       PI%parmin(13)=0.0006844627d0 ! 4 years 0.0001368925d0 ! 20 years
        PI%parmax(13)=0.05d0         ! 20 days
 
-       ! GSI min temperature threshold (oC)
-       PI%parmin(14)=225.15d0 !225d0
-       PI%parmax(14)=305.15d0 !330d0
+       ! Days between leaf emergence and peak NUE
+       PI%parmin(14)=3d0
+       PI%parmax(14)=90d0
 
-       ! GSI max temperature threshold (oC)
-       PI%parmin(15)=263.15d0 !225d0
-       PI%parmax(15)=330.15d0 !330d0
+       ! CN_wood (gC/gN; Kattge et al., 2011)
+       PI%parmin(15)=169.5d0
+       PI%parmax(15)=909.1d0
 
-       ! GSI min photoperiod threshold (sec)
-       PI%parmin(16)=3600d0*1d0  ! 1 hours
-       PI%parmax(16)=3600d0*12d0 ! 12 hours
+!       ! CN_wood baseline value (gC/gN) for logarithmic relation with woody biomass
+!       PI%parmin(15)=100
+!       PI%parmax(15)=300
+
+       ! Turnover fraction of CWD to litter (temperature adjusted)
+       PI%parmin(16)=0.0001d0
+       PI%parmax(16)=1d0/365.25d0
 
        ! Leaf Mass per unit Area (gC/m2)
        ! Kattge et al. 2011,
        PI%parmin(17)=10d0
        PI%parmax(17)=180d0 !200d0
 
-       ! GSI max photoperiod threshold (sec)
-       PI%parmin(24)=3600d0*6d0  ! 6 hours
-       PI%parmax(24)=3600d0*18d0 ! 18 hours
+       ! Initial mean canopy age (days)
+       PI%parmin(25)=3d0 !50d0
+       PI%parmax(25)=365.25d0*8d0
 
-       ! GSI min VPD threshold (Pa)
-       PI%parmin(25)=1d0
-       PI%parmax(25)=5500d0
+       ! baseline NUE (gC/gN/m2/day-1)
+       ! TRY database equivalent 2.5 % = 1.648512; 97.5 % = 19.906560
+       PI%parmin(26)= 1.0d0
+       PI%parmax(26)=25.0d0
 
-       ! GSI max VPD threshold (Pa)
-       PI%parmin(26)=1d0
-       PI%parmax(26)=5500d0
-
-       ! CN_wood (gC/gN; Kattge et al., 2011)
-       PI%parmin(27)=169.5d0
-       PI%parmax(27)=909.1d0
-
-!       ! CN_wood baseline value (gC/gN) for logarithmic relation with woody biomass
-!       PI%parmin(27)=100
-!       PI%parmax(27)=300
+       ! initial leaf life span (MTTleaf; days)
+       PI%parmin(27)=30d0
+       PI%parmax(27)=365.25d0*8d0
 
        ! fraction of Cwood which is branch
        PI%parmin(28)=0.05d0
@@ -147,67 +144,53 @@ module MODEL_PARAMETERS
        PI%parmin(29)=0.15d0
        PI%parmax(29)=0.30d0
 
-       ! GSI senstivity for leaf senescence
-       PI%parmin(34)=0.97d0 ! 0.96
-       PI%parmax(34)=1.00d0
-
-       ! GSI - have I just left a growing state (>1)
-       PI%parmin(35)=0.50d0
-       PI%parmax(35)=1.5d0
-
-       ! GSI - initial GSI value
-       PI%parmin(36)=1d0
-       PI%parmax(36)=2d0
-
-       ! Turnover fraction of CWD to litter (temperature adjusted)
-       PI%parmin(38)=0.0001d0 ! 0.00001
-       PI%parmax(38)=1d0/365.25d0 !0.005  ! 0.01
-
        ! BUCKET - root biomass (gbiomass/m2) needed to reach 50 % of max depth (m)
-       PI%parmin(39)=50d0
-       PI%parmax(39)=500d0
+       PI%parmin(34)=50d0
+       PI%parmax(34)=500d0
 
        ! BUCKET - maximum rooting depth (m)
-       PI%parmin(40)=0.35d0
-       PI%parmax(40)=10d0 !15.0 !20.0
+       PI%parmin(35)=0.35d0
+       PI%parmax(35)=20d0 !60d0
 
        ! Reich - Leaf N linked respiration exponential coefficient
-       PI%parmin(41)=0.935d0 ! 1.639-0.01
-       PI%parmax(41)=1.774d0 ! 1.639+0.01
+       PI%parmin(36)=0.935d0 ! 1.639-0.01
+       PI%parmax(36)=1.774d0 ! 1.639+0.01
 
        ! Reich - Leaf N linked respiration intercept
        ! max/min values based on observed ranges from Reich et al (2008)
        ! Figure 1
-       PI%parmin(42)=0.01d0 !0.01 !0.645
-       PI%parmax(42)=1.65d0 !1.25 !0.911
+       PI%parmin(37)=0.10d0 !0.01 !0.645
+       PI%parmax(37)=1.65d0 !1.25 !0.911
 
        ! Reich - root N linked respiration exponential coefficient
-       PI%parmin(43)=1.012d0 ! 1.352-0.01
-       PI%parmax(43)=1.478d0 ! 1.352+0.01
+       PI%parmin(38)=1.012d0 ! 1.352-0.01
+       PI%parmax(38)=1.478d0 ! 1.352+0.01
 
        ! Reich - root N linked respiration intercept
        ! max/min values based on observed ranges from Reich et al (2008)
        ! Figure 1
-       PI%parmin(44)=0.10d0 !0.01 !0.915
-       PI%parmax(44)=1.90d0 !1.25 !1.079
+       PI%parmin(39)=0.10d0 !0.01 !0.915
+       PI%parmax(39)=1.90d0 !1.25 !1.079
 
        ! Reich - wood N linked respiration exponential coefficient
-       PI%parmin(45)=1.170d0 ! 1.344-0.01
-       PI%parmax(45)=1.478d0 ! 1.344+0.01
+       PI%parmin(40)=1.170d0 ! 1.344-0.01
+       PI%parmax(40)=1.478d0 ! 1.344+0.01
 
        ! Reich - wood N linked respiration intercept
        ! max/min values based on observed ranges from Reich et al (2008)
        ! Figure 1
-       PI%parmin(46)=0.01d0 !0.01 !0.839
-       PI%parmax(46)=1.90d0 !1.25 !1.053
+       PI%parmin(41)=0.01d0 !0.01 !0.839
+       PI%parmax(41)=1.90d0 !1.25 !1.053
 
-       ! Initial leaf life span (days)
-       PI%parmin(47)=50d0
-       PI%parmax(47)=365.25d0*8d0
+       ! Minimum daily temperature at which temperature related NUE decline acceleration reaches 50 %
+       ! determine by logistic function with sensitivity parameter (pars(43))
+       PI%parmin(42)=-10d0
+       PI%parmax(42)= 15d0
 
-       ! baseline NUE (gC/gN/m2/day-1)
-       PI%parmin(48)= 3d0 ! 11.0
-       PI%parmax(48)=40d0 ! 12.0
+       ! maximum number of NUE decline acceleration that can be applied (days)
+       PI%parmin(43)=1d0
+       PI%parmax(43)=14d0 ! 7d0
+
 
 !       ! CN_wood coefficient for increase due to C_wood (deltalCN per gC.m-2)
 !       ! NOTE: values in log scale
@@ -243,8 +226,8 @@ module MODEL_PARAMETERS
        PI%parmax(23)=100000d0
 
        ! C CWD
-       PI%parmin(37)=1d0
-       PI%parmax(37)=10000d0
+       PI%parmin(24)=1d0
+       PI%parmax(24)=7500d0
 
        !
        ! Replanting pools (gC/m2) values

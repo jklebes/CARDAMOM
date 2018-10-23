@@ -270,10 +270,11 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
             } else { 
                 # assume VPD has been found successfully
                 vpd = vpd * 1000 # kPa->Pa
-            }
+            } # vpd or not?
 	    wind_spd=read_site_specific_obs("wind_spd",infile) # m.s-1
             # if now wind speed data use global mean
 	    if (wind_spd[1] == -9999) {wind_spd=rep(3.23,length.out=length(doy))} # CRU global mean wind speed (m.s-1)
+            # Construct day of year time series
 	    years_to_load=as.numeric(start_year):as.numeric(end_year)
 	    for (yr in seq(1,length(years_to_load))) {
 		if (yr  == 1) {

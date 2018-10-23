@@ -28,6 +28,28 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
     }
 
     ###
+    ## Get some Cfoliage information (stock)
+    ###
+#    print("checking Cfoliage")
+    if (Cfol_stock_source == "site_specific") {
+	infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
+	Cfol_stock=read_site_specific_obs("Cfol_stock",infile)
+	Cfol_stock_unc=read_site_specific_obs("Cfol_stock_unc",infile)
+	if (length(which(Cfol_stock_unc != -9999)) > 0) {
+	    # if we have uncertainty data convert to fraction to be compatable with analysis
+	    tmp=which(Cfol_stock_unc == -9999)
+	    Cfol_stock_unc=(Cfol_stock_unc/Cfol_stock)
+	    Cfol_stock_unc[tmp]=-9999
+	} else {
+	    # on the other hand if not then we have no uncertainty info, so use default
+	    Cfol_stock_unc=rep(0.38,length.out=length(Cfol_stock))
+	}
+    } else {
+	# assume no data available
+	Cfol_stock=-9999 ; Cfol_stock_unc=-9999
+    }
+
+    ###
     ## Get some Csom information
     ###
 #    print("checking Csom initial")
@@ -107,32 +129,39 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
         if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")}
 #	if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater.csv",sep="")}
 	if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_copy.csv",sep="")}
-	GPP=read_site_specific_obs("GPP",infile)
-	GPP_unc=rep(1,length.out=length(GPP))
+	GPP = read_site_specific_obs("GPP",infile)
+	GPP_unc = rep(mean(GPP*0.5),times=length(GPP)) #pmax(0.20,GPP * 0.20) #rep(1,length.out=length(GPP))
     } else {
 	# assume no data available
-	GPP=-9999
-	GPP_unc=-9999
+	GPP = -9999
+	GPP_unc = -9999
     }
 
     ###
     ## Get some Evapotranspiration information (time series)
     ###
-#    print("checking gpp")
+#    print("checking Evap")
     if (Evap_source == "site_specific") {
 	infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")}
 #	if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater.csv",sep="")}
 	if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_copy.csv",sep="")}
-	Evap=read_site_specific_obs("Evap",infile)
-	Evap_unc=rep(1,length.out=length(Evap))
-	# borrow woody increment for soil evaporation in ACM_ET recalibration
-	woodinc=read_site_specific_obs("soilevap",infile)
-	woodinc_unc=rep(1,length.out=length(woodinc))
+	Evap = read_site_specific_obs("Evap",infile)
+	Evap_unc = rep(mean(Evap*0.5),times=length(Evap)) #pmax(0.2,Evap * 0.20) #rep(1,length.out=length(Evap))
+        if (modelname == "ACM") { 
+            # borrow woody increment for soil evaporation in ACM_ET recalibration
+            woodinc = read_site_specific_obs("soilevap",infile)
+            # borrow Cfol_stock for wet canopy evaporation in ACM_ET recalibration
+            Cfol_stock = read_site_specific_obs("wetevap",infile)
+            # actually lets make uncertainty half mean of total ET
+            Evap_unc = rep(mean(Evap+woodinc+Cfol_stock)*0.5,times=length(Evap))
+            woodinc_unc = Evap_unc
+            Cfol_stock_unc = Evap_unc
+        }
     } else {
 	# assume no data available
-	Evap=-9999
-	Evap_unc=-9999
+	Evap = -9999
+	Evap_unc = -9999
     }
 
     ###
@@ -226,27 +255,6 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
     } else {
  	# assume no data available
 	Clit_initial=-9999
-    }
-    ###
-    ## Get some Cfoliage information (stock)
-    ###
-#    print("checking Cfoliage")
-    if (Cfol_stock_source == "site_specific") {
-	infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-	Cfol_stock=read_site_specific_obs("Cfol_stock",infile)
-	Cfol_stock_unc=read_site_specific_obs("Cfol_stock_unc",infile)
-	if (length(which(Cfol_stock_unc != -9999)) > 0) {
-	    # if we have uncertainty data convert to fraction to be compatable with analysis
-	    tmp=which(Cfol_stock_unc == -9999)
-	    Cfol_stock_unc=(Cfol_stock_unc/Cfol_stock)
-	    Cfol_stock_unc[tmp]=-9999
-	} else {
-	    # on the other hand if not then we have no uncertainty info, so use default
-	    Cfol_stock_unc=rep(0.38,length.out=length(Cfol_stock))
-	}
-    } else {
-	# assume no data available
-	Cfol_stock=-9999 ; Cfol_stock_unc=-9999
     }
 
     ###
