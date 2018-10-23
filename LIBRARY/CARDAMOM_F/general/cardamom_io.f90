@@ -163,6 +163,14 @@ module cardamom_io
            DATAin%nofluxes = 21
         endif
     else if (DATAin%ID == 18) then
+
+        ! DALEC_CDEA_LU_FIRES_ET - added 03/05/2018 JFE
+        DATAin%nopools = 6
+        DATAin%nopars = 23
+        DATAin%nofluxes = 28
+
+    !change ID code below to resolve conflict when merging with jeff = 23/10/18
+    else if (DATAin%ID == 19) then
         ! ID = 2 - DALECN_BUCKET
         ! DALEC_BUCKET - 8 pools currently
         DATAin%nopools = 8
@@ -174,6 +182,7 @@ module cardamom_io
            DATAin%nopars = 37
            DATAin%nofluxes = 21
         endif
+
     else
        write(*,*) "Oh dear... model ID cannot be found"
        stop
@@ -479,7 +488,7 @@ module cardamom_io
 
     ! declare local variables
     integer :: nopars_dummy
-    integer :: a,b,c,d,e,f,g,h,i,j,k,l,m,o,x,y,z,day &
+    integer :: a,b,c,d,e,f,g,h,i,j,k,l,m,o,x,y,z,day,s &
               ,start      &
               ,finish     &
               ,input_unit & ! unit number assigned to the input binary
@@ -580,6 +589,7 @@ module cardamom_io
             ,DATAin%Ccoarseroot_stock(DATAin%nodays),DATAin%Ccoarseroot_stock_unc(DATAin%nodays) &
             ,DATAin%Cfolmax_stock(DATAin%nodays),DATAin%Cfolmax_stock_unc(DATAin%nodays)         &
             ,DATAin%Evap(DATAin%nodays),DATAin%Evap_unc(DATAin%nodays)                           &
+            ,DATAin%SWE(DATAin%nodays),DATAin%SWE_unc(DATAin%nodays)                           &
             ,mettemp(DATAin%nomet),obstemp(DATAin%noobs))
 
     ! zero all variables
@@ -594,6 +604,7 @@ module cardamom_io
     DATAin%Ccoarseroot_stock = 0d0 ; DATAin%Ccoarseroot_stock_unc = 0d0
     DATAin%Cfolmax_stock = 0d0 ; DATAin%Cfolmax_stock_unc = 0d0
     DATAin%Evap = 0d0 ; DATAin%Evap_unc = 0d0
+    DATAin%SWE = 0d0 ; DATAin%SWE_unc = 0d0
     mettemp = 0d0 ; obstemp = 0d0
 
     ! zero the obs counters
@@ -613,8 +624,10 @@ module cardamom_io
     DATAin%nCcoarseroot_stock = 0
     DATAin%nCfolmax_stock = 0
     DATAin%nEvap = 0
+    DATAin%nSWE = 0
 
     ! work out some key variables
+    ! DATAin%noobs corresponds to observations and uncertainties
     totcol = DATAin%nomet*DATAin%noobs
     totread = 500+1
 
@@ -636,41 +649,78 @@ module cardamom_io
        ! assign the extracted met / obs to their type and keep count of how many
        ! of these are actually contain data
        DATAin%met(1:DATAin%nomet,day) = mettemp
-       DATAin%GPP(day) = obstemp(1) ; if (obstemp(1) > -9998d0) DATAin%ngpp = DATAin%ngpp+1
-       DATAin%LAI(day) = obstemp(2) ; if (obstemp(2) > -9998d0) DATAin%nlai = DATAin%nlai+1
-       DATAin%NEE(day) = obstemp(3) ; if (obstemp(3) > -9998d0) DATAin%nnee = DATAin%nnee+1
-       DATAin%WOO(day) = obstemp(4) ; if (obstemp(4) > -9998d0) DATAin%nwoo = DATAin%nwoo+1
-       DATAin%Reco(day) = obstemp(5) ; if (obstemp(5) > -9998d0) DATAin%nreco = DATAin%nreco+1
-       DATAin%Cfol_stock(day) = obstemp(6) ; if (obstemp(6) > -9998d0) DATAin%nCfol_stock = DATAin%nCfol_stock+1
-       DATAin%Cwood_stock(day) = obstemp(7) ; if (obstemp(7) > -9998d0) DATAin%nCwood_stock = DATAin%nCwood_stock+1
-       DATAin%Croots_stock(day) = obstemp(8) ; if (obstemp(8) > -9998d0) DATAin%nCroots_stock = DATAin%nCroots_stock+1
-       DATAin%Clit_stock(day) = obstemp(9) ; if (obstemp(9) > -9998d0) DATAin%nClit_stock = DATAin%nClit_stock+1
-       DATAin%Csom_stock(day) = obstemp(10) ; if (obstemp(10) > -9998d0) DATAin%nCsom_stock = DATAin%nCsom_stock+1
-       DATAin%Cagb_stock(day) = obstemp(11) ; if (obstemp(11) > -9998d0) DATAin%nCagb_stock = DATAin%nCagb_stock+1
-       DATAin%Cstem_stock(day) = obstemp(23) ; if (obstemp(23) > -9998d0) DATAin%nCstem_stock = DATAin%nCstem_stock+1
-       DATAin%Cbranch_stock(day) = obstemp(25) ; if (obstemp(25) > -9998d0) DATAin%nCbranch_stock = DATAin%nCbranch_stock+1
-       DATAin%Ccoarseroot_stock(day) = obstemp(27)
-                                     if (obstemp(27) > -9998d0) DATAin%nCcoarseroot_stock = DATAin%nCcoarseroot_stock+1
-       DATAin%Cfolmax_stock(day) = obstemp(29) ; if (obstemp(29) > -9998d0) DATAin%nCfolmax_stock = DATAin%nCfolmax_stock+1
-       DATAin%Evap(day) = obstemp(31) ; if (obstemp(31) > -9998d0) DATAin%nEvap = DATAin%nEvap+1
+       ! JFE change 17/04/18 to read each obs and corresponding uncertainty
        ! we will assume that where we have an observation we also have a
        ! corresponding uncertainty estimate
-       DATAin%GPP_unc(day) = obstemp(12)
-       DATAin%LAI_unc(day) = obstemp(13)
-       DATAin%NEE_unc(day) = obstemp(14)
-       DATAin%WOO_unc(day) = obstemp(15)
-       DATAin%Reco_unc(day) = obstemp(16)
-       DATAin%Cfol_stock_unc(day) = obstemp(17)
-       DATAin%Cwood_stock_unc(day) = obstemp(18)
-       DATAin%Croots_stock_unc(day) = obstemp(19)
-       DATAin%Clit_stock_unc(day) = obstemp(20)
-       DATAin%Csom_stock_unc(day) = obstemp(21)
+
+       DATAin%GPP(day) = obstemp(1)
+       if (obstemp(1) > -9998d0) DATAin%ngpp = DATAin%ngpp+1
+       DATAin%GPP_unc(day) = obstemp(2)
+
+       DATAin%LAI(day) = obstemp(3)
+       if (obstemp(3) > -9998d0) DATAin%nlai = DATAin%nlai+1
+       DATAin%LAI_unc(day) = obstemp(4)
+
+       DATAin%NEE(day) = obstemp(5)
+       if (obstemp(5) > -9998d0) DATAin%nnee = DATAin%nnee+1
+       DATAin%NEE_unc(day) = obstemp(6)
+
+       DATAin%WOO(day) = obstemp(7)
+       if (obstemp(7) > -9998d0) DATAin%nwoo = DATAin%nwoo+1
+       DATAin%WOO_unc(day) = obstemp(8)
+
+       DATAin%Reco(day) = obstemp(9)
+       if (obstemp(9) > -9998d0) DATAin%nreco = DATAin%nreco+1
+       DATAin%Reco_unc(day) = obstemp(10)
+
+       DATAin%Cfol_stock(day) = obstemp(11)
+       if (obstemp(11) > -9998d0) DATAin%nCfol_stock = DATAin%nCfol_stock+1
+       DATAin%Cfol_stock_unc(day) = obstemp(12)
+
+       DATAin%Cwood_stock(day) = obstemp(13)
+       if (obstemp(13) > -9998d0) DATAin%nCwood_stock = DATAin%nCwood_stock+1
+       DATAin%Cwood_stock_unc(day) = obstemp(14)
+
+       DATAin%Croots_stock(day) = obstemp(15)
+       if (obstemp(15) > -9998d0) DATAin%nCroots_stock = DATAin%nCroots_stock+1
+       DATAin%Croots_stock_unc(day) = obstemp(16)
+
+       DATAin%Clit_stock(day) = obstemp(17)
+       if (obstemp(17) > -9998d0) DATAin%nClit_stock = DATAin%nClit_stock+1
+       DATAin%Clit_stock_unc(day) = obstemp(18)
+
+       DATAin%Csom_stock(day) = obstemp(19)
+       if (obstemp(19) > -9998d0) DATAin%nCsom_stock = DATAin%nCsom_stock+1
+       DATAin%Csom_stock_unc(day) = obstemp(20)
+
+       DATAin%Cagb_stock(day) = obstemp(21)
+       if (obstemp(21) > -9998d0) DATAin%nCagb_stock = DATAin%nCagb_stock+1
        DATAin%Cagb_stock_unc(day) = obstemp(22)
+
+       DATAin%Cstem_stock(day) = obstemp(23)
+       if (obstemp(23) > -9998d0) DATAin%nCstem_stock = DATAin%nCstem_stock+1
        DATAin%Cstem_stock_unc(day) = obstemp(24)
+
+       DATAin%Cbranch_stock(day) = obstemp(25)
+       if (obstemp(25) > -9998d0) DATAin%nCbranch_stock = DATAin%nCbranch_stock+1
        DATAin%Cbranch_stock_unc(day) = obstemp(26)
+
+       DATAin%Ccoarseroot_stock(day) = obstemp(27)
+       if (obstemp(27) > -9998d0) DATAin%nCcoarseroot_stock = DATAin%nCcoarseroot_stock+1
        DATAin%Ccoarseroot_stock_unc(day) = obstemp(28)
+
+       DATAin%Cfolmax_stock(day) = obstemp(29)
+       if (obstemp(29) > -9998d0) DATAin%nCfolmax_stock = DATAin%nCfolmax_stock+1
        DATAin%Cfolmax_stock_unc(day) = obstemp(30)
+
+       DATAin%Evap(day) = obstemp(31)
+       if (obstemp(31) > -9998d0) DATAin%nEvap = DATAin%nEvap+1
        DATAin%Evap_unc(day) = obstemp(32)
+
+       !added SWE for future applications
+       DATAin%SWE(day) = obstemp(33)
+       if (obstemp(33) > -9998d0) DATAin%nSWE = DATAin%nSWE+1
+       DATAin%SWE_unc(day) = obstemp(34)
 
     end do ! day loop
 
@@ -705,12 +755,12 @@ module cardamom_io
     if (DATAin%nCcoarseroot_stock > 0) allocate(DATAin%Ccoarseroot_stockpts(DATAin%nCcoarseroot_stock))
     if (DATAin%nCfolmax_stock > 0) allocate(DATAin%Cfolmax_stockpts(DATAin%nCfolmax_stock))
     if (DATAin%nEvap > 0) allocate(DATAin%Evappts(DATAin%nEvap))
-
+    if (DATAin%nSWE > 0) allocate(DATAin%SWEpts(DATAin%nSWE))
     ! we know how many observations we have and what they are, but now lets work
     ! out where they are in the data sets
     x = 1 ; y = 1 ; z = 1 ; b = 1 ; c = 1 ; d = 1 ; e = 1
     f = 1 ; g = 1 ; h = 1 ; i = 1 ; j = 1 ; k = 1 ; l = 1
-    m = 1 ; o = 1
+    m = 1 ; o = 1 ; s = 1
     do day = 1, DATAin%nodays
        if (DATAin%GPP(day) > -9998d0) then
           DATAin%gpppts(b)=day ; b=b+1
@@ -759,6 +809,9 @@ module cardamom_io
        endif ! data present condition
        if (DATAin%Evap(day) > -9998d0) then
            DATAin%Evappts(o)=day ; o=o+1
+       endif ! data present condition
+       if (DATAin%SWE(day) > -9998d0) then
+           DATAin%SWEpts(s)=day ; s=s+1
        endif ! data present condition
     end do ! day loop
 
