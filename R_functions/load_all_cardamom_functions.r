@@ -23,7 +23,7 @@ load_r_libraries<-function(){
 load_r_libraries()
 
 # get the complete list
-list_o_functions=list.files("./cardamom_functions/", full.names=T)
+list_o_functions=list.files("./R_functions/", full.names=T)
 print(list_o_functions)
 # remove this file to avoid repetition
 loser_list=grepl("load_all_cardamom_functions.r",list_o_functions)
