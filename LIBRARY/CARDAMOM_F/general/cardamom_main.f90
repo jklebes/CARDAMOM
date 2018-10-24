@@ -3,6 +3,7 @@ program cardamom_framework
 
  use math_functions, only: idum, randn, rnstrt
  use MCMCOPT, only: MCO, MCOUT, PI, initialise_mcmc_output
+ use cardamom_structures, only: DATAin
  use cardamom_io, only: read_pari_data, read_options, open_output_files, &
                         check_for_exisiting_output_files,restart_flag,   &
                         update_for_restart_simulation

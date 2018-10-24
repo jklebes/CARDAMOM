@@ -182,7 +182,6 @@ module cardamom_io
            DATAin%nopars = 37
            DATAin%nofluxes = 21
         endif
-
     else
        write(*,*) "Oh dear... model ID cannot be found"
        stop

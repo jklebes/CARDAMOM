@@ -128,31 +128,30 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   # Other priors & uncertainties: 201-300
   # TEMPORAL DRIVERS & DATA: 301-end
   # construct obs/drivers
-  OBSMAT = array(-9999.0,dim=c(length(met$run_day),32))
+  OBSMAT = array(-9999.0,dim=c(length(met$run_day),34))
   #OBSMAT=MET[,1:9]*0-9999.0 # all rows, first 3 columns, which are 1= day of simulation run, 2= mint, 3= maxt, 4 =RAD, 5= CO2, 6=doy
   # line makes the correct array size but with -9999 in place of all
   OBSMAT[,1] = OBS$GPP      # loads into column 1 GPP, 2 LAI, 3 NEE, 4 Woodinc, 5 Reco obs where they exist, leaving the rest -9999
-  OBSMAT[,2] = OBS$LAI
-  OBSMAT[,3] = OBS$NEE
-  OBSMAT[,4] = OBS$woodinc
-  OBSMAT[,5] = OBS$Reco
-  OBSMAT[,6] = OBS$Cfol_stock
-  OBSMAT[,7] = OBS$Cwood_stock
-  OBSMAT[,8] = OBS$Croots_stock
-  OBSMAT[,9] = OBS$Clit_stock
-  OBSMAT[,10] = OBS$Csom_stock
-  OBSMAT[,11] = OBS$Cagb_stock
-  # now for the corresponding uncertainty values
-  OBSMAT[,12] = OBS$GPP_unc
-  OBSMAT[,13] = OBS$LAI_unc
-  OBSMAT[,14] = OBS$NEE_unc
-  OBSMAT[,15] = OBS$woodinc_unc
-  OBSMAT[,16] = OBS$Reco_unc
-  OBSMAT[,17] = OBS$Cfol_stock_unc
-  OBSMAT[,18] = OBS$Cwood_stock_unc
-  OBSMAT[,19] = OBS$Croots_stock_unc
-  OBSMAT[,20] = OBS$Clit_stock_unc
-  OBSMAT[,21] = OBS$Csom_stock_unc
+  OBSMAT[,2] = OBS$GPP_unc
+  OBSMAT[,3] = OBS$LAI
+  OBSMAT[,4] = OBS$LAI_unc
+  OBSMAT[,5] = OBS$NEE
+  OBSMAT[,6] = OBS$NEE_unc
+  OBSMAT[,7] = OBS$woodinc
+  OBSMAT[,8] = OBS$woodinc_unc
+  OBSMAT[,9] = OBS$Reco
+  OBSMAT[,10] = OBS$Reco_unc
+  OBSMAT[,11] = OBS$Cfol_stock
+  OBSMAT[,12] = OBS$Cfol_stock_unc
+  OBSMAT[,13] = OBS$Cwood_stock
+  OBSMAT[,14] = OBS$Cwood_stock_unc
+  OBSMAT[,15] = OBS$Croots_stock
+  OBSMAT[,16] = OBS$Croots_stock_unc
+  OBSMAT[,17] = OBS$Clit_stock
+  OBSMAT[,18] = OBS$Clit_stock_unc
+  OBSMAT[,19] = OBS$Csom_stock
+  OBSMAT[,20] = OBS$Csom_stock_unc
+  OBSMAT[,21] = OBS$Cagb_stock
   OBSMAT[,22] = OBS$Cagb_stock_unc
   OBSMAT[,23] = OBS$Cstem_stock
   OBSMAT[,24] = OBS$Cstem_stock_unc
@@ -164,6 +163,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   OBSMAT[,30] = OBS$Cfolmax_stock_unc
   OBSMAT[,31] = OBS$Evap
   OBSMAT[,32] = OBS$Evap_unc
+  OBSMAT[,33] = OBS$SWE # snow water equivalent
+  OBSMAT[,34] = OBS$SWE_unc
   DATA_TEMP = t(cbind(MET,OBSMAT))
 
   #STATIC DATA
