@@ -23,6 +23,7 @@ from itertools import combinations
 import xarray as xr
 import re
 import subprocess
+import glob
 
 class CARDAMOM_F(object):
 
@@ -571,19 +572,32 @@ class CARDAMOM_F(object):
         path += self.project_name+'_%05i_%i_PARS' % (pixel,chain)
 
         #get the number of parameters from the object
-        npar = self.npars
-        fpars=file(path,'rb')
-        content=fpars.read()
-        parsets=np.array(struct.unpack((len(content)/8)*'d',content)).reshape([len(content)/(8*(npar+1)),npar+1])
+        npars = self.npars
+        #JFE checking if the are output file exists
+        if len(glob.glob(path)) > 0:
+            fpars=file(path,'rb')
+            content=fpars.read()
 
+            #if file is not empty, extract the parameter sets
+            if content != '':
+                parsets=np.array(struct.unpack((len(content)/8)*'d',content)).reshape([len(content)/(8*(npars+1)),npars+1])
 
-        if burnin < 1:
-            keep = int(parsets.shape[0]*burnin)
-        elif burnin > 1:
-            keep = burnin
+                if burnin < 1:
+                    keep = int(parsets.shape[0]*burnin)
+                elif burnin > 1:
+                    keep = burnin
 
-        parsets = parsets[keep:]
+                parsets = parsets[keep:]
 
+            # if file is empty, return empty array of parameters
+            else:
+                parsets = np.zeros([500,npars+1])-9999.
+
+        #no output file, return empty array of parameters
+        else:
+            parsets = np.zeros([500,npars+1])-9999.
+
+        #return the parameter sets as a pandas dataframe
         return pd.DataFrame(parsets)
 
     def rerun_pixel(self, run=1, pixel=1, chains=1, thresh=1.2, burnin = 0.5):
@@ -627,15 +641,17 @@ class CARDAMOM_F(object):
         deltat  = np.append([self.drivers[pixid,0,0]],np.diff(self.drivers[pixid,:,0]))
         lat     = self.lat[pixid]
         #now create arrays that will store the output
-        lai     = np.empty([nparsets,self.nsteps])
-        nee     = np.empty([nparsets,self.nsteps])
-        fluxes  = np.empty([nparsets,self.nsteps,self.nfluxes])
-        pools   = np.empty([nparsets,self.nsteps+1,self.npools])
-        gpp     = np.empty([nparsets,self.nsteps])
+        lai     = np.zeros([nparsets,self.nsteps])-9999.
+        nee     = np.zeros([nparsets,self.nsteps])-9999.
+        fluxes  = np.zeros([nparsets,self.nsteps,self.nfluxes])-9999.
+        pools   = np.zeros([nparsets,self.nsteps+1,self.npools])-9999.
+        gpp     = np.zeros([nparsets,self.nsteps])-9999.
 
         #now loop over the parameter sets
         for pp,pars in enumerate(parsets):
-            lai[pp],nee[pp],fluxes[pp],pools[pp],gpp[pp] = carbon_model(start,finish,
+            #do not do anything if all parameters are -9999. => missing data
+            if pars.size != (pars == -9999.).sum():
+                lai[pp],nee[pp],fluxes[pp],pools[pp],gpp[pp] = carbon_model(start,finish,
                                                                         met,pars,deltat,
                                                                         lat,lai[pp],
                                                                         nee[pp],fluxes[pp],
@@ -700,8 +716,13 @@ class CARDAMOM_F(object):
             pars = []
             for ch in combi:
                 pars.append(self.read_output(run=run,pixel=pixel,chain=ch,burnin=burnin).values[:,-1])
-            crit = self.GR(pars)
-            if crit < thresh:
+            #JFE concat dataframes to test whether data's missing
+            pars1d = np.concatenate(pars)
+            if pars1d.size != (pars1d==-9999.).sum():
+                crit = self.GR(pars)
+                if crit < thresh:
+                    conv[cc] = True
+            else:
                 conv[cc] = True
 
         zipped_res = zip(chain_combinations,conv)
@@ -709,24 +730,25 @@ class CARDAMOM_F(object):
             #output the results of the convergence test
             return zipped_res
         else:
-            #output the parameter sets
-            for combi in zipped_res:
+            #start a counter to check whether one of the chain combinations has converged
+            conv = 0
+            #loop over inverted combinations list, to be sure the converged combination with max no of chains is last 
+            for combi in zipped_res[::-1]:
+                #if combination as converged get the data
                 if combi[1] == True:
+                    conv+=1
                     for ch,chainid in enumerate(combi[0]):
                         if ch == 0:
                             pars = self.read_output(run=run,pixel=pixel,chain=chainid,burnin=burnin)
                         else:
                             pars = pd.concat([pars,self.read_output(run=run,pixel=pixel,chain=chainid,burnin=burnin)])
-                    pars.index = np.arange(pars.shape[0])
-                    return pars
-            # if none as converged, output them all...
-            for ch,chainid in enumerate(chains):
-                if ch == 0:
-                    pars = self.read_output(run=run,pixel=pixel,chain=chainid,burnin=burnin)
-                else:
-                    pars = pd.concat([pars,self.read_output(run=run,pixel=pixel,chain=chainid,burnin=burnin)])
+            # if no combination has converged, return empty parameter sets               
+            if conv == 0:
+                pars = pd.DataFrame(np.zeros([500,self.npars])-9999)
+            
             pars.index = np.arange(pars.shape[0])
             return pars
+
 
     def get_parameter_maps(self,run=1,chains=[1,2,3], burnin = 0.5,thresh=1.2,
                         percentiles=[2.5,5.,25.,50.,75.,95.,97.5],save=True):

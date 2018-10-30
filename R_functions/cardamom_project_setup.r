@@ -238,4 +238,16 @@ cardamom_project_setup <- function (paths,PROJECT) {
   PROJECT$chain_runtime=chain_runtime
   PROJECT$description=description
   PROJECT$samplerate=samplerate
- 
+  PROJECT$date=date
+  PROJECT$exe=exe
+  # eddie specific information
+  if (use_eddie) {
+    PROJECT$eddiepath=eddiepath
+    PROJECT$edatapath=edatapath
+    PROJECT$eresultspath=eresultspath
+    PROJECT$eoestreampath=eoestreampath
+    PROJECT$eexepath=eexepath
+    PROJECT$email=email
+  }
+  return(PROJECT)
+} # function end
