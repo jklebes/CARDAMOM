@@ -302,9 +302,9 @@ contains
     ! if the minimum step size has been hit
     ! and we are still falling outside of the acceptance rate adjust likelihood scaler
     if (minval(PI%stepsize) <= minstepsize .and. N%ACCRATE < 0.23d0 .and. N%likelihood_scaler < 100d0) then
-        N%likelihood_scaler = N%likelihood_scaler + 0.075d0
+        N%likelihood_scaler = N%likelihood_scaler + 0.2d0
     elseif (N%likelihood_scaler > 1d0 .and. N%ACCRATE > 0.23d0) then
-        N%likelihood_scaler = N%likelihood_scaler - 0.075d0
+        N%likelihood_scaler = N%likelihood_scaler - 0.2d0
     end if
 
     ! step size can't be greater than 1

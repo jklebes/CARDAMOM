@@ -4,7 +4,7 @@ implicit none
 
 private
 
-public :: data_type, DATAin, emulator_parameters ,emulator_pars
+public :: data_type, DATAin, emulator_parameters, emulator_pars
 
   !!!!! such as the data type !!!!!
   type DATA_type

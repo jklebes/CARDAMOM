@@ -472,7 +472,7 @@ contains
     double precision, dimension(nodays,nofluxes), intent(inout) :: FLUXES ! vector of ecosystem fluxes
 
     ! declare general local variables
-    double precision ::  infi &
+    double precision ::  tmp,infi &
                ,transpiration &
              ,soilevaporation &
               ,wetcanopy_evap &
@@ -915,15 +915,18 @@ contains
            ! Determine those related to phenology
            !
 
-           ! Hydraulic limitation parameters for wood cell expansion, i.e. growth
-           Cwood_hydraulic_gradient = 10d0 ; Cwood_hydraulic_half_saturation = -1.5d0
+           ! Hydraulic limitation parameters for tissue cell expansion, i.e. growth
+           ! NOTE: that these parameters are applied to deltaWP (i.e. minLWP-wSWP)
+           Cwood_hydraulic_gradient = 5d0 ; Cwood_hydraulic_half_saturation = -1.5d0
+           ! When tied to estimated actual lwp
+           !Cwood_hydraulic_gradient = 5d0 ; Cwood_hydraulic_half_saturation = -0.5d0
 
            ! Temperature limitiation parameters on wood and fine root growth.
            ! Parmeters generated on the assumption of 5 % / 95 % activation at key
            ! temperature values. Roots 1oC/30oC, wood 5oC/30oC.
            ! NOTE: Foliage and root potential turnovers use the same temperature curve
            Croot_labile_release_gradient = 0.1962d0 ; Croot_labile_half_saturation = 15.0d0
-           Cwood_labile_release_gradient = 0.2355d0 ; Cwood_labile_half_saturation  = 17.5d0
+           Cwood_labile_release_gradient = 0.2355d0 ; Cwood_labile_half_saturation = 17.5d0
            ! calculate temperature limitation on potential wood/root growth
            Cwood_labile_release_coef = (dble_one+exp(-Cwood_labile_release_gradient* &
                                      (((met(3,:)+met(2,:))*0.5d0)-Cwood_labile_half_saturation)))**(-dble_one)
@@ -1201,17 +1204,6 @@ contains
       ! calculate radiation absorption and estimate stomatal conductance
       call acm_albedo_gc(abs(deltaWP),Rtot)
 
-      !!!!!!!!!!
-      ! Evaptranspiration (kgH2O.m-2.day-1)
-      !!!!!!!!!!
-
-      ! Canopy transpiration (kgH2O/m2/day)
-      call calculate_transpiration(transpiration)
-      ! Soil surface (kgH2O.m-2.day-1)
-      call calculate_soil_evaporation(soilevaporation)
-      ! restrict transpiration to positive only
-      transpiration = max(dble_zero,transpiration)
-
       ! if snow present assume that soilevaporation is sublimation of soil first
       snow_sublimation = dble_zero
       if (snow_storage > dble_zero) then
@@ -1225,18 +1217,28 @@ contains
       ! adjustments
 
       !!!!!!!!!!
-      ! GPP (gC.m-2.day-1)
+      ! GPP (gC.m-2.day-1) and Evaporation (kgH2O/m2/day)
       !!!!!!!!!!
 
       ! reset output variable
       ci_global = dble_zero
       if (lai > vsmall .and. stomatal_conductance > vsmall) then
+          ! Gross primary productivity (gC/m2/day)
           FLUXES(n,1) = max(dble_zero,acm_gpp(stomatal_conductance))
+          ! Canopy transpiration (kgH2O/m2/day)
+          call calculate_transpiration(transpiration)
+          ! restrict transpiration to positive only
+          transpiration = max(dble_zero,transpiration)
       else
+          ! assume zero fluxes
           FLUXES(n,1) = dble_zero
+          transpiration = dble_zero
       endif
       ! labile production (gC.m-2.day-1)
       FLUXES(n,5) = FLUXES(n,1)
+
+      ! Soil surface (kgH2O.m-2.day-1)
+      call calculate_soil_evaporation(soilevaporation)
 
       !!!!!!!!!!
       ! calculate maintenance respiration demands and mass balance
@@ -1309,16 +1311,19 @@ contains
       ! calculate canopy phenology
       !!!!!!!!!!
 
+      ! calculate hydraulic limits on leaf / wood growth.
+      ! NOTE: PARAMETERS NEED TO BE CALIBRATRED OR TISSUE SPECIFIC
+      !tmp = minlwp * (transpiration / (max_supply * mmol_to_kg_water))
+      !if (max_supply <= vsmall) tmp = minlwp
+      !Cwood_hydraulic_limit = (dble_one+exp(-Cwood_hydraulic_gradient*(tmp-Cwood_hydraulic_half_saturation)))**(-dble_one)
+      Cwood_hydraulic_limit = (dble_one+exp(Cwood_hydraulic_gradient*(deltaWP-Cwood_hydraulic_half_saturation)))**(-dble_one)
+
       ! Determine leaf growth and turnover based on marginal return calculations
       ! NOTE: that turnovers will be bypassed in favour of mortality turnover
       ! should available labile be exhausted
       call calculate_leaf_dynamics(n,deltat,nodays,pars(12),pars(36),pars(37) &
                                   ,deltaWP,Rtot,FLUXES(n,1),Rm_leaf &
                                   ,POOLS(n,2),FLUXES(n,9),FLUXES(n,16))
-      ! call calculate_leaf_dynamics(n,deltat,nodays,pars(5),pars(12),pars(36),pars(37) &
-      !                             ,deltaWP,Rtot,FLUXES(n,1),Rm_leaf &
-      !                             ,POOLS(n,2),FLUXES(n,9),FLUXES(n,16))
-
 
       ! Total labile release to foliage
       FLUXES(n,8) = avail_labile*(dble_one-(dble_one-FLUXES(n,16))**deltat(n))*deltat_1(n)
@@ -2767,7 +2772,7 @@ contains
     ! whether this actually varies with height or whether tall trees have a
     ! xylem architecture which keeps the whole plant conductance (gplant) 1-10 (ish).
 !    transpiration_resistance = (gplant * lai)**(-dble_one)
-    transpiration_resistance = canopy_height / (gplant * lai)
+    transpiration_resistance = canopy_height / (gplant * max(min_lai,lai))
 
     !!!!!!!!!!!
     ! calculate current steps soil hydraulic conductivity
@@ -2882,7 +2887,7 @@ contains
     wSWP = wSWP / sum_water_flux
 
     ! sanity check in case of zero flux
-    if (sum_water_flux == dble_zero) then
+    if (sum_water_flux <= vsmall) then
         wSWP = -20d0
         uptake_fraction = dble_zero ; uptake_fraction(1) = dble_one
     endif
@@ -3721,6 +3726,8 @@ contains
                          ,marginal_loss &
                          ,growth_marginal_sum &
                          ,death_gradient &
+                         ,reconstruction_cost &
+                         ,development_cost &
                          ,NUE_save  &
                          ,lai_save  &
                          ,canopy_lw_save &
@@ -3746,6 +3753,7 @@ contains
       marginal_gain = dble_zero ; marginal_loss = dble_zero
       loss = dble_zero ; tmp = dble_zero
       leaf_fall_dead = dble_zero ; deltaC = dble_zero
+      reconstruction_cost = dble_zero ; development_cost = dble_zero
       leaf_fall = dble_zero   ! leaf turnover
       leaf_growth = dble_zero ! leaf growth
 
@@ -3843,8 +3851,6 @@ contains
                   deltaRm = Rm_leaf * (deltaC/foliage)
                   ! calculate leaf area of the leaf to be assessed
                   lai = deltaC * SLA
-! CURRENTLY ESTIMATING SINGLE AGE CLASSES AT ATIME SO THIS COULD BE
-! SIMPLIFIED....
                   ! calculate mean canopy age of those considered for loss, weighted by the mass at each age point
                   !canopy_age = (canopy_age_vector(a) * canopy_days(a)) / canopy_age_vector(a)
                   canopy_age = canopy_days(a)
@@ -3861,18 +3867,19 @@ contains
                       deltaGPP = dble_zero
                   endif
                   ! Estimate marginal return of leaf loss vs cost of regrowth, scaled by expected remaining leaf life span
-                  life_remain = leaf_life_max - canopy_age ! how much longer is the leaf expected to be live for?
-                  if (life_remain > dble_zero) then
-                      ! if we are within the mean age consider trade off
-                      ! including replacement cost
-                      marginal_loss = (deltaRm-deltaGPP)*life_remain ! costs of continued life
-                      marginal_loss = marginal_loss - ((deltaC*(life_remain / leaf_life_max))/one_Rg_fraction) ! less recontruction costs
+                  life_remain = max(1d0,leaf_life_max - canopy_age) ! how much longer is the leaf expected to be live for?
+                  ! is the instantaneous return of loss positive?
+                  marginal_loss = (deltaRm-deltaGPP)*life_remain ! instantaneous costs of continued life
+                  if (marginal_loss > dble_zero) then
+                      !...if so then consider whether this is greater than the cost of reconstruction...
+                      reconstruction_cost = ((deltaC*(life_remain / leaf_life_max))/one_Rg_fraction)
+                      marginal_loss = marginal_loss - reconstruction_cost ! less recontruction costs
+                      !...and GPP loss due to maturation should this be a false loss of leaf area
+                      ! NOTE: that 0.5 represents that GPP would be reduced by 50 % (linear integration theory) for the below determine period
+!                       development_cost = deltaGPP * 0.5d0 * (NUE / NUE_optimum) * canopy_maturation_lag
+!                       marginal_loss = marginal_loss - development_cost ! less loss associated with reduced production of maturing leaves
                       marginal_loss = marginal_loss / deltaC ! scaled to per gC/m2
-                  else
-                      ! outside of the mean life expectancy, just consider
-                      ! instant marginal return
-                      marginal_loss = (deltaRm-deltaGPP) / deltaC
-                  end if
+                  endif ! marginal_loss > dble_zero
 
                   ! escape condition
                   if (marginal_loss <= dble_zero) then
@@ -3923,7 +3930,7 @@ contains
       if (avail_labile > dble_zero) then
 
           ! we are in an assending condition so labile turnover
-          leaf_growth = pot_leaf_growth*Croot_labile_release_coef(current_step)
+          leaf_growth = pot_leaf_growth*Croot_labile_release_coef(current_step)*Cwood_hydraulic_limit
           ! calculate potential C allocation to leaves
           deltaC = avail_labile * (dble_one-(dble_one-leaf_growth)**deltat(current_step))*deltat_1(current_step)
           ! C spent on growth
@@ -4128,9 +4135,6 @@ contains
         ! with the new roots?
 !        if (current_gpp - Rm_wood - Rm_leaf - Rm_root - deltaRm < dble_zero) root_cost = dble_zero
 
-        ! calculate hydraulic limits on wood growth.
-        ! NOTE: PARAMETERS NEED TO BE CALIBRATRED
-        Cwood_hydraulic_limit = (dble_one+exp(Cwood_hydraulic_gradient*(deltaWP-Cwood_hydraulic_half_saturation)))**(-dble_one)
         ! determine wood growth based on temperature and hydraulic limits
         wood_growth = lab_to_wood*Cwood_labile_release_coef(n)*Cwood_hydraulic_limit
         ! Estimate potential root allocation over time for potential root

@@ -133,14 +133,14 @@ parallel_cluster_processing<-function(c,analysis_info
       if(slot_i == 0) {slot_i = PROJECT$long_dim} ; slot_j=ceiling(slot_j)
 
       # generate file name of the output file created in stage 3
-      loadfile=paste(PROJECT$results_processedpath,PROJECT$sites[n],"_parameters.RData",sep="")
+      loadfile = paste(PROJECT$results_processedpath,PROJECT$sites[n],"_parameters.RData",sep="")
       #print(paste(".........processing site:",PROJECT$sites[n],sep=""))
       # load driver / parameter information
       load(loadfile)
       # run the parameter chains to generate states but without actually saving them this time
-      states_all=run_mcmc_results_for_grid(n,PROJECT,parameters,sub_parameter,drivers)
+      states_all = run_mcmc_results_for_grid(n,PROJECT,parameters,sub_parameter,drivers)
       # remove variable that we don't need here
-      states_all=states_all[which(names(states_all) != "aNPP")] ; gc()
+      states_all = states_all[which(names(states_all) != "aNPP")] ; gc()
       pixel_dims = dim(states_all[[1]]) ; current_pars = pixel_dims[1]
 
       if (nn == 1) {
@@ -288,14 +288,14 @@ parallel_cluster_processing<-function(c,analysis_info
             # now calculate time series information for gsi and each of its components
             # sample distribution to max_pars samples (mostly this is to save compute time)
             # GSI
-            tmp=t(t(apply(states_all$gsi,2,quantile,prob=seq(0,1,length.out=analysis_info$max_pars)))*analysis_info$timestep_days)*area[slot_i,slot_j]
+            tmp = t(t(apply(states_all$gsi,2,quantile,prob = seq(0,1,length.out=analysis_info$max_pars)))*analysis_info$timestep_days)*area[slot_i,slot_j]
             states_sum_timeseries[1:analysis_info$max_pars,1:pixel_dims[2],p] = states_sum_timeseries[1:analysis_info$max_pars,1:pixel_dims[2],p]+tmp
-            tmp=apply(states_all$gsi,2,quantile,prob=seq(0,1,length.out=analysis_info$max_pars))*(area[slot_i,slot_j]*total_area_1)
+            tmp = apply(states_all$gsi,2,quantile,prob = seq(0,1,length.out=analysis_info$max_pars))*(area[slot_i,slot_j]*total_area_1)
             states_mean_timeseries[1:analysis_info$max_pars,1:pixel_dims[2],p] = states_mean_timeseries[1:analysis_info$max_pars,1:pixel_dims[2],p] + tmp
             # gsi_itemp
-            tmp=t(t(apply(states_all$gsi_itemp,2,quantile,prob=seq(0,1,length.out=analysis_info$max_pars))))*area[slot_i,slot_j]
+            tmp = t(t(apply(states_all$gsi_itemp,2,quantile,prob = seq(0,1,length.out=analysis_info$max_pars))))*area[slot_i,slot_j]
             states_sum_timeseries[1:analysis_info$max_pars,1:pixel_dims[2],which(analysis_info$in_file_names == "gsi_itemp")] = states_sum_timeseries[1:analysis_info$max_pars,1:pixel_dims[2],which(analysis_info$in_file_names == "gsi_itemp")]+tmp
-            tmp=apply(states_all$gsi_itemp,2,quantile,prob=seq(0,1,length.out=analysis_info$max_pars))*(area[slot_i,slot_j]*total_area_1)
+            tmp = apply(states_all$gsi_itemp,2,quantile,prob = seq(0,1,length.out=analysis_info$max_pars))*(area[slot_i,slot_j]*total_area_1)
             states_mean_timeseries[1:analysis_info$max_pars,1:pixel_dims[2],which(analysis_info$in_file_names == "gsi_itemp")] = states_mean_timeseries[1:analysis_info$max_pars,1:pixel_dims[2],which(analysis_info$in_file_names == "gsi_itemp")]+tmp
             # gsi_iphoto
             tmp=t(t(apply(states_all$gsi_iphoto,2,quantile,prob=seq(0,1,length.out=analysis_info$max_pars))))*area[slot_i,slot_j]
@@ -407,7 +407,7 @@ parallel_cluster_processing<-function(c,analysis_info
           # than 21 days) or all available steps (if n < 21).
           m = 0 ; test = 0
           while (test < 21) {
-            m=m+1 ; test = sum(timestep_days[(n-m):n])
+            m = m+1 ; test = sum(timestep_days[(n-m):n])
             if (m > (n-1)) {test = 21}
           } # while
           tmp_m[n] = m
@@ -417,17 +417,17 @@ parallel_cluster_processing<-function(c,analysis_info
       # work out area matrix for the pixels in meters
       # include adjustment for g-> Tg (*1e-12)
       if (PROJECT$grid_type == "UK") {
-        area_with_g_Tg=array(PROJECT$resolution**2, dim=c(PROJECT$long_dim,PROJECT$lat_dim))*1e-12
-        area=array(PROJECT$resolution**2, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+        area_with_g_Tg = array(PROJECT$resolution**2, dim=c(PROJECT$long_dim,PROJECT$lat_dim))*1e-12
+        area = array(PROJECT$resolution**2, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
       } else if (PROJECT$grid_type == "wgs84") {
         # generate the lat / long grid again
-        output=generate_wgs84_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
+        output = generate_wgs84_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
         # then generate the area estimates for each pixel
-        area_with_g_Tg=calc_pixel_area(output$lat,output$long,PROJECT$resolution)*1e-12
-        area=calc_pixel_area(output$lat,output$long,PROJECT$resolution)
+        area_with_g_Tg = calc_pixel_area(output$lat,output$long,PROJECT$resolution)*1e-12
+        area = calc_pixel_area(output$lat,output$long,PROJECT$resolution)
         # this output is in vector form and we need matching array shapes so...
-        area=array(area, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-        area_with_g_Tg=array(area_with_g_Tg, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+        area = array(area, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+        area_with_g_Tg = array(area_with_g_Tg, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
       } else {
         stop("valid spatial grid option not selected (UK, or wgs84)")
       }

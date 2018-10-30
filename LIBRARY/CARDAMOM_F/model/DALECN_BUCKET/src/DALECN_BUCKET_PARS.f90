@@ -90,7 +90,7 @@ module MODEL_PARAMETERS
        PI%parmax(10)=0.06d0
 
        ! log10 avg foliar N (gN.m-2)
-       ! Kattge et al., (2011)
+       ! Kattge et al., (2011) (Quantiles 2.5% / 97.5%)
        PI%parmin(11)=-0.2218487d0
        PI%parmax(11)= 0.5563025d0
 
@@ -189,7 +189,7 @@ module MODEL_PARAMETERS
 
        ! maximum number of NUE decline acceleration that can be applied (days)
        PI%parmin(43)=1d0
-       PI%parmax(43)=14d0 ! 7d0
+       PI%parmax(43)=28d0 ! 7d0
 
 
 !       ! CN_wood coefficient for increase due to C_wood (deltalCN per gC.m-2)
