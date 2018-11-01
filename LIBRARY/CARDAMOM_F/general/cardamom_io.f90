@@ -174,12 +174,12 @@ module cardamom_io
         ! ID = 2 - DALECN_BUCKET
         ! DALEC_BUCKET - 8 pools currently
         DATAin%nopools = 8
-        DATAin%nopars = 43
+        DATAin%nopars = 44
         DATAin%nofluxes = 25
         if (DATAin%PFT == 1) then
            ! then actually this is a crop pixel
            DATAin%nopools = 9
-           DATAin%nopars = 37
+           DATAin%nopars = 38
            DATAin%nofluxes = 21
         endif
     else

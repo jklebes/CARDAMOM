@@ -188,7 +188,7 @@ module model_likelihood_module
     use cardamom_structures, only: DATAin
     use CARBON_MODEL_MOD, only: sw_par_fraction, &
                                 opt_max_scaling, &
-                                     emissivity 
+                                     emissivity
 
     ! subroutine assessed the current parameter sets for passing ecological and
     ! steady state contraints (modified from Bloom et al., 2014).
@@ -203,7 +203,7 @@ module model_likelihood_module
                                    ,meanrad    ! mean radiation (MJ.m-2.day-1)
 
     ! declare local parameters
-    double precision, dimension(7), parameter :: lai = (/0.125d0,0.25d0,0.5d0,1d0,2.5d0,5d0,10d0/)
+    double precision, dimension(10), parameter :: lai = (/0.000001d0,0.03125,0.0625d0,0.125d0,0.25d0,0.5d0,1d0,2.5d0,5d0,10d0/)
 
     ! declare local variables
     integer :: n, DIAG, i
@@ -229,8 +229,7 @@ module model_likelihood_module
     ! begin checking EDCs
     !
 
-
-    do i = 1,7
+    do i = 1,10
 
        ! Canopy transmitted of PAR & NIR radiation towards the soil
        par_trans = 1d0 - (lai(i)*pars(16)) / (lai(i)+pars(17))
@@ -269,7 +268,7 @@ module model_likelihood_module
     endif
 
     ! assume that photosynthesis limitation at 0C should be between 10 % and 20 %
-    ! of potential. Fatchi et al (2013), New Phytologist, https://doi.org/10.1111/nph.12614 
+    ! of potential. Fatchi et al (2013), New Phytologist, https://doi.org/10.1111/nph.12614
     tmp = opt_max_scaling(pars(2),pars(3),pars(4),0d0)
     if ((EDC1 == 1 .or. DIAG == 1) .and. tmp > 0.20d0) then
        EDC1 = 0 ; EDCD%PASSFAIL(7) = 0
@@ -492,7 +491,7 @@ module model_likelihood_module
     integer :: n
 
     ! set initial value
-    likelihood_p = 0d0 
+    likelihood_p = 0d0
 
     ! now loop through defined parameters for their uncertainties
     do n = 1, npars

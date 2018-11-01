@@ -213,7 +213,7 @@ cardamom_project_setup <- function (paths,PROJECT) {
       if (modelname == "AT_DALEC" & parameter_type == "pft_specific") {
         system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/AT_DALEC/src/winter_wheat_development.csv ",exepath,"/",sep=""))
       } #  only for AT_DALEC use the GAM emulator
-      if ((modelname == "DALEC_GSI_DFOL_CWD_FR" | modelname == "DALEC_GSI_BUCKET" | modelname == "DALECN_GSI_BUCKET") & parameter_type == "pft_specific") {
+      if ((modelname == "DALEC_GSI_DFOL_CWD_FR" | modelname == "DALEC_GSI_BUCKET" | modelname == "DALECN_GSI_BUCKET" | modelname == "DALECN_BUCKET") & parameter_type == "pft_specific") {
         system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/DALEC_GSI_DFOL_CWD_FR/src/winter_wheat_development.csv ",exepath,"/",sep=""))
       } #  only for AT_DALEC use the GAM emulator
       # return to original working directory

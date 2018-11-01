@@ -18,6 +18,8 @@ public :: CARBON_MODEL                  &
          ,calculate_soil_evaporation    &
          ,acm_albedo_gc                 &
          ,acm_meteorological_constants  &
+         ,calculate_shortwave_balance   &
+         ,calculate_longwave_isothermal &
          ,calculate_daylength           &
          ,daylength_hours               &
          ,daylength_seconds             &
@@ -34,6 +36,7 @@ public :: CARBON_MODEL                  &
          ,calculate_aerodynamic_conductance &
          ,saxton_parameters             &
          ,initialise_soils              &
+         ,update_soil_initial_conditions&
          ,linear_model_gradient         &
          ,seconds_per_day               &
          ,seconds_per_step              &
@@ -74,6 +77,7 @@ public :: CARBON_MODEL                  &
          ,meant_K                       &
          ,meant_time                    &
          ,stomatal_conductance          &
+         ,aerodynamic_conductance       &
          ,iWUE                          &
          ,avN                           &
          ,NUE_optimum                   &
@@ -100,6 +104,7 @@ public :: CARBON_MODEL                  &
          ,soil_swrad_absorption         &
          ,max_lai_lwrad_release         &
          ,lai_half_lwrad_release        &
+         ,leafT                         &
          ,mint                          &
          ,maxt                          &
          ,swrad                         &
@@ -114,6 +119,7 @@ public :: CARBON_MODEL                  &
          ,lai                           &
          ,days_per_step                 &
          ,days_per_step_1               &
+         ,dayl_seconds_1                &
          ,dayl_seconds                  &
          ,dayl_hours                    &
          ,snow_storage                  &
@@ -165,7 +171,7 @@ logical :: do_iWUE = .true., & ! Use iWUE or WUE for stomatal optimisation
  do_energy_balance = .false.   ! Calculate steady-state energy balance for GPP~Transpiration
 double precision, parameter :: dble_zero = 0d0    &
                               ,dble_one = 1d0     &
-                              ,vsmall = tiny(0d0)
+                              ,vsmall = tiny(0d0)*1e3 ! *1d3 to add a little breathing room
 
 integer, parameter :: nos_root_layers = 3, nos_soil_layers = nos_root_layers + 1
 double precision, parameter :: pi = 3.1415927d0,  &
@@ -942,6 +948,7 @@ contains
            ! initialise some time invarient parameters
            call saxton_parameters(soil_frac_clay,soil_frac_sand)
            call initialise_soils(soil_frac_clay,soil_frac_sand)
+           call update_soil_initial_conditions(pars(44))
            ! save the initial conditions for later
            soil_waterfrac_initial = soil_waterfrac
            SWP_initial = SWP
@@ -955,10 +962,12 @@ contains
            !
 
            water_flux = dble_zero
-           soil_waterfrac = soil_waterfrac_initial
-           SWP = SWP_initial
            field_capacity = field_capacity_initial
            porosity = porosity_initial
+
+           ! input initial soil water fraction then
+           ! update SWP and soil conductivity accordingly
+           call update_soil_initial_conditions(pars(44))
 
         endif ! allocatable variables already allocated...?
 
@@ -1180,7 +1189,7 @@ contains
       call calculate_longwave_isothermal(leafT,maxt)
 
       !!!!!!!!!!
-      ! Estimate approximate wet canopy evaporation and impact on energy balance
+      ! Estimate evaporative and photosynthetic fluxes
       !!!!!!!!!!
 
       ! if desired calculate the steady-state energy balance
@@ -1215,10 +1224,6 @@ contains
 
       ! Note that soil mass balance will be calculated after phenology
       ! adjustments
-
-      !!!!!!!!!!
-      ! GPP (gC.m-2.day-1) and Evaporation (kgH2O/m2/day)
-      !!!!!!!!!!
 
       ! reset output variable
       ci_global = dble_zero
@@ -1313,9 +1318,6 @@ contains
 
       ! calculate hydraulic limits on leaf / wood growth.
       ! NOTE: PARAMETERS NEED TO BE CALIBRATRED OR TISSUE SPECIFIC
-      !tmp = minlwp * (transpiration / (max_supply * mmol_to_kg_water))
-      !if (max_supply <= vsmall) tmp = minlwp
-      !Cwood_hydraulic_limit = (dble_one+exp(-Cwood_hydraulic_gradient*(tmp-Cwood_hydraulic_half_saturation)))**(-dble_one)
       Cwood_hydraulic_limit = (dble_one+exp(Cwood_hydraulic_gradient*(deltaWP-Cwood_hydraulic_half_saturation)))**(-dble_one)
 
       ! Determine leaf growth and turnover based on marginal return calculations
@@ -1905,7 +1907,23 @@ contains
 
     ! calculate combined light and CO2 limited photosynthesis
     acm_gpp = pl*pd/(pl+pd)
-
+!print*,"-----------------------"
+!print*,co2_half_sat,co2_comp_point,leafT
+!print*,lai,avN,NUE,opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
+!print*,gs_mol,gs,seconds_per_day,gs_H2O_CO2
+!print*,gb_mol,aerodynamic_conductance,seconds_per_day,convert_ms1_mol_1,gb_H2O_CO2
+!print*,gc,co2,ci,umol_to_gC
+!print*,canopy_par_MJday,dayl_hours,0.04166667d0
+!print*,"pl",pl,"pd",pd,"pn",pn
+!print*,"-----------------------"
+!if (maxt > 15d0) stop
+if (acm_gpp /= acm_gpp) then
+    print*,"pl",pl,"pd",pd,"pn",pn
+    if (pl == 0d0) print*,"par",canopy_par_MJday
+    if (pn == 0d0) print*,"lai",lai,leafT,leafT
+    if (pd == 0d0) print*,"gs",gs,"ga",aerodynamic_conductance,"ci",ci
+endif
+    if (acm_gpp /= acm_gpp) acm_gpp = dble_zero
     ! don't forget to return
     return
 
@@ -1913,12 +1931,12 @@ contains
   !
   !----------------------------------------------------------------------
   !
-  double precision function find_gs(gs_in)
+  double precision function find_gs_iWUE(gs_in)
 
     ! Calculate CO2 limited photosynthesis as a function of metabolic limited
     ! photosynthesis (pn), atmospheric CO2 concentration and stomatal
     ! conductance (gs_in). Photosynthesis is calculated twice to allow for
-    ! testing of senstivity to iWUE (iWUE).
+    ! testing of senstivity to iWUE.
 
     ! arguments
     double precision, intent(in) :: gs_in
@@ -1930,104 +1948,45 @@ contains
                         gpp_high, gpp_low, &
                         evap_high, evap_low
 
-    if (do_iWUE) then
+    !!!!!!!!!!
+    ! Optimise intrinsic water use efficiency
+    !!!!!!!!!!
 
-        !!!!!!!!!!
-        ! Optimise intrinsic water use efficiency
-        !!!!!!!!!!
+    ! if desired calculate the steady-state energy balance
+    if (do_energy_balance) then
+        ! save values which will need to be reset
+        airt_save = leafT ; lw_save = canopy_lwrad_Wm2
+        ! estimate energy balance without wet evaporation effects
+        isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
+        call update_net_radiation(isothermal,leafT,lai,dble_one &
+                                 ,gs_in,aerodynamic_conductance,vpd_pa &
+                                 ,deltaTemp,deltaR)
+        ! note that both the leafT and canopy LW have an implicit day -> day length correction
+        canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
+        leafT = leafT + deltaTemp
+    endif
+    ! estimate photosynthesis with current estimate of gs
+    gpp_low = acm_gpp(gs_in)
 
-        ! if desired calculate the steady-state energy balance
-        if (do_energy_balance) then
-            ! save values which will need to be reset
-            airt_save = leafT ; lw_save = canopy_lwrad_Wm2
-            ! estimate energy balance without wet evaporation effects
-            isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
-            call update_net_radiation(isothermal,leafT,lai,dble_one &
-                                     ,gs_in,aerodynamic_conductance,vpd_pa &
-                                     ,deltaTemp,deltaR)
-            ! note that both the leafT and canopy LW have an implicit day -> day length correction
-            canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
-            leafT = leafT + deltaTemp
-        endif
-        ! estimate photosynthesis with current estimate of gs
-        gpp_low = acm_gpp(gs_in)
+    ! Increment gs
+    gs_high = gs_in + delta_gs
+    ! if desired calculate the steady-state energy balance
+    if (do_energy_balance) then
+        leafT = airt_save ; canopy_lwrad_Wm2 = lw_save
+        ! estimate energy balance without wet evaporation effects
+        isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
+        call update_net_radiation(isothermal,leafT,lai,dble_one &
+                                 ,gs_in,aerodynamic_conductance,vpd_pa &
+                                 ,deltaTemp,deltaR)
+        ! note that both the leafT and canopy LW have an implicit day -> day length correction
+        canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
+        leafT = leafT + deltaTemp
+    endif
+    ! estimate photosynthesis with incremented gs
+    gpp_high = acm_gpp(gs_high)
 
-        ! Increment gs
-        gs_high = gs_in + delta_gs
-        ! if desired calculate the steady-state energy balance
-        if (do_energy_balance) then
-            leafT = airt_save ; canopy_lwrad_Wm2 = lw_save
-            ! estimate energy balance without wet evaporation effects
-            isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
-            call update_net_radiation(isothermal,leafT,lai,dble_one &
-                                     ,gs_in,aerodynamic_conductance,vpd_pa &
-                                     ,deltaTemp,deltaR)
-            ! note that both the leafT and canopy LW have an implicit day -> day length correction
-            canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
-            leafT = leafT + deltaTemp
-        endif
-        ! estimate photosynthesis with incremented gs
-        gpp_high = acm_gpp(gs_high)
-
-        ! determine impact of gs increment on pd and how far we are from iWUE
-        find_gs = iWUE - ((gpp_high - gpp_low)/lai)
-!        find_gs = iWUE - (gpp_high - gpp_low)
-
-    else ! iWUE = .true. / .false.
-
-        !!!!!!!!!!
-        ! Optimise water use efficiency
-        !!!!!!!!!!
-
-        ! Globally stored upper stomatal conductance estimate in memory
-        gs_store = stomatal_conductance
-        ! now assign the current estimate
-        stomatal_conductance = gs_in
-        if (do_energy_balance) then
-            ! save values which will need to be reset
-            airt_save = leafT ; lw_save = canopy_lwrad_Wm2
-            ! estimate energy balance without wet evaporation effects
-            isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
-            call update_net_radiation(isothermal,leafT,lai,dble_one &
-                                     ,gs_in,aerodynamic_conductance,vpd_pa &
-                                     ,deltaTemp,deltaR)
-            ! note that both the leafT and canopy LW have an implicit day -> day length correction
-            canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
-            leafT = leafT + deltaTemp
-        endif
-        ! estimate photosynthesis with current estimate of gs
-        gpp_low = acm_gpp(gs_in)
-        call calculate_transpiration(evap_low)
-
-        ! Increment gs
-        gs_high = gs_in + delta_gs
-        ! now assign the incremented estimate
-        stomatal_conductance = gs_high
-        ! if desired calculate the steady-state energy balance
-        if (do_energy_balance) then
-            leafT = airt_save ; canopy_lwrad_Wm2 = lw_save
-            ! estimate energy balance without wet evaporation effects
-            isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
-            call update_net_radiation(isothermal,leafT,lai,dble_one &
-                                     ,gs_in,aerodynamic_conductance,vpd_pa &
-                                     ,deltaTemp,deltaR)
-            ! note that both the leafT and canopy LW have an implicit day -> day length correction
-            canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
-            leafT = leafT + deltaTemp
-        endif
-        ! estimate photosynthesis with incremented gs
-        gpp_high = acm_gpp(gs_high)
-        call calculate_transpiration(evap_high)
-
-        ! estimate marginal return on GPP for water loss, less water use efficiency criterion (gC.kgH2O-1.m-2.s-1)
-        find_gs = ((gpp_high - gpp_low)/(evap_high - evap_low)) / lai
-!        find_gs = ((gpp_high - gpp_low)/(evap_high - evap_low))
-        find_gs = find_gs - iWUE
-
-        ! return original stomatal value back into memory
-        stomatal_conductance = gs_store
-
-    end if ! iWUE = .true. / .false.
+    ! determine impact of gs increment on pd and how far we are from iWUE
+    find_gs_iWUE = iWUE - ((gpp_high - gpp_low)/lai)
 
     ! now if I have been changing these drivers, best put them back to normal
     if (do_energy_balance) then
@@ -2037,7 +1996,87 @@ contains
     ! remember to return back to the user
     return
 
-  end function find_gs
+  end function find_gs_iWUE
+  !
+  !----------------------------------------------------------------------
+  !
+  double precision function find_gs_WUE(gs_in)
+
+    ! Calculate CO2 limited photosynthesis as a function of metabolic limited
+    ! photosynthesis (pn), atmospheric CO2 concentration and stomatal
+    ! conductance (gs_in). Photosynthesis is calculated twice to allow for
+    ! testing of senstivity to WUE.
+
+    ! arguments
+    double precision, intent(in) :: gs_in
+
+    ! local variables
+    double precision :: tmp,airt_save,lw_save, &
+                        isothermal,deltaTemp,deltaR
+    double precision :: gs_high, gs_store, &
+                        gpp_high, gpp_low, &
+                        evap_high, evap_low
+
+    !!!!!!!!!!
+    ! Optimise water use efficiency
+    !!!!!!!!!!
+
+    ! Globally stored upper stomatal conductance estimate in memory
+    gs_store = stomatal_conductance
+    ! now assign the current estimate
+    stomatal_conductance = gs_in
+    if (do_energy_balance) then
+        ! save values which will need to be reset
+        airt_save = leafT ; lw_save = canopy_lwrad_Wm2
+        ! estimate energy balance without wet evaporation effects
+        isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
+        call update_net_radiation(isothermal,leafT,lai,dble_one &
+                                 ,gs_in,aerodynamic_conductance,vpd_pa &
+                                 ,deltaTemp,deltaR)
+        ! note that both the leafT and canopy LW have an implicit day -> day length correction
+        canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
+        leafT = leafT + deltaTemp
+    endif
+    ! estimate photosynthesis with current estimate of gs
+    gpp_low = acm_gpp(gs_in)
+    call calculate_transpiration(evap_low)
+
+    ! Increment gs
+    gs_high = gs_in + delta_gs
+    ! now assign the incremented estimate
+    stomatal_conductance = gs_high
+    ! if desired calculate the steady-state energy balance
+    if (do_energy_balance) then
+        leafT = airt_save ; canopy_lwrad_Wm2 = lw_save
+        ! estimate energy balance without wet evaporation effects
+        isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
+        call update_net_radiation(isothermal,leafT,lai,dble_one &
+                                 ,gs_in,aerodynamic_conductance,vpd_pa &
+                                 ,deltaTemp,deltaR)
+        ! note that both the leafT and canopy LW have an implicit day -> day length correction
+        canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
+        leafT = leafT + deltaTemp
+    endif
+    ! estimate photosynthesis with incremented gs
+    gpp_high = acm_gpp(gs_high)
+    call calculate_transpiration(evap_high)
+
+    ! estimate marginal return on GPP for water loss, less water use efficiency criterion (gC.kgH2O-1.m-2.s-1)
+    find_gs_WUE = ((gpp_high - gpp_low)/(evap_high - evap_low)) / lai
+    find_gs_WUE = find_gs_WUE - iWUE
+
+    ! return original stomatal value back into memory
+    stomatal_conductance = gs_store
+
+    ! now if I have been changing these drivers, best put them back to normal
+    if (do_energy_balance) then
+        leafT = airt_save ; canopy_lwrad_Wm2 = lw_save
+    endif
+
+    ! remember to return back to the user
+    return
+
+  end function find_gs_WUE
   !
   !------------------------------------------------------------------
   !
@@ -2066,12 +2105,14 @@ contains
     if (deltaWP > vsmall) then
        ! Determine potential water flow rate (mmolH2O.m-2.dayl-1)
        max_supply = (deltaWP/Rtot) * seconds_per_day
+!print*,"max_supply",deltaWP,Rtot,seconds_per_day
+!1.9963123700890211  88.511237272649197        86400.000000000000
     else
        ! set minimum (computer) precision level flow
        max_supply = vsmall
     end if
 
-    if (lai > vsmall) then
+    if (lai > vsmall .and. aerodynamic_conductance > vsmall) then
 
         ! there is lai therefore we have have stomatal conductance
 
@@ -2084,7 +2125,14 @@ contains
         denom = (denom / (lambda * max_supply * mmol_to_kg_water * dayl_seconds_1)) - slope
         denom = denom / psych
         stomatal_conductance = aerodynamic_conductance / denom
-
+!print*,"gs_calc-----------------"
+!print*,slope,canopy_swrad_MJday,dayl_seconds_1,canopy_lwrad_Wm2
+! 0.11458623301069608       0.19951043058125814        1.8461140528937935E-005 -0.77904083030021987
+!print*,air_density_kg,cpair,vpd_pa,aerodynamic_conductance
+!1.2218238391377585        1004.6000000000000        234.23529464108495        3.2611182018366564E-004
+!print*,lambda,max_supply,mmol_to_kg_water,psych,convert_ms1_mol_1
+!2463737.7981209164        1948.6948108564040        1.8000000000000000E-005   6.5595289892106487E-002   42.181263763497313
+!print*,"gs_cald-----------------"
         ! convert m.s-1 to mmolH2O.m-2.s-1
         stomatal_conductance = stomatal_conductance * 1d3 * convert_ms1_mol_1
         ! if conditions are dew forming then set conductance to maximum as we are not going to be limited by water demand
@@ -2095,7 +2143,13 @@ contains
         if (stomatal_conductance /= max_gs .or. do_iWUE ) then
             ! If there is a positive demand for water then we will solve for photosynthesis limits on gs through iterative solution
             delta_gs = 1d-3*lai ! mmolH2O/m2leaf/day
-            stomatal_conductance = zbrent('acm_albedo_gc:find_gs',find_gs,min_gs,stomatal_conductance,tol_gs)
+            if (do_iWUE) then
+                ! intrinsic WUE optimisation
+                stomatal_conductance = zbrent('acm_albedo_gc:find_gs_iWUE',find_gs_iWUE,min_gs,stomatal_conductance,tol_gs)
+            else
+                ! WUE optimisation
+                stomatal_conductance = zbrent('acm_albedo_gc:find_gs_WUE',find_gs_WUE,min_gs,stomatal_conductance,tol_gs)
+            endif
         end if
 
         ! if desired calculate the steady-state energy balance
@@ -3399,8 +3453,37 @@ contains
     call soil_porosity(soil_frac_clay,soil_frac_sand)
     ! calculate field capacity (m3/m-3)
     call calculate_field_capacity
-    ! calculate initial soil water fraction
-    soil_waterfrac = field_capacity
+
+    ! final sanity check for porosity
+    where (porosity <= field_capacity) porosity = field_capacity + 0.01d0
+
+  end subroutine initialise_soils
+  !
+  !---------------------------------------------------------------------
+  !
+  subroutine update_soil_initial_conditions(input_soilwater_frac)
+
+    !
+    ! Subroutine calculate the soil layers field capacities and sets the initial
+    ! soil water potential set to field capacity
+    !
+
+    implicit none
+
+    ! arguments
+    double precision :: input_soilwater_frac
+
+    ! local variables
+    integer :: i
+
+    ! if prior value has been given
+    if (input_soilwater_frac > -9998d0) then
+        ! calculate initial soil water fraction
+        soil_waterfrac = input_soilwater_frac
+    else
+        soil_waterfrac = field_capacity
+    endif
+
     ! calculate initial soil water potential
     SWP = dble_zero
     call soil_water_potential
@@ -3411,10 +3494,7 @@ contains
     ! but apply the lowest soil layer to the core as well in initial conditions
     soil_conductivity(nos_soil_layers+1) = soil_conductivity(nos_soil_layers)
 
-    ! final sanity check for porosity
-    where (porosity <= field_capacity) porosity = field_capacity + 0.01d0
-
-  end subroutine initialise_soils
+  end subroutine update_soil_initial_conditions
   !
   !-----------------------------------------------------------------
   !
@@ -3452,10 +3532,10 @@ contains
                                                    ,soil_frac_sand
 
     ! local variables
-    double precision, parameter :: A = -4.396d0,  B = -0.0715d0,       CC = -4.880d-4, D = -4.285d-5, &
-                                   E = -3.140d0,  F = -2.22d-3,         G = -3.484d-5, H = 0.332d0,   &
-                                   J = -7.251d-4, K = 0.1276d0,         P = 12.012d0,  Q = -7.551d-2, &
-                                   R = -3.895d0,  T = 3.671d-2,         U = -0.1103d0, V = 8.7546d-4, &
+    double precision, parameter :: A = -4.396d0,  B = -0.0715d0,   CC = -4.880d-4, D = -4.285d-5, &
+                                   E = -3.140d0,  F = -2.22d-3,     G = -3.484d-5, H = 0.332d0,   &
+                                   J = -7.251d-4, K = 0.1276d0,     P = 12.012d0,  Q = -7.551d-2, &
+                                   R = -3.895d0,  T = 3.671d-2,     U = -0.1103d0, V = 8.7546d-4, &
                                    mult1 = 100d0, mult2 = 2.778d-6
 
     ! layed out in this manor to avoid memory management issues in module

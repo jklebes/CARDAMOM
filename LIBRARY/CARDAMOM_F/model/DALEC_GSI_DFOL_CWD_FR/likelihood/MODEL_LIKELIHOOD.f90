@@ -328,7 +328,7 @@ module model_likelihood_module
                       ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
                       ,meantemp,EDC2)
 
-    use CARBON_MODEL_CROP_MOD, only: resp_rate_temp_coeff, ts_length 
+    use CARBON_MODEL_CROP_MOD, only: resp_rate_temp_coeff, ts_length
     use CARBON_MODEL_MOD,      only: seconds_per_hour, seconds_per_day
 
     ! the second of two subroutines for assessing current parameters for passing
@@ -814,7 +814,7 @@ module model_likelihood_module
        ! year period to allow for the most severe non-steady state response
        ! Croot
        in_out_root = sum(M_FLUXES(1:disturb_begin,6)) / sum(M_FLUXES(1:disturb_begin,12)+M_FLUXES(1:disturb_begin,23))
-       in_out_root_disturb = sum(M_FLUXES(disturb_end:nodays,6)) & 
+       in_out_root_disturb = sum(M_FLUXES(disturb_end:nodays,6)) &
                            / sum(M_FLUXES(disturb_end:nodays,12)+M_FLUXES(disturb_end:nodays,23))
 !       in_out_root = in_out_root + (sum(M_FLUXES(disturb_end:nodays,6)) / sum(M_FLUXES(disturb_end:nodays,12)))
 !       in_out_root = in_out_root * 0.5
@@ -1654,7 +1654,8 @@ module model_likelihood_module
          ! errors of zero LAI which occur in managed systems
          if (DATAin%M_LAI(dn) >= 0d0) then
              ! note that division is the uncertainty
-             tot_exp=tot_exp+(log(max(0.001d0,DATAin%M_LAI(dn))/max(0.001d0,DATAin%LAI(dn)))/log(DATAin%LAI_unc(dn)))**2d0
+             !tot_exp = tot_exp+(log(max(0.001d0,DATAin%M_LAI(dn))/max(0.001d0,DATAin%LAI(dn)))/log(DATAin%LAI_unc(dn)))**2d0
+             tot_exp = tot_exp + (max(0.001d0,DATAin%M_LAI(dn)-DATAin%LAI(dn))/DATAin%LAI_unc(dn))**2d0
          endif
        end do
        do n = 1, DATAin%nlai
