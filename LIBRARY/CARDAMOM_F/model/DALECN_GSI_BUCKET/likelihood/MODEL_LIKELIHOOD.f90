@@ -386,7 +386,7 @@ module model_likelihood_module
     meangpp=sum(M_GPP(1:nodays))/dble(nodays)
 
     ! EDC 11 - SOM steady state within order magnitude of initial conditions
-    if ((EDC2 == 1 .or. DIAG == 1) .and. & 
+    if ((EDC2 == 1 .or. DIAG == 1) .and. &
        ((meangpp*fsom)/(pars(10)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) > (pars(23)*EQF)) then
        EDC2 = 0 ; EDCD%PASSFAIL(14) = 0
     end if
@@ -523,7 +523,7 @@ module model_likelihood_module
     !
     ! begin checking EDCs
     !
- 
+
     ! calculate temperature response of decomposition processes
     temp_response = exp(pars(10)*meantemp)
 
@@ -1499,7 +1499,7 @@ module model_likelihood_module
     ML_out = 0d0
     ! if == 0 EDCs are checked only until the first failure occurs
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
-    EDCD%DIAG = 1 
+    EDCD%DIAG = 1
 
     if (DATAin%PFT == 1) then
        ! then we are crops so run these EDCs instead
@@ -1674,7 +1674,8 @@ module model_likelihood_module
          ! errors of zero LAI which occur in managed systems
          if (DATAin%M_LAI(dn) >= 0d0) then
              ! note that division is the uncertainty
-             tot_exp = tot_exp+(log(max(0.001d0,DATAin%M_LAI(dn))/max(0.001d0,DATAin%LAI(dn)))/log(DATAin%LAI_unc(dn)))**2d0
+             !tot_exp = tot_exp+(log(max(0.001d0,DATAin%M_LAI(dn))/max(0.001d0,DATAin%LAI(dn)))/log(DATAin%LAI_unc(dn)))**2d0
+             tot_exp = tot_exp + (max(0.001d0,DATAin%M_LAI(dn)-DATAin%LAI(dn))/DATAin%LAI_unc(dn))**2d0
          endif
        end do
        do n = 1, DATAin%nlai

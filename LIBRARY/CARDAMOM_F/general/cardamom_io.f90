@@ -174,12 +174,12 @@ module cardamom_io
         ! ID = 2 - DALECN_BUCKET
         ! DALEC_BUCKET - 8 pools currently
         DATAin%nopools = 8
-        DATAin%nopars = 43
+        DATAin%nopars = 44
         DATAin%nofluxes = 25
         if (DATAin%PFT == 1) then
            ! then actually this is a crop pixel
            DATAin%nopools = 9
-           DATAin%nopars = 37
+           DATAin%nopars = 38
            DATAin%nofluxes = 21
         endif
     else
@@ -923,18 +923,22 @@ module cardamom_io
     MCO%fixedpars  = .false.
 
     ! command line options
+
+    ! how many accepted parameters to accept before completion
     if (solutions_wanted > 0) then
        MCO%nOUT = solutions_wanted
     else
        MCO%nOUT = 1000
        write(*,*)"Default MCO%nOUT value used"
     endif
+    ! how frequently to print information to screen
     if (freq_print >= 0) then
        MCO%nPRINT = freq_print
     else
        MCO%nPRINT = 1000
        write(*,*)"Default MCO%nPRINT value used"
     end if
+    ! how frequently to write information to file
     if (freq_write >= 0) then
        MCO%nWRITE = freq_write
     else

@@ -4,7 +4,7 @@
 ###
 
 extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_clay_all,crop_man_all
-	,burnt_all,ctessel_pft,site_name,start_year,end_year,timestep_days,spatial_type,resolution
+	,burnt_all,soilwater_all,ctessel_pft,site_name,start_year,end_year,timestep_days,spatial_type,resolution
 	,grid_type,modelname) {
 
 		###
@@ -13,17 +13,21 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 		#    print("checking lai")
 		if (lai_source == "MODIS") {
 			# get lai
-			lai=extract_modis_lai(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,lai_all,as.numeric(start_year):as.numeric(end_year))
-			# assume default uncertainty (log scale)
-			lai_unc=rep(1.5,length.out=length(lai))
+			lai = extract_modis_lai(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,lai_all,as.numeric(start_year):as.numeric(end_year))
+			# assume default uncertainty (+/- scale)
+			#lai_unc = lai * 0.14028508 + 0.2 # borrowed linear approximtion of uncertainty form Copernicus
+      lai_unc = sd(lai,na.rm=TRUE)
 		} else if (lai_source == "site_specific") {
 			# read from .csv or netcdf
-			infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-			lai=read_site_specific_obs("LAI",infile)
-			lai_unc=rep(1.5,length.out=length(lai))
+			infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
+			lai = read_site_specific_obs("LAI",infile) ; lai_unc = read_site_specific_obs("LAI_unc",infile)
+      if (max(lai_unc) == -9999) {
+          lai_unc = sd(lai,na.rm=TRUE)
+			   #lai_unc = lai * 0.14028508 + 0.2 # borrowed linear approximtion of uncertainty form Copernicus
+      }
 		} else {
-			lai=-9999
-			lai_unc=-9999
+			lai = -9999
+			lai_unc = -9999
 		}
 
 		###
@@ -519,6 +523,25 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 			SWE=-9999 ; SWE_unc=-9999
 		}
 
+		###
+		## Get initial soil water fraction prior (initial conditions)
+		###
+		if (soilwater_initial_source == "site_specific") {
+			infile=paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
+			soilwater=read_site_specific_obs("soil_water",infile)
+			soilwater_unc=read_site_specific_obs("soil_water_unc",infile)
+			if (length(which(soilwater_unc != -9999)) == 0) {
+				# on the other hand if not then we have no uncertainty info, so use default
+				soilwater_unc=rep(soilwater * 0.10,length.out=length(soilwater))
+			}
+		} else if (soilwater_initial_source == "GLEAM") {
+			output = extract_soilwater_initial(spatial_type,resolution,grid_type,latlon_wanted,soilwater_all)
+			soilwater = output$soil_water ; soilwater_unc = output$soil_water_unc
+		} else {
+			# assume no data available
+			soilwater=-9999 ; soilwater_unc=-9999
+		}
+
 		# return output now
 		return(list(LAT=latlon_wanted[1],LAI=lai,SOM=som,GPP=GPP,Evap=Evap,NEE=NEE,Reco=Reco,woodinc=woodinc
 			,Cfol_stock=Cfol_stock,Cwood_stock=Cwood_stock,Cagb_stock=Cagb_stock,Croots_stock=Croots_stock,Clit_stock=Clit_stock
@@ -530,6 +553,6 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 			,Cbranch_stock=Cbranch_stock,Cbranch_stock_unc=Cbranch_stock_unc,Ccoarseroot_stock=Ccoarseroot_stock
 			,Ccoarseroot_stock_unc=Ccoarseroot_stock_unc,Cfolmax_stock=Cfolmax_stock,Cfolmax_stock_unc=Cfolmax_stock_unc
 			,top_sand=top_sand,bot_sand=bot_sand,top_clay=top_clay,bot_clay=bot_clay,plant=plant,plant_range=plant_range
-			,harvest=harvest,harvest_range=harvest_range,SWE = SWE,SWE_unc = SWE_unc))
+			,harvest=harvest,harvest_range=harvest_range,SWE = SWE,SWE_unc = SWE_unc,soilwater = soilwater,soilwater_unc=soilwater_unc))
 
 		}

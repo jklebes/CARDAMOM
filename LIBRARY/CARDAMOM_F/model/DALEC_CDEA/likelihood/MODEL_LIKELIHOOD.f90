@@ -1,7 +1,7 @@
 
 module model_likelihood_module
   implicit none
-  
+
   ! make all private
   private
 
@@ -18,7 +18,7 @@ module model_likelihood_module
   type (EDCDIAGNOSTICS), save :: EDCD
 
   contains
-  ! 
+  !
   !------------------------------------------------------------------
   !
   subroutine find_edc_initial_values (PI)
@@ -28,14 +28,14 @@ module model_likelihood_module
     use MHMCMC_MODULE, only: MHMCMC
 
     ! subroutine deals with the determination of initial parameter and initial
-    ! conditions which are consistent with EDCs 
+    ! conditions which are consistent with EDCs
 
     implicit none
 
     ! declare inputs
     type ( parameter_info ), intent(inout) :: PI
 
-    ! declare local variables 
+    ! declare local variables
     type ( mcmc_output ) :: MCOUT
     type ( mcmc_options ) :: MCOPT
     integer :: n, counter_local
@@ -77,7 +77,7 @@ module model_likelihood_module
          PI%stepsize(1:PI%npars)=0.0005
          ! call the MHMCMC directing to the appropriate likelihood
          call MHMCMC(EDC_MODEL_LIKELIHOOD,PI,MCOPT,MCOUT)
-  
+
          ! store the best parameters from that loop
          PI%parini(1:PI%npars)=MCOUT%best_pars(1:PI%npars)
 
@@ -91,7 +91,7 @@ module model_likelihood_module
              PI%parini(1:PI%npars)=DATAin%parpriors(1:PI%npars)
          endif
       end do ! for while condition
-    endif 
+    endif
     ! reset
     PI%parfix(1:PI%npars)=0
 
@@ -153,7 +153,7 @@ module model_likelihood_module
     end if
 
     ! calculate the likelihood
-    tot_exp=0. 
+    tot_exp=0.
 !print*,"EDC checks"
     do n = 1, EDCD%nedc
        tot_exp=tot_exp+(1.-EDCD%PASSFAIL(n))
@@ -190,7 +190,7 @@ module model_likelihood_module
   end subroutine edc_model_likelihood
   !
   !------------------------------------------------------------------
-  ! 
+  !
   subroutine EDC1_CDEA(PARS, npars, meantemp, meanrad, EDC1)
 
     ! subroutine assessed the current parameter sets for passing ecological and
@@ -220,20 +220,20 @@ module model_likelihood_module
     torfol=1./(pars(5)*365.25)
     EDC1=1
     DIAG=EDCD%DIAG
-    fauto=pars(2)                                        
-    ffol=(1.-fauto)*pars(3)                              
-    flab=(1.-fauto-ffol)*pars(13)                       
-    froot=(1.-fauto-ffol-flab)*pars(4)                 
-    fwood=1.-fauto-ffol-flab-froot                    
+    fauto=pars(2)
+    ffol=(1.-fauto)*pars(3)
+    flab=(1.-fauto-ffol)*pars(13)
+    froot=(1.-fauto-ffol-flab)*pars(4)
+    fwood=1.-fauto-ffol-flab-froot
     fsom=fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(8))
 
     ! set all EDCs to 1 (pass)
     EDCD%nedc=100
     EDCD%PASSFAIL(1:EDCD%nedc)=1
 
-    ! 
+    !
     ! begin checking EDCs
-    ! 
+    !
 
     ! Turnover of litter faster than turnover of som
 
@@ -313,13 +313,13 @@ module model_likelihood_module
     ! update initial values
     DIAG=EDCD%DIAG
     EDC2=1
-    fauto=pars(2) 
-    ffol=(1.-fauto)*pars(3) 
-    flab=(1.-fauto-ffol)*pars(13) 
-    froot=(1.-fauto-ffol-flab)*pars(4) 
-    fwood=1.-fauto-ffol-flab-froot 
+    fauto=pars(2)
+    ffol=(1.-fauto)*pars(3)
+    flab=(1.-fauto-ffol)*pars(13)
+    froot=(1.-fauto-ffol-flab)*pars(4)
+    fwood=1.-fauto-ffol-flab-froot
     fsom=fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(8))
-    flit=(froot+flab+ffol) 
+    flit=(froot+flab+ffol)
 
     ! derive mean pools
     do n = 1, nopools
@@ -328,7 +328,7 @@ module model_likelihood_module
 
     !
     ! Begin EDCs here
-    ! 
+    !
 
     ! EDC 6
     ! ensure ratio between Cfoilar and Croot is less than 5
@@ -348,7 +348,7 @@ module model_likelihood_module
        ! rapid pool growth is not allowed, increase is restricted by G growth
        ! over N years. Rapid decay is dealth with in a later EDC
        do y = 1, no_years
-          ! derive mean annual pools 
+          ! derive mean annual pools
           mean_annual_pools(y)=cal_mean_annual_pools(M_POOLS,y,n,nopools,deltat,nodays+1)
        end do ! year loop
        ! now check the growth rate
@@ -371,7 +371,7 @@ module model_likelihood_module
              EDC2 = 0 ; EDCD%PASSFAIL(8)=0
           end if ! EDC conditions
        end if ! EDC .or. DIAG condition
-    end do ! pools loop 
+    end do ! pools loop
 
     ! SOM attractor - must be within a factor of 2 from Csom0
     ! eqiulibrium factor (in comparison with initial conditions)
@@ -412,9 +412,9 @@ module model_likelihood_module
         EDC2 = 0 ; EDCD%PASSFAIL(12) = 0
     endif
 
-    ! 
+    !
     ! EDCs done, below are additional fault detection conditions
-    ! 
+    !
 
     ! additional faults can be stored in locations 35 - 40 of the PASSFAIL array
 
@@ -464,7 +464,7 @@ module model_likelihood_module
 
     ! declare input variables
     integer, intent(in) :: nopools          & !
-                          ,pool_number      & ! 
+                          ,pool_number      & !
                           ,averaging_period   !
 
     double precision,dimension(averaging_period,nopools), intent (in) :: pools
@@ -572,7 +572,7 @@ module model_likelihood_module
 
    double precision, intent(in) :: pools(averaging_period,nopools) & ! input pool state variables
                                   ,interval((averaging_period-1))    ! model time step in decimal days
- 
+
    ! declare local variables
    integer :: n
    double precision :: P0    & ! initial pool value
@@ -622,9 +622,9 @@ module model_likelihood_module
    dcdt0 = MP1-MP0
 
    ! using multiple year mean to determine c
-   if ((dcdt1 > 0. .and. dcdt0 < 0.) .or. (dcdt1 < 0. .and. dcdt0 > 0.) & 
+   if ((dcdt1 > 0. .and. dcdt0 < 0.) .or. (dcdt1 < 0. .and. dcdt0 > 0.) &
        .or. dcdt1 == 0 .or. dcdt0 == 0) then
-       ! then return error values   
+       ! then return error values
        expdecay2 = 1
    else
        expdecay2 = log(dcdt1/dcdt0) / (os*(sum(interval)/(averaging_period-1)))
@@ -641,14 +641,14 @@ module model_likelihood_module
     use MCMCOPT, only:  PARAMETER_INFO
     use CARBON_MODEL_MOD, only: CARBON_MODEL
     use cardamom_structures, only: DATAin
-  
+
     ! this subroutine is responsible, under normal circumstances for the running
     ! of the DALEC model, calculation of the log-likelihood for comparison
     ! assessment of parameter performance and use of the EDCs if they are
     ! present / selected
 
     implicit none
- 
+
     ! declare inputs
     type ( parameter_info ), intent(inout) :: PI ! parameter information
 
@@ -658,7 +658,7 @@ module model_likelihood_module
 
     ! declare local variables
     double precision :: EDC,EDC1,EDC2
- 
+
     ! initial values
     ML_out=0.
     EDCD%DIAG=0
@@ -687,24 +687,24 @@ module model_likelihood_module
                       ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
                       ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
                       ,DATAin%M_GPP)
- 
+
        ! check edc2
        call EDC2_CDEA(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                     ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS & 
+                     ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                      ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
        ! check if EDCs are switched on
        if (DATAin%EDC == 1) then
            EDC = EDC2
-       else 
+       else
            EDC = 1
        end if
 
        ! extra checks to ensure correct running of the model
        if (sum(DATAin%M_LAI) /= sum(DATAin%M_LAI) .or. sum(DATAin%M_GPP) /= sum(DATAin%M_GPP)) then
            EDC=0
-       end if 
+       end if
 
        ! add EDC2 log-likelihood
        ML_out=ML_out+log(EDC)
@@ -736,7 +736,7 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n
-     
+
     ! set initial value
     likelihood_p = 0.
     ! now loop through defined parameters for their uncertainties
@@ -756,7 +756,7 @@ module model_likelihood_module
   !
   double precision function likelihood(npars,pars)
     use cardamom_structures, only: DATAin
- 
+
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
 
@@ -767,7 +767,7 @@ module model_likelihood_module
     double precision, dimension(npars), intent(in) :: pars
 
     ! declare local variables
-    integer :: n, dn, no_years, y 
+    integer :: n, dn, no_years, y
     double precision :: tot_exp, pool_dynamics, tmp_var, infini
     double precision, allocatable :: mean_annual_pools(:)
 
@@ -783,7 +783,7 @@ module model_likelihood_module
          tot_exp=tot_exp+((DATAin%M_GPP(dn)-DATAin%GPP(dn))/DATAin%GPP_unc(dn))**2
        end do
        likelihood=likelihood-0.5*tot_exp
-    endif 
+    endif
 
     ! LAI log-likelihood
     tot_exp = 0.
@@ -793,9 +793,10 @@ module model_likelihood_module
          dn=DATAin%laipts(n)
          ! if zero or greater allow calculation with min condition to prevent
          ! errors of zero LAI which occur in managed systems
-         if (DATAin%M_LAI(dn) >= 0.) then           
+         if (DATAin%M_LAI(dn) >= 0.) then
              ! note that division is the uncertainty
-             tot_exp=tot_exp+(log(max(0.001,DATAin%M_LAI(dn))/max(0.001,DATAin%LAI(dn)))/log(DATAin%LAI_unc(dn)))**2
+             !tot_exp = tot_exp+(log(max(0.001d0,DATAin%M_LAI(dn))/max(0.001d0,DATAin%LAI(dn)))/log(DATAin%LAI_unc(dn)))**2d0
+             tot_exp = tot_exp + (max(0.001d0,DATAin%M_LAI(dn)-DATAin%LAI(dn))/DATAin%LAI_unc(dn))**2d0
          endif
        end do
        do n = 1, DATAin%nlai
@@ -853,7 +854,7 @@ module model_likelihood_module
          dn=DATAin%Cfol_stockpts(n)
          ! note that division is the uncertainty
 !         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2.
-         tot_exp=tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) & 
+         tot_exp=tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) &
                           / (DATAin%Cfol_stock(dn)*DATAin%Cfol_stock_unc(dn)))**2
        end do
        likelihood=likelihood-0.5*tot_exp
@@ -996,5 +997,5 @@ module model_likelihood_module
   end function likelihood
   !
   !------------------------------------------------------------------
-  ! 
+  !
 end module model_likelihood_module

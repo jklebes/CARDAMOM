@@ -452,10 +452,10 @@ module model_likelihood_module
 
     ! LAI time series linear model must retrieve gradient which is at least
     ! positive (or some other reasonable critical threshold)
-    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-        linear_model_gradient(DATAin%M_LAI(DATAin%laipts),DATAin%LAI(DATAin%laipts),DATAin%nlai) < 0d0 ) then
-        EDC2 = 0 ; EDCD%PASSFAIL(21) = 0
-    endif
+    ! if ((EDC2 == 1 .or. DIAG == 1) .and. &
+    !     linear_model_gradient(DATAin%M_LAI(DATAin%laipts),DATAin%LAI(DATAin%laipts),DATAin%nlai) < 0d0 ) then
+    !     EDC2 = 0 ; EDCD%PASSFAIL(21) = 0
+    ! endif
 
     ! Function to calculate the gradient of a linear model for a given depentent
     ! variable (y) based on predictive variable (x). The typical use of this
@@ -469,32 +469,20 @@ module model_likelihood_module
 
     ! ensure minimum pool values are >= 0 and /= NaN
     if (EDC2 == 1 .or. DIAG == 1) then
-       n=1
-       do while (n <= nopools .and. (EDC2 == 1 .or. DIAG == 1))
-          nn = 1 ; PEDC = 1
-          do while (nn <= (nodays+1) .and. PEDC == 1)
-             ! now check conditions
-             if (M_POOLS(nn,n) < 0d0 .or. M_POOLS(nn,n) /= M_POOLS(nn,n) .or. &
-                 M_POOLS(nn,n) == log(infi) .or. M_POOLS(nn,n) == -log(infi)) then
-                 EDC2 = 0 ; PEDC = 0 ; EDCD%PASSFAIL(50+n) = 0
-             end if ! less than zero and is NaN condition
-          nn = nn + 1
-          end do ! nn < nodays .and. PEDC == 1
-          n = n + 1
-       end do ! for nopools .and. EDC .or. DIAG condition
-       n = 1
-       do while (n <= nofluxes .and. (EDC2 == 1 .or. DIAG == 1))
-          nn = 1 ; PEDC = 1
-          do while (nn <= (nodays+1) .and. PEDC == 1)
-             ! now check conditions
-             if (M_FLUXES(nn,n) < 0d0 .or. M_FLUXES(nn,n) /= M_FLUXES(nn,n) .or. &
-                 M_FLUXES(nn,n) == log(infi) .or. M_FLUXES(nn,n) == -log(infi)) then
-                 EDC2 = 0 ; PEDC = 0 ; EDCD%PASSFAIL(50+nopools+n) = 0
-             end if ! less than zero and is NaN condition
-          nn = nn + 1
-          end do ! nn < nodays .and. PEDC == 1
-          n = n + 1
-       end do ! for nopools .and. EDC .or. DIAG condition
+
+      do n = 1, nopools
+         if (minval(M_POOLS(1:nodays,n)) < 0d0 .or. maxval(abs(M_POOLS(1:nodays,n))) == abs(log(infi)) .or. &
+             minval(M_POOLS(1:nodays,n)) /= minval(M_POOLS(1:nodays,n))) then
+             EDC2 = 0 ; EDCD%PASSFAIL(55+n) = 0
+         endif
+      end do
+
+      do n = 1, nofluxes
+         if (maxval(abs(M_FLUXES(1:nodays,n))) == abs(log(infi)) .or. &
+            minval(M_FLUXES(1:nodays,n)) /= minval(M_FLUXES(1:nodays,n))) then
+             EDC2 = 0 ; EDCD%PASSFAIL(55+nopools+n) = 0
+         endif
+      end do
 
     end if ! min pool assessment
 
@@ -1620,7 +1608,7 @@ module model_likelihood_module
     do n = 1, npars
        ! if there is actually a value
        if (parpriors(n) > -9999d0) then
-           if (n == 11 .or. n == 17 .or. (n >= 36 .and. n <= 41) .or. n == 26) then
+           if (n == 11 .or. n == 17 .or. (n >= 36 .and. n <= 41) .or. n == 26 .or. n == 44) then
                ! uncertainty provided as +/-
                likelihood_p=likelihood_p-0.5d0*((pars(n)-parpriors(n))/parpriorunc(n))**2d0
            else if (n == 21) then
@@ -1681,7 +1669,8 @@ module model_likelihood_module
          ! errors of zero LAI which occur in managed systems
          if (DATAin%M_LAI(dn) >= 0d0) then
              ! note that division is the uncertainty
-             tot_exp = tot_exp+(log(max(0.001d0,DATAin%M_LAI(dn))/max(0.001d0,DATAin%LAI(dn)))/log(DATAin%LAI_unc(dn)))**2d0
+             !tot_exp = tot_exp+(log(max(0.001d0,DATAin%M_LAI(dn))/max(0.001d0,DATAin%LAI(dn)))/log(DATAin%LAI_unc(dn)))**2d0
+             tot_exp = tot_exp + (max(0.01d0,DATAin%M_LAI(dn)-DATAin%LAI(dn))/DATAin%LAI_unc(dn))**2d0
          endif
        end do
        do n = 1, DATAin%nlai

@@ -362,6 +362,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[15]=OBS$harvest       ; PARPRIORUNC[15]=1.1
       #PARPRIORS[36]=50	            ; PARPRIORUNC[36]=1.4 # Croot to half max depth (gbio.m-2)
       #PARPRIORS[37]=1	            ; PARPRIORUNC[37]=1.4 # Max rooting depth (m)
+      PARPRIORS[38]=OBS$soilwater ; PARPRIORUNC[38]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
     } else {
       PARPRIORS[2]=51.70631   ; PARPRIORUNC[2]=0.53905 # C:N root (gC/gN) Kattge et al., (2011)
       PARPRIORS[15]=416.6667  ; PARPRIORUNC[15]=6.277688 # C:N wood (gC/gN) Kattge et al., (2011)
@@ -373,6 +374,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[39]=0.997     ; PARPRIORUNC[39]=0.082*2   # Rm_root intercept (gC/gN) Reich et al., (2008)
       PARPRIORS[40]=1.344     ; PARPRIORUNC[40]=0.150*2   # Rm_wood N**exponent (gC/gN) Reich et al., (2008)
       PARPRIORS[41]=0.946     ; PARPRIORUNC[41]=0.107*2   # Rm_wood intercept (gC/gN) Reich et al., (2008)
+      PARPRIORS[44]=OBS$soilwater ; PARPRIORUNC[44]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
     } # Crop or not
     PARPRIORS[22]=OBS$Clit_initial          ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=2.0} # Clitter prior
     PARPRIORS[23]=OBS$SOM                   ; if (OBS$SOM != -9999) {PARPRIORUNC[23]=2.0} # Csom prior

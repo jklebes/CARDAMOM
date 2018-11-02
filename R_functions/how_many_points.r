@@ -272,7 +272,7 @@ how_many_points<- function (lat,long,resolution,grid_type) {
     print("Generating land sea mask")
 
     # load global shape file for land sea mask
-    landmask=shapefile("./cardamom_functions/global_map/ne_10m_admin_0_countries.shx")
+    landmask=shapefile("./R_functions/global_map/ne_10m_admin_0_countries.shx")
     # just to be sure enforce the projection to WGS-84
     landmask=spTransform(landmask,CRS("+init=epsg:4326"))
     # extract lat/long information for subsetting
@@ -298,7 +298,7 @@ how_many_points<- function (lat,long,resolution,grid_type) {
     landsea=as.vector(landsea) ; landsea[which(is.na(landsea) == FALSE)]=1 ; landsea[which(is.na(landsea))]=0
 
 #    # load the land sea mask 20 km resolution
-#    load("./cardamom_functions/landmask20km.rda")
+#    load("./R_functions/landmask20km.rda")
 #    # 1 = land, 0 = sea
 #    #image(landmask20km[1]) ; length(which(landmask20km[[1]] == 1)) ; length(which(landmask20km[[1]] == 0))
 #    # force a change from the Robinson projection to the WGS-84 lat/long

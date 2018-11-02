@@ -187,7 +187,7 @@ cardamom <-function (projname,model,method,stage) {
 
     # call compile of the model
     # define PROJECT set up
-    PROJECT=cardamom_project_setup(paths,PROJECT)
+    PROJECT = cardamom_project_setup(paths,PROJECT)
 
   }
 
@@ -197,7 +197,7 @@ cardamom <-function (projname,model,method,stage) {
   if (stage == 1) {
     print("Beginning creation of binary input files")
     # flag for met drivers load
-    loaded_all=FALSE ; met_all = 0 ; lai_all = 0 ; Csom_all = 0 ; forest_all = 0 ; Cwood_all = 0
+    loaded_all = FALSE ; met_all = 0 ; lai_all = 0 ; Csom_all = 0 ; forest_all = 0 ; Cwood_all = 0
     # load to PROJECT for perminent use
     timestep_days=PROJECT$model$timestep_days
     # start looping through sites to create site specific files of obs and met
@@ -222,23 +222,24 @@ cardamom <-function (projname,model,method,stage) {
         if (PROJECT$model$name != "ACM") {
           # if this is the first time of all creating new met files this time round load the whole dataset for rapid access
           if (loaded_all == FALSE) {
-            met_all=load_met_fields_for_extraction(latlon,met_source,PROJECT$model$name,PROJECT$start_year,PROJECT$end_year)
-            lai_all=load_lai_fields_for_extraction(latlon,lai_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
-            Csom_all=load_hwsd_Csom_fields_for_extraction(latlon,Csom_source)
-            crop_man_all=load_sacks_calendar_fields_for_extraction(latlon,crop_management_source)
-            sand_clay_all=load_hwsd_sand_clay_fields_for_extraction(latlon,sand_clay_source)
-            forest_all=load_forestry_fields_for_extraction(latlon,deforestation_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
-            Cwood_all=load_mpi_biomass_fields_for_extraction(latlon,Cwood_stock_source,Cwood_initial_source)
-            burnt_all=load_burnt_area_fields_for_extraction(latlon,burnt_area_source,path_to_burnt_area,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year))
+            met_all = load_met_fields_for_extraction(latlon,met_source,PROJECT$model$name,PROJECT$start_year,PROJECT$end_year)
+            lai_all = load_lai_fields_for_extraction(latlon,lai_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
+            Csom_all = load_hwsd_Csom_fields_for_extraction(latlon,Csom_source)
+            crop_man_all = load_sacks_calendar_fields_for_extraction(latlon,crop_management_source)
+            sand_clay_all = load_hwsd_sand_clay_fields_for_extraction(latlon,sand_clay_source)
+            forest_all = load_forestry_fields_for_extraction(latlon,deforestation_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
+            Cwood_all = load_mpi_biomass_fields_for_extraction(latlon,Cwood_stock_source,Cwood_initial_source)
+            burnt_all = load_burnt_area_fields_for_extraction(latlon,burnt_area_source,path_to_burnt_area,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year))
+            soilwater_all = load_soilwater_fields_for_extraction(latlon,soilwater_initial_source)
             # set flag
             loaded_all = TRUE }
-            met=extract_met_drivers(n,timestep_days,PROJECT$start_year,PROJECT$end_year,latlon[n,],met_all,met_source,PROJECT$sites[n])
+            met = extract_met_drivers(n,timestep_days,PROJECT$start_year,PROJECT$end_year,latlon[n,],met_all,met_source,PROJECT$sites[n])
           } else {
             # assume ACM special case
-            met=extract_acm_met_drivers(PROJECT,latlon[n,],PROJECT$sites[n])
+            met = extract_acm_met_drivers(PROJECT,latlon[n,],PROJECT$sites[n])
           } #  acm special case
           obs=extract_obs(latlon[n,],lai_all,Csom_all,forest_all,Cwood_all,sand_clay_all,crop_man_all
-            ,burnt_all
+            ,burnt_all,soilwater_all
             ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
             ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
             # if this is not an explicit forest rotation model run then we need to update pft information

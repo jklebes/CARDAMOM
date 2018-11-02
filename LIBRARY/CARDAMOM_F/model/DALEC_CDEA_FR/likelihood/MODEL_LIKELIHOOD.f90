@@ -1,7 +1,7 @@
 
 module model_likelihood_module
   implicit none
-  
+
   ! make all private
   private
 
@@ -18,7 +18,7 @@ module model_likelihood_module
   type (EDCDIAGNOSTICS), save :: EDCD
 
   contains
-  ! 
+  !
   !------------------------------------------------------------------
   !
   subroutine find_edc_initial_values (PI)
@@ -28,14 +28,14 @@ module model_likelihood_module
     use MHMCMC_MODULE, only: MHMCMC
 
     ! subroutine deals with the determination of initial parameter and initial
-    ! conditions which are consistent with EDCs 
+    ! conditions which are consistent with EDCs
 
     implicit none
 
     ! declare inputs
     type ( parameter_info ), intent(inout) :: PI
 
-    ! declare local variables 
+    ! declare local variables
     type ( mcmc_output ) :: MCOUT
     type ( mcmc_options ) :: MCOPT
     integer :: n, counter_local
@@ -153,7 +153,7 @@ module model_likelihood_module
     end if
 
     ! calculate the likelihood
-    tot_exp=0. 
+    tot_exp=0.
     do n = 1, EDCD%nedc
        tot_exp=tot_exp+(1.-EDCD%PASSFAIL(n))
 !       if (EDCD%PASSFAIL(n) /= 1) print*,"failed edcs are: ", n
@@ -188,7 +188,7 @@ module model_likelihood_module
   end subroutine edc_model_likelihood
   !
   !------------------------------------------------------------------
-  ! 
+  !
   subroutine EDC1_CDEA(PARS, npars, meantemp, meanrad, EDC1)
 
     ! subroutine assessed the current parameter sets for passing ecological and
@@ -218,20 +218,20 @@ module model_likelihood_module
     torfol=1./(pars(5)*365.25)
     EDC1=1
     DIAG=EDCD%DIAG
-    fauto=pars(2)                                        
-    ffol=(1.-fauto)*pars(3)                              
-    flab=(1.-fauto-ffol)*pars(13)                       
-    froot=(1.-fauto-ffol-flab)*pars(4)                 
-    fwood=1.-fauto-ffol-flab-froot                    
+    fauto=pars(2)
+    ffol=(1.-fauto)*pars(3)
+    flab=(1.-fauto-ffol)*pars(13)
+    froot=(1.-fauto-ffol-flab)*pars(4)
+    fwood=1.-fauto-ffol-flab-froot
     fsom=fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(8))
 
     ! set all EDCs to 1 (pass)
     EDCD%nedc=100
     EDCD%PASSFAIL(1:EDCD%nedc)=1
 
-    ! 
+    !
     ! begin checking EDCs
-    ! 
+    !
 
     ! Turnover of litter faster than turnover of som
 
@@ -314,13 +314,13 @@ module model_likelihood_module
     ! update initial values
     DIAG=EDCD%DIAG
     EDC2=1
-    fauto=pars(2) 
-    ffol=(1.-fauto)*pars(3) 
-    flab=(1.-fauto-ffol)*pars(13) 
-    froot=(1.-fauto-ffol-flab)*pars(4) 
-    fwood=1.-fauto-ffol-flab-froot 
+    fauto=pars(2)
+    ffol=(1.-fauto)*pars(3)
+    flab=(1.-fauto-ffol)*pars(13)
+    froot=(1.-fauto-ffol-flab)*pars(4)
+    fwood=1.-fauto-ffol-flab-froot
     fsom=fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(8))
-    flit=(froot+flab+ffol) 
+    flit=(froot+flab+ffol)
 
     ! derive mean pools
     do n = 1, nopools
@@ -329,12 +329,12 @@ module model_likelihood_module
 
     !
     ! Begin EDCs here
-    ! 
+    !
 
     !---------------------------------------------------
     ! First section will deal with Loblolly pine specific issues
     !---------------------------------------------------
- 
+
     ! EDC 6
     ! ensure fine root : foliage ratio is between 0.1 and 0.45 (Albaugh et al
     ! 2004; Samuelson et al 2004; Vogel et al 2010; Akers et al 2013 and Duke
@@ -353,7 +353,7 @@ module model_likelihood_module
     mean_annual_pools=0.
     do y = 1, no_years
        ! assesses the total growth of living pools (labile, foliage, roots, wood) in each year
-       ! derive mean annual pools 
+       ! derive mean annual pools
        mean_annual_pools(y)=mean_annual_pools(y)+cal_mean_annual_pools(M_POOLS,y,4,nopools,deltat,nodays+1)
     end do ! pool loop
     ! now check the growth rate
@@ -402,15 +402,15 @@ module model_likelihood_module
 
 
     ! EDC 9
-    ! Mature forest maximum foliar biomass (gC.m-2) can be expected to be 
+    ! Mature forest maximum foliar biomass (gC.m-2) can be expected to be
     ! between 430 gC.m-2 and 768 gC.m-2
-   
+
     do y = 1, no_years
        ! derive mean annual foliar pool
        mean_annual_pools(y)=cal_mean_annual_pools(M_POOLS,y,2,nopools,deltat,nodays+1)
     end do ! year loop
-    ! now check 
-    if ((EDC2 == 1 .or. DIAG == 1) .and. ( (sum(mean_annual_pools((no_years-nint(no_years/2.)):no_years))/real(no_years-(nint(no_years/2.)))) > 800. & 
+    ! now check
+    if ((EDC2 == 1 .or. DIAG == 1) .and. ( (sum(mean_annual_pools((no_years-nint(no_years/2.)):no_years))/real(no_years-(nint(no_years/2.)))) > 800. &
                                       .or. (sum(mean_annual_pools((no_years-nint(no_years/2.)):no_years))/real(no_years-(nint(no_years/2.)))) < 400. ) ) then
        EDC2=0 ; EDCD%PASSFAIL(9)=0
     endif
@@ -438,7 +438,7 @@ module model_likelihood_module
 !        EDC2 = 0 ; EDCD%PASSFAIL(12) = 0
 !    endif
 
-    ! 
+    !
     ! EDC 13 - Wood steady state should within prescribed distance of max
     ! observed forest stocks. Max loblolly pine stock observed is 60 years ~ 150
     ! MgC ha-1 (Carter and Foster 2006), therefore we will assume it must be with less than twice this
@@ -459,7 +459,7 @@ module model_likelihood_module
     !---------------------------------------------------------
 
 !    ! EDC 6
-!    ! ensure fine root : foliage ratio 
+!    ! ensure fine root : foliage ratio
 !    if ((EDC2 == 1 .or. DIAG == 1) .and. ( ((mean_pools(3)/mean_pools(2)) < xx) .or. ((mean_pools(3)/mean_pools(2)) > xx) ) ) then
 !        EDC2=0 ; EDCD%PASSFAIL(6)=0
 !    end if
@@ -473,7 +473,7 @@ module model_likelihood_module
 !    do y = 1, no_years
 !       ! assesses the total growth of living pools (labile, foliage, roots,
 !       ! wood) in each year
-!       ! derive mean annual pools 
+!       ! derive mean annual pools
 !       mean_annual_pools(y)=mean_annual_pools(y)+cal_mean_annual_pools(M_POOLS,y,4,nopools,deltat,nodays+1)
 !    end do ! pool loop
 !    ! now check the growth rate
@@ -519,9 +519,9 @@ module model_likelihood_module
 !
 !    do y = 1, no_years
 !       ! derive mean annual foliar pool
-!       mean_annual_pools(y)=cal_mean_annual_pools(M_POOLS,y,2,nopools,deltat,nodays+1) 
+!       mean_annual_pools(y)=cal_mean_annual_pools(M_POOLS,y,2,nopools,deltat,nodays+1)
 !    end do ! year loop
-!    ! now check 
+!    ! now check
 !    if ((EDC2 == 1 .or. DIAG == 1) .and. ( (sum(mean_annual_pools((no_years-nint(no_years/2.)):no_years))/real(no_years-(nint(no_years/2.)))) > xx &
 !                                      .or. (sum(mean_annual_pools((no_years-nint(no_years/2.)):no_years))/real(no_years-(nint(no_years/2.)))) < xx ) ) then
 !       EDC2=0 ; EDCD%PASSFAIL(9)=0
@@ -553,7 +553,7 @@ module model_likelihood_module
 !    ! assume uncertainty in these estimates of 30 %
 !    if (model_living_C > (target_living_C*1.30) .or. model_living_C < (target_living_C*0.70)) then
 !        EDC2=0 ; EDCD%PASSFAIL(10)=0
-!    end if    
+!    end if
 
 !    ! must also consider the same constraint for the initial condition
 !    call UK_forestry_commission_growth_curves(target_living_C,0)
@@ -587,7 +587,7 @@ module model_likelihood_module
 !        EDC2 = 0 ; EDCD%PASSFAIL(12) = 0
 !    endif
 !
-!    ! 
+!    !
 !    ! EDC 13 - Wood steady state should within prescribed distance of max
 !    ! observed forest stocks. Max loblolly pine stock observed is 60 years ~ 150
 !    ! MgC ha-1 (Carter and Foster 2006), therefore we will assume it must be
@@ -604,22 +604,22 @@ module model_likelihood_module
 !        EDC2 = 0 ; EDCD%PASSFAIL(13) = 0
 !    endif
 
-    ! 
+    !
     ! EDC 14 - Fractional allocation to foliar biomass is well constrained
     ! across dominant ecosystem types (boreal -> temperate evergreen and deciduous), therefore this information can be used to
     ! contrain the foliar pool further. Through control of the
     ! photosynthetically active compoent of the carbon balance we can enforce
     ! additional contraint on the remainder of the system.
     ! Luyssaert et al (2007)
-    ! 
+    !
 
 !    if ((EDC2 == 1 .or. DIAG == 1) .and. (ffol < 0.1 .or. ffol > 0.4)) then
 !        EDC2 = 0 ; EDCD%PASSFAIL(14) = 0
 !    endif
 
-    ! 
+    !
     ! EDCs done, below are additional fault detection conditions
-    ! 
+    !
 
     ! additional faults can be stored in locations 35 - 40 of the PASSFAIL array
 
@@ -651,7 +651,7 @@ module model_likelihood_module
     ! we need to correct this to gC.m-2 for the model
 
     implicit none
-    
+
     ! declare input / output variables
     double precision, intent(out) :: target_living_C(2) ! (gC.m-2)
     integer, intent(in) :: max_location(1) ! additional years from initial
@@ -674,7 +674,7 @@ module model_likelihood_module
 !              target_living_C(1) = 0.
 !              target_living_C(2) = 8.8519973125961e-06*adjusted_age**3    &
 !                                 + (-0.00822909089061558)*adjusted_age**2 &
-!                                 + 1.98952585135788*adjusted_age 
+!                                 + 1.98952585135788*adjusted_age
 !          elseif (DATAin%yield == 4) then
 !              ! therefore assume that lowest possible values are 70% that of
 !              ! yield == 4
@@ -685,7 +685,7 @@ module model_likelihood_module
 !              ! but that maximum accepted value is yield class == 6
 !              target_living_C(2) = 1.66391143025546e-05*adjusted_age**3 &
 !                                 + (-0.0120459101838461)*adjusted_age**2  &
-!                                 + 2.62938455712233*adjusted_age 
+!                                 + 2.62938455712233*adjusted_age
 !!              target_living_C = 8.8519973125961e-06*adjusted_age**3. &
 !!                                 + -0.00822909089061558*adjusted_age**2. &
 !!                                 + 1.98952585135788*adjusted_age
@@ -693,7 +693,7 @@ module model_likelihood_module
 !              ! then assume minimum accepted value is 4
 !              target_living_C(1) = 8.8519973125961e-06*adjusted_age**3  &
 !                                 + (-0.00822909089061558)*adjusted_age**2 &
-!                                 + 1.98952585135788*adjusted_age 
+!                                 + 1.98952585135788*adjusted_age
 !              ! and that maximum accepted value is yield == 8
 !              target_living_C(2) = 3.07782555907822e-05*adjusted_age**3 &
 !                                 + (-0.0178383232901196)*adjusted_age**2  &
@@ -705,26 +705,26 @@ module model_likelihood_module
 !              ! assume minimum value is yield == 6
 !              target_living_C(1) = 1.66391143025546e-05*adjusted_age**3 &
 !                                 + (-0.0120459101838461)*adjusted_age**2 &
-!                                 + 2.62938455712233*adjusted_age 
+!                                 + 2.62938455712233*adjusted_age
 !              ! and that maximum value is yield == 10
 !              target_living_C(2) = 3.87631592514672e-05*adjusted_age**3 &
 !                                 + (-0.0215244323143935)*adjusted_age**2 &
-!                                 + 4.06180657157036*adjusted_age 
+!                                 + 4.06180657157036*adjusted_age
 !!              target_living_C = 3.07782555907822e-05*adjusted_age**3. &
 !!                                 + -0.0178383232901196*adjusted_age**2. &
-!!                                 + 3.43789133124425*adjusted_age 
+!!                                 + 3.43789133124425*adjusted_age
 !          elseif (DATAin%yield == 10) then ! this is yield == 10
 !              ! assume that minimum is yield == 8
 !              target_living_C(1) = 3.07782555907822e-05*adjusted_age**3 &
 !                                 + (-0.0178383232901196)*adjusted_age**2 &
-!                                 + 3.43789133124425*adjusted_age 
+!                                 + 3.43789133124425*adjusted_age
 !              ! then assume that maximum is yield == 12
 !              target_living_C(2) = 4.38807806982508e-05*adjusted_age**3 &
 !                                 + (-0.0243490162399548)*adjusted_age**2 &
-!                                 + 4.63554446768751*adjusted_age 
+!                                 + 4.63554446768751*adjusted_age
 !!              target_living_C = 3.87631592514672e-05*adjusted_age**3. &
 !!                                 + -0.0215244323143935*adjusted_age**2. &
-!!                                 + 4.06180657157036*adjusted_age 
+!!                                 + 4.06180657157036*adjusted_age
 !          elseif (DATAin%yield == 12) then ! this is yield == 12
 !              ! assume that minimum yield == 10
 !              target_living_C(1) = 3.87631592514672e-05*adjusted_age**3 &
@@ -733,67 +733,67 @@ module model_likelihood_module
 !              ! and that maximum yield == 14
 !              target_living_C(2) = 5.12232446504474e-05*adjusted_age**3 &
 !                                 + (-0.0278434254990198)*adjusted_age**2 &
-!                                 + 5.2411595159636*adjusted_age 
+!                                 + 5.2411595159636*adjusted_age
 !!              target_living_C = 4.38807806982508e-05*adjusted_age**3. &
 !!                                 + -0.0243490162399548*adjusted_age**2. &
-!!                                 + 4.63554446768751*adjusted_age 
+!!                                 + 4.63554446768751*adjusted_age
 !          elseif (DATAin%yield == 14) then ! this is yield == 14
 !              ! assume that minimum yield == 12
 !              target_living_C(1) = 4.38807806982508e-05*adjusted_age**3 &
 !                                 + (-0.0243490162399548)*adjusted_age**2 &
-!                                 + 4.63554446768751*adjusted_age 
+!                                 + 4.63554446768751*adjusted_age
 !              ! and that maximum yield == 16
 !              target_living_C(2) = 5.50343459414773e-05*adjusted_age**3 &
 !                                 + (-0.030209059920374)*adjusted_age**2 &
-!                                 + 5.72011999667653*adjusted_age 
+!                                 + 5.72011999667653*adjusted_age
 !!              target_living_C = 5.12232446504474e-05*adjusted_age**3. &
 !!                                 + -0.0278434254990198*adjusted_age**2. &
-!!                                 + 5.2411595159636*adjusted_age 
+!!                                 + 5.2411595159636*adjusted_age
 !          elseif (DATAin%yield == 16) then ! this is yield == 16
 !              ! assume that minimum yield == 14
 !              target_living_C(1) = 5.12232446504474e-05*adjusted_age**3 &
 !                                 + (-0.0278434254990198)*adjusted_age**2 &
-!                                 + 5.2411595159636*adjusted_age 
+!                                 + 5.2411595159636*adjusted_age
 !              ! and maximum yield == 18
 !              target_living_C(2) = 6.47352804645592e-05*adjusted_age**3 &
 !                                 + (-0.0343797468128978)*adjusted_age**2 &
 !                                 + 6.33436315223739*adjusted_age
 !!              target_living_C = 5.50343459414773e-05*adjusted_age**3. &
 !!                                 + -0.030209059920374*adjusted_age**2. &
-!!                                 + 5.72011999667653*adjusted_age 
+!!                                 + 5.72011999667653*adjusted_age
 !          elseif (DATAin%yield == 18) then ! this is yield == 18
 !              ! assume that minimum yield == 16
 !              target_living_C(1) = 5.50343459414773e-05*adjusted_age**3 &
 !                                 + (-0.030209059920374)*adjusted_age**2 &
-!                                 + 5.72011999667653*adjusted_age 
+!                                 + 5.72011999667653*adjusted_age
 !              ! and that maximum yield == 20
 !              target_living_C(2) = 7.56016571548945e-05*adjusted_age**3 &
 !                                 + (-0.0388934064068792)*adjusted_age**2 &
-!                                 + 6.97059855628335*adjusted_age 
+!                                 + 6.97059855628335*adjusted_age
 !!              target_living_C = 6.47352804645592e-05*adjusted_age**3. &
 !!                                 + -0.0343797468128978*adjusted_age**2. &
-!!                                 + 6.33436315223739*adjusted_age 
+!!                                 + 6.33436315223739*adjusted_age
 !          elseif (DATAin%yield == 20) then ! this is yield == 20
 !              ! assume that minimum yield == 18
 !              target_living_C(1) = 6.47352804645592e-05*adjusted_age**3 &
 !                                 + (-0.0343797468128978)*adjusted_age**2 &
-!                                 + 6.33436315223739*adjusted_age 
+!                                 + 6.33436315223739*adjusted_age
 !              ! and maximum yield == 22
 !              target_living_C(2) = 8.44180416062568e-05*adjusted_age**3 &
 !                                 + (-0.0428308193342767)*adjusted_age**2 &
-!                                 + 7.60468641292822*adjusted_age 
+!                                 + 7.60468641292822*adjusted_age
 !!              target_living_C = 7.56016571548945e-05*adjusted_age**3. &
 !!                                 + -0.0388934064068792*adjusted_age**2. &
-!!                                 + 6.97059855628335*adjusted_age 
+!!                                 + 6.97059855628335*adjusted_age
 !          elseif (DATAin%yield == 22) then ! this is yield == 22
 !              ! assume that minimum yield == 20
 !              target_living_C(1) = 7.56016571548945e-05*adjusted_age**3 &
 !                                 + (-0.0388934064068792)*adjusted_age**2 &
-!                                 + 6.97059855628335*adjusted_age 
+!                                 + 6.97059855628335*adjusted_age
 !              ! and maximum yield == 24
 !              target_living_C(2) = 0.000109904656988696*adjusted_age**3 &
 !                                 + (-0.052147650208194)*adjusted_age**2 &
-!                                 + 8.57615263925567*adjusted_age 
+!                                 + 8.57615263925567*adjusted_age
 !!              target_living_C = 8.44180416062568e-05*adjusted_age**3. &
 !!                              + -0.0428308193342767*adjusted_age**2. &
 !!                              + 7.60468641292822*adjusted_age
@@ -801,47 +801,47 @@ module model_likelihood_module
 !              ! assume minimum yield == 22
 !              target_living_C(1) = 8.44180416062568e-05*adjusted_age**3 &
 !                                 + (-0.0428308193342767)*adjusted_age**2 &
-!                                 + 7.60468641292822*adjusted_age 
+!                                 + 7.60468641292822*adjusted_age
 !              ! and maximum yield == 26
 !              target_living_C(2) = 0.000130513995859074*adjusted_age**3 &
 !                                 + (-0.0582462486694394)*adjusted_age**2 &
-!                                 + 8.43674059980342*adjusted_age 
+!                                 + 8.43674059980342*adjusted_age
 !!              target_living_C = 0.000109904656988696*adjusted_age**3. &
 !!                                 + -0.052147650208194*adjusted_age**2. &
-!!                                 + 8.57615263925567*adjusted_age 
+!!                                 + 8.57615263925567*adjusted_age
 !          elseif (DATAin%yield == 26) then ! this is yield == 26
 !               ! assume minimum yield == 24
 !               target_living_C(1) = 0.000109904656988696*adjusted_age**3 &
 !                                  + (-0.052147650208194)*adjusted_age**2 &
-!                                  + 8.57615263925567*adjusted_age 
+!                                  + 8.57615263925567*adjusted_age
 !               ! and that maximum yield == 28
 !               target_living_C(2) = 0.000138676284217301*adjusted_age**3 &
 !                                  + (-0.0619624005644524)*adjusted_age**2 &
-!                                  + 8.98547026392933*adjusted_age 
+!                                  + 8.98547026392933*adjusted_age
 !!               target_living_C = 0.000130513995859074*adjusted_age**3. &
 !!                                 + -0.0582462486694394*adjusted_age**2. &
-!!                                 + 8.43674059980342*adjusted_age 
+!!                                 + 8.43674059980342*adjusted_age
 !          elseif (DATAin%yield == 28) then ! this is yield == 28
 !              ! assume that minimum yield == 26
 !              target_living_C(1) = 0.000130513995859074*adjusted_age**3 &
 !                                 + (-0.0582462486694394)*adjusted_age**2 &
-!                                 + 8.43674059980342*adjusted_age 
+!                                 + 8.43674059980342*adjusted_age
 !              ! and that maximum yield == 30
 !              target_living_C(2) = 0.00014916728414466*adjusted_age**3 &
 !                                 + (-0.0662815983372182)*adjusted_age**2 &
-!                                 + 9.55519207729034*adjusted_age 
+!                                 + 9.55519207729034*adjusted_age
 !!              target_living_C = 0.000138676284217301*adjusted_age**3. &
 !!                              + -0.0619624005644524*adjusted_age**2. &
-!!                              + 8.98547026392933*adjusted_age 
+!!                              + 8.98547026392933*adjusted_age
 !          elseif (DATAin%yield == 30) then ! this is the yield == 30
 !              ! assume minimum yield == 28
 !              target_living_C(1) = 0.000138676284217301*adjusted_age**3 &
 !                                  + (-0.0619624005644524)*adjusted_age**2 &
-!                                  + 8.98547026392933*adjusted_age 
+!                                  + 8.98547026392933*adjusted_age
 !              ! and maximum yield == 30 + 30 %
 !              target_living_C(2) = 0.00014916728414466*adjusted_age**3 &
 !                                 + (-0.0662815983372182)*adjusted_age**2 &
-!                                 + 9.55519207729034*adjusted_age 
+!                                 + 9.55519207729034*adjusted_age
 !              target_living_C(2) = target_living_C(2)*1.30
 !!              target_living_C = 0.00014916728414466*adjusted_age**3. &
 !!                              + -0.0662815983372182*adjusted_age**2. &
@@ -863,29 +863,29 @@ module model_likelihood_module
 !              ! assumed maximum value yield == 4
 !              target_living_C(2) = 2.07956043460835e-05*adjusted_age**3 &
 !                                 + (-0.0141108480550955)*adjusted_age**2 &
-!                                 + 3.14928740556523*adjusted_age 
+!                                 + 3.14928740556523*adjusted_age
 !          elseif (DATAin%yield == 4) then ! this is yield == 4
 !              ! assume that minimum is 70 % of yield == 4
 !              target_living_C(1) = 2.07956043460835e-05*adjusted_age**3 &
 !                                 + (-0.0141108480550955)*adjusted_age**2 &
-!                                 + 3.14928740556523*adjusted_age 
+!                                 + 3.14928740556523*adjusted_age
 !              target_living_C(1) = target_living_C(1)*0.70
 !              ! assume that maxmimum is yield == 6
 !              target_living_C(2) = 4.4513764638938e-05*adjusted_age**3 &
 !                                 + (-0.022944001697444)*adjusted_age**2 &
-!                                 + 4.29848533029152*adjusted_age 
+!                                 + 4.29848533029152*adjusted_age
 !              target_living_C = 2.07956043460835e-05*adjusted_age**3. &
 !                              + -0.0141108480550955*adjusted_age**2. &
-!                              + 3.14928740556523*adjusted_age 
+!                              + 3.14928740556523*adjusted_age
 !          elseif (DATAin%yield == 6) then ! this is yield == 6
 !              ! assume that minimum yield == 4
 !              target_living_C(1) = 2.07956043460835e-05*adjusted_age**3  &
 !                                 + (-0.0141108480550955)*adjusted_age**2 &
-!                                 + 3.14928740556523*adjusted_age 
+!                                 + 3.14928740556523*adjusted_age
 !              ! and maximum yield == 8
 !              target_living_C(2) = 6.30038392347502e-05*adjusted_age**3 &
 !                                 + (-0.0305149288086589)*adjusted_age**2 &
-!                                 + 5.41943577260286*adjusted_age 
+!                                 + 5.41943577260286*adjusted_age
 !!              target_living_C = 4.4513764638938e-05*adjusted_age**3. &
 !!                                 + -0.022944001697444*adjusted_age**2. &
 !!                                 + 4.29848533029152*adjusted_age
@@ -897,22 +897,22 @@ module model_likelihood_module
 !              ! and maximum yield == 10
 !              target_living_C(2) = 7.60760348008956e-05*adjusted_age**3 &
 !                                 + (-0.0364548049581851)*adjusted_age**2 &
-!                                 + 6.29507790408708*adjusted_age 
+!                                 + 6.29507790408708*adjusted_age
 !!              target_living_C = 6.30038392347502e-05*adjusted_age**3. &
 !!                              + -0.0305149288086589*adjusted_age**2. &
-!!                              + 5.41943577260286*adjusted_age 
+!!                              + 5.41943577260286*adjusted_age
 !          elseif (DATAin%yield == 10) then ! this is yield == 10
 !              ! assume minimum yield == 8
 !              target_living_C(1) = 6.30038392347502e-05*adjusted_age**3 &
 !                                 + (-0.0305149288086589)*adjusted_age**2 &
-!                                 + 5.41943577260286*adjusted_age 
+!                                 + 5.41943577260286*adjusted_age
 !              ! and maximum yield == 12
 !              target_living_C(2) = 0.000156065120683174*adjusted_age**3 &
 !                                 + (-0.0629544794948499)*adjusted_age**2 &
-!                                 + 8.30163202577001*adjusted_age 
+!                                 + 8.30163202577001*adjusted_age
 !!              target_living_C = 7.60760348008956e-05*adjusted_age**3. &
 !!                              + -0.0364548049581851*adjusted_age**2. &
-!!                              + 6.29507790408708*adjusted_age 
+!!                              + 6.29507790408708*adjusted_age
 !          elseif (DATAin%yield == 12) then ! this is yield == 12
 !              ! assume that minimum yield == 10
 !              target_living_C(1) = 7.60760348008956e-05*adjusted_age**3 &
@@ -921,17 +921,17 @@ module model_likelihood_module
 !              ! and that maximum yield == 12 + 30 %
 !              target_living_C(2) = 0.000156065120683174*adjusted_age**3 &
 !                                 + (-0.0629544794948499)*adjusted_age**2 &
-!                                 + 8.30163202577001*adjusted_age 
+!                                 + 8.30163202577001*adjusted_age
 !              target_living_C(2) = target_living_C(2)*1.30
 !!              target_living_C = 0.000156065120683174*adjusted_age**3. &
 !!                              + -0.0629544794948499*adjusted_age**2. &
-!!                              + 8.30163202577001*adjusted_age 
-!          else ! final else for yield 
+!!                              + 8.30163202577001*adjusted_age
+!          else ! final else for yield
 !!              print*,"yield class requested for deciduous cannot be found yield = ",DATAin%yield
 !!              print*,"instead sing maximum and minimum yield information"
 !              target_living_C(1) = 2.07956043460835e-05*adjusted_age**3 &
 !                                 + (-0.0141108480550955)*adjusted_age**2 &
-!                                 + 3.14928740556523*adjusted_age*0.70 
+!                                 + 3.14928740556523*adjusted_age*0.70
 !              target_living_C(2) = 0.000156065120683174*adjusted_age**3 &
 !                                 + (-0.0629544794948499)*adjusted_age**2 &
 !                                 + 8.30163202577001*adjusted_age*1.30
@@ -958,7 +958,7 @@ module model_likelihood_module
           ! use smallest
           if (tmp1(1) < tmp2(1)) then
              target_living_C(1) = tmp1(1)*0.70
-          else 
+          else
              target_living_C(1) = tmp2(1)*0.70
           endif
           ! use biggest
@@ -988,7 +988,7 @@ module model_likelihood_module
 
     ! declare input variables
     integer, intent(in) :: nopools          & !
-                          ,pool_number      & ! 
+                          ,pool_number      & !
                           ,averaging_period   !
 
     double precision,dimension(averaging_period,nopools), intent (in) :: pools
@@ -1059,7 +1059,7 @@ module model_likelihood_module
 
    double precision, intent(in) :: pools(averaging_period,nopools) & ! input pool state variables
                                   ,interval      ! model time step in decimal days
- 
+
    ! declare local variables
    integer :: n
    double precision :: P0    & ! initial pool value
@@ -1109,9 +1109,9 @@ module model_likelihood_module
    dcdt0 = MP1-MP0
 
    ! using multiple year mean to determine c
-   if ((dcdt1 > 0. .and. dcdt0 < 0.) .or. (dcdt1 < 0. .and. dcdt0 > 0.) & 
+   if ((dcdt1 > 0. .and. dcdt0 < 0.) .or. (dcdt1 < 0. .and. dcdt0 > 0.) &
        .or. dcdt1 == 0 .or. dcdt0 == 0) then
-       ! then return error values   
+       ! then return error values
        expdecay2 = 1
    else
        expdecay2 = log(dcdt1/dcdt0) / (os*interval)
@@ -1128,14 +1128,14 @@ module model_likelihood_module
     use MCMCOPT, only:  PARAMETER_INFO
     use CARBON_MODEL_MOD, only: carbon_model
     use cardamom_structures, only: DATAin
-  
+
     ! this subroutine is responsible, under normal circumstances for the running
     ! of the DALEC model, calculation of the log-likelihood for comparison
     ! assessment of parameter performance and use of the EDCs if they are
     ! present / selected
 
     implicit none
- 
+
     ! declare inputs
     type ( parameter_info ), intent(inout) :: PI ! parameter information
 
@@ -1145,7 +1145,7 @@ module model_likelihood_module
 
     ! declare local variables
     double precision :: EDC,EDC1,EDC2
- 
+
     ! initial values
     ML_out=0.
     EDCD%DIAG=0
@@ -1174,24 +1174,24 @@ module model_likelihood_module
                       ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
                       ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
                       ,DATAin%M_GPP)
- 
+
        ! check edc2
        call EDC2_CDEA(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                     ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS & 
+                     ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                      ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
        ! check if EDCs are switched on
        if (DATAin%EDC == 1) then
            EDC = EDC2
-       else 
+       else
            EDC = 1
        end if
 
        ! extra checks to ensure correct running of the model
        if (sum(DATAin%M_LAI) /= sum(DATAin%M_LAI) .or. sum(DATAin%M_GPP) /= sum(DATAin%M_GPP)) then
            EDC=0
-       end if 
+       end if
 
        ! add EDC2 log-likelihood
        ML_out=ML_out+log(EDC)
@@ -1223,10 +1223,10 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n
-     
+
     ! set initial value
     likelihood_p = 0.
-  
+
     ! now loop through defined parameters for their uncertainties
     do n = 1, npars
        ! if there is actually a value
@@ -1244,7 +1244,7 @@ module model_likelihood_module
   !
   double precision function likelihood()
     use cardamom_structures, only: DATAin
- 
+
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
 
@@ -1266,7 +1266,7 @@ module model_likelihood_module
          tot_exp=tot_exp+((DATAin%M_GPP(dn)-DATAin%GPP(dn))/2.)**2.
        end do
        likelihood=likelihood-0.5*tot_exp
-    endif 
+    endif
 
     ! LAI log-likelihood
     tot_exp = 0.
@@ -1277,7 +1277,8 @@ module model_likelihood_module
          ! errors of zero LAI which occur in managed systems
          if (DATAin%M_LAI(dn) >= 0.) then
              ! note that division is the uncertainty
-             tot_exp=tot_exp+(log(max(1e-6,DATAin%M_LAI(dn))/DATAin%LAI(dn))/log(2.))**2.
+             !tot_exp = tot_exp+(log(max(0.001d0,DATAin%M_LAI(dn))/max(0.001d0,DATAin%LAI(dn)))/log(DATAin%LAI_unc(dn)))**2d0
+             tot_exp = tot_exp + (max(0.001d0,DATAin%M_LAI(dn)-DATAin%LAI(dn))/DATAin%LAI_unc(dn))**2d0
          else
              ! if not then we have unrealistic negative values or NaN so indue
              ! error
@@ -1366,7 +1367,7 @@ module model_likelihood_module
          dn=DATAin%Clit_stockpts(n)
          ! note that division is the uncertainty
 !         tot_exp=tot_exp+((log((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12)))*DATAin%M_POOLS(dn,5))/DATAin%Clit_stock(dn))/log(2.))**2.
-         tot_exp=tot_exp+(((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12)))*(DATAin%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/(DATAin%Clit_stock(dn)*0.20))**2. 
+         tot_exp=tot_exp+(((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12)))*(DATAin%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/(DATAin%Clit_stock(dn)*0.20))**2.
       end do
        likelihood=likelihood-0.5*tot_exp
     endif
@@ -1383,11 +1384,11 @@ module model_likelihood_module
        likelihood=likelihood-0.5*tot_exp
     endif
 
-    ! growth rate contraints ensures that end point pools are within uncertainty 
+    ! growth rate contraints ensures that end point pools are within uncertainty
     ! of 2 from the prior value for proportional rate of change
     ! this could / should be altered or extended to allow for time varying, pool
     ! specific values as above
-    ! increments as done above for NEE,LAI and GPP  
+    ! increments as done above for NEE,LAI and GPP
     if (DATAin%otherpriors(1) > -9999) then
        do n = 1, DATAin%nopools
           pool_dynamics=DATAin%M_POOLS(DATAin%nodays+1,n)/DATAin%M_POOLS(1,n)
@@ -1405,5 +1406,5 @@ module model_likelihood_module
   end function likelihood
   !
   !------------------------------------------------------------------
-  ! 
+  !
 end module model_likelihood_module

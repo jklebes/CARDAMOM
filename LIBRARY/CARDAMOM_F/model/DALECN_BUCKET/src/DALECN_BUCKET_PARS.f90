@@ -50,8 +50,8 @@ module MODEL_PARAMETERS
        !
 
        ! Decomposition of litter to som (fraction; temperature adjusted)
-       PI%parmin(1)=0.0001368925d0 ! 20  years
-       PI%parmax(1)=0.005475702d0  ! 0.5 years
+       PI%parmin(1)=0.0001368925d0 ! 20  years at 0oC
+       PI%parmax(1)=0.005475702d0  ! 0.5 years at 0oC
 
        ! CN_Root (gC/gN; Kattge et al., 2011)
        PI%parmin(2)=13.85d0
@@ -78,19 +78,19 @@ module MODEL_PARAMETERS
        PI%parmax(7)=0.01d0         ! 0.27 years
 
        ! Turnover of litter to Rhet (fraction; temperature adjusted)
-       PI%parmin(8)=0.0001368925d0 ! 27 years
-       PI%parmax(8)=0.005475702d0  ! 0.50 years
+       PI%parmin(8)=0.0001368925d0 ! 27 years at 0oC
+       PI%parmax(8)=0.005475702d0  ! 0.50 years at 0oC
 
        ! Turnover of som to Rhet (fraction; temperature adjusted)
-       PI%parmin(9)=1.368925d-6 ! 2000 years
-       PI%parmax(9)=0.0002737851d0    ! ~ 10 years
+       PI%parmin(9)=1.368925d-6    ! 2000 years at 0oC
+       PI%parmax(9)=0.0002737851d0 ! ~ 10 years at 0oC
 
        ! Exponential coefficient for Rhet temperature response
        PI%parmin(10)=0.018d0
        PI%parmax(10)=0.06d0
 
        ! log10 avg foliar N (gN.m-2)
-       ! Kattge et al., (2011)
+       ! Kattge et al., (2011) (Quantiles 2.5% / 97.5%)
        PI%parmin(11)=-0.2218487d0
        PI%parmax(11)= 0.5563025d0
 
@@ -189,7 +189,7 @@ module MODEL_PARAMETERS
 
        ! maximum number of NUE decline acceleration that can be applied (days)
        PI%parmin(43)=1d0
-       PI%parmax(43)=14d0 ! 7d0
+       PI%parmax(43)=28d0 ! 7d0
 
 
 !       ! CN_wood coefficient for increase due to C_wood (deltalCN per gC.m-2)
@@ -228,6 +228,10 @@ module MODEL_PARAMETERS
        ! C CWD
        PI%parmin(24)=1d0
        PI%parmax(24)=7500d0
+
+       ! Soil water fraction (m3/m3)
+       PI%parmin(44)=0.1d0
+       PI%parmax(44)=0.9d0
 
        !
        ! Replanting pools (gC/m2) values
@@ -378,6 +382,9 @@ module MODEL_PARAMETERS
     PI%parmin(24)=0.1d0 ; PI%parmax(24)=5d0
     ! C storage organ
     PI%parmin(25)=0.1d0 ; PI%parmax(25)=1d0
+    ! Soil water fraction (m3/m3)
+    PI%parmin(38)=0.1d0 ; PI%parmax(38)=0.9d0
+
 
   end subroutine crop_parameters
   !
