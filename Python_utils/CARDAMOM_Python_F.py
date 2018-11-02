@@ -732,7 +732,7 @@ class CARDAMOM_F(object):
         else:
             #start a counter to check whether one of the chain combinations has converged
             conv = 0
-            #loop over inverted combinations list, to be sure the converged combination with max no of chains is last 
+            #loop over inverted combinations list, to be sure the converged combination with max no of chains is last
             for combi in zipped_res[::-1]:
                 #if combination as converged get the data
                 if combi[1] == True:
@@ -742,10 +742,10 @@ class CARDAMOM_F(object):
                             pars = self.read_output(run=run,pixel=pixel,chain=chainid,burnin=burnin)
                         else:
                             pars = pd.concat([pars,self.read_output(run=run,pixel=pixel,chain=chainid,burnin=burnin)])
-            # if no combination has converged, return empty parameter sets               
+            # if no combination has converged, return empty parameter sets
             if conv == 0:
                 pars = pd.DataFrame(np.zeros([500,self.npars])-9999)
-            
+                pars = pd.concat([self.read_output(run=run,pixel=pixel,chain=ch,burnin=burnin) for ch in chains],axis='rows')
             pars.index = np.arange(pars.shape[0])
             return pars
 
@@ -816,11 +816,15 @@ class CARDAMOM_F(object):
                 operators = re.findall('[+-]',meth)
                 operators = [np.add if ops == '+' else np.subtract for ops in operators]
                 #print operators
-                for oo, ops in enumerate(operators):
-                    if oo == 0:
-                        tmp = operators[0](array[:,:,int(indexes[0])],array[:,:,int(indexes[1])])
-                    else:
-                        tmp = operators[oo](tmp,array[:,:,int(indexes[oo+1])])
+                #if only missing vals in first flux/pool => return -9999.
+                if (array[:,:,int(indexes[0])] == -9999.).sum() == (array[:,:,int(indexes[0])]).size:
+                    tmp = np.zeros(array.shape[:2])-9999.
+                else:
+                    for oo, ops in enumerate(operators):
+                        if oo == 0:
+                            tmp = operators[0](array[:,:,int(indexes[0])],array[:,:,int(indexes[1])])
+                        else:
+                            tmp = operators[oo](tmp,array[:,:,int(indexes[oo+1])])
                 return tmp
 
         #create arrays to store output
