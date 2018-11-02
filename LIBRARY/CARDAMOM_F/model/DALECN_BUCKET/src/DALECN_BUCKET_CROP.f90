@@ -220,7 +220,7 @@ contains
                                     ,infi   ! used to calculate infinity for diagnositc
 
     integer :: nxp,n
-
+double precision :: deltaP,deltaF,deltaN
     ! met drivers are:
     ! 1st run day
     ! 2nd min daily temp (oC)
@@ -493,7 +493,7 @@ contains
     !
     ! Begin looping through each time step
     !
-
+deltaN = dble_zero
     do n = start, finish
 
       !!!!!!!!!!
@@ -712,8 +712,11 @@ endif
       POOLS(n+1,7) = stock_resp_auto
       ! storage organ pool
       POOLS(n+1,9) = stock_storage_organ
-!print*,"deltaP",(sum(POOLS(n+1,1:7))+POOLS(n+1,9))-(sum(POOLS(n,1:7))+POOLS(n,9))
-!print*,"deltaF",FLUXES(n,1) - (FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14))
+deltaP = (sum(POOLS(n+1,1:7))+POOLS(n+1,9))-(sum(POOLS(n,1:7))+POOLS(n,9))
+deltaF = FLUXES(n,1) - (FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14)+FLUXES(n,21))
+deltaN = deltaN + (deltaP-deltaF)
+print*,"deltaP",deltaP,"deltaF",deltaF,"diff" = deltaP-deltaF,"Cdiff",deltaN
+
       do nxp = 1, nopools
          if (POOLS(n+1,nxp) /= POOLS(n+1,nxp) .or. POOLS(n+1,nxp) < dble_zero) then
              print*,"step",n,"FLUXES",nxp

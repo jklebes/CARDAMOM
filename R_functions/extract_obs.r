@@ -15,12 +15,16 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 			# get lai
 			lai = extract_modis_lai(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,lai_all,as.numeric(start_year):as.numeric(end_year))
 			# assume default uncertainty (+/- scale)
-			lai_unc = lai * 0.14028508 + 0.2 # borrowed linear approximtion of uncertainty form Copernicus
+			#lai_unc = lai * 0.14028508 + 0.2 # borrowed linear approximtion of uncertainty form Copernicus
+      lai_unc = sd(lai,na.rm=TRUE)
 		} else if (lai_source == "site_specific") {
 			# read from .csv or netcdf
 			infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-			lai = read_site_specific_obs("LAI",infile)
-			lai_unc = lai * 0.14028508 + 0.2 # borrowed linear approximtion of uncertainty form Copernicus
+			lai = read_site_specific_obs("LAI",infile) ; lai_unc = read_site_specific_obs("LAI_unc",infile)
+      if (max(lai_unc) == -9999) {
+          lai_unc = sd(lai,na.rm=TRUE)
+			   #lai_unc = lai * 0.14028508 + 0.2 # borrowed linear approximtion of uncertainty form Copernicus
+      }
 		} else {
 			lai = -9999
 			lai_unc = -9999

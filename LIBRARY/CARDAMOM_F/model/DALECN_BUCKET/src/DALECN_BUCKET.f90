@@ -3476,12 +3476,13 @@ endif
     ! local variables
     integer :: i
 
+    ! Default assumption to be field capacity
+    soil_waterfrac = field_capacity
+
     ! if prior value has been given
     if (input_soilwater_frac > -9998d0) then
         ! calculate initial soil water fraction
-        soil_waterfrac = input_soilwater_frac
-    else
-        soil_waterfrac = field_capacity
+        soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac
     endif
 
     ! calculate initial soil water potential
