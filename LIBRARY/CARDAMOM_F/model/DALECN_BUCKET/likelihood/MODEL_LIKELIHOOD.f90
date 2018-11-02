@@ -1667,11 +1667,11 @@ module model_likelihood_module
          dn = DATAin%laipts(n)
          ! if zero or greater allow calculation with min condition to prevent
          ! errors of zero LAI which occur in managed systems
-         if (DATAin%M_LAI(dn) >= 0d0) then
+!         if (DATAin%M_LAI(dn) >= 0d0) then
              ! note that division is the uncertainty
              !tot_exp = tot_exp+(log(max(0.001d0,DATAin%M_LAI(dn))/max(0.001d0,DATAin%LAI(dn)))/log(DATAin%LAI_unc(dn)))**2d0
              tot_exp = tot_exp + (max(0.01d0,DATAin%M_LAI(dn)-DATAin%LAI(dn))/DATAin%LAI_unc(dn))**2d0
-         endif
+!         endif
        end do
        do n = 1, DATAin%nlai
          dn = DATAin%laipts(n)
