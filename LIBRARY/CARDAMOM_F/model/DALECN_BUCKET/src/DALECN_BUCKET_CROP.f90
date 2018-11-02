@@ -592,11 +592,11 @@ deltaN = dble_zero
       endif
       ! load GPP for crop model daily rate to total
       gpp_acm = GPP_out(n) * deltat(n)
-if (GPP_out(n) /= GPP_out(n)) then
-print*,"lai_cond",lai > vsmall,"gs_cond",stomatal_conductance > vsmall
-print*,"soilwater",soil_waterfrac,"wSWP",wSWP
-print*,"Etrans",transpiration,"ga",aerodynamic_conductance
-endif
+!if (GPP_out(n) /= GPP_out(n)) then
+!print*,"lai_cond",lai > vsmall,"gs_cond",stomatal_conductance > vsmall
+!print*,"soilwater",soil_waterfrac,"wSWP",wSWP
+!print*,"Etrans",transpiration,"ga",aerodynamic_conductance
+!endif
       ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
       call calculate_wetcanopy_evaporation(wetcanopy_evap,pot_actual_ratio,canopy_storage,transpiration)
       ! Soil surface (kgH2O.m-2.day-1)
@@ -712,10 +712,20 @@ endif
       POOLS(n+1,7) = stock_resp_auto
       ! storage organ pool
       POOLS(n+1,9) = stock_storage_organ
-deltaP = (sum(POOLS(n+1,1:7))+POOLS(n+1,9))-(sum(POOLS(n,1:7))+POOLS(n,9))
-deltaF = FLUXES(n,1) - (FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14)+FLUXES(n,21))
-deltaN = deltaN + (deltaP-deltaF)
-print*,"deltaP",deltaP,"deltaF",deltaF,"diff" = deltaP-deltaF,"Cdiff",deltaN
+!print*,"steps_in_day",steps_in_day,"use_seed",use_seed_labile,"yield",yield
+!print*,POOLS(n+1,1)-POOLS(n,1),alloc_to_labile-alloc_from_labile-resp_cost_labile_to_foliage+remob
+!print*,POOLS(n+1,2)-POOLS(n,2),alloc_to_foliage -litterfall_foliage
+!print*,POOLS(n+1,3)-POOLS(n,3),alloc_to_roots - litterfall_roots
+!print*,POOLS(n+1,4)-POOLS(n,4),alloc_to_stem -litterfall_stem
+!print*,POOLS(n+1,5)-POOLS(n,5),litterfall_roots - resp_h_litter - decomposition 
+!print*,POOLS(n+1,6)-POOLS(n,6),decomposition - resp_h_soilOrgMatter
+!print*,POOLS(n+1,7)-POOLS(n,7),(frac_GPP_resp_auto*gpp_acm)- & 
+!(resp_auto-resp_cost_labile_to_foliage-resp_cost_foliage_to_labile-Raremob)
+!print*,POOLS(n+1,9)-POOLS(n,9),alloc_to_storage_organ - yield
+!deltaP = (sum(POOLS(n+1,1:7))+POOLS(n+1,9))-(sum(POOLS(n,1:7))+POOLS(n,9)!)
+!deltaF = FLUXES(n,1) - (FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14)+FLUXES(n,21)+BM_EX)
+!deltaN = deltaN + (deltaP-deltaF)
+!print*,"n",n,"deltaP",deltaP,"deltaF",deltaF,"diff",deltaP-deltaF,"Cdiff",deltaN
 
       do nxp = 1, nopools
          if (POOLS(n+1,nxp) /= POOLS(n+1,nxp) .or. POOLS(n+1,nxp) < dble_zero) then
@@ -884,7 +894,7 @@ print*,"deltaP",deltaP,"deltaF",deltaF,"diff" = deltaP-deltaF,"Cdiff",deltaN
     endif
 
     ! Initialise..
-    resp_cost_foliage_to_labile = dble_zero ; yield = dble_zero
+    resp_cost_foliage_to_labile = dble_zero ; yield = dble_zero ; BM_EX = dble_zero
 
     ! respiratory cost of C transfer from labile pool to short-term pool (NPP) (gC.m-2.t-1)
     resp_cost_labile_to_foliage = turnover_rate_labile * resp_cost_labile_trans * resp_rate &
@@ -932,20 +942,20 @@ print*,"deltaP",deltaP,"deltaF",deltaF,"diff" = deltaP-deltaF,"Cdiff",deltaN
 
     ! set switches to (de)activate leaf, root and stem remobliization
     if ( step_of_day == steps_in_day ) then
-      mean_alloc_to_storage_organ = mean_alloc_to_storage_organ / steps_in_day
-      raso_old = raso
-      ! running average of growth rate of storage organ..
-      raso = ( mean_alloc_to_storage_organ + mean_alloc_to_storage_organ_old ) * 0.5d0
-      max_raso_old = max_raso
-      max_raso = max( raso , max_raso_old )
-      ! Stem remobilisation triggered once running average of storage organ growth declines
-      ! Second part prevents premature remobilisation
-      if ( ( raso < raso_old ) .and. &
-            ( mean_alloc_to_storage_organ > ( mean_alloc_to_storage_organ_old + 0.5d0 ) / steps_in_day ) ) then
-          stmob = 1
-      else
-          stmob = 0
-      endif
+        mean_alloc_to_storage_organ = mean_alloc_to_storage_organ / steps_in_day
+        raso_old = raso
+        ! running average of growth rate of storage organ..
+        raso = ( mean_alloc_to_storage_organ + mean_alloc_to_storage_organ_old ) * 0.5d0
+        max_raso_old = max_raso
+        max_raso = max( raso , max_raso_old )
+        ! Stem remobilisation triggered once running average of storage organ growth declines
+        ! Second part prevents premature remobilisation
+        if ( ( raso < raso_old ) .and. &
+              ( mean_alloc_to_storage_organ > ( mean_alloc_to_storage_organ_old + 0.5d0 ) / steps_in_day ) ) then
+            stmob = 1
+        else
+            stmob = 0
+        endif
     endif
 
     ! Code for calculating relative death rate of leaves (RDR) as a
@@ -1001,7 +1011,7 @@ print*,"deltaP",deltaP,"deltaF",deltaF,"diff" = deltaP-deltaF,"Cdiff",deltaN
     stock_roots         = max(dble_zero, stock_roots         + alloc_to_roots   - litterfall_roots)
     stock_litter        = max(dble_zero, stock_litter + litterfall_roots - resp_h_litter - decomposition)
     stock_soilOrgMatter = max(dble_zero, stock_soilOrgMatter + decomposition    - resp_h_soilOrgMatter)
-    stock_dead_foliage  = max(dble_zero, stock_dead_foliage  + litterfall_foliage * 0.5d0)
+    stock_dead_foliage  = max(dble_zero, stock_dead_foliage  + litterfall_foliage * 0.5d0) ! remainder of litfol is remobilisedi
     stock_labile        = max(dble_zero, stock_labile + alloc_to_labile  - alloc_from_labile - resp_cost_labile_to_foliage + remob)
 
     ! respiratory pool: new photosynthates are added (gC.m-2.t-1)
@@ -1011,8 +1021,7 @@ print*,"deltaP",deltaP,"deltaF",deltaF,"diff" = deltaP-deltaF,"Cdiff",deltaN
     ! respiratory pool reduced by Ra (amount of C respired by plant)
     stock_resp_auto = max(dble_zero, stock_resp_auto - resp_auto)
     ! respiratory cost of C transfer from labile pool to short-term pool added
-    ! to
-    ! yield total autotrophic respiration (gC.m-2.t-1)
+    ! to yield total autotrophic respiration (gC.m-2.t-1)
     resp_auto = resp_auto + resp_cost_labile_to_foliage + resp_cost_foliage_to_labile + Raremob
     ! nee (gC.m-2.t-1)
     nee_dalec = (resp_auto + resp_h_litter + resp_h_soilOrgMatter) - gpp_acm
