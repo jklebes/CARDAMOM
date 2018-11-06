@@ -6,15 +6,7 @@ subroutine rdalecnbucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
                         ,exepath,pathlength)
 
   use CARBON_MODEL_MOD, only: CARBON_MODEL &
-                             ,soil_frac_clay, soil_frac_sand,nos_soil_layers                       & 
-                             ,disturbance_residue_to_litter,disturbance_residue_to_cwd             &
-                             ,disturbance_residue_to_som,disturbance_loss_from_litter              &
-                             ,disturbance_loss_from_cwd,disturbance_loss_from_som                  &
-                             ,Cwood_labile_release_coef,Croot_labile_release_coef,deltat_1         &
-                             ,wSWP_time,soilwatermm,daylength_hours,daylength_seconds,meant_time   &
-                             ,rainfall_time,co2_half_saturation,co2_compensation_point,canopy_days &
-                             ,canopy_age_vector
-
+                             ,soil_frac_clay, soil_frac_sand,nos_soil_layers,wSWP_time
   use CARBON_MODEL_CROP_MOD, only: CARBON_MODEL_CROP
 
   ! subroutine specificially deals with the calling of the fortran code model by

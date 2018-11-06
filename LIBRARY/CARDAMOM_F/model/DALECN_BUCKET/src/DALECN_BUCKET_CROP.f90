@@ -220,7 +220,7 @@ contains
                                     ,infi   ! used to calculate infinity for diagnositc
 
     integer :: nxp,n
-double precision :: deltaP,deltaF,deltaN
+
     ! met drivers are:
     ! 1st run day
     ! 2nd min daily temp (oC)
@@ -493,7 +493,7 @@ double precision :: deltaP,deltaF,deltaN
     !
     ! Begin looping through each time step
     !
-deltaN = dble_zero
+
     do n = start, finish
 
       !!!!!!!!!!
@@ -592,11 +592,7 @@ deltaN = dble_zero
       endif
       ! load GPP for crop model daily rate to total
       gpp_acm = GPP_out(n) * deltat(n)
-!if (GPP_out(n) /= GPP_out(n)) then
-!print*,"lai_cond",lai > vsmall,"gs_cond",stomatal_conductance > vsmall
-!print*,"soilwater",soil_waterfrac,"wSWP",wSWP
-!print*,"Etrans",transpiration,"ga",aerodynamic_conductance
-!endif
+
       ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
       call calculate_wetcanopy_evaporation(wetcanopy_evap,pot_actual_ratio,canopy_storage,transpiration)
       ! Soil surface (kgH2O.m-2.day-1)
@@ -712,20 +708,6 @@ deltaN = dble_zero
       POOLS(n+1,7) = stock_resp_auto
       ! storage organ pool
       POOLS(n+1,9) = stock_storage_organ
-!print*,"steps_in_day",steps_in_day,"use_seed",use_seed_labile,"yield",yield
-!print*,POOLS(n+1,1)-POOLS(n,1),alloc_to_labile-alloc_from_labile-resp_cost_labile_to_foliage+remob
-!print*,POOLS(n+1,2)-POOLS(n,2),alloc_to_foliage -litterfall_foliage
-!print*,POOLS(n+1,3)-POOLS(n,3),alloc_to_roots - litterfall_roots
-!print*,POOLS(n+1,4)-POOLS(n,4),alloc_to_stem -litterfall_stem
-!print*,POOLS(n+1,5)-POOLS(n,5),litterfall_roots - resp_h_litter - decomposition 
-!print*,POOLS(n+1,6)-POOLS(n,6),decomposition - resp_h_soilOrgMatter
-!print*,POOLS(n+1,7)-POOLS(n,7),(frac_GPP_resp_auto*gpp_acm)- & 
-!(resp_auto-resp_cost_labile_to_foliage-resp_cost_foliage_to_labile-Raremob)
-!print*,POOLS(n+1,9)-POOLS(n,9),alloc_to_storage_organ - yield
-!deltaP = (sum(POOLS(n+1,1:7))+POOLS(n+1,9))-(sum(POOLS(n,1:7))+POOLS(n,9)!)
-!deltaF = FLUXES(n,1) - (FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14)+FLUXES(n,21)+BM_EX)
-!deltaN = deltaN + (deltaP-deltaF)
-!print*,"n",n,"deltaP",deltaP,"deltaF",deltaF,"diff",deltaP-deltaF,"Cdiff",deltaN
 
       do nxp = 1, nopools
          if (POOLS(n+1,nxp) /= POOLS(n+1,nxp) .or. POOLS(n+1,nxp) < dble_zero) then
