@@ -182,10 +182,14 @@ module MODEL_PARAMETERS
        PI%parmin(41)=0.01d0 !0.01 !0.839
        PI%parmax(41)=1.90d0 !1.25 !1.053
 
-       ! Minimum daily temperature at which temperature related NUE decline acceleration reaches 50 %
-       ! determine by logistic function with sensitivity parameter (pars(43))
-       PI%parmin(42)=-10d0
-       PI%parmax(42)= 15d0
+       ! Leaf death sensitivity period (days)
+       PI%parmin(42)=1.5d0
+       PI%parmax(42)=30d0
+
+!       ! Minimum daily temperature at which temperature related NUE decline acceleration reaches 50 %
+!       ! determine by logistic function with sensitivity parameter (pars(43))
+!       PI%parmin(42)=-10d0
+!       PI%parmax(42)= 15d0
 
        ! maximum number of NUE decline acceleration that can be applied (days)
        PI%parmin(43)=1d0

@@ -8,44 +8,55 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       noedc=100
       output_dim=17 ; aNPP_dim=8
 
+      # restructure pars
+      if (length(dim(pars)) > 2) {
+          pars_in=array(0,dim=c(dim(pars)[1],dim(pars)[2]*dim(pars)[3]))
+          nos_iter=dim(pars)[2]*dim(pars)[3]
+          for (n in seq(1,dim(pars)[1])){
+              pars_in[n,]=pars[n,,]
+          }
+      } else {
+          pars_in = pars
+      }
+
       # declare output variables
       # order is npar,chain,step
-      laiall=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-      gppall=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-      rtotall=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-      soilevapall=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
+      laiall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+      gppall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+      rtotall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+      soilevapall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
       if (model_name != "ACM") {
-	  neeall=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  somall=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  bioall=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  rooall=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  litall=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  laball=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  folall=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  rautoall=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  rhetall=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  harall=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  gsiall=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  gsitempall=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  gsiphotoall=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  gsivpdall=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  Clabslow=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  somfast=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  litroot=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  litwood=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  microact=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  microbial=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  litN=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  labN=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
-	  DIN=array(0,dim=c(dim(pars)[2]*dim(pars)[3],dim(met)[1]))
+	  neeall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  somall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  bioall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  rooall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  litall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  laball=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  folall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  rautoall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  rhetall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  harall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  gsiall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  gsitempall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  gsiphotoall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  gsivpdall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  Clabslow=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  somfast=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  litroot=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  litwood=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  microact=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  microbial=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  litN=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  labN=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
+	  DIN=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
       }
 
       # restructure pars
-      pars_in=array(0,dim=c(dim(pars)[1],dim(pars)[2]*dim(pars)[3]))
-      nos_iter=dim(pars)[2]*dim(pars)[3]
-      for (n in seq(1,dim(pars)[1])){
-	  pars_in[n,]=pars[n,,]
-      }
+#      pars_in=array(0,dim=c(dim(pars)[1],dim(pars)[2]*dim(pars)[3]))
+#      nos_iter=dim(pars)[2]*dim(pars)[3]
+#      for (n in seq(1,dim(pars)[1])){
+#	  pars_in[n,]=pars[n,,]
+#      }
       # loop through combinations
       if (model_name == "ACM") {
 	  dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))

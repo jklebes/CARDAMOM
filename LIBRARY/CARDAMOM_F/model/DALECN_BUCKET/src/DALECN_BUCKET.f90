@@ -289,8 +289,10 @@ double precision, allocatable, dimension(:) :: canopy_age_vector, canopy_days, N
 ! See source below for details of these variables
 integer :: oldest_leaf
 double precision :: deltaGPP, deltaRm, Rm_deficit, &
-                    leaf_sensitivity_period, &
-                    leaf_sensitivity_period_1, &
+                    leaf_growth_period,      &
+                    leaf_growth_period_1,    &
+                    leaf_mortality_period,   &
+                    leaf_mortality_period_1, &
                     marginal_gain_avg,       &
                     Q10_adjustment, &
                     Rm_deficit_leaf_loss, &
@@ -699,9 +701,13 @@ contains
     canopy_zero_efficiency = pars(3) ! canopy age (days) past peak at which NUE = 0
     canopy_maturation_lag = pars(14) ! canopy age (days) before peak NUE
     canopy_optimum_period = 7d0      ! period of time the canopy is at optimum NUE
-    ! estimate the canopy growth / mortality sensitivity variable (i.e. period over which to average marginal returns)
-    leaf_sensitivity_period = ceiling(pars(5)/dble(mean_days_per_step))
-    leaf_sensitivity_period_1 = leaf_sensitivity_period**(-dble_one)
+    ! estimate the canopy growth sensitivity variable (i.e. period over which to average marginal returns)
+    leaf_growth_period = ceiling(pars(5)/dble(mean_days_per_step))
+    leaf_growth_period_1 = leaf_growth_period**(-dble_one)
+    ! estimate the canopy mortality sensitivity variable (i.e. period
+    ! over which to average marginal returns)
+    leaf_mortality_period = ceiling(pars(42)/dble(mean_days_per_step))
+    leaf_mortality_period_1 = leaf_mortality_period**(-dble_one)
 
     ! Root biomass to reach 50% (root_k) of maximum rooting depth (max_depth)
     root_k = pars(34) ; max_depth = pars(35)
@@ -999,9 +1005,9 @@ contains
     leafT = maxt
 
     ! Calculate logistic temperature response function of leaf turnover
-    Cfol_turnover_gradient = 0.5d0 ; Cfol_turnover_half_saturation = pars(42)
-    Cfol_turnover_coef = (dble_one+exp(Cfol_turnover_gradient*(met(2,:)-Cfol_turnover_half_saturation)))**(-dble_one)
-    NUE_decay_acceleration = pars(43) ! acceleration (days) of NUE decay due to environmental effects (func(temperature))
+!    Cfol_turnover_gradient = 0.5d0 ; Cfol_turnover_half_saturation = pars(42)
+!    Cfol_turnover_coef = (dble_one+exp(Cfol_turnover_gradient*(met(2,:)-Cfol_turnover_half_saturation)))**(-dble_one)
+!    NUE_decay_acceleration = pars(43) ! acceleration (days) of NUE decay due to environmental effects (func(temperature))
 
     ! initialise foliage age distribution
     canopy_age_vector = dble_zero
@@ -3804,7 +3810,7 @@ contains
       ! how many days in the current time step
       age_by_time = nint(deltat(current_step))
       ! include the environmental stress acceleration to NUE decline (i.e. leaf aging)
-      age_by_met = nint(NUE_decay_acceleration * Cfol_turnover_coef(current_step))
+      age_by_met = 0 !nint(NUE_decay_acceleration * Cfol_turnover_coef(current_step))
       age_by = age_by_time + age_by_met
 
       ! reset counters
@@ -3931,13 +3937,13 @@ contains
                endif
                ! Estimate marginal return of leaf loss vs cost of regrowth, scaled by expected remaining leaf life span
                !life_remain = max(1d0,leaf_life_max - canopy_age) ! how much longer is the leaf expected to be live for?
-               life_remain = max(1d0,leaf_life - canopy_age) ! how much longer is the leaf expected to be live for?
+               !life_remain = max(1d0,leaf_life - canopy_age) ! how much longer is the leaf expected to be live for?
                ! is the instantaneous return of loss positive?
                marginal_loss = (deltaRm-deltaGPP)!*life_remain ! instantaneous costs of continued life
                marginal_loss = marginal_loss / deltaC ! scaled to per gC/m2
                ! pass to marginal_loss_avg vector
-               marginal_loss_avg(a) = marginal_loss_avg(a) * (dble_one - leaf_sensitivity_period_1) &
-                                    + marginal_loss * leaf_sensitivity_period_1
+               marginal_loss_avg(a) = marginal_loss_avg(a) * (dble_one - leaf_mortality_period_1) &
+                                    + marginal_loss * leaf_mortality_period_1
 
                ! escape condition
                if (marginal_loss <= dble_zero .and. leaf_loss_possible(a) == 0) exit
@@ -3948,7 +3954,12 @@ contains
 
           ! keep count of the number of times each age class has been assessed
           ! NOTE: must be before escape_point is adjusted to consider the oldest_leaf to lose
+!print*,"pos",leaf_loss_possible((escape_point):oldest_leaf)
           leaf_loss_possible(escape_point:oldest_leaf) = leaf_loss_possible(escape_point:oldest_leaf) + 1
+!print*,"A",leaf_fall,escape_point,oldest_leaf,leaf_mortality_period
+!print*,"avg",marginal_loss_avg((escape_point):oldest_leaf)
+!print*,"pos",leaf_loss_possible((escape_point):oldest_leaf)
+!print*,"can",canopy_age_vector((escape_point):oldest_leaf)
           ! now loop back through to find the location of the oldest leaf
           ! which we have assess sufficient times and is marginally due to be lost
           do a = oldest_leaf, nint(canopy_maturation_lag), -1
@@ -3957,7 +3968,7 @@ contains
               escape_point = a
               if (canopy_age_vector(a) > 0d0) then
                   ! if the portion of the canopy we are in has not been checked enough or is not good to lose, abort loop
-                  if (leaf_loss_possible(a) < leaf_sensitivity_period .or. marginal_loss_avg(a) <= 0d0) then
+                  if (leaf_loss_possible(a) < leaf_mortality_period .or. marginal_loss_avg(a) <= 0d0) then
                       ! the current position must be net loss of uptake to lose,
                       ! adjust the 'a' counter so that we do not include this age class.
                       escape_point = min(oldest_leaf,escape_point+1)
@@ -3969,12 +3980,21 @@ contains
                          if (leaf_fall > dble_zero) then
                              leaf_fall = leaf_fall * deltat_1(current_step)
                              leaf_fall = dble_one - (dble_one-((leaf_fall/foliage) * deltat(current_step)))**deltat_1(current_step)
-                             endif ! leaf_fall > dble_zero
+                         endif ! leaf_fall > dble_zero
                       end if ! escape_point /= oldest_leaf
-                  end if ! leaf_loss_possible(a) < leaf_sensitivity_period .or. marginal_loss_avg(a) < 0d0
-              end if ! canopy_age_vector(a) > 0d0
-          end do ! from oldest leaf back to NUE decline phases
 
+                      ! now escape the loop
+                      exit
+
+                  end if ! leaf_loss_possible(a) < leaf_mortality_period .or. marginal_loss_avg(a) < 0d0
+              end if ! canopy_age_vector(a) > 0d0
+
+          end do ! from oldest leaf back to NUE decline phases
+!print*,"B",leaf_fall,escape_point,oldest_leaf,leaf_mortality_period
+!print*,"avg",marginal_loss_avg((escape_point-1):oldest_leaf)
+!print*,"pos",leaf_loss_possible((escape_point-1):oldest_leaf)
+!print*,"can",canopy_age_vector((escape_point-1):oldest_leaf)
+!stop
           ! if the loop extended to its finish a = 0 which we don't want
           a = max(1,escape_point)
 
@@ -4050,8 +4070,8 @@ contains
           marginal_gain = marginal_gain / deltaC
 
           ! accumulate marginal return information
-          marginal_gain_avg = marginal_gain_avg * (dble_one-leaf_sensitivity_period_1) + &
-                              marginal_gain * (leaf_sensitivity_period_1)
+          marginal_gain_avg = marginal_gain_avg * (dble_one-leaf_growth_period_1) + &
+                              marginal_gain * (leaf_growth_period_1)
 
       endif ! avail_labile > 0
 
