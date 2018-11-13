@@ -489,7 +489,6 @@ contains
              ,soilevaporation &
               ,wetcanopy_evap &
             ,snow_sublimation &
-                    ,loss_adj &
                      ,deltaWP & ! deltaWP (MPa) minlwp-soilWP
                ,act_pot_ratio &
                   ,isothermal &
@@ -497,7 +496,7 @@ contains
                         ,loss &
                         ,Rtot   ! Total hydraulic resistance (MPa.s-1.m-2.mmol-1)
 
-    integer :: nxp,n,test,m,a
+    integer :: nxp,n,test,m,a,b,c
 
     ! local fire related variables
     double precision :: burnt_area &
@@ -598,7 +597,7 @@ contains
     ! p(2) = CN_root (gC/gN)
     ! p(3) = Days past optimum at which canopy NUE = 0
     ! p(4) = Max labile turnover to roots (fraction)
-    ! p(5) = Max leaf turnover (fraction)
+    ! p(5) = Leaf marginal growth sensitivity (days)
     ! p(6) = Turnover rate of wood (fraction)
     ! p(7) = Turnover rate of roots (fraction)
     ! p(8) = Litter turnover rate to heterotrophic respiration (fraction)
@@ -618,9 +617,9 @@ contains
     ! p(22) = Initial litter pool (gC/m2)
     ! p(23) = Initial som pool (gC/m2)
     ! p(24) = Initial CWD pool (gC/m2)
-    ! p(25) = Initial canopy life span (days)
+    ! p(25) = Initial canopy age (days)
     ! p(26) = Photosynthetic nitrogen use efficiency (gC/gN/m2/day)
-    ! p(27) = ---------SPARE---------
+    ! p(27) = Initial canopy life span (days)
     ! p(28) = Fraction of Cwood which is Cbranch
     ! p(29) = Fraction of Cwood which is Ccoarseroot
     ! p(34) = Fine root (gbiomass.m-2) needed to reach 50% of max depth
@@ -631,6 +630,9 @@ contains
     ! p(39) = Reich Rm_root N baseline
     ! p(40) = Reich Rm_wood N exponent
     ! p(41) = Reich Rm_wood N baseline
+    ! p(42) = Leaf marginal loss sensitivity (days)
+    ! p(43) = ---------- SPARE -----------
+    ! p(44) = Initial root profile water content (m3/m3)
 
     ! variables related to deforestation
     ! labile_loss = total loss from labile pool from deforestation
@@ -663,6 +665,7 @@ contains
     infi = 0d0
 
     ! load ACM-GPP-ET parameters
+    ! WARNING: pn_max_temp, pn_opt_temp, pn_kurtosis used in EDC1!
     NUE_optimum                = pars(26)      ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
                                                ! ,unlimited by CO2, light and
                                                ! photoperiod (gC/gN/m2leaf/day)
@@ -702,11 +705,11 @@ contains
     canopy_maturation_lag = pars(14) ! canopy age (days) before peak NUE
     canopy_optimum_period = 7d0      ! period of time the canopy is at optimum NUE
     ! estimate the canopy growth sensitivity variable (i.e. period over which to average marginal returns)
-    leaf_growth_period = ceiling(pars(5)/dble(mean_days_per_step))
+    leaf_growth_period = ceiling(pars(5))/dble(mean_days_per_step)
     leaf_growth_period_1 = leaf_growth_period**(-dble_one)
     ! estimate the canopy mortality sensitivity variable (i.e. period
     ! over which to average marginal returns)
-    leaf_mortality_period = ceiling(pars(42)/dble(mean_days_per_step))
+    leaf_mortality_period = ceiling(pars(42))/dble(mean_days_per_step)
     leaf_mortality_period_1 = leaf_mortality_period**(-dble_one)
 
     ! Root biomass to reach 50% (root_k) of maximum rooting depth (max_depth)
@@ -1259,9 +1262,10 @@ contains
 
       ! autotrophic maintenance respiration demand (umolC.gC-1.s-1 -> gC.m-2.day-1)
       Q10_adjustment = Rm_reich_Q10(meant)
-      Rm_leaf = Rm_reich_N(Q10_adjustment,CN_leaf,pars(36),pars(37))*umol_to_gC*seconds_per_day*POOLS(n,2)
-      Rm_root = Rm_reich_N(Q10_adjustment,CN_root,pars(38),pars(39))*umol_to_gC*seconds_per_day*POOLS(n,3)
-      Rm_wood = Rm_reich_N(Q10_adjustment,CN_wood,pars(40),pars(41))*umol_to_gC*seconds_per_day*POOLS(n,4)
+      tmp = umol_to_gC*seconds_per_day
+      Rm_leaf = Rm_reich_N(Q10_adjustment,CN_leaf,pars(36),pars(37))*tmp*POOLS(n,2)
+      Rm_root = Rm_reich_N(Q10_adjustment,CN_root,pars(38),pars(39))*tmp*POOLS(n,3)
+      Rm_wood = Rm_reich_N(Q10_adjustment,CN_wood,pars(40),pars(41))*tmp*POOLS(n,4)
       ! reset all over variables
       Rm_deficit = dble_zero
       Rm_deficit_leaf_loss = dble_zero ; Rm_deficit_root_loss = dble_zero ; Rm_deficit_wood_loss = dble_zero
@@ -1371,35 +1375,39 @@ contains
               ! adjust to maximum of the pool size
               tmp = min(POOLS(n,2),tmp)
               ! increment age profiles, remove old leaf...
-              loss = dble_zero ; loss_adj = dble_zero
+              loss = dble_zero ; b = oldest_leaf ; c = oldest_leaf
               do a = oldest_leaf, 1, -1
-                 loss = sum(canopy_age_vector(a:oldest_leaf))
-                 ! if we have found enough carbon to remove then exit the loop
-                 if (loss >= tmp) exit
+                 ! keep track of the position within the canopy for use outside
+                 ! of the loop
+                 b = a
+                 if (canopy_age_vector(b) > 0d0) then
+                     ! how much canopy can we lose for the current age classes
+                     loss = loss + canopy_age_vector(b)
+                     ! if we have found enough carbon to remove then exit the loop
+                     if (loss > tmp) exit
+                     ! each time we pass through but it is not enough we need to
+                     ! check the location of the available C in age classes
+                     c = a
+                 endif
               end do
-              ! if the loop extended to its finish a = 0 which we don't want
-              a = max(1,a)
+              ! ensure that the looping information within is now passed out-with
+              a = b
 
-              ! if based on age class we now allocate more leaf to turnover than wanted we must adjust this...
-              if (loss > tmp) then
-                  ! ...by adding the difference back into the profile...
-                  loss_adj = loss - tmp
-                  ! ...add one more to the
-                  loss = loss - loss_adj
-              endif
               ! remove the biomass from the canopy age vector
               canopy_age_vector(a:oldest_leaf) = dble_zero
-              leaf_loss_possible(min(a+1,oldest_leaf):oldest_leaf) = 0
-              ! add the difference between target and actual back to the final age class if available.
-              canopy_age_vector(a) = loss_adj
-              ! update the new oldest leaf age, accounting for indexing used above in "while" statement
-              oldest_leaf = a
-              ! if we have ran out of leaf area we cannot have zero age
+              ! and marginal return calculation
+              marginal_loss_avg(a:oldest_leaf) = dble_zero
+              ! and counter
+              leaf_loss_possible(a:oldest_leaf) = 0
+              ! update the new oldest leaf age
+              oldest_leaf = c
+              ! cannot have oldest leaf at position less than 1
               if (oldest_leaf <= 0) oldest_leaf = 1
+
               ! update FLX10 for leaf loss
               FLUXES(n,10) = FLUXES(n,10) + (loss*deltat_1(n))
 
-         endif ! FLX10 < Rm_deficit_leaf_loss
+          endif ! FLX10 < Rm_deficit_leaf_loss
 
           ! update root & wood losses based on C starvation
           FLUXES(n,11) = Rm_deficit_wood_loss
@@ -1600,7 +1608,11 @@ contains
                                                    - ( (canopy_age_vector(1:oldest_leaf) / sum(canopy_age_vector(1:oldest_leaf)))&
                                                       * foliar_loss)
                   ! correct for precision errors
-                  where (canopy_age_vector(1:oldest_leaf) < dble_zero) canopy_age_vector(1:oldest_leaf) = dble_zero
+                  where (canopy_age_vector(1:oldest_leaf) < dble_zero)
+                         canopy_age_vector(1:oldest_leaf) = dble_zero
+                         marginal_loss_avg(1:oldest_leaf) = dble_zero
+                         leaf_loss_possible(1:oldest_leaf) = 0
+                  end where
               endif
 
               ! Some variable needed for the EDCs
@@ -1709,7 +1721,11 @@ contains
                                                    - ( (canopy_age_vector(1:oldest_leaf) / sum(canopy_age_vector(1:oldest_leaf))) &
                                                       * (CFF(2)+NCFF(2)))
                   ! correct for precision errors
-                  where (canopy_age_vector(1:oldest_leaf) < dble_zero) canopy_age_vector(1:oldest_leaf) = dble_zero
+                  where (canopy_age_vector(1:oldest_leaf) < dble_zero)
+                         canopy_age_vector(1:oldest_leaf) = dble_zero
+                         marginal_loss_avg(1:oldest_leaf) = dble_zero
+                         leaf_loss_possible(1:oldest_leaf) = 0
+                  end where
               endif
 
               ! some variable needed for the EDCs
@@ -3762,7 +3778,7 @@ contains
       double precision, intent(inout) :: leaf_fall,leaf_growth
 
       ! declare local variables
-      integer :: a, b, c, d, escape_point, age_by, age_by_time, age_by_met
+      integer :: a, b, c, d, death_point, oldest_point, age_by, age_by_time, age_by_met
       double precision :: infi      &
                          ,tmp       &
                          ,loss      &
@@ -3833,10 +3849,12 @@ contains
           canopy_age_vector(d) = sum(canopy_age_vector((oldest_leaf-b):oldest_leaf))
           ! empty the previous days
           canopy_age_vector((oldest_leaf-b):oldest_leaf) = dble_zero
+          marginal_loss_avg((oldest_leaf-b):oldest_leaf) = dble_zero
+          leaf_loss_possible((oldest_leaf-b):oldest_leaf) = 0
 
       endif ! oldest_leaf+age_by > size(canopy_age_vector)
 
-      if (oldest_leaf >= canopy_maturation_lag) then
+      if (oldest_leaf >= canopy_maturation_lag .and. age_by_met > 0) then
           ! oldest leaf will be incremented subject to both time and temperature
           ! effects
           d = oldest_leaf + age_by - b
@@ -3895,8 +3913,8 @@ contains
       ! Marginal return of leaf loss
       !
 
-      ! initialise counter
-      escape_point = oldest_leaf
+      ! initialise counters
+      death_point = oldest_leaf ; oldest_point = oldest_leaf
 
       ! can't quantify leaf loss if there are no leaves...
       if (foliage > dble_zero) then
@@ -3909,7 +3927,7 @@ contains
           do a = oldest_leaf, nint(canopy_maturation_lag), -1
 
             ! set current possible escape point (age class)
-            escape_point = a
+            death_point = a
             ! how much C is there to lose in the current age class?
             deltaC = canopy_age_vector(a)
 
@@ -3927,9 +3945,10 @@ contains
                !NUE = canopy_aggregate_NUE(a,a)
                NUE = NUE_vector(a)
                ! use proportional scaling of radiation, stomatal conductance and aerodynamics conductances
-               stomatal_conductance = gs_save * (lai / lai_save)
-               aerodynamic_conductance = ga_save * (lai / lai_save)
-               canopy_par_MJday = canopy_par_save * (lai / lai_save)
+               tmp = lai / lai_save
+               stomatal_conductance = gs_save * tmp
+               aerodynamic_conductance = ga_save * tmp
+               canopy_par_MJday = canopy_par_save * tmp
                if (lai > vsmall .and. stomatal_conductance > vsmall) then
                    deltaGPP = acm_gpp(stomatal_conductance)
                else
@@ -3944,8 +3963,7 @@ contains
                ! pass to marginal_loss_avg vector
                marginal_loss_avg(a) = marginal_loss_avg(a) * (dble_one - leaf_mortality_period_1) &
                                     + marginal_loss * leaf_mortality_period_1
-
-               ! escape condition
+               ! assess escape condition
                if (marginal_loss <= dble_zero .and. leaf_loss_possible(a) == 0) exit
 
             end if ! if there is leaf area in the current age class
@@ -3953,50 +3971,47 @@ contains
           end do ! from oldest leaf back to NUE decline phases
 
           ! keep count of the number of times each age class has been assessed
-          ! NOTE: must be before escape_point is adjusted to consider the oldest_leaf to lose
-!print*,"pos",leaf_loss_possible((escape_point):oldest_leaf)
-          leaf_loss_possible(escape_point:oldest_leaf) = leaf_loss_possible(escape_point:oldest_leaf) + 1
-!print*,"A",leaf_fall,escape_point,oldest_leaf,leaf_mortality_period
-!print*,"avg",marginal_loss_avg((escape_point):oldest_leaf)
-!print*,"pos",leaf_loss_possible((escape_point):oldest_leaf)
-!print*,"can",canopy_age_vector((escape_point):oldest_leaf)
+          ! NOTE: must be before death_point is adjusted to consider the oldest_leaf to lose
+          leaf_loss_possible(death_point:oldest_leaf) = leaf_loss_possible(death_point:oldest_leaf) + 1
+
+          ! Need to re-initialise counters
+          death_point = oldest_leaf ; oldest_point = oldest_leaf
+
           ! now loop back through to find the location of the oldest leaf
           ! which we have assess sufficient times and is marginally due to be lost
           do a = oldest_leaf, nint(canopy_maturation_lag), -1
 
               ! track for use outside of the loop
-              escape_point = a
+              oldest_point = a
               if (canopy_age_vector(a) > 0d0) then
                   ! if the portion of the canopy we are in has not been checked enough or is not good to lose, abort loop
                   if (leaf_loss_possible(a) < leaf_mortality_period .or. marginal_loss_avg(a) <= 0d0) then
-                      ! the current position must be net loss of uptake to lose,
-                      ! adjust the 'a' counter so that we do not include this age class.
-                      escape_point = min(oldest_leaf,escape_point+1)
                       ! assuming that our escape leaf is not the oldest leaf in the canopy,
                       ! calculate the total loss. Otherwise we keep the whole canopy
-                      if (escape_point /= oldest_leaf) then
+                      if (oldest_point < oldest_leaf) then
                          ! estimate the total removal and convert into turnover fraction
-                         leaf_fall = sum(canopy_age_vector(escape_point:oldest_leaf))
+                         leaf_fall = sum(canopy_age_vector(death_point:oldest_leaf))
                          if (leaf_fall > dble_zero) then
                              leaf_fall = leaf_fall * deltat_1(current_step)
                              leaf_fall = dble_one - (dble_one-((leaf_fall/foliage) * deltat(current_step)))**deltat_1(current_step)
                          endif ! leaf_fall > dble_zero
-                      end if ! escape_point /= oldest_leaf
+                      else
+                         ! we must be > oldest_leaf, i.e. none of the canopy
+                         ! should be turned over
+                         leaf_fall = 0d0
+                         death_point = oldest_leaf ; oldest_point = oldest_leaf
+                      end if ! death_point /= oldest_leaf
 
                       ! now escape the loop
                       exit
 
                   end if ! leaf_loss_possible(a) < leaf_mortality_period .or. marginal_loss_avg(a) < 0d0
+                  ! track last known occupied age class, potentially the new
+                  ! oldest_leaf
+                  death_point = oldest_point
               end if ! canopy_age_vector(a) > 0d0
 
           end do ! from oldest leaf back to NUE decline phases
-!print*,"B",leaf_fall,escape_point,oldest_leaf,leaf_mortality_period
-!print*,"avg",marginal_loss_avg((escape_point-1):oldest_leaf)
-!print*,"pos",leaf_loss_possible((escape_point-1):oldest_leaf)
-!print*,"can",canopy_age_vector((escape_point-1):oldest_leaf)
-!stop
-          ! if the loop extended to its finish a = 0 which we don't want
-          a = max(1,escape_point)
 
           ! restore original value back from memory
           lai = lai_save ; NUE = NUE_save ; canopy_age = canopy_age_save
@@ -4024,8 +4039,9 @@ contains
           ! C spent on growth
           deltaC = deltaC * deltat(current_step)
           if (deltaC > avail_labile) then
-              leaf_growth = leaf_growth * (avail_labile / deltaC)
-              avail_labile = avail_labile * (avail_labile / deltaC)
+              tmp = (avail_labile / deltaC)
+              leaf_growth = leaf_growth * tmp
+              avail_labile = avail_labile * tmp
           endif
           ! C to new growth
           tmp = deltaC * (one_Rg_fraction)
@@ -4084,13 +4100,13 @@ contains
       ! Don't forget that the mass-balance here may have also been updated with NEW leaves
       if (leaf_fall > dble_zero) then
           ! remove the biomass from the canopy age vector
-          canopy_age_vector(a:oldest_leaf) = dble_zero
+          canopy_age_vector(death_point:oldest_leaf) = dble_zero
           ! and marginal return calculation
-          marginal_loss_avg(a:oldest_leaf) = dble_zero
+          marginal_loss_avg(death_point:oldest_leaf) = dble_zero
           ! and counter
-          leaf_loss_possible(a:oldest_leaf) = 0
+          leaf_loss_possible(death_point:oldest_leaf) = 0
           ! update the new oldest leaf age
-          oldest_leaf = a
+          oldest_leaf = oldest_point
           ! cannot have oldest leaf at position less than 1
           if (oldest_leaf <= 0) oldest_leaf = 1
       endif
@@ -4099,7 +4115,11 @@ contains
       leaf_fall = leaf_fall + leaf_fall_dead
 
       ! marginal suggest that we are not gaining leaves therefore we must update the age model
-      if (leaf_growth <= dble_zero) canopy_age_vector(1) = dble_zero
+      if (leaf_growth <= dble_zero) then
+          canopy_age_vector(1) = dble_zero
+          marginal_loss_avg(1) = dble_zero
+          leaf_loss_possible(1) = 0
+      endif
 
       ! restore original value back from memory
       lai = lai_save ; NUE = NUE_save ; canopy_age = canopy_age_save
@@ -4815,12 +4835,7 @@ contains
    !
 
    ! calculate and accumulate steady state water flux in mmol.m-2.s-1
-   ! NOTE: Depth correction already accounted for in soil resistance
-   ! calculations and this is the maximum potential rate of transpiration
-   ! assuming saturated soil and leaves at their minimum water potential.
-   ! also note that the head correction is now added rather than
-   ! subtracted in SPA equations because deltaWP is soilWP-minlwp not
-   ! soilWP prior to application of minlwp
+   ! From the current soil layer given an amount of root within the soil layer.
 
    implicit none
 

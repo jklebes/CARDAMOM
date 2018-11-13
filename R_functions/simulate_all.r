@@ -10,12 +10,13 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
 
       # restructure pars
       if (length(dim(pars)) > 2) {
-          pars_in=array(0,dim=c(dim(pars)[1],dim(pars)[2]*dim(pars)[3]))
-          nos_iter=dim(pars)[2]*dim(pars)[3]
+          pars_in = array(0,dim=c(dim(pars)[1],dim(pars)[2]*dim(pars)[3]))
+          nos_iter = dim(pars)[2]*dim(pars)[3]
           for (n in seq(1,dim(pars)[1])){
-              pars_in[n,]=pars[n,,]
+              pars_in[n,] = pars[n,,]
           }
       } else {
+          nos_iter = dim(pars)[2]
           pars_in = pars
       }
 
@@ -131,7 +132,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
 	  dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
 	  pft_specific = 0
 	  tmp=.Fortran( "rdaleccdea",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
-				      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(dim(pars)[2]*dim(pars)[3],aNPP_dim)))
+				      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
 			              ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                       ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
 	        	              ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
@@ -144,7 +145,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
 	  dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
 	  if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
 	  tmp=.Fortran( "rdaleccdeafr",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
-				      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(dim(pars)[2]*dim(pars)[3],aNPP_dim)))
+				      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
 			              ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                       ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
 	        	              ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
@@ -158,7 +159,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
 	  dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
 	  if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
 	  tmp=.Fortran( "rdalecgsifr",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
-				      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(dim(pars)[2]*dim(pars)[3],aNPP_dim)))
+				      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
 			              ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                       ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
 	        	              ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
@@ -172,7 +173,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
 	  dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
 	  if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
 	  tmp=.Fortran( "rdalecngsifr",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
-				      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(dim(pars)[2]*dim(pars)[3],aNPP_dim)))
+				      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
 			              ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                       ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
 	        	              ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
@@ -185,7 +186,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
 	  dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
 	  if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
 	  tmp=.Fortran( "rdalecgsifr",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
-				      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(dim(pars)[2]*dim(pars)[3],aNPP_dim)))
+				      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
 			              ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                       ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
 	        	              ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
@@ -198,7 +199,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
           dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
           if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
           tmp=.Fortran( "rdalecgsidfolfr",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
-                                      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(dim(pars)[2]*dim(pars)[3],aNPP_dim)))
+                                      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
                                       ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                       ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
                                       ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
@@ -213,7 +214,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
 	  crop_file_location=paste(PROJECT$exepath,"winter_wheat_development.csv", sep="")
           if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
           tmp=.Fortran( "rdalecgsidfolcwdfr",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
-                                      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(dim(pars)[2]*dim(pars)[3],aNPP_dim)))
+                                      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
                                       ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                       ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
                                       ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
@@ -228,7 +229,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
           dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
           if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
           tmp=.Fortran( "rdalecgsidfolfrootfr",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
-                                      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(dim(pars)[2]*dim(pars)[3],aNPP_dim)))
+                                      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
                                       ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                       ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
                                       ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
@@ -242,7 +243,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
           dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
           if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
           tmp=.Fortran( "rdalecngsidfollabfr",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
-                                      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(dim(pars)[2]*dim(pars)[3],aNPP_dim)))
+                                      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
                                       ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                       ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
                                       ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
@@ -256,7 +257,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
           dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
           if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
           tmp=.Fortran( "rdalecngsidfollabfrootfr",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
-                                      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(dim(pars)[2]*dim(pars)[3],aNPP_dim)))
+                                      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
                                       ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                       ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
                                       ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
@@ -270,7 +271,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
           dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
           if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
           tmp=.Fortran( "rdalecgsidfollabfr",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
-                                      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(dim(pars)[2]*dim(pars)[3],aNPP_dim)))
+                                      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
                                       ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                       ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
                                       ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
@@ -283,7 +284,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
 	  dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
 	  if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
 	  tmp=.Fortran( "rdalecgsimfolfr",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
-					 ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(dim(pars)[2]*dim(pars)[3],aNPP_dim)))
+					 ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
 			                 ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                          ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
 	        	                 ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
@@ -297,7 +298,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
           dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
           if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
           tmp=.Fortran( "rdalecgsibiofr",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
-				      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(dim(pars)[2]*dim(pars)[3],aNPP_dim)))
+				      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
                                       ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                       ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
                                       ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
@@ -312,7 +313,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
 	  dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
 	  if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
 	  tmp=.Fortran( "ratdalec",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
-				  ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(dim(pars)[2]*dim(pars)[3],aNPP_dim)))
+				  ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
 			          ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                   ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
 	        	          ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])

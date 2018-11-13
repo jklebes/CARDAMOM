@@ -493,7 +493,7 @@ module model_likelihood_module
   subroutine EDC1_GSI(PARS, npars, meantemp, meanrad, EDC1)
 
       use cardamom_structures, only: DATAin
-      use CARBON_MODEL_MOD, only: Rm_reich_Q10, Rm_reich_N
+      use CARBON_MODEL_MOD, only: Rm_reich_Q10, Rm_reich_N, opt_max_scaling
 
     ! subroutine assessed the current parameter sets for passing ecological and
     ! steady state contraints (modified from Bloom et al., 2014).
@@ -586,12 +586,12 @@ module model_likelihood_module
 
     ! initial LAI should not be greater than 15 m2/m2
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(19)/pars(17) > 15d0)) then
-       EDC1 = 0 ; EDCD%PASSFAIL(10) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(9) = 0
     endif
     ! replanting stock of foliage is unlikely to have much lai, thus limit lai
     ! to less than 1 m2/m2
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(31)/pars(17) > 1d0)) then
-       EDC1 = 0 ; EDCD%PASSFAIL(11) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(10) = 0
     endif
 
     ! initial replanting wood stocks must be sufficient to support intended
@@ -601,32 +601,32 @@ module model_likelihood_module
     ! NOTE: only half that used from Thomas & Williams to allow for non-forested
     ! systems
     if ((EDC1 == 1 .or. DIAG == 1) .and. ((pars(31) / pars(33)) > 2d0) ) then
-       EDC1 = 0 ; EDCD%PASSFAIL(12) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(11) = 0
     endif
     ! also apply to initial conditions
     if ((EDC1 == 1 .or. DIAG == 1) .and. ((pars(19) / pars(21)) > 2d0) ) then
-       EDC1 = 0 ; EDCD%PASSFAIL(13) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(12) = 0
     endif
 
-    ! The initial leaf life span should not be greater than NUE > 0
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(27) > (pars(3)+pars(14))) then
-       EDC1 = 0 ; EDCD%PASSFAIL(14) = 0
-    endif
+!    ! The initial leaf life span should not be greater than NUE > 0
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(27) > (pars(3)+pars(14))) then
+!       EDC1 = 0 ; EDCD%PASSFAIL(13) = 0
+!    endif
 
     ! The initial life span cannot be shorter than the mean canopy age
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(25) > pars(27)) then
-       EDC1 = 0 ; EDCD%PASSFAIL(15) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(14) = 0
     endif
 
     ! The total period where NUE > 0 cannot be greater than 12 years
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(3)+pars(14)) > 365.25d0*12d0) then
-       EDC1 = 0 ; EDCD%PASSFAIL(16) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(15) = 0
     endif
 
     ! the maturation time (pars(14)) should not be greater than
     ! age related efficiency reduction (pars(3))
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(3) < pars(14) ) then
-       EDC1 = 0 ; EDCD%PASSFAIL(17) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(16) = 0
     endif
 
     !---------------------------------------------------------------------
@@ -636,14 +636,14 @@ module model_likelihood_module
     ! CN ratio of wood (pars(15)) should always be greater than
     ! roots (pars(2))
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(15) < pars(2)) ) then
-       EDC1 = 0 ; EDCD%PASSFAIL(18) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(17) = 0
     endif
 
     ! CN ratio of wood (pars(15)) should always be greater than
     ! leaves (pars(17)/(10**pars(11))) or roots (pars(2))
     tmp = (pars(17)/(10d0**pars(11)))
     if ((EDC1 == 1 .or. DIAG == 1) .and. tmp > pars(15) ) then
-       EDC1 = 0 ; EDCD%PASSFAIL(19) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(18) = 0
     endif
 
     ! CN ratio of leaf should also be between 95CI(+5% of CR for safety) of trait database values
@@ -652,17 +652,17 @@ module model_likelihood_module
     ! constrained a CN ratio of the whole canopy is compared to individual
     ! leaves (which have ranges upto ~100)
     if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 43.76895d0 .or. tmp < 10.82105d0)) then
-       EDC1 = 0 ; EDCD%PASSFAIL(20) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(19) = 0
     endif
 
     ! N linked Reich model of maintenance respiration intercept leaves (pars(37)) should
     ! always be less than that for wood (pars(41)) or roots (pars(39))
     ! Reich et al., (2008) for details
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(37) > pars(39)) ) then
-       EDC1 = 0 ; EDCD%PASSFAIL(21) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(20) = 0
     endif
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(37) > pars(41)) ) then
-       EDC1 = 0 ; EDCD%PASSFAIL(22) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(21) = 0
     endif
 
     ! check that the selected maintenance respiration baseline and exponents,
@@ -685,8 +685,19 @@ module model_likelihood_module
     ! combine each Rm estimate
     tmp = tmp + tmp1 + tmp2
     if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 4000d0)) then
-       EDC1 = 0 ; EDCD%PASSFAIL(23) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(22) = 0
     end if
+
+    ! It is expected that at common temperature (25oC) leaf maintenance
+    ! respiration should be not less than 5 % of Vcmax m2 leaf area 
+    ! (Atkins, reviews...need to check which paper this comes from)
+    ! NOTE 1: 1.0368d0 = umol_to_gC * seconds_per_day
+    temp_response = Rm_reich_Q10(25d0)
+    tmp = Rm_reich_N(temp_response,tmp,pars(36),pars(37))*1.0368d0*pars(17) ! foliar
+    tmp1 = pars(26)*opt_max_scaling(5.357174d+01,3.137242d+01,1.927458d-01,25d0)
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp / tmp1) < 0.05d0) then
+       EDC1 = 0 ; EDCD%PASSFAIL(23) = 0
+    endif
 
     ! --------------------------------------------------------------------
     ! could always add more / remove some
