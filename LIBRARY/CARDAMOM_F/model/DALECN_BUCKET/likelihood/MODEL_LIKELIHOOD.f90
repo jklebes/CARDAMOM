@@ -672,32 +672,32 @@ module model_likelihood_module
     ! or by maximum observed GPP*0.8 (a reasonable upper limit on Ra:GPP)
     ! NOTE 1: 378.6912d0 = seconds_per_year * umol_to_gC
     ! NOTE 2: at 25 oC Rmleaf should be > 5 % of Vcmax for 1 m2/m2
-    tmp = pars(17) / (10d0**pars(11)) ! foliar C:N
-    if (DATAin%nlai > 3) then
-        tmp1 = tmp*(sum(DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) / DATAin%nlai) ! observed mean foliar C stock
-    else
-        tmp1 = pars(19) ! initial condition
-    endif
-    temp_response = Rm_reich_Q10(meantemp)
-    tmp  = Rm_reich_N(temp_response,tmp,pars(36),pars(37))*378.6912d0*tmp1          ! foliar
-    tmp1 = Rm_reich_N(temp_response,pars(2),pars(38),pars(39))*378.6912d0*pars(20)  ! roots
-    tmp2 = Rm_reich_N(temp_response,pars(15),pars(40),pars(41))*378.6912d0*pars(21) ! wood
-    ! combine each Rm estimate
-    tmp = tmp + tmp1 + tmp2
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 4000d0)) then
-       EDC1 = 0 ; EDCD%PASSFAIL(22) = 0
-    end if
+!    tmp = pars(17) / (10d0**pars(11)) ! foliar C:N
+!    if (DATAin%nlai > 3) then
+!        tmp1 = tmp*(sum(DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) / DATAin%nlai) ! observed mean foliar C stock
+!    else
+!        tmp1 = pars(19) ! initial condition
+!    endif
+!    temp_response = Rm_reich_Q10(meantemp)
+!    tmp  = Rm_reich_N(temp_response,tmp,pars(36),pars(37))*378.6912d0*tmp1          ! foliar
+!    tmp1 = Rm_reich_N(temp_response,pars(2),pars(38),pars(39))*378.6912d0*pars(20)  ! roots
+!    tmp2 = Rm_reich_N(temp_response,pars(15),pars(40),pars(41))*378.6912d0*pars(21) ! wood
+!    ! combine each Rm estimate
+!    tmp = tmp + tmp1 + tmp2
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 4000d0)) then
+!       EDC1 = 0 ; EDCD%PASSFAIL(22) = 0
+!    end if
 
     ! It is expected that at common temperature (25oC) leaf maintenance
     ! respiration should be not less than 5 % of Vcmax m2 leaf area
     ! (Atkins, reviews...need to check which paper this comes from)
     ! NOTE 1: 1.0368d0 = umol_to_gC * seconds_per_day
-    temp_response = Rm_reich_Q10(25d0)
-    tmp = Rm_reich_N(temp_response,tmp,pars(36),pars(37))*1.0368d0*pars(17) ! foliar
-    tmp1 = pars(26)*opt_max_scaling(5.357174d+01,3.137242d+01,1.927458d-01,25d0)
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp / tmp1) < 0.05d0) then
-       EDC1 = 0 ; EDCD%PASSFAIL(23) = 0
-    endif
+!    temp_response = Rm_reich_Q10(25d0)
+!    tmp = Rm_reich_N(temp_response,tmp,pars(36),pars(37))*1.0368d0*pars(17) ! foliar
+!    tmp1 = pars(26)*opt_max_scaling(5.357174d+01,3.137242d+01,1.927458d-01,25d0)
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp / tmp1) < 0.05d0) then
+!       EDC1 = 0 ; EDCD%PASSFAIL(23) = 0
+!    endif
 
     ! --------------------------------------------------------------------
     ! could always add more / remove some
@@ -1616,7 +1616,6 @@ module model_likelihood_module
            if (n == 11 .or. n == 17 .or. (n >= 36 .and. n <= 41) .or. n == 26 .or. n == 44) then
                ! uncertainty provided as +/-
                likelihood_p=likelihood_p-0.5d0*((pars(n)-parpriors(n))/parpriorunc(n))**2
-print*,"p = ",n,"likelihood = ",-0.5d0*((pars(n)-parpriors(n))/parpriorunc(n))**2
            else if (n == 21) then
                ! uncertainty provided as fraction of observed value
                likelihood_p=likelihood_p-0.5d0*((pars(n)-parpriors(n))/(parpriors(n)*parpriorunc(n)))**2
@@ -1691,7 +1690,7 @@ print*,"p = ",n,"likelihood = ",-0.5d0*((pars(n)-parpriors(n))/parpriorunc(n))**
        end do
        likelihood = likelihood-0.5d0*tot_exp
     endif
-print*,"LAI",-0.5d0*tot_exp
+
     ! NEE likelihood
     tot_exp = 0.
     if (DATAin%nnee > 0) then
@@ -1702,7 +1701,7 @@ print*,"LAI",-0.5d0*tot_exp
        end do
        likelihood = likelihood-0.5d0*tot_exp
     endif
-print*,"NEE",-0.5d0*tot_exp
+
     ! Reco likelihood
     tot_exp = 0d0
     if (DATAin%nreco > 0) then
