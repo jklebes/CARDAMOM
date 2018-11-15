@@ -16,21 +16,24 @@ Actively maintained models
      The revised ACM-GPP-ET models is present here, but has been modified to assume field capacity at all times.
      Therefore, the model responds to changes in atmospheric demand to evaporation but not the development of long term drought.
 
-  3) DALEC_BUCKET (IN DEVELOPMENT)
+  3) DALEC_GSI_BUCKET (WORKING MODEL)
+     As DALEC_GSI_DFOL_CWD_FR except that the full ACM-GPP-ETv1 along with water cycle is coupled.
+
+  4) DALEC_BUCKET (IN DEVELOPMENT)
      The active development of the C+H2O cycles model.
      Full implementation of ACM-GPP-ET.
      Implementation of maintenance respiration model linked to retrieved tissue C:N based on Reich et al (2008).
      The phenology model is a simplification of the GSI approach, where the trajectory of GPP increment is used to determine growth and scenesence.
      This system will form an intermediate step between the C-cycle only system and the C+H2O coupled system with mechanistic phenology.
 
-  3) DALECN_BUCKET (IN DEVELOPMENT)
+  5) DALECN_BUCKET (IN DEVELOPMENT)
      The active development of the C+H2O cycles model.
      Full implementation of ACM-GPP-ET.
      Implementation of maintenance respiration model linked to retrieved tissue C:N based on Reich et al (2008).
      Based on revised ACM-GPP-ET, a maintenance respiration and leaf age model the phenology model is being revised to make growth and mortality choices based on marginal return calculation.
      This system is still in development, as a result there is a simpler intermediate model between the DALEC_GSI_DFOL_CWD_FR and DALEC_BUCKET.
 
-  4) DALEC_CDEA_LU_FIRES (WORKING MODEL)
+  6) DALEC_CDEA_LU_FIRES (WORKING MODEL)
      Application of the DALEC-CDEA model which has biomass removal and fire sub-models imposed.
      This model is the closed to that used in Bloom et al., 2016
      Note that in all other actively developed models the biomass removal and fire sub-models are also implemented.
@@ -43,7 +46,6 @@ Preserved models
    5) DALEC_CDEA_LU_FIRES_HBV
       Does not run
       Does exists in C also which does run
-   6) DALEC_GSI_BUCKET
    7) DALEC_GSI_DBio_FR
    8) DALEC_GSI_DFOL_FR
    9) DALEC_GSI_DFOL_FROOT_FR

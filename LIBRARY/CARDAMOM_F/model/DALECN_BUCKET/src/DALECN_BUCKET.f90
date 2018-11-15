@@ -171,7 +171,7 @@ logical :: do_iWUE = .true., & ! Use iWUE or WUE for stomatal optimisation
  do_energy_balance = .false.   ! Calculate steady-state energy balance for GPP~Transpiration
 double precision, parameter :: dble_zero = 0d0    &
                               ,dble_one = 1d0     &
-                              ,vsmall = tiny(0d0)*1e3 ! *1d3 to add a little breathing room
+                              ,vsmall = tiny(0d0)*1d3 ! *1d3 to add a little breathing room
 
 integer, parameter :: nos_root_layers = 3, nos_soil_layers = nos_root_layers + 1
 double precision, parameter :: pi = 3.1415927d0,  &
@@ -542,7 +542,7 @@ contains
     ! 9th burnt area fraction
     ! 10th 21 day average min temperature (oC)
     ! 11th 21 day average photoperiod (seconds)
-    ! 12th 21 day average VPD (kPa)
+    ! 12th 21 day average VPD (Pa)
     ! 13th Forest management practice to accompany any clearing
     ! 14th avg daily temperature (oC)
     ! 15th avg daily wind speed (m.s-1)
@@ -591,7 +591,7 @@ contains
     ! 25 = wood loss due to disturbance
 
     ! PARAMETERS
-    ! 41 process parameters; 7 C pool initial conditions
+    ! 41 process parameters; 7 C pool initial conditions; 1 soil water initial condition
 
     ! p(1) = Litter to SOM conversion rate (fraction)
     ! p(2) = CN_root (gC/gN)
@@ -4552,9 +4552,7 @@ contains
     root_growth = dble_zero ; wood_growth = dble_zero
 
     ! save original values for re-allocation later
-    canopy_lw_save = canopy_lwrad_Wm2 ; soil_lw_save  = soil_lwrad_Wm2
-    canopy_sw_save = canopy_swrad_MJday ; canopy_par_save  = canopy_par_MJday
-    soil_sw_save = soil_swrad_MJday ; gs_save = stomatal_conductance
+    gs_save = stomatal_conductance
 
     ! Is it currently hydraulically possible for cell expansion (i.e. is soil
     ! water potential more negative than min leaf water potential).
@@ -4638,9 +4636,7 @@ contains
     avail_labile = avail_labile - (wood_growth*days_per_step)
 
     ! restore original values
-    canopy_lwrad_Wm2 = canopy_lw_save ; soil_lwrad_Wm2 = soil_lw_save
-    canopy_swrad_MJday = canopy_sw_save ; canopy_par_MJday = canopy_par_save
-    soil_swrad_MJday = soil_sw_save ; stomatal_conductance = gs_save
+    stomatal_conductance = gs_save
 
     return
 

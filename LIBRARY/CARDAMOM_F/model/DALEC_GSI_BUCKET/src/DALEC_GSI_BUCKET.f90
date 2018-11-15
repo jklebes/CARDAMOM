@@ -65,7 +65,7 @@ public :: CARBON_MODEL                  &
          ,min_drythick                  &
          ,min_layer                     &
          ,soilwatermm                   &
-         ,wSWP_time                     & 
+         ,wSWP_time                     &
          ,soil_frac_clay                &
          ,soil_frac_sand                &
          ,nos_soil_layers               &
@@ -74,28 +74,28 @@ public :: CARBON_MODEL                  &
          ,stomatal_conductance          &
          ,iWUE                          &
          ,avN                           &
-         ,NUE                           & 
-         ,pn_max_temp                   & 
-         ,pn_opt_temp                   & 
-         ,pn_kurtosis                   & 
-         ,e0                            & 
-         ,co2_half_sat                  & 
-         ,co2_comp_point                & 
-         ,minlwp                        & 
-         ,max_lai_lwrad_transmitted     & 
-         ,lai_half_lwrad_transmitted    & 
-         ,max_lai_nir_reflection        & 
-         ,lai_half_nir_reflection       & 
-         ,max_lai_par_reflection        & 
-         ,lai_half_par_reflection       & 
-         ,max_lai_par_transmitted       & 
-         ,lai_half_par_transmitted      & 
-         ,max_lai_nir_transmitted       & 
+         ,NUE                           &
+         ,pn_max_temp                   &
+         ,pn_opt_temp                   &
+         ,pn_kurtosis                   &
+         ,e0                            &
+         ,co2_half_sat                  &
+         ,co2_comp_point                &
+         ,minlwp                        &
+         ,max_lai_lwrad_transmitted     &
+         ,lai_half_lwrad_transmitted    &
+         ,max_lai_nir_reflection        &
+         ,lai_half_nir_reflection       &
+         ,max_lai_par_reflection        &
+         ,lai_half_par_reflection       &
+         ,max_lai_par_transmitted       &
+         ,lai_half_par_transmitted      &
+         ,max_lai_nir_transmitted       &
          ,lai_half_nir_transmitted      &
          ,max_lai_lwrad_reflected       &
          ,lai_half_lwrad_reflected      &
-         ,soil_swrad_absorption         & 
-         ,max_lai_lwrad_release         & 
+         ,soil_swrad_absorption         &
+         ,max_lai_lwrad_release         &
          ,lai_half_lwrad_release        &
          ,mint                          &
          ,maxt                          &
@@ -103,7 +103,7 @@ public :: CARBON_MODEL                  &
          ,co2                           &
          ,doy                           &
          ,rainfall                      &
-         ,airt_zero_fraction            & 
+         ,airt_zero_fraction            &
          ,snowfall                      &
          ,snow_melt                     &
          ,wind_spd                      &
@@ -154,10 +154,10 @@ double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daug
 !!!!!!!!!
 
 ! useful technical parameters
-logical :: do_iWUE = .true.
+logical :: do_iWUE = .true.  ! Use iWUE or WUE for stomatal optimisation
 double precision, parameter :: dble_zero = 0d0    &
                               ,dble_one = 1d0     &
-                              ,vsmall = tiny(0d0)
+                              ,vsmall = tiny(0d0)*1d3 ! *1d3 to add a little breathing room
 
 integer, parameter :: nos_root_layers = 3, nos_soil_layers = nos_root_layers + 1
 double precision, parameter :: pi = 3.1415927d0,  &
@@ -310,12 +310,16 @@ double precision :: root_reach, root_biomass, &
                 max_supply, & ! maximum water supply (mmolH2O/m2/day)
                      meant, & ! mean air temperature (oC)
                    meant_K, & ! mean air temperature (K)
+                 maxt_lag1, &
+                     leafT, & ! canopy temperature (oC)
+          mean_annual_temp, &
         canopy_swrad_MJday, & ! canopy_absorbed shortwave radiation (MJ.m-2.day-1)
           canopy_par_MJday, & ! canopy_absorbed PAR radiation (MJ.m-2.day-1)
           soil_swrad_MJday, & ! soil absorbed shortwave radiation (MJ.m-2.day-1)
           canopy_lwrad_Wm2, & ! canopy absorbed longwave radiation (W.m-2)
             soil_lwrad_Wm2, & ! soil absorbed longwave radiation (W.m-2)
              sky_lwrad_Wm2, & ! sky absorbed longwave radiation (W.m-2)
+                 ci_global, & ! internal CO2 concentration (ppm or umol/mol)
       stomatal_conductance, & ! maximum stomatal conductance (mmolH2O.m-2.s-1)
    aerodynamic_conductance, & ! bulk surface layer conductance (m.s-1)
           soil_conductance, & ! soil surface conductance (m.s-1)
@@ -351,7 +355,7 @@ lai_half_lwrad_transmitted, & ! LAI at which canopy LW transmittance = 50 %
   lai_half_par_transmitted, & ! LAI at which 50 %
    max_lai_nir_transmitted, & ! minimum transmittance = 1-par
   lai_half_nir_transmitted, & ! LAI at which 50 %
-   max_lai_lwrad_reflected, & ! 
+   max_lai_lwrad_reflected, & !
   lai_half_lwrad_reflected, & ! LAI at which 50 % LW is reflected back to sky
      soil_swrad_absorption, & ! Fraction of SW rad absorbed by soil
      max_lai_lwrad_release, & ! 1-Max fraction of LW emitted from canopy to be
@@ -382,16 +386,16 @@ double precision :: cos_solar_zenith_angle, &
                           dayl_hours    ! day length in hours
 
 double precision, dimension(:), allocatable ::    deltat_1, & ! inverse of decimal days
-                                                meant_time, &
                                            daylength_hours, &
                                          daylength_seconds, &
-                                             rainfall_time, &
                                        co2_half_saturation, & ! (ppm)
                                     co2_compensation_point, & ! (ppm)
                                  Cwood_labile_release_coef, & ! time series of labile release to wood
                                  Croot_labile_release_coef, & ! time series of labile release to root
                                                soilwatermm, &
                                                  wSWP_time
+
+save
 
 contains
 !
@@ -400,20 +404,26 @@ contains
   subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,lai_out,NEE_out,FLUXES,POOLS &
                          ,nopars,nomet,nopools,nofluxes,GPP_out)
 
+    !
     ! The Data Assimilation Linked Ecosystem Carbon - Growing Season
-    ! Index - BUCKET (DALEC_GSI_BUCKET) model. 
-    ! The subroutine calls the Aggregated Canopy Model to simulate GPP and 
-    ! partitions between various ecosystem carbon pools. These pools are
-    ! subject to turnovers / decompostion resulting in ecosystem phenology and fluxes of CO2
-    ! The ACM_ET simulates the potential evapotranspiration and updates the water balance of a simple 3 layer soil model 
-    ! into which roots are distributed.
-    ! The purpose of the simple hydraulic (or Bucket) model is to link water deficit in the calculation of GPP.
+    ! Index - BUCKET (DALEC_GSI_BUCKET) model.
+    !
+    ! The Aggregated Canopy Model for Gross Primary Productivity and Evapotranspiration (ACM-GPP-ET)
+    ! simulates coupled photosynthesis-transpiration (via stomata), soil and intercepted canopy evaporation and
+    ! soil water balance (4 layers).
+    !
+    ! Carbon allocation based on fixed fraction and turnover follows first order kinetics with the following exceptions.
+    ! 1) Foliar allocation and turnover is based on the Growing Season Index framework.
+    ! 2) Turnover of litter and soil includes an exponential temperature dependency.
+    !
+    ! This version was coded by T. Luke Smallman (t.l.smallman@ed.ac.uk)
+    ! Version 1: 15/11/18
 
     implicit none
 
     ! declare input variables
     integer, intent(in) :: start    &
-                          ,finish   & 
+                          ,finish   &
                           ,nopars   & ! number of paremeters in vector
                           ,nomet    & ! number of meteorological fields
                           ,nofluxes & ! number of model fluxes
@@ -430,9 +440,9 @@ contains
                                                ,NEE_out   ! net ecosystem exchange of CO2
 
     double precision, dimension((nodays+1),nopools), intent(inout) :: POOLS ! vector of ecosystem pools
- 
+
     double precision, dimension(nodays,nofluxes), intent(inout) :: FLUXES ! vector of ecosystem fluxes
-                                             
+
     ! declare general local variables
     double precision ::  infi &
                 ,Tfac_range_1 &
@@ -444,7 +454,7 @@ contains
                ,transpiration &
              ,soilevaporation &
               ,wetcanopy_evap &
-            ,snow_sublimation 
+            ,snow_sublimation
 
     integer :: f,nxp,n,test,m
 
@@ -464,20 +474,20 @@ contains
                                      ,branch_frac_res     &
                                      ,Cbranch_part        &
                                      ,Crootcr_part        &
-                                     ,soil_loss_frac     
+                                     ,soil_loss_frac
 
     double precision :: labile_loss,foliar_loss      &
                        ,roots_loss,wood_loss         &
                        ,labile_residue,foliar_residue&
-                       ,roots_residue,wood_residue   & 
+                       ,roots_residue,wood_residue   &
                        ,C_total,labile_frac_res      &
                        ,Cstem,Cbranch,Crootcr        &
                        ,stem_residue,branch_residue  &
                        ,coarse_root_residue          &
-                       ,soil_loss_with_roots  
+                       ,soil_loss_with_roots
 
     integer :: reforest_day, harvest_management,restocking_lag, gsi_lag
-   
+
     ! met drivers are:
     ! 1st run day
     ! 2nd min daily temp (oC)
@@ -485,15 +495,15 @@ contains
     ! 4th Radiation (MJ.m-2.day-1)
     ! 5th CO2 (ppm)
     ! 6th DOY
-    ! 7th precipitation (kg.m-2.s-1)
+    ! 7th precipitation (kgH2O.m-2.s-1)
     ! 8th deforestation fraction
     ! 9th burnt area fraction
-    ! 10th 21 day average min temperature
-    ! 11th 21 day average photoperiod
-    ! 12th 21 day average VPD 
+    ! 10th 21 day average min temperature (oC)
+    ! 11th 21 day average photoperiod (seconds)
+    ! 12th 21 day average VPD (Pa)
     ! 13th Forest management practice to accompany any clearing
-    ! 14th avg daily temperature
-    ! 15th avg daily wind speed (ms-1)
+    ! 14th avg daily temperature (oC)
+    ! 15th avg daily wind speed (m.s-1)
     ! 16th vapour pressure deficit (Pa)
 
     ! POOLS are:
@@ -511,7 +521,7 @@ contains
     ! p(32) = fine root replanting
     ! p(33) = wood replanting
 
-    ! FLUXES are: 
+    ! FLUXES are:
     ! 1 = GPP
     ! 2 = temprate
     ! 3 = respiration_auto
@@ -533,24 +543,24 @@ contains
     ! 19 = Evapotranspiration (kgH2O.m-2.day-1)
 
     ! PARAMETERS
-    ! 17+4(GSI)+2(BUCKET)
+    ! 23 process parameters; 7 C pool initial conditions; 1 soil water initial condition
 
     ! p(1) Litter to SOM conversion rate  - m_r
     ! p(2) Fraction of GPP respired - f_a
-    ! p(3) Fraction of NPP allocated to foliage - f_f 
+    ! p(3) Fraction of NPP allocated to foliage - f_f
     ! p(4) Fraction of NPP allocated to roots - f_r
-    ! p(5) max leaf turnover (GSI) ! Leaf lifespan - L_f (CDEA)
+    ! p(5) max leaf turnover (GSI)
     ! p(6) Turnover rate of wood - t_w
     ! p(7) Turnover rate of roots - t_r
     ! p(8) Litter turnover rate - t_l
     ! p(9) SOM turnover rate  - t_S
     ! p(10) Parameter in exponential term of temperature - \theta
-    ! p(11) Canopy efficiency parameter - C_eff (part of ACM)
-    ! p(12) = max labile turnover(GSI) ! date of Clab release - B_day (CDEA)
+    ! p(11) mean foliar nitrogen content (gN/m2)
+    ! p(12) = max labile turnover(GSI)
     ! p(13) = Fraction allocated to Clab - f_l
-    ! p(14) = min temp threshold (GSI) ! lab release duration period - R_l (CDEA)
-    ! p(15) = max temp threshold (GSI)! date of leaf fall - F_day
-    ! p(16) = min photoperiod threshold (GIS) 
+    ! p(14) = min temp threshold (GSI)
+    ! p(15) = max temp threshold (GSI)
+    ! p(16) = min photoperiod threshold (GIS)
     ! p(17) = LMA
     ! p(24) = max photoperiod threshold (GSI)
     ! p(25) = min VPD threshold (GSI)
@@ -562,6 +572,7 @@ contains
     ! p(38) = CWD turnover fraction
     ! p(39) = Fine root (gbiomass.m-2) needed to reach 50% of max depth
     ! p(40) = Maximum rooting depth (m)
+    ! p(41) = Initial root profile water content (m3/m3)
 
     ! variables related to deforestation
     ! labile_loss = total loss from labile pool from deforestation
@@ -591,30 +602,31 @@ contains
 !call cpu_time(finish)
 
     ! load ACM-GPP-ET parameters
-    NUE                        = 1.424234d+01  ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
+    ! load ACM-GPP-ET parameters
+    NUE                        = 1.182549d+01  ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
                                                ! ,unlimited by CO2, light and
                                                ! photoperiod (gC/gN/m2leaf/day)
-    pn_max_temp                = 4.772427d+01  ! Maximum temperature for photosynthesis (oC)
-    pn_opt_temp                = 3.241907d+01  ! Optimum temperature for photosynthesis (oC)
-    pn_kurtosis                = 1.412502d-01  ! Kurtosis of photosynthesis temperature response 
-    e0                         = 6.895808d+00  ! Quantum yield gC/MJ/m2/day PAR
-    max_lai_lwrad_transmitted  = 6.636301d-01  ! Max fractional reduction of LW from sky transmitted through canopy
-    lai_half_lwrad_transmitted = 1.014790d+00  ! LAI at which canopy LW transmittance reduction = 50 %
-    max_lai_nir_reflection     = 2.141106d-01  ! Max fraction of NIR reflected by canopy
-    lai_half_nir_reflection    = 9.070301d-01  ! LAI at which canopy NIR reflected = 50 %
-    minlwp                     =-2.002699d+00  ! minimum leaf water potential (MPa)
-    max_lai_par_reflection     = 1.423063d-01  ! Max fraction of PAR reflected by canopy
-    lai_half_par_reflection    = 2.314545d+00  ! LAI at which canopy PAR reflected = 50 %
-    lai_half_lwrad_reflected   = 1.050068d+00  ! LAI at which 50 % LW is reflected back to sky
-    iWUE                       = 2.901203d-07  ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
-    soil_swrad_absorption      = 6.155656d-01  ! Fraction of SW rad absorbed by soil
-    max_lai_par_transmitted    = 5.995337d-01  ! Max fractional reduction in PAR transmittance by canopy
-    lai_half_par_transmitted   = 1.732624d+00  ! LAI at which PAR transmittance reduction = 50 %
-    max_lai_nir_transmitted    = 5.344348d-01  ! Max fractional reduction in NIR transmittance by canopy
-    lai_half_nir_transmitted   = 2.210447d+00  ! LAI at which NIR transmittance reduction = 50 %
-    max_lai_lwrad_release      = 9.896515d-01  ! Max fraction of LW emitted (1-par) from canopy to be released
-    lai_half_lwrad_release     = 4.193762d-02  ! LAI at which LW emitted from canopy to be released at 50 %
-    max_lai_lwrad_reflected    = 6.602782d-01  ! LAI at which 50 % LW is reflected back to sky
+    pn_max_temp                = 5.357174d+01  ! Maximum temperature for photosynthesis (oC)
+    pn_opt_temp                = 3.137242d+01  ! Optimum temperature for photosynthesis (oC)
+    pn_kurtosis                = 1.927458d-01  ! Kurtosis of photosynthesis temperature response
+    e0                         = 5.875662d+00  ! Quantum yield gC/MJ/m2/day PAR
+    max_lai_lwrad_transmitted  = 7.626683d-01  ! Max fractional reduction of LW from sky transmitted through canopy
+    lai_half_lwrad_transmitted = 7.160363d-01  ! LAI at which canopy LW transmittance reduction = 50 %
+    max_lai_nir_reflection     = 4.634860d-01  ! Max fraction of NIR reflected by canopy
+    lai_half_nir_reflection    = 1.559148d+00  ! LAI at which canopy NIR reflected = 50 %
+    minlwp                     =-1.996830d+00  ! minimum leaf water potential (MPa)
+    max_lai_par_reflection     = 1.623013d-01  ! Max fraction of PAR reflected by canopy
+    lai_half_par_reflection    = 1.114360d+00  ! LAI at which canopy PAR reflected = 50 %
+    lai_half_lwrad_reflected   = 1.126214d+00  ! LAI at which 50 % LW is reflected back to sky
+    iWUE                       = 1.602503d-06  ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
+    soil_swrad_absorption      = 6.643079d-01  ! Fraction of SW rad absorbed by soil
+    max_lai_par_transmitted    = 8.079519d-01  ! Max fractional reduction in PAR transmittance by canopy
+    lai_half_par_transmitted   = 9.178784d-01  ! LAI at which PAR transmittance reduction = 50 %
+    max_lai_nir_transmitted    = 8.289803d-01  ! Max fractional reduction in NIR transmittance by canopy
+    lai_half_nir_transmitted   = 1.961831d+00  ! LAI at which NIR transmittance reduction = 50 %
+    max_lai_lwrad_release      = 9.852855d-01  ! Max fraction of LW emitted (1-par) from canopy to be released
+    lai_half_lwrad_release     = 7.535450d-01  ! LAI at which LW emitted from canopy to be released at 50 %
+    max_lai_lwrad_reflected    = 1.955832d-02  ! LAI at which 50 % LW is reflected back to sky
 
     ! Other initial values for ACM_GPP_ET
     avN = 10d0**pars(11)  ! foliar N gN/m2
@@ -647,14 +659,14 @@ contains
     roots_frac_res(1)   = 1.0d0
     rootcr_frac_res(1) = 1.0d0
     branch_frac_res(1) = 1.0d0
-    stem_frac_res(1)   = 0d0 ! 
+    stem_frac_res(1)   = 0d0 !
     ! wood partitioning (fraction)
     Crootcr_part(1) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
     ! Black et al 2009; Morison et al 2012)
     Cbranch_part(1) =  0.20d0 ! (Ares & Brauers 2005)
     ! actually < 15 years branches = ~25 %
     !          > 15 years branches = ~15 %.
-    ! Csom loss due to phyical removal with roots 
+    ! Csom loss due to phyical removal with roots
     ! Morison et al (2012) Forestry Commission Research Note
     soil_loss_frac(1) = 0.02d0 ! actually between 1-3 %
     ! was the forest burned after deforestation
@@ -666,14 +678,14 @@ contains
     roots_frac_res(2)   = 1.0d0
     rootcr_frac_res(2) = 1.0d0
     branch_frac_res(2) = 1.0d0
-    stem_frac_res(2)   = 0d0 ! 
+    stem_frac_res(2)   = 0d0 !
     ! wood partitioning (fraction)
     Crootcr_part(2) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
     ! Black et al 2009; Morison et al 2012)
     Cbranch_part(2) =  0.20d0 ! (Ares & Brauers 2005)
     ! actually < 15 years branches = ~25 %
     !          > 15 years branches = ~15 %.
-    ! Csom loss due to phyical removal with roots 
+    ! Csom loss due to phyical removal with roots
     ! Morison et al (2012) Forestry Commission Research Note
     soil_loss_frac(2) = 0.02d0 ! actually between 1-3 %
     ! was the forest burned after deforestation
@@ -685,14 +697,14 @@ contains
     roots_frac_res(3)   = 1.0d0
     rootcr_frac_res(3) = 1.0d0
     branch_frac_res(3) = 0d0
-    stem_frac_res(3)   = 0d0 ! 
+    stem_frac_res(3)   = 0d0 !
     ! wood partitioning (fraction)
     Crootcr_part(3) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
     ! Black et al 2009; Morison et al 2012)
     Cbranch_part(3) =  0.20d0 ! (Ares & Brauers 2005)
     ! actually < 15 years branches = ~25 %
     !          > 15 years branches = ~15 %.
-    ! Csom loss due to phyical removal with roots 
+    ! Csom loss due to phyical removal with roots
     ! Morison et al (2012) Forestry Commission Research Note
     soil_loss_frac(3) = 0.02d0 ! actually between 1-3 %
     ! was the forest burned after deforestation
@@ -704,18 +716,37 @@ contains
     roots_frac_res(4)   = 1.0d0
     rootcr_frac_res(4) = 0d0
     branch_frac_res(4) = 0d0
-    stem_frac_res(4)   = 0d0 ! 
+    stem_frac_res(4)   = 0d0 !
     ! wood partitioning (fraction)
     Crootcr_part(4) = 0.32 ! Coarse roots (Adegbidi et al 2005;
     ! Black et al 2009; Morison et al 2012)
     Cbranch_part(4) =  0.20d0 ! (Ares & Brauers 2005)
     ! actually < 15 years branches = ~25 %
     !          > 15 years branches = ~15 %.
-    ! Csom loss due to phyical removal with roots 
+    ! Csom loss due to phyical removal with roots
     ! Morison et al (2012) Forestry Commission Research Note
     soil_loss_frac(4) = 0.02d0 ! actually between 1-3 %
     ! was the forest burned after deforestation
     post_harvest_burn(4) = 0d0
+
+    !## scen 5 (grassland grazing / cutting)
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(5) = 0.1d0
+    roots_frac_res(5)   = dble_zero
+    rootcr_frac_res(5)  = dble_zero
+    branch_frac_res(5)  = 0.1d0
+    stem_frac_res(5)    = 0.1d0
+    ! wood partitioning (fraction)
+    Crootcr_part(5) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Black et al 2009; Morison et al 2012)
+    Cbranch_part(5) =  0.20d0 ! (Ares & Brauers 2005)
+    ! actually < 15 years branches = ~25 %
+    !          > 15 years branches = ~15 %.
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(5) = dble_zero ! actually between 1-3 %
+    ! was the forest burned after deforestation
+    post_harvest_burn(5) = dble_zero
 
     ! for the moment override all paritioning parameters with those coming from
     ! CARDAMOM
@@ -727,46 +758,54 @@ contains
     combust_eff(3) = 0.1d0 ; combust_eff(4) = 0.5d0
     combust_eff(5) = 0.3d0 ; rfac = 0.5d0
 
-    if (start == 1) then
+    ! assigning initial conditions
+    POOLS(1,1)=pars(18)
+    POOLS(1,2)=pars(19)
+    POOLS(1,3)=pars(20)
+    POOLS(1,4)=pars(21)
+    POOLS(1,5)=pars(22)
+    POOLS(1,6)=pars(23)
+    POOLS(1,7)=pars(37)
+    ! POOL(1,8) assigned later
 
-        ! assigning initial conditions
-        POOLS(1,1)=pars(18)
-        POOLS(1,2)=pars(19)
-        POOLS(1,3)=pars(20)
-        POOLS(1,4)=pars(21)
-        POOLS(1,5)=pars(22)
-        POOLS(1,6)=pars(23)
-        POOLS(1,7)=pars(37)
-        ! POOL(1,8) assigned later
+    if (.not.allocated(deltat_1)) then
+        ! allocate variables dimension which are fixed per site only the once
+        allocate(disturbance_residue_to_litter(nodays), &
+                 disturbance_residue_to_cwd(nodays),    &
+                 disturbance_residue_to_som(nodays),    &
+                 disturbance_loss_from_litter(nodays),  &
+                 disturbance_loss_from_cwd(nodays),     &
+                 disturbance_loss_from_som(nodays),     &
+                 Cwood_labile_release_coef(nodays),     &
+                 Croot_labile_release_coef(nodays),     &
+                 deltat_1(nodays),soilwatermm(nodays),  &
+                 wSWP_time(nodays))
+        ! calculate inverse of number of days per time step, as this will be useful to avoid divisions later
+        deltat_1 = deltat**(-1d0)
 
-        if (.not.allocated(disturbance_residue_to_som)) then
-            allocate(disturbance_residue_to_litter(nodays), &
-                     disturbance_residue_to_cwd(nodays),    &
-                     disturbance_residue_to_som(nodays),    &
-                     disturbance_loss_from_litter(nodays),  &
-                     disturbance_loss_from_cwd(nodays),     &
-                     disturbance_loss_from_som(nodays))
-        endif
-        disturbance_residue_to_litter = 0d0 ; disturbance_loss_from_litter = 0d0
-        disturbance_residue_to_som = 0d0 ; disturbance_loss_from_som = 0d0
-        disturbance_residue_to_cwd = 0d0 ; disturbance_loss_from_cwd = 0d0
+        ! first those linked to the time period of the analysis
+        do n = 1, nodays
+          ! check positive values only for rainfall input
+          rainfall_time(n)=max(dble_zero,met(7,n))
+          ! Temperature adjustments for Michaelis-Menten coefficients
+          ! for CO2 (kc) and O2 (ko) and CO2 compensation point.
+          co2_compensation_point(n) = arrhenious(co2comp_saturation,co2comp_half_sat_conc,met(3,n))
+          co2_half_saturation(n) = arrhenious(kc_saturation,kc_half_sat_conc,met(3,n))
+        end do
 
-        if (.not.allocated(Cwood_labile_release_coef)) then
-            allocate(Cwood_labile_release_coef(nodays),Croot_labile_release_coef(nodays))
-            ! Temperature limitiation parameters on wood and fine root growth.
-            ! Parmeters generated on the assumption of 5 % / 95 % activation at key
-            ! temperature values. Roots 1oC/30oC, wood 5oC/30oC.
-            ! NOTE: Foliage and root potential turnovers use the same temperature curve
-            Croot_labile_release_gradient = 0.1962d0 ; Croot_labile_half_saturation = 15.0d0
-            Cwood_labile_release_gradient = 0.2355d0 ; Cwood_labile_half_saturation  = 17.5d0  
-            ! calculate temperature limitation on potential wood/root growth
-            Cwood_labile_release_coef = (dble_one+exp(-Cwood_labile_release_gradient* &
-                                      (((met(3,:)+met(2,:))*0.5d0)-Cwood_labile_half_saturation)))**(-dble_one)
-            Croot_labile_release_coef = (dble_one+exp(-Croot_labile_release_gradient* &
-                                      (((met(3,:)+met(2,:))*0.5d0)-Croot_labile_half_saturation)))**(-dble_one)
-        endif
+        ! Temperature limitiation parameters on wood and fine root growth.
+        ! Parmeters generated on the assumption of 5 % / 95 % activation at key
+        ! temperature values. Roots 1oC/30oC, wood 5oC/30oC.
+        ! NOTE: Foliage and root potential turnovers use the same temperature curve
+        Croot_labile_release_gradient = 0.1962d0 ; Croot_labile_half_saturation = 15.0d0
+        Cwood_labile_release_gradient = 0.2355d0 ; Cwood_labile_half_saturation  = 17.5d0
+        ! calculate temperature limitation on potential wood/root growth
+        Cwood_labile_release_coef = (dble_one+exp(-Cwood_labile_release_gradient* &
+                                  (((met(3,:)+met(2,:))*0.5d0)-Cwood_labile_half_saturation)))**(-dble_one)
+        Croot_labile_release_coef = (dble_one+exp(-Croot_labile_release_gradient* &
+                                  (((met(3,:)+met(2,:))*0.5d0)-Croot_labile_half_saturation)))**(-dble_one)
         ! hydraulic limitation parameters for wood cell expansion, i.e. growth
-        Cwood_hydraulic_gradient = 10.0d0 ; Cwood_hydraulic_half_saturation = -1.5d0
+        Cwood_hydraulic_gradient = 5d0 ; Cwood_hydraulic_half_saturation = -1.5d0
 
         ! calculate some values once as these are invarient between DALEC runs
         if (.not.allocated(tmp_x)) then
@@ -805,45 +844,53 @@ contains
          just_grown = pars(35)
 
         ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
-        if (.not.allocated(deltat_1)) then
-           allocate(deltat_1(nodays),soilwatermm(nodays),wSWP_time(nodays))
-           deltat_1 = deltat**(-1d0) 
-           ! zero variables not done elsewhere
-           water_flux = 0d0 
-           ! initialise some time invarient parameters
-           call saxton_parameters(soil_frac_clay,soil_frac_sand)
-           call initialise_soils(soil_frac_clay,soil_frac_sand)
-           soil_waterfrac_initial = soil_waterfrac
-           SWP_initial = SWP
-           field_capacity_initial = field_capacity
-           porosity_initial = porosity
-        else
-           water_flux = 0d0
-           soil_waterfrac = soil_waterfrac_initial
-           SWP = SWP_initial
-           field_capacity = field_capacity_initial
-           porosity = porosity_initial
-        endif
 
-        ! Initialise root reach based on initial conditions
-        root_biomass = max(min_root,POOLS(1,3)*2d0)
-        root_reach = max_depth * root_biomass / (root_k + root_biomass)
-        ! Determine initial soil layer thickness
-        layer_thickness(1) = top_soil_depth ; layer_thickness(2) = mid_soil_depth
-        layer_thickness(3) = max(min_layer,root_reach-sum(layer_thickness(1:2)))
-        layer_thickness(4) = max_depth - sum(layer_thickness(1:3))
-        layer_thickness(5) = top_soil_depth
-        previous_depth = max(top_soil_depth,root_reach)
-        ! Needed to initialise soils
-        call calculate_Rtot(Rtot)
-        ! Used to initialise soils
-        call calculate_update_soil_water(dble_zero,dble_zero,dble_zero,FLUXES(1,19)) ! assume no evap or rainfall
-        ! Store soil water content of the surface zone (mm)
-        POOLS(1,8) = 1d3*soil_waterfrac(1)*layer_thickness(1)
-    
+       !
+       ! Initialise the water model
+       !
+
+       ! zero variables not done elsewhere
+       water_flux = dble_zero
+       ! initialise some time invarient parameters
+       call saxton_parameters(soil_frac_clay,soil_frac_sand)
+       call initialise_soils(soil_frac_clay,soil_frac_sand)
+       call update_soil_initial_conditions(pars(44))
+       ! save the initial conditions for later
+       soil_waterfrac_initial = soil_waterfrac
+       SWP_initial = SWP
+       field_capacity_initial = field_capacity
+       porosity_initial = porosity
+
     else
+       !
+       ! Load initial soil water conditions from memory
+       !
 
-    endif !  start == 1
+       water_flux = dble_zero
+       field_capacity = field_capacity_initial
+       porosity = porosity_initial
+
+       ! input initial soil water fraction then
+       ! update SWP and soil conductivity accordingly
+       call update_soil_initial_conditions(pars(41))
+
+    endif
+
+    ! Initialise root reach based on initial conditions
+    root_biomass = max(min_root,POOLS(1,3)*2d0)
+    root_reach = max_depth * root_biomass / (root_k + root_biomass)
+    ! Determine initial soil layer thickness
+    layer_thickness(1) = top_soil_depth ; layer_thickness(2) = mid_soil_depth
+    layer_thickness(3) = max(min_layer,root_reach-sum(layer_thickness(1:2)))
+    layer_thickness(4) = max_depth - sum(layer_thickness(1:3))
+    layer_thickness(5) = top_soil_depth
+    previous_depth = max(top_soil_depth,root_reach)
+    ! Needed to initialise soils
+    call calculate_Rtot(Rtot)
+    ! Used to initialise soils
+    call calculate_update_soil_water(dble_zero,dble_zero,dble_zero,FLUXES(1,19)) ! assume no evap or rainfall
+    ! Store soil water content of the surface zone (mm)
+    POOLS(1,8) = 1d3*soil_waterfrac(1)*layer_thickness(1)
 
     ! assign climate sensitivities
     gsi_lag = gsi_lag_remembered ! added to prevent loss from memory
@@ -856,9 +903,15 @@ contains
 
     infi = 0d0
 
-    ! 
+    ! clear disturbance arrays to avoid throw overs
+    disturbance_residue_to_litter = 0d0 ; disturbance_loss_from_litter = 0d0
+    disturbance_residue_to_som = 0d0 ; disturbance_loss_from_som = 0d0
+    disturbance_residue_to_cwd = 0d0 ; disturbance_loss_from_cwd = 0d0
+
+
+    !
     ! Begin looping through each time step
-    ! 
+    !
 
     do n = start, finish
 
@@ -866,14 +919,17 @@ contains
       ! assign drivers and update some prognostic variables
       !!!!!!!!!!
 
+      ! set lag information using previous time step value for temperature
+      maxt_lag1 = maxt
       ! Incoming drivers
       mint = met(2,n)  ! minimum temperature (oC)
       maxt = met(3,n)  ! maximum temperature (oC)
+      leafT = maxt     ! initial canopy temperature (oC)
       swrad = met(4,n) ! incoming short wave radiation (MJ/m2/day)
       co2 = met(5,n)   ! CO2 (ppm)
       doy = met(6,n)   ! Day of year
-      rainfall = rainfall_time(n) ! rainfall (kgH2O/m2/s)
-      meant = meant_time(n)  ! mean air temperature (oC)
+      rainfall = met(7,n) ! rainfall (kgH2O/m2/s)
+      meant = (maxt + mint) * 0.5d0  ! mean air temperature (oC)
       meant_K = meant + freeze
       airt_zero_fraction = (maxt-dble_zero) / (maxt-mint) ! fraction of temperture period above freezing
       wind_spd = met(15,n) ! wind speed (m/s)
@@ -907,21 +963,18 @@ contains
           snowfall = rainfall * snowfall ; rainfall = rainfall - snowfall
           ! Add rainfall to the snowpack and clear rainfall variable
           snow_storage = snow_storage + (snowfall*seconds_per_step)
+
+          ! Also melt some of the snow
+          snow_melt = airt_zero_fraction
+          ! otherwise we assume snow is melting at 10 % per day light hour
+          snow_melt = min(snow_storage, snow_melt * snow_storage * dayl_hours * 0.1d0 * deltat(n))
+          snow_storage = snow_storage - snow_melt
       elseif (maxt < dble_zero) then
           ! if whole day is below freezing then we should assume that all
           ! precipitation is snowfall
           snowfall = rainfall ; rainfall = dble_zero
           ! Add rainfall to the snowpack and clear rainfall variable
           snow_storage = snow_storage + (snowfall*seconds_per_step)
-      end if
-
-      ! now if there is snow and some of the day is above freezing point assume
-      ! that some melting occurs
-      if (maxt > dble_zero .and. mint < dble_zero) then
-          snow_melt = airt_zero_fraction
-          ! otherwise we assume snow is melting at 10 % per day light hour
-          snow_melt = min(snow_storage, snow_melt * snow_storage * dayl_hours * 0.1d0 * deltat(n))
-          snow_storage = snow_storage - snow_melt
       else if (mint > dble_zero) then
           ! otherwise we assume snow is melting at 10 % per day light hour
           snow_melt = min(snow_storage, snow_storage * dayl_hours * 0.1d0 * deltat(n))
@@ -946,33 +999,30 @@ contains
       ! Calculate surface exchange coefficients
       !!!!!!!!!!
 
+      !!!!!!!!!!
+      ! Calculate surface exchange coefficients
+      !!!!!!!!!!
+
       ! calculate some temperature dependent meteorologial properties
       call acm_meteorological_constants(maxt)
+      ! calculate aerodynamic using consistent approach with SPA
+      call calculate_aerodynamic_conductance
+
+      !!!!!!!!!!
+      ! Determine net shortwave and isothermal longwave energy balance
+      !!!!!!!!!!
+
+      call calculate_shortwave_balance
+      call calculate_longwave_isothermal(leafT,maxt)
+
+      !!!!!!!!!!
+      ! Estimate evaporative and photosynthetic fluxes
+      !!!!!!!!!!
+
+      ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
+      call calculate_wetcanopy_evaporation(wetcanopy_evap,act_pot_ratio,canopy_storage,dble_zero)
       ! calculate radiation absorption and estimate stomatal conductance
       call acm_albedo_gc(abs(deltaWP),Rtot)
-
-      !!!!!!!!!!
-      ! GPP (gC.m-2.day-1)
-      !!!!!!!!!!
-
-      if (stomatal_conductance > dble_zero) then
-          FLUXES(n,1) = max(dble_zero,acm_gpp(stomatal_conductance))
-      else
-          FLUXES(n,1) = dble_zero
-      endif
-
-      !!!!!!!!!!
-      ! Evaptranspiration (kgH2O.m-2.day-1)
-      !!!!!!!!!!
-
-      ! Canopy transpiration (kgH2O/m2/day)
-      call calculate_transpiration(transpiration)
-      ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
-      call calculate_wetcanopy_evaporation(wetcanopy_evap,pot_actual_ratio,canopy_storage,transpiration)
-      ! Soil surface (kgH2O.m-2.day-1)
-      call calculate_soil_evaporation(soilevaporation)
-      ! restrict transpiration to positive only
-      transpiration = max(dble_zero,transpiration)
 
       ! if snow present assume that soilevaporation is sublimation of soil first
       snow_sublimation = dble_zero
@@ -982,6 +1032,27 @@ contains
           soilevaporation = soilevaporation - snow_sublimation
           snow_storage = snow_storage - (snow_sublimation * deltat(n))
       end if
+
+      ! Note that soil mass balance will be calculated after phenology
+      ! adjustments
+
+      ! reset output variable
+      ci_global = dble_zero
+      if (lai > vsmall .and. stomatal_conductance > vsmall) then
+          ! Gross primary productivity (gC/m2/day)
+          FLUXES(n,1) = max(dble_zero,acm_gpp(stomatal_conductance))
+          ! Canopy transpiration (kgH2O/m2/day)
+          call calculate_transpiration(transpiration)
+          ! restrict transpiration to positive only
+          transpiration = max(dble_zero,transpiration)
+      else
+          ! assume zero fluxes
+          FLUXES(n,1) = dble_zero
+          transpiration = dble_zero
+      endif
+
+      ! Soil surface (kgH2O.m-2.day-1)
+      call calculate_soil_evaporation(soilevaporation)
 
       !!!!!!!!!!
       ! GPP allocation
@@ -1033,9 +1104,9 @@ contains
       ! total root litter production
       FLUXES(n,12) = POOLS(n,3)*(1d0-(1d0-pars(7))**deltat(n))*deltat_1(n)
 
-      ! 
+      !
       ! those with temperature AND time dependancies
-      ! 
+      !
 
       ! respiration heterotrophic litter
       FLUXES(n,13) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))*deltat_1(n)
@@ -1060,14 +1131,14 @@ contains
       ! now update the Ra flux with Rg
       FLUXES(n,3) = FLUXES(n,3) + Rg_from_labile
 
-      ! calculate the NEE 
+      ! calculate the NEE
       NEE_out(n) = (-FLUXES(n,1)+FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14))
       ! load GPP
       GPP_out(n) = FLUXES(n,1)
 
       !
       ! update pools for next timestep
-      ! 
+      !
 
       ! labile pool
       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8)-FLUXES(n,6)-FLUXES(n,7)-Rg_from_labile)*deltat(n)
@@ -1100,16 +1171,16 @@ contains
       POOLS(n,8) = 1d3*soil_waterfrac(1)*layer_thickness(1)
 
 
-      ! 
+      !
       ! deal first with deforestation
-      ! 
+      !
 
       if (n == reforest_day) then
-          POOLS(n+1,1) = pars(30) 
-          POOLS(n+1,2) = pars(31) 
-          POOLS(n+1,3) = pars(32) 
-          POOLS(n+1,4) = pars(33) 
-      endif 
+          POOLS(n+1,1) = pars(30)
+          POOLS(n+1,2) = pars(31)
+          POOLS(n+1,3) = pars(32)
+          POOLS(n+1,4) = pars(33)
+      endif
 
       ! reset values
       FLUXES(n,17) = dble_zero ; FLUXES(n,22:25) = dble_zero
@@ -1144,10 +1215,10 @@ contains
               labile_loss = POOLS(n+1,1)*met(8,n)
               foliar_loss = POOLS(n+1,2)*met(8,n)
               ! roots are not removed under grazing
-              if (harvest_management /= 5) then 
+              if (harvest_management /= 5) then
                  roots_loss = POOLS(n+1,3)*met(8,n)
               else
-                 roots_loss = dble_zero 
+                 roots_loss = dble_zero
               endif
               wood_loss   = POOLS(n+1,4)*met(8,n)
               ! estimate labile loss explicitly from the loss of their storage
@@ -1315,12 +1386,11 @@ contains
       endif ! fire activity
 
       do nxp = 1, nopools
-         if (POOLS(n+1,nxp) /= POOLS(n+1,nxp)) then
+         if (POOLS(n+1,nxp) /= POOLS(n+1,nxp) .or. POOLS(n+1,nxp) < 0d0) then
             print*,"step",n, nxp
             print*,"met",met(:,n)
             print*,"POOLS",POOLS(n,:)
             print*,"FLUXES",FLUXES(n,:)
-!            print*,"Rtot",Rtot_time(n)
             print*,"wSWP",wSWP
             print*,"waterfrac",soil_waterfrac
             stop
@@ -1351,8 +1421,8 @@ contains
     ! Temperature adjustments for Michaelis-Menten coefficients
     ! for CO2 (kc) and O2 (ko) and CO2 compensation point
     ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
-!    co2_half_sat   = arrhenious(kc_saturation,kc_half_sat_conc,maxt)
-!    co2_comp_point = arrhenious(co2comp_saturation,co2comp_half_sat_conc,maxt)
+!    co2_half_sat   = arrhenious(kc_saturation,kc_half_sat_conc,leafT)
+!    co2_comp_point = arrhenious(co2comp_saturation,co2comp_half_sat_conc,leafT)
 
     !
     ! Metabolic limited photosynthesis
@@ -1360,13 +1430,13 @@ contains
 
     ! maximum rate of temperature and nitrogen (canopy efficiency) limited
     ! photosynthesis (gC.m-2.day-1)
-    pn = lai*avN*NUE*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,maxt)
+    pn = lai*avN*NUE*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
 
     !
     ! Diffusion limited photosynthesis
     !
 
-    ! daily canopy conductance (mmolH2O.m-2.day-1-> molCO2.m-2.day-1)
+    ! daily canopy conductance (mmolH2O.m-2.s-1-> molCO2.m-2.day-1)
     ! The ratio of H20:CO2 diffusion is 1.646259 (Jones appendix 2).
     ! i.e. gcH2O*1.646259 = gcCO2
     gs_mol = gs * 1d-3 * seconds_per_day * gs_H2O_CO2
@@ -1384,11 +1454,13 @@ contains
     ! calculate internal CO2 concentration (ppm or umol/mol)
     mult = co2+qq-pp
     ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
+    ci = min(ci,co2) ! C3 can't have more CO2 than is in the atmosphere
+    ci_global = ci
     ! calculate CO2 limited rate of photosynthesis (gC.m-2.day-1)
     pd = (gc * (co2-ci)) * umol_to_gC
     ! scale to day light period as this is then consistent with the light
-    ! capture period
-    pd = pd * (dayl_hours / 24d0)
+    ! capture period (1/24 = 0.04166667)
+    pd = pd * dayl_hours * 0.04166667d0
 
     !
     ! Light limited photosynthesis
@@ -1403,7 +1475,8 @@ contains
 
     ! calculate combined light and CO2 limited photosynthesis
     acm_gpp = pl*pd/(pl+pd)
-
+    ! sanity check
+    if (acm_gpp /= acm_gpp) acm_gpp = dble_zero
     ! don't forget to return
     return
 
@@ -1411,75 +1484,90 @@ contains
   !
   !----------------------------------------------------------------------
   !
-  double precision function find_gs(gs_in)
+  double precision function find_gs_iWUE(gs_in)
 
     ! Calculate CO2 limited photosynthesis as a function of metabolic limited
     ! photosynthesis (pn), atmospheric CO2 concentration and stomatal
     ! conductance (gs_in). Photosynthesis is calculated twice to allow for
-    ! testing of senstivity to iWUE (iWUE).
+    ! testing of senstivity to iWUE.
 
     ! arguments
     double precision, intent(in) :: gs_in
 
     ! local variables
+    double precision :: tmp
+    double precision :: gs_high, gs_store, &
+                        gpp_high, gpp_low
+
+    !!!!!!!!!!
+    ! Optimise intrinsic water use efficiency
+    !!!!!!!!!!
+
+    ! estimate photosynthesis with current estimate of gs
+    gpp_low = acm_gpp(gs_in)
+
+    ! Increment gs
+    gs_high = gs_in + delta_gs
+    ! estimate photosynthesis with incremented gs
+    gpp_high = acm_gpp(gs_high)
+
+    ! determine impact of gs increment on pd and how far we are from iWUE
+    find_gs_iWUE = iWUE - ((gpp_high - gpp_low)/lai)
+
+    ! remember to return back to the user
+    return
+
+  end function find_gs_iWUE
+  !
+  !----------------------------------------------------------------------
+  !
+  double precision function find_gs_WUE(gs_in)
+
+    ! Calculate CO2 limited photosynthesis as a function of metabolic limited
+    ! photosynthesis (pn), atmospheric CO2 concentration and stomatal
+    ! conductance (gs_in). Photosynthesis is calculated twice to allow for
+    ! testing of senstivity to WUE.
+
+    ! arguments
+    double precision, intent(in) :: gs_in
+
+    ! local variables
+    double precision :: tmp
     double precision :: gs_high, gs_store, &
                         gpp_high, gpp_low, &
                         evap_high, evap_low
 
-    if (do_iWUE) then
+    !!!!!!!!!!
+    ! Optimise water use efficiency
+    !!!!!!!!!!
 
-        !!!!!!!!!!
-        ! Optimise intrinsic water use efficiency
-        !!!!!!!!!!
+    ! Globally stored upper stomatal conductance estimate in memory
+    gs_store = stomatal_conductance
+    ! now assign the current estimate
+    stomatal_conductance = gs_in
+    ! estimate photosynthesis with current estimate of gs
+    gpp_low = acm_gpp(gs_in)
+    call calculate_transpiration(evap_low)
 
-        ! estimate photosynthesis with current estimate of gs
-        gpp_low = acm_gpp(gs_in)
+    ! Increment gs
+    gs_high = gs_in + delta_gs
+    ! now assign the incremented estimate
+    stomatal_conductance = gs_high
+    ! estimate photosynthesis with incremented gs
+    gpp_high = acm_gpp(gs_high)
+    call calculate_transpiration(evap_high)
 
-        ! Increment gs
-        gs_high = gs_in + delta_gs 
-        ! estimate photosynthesis with incremented gs
-        gpp_high = acm_gpp(gs_high)
+    ! estimate marginal return on GPP for water loss, less water use efficiency criterion (gC.kgH2O-1.m-2.s-1)
+    find_gs_WUE = ((gpp_high - gpp_low)/(evap_high - evap_low)) / lai
+    find_gs_WUE = find_gs_WUE - iWUE
 
-        ! determine impact of gs increment on pd and how far we are from iWUE
-        find_gs = iWUE - ((gpp_high - gpp_low)/lai)
-   
-    else ! iWUE = .true. / .false.
+    ! return original stomatal value back into memory
+    stomatal_conductance = gs_store
 
-        !!!!!!!!!!
-        ! Optimise water use efficiency
-        !!!!!!!!!!
-
-        ! Globally stored upper stomatal conductance estimate in memory
-        gs_store = stomatal_conductance
-        ! now assign the current estimate
-        stomatal_conductance = gs_in
- 
-        ! estimate photosynthesis with current estimate of gs
-        gpp_low = acm_gpp(gs_in)
-        call calculate_transpiration(evap_low)
-
-        ! Increment gs
-        gs_high = gs_in + delta_gs 
-        ! now assign the incremented estimate
-        stomatal_conductance = gs_high
-        ! estimate photosynthesis with incremented gs
-        gpp_high = acm_gpp(gs_high)
-        call calculate_transpiration(evap_high)
-
-        ! estimate marginal return on GPP for water loss, less water use efficiency criterion (gC.kgH2O-1.m-2.s-1)
-        find_gs = ((gpp_high - gpp_low)/(evap_high - evap_low)) / lai  
-        find_gs = find_gs - iWUE
-
-        ! return original stomatal value back into memory
-        stomatal_conductance = gs_store
-
-    end if ! iWUE = .true. / .false.
-  
     ! remember to return back to the user
     return
 
-  end function find_gs
-  !
+  end function find_gs_WUE  !
   !------------------------------------------------------------------
   !
   subroutine acm_albedo_gc(deltaWP,Rtot)
@@ -1497,18 +1585,8 @@ contains
     ! local variables
     double precision :: denom
     double precision, parameter :: max_gs = 2500d0, & ! mmolH2O.m-2.s-1
-                                   min_gs = 0.1d0,  & !
-                                   tol_gs = 4d0
-
-    ! calculate aerodynamic using consistent approach with SPA
-    call calculate_aerodynamic_conductance
-
-    !!!!!!!!!!
-    ! Determine net shortwave and isothermal longwave energy balance
-    !!!!!!!!!!
-
-    call calculate_shortwave_balance
-    call calculate_longwave_isothermal(maxt,maxt)
+                                   min_gs = 0.0001d0, & !
+                                   tol_gs = 4d0!4d0       !
 
     !!!!!!!!!!
     ! Calculate stomatal conductance under H2O and CO2 limitations
@@ -1522,28 +1600,45 @@ contains
        max_supply = vsmall
     end if
 
-    ! Invert Penman-Monteith equation to give gs (m.s-1) needed to meet
-    ! maximum possible evaporation for the day.
-    ! This will then be reduced based on CO2 limits for diffusion based
-    ! photosynthesis
-    denom = slope * ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2) &
-            + (air_density_kg * cpair * vpd_pa * 1d-3 * aerodynamic_conductance)
-    denom = (denom / (lambda * max_supply * mmol_to_kg_water * dayl_seconds_1)) - slope
-    denom = denom / psych
-    stomatal_conductance = aerodynamic_conductance / denom
+    if (lai > vsmall .and. aerodynamic_conductance > vsmall) then
 
-    ! convert m.s-1 to mmolH2O.m-2.s-1
-    stomatal_conductance = stomatal_conductance * 1d3 * convert_ms1_mol_1
-    ! if conditions are dew forming then set conductance to maximum as we are not going to be limited by water demand
-    if (stomatal_conductance <= dble_zero .or. stomatal_conductance > max_gs) stomatal_conductance = max_gs
+        ! there is lai therefore we have have stomatal conductance
 
-    ! if we are potentially limited by stomatal conductance or we are using instrinsic water use efficiency (rather than WUE)
-    ! then iterate to find optimum gs otherwise just go with the max...
-    if (stomatal_conductance /= max_gs .or. do_iWUE ) then
-        ! If there is a positive demand for water then we will solve for photosynthesis limits on gs through iterative solution
-        delta_gs = 1d-3*lai ! mmolH2O/m2leaf/day
-        stomatal_conductance = zbrent('acm_albedo_gc:find_gs',find_gs,min_gs,stomatal_conductance,tol_gs)
-    end if
+        ! Invert Penman-Monteith equation to give gs (m.s-1) needed to meet
+        ! maximum possible evaporation for the day.
+        ! This will then be reduced based on CO2 limits for diffusion based
+        ! photosynthesis
+        denom = slope * ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2) &
+              + (air_density_kg * cpair * vpd_pa * 1d-3 * aerodynamic_conductance)
+        denom = (denom / (lambda * max_supply * mmol_to_kg_water * dayl_seconds_1)) - slope
+        denom = denom / psych
+        stomatal_conductance = aerodynamic_conductance / denom
+
+        ! convert m.s-1 to mmolH2O.m-2.s-1
+        stomatal_conductance = stomatal_conductance * 1d3 * convert_ms1_mol_1
+        ! if conditions are dew forming then set conductance to maximum as we are not going to be limited by water demand
+        if (stomatal_conductance <= dble_zero .or. stomatal_conductance > max_gs) stomatal_conductance = max_gs
+
+        ! if we are potentially limited by stomatal conductance or we are using instrinsic water use efficiency (rather than WUE)
+        ! then iterate to find optimum gs otherwise just go with the max...
+        if (stomatal_conductance /= max_gs .or. do_iWUE ) then
+            ! If there is a positive demand for water then we will solve for photosynthesis limits on gs through iterative solution
+            delta_gs = 1d-3*lai ! mmolH2O/m2leaf/day
+            if (do_iWUE) then
+                ! intrinsic WUE optimisation
+                stomatal_conductance = zbrent('acm_albedo_gc:find_gs_iWUE',find_gs_iWUE,min_gs,stomatal_conductance,tol_gs)
+            else
+                ! WUE optimisation
+                stomatal_conductance = zbrent('acm_albedo_gc:find_gs_WUE',find_gs_WUE,min_gs,stomatal_conductance,tol_gs)
+            endif
+        end if
+
+    else
+
+        ! if no LAI then there can be no stomatal conductance
+        stomatal_conductance = dble_zero
+
+    endif ! if LAI > vsmall
 
   end subroutine acm_albedo_gc
   !
@@ -1638,7 +1733,7 @@ contains
   !
   !------------------------------------------------------------------
   !
-  subroutine calculate_wetcanopy_evaporation(wetcanopy_evap,pot_actual_ratio,storage,transpiration)
+  subroutine calculate_wetcanopy_evaporation(wetcanopy_evap,act_pot_ratio,storage,transpiration)
 
     ! Estimates evaporation of canopy intercepted rainfall based on the Penman-Monteith model of
     ! evapotranspiration used to estimate SPA's daily evapotranspiration flux
@@ -1650,11 +1745,11 @@ contains
     double precision, intent(in) :: transpiration      ! kgH2O/m2/day
     double precision, intent(inout) :: storage         ! canopy water storage kgH2O/m2
     double precision, intent(out) :: wetcanopy_evap, & ! kgH2O.m-2.day-1
-                                   pot_actual_ratio    ! Ratio of potential evaporation to actual
+                                      act_pot_ratio    ! Ratio of potential evaporation to actual
 
     ! local variables
-    double precision :: canopy_radiation & ! isothermal net radiation (W/m2)
-                                     ,gb   ! stomatal and boundary layer conductance (m.s-1)
+    double precision :: canopy_radiation, & ! isothermal net radiation (W/m2)
+                                      gb   ! stomatal and boundary layer conductance (m.s-1)
 
     !!!!!!!!!!
     ! Calculate canopy conductance (to water vapour)
@@ -1668,7 +1763,6 @@ contains
     !!!!!!!!!!
 
     ! Absorbed shortwave radiation MJ.m-2.day-1 -> J.m-2.s-1
-!    canopy_radiation = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
     canopy_radiation = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * seconds_per_day_1)
 
     !!!!!!!!!!
@@ -1680,6 +1774,8 @@ contains
     ! Calculate the potential wet canopy evaporation, limited by energy used for
     ! transpiration
     wetcanopy_evap = (wetcanopy_evap / (lambda*(slope+psych))) * seconds_per_day !dayl_seconds
+    ! substract transpiration from potential surface evaporation
+    wetcanopy_evap = wetcanopy_evap - transpiration
 
     ! dew is unlikely to occur (if we had energy balance) if mint > 0
     if (wetcanopy_evap < dble_zero .and. mint > dble_zero) wetcanopy_evap = dble_zero
@@ -1688,19 +1784,23 @@ contains
 
     ! Remember potential evaporation to later calculation of the potential
     ! actual ratio
-    pot_actual_ratio = wetcanopy_evap
+    act_pot_ratio = wetcanopy_evap
 
     ! assuming there is any rainfall, currently water on the canopy or dew formation
     if (rainfall > dble_zero .or. storage > dble_zero .or. wetcanopy_evap < dble_zero) then
-       ! Update based on canopy water storage
-       call canopy_interception_and_storage(wetcanopy_evap,storage,transpiration)
+        ! Update based on canopy water storage
+        call canopy_interception_and_storage(wetcanopy_evap,storage)
     else
-       ! there is no water movement possible
-       intercepted_rainfall = dble_zero ; wetcanopy_evap = dble_zero
+        ! there is no water movement possible
+        intercepted_rainfall = dble_zero ; wetcanopy_evap = dble_zero
     endif
 
     ! now calculate the ratio of potential to actual evaporation
-    pot_actual_ratio = abs(wetcanopy_evap / pot_actual_ratio)
+    if (act_pot_ratio == dble_zero) then
+        act_pot_ratio = dble_zero
+    else
+        act_pot_ratio = abs(wetcanopy_evap / act_pot_ratio)
+    endif
 
   end subroutine calculate_wetcanopy_evaporation
   !
@@ -1722,7 +1822,8 @@ contains
                       ,water_diffusion & ! Diffusion of water through soil matrix (m.s-1)
                                 ,esurf & ! see code below
                                  ,esat & ! soil air space saturation vapour pressure
-                                  ,gws   ! water vapour conductance through soil air space (m.s-1)
+                                  ,gws & ! water vapour conductance through soil air space (m.s-1)
+                                   ,Qc
 
     !!!!!!!!!!
     ! Estimate energy radiation balance (W.m-2)
@@ -1730,6 +1831,10 @@ contains
 
     ! Absorbed shortwave radiation MJ.m-2.day-1 -> J.m-2.s-1
     soil_radiation = soil_lwrad_Wm2 + (soil_swrad_MJday * 1d6 * dayl_seconds_1)
+    ! estimate ground heat flux from statistical approximation, positive if energy moving up profile
+    ! NOTE: linear coefficient estimates from SPA simulations
+    Qc = -0.4108826d0 * (maxt - maxt_lag1)
+    soil_radiation = soil_radiation + Qc
 
     !!!!!!!!!!
     ! Calculate soil evaporative fluxes (kgH2O/m2/day)
@@ -1750,16 +1855,15 @@ contains
     ! now difference in vapour pressure between soil and canopy air spaces
     esurf = esurf - air_vapour_pressure
 
-    ! generate final output
     ! Estimate potential soil evaporation flux (kgH2O.m-2.day-1)
     soilevap = (slope*soil_radiation) + (air_density_kg*cpair*esurf*soil_conductance)
     soilevap = soilevap / (lambda*(slope+(psych*(dble_one+soil_conductance/gws))))
     soilevap = soilevap * dayl_seconds
 
     ! dew is unlikely to occur (if we had energy balance) if mint > 0
-    if (soilevap < dble_zero .and. mint > dble_zero) soilevap = dble_zero
+!    if (soilevap < dble_zero .and. mint > dble_one) soilevap = dble_zero
     ! Sublimation is unlikely to occur (if we had energy balance) if maxt < 0
-    if (soilevap > dble_zero .and. maxt < dble_zero) soilevap = dble_zero
+!    if (soilevap > dble_zero .and. maxt < dble_one) soilevap = dble_zero
 
   end subroutine calculate_soil_evaporation
   !
@@ -1938,7 +2042,7 @@ contains
     dayl_seconds = dayl_hours * seconds_per_hour
 
     ! estimate sun rise and run set hours
-    sunrise = 12 - nint(dayl_hours*0.5d0) ; sunset = 12 + nint(dayl_hours*0.5d0)
+    sunrise = 12 - nint(dayl_hours*0.5d0) ; sunset = sunrise + nint(dayl_hours)
 
     ! estimate the solar cosine zenith angle for 12 noon
     cos_solar_zenith_angle = sinld + cosld
@@ -2122,8 +2226,8 @@ contains
     ! Update soil reflectance based on snow cover
     if (snow_storage > dble_zero) then
         fsnow = dble_one - exp( - snow_storage * 1d-2 )  ! fraction of snow cover on the ground
-        absorbed_par_fraction_soil = (dble_one - fsnow) * soil_swrad_absorption + fsnow * newsnow_par_abs
-        absorbed_nir_fraction_soil = (dble_one - fsnow) * soil_swrad_absorption + fsnow * newsnow_nir_abs
+        absorbed_par_fraction_soil = ((dble_one - fsnow) * soil_swrad_absorption) + (fsnow * newsnow_par_abs)
+        absorbed_nir_fraction_soil = ((dble_one - fsnow) * soil_swrad_absorption) + (fsnow * newsnow_nir_abs)
     else
         absorbed_par_fraction_soil = soil_swrad_absorption
         absorbed_nir_fraction_soil = soil_swrad_absorption
@@ -2173,7 +2277,7 @@ contains
     ! local variables
     integer :: i
     double precision :: bonus, sum_water_flux, &
-                        soilR1,soilR2,transpiration_resistance,root_reach_local, &
+                        transpiration_resistance,root_reach_local, &
                         root_depth_50
     double precision, dimension(nos_root_layers) :: root_mass    &
                                                    ,root_length  &
@@ -2190,7 +2294,7 @@ contains
     ! whether this actually varies with height or whether tall trees have a
     ! xylem architecture which keeps the whole plant conductance (gplant) 1-10 (ish).
 !    transpiration_resistance = (gplant * lai)**(-dble_one)
-    transpiration_resistance = canopy_height / (gplant * lai)
+    transpiration_resistance = canopy_height / (gplant * max(min_lai,lai))
 
     !!!!!!!!!!!
     ! calculate current steps soil hydraulic conductivity
@@ -2258,10 +2362,7 @@ contains
     ! Calculate hydraulic properties and each rooted layer
     !!!!!!!!!!!
 
-    ! soil conductivity converted from m.s-1 -> m2.s-1.MPa-1 by head
-    root_reach_local = min(root_reach,layer_thickness(1))
-    soilR1=soil_resistance(root_length(1),root_reach_local,soil_conductivity(1)*head_1)
-    soilR2=root_resistance(root_mass(1),root_reach_local)
+
     ! calculate and accumulate steady state water flux in mmol.m-2.s-1
     ! NOTE: Depth correction already accounted for in soil resistance
     ! calculations and this is the maximum potential rate of transpiration
@@ -2270,24 +2371,19 @@ contains
     ! subtracted in SPA equations because deltaWP is soilWP-minlwp not
     ! soilWP prior to application of minlwp
     demand = abs(minlwp-SWP(1:nos_root_layers))+head*canopy_height
-    water_flux(1) = demand(1)/(transpiration_resistance + soilR1 + soilR2)
-
-    ! second root layer
-    if (root_mass(2) > dble_zero) then
-        root_reach_local = min(root_reach,layer_thickness(2))
-        soilR1=soil_resistance(root_length(2),root_reach_local,soil_conductivity(2)*head_1)
-        soilR2=root_resistance(root_mass(2),root_reach_local)
-        water_flux(2) = demand(2)/(transpiration_resistance + soilR1 + soilR2)
-    endif ! roots present in the seconds layer?
-
-    ! Bottom root layer
-    if (root_mass(3) > dble_zero ) then
-       ! soil conductivity converted from m.s-1 -> m2.s-1.MPa-1 by head
-       soilR1=soil_resistance(root_length(3),layer_thickness(3),soil_conductivity(3)*head_1)
-       soilR2=root_resistance(root_mass(3),layer_thickness(3))
-       ! calculate and accumulate steady state water flux in mmol.m-2.s-1
-       water_flux(3) = demand(3)/(transpiration_resistance + soilR1 + soilR2)
-    endif ! roots present in third layer?
+    ! now loop through soil layers, where root is present
+    do i = 1, nos_root_layers
+      if (root_mass(i) > dble_zero) then
+          ! if there is root then there is a water flux potential...
+          root_reach_local = min(root_reach,layer_thickness(i))
+          ! calculate and accumulate steady state water flux in mmol.m-2.s-1
+          water_flux(1) = plant_soil_flow(i,root_length(i),root_mass(i) &
+                         ,demand(i),root_reach_local,transpiration_resistance)
+      else
+          ! ...if there is not then we wont have any below...
+          exit
+      end if ! root present in current layer?
+    end do ! nos_root_layers
     ratio = layer_thickness(1:nos_root_layers)/sum(layer_thickness(1:nos_root_layers))
 
     ! if freezing then assume soil surface is frozen
@@ -2305,7 +2401,7 @@ contains
     wSWP = wSWP / sum_water_flux
 
     ! sanity check in case of zero flux
-    if (sum_water_flux == dble_zero) then
+    if (sum_water_flux <= vsmall) then
         wSWP = -20d0
         uptake_fraction = dble_zero ; uptake_fraction(1) = dble_one
     endif
@@ -2324,7 +2420,7 @@ contains
   !
   !-----------------------------------------------------------------
   !
-  subroutine canopy_interception_and_storage(potential_evaporation,storage,transpiration)
+  subroutine canopy_interception_and_storage(potential_evaporation,storage)
 
     ! Simple daily time step integration of canopy rainfall interception, runoff
     ! and rainfall (kgH2O.m-2.s-1). NOTE: it is possible for intercepted rainfall to be
@@ -2334,194 +2430,108 @@ contains
     implicit none
 
     ! arguments
-    double precision, intent(in) :: transpiration ! transpiration (kgH2O/m2/day)
     double precision, intent(inout) :: storage, & ! canopy water storage (kgH2O/m2)
                          potential_evaporation    ! wet canopy evaporation (kgH2O.m-2.day-1),
                                                   ! enters as potential but leaves as water balance adjusted
     ! local variables
-    integer :: i, hr, start_rain, finish_rain, start, finish
-    double precision :: through_fall, max_storage, max_storage_1, daily_addition, wetcanopy_evaporation &
-                       ,drain_rate, evap_rate, initial_canopy, dayl_evap_coef, solar_integral, gradient, half_day
-    double precision, parameter :: rainfall_period = 3d0 ! hours over which rain occurs see FLUXNET2015 meteorology.
+    integer :: i, hr
+    double precision :: a, through_fall, max_storage, max_storage_1, daily_addition, wetcanopy_evaporation &
+                       ,potential_drainage_rate ,drain_rate, evap_rate, initial_canopy, co_mass_balance, dx, tmp1, tmp2, tmp3
+    ! local parameters
+    double precision, parameter :: CanIntFrac = -0.5d0,  & ! Coefficient scaling rainfall interception fraction with LAI
+                                  CanStorFrac = 0.1d0,   & ! Coefficient scaling canopy water storage with LAI
+                                 RefDrainRate = 0.002d0, & ! Reference drainage rate (mm/min; Rutter et al 1975)
+                                  RefDrainLAI = 1.05d0,  & ! Reference drainage LAI (m2/m2; Rutter et al 1975)
+                                 RefDrainCoef = 3.7d0,   & ! Reference drainage Coefficient (Rutter et al 1975)
+                               RefDrainCoef_1 = RefDrainCoef ** (-dble_one)
 
     ! hold initial canopy storage in memory
     initial_canopy = storage
     ! determine maximum canopy storage & through fall fraction
-    through_fall = max(min_throughfall,exp(-0.5d0*lai))
+    through_fall = max(min_throughfall,exp(CanIntFrac*lai))
     ! maximum canopy storage (mm); minimum is applied to prevent errors in
     ! drainage calculation. Assume minimum capacity due to wood
-    max_storage = max(min_storage,0.1d0*lai) ; max_storage_1 = max_storage**(-dble_one)
+    max_storage = max(min_storage,CanStorFrac*lai) ; max_storage_1 = max_storage**(-dble_one)
     ! potential intercepted rainfall (kgH2O.m-2.s-1)
     intercepted_rainfall = rainfall * (dble_one - through_fall)
 
-    ! estimate start and finish points for rainfall assumed to center at
-    ! sunrise at the moment...
-    start_rain = sunrise - nint(rainfall_period*0.5d0) ; start_rain = max(1, start)
-    finish_rain = start_rain + nint(rainfall_period) - 1 ; finish_rain = min(24,finish)
+    ! calculate drainage coefficients (Rutter et al 1975); Corsican Pine
+    ! 0.002 is canopy specific coefficient modified by 0.002*(max_storage/1.05)
+    ! where max_storage is the canopy maximum capacity (mm) (LAI based) and
+    ! 1.05 is the original canopy capacitance
+    a = log( RefDrainRate * ( max_storage / RefDrainLAI ) ) - RefDrainCoef * max_storage
 
     ! average rainfall intercepted by canopy (kgH2O.m-2.day-1)
     daily_addition = intercepted_rainfall * seconds_per_day
 
+    ! reset cumulative variables
     through_fall = dble_zero ; wetcanopy_evaporation = dble_zero
     drain_rate = dble_zero ; evap_rate = dble_zero
-    ! determine dew forming or evaporative conditions?
-    if (potential_evaporation > dble_zero) then
 
-        !
-        ! evaporative conditions
-        !
+    ! deal with rainfall additions first
+    do i = 1, int(days_per_step)
 
-        ! do we need to iterate in the first place?
-        if (daily_addition + storage < max_storage) then
+       ! add rain to the canopy and overflow as needed
+       storage = storage + daily_addition
 
-           ! guess not...
+       if (storage > max_storage) then
 
-           ! add all the rain to the canopy
-           storage = storage + daily_addition
-           ! scale potential evaporation by wet surface, substract transpiraion and limit to available water supply
-           evap_rate = potential_evaporation * min(dble_one,storage * max_storage_1)
-           evap_rate = max(dble_zero,evap_rate - transpiration)
-           wetcanopy_evaporation = min(storage,evap_rate)
+           if (potential_evaporation > dble_zero) then
 
-           ! update canopy
-           storage = storage - wetcanopy_evaporation
+               ! assume co-access to available water above max_storage by both drainage and
+               ! evaporation. Water below max_storage is accessable by evaporation only.
 
-           ! no further throughfall as there is no risk of overflow
-           through_fall = dble_zero
+               ! Trapezium rule for approximating integral of drainage rate.
+               ! Allows estimation of the mean drainage rate between starting point and max_storage,
+               ! thus the time period appropriate for co-access can be quantified
+               dx = storage - ((storage + max_storage)*0.5d0)
+               tmp1 = exp(a + (RefDrainCoef * storage))
+               tmp2 = exp(a + (RefDrainCoef * max_storage))
+               tmp3 = exp(a + (RefDrainCoef * (storage+dx)))
+               potential_drainage_rate = 0.5d0 * dx * ((tmp1 + tmp2) + 2d0 * tmp3)
+               potential_drainage_rate = potential_drainage_rate * 1440d0
 
-           ! assume the same happens each day and scale up evaporative component
-           wetcanopy_evaporation = wetcanopy_evaporation * days_per_step
+               ! restrict evaporation and drainage to the quantity above max_storage
+               evap_rate = potential_evaporation ; drain_rate = min(potential_drainage_rate,storage-max_storage)
 
-        else
+               ! limit based on available water if total demand is greater than excess
+               co_mass_balance = ((storage-max_storage) / (evap_rate + drain_rate))
+               evap_rate = evap_rate * co_mass_balance ; drain_rate = drain_rate * co_mass_balance
 
-           ! must now iterate...
+               ! estimate evaporation from remaining water, less that already removed from storage and evaporation energy used
+               evap_rate = evap_rate + min(potential_evaporation - evap_rate, storage - evap_rate - drain_rate)
 
-           ! adjust to rainfall period
-           daily_addition = daily_addition * (dble_one / dble(finish_rain - start_rain + 1))
+           else
 
-           ! estimate the linear approximation of the solar angle across the day
-           ! and use this to distribute the evaporative potential.
-           ! NOTE: that this integral has been simplifed to cancel out divide by 2
-           ! (from the inegral) and the 2 sides of the linear curve
-           half_day = dble(12 - sunrise)
-           gradient = cos_solar_zenith_angle / half_day
-           solar_integral = gradient * half_day ** 2
+               ! load dew formation to the current local evap_rate variable
+               evap_rate = potential_evaporation
+               ! restrict drainage the quantity above max_storage, adding dew formation too
+               drain_rate = (storage - evap_rate) - max_storage
 
-           ! set start and end of the daily loop needed
-           start = min(start_rain,sunrise) ; finish = sunset
+           endif
 
-           ! intergrate over canopy for each day
-           do i = 1, int(days_per_step)
+       else
+           ! no drainage just apply evaporation / dew formation fluxes directly
+           evap_rate = potential_evaporation
+           drain_rate = dble_zero
+           if (evap_rate > dble_zero) then
+               ! evaporation restricted by fraction of surface actually covered
+               ! in water
+               evap_rate = evap_rate * min(dble_one,storage * max_storage_1)
+               ! and the total amount of water
+               evap_rate = min(evap_rate,storage)
+           else
+               ! then dew formation has occurred, if this pushes storage > max_storage add it to drainage
+               drain_rate = max(dble_zero,(storage - evap_rate) - max_storage)
+           endif ! evap_rate > 0
+       endif ! storage > max_storage
 
-              do hr = start, finish
+       ! update canopy storage with water flux
+       storage = max(dble_zero,storage - evap_rate - drain_rate)
+       wetcanopy_evaporation = wetcanopy_evaporation + evap_rate
+       through_fall = through_fall + drain_rate
 
-                  ! add new rain to the canopy
-                  if (hr >= start_rain .and. hr <= finish_rain) storage = storage + daily_addition
-
-                  ! estimate rate of drainage from store (mm per hour)
-                  if (storage > max_storage) then
-                      drain_rate = storage-max_storage
-                      ! update through fall with the new drainage
-                      through_fall = through_fall + drain_rate
-                      ! update storage
-                      storage = storage - drain_rate
-                  endif ! storage > max_storage
-
-                  ! we this is the night time then we assume dew is forming
-                  if (hr >= sunrise .and. hr < sunset) then
-                      ! estimate the solar correction for the specific hour of the day
-                      dayl_evap_coef = (gradient * dble((12 - sunrise) - abs(hr - 12))) / solar_integral
-                      ! estimate evaporation rate adjusted for available water supply and day length
-                      evap_rate = potential_evaporation * min(dble_one,storage * max_storage_1) * dayl_evap_coef
-                      ! substract equivalent assumed transpiration 
-                      evap_rate = max(dble_zero,evap_rate - (transpiration * dayl_evap_coef))
-                      ! and limit by available canopy surface water
-                      evap_rate = min(storage,evap_rate)
-                      ! update evaporation with new evaporation
-                      wetcanopy_evaporation = wetcanopy_evaporation + evap_rate
-                      ! remove drainage from canopy but not below the max_storage value
-                      storage = storage - evap_rate
-                  endif
-
-                  ! add escape condition
-                  if (hr > finish_rain .and. canopy_storage == dble_zero) exit
-
-              end do ! 24 hours
-
-           end do ! day looping
-
-        end if ! daily_addition + storage < max_storage
-
-    else ! dew forming or evaporative
-
-        !
-        ! dew forming conditions
-        !
-
-        ! do we need to iterate in the first place?
-        if (daily_addition + storage - potential_evaporation < max_storage) then
-
-           ! guess not...
-
-           ! add all the rain to the canopy
-           storage = storage + daily_addition
-           ! nope just substract the potential evaporation from the rainfall
-           wetcanopy_evaporation = max(potential_evaporation,-(max_storage-storage))
-           ! update canopy
-           storage = storage - wetcanopy_evaporation
-
-           ! no further throughfall as there is no risk of overflow
-           through_fall = dble_zero
-
-           ! assume the same happens each day and scale up evaporative component
-           wetcanopy_evaporation = wetcanopy_evaporation * days_per_step
-
-        else
-
-           ! must iterate...
-
-           ! estimate day length corrections,
-           ! we assume dew fall is most likely to occur at the same time as rainfall is likely to occur
-           dayl_evap_coef = (dble_one / dble(finish_rain - start_rain + 1))
-
-           ! set start and end of the daily loop needed
-           start = 1 ; finish = 24
-
-           ! intergrate over canopy for each day
-           do i = 1, int(days_per_step)
-
-              do hr = start, finish
-
-                  ! we this is the night time then we assume dew is forming
-                  if (hr >= start_rain .and. hr <= finish_rain) then
-                      ! add new rain to the canopy
-                      storage = storage + daily_addition
-                      ! estimate evaporation rate
-                      evap_rate = potential_evaporation * dayl_evap_coef
-                      ! negative sign due to the fact that this is a negative flux...
-                      evap_rate = max(evap_rate,-max(dble_zero,max_storage-storage))
-                      ! update evaporation with new evaporation
-                      wetcanopy_evaporation = wetcanopy_evaporation + evap_rate
-                      ! remove drainage from canopy but not below the max_storage value
-                      storage = storage - evap_rate
-                  end if
-
-                  ! estimate rate of drainage from store (mm per hour)
-                  if (storage > max_storage) then
-                      drain_rate = storage-max_storage
-                      ! update through fall with the new drainage
-                      through_fall = through_fall + drain_rate
-                      ! update storage
-                      storage = storage - drain_rate
-                  endif ! storage > max_storage
-
-              end do ! 24 hours
-
-           end do ! day looping
-
-        end if ! daily_addition + storage - wetcanopy_evaporation < max_storage
-
-    end if ! dew forming or evaporative
+    end do ! days
 
     ! correct intercepted rainfall rate to kgH2O.m-2.s-1
     intercepted_rainfall = intercepted_rainfall - ((through_fall * days_per_step_1) * seconds_per_day_1)
@@ -2547,261 +2557,6 @@ contains
     if (storage < 10d0*vsmall) storage = dble_zero
 
   end subroutine canopy_interception_and_storage
-  !
-  !-----------------------------------------------------------------
-  !
-  ! subroutine canopy_interception_and_storage(potential_evaporation,storage)
-  !
-  !   ! Simple daily time step integration of canopy rainfall interception, runoff
-  !   ! and rainfall (kgH2O.m-2.s-1). NOTE: it is possible for intercepted rainfall to be
-  !   ! negative if stored water running off into the soil is greater than
-  !   ! rainfall (i.e. when leaves have died between steps)
-  !
-  !   implicit none
-  !
-  !   ! arguments
-  !   double precision, intent(inout) :: storage, &
-  !                        potential_evaporation    ! wet canopy evaporation (kgH2O.m-2.day-1),
-  !                                                 ! enters as potential but leaves as water balance adjusted
-  !   ! local variables
-  !   integer :: i, d, hr, start_rain, finish_rain, start, finish
-  !   double precision :: local_storage, local_drain, nos_integrate, nos_minutes, tmp, through_fall, max_storage, max_storage_1 &
-  !                      ,daily_addition, wetcanopy_evaporation, a, b  &
-  !                      ,drain_rate, evap_rate, initial_canopy, dayl_evap_coef, solar_integral, gradient, half_day
-  !   double precision, parameter :: rainfall_period = 3d0 ! hours over which rain occurs see FLUXNET2015 meteorology.
-  !
-  !   ! hold initial canopy storage in memory
-  !   initial_canopy = storage
-  !   ! determine maximum canopy storage & through fall fraction
-  !   through_fall = max(min_throughfall,exp(-0.5d0*lai))
-  !   ! maximum canopy storage (mm); minimum is applied to prevent errors in
-  !   ! drainage calculation. Assume minimum capacity due to wood
-  !   max_storage = max(min_storage,0.1d0*lai) ; max_storage_1 = max_storage**(-dble_one)
-  !   ! potential intercepted rainfall (kgH2O.m-2.s-1)
-  !   intercepted_rainfall = rainfall * (dble_one - through_fall)
-  !
-  !   ! estimate start and finish points for rainfall assumed to center at
-  !   ! sunrise at the moment...
-  !   start_rain = sunrise - nint(rainfall_period*0.5d0) ; start_rain = max(1, start)
-  !   finish_rain = start_rain + nint(rainfall_period) - 1 ; finish_rain = min(24,finish)
-  !   start_rain = 6 ; finish_rain = 10
-  !
-  !   ! average rainfall intercepted by canopy (kgH2O.m-2.day-1)
-  !   daily_addition = intercepted_rainfall * seconds_per_day
-  !
-  !   ! calculate drainage coefficients (Rutter et al 1975); Corsican Pine
-  !   ! 0.002 is canopy specific coefficient modified by 0.002*(max_storage/1.05)
-  !   ! where max_storage is the canopy maximum capacity (mm) (LAI based) and
-  !   ! 1.05 is the original canopy capacitance
-  !   a = log( 0.002d0 * ( max_storage / 1.05d0 ) ) - 3.7d0 * max_storage
-  !
-  !   through_fall = dble_zero ; wetcanopy_evaporation = dble_zero
-  !   tmp = dble_zero ; drain_rate = dble_zero ; evap_rate = dble_zero
-  !   ! determine dew forming or evaporative conditions?
-  !   if (potential_evaporation > dble_zero) then
-  !
-  !       !
-  !       ! evaporative conditions
-  !       !
-  !
-  !       ! do we need to iterate in the first place?
-  !       if (daily_addition + storage < max_storage) then
-  !
-  !          ! guess not...
-  !
-  !          ! add all the rain to the canopy
-  !          storage = storage + daily_addition
-  !          ! nope just substract the potential evaporation from the rainfall
-  !          wetcanopy_evaporation = min(storage,potential_evaporation * min(dble_one,storage * max_storage_1))
-  !          ! update canopy
-  !          storage = storage - wetcanopy_evaporation
-  !
-  !          ! no further throughfall as there is no risk of overflow
-  !          through_fall = dble_zero
-  !
-  !          ! assume the same happens each day and scale up evaporative component
-  !          wetcanopy_evaporation = wetcanopy_evaporation * days_per_step
-  !
-  !       else
-  !
-  !          ! must now iterate...
-  !
-  !          ! adjust to rainfall period
-  !          daily_addition = daily_addition * (dble_one / dble(finish_rain - start_rain + 1))
-  !
-  !          ! estimate the linear approximation of the solar angle across the day
-  !          ! and use this to distribute the evaporative potential.
-  !          ! NOTE: that this integral has been simplifed to cancel out divide by 2
-  !          ! (from the inegral) and the 2 sides of the linear curve
-  !          half_day = dble(12 - sunrise)
-  !          gradient = cos_solar_zenith_angle / half_day
-  !          solar_integral = gradient * half_day ** 2
-  !
-  !          ! set start and end of the daily loop needed
-  !          start = min(start_rain,sunrise) ; finish = sunset
-  !
-  !          ! intergrate over canopy for each day
-  !          do i = 1, int(days_per_step)
-  !
-  !             do hr = start, finish
-  !
-  !                 ! add new rain to the canopy
-  !                 if (hr >= start_rain .and. hr <= finish_rain) storage = storage + daily_addition
-  !
-  !                 ! reset drainage calculation
-  !                 drain_rate = dble_zero
-  !                 ! estimate rate of drainage from store (mm per hour)
-  !                 if (storage > max_storage) then
-  !                     nos_minutes = 10d0
-  !                     d = 1 ; nos_integrate = 60d0 / nos_minutes
-  !                     drain_rate = dble_zero ; local_drain = dble_zero ; local_storage = storage
-  !                     do while (d <= nint(nos_integrate) .and. local_storage > max_storage)
-  !                        ! estimate drainage rate over the hour but in small increments
-  !                        local_drain = exp( a + 3.7d0 * local_storage ) * nos_minutes
-  !                        local_storage = local_storage - local_drain
-  !                        drain_rate = drain_rate + local_drain
-  !                        d = d + 1
-  !                     end do ! integrate over the canopy
-  !                     drain_rate = min(storage,drain_rate)
-  !                     ! update through fall with the new drainage
-  !                     through_fall = through_fall + drain_rate
-  !                     ! update storage
-  !                     storage = storage - drain_rate
-  !                 endif ! storage > max_storage
-  !
-  !                 ! reset evaporation
-  !                 evap_rate = dble_zero
-  !                 ! we this is the night time then we assume dew is forming
-  !                 if (hr >= sunrise .and. hr < sunset) then
-  !                     ! estimate the solar correction for the specific hour of the day
-  !                     dayl_evap_coef = (gradient * dble((12 - sunrise) - abs(hr - 12))) / solar_integral
-  !                     ! estimate evaporation rate adjusted for available water supply and day length
-  !                     evap_rate = potential_evaporation * min(dble_one,storage * max_storage_1) * dayl_evap_coef
-  !                     evap_rate = min(storage,evap_rate)
-  !                     ! update evaporation with new evaporation
-  !                     wetcanopy_evaporation = wetcanopy_evaporation + evap_rate
-  !                     ! remove drainage from canopy but not below the max_storage value
-  !                     storage = storage - evap_rate
-  !                 endif
-  !
-  !                 ! add escape condition
-  !                 if (hr > finish_rain .and. canopy_storage == dble_zero) exit
-  !
-  !             end do ! 24 hours
-  !
-  !          end do ! day looping
-  !
-  !       end if ! daily_addition + storage < max_storage
-  !
-  !   else ! dew forming or evaporative
-  !
-  !       !
-  !       ! dew forming conditions
-  !       !
-  !
-  !       ! do we need to iterate in the first place?
-  !       if (daily_addition + storage - potential_evaporation < max_storage) then
-  !
-  !          ! guess not...
-  !
-  !          ! add all the rain to the canopy
-  !          storage = storage + daily_addition
-  !          ! nope just substract the potential evaporation from the rainfall
-  !          wetcanopy_evaporation = max(potential_evaporation,-(max_storage-storage))
-  !          ! update canopy
-  !          storage = storage - wetcanopy_evaporation
-  !
-  !          ! no further throughfall as there is no risk of overflow
-  !          through_fall = dble_zero
-  !
-  !          ! assume the same happens each day and scale up evaporative component
-  !          wetcanopy_evaporation = wetcanopy_evaporation * days_per_step
-  !
-  !       else
-  !
-  !          ! must iterate...
-  !
-  !          ! estimate day length corrections,
-  !          ! we assume dew fall is most likely to occur at the same time as rainfall is likely to occur
-  !          dayl_evap_coef = (dble_one / dble(finish_rain - start_rain + 1))
-  !
-  !          ! set start and end of the daily loop needed
-  !          start = 1 ; finish = 24
-  !
-  !          ! intergrate over canopy for each day
-  !          do i = 1, int(days_per_step)
-  !
-  !             do hr = start, finish
-  !
-  !                 ! reset evaporation
-  !                 evap_rate = dble_zero
-  !                 ! we this is the night time then we assume dew is forming
-  !                 if (hr >= start_rain .and. hr <= finish_rain) then
-  !                     ! add new rain to the canopy
-  !                     storage = storage + daily_addition
-  !                     ! estimate evaporation rate
-  !                     evap_rate = potential_evaporation * dayl_evap_coef
-  !                     ! negative sign due to the fact that this is a negative flux...
-  !                     evap_rate = max(evap_rate,-max(dble_zero,max_storage-storage))
-  !                     ! update evaporation with new evaporation
-  !                     wetcanopy_evaporation = wetcanopy_evaporation + evap_rate
-  !                     ! remove drainage from canopy but not below the max_storage value
-  !                     storage = storage - evap_rate
-  !                 end if
-  !
-  !                 ! reset drainage calculation
-  !                 drain_rate = dble_zero
-  !                 ! estimate rate of drainage from store (mm per hour)
-  !                 if (storage > max_storage) then
-  !                     nos_minutes = 10d0
-  !                     d = 1 ; nos_integrate = 60d0 / nos_minutes
-  !                     drain_rate = dble_zero ; local_drain = dble_zero ; local_storage = storage
-  !                     do while (d <= nint(nos_integrate) .and. local_storage > max_storage)
-  !                        ! estimate drainage rate over the hour but in small increments
-  !                        local_drain = exp( a + 3.7d0 * local_storage ) * nos_minutes
-  !                        local_storage = local_storage - local_drain
-  !                        drain_rate = drain_rate + local_drain
-  !                        d = d + 1
-  !                     end do ! integrate over the canopy
-  !                     drain_rate = min(storage,drain_rate)
-  !                     ! update through fall with the new drainage
-  !                     through_fall = through_fall + drain_rate
-  !                     ! update storage
-  !                     storage = storage - drain_rate
-  !                 endif
-  !
-  !             end do ! 24 hours
-  !
-  !          end do ! day looping
-  !
-  !       end if ! daily_addition + storage - wetcanopy_evaporation < max_storage
-  !
-  !   end if ! dew forming or evaporative
-  !
-  !   ! correct intercepted rainfall rate to kgH2O.m-2.s-1
-  !   intercepted_rainfall = intercepted_rainfall - ((through_fall * days_per_step_1) * seconds_per_day_1)
-  !
-  !   ! sanity checks; note 1e-8 prevents precision errors causing flags
-  !   if (intercepted_rainfall > rainfall .or. storage < dble_zero &
-  !  .or. (wetcanopy_evaporation * days_per_step_1) > (1d-8 + initial_canopy + (rainfall*seconds_per_day)) ) then
-  !      print*,"Condition 1",intercepted_rainfall > rainfall
-  !      print*,"Condition 2",storage < dble_zero
-  !      print*,"Condition 3",(wetcanopy_evaporation * days_per_step_1) > (1d-8 + initial_canopy + (rainfall*seconds_per_day))
-  !      print*,"storage (kgH2O/m2)",storage,"max_storage (kgH2O/m2)",max_storage,"initial storage (kgH2O/m2)", initial_canopy
-  !      print*,"rainfall (kgH2O/m2/day)", rainfall*seconds_per_day, "through_fall (kgH2O/m2/day)", (through_fall * days_per_step_1)
-  !      print*,"through_fall_total (kgH2O/m2/step)",through_fall
-  !      print*,"potential_evaporation (kgH2O/m2/day)",potential_evaporation
-  !      print*,"actual evaporation    (kgH2O/m2/day)",wetcanopy_evaporation * days_per_step_1
-  !      stop
-  !   endif
-  !
-  !   ! average evaporative flux to daily rate (kgH2O/m2/day)
-  !   potential_evaporation = wetcanopy_evaporation * days_per_step_1
-  !
-  !   ! final clearance of canopy storage of version small values at the level of system precision
-  !   if (storage < 10d0*vsmall) storage = dble_zero
-  !
-  ! end subroutine canopy_interception_and_storage
   !
   !------------------------------------------------------------------
   !
@@ -3046,14 +2801,14 @@ contains
     integer :: d, nos_integrate
     double precision  :: liquid & ! liquid water in local soil layer (m3/m3)
                     ,drainlayer & ! field capacity of local soil layer (m3/m3)
-                         ,unsat & ! unsaturated pore space in soil_layer below the current (m3/m3) 
+                         ,unsat & ! unsaturated pore space in soil_layer below the current (m3/m3)
                         ,change & ! absolute volume of water drainage in current layer (m3)
                       ,drainage & ! drainage rate of current layer (m/day)
                    ,local_drain & ! drainage of current layer (m/nos_minutes)
       ,iceprop(nos_soil_layers)
 
     ! local parameters
-    integer, parameter :: nos_minutes = 360
+    integer, parameter :: nos_hours_per_day = 1440, nos_minutes = 360
 
     ! calculate soil ice proportion; at the moment
     ! assume everything liquid
@@ -3077,10 +2832,10 @@ contains
           unsat = max( dble_zero , ( porosity( soil_layer+1 ) - soil_waterfrac( soil_layer+1 ) ) &
                              * layer_thickness( soil_layer+1 ) / layer_thickness( soil_layer ) )
 
-          d = 1 ; nos_integrate = 1440 / nos_minutes
+          d = 1 ; nos_integrate = nos_hours_per_day / nos_minutes
           drainage = dble_zero ; local_drain = dble_zero
           do while (d <= nos_integrate .and. liquid > drainlayer)
-              ! estimate drainage rate (m/s) 
+              ! estimate drainage rate (m/s)
               call calculate_soil_conductivity(soil_layer,liquid,local_drain)
               ! scale to total number of seconds in increment
               local_drain = local_drain * dble(nos_minutes * 60)
@@ -3158,8 +2913,38 @@ contains
     call soil_porosity(soil_frac_clay,soil_frac_sand)
     ! calculate field capacity (m3/m-3)
     call calculate_field_capacity
-    ! calculate initial soil water fraction
+
+    ! final sanity check for porosity
+    where (porosity <= field_capacity) porosity = field_capacity + 0.01d0
+
+  end subroutine initialise_soils
+  !
+  !---------------------------------------------------------------------
+  !
+  subroutine update_soil_initial_conditions(input_soilwater_frac)
+
+    !
+    ! Subroutine calculate the soil layers field capacities and sets the initial
+    ! soil water potential set to field capacity
+    !
+
+    implicit none
+
+    ! arguments
+    double precision :: input_soilwater_frac
+
+    ! local variables
+    integer :: i
+
+    ! Default assumption to be field capacity
     soil_waterfrac = field_capacity
+
+    ! if prior value has been given
+    if (input_soilwater_frac > -9998d0) then
+        ! calculate initial soil water fraction
+        soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac
+    endif
+
     ! calculate initial soil water potential
     SWP = dble_zero
     call soil_water_potential
@@ -3170,10 +2955,7 @@ contains
     ! but apply the lowest soil layer to the core as well in initial conditions
     soil_conductivity(nos_soil_layers+1) = soil_conductivity(nos_soil_layers)
 
-    ! final sanity check for porosity
-    where (porosity <= field_capacity) porosity = field_capacity + 0.01d0
-
-  end subroutine initialise_soils
+  end subroutine update_soil_initial_conditions
   !
   !-----------------------------------------------------------------
   !
@@ -3211,10 +2993,10 @@ contains
                                                    ,soil_frac_sand
 
     ! local variables
-    double precision, parameter :: A = -4.396d0,  B = -0.0715d0,       CC = -4.880d-4, D = -4.285d-5, &
-                                   E = -3.140d0,  F = -2.22d-3,         G = -3.484d-5, H = 0.332d0,   &
-                                   J = -7.251d-4, K = 0.1276d0,         P = 12.012d0,  Q = -7.551d-2, &
-                                   R = -3.895d0,  T = 3.671d-2,         U = -0.1103d0, V = 8.7546d-4, &
+    double precision, parameter :: A = -4.396d0,  B = -0.0715d0,   CC = -4.880d-4, D = -4.285d-5, &
+                                   E = -3.140d0,  F = -2.22d-3,     G = -3.484d-5, H = 0.332d0,   &
+                                   J = -7.251d-4, K = 0.1276d0,     P = 12.012d0,  Q = -7.551d-2, &
+                                   R = -3.895d0,  T = 3.671d-2,     U = -0.1103d0, V = 8.7546d-4, &
                                    mult1 = 100d0, mult2 = 2.778d-6
 
     ! layed out in this manor to avoid memory management issues in module
@@ -3302,81 +3084,83 @@ contains
   !
   !------------------------------------------------------------------
   !
-!  subroutine update_net_radiation(isothermal,tempC,area_scaling,pot_actual_ratio &
-!                                 ,sfc_exchange,aero_exchange,vapour_gradient,deltaTemp,deltaR)
-!
-!    ! Use steady state solution of evaporation, convective (sensible) and radiative heat loss
-!    ! to update isothermal net radiation to net.
-!    ! Area scaling (e.g. lai) is an input to allow for common useage for soil (neglecting ground heat) and canopy
-!
-!    ! arguments
-!    double precision, intent(in) ::      tempC, &
-!                                    isothermal, & ! isothermal net radiation (SW+LW; W/m2)
-!                                  area_scaling, & ! area scaling to apply (m2/m2)
-!                              pot_actual_ratio, & ! ratio of potential to actual evaporation
-!                                  sfc_exchange, & ! surface exchange conductance (m/s; e.g. stomatal conductance)
-!                                 aero_exchange, & ! aerodynamic exchange conductance (m/s; e.g. aerodynamic conductance)
-!                               vapour_gradient    ! vapour pressure gradient (Pa; either VPD or between air and soil)
-!    double precision, intent(out) :: deltaTemp, & ! surface temperature difference (K)
-!                                     deltaR    ! surface longwave radiation difference (W/m2); subtract from isothermal longwave
-!
-!    ! local variables
-!    double precision ::  tempK, & ! ambient temperature as K
-!          heat_loss_resistance, & ! resistance to heat loss from radiative and convection (s/m)
-!        aerodynamic_resistance, & ! aerodynamic resistance to water or heat exchangce (s/m)
-!           stomatal_resistance, & ! stomatal resistance to water exchangce (s/m)
-!              water_resistance, & ! serial combination of resistances to water evaporation
-! thermal_gains, thermal_losses
-!
-!    ! ambient temperature C -> K
-!    tempK = tempC + freeze
-!
-!    !
-!    ! Calculate resistance to heat loss (s/m)
-!    !
-!
-!    ! First estimate radiative loss term, initially calculated as conductance)
-!    heat_loss_resistance = 4d0 * emissivity * boltz * tempK ** 3 / (air_density_kg * cpair)
-!    ! Combine in parallel with convective conductances with area correction
-!    heat_loss_resistance = heat_loss_resistance + (aero_exchange / area_scaling)
-!    ! convert from conductance m/s to s/m
-!    heat_loss_resistance = heat_loss_resistance ** (-1d0)
-!
-!    !
-!    ! Convert aerodynamic and stomatal conductances to resistance
-!    !
-!
-!    aerodynamic_resistance = (aero_exchange/area_scaling) ** (-1d0)
-!    if (sfc_exchange == dble_zero) then
-!        stomatal_resistance = dble_zero
-!    else
-!        stomatal_resistance = (sfc_exchange/area_scaling) ** (-1d0)
-!    endif
-!
-!    !
-!    ! Estimate thermal gains and losses (K) to calculate temperature difference
-!    !
-!
-!    water_resistance = (aerodynamic_resistance + stomatal_resistance)
-!    thermal_gains = (heat_loss_resistance * water_resistance * psych * (isothermal/area_scaling)) &
-!                  / (air_density_kg * cpair * ((psych*water_resistance) + (slope*heat_loss_resistance)))
-!    thermal_losses = (heat_loss_resistance * vapour_gradient * 1d-3) &
-!                   / ((psych*water_resistance) + (slope*heat_loss_resistance))
-!    ! determine surface temperature difference (K); should be added to the canopy temperature
-!    deltaTemp = thermal_gains - thermal_losses
-!    ! apply actual potential ratio to scale wet surface evaporation when the
-!    ! supply of water is limited
-!    deltaTemp = deltaTemp * pot_actual_ratio
-!
-!    ! estimate update between isothermal to net radiation (W/m2), including area correction
-!    ! note that this MUST be added from the longwave component outside of this function
-!    deltaR = -4d0 * emissivity * boltz * tempK ** 3 * ( deltaTemp )
-!    deltaR = deltaR * area_scaling
-!
-!    ! return to user
-!    return
-!
-!  end subroutine update_net_radiation
+  subroutine update_net_radiation(isothermal,tempC,area_scaling,act_pot_ratio &
+                                 ,sfc_exchange,aero_exchange,vapour_gradient,deltaTemp,deltaR)
+
+    ! Use steady state solution of evaporation, convective (sensible) and radiative heat loss
+    ! to update isothermal net radiation to net.
+    ! Area scaling (e.g. lai) is an input to allow for common useage for soil (neglecting ground heat) and canopy
+
+    ! arguments
+    double precision, intent(in) ::      tempC, & ! input surface / air temperature (oC)
+                                    isothermal, & ! isothermal net radiation (SW+LW; W/m2)
+                                  area_scaling, & ! area scaling to apply (m2/m2)
+                                 act_pot_ratio, & ! ratio of potential to actual evaporation, i.e. (avail / potenial)
+                                  sfc_exchange, & ! surface exchange conductance (m/s; e.g. stomatal conductance)
+                                 aero_exchange, & ! aerodynamic exchange conductance (m/s; e.g. aerodynamic conductance)
+                               vapour_gradient    ! vapour pressure gradient (Pa; either VPD or between air and soil)
+    double precision, intent(out) :: deltaTemp, & ! surface temperature difference (K)
+                                     deltaR    ! surface longwave radiation difference (W/m2); subtract from isothermal longwave
+
+    ! local variables
+    double precision ::  tempK, & ! ambient temperature as K
+          heat_loss_resistance, & ! resistance to heat loss from radiative and convection (s/m)
+        aerodynamic_resistance, & ! aerodynamic resistance to water or heat exchangce (s/m)
+           stomatal_resistance, & ! stomatal resistance to water exchangce (s/m)
+              water_resistance, & ! serial combination of resistances to water evaporation
+ thermal_gains, thermal_losses
+
+    ! ambient temperature C -> K
+    tempK = tempC + freeze
+
+    !
+    ! Calculate resistance to heat loss (s/m)
+    !
+
+    ! First estimate radiative loss term, initially calculated as conductance)
+    heat_loss_resistance = 4d0 * emissivity * boltz * tempK ** 3 / (air_density_kg * cpair)
+    ! Combine in parallel with convective conductances with area correction
+    heat_loss_resistance = heat_loss_resistance + (2d0 * aero_exchange / area_scaling)
+    ! convert from conductance m/s to s/m
+    heat_loss_resistance = heat_loss_resistance ** (-1d0)
+
+    !
+    ! Convert aerodynamic and stomatal conductances to reisistance of water flux
+    !
+
+    aerodynamic_resistance = (aero_exchange/area_scaling) ** (-1d0)
+    if (sfc_exchange == dble_zero) then
+        ! if being used for surface water flux
+        stomatal_resistance = dble_zero
+    else
+        ! if used for transpiration
+        stomatal_resistance = (sfc_exchange/area_scaling) ** (-1d0)
+    endif
+
+    !
+    ! Estimate thermal gains and losses (K) to calculate temperature difference
+    !
+
+    water_resistance = (aerodynamic_resistance + stomatal_resistance)
+    thermal_gains = (heat_loss_resistance * water_resistance * psych * (isothermal/area_scaling)) &
+                  / (air_density_kg * cpair * ((psych*water_resistance) + (slope*heat_loss_resistance)))
+    thermal_losses = (heat_loss_resistance * vapour_gradient * 1d-3) &
+                   / ((psych*water_resistance) + (slope*heat_loss_resistance))
+    ! determine surface temperature difference (K); should be added to the canopy temperature
+    deltaTemp = thermal_gains - thermal_losses
+    ! apply actual potential ratio to scale wet surface evaporation when the
+    ! supply of water is limited
+    deltaTemp = deltaTemp * act_pot_ratio
+
+    ! estimate update between isothermal to net radiation (W/m2), including area correction
+    ! note that this MUST be added from the longwave component outside of this function
+    deltaR = -4d0 * emissivity * boltz * tempK ** 3 * ( deltaTemp )
+    deltaR = deltaR * area_scaling
+
+    ! return to user
+    return
+
+  end subroutine update_net_radiation
   !
   !------------------------------------------------------------------
   !
@@ -3461,7 +3245,7 @@ contains
                                       ,gpp_crit_frac & !
                                       ,mean_min_airt & !
                                      ,mean_daylength & !
-                                           ,mean_vpd & ! 
+                                           ,mean_vpd & !
                                             ,deltaWP & !
                                                ,Rtot &
                                            ,Tfac_min & !
@@ -3715,7 +3499,7 @@ contains
   !------------------------------------------------------------------
   !
   !------------------------------------------------------------------
-  ! Functions other than the primary ACM and ACM ET are stored 
+  ! Functions other than the primary ACM and ACM ET are stored
   ! below this line.
   !------------------------------------------------------------------
   !
@@ -3824,6 +3608,43 @@ contains
   !
   !------------------------------------------------------------------
   !
+  double precision function plant_soil_flow(root_layer,root_length,root_mass &
+                                           ,demand,root_reach_in,transpiration_resistance)
+
+   !
+   ! Calculate soil layer specific water flow form the soil to canopy (mmolH2O.m-2.s-1)
+   ! Accounting for soil, root and plant resistance, and canopy demand
+   !
+
+   ! calculate and accumulate steady state water flux in mmol.m-2.s-1
+   ! From the current soil layer given an amount of root within the soil layer.
+
+   implicit none
+
+   ! arguments
+   integer, intent(in) :: root_layer
+   double precision, intent(in) :: root_length, &
+                                     root_mass, &
+                                        demand, &
+                                 root_reach_in, &
+                      transpiration_resistance
+
+   ! local arguments
+   double precision :: soilR1, &
+                       soilR2
+
+   ! soil conductivity converted from m.s-1 -> m2.s-1.MPa-1 by head
+   soilR1 = soil_resistance(root_length,root_reach_in,soil_conductivity(root_layer)*head_1)
+   soilR2 = root_resistance(root_mass,root_reach_in)
+   plant_soil_flow = demand/(transpiration_resistance + soilR1 + soilR2)
+
+   ! return
+   return
+
+  end function plant_soil_flow
+  !
+  !------------------------------------------------------------------
+  !
   double precision function water_retention_saxton_eqns( xin )
 
     ! field capacity calculations for saxton eqns !
@@ -3847,208 +3668,6 @@ contains
     return
 
   end function water_retention_saxton_eqns
-  !
-  !------------------------------------------------------------------
-  !
-  double precision function calc_pot_root_alloc_Rtot(potential_root_biomass)
-
-    !
-    ! Description
-    !
-
-    implicit none
-
-    ! declare arguments
-    double precision,intent(in) :: potential_root_biomass ! potential root biomass (g.m-2)
-
-    ! declare local variables
-    integer :: i
-    double precision, dimension(nos_root_layers) :: water_flux_local &
-                                                   ,root_mass    &
-                                                   ,root_length  &
-                                                   ,ratio
-    double precision, dimension(nos_soil_layers+1) :: soil_waterfrac_save, soil_conductivity_save,layer_thickness_save
-    double precision :: bonus,transpiration_resistance,root_reach_local &
-                       ,soilR1,soilR2,depth_change,water_change,root_depth_50
-    double precision, parameter :: root_depth_frac_50 = 0.25d0 ! fractional soil depth above which 50 %
-                                                               ! of the root
-                                                               ! mass is assumed
-                                                               ! to be located
-
-    ! estimate rooting depth with potential root growth
-    root_reach_local = max_depth * potential_root_biomass / (root_k + potential_root_biomass)
-    ratio = dble_zero ; ratio(1) = dble_one
-    ! save soil water information
-    soil_waterfrac_save = soil_waterfrac
-    soil_conductivity_save = soil_conductivity
-    layer_thickness_save = layer_thickness
-
-    !!!!!!!!!!
-    ! Update soil layer thickness for marginal return calculation
-    !!!!!!!!!!
-
-    depth_change = dble_zero ; water_change = dble_zero
-    ! if roots extent down into the bucket
-    if (root_reach > (top_soil_depth+mid_soil_depth) .or. previous_depth > (top_soil_depth+mid_soil_depth)) then
-       ! how much has root depth extended since last step?
-       depth_change = root_reach - previous_depth
-
-       ! if there has been an increase
-       if (depth_change > dble_zero .and. root_reach > sum(layer_thickness(1:2))+min_layer) then
-
-          ! determine how much water is within the new volume of soil
-          water_change = soil_waterfrac(nos_soil_layers) * depth_change
-          ! now assign that new volume of water to the deep rooting layer
-          soil_waterfrac(nos_root_layers) = ((soil_waterfrac(nos_root_layers) * layer_thickness(nos_root_layers)) &
-                                             + water_change) / (layer_thickness(nos_root_layers)+depth_change)
-          ! explicitly update the soil profile if there has been rooting depth
-          ! changes
-          layer_thickness(1) = top_soil_depth ; layer_thickness(2) = mid_soil_depth
-          layer_thickness(3) = max(min_layer,root_reach-sum(layer_thickness(1:2)))
-          layer_thickness(4) = max_depth - sum(layer_thickness(1:3))
-
-
-       elseif (depth_change < dble_zero .and. root_reach > layer_thickness(1)+min_layer) then
-
-          ! determine how much water is lost from the old volume of soil
-          water_change = soil_waterfrac(nos_root_layers) * abs(depth_change)
-          ! now assign that new volume of water to the deep rooting layer
-          soil_waterfrac(nos_soil_layers) = ((soil_waterfrac(nos_soil_layers) * layer_thickness(nos_soil_layers)) &
-                                             + water_change) / (layer_thickness(nos_soil_layers)+abs(depth_change))
-
-          ! explicitly update the soil profile if there has been rooting depth
-          ! changes
-          layer_thickness(1) = top_soil_depth ; layer_thickness(2) = mid_soil_depth
-          layer_thickness(3) = max(min_layer,root_reach-sum(layer_thickness(1:2)))
-          layer_thickness(4) = max_depth - sum(layer_thickness(1:3))
-
-       else
-
-          ! we don't want to do anything, just recycle the previous depth
-
-       end if ! depth change
-
-    end if ! root reach beyond top layer
-
-    ! seperately calculate the soil conductivity as this applies to each layer
-    do i = 1, nos_soil_layers
-       call calculate_soil_conductivity(i,soil_waterfrac(i),soil_conductivity(i))
-    end do ! soil layers
-
-    ! estimate water flux based on soil and root hydraulic resistances with potential growth.
-    ! See subroutine calculate_Rtot for further details
-
-    ! calculate the plant hydraulic resistance component
-!    transpiration_resistance = (gplant * lai)**(-dble_one)
-    transpiration_resistance = canopy_height / (gplant * lai)
-
-    !!!!!!!!!!!
-    ! Calculate root profile
-    !!!!!!!!!!!
-
-    ! top 25 % of root profile
-    root_depth_50 = root_reach * root_depth_frac_50
-    if (root_depth_50 <= layer_thickness(1)) then
-        ! Greater than 50 % of the fine root biomass can be found in the top
-        ! soil layer
-
-        ! Start by assigning all 50 % of root biomass to the top soil layer
-        root_mass(1) = root_biomass * 0.5d0
-        ! Then quantify how much additional root is found in the top soil layer
-        ! assuming that the top 25 % depth is found somewhere within the top
-        ! layer
-        bonus = (root_biomass-root_mass(1)) &
-              * (layer_thickness(1)-root_depth_50) / (root_reach - root_depth_50)
-        root_mass(1) = root_mass(1) + bonus
-        ! partition the remaining root biomass between the seconds and third
-        ! soil layers
-        if (root_reach > sum(layer_thickness(1:2))) then
-            root_mass(2) = (root_biomass - root_mass(1)) &
-                         * (layer_thickness(2)/(root_reach-layer_thickness(1)))
-            root_mass(3) = root_biomass - sum(root_mass(1:2))
-        else
-            root_mass(2) = root_biomass - root_mass(1)
-        endif
-    else if (root_depth_50 > layer_thickness(1) .and. root_depth_50 <= sum(layer_thickness(1:2))) then
-        ! Greater than 50 % of fine root biomass found in the top two soil
-        ! layers. We will divide the root biomass uniformly based on volume,
-        ! plus bonus for the second layer (as done above)
-        root_mass(1) = root_biomass * 0.5d0 * (layer_thickness(1)/root_depth_50)
-        root_mass(2) = root_biomass * 0.5d0 * ((root_depth_50-layer_thickness(1))/root_depth_50)
-        ! determine bonus for the seconds layer
-        bonus = (root_biomass-sum(root_mass(1:2))) &
-              * ((sum(layer_thickness(1:2))-root_depth_50)/(root_reach-root_depth_50))
-        root_mass(2) = root_mass(2) + bonus
-        root_mass(3) = root_biomass - sum(root_mass(1:2))
-    else
-        ! Greater than 50 % of fine root biomass stock spans across all three
-        ! layers
-        root_mass(1) = root_biomass * 0.5d0 * (layer_thickness(1)/root_depth_50)
-        root_mass(2) = root_biomass * 0.5d0 * (layer_thickness(2)/root_depth_50)
-        root_mass(3) = root_biomass - sum(root_mass(1:2))
-    endif
-    ! now convert root mass into lengths
-    root_length = root_mass * root_mass_length_coef_1
-!    root_length = root_mass / (root_density * root_cross_sec_area)
-
-    !!!!!!!!!!!
-    ! Calculate hydraulic properties and each rooted layer
-    !!!!!!!!!!!
-
-    ! soil conductivity converted from m.s-1 -> m2.s-1.MPa-1 by head
-    root_reach_local = min(root_reach,layer_thickness(1))
-    soilR1=soil_resistance(root_length(1),root_reach_local,soil_conductivity(1)*head_1)
-    soilR2=root_resistance(root_mass(1),root_reach_local)
-    ! calculate and accumulate steady state water flux in mmol.m-2.s-1
-    ! NOTE: Depth correction already accounted for in soil resistance
-    ! calculations and this is the maximum potential rate of transpiration
-    ! assuming saturated soil and leaves at their minimum water potential.
-    ! also note that the head correction is now added rather than
-    ! subtracted in SPA equations because deltaWP is soilWP-minlwp not
-    ! soilWP prior to application of minlwp
-    demand = abs(minlwp-SWP(1:nos_root_layers))+head*canopy_height
-    water_flux_local(1) = demand(1)/(transpiration_resistance + soilR1 + soilR2)
-
-    ! second root layer
-    if (root_mass(2) > dble_zero) then
-        root_reach_local = min(root_reach,layer_thickness(2))
-        soilR1=soil_resistance(root_length(2),root_reach_local,soil_conductivity(2)*head_1)
-        soilR2=root_resistance(root_mass(2),root_reach_local)
-        water_flux_local(2) = demand(2)/(transpiration_resistance + soilR1 + soilR2)
-    endif ! roots present in the seconds layer?
-
-    ! Bottom root layer
-    if (root_mass(3) > dble_zero ) then
-       ! soil conductivity converted from m.s-1 -> m2.s-1.MPa-1 by head
-       soilR1=soil_resistance(root_length(3),layer_thickness(3),soil_conductivity(3)*head_1)
-       soilR2=root_resistance(root_mass(3),layer_thickness(3))
-       ! calculate and accumulate steady state water flux in mmol.m-2.s-1
-       water_flux_local(3) = demand(3)/(transpiration_resistance + soilR1 + soilR2)
-    endif ! roots present in third layer?
-    ratio = layer_thickness(1:nos_root_layers)/sum(layer_thickness(1:nos_root_layers))
-
-    ! if freezing then assume soil surface is frozen
-    if (meant < dble_one) then
-        water_flux_local(1) = dble_zero
-        ratio(1) = dble_zero
-        ratio(2:nos_root_layers) = layer_thickness(2:nos_root_layers) / sum(layer_thickness(2:nos_root_layers))
-    endif
-
-    ! WARNING: should probably have updated the wSWP here as well...do this
-    ! later I thinks...
-
-    ! determine effective resistance
-    calc_pot_root_alloc_Rtot = sum(demand) / sum(water_flux_local)
-
-    ! return layer_thickness and soil_waterfrac back to
-    ! orginal values
-    layer_thickness = layer_thickness_save
-    soil_waterfrac = soil_waterfrac_save
-    soil_conductivity = soil_conductivity_save
-
-    return
-
-  end function calc_pot_root_alloc_Rtot
   !
   !--------------------------------------------------------------------------
   !
@@ -4090,7 +3709,7 @@ contains
   !
   !------------------------------------------------------------------
   !
-  ! 
+  !
   !------------------------------------------------------------------
   ! Generic mathematical functions such as bisection and intergrator proceedures
   ! are stored below here
@@ -4162,7 +3781,7 @@ contains
     do iter = 1 , ITMAX
 
        ! If the new value (f(c)) doesn't bracket
-       ! the root with f(b) then adjust it.. 
+       ! the root with f(b) then adjust it..
        if ( sign(1d0,fb) .eq. sign(1d0,fc) ) then
           c  = a
           fc = fa
@@ -4321,7 +3940,7 @@ contains
 !  end subroutine ode_int
   !
   !------------------------------------------------------------------
-  !  
+  !
 !  subroutine runge_kutta_check( y , dydx , n , x , h , yout , yerr , derivs )
 !
 !    ! > subroutine summary? < !
@@ -4351,7 +3970,7 @@ contains
 !    double precision  :: ak2(max_nos_iterations),ak3(max_nos_iterations) &
 !                        ,ak4(max_nos_iterations),ak5(max_nos_iterations) &
 !                        ,ak6(max_nos_iterations),ytemp(max_nos_iterations)
-!    double precision,parameter :: & 
+!    double precision,parameter :: &
 !         A2=.2,A3=.3,A4=.6,A5=1.,A6=.875,B21=.2,B31=3./40.,B32=9./40., &
 !         B41=.3,B42=-.9,B43=1.2,B51=-11./54.,B52=2.5,B53=-70./27.,B54=35./27., &
 !         B61=1631./55296.,B62=175./512.,B63=575./13824.,B64=44275./110592., &
