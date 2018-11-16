@@ -5,9 +5,9 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
                           ,nodays,deltat,nos_iter,soil_frac_clay_in,soil_frac_sand_in &
                           ,exepath,pathlength)
 
-  use CARBON_MODEL_MOD, only: CARBON_MODEL, extracted_C, itemp, ivpd, iphoto &
+  use CARBON_MODEL_MOD, only: CARBON_MODEL, itemp, ivpd, iphoto &
                              ,soil_frac_clay, soil_frac_sand &
-                             ,nos_soil_layers, Rtot_time
+                             ,nos_soil_layers, wSWP_time
   use CARBON_MODEL_CROP_MOD, only: CARBON_MODEL_CROP
 
   ! subroutine specificially deals with the calling of the fortran code model by
@@ -168,7 +168,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
      endif
      out_var(i,1:nodays,18) = FLUXES(1:nodays,19) ! Evapotranspiration (kgH2O.m-2.day-1)
      out_var(i,1:nodays,19) = POOLS(1:nodays,8) ! rootwater (kgH2O.m-2.rootdepth)
-     out_var(i,1:nodays,20) = Rtot_time(1:nodays) ! MPa total hydraulic resistance
+     out_var(i,1:nodays,20) = wSWP_time(1:nodays) ! Weighted Soil Water Potential (MPa)
      if (pft == 1) then
         ! crop so...
         out_var(i,1:nodays,21) = 0.0               ! ...no CWD

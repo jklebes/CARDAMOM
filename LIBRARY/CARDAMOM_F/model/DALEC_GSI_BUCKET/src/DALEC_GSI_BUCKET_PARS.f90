@@ -208,6 +208,10 @@ module MODEL_PARAMETERS
        PI%parmin(37)=1d0
        PI%parmax(37)=10000d0
 
+       ! Soil water fraction (m3/m3)
+       PI%parmin(41)=0.1d0
+       PI%parmax(41)=0.9d0
+
        !
        ! Replanting pools values 
        !
@@ -357,6 +361,8 @@ module MODEL_PARAMETERS
     PI%parmin(24)=0.1 ; PI%parmax(24)=5.0
     ! C storage organ
     PI%parmin(25)=0.1 ; PI%parmax(25)=1.0
+    ! Initial root zone water content (m3/m3)
+    PI%parmin(38)=0.1d0 ;  PI%parmax(38)=0.9d0
 
   end subroutine crop_parameters
   !

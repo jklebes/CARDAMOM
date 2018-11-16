@@ -75,7 +75,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 			# could add other variables such as SOM (gC.m-2)
 			sand_clay=extract_hwsd_sand_clay(spatial_type,resolution,grid_type,latlon_wanted,sand_clay_all)
 			top_sand = sand_clay$top_sand ; bot_sand = sand_clay$bot_sand
-			top_clay = sand_clay$bot_sand ; bot_clay = sand_clay$bot_clay
+			top_clay = sand_clay$top_clay ; bot_clay = sand_clay$bot_clay
 		} else if (sand_clay_source == "site_specific") {
 			infile=paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
 			top_sand = read_site_specific_obs("top_sand_initial",infile)

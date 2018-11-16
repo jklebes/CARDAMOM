@@ -166,7 +166,7 @@ contains
                                ,max_lai_lwrad_release,lai_half_lwrad_release,mint,maxt,swrad,co2,doy,leafT&
                                ,rainfall,wind_spd,vpd_pa,lai,days_per_step,days_per_step_1,canopy_storage &
                                ,intercepted_rainfall,snow_storage,snow_melt,airt_zero_fraction,snowfall   &
-                               ,update_soil_initial_conditions,aerodynamic_conductance
+                               ,update_soil_initial_conditions
 
     ! DALEC crop model modified from Sus et al., (2010)
 

@@ -60,12 +60,12 @@ module cardamom_io
         ! ID = 2 - DALEC_GSI_BUCKET
         ! DALEC_BUCKET - 8 pools currently
         DATAin%nopools = 8
-        DATAin%nopars = 40
+        DATAin%nopars = 41
         DATAin%nofluxes = 25
         if (DATAin%PFT == 1) then
            ! then actually this is a crop pixel
            DATAin%nopools = 9
-           DATAin%nopars = 37
+           DATAin%nopars = 38
            DATAin%nofluxes = 21
         endif
     else if (DATAin%ID == 3 ) then
@@ -163,13 +163,11 @@ module cardamom_io
            DATAin%nofluxes = 21
         endif
     else if (DATAin%ID == 18) then
-
         ! DALEC_CDEA_LU_FIRES_ET - added 03/05/2018 JFE
         DATAin%nopools = 6
         DATAin%nopars = 23
         DATAin%nofluxes = 28
-
-    !change ID code below to resolve conflict when merging with jeff = 23/10/18
+        !change ID code below to resolve conflict when merging with jeff = 23/10/18
     else if (DATAin%ID == 19) then
         ! ID = 2 - DALECN_BUCKET
         ! DALEC_BUCKET - 8 pools currently

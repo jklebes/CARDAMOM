@@ -108,7 +108,6 @@ module model_likelihood_module
   !------------------------------------------------------------------
   !
   subroutine edc_model_likelihood(PI, PARS, prob_out)
-!TLS    use, intrinsic :: ieee_arithmetic
     use cardamom_structures, only: DATAin
     use MCMCOPT, only: PARAMETER_INFO
     use CARBON_MODEL_MOD, only: carbon_model
@@ -130,14 +129,15 @@ module model_likelihood_module
     integer ::  n
     double precision :: tot_exp, ML, EDC1, EDC2, infini
 
-    ! set initial values
+    ! if == 0 EDCs are checked only until the first failure occurs
+    ! if == 1 then all EDCs are checked irrespective of whether or not one has
+    ! failed
     EDCD%DIAG = 1
 
     ! crop or not split....trouble
     if (DATAin%PFT == 1) then
        ! PFT has been provided and is crop! Best try running the crop model
        ! then...
-
        ! call EDCs which can be evaluated prior to running the model
        call EDC1_CROP(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
        ! next need to run the model itself
@@ -157,6 +157,7 @@ module model_likelihood_module
                       ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
     else
+
         ! call EDCs which can be evaluated prior to running the model
         call EDC1_GSI(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
@@ -176,36 +177,34 @@ module model_likelihood_module
     end if ! crop or not if
 
     ! calculate the likelihood
-    tot_exp = 0d0
-    do n = 1, EDCD%nedc
-       tot_exp = tot_exp+(1d0-EDCD%PASSFAIL(n))
+    tot_exp = sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))
+!    tot_exp = 0d0
+!    do n = 1, EDCD%nedc
+!       tot_exp=tot_exp+(1d0-EDCD%PASSFAIL(n))
 !       if (EDCD%PASSFAIL(n) /= 1) print*,"failed edcs are: ", n
-    end do ! checking EDCs
-    ! for testing purposes, stop the model when start achieved
-!    if (sum(EDCD%PASSFAIL) == 100) pause
-
+!    end do ! checking EDCs
+!    ! for testing purposes, stop the model when start achieved
+!    if (sum(EDCD%PASSFAIL) == 100) then
+!        print*,"Found it!" ; stop
+!    endif
     ! convert to a probability
-    prob_out = -0.5d0*(tot_exp*10d0)*DATAin%EDC
+    prob_out=-0.5d0*(tot_exp*10d0)*DATAin%EDC
 
-    ! override probability if parameter set gives NaN or near -infinitiy output
+    ! override probability if parameter set gives NaN or near -infinity output
     call model_likelihood(PI,PARS,ML)
 
     ! apply this condition irrespective of EDC flag
     infini = 0d0
-    if (ML /= ML .or. abs(ML) == abs(log(infini)) .or. &
-        sum(DATAin%M_LAI) /= sum(DATAin%M_LAI) .or. sum(DATAin%M_GPP) /= sum(DATAin%M_GPP)) then
-       prob_out = prob_out-0.5d0*10d0
+    if (ML /= ML .or. abs(ML) == abs(log(infini)) ) then
+       prob_out=prob_out-0.5d0*10d0
     end if
 
-    ! now add the exponential component
-    ! prob_out is the Log-Likelihood
-    prob_out = prob_out
-
-  end subroutine edc_model_likelihood
+  end subroutine edc_model_likelihood 
   !
   !------------------------------------------------------------------
   !
   subroutine EDC1_CROP (PARS, npars, meantemp, meanrad, EDC1)
+
     ! the first of two subroutine to assess current parameters for passing
     ! realism tests for crop
     ! ecosystems
@@ -221,10 +220,9 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n, DIAG
-    double precision :: torfol ! yearly leaf loss fraction
+    double precision :: torfol,tmp ! yearly leaf loss fraction
 
     ! set initial value
-!    torfol=1./(pars(5)*365.25)
     EDC1 = 1
     DIAG = EDCD%DIAG
 
@@ -246,70 +244,77 @@ module model_likelihood_module
         EDC1 = 0 ; EDCD%PASSFAIL(2) = 0
     endif
 
-    ! turnover of foliage faster than turnover of wood
+     ! turnover of foliage faster than turnover of wood
 ! TLS: turnover off because foliage and stem turnovers are made same
 !    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(6) > pars(5)) then
-!       EDC1=0 ; EDCD%PASSFAIL(3)=0
+!       EDC1 = 0 ; EDCD%PASSFAIL(3) = 0
 !    end if
 
     ! pre_DR should be greater than post_DR
 !    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(4) > pars(3))) then
-!        EDC1=0 ; EDCD%PASSFAIL(4)=0
+!        EDC1 = 0 ; EDCD%PASSFAIL(4) = 0
 !    endif
 
     ! for development: Tmin should be < topt and topt should be < tmax
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(26) > pars(28) &
                                      .or. pars(28) > pars(27) &
                                      .or. pars(26) > pars(27))) then
-        EDC1=0 ; EDCD%PASSFAIL(5)=0
+        EDC1 = 0 ; EDCD%PASSFAIL(5) = 0
     endif
 
     ! for development: the difference between each Tmin,Topt,Tmax > 1.
     if ((EDC1 == 1 .or. DIAG == 1) .and. (abs(pars(26)-pars(28)) < 1d0 &
                                      .or. abs(pars(28)-pars(27)) < 1d0  &
                                      .or. abs(pars(26)-pars(27)) < 1d0)) then
-        EDC1=0 ; EDCD%PASSFAIL(6)=0
+        EDC1 = 0 ; EDCD%PASSFAIL(6) = 0
     endif
 
    ! for vernalisation: Tmin < Topt < Tmax
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(29) > pars(31) &
                                      .or. pars(31) > pars(30) &
                                      .or. pars(29) > pars(30))) then
-        EDC1=0 ; EDCD%PASSFAIL(7)=0
+        EDC1 = 0 ; EDCD%PASSFAIL(7) = 0
     endif
 
    ! for vernalisation: the difference between each Tmin, Topt, Tmax
     if ((EDC1 == 1 .or. DIAG == 1) .and. ( abs(pars(29)-pars(31)) < 1d0 &
                                       .or. abs(pars(31)-pars(30)) < 1d0 &
                                       .or. abs(pars(29)-pars(30)) < 1d0 ) ) then
-        EDC1=0 ; EDCD%PASSFAIL(8)=0
+        EDC1 = 0 ; EDCD%PASSFAIL(8) = 0
     endif
 
    ! development temperature value should be larger corresponding vernalisation
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(29) > pars(26) &
                                      .or. pars(31) > pars(28) &
                                      .or. pars(30) > pars(27))) then
-        EDC1=0 ; EDCD%PASSFAIL(9)=0
+        EDC1 = 0 ; EDCD%PASSFAIL(9) = 0
     endif
 
 !    ! plough must be before sow and after harvest: WINTER ONLY
 !    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(16) > pars(12) ) then
-!        EDC1=0 ; EDCD%PASSFAIL(10)=0
+!        EDC1 = 0 ; EDCD%PASSFAIL(10) = 0
 !    endif
 !
 !    ! harvest cannot be more than 345 after harvest
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(15) < pars(12)+345.25) ) then
-!        EDC1=0 ; EDCD%PASSFAIL(11)=0
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(15) < pars(12)+345.25d0) ) then
+!        EDC1 = 0 ; EDCD%PASSFAIL(11) = 0
 !    endif
 !
 !    ! plough must be before sow and after harvest: WINTER ONLY
 !    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(16) < pars(15) .or. &
 !        pars(16) > pars(12)) ) then
-!        EDC1=0 ; EDCD%PASSFAIL(12)=0
+!        EDC1 = 0 ; EDCD%PASSFAIL(12) = 0
 !    endif
 
+    ! CN ratio of leaf should also be between 95CI of trait database values
+    ! Kattge et al (2011)
+    tmp = (pars(17)/(10d0**pars(11)))
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 43.76895d0 .or. tmp < 10.82105d0)) then
+       EDC1=0 ; EDCD%PASSFAIL(13) = 0
+    endif
+
     ! could and probably should add some more
-  end subroutine EDC1_CROP
+  end subroutine EDC1_CROP 
   !
   !------------------------------------------------------------------
   !
@@ -317,6 +322,8 @@ module model_likelihood_module
                       ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
                       ,meantemp,EDC2)
 
+    use cardamom_structures, only: DATAin
+    use CARBON_MODEL_MOD, only: linear_model_gradient
     use CARBON_MODEL_CROP_MOD, only: resp_rate_temp_coeff,ts_length
 
     ! the second of two subroutines for assessing current parameters for passing
@@ -346,7 +353,7 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n, DIAG, no_years, nn
-    double precision :: decay_coef, meangpp, EQF, PEDC, infi
+    double precision :: mean_pools(nopools), decay_coef, meangpp, EQF, PEDC, infi
     double precision :: fauto & ! Fractions of GPP to autotrophic respiration
              ,ffol  & ! Fraction of GPP to foliage
              ,flab  & ! Fraction of GPP to labile pool
@@ -356,25 +363,25 @@ module model_likelihood_module
              ,fsom    ! fraction of GPP som under eqilibrium conditions
 
     ! set initial value
-    fauto=sum(M_FLUXES(:,3))/sum(M_FLUXES(:,1))
-    ffol=sum(M_FLUXES(:,4))/(sum(M_FLUXES(:,1))*fauto)
-    flab=sum(M_FLUXES(:,5))/(sum(M_FLUXES(:,1))*fauto)
-    froot=sum(M_FLUXES(:,6))/(sum(M_FLUXES(:,1))*fauto)
-    fwood=sum(M_FLUXES(:,7))/(sum(M_FLUXES(:,1))*fauto)
-    fsom=fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(10))
-    flit=(froot+flab+ffol)
+    fauto = sum(M_FLUXES(:,3)) / sum(M_FLUXES(:,1))
+    ffol = sum(M_FLUXES(:,4)) / (sum(M_FLUXES(:,1))*fauto)
+    flab = sum(M_FLUXES(:,5)) / (sum(M_FLUXES(:,1))*fauto)
+    froot = sum(M_FLUXES(:,6)) / (sum(M_FLUXES(:,1))*fauto)
+    fwood = sum(M_FLUXES(:,7)) / (sum(M_FLUXES(:,1))*fauto)
+    fsom = fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(10))
+    flit = (froot+flab+ffol)
     ! length of time step in hours..
-    ts_length = 24.0d0
+    ts_length = 24d0
     ! initial value
     infi = 0d0
     ! update initial values
-    DIAG=EDCD%DIAG
+    DIAG = EDCD%DIAG
     ! give EDC2 an initial value
     EDC2 = 1
 
     ! SOM attractor - must be within a factor of 2 from Csom0
     ! eqiulibrium factor (in comparison with initial conditions)
-    EQF=10d0
+    EQF = 10d0
 
     ! initialise and then calculate mean gpp values
     meangpp=sum(M_GPP(1:nodays))/dble(nodays)
@@ -425,7 +432,7 @@ module model_likelihood_module
           decay_coef=expdecay2(M_POOLS(1:(nodays+1),5),n,deltat,1,nodays+1)
           ! next assess the decay coefficient for meetings the EDC criterion
           if (abs(-log(2d0)/decay_coef) < (365.25d0*dble(no_years)) .and. decay_coef < 0d0 ) then
-             EDC2 = 0 ; EDCD%PASSFAIL(19)=0
+             EDC2 = 0 ; EDCD%PASSFAIL(19) = 0
           end if ! EDC conditions
        end if ! EDC .or. DIAG condition
     end do ! pools loop
@@ -433,8 +440,26 @@ module model_likelihood_module
     ! we know that the crop model should produce some yield - therefore we
     ! reject parameter sets which generate no yield ever!
     if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(1:nodays,21)) < 1d0 ) then
-        EDC2 = 0 ; EDCD%PASSFAIL(20)=0
+        EDC2 = 0 ; EDCD%PASSFAIL(20) = 0
     endif
+
+    ! we know that the crop model should produce some yield - therefore we
+    ! reject parameter sets which generate no yield ever!
+    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(1:nodays,21)) < 1d0 ) then
+        EDC2 = 0 ; EDCD%PASSFAIL(20) = 0
+    endif
+
+    ! LAI time series linear model must retrieve gradient which is at least
+    ! positive (or some other reasonable critical threshold)
+    ! if ((EDC2 == 1 .or. DIAG == 1) .and. &
+    !     linear_model_gradient(DATAin%M_LAI(DATAin%laipts),DATAin%LAI(DATAin%laipts),DATAin%nlai)
+    !     < 0d0 ) then
+    !     EDC2 = 0 ; EDCD%PASSFAIL(21) = 0
+    ! endif
+
+    ! Function to calculate the gradient of a linear model for a given depentent
+    ! variable (y) based on predictive variable (x). The typical use of this
+    ! function will in fact be to assume that x is time.
 
     !
     ! EDCs done, below are additional fault detection conditions
@@ -444,32 +469,20 @@ module model_likelihood_module
 
     ! ensure minimum pool values are >= 0 and /= NaN
     if (EDC2 == 1 .or. DIAG == 1) then
-       n=1
-       do while (n <= nopools .and. (EDC2 == 1 .or. DIAG == 1))
-          nn = 1 ; PEDC = 1
-          do while (nn <= (nodays+1) .and. PEDC == 1)
-             ! now check conditions
-             if (M_POOLS(nn,n) < 0d0 .or. M_POOLS(nn,n) /= M_POOLS(nn,n) .or. &
-                 M_POOLS(nn,n) == log(infi) .or. M_POOLS(nn,n) == -log(infi)) then
-                 EDC2=0 ; PEDC=0 ; EDCD%PASSFAIL(50+n)=0
-             end if ! less than zero and is NaN condition
-          nn = nn + 1
-          end do ! nn < nodays .and. PEDC == 1
-          n = n + 1
-       end do ! for nopools .and. EDC .or. DIAG condition
-       n = 1
-       do while (n <= nofluxes .and. (EDC2 == 1 .or. DIAG == 1))
-          nn = 1 ; PEDC = 1
-          do while (nn <= (nodays+1) .and. PEDC == 1)
-             ! now check conditions
-             if (M_FLUXES(nn,n) < 0d0 .or. M_FLUXES(nn,n) /= M_FLUXES(nn,n) .or. &
-                 M_FLUXES(nn,n) == log(infi) .or. M_FLUXES(nn,n) == -log(infi)) then
-                 EDC2=0 ; PEDC=0 ; EDCD%PASSFAIL(50+nopools+n)=0
-             end if ! less than zero and is NaN condition
-          nn = nn + 1
-          end do ! nn < nodays .and. PEDC == 1
-          n = n + 1
-       end do ! for nopools .and. EDC .or. DIAG condition
+
+      do n = 1, nopools
+         if (minval(M_POOLS(1:nodays,n)) < 0d0 .or. maxval(abs(M_POOLS(1:nodays,n))) == abs(log(infi)) .or. &
+             minval(M_POOLS(1:nodays,n)) /= minval(M_POOLS(1:nodays,n))) then
+             EDC2 = 0 ; EDCD%PASSFAIL(55+n) = 0
+         endif
+      end do
+
+      do n = 1, nofluxes
+         if (maxval(abs(M_FLUXES(1:nodays,n))) == abs(log(infi)) .or. &
+            minval(M_FLUXES(1:nodays,n)) /= minval(M_FLUXES(1:nodays,n))) then
+             EDC2 = 0 ; EDCD%PASSFAIL(55+nopools+n) = 0
+         endif
+      end do
 
     end if ! min pool assessment
 
@@ -1055,36 +1068,24 @@ module model_likelihood_module
     ! EDCs done, below are additional fault detection conditions
     !
 
-    ! additional faults can be stored in locations > 40 of the PASSFAIL array
+    ! additional faults can be stored in locations > 55 of the PASSFAIL array
 
     ! ensure minimum pool values are >= 0 and /= NaN
     if (EDC2 == 1 .or. DIAG == 1) then
-       n=1
-       do while (n <= nopools .and. (EDC2 == 1 .or. DIAG == 1))
-          nn = 1
-          do while (nn <= (nodays+1))
-             ! now check conditions
-             if ( M_POOLS(nn,n) < 0d0 .or. M_POOLS(nn,n) /= M_POOLS(nn,n) .or. &
-                  abs(M_POOLS(nn,n)) == abs(log(infi)) ) then
-                  EDC2 = 0; EDCD%PASSFAIL(50+n) = 0
-             end if ! less than zero and is NaN condition
-          nn = nn + 1
-          end do ! nn < nodays
-          n = n + 1
-       end do ! for nopools .and. EDC .or. DIAG condition
-       n = 1
-       do while (n <= nofluxes .and. (EDC2 == 1 .or. DIAG == 1))
-          nn = 1
-          do while (nn <= (nodays+1))
-             ! now check conditions
-             if ( M_FLUXES(nn,n) < 0d0 .or. M_FLUXES(nn,n) /= M_FLUXES(nn,n) .or. &
-                  abs(M_FLUXES(nn,n)) == abs(log(infi)) ) then
-                  EDC2 = 0 ; EDCD%PASSFAIL(50+nopools+n) = 0
-             end if ! less than zero and is NaN condition
-          nn = nn + 1
-          end do ! nn < nodays
-          n = n + 1
-       end do ! for nopools .and. EDC .or. DIAG condition
+
+       do n = 1, nopools
+          if (minval(M_POOLS(1:nodays,n)) < 0d0 .or. maxval(abs(M_POOLS(1:nodays,n))) == abs(log(infi)) .or. &
+              minval(M_POOLS(1:nodays,n)) /= minval(M_POOLS(1:nodays,n))) then
+              EDC2 = 0 ; EDCD%PASSFAIL(55+n) = 0
+          endif
+       end do
+
+       do n = 1, nofluxes
+          if (maxval(abs(M_FLUXES(1:nodays,n))) == abs(log(infi)) .or. &
+             minval(M_FLUXES(1:nodays,n)) /= minval(M_FLUXES(1:nodays,n))) then
+              EDC2 = 0 ; EDCD%PASSFAIL(55+nopools+n) = 0
+          endif
+       end do
 
     end if ! min pool assessment
 

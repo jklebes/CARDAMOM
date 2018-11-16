@@ -15,8 +15,11 @@ public :: CARBON_MODEL                  &
          ,calculate_transpiration       &
          ,calculate_wetcanopy_evaporation &
          ,calculate_soil_evaporation    &
+         ,calculate_shortwave_balance   &
+         ,calculate_longwave_isothermal &
          ,acm_albedo_gc                 &
          ,acm_meteorological_constants  &
+         ,update_soil_initial_conditions&
          ,calculate_daylength           &
          ,daylength_hours               &
          ,daylength_seconds             &
@@ -99,6 +102,7 @@ public :: CARBON_MODEL                  &
          ,lai_half_lwrad_release        &
          ,mint                          &
          ,maxt                          &
+         ,leafT                         &
          ,swrad                         &
          ,co2                           &
          ,doy                           &
@@ -112,6 +116,7 @@ public :: CARBON_MODEL                  &
          ,days_per_step                 &
          ,days_per_step_1               &
          ,dayl_seconds                  &
+         ,dayl_seconds_1                &
          ,dayl_hours                    &
          ,snow_storage                  &
          ,canopy_storage                &
@@ -450,7 +455,7 @@ contains
               ,VPDfac_range_1 &
                      ,deltaWP & ! deltaWP (MPa) minlwp-soilWP
                         ,Rtot & ! Total hydraulic resistance (MPa.s-1.m-2.mmol-1)
-            ,pot_actual_ratio &
+               ,act_pot_ratio &
                ,transpiration &
              ,soilevaporation &
               ,wetcanopy_evap &
@@ -466,7 +471,7 @@ contains
                        ,rfac                                            ! resilience factor
 
     ! local deforestation related variables
-    double precision, dimension(4) :: post_harvest_burn   & ! how much burning to occur after
+    double precision, dimension(5) :: post_harvest_burn   & ! how much burning to occur after
                                      ,foliage_frac_res    &
                                      ,roots_frac_res      &
                                      ,rootcr_frac_res     &
@@ -778,6 +783,8 @@ contains
                  disturbance_loss_from_som(nodays),     &
                  Cwood_labile_release_coef(nodays),     &
                  Croot_labile_release_coef(nodays),     &
+                 co2_compensation_point(nodays),        &
+                 co2_half_saturation(nodays),           &
                  deltat_1(nodays),soilwatermm(nodays),  &
                  wSWP_time(nodays))
         ! calculate inverse of number of days per time step, as this will be useful to avoid divisions later
@@ -785,8 +792,6 @@ contains
 
         ! first those linked to the time period of the analysis
         do n = 1, nodays
-          ! check positive values only for rainfall input
-          rainfall_time(n)=max(dble_zero,met(7,n))
           ! Temperature adjustments for Michaelis-Menten coefficients
           ! for CO2 (kc) and O2 (ko) and CO2 compensation point.
           co2_compensation_point(n) = arrhenious(co2comp_saturation,co2comp_half_sat_conc,met(3,n))
@@ -854,7 +859,7 @@ contains
        ! initialise some time invarient parameters
        call saxton_parameters(soil_frac_clay,soil_frac_sand)
        call initialise_soils(soil_frac_clay,soil_frac_sand)
-       call update_soil_initial_conditions(pars(44))
+       call update_soil_initial_conditions(pars(41))
        ! save the initial conditions for later
        soil_waterfrac_initial = soil_waterfrac
        SWP_initial = SWP
@@ -1169,7 +1174,6 @@ contains
       FLUXES(n,19) = FLUXES(n,19) + wetcanopy_evap
       ! store soil water content of the surface zone (mm)
       POOLS(n,8) = 1d3*soil_waterfrac(1)*layer_thickness(1)
-
 
       !
       ! deal first with deforestation
@@ -3084,83 +3088,83 @@ contains
   !
   !------------------------------------------------------------------
   !
-  subroutine update_net_radiation(isothermal,tempC,area_scaling,act_pot_ratio &
-                                 ,sfc_exchange,aero_exchange,vapour_gradient,deltaTemp,deltaR)
-
-    ! Use steady state solution of evaporation, convective (sensible) and radiative heat loss
-    ! to update isothermal net radiation to net.
-    ! Area scaling (e.g. lai) is an input to allow for common useage for soil (neglecting ground heat) and canopy
-
-    ! arguments
-    double precision, intent(in) ::      tempC, & ! input surface / air temperature (oC)
-                                    isothermal, & ! isothermal net radiation (SW+LW; W/m2)
-                                  area_scaling, & ! area scaling to apply (m2/m2)
-                                 act_pot_ratio, & ! ratio of potential to actual evaporation, i.e. (avail / potenial)
-                                  sfc_exchange, & ! surface exchange conductance (m/s; e.g. stomatal conductance)
-                                 aero_exchange, & ! aerodynamic exchange conductance (m/s; e.g. aerodynamic conductance)
-                               vapour_gradient    ! vapour pressure gradient (Pa; either VPD or between air and soil)
-    double precision, intent(out) :: deltaTemp, & ! surface temperature difference (K)
-                                     deltaR    ! surface longwave radiation difference (W/m2); subtract from isothermal longwave
-
-    ! local variables
-    double precision ::  tempK, & ! ambient temperature as K
-          heat_loss_resistance, & ! resistance to heat loss from radiative and convection (s/m)
-        aerodynamic_resistance, & ! aerodynamic resistance to water or heat exchangce (s/m)
-           stomatal_resistance, & ! stomatal resistance to water exchangce (s/m)
-              water_resistance, & ! serial combination of resistances to water evaporation
- thermal_gains, thermal_losses
-
-    ! ambient temperature C -> K
-    tempK = tempC + freeze
-
-    !
-    ! Calculate resistance to heat loss (s/m)
-    !
-
-    ! First estimate radiative loss term, initially calculated as conductance)
-    heat_loss_resistance = 4d0 * emissivity * boltz * tempK ** 3 / (air_density_kg * cpair)
-    ! Combine in parallel with convective conductances with area correction
-    heat_loss_resistance = heat_loss_resistance + (2d0 * aero_exchange / area_scaling)
-    ! convert from conductance m/s to s/m
-    heat_loss_resistance = heat_loss_resistance ** (-1d0)
-
-    !
-    ! Convert aerodynamic and stomatal conductances to reisistance of water flux
-    !
-
-    aerodynamic_resistance = (aero_exchange/area_scaling) ** (-1d0)
-    if (sfc_exchange == dble_zero) then
-        ! if being used for surface water flux
-        stomatal_resistance = dble_zero
-    else
-        ! if used for transpiration
-        stomatal_resistance = (sfc_exchange/area_scaling) ** (-1d0)
-    endif
-
-    !
-    ! Estimate thermal gains and losses (K) to calculate temperature difference
-    !
-
-    water_resistance = (aerodynamic_resistance + stomatal_resistance)
-    thermal_gains = (heat_loss_resistance * water_resistance * psych * (isothermal/area_scaling)) &
-                  / (air_density_kg * cpair * ((psych*water_resistance) + (slope*heat_loss_resistance)))
-    thermal_losses = (heat_loss_resistance * vapour_gradient * 1d-3) &
-                   / ((psych*water_resistance) + (slope*heat_loss_resistance))
-    ! determine surface temperature difference (K); should be added to the canopy temperature
-    deltaTemp = thermal_gains - thermal_losses
-    ! apply actual potential ratio to scale wet surface evaporation when the
-    ! supply of water is limited
-    deltaTemp = deltaTemp * act_pot_ratio
-
-    ! estimate update between isothermal to net radiation (W/m2), including area correction
-    ! note that this MUST be added from the longwave component outside of this function
-    deltaR = -4d0 * emissivity * boltz * tempK ** 3 * ( deltaTemp )
-    deltaR = deltaR * area_scaling
-
-    ! return to user
-    return
-
-  end subroutine update_net_radiation
+!  subroutine update_net_radiation(isothermal,tempC,area_scaling,act_pot_ratio &
+!                                 ,sfc_exchange,aero_exchange,vapour_gradient,deltaTemp,deltaR)
+!
+!    ! Use steady state solution of evaporation, convective (sensible) and radiative heat loss
+!    ! to update isothermal net radiation to net.
+!    ! Area scaling (e.g. lai) is an input to allow for common useage for soil (neglecting ground heat) and canopy
+!
+!    ! arguments
+!    double precision, intent(in) ::      tempC, & ! input surface / air temperature (oC)
+!                                    isothermal, & ! isothermal net radiation (SW+LW; W/m2)
+!                                  area_scaling, & ! area scaling to apply (m2/m2)
+!                                 act_pot_ratio, & ! ratio of potential to actual evaporation, i.e. (avail / potenial)
+!                                  sfc_exchange, & ! surface exchange conductance (m/s; e.g. stomatal conductance)
+!                                 aero_exchange, & ! aerodynamic exchange conductance (m/s; e.g. aerodynamic conductance)
+!                               vapour_gradient    ! vapour pressure gradient (Pa; either VPD or between air and soil)
+!    double precision, intent(out) :: deltaTemp, & ! surface temperature difference (K)
+!                                     deltaR    ! surface longwave radiation difference (W/m2); subtract from isothermal longwave
+!
+!    ! local variables
+!    double precision ::  tempK, & ! ambient temperature as K
+!          heat_loss_resistance, & ! resistance to heat loss from radiative and convection (s/m)
+!        aerodynamic_resistance, & ! aerodynamic resistance to water or heat exchangce (s/m)
+!           stomatal_resistance, & ! stomatal resistance to water exchangce (s/m)
+!              water_resistance, & ! serial combination of resistances to water evaporation
+! thermal_gains, thermal_losses
+!
+!    ! ambient temperature C -> K
+!    tempK = tempC + freeze
+!
+!    !
+!    ! Calculate resistance to heat loss (s/m)
+!    !
+!
+!    ! First estimate radiative loss term, initially calculated as conductance)
+!    heat_loss_resistance = 4d0 * emissivity * boltz * tempK ** 3 / (air_density_kg * cpair)
+!    ! Combine in parallel with convective conductances with area correction
+!    heat_loss_resistance = heat_loss_resistance + (2d0 * aero_exchange / area_scaling)
+!    ! convert from conductance m/s to s/m
+!    heat_loss_resistance = heat_loss_resistance ** (-1d0)
+!
+!    !
+!    ! Convert aerodynamic and stomatal conductances to reisistance of water flux
+!    !
+!
+!    aerodynamic_resistance = (aero_exchange/area_scaling) ** (-1d0)
+!    if (sfc_exchange == dble_zero) then
+!        ! if being used for surface water flux
+!        stomatal_resistance = dble_zer!o
+!    else
+!        ! if used for transpiration
+!        stomatal_resistance = (sfc_exchange/area_scaling) ** (-1d0)
+!    endif
+!
+!    !
+!    ! Estimate thermal gains and losses (K) to calculate temperature difference
+!    !
+!
+!    water_resistance = (aerodynamic_resistance + stomatal_resistance)
+!    thermal_gains = (heat_loss_resistance * water_resistance * psych * (isothermal/area_scaling)) &
+!                  / (air_density_kg * cpair * ((psych*water_resistance) + (slope*heat_loss_resistance)))
+!    thermal_losses = (heat_loss_resistance * vapour_gradient * 1d-3) &
+!                   / ((psych*water_resistance) + (slope*heat_loss_resistance))
+!    ! determine surface temperature difference (K); should be added to the canopy temperature
+!    deltaTemp = thermal_gains - thermal_losses
+!    ! apply actual potential ratio to scale wet surface evaporation when the
+!    ! supply of water is limited
+!    deltaTemp = deltaTemp * act_pot_ratio
+!
+!    ! estimate update between isothermal to net radiation (W/m2), including area correction
+!    ! note that this MUST be added from the longwave component outside of this function
+!    deltaR = -4d0 * emissivity * boltz * tempK ** 3 * ( deltaTemp )
+!    deltaR = deltaR * area_scaling
+!
+!    ! return to user
+!    return
+!
+!  end subroutine update_net_radiation
   !
   !------------------------------------------------------------------
   !
@@ -3342,7 +3346,7 @@ contains
                    min(dble_one,dble_one-(dble_one-leaf_growth)**deltat(current_step))*deltat_1(current_step)
              ! calculate new leaf area, GPP return
              lai = (foliage+tmp) * SLA
-             call calculate_shortwave_balance
+             call calculate_shortwave_balance 
              ! calculate stomatal conductance of water
              if (lai > vsmall .and. stomatal_conductance > vsmall) then
                  tmp = acm_gpp(stomatal_conductance)
