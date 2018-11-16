@@ -52,12 +52,6 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
 	  DIN=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
       }
 
-      # restructure pars
-#      pars_in=array(0,dim=c(dim(pars)[1],dim(pars)[2]*dim(pars)[3]))
-#      nos_iter=dim(pars)[2]*dim(pars)[3]
-#      for (n in seq(1,dim(pars)[1])){
-#	  pars_in[n,]=pars[n,,]
-#      }
       # loop through combinations
       if (model_name == "ACM") {
 	  dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))

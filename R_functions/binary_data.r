@@ -378,8 +378,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[41]=0.946     ; PARPRIORUNC[41]=0.107*2   # Rm_wood intercept (gC/gN) Reich et al., (2008)
       PARPRIORS[44]=OBS$soilwater ; PARPRIORUNC[44]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
     } # Crop or not
-    PARPRIORS[22]=OBS$Clit_initial          ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=2.0} # Clitter prior
-    PARPRIORS[23]=OBS$SOM                   ; if (OBS$SOM != -9999) {PARPRIORUNC[23]=2.0} # Csom prior
+    PARPRIORS[22]=OBS$Clit_initial          ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial} # Clitter prior
+    PARPRIORS[23]=OBS$SOM                   ; if (OBS$SOM != -9999) {PARPRIORUNC[23]=OBS$SOM*0.40} # Csom prior
   } else if (modelname == "ACM") {
 
     # For ACM_GPP_ET
