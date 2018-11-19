@@ -691,7 +691,7 @@ module model_likelihood_module
               ,i, exp_adjust, no_years_adjust, disturb_year, replant_year &
               ,disturb_begin, disturb_end
     double precision :: mean_pools(nopools), G, decay_coef, meangpp &
-                       ,EQF2, EQF5, EQF10, EQF20, sumgpp, sumnpp, model_living_C &
+                       ,infi, EQF2, EQF5, EQF10, EQF20, sumgpp, sumnpp, model_living_C &
                        ,target_living_C(2),hold, steps_per_year
     double precision, dimension(nodays) :: mean_ratio, resid_fol,resid_lab
     integer, dimension(nodays) :: hak ! variable to determine number of NaN in foliar residence time calculation
@@ -776,6 +776,7 @@ module model_likelihood_module
     sumgpp = 1d0/sum(M_GPP(1:nodays))
     sumnpp = 1d0/(sum(M_GPP(1:nodays))*(1d0-fauto))
 
+    infi = 0d0
     DIAG = EDCD%DIAG
     EDC2 = 1
 
