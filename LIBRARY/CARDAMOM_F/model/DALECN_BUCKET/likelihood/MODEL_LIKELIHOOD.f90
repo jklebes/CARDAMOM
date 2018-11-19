@@ -812,8 +812,8 @@ module model_likelihood_module
 
     ! reset initial values
     hak = 0 ; resid_lab = 0d0
-    resid_lab(1:nodays) = (M_FLUXES(1:nodays,8)+M_FLUXES(1:nodays,7)+M_FLUXES(1:nodays,6)+M_FLUXES(1:nodays,22)) &
-                        / M_POOLS(1:nodays,1)
+    resid_lab(1:nodays) = (M_FLUXES(1:nodays,3)+M_FLUXES(1:nodays,8)+M_FLUXES(1:nodays,7) &
+                          +M_FLUXES(1:nodays,6)+M_FLUXES(1:nodays,22)) / M_POOLS(1:nodays,1)
     ! division by zero results in NaN plus obviously I can't have turned
     ! anything over if there was nothing to start out with...
     where ( M_POOLS(1:nodays,1) == 0d0 )
