@@ -166,7 +166,7 @@ module model_likelihood_module
     else
 
         ! call EDCs which can be evaluated prior to running the model
-        call EDC1_GSI(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+        call EDC1_GSI(PARS,PI%npars,DATAin%meantemp,DATAin%meanrad,EDC1)
 
         ! next need to run the model itself
         call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
@@ -490,8 +490,10 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine EDC1_GSI(PARS, npars, meantemp, meanrad, &
-                      nodays, deltat, EDC1)
+  subroutine EDC1_GSI(PARS, npars, meantemp, meanrad, EDC1)
+
+    use cardamom_structures, only: DATAin
+    use CARBON_MODEL_MOD, only: opt_max_scaling
 
     ! subroutine assessed the current parameter sets for passing ecological and
     ! steady state contraints (modified from Bloom et al., 2014).
@@ -499,13 +501,10 @@ module model_likelihood_module
     implicit none
 
     ! declare input variables
-    integer, intent(in) :: npars, & ! number of parameters
-                          nodays    ! number of timesteps
     double precision, intent(out) :: EDC1    ! EDC1 flag
     double precision, dimension(npars), intent(in) :: PARS ! current parameter set
     double precision, intent(in) :: meantemp & ! mean temperature (k)
                                    ,meanrad    ! mean radiation (MJ.m-2.day-1)
-    double precision, dimension(nodays), intent(in) :: deltat(nodays)  ! timestep length (days)
 
     ! declare local variables
     integer :: n, DIAG
