@@ -733,7 +733,7 @@ module model_likelihood_module
     no_years=int(nint(sum(deltat)/365.25d0))
     steps_per_year = sum(deltat)/dble(no_years)
     no_years_adjust=no_years
-    allocate(mean_annual_pools(no_years))
+!    allocate(mean_annual_pools(no_years))
 
     ! Some EDCs can only be used if the management periods are except in their
     ! analysis timeframe. For example EDC 8 assesses expoential shifts
