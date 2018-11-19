@@ -197,189 +197,167 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   #PARPRIORS(17)=70;PARPRIORUNC(17)=2;%LMA - Kattge 2011
   if (modelname == "DALEC_CDEA") {
     PARPRIORS[11]=20.52048            ; PARPRIORUNC[11]=1.617705 # Ceff
-    PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=2.0} # Cfoliar prior
-    PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=2.0} # Croots prior
-    PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=2.0} # Cwood prior
-    PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=2.0} # Clitter prior
-    PARPRIORS[23]=OBS$SOM             ; if (OBS$SOM != -9999) {PARPRIORUNC[23]=2.0} # Csom prior
+    PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_intial_unc} # Cfoliar prior
+    PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_uc} # Croots prior
+    PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+    PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+    PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "AT_DALEC" & parameter_type == "pft_specific" & ctessel_pft == 1) {
     #        PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.617705 # Ceff
-    PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=2.0} # Cfoliar prior
-    PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=2.0} # Croots prior
-    PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=2.0} # Cwood prior
-    PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=2.0} # Clitter prior
-    PARPRIORS[23]=OBS$SOM             ; if (OBS$SOM != -9999) {PARPRIORUNC[23]=2.0} # Csom prior
+    PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_intial_unc} # Cfoliar prior
+    PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_uc} # Croots prior
+    PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+    PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+    PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "AT_DALEC") {
-    #        PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.617705 # Ceff
-    PARPRIORS[18]=OBS$Cfol_initial 		; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[18]=2.0} # Cfoliar prior
-    PARPRIORS[19]=OBS$Croots_initial 	; if (OBS$Croots_initial != -9999) {PARPRIORUNC[19]=2.0} # Croots prior
-    PARPRIORS[20]=OBS$Cwood_initial 	; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[20]=2.0} # Cwood prior
-    PARPRIORS[21]=OBS$Clit_initial 		; if (OBS$Clit_initial != -9999) {PARPRIORUNC[21]=2.0} # Clitter prior
-    PARPRIORS[22]=OBS$SOM 			; if (OBS$SOM != -9999) {PARPRIORUNC[22]=2.0} # Csom prior
+    print("--------AT_DALEC--------")
+    print("Priors no longer supported")
   } else if (modelname == "DALEC_CDEA_FR") {
     #        PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.617705 # Ceff
-    PARPRIORS[17]=140.0   ; PARPRIORUNC[17]=1.5 # LMA gC.m-2 prior (Duke Forest; Akers et al 2013)
-    PARPRIORS[19]=OBS$Cfol_initial 		; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=2.0} # Cfoliar prior
-    PARPRIORS[20]=OBS$Croots_initial 	; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=2.0} # Croots prior
-    PARPRIORS[21]=OBS$Cwood_initial 	; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=2.0} # Cwood prior
-    PARPRIORS[22]=OBS$Clit_initial 		; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=2.0} # Clitter prior
-    PARPRIORS[23]=OBS$SOM 			; if (OBS$SOM != -9999) {PARPRIORUNC[23]=2.0} # Csom prior
+    #PARPRIORS[17]=140.0   ; PARPRIORUNC[17]=1.5 # LMA gC.m-2 prior (Duke Forest; Akers et al 2013)
+    PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_intial_unc} # Cfoliar prior
+    PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_uc} # Croots prior
+    PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+    PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+    PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALEC_GSI_DBio_FR") {
-    PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
-    PARPRIORS[17]=-9999   ; PARPRIORUNC[17]=-9999 # LMA
-    PARPRIORS[19]=OBS$Cfol_initial          ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=2.0} # Cfoliar prior
-    PARPRIORS[20]=OBS$Croots_initial        ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=2.0} # Croots prior
-    PARPRIORS[21]=OBS$Cwood_initial         ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
-    #       PARPRIORS[21]=OBS$Cwood_initial         ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=2.0} # Cwood prior
-    PARPRIORS[22]=OBS$Clit_initial          ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=2.0} # Clitter prior
-    PARPRIORS[23]=OBS$SOM                   ; if (OBS$SOM != -9999) {PARPRIORUNC[23]=2.0} # Csom priors
+    PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_intial_unc} # Cfoliar prior
+    PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_uc} # Croots prior
+    PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+    PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+    PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALECN_GSI_FR") {
-    PARPRIORS[11]=0.2432501   ; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
     PARPRIORS[49]=0.001868948 ; PARPRIORUNC[49]=0.0005951156 # NUE**(1/-2.999299929993) (gC/gN)
-    #        PARPRIORS[17]=140.0   ; PARPRIORUNC[17]=11.7*3 # (not log) LMA gC.m-2 prior (Duke Forest; Akers et al 2013)
-    PARPRIORS[17]=-9999   ; PARPRIORUNC[17]=-9999 # (not log) LMA gC.m-2 prior (Duke Forest; Akers et al 2013)
-    PARPRIORS[19]=OBS$Cfol_initial 		; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=2.0} # Cfoliar prior
-    PARPRIORS[20]=OBS$Croots_initial 	; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=2.0} # Croots prior
-    PARPRIORS[21]=OBS$Cwood_initial 	; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=2.0} # Cwood prior
-    PARPRIORS[22]=OBS$Clit_initial 		; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=2.0} # Clitter prior
-    PARPRIORS[23]=OBS$SOM 			; if (OBS$SOM != -9999) {PARPRIORUNC[23]=2.0} # Csom prior
+    PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_intial_unc} # Cfoliar prior
+    PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_uc} # Croots prior
+    PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+    PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+    PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALEC_GSI_FR") {
     #        PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.617705 # Ceff
-    PARPRIORS[17]=-9999   ; PARPRIORUNC[17]=-9999 # (not log) LMA gC.m-2 prior (Duke Forest; Akers et al 2013)
-    PARPRIORS[19]=OBS$Cfol_initial 		; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=2.0} # Cfoliar prior
-    PARPRIORS[20]=OBS$Croots_initial 	; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=2.0} # Croots prior
-    PARPRIORS[21]=OBS$Cwood_initial 	; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=2.0} # Cwood prior
-    PARPRIORS[22]=OBS$Clit_initial 		; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=2.0} # Clitter prior
-    PARPRIORS[23]=OBS$SOM 			; if (OBS$SOM != -9999) {PARPRIORUNC[23]=2.0} # Csom prior
+    PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_intial_unc} # Cfoliar prior
+    PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_uc} # Croots prior
+    PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+    PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+    PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALEC_GSI_DFOL_FR") {
     PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.2 #1.617705 # Ceff
-    PARPRIORS[17]=-9999   ; PARPRIORUNC[17]=-9999 # LMA
-    PARPRIORS[19]=OBS$Cfol_initial 		; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=2.0} # Cfoliar prior
-    PARPRIORS[20]=OBS$Croots_initial 	; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=2.0} # Croots prior
-    PARPRIORS[21]=OBS$Cwood_initial 	; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
-    #	PARPRIORS[21]=OBS$Cwood_initial 	; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=2.0} # Cwood prior
-    PARPRIORS[22]=OBS$Clit_initial 		; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=2.0} # Clitter prior
-    PARPRIORS[23]=OBS$SOM 			; if (OBS$SOM != -9999) {PARPRIORUNC[23]=2.0} # Csom prior
+    PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_intial_unc} # Cfoliar prior
+    PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_uc} # Croots prior
+    PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+    PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+    PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALEC_GSI_DFOL_CWD_FR") {
-    #PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.6 #1.617705 # Ceff
     PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_intial_unc} # Cfoliar prior
+    PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_uc} # Croots prior
+    PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+    PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+    PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
     if (parameter_type == "pft_specific" & ctessel_pft == 1) {
-      PARPRIORS[12]=OBS$plant   ; PARPRIORUNC[12]=1.1
-      PARPRIORS[15]=OBS$harvest ; PARPRIORUNC[15]=1.1
+      PARPRIORS[12]=OBS$plant         ; PARPRIORUNC[12]=OBS$plant_range
+      PARPRIORS[15]=OBS$harvest       ; PARPRIORUNC[15]=OBS$harvest_range
+      # for crops remove the biomass prior
+      PARPRIORS[21]=-9999   ; PARPRIORUNC[21]=-9999
     }
-    PARPRIORS[17]=-9999   ; PARPRIORUNC[17]=-9999 # LMA
-    PARPRIORS[19]=OBS$Cfol_initial          ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=2.0} # Cfoliar prior
-    PARPRIORS[20]=OBS$Croots_initial        ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=2.0} # Croots prior
-    if (parameter_type == "pft_specific" & ctessel_pft == 1) {
-
-    } else {
-      PARPRIORS[21]=OBS$Cwood_initial         ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
-      #       PARPRIORS[21]=OBS$Cwood_initial         ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=2.0} # Cwood prior
-    }
-    PARPRIORS[22]=OBS$Clit_initial          ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=2.0} # Clitter prior
-    PARPRIORS[23]=OBS$SOM                   ; if (OBS$SOM != -9999) {PARPRIORUNC[23]=2.0} # Csom prior
   } else if (modelname == "DALEC_GSI_DFOL_LABILE_FR") {
     PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.6 #1.617705 # Ceff
-    PARPRIORS[17]=-9999   ; PARPRIORUNC[17]=-9999 # LMA
-    PARPRIORS[19]=OBS$Cfol_initial 		; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=2.0} # Cfoliar prior
-    PARPRIORS[20]=OBS$Croots_initial 	; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=2.0} # Croots prior
-    PARPRIORS[21]=OBS$Cwood_initial 	; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=2.0} # Cwood prior
-    PARPRIORS[22]=OBS$Clit_initial 		; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=2.0} # Clitter prior
-    PARPRIORS[23]=OBS$SOM 			; if (OBS$SOM != -9999) {PARPRIORUNC[23]=2.0} # Csom priors
-  } else if (modelname == "DALECN_GSI_DFOL_LABILE_FR") {
+    PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_intial_unc} # Cfoliar prior
+    PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_uc} # Croots prior
+    PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+    PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+    PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
+   } else if (modelname == "DALECN_GSI_DFOL_LABILE_FR") {
     PARPRIORS[11]=0.2432501      ; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
     #        PARPRIORS[52]=0.0479264      ; PARPRIORUNC[52]=0.01904211 # NUE**(1/-1.38513851385139) (gC/gN)
     PARPRIORS[52]=0.001868948    ; PARPRIORUNC[52]=0.0005951156 # NUE**(1/-2.999299929993) (gC/gN)
-    PARPRIORS[17]=-9999          ; PARPRIORUNC[17]=-9999 # LMA
-    PARPRIORS[19]=OBS$Cfol_initial 		; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=2.0} # Cfoliar prior
-    PARPRIORS[20]=OBS$Croots_initial 	; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=2.0} # Croots prior
-    PARPRIORS[21]=OBS$Cwood_initial 	; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=2.0} # Cwood prior
-    PARPRIORS[22]=OBS$Clit_initial 		; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=2.0} # Clitter prior
-    PARPRIORS[23]=OBS$SOM 			; if (OBS$SOM != -9999) {PARPRIORUNC[23]=2.0} # Csom priors
+    PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_intial_unc} # Cfoliar prior
+    PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_uc} # Croots prior
+    PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+    PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+    PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALECN_GSI_DFOL_LABILE_FROOT_FR") {
     PARPRIORS[11]=0.2432501      ; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
     #        PARPRIORS[52]=0.0479264      ; PARPRIORUNC[52]=0.01904211 # NUE**(1/-1.38513851385139) (gC/gN)
     PARPRIORS[52]=0.001868948    ; PARPRIORUNC[52]=0.0005951156 # NUE**(1/-2.999299929993) (gC/gN)
-    PARPRIORS[17]=-9999          ; PARPRIORUNC[17]=-9999 # LMA
-    PARPRIORS[19]=OBS$Cfol_initial          ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=2.0} # Cfoliar prior
-    PARPRIORS[20]=OBS$Croots_initial        ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=2.0} # Croots prior
-    PARPRIORS[21]=OBS$Cwood_initial         ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=2.0} # Cwood prior
-    PARPRIORS[22]=OBS$Clit_initial          ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=2.0} # Clitter prior
-    PARPRIORS[23]=OBS$SOM                   ; if (OBS$SOM != -9999) {PARPRIORUNC[23]=2.0} # Csom priors
+    PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_intial_unc} # Cfoliar prior
+    PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_uc} # Croots prior
+    PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+    PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+    PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALEC_GSI_DFOL_FROOT_FR") {
     PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.1 # 1.617705 # Ceff
-    PARPRIORS[17]=-9999   ; PARPRIORUNC[17]=-9999 # LMA
-    PARPRIORS[19]=OBS$Cfol_initial 		; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=2.0} # Cfoliar prior
-    PARPRIORS[20]=OBS$Croots_initial 	; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=2.0} # Croots prior
-    PARPRIORS[21]=OBS$Cwood_initial 	; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=2.0} # Cwood prior
-    PARPRIORS[22]=OBS$Clit_initial 		; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=2.0} # Clitter prior
-    PARPRIORS[23]=OBS$SOM 			; if (OBS$SOM != -9999) {PARPRIORUNC[23]=2.0} # Csom prior
+    PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_intial_unc} # Cfoliar prior
+    PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_uc} # Croots prior
+    PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+    PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+    PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALEC_GSI_MFOL_FR") {
     #        PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.617705 # Ceff
-    PARPRIORS[17]=-9999   ; PARPRIORUNC[17]=-9999 # LMA
-    #	PARPRIORS[19]=OBS$Cfol_initial 		; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=2.0} # Cfoliar prior
-    PARPRIORS[20]=OBS$Croots_initial 	; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=2.0} # Croots prior
-    PARPRIORS[21]=OBS$Cwood_initial 	; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=2.0} # Cwood prior
-    PARPRIORS[22]=OBS$Clit_initial 		; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=2.0} # Clitter prior
-    PARPRIORS[23]=OBS$SOM 			; if (OBS$SOM != -9999) {PARPRIORUNC[23]=2.0} # Csom prior
+    PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_intial_unc} # Cfoliar prior
+    PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_uc} # Croots prior
+    PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+    PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+    PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALEC_GSI_BUCKET") {
-    PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_intial_unc} # Cfoliar prior
+    PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_uc} # Croots prior
+    PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+    PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+    PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
     if (parameter_type == "pft_specific" & ctessel_pft == 1) {
-      PARPRIORS[12]=OBS$plant         ; PARPRIORUNC[12]=1.1
-      PARPRIORS[15]=OBS$harvest       ; PARPRIORUNC[15]=1.1
-      #PARPRIORS[36]=50	            ; PARPRIORUNC[36]=1.4 # Croot to half max depth (gbio.m-2)
-      PARPRIORS[37]=1	            ; PARPRIORUNC[37]=1.4 # Max rooting depth (m)
+      PARPRIORS[12]=OBS$plant     ; PARPRIORUNC[12]=OBS$plant_range
+      PARPRIORS[15]=OBS$harvest   ; PARPRIORUNC[15]=OBS$harvest_range
+      PARPRIORS[21]=-9999         ; PARPRIORUNC[21]=-9999
       PARPRIORS[38]=OBS$soilwater ; PARPRIORUNC[38]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
     } else {
-      #PARPRIORS[39]=150               ; PARPRIORUNC[39]=1.4 # Croot to half max depth (gbio.m-2)
-      PARPRIORS[40]=2	      	    ; PARPRIORUNC[40]=1.4 # Max rooting depth (m)
       PARPRIORS[41]=OBS$soilwater   ; PARPRIORUNC[41]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
-      PARPRIORS[21]=OBS$Cwood_initial ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
     } # crop or not
-    PARPRIORS[22]=OBS$Clit_initial          ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=2.0} # Clitter prior
-    PARPRIORS[23]=OBS$SOM                   ; if (OBS$SOM != -9999) {PARPRIORUNC[23]=2.0} # Csom prior
   } else if (modelname == "DALECN_GSI_BUCKET") {
     PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_intial_unc} # Cfoliar prior
+    PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_uc} # Croots prior
+    PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+    PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+    PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
     if (parameter_type == "pft_specific" & ctessel_pft == 1) {
-      PARPRIORS[12]=OBS$plant         ; PARPRIORUNC[12]=1.1
-      PARPRIORS[15]=OBS$harvest       ; PARPRIORUNC[15]=1.1
-      #PARPRIORS[36]=50	            ; PARPRIORUNC[36]=1.4 # Croot to half max depth (gbio.m-2)
-      #PARPRIORS[37]=1	            ; PARPRIORUNC[37]=1.4 # Max rooting depth (m)
+      PARPRIORS[12]=OBS$plant         ; PARPRIORUNC[12]=OBS$plant_range
+      PARPRIORS[15]=OBS$harvest       ; PARPRIORUNC[15]=OBS$harvest_range
+      PARPRIORS[21]=-9999             ; PARPRIORUNC[21]=-9999
     } else {
-      PARPRIORS[2]=51.70631   ; PARPRIORUNC[2]=0.53905 # C:N root (gC/gN) Kattge et al., (2011)
-      PARPRIORS[27]=416.6667  ; PARPRIORUNC[27]=6.277688 # C:N wood (gC/gN) Kattge et al., (2011)
-      PARPRIORS[21]=OBS$Cwood_initial ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
-      #PARPRIORS[39]=150      ; PARPRIORUNC[39]=1.4 # Croot to half max depth (gbio.m-2)
-      #PARPRIORS[40]=2        ; PARPRIORUNC[40]=1.4 # Max rooting depth (m)
-      PARPRIORS[41]=1.639     ; PARPRIORUNC[41]=0.125*3 # Rm_leaf N**exponent (gC/gN) Reich et al., (2008)
-      PARPRIORS[43]=1.352     ; PARPRIORUNC[43]=0.150*3 # Rm_root N**exponent (gC/gN) Reich et al., (2008)
-      PARPRIORS[45]=1.344     ; PARPRIORUNC[45]=0.150*3 # Rm_wood N**exponent (gC/gN) Reich et al., (2008)
+      PARPRIORS[2]=51.70631   ; PARPRIORUNC[2]=124.6938 # C:N root (gC/gN) Kattge et al., (2011)
+      PARPRIORS[27]=416.6667  ; PARPRIORUNC[27]=326.3762 # C:N wood (gC/gN) Kattge et al., (2011)
+      PARPRIORS[41]=1.639     ; PARPRIORUNC[41]=0.125 # Rm_leaf N**exponent (gC/gN) Reich et al., (2008)
+      PARPRIORS[43]=1.352     ; PARPRIORUNC[43]=0.150 # Rm_root N**exponent (gC/gN) Reich et al., (2008)
+      PARPRIORS[45]=1.344     ; PARPRIORUNC[45]=0.150 # Rm_wood N**exponent (gC/gN) Reich et al., (2008)
     } # Crop or not
-    PARPRIORS[22]=OBS$Clit_initial          ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=2.0} # Clitter prior
-    PARPRIORS[23]=OBS$SOM                   ; if (OBS$SOM != -9999) {PARPRIORUNC[23]=2.0} # Csom prior
   } else if (modelname == "DALECN_BUCKET") {
     PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_intial_unc} # Cfoliar prior
+    PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_uc} # Croots prior
+    PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+    PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+    PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
     if (parameter_type == "pft_specific" & ctessel_pft == 1) {
-      PARPRIORS[12]=OBS$plant         ; PARPRIORUNC[12]=1.1
-      PARPRIORS[15]=OBS$harvest       ; PARPRIORUNC[15]=1.1
-      #PARPRIORS[36]=50	            ; PARPRIORUNC[36]=1.4 # Croot to half max depth (gbio.m-2)
-      #PARPRIORS[37]=1	            ; PARPRIORUNC[37]=1.4 # Max rooting depth (m)
+      PARPRIORS[12]=OBS$plant         ; PARPRIORUNC[12]=OBS$plant_range
+      PARPRIORS[15]=OBS$harvest       ; PARPRIORUNC[15]=OBS$harvest_range
+      PARPRIORS[21]=-9999             ; PARPRIORUNC[21]=-9999
       PARPRIORS[38]=OBS$soilwater ; PARPRIORUNC[38]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
     } else {
-      PARPRIORS[2]=51.70631   ; PARPRIORUNC[2]=0.53905 # C:N root (gC/gN) Kattge et al., (2011)
-      PARPRIORS[15]=416.6667  ; PARPRIORUNC[15]=6.277688 # C:N wood (gC/gN) Kattge et al., (2011)
-      PARPRIORS[21]=OBS$Cwood_initial ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
-      PARPRIORS[26]=11.197440 ; PARPRIORUNC[26]=1.32313*2 # NUE prior derived from Kattge et al., (2011)
-      PARPRIORS[36]=1.639     ; PARPRIORUNC[36]=0.125*2   # Rm_leaf N**exponent (gC/gN) Reich et al., (2008)
-      PARPRIORS[37]=0.778     ; PARPRIORUNC[37]=0.133*2   # Rm_leaf intercept (gC/gN) Reich et al., (2008)
-      PARPRIORS[38]=1.352     ; PARPRIORUNC[38]=0.150*2   # Rm_root N**exponent (gC/gN) Reich et al., (2008)
-      PARPRIORS[39]=0.997     ; PARPRIORUNC[39]=0.082*2   # Rm_root intercept (gC/gN) Reich et al., (2008)
-      PARPRIORS[40]=1.344     ; PARPRIORUNC[40]=0.150*2   # Rm_wood N**exponent (gC/gN) Reich et al., (2008)
-      PARPRIORS[41]=0.946     ; PARPRIORUNC[41]=0.107*2   # Rm_wood intercept (gC/gN) Reich et al., (2008)
+      PARPRIORS[2]=51.70631   ; PARPRIORUNC[2]=124.6938 # C:N root (gC/gN) Kattge et al., (2011)
+      PARPRIORS[15]=416.6667  ; PARPRIORUNC[15]=326.3762 # C:N wood (gC/gN) Kattge et al., (2011)
+      PARPRIORS[26]=11.197440 ; PARPRIORUNC[26]=1.32313 # NUE prior derived from Kattge et al., (2011)
+      PARPRIORS[36]=1.639     ; PARPRIORUNC[36]=0.125   # Rm_leaf N**exponent (gC/gN) Reich et al., (2008)
+      PARPRIORS[37]=0.778     ; PARPRIORUNC[37]=0.133   # Rm_leaf intercept (gC/gN) Reich et al., (2008)
+      PARPRIORS[38]=1.352     ; PARPRIORUNC[38]=0.150   # Rm_root N**exponent (gC/gN) Reich et al., (2008)
+      PARPRIORS[39]=0.997     ; PARPRIORUNC[39]=0.082   # Rm_root intercept (gC/gN) Reich et al., (2008)
+      PARPRIORS[40]=1.344     ; PARPRIORUNC[40]=0.150   # Rm_wood N**exponent (gC/gN) Reich et al., (2008)
+      PARPRIORS[41]=0.946     ; PARPRIORUNC[41]=0.107   # Rm_wood intercept (gC/gN) Reich et al., (2008)
       PARPRIORS[44]=OBS$soilwater ; PARPRIORUNC[44]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
     } # Crop or not
-    PARPRIORS[22]=OBS$Clit_initial          ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial} # Clitter prior
-    PARPRIORS[23]=OBS$SOM                   ; if (OBS$SOM != -9999) {PARPRIORUNC[23]=OBS$SOM*0.40} # Csom prior
   } else if (modelname == "ACM") {
 
     # For ACM_GPP_ET
