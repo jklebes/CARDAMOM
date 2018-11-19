@@ -933,12 +933,12 @@ contains
       swrad = met(4,n) ! incoming short wave radiation (MJ/m2/day)
       co2 = met(5,n)   ! CO2 (ppm)
       doy = met(6,n)   ! Day of year
-      rainfall = met(7,n) ! rainfall (kgH2O/m2/s)
+      rainfall = max(0d0,met(7,n)) ! rainfall (kgH2O/m2/s)
       meant = (maxt + mint) * 0.5d0  ! mean air temperature (oC)
       meant_K = meant + freeze
       airt_zero_fraction = (maxt-dble_zero) / (maxt-mint) ! fraction of temperture period above freezing
       wind_spd = met(15,n) ! wind speed (m/s)
-      vpd_pa = met(16,n)  ! Vapour pressure deficit (Pa)
+      vpd_pa = max(0d0,met(16,n))  ! Vapour pressure deficit (Pa)
 
       ! states needed for module variables
       lai_out(n) = POOLS(n,2)*SLA
@@ -1479,6 +1479,7 @@ contains
 
     ! calculate combined light and CO2 limited photosynthesis
     acm_gpp = pl*pd/(pl+pd)
+
     ! sanity check
     if (acm_gpp /= acm_gpp) acm_gpp = dble_zero
     ! don't forget to return
@@ -1500,8 +1501,7 @@ contains
 
     ! local variables
     double precision :: tmp
-    double precision :: gs_high, gs_store, &
-                        gpp_high, gpp_low
+    double precision :: gs_high, gpp_high, gpp_low
 
     !!!!!!!!!!
     ! Optimise intrinsic water use efficiency
@@ -1547,6 +1547,7 @@ contains
 
     ! Globally stored upper stomatal conductance estimate in memory
     gs_store = stomatal_conductance
+
     ! now assign the current estimate
     stomatal_conductance = gs_in
     ! estimate photosynthesis with current estimate of gs
@@ -1571,7 +1572,8 @@ contains
     ! remember to return back to the user
     return
 
-  end function find_gs_WUE  !
+  end function find_gs_WUE  
+  !
   !------------------------------------------------------------------
   !
   subroutine acm_albedo_gc(deltaWP,Rtot)
@@ -3354,6 +3356,7 @@ contains
                  tmp = dble_zero
              endif
              deltaGPP = tmp - GPP_current
+print*,"deltaGPP",deltaGPP
              ! is the marginal return for GPP (over the mean life of leaves)
              ! less than increase in maintenance respiration and C required to
              ! growth?
@@ -3390,7 +3393,7 @@ contains
                 ! is the marginal return for GPP (over the mean life of leaves)
                 ! less than increase in maintenance respiration and C required to
                 ! growth?
-
+print*,"deltaGPP",deltaGPP
                 if (deltaGPP < gpp_crit_frac*GPP_current) leaf_growth = dble_zero
 
              end if ! Just grown?

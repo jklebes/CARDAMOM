@@ -69,7 +69,7 @@ module MODEL_PARAMETERS
        PI%parmin(5)=0.00027 ! 10 years
        PI%parmax(5)=0.10    ! 10 days
 
-       ! TOR wood* - 1% loss per year value
+       od* - 1% loss per year value
        PI%parmin(6)=0.000009 ! 300 years
        PI%parmax(6)=0.001    ! 2.73 years
 
@@ -123,14 +123,6 @@ module MODEL_PARAMETERS
        ! GSI max photoperiod threshold (sec)
        PI%parmin(24)=3600d0 !21600d0 ! 6 hours 
        PI%parmax(24)=64800d0 ! 18 hours
-
-!       ! GSI min Rtot threshold (MPa)
-!       PI%parmin(25)=0.01
-!       PI%parmax(25)=25.0 !50.0
-!
-!       ! GSI max Rtot threshold (MPa)
-!       PI%parmin(26)=0.1  
-!       PI%parmax(26)=75.0 !100.0 
 
        ! GSI min VPD threshold (Pa)
        PI%parmin(25)=1d0
