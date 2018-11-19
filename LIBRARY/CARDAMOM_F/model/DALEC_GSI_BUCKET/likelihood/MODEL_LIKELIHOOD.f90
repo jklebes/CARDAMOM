@@ -184,16 +184,16 @@ module model_likelihood_module
     end if ! crop or not if
 
     ! calculate the likelihood
-!    tot_exp = sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))
-    tot_exp = 0d0
-    do n = 1, EDCD%nedc
-       tot_exp=tot_exp+(1d0-EDCD%PASSFAIL(n))
-       if (EDCD%PASSFAIL(n) /= 1) print*,"failed edcs are: ", n
-    end do ! checking EDCs
-    ! for testing purposes, stop the model when start achieved
-    if (sum(EDCD%PASSFAIL) == 100) then
-        print*,"Found it!" ; stop
-    endif
+    tot_exp = sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))
+!    tot_exp = 0d0
+!    do n = 1, EDCD%nedc
+!       tot_exp=tot_exp+(1d0-EDCD%PASSFAIL(n))
+!       if (EDCD%PASSFAIL(n) /= 1) print*,"failed edcs are: ", n
+!    end do ! checking EDCs
+!    ! for testing purposes, stop the model when start achieved
+!    if (sum(EDCD%PASSFAIL) == 100) then
+!        print*,"Found it!" ; stop
+!    endif
     ! convert to a probability
     prob_out=-0.5d0*(tot_exp*10d0)*DATAin%EDC
 
