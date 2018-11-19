@@ -177,7 +177,7 @@ module MODEL_PARAMETERS
 
        ! C litter
        PI%parmin(22)=1d0
-       PI%parmax(22)=5000d0 ?
+       PI%parmax(22)=5000d0 
 
        ! C_som
        PI%parmin(23)=100d0
