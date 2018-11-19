@@ -389,7 +389,6 @@ module MODEL_PARAMETERS
     ! Soil water fraction (m3/m3)
     PI%parmin(38)=0.1d0 ; PI%parmax(38)=0.9d0
 
-
   end subroutine crop_parameters
   !
   !--------------------------------------------------------------------------------------------------------------------------------!
