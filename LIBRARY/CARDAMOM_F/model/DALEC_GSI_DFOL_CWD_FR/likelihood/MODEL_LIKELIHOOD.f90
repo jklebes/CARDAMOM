@@ -493,7 +493,6 @@ module model_likelihood_module
   subroutine EDC1_GSI(PARS, npars, meantemp, meanrad, EDC1)
 
     use cardamom_structures, only: DATAin
-    use CARBON_MODEL_MOD, only: opt_max_scaling
 
     ! subroutine assessed the current parameter sets for passing ecological and
     ! steady state contraints (modified from Bloom et al., 2014).
@@ -501,6 +500,7 @@ module model_likelihood_module
     implicit none
 
     ! declare input variables
+    integer, intent(in) :: npars ! number of parameters
     double precision, intent(out) :: EDC1    ! EDC1 flag
     double precision, dimension(npars), intent(in) :: PARS ! current parameter set
     double precision, intent(in) :: meantemp & ! mean temperature (k)
