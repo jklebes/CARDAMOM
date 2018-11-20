@@ -21,8 +21,6 @@ public :: CARBON_MODEL                  &
          ,calculate_shortwave_balance   &
          ,calculate_longwave_isothermal &
          ,calculate_daylength           &
-         ,daylength_hours               &
-         ,daylength_seconds             &
          ,opt_max_scaling               &
          ,freeze                        &
          ,co2comp_saturation            &
@@ -74,7 +72,6 @@ public :: CARBON_MODEL                  &
          ,soil_frac_sand                &
          ,nos_soil_layers               &
          ,meant                         &
-         ,meant_K                       &
          ,meant_time                    &
          ,stomatal_conductance          &
          ,aerodynamic_conductance       &
@@ -346,7 +343,6 @@ double precision :: root_reach, root_biomass, &
               displacement, & ! zero plane displacement (m)
                 max_supply, & ! maximum water supply (mmolH2O/m2/day)
                      meant, & ! mean air temperature (oC)
-                   meant_K, & ! mean air temperature (K)
                  maxt_lag1, &
                      leafT, & ! canopy temperature (oC)
           mean_annual_temp, &
@@ -499,7 +495,7 @@ contains
     integer :: nxp,n,test,m,a,b,c
 
     ! local fire related variables
-    double precision :: burnt_area &
+    double precision :: burnt_area          &
                        ,CFF(7) = dble_zero  & ! combusted and non-combustion fluxes
                        ,NCFF(7) = dble_zero & ! with residue and non-residue seperates
                        ,combust_eff(5)      & ! combustion efficiency
@@ -555,7 +551,7 @@ contains
     ! 4 = wood   (p21)
     ! 5 = litter (p22)
     ! 6 = som    (p23)
-    ! 7 = cwd    (p37)
+    ! 7 = cwd    (p24)
     ! 8 = soil water content (currently assumed to field capacity)
 
     ! p(30) = labile replanting
@@ -867,6 +863,20 @@ contains
     combust_eff(5) = 0.3d0 ; rfac = 0.5d0
 
     !
+    ! Load all variables which need to be reset between iterations
+    !
+
+    ! assigning initial conditions
+    POOLS(1,1) = pars(18)
+    POOLS(1,2) = pars(19)
+    POOLS(1,3) = pars(20)
+    POOLS(1,4) = pars(21)
+    POOLS(1,5) = pars(22)
+    POOLS(1,6) = pars(23)
+    POOLS(1,7) = pars(24)
+    ! POOL(1,8) assigned later
+
+    !
     ! Components to be initialised if this call is at the beginning of the model analysis.
     ! Allows potential for other MDF algorithms to be used which call the model one step at a time.
     !
@@ -885,7 +895,8 @@ contains
                 Cwood_labile_release_coef(nodays),Croot_labile_release_coef(nodays),      &
                 Cfol_turnover_coef(nodays),deltat_1(nodays),wSWP_time(nodays),            &
                 soilwatermm(nodays),daylength_hours(nodays),daylength_seconds(nodays),    &
-                meant_time(nodays),rainfall_time(nodays),co2_half_saturation(nodays),co2_compensation_point(nodays))
+                meant_time(nodays),rainfall_time(nodays),co2_half_saturation(nodays),     &
+                co2_compensation_point(nodays))
 
        ! then those independent of the time period, 15 years used to provide
        ! buffer for maximum value at which leaves become photosynthetically
@@ -910,11 +921,17 @@ contains
        do n = 1, nodays
           ! check positive values only for rainfall input
           rainfall_time(n)=max(dble_zero,met(7,n))
+          ! calculate daylength in hours and seconds
+          call calculate_daylength((doy-(deltat(n)*0.5d0)),lat)
+          daylength_hours(n) = dayl_hours ; daylength_seconds(n) = dayl_seconds
           ! Temperature adjustments for Michaelis-Menten coefficients
           ! for CO2 (kc) and O2 (ko) and CO2 compensation point.
           co2_compensation_point(n) = arrhenious(co2comp_saturation,co2comp_half_sat_conc,met(3,n))
           co2_half_saturation(n) = arrhenious(kc_saturation,kc_half_sat_conc,met(3,n))
        end do
+
+       ! meant time step temperature
+       meant_time = (met(2,1:nodays)+met(3,1:nodays)) * 0.5d0
 
        ! then those independent of the time period (8yr*365days + 90days; accounting for pre and post peak NUE )
        do n = 1, size(canopy_days)
@@ -923,23 +940,12 @@ contains
        end do
 
        !
-       ! Iteration independent variables derived from driving data that does not need to be in a loop
-       !
-
-       ! generate daylength per seconds
-       daylength_seconds = daylength_hours * seconds_per_hour
-       ! meant time step temperature
-       meant_time = (met(2,1:nodays)+met(3,1:nodays)) * 0.5d0
-
-       !
        ! Determine those related to phenology
        !
 
        ! Hydraulic limitation parameters for tissue cell expansion, i.e. growth
        ! NOTE: that these parameters are applied to deltaWP (i.e. minLWP-wSWP)
        Cwood_hydraulic_gradient = 5d0 ; Cwood_hydraulic_half_saturation = -1.5d0
-       ! When tied to estimated actual lwp
-       !Cwood_hydraulic_gradient = 5d0 ; Cwood_hydraulic_half_saturation = -0.5d0
 
        ! Temperature limitiation parameters on wood and fine root growth.
        ! Parmeters generated on the assumption of 5 % / 95 % activation at key
@@ -985,27 +991,21 @@ contains
 
     endif ! allocatable variables already allocated...?
 
-    !
-    ! Load all variables which need to be reset between iterations
-    !
-
-    ! assigning initial conditions
-    POOLS(1,1)=pars(18)
-    POOLS(1,2)=pars(19)
-    POOLS(1,3)=pars(20)
-    POOLS(1,4)=pars(21)
-    POOLS(1,5)=pars(22)
-    POOLS(1,6)=pars(23)
-    POOLS(1,7)=pars(24)
-    ! POOL(1,8) assigned later
-
     ! load some needed module level values
     lai = POOLS(1,2)/pars(17)
+    mint = met(2,1)  ! minimum temperature (oC)
+    maxt = met(3,1)  ! maximum temperature (oC)
+    swrad = met(4,1) ! incoming short wave radiation (MJ/m2/day)
+    co2 = met(5,1)   ! CO2 (ppm)
+    doy = met(6,1)   ! Day of year
+    rainfall = rainfall_time(1) ! rainfall (kgH2O/m2/s)
+    wind_spd = met(15,1) ! wind speed (m/s)
+    vpd_pa = met(16,1)   ! vapour pressure deficit (Pa)
+    meant = meant_time(1)
+    leafT = maxt     ! initial canopy temperature (oC)
+    maxt_lag1 = maxt
     seconds_per_step = deltat(1) * seconds_per_day
     days_per_step =  deltat(1)
-    meant = meant_time(1)
-    maxt_lag1 = maxt
-    leafT = maxt
 
     ! Calculate logistic temperature response function of leaf turnover
 !    Cfol_turnover_gradient = 0.5d0 ; Cfol_turnover_half_saturation = pars(42)
@@ -1101,7 +1101,6 @@ contains
       doy = met(6,n)   ! Day of year
       rainfall = rainfall_time(n) ! rainfall (kgH2O/m2/s)
       meant = meant_time(n) ! mean air temperature (oC)
-      meant_K = meant + freeze
       airt_zero_fraction = (maxt-dble_zero) / (maxt-mint) ! fraction of temperture period above freezing
       wind_spd = met(15,n) ! wind speed (m/s)
       vpd_pa = met(16,n)   ! vapour pressure deficit (Pa)
@@ -1115,6 +1114,14 @@ contains
       ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
       co2_half_sat   = co2_half_saturation(n)
       co2_comp_point = co2_compensation_point(n)
+
+      ! extract timing related values
+      dayl_hours = daylength_hours(n)
+      dayl_seconds = daylength_seconds(n)
+      dayl_seconds_1 = dayl_seconds ** (-dble_one)
+      seconds_per_step = seconds_per_day * deltat(n)
+      days_per_step = deltat(n)
+      days_per_step_1 = deltat_1(n)
 
       ! Estimate the current canopy NUE as a function of age
       if (sum(canopy_age_vector(1:oldest_leaf)) == dble_zero ) then
@@ -1132,14 +1139,6 @@ contains
       FLUXES(n,18) = canopy_age
       ! estimate the new NUE as function of canopy age
       NUE = canopy_aggregate_NUE(1,oldest_leaf)
-
-      ! calculate daylength in hours and seconds
-      call calculate_daylength((doy-(deltat(n)*0.5d0)),lat)
-      ! extract timing related values
-      dayl_seconds_1 = dayl_seconds ** (-dble_one)
-      seconds_per_step = seconds_per_day * deltat(n)
-      days_per_step = deltat(n)
-      days_per_step_1 = deltat_1(n)
 
       ! snowing or not...?
       snow_melt = dble_zero ; snowfall = dble_zero

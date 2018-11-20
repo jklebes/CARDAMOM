@@ -969,7 +969,7 @@ contains
       ! litter to som
       FLUXES(n,15) = POOLS(n,5)*min(dble_one,dble_one-(dble_one-(FLUXES(n,2)*pars(1)))**deltat(n))/deltat(n)
       ! CWD to litter
-      FLUXES(n,19) = POOLS(n,7)*min(dble_one,dble_one-(dble_one-(FLUXES(n,2)*pars(38)))**deltat(n))/deltat(n)
+      FLUXES(n,20) = POOLS(n,7)*min(dble_one,dble_one-(dble_one-(FLUXES(n,2)*pars(38)))**deltat(n))/deltat(n)
 
       ! mass balance check for decomposition of litter as occurs via two
       ! pathways
@@ -1008,15 +1008,15 @@ contains
       ! root pool
       POOLS(n+1,3) = POOLS(n,3) + (FLUXES(n,6)-FLUXES(n,12))*deltat(n)
       ! litter pool
-      POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)+FLUXES(n,19)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
+      POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)+FLUXES(n,20)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
       ! som pool
       POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)-FLUXES(n,14))*deltat(n)
       ! cwd pool
-      POOLS(n+1,7) = POOLS(n,7) + (FLUXES(n,11)-FLUXES(n,19))*deltat(n)
+      POOLS(n+1,7) = POOLS(n,7) + (FLUXES(n,11)-FLUXES(n,20))*deltat(n)
 
-      !
+      !!!!!!!!!!
       ! deal first with deforestation
-      !
+      !!!!!!!!!!
 
       if (n == reforest_day) then
           POOLS(n+1,1) = pars(30)
@@ -1025,8 +1025,9 @@ contains
           POOLS(n+1,4) = pars(33)
       endif
 
-      ! reset variables
-      FLUXES(n,21:24) = dble_zero ;  harvest_management = 0 ; burnt_area = dble_zero
+      ! reset values
+      FLUXES(n,17) = dble_zero ; FLUXES(n,21:25) = dble_zero
+      harvest_management = 0 ; burnt_area = dble_zero
 
       if (met(8,n) > dble_zero) then
 
@@ -1034,104 +1035,106 @@ contains
           harvest_management = int(met(13,n))
 
           ! assume that labile is proportionally distributed through the plant
-          ! and therefore so is the residual fraction
-          C_total = POOLS(n+1,2) + POOLS(n+1,3) + POOLS(n+1,4)
+          ! root and wood and therefore so is the residual fraction
+          C_total = POOLS(n+1,3) + POOLS(n+1,4)
           ! partition wood into its components
           Cbranch = POOLS(n+1,4)*Cbranch_part(harvest_management)
           Crootcr = POOLS(n+1,4)*Crootcr_part(harvest_management)
           Cstem   = POOLS(n+1,4)-(Cbranch + Crootcr)
           ! now calculate the labile fraction of residue
-          labile_frac_res = ( (POOLS(n+1,2)/C_total) * foliage_frac_res(harvest_management) ) &
-                          + ( (POOLS(n+1,3)/C_total) * roots_frac_res(harvest_management)   ) &
-                          + ( (Cbranch/C_total)      * branch_frac_res(harvest_management)  ) &
-                          + ( (Cstem/C_total)        * stem_frac_res(harvest_management)    ) &
-                          + ( (Crootcr/C_total)      * rootcr_frac_res(harvest_management)  )
-
-          ! loss of carbon from each pools
-          labile_loss = POOLS(n+1,1)*met(8,n)
-          foliar_loss = POOLS(n+1,2)*met(8,n)
-          ! roots are not removed under grazing
-          if (harvest_management /= 5) roots_loss  = POOLS(n+1,3)*met(8,n)
-          wood_loss   = POOLS(n+1,4)*met(8,n)
-
-          ! for output / EDC updates
-          if (met(8,n) <= 0.99d0) then
-              FLUXES(n,21) = labile_loss / deltat(n)
-              FLUXES(n,22) = foliar_loss / deltat(n)
-              FLUXES(n,23) = roots_loss / deltat(n)
-              FLUXES(n,24) = wood_loss / deltat(n)
+          if (C_total > dble_zero) then
+              labile_frac_res = ((POOLS(n+1,3)/C_total) * roots_frac_res(harvest_management)  ) &
+                              + ((Cbranch/C_total)      * branch_frac_res(harvest_management) ) &
+                              + ((Cstem/C_total)        * stem_frac_res(harvest_management)   ) &
+                              + ((Crootcr/C_total)      * rootcr_frac_res(harvest_management) )
+          else
+              labile_frac_res = dble_zero
           endif
 
-          ! transfer fraction of harvest waste to litter or som pools
-          ! easy pools first
-          labile_residue = POOLS(n+1,1)*met(8,n)*labile_frac_res
-          foliar_residue = POOLS(n+1,2)*met(8,n)*foliage_frac_res(harvest_management)
-          roots_residue  = POOLS(n+1,3)*met(8,n)*roots_frac_res(harvest_management)
-          ! explicit calculation of the residues from each fraction
-          coarse_root_residue  = Crootcr*met(8,n)*rootcr_frac_res(harvest_management)
-          branch_residue = Cbranch*met(8,n)*branch_frac_res(harvest_management)
-          stem_residue = Cstem*met(8,n)*stem_frac_res(harvest_management)
-          ! now finally calculate the final wood residue
-          wood_residue = stem_residue + branch_residue + coarse_root_residue
-          ! mechanical loss of Csom due to coarse root extraction
-          soil_loss_with_roots = Crootcr*met(8,n)*(dble_one-rootcr_frac_res(harvest_management)) &
+          ! you can't remove any biomass if there is none left...
+          if (C_total > vsmall) then
+
+              ! Loss of carbon from each pools
+              labile_loss = POOLS(n+1,1)*met(8,n)
+              foliar_loss = POOLS(n+1,2)*met(8,n)
+              ! roots are not removed under grazing
+              if (harvest_management /= 5) then
+                 roots_loss = POOLS(n+1,3)*met(8,n)
+              else
+                 roots_loss = dble_zero
+              endif
+              wood_loss   = (Cbranch+Crootcr+Cstem)*met(8,n)
+              ! estimate labile loss explicitly from the loss of their storage
+              ! tissues
+              labile_loss = POOLS(n+1,1) * ((roots_loss+wood_loss) / (POOLS(n+1,3)+POOLS(n+1,4)))
+
+              ! For output / EDC updates
+              if (met(8,n) <= 0.99d0) then
+                  FLUXES(n,22) = labile_loss * deltat_1(n)
+                  FLUXES(n,23) = foliar_loss * deltat_1(n)
+                  FLUXES(n,24) = roots_loss * deltat_1(n)
+                  FLUXES(n,25) = wood_loss * deltat_1(n)
+              endif
+              ! Transfer fraction of harvest waste to litter or som pools
+              ! easy pools first
+              labile_residue = labile_loss*labile_frac_res
+              foliar_residue = foliar_loss*foliage_frac_res(harvest_management)
+              roots_residue  = roots_loss*roots_frac_res(harvest_management)
+              ! Explicit calculation of the residues from each fraction
+              coarse_root_residue  = Crootcr*met(8,n)*rootcr_frac_res(harvest_management)
+              branch_residue = Cbranch*met(8,n)*branch_frac_res(harvest_management)
+              stem_residue = Cstem*met(8,n)*stem_frac_res(harvest_management)
+              ! Now finally calculate the final wood residue
+              wood_residue = stem_residue + branch_residue + coarse_root_residue
+              ! Mechanical loss of Csom due to coarse root extraction
+              soil_loss_with_roots = Crootcr*met(8,n)*(dble_one-rootcr_frac_res(harvest_management)) &
                               * soil_loss_frac(harvest_management)
 
-          ! update living pools directly
-          POOLS(n+1,1) = max(dble_zero,POOLS(n+1,1)-labile_loss)
-          POOLS(n+1,2) = max(dble_zero,POOLS(n+1,2)-foliar_loss)
-          POOLS(n+1,3) = max(dble_zero,POOLS(n+1,3)-roots_loss)
-          POOLS(n+1,4) = max(dble_zero,POOLS(n+1,4)-wood_loss)
+              ! Update pools
+              POOLS(n+1,1) = max(dble_zero,POOLS(n+1,1)-labile_loss)
+              POOLS(n+1,2) = max(dble_zero,POOLS(n+1,2)-foliar_loss)
+              POOLS(n+1,3) = max(dble_zero,POOLS(n+1,3)-roots_loss)
+              POOLS(n+1,4) = max(dble_zero,POOLS(n+1,4)-wood_loss)
+              POOLS(n+1,5) = max(dble_zero, POOLS(n+1,5) + (labile_residue+foliar_residue+roots_residue))
+              POOLS(n+1,6) = max(dble_zero, POOLS(n+1,6) - soil_loss_with_roots)
+              POOLS(n+1,7) = max(dble_zero, POOLS(n+1,7) + wood_residue)
 
-          ! ensure fire related values are reset
-          FLUXES(n,17) = dble_zero
-          CFF = dble_zero ; NCFF = dble_zero
-          CFF_res = dble_zero ; NCFF_res = dble_zero
+              ! Some variable needed for the EDCs
+              ! reallocation fluxes for the residues
+              disturbance_residue_to_litter(n) = labile_residue+foliar_residue+roots_residue
+              disturbance_loss_from_litter(n)  = dble_zero
+              disturbance_residue_to_cwd(n)    = wood_residue
+              disturbance_loss_from_cwd(n)     = dble_zero
+              disturbance_residue_to_som(n)    = dble_zero
+              disturbance_loss_from_som(n)     = soil_loss_with_roots
+              ! Convert all to rates to be consistent with the FLUXES in EDCs
+              disturbance_residue_to_litter(n) = disturbance_residue_to_litter(n) * deltat_1(n)
+              disturbance_loss_from_litter(n)  = disturbance_loss_from_litter(n) * deltat_1(n)
+              disturbance_residue_to_cwd(n)    = disturbance_residue_to_cwd(n) * deltat_1(n)
+              disturbance_loss_from_cwd(n)     = disturbance_loss_from_cwd(n) * deltat_1(n)
+              disturbance_residue_to_som(n)    = disturbance_residue_to_som(n) * deltat_1(n)
+              disturbance_loss_from_som(n)     = disturbance_loss_from_som(n) * deltat_1(n)
+              ! estimate total C extraction
+              ! NOTE: this calculation format is to prevent precision error in calculation
+              FLUXES(n,21) = wood_loss + labile_loss + foliar_loss + roots_loss
+              FLUXES(n,21) = FLUXES(n,21) - (wood_residue + labile_residue + foliar_residue + roots_residue)
+              ! Convert to daily rate
+              FLUXES(n,21) = FLUXES(n,21) * deltat_1(n)
 
-          ! update all pools this time
-          POOLS(n+1,1) = max(dble_zero, POOLS(n+1,1) - CFF(1) - NCFF(1) )
-          POOLS(n+1,2) = max(dble_zero, POOLS(n+1,2) - CFF(2) - NCFF(2) )
-          POOLS(n+1,3) = max(dble_zero, POOLS(n+1,3) - CFF(3) - NCFF(3) )
-          POOLS(n+1,4) = max(dble_zero, POOLS(n+1,4) - CFF(4) - NCFF(4) )
-          POOLS(n+1,5) = max(dble_zero, POOLS(n+1,5) + (labile_residue+foliar_residue+roots_residue) &
-                                              + (NCFF(1)+NCFF(2)+NCFF(3))-CFF(5)-NCFF(5) )
-          POOLS(n+1,6) = max(dble_zero, POOLS(n+1,6) - soil_loss_with_roots + (NCFF(4)+NCFF(5)+NCFF(7)))
-          POOLS(n+1,7) = max(dble_zero, POOLS(n+1,7) + wood_residue - CFF(7) - NCFF(7) )
-          ! some variable needed for the EDCs
-          ! reallocation fluxes for the residues
-          disturbance_residue_to_litter(n) = (labile_residue+foliar_residue+roots_residue) &
-                                           + (NCFF(1)+NCFF(2)+NCFF(3))
-          disturbance_loss_from_litter(n)  = CFF(5)+NCFF(5)
-          disturbance_residue_to_cwd(n)    = wood_residue
-          disturbance_loss_from_cwd(n)     = CFF(7) - NCFF(7)
-          disturbance_residue_to_som(n)    = NCFF(4)+NCFF(5)+NCFF(7)
-          disturbance_loss_from_som(n)     = soil_loss_with_roots
-          ! convert all to rates to be consistent with the FLUXES in EDCs
-          disturbance_residue_to_litter(n) = disturbance_residue_to_litter(n) / deltat(n)
-          disturbance_loss_from_litter(n)  = disturbance_loss_from_litter(n) / deltat(n)
-          disturbance_residue_to_cwd(n)    = disturbance_residue_to_cwd(n) / deltat(n)
-          disturbance_loss_from_cwd(n)     = disturbance_loss_from_cwd(n) / deltat(n)
-          disturbance_residue_to_som(n)    = disturbance_residue_to_som(n) / deltat(n)
-          disturbance_loss_from_som(n)     = disturbance_loss_from_som(n) / deltat(n)
-          ! harvested carbon from all pools
-          FLUXES(n,20) = (wood_loss-(wood_residue+CFF_res(4)+NCFF_res(4))) &
-                       + (labile_loss-(labile_residue+CFF_res(1)+NCFF_res(1))) &
-                       + (foliar_loss-(foliar_residue+CFF_res(2)+NCFF_res(2))) &
-                       + (roots_loss-(roots_residue+CFF_res(3)+NCFF_res(3)))
-          ! convert to daily rate
-          FLUXES(n,20) = FLUXES(n,20) / deltat(n)
-          ! total carbon loss from the system
+          end if ! C_total > vsmall
+
+          ! Total carbon loss from the system
           C_total = (labile_residue+foliar_residue+roots_residue+wood_residue+sum(NCFF)) &
                   - (labile_loss+foliar_loss+roots_loss+wood_loss+soil_loss_with_roots+sum(CFF))
 
-          ! if total clearance occured then we need to ensure some minimum
+          ! If total clearance occured then we need to ensure some minimum
           ! values and reforestation is assumed one year forward
           if (met(8,n) > 0.99d0) then
               m = 0 ; test = nint(sum(deltat(n:(n+m))))
               ! FC Forest Statistics 2015 lag between harvest and restocking ~ 2 year
               restocking_lag = 365*2
               do while (test < restocking_lag)
-                 m = m+1 ; test = nint(sum(deltat(n:(n+m))))
+                 m = m + 1 ; test = nint(sum(deltat(n:(n+m))))
                  !  get out clause for hitting the end of the simulation
                  if (m+n >= nodays) test = restocking_lag
               enddo
@@ -1140,9 +1143,9 @@ contains
 
       endif ! end deforestation info
 
-      !
+      !!!!!!!!!!
       ! then deal with fire
-      !
+      !!!!!!!!!!
 
       if (met(9,n) > dble_zero .or.(met(8,n) > dble_zero .and. harvest_management > 0)) then
 
@@ -1154,63 +1157,63 @@ contains
               burnt_area = post_harvest_burn(harvest_management)
           endif
 
-         if (burnt_area > dble_zero) then
+          if (burnt_area > dble_zero) then
 
-             !/*first fluxes*/
-             !/*LABILE*/
-             CFF(1) = POOLS(n+1,1)*met(9,n)*combust_eff(1)
-             NCFF(1) = POOLS(n+1,1)*met(9,n)*(dble_one-combust_eff(1))*(1-rfac)
-             !/*foliar*/
-             CFF(2) = POOLS(n+1,2)*met(9,n)*combust_eff(2)
-             NCFF(2) = POOLS(n+1,2)*met(9,n)*(dble_one-combust_eff(2))*(1-rfac)
-             !/*root*/
-             CFF(3) = dble_zero ! POOLS(n+1,3)*met(9,n)*combust_eff(3)
-             NCFF(3) = dble_zero ! POOLS(n+1,3)*met(9,n)*(dble_one-combust_eff(3))*(dble_one-rfac)
-             !/*wood*/
-             CFF(4) = POOLS(n+1,4)*met(9,n)*combust_eff(4)
-             NCFF(4) = POOLS(n+1,4)*met(9,n)*(dble_one-combust_eff(4))*(dble_one-rfac)
-             !/*litter*/
-             CFF(5) = POOLS(n+1,5)*met(9,n)*combust_eff(5)
-             NCFF(5) = POOLS(n+1,5)*met(9,n)*(dble_one-combust_eff(5))*(1-rfac)
-             !/*CWD*/ Using Combustion factors for wood
-             CFF(7) = POOLS(n+1,7)*met(9,n)*combust_eff(4)
-             NCFF(7) = POOLS(n+1,7)*met(9,n)*(dble_one-combust_eff(4))*(1-rfac)
+              !/*first fluxes*/
+              !/*LABILE*/
+              CFF(1) = POOLS(n+1,1)*burnt_area*combust_eff(1)
+              NCFF(1) = POOLS(n+1,1)*burnt_area*(dble_one-combust_eff(1))*(dble_one-rfac)
+              !/*foliar*/
+              CFF(2) = POOLS(n+1,2)*burnt_area*combust_eff(2)
+              NCFF(2) = POOLS(n+1,2)*burnt_area*(dble_one-combust_eff(2))*(dble_one-rfac)
+              !/*root*/
+              CFF(3) = dble_zero !POOLS(n+1,3)*burnt_area*combust_eff(3)
+              NCFF(3) = dble_zero !POOLS(n+1,3)*burnt_area*(dble_one-combust_eff(3))*(dble_one-rfac)
+              !/*wood*/
+              CFF(4) = POOLS(n+1,4)*burnt_area*combust_eff(4)
+              NCFF(4) = POOLS(n+1,4)*burnt_area*(dble_one-combust_eff(4))*(dble_one-rfac)
+              !/*litter*/
+              CFF(5) = POOLS(n+1,5)*burnt_area*combust_eff(5)
+              NCFF(5) = POOLS(n+1,5)*burnt_area*(dble_one-combust_eff(5))*(dble_one-rfac)
+              ! CWD; assume same as live wood (should be improved later)
+              CFF(7) = POOLS(n+1,7)*burnt_area*combust_eff(4)
+              NCFF(7) = POOLS(n+1,7)*burnt_area*(dble_one-combust_eff(4))*(dble_one-rfac)
+              !/*fires as daily averages to comply with units*/
+              FLUXES(n,17)=(CFF(1)+CFF(2)+CFF(3)+CFF(4)+CFF(5)) * deltat_1(n)
+!              !/*update net exchangep*/
+!              NEE(n)=NEE(n)+FLUXES(n,17)
+              ! determine the as daily rate impact on live tissues for use in EDC and
+              ! MTT calculations
+              FLUXES(n,22) = FLUXES(n,22) + ((CFF(1) + NCFF(1)) * deltat_1(n)) ! labile
+              FLUXES(n,23) = FLUXES(n,23) + ((CFF(2) + NCFF(2)) * deltat_1(n)) ! foliar
+              FLUXES(n,24) = FLUXES(n,24) + ((CFF(3) + NCFF(3)) * deltat_1(n)) ! root
+              FLUXES(n,25) = FLUXES(n,25) + ((CFF(4) + NCFF(4)) * deltat_1(n)) ! wood
 
-             !/*fires as daily averages to comply with units*/
-             FLUXES(n,17)=(CFF(1)+CFF(2)+CFF(3)+CFF(4)+CFF(5)+CFF(7)) / deltat(n)
-             !/*all fluxes are at a daily timestep*/
-             NEE_out(n)=NEE_out(n)+FLUXES(n,17)
-             ! determine the as daily rate impact on live tissues for use in EDC and
-             ! MTT calculations
-             FLUXES(n,21) = FLUXES(n,21) + ((CFF(1) + NCFF(1)) / deltat(n))
-             FLUXES(n,22) = FLUXES(n,22) + ((CFF(2) + NCFF(2)) / deltat(n))
-             FLUXES(n,23) = FLUXES(n,23) + ((CFF(3) + NCFF(3)) / deltat(n))
-             FLUXES(n,24) = FLUXES(n,24) + ((CFF(4) + NCFF(4)) / deltat(n))
+              !// update pools
+              !/*Adding all fire pool transfers here*/
+              POOLS(n+1,1) = max(dble_zero,POOLS(n+1,1)-CFF(1)-NCFF(1))
+              POOLS(n+1,2) = max(dble_zero,POOLS(n+1,2)-CFF(2)-NCFF(2))
+              POOLS(n+1,3) = max(dble_zero,POOLS(n+1,3)-CFF(3)-NCFF(3))
+              POOLS(n+1,4) = max(dble_zero,POOLS(n+1,4)-CFF(4)-NCFF(4))
+              POOLS(n+1,5) = max(dble_zero,POOLS(n+1,5)-CFF(5)-NCFF(5)+NCFF(1)+NCFF(2)+NCFF(3))
+              POOLS(n+1,6) = max(dble_zero,POOLS(n+1,6)+NCFF(4)+NCFF(5)+NCFF(7))
+              POOLS(n+1,7) = max(dble_zero,POOLS(n+1,7)-CFF(7)-NCFF(7))
 
-             !// update pools
-             !/*Adding all fire pool transfers here*/
-             POOLS(n+1,1)=POOLS(n+1,1)-CFF(1)-NCFF(1)
-             POOLS(n+1,2)=POOLS(n+1,2)-CFF(2)-NCFF(2)
-             POOLS(n+1,3)=POOLS(n+1,3)-CFF(3)-NCFF(3)
-             POOLS(n+1,4)=POOLS(n+1,4)-CFF(4)-NCFF(4)
-             POOLS(n+1,5)=POOLS(n+1,5)-CFF(5)-NCFF(5)+NCFF(1)+NCFF(2)+NCFF(3)
-             POOLS(n+1,6)=POOLS(n+1,6)+NCFF(4)+NCFF(5)+NCFF(7)
-             POOLS(n+1,7)=POOLS(n+1,7)-CFF(7)-NCFF(7)
-             ! some variable needed for the EDCs
-             ! reallocation fluxes for the residues
-             disturbance_residue_to_litter(n) = (NCFF(1)+NCFF(2)+NCFF(3))
-             disturbance_residue_to_som(n)    = (NCFF(4)+NCFF(5)+NCFF(7))
-             disturbance_loss_from_litter(n)  = CFF(5)+NCFF(5)
-             disturbance_loss_from_cwd(n)     = CFF(7) - NCFF(7)
-             ! convert all to rates to be consistent with the FLUXES in EDCs
-             disturbance_residue_to_litter(n) = disturbance_residue_to_litter(n) / deltat(n)
-             disturbance_residue_to_som(n)    = disturbance_residue_to_som(n) / deltat(n)
-             disturbance_loss_from_litter(n)  = disturbance_loss_from_litter(n) / deltat(n)
-             disturbance_loss_from_cwd(n)     = disturbance_loss_from_cwd(n) / deltat(n)
+              ! some variable needed for the EDCs
+              ! reallocation fluxes for the residues
+              disturbance_residue_to_litter(n) = (NCFF(1)+NCFF(2)+NCFF(3))
+              disturbance_residue_to_som(n)    = (NCFF(4)+NCFF(5)+NCFF(7))
+              disturbance_loss_from_litter(n)  = CFF(5)+NCFF(5)
+              disturbance_loss_from_cwd(n)     = CFF(7) - NCFF(7)
+              ! convert to daily rate for consistency with the EDCs
+              disturbance_residue_to_litter(n) = disturbance_residue_to_litter(n)  * deltat_1(n)
+              disturbance_residue_to_som(n)    = disturbance_residue_to_som(n) * deltat_1(n)
+              disturbance_loss_from_litter(n)  = disturbance_loss_from_litter(n) * deltat_1(n)
+              disturbance_loss_from_cwd(n)     = disturbance_loss_from_cwd(n) * deltat_1(n)
 
-         end if ! burnt_area  > 0
+          endif ! burn area > 0
 
-      endif ! end burnst area issues
+      endif ! fire activity
 
       do nxp = 1, nopools
          if (POOLS(n+1,nxp) /= POOLS(n+1,nxp) .or. POOLS(n+1,nxp) < dble_zero) then

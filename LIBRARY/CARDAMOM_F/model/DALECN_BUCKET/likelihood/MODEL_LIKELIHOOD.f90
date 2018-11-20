@@ -1075,7 +1075,7 @@ module model_likelihood_module
     if (EDC2 == 1 .or. DIAG == 1) then
 
        ! calculate input and output ratios for all pools
-       if (maxval(met(8,:)) > 0.99d0 .and. disturb_end == nodays) then
+       if (maxval(met(8,1:nodays)) > 0.99d0 .and. disturb_end == nodays) then
           ! there has been a replacement level event, but there is less than 2
           ! years before the end so we will assess the beginning of the analysis
           ! only
@@ -1101,7 +1101,7 @@ module model_likelihood_module
                            +disturbance_loss_from_litter(1:disturb_begin) &
                            +disturbance_loss_from_cwd(1:disturb_begin) &
                            +disturbance_loss_from_som(1:disturb_begin))
-       else if (maxval(met(8,:)) > 0.99d0 .and. disturb_end /= nodays) then
+       else if (maxval(met(8,1:nodays)) > 0.99d0 .and. disturb_end /= nodays) then
           ! there has been a replacement level event, we will remove filter out a 2
           ! year period to allow for the most severe non-steady state response
           ! Croot

@@ -160,12 +160,12 @@ module MODEL_PARAMETERS
        PI%parmax(38)=1d0/365.25 !0.005  ! 0.01
 
        ! BUCKET - root biomass needed to reach 50 % of max depth
-       PI%parmin(39)=50.0
-       PI%parmax(39)=500.0
+       PI%parmin(39)=50d0
+       PI%parmax(39)=500d0
 
        ! BUCKET - maximum rooting depth
-       PI%parmin(40)=0.35
-       PI%parmax(40)=15.0 !20.0
+       PI%parmin(40)=0.35d0
+       PI%parmax(40)=20d0 !20.0
 
        !
        ! INITIAL VALUES DECLARED HERE

@@ -691,7 +691,7 @@ module model_likelihood_module
               ,i, exp_adjust, no_years_adjust, disturb_year, replant_year &
               ,disturb_begin, disturb_end
     double precision :: mean_pools(nopools), G, decay_coef, meangpp &
-                       ,infi, EQF2, EQF5, EQF10, EQF20, sumgpp, sumnpp, model_living_C &
+                       ,infi, sumgpp, sumnpp, model_living_C &
                        ,target_living_C(2),hold, steps_per_year
     double precision, dimension(nodays) :: mean_ratio, resid_fol,resid_lab
     integer, dimension(nodays) :: hak ! variable to determine number of NaN in foliar residence time calculation
@@ -716,6 +716,14 @@ module model_likelihood_module
                        ,froot       & ! fraction of GPP to root
                        ,fwood       & ! fraction of GPP to wood
                        ,delta_gsi
+
+    ! Steady State Attractor:
+    ! Log ratio difference between inputs and outputs of the system.
+    double precision, parameter :: EQF1_5 = log(1.5d0), & ! 10.0 = order magnitude; 2 = double and half
+                                     EQF2 = log(2d0),   & ! 10.0 = order magnitude; 2 = double and half
+                                     EQF5 = log(5d0),   &
+                                     EQF10 = log(10d0), &
+                                     EQF20 = log(20d0)
 
     ! update initial values
     hak = 0 ; resid_fol = 0d0
@@ -792,132 +800,101 @@ module model_likelihood_module
     rNPP = sum(M_FLUXES(1:nodays,6)) * sumnpp
 
     ! calculate input and output ratios for all pools
-    if (maxval(met(8,:)) > 0.99d0 .and. disturb_end == nodays) then
+    ! calculate input and output ratios for all pools
+    if (maxval(met(8,1:nodays)) > 0.99d0 .and. disturb_end == nodays) then
        ! there has been a replacement level event, but there is less than 2
        ! years before the end so we will assess the beginning of the analysis
        ! only
-       in_out_root = sum(M_FLUXES(1:disturb_begin,6)) / sum(M_FLUXES(1:disturb_begin,12)+M_FLUXES(1:disturb_begin,23))
+       in_out_root = sum(M_FLUXES(1:disturb_begin,6)) / sum(M_FLUXES(1:disturb_begin,12)+M_FLUXES(1:disturb_begin,24))
        in_out_root_disturb = 1d0
-       in_out_wood = sum(M_FLUXES(1:disturb_begin,7)) / sum(M_FLUXES(1:disturb_begin,11)+M_FLUXES(1:disturb_begin,24))
+       in_out_wood = sum(M_FLUXES(1:disturb_begin,7)) / sum(M_FLUXES(1:disturb_begin,11)+M_FLUXES(1:disturb_begin,25))
        in_out_wood_disturb = 1d0
-       in_out_lit = sum(M_FLUXES(1:disturb_begin,10)+M_FLUXES(1:disturb_begin,12)+M_FLUXES(1:disturb_begin,19) &
+       in_out_lit = sum(M_FLUXES(1:disturb_begin,10)+M_FLUXES(1:disturb_begin,12)+M_FLUXES(1:disturb_begin,20) &
                         +disturbance_residue_to_litter(1:disturb_begin)) &
-                  / sum(M_FLUXES(1:disturb_begin,13)+M_FLUXES(1:disturb_begin,15)+disturbance_loss_from_litter(1:disturb_begin))
+                  / sum(M_FLUXES(1:disturb_begin,13)+ &
+                        M_FLUXES(1:disturb_begin,15)+ &
+                        disturbance_loss_from_litter(1:disturb_begin))
        in_out_som = sum(M_FLUXES(1:disturb_begin,15)+disturbance_residue_to_som(1:disturb_begin)) &
                   / sum(M_FLUXES(1:disturb_begin,14)+disturbance_loss_from_som(1:disturb_begin))
        in_out_cwd = sum(M_FLUXES(1:disturb_begin,11)+disturbance_residue_to_cwd(1:disturb_begin)) &
-                  / sum(M_FLUXES(1:disturb_begin,19)+disturbance_loss_from_cwd(1:disturb_begin))
-       in_out_dead = sum(M_FLUXES(1:disturb_begin,10)+M_FLUXES(1:disturb_begin,12) &
-                        +M_FLUXES(1:disturb_begin,11)                       &
-                        +disturbance_residue_to_som(1:disturb_begin)        &
-                        +disturbance_residue_to_cwd(1:disturb_begin)        &
-                        +disturbance_residue_to_litter(1:disturb_begin))    &
+                  / sum(M_FLUXES(1:disturb_begin,20)+disturbance_loss_from_cwd(1:disturb_begin))
+       in_out_dead = sum(M_FLUXES(1:disturb_begin,10)+M_FLUXES(1:disturb_begin,11) &
+                        +M_FLUXES(1:disturb_begin,12) &
+                        +disturbance_residue_to_litter(1:disturb_begin) &
+                        +disturbance_residue_to_cwd(1:disturb_begin) &
+                        +disturbance_residue_to_som(1:disturb_begin)) &
                    / sum(M_FLUXES(1:disturb_begin,13)+M_FLUXES(1:disturb_begin,14) &
-                        +disturbance_loss_from_som(1:disturb_begin)         &
-                        +disturbance_loss_from_cwd(1:disturb_begin)         &
-                        +disturbance_loss_from_litter(1:disturb_begin))
-    else if (maxval(met(8,:)) > 0.99d0 .and. disturb_end /= nodays) then
+                        +disturbance_loss_from_litter(1:disturb_begin) &
+                        +disturbance_loss_from_cwd(1:disturb_begin) &
+                        +disturbance_loss_from_som(1:disturb_begin))
+    else if (maxval(met(8,1:nodays)) > 0.99d0 .and. disturb_end /= nodays) then
        ! there has been a replacement level event, we will remove filter out a 2
        ! year period to allow for the most severe non-steady state response
        ! Croot
-       in_out_root = sum(M_FLUXES(1:disturb_begin,6)) / sum(M_FLUXES(1:disturb_begin,12)+M_FLUXES(1:disturb_begin,23))
+       in_out_root         = sum(M_FLUXES(1:disturb_begin,6))    &
+                           / sum(M_FLUXES(1:disturb_begin,12)+M_FLUXES(1:disturb_begin,24))
        in_out_root_disturb = sum(M_FLUXES(disturb_end:nodays,6)) &
-                           / sum(M_FLUXES(disturb_end:nodays,12)+M_FLUXES(disturb_end:nodays,23))
-!       in_out_root = in_out_root + (sum(M_FLUXES(disturb_end:nodays,6)) / sum(M_FLUXES(disturb_end:nodays,12)))
-!       in_out_root = in_out_root * 0.5
+                           / sum(M_FLUXES(disturb_end:nodays,12)+M_FLUXES(disturb_end:nodays,24))
        ! Cwood
-       in_out_wood = sum(M_FLUXES(1:disturb_begin,7)) / sum(M_FLUXES(1:disturb_begin,11)+M_FLUXES(1:disturb_begin,24))
+       in_out_wood         = sum(M_FLUXES(1:disturb_begin,7))    &
+                           / sum(M_FLUXES(1:disturb_begin,11)+M_FLUXES(1:disturb_begin,25))
        in_out_wood_disturb = sum(M_FLUXES(disturb_end:nodays,7)) &
-                           / sum(M_FLUXES(disturb_end:nodays,11)+M_FLUXES(disturb_end:nodays,24))
-!       in_out_wood = in_out_wood + (sum(M_FLUXES(disturb_end:nodays,7)) / sum(M_FLUXES(disturb_end:nodays,11)))
-!       in_out_wood = in_out_wood * 0.5
+                           / sum(M_FLUXES(disturb_end:nodays,11)+M_FLUXES(disturb_end:nodays,25))
        ! Clitter
-!       in_out_lit = sum(M_FLUXES(1:nodays,10)+M_FLUXES(1:nodays,12)+M_FLUXES(1:nodays,19) &
-!                        +disturbance_residue_to_litter(1:nodays)) &
-!                  / sum(M_FLUXES(1:nodays,13)+M_FLUXES(1:nodays,15)+disturbance_loss_from_litter(1:nodays))
-       in_out_lit = (sum(M_FLUXES(1:disturb_begin,10)+M_FLUXES(1:disturb_begin,12)+ &
-                         M_FLUXES(1:disturb_begin,19)+disturbance_residue_to_litter(1:disturb_begin))) &
+       in_out_lit = (sum(M_FLUXES(1:disturb_begin,10)+M_FLUXES(disturb_end:nodays,10)+ &
+                         M_FLUXES(1:disturb_begin,12)+M_FLUXES(disturb_end:nodays,12)+ &
+                         M_FLUXES(1:disturb_begin,20)+M_FLUXES(disturb_end:nodays,19)+ &
+                         disturbance_residue_to_litter(1:disturb_begin)+disturbance_residue_to_litter(disturb_end:nodays) )) &
                   / (sum(M_FLUXES(1:disturb_begin,13)+M_FLUXES(1:disturb_begin,15)+ &
-                         disturbance_loss_from_litter(1:disturb_begin)))
-       in_out_lit = in_out_lit + &
-                   ((sum(M_FLUXES(disturb_end:nodays,10)+M_FLUXES(disturb_end:nodays,12)+ &
-                         M_FLUXES(disturb_end:nodays,19)+disturbance_residue_to_litter(disturb_end:nodays))) &
-                  / (sum(M_FLUXES(disturb_end:nodays,13)+M_FLUXES(disturb_end:nodays,15)+ &
-                         disturbance_loss_from_litter(disturb_end:nodays))))
-       in_out_lit = in_out_lit * 0.5d0
+                         disturbance_loss_from_litter(1:disturb_begin)+&
+                         M_FLUXES(disturb_end:nodays,13)+M_FLUXES(disturb_end:nodays,15)+ &
+                         disturbance_loss_from_litter(disturb_end:nodays)))
        ! Csom
-!       in_out_som = sum(M_FLUXES(1:nodays,15)+disturbance_residue_to_som(1:nodays)) &
-!                  / sum(M_FLUXES(1:nodays,14)+disturbance_loss_from_som(1:nodays))
-       in_out_som = (sum(M_FLUXES(1:disturb_begin,15)+disturbance_residue_to_som(1:disturb_begin))) &
-                  / (sum(M_FLUXES(1:disturb_begin,14)+disturbance_loss_from_som(1:disturb_begin)))
-       in_out_som = in_out_som + &
-                   ((sum(M_FLUXES(disturb_end:nodays,15)+disturbance_residue_to_som(disturb_end:nodays))) &
-                  / (sum(M_FLUXES(disturb_end:nodays,14)+disturbance_loss_from_som(disturb_end:nodays))))
-       in_out_som = in_out_som * 0.5d0
+       in_out_som = (sum(M_FLUXES(1:disturb_begin,15)+M_FLUXES(disturb_end:nodays,15)+ &
+                         disturbance_residue_to_som(1:disturb_begin)+disturbance_residue_to_som(disturb_end:nodays))) &
+                  / (sum(M_FLUXES(1:disturb_begin,14)+M_FLUXES(disturb_end:nodays,14)+ &
+                         disturbance_loss_from_som(1:disturb_begin)+disturbance_loss_from_som(disturb_end:nodays)))
        ! Ccwd
-!       in_out_cwd = sum(M_FLUXES(1:nodays,11)+disturbance_residue_to_cwd(1:nodays)) &
-!                  / sum(M_FLUXES(1:nodays,19)+disturbance_loss_from_cwd(1:nodays))
-       in_out_cwd = sum(M_FLUXES(1:disturb_begin,11)+disturbance_residue_to_cwd(1:disturb_begin)) &
-                   / sum(M_FLUXES(1:disturb_begin,19)+disturbance_loss_from_cwd(1:disturb_begin))
-       in_out_cwd = in_out_cwd + &
-                    (sum(M_FLUXES(disturb_end:nodays,11)+disturbance_residue_to_cwd(disturb_end:nodays)) &
-                  / sum(M_FLUXES(disturb_end:nodays,19)+disturbance_loss_from_cwd(disturb_end:nodays)))
-       in_out_cwd = in_out_cwd * 0.5d0
-       ! combined dead organic matter pools
-!       in_out_dead = sum(M_FLUXES(1:nodays,10)+M_FLUXES(1:nodays,12) &
-!                        +M_FLUXES(1:nodays,11)                       &
-!                        +disturbance_residue_to_som(1:nodays)        &
-!                        +disturbance_residue_to_cwd(1:nodays)        &
-!                        +disturbance_residue_to_litter(1:nodays))    &
-!                   / sum(M_FLUXES(1:nodays,13)+M_FLUXES(1:nodays,14) &
-!                        +disturbance_loss_from_som(1:nodays)         &
-!                        +disturbance_loss_from_cwd(1:nodays)         &
-!                        +disturbance_loss_from_litter(1:nodays))
-       in_out_dead = sum(M_FLUXES(1:disturb_begin,10) &
-                        +M_FLUXES(1:disturb_begin,12) &
-                        +M_FLUXES(1:disturb_begin,11) &
-                        +disturbance_residue_to_som(1:disturb_begin) &
-                        +disturbance_residue_to_cwd(1:disturb_begin) &
-                        +disturbance_residue_to_litter(1:disturb_begin) ) &
-                   / sum(M_FLUXES(1:disturb_begin,14) &
-                        +M_FLUXES(1:disturb_begin,13) &
-                        +disturbance_loss_from_som(1:disturb_begin) &
-                        +disturbance_loss_from_cwd(1:disturb_begin) &
-                        +disturbance_loss_from_litter(1:disturb_begin))
-       in_out_dead = in_out_dead + &
-                    (sum(M_FLUXES(disturb_end:nodays,10)+M_FLUXES(disturb_end:nodays,12) &
-                        +M_FLUXES(disturb_end:nodays,11)+disturbance_residue_to_som(disturb_end:nodays) &
-                        +disturbance_residue_to_cwd(disturb_end:nodays)        &
-                        +disturbance_residue_to_litter(disturb_end:nodays) ) &
-                   / sum(M_FLUXES(disturb_end:nodays,14)+M_FLUXES(disturb_end:nodays,13) &
-                        +disturbance_loss_from_som(disturb_end:nodays) &
-                        +disturbance_loss_from_cwd(disturb_end:nodays)         &
-                        +disturbance_loss_from_litter(disturb_end:nodays)))
-       in_out_dead = in_out_dead * 0.5d0
+       in_out_cwd = (sum(M_FLUXES(1:disturb_begin,11)+M_FLUXES(disturb_end:nodays,11)+ &
+                        disturbance_residue_to_cwd(1:disturb_begin)+disturbance_residue_to_cwd(disturb_end:nodays))) &
+                  / (sum(M_FLUXES(1:disturb_begin,20)+M_FLUXES(disturb_end:nodays,20)+ &
+                        disturbance_loss_from_cwd(1:disturb_begin)+disturbance_loss_from_cwd(disturb_end:nodays)))
+       ! dead organic matter
+       in_out_dead = sum(M_FLUXES(1:disturb_begin,10)+M_FLUXES(disturb_end:nodays,10) &
+                        +M_FLUXES(1:disturb_begin,11)+M_FLUXES(disturb_end:nodays,11) &
+                        +M_FLUXES(1:disturb_begin,12)+M_FLUXES(disturb_end:nodays,12) &
+                        +disturbance_residue_to_litter(1:disturb_begin)+disturbance_residue_to_litter(disturb_end:nodays) &
+                        +disturbance_residue_to_cwd(1:disturb_begin)+disturbance_residue_to_cwd(disturb_end:nodays) &
+                        +disturbance_residue_to_som(1:disturb_begin)+disturbance_residue_to_som(disturb_end:nodays)) &
+                   / sum(M_FLUXES(1:disturb_begin,13)+M_FLUXES(disturb_end:nodays,13) &
+                        +M_FLUXES(1:disturb_begin,14)+M_FLUXES(disturb_end:nodays,14) &
+                        +disturbance_loss_from_litter(1:disturb_begin)+disturbance_loss_from_litter(disturb_end:nodays) &
+                        +disturbance_loss_from_cwd(1:disturb_begin)+disturbance_loss_from_cwd(disturb_end:nodays) &
+                        +disturbance_loss_from_som(1:disturb_begin)+disturbance_loss_from_som(disturb_end:nodays))
     else
        ! no replacement level disturbance so we assume everything must be in
        ! balance
-       in_out_root = sum(M_FLUXES(1:nodays,6)) / sum(M_FLUXES(1:nodays,12)+M_FLUXES(1:nodays,23))
+       in_out_root = sumroot / sum(M_FLUXES(1:nodays,12)+M_FLUXES(1:nodays,24))
        in_out_root_disturb = 1d0
-       in_out_wood = sum(M_FLUXES(1:nodays,7)) / sum(M_FLUXES(1:nodays,11)+M_FLUXES(1:nodays,24))
+       in_out_wood = sumwood / sum(M_FLUXES(1:nodays,11)+M_FLUXES(1:nodays,25))
        in_out_wood_disturb = 1d0
-       in_out_lit = sum(M_FLUXES(1:nodays,10)+M_FLUXES(1:nodays,12)+M_FLUXES(1:nodays,19) &
+       in_out_lit = sum(M_FLUXES(1:nodays,10)+M_FLUXES(1:nodays,12)+M_FLUXES(1:nodays,20) &
                         +disturbance_residue_to_litter(1:nodays)) &
                   / sum(M_FLUXES(1:nodays,13)+M_FLUXES(1:nodays,15)+disturbance_loss_from_litter(1:nodays))
        in_out_som = sum(M_FLUXES(1:nodays,15)+disturbance_residue_to_som(1:nodays)) &
                   / sum(M_FLUXES(1:nodays,14)+disturbance_loss_from_som(1:nodays))
        in_out_cwd = sum(M_FLUXES(1:nodays,11)+disturbance_residue_to_cwd(1:nodays)) &
-                  / sum(M_FLUXES(1:nodays,19)+disturbance_loss_from_cwd(1:nodays))
-       in_out_dead = sum(M_FLUXES(1:nodays,10)+M_FLUXES(1:nodays,12) &
-                        +M_FLUXES(1:nodays,11)                       &
-                        +disturbance_residue_to_som(1:nodays)        &
-                        +disturbance_residue_to_cwd(1:nodays)        &
-                        +disturbance_residue_to_litter(1:nodays))    &
+                  / sum(M_FLUXES(1:nodays,20)+disturbance_loss_from_cwd(1:nodays))
+       in_out_dead = sum(M_FLUXES(1:nodays,10)+M_FLUXES(1:nodays,11) &
+                        +M_FLUXES(1:nodays,12) &
+                        +disturbance_residue_to_litter(1:nodays) &
+                        +disturbance_residue_to_cwd(1:nodays) &
+                        +disturbance_residue_to_som(1:nodays)) &
                    / sum(M_FLUXES(1:nodays,13)+M_FLUXES(1:nodays,14) &
-                        +disturbance_loss_from_som(1:nodays)         &
-                        +disturbance_loss_from_cwd(1:nodays)         &
-                        +disturbance_loss_from_litter(1:nodays))
-    endif ! calculate in_out ratios, disturbed or not?
+                        +disturbance_loss_from_litter(1:nodays) &
+                        +disturbance_loss_from_cwd(1:nodays) &
+                        +disturbance_loss_from_som(1:nodays))
+    endif ! what to do with in:out ratios and disturbance
 
     ! derive mean pools
     do n = 1, nopools
@@ -1033,11 +1010,6 @@ module model_likelihood_module
     if ((EDC2 == 1 .or. DIAG == 1) .and. ( (sum(mean_annual_pools)/dble(no_years)) > 1200d0 ) ) then
        EDC2 = 0 ; EDCD%PASSFAIL(28) = 0
     endif
-
-    ! Steady state attractor - log ratio difference between inputs and outputs of
-    ! system (maybe this should be pool specific?)
-    EQF5=log(5d0) ! 10.0 = order magnitude; 2 = double and half (not accurate any longer)
-    EQF2=log(2d0) ; EQF10=log(10d0) ; EQF20=log(20d0)
 
     if (EDC2 == 1 .or. DIAG == 1) then
        ! roots input / output ratio

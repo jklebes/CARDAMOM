@@ -143,7 +143,7 @@ module cardamom_io
         ! DALEC_GSI_DFOL_CWD_FR
         DATAin%nopools = 7
         DATAin%nopars = 38
-        DATAin%nofluxes = 24
+        DATAin%nofluxes = 25
         if (DATAin%PFT == 1) then
            ! then actually this is a crop pixel
            DATAin%nopools = 8

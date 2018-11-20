@@ -21,8 +21,6 @@ public :: CARBON_MODEL                  &
          ,acm_meteorological_constants  &
          ,update_soil_initial_conditions&
          ,calculate_daylength           &
-         ,daylength_hours               &
-         ,daylength_seconds             &
          ,opt_max_scaling               &
          ,freeze                        &
          ,co2comp_saturation            &
@@ -73,7 +71,6 @@ public :: CARBON_MODEL                  &
          ,soil_frac_sand                &
          ,nos_soil_layers               &
          ,meant                         &
-         ,meant_K                       &
          ,stomatal_conductance          &
          ,iWUE                          &
          ,avN                           &
@@ -314,7 +311,6 @@ double precision :: root_reach, root_biomass, &
               displacement, & ! zero plane displacement (m)
                 max_supply, & ! maximum water supply (mmolH2O/m2/day)
                      meant, & ! mean air temperature (oC)
-                   meant_K, & ! mean air temperature (K)
                  maxt_lag1, &
                      leafT, & ! canopy temperature (oC)
           mean_annual_temp, &
@@ -382,7 +378,6 @@ double precision :: mint, & ! minimum temperature (oC)
 
 ! Module level varoables for step specific timing information
 double precision :: cos_solar_zenith_angle, &
-                  mean_days_per_step, & !
                     seconds_per_step, & !
                        days_per_step, & !
                      days_per_step_1, & !
@@ -464,11 +459,11 @@ contains
     integer :: f,nxp,n,test,m
 
     ! local fire related variables
-    double precision :: burnt_area &
-                       ,CFF(7) = dble_zero, CFF_res(4) = dble_zero    & ! combusted and non-combustion fluxes
-                       ,NCFF(7) = dble_zero, NCFF_res(4) = dble_zero  & ! with residue and non-residue seperates
-                       ,combust_eff(5)                                & ! combustion efficiency
-                       ,rfac                                            ! resilience factor
+    double precision :: burnt_area           &
+                       ,CFF(7) = dble_zero   & ! combusted and non-combustion fluxes
+                       ,NCFF(7) = dble_zero  & ! with residue and non-residue seperates
+                       ,combust_eff(5)       & ! combustion efficiency
+                       ,rfac                   ! resilience factor
 
     ! local deforestation related variables
     double precision, dimension(5) :: post_harvest_burn   & ! how much burning to occur after
@@ -546,6 +541,12 @@ contains
     ! 17 = carbon flux due to fire
     ! 18 = growing season index
     ! 19 = Evapotranspiration (kgH2O.m-2.day-1)
+    ! 20 = CWD turnover to litter
+    ! 21 = C extracted as harvest
+    ! 22 = labile loss due to disturbance
+    ! 23 = foliage loss due to disturbance
+    ! 24 = root loss due to disturbance
+    ! 25 = wood loss due to disturbance
 
     ! PARAMETERS
     ! 23 process parameters; 7 C pool initial conditions; 1 soil water initial condition
@@ -606,7 +607,6 @@ contains
 !call cpu_time(start)
 !call cpu_time(finish)
 
-    ! load ACM-GPP-ET parameters
     ! load ACM-GPP-ET parameters
     NUE                        = 1.182549d+01  ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
                                                ! ,unlimited by CO2, light and
@@ -764,53 +764,65 @@ contains
     combust_eff(5) = 0.3d0 ; rfac = 0.5d0
 
     ! assigning initial conditions
-    POOLS(1,1)=pars(18)
-    POOLS(1,2)=pars(19)
-    POOLS(1,3)=pars(20)
-    POOLS(1,4)=pars(21)
-    POOLS(1,5)=pars(22)
-    POOLS(1,6)=pars(23)
-    POOLS(1,7)=pars(37)
+    POOLS(1,1) = pars(18)
+    POOLS(1,2) = pars(19)
+    POOLS(1,3) = pars(20)
+    POOLS(1,4) = pars(21)
+    POOLS(1,5) = pars(22)
+    POOLS(1,6) = pars(23)
+    POOLS(1,7) = pars(37)
     ! POOL(1,8) assigned later
 
     if (.not.allocated(deltat_1)) then
         ! allocate variables dimension which are fixed per site only the once
-        allocate(disturbance_residue_to_litter(nodays), &
-                 disturbance_residue_to_cwd(nodays),    &
-                 disturbance_residue_to_som(nodays),    &
-                 disturbance_loss_from_litter(nodays),  &
-                 disturbance_loss_from_cwd(nodays),     &
-                 disturbance_loss_from_som(nodays),     &
-                 Cwood_labile_release_coef(nodays),     &
-                 Croot_labile_release_coef(nodays),     &
-                 co2_compensation_point(nodays),        &
-                 co2_half_saturation(nodays),           &
-                 deltat_1(nodays),soilwatermm(nodays),  &
-                 wSWP_time(nodays))
-        ! calculate inverse of number of days per time step, as this will be useful to avoid divisions later
+        allocate(disturbance_residue_to_litter(nodays),disturbance_residue_to_cwd(nodays), &
+                 disturbance_residue_to_som(nodays),disturbance_loss_from_litter(nodays),  &
+                 disturbance_loss_from_cwd(nodays),disturbance_loss_from_som(nodays),      &
+                 Cwood_labile_release_coef(nodays),Croot_labile_release_coef(nodays),      &
+                 deltat_1(nodays),wSWP_time(nodays),soilwatermm(nodays),                    &
+                 daylength_hours(nodays),daylength_seconds(nodays),    &
+                 co2_half_saturation(nodays),co2_compensation_point(nodays))
+
+        !
+        ! Timing variables which are needed first
+        !
+
         deltat_1 = deltat**(-1d0)
+
+        !
+        ! Iteration independent variables using functions and thus need to be in a loop
+        !
 
         ! first those linked to the time period of the analysis
         do n = 1, nodays
+          ! calculate daylength in hours and seconds
+          call calculate_daylength((doy-(deltat(n)*0.5d0)),lat)
+          daylength_hours(n) = dayl_hours ; daylength_seconds(n) = dayl_seconds
           ! Temperature adjustments for Michaelis-Menten coefficients
           ! for CO2 (kc) and O2 (ko) and CO2 compensation point.
           co2_compensation_point(n) = arrhenious(co2comp_saturation,co2comp_half_sat_conc,met(3,n))
           co2_half_saturation(n) = arrhenious(kc_saturation,kc_half_sat_conc,met(3,n))
         end do
 
+        !
+        ! Determine those related to phenology
+        !
+
+        ! Hydraulic limitation parameters for tissue cell expansion, i.e. growth
+        ! NOTE: that these parameters are applied to deltaWP (i.e. minLWP-wSWP)
+        Cwood_hydraulic_gradient = 5d0 ; Cwood_hydraulic_half_saturation = -1.5d0
+
         ! Temperature limitiation parameters on wood and fine root growth.
         ! Parmeters generated on the assumption of 5 % / 95 % activation at key
         ! temperature values. Roots 1oC/30oC, wood 5oC/30oC.
         ! NOTE: Foliage and root potential turnovers use the same temperature curve
         Croot_labile_release_gradient = 0.1962d0 ; Croot_labile_half_saturation = 15.0d0
-        Cwood_labile_release_gradient = 0.2355d0 ; Cwood_labile_half_saturation  = 17.5d0
+        Cwood_labile_release_gradient = 0.2355d0 ; Cwood_labile_half_saturation = 17.5d0
         ! calculate temperature limitation on potential wood/root growth
         Cwood_labile_release_coef = (dble_one+exp(-Cwood_labile_release_gradient* &
                                   (((met(3,:)+met(2,:))*0.5d0)-Cwood_labile_half_saturation)))**(-dble_one)
         Croot_labile_release_coef = (dble_one+exp(-Croot_labile_release_gradient* &
                                   (((met(3,:)+met(2,:))*0.5d0)-Croot_labile_half_saturation)))**(-dble_one)
-        ! hydraulic limitation parameters for wood cell expansion, i.e. growth
-        Cwood_hydraulic_gradient = 5d0 ; Cwood_hydraulic_half_saturation = -1.5d0
 
         ! calculate some values once as these are invarient between DALEC runs
         if (.not.allocated(tmp_x)) then
@@ -848,7 +860,7 @@ contains
         gsi_history = pars(36)-1d0
          just_grown = pars(35)
 
-        ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
+       ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
 
        !
        ! Initialise the water model
@@ -867,6 +879,7 @@ contains
        porosity_initial = porosity
 
     else
+
        !
        ! Load initial soil water conditions from memory
        !
@@ -880,6 +893,28 @@ contains
        call update_soil_initial_conditions(pars(41))
 
     endif
+
+    ! load some needed module level values
+    lai = POOLS(1,2)/pars(17)
+    mint = met(2,1)  ! minimum temperature (oC)
+    maxt = met(3,1)  ! maximum temperature (oC)
+    swrad = met(4,1) ! incoming short wave radiation (MJ/m2/day)
+    co2 = met(5,1)   ! CO2 (ppm)
+    doy = met(6,1)   ! Day of year
+    rainfall = rainfall_time(1) ! rainfall (kgH2O/m2/s)
+    meant = meant_time(1) ! mean air temperature (oC)
+    wind_spd = met(15,1) ! wind speed (m/s)
+    vpd_pa = met(16,1)   ! vapour pressure deficit (Pa)
+    meant = (maxt + mint) * 0.5d0
+    leafT = maxt     ! initial canopy temperature (oC)
+    maxt_lag1 = maxt
+    seconds_per_step = deltat(1) * seconds_per_day
+    days_per_step =  deltat(1)
+
+    ! clear disturbance arrays to avoid throw overs
+    disturbance_residue_to_litter = 0d0 ; disturbance_loss_from_litter = 0d0
+    disturbance_residue_to_som = 0d0 ; disturbance_loss_from_som = 0d0
+    disturbance_residue_to_cwd = 0d0 ; disturbance_loss_from_cwd = 0d0
 
     ! Initialise root reach based on initial conditions
     root_biomass = max(min_root,POOLS(1,3)*2d0)
@@ -908,12 +943,6 @@ contains
 
     infi = 0d0
 
-    ! clear disturbance arrays to avoid throw overs
-    disturbance_residue_to_litter = 0d0 ; disturbance_loss_from_litter = 0d0
-    disturbance_residue_to_som = 0d0 ; disturbance_loss_from_som = 0d0
-    disturbance_residue_to_cwd = 0d0 ; disturbance_loss_from_cwd = 0d0
-
-
     !
     ! Begin looping through each time step
     !
@@ -926,6 +955,7 @@ contains
 
       ! set lag information using previous time step value for temperature
       maxt_lag1 = maxt
+
       ! Incoming drivers
       mint = met(2,n)  ! minimum temperature (oC)
       maxt = met(3,n)  ! maximum temperature (oC)
@@ -935,10 +965,9 @@ contains
       doy = met(6,n)   ! Day of year
       rainfall = max(0d0,met(7,n)) ! rainfall (kgH2O/m2/s)
       meant = (maxt + mint) * 0.5d0  ! mean air temperature (oC)
-      meant_K = meant + freeze
       airt_zero_fraction = (maxt-dble_zero) / (maxt-mint) ! fraction of temperture period above freezing
       wind_spd = met(15,n) ! wind speed (m/s)
-      vpd_pa = max(0d0,met(16,n))  ! Vapour pressure deficit (Pa)
+      vpd_pa = met(16,n)  ! Vapour pressure deficit (Pa)
 
       ! states needed for module variables
       lai_out(n) = POOLS(n,2)*SLA
@@ -950,9 +979,9 @@ contains
       co2_half_sat   = co2_half_saturation(n)
       co2_comp_point = co2_compensation_point(n)
 
-      ! calculate daylength in hours and seconds
-      call calculate_daylength((doy-(deltat(n)*0.5d0)),lat)
       ! extract timing related values
+      dayl_hours = daylength_hours(n)
+      dayl_seconds = daylength_seconds(n)
       dayl_seconds_1 = dayl_seconds ** (-dble_one)
       seconds_per_step = seconds_per_day * deltat(n)
       days_per_step = deltat(n)
@@ -1175,9 +1204,9 @@ contains
       ! store soil water content of the surface zone (mm)
       POOLS(n,8) = 1d3*soil_waterfrac(1)*layer_thickness(1)
 
-      !
+      !!!!!!!!!!
       ! deal first with deforestation
-      !
+      !!!!!!!!!!
 
       if (n == reforest_day) then
           POOLS(n+1,1) = pars(30)
@@ -1187,7 +1216,7 @@ contains
       endif
 
       ! reset values
-      FLUXES(n,17) = dble_zero ; FLUXES(n,22:25) = dble_zero
+      FLUXES(n,17) = dble_zero ; FLUXES(n,21:25) = dble_zero
       harvest_management = 0 ; burnt_area = dble_zero
 
       if (met(8,n) > dble_zero) then
@@ -1224,7 +1253,7 @@ contains
               else
                  roots_loss = dble_zero
               endif
-              wood_loss   = POOLS(n+1,4)*met(8,n)
+              wood_loss   = (Cbranch+Crootcr+Cstem)*met(8,n)
               ! estimate labile loss explicitly from the loss of their storage
               ! tissues
               labile_loss = POOLS(n+1,1) * ((roots_loss+wood_loss) / (POOLS(n+1,3)+POOLS(n+1,4)))
@@ -1238,9 +1267,9 @@ contains
               endif
               ! Transfer fraction of harvest waste to litter or som pools
               ! easy pools first
-              labile_residue = POOLS(n+1,1)*met(8,n)*labile_frac_res
-              foliar_residue = POOLS(n+1,2)*met(8,n)*foliage_frac_res(harvest_management)
-              roots_residue  = POOLS(n+1,3)*met(8,n)*roots_frac_res(harvest_management)
+              labile_residue = labile_loss*labile_frac_res
+              foliar_residue = foliar_loss*foliage_frac_res(harvest_management)
+              roots_residue  = roots_loss*roots_frac_res(harvest_management)
               ! Explicit calculation of the residues from each fraction
               coarse_root_residue  = Crootcr*met(8,n)*rootcr_frac_res(harvest_management)
               branch_residue = Cbranch*met(8,n)*branch_frac_res(harvest_management)
@@ -1251,34 +1280,22 @@ contains
               soil_loss_with_roots = Crootcr*met(8,n)*(dble_one-rootcr_frac_res(harvest_management)) &
                               * soil_loss_frac(harvest_management)
 
-              ! Update living pools directly
+              ! Update pools
               POOLS(n+1,1) = max(dble_zero,POOLS(n+1,1)-labile_loss)
               POOLS(n+1,2) = max(dble_zero,POOLS(n+1,2)-foliar_loss)
               POOLS(n+1,3) = max(dble_zero,POOLS(n+1,3)-roots_loss)
               POOLS(n+1,4) = max(dble_zero,POOLS(n+1,4)-wood_loss)
+              POOLS(n+1,5) = max(dble_zero, POOLS(n+1,5) + (labile_residue+foliar_residue+roots_residue))
+              POOLS(n+1,6) = max(dble_zero, POOLS(n+1,6) - soil_loss_with_roots)
+              POOLS(n+1,7) = max(dble_zero, POOLS(n+1,7) + wood_residue)
 
-              ! Set burn related values
-              FLUXES(n,17) = dble_zero
-              CFF = dble_zero ; NCFF = dble_zero
-              CFF_res = dble_zero ; NCFF_res = dble_zero
-
-              ! Update all pools this time
-              POOLS(n+1,1) = max(dble_zero, POOLS(n+1,1) - CFF(1) - NCFF(1) )
-              POOLS(n+1,2) = max(dble_zero, POOLS(n+1,2) - CFF(2) - NCFF(2) )
-              POOLS(n+1,3) = max(dble_zero, POOLS(n+1,3) - CFF(3) - NCFF(3) )
-              POOLS(n+1,4) = max(dble_zero, POOLS(n+1,4) - CFF(4) - NCFF(4) )
-              POOLS(n+1,5) = max(dble_zero, POOLS(n+1,5) + (labile_residue+foliar_residue+roots_residue) &
-                                                  + (NCFF(1)+NCFF(2)+NCFF(3))-CFF(5)-NCFF(5) )
-              POOLS(n+1,6) = max(dble_zero, POOLS(n+1,6) - soil_loss_with_roots + (NCFF(4)+NCFF(5)+NCFF(7)))
-              POOLS(n+1,7) = max(dble_zero, POOLS(n+1,7) + wood_residue - CFF(7) - NCFF(7) )
               ! Some variable needed for the EDCs
               ! reallocation fluxes for the residues
-              disturbance_residue_to_litter(n) = (labile_residue+foliar_residue+roots_residue) &
-                                               + (NCFF(1)+NCFF(2)+NCFF(3))
-              disturbance_loss_from_litter(n)  = CFF(5)+NCFF(5)
+              disturbance_residue_to_litter(n) = labile_residue+foliar_residue+roots_residue
+              disturbance_loss_from_litter(n)  = dble_zero
               disturbance_residue_to_cwd(n)    = wood_residue
-              disturbance_loss_from_cwd(n)     = CFF(7) - NCFF(7)
-              disturbance_residue_to_som(n)    = NCFF(4)+NCFF(5)+NCFF(7)
+              disturbance_loss_from_cwd(n)     = dble_zero
+              disturbance_residue_to_som(n)    = dble_zero
               disturbance_loss_from_som(n)     = soil_loss_with_roots
               ! Convert all to rates to be consistent with the FLUXES in EDCs
               disturbance_residue_to_litter(n) = disturbance_residue_to_litter(n) * deltat_1(n)
@@ -1287,12 +1304,10 @@ contains
               disturbance_loss_from_cwd(n)     = disturbance_loss_from_cwd(n) * deltat_1(n)
               disturbance_residue_to_som(n)    = disturbance_residue_to_som(n) * deltat_1(n)
               disturbance_loss_from_som(n)     = disturbance_loss_from_som(n) * deltat_1(n)
-              ! This is intended for use with the R interface for subsequent post
-              ! processing
-              FLUXES(n,21) =  (wood_loss-(wood_residue+CFF_res(4)+NCFF_res(4))) &
-                               + (labile_loss-(labile_residue+CFF_res(1)+NCFF_res(1))) &
-                               + (foliar_loss-(foliar_residue+CFF_res(2)+NCFF_res(2))) &
-                               + (roots_loss-(roots_residue+CFF_res(3)+NCFF_res(3)))
+              ! estimate total C extraction
+              ! NOTE: this calculation format is to prevent precision error in calculation
+              FLUXES(n,21) = wood_loss + labile_loss + foliar_loss + roots_loss
+              FLUXES(n,21) = FLUXES(n,21) - (wood_residue + labile_residue + foliar_residue + roots_residue)
               ! Convert to daily rate
               FLUXES(n,21) = FLUXES(n,21) * deltat_1(n)
 
@@ -1359,20 +1374,21 @@ contains
 !              NEE(n)=NEE(n)+FLUXES(n,17)
               ! determine the as daily rate impact on live tissues for use in EDC and
               ! MTT calculations
-              FLUXES(n,22) = FLUXES(n,22) + ((CFF(1) + NCFF(1)) * deltat_1(n))
-              FLUXES(n,23) = FLUXES(n,23) + ((CFF(2) + NCFF(2)) * deltat_1(n))
-              FLUXES(n,24) = FLUXES(n,24) + ((CFF(3) + NCFF(3)) * deltat_1(n))
-              FLUXES(n,25) = FLUXES(n,25) + ((CFF(4) + NCFF(4)) * deltat_1(n))
+              FLUXES(n,22) = FLUXES(n,22) + ((CFF(1) + NCFF(1)) * deltat_1(n)) ! labile
+              FLUXES(n,23) = FLUXES(n,23) + ((CFF(2) + NCFF(2)) * deltat_1(n)) ! foliar
+              FLUXES(n,24) = FLUXES(n,24) + ((CFF(3) + NCFF(3)) * deltat_1(n)) ! root
+              FLUXES(n,25) = FLUXES(n,25) + ((CFF(4) + NCFF(4)) * deltat_1(n)) ! wood
 
               !// update pools
               !/*Adding all fire pool transfers here*/
-              POOLS(n+1,1)=max(dble_zero,POOLS(n+1,1)-CFF(1)-NCFF(1))
-              POOLS(n+1,2)=max(dble_zero,POOLS(n+1,2)-CFF(2)-NCFF(2))
-              POOLS(n+1,3)=max(dble_zero,POOLS(n+1,3)-CFF(3)-NCFF(3))
-              POOLS(n+1,4)=max(dble_zero,POOLS(n+1,4)-CFF(4)-NCFF(4))
-              POOLS(n+1,5)=max(dble_zero,POOLS(n+1,5)-CFF(5)-NCFF(5)+NCFF(1)+NCFF(2)+NCFF(3))
-              POOLS(n+1,6)=max(dble_zero,POOLS(n+1,6)+NCFF(4)+NCFF(5)+NCFF(7))
-              POOLS(n+1,7)=max(dble_zero,POOLS(n+1,7)-CFF(7)-NCFF(7))
+              POOLS(n+1,1) = max(dble_zero,POOLS(n+1,1)-CFF(1)-NCFF(1))
+              POOLS(n+1,2) = max(dble_zero,POOLS(n+1,2)-CFF(2)-NCFF(2))
+              POOLS(n+1,3) = max(dble_zero,POOLS(n+1,3)-CFF(3)-NCFF(3))
+              POOLS(n+1,4) = max(dble_zero,POOLS(n+1,4)-CFF(4)-NCFF(4))
+              POOLS(n+1,5) = max(dble_zero,POOLS(n+1,5)-CFF(5)-NCFF(5)+NCFF(1)+NCFF(2)+NCFF(3))
+              POOLS(n+1,6) = max(dble_zero,POOLS(n+1,6)+NCFF(4)+NCFF(5)+NCFF(7))
+              POOLS(n+1,7) = max(dble_zero,POOLS(n+1,7)-CFF(7)-NCFF(7))
+
               ! some variable needed for the EDCs
               ! reallocation fluxes for the residues
               disturbance_residue_to_litter(n) = (NCFF(1)+NCFF(2)+NCFF(3))
@@ -1572,7 +1588,7 @@ contains
     ! remember to return back to the user
     return
 
-  end function find_gs_WUE  
+  end function find_gs_WUE
   !
   !------------------------------------------------------------------
   !
@@ -3348,7 +3364,7 @@ contains
                    min(dble_one,dble_one-(dble_one-leaf_growth)**deltat(current_step))*deltat_1(current_step)
              ! calculate new leaf area, GPP return
              lai = (foliage+tmp) * SLA
-             call calculate_shortwave_balance 
+             call calculate_shortwave_balance
              ! calculate stomatal conductance of water
              if (lai > vsmall .and. stomatal_conductance > vsmall) then
                  tmp = acm_gpp(stomatal_conductance)

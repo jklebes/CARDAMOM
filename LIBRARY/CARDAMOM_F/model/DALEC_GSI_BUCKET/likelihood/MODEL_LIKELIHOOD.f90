@@ -741,8 +741,8 @@ module model_likelihood_module
     ! reset initial values
     ! WARNING: Rg is not current accounted for in this calculation...
     hak = 0 ; resid_lab = 0d0
-    resid_lab(1:nodays) = (M_FLUXES(1:nodays,8)+M_FLUXES(1:nodays,7)+M_FLUXES(1:nodays,6)+M_FLUXES(1:nodays,22)) &
-                        / M_POOLS(1:nodays,1)
+    resid_lab(1:nodays) = (M_FLUXES(1:nodays,3)+M_FLUXES(1:nodays,8)+M_FLUXES(1:nodays,7) &
+                          +M_FLUXES(1:nodays,6)+M_FLUXES(1:nodays,22)) / M_POOLS(1:nodays,1)
     ! division by zero results in NaN plus obviously I can't have turned
     ! anything over if there was nothing to start out with...
     where ( M_POOLS(1:nodays,1) == 0d0 )
@@ -997,7 +997,7 @@ module model_likelihood_module
     if (EDC2 == 1 .or. DIAG == 1) then
 
        ! calculate input and output ratios for all pools
-       if (maxval(met(8,:)) > 0.99d0 .and. disturb_end == nodays) then
+       if (maxval(met(8,1:nodays)) > 0.99d0 .and. disturb_end == nodays) then
           ! there has been a replacement level event, but there is less than 2
           ! years before the end so we will assess the beginning of the analysis
           ! only
@@ -1023,7 +1023,7 @@ module model_likelihood_module
                            +disturbance_loss_from_litter(1:disturb_begin) &
                            +disturbance_loss_from_cwd(1:disturb_begin) &
                            +disturbance_loss_from_som(1:disturb_begin))
-       else if (maxval(met(8,:)) > 0.99d0 .and. disturb_end /= nodays) then
+       else if (maxval(met(8,1:nodays)) > 0.99d0 .and. disturb_end /= nodays) then
           ! there has been a replacement level event, we will remove filter out a 2
           ! year period to allow for the most severe non-steady state response
           ! Croot
