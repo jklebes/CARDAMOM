@@ -901,8 +901,6 @@ contains
     swrad = met(4,1) ! incoming short wave radiation (MJ/m2/day)
     co2 = met(5,1)   ! CO2 (ppm)
     doy = met(6,1)   ! Day of year
-    rainfall = rainfall_time(1) ! rainfall (kgH2O/m2/s)
-    meant = meant_time(1) ! mean air temperature (oC)
     wind_spd = met(15,1) ! wind speed (m/s)
     vpd_pa = met(16,1)   ! vapour pressure deficit (Pa)
     meant = (maxt + mint) * 0.5d0
