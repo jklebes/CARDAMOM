@@ -707,6 +707,10 @@ module model_likelihood_module
                        ,in_out_dead &
                        ,torfol      & ! yearly average turnover
                        ,torlab      & !
+                       ,sumrauto    &
+                       ,sumfol      &
+                       ,sumroot     &
+                       ,sumwood     &
                        ,fNPP        & ! fraction of NPP to foliage
                        ,rNPP        & ! fraction of NPP to roots
                        ,wNPP        & ! fraction of NPP to wood
@@ -778,26 +782,31 @@ module model_likelihood_module
        no_years_adjust=int(nint(sum(deltat(exp_adjust:nodays))/365.25d0))
     endif ! there has been a full clearance event
 
+    ! calculate sum fluxes
+    sumgpp = sum(M_FLUXES(1:nodays,1))
+    sumrauto = sum(M_FLUXES(1:nodays,3))
+    sumfol = sum(M_FLUXES(1:nodays,8))
+    sumroot = sum(M_FLUXES(1:nodays,6))
+    sumwood = sum(M_FLUXES(1:nodays,7))
+
     ! initialise and then calculate mean gpp values
-    fauto = sum(M_FLUXES(1:nodays,3))/sum(M_FLUXES(1:nodays,1))
-!    meangpp=sum(M_GPP(1:nodays))/real(nodays)
-    sumgpp = 1d0/sum(M_GPP(1:nodays))
-    sumnpp = 1d0/(sum(M_GPP(1:nodays))*(1d0-fauto))
+    fauto = sumrauto / sumgpp            ! i.e. Ra:GPP = 1-CUE
+    sumnpp = (sumgpp - sumrauto)**(-1d0) ! NOTE: inverted here
+    sumgpp = sumgpp**(-1d0)              ! NOTE: inverted here
+
+    ! GPP allocation fractions
+    ffol = sumfol * sumgpp
+    froot = sumroot * sumgpp
+
+    ! NPP allocations; note that because of possible labile accumulation this
+    ! might not be equal to 1
+    fNPP = sumfol * sumnpp
+    wNPP = sumwood * sumnpp
+    rNPP = sumroot * sumnpp
 
     infi = 0d0
     DIAG = EDCD%DIAG
     EDC2 = 1
-
-    ! GPP allocation fractions
-    ffol = sum(M_FLUXES(1:nodays,4)+M_FLUXES(1:nodays,8)) * sumgpp
-    froot = sum(M_FLUXES(1:nodays,6)) * sumgpp
-    fwood = sum(M_FLUXES(1:nodays,7)) * sumgpp
-
-    ! NPP allocations; note that because of possible labile accumulation this
-    ! might not be equal to 1
-    fNPP = sum(M_FLUXES(1:nodays,4)+M_FLUXES(1:nodays,8)) * sumnpp
-    wNPP = sum(M_FLUXES(1:nodays,7)) * sumnpp
-    rNPP = sum(M_FLUXES(1:nodays,6)) * sumnpp
 
     ! calculate input and output ratios for all pools
     ! calculate input and output ratios for all pools
