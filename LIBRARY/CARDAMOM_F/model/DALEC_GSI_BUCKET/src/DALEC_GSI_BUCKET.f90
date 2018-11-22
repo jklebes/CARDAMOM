@@ -796,7 +796,7 @@ contains
         ! first those linked to the time period of the analysis
         do n = 1, nodays
           ! calculate daylength in hours and seconds
-          call calculate_daylength((doy-(deltat(n)*0.5d0)),lat)
+          call calculate_daylength((met(6,n)-(deltat(n)*0.5d0)),lat)
           daylength_hours(n) = dayl_hours ; daylength_seconds(n) = dayl_seconds
           ! Temperature adjustments for Michaelis-Menten coefficients
           ! for CO2 (kc) and O2 (ko) and CO2 compensation point.
@@ -1102,6 +1102,9 @@ contains
       !!!!!!!!!!
       ! calculate canopy phenology
       !!!!!!!!!!
+
+      ! assign labile C available in current time step
+      avail_labile = POOLS(n,1)
 
       ! Determine leaf growth and turnover based on GSI model + some economics
       ! NOTE: that turnovers will be bypassed in favour of mortality turnover
@@ -2062,7 +2065,7 @@ contains
     dayl_seconds = dayl_hours * seconds_per_hour
 
     ! estimate sun rise and run set hours
-    sunrise = 12 - nint(dayl_hours*0.5d0) ; sunset = sunrise + nint(dayl_hours)
+!    sunrise = 12 - nint(dayl_hours*0.5d0) ; sunset = sunrise + nint(dayl_hours)
 
     ! estimate the solar cosine zenith angle for 12 noon
     cos_solar_zenith_angle = sinld + cosld
@@ -3370,7 +3373,7 @@ contains
                  tmp = dble_zero
              endif
              deltaGPP = tmp - GPP_current
-print*,"deltaGPP",deltaGPP
+
              ! is the marginal return for GPP (over the mean life of leaves)
              ! less than increase in maintenance respiration and C required to
              ! growth?
@@ -3407,7 +3410,7 @@ print*,"deltaGPP",deltaGPP
                 ! is the marginal return for GPP (over the mean life of leaves)
                 ! less than increase in maintenance respiration and C required to
                 ! growth?
-print*,"deltaGPP",deltaGPP
+
                 if (deltaGPP < gpp_crit_frac*GPP_current) leaf_growth = dble_zero
 
              end if ! Just grown?

@@ -920,9 +920,9 @@ contains
        ! first those linked to the time period of the analysis
        do n = 1, nodays
           ! check positive values only for rainfall input
-          rainfall_time(n)=max(dble_zero,met(7,n))
+          rainfall_time(n) = max(dble_zero,met(7,n))
           ! calculate daylength in hours and seconds
-          call calculate_daylength((doy-(deltat(n)*0.5d0)),lat)
+          call calculate_daylength((met(6,n)-(deltat(n)*0.5d0)),lat)
           daylength_hours(n) = dayl_hours ; daylength_seconds(n) = dayl_seconds
           ! Temperature adjustments for Michaelis-Menten coefficients
           ! for CO2 (kc) and O2 (ko) and CO2 compensation point.
@@ -2569,7 +2569,7 @@ contains
     dayl_seconds = dayl_hours * seconds_per_hour
 
     ! estimate sun rise and run set hours
-    sunrise = 12 - nint(dayl_hours*0.5d0) ; sunset = sunrise + nint(dayl_hours)
+!    sunrise = 12 - nint(dayl_hours*0.5d0) ; sunset = sunrise + nint(dayl_hours)
 
     ! estimate the solar cosine zenith angle for 12 noon
     cos_solar_zenith_angle = sinld + cosld

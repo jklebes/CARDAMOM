@@ -1933,7 +1933,7 @@ contains
     dayl_seconds = dayl_hours * seconds_per_hour
 
     ! estimate sun rise and run set hours
-    sunrise = 12 - nint(dayl_hours*0.5d0) ; sunset = sunrise + nint(dayl_hours)
+!    sunrise = 12 - nint(dayl_hours*0.5d0) ; sunset = sunrise + nint(dayl_hours)
 
     ! estimate the solar cosine zenith angle for 12 noon
     cos_solar_zenith_angle = sinld + cosld

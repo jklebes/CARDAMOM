@@ -117,8 +117,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     MET[,23] = met$bot_clay
   } else {
     MET[,14] = met$avgTemp
-    MET[,15] = met$wind_spd
-    MET[,16] = met$vpd
+    MET[,15] = pmax(0,met$wind_spd)
+    MET[,16] = pmax(0,met$vpd)
   }
 
   # TEMPLATE FOR ALL DALEC MCMC DATA files

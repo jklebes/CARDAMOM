@@ -8,20 +8,24 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 	,grid_type,modelname) {
 
 		###
-		## Get some LAI information
+		## Get some LAI information (m2/m2)
 		###
-		#    print("checking lai")
+
 		if (lai_source == "MODIS") {
 			# get lai
 			lai = extract_modis_lai(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,lai_all,as.numeric(start_year):as.numeric(end_year))
 			# assume default uncertainty (+/- scale)
-			lai_unc = lai * 0.14028508 + 0.2 # borrowed linear approximtion of uncertainty form Copernicus
+			lai_unc = rep(-9999,times = length(lai))
+ 			# borrowed linear approximtion of uncertainty form Copernicus
+			lai_unc[which(lai != -9999)] = lai[which(lai != -9999)] * 0.14028508 + 0.2
 		} else if (lai_source == "site_specific") {
 			# read from .csv or netcdf
 			infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
 			lai = read_site_specific_obs("LAI",infile) ; lai_unc = read_site_specific_obs("LAI_unc",infile)
 			if (max(lai_unc) == -9999) {
-			   lai_unc = lai * 0.14028508 + 0.2 # borrowed linear approximtion of uncertainty form Copernicus
+				 lai_unc = rep(-9999,times = length(lai))
+ 				 # borrowed linear approximtion of uncertainty form Copernicus
+			   lai_unc[which(lai != -9999)] = lai[which(lai != -9999)] * 0.14028508 + 0.2
 			}
 		} else {
 			lai = -9999
@@ -29,9 +33,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 		}
 
 		###
-		## Get some Cfoliage information (stock)
+		## Get some Cfoliage information (stock; gC/m2)
 		###
-		#    print("checking Cfoliage")
+
 		if (Cfol_stock_source == "site_specific") {
 			infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
 			Cfol_stock=read_site_specific_obs("Cfol_stock",infile)
@@ -48,7 +52,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 		}
 
 		###
-		## Get some Csom information
+		## Get some initial Csom (gC/m2) information
 		###
 
 		if (Csom_source == "HWSD") {
@@ -69,11 +73,10 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 		}
 
 		###
-		## Get some sand / clay information
+		## Get some sand / clay information (%)
 		###
 
 		if (sand_clay_source == "HWSD") {
-			# could add other variables such as SOM (gC.m-2)
 			sand_clay=extract_hwsd_sand_clay(spatial_type,resolution,grid_type,latlon_wanted,sand_clay_all)
 			top_sand = sand_clay$top_sand ; bot_sand = sand_clay$bot_sand
 			top_clay = sand_clay$top_clay ; bot_clay = sand_clay$bot_clay
@@ -90,7 +93,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 		}
 
 		###
-		## Get some crop management information
+		## Get some crop management information (day)
 		###
 
 		if (ctessel_pft == 1 & crop_management_source == "sacks_crop_calendar") {
@@ -111,7 +114,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 		}
 
 		###
-		## Get some Wood increment information (time series)
+		## Get some Wood increment information (gC/m2/yr; time series)
 		###
 
 		if (woodinc_source == "site_specific") {
@@ -129,9 +132,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 		}
 
 		###
-		## Get some GPP information (time series)
+		## Get some GPP information (time series; gC/m2/day)
 		###
-		#    print("checking gpp")
+
 		if (GPP_source == "site_specific") {
 			infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
 			if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")}
@@ -141,7 +144,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 			GPP_unc = read_site_specific_obs("GPP_unc",infile)
       if (length(GPP_unc) == 1) {
           GPP_unc = rep(-9999,times = length(GPP))
-			    GPP_unc[which(GPP > 0)] = 0.5 * GPP[which(GPP > 0)] #rep(mean(GPP*0.5),times=length(GPP)) #pmax(0.20,GPP * 0.20) #rep(1,length.out=length(GPP))
+			    GPP_unc[which(GPP > 0)] = 0.5 * GPP[which(GPP > 0)] + 0.5
+					#rep(mean(GPP*0.5),times=length(GPP)) #pmax(0.20,GPP * 0.20) #rep(1,length.out=length(GPP))
       }
 		} else {
 			# assume no data available
@@ -149,7 +153,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 		}
 
 		###
-		## Get some Evapotranspiration information (time series)
+		## Get some Evapotranspiration information (time series; kgH2O/m2/day)
 		###
 
 		if (Evap_source == "site_specific") {
@@ -161,7 +165,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 			Evap_unc = read_site_specific_obs("Evap_unc",infile)
       if (length(Evap_unc) == 1) {
           Evap_unc = rep(-9999,times = length(Evap))
-			    Evap_unc[which(GPP > 0)] = 0.5 * Evap[which(Evap > 0)] #rep(mean(Evap*0.5),times=length(Evap))
+			    Evap_unc[which(GPP > 0)] = 0.5 * Evap[which(Evap > 0)]#rep(mean(Evap*0.5),times=length(Evap))
       }
 			if (modelname == "ACM") {
 				# borrow woody increment for soil evaporation in ACM_ET recalibration
@@ -179,9 +183,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 		}
 
 		###
-		## Get some Reco information (time series)
+		## Get some Reco information (time series; gC/m2/day)
 		###
-		#    print("checking Reco")
+
 		if (Reco_source == "site_specific") {
 			infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
 			Reco=read_site_specific_obs("Reco",infile)
@@ -189,7 +193,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
       if (length(Reco_unc) == 1) {
 				# on the other hand if not then we have no uncertainty info, so use default
         Reco_unc = rep(-9999,times = length(Reco))
-				Reco_unc[which(Reco > 0)] = 0.50 * Reco[which(Reco > 0)]
+				Reco_unc[which(Reco > 0)] = 0.50 * Reco[which(Reco > 0)] + 0.5
       }
 		} else {
 			# assume no data available
@@ -197,9 +201,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 		}
 
 		###
-		## Get some NEE information (time series)
+		## Get some NEE information (time series; gC/m2/day)
 		###
-		#    print("checking nee")
+
 		if (NEE_source == "site_specific") {
 			infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
 			NEE=read_site_specific_obs("NEE",infile)
@@ -207,7 +211,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
       if (length(NEE_unc) == 1) {
 				# on the other hand if not then we have no uncertainty info, so use default
         NEE_unc = rep(-9999,times = length(NEE))
-				NEE_unc[which(NEE != -9999)] = abs(0.25 * NEE[which(NEE != -9999)])
+				NEE_unc[which(NEE != -9999)] = abs(0.25 * NEE[which(NEE != -9999)]) + 0.5
       }
 		} else {
 			# assume no data available
