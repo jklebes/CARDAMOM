@@ -147,7 +147,7 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat 
      out_var(i,1:nodays,11) = POOLS(1:nodays,1) ! labile
      out_var(i,1:nodays,12) = POOLS(1:nodays,2) ! foliage
      if (pft == 1) then
-         out_var(i,1:nodays,13) = FLUXES(1:nodays,17) !POOLS(1:nodays,8)! replace with crop model yield
+         out_var(i,1:nodays,13) = FLUXES(1:nodays,17) ! replace with crop model yield
      else
          out_var(i,1:nodays,13) = FLUXES(1:nodays,20) ! harvested material
      endif
@@ -201,7 +201,7 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat 
          out_var2(i,8) = sum(resid_fol) / dble(nodays)
      else
          ! foliage
-         resid_fol(1:nodays) = FLUXES(1:nodays,10) + FLUXES(1:nodays,22)
+         resid_fol(1:nodays) = FLUXES(1:nodays,10) + FLUXES(1:nodays,23)
          resid_fol(1:nodays) = resid_fol(1:nodays) &
                              / POOLS(1:nodays,2)
          ! division by zero results in NaN plus obviously I can't have turned
@@ -213,7 +213,7 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat 
          out_var2(i,4) = sum(resid_fol) /dble(nodays-sum(hak))
 
          ! wood
-         resid_fol(1:nodays)   = FLUXES(1:nodays,11) + FLUXES(1:nodays,24)
+         resid_fol(1:nodays)   = FLUXES(1:nodays,11) + FLUXES(1:nodays,25)
          resid_fol(1:nodays)   = resid_fol(1:nodays) &
                                / POOLS(1:nodays,4)
          ! division by zero results in NaN plus obviously I can't have turned
@@ -223,8 +223,9 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat 
                 hak = 1 ; resid_fol(1:nodays) = 0d0
          end where
          out_var2(i,5) = sum(resid_fol) /dble(nodays-sum(hak))
+
          ! roots
-         resid_fol(1:nodays)   = FLUXES(1:nodays,12) + FLUXES(1:nodays,23)
+         resid_fol(1:nodays)   = FLUXES(1:nodays,12) + FLUXES(1:nodays,24)
          resid_fol(1:nodays)   = resid_fol(1:nodays) &
                                / POOLS(1:nodays,3)
          ! division by zero results in NaN plus obviously I can't have turned
