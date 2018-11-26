@@ -260,8 +260,10 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[12]=OBS$plant         ; PARPRIORUNC[12]=OBS$plant_range
       PARPRIORS[15]=OBS$harvest       ; PARPRIORUNC[15]=OBS$harvest_range
       # for crops remove the biomass prior
-      PARPRIORS[21]=-9999   ; PARPRIORUNC[21]=-9999
-    }
+      PARPRIORS[21]=-9999     ; PARPRIORUNC[21]=-9999
+    } else {
+      PARPRIORS[39]=11.197440 ; PARPRIORUNC[39]=1.32313 # NUE prior derived from Kattge et al., (2011)
+    {
   } else if (modelname == "DALEC_GSI_DFOL_LABILE_FR") {
     PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.6 #1.617705 # Ceff
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
@@ -314,7 +316,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[21]=-9999         ; PARPRIORUNC[21]=-9999
       PARPRIORS[38]=OBS$soilwater ; PARPRIORUNC[38]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
     } else {
-      PARPRIORS[41]=OBS$soilwater   ; PARPRIORUNC[41]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
+      PARPRIORS[41]=OBS$soilwater ; PARPRIORUNC[41]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
+      PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=1.32313 # NUE prior derived from Kattge et al., (2011)
     } # crop or not
   } else if (modelname == "DALECN_GSI_BUCKET") {
     PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)

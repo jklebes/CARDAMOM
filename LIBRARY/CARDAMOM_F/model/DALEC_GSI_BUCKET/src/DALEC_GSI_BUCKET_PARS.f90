@@ -167,6 +167,13 @@ module MODEL_PARAMETERS
        PI%parmin(40)=0.35d0
        PI%parmax(40)=20d0 !20.0
 
+       ! Optimum nitrogen use efficiency (gC/gN per m2 at optimum temperature)
+       ! Derived from Vcmax reported in Wullschleger (1993), Journal of
+       ! Experimental Botany, Vol 44, No. 262, pp. 907-920.
+       ! TRY database equivalent 2.5 % = 1.648512; 97.5 % = 19.906560
+       PI%parmin(42)= 1.0d0
+       PI%parmax(42)=40.0d0 
+
        !
        ! INITIAL VALUES DECLARED HERE
        !

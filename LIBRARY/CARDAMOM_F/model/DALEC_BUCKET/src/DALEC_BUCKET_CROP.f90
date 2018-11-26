@@ -157,7 +157,7 @@ contains
                                ,min_layer,wSWP,SWP,SWP_initial,deltat_1,water_flux,soilwatermm,wSWP_time  &
                                ,layer_thickness,minlwp,soil_waterfrac,soil_waterfrac_initial              &
                                ,porosity,porosity_initial,field_capacity,field_capacity_initial,meant     &
-                               ,meant_K,stomatal_conductance,avN,iWUE,NUE,pn_max_temp,pn_opt_temp         &
+                               ,stomatal_conductance,avN,iWUE,NUE,pn_max_temp,pn_opt_temp         &
                                ,pn_kurtosis,e0,co2_half_sat,co2_comp_point,max_lai_lwrad_transmitted      &
                                ,lai_half_lwrad_transmitted,max_lai_nir_reflection,lai_half_nir_reflection &
                                ,max_lai_par_reflection,lai_half_par_reflection,max_lai_par_transmitted    &
@@ -166,7 +166,7 @@ contains
                                ,max_lai_lwrad_release,lai_half_lwrad_release,mint,maxt,swrad,co2,doy,leafT&
                                ,rainfall,wind_spd,vpd_pa,lai,days_per_step,days_per_step_1,canopy_storage &
                                ,intercepted_rainfall,snow_storage,snow_melt,airt_zero_fraction,snowfall   &
-                               ,update_soil_initial_conditions,aerodynamic_conductance
+                               ,update_soil_initial_conditions
 
     ! DALEC crop model modified from Sus et al., (2010)
 
@@ -458,7 +458,6 @@ contains
         mint = met(2,1)  ! minimum temperature (oC)
         maxt = met(3,1)  ! maximum temperature (oC)
         meant = (maxt+mint)*0.5d0  ! mean air temperature (oC)
-        meant_K = meant + freeze
 
         ! zero evapotranspiration for beginning
         ET = dble_zero
@@ -509,7 +508,6 @@ contains
       doy = ceiling(met(6,n)-(deltat(n)*0.5d0))   ! Day of year
       rainfall = max(dble_zero,met(7,n)) ! rainfall (kgH2O/m2/s)
       meant = (maxt+mint) * 0.5d0   ! mean air temperature (oC)
-      meant_K = meant + freeze
       airt_zero_fraction = (maxt-dble_zero) / (maxt-mint) ! fraction of temperture period above freezing
       wind_spd = met(15,n) ! wind speed (m/s)
       vpd_pa = met(16,n)  ! Vapour pressure deficit (Pa)

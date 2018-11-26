@@ -380,14 +380,14 @@ contains
                        ,rfac                                            ! resilience factor
 
     ! local deforestation related variables
-    double precision, dimension(5) :: post_harvest_burn   & ! how much burning to occur after
-                                     ,foliage_frac_res    &
-                                     ,roots_frac_res      &
-                                     ,rootcr_frac_res     &
-                                     ,stem_frac_res       &
-                                     ,branch_frac_res     &
-                                     ,Cbranch_part        &
-                                     ,Crootcr_part        &
+    double precision, dimension(5) :: post_harvest_burn & ! how much burning to occur after
+                                     ,foliage_frac_res  &
+                                     ,roots_frac_res    &
+                                     ,rootcr_frac_res   &
+                                     ,stem_frac_res     &
+                                     ,branch_frac_res   &
+                                     ,Cbranch_part      &
+                                     ,Crootcr_part      &
                                      ,soil_loss_frac
 
     double precision :: labile_loss,foliar_loss      &
@@ -496,6 +496,7 @@ contains
     ! p(29) = Fraction of Cwood which is Ccoarseroot
     ! p(37) = Initial CWD pool (gC/m2)
     ! p(38) = CWD turnover fraction (fraction)
+    ! p(39) = Nitrogen use efficiency (gC/gN/day)
 
     ! variables related to deforestation
     ! labile_loss = total loss from labile pool from deforestation
@@ -525,7 +526,7 @@ contains
 !call cpu_time(finish)
 
     ! load ACM-GPP-ET parameters
-    NUE                        = 1.182549d+01  ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
+    NUE                        = pars(39)      ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
                                                ! ,unlimited by CO2, light and
                                                ! photoperiod (gC/gN/m2leaf/day)
     pn_max_temp                = 5.357174d+01  ! Maximum temperature for photosynthesis (oC)

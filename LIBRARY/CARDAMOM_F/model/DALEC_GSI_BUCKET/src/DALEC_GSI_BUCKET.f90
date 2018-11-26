@@ -579,6 +579,7 @@ contains
     ! p(39) = Fine root (gbiomass.m-2) needed to reach 50% of max depth
     ! p(40) = Maximum rooting depth (m)
     ! p(41) = Initial root profile water content (m3/m3)
+    ! p(42) = Nitrogen use efficiency (gC/gN/day)
 
     ! variables related to deforestation
     ! labile_loss = total loss from labile pool from deforestation
@@ -608,7 +609,7 @@ contains
 !call cpu_time(finish)
 
     ! load ACM-GPP-ET parameters
-    NUE                        = 1.182549d+01  ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
+    NUE                        = pars(42)      ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
                                                ! ,unlimited by CO2, light and
                                                ! photoperiod (gC/gN/m2leaf/day)
     pn_max_temp                = 5.357174d+01  ! Maximum temperature for photosynthesis (oC)

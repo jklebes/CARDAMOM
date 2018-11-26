@@ -127,9 +127,10 @@ module MODEL_PARAMETERS
        PI%parmin(25)=3d0 !50d0
        PI%parmax(25)=365.25d0*8d0
 
-       ! baseline NUE (gC/gN/m2/day-1)
+       ! Optimum nitrogen use efficiency (gC/gN per m2 at optimum temperature)
+       ! Derived from Vcmax reported in Wullschleger (1993), Journal of
+       ! Experimental Botany, Vol 44, No. 262, pp. 907-920.
        ! TRY database equivalent 2.5 % = 1.648512; 97.5 % = 19.906560
-       ! See ACM_PARS.f90 for alternate reference
        PI%parmin(26)= 1.0d0
        PI%parmax(26)=40.0d0
 
