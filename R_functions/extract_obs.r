@@ -17,7 +17,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 			# assume default uncertainty (+/- scale)
 			lai_unc = rep(-9999,times = length(lai))
  			# borrowed linear approximtion of uncertainty form Copernicus
-			lai_unc[which(lai != -9999)] = lai[which(lai != -9999)] * 0.14028508 + 0.2
+			lai_unc[which(lai != -9999)] = lai[which(lai != -9999)] * 0.14028508 + 0.25
 		} else if (lai_source == "site_specific") {
 			# read from .csv or netcdf
 			infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
@@ -25,7 +25,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 			if (max(lai_unc) == -9999) {
 				 lai_unc = rep(-9999,times = length(lai))
  				 # borrowed linear approximtion of uncertainty form Copernicus
-			   lai_unc[which(lai != -9999)] = lai[which(lai != -9999)] * 0.14028508 + 0.2
+			   lai_unc[which(lai != -9999)] = lai[which(lai != -9999)] * 0.14028508 + 0.25
 			}
 		} else {
 			lai = -9999
@@ -142,11 +142,11 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 			if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_copy.csv",sep="")}
 			GPP = read_site_specific_obs("GPP",infile)
 			GPP_unc = read_site_specific_obs("GPP_unc",infile)
-      if (length(GPP_unc) == 1) {
-          GPP_unc = rep(-9999,times = length(GPP))
+                        if (length(GPP_unc) == 1) {
+                            GPP_unc = rep(-9999,times = length(GPP))
 			    GPP_unc[which(GPP > 0)] = 0.5 * GPP[which(GPP > 0)] + 0.5
-					#rep(mean(GPP*0.5),times=length(GPP)) #pmax(0.20,GPP * 0.20) #rep(1,length.out=length(GPP))
-      }
+                            if (modelname == "ACM") {GPP_unc = rep(mean(GPP*0.5),times=length(GPP))}
+                        }
 		} else {
 			# assume no data available
 			GPP = -9999 ; GPP_unc = -9999
@@ -163,10 +163,10 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
 			if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_copy.csv",sep="")}
 			Evap = read_site_specific_obs("Evap",infile)
 			Evap_unc = read_site_specific_obs("Evap_unc",infile)
-      if (length(Evap_unc) == 1) {
-          Evap_unc = rep(-9999,times = length(Evap))
-			    Evap_unc[which(GPP > 0)] = 0.5 * Evap[which(Evap > 0)]#rep(mean(Evap*0.5),times=length(Evap))
-      }
+                        if (length(Evap_unc) == 1) {
+                            Evap_unc = rep(-9999,times = length(Evap))
+			    Evap_unc[which(Evap > 0)] = 0.5 * Evap[which(Evap > 0)] 
+                         }
 			if (modelname == "ACM") {
 				# borrow woody increment for soil evaporation in ACM_ET recalibration
 				woodinc = read_site_specific_obs("soilevap",infile)
@@ -211,7 +211,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
       if (length(NEE_unc) == 1) {
 				# on the other hand if not then we have no uncertainty info, so use default
         NEE_unc = rep(-9999,times = length(NEE))
-				NEE_unc[which(NEE != -9999)] = abs(0.25 * NEE[which(NEE != -9999)]) + 0.5
+				NEE_unc[which(NEE != -9999)] = abs(0.25 * NEE[which(NEE != -9999)]) + 1.0
       }
 		} else {
 			# assume no data available

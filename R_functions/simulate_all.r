@@ -15,9 +15,12 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
           for (n in seq(1,dim(pars)[1])){
               pars_in[n,] = pars[n,,]
           }
-      } else {
+      } else if (length(dim(pars)) == 2) {
           nos_iter = dim(pars)[2]
           pars_in = pars
+      } else {
+          nos_iter = 1
+          pars_in = array(pars, dim=c(length(pars),1))
       }
 
       # declare output variables

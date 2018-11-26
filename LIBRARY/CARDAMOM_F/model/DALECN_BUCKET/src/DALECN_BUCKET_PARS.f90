@@ -129,8 +129,9 @@ module MODEL_PARAMETERS
 
        ! baseline NUE (gC/gN/m2/day-1)
        ! TRY database equivalent 2.5 % = 1.648512; 97.5 % = 19.906560
+       ! See ACM_PARS.f90 for alternate reference
        PI%parmin(26)= 1.0d0
-       PI%parmax(26)=25.0d0
+       PI%parmax(26)=40.0d0
 
        ! initial leaf life span (MTTleaf; days)
        PI%parmin(27)=30d0

@@ -167,7 +167,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   OBSMAT[,34] = OBS$SWE_unc
   DATA_TEMP = t(cbind(MET,OBSMAT))
 
-  #STATIC DATA
+  # STATIC DATA
   # Model ID = static_data[1]; DALEC_CDEA, DALEC_BUCKET etc
   # LAT=static_data[2]; Latitude of site(Degrees)
   # nodays=static_data[3]; Number of days (or time steps) in simulation
@@ -363,13 +363,13 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     # For ACM_GPP_ET
     # p(1) = nitrogen use efficiency at optimum temperature (oC)
     #,unlimited by CO2, light and photoperiod (34gC/gN)
-    #    PARPRIORS[1] = 35.65 ; PARPRIORUNC[1] = 26.19
+        PARPRIORS[1] = 35.65 ; PARPRIORUNC[1] = 26.19
     # p(2) = maximum temperature at which photosynthesis occurs (oC) (59.04677oC)
-    #    PARPRIORS[2] = 59.04677 ; PARPRIORUNC[2] = 5.0
+        PARPRIORS[2] = 59.04677 ; PARPRIORUNC[2] = 5.0
     # p(3) = optimum temperature for photosynthesis (oC) (30oC)
-    #    PARPRIORS[3] = 30.0 ; PARPRIORUNC[3] = 5.0
+        PARPRIORS[3] = 30.0 ; PARPRIORUNC[3] = 5.0
     # p(4) = kurtosis for temperature response of photosynthesis (0.185912)
-    #    PARPRIORS[4] = 0.185912 ; PARPRIORUNC[4] = 0.05
+        PARPRIORS[4] = 0.185912 ; PARPRIORUNC[4] = 0.05
     # p(10) = Maximum (most negative) leaf-soil WP difference (MPa) (i.e. minLWP)
     #    PARPRIORS[10] = -2.0 ; PARPRIORUNC[10] = 0.1
     # p(15) = Soil SW absorption (fraction)
