@@ -157,6 +157,10 @@ cardamom_project_setup <- function (paths,PROJECT) {
           commands=append(commands,paste("cp ",ecdf_source,"CARDAMOM_F/model/DALEC_GSI_DFOL_CWD_FR/src/winter_wheat_development.csv ",eexepath,"/",sep=""))
           system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/DALEC_GSI_DFOL_CWD_FR/src/winter_wheat_development.csv ",exepath,"/",sep=""))
         } #  only for AT_DALEC use the GAM emulator
+        if (modelname == "DALEC_BUCKET" & parameter_type == "pft_specific") {
+          commands=append(commands,paste("cp ",ecdf_source,"CARDAMOM_F/model/DALEC_BUCKET/src/winter_wheat_development.csv ",eexepath,"/",sep=""))
+          system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/DALEC_BUCKET/src/winter_wheat_development.csv ",exepath,"/",sep=""))
+        } #  only for AT_DALEC use the GAM emulato
         if (modelname == "DALEC_GSI_BUCKET" & parameter_type == "pft_specific") {
           commands=append(commands,paste("cp ",ecdf_source,"CARDAMOM_F/model/DALEC_GSI_BUCKET/src/winter_wheat_development.csv ",eexepath,"/",sep=""))
           system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/DALEC_GSI_BUCKET/src/winter_wheat_development.csv ",exepath,"/",sep=""))
@@ -213,7 +217,7 @@ cardamom_project_setup <- function (paths,PROJECT) {
       if (modelname == "AT_DALEC" & parameter_type == "pft_specific") {
         system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/AT_DALEC/src/winter_wheat_development.csv ",exepath,"/",sep=""))
       } #  only for AT_DALEC use the GAM emulator
-      if ((modelname == "DALEC_GSI_DFOL_CWD_FR" | modelname == "DALEC_GSI_BUCKET" | modelname == "DALECN_GSI_BUCKET" | modelname == "DALECN_BUCKET") & parameter_type == "pft_specific") {
+      if ((modelname == "DALEC_GSI_DFOL_CWD_FR" | modelname == "DALEC_BUCKET" | modelname == "DALEC_GSI_BUCKET" | modelname == "DALECN_GSI_BUCKET" | modelname == "DALECN_BUCKET") & parameter_type == "pft_specific") {
         system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/",modelname,"/src/winter_wheat_development.csv ",exepath,"/",sep=""))
       } #  only for AT_DALEC use the GAM emulator
       # return to original working directory

@@ -96,7 +96,7 @@ generate_parameter_maps<-function(PROJECT) {
 				resid_time_array_median[slot_i,slot_j,3]=bob[2] ; resid_time_array_unc[slot_i,slot_j,3]=bob[1]-bob[3]
 				bob = quantile(aNPP[,7], prob=c(0.975,0.50,0.025),na.rm=TRUE)
 				resid_time_array_median[slot_i,slot_j,4]=bob[2] ; resid_time_array_unc[slot_i,slot_j,4]=bob[1]-bob[3]
-				if (PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET" ) {
+				if (PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET" ) {
 					bob = quantile(aNPP[,8], prob=c(0.975,0.50,0.025),na.rm=TRUE)
 					resid_time_array_median[slot_i,slot_j,5]=bob[2] ; resid_time_array_unc[slot_i,slot_j,5]=bob[1]-bob[3]
 				}
@@ -112,7 +112,8 @@ generate_parameter_maps<-function(PROJECT) {
 		# tmp hack for avgN log10-normal
 		if (PROJECT$model$name == "DALECN_GSI_FR" | PROJECT$model$name == "DALECN_GSI_DFOL_FR"
 		| PROJECT$model$name == "DALEC_GSI_BUCKET"| PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR"
-		| PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET" ) {
+		| PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET" 
+		| PROJECT$model$name == "DALEC_BUCKET") {
 			par_array_median[,,11]=10**par_array_median[,,11]
 			par_array_unc[,,11]=10**par_array_unc[,,11]
 		}
@@ -128,14 +129,14 @@ generate_parameter_maps<-function(PROJECT) {
 	if (file.exists(outfile) == FALSE | repair == 1) {
 		nos_uk_clusters = 1 ; uk_cluster = 1 ; uk_cluster_pft = 1
 		if (PROJECT$model$name == "DALEC_GSI_DFOL_FR" | PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR"
-		| PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET" ) {
+		| PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET" ) {
 
 			# remove non-constrained parameters (i.e. those not actually used in this analysis)
 			initial_conditions=c(18:23)
 			par_array_median_normalised=par_array_median[,,-c(initial_conditions,28,29,30,31,32,33,35,36)]
 			if (PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR") {
 				par_array_median_normalised=par_array_median[,,-c(initial_conditions,28,29,30,31,32,33,35,36,37)]
-			} else if (PROJECT$model$name == "DALEC_GSI_BUCKET") {
+			} else if (PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALEC_BUCKET") {
 				par_array_median_normalised=par_array_median[,,-c(initial_conditions,28,29,30,31,32,33,35,36,37)]
 			} else if (PROJECT$model$name == "DALECN_GSI_BUCKET") {
 				par_array_median_normalised=par_array_median[,,-c(initial_conditions,28,29,30,31,32,33,35,36,37)]
@@ -202,7 +203,7 @@ generate_parameter_maps<-function(PROJECT) {
 
 	# assuming we have generated one lets create the Cluster analysis map
 	if (PROJECT$model$name == "DALEC_GSI_DFOL_FR" | PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR"
-	| PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET") {
+	| PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET") {
 		jpeg(file=paste(PROJECT$figpath,"Cluster_map_of_median_parameters_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
 		par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
 		image.plot(uk_cluster_pft, main=paste("Cluster analysis potential PFT map",sep=""),axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
@@ -281,7 +282,7 @@ generate_parameter_maps<-function(PROJECT) {
 	image.plot(resid_time_array_median[,,4], col=colour_choices, main=paste("Csom residence time median estimate",sep=""),axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
 	contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
 	dev.off()
-	if (PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET") {
+	if (PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET") {
 		jpeg(file=paste(PROJECT$figpath,"parameter_maps_median_","CDeadOrg_residence_time","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
 		par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
 		image.plot(resid_time_array_median[,,5], col=colour_choices, main=paste("CDeadOrg residence time median estimate",sep=""),axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
@@ -303,7 +304,7 @@ generate_parameter_maps<-function(PROJECT) {
 	image.plot(resid_time_array_unc[,,3], col=colour_choices, main=paste("Croot residence time uncertainty",sep=""),axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(0,quantile(as.vector(resid_time_array_unc[,,3]),prob=c(0.975),na.rm=TRUE)))
 	contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
 	dev.off()
-	if (PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET") {
+	if (PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET") {
 		jpeg(file=paste(PROJECT$figpath,"parameter_maps_median_uncertainty_","CDeadOrg_residence_time","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
 		par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
 		image.plot(resid_time_array_unc[,,5], col=colour_choices, main=paste("CDeadOrg residence time uncertainty",sep=""),axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(0,quantile(as.vector(resid_time_array_unc[,,5]),prob=c(0.975),na.rm=TRUE)))
@@ -352,7 +353,7 @@ generate_parameter_maps<-function(PROJECT) {
 	par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
 	hist(as.vector(resid_time_array_median[,,4]), col=colour_choices, main=paste("Csom residence time median estimate",sep=""),   cex.main=2.4      )
 	dev.off()
-	if (PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET") {
+	if (PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET") {
 		jpeg(file=paste(PROJECT$figpath,"parameter_hist_median_","CDeadOrg_residence_time","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
 		par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
 		hist(as.vector(resid_time_array_median[,,5]), col=colour_choices, main=paste("CDeadOrg residence time median estimate",sep=""),   cex.main=2.4      )
@@ -374,7 +375,7 @@ generate_parameter_maps<-function(PROJECT) {
 	par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
 	hist(as.vector(resid_time_array_unc[,,4]), col=colour_choices, main=paste("Csom residence time uncertainty",sep=""),   cex.main=2.4      )
 	dev.off()
-	if (PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET") {
+	if (PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET") {
 		jpeg(file=paste(PROJECT$figpath,"parameter_hist_median_uncertainty_","CDeadOrg_residence_time","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
 		par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
 		hist(as.vector(resid_time_array_unc[,,5]), col=colour_choices, main=paste("CDeadOrg residence time uncertainty",sep=""),   cex.main=2.4      )

@@ -649,7 +649,7 @@ parallel_cluster_processing<-function(c,analysis_info
           if (PROJECT$grid_type == "UK") { fig_height=8000 ; fig_width=7200 }
 
           mean_rooting_depth = NA
-          if (PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET") {
+          if (PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET") {
             jpeg(file=paste(PROJECT$figpath,"median_root_depth_maps_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
             par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
             mean_rooting_depth = par_array_median[,,40] * (states_array_median[,,10]*2) / (par_array_median[,,39] + (states_array_median[,,10]*2))

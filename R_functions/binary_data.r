@@ -14,47 +14,49 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
 
   # set model ID
   if (modelname == "ACM") {
-    modelid=0
+    modelid = 0
   } else if (modelname == "DALEC_CDEA") {
-    modelid=1
+    modelid = 1
   } else if (modelname == "DALEC_CDEA_FR") {
-    modelid=5
+    modelid = 5
   } else if (modelname == "DALECN_GSI_FR") {
-    modelid=10
+    modelid = 10
   } else if (modelname == "DALEC_GSI_FR") {
-    modelid=6
+    modelid = 6
   } else if (modelname == "DALEC_GSI_FR_LABILE") {
-    modelid=9
+    modelid = 9
   } else if (modelname == "DALEC_GSI_MFOL_FR") {
-    modelid=8
+    modelid = 8
   } else if (modelname == "DALEC_GSI_DFOL_FR") {
-    modelid=11
+    modelid = 11
   } else if (modelname == "DALEC_GSI_DFOL_FROOT_FR") {
-    modelid=12
+    modelid = 12
   } else if (modelname == "DALEC_GSI_DFOL_LABILE_FR") {
-    modelid=13
+    modelid = 13
   } else if (modelname == "DALECN_GSI_DFOL_LABILE_FR") {
-    modelid=14
+    modelid = 14
   } else if (modelname == "DALECN_GSI_DFOL_LABILE_FROOT_FR") {
-    modelid=15
+    modelid = 15
   } else if (modelname == "DALEC_GSI_DFOL_CWD_FR") {
-    modelid=16
+    modelid = 16
   } else if (modelname == "DALEC_GSI_DBio_FR") {
-    modelid=7
+    modelid = 7
   } else if (modelname == "DALEC_GSI_BUCKET"){
-    modelid=2
+    modelid = 2
   } else if (modelname == "DALECN_GSI_BUCKET"){
-    modelid=17
+    modelid = 17
   } else if (modelname == "DALEC_CDEA_FIRE_LU"){
-    modelid=18
+    modelid = 18
   } else if (modelname == "DALECN_BUCKET"){
-    modelid=19
+    modelid = 19
+  } else if (modelname == "DALEC_BUCKET"){
+    modelid = 20
   } else if (modelname == "AT_DALEC" & parameter_type == "pft_specific" & ctessel_pft == 1){
     # i.e. crop model
-    modelid=4
+    modelid = 4
   } else if (modelname == "AT_DALEC"){
     # i.e. default AT_DALEC
-    modelid=3
+    modelid = 3
   }
 
   # some drivers may be passed as single values assuming this will apply across the whole time series
@@ -303,6 +305,22 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
     PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
     PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
+  } else if (modelname == "DALEC_BUCKET") {
+    PARPRIORS[11]=0.2764618             ; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
+    PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_uc} # Croots prior
+    PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+    PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+    PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
+    if (parameter_type == "pft_specific" & ctessel_pft == 1) {
+      PARPRIORS[12]=OBS$plant     ; PARPRIORUNC[12]=OBS$plant_range
+      PARPRIORS[15]=OBS$harvest   ; PARPRIORUNC[15]=OBS$harvest_range
+      PARPRIORS[21]=-9999         ; PARPRIORUNC[21]=-9999
+      PARPRIORS[38]=OBS$soilwater ; PARPRIORUNC[38]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
+    } else {
+      PARPRIORS[41]=OBS$soilwater ; PARPRIORUNC[41]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
+      PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=1.32313 # NUE prior derived from Kattge et al., (2011)
+    } # crop or not
   } else if (modelname == "DALEC_GSI_BUCKET") {
     PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior

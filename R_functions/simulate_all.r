@@ -71,6 +71,24 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
           output=array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
 	  dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
           rm(tmp) ; gc()
+      } else if (model_name == "DALEC_BUCKET") {
+          output_dim=23
+          dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
+          crop_file_location=paste(PROJECT$exepath,"winter_wheat_development.csv", sep="")
+          if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
+          tmp=.Fortran( "rdalecbucket",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
+                                      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
+                                      ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
+                                      ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
+                                      ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
+                                      ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
+                                      ,soil_frac_clay_in=as.double(array(c(soil_info[3],soil_info[3],soil_info[4],soil_info[4]),dim=c(4)))
+                                      ,soil_frac_sand_in=as.double(array(c(soil_info[1],soil_info[1],soil_info[2],soil_info[2]),dim=c(4)))
+                                      ,exepath=as.character(crop_file_location),pathlength=as.integer(nchar(crop_file_location)))
+          output=tmp$out_var ; output=array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
+          aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
+          dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
+          rm(tmp) ; gc()
       } else if (model_name == "DALEC_GSI_BUCKET") {
 	  output_dim=23
           dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
