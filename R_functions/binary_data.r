@@ -265,8 +265,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[21]=-9999     ; PARPRIORUNC[21]=-9999
     } else {
       PARPRIORS[39]=11.197440 ; PARPRIORUNC[39]=1.32313 # NUE prior derived from Kattge et al., (2011)
-    {
-  } else if (modelname == "DALEC_GSI_DFOL_LABILE_FR") {
+    }
+    } else if (modelname == "DALEC_GSI_DFOL_LABILE_FR") {
     PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.6 #1.617705 # Ceff
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_uc} # Croots prior

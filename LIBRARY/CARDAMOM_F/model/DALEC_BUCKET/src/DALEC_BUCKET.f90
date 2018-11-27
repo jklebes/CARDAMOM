@@ -249,8 +249,7 @@ double precision, parameter :: &
 ! management and gsi related values
 integer :: gsi_lag_remembered
 ! local variables for GSI phenology model
-double precision :: Tfac,Photofac,VPDfac & ! oC, seconds, Pa
-                   ,SLA & ! Specific leaf area
+double precision :: SLA & ! Specific leaf area
                    ,avail_labile,Rg_from_labile    &
                    ,Cwood_labile_release_gradient  &
                    ,Cwood_labile_half_saturation   &
@@ -3232,7 +3231,7 @@ contains
   subroutine calculate_leaf_dynamics(current_step,deltat,nodays           &
                                     ,pot_leaf_fall,pot_leaf_growth        &
                                     ,deltaWP,Rtot,GPP_current,foliage     &
-                                    ,gpp_crit_frac,GSI,leaf_fall,leaf_growth)
+                                    ,gpp_crit_frac,deltaGPP,leaf_fall,leaf_growth)
 
       ! Subroutine determines whether leaves are growing or dying.
       ! 1) Calculate the change in instantanious GPP from new C invested
@@ -3319,7 +3318,7 @@ contains
       gsi_lag_remembered = gsi_lag
 
       ! now decide between growing or scenescencing leaves
-      if (gradient <= fol_turn_crit .or. deltaGPP(current) <= 0d0) then
+      if (gradient <= fol_turn_crit .or. deltaGPP(current_step) <= 0d0) then
 
          ! we are in a decending condition so foliar turnover
          leaf_fall = pot_leaf_fall
