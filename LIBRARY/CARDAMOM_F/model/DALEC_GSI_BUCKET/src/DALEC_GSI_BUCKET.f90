@@ -179,6 +179,7 @@ double precision, parameter :: pi = 3.1415927d0,  &
                        gb_H2O_CO2 = 1.37d0,       & ! The ratio of H20:CO2 diffusion for gb (Jones appendix 2)
           partial_molar_vol_water = 18.05d-6,     & ! partial molar volume of water, m3 mol-1 at 20C
                        umol_to_gC = 1d-6*12d0,    & ! conversion of umolC -> gC
+                       gC_to_umol = umol_to_gC**(-dble_one), & ! conversion of gC -> umolC
                  mmol_to_kg_water = 1.8d-5,       & ! milli mole conversion to kg
                    mol_to_g_water = 18d0,         & ! molecular mass of water (g)
                      mol_to_g_co2 = 12d0,         & ! molecular mass of CO2 (g)
@@ -1472,7 +1473,7 @@ contains
 
     ! pp and qq represent limitation by metabolic (temperature & N) and
     ! diffusion (co2 supply) respectively
-    pp = (pn/umol_to_gC)/gc ; qq = co2_comp_point-co2_half_sat
+    pp = (pn*gC_to_umol)/gc ; qq = co2_comp_point-co2_half_sat
     ! calculate internal CO2 concentration (ppm or umol/mol)
     mult = co2+qq-pp
     ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
@@ -1686,11 +1687,11 @@ contains
     convert_ms1_mol_1 = const_sfc_pressure / ((input_temperature+freeze)*Rcon)
     ! latent heat of vapourisation,
     ! function of air temperature (J.kg-1)
-    if (input_temperature < dble_one) then
-        lambda = 2.835d6
-    else
+!    if (input_temperature < dble_one) then
+!        lambda = 2.835d6
+!    else
         lambda = 2501000d0-2364d0*input_temperature
-    endif
+!    endif
     ! psychrometric constant (kPa K-1)
     psych = (0.0646d0*exp(0.00097d0*input_temperature))
     ! Straight line approximation of the true slope; used in determining
@@ -2051,9 +2052,12 @@ contains
     ! Estimate solar geometry variables needed
     !
 
-    ! declination
+    ! Declination
+    ! NOTE: 0.002739726d0 = 1/365
 !    dec = - asin( sin( 23.45d0 * deg_to_rad ) * cos( 2d0 * pi * ( doy + 10d0 ) / 365d0 ) )
-    dec = - asin( sin_dayl_deg_to_rad * cos( two_pi * ( doy + 10d0 ) / 365d0 ) )
+!    dec = - asin( sin_dayl_deg_to_rad * cos( two_pi * ( doy + 10d0 ) / 365d0 ) )
+    dec = - asin( sin_dayl_deg_to_rad * cos( two_pi * ( doy + 10d0 ) * 0.002739726d0 ) )
+
     ! latitude in radians
     mult = lat * deg_to_rad
     ! day length is estimated as the ratio of sin and cos of the product of declination an latitude in radiation
@@ -2069,7 +2073,7 @@ contains
 !    sunrise = 12 - nint(dayl_hours*0.5d0) ; sunset = sunrise + nint(dayl_hours)
 
     ! estimate the solar cosine zenith angle for 12 noon
-    cos_solar_zenith_angle = sinld + cosld
+!    cos_solar_zenith_angle = sinld + cosld
 
     ! return to user
     return
@@ -2280,7 +2284,7 @@ contains
     canopy_swrad_MJday = canopy_par_MJday + canopy_nir_MJday
 
     ! check energy balance
-    balance = swrad - canopy_par_MJday - canopy_nir_MJday - refl_par_MJday - refl_nir_MJday - soil_swrad_MJday
+!    balance = swrad - canopy_par_MJday - canopy_nir_MJday - refl_par_MJday - refl_nir_MJday - soil_swrad_MJday
 !    if ((balance - swrad) / swrad > 0.01) then
 !        print*,"SW residual frac = ",(balance - swrad) / swrad,"SW residual = ",balance,"SW in = ",swrad
 !    endif
@@ -2401,37 +2405,37 @@ contains
           ! if there is root then there is a water flux potential...
           root_reach_local = min(root_reach,layer_thickness(i))
           ! calculate and accumulate steady state water flux in mmol.m-2.s-1
-          water_flux(1) = plant_soil_flow(i,root_length(i),root_mass(i) &
+          water_flux(i) = plant_soil_flow(i,root_length(i),root_mass(i) &
                          ,demand(i),root_reach_local,transpiration_resistance)
       else
           ! ...if there is not then we wont have any below...
           exit
       end if ! root present in current layer?
     end do ! nos_root_layers
-    ratio = layer_thickness(1:nos_root_layers)/sum(layer_thickness(1:nos_root_layers))
 
     ! if freezing then assume soil surface is frozen
     if (meant < dble_one) then
         water_flux(1) = dble_zero
         ratio(1) = dble_zero
         ratio(2:nos_root_layers) = layer_thickness(2:nos_root_layers) / sum(layer_thickness(2:nos_root_layers))
+    else
+        ratio = layer_thickness(1:nos_root_layers)/sum(layer_thickness(1:nos_root_layers))
     endif
+
     ! calculate sum value
     sum_water_flux = sum(water_flux)
-
-    ! calculate weighted SWP and uptake fraction
-    wSWP = sum(SWP(1:nos_root_layers) * water_flux(1:nos_root_layers))
-    uptake_fraction(1:nos_root_layers) = water_flux(1:nos_root_layers) / sum_water_flux
-    wSWP = wSWP / sum_water_flux
-
-    ! sanity check in case of zero flux
-    if (sum_water_flux <= vsmall) then
+    if (sum_water_flux <= dble_zero) then
         wSWP = -20d0
         uptake_fraction = dble_zero ; uptake_fraction(1) = dble_one
+    else
+        ! calculate weighted SWP and uptake fraction
+        wSWP = sum(SWP(1:nos_root_layers) * water_flux(1:nos_root_layers))
+        uptake_fraction(1:nos_root_layers) = water_flux(1:nos_root_layers) / sum_water_flux
+        wSWP = wSWP / sum_water_flux
     endif
 
     ! determine effective resistance (MPa.s-1.m-2.mmol-1)
-    Rtot = sum(demand) / sum(water_flux)
+    Rtot = sum(demand) / sum_water_flux
 
     ! finally convert transpiration flux (mmol.m-2.s-1)
     ! into kg.m-2.step-1 for consistency with ET in "calculate_update_soil_water"
@@ -2465,14 +2469,15 @@ contains
     double precision, parameter :: CanIntFrac = -0.5d0,  & ! Coefficient scaling rainfall interception fraction with LAI
                                   CanStorFrac = 0.1d0,   & ! Coefficient scaling canopy water storage with LAI
                                  RefDrainRate = 0.002d0, & ! Reference drainage rate (mm/min; Rutter et al 1975)
-                                  RefDrainLAI = 1.05d0,  & ! Reference drainage LAI (m2/m2; Rutter et al 1975)
+                                  RefDrainLAI = 0.952381,& ! Reference drainage 1/LAI (m2/m2; Rutter et al 1975, 1/1.05)
                                  RefDrainCoef = 3.7d0,   & ! Reference drainage Coefficient (Rutter et al 1975)
                                RefDrainCoef_1 = RefDrainCoef ** (-dble_one)
 
     ! hold initial canopy storage in memory
     initial_canopy = storage
     ! determine maximum canopy storage & through fall fraction
-    through_fall = max(min_throughfall,exp(CanIntFrac*lai))
+!    through_fall = max(min_throughfall,exp(CanIntFrac*lai))
+    through_fall = exp(CanIntFrac*lai)
     ! maximum canopy storage (mm); minimum is applied to prevent errors in
     ! drainage calculation. Assume minimum capacity due to wood
     max_storage = max(min_storage,CanStorFrac*lai) ; max_storage_1 = max_storage**(-dble_one)
@@ -2483,7 +2488,7 @@ contains
     ! 0.002 is canopy specific coefficient modified by 0.002*(max_storage/1.05)
     ! where max_storage is the canopy maximum capacity (mm) (LAI based) and
     ! 1.05 is the original canopy capacitance
-    a = log( RefDrainRate * ( max_storage / RefDrainLAI ) ) - RefDrainCoef * max_storage
+    a = log( RefDrainRate * ( max_storage * RefDrainLAI ) ) - RefDrainCoef * max_storage
 
     ! average rainfall intercepted by canopy (kgH2O.m-2.day-1)
     daily_addition = intercepted_rainfall * seconds_per_day
@@ -2507,7 +2512,7 @@ contains
 
                ! Trapezium rule for approximating integral of drainage rate.
                ! Allows estimation of the mean drainage rate between starting point and max_storage,
-               ! thus the time period appropriate for co-access can be quantified
+               ! thus the time period appropriate for co-access can be quantified. NOTE 1440 = minutes / day
                dx = storage - ((storage + max_storage)*0.5d0)
                tmp1 = exp(a + (RefDrainCoef * storage))
                tmp2 = exp(a + (RefDrainCoef * max_storage))
@@ -2541,7 +2546,7 @@ contains
            if (evap_rate > dble_zero) then
                ! evaporation restricted by fraction of surface actually covered
                ! in water
-               evap_rate = evap_rate * min(dble_one,storage * max_storage_1)
+               evap_rate = evap_rate * storage * max_storage_1
                ! and the total amount of water
                evap_rate = min(evap_rate,storage)
            else
@@ -2560,19 +2565,19 @@ contains
     ! correct intercepted rainfall rate to kgH2O.m-2.s-1
     intercepted_rainfall = intercepted_rainfall - ((through_fall * days_per_step_1) * seconds_per_day_1)
 
-    ! sanity checks; note 1e-8 prevents precision errors causing flags
-    if (intercepted_rainfall > rainfall .or. storage < dble_zero &
-   .or. (wetcanopy_evaporation * days_per_step_1) > (1d-8 + initial_canopy + (rainfall*seconds_per_day)) ) then
-       print*,"Condition 1",intercepted_rainfall > rainfall
-       print*,"Condition 2",storage < dble_zero
-       print*,"Condition 3",(wetcanopy_evaporation * days_per_step_1) > (1d-8 + initial_canopy + (rainfall*seconds_per_day))
-       print*,"storage (kgH2O/m2)",storage,"max_storage (kgH2O/m2)",max_storage,"initial storage (kgH2O/m2)", initial_canopy
-       print*,"rainfall (kgH2O/m2/day)", rainfall*seconds_per_day, "through_fall (kgH2O/m2/day)", (through_fall * days_per_step_1)
-       print*,"through_fall_total (kgH2O/m2/step)",through_fall
-       print*,"potential_evaporation (kgH2O/m2/day)",potential_evaporation
-       print*,"actual evaporation    (kgH2O/m2/day)",wetcanopy_evaporation * days_per_step_1
-       stop
-    endif
+!    ! sanity checks; note 1e-8 prevents precision errors causing flags
+!    if (intercepted_rainfall > rainfall .or. storage < dble_zero &
+!   .or. (wetcanopy_evaporation * days_per_step_1) > (1d-8 + initial_canopy + (rainfall*seconds_per_day)) ) then
+!       print*,"Condition 1",intercepted_rainfall > rainfall
+!       print*,"Condition 2",storage < dble_zero
+!       print*,"Condition 3",(wetcanopy_evaporation * days_per_step_1) > (1d-8 + initial_canopy + (rainfall*seconds_per_day))
+!       print*,"storage (kgH2O/m2)",storage,"max_storage (kgH2O/m2)",max_storage,"initial storage (kgH2O/m2)", initial_canopy
+!       print*,"rainfall (kgH2O/m2/day)", rainfall*seconds_per_day, "through_fall (kgH2O/m2/day)", (through_fall * days_per_step_1)
+!       print*,"through_fall_total (kgH2O/m2/step)",through_fall
+!       print*,"potential_evaporation (kgH2O/m2/day)",potential_evaporation
+!       print*,"actual evaporation    (kgH2O/m2/day)",wetcanopy_evaporation * days_per_step_1
+!       stop
+!    endif
 
     ! average evaporative flux to daily rate (kgH2O/m2/day)
     potential_evaporation = wetcanopy_evaporation * days_per_step_1
@@ -2622,8 +2627,8 @@ contains
       ! Assume all soil evaporation comes from the soil surface only
       evaporation_losses(1) = evaporation_losses(1) + ET_soil
       ! can not evaporate from soil more than is available (m -> mm)
-      avail_flux = soil_waterfrac(1:nos_root_layers) * layer_thickness(1:nos_root_layers) * 1d3
-      where (evaporation_losses > avail_flux) evaporation_losses = avail_flux * 0.999d0
+!      avail_flux = soil_waterfrac(1:nos_root_layers) * layer_thickness(1:nos_root_layers) * 1d3
+!      where (evaporation_losses > avail_flux) evaporation_losses = avail_flux * 0.999d0
 
       ! this will update the ET estimate outside of the function
       ! days_per_step corrections happens outside of the loop below
@@ -2648,11 +2653,11 @@ contains
       call gravitational_drainage
 
       ! update soil water status with drainage
-      soil_waterfrac(1:nos_soil_layers) = ((soil_waterfrac(1:nos_soil_layers)*layer_thickness(1:nos_soil_layers)) &
-                                           + watergain(1:nos_soil_layers) - waterloss(1:nos_soil_layers)) &
-                                        / layer_thickness(1:nos_soil_layers)
+!      soil_waterfrac(1:nos_soil_layers) = ((soil_waterfrac(1:nos_soil_layers)*layer_thickness(1:nos_soil_layers)) &
+!                                           + watergain(1:nos_soil_layers) - waterloss(1:nos_soil_layers)) &
+!                                        / layer_thickness(1:nos_soil_layers)
       ! reset soil water flux variables
-      waterloss = dble_zero ; watergain = dble_zero
+!      waterloss = dble_zero ; watergain = dble_zero
 
       !!!!!!!!!!
       ! Rainfall infiltration drainage
@@ -2670,7 +2675,7 @@ contains
                                            + watergain(1:nos_soil_layers) - waterloss(1:nos_soil_layers)) &
                                         / layer_thickness(1:nos_soil_layers)
       ! reset soil water flux variables
-      waterloss = dble_zero ; watergain = dble_zero
+!      waterloss = dble_zero ; watergain = dble_zero
 
       ! mass balance check, at this point do not try and adjust evaporation to
       ! correct for lack of supply. Simply allow for drought in next time step
@@ -2786,7 +2791,7 @@ contains
 
     do i = 1 , nos_soil_layers
        ! determine the available pore space in current soil layer
-       wdiff = max(dble_zero,(porosity(i)-soil_waterfrac(i))*layer_thickness(i)-watergain(i)+waterloss(i))
+       wdiff = (porosity(i)-soil_waterfrac(i))*layer_thickness(i)-watergain(i)+waterloss(i)
        ! is the input of water greater than available space
        ! if so fill and subtract from input and move on to the next
        ! layer
@@ -2823,7 +2828,8 @@ contains
 
     ! local variables..
     integer :: d, nos_integrate
-    double precision  :: liquid & ! liquid water in local soil layer (m3/m3)
+    double precision  :: tmp1,tmp2,tmp3,dx &
+                        ,liquid & ! liquid water in local soil layer (m3/m3)
                     ,drainlayer & ! field capacity of local soil layer (m3/m3)
                          ,unsat & ! unsaturated pore space in soil_layer below the current (m3/m3)
                         ,change & ! absolute volume of water drainage in current layer (m3)
@@ -2852,10 +2858,14 @@ contains
        ! layer can hold
        if ( liquid > drainlayer ) then
 
-          ! unsaturated volume of layer below (m3 m-2)..
-          unsat = max( dble_zero , ( porosity( soil_layer+1 ) - soil_waterfrac( soil_layer+1 ) ) &
-                             * layer_thickness( soil_layer+1 ) / layer_thickness( soil_layer ) )
-
+!          ! Trapezium rule for approximating integral of drainage rate
+!          dx = liquid - ((liquid + drainlayer)*0.5d0)
+!          call calculate_soil_conductivity(soil_layer,liquid,tmp1)
+!          call calculate_soil_conductivity(soil_layer,drainlayer,tmp2)
+!          call calculate_soil_conductivity(soil_layer,(liquid+dx),tmp3)
+!          drainage = 0.5d0 * dx * ((tmp1 + tmp2) + 2d0 * tmp3)
+!          drainage = drainage * seconds_per_day
+!          drainage = min(drainage,liquid - drainlayer)
           d = 1 ; nos_integrate = nos_hours_per_day / nos_minutes
           drainage = dble_zero ; local_drain = dble_zero
           do while (d <= nos_integrate .and. liquid > drainlayer)
@@ -2869,6 +2879,9 @@ contains
               d = d + 1
           end do ! integrate over time
 
+          ! unsaturated volume of layer below (m3 m-2)
+          unsat = max( dble_zero , ( porosity( soil_layer+1 ) - soil_waterfrac( soil_layer+1 ) ) &
+                             * layer_thickness( soil_layer+1 ) / layer_thickness( soil_layer ) )
           ! layer below cannot accept more water than unsat
           if ( drainage > unsat ) drainage = unsat
           ! water loss from this layer (m3)

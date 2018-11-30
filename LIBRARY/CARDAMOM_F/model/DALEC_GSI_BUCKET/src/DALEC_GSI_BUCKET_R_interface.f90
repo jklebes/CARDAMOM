@@ -1,7 +1,7 @@
 
 
-subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat & 
-                          ,nopars,nomet,nofluxes,nopools,pft,pft_specific & 
+subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
+                          ,nopars,nomet,nofluxes,nopools,pft,pft_specific &
                           ,nodays,deltat,nos_iter,soil_frac_clay_in,soil_frac_sand_in &
                           ,exepath,pathlength)
 
@@ -25,12 +25,12 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
       integer, intent(in) :: pathlength
       double precision :: stock_seed_labile
       double precision, allocatable, dimension(:) :: DS_shoot, & !
-                                                      DS_root, & ! 
+                                                      DS_root, & !
                                                      fol_frac, & !
                                                     stem_frac, & !
                                                     root_frac, & !
                                                       DS_LRLV, & !
-                                                         LRLV, & ! 
+                                                         LRLV, & !
                                                       DS_LRRT, & !
                                                          LRRT
       ! local variables..
@@ -83,14 +83,20 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
   ! crop specific variables
   double precision :: stock_seed_labile
   double precision, allocatable, dimension(:)  ::  DS_shoot, & !
-                                                    DS_root, & ! 
+                                                    DS_root, & !
                                                    fol_frac, & !
                                                   stem_frac, & !
                                                   root_frac, & !
                                                     DS_LRLV, & !
-                                                       LRLV, & ! 
+                                                       LRLV, & !
                                                     DS_LRRT, & !
                                                        LRRT
+
+! profiling example
+!real :: begin, done,f1=0,f2=0,f3=0,f4=0,f5=0,total_time = 0
+!real :: Rtot_track_time = 0, aero_time = 0 , soilwater_time = 0 , acm_et_time = 0 , Rm_time = 0
+!call cpu_time(done)
+!print*,"time taken per iter",(done-begin) / real(nos_iter)
 
   ! zero initial conditions
   lai = 0.0 ; GPP = 0.0 ; NEE = 0.0 ; POOLS = 0.0 ; FLUXES = 0.0 ; out_var = 0.0
@@ -113,11 +119,12 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
   if (pft == 1) call crop_development_parameters(stock_seed_labile,DS_shoot,DS_root,fol_frac &
                                                 ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT &
                                                 ,exepath,pathlength)
+
   ! begin iterations
   do i = 1, nos_iter
      ! call the models
      if (pft == 1) then
-         ! crop pft and we want pft specific model        
+         ! crop pft and we want pft specific model
          call CARBON_MODEL_CROP(1,nodays,met,pars(1:nopars,i),deltat,nodays,lat &
                           ,lai,NEE,FLUXES,POOLS,pft,nopars,nomet,nopools,nofluxes &
                           ,GPP,stock_seed_labile,DS_shoot,DS_root,fol_frac &
@@ -128,7 +135,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
                           ,nopars,nomet,nopools,nofluxes,GPP)
      endif
 !if (i == 1) then
-!    open(unit=666,file="/home/lsmallma/out.csv", & 
+!    open(unit=666,file="/home/lsmallma/out.csv", &
 !         status='replace',action='readwrite' )
 !write(666,*)"deltat",deltat
 !    write(666,*),"GSI",FLUXES(:,14)(1:365)
@@ -136,11 +143,11 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
 !endif
 
      ! now allocate the output the our 'output' variable
-     out_var(i,1:nodays,1)  = lai 
+     out_var(i,1:nodays,1)  = lai
      out_var(i,1:nodays,2)  = GPP
      out_var(i,1:nodays,3)  = FLUXES(1:nodays,3) ! auto resp
      out_var(i,1:nodays,4)  = FLUXES(1:nodays,13) + FLUXES(1:nodays,14) ! het resp
-     out_var(i,1:nodays,5)  = NEE 
+     out_var(i,1:nodays,5)  = NEE
      out_var(i,1:nodays,6)  = POOLS(1:nodays,4) ! wood
      out_var(i,1:nodays,7)  = POOLS(1:nodays,6) ! som
      out_var(i,1:nodays,8)  = POOLS(1:nodays,1) + POOLS(1:nodays,2) + POOLS(1:nodays,3) & ! common pools
@@ -160,7 +167,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
         out_var(i,1:nodays,15) = 0.0 ! GSI temp component
         out_var(i,1:nodays,16) = 0.0 ! GSI photoperiod component
         out_var(i,1:nodays,17) = 0.0 ! GSI vpd component
-     else 
+     else
         out_var(i,1:nodays,14) = FLUXES(1:nodays,18) ! GSI value
         out_var(i,1:nodays,15) = itemp(1:nodays) ! GSI temp component
         out_var(i,1:nodays,16) = iphoto(1:nodays) ! GSI photoperiod component
@@ -175,13 +182,13 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
         out_var(i,1:nodays,22) = POOLS(1:nodays,7) ! ...Cauto pool present
      else
         ! not a crop...excellent
-        out_var(i,1:nodays,21) = POOLS(1:nodays,7) ! ...CWD 
+        out_var(i,1:nodays,21) = POOLS(1:nodays,7) ! ...CWD
         out_var(i,1:nodays,22) = 0.0 ! no Cauto pool present
      endif
      ! output fire
      out_var(i,1:nodays,23) = FLUXES(1:nodays,17)
 
-     ! calculate the actual NPP allocation fractions to foliar, wood and fine root pools 
+     ! calculate the actual NPP allocation fractions to foliar, wood and fine root pools
      ! by comparing the sum alloaction to each pools over the sum NPP.
      fauto = sum(FLUXES(1:nodays,3)) / sum(FLUXES(1:nodays,1))
      sumNPP = (sum(FLUXES(1:nodays,1))*(1.0-fauto))**(-1.0) ! GPP * (1-Ra) fraction
@@ -197,7 +204,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
          ! wood crop system residence time is due to managment < 1 year
          out_var2(i,5) = 1/365.25
          ! roots crop system residence time is due to managment < 1 year
-         out_var2(i,6) = 1/365.25  
+         out_var2(i,6) = 1/365.25
          ! cwd+litter / litter
          resid_fol(1:nodays)   = (FLUXES(1:nodays,13)+FLUXES(1:nodays,15))
          resid_fol(1:nodays)   = resid_fol(1:nodays) &
@@ -215,7 +222,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
                              / POOLS(1:nodays,2)
          ! division by zero results in NaN plus obviously I can't have turned
          ! anything over if there was nothing to start out with...
-         where ( POOLS(1:nodays,2) == 0 ) 
+         where ( POOLS(1:nodays,2) == 0 )
                 hak = 1 ; resid_fol(1:nodays) = 0d0
          end where
          out_var2(i,4) = sum(resid_fol) /dble(nodays-sum(hak))
@@ -247,8 +254,8 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
          out_var2(i,8) = sum(resid_fol) / dble(nodays)
      endif ! crop choice
 
-     ! Csom 
-     resid_fol(1:nodays)   = FLUXES(1:nodays,14) 
+     ! Csom
+     resid_fol(1:nodays)   = FLUXES(1:nodays,14)
      resid_fol(1:nodays)   = resid_fol(1:nodays) &
                            / POOLS(1:nodays,6)
      out_var2(i,7) = sum(resid_fol) /dble(nodays)
@@ -258,7 +265,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
   ! moving this out of the loop to calculate fractions to years residence times
   out_var2(1:nos_iter,4) = (out_var2(1:nos_iter,4)*365.25)**(-1.0) ! fol
   out_var2(1:nos_iter,5) = (out_var2(1:nos_iter,5)*365.25)**(-1.0) ! wood
-  out_var2(1:nos_iter,6) = (out_var2(1:nos_iter,6)*365.25)**(-1.0) ! root 
+  out_var2(1:nos_iter,6) = (out_var2(1:nos_iter,6)*365.25)**(-1.0) ! root
   out_var2(1:nos_iter,7) = (out_var2(1:nos_iter,7)*365.25)**(-1.0) ! som
   out_var2(1:nos_iter,8) = (out_var2(1:nos_iter,8)*365.25)**(-1.0) ! CWD + Litter
 
@@ -288,12 +295,12 @@ end subroutine rdalecgsibucket
     integer,intent(in) :: pathlength
     double precision :: stock_seed_labile
     double precision, allocatable, dimension(:) :: DS_shoot, & !
-                                                    DS_root, & ! 
+                                                    DS_root, & !
                                                    fol_frac, & !
                                                   stem_frac, & !
                                                   root_frac, & !
                                                     DS_LRLV, & !
-                                                       LRLV, & ! 
+                                                       LRLV, & !
                                                     DS_LRRT, & !
                                                        LRRT
 
@@ -356,4 +363,3 @@ end subroutine rdalecgsibucket
   !
   !------------------------------------------------------------------
   !
-

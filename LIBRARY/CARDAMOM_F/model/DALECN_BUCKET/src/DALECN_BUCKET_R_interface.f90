@@ -90,6 +90,11 @@ subroutine rdalecnbucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
                                                     DS_LRRT, & !
                                                        LRRT
 
+! profiling example
+real :: begin, done,f1=0,f2=0,f3=0,f4=0,f5=0,total_time = 0
+!real :: Rtot_track_time = 0, aero_time = 0 , soilwater_time = 0 , acm_et_time = 0 , Rm_time = 0
+!call cpu_time(done)
+!print*,"time taken per iter",(done-begin) / real(nos_iter)
   ! zero initial conditions
   out_var = 0d0 ; out_var2 = 0d0
 
@@ -108,6 +113,7 @@ subroutine rdalecnbucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
   if (pft == 1) call crop_development_parameters(stock_seed_labile,DS_shoot,DS_root,fol_frac &
                                                 ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT &
                                                 ,exepath,pathlength)
+call cpu_time(begin)
   ! begin iterations
   do i = 1, nos_iter
 
@@ -264,7 +270,8 @@ subroutine rdalecnbucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
   out_var2(1:nos_iter,6) = (out_var2(1:nos_iter,6)*365.25d0)**(-1d0) ! root
   out_var2(1:nos_iter,7) = (out_var2(1:nos_iter,7)*365.25d0)**(-1d0) ! som
   out_var2(1:nos_iter,8) = (out_var2(1:nos_iter,8)*365.25d0)**(-1d0) ! CWD + Litter
-
+call cpu_time(done)
+print*,"time taken per iter",(done-begin) / real(nos_iter)
   ! return back to the subroutine then
   return
 

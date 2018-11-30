@@ -151,6 +151,7 @@ double precision, parameter :: pi = 3.1415927d0,    &
                        gb_H2O_CO2 = 1.37d0,         & ! The ratio of H20:CO2 diffusion for gb (Jones appendix 2)
           partial_molar_vol_water = 18.05d-6,       & ! partial molar volume of water, m3 mol-1 at 20C
                        umol_to_gC = 1d-6*12d0,      & ! conversion of umolC -> gC
+                       gC_to_umol = umol_to_gC**(-dble_one), & ! conversion of gC -> umolC
                  mmol_to_kg_water = 1.8d-5,         & ! milli mole conversion to kg
                    mol_to_g_water = 18d0,           & ! molecular mass of water
                      mol_to_g_co2 = 12d0,           & ! molecular mass of CO2 (g)
@@ -1281,7 +1282,7 @@ contains
 
     ! pp and qq represent limitation by metabolic (temperature & N) and
     ! diffusion (co2 supply) respectively
-    pp = (pn/umol_to_gC)/gc ; qq = co2_comp_point-co2_half_sat
+    pp = (pn*gC_to_umol)/gc ; qq = co2_comp_point-co2_half_sat
     ! calculate internal CO2 concentration (ppm or umol/mol)
     mult = co2+qq-pp
     ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
@@ -1523,11 +1524,11 @@ contains
     convert_ms1_mol_1 = const_sfc_pressure / ((input_temperature+freeze)*Rcon)
     ! latent heat of vapourisation,
     ! function of air temperature (J.kg-1)
-    if (input_temperature < dble_one) then
-        lambda = 2.835d6
-    else
+!    if (input_temperature < dble_one) then
+!        lambda = 2.835d6
+!    else
         lambda = 2501000d0-2364d0*input_temperature
-    endif
+!    endif
     ! psychrometric constant (kPa K-1)
     psych = (0.0646d0*exp(0.00097d0*input_temperature))
     ! Straight line approximation of the true slope; used in determining
@@ -1860,21 +1861,23 @@ contains
           ! if there is root then there is a water flux potential...
           root_reach_local = min(root_reach,layer_thickness(i))
           ! calculate and accumulate steady state water flux in mmol.m-2.s-1
-          water_flux(1) = plant_soil_flow(i,root_length(i),root_mass(i) &
+          water_flux(i) = plant_soil_flow(i,root_length(i),root_mass(i) &
                          ,demand(i),root_reach_local,transpiration_resistance)
       else
           ! ...if there is not then we wont have any below...
           exit
       end if ! root present in current layer?
     end do ! nos_root_layers
-    ratio = layer_thickness(1:nos_root_layers)/sum(layer_thickness(1:nos_root_layers))
 
     ! if freezing then assume soil surface is frozen
     if (meant < dble_one) then
         water_flux(1) = dble_zero
         ratio(1) = dble_zero
         ratio(2:nos_root_layers) = layer_thickness(2:nos_root_layers) / sum(layer_thickness(2:nos_root_layers))
+    else
+        ratio = layer_thickness(1:nos_root_layers)/sum(layer_thickness(1:nos_root_layers))
     endif
+
     ! calculate sum value
     sum_water_flux = sum(water_flux)
     ! calculate uptake fraction
@@ -1886,7 +1889,7 @@ contains
     endif
 
     ! determine effective resistance (MPa.s-1.m-2.mmol-1)
-    Rtot = sum(demand) / sum(water_flux)
+    Rtot = sum(demand) / sum_water_flux
 
     ! finally convert transpiration flux (mmol.m-2.s-1)
     ! into kg.m-2.step-1 for consistency with ET in "calculate_update_soil_water"
@@ -1919,9 +1922,12 @@ contains
     ! Estimate solar geometry variables needed
     !
 
-    ! declination
+    ! Declination
+    ! NOTE: 0.002739726d0 = 1/365
 !    dec = - asin( sin( 23.45d0 * deg_to_rad ) * cos( 2d0 * pi * ( doy + 10d0 ) / 365d0 ) )
-    dec = - asin( sin_dayl_deg_to_rad * cos( two_pi * ( doy + 10d0 ) / 365d0 ) )
+!    dec = - asin( sin_dayl_deg_to_rad * cos( two_pi * ( doy + 10d0 ) / 365d0 ) )
+    dec = - asin( sin_dayl_deg_to_rad * cos( two_pi * ( doy + 10d0 ) * 0.002739726d0 ) )
+
     ! latitude in radians
     mult = lat * deg_to_rad
     ! day length is estimated as the ratio of sin and cos of the product of declination an latitude in radiation
@@ -1937,7 +1943,7 @@ contains
 !    sunrise = 12 - nint(dayl_hours*0.5d0) ; sunset = sunrise + nint(dayl_hours)
 
     ! estimate the solar cosine zenith angle for 12 noon
-    cos_solar_zenith_angle = sinld + cosld
+!    cos_solar_zenith_angle = sinld + cosld
 
     ! return to user
     return
