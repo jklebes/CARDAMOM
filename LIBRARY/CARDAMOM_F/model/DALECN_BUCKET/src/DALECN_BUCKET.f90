@@ -2320,9 +2320,9 @@ contains
     endif
 
     ! dew is unlikely to occur (if we had energy balance) if mint > 0
-    !if (wetcanopy_evap < dble_zero .and. mint > dble_zero) wetcanopy_evap = dble_zero
+!    if (wetcanopy_evap < dble_zero .and. mint > dble_zero) wetcanopy_evap = dble_zero
     ! Sublimation is unlikely to occur (if we had energy balance) if maxt < 0
-    !if (wetcanopy_evap > dble_zero .and. maxt < dble_zero) wetcanopy_evap = dble_zero
+!    if (wetcanopy_evap > dble_zero .and. maxt < dble_zero) wetcanopy_evap = dble_zero
 
     ! Remember potential evaporation to later calculation of the potential
     ! actual ratio
@@ -2493,6 +2493,8 @@ contains
                  ,Sh_forced & ! Sherwood number under forced convection
                         ,Re   ! Reynolds number
 
+    ! local estimate of temperature in Kelvin
+    local_temp = maxt+freeze
     ! Determine diffusion coefficient (m2s-1), temperature dependant (pressure dependence neglected). Jones p51;
     ! 0.0000242 = conversion to make diffusion specific for water vapor (um2.s-1)
     Dwv = 0.0000242d0*((local_temp/293.15d0)**1.75d0)
