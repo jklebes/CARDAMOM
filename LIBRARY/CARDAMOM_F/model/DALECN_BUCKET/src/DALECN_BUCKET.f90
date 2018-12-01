@@ -721,8 +721,8 @@ contains
     ! set time invarient / initial phenology parameters
     !!!!!!!!!!!!
 
+    ! calculate specific leaf area from leaf mass area
     SLA = pars(17)**(-dble_one)
-    root_cost = dble_zero ; leaf_cost = dble_zero ; wood_cost = dble_zero
     ! calculate root life spans (days)
     root_life = pars(7)**(-dble_one)
     ! Assign initial leaf lifespan used in marginal return calculations
@@ -744,6 +744,7 @@ contains
 
     ! reset values
     intercepted_rainfall = dble_zero ; canopy_storage = dble_zero ; snow_storage = dble_zero
+    root_cost = dble_zero ; leaf_cost = dble_zero ; wood_cost = dble_zero
 
     !
     ! Initialise the disturbance model
@@ -873,13 +874,13 @@ contains
     !
 
     ! assigning initial conditions
-    POOLS(1,1) = pars(18)
-    POOLS(1,2) = pars(19)
-    POOLS(1,3) = pars(20)
-    POOLS(1,4) = pars(21)
-    POOLS(1,5) = pars(22)
-    POOLS(1,6) = pars(23)
-    POOLS(1,7) = pars(24)
+    POOLS(1,1) = pars(18) ! labile
+    POOLS(1,2) = pars(19) ! Foliage
+    POOLS(1,3) = pars(20) ! fine roots
+    POOLS(1,4) = pars(21) ! wood
+    POOLS(1,5) = pars(22) ! fine litter
+    POOLS(1,6) = pars(23) ! som
+    POOLS(1,7) = pars(24) ! cwd
     ! POOL(1,8) assigned later
 
     !
@@ -959,9 +960,9 @@ contains
        Cwood_labile_release_gradient = 0.2355d0 ; Cwood_labile_half_saturation = 17.5d0
        ! calculate temperature limitation on potential wood/root growth
        Cwood_labile_release_coef = (dble_one+exp(-Cwood_labile_release_gradient* &
-                                 (((met(3,:)+met(2,:))*0.5d0)-Cwood_labile_half_saturation)))**(-dble_one)
+                                 (meant_time-Cwood_labile_half_saturation)))**(-dble_one)
        Croot_labile_release_coef = (dble_one+exp(-Croot_labile_release_gradient* &
-                                 (((met(3,:)+met(2,:))*0.5d0)-Croot_labile_half_saturation)))**(-dble_one)
+                                 (meant_time-Croot_labile_half_saturation)))**(-dble_one)
 
        !
        ! Initialise the water model
@@ -1030,15 +1031,17 @@ contains
     ! estimate gradient needed using the integral of 0-canopy age (2 comes re-arranging the integral of the linear equation)
     ! to assign 50% (i.e. 0.5) of the canopy. Note that this must be scalable for simulations at different time steps
     tmp = ((0.5d0 * 2d0) / canopy_age ** 2)
+    tmp = POOLS(1,2) * tmp
     ! assign foliar biomass to first half of the distribution
     do n = 1, nint(canopy_age), 1
-       canopy_age_vector(n) = POOLS(1,2) * dble(n) * tmp
+       canopy_age_vector(n) = tmp * dble(n)
     end do
 
     ! now repeat the process for the second part of the distribution
     tmp = ((0.5d0 * 2d0) / (dble(oldest_leaf) - canopy_age) ** 2)
+    tmp = POOLS(1,2) * tmp
     do n = nint(canopy_age+1d0), oldest_leaf, 1
-       canopy_age_vector(n) = POOLS(1,2) * (dble(oldest_leaf)-n) * tmp
+       canopy_age_vector(n) = tmp * dble(oldest_leaf-n)
     end do
 
     ! check / adjust mass balance
@@ -1228,19 +1231,19 @@ contains
       call acm_albedo_gc(abs(deltaWP),Rtot)
 
       ! if snow present assume that soilevaporation is sublimation of soil first
-      snow_sublimation = dble_zero
       if (snow_storage > dble_zero) then
           snow_sublimation = soilevaporation
           if (snow_sublimation*deltat(n) > snow_storage) snow_sublimation = snow_storage * deltat_1(n)
           soilevaporation = soilevaporation - snow_sublimation
           snow_storage = snow_storage - (snow_sublimation * deltat(n))
+      else
+          snow_sublimation = dble_zero
       end if
 
       ! Note that soil mass balance will be calculated after phenology
       ! adjustments
 
       ! reset output variable
-      ci_global = dble_zero
       if (lai > vsmall .and. stomatal_conductance > vsmall) then
           ! Gross primary productivity (gC/m2/day)
           FLUXES(n,1) = max(dble_zero,acm_gpp(stomatal_conductance))
@@ -1252,6 +1255,7 @@ contains
           ! assume zero fluxes
           FLUXES(n,1) = dble_zero
           transpiration = dble_zero
+          ci_global = dble_zero
       endif
       ! labile production (gC.m-2.day-1)
       FLUXES(n,5) = FLUXES(n,1)
@@ -1332,7 +1336,7 @@ contains
       !!!!!!!!!!
 
       ! calculate hydraulic limits on leaf / wood growth.
-      ! NOTE: PARAMETERS NEED TO BE CALIBRATRED OR TISSUE SPECIFIC
+      ! NOTE: PARAMETERS SHOULD BE CALIBRATRED OR TISSUE SPECIFIC
       Cwood_hydraulic_limit = (dble_one+exp(Cwood_hydraulic_gradient*(deltaWP-Cwood_hydraulic_half_saturation)))**(-dble_one)
 
       ! Determine leaf growth and turnover based on marginal return calculations
@@ -1429,22 +1433,20 @@ contains
       endif
 
       ! if 12 months has gone by, update the leaf lifespan variable
-      if (n > steps_per_year) then
-          if (met(6,n) < met(6,n-1)) then
-             ! determine the turnover fraction across the year
-             tmp = sum(FLUXES((n-steps_per_year):(n-1),10) + FLUXES((n-steps_per_year):(n-1),23)) &
-                 / sum(POOLS((n-steps_per_year):(n-1),2))
-             ! i.e. we cannot / should not update the leaf lifespan if there has
-             ! been no turnover and / or there is no foliar pool.
-             if (tmp > dble_zero) then
-                 tmp = tmp ** (-dble_one)
-                 tmp = tmp * leaf_life_weighting
-                 leaf_life = tmp + (leaf_life * (dble_one - leaf_life_weighting))
-                 ! if we have updated the leaf_life we should also update the canopy NUE_mean
-                 call estimate_mean_NUE
-             end if
-          endif ! met(6,n) < met(6,n-1), i.e. new calender year
-      endif ! n /= 1
+      if (n > steps_per_year .and. met(6,n) < met(6,n-1)) then
+          ! determine the turnover fraction across the year
+          tmp = sum(FLUXES((n-steps_per_year):(n-1),10) + FLUXES((n-steps_per_year):(n-1),23)) &
+             / sum(POOLS((n-steps_per_year):(n-1),2))
+          ! i.e. we cannot / should not update the leaf lifespan if there has
+          ! been no turnover and / or there is no foliar pool.
+          if (tmp > dble_zero) then
+             tmp = tmp ** (-dble_one)
+             tmp = tmp * leaf_life_weighting
+             leaf_life = tmp + (leaf_life * (dble_one - leaf_life_weighting))
+             ! if we have updated the leaf_life we should also update the canopy NUE_mean
+             call estimate_mean_NUE
+          end if
+      endif ! n /= 1 and new calendar year
 
       !!!!!!!!!!
       ! those with temperature AND time dependancies
@@ -1515,7 +1517,7 @@ contains
       call calculate_update_soil_water(transpiration,soilevaporation,((rainfall-intercepted_rainfall)*seconds_per_day) &
                                       ,FLUXES(n,19))
       ! now that soil mass balance has been updated we can add the wet canopy
-      ! evaporation (kg.m-2.day-1)
+      ! evaporation (kgH2O.m-2.day-1)
       FLUXES(n,19) = FLUXES(n,19) + wetcanopy_evap
       ! store soil water content of the surface zone (mm)
       POOLS(n+1,8) = 1d3*soil_waterfrac(1)*layer_thickness(1)
@@ -2106,7 +2108,7 @@ contains
     double precision :: denom, isothermal, deltaTemp, deltaR
     double precision, parameter :: max_gs = 2500d0, & ! mmolH2O.m-2.s-1
                                    min_gs = 0.0001d0, & !
-                                   tol_gs = 4d0!4d0       !
+                                   tol_gs = 4d0       !
 
     !!!!!!!!!!
     ! Calculate stomatal conductance under H2O and CO2 limitations
@@ -2185,12 +2187,14 @@ contains
     double precision, intent(in) :: input_temperature
 
     ! local variables
-    double precision :: s, mult
+    double precision :: s, mult, local_temp
 
+    ! local estimate of tempeature in K
+    local_temp = input_temperature + freeze
     ! Density of air (kg/m3)
-    air_density_kg = 353d0/(input_temperature+freeze)
+    air_density_kg = 353d0/local_temp
     ! Conversion ratio for m.s-1 -> mol.m-2.s-1
-    convert_ms1_mol_1 = const_sfc_pressure / ((input_temperature+freeze)*Rcon)
+    convert_ms1_mol_1 = const_sfc_pressure / (local_temp*Rcon)
     ! latent heat of vapourisation,
     ! function of air temperature (J.kg-1)
 !    if (input_temperature < dble_one) then
@@ -2304,14 +2308,21 @@ contains
     wetcanopy_evap = (slope*canopy_radiation) + (air_density_kg*cpair*vpd_pa*1d-3*gb)
     ! Calculate the potential wet canopy evaporation, limited by energy used for
     ! transpiration
-    wetcanopy_evap = (wetcanopy_evap / (lambda*(slope+psych))) * seconds_per_day !dayl_seconds
+    wetcanopy_evap = (wetcanopy_evap / (lambda*(slope+psych))) * seconds_per_day
     ! substract transpiration from potential surface evaporation
     wetcanopy_evap = wetcanopy_evap - transpiration
 
+    ! Dew is unlikely to occur (if we had energy balance) if mint > 0
+    ! Sublimation is also unlikely to occur (if we had energy balance) if maxt < 0
+    if ((wetcanopy_evap < dble_zero .and. mint > dble_zero) .or. &
+        (wetcanopy_evap > dble_zero .and. maxt < dble_zero)) then
+         wetcanopy_evap = dble_zero
+    endif
+
     ! dew is unlikely to occur (if we had energy balance) if mint > 0
-    if (wetcanopy_evap < dble_zero .and. mint > dble_zero) wetcanopy_evap = dble_zero
+    !if (wetcanopy_evap < dble_zero .and. mint > dble_zero) wetcanopy_evap = dble_zero
     ! Sublimation is unlikely to occur (if we had energy balance) if maxt < 0
-    if (wetcanopy_evap > dble_zero .and. maxt < dble_zero) wetcanopy_evap = dble_zero
+    !if (wetcanopy_evap > dble_zero .and. maxt < dble_zero) wetcanopy_evap = dble_zero
 
     ! Remember potential evaporation to later calculation of the potential
     ! actual ratio
@@ -2349,12 +2360,15 @@ contains
     double precision, intent(out) :: soilevap ! kgH2O.m-2.day-1
 
     ! local variables
-    double precision :: soil_radiation & ! isothermal net radiation (W/m2)
+    double precision :: local_temp     &
+                       ,soil_radiation & ! isothermal net radiation (W/m2)
                       ,water_diffusion & ! Diffusion of water through soil matrix (m.s-1)
                                 ,esurf & ! see code below
                                  ,esat & ! soil air space saturation vapour pressure
                                   ,gws & ! water vapour conductance through soil air space (m.s-1)
                                    ,Qc
+
+    local_temp = maxt + freeze
 
     !!!!!!!!!!
     ! Estimate energy radiation balance (W.m-2)
@@ -2372,17 +2386,17 @@ contains
     !!!!!!!!!!
 
     ! calculate saturated vapour pressure (kPa), function of temperature.
-    esat = 0.1d0 * exp( 1.80956664d0 + ( 17.2693882d0 * (maxt+freeze) - 4717.306081d0 ) / ( maxt+freeze - 35.86d0 ) )
+    esat = 0.1d0 * exp( 1.80956664d0 + ( 17.2693882d0 * local_temp - 4717.306081d0 ) / ( local_temp - 35.86d0 ) )
     air_vapour_pressure = esat - (vpd_pa * 1d-3)
 
     ! Estimate water diffusion rate (m2.s-1) Jones (2014) appendix 2
-    water_diffusion = 24.2d-6 * ( (maxt+freeze) / 293.2d0 )**1.75d0
+    water_diffusion = 24.2d-6 * ( local_temp / 293.2d0 )**1.75d0
     ! Soil conductance to water vapour diffusion (m s-1)...
     gws = porosity(1) * water_diffusion / (tortuosity*drythick)
 
     ! vapour pressure in soil airspace (kPa), dependent on soil water potential
     ! - Jones p.110. partial_molar_vol_water
-    esurf = esat * exp( 1d6 * SWP(1) * partial_molar_vol_water / ( Rcon * (maxt+freeze) ) )
+    esurf = esat * exp( 1d6 * SWP(1) * partial_molar_vol_water / ( Rcon * local_temp ) )
     ! now difference in vapour pressure between soil and canopy air spaces
     esurf = esurf - air_vapour_pressure
 
@@ -2469,7 +2483,8 @@ contains
     double precision, parameter :: leaf_width = 0.08d0   & ! leaf width (m)
                                           ,Pr = 0.72d0     ! Prandtl number
     ! local variables
-    double precision :: Dwv & ! Diffusion coefficient of water in air (m2.s-1); air temperature and pressure dependant
+    double precision :: local_temp &
+                       ,Dwv & ! Diffusion coefficient of water in air (m2.s-1); air temperature and pressure dependant
                               ! variables for the more advanced
                               ! boundary conditions
             ,nusselt_forced & ! Nusselt value under forced convection
@@ -2480,9 +2495,9 @@ contains
 
     ! Determine diffusion coefficient (m2s-1), temperature dependant (pressure dependence neglected). Jones p51;
     ! 0.0000242 = conversion to make diffusion specific for water vapor (um2.s-1)
-    Dwv = 0.0000242d0*(((maxt+freeze)/293.15d0)**1.75d0)
+    Dwv = 0.0000242d0*((local_temp/293.15d0)**1.75d0)
     ! Calculate the dynamic viscosity of air
-    dynamic_viscosity = (((maxt+freeze)**1.5d0)/((maxt+freeze)+120d0))*1.4963d-6
+    dynamic_viscosity = ((local_temp**1.5d0)/(local_temp+120d0))*1.4963d-6
     kinematic_viscosity = dynamic_viscosity/air_density_kg
     Re = (leaf_width*canopy_wind)/kinematic_viscosity
     ! calculate nusselt value under forced convection conditions
@@ -3296,8 +3311,8 @@ contains
 
     do i = 1 , nos_soil_layers
        ! determine the available pore space in current soil layer
-       wdiff = max(dble_zero,(porosity(i)-soil_waterfrac(i))*layer_thickness(i)-watergain(i)+waterloss(i))
-!       wdiff = (porosity(i)-soil_waterfrac(i))*layer_thickness(i)-watergain(i)+waterloss(i)
+!       wdiff = max(dble_zero,(porosity(i)-soil_waterfrac(i))*layer_thickness(i)-watergain(i)+waterloss(i))
+       wdiff = (porosity(i)-soil_waterfrac(i))*layer_thickness(i)-watergain(i)+waterloss(i)
        ! is the input of water greater than available space
        ! if so fill and subtract from input and move on to the next
        ! layer
@@ -3481,16 +3496,16 @@ contains
 
     ! Default assumption to be field capacity
     soil_waterfrac = field_capacity
+    SWP = SWP_initial
 
     ! if prior value has been given
     if (input_soilwater_frac > -9998d0) then
         ! calculate initial soil water fraction
         soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac
+        ! calculate initial soil water potential
+        call soil_water_potential
     endif
 
-    ! calculate initial soil water potential
-    SWP = dble_zero
-    call soil_water_potential
     ! seperately calculate the soil conductivity as this applies to each layer
     do i = 1, nos_soil_layers
        call calculate_soil_conductivity(i,soil_waterfrac(i),soil_conductivity(i))
