@@ -93,8 +93,8 @@ UK_forest_hack = FALSE
 	planting_lat=lat ; planting_long=long
 
 	# close files after use
-	nc_close(data1) 
-	
+	nc_close(data1)
+
 	# begin reading the forest loss information instead
 	loss_lat=ncvar_get(data2, "lat") ; loss_long=ncvar_get(data2, "long")
 	# read year of forest loss informatin
@@ -106,10 +106,10 @@ UK_forest_hack = FALSE
 	loss_fraction[which(year_of_loss != -9999)]=1
 
 	# tidy up
-	nc_close(data2) 
+	nc_close(data2)
 
 #	rm(primary_cover,secondary_cover,tertiary_cover,dims,lat,long,input_file_1,input_file_2) ; gc(reset=TRUE,verbose=FALSE)
-	
+
 	# output variables
 	return(list(planting_lat=planting_lat,planting_long=planting_long,planting_year=planting_year,planting_yield=planting_yield,planting_pft=planting_pft
 		   ,loss_lat=loss_lat,loss_long=loss_long,year_of_loss=year_of_loss,loss_fraction=loss_fraction))
@@ -177,13 +177,13 @@ UK_forest_hack = FALSE
 	planting_lat=lat ; planting_long=long
 
 	# close files after use
-	nc_close(data1) 
+	nc_close(data1)
 
 	for (yrr in seq(1,length(years_to_load))){
 
              input_file_2=paste(path_to_forestry,"GFW_forest_loss_",years_to_load[yrr],".nc",sep="")
              data2=nc_open(input_file_2)
-	
+
              if (yrr == 1) {
                  # begin reading the forest loss information instead
                  loss_lat=ncvar_get(data2, "latitude") ; loss_long=ncvar_get(data2, "longitude")
@@ -197,7 +197,7 @@ UK_forest_hack = FALSE
              loss_fraction[,,yrr]=loss_fraction_tmp
 
              # tidy up
-             nc_close(data2) 
+             nc_close(data2)
 
 	} # looping years
 
@@ -214,13 +214,13 @@ UK_forest_hack = FALSE
 
              input_file_2=paste(path_to_forestry,"GFW_forest_loss_",years_to_load[yrr],".nc",sep="")
              data2=nc_open(input_file_2)
-	
+
 	     if (length(dim(latlon_in)) > 1) {
 		 max_lat=max(latlon_in[,1])+1.0 ; max_long=max(latlon_in[,2])+1.0
 		 min_lat=min(latlon_in[,1])-1.0 ; min_long=min(latlon_in[,2])-1.0
 	     } else {
 		 max_lat=max(latlon_in[1])+1.0 ; max_long=max(latlon_in[2])+1.0
-		 min_lat=min(latlon_in[1])-1.0 ; min_long=min(latlon_in[2])-1.0	    
+		 min_lat=min(latlon_in[1])-1.0 ; min_long=min(latlon_in[2])-1.0
 	     }
 
              if (yrr == 1) {
@@ -230,7 +230,7 @@ UK_forest_hack = FALSE
 		 keep_long=which(loss_long[,1] > min_long & loss_long[,1] < max_long)
 		 lat_dim = length(min(keep_lat):max(keep_lat))
 		 long_dim = length(min(keep_long):max(keep_long))
-		 loss_lat=loss_lat[min(keep_long):max(keep_long),min(keep_lat):max(keep_lat)] 
+		 loss_lat=loss_lat[min(keep_long):max(keep_long),min(keep_lat):max(keep_lat)]
 		 loss_long=loss_long[min(keep_long):max(keep_long),min(keep_lat):max(keep_lat)]
 		 # rebuild dimensions
 		 loss_lat = array(loss_lat, dim=c(long_dim,lat_dim)) ; loss_long = array(loss_long, dim=c(long_dim,lat_dim))
@@ -246,7 +246,7 @@ UK_forest_hack = FALSE
              loss_fraction[,,yrr]=loss_fraction_tmp
 
              # tidy up
-             nc_close(data2) 
+             nc_close(data2)
 
 	} # looping years
 

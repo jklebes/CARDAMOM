@@ -164,7 +164,7 @@ contains
                                ,lai_half_par_transmitted,max_lai_nir_transmitted,lai_half_nir_transmitted &
                                ,max_lai_lwrad_reflected,lai_half_lwrad_reflected,soil_swrad_absorption    &
                                ,max_lai_lwrad_release,lai_half_lwrad_release,mint,maxt,swrad,co2,doy,leafT&
-                               ,rainfall,wind_spd,vpd_pa,lai,days_per_step,days_per_step_1,canopy_storage &
+                               ,rainfall,wind_spd,vpd_kpa,lai,days_per_step,days_per_step_1,canopy_storage&
                                ,intercepted_rainfall,snow_storage,snow_melt,airt_zero_fraction,snowfall   &
                                ,update_soil_initial_conditions,aerodynamic_conductance
 
@@ -510,7 +510,7 @@ contains
       meant = (maxt+mint) * 0.5d0   ! mean air temperature (oC)
       airt_zero_fraction = (maxt-dble_zero) / (maxt-mint) ! fraction of temperture period above freezing
       wind_spd = met(15,n) ! wind speed (m/s)
-      vpd_pa = met(16,n)  ! Vapour pressure deficit (Pa)
+      vpd_kpa = met(16,n)*1d-3  ! Vapour pressure deficit (Pa->kPa)
 
       ! states needed for module variables
       lai_out(n) = POOLS(n,2)/LCA

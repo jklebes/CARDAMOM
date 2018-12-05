@@ -988,28 +988,25 @@ contains
       days_per_step_1 = deltat_1(n)
 
       ! snowing or not...?
-      snow_melt = dble_zero ; snowfall = dble_zero
-      if (mint < dble_zero .and. maxt > dble_zero) then
+      if (mint < 0d0 .and. maxt > 0d0) then
           ! if minimum temperature is below freezing point then we weight the
           ! rainfall into snow or rain based on proportion of temperature below
           ! freezing
-          snowfall = dble_one - airt_zero_fraction
-          snowfall = rainfall * snowfall ; rainfall = rainfall - snowfall
+          snowfall = rainfall * (1d0 - airt_zero_fraction) ; rainfall = rainfall - snowfall
           ! Add rainfall to the snowpack and clear rainfall variable
           snow_storage = snow_storage + (snowfall*seconds_per_step)
 
-          ! Also melt some of the snow
-          snow_melt = airt_zero_fraction
-          ! otherwise we assume snow is melting at 10 % per day light hour
-          snow_melt = min(snow_storage, snow_melt * snow_storage * dayl_hours * 0.1d0 * deltat(n))
+          ! Also melt some of the snow based on airt_zero_fraction
+          ! default assumption is that snow is melting at 10 % per day light hour
+          snow_melt = min(snow_storage, airt_zero_fraction * snow_storage * dayl_hours * 0.1d0 * deltat(n))
           snow_storage = snow_storage - snow_melt
-      elseif (maxt < dble_zero) then
+      elseif (maxt < 0d0) then
           ! if whole day is below freezing then we should assume that all
           ! precipitation is snowfall
-          snowfall = rainfall ; rainfall = dble_zero
+          snowfall = rainfall ; rainfall = 0d0
           ! Add rainfall to the snowpack and clear rainfall variable
           snow_storage = snow_storage + (snowfall*seconds_per_step)
-      else if (mint > dble_zero) then
+      else if (mint > 0d0) then
           ! otherwise we assume snow is melting at 10 % per day light hour
           snow_melt = min(snow_storage, snow_storage * dayl_hours * 0.1d0 * deltat(n))
           snow_storage = snow_storage - snow_melt

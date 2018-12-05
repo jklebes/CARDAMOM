@@ -534,7 +534,7 @@ module cardamom_io
     DATAin%noobs = int(statdat(5))
     DATAin%EDC = int(statdat(6))
     DATAin%PFT = int(statdat(7))
-    DATAin%yield = -9999 !int(statdat(8))
+    DATAin%yield = int(statdat(8))
     DATAin%age = int(statdat(9))
     nopars_dummy = int(statdat(10)) ! needed for next dev stage
     soil_frac_sand(1:2) = statdat(12) ! top soil sand percentage
