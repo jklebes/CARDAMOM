@@ -2991,8 +2991,7 @@ contains
 
        else
            ! no drainage just apply evaporation / dew formation fluxes directly
-           evap_rate = potential_evaporation
-           drain_rate = 0d0
+           drain_rate = 0d0 ; evap_rate = potential_evaporation
            if (evap_rate > 0d0) then
                ! evaporation restricted by fraction of surface actually covered
                ! in water
@@ -3006,14 +3005,15 @@ contains
        endif ! storage > max_storage
 
        ! update canopy storage with water flux
-       storage = max(0d0,storage - evap_rate - drain_rate)
+       !storage = max(0d0,storage - evap_rate - drain_rate)
+       storage = storage - evap_rate - drain_rate
        wetcanopy_evaporation = wetcanopy_evaporation + evap_rate
        through_fall = through_fall + drain_rate
 
     end do ! days
 
     ! correct intercepted rainfall rate to kgH2O.m-2.s-1
-    intercepted_rainfall = intercepted_rainfall - ((through_fall * days_per_step_1) * seconds_per_day_1)
+    intercepted_rainfall = intercepted_rainfall - (through_fall * days_per_step_1 * seconds_per_day_1)
 
 !    ! sanity checks; note 1e-8 prevents precision errors causing flags
 !    if (intercepted_rainfall > rainfall .or. storage < 0d0 &
