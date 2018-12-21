@@ -1021,10 +1021,10 @@ contains
       !!!!!!!!!!
 
       if (n == reforest_day) then
-          POOLS(n+1,1) = pars(30)
-          POOLS(n+1,2) = pars(31)
-          POOLS(n+1,3) = pars(32)
-          POOLS(n+1,4) = pars(33)
+          POOLS(n+1,1) = pars(30) ! labile
+          POOLS(n+1,2) = pars(31) ! foliar
+          POOLS(n+1,3) = pars(32) ! roots
+          POOLS(n+1,4) = pars(33) ! wood
       endif
 
       ! reset values

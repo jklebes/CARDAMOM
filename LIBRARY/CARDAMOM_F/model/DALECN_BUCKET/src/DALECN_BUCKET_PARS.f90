@@ -59,7 +59,7 @@ module MODEL_PARAMETERS
 
        ! Days past optimum at which canopy NUE = 0
        PI%parmin(3)=3d0
-       PI%parmax(3)=365.25d0*12d0
+       PI%parmax(3)=365.25d0*6d0
 
        ! Max labile turnover (fraction) to roots
        PI%parmin(4)=2d0*0.0001368925d0 ! 20->10 years
@@ -92,7 +92,7 @@ module MODEL_PARAMETERS
        ! log10 avg foliar N (gN.m-2)
        ! Kattge et al., (2011) (Quantiles 2.5% / 97.5%)
        PI%parmin(11)=-0.2218487d0
-       PI%parmax(11)= 0.5563025d0
+       PI%parmax(11)=0.6382028d0! 0.5563025d0
 
        ! Max labile turnover fraction to foliage
        PI%parmin(12)=0.0006844627d0 ! 4 years 0.0001368925d0 ! 20 years
@@ -125,18 +125,23 @@ module MODEL_PARAMETERS
 
        ! Initial mean canopy age (days)
        PI%parmin(25)=3d0 !50d0
-       PI%parmax(25)=365.25d0*8d0
+       PI%parmax(25)=365.25d0*4d0
 
        ! Optimum nitrogen use efficiency (gC/gN per m2 at optimum temperature)
        ! Derived from Vcmax reported in Wullschleger (1993), Journal of
        ! Experimental Botany, Vol 44, No. 262, pp. 907-920.
+       ! ~40 gC/gN/day
        ! TRY database equivalent 2.5 % = 1.648512; 97.5 % = 19.906560
+       ! Xu et al., (2017):
+       ! Variations of leaf longevity in tropical moist forests predicted by a
+       ! trait-driven carbon optimality model,
+       ! Ecology Letters, doi: 10.1111/ele.12804, upper value of 82 gC/gN/day 
        PI%parmin(26)= 1.0d0
-       PI%parmax(26)=40.0d0
+       PI%parmax(26)=80.0d0
 
        ! initial leaf life span (MTTleaf; days)
        PI%parmin(27)=30d0
-       PI%parmax(27)=365.25d0*8d0
+       PI%parmax(27)=365.25d0*6d0
 
        ! fraction of Cwood which is branch
        PI%parmin(28)=0.05d0
@@ -152,7 +157,7 @@ module MODEL_PARAMETERS
 
        ! BUCKET - maximum rooting depth (m)
        PI%parmin(35)=0.35d0
-       PI%parmax(35)=20d0 !60d0
+       PI%parmax(35)=15d0 !20d0 !60d0
 
        ! Reich - Leaf N linked respiration exponential coefficient
        PI%parmin(36)=0.935d0 ! 1.639-0.01
@@ -188,15 +193,9 @@ module MODEL_PARAMETERS
        PI%parmin(42)=1.5d0
        PI%parmax(42)=30d0
 
-!       ! Minimum daily temperature at which temperature related NUE decline acceleration reaches 50 %
-!       ! determine by logistic function with sensitivity parameter (pars(43))
-!       PI%parmin(42)=-10d0
-!       PI%parmax(42)= 15d0
-
-       ! maximum number of NUE decline acceleration that can be applied (days)
-       PI%parmin(43)=1d0
-       PI%parmax(43)=28d0 ! 7d0
-
+       ! intrinsc water use efficiency (gC/m2leaf/day/mmolH2Ogs)
+       PI%parmin(43)=5d-8
+       PI%parmax(43)=5d-6 
 
 !       ! CN_wood coefficient for increase due to C_wood (deltalCN per gC.m-2)
 !       ! NOTE: values in log scale
@@ -225,7 +224,7 @@ module MODEL_PARAMETERS
 
        ! C litter
        PI%parmin(22)=1d0
-       PI%parmax(22)=5000d0
+       PI%parmax(22)=2500d0 !5000d0
 
        ! C_som
        PI%parmin(23)=100d0

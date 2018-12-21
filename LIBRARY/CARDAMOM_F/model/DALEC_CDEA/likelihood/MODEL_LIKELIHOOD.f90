@@ -375,7 +375,7 @@ module model_likelihood_module
 
     ! SOM attractor - must be within a factor of 2 from Csom0
     ! eqiulibrium factor (in comparison with initial conditions)
-    EQF=10.0
+    EQF = 10.0
 
     ! initialise and then calculate mean gpp values
     meangpp=sum(M_GPP(1:nodays))/real(nodays)

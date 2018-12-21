@@ -112,7 +112,7 @@ public :: CARBON_MODEL                  &
          ,snowfall                      &
          ,snow_melt                     &
          ,wind_spd                      &
-         ,vpd_kpa                        &
+         ,vpd_kPa                        &
          ,lai                           &
          ,days_per_step                 &
          ,days_per_step_1               &
@@ -164,8 +164,7 @@ double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daug
 !!!!!!!!!
 
 ! useful technical parameters
-logical :: do_iWUE = .true., & ! Use iWUE or WUE for stomatal optimisation
- do_energy_balance = .false.   ! Calculate steady-state energy balance for GPP~Transpiration
+logical :: do_iWUE = .true. ! Use iWUE or WUE for stomatal optimisation
 double precision, parameter :: dble_zero = 0d0    &
                               ,dble_one = 1d0     &
                               ,vsmall = tiny(0d0)*1d3 ! *1d3 to add a little breathing room
@@ -185,6 +184,7 @@ double precision, parameter :: pi = 3.1415927d0,  &
                            freeze = 273.15d0,     &
                        gs_H2O_CO2 = 1.646259d0,   & ! The ratio of H20:CO2 diffusion for gs (Jones appendix 2)
                      gs_H2O_CO2_1 = gs_H2O_CO2 ** (-1d0), &
+                gs_H2Ommol_CO2mol = gs_H2O_CO2 * 1d-3, & ! The ratio of H20:CO2 diffusion for gs (Jones appendix 2)
                        gb_H2O_CO2 = 1.37d0,       & ! The ratio of H20:CO2 diffusion for gb (Jones appendix 2)
           partial_molar_vol_water = 18.05d-6,     & ! partial molar volume of water, m3 mol-1 at 20C
                        umol_to_gC = 1d-6*12d0,    & ! conversion of umolC -> gC
@@ -345,6 +345,7 @@ double precision :: root_reach, root_biomass, &
                      ustar, & ! friction velocity (m.s-1)
                   ustar_Uh, &
             air_density_kg, & ! air density kg/m3
+            ET_demand_coef, & ! air_density_kg * vpd_kPa * cpair
                     roughl, & ! roughness length (m)
               displacement, & ! zero plane displacement (m)
                 max_supply, & ! maximum water supply (mmolH2O/m2/day)
@@ -363,6 +364,7 @@ double precision :: root_reach, root_biomass, &
    aerodynamic_conductance, & ! bulk surface layer conductance (m.s-1)
           soil_conductance, & ! soil surface conductance (m.s-1)
          convert_ms1_mol_1, & ! Conversion ratio for m.s-1 -> mol.m-2.s-1
+        convert_ms1_mmol_1, & ! Conversion ratio for m/s -> mmol/m2/s
        air_vapour_pressure, & ! Vapour pressure of the air (kPa)
                     lambda, & ! latent heat of vapourisation (J.kg-1)
                      psych, & ! psychrometric constant (kPa K-1)
@@ -413,7 +415,7 @@ double precision :: mint, & ! minimum temperature (oC)
                 snowfall, &
                snow_melt, & ! snow melt (kgH2O/m2/s)
                 wind_spd, & ! wind speed (m/s)
-                 vpd_kpa, & ! Vapour pressure deficit (kPa)
+                 vpd_kPa, & ! Vapour pressure deficit (kPa)
                      lai    ! leaf area index (m2/m2)
 
 ! Module level varoables for step specific timing information
@@ -488,7 +490,7 @@ contains
     double precision, dimension(nodays,nofluxes), intent(inout) :: FLUXES ! vector of ecosystem fluxes
 
     ! declare general local variables
-    double precision ::  tmp,infi &
+    double precision ::  tmp,tmp1,infi &
                ,transpiration &
              ,soilevaporation &
               ,wetcanopy_evap &
@@ -635,7 +637,7 @@ contains
     ! p(40) = Reich Rm_wood N exponent
     ! p(41) = Reich Rm_wood N baseline
     ! p(42) = Leaf marginal loss sensitivity (days)
-    ! p(43) = ---------- SPARE -----------
+    ! p(43) = iWUE
     ! p(44) = Initial root profile water content (m3/m3)
 
     ! variables related to deforestation
@@ -687,7 +689,7 @@ contains
     max_lai_par_reflection     = 1.623013d-01  ! Max fraction of PAR reflected by canopy
     lai_half_par_reflection    = 1.114360d+00  ! LAI at which canopy PAR reflected = 50 %
     lai_half_lwrad_reflected   = 1.126214d+00  ! LAI at which 50 % LW is reflected back to sky
-    iWUE                       = 1.602503d-06  ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
+    iWUE                       = pars(43) !1.602503d-06  ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
     soil_swrad_absorption      = 6.643079d-01  ! Fraction of SW rad absorbed by soil
     max_lai_par_transmitted    = 8.079519d-01  ! Max fractional reduction in PAR transmittance by canopy
     lai_half_par_transmitted   = 9.178784d-01  ! LAI at which PAR transmittance reduction = 50 %
@@ -711,11 +713,11 @@ contains
     canopy_maturation_lag = pars(14) ! canopy age (days) before peak NUE
     canopy_optimum_period = 7d0      ! period of time the canopy is at optimum NUE
     ! estimate the canopy growth sensitivity variable (i.e. period over which to average marginal returns)
-    leaf_growth_period = ceiling(pars(5))/dble(mean_days_per_step)
+    leaf_growth_period = ceiling(pars(5))/mean_days_per_step
     leaf_growth_period_1 = leaf_growth_period**(-1d0)
     ! estimate the canopy mortality sensitivity variable (i.e. period
     ! over which to average marginal returns)
-    leaf_mortality_period = ceiling(pars(42))/dble(mean_days_per_step)
+    leaf_mortality_period = ceiling(pars(42))/mean_days_per_step
     leaf_mortality_period_1 = leaf_mortality_period**(-1d0)
 
     ! Root biomass to reach 50% (root_k) of maximum rooting depth (max_depth)
@@ -728,12 +730,129 @@ contains
     ! calculate specific leaf area from leaf mass area
     SLA = pars(17)**(-1d0)
     ! calculate root life spans (days)
-    root_life = pars(7)**(-1d0)
+    !root_life = pars(7)**(-1d0)
     ! Assign initial leaf lifespan used in marginal return calculations
     leaf_life = pars(27)
     ! Determine the maximum possible leaf life span
-    leaf_life_max = canopy_zero_efficiency + canopy_maturation_lag + canopy_optimum_period
+    !leaf_life_max = canopy_zero_efficiency + canopy_maturation_lag + canopy_optimum_period
     call estimate_mean_NUE
+
+    !
+    ! Components to be initialised if this call is at the beginning of the model analysis.
+    ! Allows potential for other MDF algorithms to be used which call the model one step at a time.
+    !
+
+    ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
+    if (.not.allocated(deltat_1)) then
+
+       !
+       ! Allocate all variables whose dimensions are now known and invarient between iterations
+       !
+
+       ! first those linked to the time period of the analysis
+       allocate(disturbance_residue_to_litter(nodays),disturbance_residue_to_cwd(nodays), &
+                disturbance_residue_to_som(nodays),disturbance_loss_from_litter(nodays),  &
+                disturbance_loss_from_cwd(nodays),disturbance_loss_from_som(nodays),      &
+                Cwood_labile_release_coef(nodays),Croot_labile_release_coef(nodays),      &
+                Cfol_turnover_coef(nodays),deltat_1(nodays),wSWP_time(nodays),            &
+                soilwatermm(nodays),daylength_hours(nodays),daylength_seconds(nodays),    &
+                daylength_seconds_1(nodays),meant_time(nodays),rainfall_time(nodays),     &
+                airt_zero_fraction_time(nodays), &
+                co2_half_saturation(nodays),co2_compensation_point(nodays))
+
+       !
+       ! Timing variables which are needed first
+       !
+
+       ! inverse of time step (days-1) to avoid divisions
+       deltat_1 = deltat**(-1d0)
+
+       !
+       ! Iteration independent variables using functions and thus need to be in a loop
+       !
+
+       ! then those independent of the time period, 15 years used to provide
+       ! buffer for maximum value at which leaves become photosynthetically
+       ! useless
+       canopy_age_vector = 0d0 ; canopy_days = 0d0 ; marginal_loss_avg = 0d0
+       NUE_vector = 0d0 ; leaf_loss_possible = 0
+
+       ! first those linked to the time period of the analysis
+       do n = 1, nodays
+          ! check positive values only for rainfall input
+          rainfall_time(n) = max(0d0,met(7,n))
+          ! calculate daylength in hours and seconds
+          call calculate_daylength((met(6,n)-(deltat(n)*0.5d0)),lat)
+          daylength_hours(n) = dayl_hours ; daylength_seconds(n) = dayl_seconds
+          ! Temperature adjustments for Michaelis-Menten coefficients
+          ! for CO2 (kc) and O2 (ko) and CO2 compensation point.
+          co2_compensation_point(n) = arrhenious(co2comp_saturation,co2comp_half_sat_conc,met(3,n))
+          co2_half_saturation(n) = arrhenious(kc_saturation,kc_half_sat_conc,met(3,n))
+       end do
+
+       ! calculate inverse for each time step in seconds
+       daylength_seconds_1 = daylength_seconds ** (-1d0)
+       ! meant time step temperature
+       meant_time = (met(2,1:nodays)+met(3,1:nodays)) * 0.5d0
+       ! fraction of temperture period above freezing
+       airt_zero_fraction_time = (met(3,1:nodays)-0d0) / (met(3,1:nodays)-met(2,1:nodays))
+       ! then those independent of the time period (8yr*365days + 90days; accounting for pre and post peak NUE )
+       do n = 1, size(canopy_days)
+          ! estimate cumulative age in days
+          canopy_days(n) = n
+       end do
+
+       !
+       ! Determine those related to phenology
+       !
+
+       ! Hydraulic limitation parameters for tissue cell expansion, i.e. growth
+       ! NOTE: that these parameters are applied to deltaWP (i.e. minLWP-wSWP)
+       Cwood_hydraulic_gradient = 5d0 ; Cwood_hydraulic_half_saturation = -1.5d0
+
+       ! Temperature limitiation parameters on wood and fine root growth.
+       ! Parmeters generated on the assumption of 5 % / 95 % activation at key
+       ! temperature values. Roots 1oC/30oC, wood 5oC/30oC.
+       ! NOTE: Foliage and root potential turnovers use the same temperature curve
+       Croot_labile_release_gradient = 0.1962d0 ; Croot_labile_half_saturation = 15.0d0
+       Cwood_labile_release_gradient = 0.2355d0 ; Cwood_labile_half_saturation = 17.5d0
+       ! calculate temperature limitation on potential wood/root growth
+       Cwood_labile_release_coef = (1d0+exp(-Cwood_labile_release_gradient* &
+                                 (meant_time-Cwood_labile_half_saturation)))**(-1d0)
+       Croot_labile_release_coef = (1d0+exp(-Croot_labile_release_gradient* &
+                                 (meant_time-Croot_labile_half_saturation)))**(-1d0)
+
+       !
+       ! Initialise the water model
+       !
+
+       ! zero variables not done elsewhere
+       water_flux = 0d0
+       ! initialise some time invarient parameters
+       call saxton_parameters(soil_frac_clay,soil_frac_sand)
+       call initialise_soils(soil_frac_clay,soil_frac_sand)
+       call update_soil_initial_conditions(pars(44))
+       ! save the initial conditions for later
+       soil_waterfrac_initial = soil_waterfrac
+       SWP_initial = SWP
+       field_capacity_initial = field_capacity
+       porosity_initial = porosity
+
+      else ! allocated or not
+
+       !
+       ! Load initial soil water conditions from memory
+       !
+
+       water_flux = 0d0
+       field_capacity = field_capacity_initial
+       porosity = porosity_initial
+
+       ! input initial soil water fraction then
+       ! update SWP and soil conductivity accordingly
+       call update_soil_initial_conditions(pars(44))
+
+    endif ! allocatable variables already allocated...?
 
     !!!!!!
     ! N cycle related parameters
@@ -887,123 +1006,6 @@ contains
     POOLS(1,7) = pars(24) ! cwd
     ! POOL(1,8) assigned later
 
-    !
-    ! Components to be initialised if this call is at the beginning of the model analysis.
-    ! Allows potential for other MDF algorithms to be used which call the model one step at a time.
-    !
-
-    ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
-    if (.not.allocated(deltat_1)) then
-
-       !
-       ! Allocate all variables whose dimensions are now known and invarient between iterations
-       !
-
-       ! first those linked to the time period of the analysis
-       allocate(disturbance_residue_to_litter(nodays),disturbance_residue_to_cwd(nodays), &
-                disturbance_residue_to_som(nodays),disturbance_loss_from_litter(nodays),  &
-                disturbance_loss_from_cwd(nodays),disturbance_loss_from_som(nodays),      &
-                Cwood_labile_release_coef(nodays),Croot_labile_release_coef(nodays),      &
-                Cfol_turnover_coef(nodays),deltat_1(nodays),wSWP_time(nodays),            &
-                soilwatermm(nodays),daylength_hours(nodays),daylength_seconds(nodays),    &
-                daylength_seconds_1(nodays),meant_time(nodays),rainfall_time(nodays),     &
-                airt_zero_fraction_time(nodays), &
-                co2_half_saturation(nodays),co2_compensation_point(nodays))
-
-       !
-       ! Timing variables which are needed first
-       !
-
-       ! inverse of time step (days-1) to avoid divisions
-       deltat_1 = deltat**(-1d0)
-
-       !
-       ! Iteration independent variables using functions and thus need to be in a loop
-       !
-
-       ! then those independent of the time period, 15 years used to provide
-       ! buffer for maximum value at which leaves become photosynthetically
-       ! useless
-       canopy_age_vector = 0d0 ; canopy_days = 0d0 ; marginal_loss_avg = 0d0
-       NUE_vector = 0d0 ; leaf_loss_possible = 0
-
-       ! first those linked to the time period of the analysis
-       do n = 1, nodays
-          ! check positive values only for rainfall input
-          rainfall_time(n) = max(0d0,met(7,n))
-          ! calculate daylength in hours and seconds
-          call calculate_daylength((met(6,n)-(deltat(n)*0.5d0)),lat)
-          daylength_hours(n) = dayl_hours ; daylength_seconds(n) = dayl_seconds
-          ! Temperature adjustments for Michaelis-Menten coefficients
-          ! for CO2 (kc) and O2 (ko) and CO2 compensation point.
-          co2_compensation_point(n) = arrhenious(co2comp_saturation,co2comp_half_sat_conc,met(3,n))
-          co2_half_saturation(n) = arrhenious(kc_saturation,kc_half_sat_conc,met(3,n))
-       end do
-
-       ! calculate inverse for each time step in seconds
-       daylength_seconds_1 = daylength_seconds ** (-1d0)
-       ! meant time step temperature
-       meant_time = (met(2,1:nodays)+met(3,1:nodays)) * 0.5d0
-       ! fraction of temperture period above freezing
-       airt_zero_fraction_time = (met(3,1:nodays)-0d0) / (met(3,1:nodays)-met(2,1:nodays))
-       ! then those independent of the time period (8yr*365days + 90days; accounting for pre and post peak NUE )
-       do n = 1, size(canopy_days)
-          ! estimate cumulative age in days
-          canopy_days(n) = n
-       end do
-
-       !
-       ! Determine those related to phenology
-       !
-
-       ! Hydraulic limitation parameters for tissue cell expansion, i.e. growth
-       ! NOTE: that these parameters are applied to deltaWP (i.e. minLWP-wSWP)
-       Cwood_hydraulic_gradient = 5d0 ; Cwood_hydraulic_half_saturation = -1.5d0
-
-       ! Temperature limitiation parameters on wood and fine root growth.
-       ! Parmeters generated on the assumption of 5 % / 95 % activation at key
-       ! temperature values. Roots 1oC/30oC, wood 5oC/30oC.
-       ! NOTE: Foliage and root potential turnovers use the same temperature curve
-       Croot_labile_release_gradient = 0.1962d0 ; Croot_labile_half_saturation = 15.0d0
-       Cwood_labile_release_gradient = 0.2355d0 ; Cwood_labile_half_saturation = 17.5d0
-       ! calculate temperature limitation on potential wood/root growth
-       Cwood_labile_release_coef = (1d0+exp(-Cwood_labile_release_gradient* &
-                                 (meant_time-Cwood_labile_half_saturation)))**(-1d0)
-       Croot_labile_release_coef = (1d0+exp(-Croot_labile_release_gradient* &
-                                 (meant_time-Croot_labile_half_saturation)))**(-1d0)
-
-       !
-       ! Initialise the water model
-       !
-
-       ! zero variables not done elsewhere
-       water_flux = 0d0
-       ! initialise some time invarient parameters
-       call saxton_parameters(soil_frac_clay,soil_frac_sand)
-       call initialise_soils(soil_frac_clay,soil_frac_sand)
-       call update_soil_initial_conditions(pars(44))
-       ! save the initial conditions for later
-       soil_waterfrac_initial = soil_waterfrac
-       SWP_initial = SWP
-       field_capacity_initial = field_capacity
-       porosity_initial = porosity
-
-      else ! allocated or not
-
-       !
-       ! Load initial soil water conditions from memory
-       !
-
-       water_flux = 0d0
-       field_capacity = field_capacity_initial
-       porosity = porosity_initial
-
-       ! input initial soil water fraction then
-       ! update SWP and soil conductivity accordingly
-       call update_soil_initial_conditions(pars(44))
-
-    endif ! allocatable variables already allocated...?
-
     ! load some needed module level values
     lai = POOLS(1,2)*SLA
     mint = met(2,1)  ! minimum temperature (oC)
@@ -1013,7 +1015,7 @@ contains
     doy = met(6,1)   ! Day of year
     rainfall = rainfall_time(1) ! rainfall (kgH2O/m2/s)
     wind_spd = met(15,1) ! wind speed (m/s)
-    vpd_kpa = met(16,1)*1d-3 ! vapour pressure deficit (Pa)
+    vpd_kPa = met(16,1)*1d-3 ! vapour pressure deficit (Pa)
     meant = meant_time(1)
     leafT = maxt     ! initial canopy temperature (oC)
     maxt_lag1 = maxt
@@ -1042,24 +1044,27 @@ contains
     tmp = canopy_age ** (-2d0)
     tmp = POOLS(1,2) * tmp
     ! assign foliar biomass to first half of the distribution
-    do n = 1, nint(canopy_age), 1
-       canopy_age_vector(n) = tmp * dble(n)
-    end do
+!    do n = 1, nint(canopy_age), 1
+!       canopy_age_vector(n) = tmp * dble(n)
+!    end do
+    canopy_age_vector(1:nint(canopy_age)) = canopy_days(1:nint(canopy_age)) * tmp
 
     ! now repeat the process for the second part of the distribution
     !tmp = ((0.5d0 * 2d0) / (dble(oldest_leaf) - canopy_age) ** 2)
     tmp = (dble(oldest_leaf) - canopy_age) ** (-2d0)
     tmp = POOLS(1,2) * tmp
-    do n = nint(canopy_age+1d0), oldest_leaf, 1
-       canopy_age_vector(n) = tmp * dble(oldest_leaf-n)
-    end do
+!    do n = nint(canopy_age+1d0), oldest_leaf, 1
+!       canopy_age_vector(n) = tmp * dble(oldest_leaf-n)
+!    end do
+    canopy_age_vector((nint(canopy_age)+1):oldest_leaf) = tmp * &
+                                                         (dble(oldest_leaf) - canopy_days((nint(canopy_age)+1):oldest_leaf))
 
     ! check / adjust mass balance
     tmp = POOLS(1,2) / sum(canopy_age_vector(1:oldest_leaf))
     canopy_age_vector(1:oldest_leaf) = canopy_age_vector(1:oldest_leaf) * tmp
     ! we have leaves therefore there must be an age
     canopy_age = sum(canopy_age_vector(1:oldest_leaf) * canopy_days(1:oldest_leaf)) &
-               / sum(canopy_age_vector(1:oldest_leaf))
+               / POOLS(1,2) !sum(canopy_age_vector(1:oldest_leaf))
 
     ! estimate canopy age class specific NUE
     do n = 1, size(canopy_days)
@@ -1118,7 +1123,7 @@ contains
       meant = meant_time(n) ! mean air temperature (oC)
       airt_zero_fraction = airt_zero_fraction_time(n) ! fraction of temperture period above freezing
       wind_spd = met(15,n) ! wind speed (m/s)
-      vpd_kpa = met(16,n)*1d-3 ! vapour pressure deficit (Pa->kPa)
+      vpd_kPa = met(16,n)*1d-3 ! vapour pressure deficit (Pa->kPa)
 
       ! states needed for module variables
       lai_out(n) = POOLS(n,2)*SLA
@@ -1214,23 +1219,8 @@ contains
       ! Estimate evaporative and photosynthetic fluxes
       !!!!!!!!!!
 
-      ! if desired calculate the steady-state energy balance
-      if (do_energy_balance) then
-          isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * seconds_per_day_1)
-          call update_net_radiation(isothermal,leafT,lai,1d0 &
-                                   ,0d0,aerodynamic_conductance,vpd_kpa &
-                                   ,deltaTemp,deltaR)
-          ! update long wave and canopy temperature based on potential canopy surface flux
-          canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
-          leafT = leafT + deltaTemp
-          ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
-          call calculate_wetcanopy_evaporation(wetcanopy_evap,act_pot_ratio,canopy_storage,0d0)
-          ! restore temperature and radiation values
-          leafT = leafT - deltaTemp ; canopy_lwrad_Wm2 = canopy_lwrad_Wm2 - deltaR
-      else
-          ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
-          call calculate_wetcanopy_evaporation(wetcanopy_evap,act_pot_ratio,canopy_storage,0d0)
-      endif ! do energy balance
+      ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
+      call calculate_wetcanopy_evaporation(wetcanopy_evap,act_pot_ratio,canopy_storage,0d0)
 
       ! calculate radiation absorption and estimate stomatal conductance
       call acm_albedo_gc(abs(deltaWP),Rtot)
@@ -1469,11 +1459,11 @@ contains
       !!!!!!!!!!
 
       ! foliage
-      Rg_from_labile =                   FLUXES(n,8)*Rg_fraction  ; FLUXES(n,8) = FLUXES(n,8) * (one_Rg_fraction)
+      Rg_from_labile =                   FLUXES(n,8)*Rg_fraction  ; FLUXES(n,8) = FLUXES(n,8) * one_Rg_fraction
       ! roots
-      Rg_from_labile = Rg_from_labile + (FLUXES(n,6)*Rg_fraction) ; FLUXES(n,6) = FLUXES(n,6) * (one_Rg_fraction)
+      Rg_from_labile = Rg_from_labile + (FLUXES(n,6)*Rg_fraction) ; FLUXES(n,6) = FLUXES(n,6) * one_Rg_fraction
       ! wood
-      Rg_from_labile = Rg_from_labile + (FLUXES(n,7)*Rg_fraction) ; FLUXES(n,7) = FLUXES(n,7) * (one_Rg_fraction)
+      Rg_from_labile = Rg_from_labile + (FLUXES(n,7)*Rg_fraction) ; FLUXES(n,7) = FLUXES(n,7) * one_Rg_fraction
       ! now update the Ra flux with Rg
       FLUXES(n,3) = FLUXES(n,3) + Rg_from_labile
 
@@ -1877,13 +1867,13 @@ contains
     double precision :: pn, pd, pp, qq, ci, mult, pl &
                        ,gc ,gs_mol, gb_mol
 
-    if (do_energy_balance) then
-        ! Temperature adjustments for Michaelis-Menten coefficients
-        ! for CO2 (kc) and O2 (ko) and CO2 compensation point
-        ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
-        co2_half_sat   = arrhenious(kc_saturation,kc_half_sat_conc,leafT)
-        co2_comp_point = arrhenious(co2comp_saturation,co2comp_half_sat_conc,leafT)
-    endif
+
+!    ! Temperature adjustments for Michaelis-Menten coefficients
+!    ! for CO2 (kc) and O2 (ko) and CO2 compensation point
+!    ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
+!    co2_half_sat   = arrhenious(kc_saturation,kc_half_sat_conc,leafT)
+!    co2_comp_point = arrhenious(co2comp_saturation,co2comp_half_sat_conc,leafT)
+
 
     !
     ! Metabolic limited photosynthesis
@@ -1900,7 +1890,7 @@ contains
     ! daily canopy conductance (mmolH2O.m-2.s-1-> molCO2.m-2.day-1)
     ! The ratio of H20:CO2 diffusion is 1.646259 (Jones appendix 2).
     ! i.e. gcH2O*1.646259 = gcCO2
-    gs_mol = gs * 1d-3 * seconds_per_day * gs_H2O_CO2
+    gs_mol = gs * seconds_per_day * gs_H2Ommol_CO2mol
     ! canopy level boundary layer conductance unit change
     ! (m.s-1 -> mol.m-2.day-1) assuming sea surface pressure only.
     ! Note the ratio of H20:CO2 diffusion through leaf level boundary layer is
@@ -1958,8 +1948,6 @@ contains
     double precision, intent(in) :: gs_in
 
     ! local variables
-    double precision :: tmp,airt_save,lw_save, &
-                        isothermal,deltaTemp,deltaR
     double precision :: gs_high, gs_store, &
                         gpp_high, gpp_low
 
@@ -1967,46 +1955,16 @@ contains
     ! Optimise intrinsic water use efficiency
     !!!!!!!!!!
 
-    ! if desired calculate the steady-state energy balance
-    if (do_energy_balance) then
-        ! save values which will need to be reset
-        airt_save = leafT ; lw_save = canopy_lwrad_Wm2
-        ! estimate energy balance without wet evaporation effects
-        isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
-        call update_net_radiation(isothermal,leafT,lai,1d0 &
-                                 ,gs_in,aerodynamic_conductance,vpd_kpa &
-                                 ,deltaTemp,deltaR)
-        ! note that both the leafT and canopy LW have an implicit day -> day length correction
-        canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
-        leafT = leafT + deltaTemp
-    endif
     ! estimate photosynthesis with current estimate of gs
     gpp_low = acm_gpp(gs_in)
 
     ! Increment gs
     gs_high = gs_in + delta_gs
-    ! if desired calculate the steady-state energy balance
-    if (do_energy_balance) then
-        leafT = airt_save ; canopy_lwrad_Wm2 = lw_save
-        ! estimate energy balance without wet evaporation effects
-        isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
-        call update_net_radiation(isothermal,leafT,lai,1d0 &
-                                 ,gs_in,aerodynamic_conductance,vpd_kpa &
-                                 ,deltaTemp,deltaR)
-        ! note that both the leafT and canopy LW have an implicit day -> day length correction
-        canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
-        leafT = leafT + deltaTemp
-    endif
     ! estimate photosynthesis with incremented gs
     gpp_high = acm_gpp(gs_high)
 
     ! determine impact of gs increment on pd and how far we are from iWUE
     find_gs_iWUE = iWUE - ((gpp_high - gpp_low)/lai)
-
-    ! now if I have been changing these drivers, best put them back to normal
-    if (do_energy_balance) then
-        leafT = airt_save ; canopy_lwrad_Wm2 = lw_save
-    endif
 
     ! remember to return back to the user
     return
@@ -2026,8 +1984,6 @@ contains
     double precision, intent(in) :: gs_in
 
     ! local variables
-    double precision :: tmp,airt_save,lw_save, &
-                        isothermal,deltaTemp,deltaR
     double precision :: gs_high, gs_store, &
                         gpp_high, gpp_low, &
                         evap_high, evap_low
@@ -2038,20 +1994,9 @@ contains
 
     ! Globally stored upper stomatal conductance estimate in memory
     gs_store = stomatal_conductance
+
     ! now assign the current estimate
     stomatal_conductance = gs_in
-    if (do_energy_balance) then
-        ! save values which will need to be reset
-        airt_save = leafT ; lw_save = canopy_lwrad_Wm2
-        ! estimate energy balance without wet evaporation effects
-        isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
-        call update_net_radiation(isothermal,leafT,lai,1d0 &
-                                 ,gs_in,aerodynamic_conductance,vpd_kpa &
-                                 ,deltaTemp,deltaR)
-        ! note that both the leafT and canopy LW have an implicit day -> day length correction
-        canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
-        leafT = leafT + deltaTemp
-    endif
     ! estimate photosynthesis with current estimate of gs
     gpp_low = acm_gpp(gs_in)
     call calculate_transpiration(evap_low)
@@ -2060,18 +2005,6 @@ contains
     gs_high = gs_in + delta_gs
     ! now assign the incremented estimate
     stomatal_conductance = gs_high
-    ! if desired calculate the steady-state energy balance
-    if (do_energy_balance) then
-        leafT = airt_save ; canopy_lwrad_Wm2 = lw_save
-        ! estimate energy balance without wet evaporation effects
-        isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
-        call update_net_radiation(isothermal,leafT,lai,1d0 &
-                                 ,gs_in,aerodynamic_conductance,vpd_kpa &
-                                 ,deltaTemp,deltaR)
-        ! note that both the leafT and canopy LW have an implicit day -> day length correction
-        canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
-        leafT = leafT + deltaTemp
-    endif
     ! estimate photosynthesis with incremented gs
     gpp_high = acm_gpp(gs_high)
     call calculate_transpiration(evap_high)
@@ -2082,11 +2015,6 @@ contains
 
     ! return original stomatal value back into memory
     stomatal_conductance = gs_store
-
-    ! now if I have been changing these drivers, best put them back to normal
-    if (do_energy_balance) then
-        leafT = airt_save ; canopy_lwrad_Wm2 = lw_save
-    endif
 
     ! remember to return back to the user
     return
@@ -2125,7 +2053,7 @@ contains
        max_supply = vsmall
     end if
 
-    if (lai > vsmall .and. aerodynamic_conductance > vsmall) then
+    if (aerodynamic_conductance > vsmall) then
 
         ! there is lai therefore we have have stomatal conductance
 
@@ -2134,13 +2062,13 @@ contains
         ! This will then be reduced based on CO2 limits for diffusion based
         ! photosynthesis
         denom = slope * ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2) &
-              + (air_density_kg * cpair * vpd_kpa * aerodynamic_conductance)
+              + (ET_demand_coef * aerodynamic_conductance)
         denom = (denom / (lambda * max_supply * mmol_to_kg_water * dayl_seconds_1)) - slope
         denom = denom / psych
         stomatal_conductance = aerodynamic_conductance / denom
 
         ! convert m.s-1 to mmolH2O.m-2.s-1
-        stomatal_conductance = stomatal_conductance * 1d3 * convert_ms1_mol_1
+        stomatal_conductance = stomatal_conductance * convert_ms1_mmol_1
         ! if conditions are dew forming then set conductance to maximum as we are not going to be limited by water demand
         if (stomatal_conductance <= 0d0 .or. stomatal_conductance > max_gs) stomatal_conductance = max_gs
 
@@ -2157,17 +2085,6 @@ contains
                 stomatal_conductance = zbrent('acm_albedo_gc:find_gs_WUE',find_gs_WUE,min_gs,stomatal_conductance,tol_gs)
             endif
         end if
-
-        ! if desired calculate the steady-state energy balance
-        if (do_energy_balance) then
-            isothermal = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
-            call update_net_radiation(isothermal,leafT,lai,1d0 &
-                                     ,stomatal_conductance,aerodynamic_conductance,vpd_kpa &
-                                     ,deltaTemp,deltaR)
-            ! note that both the leafT and canopy LW have an implicit day -> day length correction
-            canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + deltaR
-            leafT = leafT + deltaTemp
-        endif
 
     else
 
@@ -2198,6 +2115,7 @@ contains
     air_density_kg = 353d0/local_temp
     ! Conversion ratio for m.s-1 -> mol.m-2.s-1
     convert_ms1_mol_1 = const_sfc_pressure / (local_temp*Rcon)
+    convert_ms1_mmol_1 = convert_ms1_mol_1 * 1d3
     ! latent heat of vapourisation,
     ! function of air temperature (J.kg-1)
 !    if (input_temperature < 1d0) then
@@ -2214,6 +2132,9 @@ contains
     s = 2502.935945d0*exp(17.269d0*input_temperature/mult)
     ! Rate of change of saturation vapour pressure with temperature (kPa.K-1)
     slope = s/(mult*mult)
+
+    ! create commonly used evaporative multiplicative
+    ET_demand_coef = air_density_kg * vpd_kPa * cpair
 
   end subroutine acm_meteorological_constants
   !
@@ -2253,7 +2174,7 @@ contains
     ! Change units of potential stomatal conductance
     ! (mmolH2O.m-2.s-1 -> m.s-1).
     ! Note assumption of sea surface pressure only
-    gs = stomatal_conductance / (convert_ms1_mol_1 * 1d3)
+    gs = stomatal_conductance / convert_ms1_mmol_1
     ! Combine in series stomatal conductance with boundary layer
     gb = aerodynamic_conductance
 
@@ -2262,7 +2183,7 @@ contains
     !!!!!!!!!!
 
     ! Calculate numerator of Penman Montheith (kg.m-2.day-1)
-    transpiration = (slope*canopy_radiation) + (air_density_kg*cpair*vpd_kpa*gb)
+    transpiration = (slope*canopy_radiation) + (ET_demand_coef*gb)
     ! Calculate the transpiration flux and restrict by potential water supply
     ! over the day
     transpiration = min(water_supply,(transpiration / (lambda*(slope+(psych*(1d0+gb/gs)))))*dayl_seconds)
@@ -2308,7 +2229,7 @@ contains
     !!!!!!!!!!
 
     ! Calculate numerator of Penman Montheith (kgH2O.m-2.day-1)
-    wetcanopy_evap = (slope*canopy_radiation) + (air_density_kg*cpair*vpd_kpa*gb)
+    wetcanopy_evap = (slope*canopy_radiation) + (ET_demand_coef*gb)
     ! Calculate the potential wet canopy evaporation, limited by energy used for
     ! transpiration
     wetcanopy_evap = (wetcanopy_evap / (lambda*(slope+psych))) * seconds_per_day
@@ -2390,10 +2311,12 @@ contains
 
     ! calculate saturated vapour pressure (kPa), function of temperature.
     esat = 0.1d0 * exp( 1.80956664d0 + ( 17.2693882d0 * local_temp - 4717.306081d0 ) / ( local_temp - 35.86d0 ) )
-    air_vapour_pressure = esat - vpd_kpa
+    air_vapour_pressure = esat - vpd_kPa
 
     ! Estimate water diffusion rate (m2.s-1) Jones (2014) appendix 2
-    water_diffusion = 24.2d-6 * ( local_temp / 293.2d0 )**1.75d0
+    ! Temperature adjusted from standard 20oC (293.15 K), NOTE that 1/293.15 = 0.003411223
+    !water_diffusion = 24.2d-6 * ( local_temp / 293.15d0 )**1.75d0
+    water_diffusion = 24.2d-6 * ( local_temp * 0.003411223d0 )**1.75d0
     ! Soil conductance to water vapour diffusion (m s-1)...
     gws = porosity(1) * water_diffusion / (tortuosity*drythick)
 
@@ -2483,7 +2406,7 @@ contains
     double precision, intent(out) :: gv_forced ! canopy conductance (m/s) for water vapour under forced convection
 
     ! local parameters
-    double precision, parameter :: leaf_width = 0.08d0   & ! leaf width (m)
+    double precision, parameter :: leaf_width = 0.04d0   & ! leaf width (m) (original 0.08)
                                           ,Pr = 0.72d0     ! Prandtl number
     ! local variables
     double precision :: local_temp &
@@ -2498,9 +2421,11 @@ contains
 
     ! local estimate of temperature in Kelvin
     local_temp = maxt+freeze
-    ! Determine diffusion coefficient (m2s-1), temperature dependant (pressure dependence neglected). Jones p51;
+    ! Determine diffusion coefficient (m2.s-1), temperature dependant (pressure dependence neglected). Jones p51; appendix 2
+    ! Temperature adjusted from standard 20oC (293.15 K), NOTE that 1/293.15 = 0.003411223
     ! 0.0000242 = conversion to make diffusion specific for water vapor (um2.s-1)
-    Dwv = 0.0000242d0*((local_temp/293.15d0)**1.75d0)
+!    Dwv = 0.0000242d0*((local_temp/293.15d0)**1.75d0)
+    Dwv = 0.0000242d0*((local_temp * 0.003411223d0)**1.75d0)
     ! Calculate the dynamic viscosity of air
     dynamic_viscosity = ((local_temp**1.5d0)/(local_temp+120d0))*1.4963d-6
     kinematic_viscosity = dynamic_viscosity/air_density_kg

@@ -149,7 +149,7 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat 
      if (pft == 1) then
          out_var(i,1:nodays,13) = FLUXES(1:nodays,17) ! replace with crop model yield
      else
-         out_var(i,1:nodays,13) = FLUXES(1:nodays,20) ! harvested material
+         out_var(i,1:nodays,13) = FLUXES(1:nodays,17) ! harvested material
      endif
      if (pft == 1) then
         out_var(i,1:nodays,14) = 0d0

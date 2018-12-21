@@ -172,17 +172,24 @@ contains
 
        ! determine accept or reject
        ! changed accept / reject during merge - 23/10/18
-       if (((P-P0)/N%likelihood_scaler) > crit) then
+!       if (((P-P0)/N%likelihood_scaler) > crit) then
+!print*,(P-P0)
+       if ((P-P0) > crit) then
 
           ! store accepted parameter solutions
-          do i = 1, PI%npars
-             ! keep record of all parameters accepted since step adaption
-             PARSALL((N%ACCLOC*PI%npars)+i) = PARS(i)
-             PARS0(i) = PARS(i)
-          end do ! pars
+          ! do i = 1, PI%npars
+          !    ! keep record of all parameters accepted since step adaption
+          !    PARSALL((N%ACCLOC*PI%npars)+i) = PARS(i)
+          !    PARS0(i) = PARS(i)
+          ! end do ! pars
+          ! store accepted parameter solutions
+          ! keep record of all parameters accepted since step adaption
+          PARSALL(((N%ACCLOC*PI%npars)+1):((N%ACCLOC*PI%npars)+PI%npars)) = PARS(i)
+          PARS0(1:PI%npars) = PARS(1:PI%npars)
+          ! specifically store the best parameter set
           if (P > P0) BESTPARS = PARS
           ! keep track of how many accepted solutions (global and local)
-          N%ACC = N%ACC+1 ; N%ACCLOC = N%ACCLOC+1 ; P0 = P
+          N%ACC = N%ACC + 1 ; N%ACCLOC = N%ACCLOC + 1 ; P0 = P
 
           ! write out parameter, log-likelihood and step if appropriate
           if (MCO%nWRITE > 0 .and. mod(N%ACC,MCO%nWRITE) == 0) then
@@ -197,7 +204,8 @@ contains
        ! time to adapt?
        if (mod(N%ITER,MCO%nADAPT) == 0) then
            ! work out local acceptance rate (i.e. since last adapt)
-           N%ACCRATE=dble(N%ACCLOC)/dble(MCO%nADAPT)
+           N%ACCRATE = dble(N%ACCLOC) / dble(MCO%nADAPT)
+!print*,"acceptance = ",N%ACCRATE
            ! have few enough parameters been accepted to consider adapting
            if ((MCO%fADAPT*dble(MCO%nOUT)) > dble(N%ACC)) then
                call adapt_step_size(PARSALL,PI,N,MCO)
@@ -257,8 +265,7 @@ contains
 
     ! calculate constants
     minstepsize = 10000d0/dble(N%ITER)
-
-    if (minstepsize > 0.01d0) minstepsize = 0.01d0 ! TLS
+    if (minstepsize > 0.01d0) minstepsize = 0.01d0
 
     ! determine local acceptance rate
     N%ACCRATE = dble(N%ACCLOC)/dble(MCO%nADAPT)
@@ -276,7 +283,7 @@ contains
     ! this is the adaptive part (Bloom & Williams 2015)
     ! NOTE: original value was > 3, however this result in a biased estimate of
     ! the standard deviation to a lower value.
-    if (N%ACCLOC > 10 .and. N%ACCRATE < 0.23d0) then
+    if (N%ACCLOC > 5 .and. N%ACCRATE < 0.23d0) then
         do p = 1, PI%npars
            do i = 1, N%ACCLOC
               norparvec(i) = par2nor(PARSALL((PI%npars*(i-1))+p),PI%parmin(p),PI%parmax(p))
@@ -293,7 +300,7 @@ contains
     endif ! if N%ACCLOC > 10
 
     ! keep track of how long we have been stuck somewhere
-    if (N%ACCLOC == 0) N%ACCLOC_ZEROS = N%ACCLOC_ZEROS + 1
+    ! if (N%ACCLOC == 0) N%ACCLOC_ZEROS = N%ACCLOC_ZEROS + 1
 
     !!!!!!!
     ! carry out final checks
@@ -301,12 +308,12 @@ contains
 
     ! if the minimum step size has been hit
     ! and we are still falling outside of the acceptance rate adjust likelihood scaler
-    if (minval(PI%stepsize) <= minstepsize .and. N%ACCRATE < 0.23d0 .and. N%likelihood_scaler < 100d0) then
-        N%likelihood_scaler = N%likelihood_scaler + 0.05d0
-    elseif (N%likelihood_scaler > 1d0 .and. N%ACCRATE > 0.23d0) then
-!    elseif (N%likelihood_scaler > 1d0 .and. N%ACCRATE > 0.44d0) then
-        N%likelihood_scaler = N%likelihood_scaler - 0.05d0
-    end if
+!     if (minval(PI%stepsize) <= minstepsize .and. N%ACCRATE < 0.23d0 .and. N%likelihood_scaler < 100d0) then
+!         N%likelihood_scaler = N%likelihood_scaler + 0.05d0
+!     elseif (N%likelihood_scaler > 1d0 .and. N%ACCRATE > 0.23d0) then
+! !    elseif (N%likelihood_scaler > 1d0 .and. N%ACCRATE > 0.44d0) then
+!         N%likelihood_scaler = N%likelihood_scaler - 0.05d0
+!     end if
 
     ! step size can't be greater than 1
     where (PI%stepsize > 1d0) PI%stepsize = PI%stepsize * adaptfac_1
@@ -323,8 +330,7 @@ contains
   double precision function par2nor(initial_par,min_par,max_par)
 
     ! functions to normalised log parameter values and return them back to
-    ! unlogged
-    ! un-normalised value
+    ! unlogged / un-normalised value
 
     ! converting parameters on log scale between 0-1 for min/max values
     implicit none
@@ -332,9 +338,9 @@ contains
 
     if (max_par > 0d0 .and. min_par < 0d0) then
         ! then normalise without logs and we cross zero
-        par2nor=(initial_par-min_par)/(max_par-min_par)
+        par2nor = (initial_par-min_par)/(max_par-min_par)
     else
-        par2nor=log(initial_par/min_par)/log(max_par/min_par)
+        par2nor = log(initial_par/min_par)/log(max_par/min_par)
     end if
 
     ! explicit return
@@ -346,15 +352,18 @@ contains
   !
   double precision function nor2par(initial_par,min_par,max_par)
 
-    ! converting values back from log scale 0-1 to 'real' numbers
+    ! Converting values back from normalised (0-1) to 'real' numbers
+
     implicit none
     double precision initial_par, min_par, max_par
 
+    ! determine whether we used log normalisation or not
     if ( max_par > 0d0 .and. min_par < 0d0) then
-        ! then un-normalise without logs as we cross zero and logs wont work
-        nor2par=min_par+(max_par-min_par)*initial_par
+        ! ...then un-normalise without logs as we cross zero and logs wont work
+        nor2par = min_par+(max_par-min_par)*initial_par
     else
-        nor2par=min_par*((max_par/min_par)**initial_par)
+        ! ...then un-normalised assuming logs-normalisation was used
+        nor2par = min_par*((max_par/min_par)**initial_par)
     endif
 
     ! explicit return
@@ -379,7 +388,7 @@ contains
 
     ! declare local variables
     integer :: n, fp
-    double precision  :: npar, rn
+    double precision  :: npar, npar_new, rn
 
     ! default values
     npar = 0d0 ; rn = 0d0
@@ -387,17 +396,20 @@ contains
     ! begin sampling parameter space
     do n = 1, PI%npars
       fp = 0
+      ! normalise parameters first
+      npar = par2nor(pars0(n),PI%parmin(n),PI%parmax(n))
+      ! then apply step...
       do while (fp == 0)
          ! get a normally distributed random number
 !         rn = randn(1)
          call random_normal(uniform, size(uniform_random_vector), uniform_random_vector, rn)
-         ! normalise parameters first
-         npar = par2nor(pars0(n),PI%parmin(n),PI%parmax(n))
-         npar = npar + (rn*PI%stepsize(n)*(1d0-PI%parfix(n)))
+         ! apply to our current parameter value
+         npar_new = npar + (rn*PI%stepsize(n)*(1d0-PI%parfix(n)))
+!         npar_new = min(1d0,max(0d0,npar_new))
          ! ensure the new parameter value is contrained between 0 and 1
-         if (npar > 0d0 .and. npar < 1d0) then
+         if (npar_new > 0d0 .and. npar_new < 1d0) then
             fp = 1
-            pars(n) = nor2par(npar,PI%parmin(n),PI%parmax(n))
+            pars(n) = nor2par(npar_new,PI%parmin(n),PI%parmax(n))
          end if
       end do ! while conditions
     end do ! parameter loop

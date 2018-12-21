@@ -71,7 +71,7 @@ subroutine rdalecnbucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
   double precision, dimension(nodays,nofluxes) :: FLUXES
   double precision, dimension(nodays) :: resid_fol
   integer, dimension(nodays) :: hak ! variable to determine number of NaN
-  double precision :: sumNPP, fauto
+  double precision :: sumNPP, fauto, inf
   double precision, dimension(nodays) :: lai & ! leaf area index
                                         ,GPP & ! Gross primary productivity
                                         ,NEE   ! net ecosystem exchange of CO2
@@ -91,12 +91,12 @@ subroutine rdalecnbucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
                                                        LRRT
 
 ! profiling example
-real :: begin, done,f1=0,f2=0,f3=0,f4=0,f5=0,total_time = 0
+!real :: begin, done,f1=0,f2=0,f3=0,f4=0,f5=0,total_time = 0
 !real :: Rtot_track_time = 0, aero_time = 0 , soilwater_time = 0 , acm_et_time = 0 , Rm_time = 0
 !call cpu_time(done)
 !print*,"time taken per iter",(done-begin) / real(nos_iter)
   ! zero initial conditions
-  out_var = 0d0 ; out_var2 = 0d0
+  out_var = 0d0 ; out_var2 = 0d0 ; inf = 0d0
 
   ! update soil parameters
   soil_frac_clay = soil_frac_clay_in
@@ -113,7 +113,7 @@ real :: begin, done,f1=0,f2=0,f3=0,f4=0,f5=0,total_time = 0
   if (pft == 1) call crop_development_parameters(stock_seed_labile,DS_shoot,DS_root,fol_frac &
                                                 ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT &
                                                 ,exepath,pathlength)
-call cpu_time(begin)
+!call cpu_time(begin)
   ! begin iterations
   do i = 1, nos_iter
 
@@ -270,8 +270,14 @@ call cpu_time(begin)
   out_var2(1:nos_iter,6) = (out_var2(1:nos_iter,6)*365.25d0)**(-1d0) ! root
   out_var2(1:nos_iter,7) = (out_var2(1:nos_iter,7)*365.25d0)**(-1d0) ! som
   out_var2(1:nos_iter,8) = (out_var2(1:nos_iter,8)*365.25d0)**(-1d0) ! CWD + Litter
-call cpu_time(done)
-print*,"time taken per iter",(done-begin) / real(nos_iter)
+
+  ! with the cohort based canopy model it is possible for some parameter sets to return
+  ! infinity mean transit time (i.e. no turnover occurred in the analysis).
+  where (out_var2(1:nos_iter,4) == -log(inf))
+    out_var2(1:nos_iter,4) = dble(nodays) / 365.25d0
+  end where
+!call cpu_time(done)
+!print*,"time taken per iter",(done-begin) / real(nos_iter)
   ! return back to the subroutine then
   return
 

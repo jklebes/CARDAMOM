@@ -195,6 +195,7 @@ cardamom <-function (projname,model,method,stage) {
   ## Begin Stage 1
 
   if (stage == 1) {
+skip_UK = read.csv("/home/lsmallma/Desktop/UK_forestry_sites_with_yield_and_biomass.csv",header=TRUE)
     print("Beginning creation of binary input files")
     # flag for met drivers load
     loaded_all = FALSE ; met_all = 0 ; lai_all = 0 ; Csom_all = 0 ; forest_all = 0 ; Cwood_all = 0
@@ -238,19 +239,18 @@ cardamom <-function (projname,model,method,stage) {
             # assume ACM special case
             met = extract_acm_met_drivers(PROJECT,latlon[n,],PROJECT$sites[n])
           } #  acm special case
+#if ( length(which(skip_UK$UK_Forest_site_nos == n)) > 0) {
           obs=extract_obs(latlon[n,],lai_all,Csom_all,forest_all,Cwood_all,sand_clay_all,crop_man_all
             ,burnt_all,soilwater_all
             ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
             ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
-            # if this is not an explicit forest rotation model run then we need to update pft information
-            if (PROJECT$model$name != "DALEC_CDEA_FR") {
-              # update ctessel pft in the project and potentially the model information
-              PROJECT$ctessel_pft[n]=obs$ctessel_pft
-              # Load additional model information
-              PROJECT$model=cardamom_model_details(PROJECT$model$name,pft_specific_parameters,PROJECT$ctessel_pft)
-            }
+            # update ctessel pft in the project and potentially the model information
+            PROJECT$ctessel_pft[n]=obs$ctessel_pft
+            # Load additional model information
+            PROJECT$model=cardamom_model_details(PROJECT$model$name,pft_specific_parameters,PROJECT$ctessel_pft)
             # write out the relevant binary files
             binary_data(met,obs,filename,PROJECT$edc,latlon[n,],PROJECT$ctessel_pft[n],PROJECT$model$name,PROJECT$parameter_type,PROJECT$model$nopars[n])
+#}
           }
         } # site loop
 
@@ -320,14 +320,14 @@ cardamom <-function (projname,model,method,stage) {
           }
         } # ecdf condition
         # do we run the parameters yet for analysis
-        run_all=readline("Run all parameter vectors to generate confidence intervals? (y/n)")
-        failed=TRUE
+        run_all = readline("Run all parameter vectors to generate confidence intervals? (y/n)")
+        failed = TRUE
         while(failed) {
           if (run_all != "y" & run_all != "n") {run_all=readline("Run all parameter vectors to generate confidence intervals? (y/n)") ; failed=TRUE} else {failed = FALSE}
         }
         if (run_all == "y") {
           PROJECT$latter_sample_frac = 0.75 #0.5 # 0.75 #readline("What (latter) fraction of accepted parameters to use (e.g. 0.5)?")
-          run_mcmc_results(PROJECT,stage,repair)
+          run_mcmc_results(PROJECT,stage,repair,grid_override)
         }
 
         # now save the project
@@ -340,12 +340,12 @@ cardamom <-function (projname,model,method,stage) {
       ###
       ## Begin Stage 4
 
-      if (stage == 4) {
+      if (stage == 4 | stage == 4.5) {
         print("Beginning stage 4: generating stardard outputs")
 
         # assume default latter half of analysis to be kept
         if ( PROJECT$latter_sample_frac == 0 | PROJECT$latter_sample_frac == 1) {
-          PROJECT$latter_sample_frac=0.5 #readline("What (latter) fraction of accepted parameters to use (e.g. 0.5)?")
+          PROJECT$latter_sample_frac = 0.75 #readline("What (latter) fraction of accepted parameters to use (e.g. 0.5)?")
           save(PROJECT,file=PROJECTfile)
         }
 
@@ -368,7 +368,7 @@ cardamom <-function (projname,model,method,stage) {
 
           # will generate spatial maps instead
           generate_parameter_maps(PROJECT)
-          generate_stocks_and_fluxes_maps(PROJECT)
+          if (stage == 4.5) {generate_stocks_and_fluxes_maps(PROJECT)}
 
         } else {
           stop('missing spatial_type definition (i.e. grid or site)')
@@ -401,7 +401,7 @@ cardamom <-function (projname,model,method,stage) {
         }
         if (run_all == "y") {
           PROJECT$latter_sample_frac=0.75 #0.5 # 0.75
-          run_mcmc_results(PROJECT,stage,repair)
+          run_mcmc_results(PROJECT,stage,repair,grid_override)
         }
         # ...but just in case we remember and set the rapair value back to its original user defined value
         repair = repair_remember

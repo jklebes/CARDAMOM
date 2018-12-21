@@ -335,7 +335,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[38]=OBS$soilwater ; PARPRIORUNC[38]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
     } else {
       PARPRIORS[41]=OBS$soilwater ; PARPRIORUNC[41]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
-      PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=1.32313*2 # NUE prior derived from Kattge et al., (2011)
+      # PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=1.32313*2 # NUE prior derived from Kattge et al., (2011)
     } # crop or not
   } else if (modelname == "DALECN_GSI_BUCKET") {
     PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
@@ -368,15 +368,15 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[21]=-9999             ; PARPRIORUNC[21]=-9999
       PARPRIORS[38]=OBS$soilwater ; PARPRIORUNC[38]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
     } else {
-      PARPRIORS[2]=51.70631   ; PARPRIORUNC[2]=124.6938 # C:N root (gC/gN) Kattge et al., (2011)
-      PARPRIORS[15]=416.6667  ; PARPRIORUNC[15]=326.3762 # C:N wood (gC/gN) Kattge et al., (2011)
-      PARPRIORS[26]=11.197440 ; PARPRIORUNC[26]=1.32313*2 # NUE prior derived from Kattge et al., (2011)
-      PARPRIORS[36]=1.639     ; PARPRIORUNC[36]=0.125   # Rm_leaf N**exponent (gC/gN) Reich et al., (2008)
-      PARPRIORS[37]=0.778     ; PARPRIORUNC[37]=0.133   # Rm_leaf intercept (gC/gN) Reich et al., (2008)
-      PARPRIORS[38]=1.352     ; PARPRIORUNC[38]=0.150   # Rm_root N**exponent (gC/gN) Reich et al., (2008)
-      PARPRIORS[39]=0.997     ; PARPRIORUNC[39]=0.082   # Rm_root intercept (gC/gN) Reich et al., (2008)
-      PARPRIORS[40]=1.344     ; PARPRIORUNC[40]=0.150   # Rm_wood N**exponent (gC/gN) Reich et al., (2008)
-      PARPRIORS[41]=0.946     ; PARPRIORUNC[41]=0.107   # Rm_wood intercept (gC/gN) Reich et al., (2008)
+      # PARPRIORS[2]=51.70631   ; PARPRIORUNC[2]=124.6938 # C:N root (gC/gN) Kattge et al., (2011)
+      # PARPRIORS[15]=416.6667  ; PARPRIORUNC[15]=326.3762 # C:N wood (gC/gN) Kattge et al., (2011)
+      # PARPRIORS[26]=11.197440 ; PARPRIORUNC[26]=1.32313 # NUE prior derived from Kattge et al., (2011)
+      # PARPRIORS[36]=1.639     ; PARPRIORUNC[36]=0.125   # Rm_leaf N**exponent (gC/gN) Reich et al., (2008)
+      # PARPRIORS[37]=0.778     ; PARPRIORUNC[37]=0.133   # Rm_leaf intercept (gC/gN) Reich et al., (2008)
+      # PARPRIORS[38]=1.352     ; PARPRIORUNC[38]=0.150   # Rm_root N**exponent (gC/gN) Reich et al., (2008)
+      # PARPRIORS[39]=0.997     ; PARPRIORUNC[39]=0.082   # Rm_root intercept (gC/gN) Reich et al., (2008)
+      # PARPRIORS[40]=1.344     ; PARPRIORUNC[40]=0.150   # Rm_wood N**exponent (gC/gN) Reich et al., (2008)
+      # PARPRIORS[41]=0.946     ; PARPRIORUNC[41]=0.107   # Rm_wood intercept (gC/gN) Reich et al., (2008)
       PARPRIORS[44]=OBS$soilwater ; PARPRIORUNC[44]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
     } # Crop or not
   } else if (modelname == "ACM") {

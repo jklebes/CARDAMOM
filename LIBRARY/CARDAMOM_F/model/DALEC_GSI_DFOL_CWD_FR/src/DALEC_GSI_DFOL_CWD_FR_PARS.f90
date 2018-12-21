@@ -88,7 +88,7 @@ module MODEL_PARAMETERS
        ! log10 avg foliar N (gN.m-2)
        ! Kattge et al., (2011) (Quantiles 2.5% / 97.5%)
        PI%parmin(11)=-0.2218487d0
-       PI%parmax(11)= 0.5563025d0
+       PI%parmax(11)=0.6382028d0! 0.5563025d0
 
        ! Max labile turnover fraction to foliage
        PI%parmin(12)=0.0006844627d0 ! 4 years 0.0001368925d0 ! 20 years
@@ -184,7 +184,7 @@ module MODEL_PARAMETERS
 
        ! C litter
        PI%parmin(22)=1d0
-       PI%parmax(22)=5000d0 
+       PI%parmax(22)=5000d0
 
        ! C_som
        PI%parmin(23)=100d0

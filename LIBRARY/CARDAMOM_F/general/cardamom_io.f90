@@ -234,12 +234,12 @@ module cardamom_io
         enddo
         if (num_lines > 0) then
             ! then there is something in the file we we can use it
-            restart_flag=.true.
+            restart_flag = .true.
             print*,"...have found parameter file = ",trim(parname)
             print*,"...have found step file = ",trim(stepname)
         else
             ! or the file exists but is empty so treat it as a fresh start
-            restart_flag=.false.
+            restart_flag = .false.
             print*,"the *PAR and *STEP files exist however they are empty so treat as a new job"
         endif
         ! either way we open the file up later on so now we need to close them
@@ -534,7 +534,7 @@ module cardamom_io
     DATAin%noobs = int(statdat(5))
     DATAin%EDC = int(statdat(6))
     DATAin%PFT = int(statdat(7))
-    DATAin%yield = int(statdat(8))
+    DATAin%yield = -9999 !int(statdat(8))
     DATAin%age = int(statdat(9))
     nopars_dummy = int(statdat(10)) ! needed for next dev stage
     soil_frac_sand(1:2) = statdat(12) ! top soil sand percentage

@@ -12,13 +12,21 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
     ###
 
     if (lai_source == "MODIS") {
-      # get lai
-      lai = extract_modis_lai(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,lai_all,as.numeric(start_year):as.numeric(end_year))
-      # assume default uncertainty (+/- scale)
-      lai_unc = rep(-9999,times = length(lai))
-      # borrowed linear approximtion of uncertainty form Copernicus
-      lai_unc[which(lai != -9999)] = 0.25 #lai[which(lai != -9999)] * 0.14028508 + 1.0
+
+      # Extract lai and uncertainty information
+      # NOTE: assume default uncertainty (+/- scale)
+      output = extract_modis_lai(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,lai_all,as.numeric(start_year):as.numeric(end_year))
+      lai = output$lai ; lai_unc = output$lai_unc
+
+    } else if (lai_source == "COPERNICUS") {
+
+      # Extract lai and uncertainty information
+      # NOTE: assume default uncertainty (+/- scale)
+      output = extract_copernicus_lai(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,lai_all,as.numeric(start_year):as.numeric(end_year))
+      lai = output$lai ; lai_unc = output$lai_unc
+
     } else if (lai_source == "site_specific") {
+
       # read from .csv or netcdf
       infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
       lai = read_site_specific_obs("LAI",infile) ; lai_unc = read_site_specific_obs("LAI_unc",infile)
@@ -27,9 +35,12 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
         # borrowed linear approximtion of uncertainty form Copernicus
         lai_unc[which(lai != -9999)] = 0.25 #lai[which(lai != -9999)] * 0.14028508 + 1.0
       }
+
     } else {
+
       lai = -9999
       lai_unc = -9999
+
     }
 
     ###
@@ -211,7 +222,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
       if (length(NEE_unc) == 1) {
         # on the other hand if not then we have no uncertainty info, so use default
         NEE_unc = rep(-9999,times = length(NEE))
-        NEE_unc[which(NEE != -9999)] = 1 #abs(0.25 * NEE[which(NEE != -9999)]) + 1.0
+        NEE_unc[which(NEE != -9999)] = 1.5 #abs(0.25 * NEE[which(NEE != -9999)]) + 1.0
       }
     } else {
       # assume no data available
