@@ -1,6 +1,6 @@
 
 ###
-## Function to run CARDAMOM parameters via the choosen model
+## Function to run CARDAMOM parameters via the chosen model
 ###
 
 run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
@@ -104,7 +104,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
 				save(parameters,drivers,states_all,sub_parameter,site_ctessel_pft,aNPP,file=outfile)#, compress="gzip")
 			} else {
 				# ...otherwise this is a grid and we want straight forward reduced dataset of common stocks and fluxes
-				num_quantiles = c(0.025,0.5,0.975)
+				num_quantiles = c(0.025,0.25,0.5,0.75,0.975)
 				# Stocks first
 				site_output = list(labile_gCm2 = apply(states_all$lab,2,quantile,prob=num_quantiles),
 				foliage_gCm2 = apply(states_all$fol,2,quantile,prob=num_quantiles),
@@ -211,39 +211,85 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 						# make a list of all the files we will be reading in
 						to_do = list.files(PROJECT$results_processedpath, full.names=TRUE)
 						to_do = to_do[grepl("_stock_fluxes",to_do)]
-						# read in the first file so that we can then set up all the grids for combined output
+						# read in the first file so that we can then set up all the grids for combined summary output
 						load(to_do[1])
 
+						#
+						# Generate the summary information
+						# Time invariant but contain uncertainty, shaped into the full spatial grid
+						# i.e. including areas not part of the analysis but within the spatail domain
+						#
+
 						# Stocks first
-						grid_output = list(labile_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2])))
-						grid_output$foliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-						grid_output$roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-						grid_output$wood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-						grid_output$lit_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-						grid_output$som_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-						grid_output$cwd_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+						grid_output = list(mean_labile_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1])))
+						grid_output$mean_foliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+						grid_output$mean_roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+						grid_output$mean_wood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+						grid_output$mean_lit_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+						grid_output$mean_som_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+						grid_output$mean_cwd_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						# Fluxes second
-						grid_output$gpp_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-						grid_output$rauto_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-						grid_output$rhet_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-						grid_output$harvest_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-						grid_output$fire_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-print("f")
+						grid_output$mean_gpp_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+						grid_output$mean_rauto_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+						grid_output$mean_rhet_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+						grid_output$mean_harvest_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+						grid_output$mean_fire_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+
 						# Finally water cycle specific if available
 						if (length(which(names(site_output) == "evap")) > 0) {
 								# currently water in the soil surface layer (0-10 cm)
-								grid_output$SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+								grid_output$mean_SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 								# plant apparent soil water potential (MPa)
-								grid_output$wSWP_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+								grid_output$mean_wSWP_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 								# evapotranspiration (Etrans + Esoil + Ewetcanopy)
-								grid_output$evap_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+								grid_output$mean_evap_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						}
 
-						# determine the latitude / longitude grid
-						lat = seq(PROJECT$latitude[1],PROJECT$latitude[2],length.out=PROJECT$lat_dim)
-						long = seq(PROJECT$longitude[1],PROJECT$longitude[2],length.out=PROJECT$long_dim)
-						lat = array(lat, dim=c(length(lat),length(long))) ; lat = t(lat)
-						long = array(long, dim=dim(lat))
+						#
+						# Generate the variables needed to contain just the analysis locations
+						# Fully time series provided along with uncertainty information but for the analysis pixels only
+						# Each pixel will have a corresponding i and j location which related to its lat/long within the overall domain grid
+						#
+
+						# Stocks first
+						grid_output = list(labile_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2])))
+						grid_output$foliage_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+						grid_output$roots_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+						grid_output$wood_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+						grid_output$lit_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+						grid_output$som_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+						grid_output$cwd_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+						# Fluxes second
+						grid_output$gpp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+						grid_output$rauto_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+						grid_output$rhet_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+						grid_output$harvest_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+						grid_output$fire_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+
+						# Finally water cycle specific if available
+						if (length(which(names(site_output) == "evap")) > 0) {
+								# currently water in the soil surface layer (0-10 cm)
+								grid_output$SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+								# plant apparent soil water potential (MPa)
+								grid_output$wSWP_kgH2Om2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+								# evapotranspiration (Etrans + Esoil + Ewetcanopy)
+								grid_output$evap_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+						}
+
+						#
+						# Generate the spatial information needed to relate i,j within the grid to long / lat and the summary vs detailed output
+						#
+
+						# vector into which the i,j position information within the grid will be stored
+						grid_output$i_location = rep(NA, length.out = PROJECT$nosites)
+						grid_output$j_location = rep(NA, length.out = PROJECT$nosites)
+
+						# determine the latitude / longitude grid (dimension long = i, lat = j)
+						grid_output$lat = seq(PROJECT$latitude[1],PROJECT$latitude[2],length.out=PROJECT$lat_dim)
+						grid_output$long = seq(PROJECT$longitude[1],PROJECT$longitude[2],length.out=PROJECT$long_dim)
+						grid_output$lat = array(grid_output$lat, dim=c(length(grid_output$lat),length(grid_output$long)))
+						grid_output$lat = t(grid_output$lat)
+						grid_output$long = array(grid_output$long, dim=dim(grid_output$lat))
 
 				} else {
 
@@ -262,29 +308,57 @@ print("f")
 					      slot_j=as.numeric(PROJECT$sites[n])/PROJECT$long_dim
 					      slot_i=as.numeric(PROJECT$sites[n])-(floor(slot_j)*PROJECT$long_dim)
 					      if(slot_i == 0) {slot_i = PROJECT$long_dim} ; slot_j=ceiling(slot_j)
+								# save for later
+								grid_output$i_location[n] = slot_i ; grid_output$j_location[n] = slot_j
+
 								# now assign to correct location in array
 								# Stocks first
-								grid_output$labile_gCm2[slot_i,slot_j,,] = site_output$labile_gCm2
-								grid_output$foliage_gCm2[slot_i,slot_j,,] = site_output$foliage_gCm2
-								grid_output$roots_gCm2[slot_i,slot_j,,] = site_output$roots_gCm2
-								grid_output$wood_gCm2[slot_i,slot_j,,] = site_output$wood_gCm2
-								grid_output$lit_gCm2[slot_i,slot_j,,] = site_output$lit_gCm2
-								grid_output$som_gCm2[slot_i,slot_j,,] = site_output$som_gCm2
-								grid_output$cwd_gCm2[slot_i,slot_j,,] = site_output$cwd_gCm2
+								grid_output$labile_gCm2[n,,] = site_output$labile_gCm2
+								grid_output$foliage_gCm2[n,,] = site_output$foliage_gCm2
+								grid_output$roots_gCm2[n,,] = site_output$roots_gCm2
+								grid_output$wood_gCm2[n,,] = site_output$wood_gCm2
+								grid_output$lit_gCm2[n,,] = site_output$lit_gCm2
+								grid_output$som_gCm2[n,,] = site_output$som_gCm2
+								grid_output$cwd_gCm2[n,,] = site_output$cwd_gCm2
 								# Fluxes second
-								grid_output$gpp_gCm2day[slot_i,slot_j,,] = site_output$gpp_gCm2day
-								grid_output$rauto_gCm2day[slot_i,slot_j,,] = site_output$rauto_gCm2day
-								grid_output$rhet_gCm2day[slot_i,slot_j,,] = site_output$rhet_gCm2day
-								grid_output$harvest_gCm2day[slot_i,slot_j,,] = site_output$harvest_gCm2day
-								grid_output$fire_gCm2day[slot_i,slot_j,,] = site_output$fire_gCm2day
+								grid_output$gpp_gCm2day[n,,] = site_output$gpp_gCm2day
+								grid_output$rauto_gCm2day[n,,] = site_output$rauto_gCm2day
+								grid_output$rhet_gCm2day[n,,] = site_output$rhet_gCm2day
+								grid_output$harvest_gCm2day[n,,] = site_output$harvest_gCm2day
+								grid_output$fire_gCm2day[n,,] = site_output$fire_gCm2day
+								# Finally water cycle specific if available
+								if (length(which(names(site_output) == "evap")) > 0) {
+										# currently water in the soil surface layer (0-10 cm)
+										grid_output$SurfWater_kgH2Om2[n,,] = site_output$SurfWater_kgH2Om2
+										# plant apparent soil water potential (MPa)
+										grid_output$wSWP_kgH2Om2[n,,] = site_output$wSWP_kgH2Om2
+										# evapotranspiration (Etrans + Esoil + Ewetcanopy)
+										grid_output$evap_kgH2Om2day[n,,] = site_output$evap_kgH2Om2day
+								}
+
+								# now assign to correct location in array
+								# Stocks first
+								grid_output$labile_gCm2[slot_i,slot_j,] = apply(site_output$labile_gCm2,1,mean)
+								grid_output$foliage_gCm2[slot_i,slot_j,] = apply(site_output$foliage_gCm2,1,mean)
+								grid_output$roots_gCm2[slot_i,slot_j,] = apply(site_output$roots_gCm2,1,mean)
+								grid_output$wood_gCm2[slot_i,slot_j,] = apply(site_output$wood_gCm2,1,mean)
+								grid_output$lit_gCm2[slot_i,slot_j,] = apply(site_output$lit_gCm2,1,mean)
+								grid_output$som_gCm2[slot_i,slot_j,] = apply(site_output$som_gCm2,1,mean)
+								grid_output$cwd_gCm2[slot_i,slot_j,] = apply(site_output$cwd_gCm2,1,mean)
+								# Fluxes second
+								grid_output$gpp_gCm2day[slot_i,slot_j,] = apply(site_output$gpp_gCm2day,1,mean)
+								grid_output$rauto_gCm2day[slot_i,slot_j,] = apply(site_output$rauto_gCm2day,1,mean)
+								grid_output$rhet_gCm2day[slot_i,slot_j,] = apply(site_output$rhet_gCm2day,1,mean)
+								grid_output$harvest_gCm2day[slot_i,slot_j,] = apply(site_output$harvest_gCm2day,1,mean)
+								grid_output$fire_gCm2day[slot_i,slot_j,] = apply(site_output$fire_gCm2day,1,mean)
 								# Finally water cycle specific if available
 								if (length(which(names(site_output) == evap)) > 0) {
 										# currently water in the soil surface layer (0-10 cm)
-										grid_output$SurfWater_kgH2Om2[slot_i,slot_j,,] = site_output$SurfWater_kgH2Om2
+										grid_output$SurfWater_kgH2Om2[slot_i,slot_j,] = apply(site_output$SurfWater_kgH2Om2,1,mean)
 										# plant apparent soil water potential (MPa)
-										grid_output$wSWP_kgH2Om2[slot_i,slot_j,,] = site_output$wSWP_kgH2Om2
+										grid_output$wSWP_kgH2Om2[slot_i,slot_j,] = apply(site_output$wSWP_kgH2Om2,1,mean)
 										# evapotranspiration (Etrans + Esoil + Ewetcanopy)
-										grid_output$evap_kgH2Om2day[slot_i,slot_j,,] = site_output$evap_kgH2Om2day
+										grid_output$evap_kgH2Om2day[slot_i,slot_j,] = apply(site_output$evap_kgH2Om2day,1,mean)
 								}
 
 								# now tidy away the file
@@ -293,9 +367,6 @@ print("f")
 						} # if site has been done and can now be made part of the overall...
 
 				} # looping through sites
-
-				# assign lat / long information
-				grid_output$latitude = lat ; grid_output$longitude = long
 
 				# now save the combined grid file
 				save(grid_output, file=outfile_grid)
