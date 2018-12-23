@@ -206,8 +206,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 
 				# determine what the output file name is here, so that we can check if one already exists
 				outfile_grid = paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep="")
+print(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
 				if (file.exists(outfile_grid) == FALSE) {
-
+print("arrays")
 						# make a list of all the files we will be reading in
 						to_do = list.files(PROJECT$results_processedpath, full.names=TRUE)
 						to_do = to_do[grepl("_stock_fluxes",to_do)]
@@ -219,7 +220,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 						# Time invariant but contain uncertainty, shaped into the full spatial grid
 						# i.e. including areas not part of the analysis but within the spatail domain
 						#
-
+print(PROJECT$long_dim) ; print(PROJECT$lat_dim) ; print(dim(site_output$labile_gCm2)[1])
 						# Stocks first
 						grid_output = list(mean_labile_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1])))
 						grid_output$mean_foliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -252,7 +253,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 						#
 
 						# Stocks first
-						grid_output = list(labile_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2])))
+						grid_output$labile_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
 						grid_output$foliage_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
 						grid_output$roots_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
 						grid_output$wood_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
@@ -338,27 +339,27 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 
 								# now assign to correct location in array
 								# Stocks first
-								grid_output$labile_gCm2[slot_i,slot_j,] = apply(site_output$labile_gCm2,1,mean)
-								grid_output$foliage_gCm2[slot_i,slot_j,] = apply(site_output$foliage_gCm2,1,mean)
-								grid_output$roots_gCm2[slot_i,slot_j,] = apply(site_output$roots_gCm2,1,mean)
-								grid_output$wood_gCm2[slot_i,slot_j,] = apply(site_output$wood_gCm2,1,mean)
-								grid_output$lit_gCm2[slot_i,slot_j,] = apply(site_output$lit_gCm2,1,mean)
-								grid_output$som_gCm2[slot_i,slot_j,] = apply(site_output$som_gCm2,1,mean)
-								grid_output$cwd_gCm2[slot_i,slot_j,] = apply(site_output$cwd_gCm2,1,mean)
+								grid_output$mean_labile_gCm2[slot_i,slot_j,] = apply(site_output$labile_gCm2,1,mean)
+								grid_output$mean_foliage_gCm2[slot_i,slot_j,] = apply(site_output$foliage_gCm2,1,mean)
+								grid_output$mean_roots_gCm2[slot_i,slot_j,] = apply(site_output$roots_gCm2,1,mean)
+								grid_output$mean_wood_gCm2[slot_i,slot_j,] = apply(site_output$wood_gCm2,1,mean)
+								grid_output$mean_lit_gCm2[slot_i,slot_j,] = apply(site_output$lit_gCm2,1,mean)
+								grid_output$mean_som_gCm2[slot_i,slot_j,] = apply(site_output$som_gCm2,1,mean)
+								grid_output$mean_cwd_gCm2[slot_i,slot_j,] = apply(site_output$cwd_gCm2,1,mean)
 								# Fluxes second
-								grid_output$gpp_gCm2day[slot_i,slot_j,] = apply(site_output$gpp_gCm2day,1,mean)
-								grid_output$rauto_gCm2day[slot_i,slot_j,] = apply(site_output$rauto_gCm2day,1,mean)
-								grid_output$rhet_gCm2day[slot_i,slot_j,] = apply(site_output$rhet_gCm2day,1,mean)
-								grid_output$harvest_gCm2day[slot_i,slot_j,] = apply(site_output$harvest_gCm2day,1,mean)
-								grid_output$fire_gCm2day[slot_i,slot_j,] = apply(site_output$fire_gCm2day,1,mean)
+								grid_output$mean_gpp_gCm2day[slot_i,slot_j,] = apply(site_output$gpp_gCm2day,1,mean)
+								grid_output$mean_rauto_gCm2day[slot_i,slot_j,] = apply(site_output$rauto_gCm2day,1,mean)
+								grid_output$mean_rhet_gCm2day[slot_i,slot_j,] = apply(site_output$rhet_gCm2day,1,mean)
+								grid_output$mean_harvest_gCm2day[slot_i,slot_j,] = apply(site_output$harvest_gCm2day,1,mean)
+								grid_output$mean_fire_gCm2day[slot_i,slot_j,] = apply(site_output$fire_gCm2day,1,mean)
 								# Finally water cycle specific if available
-								if (length(which(names(site_output) == evap)) > 0) {
+								if (length(which(names(site_output) == "evap")) > 0) {
 										# currently water in the soil surface layer (0-10 cm)
-										grid_output$SurfWater_kgH2Om2[slot_i,slot_j,] = apply(site_output$SurfWater_kgH2Om2,1,mean)
+										grid_output$mean_SurfWater_kgH2Om2[slot_i,slot_j,] = apply(site_output$SurfWater_kgH2Om2,1,mean)
 										# plant apparent soil water potential (MPa)
-										grid_output$wSWP_kgH2Om2[slot_i,slot_j,] = apply(site_output$wSWP_kgH2Om2,1,mean)
+										grid_output$mean_wSWP_kgH2Om2[slot_i,slot_j,] = apply(site_output$wSWP_kgH2Om2,1,mean)
 										# evapotranspiration (Etrans + Esoil + Ewetcanopy)
-										grid_output$evap_kgH2Om2day[slot_i,slot_j,] = apply(site_output$evap_kgH2Om2day,1,mean)
+										grid_output$mean_evap_kgH2Om2day[slot_i,slot_j,] = apply(site_output$evap_kgH2Om2day,1,mean)
 								}
 
 								# now tidy away the file
