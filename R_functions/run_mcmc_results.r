@@ -206,9 +206,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 
 				# determine what the output file name is here, so that we can check if one already exists
 				outfile_grid = paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep="")
-print(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
+
 				if (file.exists(outfile_grid) == FALSE) {
-print("arrays")
+
 						# make a list of all the files we will be reading in
 						to_do = list.files(PROJECT$results_processedpath, full.names=TRUE)
 						to_do = to_do[grepl("_stock_fluxes",to_do)]
@@ -220,7 +220,6 @@ print("arrays")
 						# Time invariant but contain uncertainty, shaped into the full spatial grid
 						# i.e. including areas not part of the analysis but within the spatail domain
 						#
-print(PROJECT$long_dim) ; print(PROJECT$lat_dim) ; print(dim(site_output$labile_gCm2)[1])
 						# Stocks first
 						grid_output = list(mean_labile_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1])))
 						grid_output$mean_foliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))

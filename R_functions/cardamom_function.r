@@ -368,7 +368,11 @@ skip_UK = read.csv("/home/lsmallma/Desktop/UK_forestry_sites_with_yield_and_biom
 
           # will generate spatial maps instead
           generate_parameter_maps(PROJECT)
-          if (stage == 4.5) {generate_stocks_and_fluxes_maps(PROJECT)}
+          if (stage == 4.5) {
+              generate_stocks_and_fluxes_maps(PROJECT)
+          } else {
+              generate_simplified_stock_and_flux_maps(PROJECT)
+          }
 
         } else {
           stop('missing spatial_type definition (i.e. grid or site)')

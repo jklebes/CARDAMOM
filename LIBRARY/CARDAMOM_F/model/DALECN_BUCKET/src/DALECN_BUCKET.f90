@@ -711,7 +711,7 @@ contains
     Rtot = 1d0                  ! Reset Total hydraulic resistance to 1
     canopy_zero_efficiency = pars(3) ! canopy age (days) past peak at which NUE = 0
     canopy_maturation_lag = pars(14) ! canopy age (days) before peak NUE
-    canopy_optimum_period = 7d0      ! period of time the canopy is at optimum NUE
+    canopy_optimum_period = 1d0      ! period of time the canopy is at optimum NUE
     ! estimate the canopy growth sensitivity variable (i.e. period over which to average marginal returns)
     leaf_growth_period = ceiling(pars(5))/mean_days_per_step
     leaf_growth_period_1 = leaf_growth_period**(-1d0)
@@ -1266,7 +1266,8 @@ contains
       Rm_leaf = Rm_reich_N(Q10_adjustment,CN_leaf,pars(36),pars(37))*tmp*POOLS(n,2)
       Rm_root = Rm_reich_N(Q10_adjustment,CN_root,pars(38),pars(39))*tmp*POOLS(n,3)
       Rm_wood = Rm_reich_N(Q10_adjustment,CN_wood,pars(40),pars(41))*tmp*POOLS(n,4)
-
+!print*,Rm_leaf > Rm_wood,(Rm_leaf/POOLS(n,2)) > (Rm_wood/POOLS(n,4))
+!print*,Rm_leaf / (Rm_leaf+Rm_wood+Rm_root),Rm_leaf / FLUXES(n,1)
       ! reset overall value as this is used in flag later
       Rm_deficit = 0d0
       ! determine if there is greater demand for Rm than available labile C
@@ -1466,7 +1467,7 @@ contains
       Rg_from_labile = Rg_from_labile + (FLUXES(n,7)*Rg_fraction) ; FLUXES(n,7) = FLUXES(n,7) * one_Rg_fraction
       ! now update the Ra flux with Rg
       FLUXES(n,3) = FLUXES(n,3) + Rg_from_labile
-
+!print*,Rg_from_labile / FLUXES(n,3)
       !!!!!!!!!!
       ! update pools for next timestep
       !!!!!!!!!!
@@ -3987,7 +3988,8 @@ contains
       endif ! avail_labile > 0
 
       ! no positives of growing new leaves so don't
-      if (marginal_gain_avg < 0d0 .or. marginal_gain < 0d0) then
+!      if (marginal_gain_avg < 0d0 .or. marginal_gain < 0d0) then
+      if (marginal_gain_avg < 0d0) then
         ! Marginal suggest that we are not gaining leaves
         ! Therefore, we must clear our "new" allocation from the first age class
           leaf_growth = 0d0

@@ -207,8 +207,10 @@ module MODEL_PARAMETERS
        !
 
        ! C labile
+       ! NOTE: labile upper bound to ensure that upper lab/wood ratio can be
+       ! reached
        PI%parmin(18)=1d0
-       PI%parmax(18)=1000d0
+       PI%parmax(18)=7500d0
 
        ! C foliar
        PI%parmin(19)=1d0

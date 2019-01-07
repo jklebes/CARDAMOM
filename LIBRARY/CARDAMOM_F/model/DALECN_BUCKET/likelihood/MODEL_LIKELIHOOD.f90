@@ -655,25 +655,25 @@ module model_likelihood_module
     end if
 
     ! The initial leaf life span should not be greater than period NUE > 0
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(3)+pars(14)) > (3d0*canopy_max_life)) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(3)+pars(14)) > (2d0*canopy_max_life)) then
         EDC1 = 0 ; EDCD%PASSFAIL(15) = 0
     endif
 
     ! The initial life span cannot be shorter than the mean canopy age
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(25) > pars(27)) then
-!        EDC1 = 0 ; EDCD%PASSFAIL(16) = 0
-!    endif
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(25) > pars(27)) then
+        EDC1 = 0 ; EDCD%PASSFAIL(16) = 0
+    endif
 !
 !     ! The total period where NUE > 0 cannot be greater than 8 years
 !     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(3)+pars(14)) > 365.25d0*8d0) then
 !        EDC1 = 0 ; EDCD%PASSFAIL(16) = 0
 !     endif
 !
-!     ! the maturation time (pars(14)) should not be greater than
-!     ! age related efficiency reduction (pars(3))
-!     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(14) > pars(3) ) then
-!        EDC1 = 0 ; EDCD%PASSFAIL(17) = 0
-!     endif
+     ! the maturation time (pars(14)) should not be greater than
+     ! age related efficiency reduction (pars(3))
+     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(14) > pars(3) ) then
+        EDC1 = 0 ; EDCD%PASSFAIL(17) = 0
+     endif
 
     !---------------------------------------------------------------------
     ! TLS: specifically Nitrogen model related EDCs
@@ -700,34 +700,33 @@ module model_likelihood_module
       EDC1 = 0 ; EDCD%PASSFAIL(20) = 0
     endif
 
-!     ! ! N linked Reich model of maintenance respiration intercept leaves (pars(37)) should
-!     ! ! always be less than that for wood (pars(41)) or roots (pars(39))
-!     ! ! Reich et al., (2008) for details
-!     ! if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(37) > pars(39)) ) then
-!     !    EDC1 = 0 ; EDCD%PASSFAIL(21) = 0
-!     ! endif
-!     ! if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(37) > pars(41)) ) then
-!     !    EDC1 = 0 ; EDCD%PASSFAIL(22) = 0
-!     ! endif
-!
-!     ! Reich et al (2008) suggested that on average baseline maintenance respiration for foliage
-!     ! should be less than that of the other tissues. At the same time canopies are observed to be
-!     ! the most metabolically expensive component of the plant for gC (Aktin et al., various).
-!     ! Therefore, CN ratio must balance between this emergent proporty and an average relation of baseline activity.
-!     ! Here we impose the latter emergent constrain that at mean temperature 1 gC of tissue, the foliage should be the most expensive.
-!     ! NOTE 1: 378.6912d0 = seconds_per_year * umol_to_gC
-!     ! NOTE 2: at 25 oC Rmleaf should be > 5 % of Vcmax for 1 m2/m2
-!     if ((EDC1 == 1 .or. DIAG == 1)) then
-!         tmp = pars(17) / (10d0**pars(11)) ! foliar C:N
-!         temp_response = Rm_reich_Q10(meantemp)
-!         tmp  = Rm_reich_N(temp_response,tmp,pars(36),pars(37))      ! foliar
-!         tmp1 = Rm_reich_N(temp_response,pars(2),pars(38),pars(39))  ! roots
-!         tmp2 = Rm_reich_N(temp_response,pars(15),pars(40),pars(41)) ! wood
-!         if (tmp < tmp1 .or. tmp < tmp2) then
-!             EDC1 = 0 ; EDCD%PASSFAIL(23) = 0
-!         endif
-!     end if
-!
+    ! N linked Reich model of maintenance respiration intercept leaves (pars(37)) should
+    ! always be less than that for wood (pars(41)) or roots (pars(39))
+    ! Reich et al., (2008) for details
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(37) > pars(39)) ) then
+!       EDC1 = 0 ; EDCD%PASSFAIL(21) = 0
+!    endif
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(37) > pars(41)) ) then
+!       EDC1 = 0 ; EDCD%PASSFAIL(22) = 0
+!    endif
+
+    ! Reich et al (2008) suggested that on average baseline maintenance respiration for foliage
+    ! should be less than that of the other tissues. At the same time canopies are observed to be
+    ! the most metabolically expensive component of the plant for gC (Aktin et al., various).
+    ! Therefore, CN ratio must balance between this emergent proporty and an average relation of baseline activity.
+    ! Thus, we argue that the canopy and fine roots, per 1 gC/m2, are more
+    ! expensive than wood
+    if ((EDC1 == 1 .or. DIAG == 1)) then
+        tmp = pars(17) / (10d0**pars(11)) ! foliar C:N
+        temp_response = Rm_reich_Q10(meantemp)
+        tmp  = Rm_reich_N(temp_response,tmp,pars(36),pars(37))      ! foliar
+        tmp1 = Rm_reich_N(temp_response,pars(2),pars(38),pars(39))  ! roots
+        tmp2 = Rm_reich_N(temp_response,pars(15),pars(40),pars(41)) ! wood
+        if (tmp < tmp2 .or. tmp1 < tmp2) then
+            EDC1 = 0 ; EDCD%PASSFAIL(23) = 0
+        endif
+    end if
+
 !     ! It is expected that at common temperature (25oC) leaf maintenance
 !     ! respiration should be not less than 5 % of Vcmax m2 leaf area
 !     ! (Atkins, reviews...need to check which paper this comes from)
@@ -981,9 +980,9 @@ module model_likelihood_module
           EDC2 = 0 ; EDCD%PASSFAIL(30) = 0
      endif
 
-!     ! derive mean pools for foliage (2), roots (3) and wood (4)
-!     mean_pools(2) = cal_mean_pools(M_POOLS,2,nodays,nopools)
-!     mean_pools(3) = cal_mean_pools(M_POOLS,3,nodays,nopools)
+     ! derive mean pools for foliage (2), roots (3) and wood (4)
+     mean_pools(2) = cal_mean_pools(M_POOLS,2,nodays,nopools)
+     mean_pools(3) = cal_mean_pools(M_POOLS,3,nodays,nopools)
 !     mean_pools(4) = cal_mean_pools(M_POOLS,4,nodays,nopools)
 !
      ! In contrast to the leaf longevity labile carbon stocks can be quite long
@@ -1012,20 +1011,20 @@ module model_likelihood_module
          endif
      endif ! EDC2 == 1 .or. DIAG == 1
 
-!     ! EDC 6
-!     ! ensure fine root : foliage ratio is between 0.1 and 0.45 (Albaugh et al
-!     ! 2004; Samuelson et al 2004; Vogel et al 2010; Akers et al 2013
-!     ! Duke ambient plots between 0.1 and 0.55
-!     ! Black et al 2009 Sitka Spruce chronosquence
-!     ! Q1 = 0.1278, median = 0.7488, mean = 1.0560 Q3 = 1.242
-!     ! lower CI = 0.04180938, upper CI = 4.06657167
-!     ! if (EDC2 == 1 .or. DIAG == 1) then
-!     !     mean_ratio(1) = mean_pools(3)/mean_pools(2)
-!     !     if ( mean_ratio(1) < 0.04d0 .or. mean_ratio(1) > 4.07d0 ) then
-!     !         EDC2 = 0 ; EDCD%PASSFAIL(33) = 0
-!     !     end if
-!     ! endif !
-!
+     ! EDC 6
+     ! ensure fine root : foliage ratio is between 0.1 and 0.45 (Albaugh et al
+     ! 2004; Samuelson et al 2004; Vogel et al 2010; Akers et al 2013
+     ! Duke ambient plots between 0.1 and 0.55
+     ! Black et al 2009 Sitka Spruce chronosquence
+     ! Q1 = 0.1278, median = 0.7488, mean = 1.0560 Q3 = 1.242
+     ! lower CI = 0.04180938, upper CI = 4.06657167
+     if (EDC2 == 1 .or. DIAG == 1) then
+         mean_ratio(1) = mean_pools(3)/mean_pools(2)
+         if ( mean_ratio(1) < 0.04d0 .or. mean_ratio(1) > 4.07d0 ) then
+             EDC2 = 0 ; EDCD%PASSFAIL(33) = 0
+         end if
+     endif !
+
 !     ! EDC 9
 !     ! Mature forest maximum foliar biomass (gC.m-2) can be expected to be
 !     ! between 430 gC.m-2 and 768 gC.m-2, assume 50 % uncertainty (Loblolly Pine)
@@ -1035,37 +1034,37 @@ module model_likelihood_module
 ! !    if ((EDC2 == 1 .or. DIAG == 1) .and. mean_pools(2) > 1200d0 ) then
 ! !       EDC2 = 0 ; EDCD%PASSFAIL(34) = 0
 ! !    endif
-!
-!     !
-!     ! EDC 14 - Fractional allocation to foliar biomass is well constrained
-!     ! across dominant ecosystem types (boreal -> temperate evergreen and
-!     ! deciduous -> tropical), therefore this information can be used to contrain the foliar pool
-!     ! further. Through control of the photosynthetically active compoent of the carbon
-!     ! balance we can enforce additional contraint on the remainder of the system.
-!     ! Luyssaert et al (2007)
-!
-     ! ! foliar restrictions
-     ! if ((EDC2 == 1 .or. DIAG == 1) .and. (fNPP < 0.1d0 .or. fNPP > 0.5d0)) then
-     !     EDC2 = 0 ; EDCD%PASSFAIL(35) = 0
-     ! endif
+
      !
-     ! ! for both roots and wood the NPP > 0.85 is added to prevent large labile
-     ! ! pools being used to support growth that photosynthesis cannot provide over
-     ! ! the long term.
-     ! if ((EDC2 == 1 .or. DIAG == 1) .and. (rNPP < 0.05d0 .or. rNPP > 0.85d0)) then
-     !     EDC2 = 0 ; EDCD%PASSFAIL(36) = 0
-     ! endif
-     ! if ((EDC2 == 1 .or. DIAG == 1) .and. (rNPP < 0.05d0 .or. rNPP > 0.85d0 .or. wNPP > 0.85d0)) then
-     !     EDC2 = 0 ; EDCD%PASSFAIL(36) = 0
-     ! endif
-!
-!     ! NOTE that within the current framework NPP is split between fol, root, wood and that remaining in labile.
-!     ! Thus fail conditions fNPP + rNPP + wNPP > 1.0 .or. fNPP + rNPP + wNPP < 0.95, i.e. lNPP cannot be > 0.05 (-0.1)
-!     ! tmp = 1d0 - rNPP - wNPP - fNPP
-!     ! if ((EDC2 == 1 .or. DIAG == 1) .and. abs(tmp) > 0.1d0) then
-!     !     EDC2 = 0 ; EDCD%PASSFAIL(37) = 0
-!     ! endif
-!
+     ! EDC 14 - Fractional allocation to foliar biomass is well constrained
+     ! across dominant ecosystem types (boreal -> temperate evergreen and
+     ! deciduous -> tropical), therefore this information can be used to contrain the foliar pool
+     ! further. Through control of the photosynthetically active compoent of the carbon
+     ! balance we can enforce additional contraint on the remainder of the system.
+     ! Luyssaert et al (2007)
+
+     ! foliar restrictions
+     if ((EDC2 == 1 .or. DIAG == 1) .and. (fNPP < 0.1d0 .or. fNPP > 0.5d0)) then
+         EDC2 = 0 ; EDCD%PASSFAIL(35) = 0
+     endif
+     
+     ! for both roots and wood the NPP > 0.85 is added to prevent large labile
+     ! pools being used to support growth that photosynthesis cannot provide over
+     ! the long term.
+     if ((EDC2 == 1 .or. DIAG == 1) .and. (rNPP < 0.05d0 .or. rNPP > 0.50d0)) then
+         EDC2 = 0 ; EDCD%PASSFAIL(36) = 0
+     endif
+     if ((EDC2 == 1 .or. DIAG == 1) .and. wNPP > 0.85d0) then
+         EDC2 = 0 ; EDCD%PASSFAIL(36) = 0
+     endif
+
+     ! NOTE that within the current framework NPP is split between fol, root, wood and that remaining in labile.
+     ! Thus fail conditions fNPP + rNPP + wNPP > 1.0 .or. fNPP + rNPP + wNPP < 0.95, i.e. lNPP cannot be > 0.05 (-0.1)
+!     tmp = 1d0 - rNPP - wNPP - fNPP
+!     if ((EDC2 == 1 .or. DIAG == 1) .and. abs(tmp) > 0.1d0) then
+!          EDC2 = 0 ; EDCD%PASSFAIL(37) = 0
+!     endif
+
 !     ! Ra:GPP ratio is unlikely to be outside of 0.2 > Ra:GPP < 0.80
 !     if ((EDC2 == 1 .or. DIAG == 1) .and. (fauto > 0.80d0 .or. fauto < 0.20d0) ) then
 !         EDC2 = 0 ; EDCD%PASSFAIL(38) = 0
@@ -1103,18 +1102,18 @@ module model_likelihood_module
            end if ! EDC conditions
         enddo
     endif
-!
-!     ! this is a big set of arrays to run through so only do so when we have
-!     ! reached this point and still need them
-!     if (EDC2 == 1 .or. DIAG == 1) then
-!
-!        ! calculate input and output ratios for all pools
-!        if (maxval(met(8,1:nodays)) > 0.99d0 .and. disturb_end == nodays) then
-!           ! there has been a replacement level event, but there is less than 2
-!           ! years before the end so we will assess the beginning of the analysis
-!           ! only
-!           in_out_root = sum(M_FLUXES(1:disturb_begin,6)) / sum(M_FLUXES(1:disturb_begin,12)+M_FLUXES(1:disturb_begin,24))
-!           in_out_root_disturb = 1d0
+
+     ! this is a big set of arrays to run through so only do so when we have
+     ! reached this point and still need them
+     if (EDC2 == 1 .or. DIAG == 1) then
+
+        ! calculate input and output ratios for all pools
+        if (maxval(met(8,1:nodays)) > 0.99d0 .and. disturb_end == nodays) then
+           ! there has been a replacement level event, but there is less than 2
+           ! years before the end so we will assess the beginning of the analysis
+           ! only
+           in_out_root = sum(M_FLUXES(1:disturb_begin,6)) / sum(M_FLUXES(1:disturb_begin,12)+M_FLUXES(1:disturb_begin,24))
+           in_out_root_disturb = 1d0
 !           ! in_out_wood = sum(M_FLUXES(1:disturb_begin,7)) / sum(M_FLUXES(1:disturb_begin,11)+M_FLUXES(1:disturb_begin,25))
 !           ! in_out_wood_disturb = 1d0
 !           in_out_lit = sum(M_FLUXES(1:disturb_begin,10)+M_FLUXES(1:disturb_begin,12)+M_FLUXES(1:disturb_begin,20) &
@@ -1135,14 +1134,14 @@ module model_likelihood_module
 !           !                  +disturbance_loss_from_litter(1:disturb_begin) &
 !           !                  +disturbance_loss_from_cwd(1:disturb_begin) &
 !           !                  +disturbance_loss_from_som(1:disturb_begin))
-!        else if (maxval(met(8,1:nodays)) > 0.99d0 .and. disturb_end /= nodays) then
-!           ! there has been a replacement level event, we will remove filter out a 2
-!           ! year period to allow for the most severe non-steady state response
-!           ! Croot
-!           in_out_root         = sum(M_FLUXES(1:disturb_begin,6))    &
-!                               / sum(M_FLUXES(1:disturb_begin,12)+M_FLUXES(1:disturb_begin,24))
-!           in_out_root_disturb = sum(M_FLUXES(disturb_end:nodays,6)) &
-!                               / sum(M_FLUXES(disturb_end:nodays,12)+M_FLUXES(disturb_end:nodays,24))
+        else if (maxval(met(8,1:nodays)) > 0.99d0 .and. disturb_end /= nodays) then
+           ! there has been a replacement level event, we will remove filter out a 2
+           ! year period to allow for the most severe non-steady state response
+           ! Croot
+           in_out_root         = sum(M_FLUXES(1:disturb_begin,6))    &
+                               / sum(M_FLUXES(1:disturb_begin,12)+M_FLUXES(1:disturb_begin,24))
+           in_out_root_disturb = sum(M_FLUXES(disturb_end:nodays,6)) &
+                               / sum(M_FLUXES(disturb_end:nodays,12)+M_FLUXES(disturb_end:nodays,24))
 !           ! Cwood
 !           ! in_out_wood         = sum(M_FLUXES(1:disturb_begin,7))    &
 !           !                     / sum(M_FLUXES(1:disturb_begin,11)+M_FLUXES(1:disturb_begin,25))
@@ -1179,11 +1178,11 @@ module model_likelihood_module
 !           !                  +disturbance_loss_from_litter(1:disturb_begin)+disturbance_loss_from_litter(disturb_end:nodays) &
 !           !                  +disturbance_loss_from_cwd(1:disturb_begin)+disturbance_loss_from_cwd(disturb_end:nodays) &
 !           !                  +disturbance_loss_from_som(1:disturb_begin)+disturbance_loss_from_som(disturb_end:nodays))
-!        else
-!           ! no replacement level disturbance so we assume everything must be in
-!           ! balance
-!           in_out_root = sumroot / sum(M_FLUXES(1:nodays,12)+M_FLUXES(1:nodays,24))
-!           in_out_root_disturb = 1d0
+        else
+           ! no replacement level disturbance so we assume everything must be in
+           ! balance
+           in_out_root = sumroot / sum(M_FLUXES(1:nodays,12)+M_FLUXES(1:nodays,24))
+           in_out_root_disturb = 1d0
 !           ! in_out_wood = sumwood / sum(M_FLUXES(1:nodays,11)+M_FLUXES(1:nodays,25))
 !           ! in_out_wood_disturb = 1d0
 !           in_out_lit = sum(M_FLUXES(1:nodays,10)+M_FLUXES(1:nodays,12)+M_FLUXES(1:nodays,20) &
@@ -1202,13 +1201,13 @@ module model_likelihood_module
 !           !                  +disturbance_loss_from_litter(1:nodays) &
 !           !                  +disturbance_loss_from_cwd(1:nodays) &
 !           !                  +disturbance_loss_from_som(1:nodays))
-!        endif ! what to do with in:out ratios and disturbance
-!
-!        ! roots input / output ratio
-!        if (abs(log(in_out_root)) > EQF2) then
-!           EDC2 = 0 ; EDCD%PASSFAIL(41) = 0
-!        endif
-!        ! ! wood input / output ratio
+        endif ! what to do with in:out ratios and disturbance
+
+        ! roots input / output ratio
+        if (abs(log(in_out_root)) > EQF2) then
+           EDC2 = 0 ; EDCD%PASSFAIL(41) = 0
+        endif
+        ! ! wood input / output ratio
 !        ! if (abs(log(in_out_wood)) > EQF5) then
 !        !    EDC2 = 0 ; EDCD%PASSFAIL(42) = 0
 !        ! endif
@@ -1229,20 +1228,20 @@ module model_likelihood_module
 !        !    EDC2 = 0 ; EDCD%PASSFAIL(46) = 0
 !        ! endif
 !
-!        ! in case of disturbance
-!        if (maxval(met(8,:)) > 0.99d0 .and. disturb_end < (nodays-nint(steps_per_year)-1)) then
-!            ! roots input / output ratio
-!            if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(in_out_root_disturb)) > EQF5) then
-!               EDC2 = 0 ; EDCD%PASSFAIL(47) = 0
-!            endif
+        ! in case of disturbance
+        if (maxval(met(8,:)) > 0.99d0 .and. disturb_end < (nodays-nint(steps_per_year)-1)) then
+            ! roots input / output ratio
+            if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(in_out_root_disturb)) > EQF5) then
+               EDC2 = 0 ; EDCD%PASSFAIL(47) = 0
+            endif
 !            ! ! wood input / output ratio
 !            ! if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(in_out_wood_disturb)) > EQF20) then
 !            !    EDC2 = 0 ; EDCD%PASSFAIL(48) = 0
 !            ! endif
-!        endif ! been cleared
-!
-!     endif ! doing the big arrays then?
-!
+        endif ! been cleared
+
+     endif ! doing the big arrays then?
+
     !
     ! EDCs done, below are additional fault detection conditions
     !
