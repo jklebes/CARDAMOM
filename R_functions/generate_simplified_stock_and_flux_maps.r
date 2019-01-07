@@ -11,6 +11,9 @@
       infile = paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep="")
       if (file.exists(infile) == FALSE) {stop("grid_outputs for 'generate_simplified_stock_and_flux_maps' missing")}
       load(paste(infile))
+      infile=paste(PROJECT$results_processedpath,PROJECT$name,"_parameter_maps.RData",sep="")
+      if (file.exists(infile) == FALSE) {stop("parameter_maps for 'generate_simplified_stock_and_flux_maps' missing")}
+      load(paste(infile))
 
       # work out area matrix for the pixels in meters
       # include adjustment for g-> Tg (*1e-12)
@@ -30,6 +33,22 @@
         stop("valid spatial grid option not selected (UK, or wgs84)")
       }
 
+      # extract a list of all the variables stored in the output object 
+      par_names = names(grid_output)
+      # filter for those related to the 'mean' status
+      par_names = par_names[grepl("mean", par_names)]
+      # determine the array value for the median, 
+      num_quantiles = dim(grid_output$mean_labile_gCm2)[3]
+      if (num_quantiles == 5) {
+          # then we assume we are dealing with 0.025, 0.25, 0.5, 0.75, 0.975 quantiles
+          median_loc = 3 ; lower_loc = 1 ; upper_loc = 5
+      } else {
+          # otherwise we need to approximate it...
+          median_loc = round(num_quantiles / 2,digits=0)
+          lower_loc = ceiling(num_quantile * 0.025)
+          upper_loc = floor(num_quantile * 0.975)
+      }
+
       # calculate land mask
       landmask=array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
       # load colour palette
@@ -45,7 +64,7 @@
       if (PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET") {
         jpeg(file=paste(PROJECT$figpath,"median_root_depth_maps_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
         par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-        mean_rooting_depth = par_array_median[,,40] * (states_array_median[,,10]*2) / (par_array_median[,,39] + (states_array_median[,,10]*2))
+        mean_rooting_depth = par_array_median[,,40] * (grid_output$mean_roots_gCm2[,,median_loc]*2) / (par_array_median[,,39] + (grid_output$mean_roots_gCm2[,,median_loc]*2))
         z_axis=c(min(as.vector(mean_rooting_depth),na.rm=TRUE),max(as.vector(mean_rooting_depth),na.rm=TRUE))
         image.plot(mean_rooting_depth,col=colour_choices, main=paste("Median root depth (m)",sep=""),zlim=z_axis,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
         contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
@@ -53,27 +72,11 @@
           } else if (PROJECT$model$name == "DALECN_BUCKET") {
         jpeg(file=paste(PROJECT$figpath,"median_root_depth_maps_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
         par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-        mean_rooting_depth = par_array_median[,,35] * (states_array_median[,,10]*2) / (par_array_median[,,34] + (states_array_median[,,10]*2))
+        mean_rooting_depth = par_array_median[,,35] * (grid_output$mean_roots_gCm2[,,median_loc]*2) / (par_array_median[,,34] + (grid_output$mean_roots_gCm2[,,median_loc]*2))
         z_axis=c(min(as.vector(mean_rooting_depth),na.rm=TRUE),max(as.vector(mean_rooting_depth),na.rm=TRUE))
         image.plot(mean_rooting_depth,col=colour_choices, main=paste("Median root depth (m)",sep=""),zlim=z_axis,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
         contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
         dev.off()
-      }
-
-      # extract a list of all the variables stored in the output object 
-      par_names = names(grid_output)
-      # filter for those related to the 'mean' status
-      par_names = par_names[grepl("mean", par_names)]
-      # determine the array value for the median, 
-      num_quantiles = dim(grid_output$mean_labile_gCm2)[3]
-      if (num_quantiles == 5) {
-          # then we assume we are dealing with 0.025, 0.25, 0.5, 0.75, 0.975 quantiles
-          median_loc = 3 ; lower_loc = 1 ; upper_loc = 5
-      } else {
-          # otherwise we need to approximate it...
-          median_loc = round(num_quantiles / 2,digits=0)
-          lower_loc = ceiling(num_quantile * 0.025)
-          upper_loc = floor(num_quantile * 0.975)
       }
 
       # loop through these mean variables, output median and CI range for each of these variables
