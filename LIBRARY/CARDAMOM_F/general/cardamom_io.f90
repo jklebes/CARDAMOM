@@ -57,7 +57,7 @@ module cardamom_io
         DATAin%nopars = 23
         DATAin%nofluxes = 16
     else if (DATAin%ID == 2) then
-        ! ID = 2 - DALEC_BUCKET
+        ! ID = 2 - DALEC_GSI_BUCKET
         ! DALEC_BUCKET - 8 pools currently
         DATAin%nopools = 8
         DATAin%nopars = 42

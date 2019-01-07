@@ -10,7 +10,7 @@
       # read in the grid simmary information
       infile = paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep="")
       if (file.exists(infile) == FALSE) {stop("grid_outputs for 'generate_simplified_stock_and_flux_maps' missing")}
-      load(paste(infile)
+      load(paste(infile))
 
       # work out area matrix for the pixels in meters
       # include adjustment for g-> Tg (*1e-12)
@@ -35,7 +35,7 @@
       # load colour palette
       colour_choices_upper = colorRampPalette((brewer.pal(11,"Spectral")))
       # array sizes are always the same so
-      colour_choices = colour_choices_upper(length(par_array_median[,,1]))
+      colour_choices = colour_choices_upper(length(area))
 
       # determine correct height and widths
       fig_height=4000 ; fig_width=7200
