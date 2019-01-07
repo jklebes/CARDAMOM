@@ -87,7 +87,7 @@
            var3 = mean(grid_output[[pp]][,,lower_loc], na.rm=TRUE)
            var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2)
            info = paste("Mean estimate: ",par_names[p]," median estimate = ",var1,"; 97.5 % = ",var2,"; 2.5 % = ",var3, sep="")
-           image.plot(grid_output[[pp]][,,median_loc], main=info, col = colour_choices, axes=FALSE, cex.main=2.4, legend.width=3.0, cex=1.5, axis.args=list(cex.axis=1.8, hadj=0.1)
+           image.plot(grid_output[[pp]][,,median_loc], main=info, col = colour_choices, axes=FALSE, cex.main=2.4, legend.width=3.0, cex=1.5, axis.args=list(cex.axis=1.8, hadj=0.1))
            contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
            dev.off()            
       }
