@@ -3,12 +3,14 @@
     ## Function to extract state variables and direct the production of uncertainty plots for the key states and fluxes
     ###
 
-    generate_simplied_stock_and_flux_maps<-function(PROJECT) {
+    generate_simplified_stock_and_flux_maps<-function(PROJECT) {
 
       print("...beginning stocks and fluxes...")
 
       # read in the grid simmary information
-      load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
+      infile = paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep="")
+      if (file.exists(infile) == FALSE) {stop("grid_outputs for 'generate_simplified_stock_and_flux_maps' missing")}
+      load(paste(infile)
 
       # work out area matrix for the pixels in meters
       # include adjustment for g-> Tg (*1e-12)
