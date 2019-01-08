@@ -1,10 +1,10 @@
 
-module MCMCOPT 
+module MCMCOPT
 
   ! module contains the main derived types required by the MCMC itself. Input met
   ! drivers and observational data are however stored else where in a cardamom
   ! related module
-  
+
   implicit none
 
   ! assume all private
@@ -33,7 +33,7 @@ module MCMCOPT
               ,nWRITE     & ! write to file every N solutions
               ,APPEND       ! append to existing output files (0 = delete existing file or 1 = append)
 
-  end type ! MCMC_OPTIONS 
+  end type ! MCMC_OPTIONS
   ! create options type
   type(MCMC_OPTIONS), save :: MCO
 
@@ -54,8 +54,7 @@ module MCMCOPT
               ,ACCLOC_ZEROS ! number of consecutive adaption periods to pass
                             ! without any acceptance
 
-    double precision :: ACCRATE & ! local acceptance rate
-             ,likelihood_scaler = 1d0
+    double precision :: ACCRATE ! local acceptance rate
 
   end type ! COUNTERS
   ! create counters type
@@ -71,12 +70,12 @@ module MCMCOPT
     ! crop specific variables
     double precision :: stock_seed_labile
     double precision, allocatable, dimension(:)  ::          DS_shoot, & !
-                                                              DS_root, & ! 
+                                                              DS_root, & !
                                                              fol_frac, & !
                                                             stem_frac, & !
                                                             root_frac, & !
                                                               DS_LRLV, & !
-                                                                 LRLV, & ! 
+                                                                 LRLV, & !
                                                               DS_LRRT, & !
                                                                  LRRT
 
@@ -110,4 +109,4 @@ module MCMCOPT
   !
   !------------------------------------------------------------------
   !
-end module 
+end module

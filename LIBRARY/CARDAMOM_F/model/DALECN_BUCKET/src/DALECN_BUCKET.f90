@@ -1057,7 +1057,7 @@ contains
 !       canopy_age_vector(n) = tmp * dble(oldest_leaf-n)
 !    end do
     canopy_age_vector((nint(canopy_age)+1):oldest_leaf) = tmp * &
-                                                         (dble(oldest_leaf) - canopy_days((nint(canopy_age)+1):oldest_leaf))
+                                      (dble(oldest_leaf) - canopy_days((nint(canopy_age)+1):oldest_leaf))
 
     ! check / adjust mass balance
     tmp = POOLS(1,2) / sum(canopy_age_vector(1:oldest_leaf))

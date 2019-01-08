@@ -171,17 +171,9 @@ contains
        endif
 
        ! determine accept or reject
-       ! changed accept / reject during merge - 23/10/18
-!       if (((P-P0)/N%likelihood_scaler) > crit) then
 !print*,(P-P0)
        if ((P-P0) > crit) then
 
-          ! store accepted parameter solutions
-          ! do i = 1, PI%npars
-          !    ! keep record of all parameters accepted since step adaption
-          !    PARSALL((N%ACCLOC*PI%npars)+i) = PARS(i)
-          !    PARS0(i) = PARS(i)
-          ! end do ! pars
           ! store accepted parameter solutions
           ! keep record of all parameters accepted since step adaption
           PARSALL(((N%ACCLOC*PI%npars)+1):((N%ACCLOC*PI%npars)+PI%npars)) = PARS(i)
@@ -264,7 +256,8 @@ contains
 
 
     ! calculate constants
-    minstepsize = 10000d0/dble(N%ITER)
+    !minstepsize = 10000d0/dble(N%ITER)
+    minstepsize = 1000d0/dble(N%ACC) ! should this be linked to number of accepted parameter?
     if (minstepsize > 0.01d0) minstepsize = 0.01d0
 
     ! determine local acceptance rate
@@ -306,15 +299,6 @@ contains
     ! carry out final checks
     !!!!!!!
 
-    ! if the minimum step size has been hit
-    ! and we are still falling outside of the acceptance rate adjust likelihood scaler
-!     if (minval(PI%stepsize) <= minstepsize .and. N%ACCRATE < 0.23d0 .and. N%likelihood_scaler < 100d0) then
-!         N%likelihood_scaler = N%likelihood_scaler + 0.05d0
-!     elseif (N%likelihood_scaler > 1d0 .and. N%ACCRATE > 0.23d0) then
-! !    elseif (N%likelihood_scaler > 1d0 .and. N%ACCRATE > 0.44d0) then
-!         N%likelihood_scaler = N%likelihood_scaler - 0.05d0
-!     end if
-
     ! step size can't be greater than 1
     where (PI%stepsize > 1d0) PI%stepsize = PI%stepsize * adaptfac_1
     ! if stepsize below minimum allowed value increase
@@ -323,7 +307,6 @@ contains
     where (PI%stepsize < minstepsize) PI%stepsize = minstepsize
 
   end subroutine adapt_step_size
-
   !
   !------------------------------------------------------------------
   !

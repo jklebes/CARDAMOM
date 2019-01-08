@@ -991,7 +991,7 @@ module cardamom_io
     !
 
     ! count the number of remaining lines in the file..
-    status = 0    ;     num_lines = 0
+    status = 0 ; num_lines = 0
     do
       read(pfile_unit,iostat=status) dummy
       if ( status .ne. 0 ) exit
@@ -1023,7 +1023,7 @@ module cardamom_io
     !
 
     ! count the number of remaining lines in the file..
-    status = 0    ;     num_lines = 0
+    status = 0 ; num_lines = 0
     do
       read(sfile_unit,iostat=status) dummy
       if ( status .ne. 0. ) exit
