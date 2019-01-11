@@ -103,7 +103,6 @@ contains
     P = -1d0 ; uniform = 1
     N%ACC = 0 ; N%ITER = 0
     N%ACCLOC = 0 ; N%ACCRATE = 0d0
-    N%likelihood_scaler = 1d0
 
     ! calculate initial vector of uniform random values
     allocate(uniform_random_vector(MCO%nOUT))
@@ -257,9 +256,10 @@ contains
 
     ! calculate constants
     !minstepsize = 10000d0/dble(N%ITER)
-    minstepsize = 1000d0/dble(N%ACC) ! should this be linked to number of accepted parameter?
+    !if (minstepsize > 0.01d0) minstepsize = 0.01d0
+    minstepsize = 100d0/dble(N%ACC) ! should this be linked to number of accepted parameter?
     if (minstepsize > 0.01d0) minstepsize = 0.01d0
-
+!print*,"...................................",minstepsize,N%ACC
     ! determine local acceptance rate
     N%ACCRATE = dble(N%ACCLOC)/dble(MCO%nADAPT)
 

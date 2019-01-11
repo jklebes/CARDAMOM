@@ -795,8 +795,9 @@ contains
                  disturbance_loss_from_cwd(nodays),disturbance_loss_from_som(nodays),      &
                  Cwood_labile_release_coef(nodays),Croot_labile_release_coef(nodays),      &
                  deltat_1(nodays),wSWP_time(nodays),soilwatermm(nodays),                    &
-                 daylength_hours(nodays),daylength_seconds(nodays),    &
-                 co2_half_saturation(nodays),co2_compensation_point(nodays))
+                 daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
+                 co2_half_saturation(nodays),co2_compensation_point(nodays), &
+                 airt_zero_fraction_time(nodays),meant_time(nodays),rainfall_time(nodays) )
 
         !
         ! Timing variables which are needed first
