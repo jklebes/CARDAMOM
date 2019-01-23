@@ -262,11 +262,11 @@ contains
                          sqrt_adaptfac = 1.224745d0
 
 
-    ! calculate constants
+    ! calculate minimum step size 
+    ! Should consider whether either of these values should be adjusted to
+    ! improve searching efficiency.
     minstepsize = 10000d0/dble(N%ITER)
     if (minstepsize > 0.01d0) minstepsize = 0.01d0
-!    minstepsize = 100d0/dble(N%ACC) ! should this be linked to number of accepted parameter?
-!    if (minstepsize > 0.01d0) minstepsize = 0.01d0
 
     ! determine local acceptance rate
     N%ACCRATE = dble(N%ACCLOC)/dble(MCO%nADAPT)
