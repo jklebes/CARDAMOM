@@ -3601,13 +3601,12 @@ contains
     ! local variables..
     double precision ::soil_wp
 
-    ! calculate the soil water potential (MPa)..
-    ! note that some modifications to scaling values have been made compared to
-    ! SPA src to reduce computational cost
-!    soil_wp = -0.001 * potA( water_retention_pass ) * xin**potB( water_retention_pass )
-!    water_retention_saxton_eqns = -1000.0 * soil_wp + 10.0    ! 10 kPa represents air-entry swp
-    soil_wp = potA( water_retention_pass ) * xin**potB( water_retention_pass )
-    water_retention_saxton_eqns = -1d0 * soil_wp + 10d0    ! 10 kPa represents air-entry swp
+!    ! calculate the soil water potential (kPa)..
+!    soil_WP = -0.001 * potA( water_retention_pass ) * xin**potB( water_retention_pass ) 
+!    water_retention_saxton_eqns = 1000. * soil_wp + 10.    ! 10 kPa represents air-entry swp
+    ! calculate the soil water potential (kPa)..
+    soil_wp = -potA( water_retention_pass ) * xin**potB( water_retention_pass )
+    water_retention_saxton_eqns = soil_wp + 10d0    ! 10 kPa represents air-entry swp
 
     return
 

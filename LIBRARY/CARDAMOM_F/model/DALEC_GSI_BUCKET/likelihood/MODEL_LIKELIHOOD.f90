@@ -38,15 +38,16 @@ module model_likelihood_module
     ! declare local variables
     type ( mcmc_output ) :: MCOUT_EDC
     type ( mcmc_options ) :: MCOPT_EDC
-    integer :: n, counter_local
-    double precision :: PEDC
+    integer :: n, counter_local, iter
+    double precision :: PEDC, ML, ML_prior
+    double precision, allocatable :: iter_EDC_pars(:)
 
     ! initialise output for this EDC search
     call initialise_mcmc_output(PI,MCOUT_EDC)
 
     ! set MCMC options needed for EDC run
     MCOPT_EDC%APPEND = 0
-    MCOPT_EDC%nADAPT = 100
+    MCOPT_EDC%nADAPT = 100 !TLS: 20
     MCOPT_EDC%fADAPT = 0.5d0
     MCOPT_EDC%nOUT = 1000
     MCOPT_EDC%nPRINT = 0
@@ -57,10 +58,9 @@ module model_likelihood_module
     MCOPT_EDC%returnpars = .true.
     MCOPT_EDC%fixedpars  = .false.
 
-    ! Set intial parameter stepsize and initial priors to vector
-    PI%stepsize = 0.05d0 ! 0.005 -> 0.05 -> 0.1 TLS
+    ! Set initial priors to vector...
     PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
-    ! assume we need to find random parameters
+    ! ... and assume we need to find random parameters
     PI%parfix = 0
 
     ! if the prior is not missing and we have not told the edc to be random
@@ -69,38 +69,73 @@ module model_likelihood_module
        if (PI%parini(n) /= -9999d0 .and. DATAin%edc_random_search < 1) PI%parfix(n) = 1
     end do ! parameter loop
 
+    ! if this is not a restart run, i.e. we do not already have a starting
+    ! position we must being the EDC search procedure to find an ecologically
+    ! consistent initial parameter set
     if (.not. restart_flag) then
 
-       ! set up edc log likelihood for MHMCMC initial run
-       PEDC = -1
-       counter_local = 0
-       do while (PEDC < 0)
+       ! the EDC search will be iterated to minimise the risk of finding an EDC
+       ! consistent location in parameter space which is very poor with respect
+       ! to our observations
+       allocate(iter_EDC_pars(PI%npars+1)) ; iter_EDC_pars = -9999999999d0
+       do iter = 1, 5
 
-         write(*,*)"Beginning EDC search attempt"
-         ! reset the parameter step size at the beginning of each attempt
-         PI%stepsize(1:PI%npars) = 0.10d0 ! 0.0005 -> 0.005 -> 0.05 -> 0.1 TLS
-         ! call the MHMCMC directing to the appropriate likelihood
-         call MHMCMC(EDC_MODEL_LIKELIHOOD,PI,MCOPT_EDC,MCOUT_EDC)
+          ! set up edc log likelihood for MHMCMC initial run
+          PEDC = -1 ; counter_local = 0
+          do while (PEDC < 0)
 
-         ! store the best parameters from that loop
-         PI%parini(1:PI%npars) = MCOUT_EDC%best_pars(1:PI%npars)
-         ! turn off random selection for initial values
-         MCOPT_EDC%randparini = .false.
+            write(*,*)"Beginning EDC search attempt"
+            ! reset the parameter step size at the beginning of each attempt
+            PI%stepsize(1:PI%npars) = 0.10d0 ! 0.0005 -> 0.005 -> 0.05 -> 0.1 TLS
+            ! call the MHMCMC directing to the appropriate likelihood
+            call MHMCMC(EDC_MODEL_LIKELIHOOD,PI,MCOPT_EDC,MCOUT_EDC)
 
-         ! call edc likelihood function to get final edc probability
-         call edc_model_likelihood(PI,PI%parini,PEDC)
+            ! store the best parameters from that loop
+            PI%parini(1:PI%npars) = MCOUT_EDC%best_pars(1:PI%npars)
+            ! turn off random selection for initial values
+            MCOPT_EDC%randparini = .false.
+  
+            ! call edc likelihood function to get final edc probability
+            call edc_model_likelihood(PI,PI%parini,PEDC,ML_prior)
 
-         ! keep track of attempts
-         counter_local = counter_local+1
-         ! periodically reset the initial conditions
-         ! 3->2 TLS
-         if (PEDC < 0 .and. mod(counter_local,2) == 0) then
-             PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
-             ! reset to select random starting point
-             MCOPT_EDC%randparini = .true.
-         endif
+            ! we want to keep track of which EDC consistent parameter set best
+            ! fits the available observations
+            if (PEDC == 0) then
+                ! determine what the observation based likelihood is for the
+                ! current parameter set
+                call model_likelihood(PI,PI%parini,ML,ML_prior)
+                ! if the current parameter set has a higher likelihood than the
+                ! previous EDC consistent values we will save the new ones
+                if ((ML+ML_prior) > iter_EDC_pars(PI%npars+1)) then
+                    ! store the current EDC consistent parameters
+                    iter_EDC_pars(1:PI%npars) = PI%parini(1:PI%npars)
+                    iter_EDC_pars(PI%npars+1) = ML + ML_prior
+                endif
+                ! and reset to the initial conditions for the next iteration
+                PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
+                ! reset to select random starting point
+                MCOPT_EDC%randparini = .true.
+            endif
 
-       end do ! for while condition
+            ! keep track of attempts
+            counter_local = counter_local+1
+            ! periodically reset the initial conditions
+            if (PEDC < 0 .and. mod(counter_local,3) == 0) then
+                PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
+                ! reset to select random starting point
+                MCOPT_EDC%randparini = .true.
+            endif
+
+          end do ! for while condition
+
+       end do ! for iter = 1, 5
+
+       ! set the initial parameter values to those which best fitted the
+       ! available observations
+       PI%parini(1:PI%npars) = iter_EDC_pars(1:PI%npars)
+
+       ! tidy up before leaving
+       deallocate(iter_EDC_pars)
 
     endif ! if for restart
 
@@ -115,7 +150,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine edc_model_likelihood(PI, PARS, prob_out)
+  subroutine edc_model_likelihood(PI, PARS, ML_obs_out, ML_prior_out)
     use cardamom_structures, only: DATAin
     use MCMCOPT, only: PARAMETER_INFO
     use CARBON_MODEL_MOD, only: carbon_model
@@ -131,7 +166,7 @@ module model_likelihood_module
     type ( parameter_info ), intent(inout) :: PI
     double precision, dimension(PI%npars), intent(inout) :: PARS
     ! output
-    double precision, intent(inout) :: prob_out
+    double precision, intent(inout) :: ML_obs_out, ML_prior_out
 
     ! declare local variables
     integer ::  n
@@ -140,6 +175,7 @@ module model_likelihood_module
     ! if == 0 EDCs are checked only until the first failure occurs
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
     EDCD%DIAG = 1
+    ML_obs_out = 0d0 ; ML_prior_out = 0d0
 
     ! crop or not split....trouble
     if (DATAin%PFT == 1) then
@@ -194,17 +230,9 @@ module model_likelihood_module
 !    if (sum(EDCD%PASSFAIL) == 100) then
 !        print*,"Found it!" ; stop
 !    endif
+
     ! convert to a probability
-    prob_out=-0.5d0*(tot_exp*10d0)*DATAin%EDC
-
-    ! override probability if parameter set gives NaN or near -infinity output
-    call model_likelihood(PI,PARS,ML)
-
-    ! apply this condition irrespective of EDC flag
-    infini = 0d0
-    if (ML /= ML .or. abs(ML) == abs(log(infini)) ) then
-       prob_out=prob_out-0.5d0*10d0
-    end if
+    ML_obs_out = -0.5d0*(tot_exp*10d0)*DATAin%EDC
 
   end subroutine edc_model_likelihood
   !
@@ -531,6 +559,9 @@ module model_likelihood_module
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(9) > pars(1) ) then
        EDC1 = 0 ; EDCD%PASSFAIL(1) = 0
     endif
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(9) > pars(8) ) then
+        EDC1 = 0 ; EDCD%PASSFAIL(2) = 0
+    endif
 
     ! decomposition : mineralisation rato for litter should be between 0.25-0.75
     ! see various N cycling / microbial decomposition models which frame litter decomposition
@@ -566,26 +597,26 @@ module model_likelihood_module
        EDC1 = 0 ; EDCD%PASSFAIL(8) = 0
     endif
 
-    ! ! replanting 30 = labile ; 31 = foliar ; 32 = roots ; 33 = wood
-    ! ! initial    18 = labile ; 19 = foliar ; 20 = roots ; 21 = wood
-    ! ! initial replanting labile must be consistent with available wood storage
-    ! ! space. Labile storage cannot be greater than 12.5 % of the total ecosystem
-    ! ! carbon stock.
-    ! ! Gough et al (2009) Agricultural and Forest Meteorology. Avg 11, 12.5, 3 %
-    ! ! (Max across species for branch, bole and coarse roots). Evidence that
-    ! ! Branches accumulate labile C prior to bud burst from other areas.
-    ! ! Wurth et al (2005) Oecologia, Clab 8 % of living biomass (DM) in tropical
-    ! ! forest Richardson et al (2013), New Phytologist, Clab 2.24 +/- 0.44 % in
-    ! ! temperate (max = 4.2 %)
-    ! if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(30) > ((pars(33)+pars(32))*0.125d0 ) .or. &
-    !                                       pars(30) < ((pars(33)+pars(32))*0.018d0))) then
-    !     EDC1 = 0 ; EDCD%PASSFAIL(7) = 0
-    ! endif
-    ! ! also apply to initial conditions
-    ! if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(18) > ((pars(21)+pars(20))*0.125d0) .or. &
-    !                                       pars(18) < ((pars(21)+pars(20))*0.018d0))) then
-    !     EDC1 = 0 ; EDCD%PASSFAIL(8) = 0
-    ! endif
+    ! replanting 30 = labile ; 31 = foliar ; 32 = roots ; 33 = wood
+    ! initial    18 = labile ; 19 = foliar ; 20 = roots ; 21 = wood
+    ! initial replanting labile must be consistent with available wood storage
+    ! space. Labile storage cannot be greater than 12.5 % of the total ecosystem
+    ! carbon stock.
+    ! Gough et al (2009) Agricultural and Forest Meteorology. Avg 11, 12.5, 3 %
+    ! (Max across species for branch, bole and coarse roots). Evidence that
+    ! Branches accumulate labile C prior to bud burst from other areas.
+    ! Wurth et al (2005) Oecologia, Clab 8 % of living biomass (DM) in tropical
+    ! forest Richardson et al (2013), New Phytologist, Clab 2.24 +/- 0.44 % in
+    ! temperate (max = 4.2 %)
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(30) > ((pars(33)+pars(32))*0.125d0 ) .or. &
+                                          pars(30) < ((pars(33)+pars(32))*0.018d0))) then
+        EDC1 = 0 ; EDCD%PASSFAIL(7) = 0
+    endif
+    ! also apply to initial conditions
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(18) > ((pars(21)+pars(20))*0.125d0) .or. &
+                                          pars(18) < ((pars(21)+pars(20))*0.018d0))) then
+        EDC1 = 0 ; EDCD%PASSFAIL(8) = 0
+    endif
 
     ! initial replanting foliage and fine roots ratio must be consistent with
     ! ecological ranges. Because this is the initial condition and not the mean
@@ -598,11 +629,11 @@ module model_likelihood_module
 !       EDC1 = 0 ; EDCD%PASSFAIL(10) = 0
 !    endif
 
-    ! ! replanting stock of foliage is unlikely to have much lai, thus limit lai
-    ! ! to less than 1 m2/m2
-    ! if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(31)/pars(17) > 1d0)) then
-    !    EDC1 = 0 ; EDCD%PASSFAIL(11) = 0
-    ! endif
+    ! replanting stock of foliage is unlikely to have much lai, thus limit lai
+    ! to less than 1 m2/m2
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(31)/pars(17) > 1d0)) then
+       EDC1 = 0 ; EDCD%PASSFAIL(11) = 0
+    endif
 
     ! initial replaning wood stocks must be sufficient to support intended
     ! foliar stocks. Again as this is the initial values and not the annual mean
@@ -738,7 +769,7 @@ module model_likelihood_module
     ! reset some flags needed for EDC control
     DIAG = EDCD%DIAG
     EDC2 = 1
-
+!print*,"EDC2-0",EDC2
     !!!!!!!!!!!!
     ! calculate residence times
     !!!!!!!!!!!!
@@ -783,7 +814,7 @@ module model_likelihood_module
     no_years=nint(sum(deltat)/365.25d0)
     ! number of time steps per year
     steps_per_year = sum(deltat)/dble(no_years)
-    no_years_adjust=no_years
+    no_years_adjust = no_years
 
 !    !calculate mean annual pool size for foliage
 !    allocate(mean_annual_pools(no_years))
@@ -816,7 +847,7 @@ module model_likelihood_module
           exp_adjust=i
        endif
        ! calculate new number of whole years to assess over
-       no_years_adjust=int(nint(sum(deltat(exp_adjust:nodays))/365.25d0))
+       no_years_adjust = int(nint(sum(deltat(exp_adjust:nodays))/365.25d0))
     endif ! there has been a full clearance event
 
     !!!!!!!!!!!!
@@ -867,13 +898,13 @@ module model_likelihood_module
     if ((EDC2 == 1 .or. DIAG == 1) .and. (ffol > (5d0*froot) .or. (ffol*5d0) < froot)) then
        EDC2 = 0 ; EDCD%PASSFAIL(21) = 0
     endif
-
+!print*,"EDC2-21",EDC2
     ! Part of the GSI test, we will assess EDC(3) here
     ! average turnover of foliage should not be less than wood
     if ((EDC2 == 1 .or. DIAG == 1) .and. torfol < pars(6) ) then
          EDC2 = 0 ; EDCD%PASSFAIL(22) = 0
     endif
-
+!print*,"EDC2-22",EDC2
     ! The average leaf life span be less than 12 years
     ! NOTE: 12 years = 0.0002281542 day-1
     !        6 years = 0.0004563084 day-1
@@ -881,11 +912,11 @@ module model_likelihood_module
     if ((EDC2 == 1 .or. DIAG == 1) .and. (torfol < 0.0004563084d0 .or. torfol > 0.01825234d0) ) then
          EDC2 = 0 ; EDCD%PASSFAIL(23) = 0
     endif
-
+!print*,"EDC2-23",EDC2
     ! derive mean pools for foliage (2), roots (3) and wood (4)
-    ! mean_pools(2) = cal_mean_pools(M_POOLS,2,nodays,nopools)
-    ! mean_pools(3) = cal_mean_pools(M_POOLS,3,nodays,nopools)
-    ! mean_pools(4) = cal_mean_pools(M_POOLS,4,nodays,nopools)
+    mean_pools(2) = cal_mean_pools(M_POOLS,2,nodays,nopools)
+    mean_pools(3) = cal_mean_pools(M_POOLS,3,nodays,nopools)
+    mean_pools(4) = cal_mean_pools(M_POOLS,4,nodays,nopools)
 
     ! In contrast to the leaf longevity labile carbon stocks can be quite long
     ! lived, particularly in forests.
@@ -894,7 +925,7 @@ module model_likelihood_module
     if ((EDC2 == 1 .or. DIAG == 1) .and. torlab < 0.0001521028d0) then
         EDC2 = 0 ; EDCD%PASSFAIL(24) = 0
     endif
-
+!print*,"EDC2-24",EDC2
     ! Finally we would not expect that the mean labile stock is greater than
     ! 8 % of the total ecosystem carbon stock, as we need structure to store
     ! labile.
@@ -912,7 +943,7 @@ module model_likelihood_module
            EDC2 = 0 ; EDCD%PASSFAIL(25) = 0
        endif
     endif ! EDC2 == 1 .or. DIAG == 1
-
+!print*,"EDC2-25",EDC2
     ! EDC 6
     ! ensure fine root : foliage ratio is between 0.1 and 0.45 (Albaugh et al
     ! 2004; Samuelson et al 2004; Vogel et al 2010; Akers et al 2013
@@ -920,13 +951,13 @@ module model_likelihood_module
     ! Black et al 2009 Sitka Spruce chronosquence
     ! Q1 = 0.1278, median = 0.7488, mean = 1.0560 Q3 = 1.242
     ! lower CI = 0.04180938, upper CI = 4.06657167
-    ! if (EDC2 == 1 .or. DIAG == 1) then
-    !     mean_ratio(1) = mean_pools(3)/mean_pools(2)
-    !     if ( mean_ratio(1) < 0.04d0 .or. mean_ratio(1) > 4.07d0 ) then
-    !         EDC2 = 0 ; EDCD%PASSFAIL(26) = 0
-    !     end if
-    ! endif !
-
+    if (EDC2 == 1 .or. DIAG == 1) then
+        mean_ratio(1) = mean_pools(3)/mean_pools(2)
+        if ( mean_ratio(1) < 0.04d0 .or. mean_ratio(1) > 4.07d0 ) then
+            EDC2 = 0 ; EDCD%PASSFAIL(26) = 0
+        end if
+    endif !
+!print*,"EDC2-26",EDC2
     ! EDC 9
     ! Mature forest maximum foliar biomass (gC.m-2) can be expected to be
     ! between 430 gC.m-2 and 768 gC.m-2, assume 50 % uncertainty (Loblolly Pine)
@@ -945,30 +976,30 @@ module model_likelihood_module
     ! balance we can enforce additional contraint on the remainder of the system.
     ! Luyssaert et al (2007)
 
-    ! ! foliar restrictions
-    ! if ((EDC2 == 1 .or. DIAG == 1) .and. (fNPP < 0.1d0 .or. fNPP > 0.5d0)) then
-    !     EDC2 = 0 ; EDCD%PASSFAIL(30) = 0
-    ! endif
-    !
-    ! ! for both roots and wood the NPP > 0.85 is added to prevent large labile
-    ! ! pools being used to support growth that photosynthesis cannot provide over
-    ! ! the long term.
-    !  if ((EDC2 == 1 .or. DIAG == 1) .and. (rNPP < 0.05d0 .or. rNPP > 0.85d0 .or. wNPP > 0.85d0)) then
-    !      EDC2 = 0 ; EDCD%PASSFAIL(31) = 0
-    !  endif
-    !
-    ! ! NOTE that within the current framework NPP is split between fol, root, wood and that remaining in labile.
-    ! ! Thus fail conditions fNPP + rNPP + wNPP > 1.0 .or. fNPP + rNPP + wNPP < 0.95, i.e. lNPP cannot be > 0.05 (-0.1)
-    ! ! tmp = 1d0 - rNPP - wNPP - fNPP
-    ! ! if ((EDC2 == 1 .or. DIAG == 1) .and. abs(tmp) > 0.1d0) then
-    ! !     EDC2 = 0 ; EDCD%PASSFAIL(32) = 0
-    ! ! endif
-    !
-    ! ! Ra:GPP ratio is unlikely to be outside of 0.2 > Ra:GPP < 0.80
-    ! if ((EDC2 == 1 .or. DIAG == 1) .and. (fauto > 0.80d0 .or. fauto < 0.20d0) ) then
-    !     EDC2 = 0 ; EDCD%PASSFAIL(33) = 0
-    ! end if
-
+     ! foliar restrictions
+     if ((EDC2 == 1 .or. DIAG == 1) .and. (fNPP < 0.1d0 .or. fNPP > 0.5d0)) then
+         EDC2 = 0 ; EDCD%PASSFAIL(30) = 0
+     endif
+!print*,"EDC2-30",EDC2
+     ! for both roots and wood the NPP > 0.85 is added to prevent large labile
+     ! pools being used to support growth that photosynthesis cannot provide over
+     ! the long term.
+      if ((EDC2 == 1 .or. DIAG == 1) .and. (rNPP < 0.05d0 .or. rNPP > 0.85d0 .or. wNPP > 0.85d0)) then
+          EDC2 = 0 ; EDCD%PASSFAIL(31) = 0
+      endif
+!print*,"EDC2-31",EDC2    
+     ! NOTE that within the current framework NPP is split between fol, root, wood and that remaining in labile.
+     ! Thus fail conditions fNPP + rNPP + wNPP > 1.0 .or. fNPP + rNPP + wNPP < 0.95, i.e. lNPP cannot be > 0.05 (-0.1)
+     ! tmp = 1d0 - rNPP - wNPP - fNPP
+     ! if ((EDC2 == 1 .or. DIAG == 1) .and. abs(tmp) > 0.1d0) then
+     !     EDC2 = 0 ; EDCD%PASSFAIL(32) = 0
+     ! endif
+    
+     ! Ra:GPP ratio is unlikely to be outside of 0.2 > Ra:GPP < 0.80
+     if ((EDC2 == 1 .or. DIAG == 1) .and. (fauto > 0.80d0 .or. fauto < 0.20d0) ) then
+         EDC2 = 0 ; EDCD%PASSFAIL(33) = 0
+     end if
+!print*,"EDC2-33",EDC2
     !!!!!!!!!
     ! Deal with ecosystem dynamics
     !!!!!!!!!
@@ -988,7 +1019,7 @@ module model_likelihood_module
            end if ! EDC conditions
         enddo
     endif
-
+!print*,"EDC2-34",EDC2
     ! re-check exponential growth / decay for wood pool only after replacement
     ! level disturbance
     if ((EDC2 == 1 .or. DIAG == 1) .and. (maxval(met(8,:)) > 0.99d0 .and. disturb_end < (nodays-nint(steps_per_year)-1)) ) then
@@ -1001,7 +1032,7 @@ module model_likelihood_module
            end if ! EDC conditions
         enddo
     endif
-
+!print*,"EDC2-35",EDC2
     ! EDC 19 - Constrain the initial condition of wood stocks to that consistent
     ! with forestry age~yeild curves. UK forestry commission yield curves for
     ! evergreen species lowest yield and largest yield at year 60 is similar bound to those used above,
@@ -1028,146 +1059,147 @@ module model_likelihood_module
              end if
         end if
     endif ! EDC2 .or. DIAG .and. age
-
+!print*,"EDC2-36",EDC2
     ! this is a big set of arrays to run through so only do so when we have
     ! reached this point and still need them
-    ! if (EDC2 == 1 .or. DIAG == 1) then
-    !
-    !    ! calculate input and output ratios for all pools
-    !    if (maxval(met(8,1:nodays)) > 0.99d0 .and. disturb_end == nodays) then
-    !       ! there has been a replacement level event, but there is less than 2
-    !       ! years before the end so we will assess the beginning of the analysis
-    !       ! only
-    !       in_out_root = sum(M_FLUXES(1:disturb_begin,6)) / sum(M_FLUXES(1:disturb_begin,12)+M_FLUXES(1:disturb_begin,24))
-    !       in_out_root_disturb = 1d0
-    !       in_out_wood = sum(M_FLUXES(1:disturb_begin,7)) / sum(M_FLUXES(1:disturb_begin,11)+M_FLUXES(1:disturb_begin,25))
-    !       in_out_wood_disturb = 1d0
-    !       in_out_lit = sum(M_FLUXES(1:disturb_begin,10)+M_FLUXES(1:disturb_begin,12)+M_FLUXES(1:disturb_begin,20) &
-    !                        +disturbance_residue_to_litter(1:disturb_begin)) &
-    !                  / sum(M_FLUXES(1:disturb_begin,13)+ &
-    !                        M_FLUXES(1:disturb_begin,15)+ &
-    !                        disturbance_loss_from_litter(1:disturb_begin))
-    !       in_out_som = sum(M_FLUXES(1:disturb_begin,15)+disturbance_residue_to_som(1:disturb_begin)) &
-    !                  / sum(M_FLUXES(1:disturb_begin,14)+disturbance_loss_from_som(1:disturb_begin))
-    !       in_out_cwd = sum(M_FLUXES(1:disturb_begin,11)+disturbance_residue_to_cwd(1:disturb_begin)) &
-    !                  / sum(M_FLUXES(1:disturb_begin,20)+disturbance_loss_from_cwd(1:disturb_begin))
-    !       ! in_out_dead = sum(M_FLUXES(1:disturb_begin,10)+M_FLUXES(1:disturb_begin,11) &
-    !       !                  +M_FLUXES(1:disturb_begin,12) &
-    !       !                  +disturbance_residue_to_litter(1:disturb_begin) &
-    !       !                  +disturbance_residue_to_cwd(1:disturb_begin) &
-    !       !                  +disturbance_residue_to_som(1:disturb_begin)) &
-    !       !             / sum(M_FLUXES(1:disturb_begin,13)+M_FLUXES(1:disturb_begin,14) &
-    !       !                  +disturbance_loss_from_litter(1:disturb_begin) &
-    !       !                  +disturbance_loss_from_cwd(1:disturb_begin) &
-    !       !                  +disturbance_loss_from_som(1:disturb_begin))
-    !    else if (maxval(met(8,1:nodays)) > 0.99d0 .and. disturb_end /= nodays) then
-    !       ! there has been a replacement level event, we will remove filter out a 2
-    !       ! year period to allow for the most severe non-steady state response
-    !       ! Croot
-    !       in_out_root         = sum(M_FLUXES(1:disturb_begin,6))    &
-    !                           / sum(M_FLUXES(1:disturb_begin,12)+M_FLUXES(1:disturb_begin,24))
-    !       in_out_root_disturb = sum(M_FLUXES(disturb_end:nodays,6)) &
-    !                           / sum(M_FLUXES(disturb_end:nodays,12)+M_FLUXES(disturb_end:nodays,24))
-    !       ! Cwood
-    !       in_out_wood         = sum(M_FLUXES(1:disturb_begin,7))    &
-    !                           / sum(M_FLUXES(1:disturb_begin,11)+M_FLUXES(1:disturb_begin,25))
-    !       in_out_wood_disturb = sum(M_FLUXES(disturb_end:nodays,7)) &
-    !                           / sum(M_FLUXES(disturb_end:nodays,11)+M_FLUXES(disturb_end:nodays,25))
-    !       ! Clitter
-    !       in_out_lit = (sum(M_FLUXES(1:disturb_begin,10)+M_FLUXES(disturb_end:nodays,10)+ &
-    !                         M_FLUXES(1:disturb_begin,12)+M_FLUXES(disturb_end:nodays,12)+ &
-    !                         M_FLUXES(1:disturb_begin,20)+M_FLUXES(disturb_end:nodays,20)+ &
-    !                         disturbance_residue_to_litter(1:disturb_begin)+disturbance_residue_to_litter(disturb_end:nodays) )) &
-    !                  / (sum(M_FLUXES(1:disturb_begin,13)+M_FLUXES(1:disturb_begin,15)+ &
-    !                         disturbance_loss_from_litter(1:disturb_begin)+&
-    !                         M_FLUXES(disturb_end:nodays,13)+M_FLUXES(disturb_end:nodays,15)+ &
-    !                         disturbance_loss_from_litter(disturb_end:nodays)))
-    !       ! Csom
-    !       in_out_som = (sum(M_FLUXES(1:disturb_begin,15)+M_FLUXES(disturb_end:nodays,15)+ &
-    !                         disturbance_residue_to_som(1:disturb_begin)+disturbance_residue_to_som(disturb_end:nodays))) &
-    !                  / (sum(M_FLUXES(1:disturb_begin,14)+M_FLUXES(disturb_end:nodays,14)+ &
-    !                         disturbance_loss_from_som(1:disturb_begin)+disturbance_loss_from_som(disturb_end:nodays)))
-    !       ! Ccwd
-    !       in_out_cwd = (sum(M_FLUXES(1:disturb_begin,11)+M_FLUXES(disturb_end:nodays,11)+ &
-    !                        disturbance_residue_to_cwd(1:disturb_begin)+disturbance_residue_to_cwd(disturb_end:nodays))) &
-    !                  / (sum(M_FLUXES(1:disturb_begin,20)+M_FLUXES(disturb_end:nodays,20)+ &
-    !                        disturbance_loss_from_cwd(1:disturb_begin)+disturbance_loss_from_cwd(disturb_end:nodays)))
-    !       ! ! dead organic matter
-    !       ! in_out_dead = sum(M_FLUXES(1:disturb_begin,10)+M_FLUXES(disturb_end:nodays,10) &
-    !       !                  +M_FLUXES(1:disturb_begin,11)+M_FLUXES(disturb_end:nodays,11) &
-    !       !                  +M_FLUXES(1:disturb_begin,12)+M_FLUXES(disturb_end:nodays,12) &
-    !       !                  +disturbance_residue_to_litter(1:disturb_begin)+disturbance_residue_to_litter(disturb_end:nodays) &
-    !       !                  +disturbance_residue_to_cwd(1:disturb_begin)+disturbance_residue_to_cwd(disturb_end:nodays) &
-    !       !                  +disturbance_residue_to_som(1:disturb_begin)+disturbance_residue_to_som(disturb_end:nodays)) &
-    !       !             / sum(M_FLUXES(1:disturb_begin,13)+M_FLUXES(disturb_end:nodays,13) &
-    !       !                  +M_FLUXES(1:disturb_begin,14)+M_FLUXES(disturb_end:nodays,14) &
-    !       !                  +disturbance_loss_from_litter(1:disturb_begin)+disturbance_loss_from_litter(disturb_end:nodays) &
-    !       !                  +disturbance_loss_from_cwd(1:disturb_begin)+disturbance_loss_from_cwd(disturb_end:nodays) &
-    !       !                  +disturbance_loss_from_som(1:disturb_begin)+disturbance_loss_from_som(disturb_end:nodays))
-    !    else
-    !       ! no replacement level disturbance so we assume everything must be in
-    !       ! balance
-    !       in_out_root = sumroot / sum(M_FLUXES(1:nodays,12)+M_FLUXES(1:nodays,24))
-    !       in_out_root_disturb = 1d0
-    !       in_out_wood = sumwood / sum(M_FLUXES(1:nodays,11)+M_FLUXES(1:nodays,25))
-    !       in_out_wood_disturb = 1d0
-    !       in_out_lit = sum(M_FLUXES(1:nodays,10)+M_FLUXES(1:nodays,12)+M_FLUXES(1:nodays,20) &
-    !                        +disturbance_residue_to_litter(1:nodays)) &
-    !                  / sum(M_FLUXES(1:nodays,13)+M_FLUXES(1:nodays,15)+disturbance_loss_from_litter(1:nodays))
-    !       in_out_som = sum(M_FLUXES(1:nodays,15)+disturbance_residue_to_som(1:nodays)) &
-    !                  / sum(M_FLUXES(1:nodays,14)+disturbance_loss_from_som(1:nodays))
-    !       in_out_cwd = sum(M_FLUXES(1:nodays,11)+disturbance_residue_to_cwd(1:nodays)) &
-    !                  / sum(M_FLUXES(1:nodays,20)+disturbance_loss_from_cwd(1:nodays))
-    !       ! in_out_dead = sum(M_FLUXES(1:nodays,10)+M_FLUXES(1:nodays,11) &
-    !       !                  +M_FLUXES(1:nodays,12) &
-    !       !                  +disturbance_residue_to_litter(1:nodays) &
-    !       !                  +disturbance_residue_to_cwd(1:nodays) &
-    !       !                  +disturbance_residue_to_som(1:nodays)) &
-    !       !             / sum(M_FLUXES(1:nodays,13)+M_FLUXES(1:nodays,14) &
-    !       !                  +disturbance_loss_from_litter(1:nodays) &
-    !       !                  +disturbance_loss_from_cwd(1:nodays) &
-    !       !                  +disturbance_loss_from_som(1:nodays))
-    !    endif ! what to do with in:out ratios and disturbance
-    !
-    !    ! roots input / output ratio
-    !    if (abs(log(in_out_root)) > EQF2) then
-    !       EDC2 = 0 ; EDCD%PASSFAIL(37) = 0
-    !    endif
-    !    ! wood input / output ratio
-    !    if (abs(log(in_out_wood)) > EQF5) then
-    !       EDC2 = 0 ; EDCD%PASSFAIL(38) = 0
-    !    endif
-    !    ! litter input / output ratio
-    !    if (abs(log(in_out_lit)) > EQF2) then
-    !       EDC2 = 0 ; EDCD%PASSFAIL(39) = 0
-    !    endif
-    !    ! som input / output ratio
-    !    if (abs(log(in_out_som)) > EQF2) then
-    !       EDC2 = 0 ; EDCD%PASSFAIL(40) = 0
-    !    endif
-    !    ! cwd input / output ratio ! Possibly change to EQF2
-    !    if (abs(log(in_out_cwd)) > EQF2) then
-    !       EDC2 = 0 ; EDCD%PASSFAIL(41) = 0
-    !    endif
-    !    ! ! total dead organic matter input / output ratio ! Possibly change to EQF2
-    !    ! if (abs(log(in_out_dead)) > EQF2) then
-    !    !    EDC2 = 0 ; EDCD%PASSFAIL(42) = 0
-    !    ! endif
-    !
-    !    ! in case of disturbance
-    !    if (maxval(met(8,:)) > 0.99d0 .and. disturb_end < (nodays-nint(steps_per_year)-1)) then
-    !        ! roots input / output ratio
-    !        if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(in_out_root_disturb)) > EQF5) then
-    !           EDC2 = 0 ; EDCD%PASSFAIL(43) = 0
-    !        endif
-    !        ! wood input / output ratio
-    !        if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(in_out_wood_disturb)) > EQF20) then
-    !           EDC2 = 0 ; EDCD%PASSFAIL(44) = 0
-    !        endif
-    !    endif ! been cleared
-    !
-    ! endif ! doing the big arrays then?
-
+    if (EDC2 == 1 .or. DIAG == 1) then
+    
+        ! calculate input and output ratios for all pools
+        if (maxval(met(8,1:nodays)) > 0.99d0 .and. disturb_end == nodays) then
+           ! there has been a replacement level event, but there is less than 2
+           ! years before the end so we will assess the beginning of the analysis
+           ! only
+           in_out_root = sum(M_FLUXES(1:disturb_begin,6)) / sum(M_FLUXES(1:disturb_begin,12)+M_FLUXES(1:disturb_begin,24))
+           in_out_root_disturb = 1d0
+           in_out_wood = sum(M_FLUXES(1:disturb_begin,7)) / sum(M_FLUXES(1:disturb_begin,11)+M_FLUXES(1:disturb_begin,25))
+           in_out_wood_disturb = 1d0
+           in_out_lit = sum(M_FLUXES(1:disturb_begin,10)+M_FLUXES(1:disturb_begin,12)+M_FLUXES(1:disturb_begin,20) &
+                            +disturbance_residue_to_litter(1:disturb_begin)) &
+                      / sum(M_FLUXES(1:disturb_begin,13)+ &
+                            M_FLUXES(1:disturb_begin,15)+ &
+                            disturbance_loss_from_litter(1:disturb_begin))
+           in_out_som = sum(M_FLUXES(1:disturb_begin,15)+disturbance_residue_to_som(1:disturb_begin)) &
+                      / sum(M_FLUXES(1:disturb_begin,14)+disturbance_loss_from_som(1:disturb_begin))
+           in_out_cwd = sum(M_FLUXES(1:disturb_begin,11)+disturbance_residue_to_cwd(1:disturb_begin)) &
+                      / sum(M_FLUXES(1:disturb_begin,20)+disturbance_loss_from_cwd(1:disturb_begin))
+           ! in_out_dead = sum(M_FLUXES(1:disturb_begin,10)+M_FLUXES(1:disturb_begin,11) &
+           !                  +M_FLUXES(1:disturb_begin,12) &
+           !                  +disturbance_residue_to_litter(1:disturb_begin) &
+           !                  +disturbance_residue_to_cwd(1:disturb_begin) &
+           !                  +disturbance_residue_to_som(1:disturb_begin)) &
+           !             / sum(M_FLUXES(1:disturb_begin,13)+M_FLUXES(1:disturb_begin,14) &
+           !                  +disturbance_loss_from_litter(1:disturb_begin) &
+           !                  +disturbance_loss_from_cwd(1:disturb_begin) &
+           !                  +disturbance_loss_from_som(1:disturb_begin))
+        else if (maxval(met(8,1:nodays)) > 0.99d0 .and. disturb_end /= nodays) then
+           ! there has been a replacement level event, we will remove filter out a 2
+           ! year period to allow for the most severe non-steady state response
+           ! Croot
+           in_out_root         = sum(M_FLUXES(1:disturb_begin,6))    &
+                               / sum(M_FLUXES(1:disturb_begin,12)+M_FLUXES(1:disturb_begin,24))
+           in_out_root_disturb = sum(M_FLUXES(disturb_end:nodays,6)) &
+                               / sum(M_FLUXES(disturb_end:nodays,12)+M_FLUXES(disturb_end:nodays,24))
+           ! Cwood
+           in_out_wood         = sum(M_FLUXES(1:disturb_begin,7))    &
+                               / sum(M_FLUXES(1:disturb_begin,11)+M_FLUXES(1:disturb_begin,25))
+           in_out_wood_disturb = sum(M_FLUXES(disturb_end:nodays,7)) &
+                               / sum(M_FLUXES(disturb_end:nodays,11)+M_FLUXES(disturb_end:nodays,25))
+           ! Clitter
+           in_out_lit = (sum(M_FLUXES(1:disturb_begin,10)+M_FLUXES(disturb_end:nodays,10)+ &
+                             M_FLUXES(1:disturb_begin,12)+M_FLUXES(disturb_end:nodays,12)+ &
+                             M_FLUXES(1:disturb_begin,20)+M_FLUXES(disturb_end:nodays,20)+ &
+                             disturbance_residue_to_litter(1:disturb_begin)+disturbance_residue_to_litter(disturb_end:nodays) )) &
+                      / (sum(M_FLUXES(1:disturb_begin,13)+M_FLUXES(1:disturb_begin,15)+ &
+                             disturbance_loss_from_litter(1:disturb_begin)+&
+                             M_FLUXES(disturb_end:nodays,13)+M_FLUXES(disturb_end:nodays,15)+ &
+                             disturbance_loss_from_litter(disturb_end:nodays)))
+           ! Csom
+           in_out_som = (sum(M_FLUXES(1:disturb_begin,15)+M_FLUXES(disturb_end:nodays,15)+ &
+                             disturbance_residue_to_som(1:disturb_begin)+disturbance_residue_to_som(disturb_end:nodays))) &
+                      / (sum(M_FLUXES(1:disturb_begin,14)+M_FLUXES(disturb_end:nodays,14)+ &
+                             disturbance_loss_from_som(1:disturb_begin)+disturbance_loss_from_som(disturb_end:nodays)))
+           ! Ccwd
+           in_out_cwd = (sum(M_FLUXES(1:disturb_begin,11)+M_FLUXES(disturb_end:nodays,11)+ &
+                            disturbance_residue_to_cwd(1:disturb_begin)+disturbance_residue_to_cwd(disturb_end:nodays))) &
+                      / (sum(M_FLUXES(1:disturb_begin,20)+M_FLUXES(disturb_end:nodays,20)+ &
+                            disturbance_loss_from_cwd(1:disturb_begin)+disturbance_loss_from_cwd(disturb_end:nodays)))
+           ! ! dead organic matter
+           ! in_out_dead = sum(M_FLUXES(1:disturb_begin,10)+M_FLUXES(disturb_end:nodays,10) &
+           !                  +M_FLUXES(1:disturb_begin,11)+M_FLUXES(disturb_end:nodays,11) &
+           !                  +M_FLUXES(1:disturb_begin,12)+M_FLUXES(disturb_end:nodays,12) &
+           !                  +disturbance_residue_to_litter(1:disturb_begin)+disturbance_residue_to_litter(disturb_end:nodays) &
+           !                  +disturbance_residue_to_cwd(1:disturb_begin)+disturbance_residue_to_cwd(disturb_end:nodays) &
+           !                  +disturbance_residue_to_som(1:disturb_begin)+disturbance_residue_to_som(disturb_end:nodays)) &
+           !             / sum(M_FLUXES(1:disturb_begin,13)+M_FLUXES(disturb_end:nodays,13) &
+           !                  +M_FLUXES(1:disturb_begin,14)+M_FLUXES(disturb_end:nodays,14) &
+           !                  +disturbance_loss_from_litter(1:disturb_begin)+disturbance_loss_from_litter(disturb_end:nodays) &
+           !                  +disturbance_loss_from_cwd(1:disturb_begin)+disturbance_loss_from_cwd(disturb_end:nodays) &
+           !                  +disturbance_loss_from_som(1:disturb_begin)+disturbance_loss_from_som(disturb_end:nodays))
+        else
+           ! no replacement level disturbance so we assume everything must be in
+           ! balance
+           in_out_root = sumroot / sum(M_FLUXES(1:nodays,12)+M_FLUXES(1:nodays,24))
+           in_out_root_disturb = 1d0
+           in_out_wood = sumwood / sum(M_FLUXES(1:nodays,11)+M_FLUXES(1:nodays,25))
+           in_out_wood_disturb = 1d0
+           in_out_lit = sum(M_FLUXES(1:nodays,10)+M_FLUXES(1:nodays,12)+M_FLUXES(1:nodays,20) &
+                            +disturbance_residue_to_litter(1:nodays)) &
+                      / sum(M_FLUXES(1:nodays,13)+M_FLUXES(1:nodays,15)+disturbance_loss_from_litter(1:nodays))
+           in_out_som = sum(M_FLUXES(1:nodays,15)+disturbance_residue_to_som(1:nodays)) &
+                      / sum(M_FLUXES(1:nodays,14)+disturbance_loss_from_som(1:nodays))
+           in_out_cwd = sum(M_FLUXES(1:nodays,11)+disturbance_residue_to_cwd(1:nodays)) &
+                      / sum(M_FLUXES(1:nodays,20)+disturbance_loss_from_cwd(1:nodays))
+           ! in_out_dead = sum(M_FLUXES(1:nodays,10)+M_FLUXES(1:nodays,11) &
+           !                  +M_FLUXES(1:nodays,12) &
+           !                  +disturbance_residue_to_litter(1:nodays) &
+           !                  +disturbance_residue_to_cwd(1:nodays) &
+           !                  +disturbance_residue_to_som(1:nodays)) &
+           !             / sum(M_FLUXES(1:nodays,13)+M_FLUXES(1:nodays,14) &
+           !                  +disturbance_loss_from_litter(1:nodays) &
+           !                  +disturbance_loss_from_cwd(1:nodays) &
+           !                  +disturbance_loss_from_som(1:nodays))
+        endif ! what to do with in:out ratios and disturbance
+    
+        ! roots input / output ratio
+        if (abs(log(in_out_root)) > EQF1_5) then
+           EDC2 = 0 ; EDCD%PASSFAIL(37) = 0
+        endif
+!print*,"EDC2-37",EDC2
+        ! wood input / output ratio
+        if (abs(log(in_out_wood)) > EQF5) then
+           EDC2 = 0 ; EDCD%PASSFAIL(38) = 0
+        endif
+        ! litter input / output ratio
+        if (abs(log(in_out_lit)) > EQF2) then
+           EDC2 = 0 ; EDCD%PASSFAIL(39) = 0
+        endif
+        ! som input / output ratio
+        if (abs(log(in_out_som)) > EQF2) then
+           EDC2 = 0 ; EDCD%PASSFAIL(40) = 0
+        endif
+        ! cwd input / output ratio ! Possibly change to EQF2
+        if (abs(log(in_out_cwd)) > EQF2) then
+           EDC2 = 0 ; EDCD%PASSFAIL(41) = 0
+        endif
+        ! ! total dead organic matter input / output ratio ! Possibly change to EQF2
+        ! if (abs(log(in_out_dead)) > EQF2) then
+        !    EDC2 = 0 ; EDCD%PASSFAIL(42) = 0
+        ! endif
+    
+        ! in case of disturbance
+        if (maxval(met(8,:)) > 0.99d0 .and. disturb_end < (nodays-nint(steps_per_year)-1)) then
+            ! roots input / output ratio
+            if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(in_out_root_disturb)) > EQF5) then
+               EDC2 = 0 ; EDCD%PASSFAIL(43) = 0
+            endif
+            ! wood input / output ratio
+            if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(in_out_wood_disturb)) > EQF20) then
+               EDC2 = 0 ; EDCD%PASSFAIL(44) = 0
+            endif
+        endif ! been cleared
+    
+    endif ! doing the big arrays then?
+!print*,"EDC2-43",EDC2
     !
     ! EDCs done, below are additional fault detection conditions
     !
@@ -1192,7 +1224,7 @@ module model_likelihood_module
        end do
 
     end if ! min pool assessment
-
+!print*,"EDC2-55",EDC2
   end subroutine EDC2_GSI
   !
   !------------------------------------------------------------------
@@ -1344,11 +1376,11 @@ module model_likelihood_module
     integer :: startday, endday
 
     ! initialise the output variable
-    cal_max_annual_pools=0d0
+    cal_max_annual_pools = 0d0
 
     ! calculate some constants
-    startday=floor(365.25d0*dble(year-1)/(sum(interval)/dble(averaging_period-1)))+1
-    endday=floor(365.25d0*dble(year)/(sum(interval)/dble(averaging_period-1)))
+    startday = floor(365.25d0*dble(year-1)/(sum(interval)/dble(averaging_period-1)))+1
+    endday = floor(365.25d0*dble(year)/(sum(interval)/dble(averaging_period-1)))
 
     ! pool through and work out the annual max values
     cal_max_annual_pools=maxval(pools(startday:endday,pool_number))
@@ -1454,7 +1486,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine model_likelihood(PI,PARS,ML_out)
+  subroutine model_likelihood(PI,PARS,ML_obs_out,ML_prior_out)
     use MCMCOPT, only:  PARAMETER_INFO
     use CARBON_MODEL_MOD, only: carbon_model
     use CARBON_MODEL_CROP_MOD, only: carbon_model_crop
@@ -1472,13 +1504,13 @@ module model_likelihood_module
 
     double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
     ! output
-    double precision, intent(inout) :: ML_out ! output variables for log-likelihood
-
+    double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
+                                       ML_prior_out   ! prior log-likelihood
     ! declare local variables
-    double precision :: EDC,EDC1,EDC2,EDC_ML
+    double precision :: EDC, EDC1, EDC2
 
     ! initial values
-    ML_out = 0d0
+    ML_obs_out = 0d0 ; ML_prior_out = 0d0
     ! if == 0 EDCs are checked only until the first failure occurs
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
     EDCD%DIAG = 0
@@ -1500,35 +1532,35 @@ module model_likelihood_module
     end if
 
     ! update effect to the probabity
-    ML_out=ML_out+log(EDC)
+    ML_obs_out = ML_obs_out + log(EDC)
 
     ! if first set of EDCs have been passed
     if (EDC == 1) then
        ! calculate parameter log likelihood (assumed we have estimate of
        ! uncertainty)
-       ML_out = ML_out + likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
+       ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
 
        if (DATAin%PFT == 1) then
           ! then this is a crop run....
-           ! run the dalec model
-           call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                                 ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                                 ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft &
-                                 ,DATAin%nopars,DATAin%nomet,DATAin%nopools &
-                                 ,DATAin%nofluxes,DATAin%M_GPP &
-                                 ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
-                                 ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV &
-                                 ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
+          ! run the dalec model
+          call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                                ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                                ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft   &
+                                ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
+                                ,DATAin%nofluxes,DATAin%M_GPP                &
+                                ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
+                                ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
+                                ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
 
            ! check edc2
            call EDC2_CROP(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                          ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                          ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                          ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-       else
+                         ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                         ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                         ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+       else   
 
            ! run the dalec model
-           call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat&
+           call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                             ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
                             ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
                             ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
@@ -1549,16 +1581,13 @@ module model_likelihood_module
            EDC = 1
        end if
 
-! TLS: This should actually be dealt with in EDC2
-       ! extra checks to ensure correct running of the model
-!       if (sum(DATAin%M_LAI) /= sum(DATAin%M_LAI) .or. sum(DATAin%M_GPP) /= sum(DATAin%M_GPP)) then
-!           EDC = 0
-!       end if
-
        ! add EDC2 log-likelihood
-       ML_out = ML_out + log(EDC)
-       ! calculate final model likelihood when compared to obs
-       ML_out = ML_out + likelihood(PI%npars,PARS)
+       ML_obs_out = ML_obs_out + log(EDC)
+
+       if (EDC == 1) then
+          ! calculate final model likelihood when compared to obs
+          ML_obs_out = ML_obs_out + likelihood(PI%npars,PARS)
+       endif 
 
     end if ! EDC == 1
 
@@ -1634,7 +1663,7 @@ module model_likelihood_module
          ! note that division is the uncertainty
          tot_exp = tot_exp+((DATAin%M_GPP(dn)-DATAin%GPP(dn))/DATAin%GPP_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! LAI log-likelihood
@@ -1656,18 +1685,18 @@ module model_likelihood_module
              tot_exp = tot_exp+(-log(infini))
          endif
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! NEE likelihood
-    tot_exp = 0.
+    tot_exp = 0d0
     if (DATAin%nnee > 0) then
        do n = 1, DATAin%nnee
          dn = DATAin%neepts(n)
          ! note that division is the uncertainty
          tot_exp = tot_exp+((DATAin%M_NEE(dn)-DATAin%NEE(dn))/DATAin%NEE_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Reco likelihood
@@ -1679,7 +1708,7 @@ module model_likelihood_module
          ! note that we calculate the Ecosystem resp from GPP and NEE
          tot_exp = tot_exp+((tmp_var-DATAin%Reco(dn))/DATAin%Reco_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Cwood increment log-likelihood
@@ -1692,7 +1721,7 @@ module model_likelihood_module
          !                   / DATAin%WOO(dn))/log(DATAin%WOO_unc(dn)))**2
          tot_exp = tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%M_POOLS(dn-365,4)) / DATAin%WOO_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Cfoliage log-likelihood
@@ -1704,7 +1733,7 @@ module model_likelihood_module
 !         tot_exp = tot_exp+(log(DATAin%M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2d0
          tot_exp = tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Annual foliar maximum
@@ -1729,7 +1758,7 @@ module model_likelihood_module
          ! note that division is the uncertainty
          tot_exp = tot_exp+((tmp_var-DATAin%Cfolmax_stock(dn)) / DATAin%Cfolmax_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Cwood log-likelihood (i.e. branch, stem and CR)
@@ -1741,7 +1770,7 @@ module model_likelihood_module
 !         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,4)/DATAin%Cwood_stock(dn))/log(2.))**2.
          tot_exp = tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/DATAin%Cwood_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Cagb log-likelihood
@@ -1751,9 +1780,9 @@ module model_likelihood_module
          dn = DATAin%Cagb_stockpts(n)
          ! remove coarse root fraction from wood (pars29)
          tmp_var = DATAin%M_POOLS(dn,4)-(DATAin%M_POOLS(dn,4)*pars(29))
-         tot_exp = tot_exp+((tmp_var-DATAin%Cagb_stock(dn))/DATAin%Cagb_stock_unc(dn))*2
+         tot_exp = tot_exp+((tmp_var-DATAin%Cagb_stock(dn))/DATAin%Cagb_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Cstem log-likelihood
@@ -1765,7 +1794,7 @@ module model_likelihood_module
          tmp_var = DATAin%M_POOLS(dn,4)-( (DATAin%M_POOLS(dn,4)*pars(29))+((DATAin%M_POOLS(dn,4)*pars(28))) )
          tot_exp = tot_exp+((tmp_var-DATAin%Cstem_stock(dn))/(DATAin%Cstem_stock(dn)*DATAin%Cstem_stock_unc(dn)))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Cbranch log-likelihood
@@ -1777,7 +1806,7 @@ module model_likelihood_module
          tmp_var = DATAin%M_POOLS(dn,4)*pars(28)
          tot_exp = tot_exp+((tmp_var-DATAin%Cbranch_stock(dn)) / DATAin%Cbranch_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Ccoarseroot log-likelihood
@@ -1789,7 +1818,7 @@ module model_likelihood_module
          tmp_var = DATAin%M_POOLS(dn,4)*pars(29)
          tot_exp = tot_exp+((tmp_var-DATAin%Ccoarseroot_stock(dn)) / DATAin%Ccoarseroot_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Croots log-likelihood
@@ -1801,7 +1830,7 @@ module model_likelihood_module
 !         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,3)/DATAin%Croots_stock(dn))/log(2.))**2.
          tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Clitter log-likelihood
@@ -1817,7 +1846,7 @@ module model_likelihood_module
          tot_exp = tot_exp+(((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
                            *(DATAin%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Csom log-likelihood
@@ -1829,8 +1858,14 @@ module model_likelihood_module
 !         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,6)/DATAin%Csom_stock(dn))/log(2.))**2.
          tot_exp = tot_exp+((DATAin%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
+
+    ! the likelihood scores for each observation are subject to multiplication
+    ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
+    ! multiple datastreams we apply this multiplication to the bulk liklihood
+    ! hear
+    likelihood = likelihood * 0.5d0
 
     ! check that log-likelihood is an actual number
     if (likelihood /= likelihood) then

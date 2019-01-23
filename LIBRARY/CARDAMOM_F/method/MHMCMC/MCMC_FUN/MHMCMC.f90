@@ -67,7 +67,7 @@ contains
     ! NOTE that the inputted MODEL_LIKEIHOOD_OPTION could be multiple subroutines,
     ! the interface allows for making the requirements of this explicit
     interface
-      subroutine model_likelihood_option(param_info, param_vector, prob_out)
+      subroutine model_likelihood_option(param_info, param_vector, ML_obs_out, ML_prior_out)
 !TLS        use, intrinsic :: ieee_arithmetic
         use cardamom_structures, only: DATAin, emulator_pars
         use MCMCOPT, only: PARAMETER_INFO
@@ -77,7 +77,7 @@ contains
            type ( parameter_info ), intent(inout) :: param_info
            double precision, dimension(param_info%npars), intent(inout) :: param_vector
            ! output
-           double precision,intent(inout) :: prob_out
+           double precision,intent(inout) :: ML_obs_out, ML_prior_out
       end subroutine model_likelihood_option
     end interface
 
@@ -94,13 +94,15 @@ contains
 
     double precision, dimension(PI%npars*MCO%nADAPT) :: PARSALL ! All accepted parameters since previous step adaption
     double precision :: infini &
-                       ,crit &
-                       ,P0 & ! initial probability / log likelihood
-                       ,P    ! current probability / log likelihood
+                       ,crit1,crit2 & ! random numbers log(0->1) used to accept / reject
+                       ,P0prior, Pprior & ! as below but for priors only
+                       ,P0 & ! previously accepted observation based log-likelihood
+                       ,P    ! current observation based log-likelihood
     integer :: i
 
     ! initial values
-    P = -1d0 ; uniform = 1
+    P = -1d0 ; Pprior = -1d0
+    uniform = 1
     N%ACC = 0 ; N%ITER = 0
     N%ACCLOC = 0 ; N%ACCRATE = 0d0
 
@@ -141,10 +143,10 @@ contains
     ! calculate the initial probability / log likelihood.
     ! NOTE: passing P0 -> P is needed during the EDC searching phase where we
     ! could read an EDC consistent parameter set in the first instance
-    call model_likelihood_option(PI, PI%parini,P0) ; P = P0
-    write(*,*) "Starting likelihood = ",P0
+    call model_likelihood_option(PI, PI%parini,P0,P0prior) ; P = P0 ; Pprior = P0prior
+    write(*,*) "Starting likelihood = ",(P0+P0prior)
 
-    ! appropriate warning
+    ! checks whether the EDCs (combined with P0 not P0prior) have been met in the initial parameter set
     infini = 0d0
     if (P0 == log(infini)) then
         write(*,*) "WARNING! P0 = ",P0," - MHMCMC may get stuck, if so please check initial conditins"
@@ -156,40 +158,45 @@ contains
        ! take a step in parameter space
        call step(PARS0,PARS,PI)
        ! calculate the model likelihood
-       call model_likelihood_option(PI, PARS,P)
+       call model_likelihood_option(PI, PARS, P, Pprior)
 
        ! accept or reject, draw uniform distribution (0,1)
-       crit = log(uniform_random_vector(uniform)) !crit=log(randn(0))
+       crit1 = log(uniform_random_vector(uniform)) !crit=log(randn(0))
+       uniform = uniform + 1
+       crit2 = log(uniform_random_vector(uniform)) 
        uniform = uniform + 1
        ! if we are near to the end re-generate some more values
-       if (uniform >= size(uniform_random_vector)-2) then
+       if (uniform >= size(uniform_random_vector)-4) then
            ! calculate new vector of uniform random values
            call random_uniform(uniform_random_vector,size(uniform_random_vector))
            ! and reset uniform counter
            uniform = 1
        endif
 
-       ! determine accept or reject
+       ! determine accept or reject, should this criterion be > crit + ? (or
+       ! other limit, such as p = 0.05 -> -3)
 !print*,(P-P0)
-       if ((P-P0) > crit) then
+       if ((P-P0) >= crit1 .and. (Pprior-P0prior) >= crit2) then
 
           ! store accepted parameter solutions
           ! keep record of all parameters accepted since step adaption
           PARSALL(((N%ACCLOC*PI%npars)+1):((N%ACCLOC*PI%npars)+PI%npars)) = PARS(i)
           PARS0(1:PI%npars) = PARS(1:PI%npars)
           ! specifically store the best parameter set
-          if (P > P0) BESTPARS = PARS
+!          if (P > P0) BESTPARS = PARS
+          if ((P+Pprior) > (P0+P0prior)) BESTPARS = PARS
           ! keep track of how many accepted solutions (global and local)
-          N%ACC = N%ACC + 1 ; N%ACCLOC = N%ACCLOC + 1 ; P0 = P
+          N%ACC = N%ACC + 1 ; N%ACCLOC = N%ACCLOC + 1 
+          P0 = P ; P0prior = Pprior
 
           ! write out parameter, log-likelihood and step if appropriate
           if (MCO%nWRITE > 0 .and. mod(N%ACC,MCO%nWRITE) == 0) then
-             call write_results(PARS,P,PI)
+             call write_results(PARS,(P+Pprior),PI)
           end if ! write or not to write
 
        endif ! accept or reject condition
 
-       ! continue counting on
+       ! count iteration whether accepted or rejected
        N%ITER = N%ITER + 1
 
        ! time to adapt?
@@ -207,9 +214,10 @@ contains
 
        ! should I be write(*,*)ing to screen or not?
        if (MCO%nPRINT > 0 .and. (mod(N%ITER,MCO%nPRINT) == 0)) then
-           write(*,*)"Total Accepted = ",N%ACC," out of ",MCO%nOUT
-           write(*,*)"Local Acceptance rate ",N%ACCRATE*100
-           write(*,*)"Current Log Likelihood = ",P0
+           write(*,*)"Total accepted = ",N%ACC," out of ",MCO%nOUT
+           write(*,*)"Local acceptance rate ",N%ACCRATE*100
+           write(*,*)"Current observation log-likelihood = ",P0
+           write(*,*)"Current prior log-likelihood = ",P0prior
        end if ! write(*,*) to screen or not
 
     end do ! while conditions
@@ -255,15 +263,15 @@ contains
 
 
     ! calculate constants
-    !minstepsize = 10000d0/dble(N%ITER)
-    !if (minstepsize > 0.01d0) minstepsize = 0.01d0
-    minstepsize = 100d0/dble(N%ACC) ! should this be linked to number of accepted parameter?
+    minstepsize = 10000d0/dble(N%ITER)
     if (minstepsize > 0.01d0) minstepsize = 0.01d0
-!print*,"...................................",minstepsize,N%ACC
+!    minstepsize = 100d0/dble(N%ACC) ! should this be linked to number of accepted parameter?
+!    if (minstepsize > 0.01d0) minstepsize = 0.01d0
+
     ! determine local acceptance rate
     N%ACCRATE = dble(N%ACCLOC)/dble(MCO%nADAPT)
-
-    ! default stepize increment
+!print*,"...................................",minstepsize,N%ACCRATE
+    ! default stepsize increment
     if (N%ACCLOC > 0 .and. N%ACCRATE < 0.23d0) then
         ! make step size smaller
         PI%stepsize = PI%stepsize * adaptfac_1

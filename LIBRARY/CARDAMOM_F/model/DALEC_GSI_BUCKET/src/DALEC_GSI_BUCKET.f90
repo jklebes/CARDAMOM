@@ -108,7 +108,7 @@ public :: CARBON_MODEL                  &
          ,snowfall                      &
          ,snow_melt                     &
          ,wind_spd                      &
-         ,vpd_kPa                        &
+         ,vpd_kPa                       &
          ,lai                           &
          ,days_per_step                 &
          ,days_per_step_1               &
@@ -426,7 +426,7 @@ contains
     ! 2) Turnover of litter and soil includes an exponential temperature dependency.
     !
     ! This version was coded by T. Luke Smallman (t.l.smallman@ed.ac.uk)
-    ! Version 1: 15/11/18
+    ! Version 1: 15/11/2018
 
     implicit none
 
@@ -928,14 +928,14 @@ contains
     doy = met(6,1)   ! Day of year
     rainfall = rainfall_time(1) ! rainfall (kgH2O/m2/s)
     wind_spd = met(15,1) ! wind speed (m/s)
-    vpd_kPa = met(16,1)*1d-3 ! vapour pressure deficit (Pa)
+    vpd_kPa = met(16,1)*1d-3 ! vapour pressure deficit (Pa->kPa)
     meant = meant_time(1)
     leafT = maxt     ! initial canopy temperature (oC)
     maxt_lag1 = maxt
     seconds_per_step = deltat(1) * seconds_per_day
     days_per_step =  deltat(1)
 
-    ! clear disturbance arrays to avoid throw overs
+    ! reset disturbance at the beginning of iteration
     disturbance_residue_to_litter = 0d0 ; disturbance_loss_from_litter = 0d0
     disturbance_residue_to_som = 0d0 ; disturbance_loss_from_som = 0d0
     disturbance_residue_to_cwd = 0d0 ; disturbance_loss_from_cwd = 0d0
@@ -954,7 +954,7 @@ contains
     ! Used to initialise soils
     call calculate_update_soil_water(dble_zero,dble_zero,dble_zero,FLUXES(1,19)) ! assume no evap or rainfall
     ! Store soil water content of the surface zone (mm)
-    POOLS(1,8) = 1d3*soil_waterfrac(1)*layer_thickness(1)
+    POOLS(1,8) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
 
     ! assign climate sensitivities
     gsi_lag = gsi_lag_remembered ! added to prevent loss from memory
@@ -964,6 +964,12 @@ contains
     Photofac_range_1 = (pars(24)-pars(16))**(-1d0)
     VPDfac_range_1 = abs(pars(26)-pars(25))**(-1d0)
     SLA = pars(17)**(-1d0)
+
+    !!!!!!!!!!!!
+    ! assign climate sensitivities
+    !!!!!!!!!!!!
+
+    FLUXES(1:nodays,2) = exp(pars(10)*meant_time(1:nodays))
 
     !
     ! Begin looping through each time step
@@ -1052,10 +1058,6 @@ contains
       ! Calculate surface exchange coefficients
       !!!!!!!!!!
 
-      !!!!!!!!!!
-      ! Calculate surface exchange coefficients
-      !!!!!!!!!!
-
       ! calculate some temperature dependent meteorologial properties
       call acm_meteorological_constants(maxt)
       ! calculate aerodynamic using consistent approach with SPA
@@ -1074,6 +1076,7 @@ contains
 
       ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
       call calculate_wetcanopy_evaporation(wetcanopy_evap,act_pot_ratio,canopy_storage,dble_zero)
+
       ! calculate radiation absorption and estimate stomatal conductance
       call acm_albedo_gc(abs(deltaWP),Rtot)
 
@@ -1110,14 +1113,10 @@ contains
       ! GPP allocation
       !!!!!!!!!!
 
-      ! temprate (i.e. temperature modified rate of metabolic activity))
-      FLUXES(n,2) = exp(pars(10)*meant)
       ! autotrophic respiration (gC.m-2.day-1)
       FLUXES(n,3) = pars(2)*FLUXES(n,1)
-      ! leaf production rate (gC.m-2.day-1)
-      FLUXES(n,4) = 0d0 !(FLUXES(n,1)-FLUXES(n,3))*pars(3)
       ! labile production (gC.m-2.day-1)
-      FLUXES(n,5) = (FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,4))
+      FLUXES(n,5) = (FLUXES(n,1)-FLUXES(n,3))
 
       !!!!!!!!!!
       ! calculate canopy phenology
@@ -1186,11 +1185,6 @@ contains
       ! now update the Ra flux with Rg
       FLUXES(n,3) = FLUXES(n,3) + Rg_from_labile
 
-      ! calculate the NEE
-      NEE_out(n) = (-FLUXES(n,1)+FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14))
-      ! load GPP
-      GPP_out(n) = FLUXES(n,1)
-
       !
       ! update pools for next timestep
       !
@@ -1198,7 +1192,7 @@ contains
       ! labile pool
       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8)-FLUXES(n,6)-FLUXES(n,7)-Rg_from_labile)*deltat(n)
       ! foliar pool
-      POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,4)-FLUXES(n,10)+FLUXES(n,8))*deltat(n)
+      POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,8)-FLUXES(n,10))*deltat(n)
       ! wood pool
       POOLS(n+1,4) = POOLS(n,4) + (FLUXES(n,7)-FLUXES(n,11))*deltat(n)
       ! root pool
@@ -1220,10 +1214,10 @@ contains
       call calculate_update_soil_water(transpiration,soilevaporation,((rainfall-intercepted_rainfall)*seconds_per_day) &
                                       ,FLUXES(n,19))
       ! now that soil mass balance has been updated we can add the wet canopy
-      ! evaporation (kg.m-2.day-1)
+      ! evaporation (kgH2O.m-2.day-1)
       FLUXES(n,19) = FLUXES(n,19) + wetcanopy_evap
       ! store soil water content of the surface zone (mm)
-      POOLS(n,8) = 1d3*soil_waterfrac(1)*layer_thickness(1)
+      POOLS(n+1,8) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
 
       !!!!!!!!!!
       ! deal first with deforestation
@@ -1437,7 +1431,29 @@ contains
          endif
       enddo
 
+      if (FLUXES(n,1) < 0d0 .or. FLUXES(n,1) /= FLUXES(n,1) .or. & 
+          FLUXES(n,19) /= FLUXES(n,19)) then
+          print*,"step",n, nxp
+          print*,"met",met(:,n)
+          print*,"POOLS",POOLS(n,:)
+          print*,"FLUXES",FLUXES(n,:)
+          print*,"wSWP",wSWP
+          print*,"waterfrac",soil_waterfrac
+          stop
+      endif 
+
     end do ! nodays loop
+
+    !!!!!!!!!!
+    ! Calculate Ecosystem diagnostics
+    !!!!!!!!!!
+
+    ! calculate NEE
+    NEE_out(1:nodays) = -FLUXES(1:nodays,1) & ! GPP
+                        +FLUXES(1:nodays,3)+FLUXES(1:nodays,13)+FLUXES(1:nodays,14) & ! Respiration
+                        +FLUXES(1:nodays,17)  ! fire
+    ! load GPP
+    GPP_out(1:nodays) = FLUXES(1:nodays,1)
 
   end subroutine CARBON_MODEL
   !
@@ -1458,11 +1474,13 @@ contains
     double precision :: pn, pd, pp, qq, ci, mult, pl &
                        ,gc ,gs_mol, gb_mol
 
-    ! Temperature adjustments for Michaelis-Menten coefficients
-    ! for CO2 (kc) and O2 (ko) and CO2 compensation point
-    ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
+
+!    ! Temperature adjustments for Michaelis-Menten coefficients
+!    ! for CO2 (kc) and O2 (ko) and CO2 compensation point
+!    ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
 !    co2_half_sat   = arrhenious(kc_saturation,kc_half_sat_conc,leafT)
 !    co2_comp_point = arrhenious(co2comp_saturation,co2comp_half_sat_conc,leafT)
+
 
     !
     ! Metabolic limited photosynthesis
@@ -1479,14 +1497,14 @@ contains
     ! daily canopy conductance (mmolH2O.m-2.s-1-> molCO2.m-2.day-1)
     ! The ratio of H20:CO2 diffusion is 1.646259 (Jones appendix 2).
     ! i.e. gcH2O*1.646259 = gcCO2
-    gs_mol = gs * 1d-3 * seconds_per_day * gs_H2O_CO2
+    gs_mol = gs * seconds_per_day * gs_H2Ommol_CO2mol
     ! canopy level boundary layer conductance unit change
     ! (m.s-1 -> mol.m-2.day-1) assuming sea surface pressure only.
     ! Note the ratio of H20:CO2 diffusion through leaf level boundary layer is
     ! 1.37 (Jones appendix 2).
     gb_mol = aerodynamic_conductance * seconds_per_day * convert_ms1_mol_1 * gb_H2O_CO2
     ! Combining in series the stomatal and boundary layer conductances
-    gc = (gs_mol ** (-dble_one) + gb_mol ** (-dble_one)) ** (-dble_one)
+    gc = (gs_mol ** (-1d0) + gb_mol ** (-1d0)) ** (-1d0)
 
     ! pp and qq represent limitation by metabolic (temperature & N) and
     ! diffusion (co2 supply) respectively
@@ -1517,7 +1535,8 @@ contains
     acm_gpp = pl*pd/(pl+pd)
 
     ! sanity check
-    if (acm_gpp /= acm_gpp) acm_gpp = dble_zero
+    if (acm_gpp /= acm_gpp) acm_gpp = 0d0
+
     ! don't forget to return
     return
 
@@ -1536,8 +1555,8 @@ contains
     double precision, intent(in) :: gs_in
 
     ! local variables
-    double precision :: tmp
-    double precision :: gs_high, gpp_high, gpp_low
+    double precision :: gs_high, gs_store, &
+                        gpp_high, gpp_low
 
     !!!!!!!!!!
     ! Optimise intrinsic water use efficiency
@@ -1572,7 +1591,6 @@ contains
     double precision, intent(in) :: gs_in
 
     ! local variables
-    double precision :: tmp
     double precision :: gs_high, gs_store, &
                         gpp_high, gpp_low, &
                         evap_high, evap_low
@@ -2787,9 +2805,6 @@ contains
 
    end if ! root reach beyond top layer
 
-   ! ! Update rooting depth in all cases
-   ! previous_depth = root_reach
-
    ! finally update soil water potential
    call soil_water_potential
 
@@ -2901,15 +2916,6 @@ contains
        ! initial conditions; i.e. is there liquid water and more water than
        ! layer can hold
        if ( liquid > drainlayer ) then
-
-!          ! Trapezium rule for approximating integral of drainage rate
-!          dx = liquid - ((liquid + drainlayer)*0.5d0)
-!          call calculate_soil_conductivity(soil_layer,liquid,tmp1)
-!          call calculate_soil_conductivity(soil_layer,drainlayer,tmp2)
-!          call calculate_soil_conductivity(soil_layer,(liquid+dx),tmp3)
-!          drainage = 0.5d0 * dx * ((tmp1 + tmp2) + 2d0 * tmp3)
-!          drainage = drainage * seconds_per_day
-!          drainage = min(drainage,liquid - drainlayer)
           d = 1 ; nos_integrate = nos_hours_per_day / nos_minutes
           drainage = 0d0 ; local_drain = 0d0
           do while (d <= nos_integrate .and. liquid > drainlayer)
@@ -2996,7 +3002,7 @@ contains
     call calculate_field_capacity
 
     ! final sanity check for porosity
-    where (porosity <= field_capacity) porosity = field_capacity + 0.01d0
+    where (porosity <= field_capacity) porosity = field_capacity + 0.05d0
 
   end subroutine initialise_soils
   !
@@ -3019,16 +3025,16 @@ contains
 
     ! Default assumption to be field capacity
     soil_waterfrac = field_capacity
+    SWP = SWP_initial
 
     ! if prior value has been given
     if (input_soilwater_frac > -9998d0) then
         ! calculate initial soil water fraction
         soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac
+        ! calculate initial soil water potential
+        call soil_water_potential
     endif
 
-    ! calculate initial soil water potential
-    SWP = dble_zero
-    call soil_water_potential
     ! seperately calculate the soil conductivity as this applies to each layer
     do i = 1, nos_soil_layers
        call calculate_soil_conductivity(i,soil_waterfrac(i),soil_conductivity(i))
@@ -3272,7 +3278,7 @@ contains
 
     ! calculate displacement (m); assume minimum lai 1.0 or 1.5 as height is not
     ! varied
-    displacement = (dble_one-((dble_one-exp(-sqrt_cd1_lai))/sqrt_cd1_lai))*canopy_height
+    displacement = (1d0-((1d0-exp(-sqrt_cd1_lai))/sqrt_cd1_lai))*canopy_height
 
     ! calculate estimate of ratio of friction velocity / canopy wind speed; with
     ! max value set at
@@ -3281,11 +3287,11 @@ contains
     ! this describes the departure of the velocity profile from just above the
     ! roughness from the intertial sublayer log law
     phi_h = 0.19314718056d0
-!    phi_h = log(Cw)-dble_one+Cw**(-dble_one) ! DO NOT FORGET TO UPDATE IF Cw CHANGES
+!    phi_h = log(Cw)-1d0+Cw**(-1d0) ! DO NOT FORGET TO UPDATE IF Cw CHANGES
 
     ! finally calculate roughness length, dependant on displacement, friction
     ! velocity and lai.
-    roughl = ((dble_one-displacement/canopy_height)*exp(-vonkarman*ustar_Uh-phi_h))*canopy_height
+    roughl = ((1d0-displacement/canopy_height)*exp(-vonkarman*ustar_Uh-phi_h))*canopy_height
 
     ! sanity check
 !    if (roughl /= roughl) then
@@ -3378,6 +3384,13 @@ contains
       VPDfac = dble_one - ((mean_VPD-VPDfac_min) * VPDfac_range_1)
       VPDfac = min(dble_one,max(dble_zero,VPDfac))
 
+      ! if this is a re-run we want to output these variables too
+      if (allocated(itemp)) then
+         itemp(current_step) = Tfac
+         ivpd(current_step) = VPDfac
+         iphoto(current_step) = Photofac
+      endif
+
       ! calculate and store the GSI index
       GSI(current_step) = Tfac*Photofac*VPDfac
 
@@ -3400,43 +3413,43 @@ contains
       leaf_fall = dble_zero   ! leaf turnover
       leaf_growth = dble_zero ! leaf growth
 
+      ! is foliar pool turning over?
+      if (gradient <= fol_turn_crit .or. GSI(current_step) == dble_zero) then
+          ! we are in a decending condition so foliar turnover
+          leaf_fall = pot_leaf_fall*(dble_one-GSI(current_step))
+          just_grown = 0.5d0
+      endif
+
       ! everything else in here was needed to keep track of GSI values but
-      ! ultimately if there is not labile available no growth can occur and loss
-      ! should have been managed else where as mortality
+      ! ultimately if there is not labile available no growth can occur
       if (avail_labile > dble_zero) then
 
           ! now update foliage and labile conditions based on gradient calculations
-          if (gradient <= fol_turn_crit .or. GSI(current_step) == dble_zero) then
-
-             ! we are in a decending condition so foliar turnover
-             leaf_fall = pot_leaf_fall*(dble_one-GSI(current_step))
-             just_grown = 0.5d0
-
-          else if (gradient >= lab_turn_crit .and. deltaWP < dble_zero) then
+          if (gradient >= lab_turn_crit .and. deltaWP < dble_zero) then
 
              ! we are in an assending condition so labile turnover
              leaf_growth = pot_leaf_growth*GSI(current_step)
              just_grown = 1.5d0
 
-             ! calculate potential C allocation to leaves
-             tmp = avail_labile * &
-                   min(dble_one,dble_one-(dble_one-leaf_growth)**deltat(current_step))*deltat_1(current_step)
-             ! calculate new leaf area, GPP return
-             lai = (foliage+tmp) * SLA
-             call calculate_shortwave_balance
-             ! calculate stomatal conductance of water
-             if (lai > vsmall .and. stomatal_conductance > vsmall) then
-                 tmp = acm_gpp(stomatal_conductance)
-             else
-                 tmp = dble_zero
-             endif
-             deltaGPP = tmp - GPP_current
+!             ! calculate potential C allocation to leaves
+!             tmp = avail_labile * &
+!                   (dble_one-(dble_one-leaf_growth)**deltat(current_step))*deltat_1(current_step)
+!             ! calculate new leaf area, GPP return
+!             lai = (foliage+tmp) * SLA
+!             call calculate_shortwave_balance
+!             ! calculate stomatal conductance of water
+!             if (lai > vsmall .and. stomatal_conductance > vsmall) then
+!                 tmp = acm_gpp(stomatal_conductance)
+!             else
+!                 tmp = dble_zero
+!             endif
+!             deltaGPP = tmp - GPP_current
 
              ! is the marginal return for GPP (over the mean life of leaves)
              ! less than increase in maintenance respiration and C required to
              ! growth?
 
-             if (deltaGPP < gpp_crit_frac*GPP_current) leaf_growth = dble_zero
+!             if (deltaGPP < gpp_crit_frac*GPP_current) leaf_growth = dble_zero
 
           else if (gradient < lab_turn_crit .and. gradient > fol_turn_crit .and. &
                    deltaWP < dble_zero ) then
@@ -3454,7 +3467,7 @@ contains
 
                 ! calculate potential C allocation to leaves
                 tmp = avail_labile * &
-                      min(dble_one,dble_one-(dble_one-leaf_growth)**deltat(current_step))*deltat_1(current_step)
+                      (dble_one-(dble_one-leaf_growth)**deltat(current_step))*deltat_1(current_step)
                 ! calculate new leaf area, GPP return
                 lai = (foliage+tmp) * SLA
                 call calculate_shortwave_balance
@@ -3739,13 +3752,12 @@ contains
     ! local variables..
     double precision ::soil_wp
 
-    ! calculate the soil water potential (MPa)..
-    ! note that some modifications to scaling values have been made compared to
-    ! SPA src to reduce computational cost
-!    soil_wp = -0.001 * potA( water_retention_pass ) * xin**potB( water_retention_pass )
-!    water_retention_saxton_eqns = -1000.0 * soil_wp + 10.0    ! 10 kPa represents air-entry swp
-    soil_wp = potA( water_retention_pass ) * xin**potB( water_retention_pass )
-    water_retention_saxton_eqns = -1d0 * soil_wp + 10d0    ! 10 kPa represents air-entry swp
+!    ! calculate the soil water potential (kPa)..
+!    soil_WP = -0.001 * potA( water_retention_pass ) * xin**potB( water_retention_pass )
+!    water_retention_saxton_eqns = 1000. * soil_wp + 10.    ! 10 kPa represents air-entry swp
+    ! calculate the soil water potential (kPa)..
+    soil_wp = -potA( water_retention_pass ) * xin**potB( water_retention_pass )
+    water_retention_saxton_eqns = soil_wp + 10d0    ! 10 kPa represents air-entry swp    
 
     return
 

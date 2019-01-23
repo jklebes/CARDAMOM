@@ -104,7 +104,6 @@ extract_modis_lai<- function(timestep_days,spatial_type,resolution,grid_type,lat
 
   # declare output variable
   lai_out=array(-9999, dim=length(doy_out))
-  lai_unc_out=array(-9999, dim=length(doy_out))
   # now line up the obs days with all days
   b=1 ; i=1 ; a=1 ; start_year=as.numeric(years_to_load[1])
   while (b <= length(lai_all$doy_obs)) {
@@ -154,6 +153,7 @@ extract_modis_lai<- function(timestep_days,spatial_type,resolution,grid_type,lat
   rm(i1,j1,check1,lai,i,nos_days,doy_out,radius,n,a) ; gc(reset=TRUE,verbose=FALSE)
 
   # assume LAI uncertainty for MODIS is 0.25 m2/m2
+  lai_unc_out = array(-9999, dim=length(lai_out))
   lai_unc_out[which(lai_out > 0)] = 0.25
 
   # pass the information back

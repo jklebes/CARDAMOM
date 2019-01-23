@@ -28,89 +28,137 @@ module model_likelihood_module
     use MHMCMC_MODULE, only: MHMCMC
 
     ! subroutine deals with the determination of initial parameter and initial
-    ! conditions which are consistent with EDCs 
+    ! conditions which are consistent with EDCs
 
     implicit none
 
     ! declare inputs
     type ( parameter_info ), intent(inout) :: PI
 
-    ! declare local variables 
-    type ( mcmc_output ) :: MCOUT
-    type ( mcmc_options ) :: MCOPT
-    integer :: n, counter_local
-    double precision :: PEDC
+    ! declare local variables
+    type ( mcmc_output ) :: MCOUT_EDC
+    type ( mcmc_options ) :: MCOPT_EDC
+    integer :: n, counter_local, iter
+    double precision :: PEDC, ML, ML_prior
+    double precision, allocatable :: iter_EDC_pars(:)
 
     ! initialise output for this EDC search
-    call initialise_mcmc_output(PI,MCOUT)
+    call initialise_mcmc_output(PI,MCOUT_EDC)
 
     ! set MCMC options needed for EDC run
-    MCOPT%APPEND=0
-    MCOPT%nADAPT=20
-    MCOPT%fADAPT=0.5
-    MCOPT%nOUT=2000
-    MCOPT%nPRINT=0
-    MCOPT%nWRITE=0
+    MCOPT_EDC%APPEND = 0
+    MCOPT_EDC%nADAPT = 100 !TLS: 20
+    MCOPT_EDC%fADAPT = 0.5d0
+    MCOPT_EDC%nOUT = 1000
+    MCOPT_EDC%nPRINT = 0
+    MCOPT_EDC%nWRITE = 0
     ! the next two lines ensure that parameter inputs are either given or
     ! entered as -9999
-    MCOPT%randparini=1
-    MCOPT%returnpars=1
-    MCOPT%fixedpars=1
+    MCOPT_EDC%randparini = .true.
+    MCOPT_EDC%returnpars = .true.
+    MCOPT_EDC%fixedpars  = .false.
 
+    ! Set initial priors to vector...
+    PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
+    ! ... and assume we need to find random parameters
+    PI%parfix = 0
+
+    ! if the prior is not missing and we have not told the edc to be random
+    ! keep the value
     do n = 1, PI%npars
-       PI%stepsize(n)=0.02
-       PI%parini(n)=DATAin%parpriors(n)
-       ! assume we need to find random parameters
-       PI%parfix(n)=0
-       ! if the prior is not missing and we have not told the edc to be random
-       ! keep the value
-       if (PI%parini(n) /= -9999 .and. DATAin%edc_random_search < 1) PI%parfix(n)=1
+       if (PI%parini(n) /= -9999d0 .and. DATAin%edc_random_search < 1) PI%parfix(n) = 1
     end do ! parameter loop
 
-    if (.not.restart_flag) then
-       ! set up edc log likelihood for MHMCMC initial run
-       PEDC=-1
-       counter_local=0
-       do while (PEDC < 0)
-         write(*,*)"Beginning EDC search attempt"
-         ! reset the parameter step size at the beginning of each attempt
-         PI%stepsize(1:PI%npars)=0.0005
-         ! call the MHMCMC directing to the appropriate likelihood
-         call MHMCMC(EDC_MODEL_LIKELIHOOD,PI,MCOPT,MCOUT)
+    ! if this is not a restart run, i.e. we do not already have a starting
+    ! position we must being the EDC search procedure to find an ecologically
+    ! consistent initial parameter set
+    if (.not. restart_flag) then
+
+       ! the EDC search will be iterated to minimise the risk of finding an EDC
+       ! consistent location in parameter space which is very poor with respect
+       ! to our observations
+       allocate(iter_EDC_pars(PI%npars+1)) ; iter_EDC_pars = -9999999999d0
+       do iter = 1, 3
+
+          ! set up edc log likelihood for MHMCMC initial run
+          PEDC = -1 ; counter_local = 0
+          do while (PEDC < 0)
+
+            write(*,*)"Beginning EDC search attempt"
+            ! reset the parameter step size at the beginning of each attempt
+            PI%stepsize(1:PI%npars) = 0.10d0 ! 0.0005 -> 0.005 -> 0.05 -> 0.1 TLS
+            ! call the MHMCMC directing to the appropriate likelihood
+            call MHMCMC(EDC_MODEL_LIKELIHOOD,PI,MCOPT_EDC,MCOUT_EDC)
+
+            ! store the best parameters from that loop
+            PI%parini(1:PI%npars) = MCOUT_EDC%best_pars(1:PI%npars)
+            ! turn off random selection for initial values
+            MCOPT_EDC%randparini = .false.
   
-         ! store the best parameters from that loop
-         PI%parini(1:PI%npars)=MCOUT%best_pars(1:PI%npars)
+            ! call edc likelihood function to get final edc probability
+            call edc_model_likelihood(PI,PI%parini,PEDC,ML_prior)
 
-         ! call edc likelihood function to get final edc probability
-         call edc_model_likelihood(PI,PI%parini,PEDC)
+            ! we want to keep track of which EDC consistent parameter set best
+            ! fits the available observations
+            if (PEDC == 0) then
+                ! determine what the observation based likelihood is for the
+                ! current parameter set
+                call model_likelihood(PI,PI%parini,ML,ML_prior)
+                ! if the current parameter set has a higher likelihood than the
+                ! previous EDC consistent values we will save the new ones
+                if ((ML+ML_prior) > iter_EDC_pars(PI%npars+1)) then
+                    ! store the current EDC consistent parameters
+                    iter_EDC_pars(1:PI%npars) = PI%parini(1:PI%npars)
+                    iter_EDC_pars(PI%npars+1) = ML + ML_prior
+                endif
+                ! and reset to the initial conditions for the next iteration
+                PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
+                ! reset to select random starting point
+                MCOPT_EDC%randparini = .true.
+            endif
 
-         ! keep track of attempts
-         counter_local=counter_local+1
-         ! periodically reset the initial conditions
-         if (PEDC < 0 .and. mod(counter_local,5) == 0) then
-             PI%parini(1:PI%npars)=DATAin%parpriors(1:PI%npars)
-         endif
-      end do ! for while condition
-    endif 
+            ! keep track of attempts
+            counter_local = counter_local+1
+            ! periodically reset the initial conditions
+            if (PEDC < 0 .and. mod(counter_local,3) == 0) then
+                PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
+                ! reset to select random starting point
+                MCOPT_EDC%randparini = .true.
+            endif
+
+          end do ! for while condition
+
+       end do ! for iter = 1, 3
+
+       ! set the initial parameter values to those which best fitted the
+       ! available observations
+       PI%parini(1:PI%npars) = iter_EDC_pars(1:PI%npars)
+
+       ! tidy up before leaving
+       deallocate(iter_EDC_pars)
+
+    endif ! if for restart
+
     ! reset
-    PI%parfix(1:PI%npars)=0
+    PI%parfix(1:PI%npars) = 0
+    MCOUT_EDC%best_pars = 0d0
 
     ! clean up some memory
-    deallocate(MCOUT%best_pars)
+    deallocate(MCOUT_EDC%best_pars)
 
   end subroutine find_edc_initial_values
   !
   !------------------------------------------------------------------
   !
-  subroutine edc_model_likelihood(PI, PARS, prob_out)
-!    use, intrinsic :: ieee_arithmetic
+  subroutine edc_model_likelihood(PI, PARS, ML_obs_out, ML_prior_out)
     use cardamom_structures, only: DATAin
     use MCMCOPT, only: PARAMETER_INFO
-    use CARBON_MODEL_MOD, only: CARBON_MODEL
+    use CARBON_MODEL_MOD, only: carbon_model
+    use CARBON_MODEL_CROP_MOD, only: carbon_model_crop
 
     ! Model likelihood function specifically intended for the determination of
     ! appropriate initial parameter choices, consistent with EDCs for DALEC2 /
-    ! DALEC_CDEA
+    ! DALEC_GSI
 
     implicit none
 
@@ -118,74 +166,73 @@ module model_likelihood_module
     type ( parameter_info ), intent(inout) :: PI
     double precision, dimension(PI%npars), intent(inout) :: PARS
     ! output
-    double precision, intent(inout) :: prob_out
+    double precision, intent(inout) :: ML_obs_out, ML_prior_out
 
     ! declare local variables
     integer ::  n
-    double precision :: tot_exp, ML, exp_orig, decay_coef &
-                       ,prob_exp, EDC, EDC1, EDC2, infini
+    double precision :: tot_exp, ML, EDC1, EDC2, infini
 
-    ! set initial values
-    EDCD%DIAG=1
+    ! if == 0 EDCs are checked only until the first failure occurs
+    ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
+    EDCD%DIAG = 1
+    ML_obs_out = 0d0 ; ML_prior_out = 0d0
 
-    ! call EDCs which can be evaluated prior to running the model
-    call EDC1_CDEA(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+    ! crop or not split....trouble
+    if (DATAin%PFT == 1) then
+       ! PFT has been provided and is crop! Best try running the crop model
+       ! then...
+       ! call EDCs which can be evaluated prior to running the model
+       call EDC1_CROP(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+       ! next need to run the model itself
+       call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                             ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                             ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft   &
+                             ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
+                             ,DATAin%nofluxes,DATAin%M_GPP                &
+                             ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
+                             ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
+                             ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
 
-    ! next need to run the model itself
-    call CARBON_MODEL(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat,DATAin%nodays  &
-                   ,DATAin%LAT, DATAin%M_LAI, DATAin%M_NEE       &
-                   ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
-                   ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                   ,DATAin%M_GPP)
+        ! assess post running EDCs
+        call EDC2_CROP(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                      ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                      ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
-    ! assess post running EDCs
-    call EDC2_CDEA(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                  ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                  ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                  ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-
-    ! combine results
-    if (DATAin%EDC == 1 .and. (EDC1 == 0 .or. EDC2 == 0 .or. &
-        sum(DATAin%M_LAI) /= sum(DATAin%M_LAI) .or. sum(DATAin%M_GPP) /= sum(DATAin%M_GPP))) then
-        EDC=0
     else
-        EDC=1
-    end if
+
+        ! call EDCs which can be evaluated prior to running the model
+        call EDC1_CDEA(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+
+        ! next need to run the model itself
+        call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                       ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                       ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
+                       ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
+                       ,DATAin%M_GPP)
+
+        ! assess post running EDCs
+        call EDC2_CDEA(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                      ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                      ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+
+    end if ! crop or not if
 
     ! calculate the likelihood
-    tot_exp=0. 
-!print*,"EDC checks"
-    do n = 1, EDCD%nedc
-       tot_exp=tot_exp+(1.-EDCD%PASSFAIL(n))
+    tot_exp = sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))
+!    tot_exp = 0d0
+!    do n = 1, EDCD%nedc
+!       tot_exp=tot_exp+(1d0-EDCD%PASSFAIL(n))
 !       if (EDCD%PASSFAIL(n) /= 1) print*,"failed edcs are: ", n
-    end do ! checking EDCs
-    ! for testing purposes, stop the model when start achieved
-!    if (sum(EDCD%PASSFAIL) == 100) stop
+!    end do ! checking EDCs
+!    ! for testing purposes, stop the model when start achieved
+!    if (sum(EDCD%PASSFAIL) == 100) then
+!        print*,"Found it!" ; stop
+!    endif
 
     ! convert to a probability
-    prob_out=-0.5*(tot_exp*10d0)*DATAin%EDC
-
-    ! override probability if parameter set gives NaN or near -infinitiy output
-    call model_likelihood(PI,PARS,ML)
-
-    infini=0d0
-    if (DATAin%EDC == 0 .and. (ML /= ML .or. ML == log(infini) .or. ML == -log(infini) )) then
-       prob_out=prob_out-0.5*10.0
-    end if
-
-!    ! adding exponential decay related term to help find starting point quicker
-!    exp_orig=-log(2.)/sum(DATAin%deltat)
-!    prob_exp=0.
-!    do n = 1, DATAin%nopools
-!       decay_coef=expdecay2(DATAin%M_POOLS,n,DATAin%deltat,DATAin%nopools,DATAin%nodays+1)
-!       if (decay_coef < exp_orig .and. decay_coef /= 1) then
-!          prob_exp=prob_exp-0.5*((decay_coef-exp_orig)/(exp_orig*10.))**2.
-!       end if
-!    end do
-
-    ! now add the exponential component
-    ! prob_out is the Log-Likelihood
-    prob_out=prob_out!+prob_exp
+    ML_obs_out = -0.5d0*(tot_exp*10d0)*DATAin%EDC
 
   end subroutine edc_model_likelihood
   !
@@ -636,35 +683,38 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine model_likelihood(PI,PARS,ML_out)
-    use, intrinsic :: ieee_arithmetic
+  subroutine model_likelihood(PI,PARS,ML_obs_out,ML_prior_out)
     use MCMCOPT, only:  PARAMETER_INFO
-    use CARBON_MODEL_MOD, only: CARBON_MODEL
+    use CARBON_MODEL_MOD, only: carbon_model
+    use CARBON_MODEL_CROP_MOD, only: carbon_model_crop
     use cardamom_structures, only: DATAin
-  
+
     ! this subroutine is responsible, under normal circumstances for the running
     ! of the DALEC model, calculation of the log-likelihood for comparison
     ! assessment of parameter performance and use of the EDCs if they are
     ! present / selected
 
     implicit none
- 
+
     ! declare inputs
     type ( parameter_info ), intent(inout) :: PI ! parameter information
 
     double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
     ! output
-    double precision, intent(inout) :: ML_out ! output variables for log-likelihood
-
+    double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
+                                       ML_prior_out   ! prior log-likelihood
     ! declare local variables
-    double precision :: EDC,EDC1,EDC2
- 
+    double precision :: EDC, EDC1, EDC2
+
     ! initial values
-    ML_out=0.
-    EDCD%DIAG=0
+    ML_obs_out = 0d0 ; ML_prior_out = 0d0
+    ! if == 0 EDCs are checked only until the first failure occurs
+    ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
+    EDCD%DIAG = 0
 
     ! call EDCs which can be evaluated prior to running the model
     call EDC1_CDEA(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+
     ! now use the EDCD%EDC flag to determine if effect is kept
     if (DATAin%EDC == 1) then
         EDC = EDC1
@@ -673,46 +723,41 @@ module model_likelihood_module
     end if
 
     ! update effect to the probabity
-    ML_out=ML_out+log(EDC)
+    ML_obs_out = ML_obs_out + log(EDC)
 
     ! if first set of EDCs have been passed
     if (EDC == 1) then
        ! calculate parameter log likelihood (assumed we have estimate of
        ! uncertainty)
-       ML_out=ML_out+likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
+       ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
 
        ! run the dalec model
-       call CARBON_MODEL(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat,DATAin%nodays  &
-                      ,DATAin%LAT, DATAin%M_LAI, DATAin%M_NEE       &
-                      ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
-                      ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                      ,DATAin%M_GPP)
- 
+       call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                        ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                        ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
+                        ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
+                        ,DATAin%M_GPP)
+
        ! check edc2
        call EDC2_CDEA(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                     ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS & 
+                     ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                      ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
        ! check if EDCs are switched on
        if (DATAin%EDC == 1) then
            EDC = EDC2
-       else 
+       else
            EDC = 1
        end if
 
-       ! extra checks to ensure correct running of the model
-       if (sum(DATAin%M_LAI) /= sum(DATAin%M_LAI) .or. sum(DATAin%M_GPP) /= sum(DATAin%M_GPP)) then
-           EDC=0
-       end if 
-
        ! add EDC2 log-likelihood
-       ML_out=ML_out+log(EDC)
+       ML_obs_out = ML_obs_out + log(EDC)
 
-       ! calculate final model likelihood when compared to obs
        if (EDC == 1) then
-          ML_out=ML_out+likelihood(PI%npars,PARS)
-       endif ! EDC still == 1
+          ! calculate final model likelihood when compared to obs
+          ML_obs_out = ML_obs_out + likelihood(PI%npars,PARS)
+       endif 
 
     end if ! EDC == 1
 

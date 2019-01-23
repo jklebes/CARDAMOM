@@ -18,19 +18,14 @@ module MODEL_PARAMETERS
     use cardamom_structures, only: DATAin
 
     ! Subroutine contains a list of parameter ranges for the model.
-    ! These could or
-    ! possibly should go into an alternate file which can be read in.
-    ! This may
-    ! improve the usability when it comes to reading these information
-    ! in for
-    ! different PFTs
+    ! These could or possibly should go into an alternate file which can be read in.
+    ! This may improve the usability when it comes to reading these information
+    ! in for different PFTs
 
     implicit none
 
     ! declare inputs
     type ( parameter_info ), intent(inout) :: PI
-
-!    PI%npars=29 ! dont forget to change in cardamom_io.f90
 
     if (DATAin%PFT == 1) then
        ! crop model will be ran and therefore needs specific parameters to be
@@ -50,82 +45,84 @@ module MODEL_PARAMETERS
        !
 
        ! Decomposition of litter to som (fraction; temperature adjusted)
-       PI%parmin(1)=0.0001368925d0 ! 20  years at 0oC
-       PI%parmax(1)=0.005475702d0  ! 0.5 years at 0oC
+       PI%parmin(1) = 0.0001368925d0 ! 20 years at 0oC
+       PI%parmax(1) = 0.002737851d0  ! 1  year  at 0oC
 
        ! CN_Root (gC/gN; Kattge et al., 2011)
-       PI%parmin(2)=13.85d0
-       PI%parmax(2)=192.31d0
+       PI%parmin(2) = 13.85d0
+       PI%parmax(2) = 192.31d0
 
        ! Days past optimum at which canopy NUE = 0
-       PI%parmin(3)=3d0
-       PI%parmax(3)=365.25d0*6d0
+       PI%parmin(3) = 3d0
+       PI%parmax(3) = 365.25d0*6d0
 
        ! Max labile turnover (fraction) to roots
-       PI%parmin(4)=2d0*0.0001368925d0 ! 20->10 years
-       PI%parmax(4)=0.05d0         ! 20 days
+       PI%parmin(4) = 0.000273785 ! 10 years
+       PI%parmax(4) = 0.05d0      ! 20 days
 
        ! Leaf growth sensitivity period (days)
-       PI%parmin(5)=1.5d0
-       PI%parmax(5)=30d0
+       PI%parmin(5) = 1.5d0
+       PI%parmax(5) = 30d0
 
        ! Turnover fraction of wood
-       PI%parmin(6)=0.000009d0 ! 300  years
-       PI%parmax(6)=0.001d0    ! 2.73 years
+       PI%parmin(6) = 0.000009d0 ! 300  years
+       PI%parmax(6) = 0.001d0    ! 2.73 years
 
        ! Turnover fraction of roots
-       PI%parmin(7)=0.0003422313d0 ! 8    years
-       PI%parmax(7)=0.01d0         ! 0.27 years
+       ! Gill and Jackson (2000), New Phytol., 147, 13–31
+       ! Fig. 6 turnover by diameter class
+       PI%parmin(7) = 0.0109514d0 ! 4    years
+       PI%parmax(7) = 0.01d0      ! 0.27 years
 
        ! Turnover of litter to Rhet (fraction; temperature adjusted)
-       PI%parmin(8)=0.0001368925d0 ! 27 years at 0oC
-       PI%parmax(8)=0.005475702d0  ! 0.50 years at 0oC
+       PI%parmin(8) = 0.0001368925d0 ! 20 years at 0oC
+       PI%parmax(8) = 0.002737851d0  ! 1 year at 0oC
 
        ! Turnover of som to Rhet (fraction; temperature adjusted)
-       PI%parmin(9)=1.368925d-6    ! 2000 years at 0oC
-       PI%parmax(9)=0.0002737851d0 ! ~ 10 years at 0oC
+       PI%parmin(9) = 2.737851d-06   ! 1000 years at 0oC
+       PI%parmax(9) = 0.0002737851d0 ! 10   years at 0oC
 
        ! Exponential coefficient for Rhet temperature response
-       PI%parmin(10)=0.018d0
-       PI%parmax(10)=0.06d0
+       PI%parmin(10) = 0.018d0
+       PI%parmax(10) = 0.06d0
 
        ! log10 avg foliar N (gN.m-2)
        ! Kattge et al., (2011) (Quantiles 2.5% / 97.5%)
-       PI%parmin(11)=-0.2218487d0
-       PI%parmax(11)=0.6382028d0! 0.5563025d0
+       PI%parmin(11) = -0.2218487d0
+       PI%parmax(11) = 0.6382028d0! 0.5563025d0
 
        ! Max labile turnover fraction to foliage
-       PI%parmin(12)=0.0006844627d0 ! 4 years 0.0001368925d0 ! 20 years
-       PI%parmax(12)=0.05d0         ! 20 days
+       PI%parmin(12) = 0.0006844627d0 ! 4 years 0.0001368925d0 ! 20 years
+       PI%parmax(12) = 0.05d0         ! 20 days
 
        ! Max labile turnover fraction to wood
-       PI%parmin(13)=0.0006844627d0 ! 4 years 0.0001368925d0 ! 20 years
-       PI%parmax(13)=0.05d0         ! 20 days
+       PI%parmin(13) = 0.0006844627d0 ! 4 years 0.0001368925d0 ! 20 years
+       PI%parmax(13) = 0.05d0         ! 20 days
 
        ! Days between leaf emergence and peak NUE
-       PI%parmin(14)=3d0
-       PI%parmax(14)=90d0
+       PI%parmin(14) = 3d0
+       PI%parmax(14) = 90d0
 
        ! CN_wood (gC/gN; Kattge et al., 2011)
-       PI%parmin(15)=169.5d0
-       PI%parmax(15)=909.1d0
+       PI%parmin(15) = 169.5d0
+       PI%parmax(15) = 909.1d0
 
 !       ! CN_wood baseline value (gC/gN) for logarithmic relation with woody biomass
-!       PI%parmin(15)=100
-!       PI%parmax(15)=300
+!       PI%parmin(15) = 100
+!       PI%parmax(15) = 300
 
        ! Turnover fraction of CWD to litter (temperature adjusted)
-       PI%parmin(16)=0.0001d0
-       PI%parmax(16)=1d0/365.25d0
+       PI%parmin(16) = 0.0001d0      ! 27 years
+       PI%parmax(16) = 0.001368925d0 ! 2 year
 
        ! Leaf Mass per unit Area (gC/m2)
        ! Kattge et al. 2011,
-       PI%parmin(17)=10d0
-       PI%parmax(17)=180d0 !200d0
+       PI%parmin(17) = 10d0
+       PI%parmax(17) = 180d0 !200d0
 
        ! Initial mean canopy age (days)
-       PI%parmin(25)=3d0 !50d0
-       PI%parmax(25)=365.25d0*4d0
+       PI%parmin(25) = 3d0 !50d0
+       PI%parmax(25) = 365.25d0*4d0
 
        ! Optimum nitrogen use efficiency (gC/gN per m2 at optimum temperature)
        ! Derived from Vcmax reported in Wullschleger (1993), Journal of
@@ -136,71 +133,75 @@ module MODEL_PARAMETERS
        ! Variations of leaf longevity in tropical moist forests predicted by a
        ! trait-driven carbon optimality model,
        ! Ecology Letters, doi: 10.1111/ele.12804, upper value of 82 gC/gN/day 
-       PI%parmin(26)= 1.0d0
-       PI%parmax(26)=80.0d0
+       PI%parmin(26) =  1.0d0
+       PI%parmax(26) = 80.0d0
 
        ! initial leaf life span (MTTleaf; days)
-       PI%parmin(27)=30d0
-       PI%parmax(27)=365.25d0*6d0
+       PI%parmin(27) = 30d0
+       PI%parmax(27) = 365.25d0*6d0
 
        ! fraction of Cwood which is branch
-       PI%parmin(28)=0.05d0
-       PI%parmax(28)=0.40d0
+       PI%parmin(28) = 0.05d0
+       PI%parmax(28) = 0.40d0
 
        ! fraction of Cwood which is coarse root
-       PI%parmin(29)=0.15d0
-       PI%parmax(29)=0.30d0
+       PI%parmin(29) = 0.15d0
+       PI%parmax(29) = 0.30d0
 
        ! BUCKET - root biomass (gbiomass/m2) needed to reach 50 % of max depth (m)
-       PI%parmin(34)=50d0
-       PI%parmax(34)=500d0
+       PI%parmin(34) = 50d0
+       PI%parmax(34) = 500d0
 
        ! BUCKET - maximum rooting depth (m)
-       PI%parmin(35)=0.35d0
-       PI%parmax(35)=15d0 !20d0 !60d0
+       PI%parmin(35) = 0.35d0
+       PI%parmax(35) = 5d0 
 
        ! Reich - Leaf N linked respiration exponential coefficient
-       PI%parmin(36)=0.935d0 ! 1.639-0.01
-       PI%parmax(36)=1.774d0 ! 1.639+0.01
+       PI%parmin(36) = 0.935d0 ! 1.639-0.01
+       PI%parmax(36) = 1.774d0 ! 1.639+0.01
 
        ! Reich - Leaf N linked respiration intercept
        ! max/min values based on observed ranges from Reich et al (2008)
        ! Figure 1
-       PI%parmin(37)=0.10d0 !0.01 !0.645
-       PI%parmax(37)=1.65d0 !1.25 !0.911
+       PI%parmin(37) = 0.10d0 !0.01 !0.645
+       PI%parmax(37) = 1.65d0 !1.25 !0.911
 
        ! Reich - root N linked respiration exponential coefficient
-       PI%parmin(38)=1.012d0 ! 1.352-0.01
-       PI%parmax(38)=1.478d0 ! 1.352+0.01
+       PI%parmin(38) = 1.012d0 ! 1.352-0.01
+       PI%parmax(38) = 1.478d0 ! 1.352+0.01
 
        ! Reich - root N linked respiration intercept
        ! max/min values based on observed ranges from Reich et al (2008)
        ! Figure 1
-       PI%parmin(39)=0.10d0 !0.01 !0.915
-       PI%parmax(39)=1.90d0 !1.25 !1.079
+       PI%parmin(39) = 0.10d0 !0.01 !0.915
+       PI%parmax(39) = 1.90d0 !1.25 !1.079
 
        ! Reich - wood N linked respiration exponential coefficient
-       PI%parmin(40)=1.170d0 ! 1.344-0.01
-       PI%parmax(40)=1.478d0 ! 1.344+0.01
+       PI%parmin(40) = 1.170d0 ! 1.344-0.01
+       PI%parmax(40) = 1.478d0 ! 1.344+0.01
 
        ! Reich - wood N linked respiration intercept
        ! max/min values based on observed ranges from Reich et al (2008)
        ! Figure 1
-       PI%parmin(41)=0.01d0 !0.01 !0.839
-       PI%parmax(41)=1.90d0 !1.25 !1.053
+       PI%parmin(41) = 0.01d0 !0.01 !0.839
+       PI%parmax(41) = 1.90d0 !1.25 !1.053
 
        ! Leaf death sensitivity period (days)
-       PI%parmin(42)=1.5d0
-       PI%parmax(42)=30d0
+       PI%parmin(42) = 1.5d0
+       PI%parmax(42) = 30d0
 
-       ! intrinsc water use efficiency (gC/m2leaf/day/mmolH2Ogs)
-       PI%parmin(43)=5d-8
-       PI%parmax(43)=5d-6 
+       ! intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
+       PI%parmin(43) = 5d-8
+       PI%parmax(43) = 5d-6 
+
+       ! Period (days) over which initial canopy is distributed
+       PI%parmin(45) = 1d0
+       PI%parmax(45) = 30d0
 
 !       ! CN_wood coefficient for increase due to C_wood (deltalCN per gC.m-2)
 !       ! NOTE: values in log scale
-!       PI%parmin(49)=0.01
-!       PI%parmax(49)=0.25
+!       PI%parmin(49) = 0.01
+!       PI%parmax(49) = 0.25
 
        !
        ! INITIAL VALUES DECLARED HERE (gC/m2)
@@ -209,36 +210,36 @@ module MODEL_PARAMETERS
        ! C labile
        ! NOTE: labile upper bound to ensure that upper lab/wood ratio can be
        ! reached
-       PI%parmin(18)=1d0
-       PI%parmax(18)=7500d0
+       PI%parmin(18) = 1d0
+       PI%parmax(18) = 7500d0
 
        ! C foliar
-       PI%parmin(19)=1d0
-       PI%parmax(19)=1000d0
+       PI%parmin(19) = 1d0
+       PI%parmax(19) = 1000d0
 
        ! C roots
-       PI%parmin(20)=1d0
-       PI%parmax(20)=1000d0
+       PI%parmin(20) = 1d0
+       PI%parmax(20) = 1000d0
 
        ! C_wood
-       PI%parmin(21)=1d0
-       PI%parmax(21)=50000d0
+       PI%parmin(21) = 1d0
+       PI%parmax(21) = 30000d0
 
        ! C litter
-       PI%parmin(22)=1d0
-       PI%parmax(22)=2500d0 !5000d0
+       PI%parmin(22) = 1d0
+       PI%parmax(22) = 2500d0 
 
        ! C_som
-       PI%parmin(23)=100d0
-       PI%parmax(23)=100000d0
+       PI%parmin(23)=200d0
+       PI%parmax(23)=90000d0
 
        ! C CWD
-       PI%parmin(24)=1d0
-       PI%parmax(24)=7500d0
+       PI%parmin(24) = 1d0
+       PI%parmax(24) = 7500d0
 
        ! Soil water fraction (m3/m3)
-       PI%parmin(44)=0.1d0
-       PI%parmax(44)=0.9d0
+       PI%parmin(44) = 0.1d0
+       PI%parmax(44) = 0.9d0
 
        !
        ! Replanting pools (gC/m2) values

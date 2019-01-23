@@ -30,17 +30,22 @@ extract_soilwater_initial<- function(spatial_type,resolution,grid_type,latlon_in
 	answer=NA
 	while (is.na(answer) == TRUE) {
 		# work out average areas
-		average_i=(i1-radius):(i1+radius) ; average_j=(j1-radius):(j1+radius)
-		average_i=max(1,(i1-radius)):min(dim(soilwater_all$soil_water)[1],(i1+radius)) ; average_j=max(1,(j1-radius)):min(dim(soilwater_all$soil_water)[2],(j1+radius))
+		average_i = (i1-radius):(i1+radius) ; average_j=(j1-radius):(j1+radius)
+		average_i = max(1,(i1-radius)):min(dim(soilwater_all$soil_water)[1],(i1+radius)) ; average_j = max(1,(j1-radius)):min(dim(soilwater_all$soil_water)[2],(j1+radius))
 		# carry out averaging
-		tmp=soilwater_all$soil_water[average_i,average_j] ; tmp[which(tmp == -9999)]=NA
-		soilwater=mean(tmp, na.rm=TRUE)
-		tmp=soilwater_all$soil_water_unc[average_i,average_j] ; tmp[which(tmp == -9999)]=NA
-		soilwater_unc=mean(tmp, na.rm=TRUE)
+		tmp=soilwater_all$soil_water[average_i,average_j] ; tmp[which(tmp == -9999)] = NA
+		soilwater = mean(tmp, na.rm=TRUE)
+		tmp = soilwater_all$soil_water_unc[average_i,average_j] ; tmp[which(tmp == -9999)] = NA
+		soilwater_unc = mean(tmp, na.rm=TRUE)
 		# error checking
-		if (is.na(soilwater) | soilwater == 0) {radius=radius+1 ; answer=NA} else {answer=0}
+		if (is.na(soilwater) | soilwater == 0) {radius = radius+1 ; answer = NA} else {answer = 0}
 	}
 	print(paste("NOTE: Initial soil water averaged over a pixel radius (i.e. centre + radius) of ",radius," points",sep=""))
+
+        # restrict minimum uncertainty allowed to prevent errors
+        # uncertainty provided is standard error averaged across 15 years of annual averages
+        soilwater_unc = soilwater_unc * 3.872983 # sqrt(15) = 3.872983
+        soilwater_unc = max(0.05,soilwater_unc)
 	# pass the information back
 	return(list(soil_water = soilwater,soil_water_unc = soilwater_unc))
 

@@ -112,7 +112,7 @@ public :: CARBON_MODEL                  &
          ,snowfall                      &
          ,snow_melt                     &
          ,wind_spd                      &
-         ,vpd_kPa                        &
+         ,vpd_kPa                       &
          ,lai                           &
          ,days_per_step                 &
          ,days_per_step_1               &
@@ -282,7 +282,7 @@ double precision, allocatable, dimension(:) :: disturbance_residue_to_litter, &
 
 ! Autotrophic respiration model / phenological choices
 ! See source below for details of these variables
-integer :: oldest_leaf
+integer :: oldest_leaf, youngest_leaf
 double precision :: deltaGPP, deltaRm, Rm_deficit, &
                     leaf_growth_period,      &
                     leaf_growth_period_1,    &
@@ -639,6 +639,7 @@ contains
     ! p(42) = Leaf marginal loss sensitivity (days)
     ! p(43) = iWUE
     ! p(44) = Initial root profile water content (m3/m3)
+    ! p(45) = Period (days) over which the initial canopy biomass is distributed
 
     ! variables related to deforestation
     ! labile_loss = total loss from labile pool from deforestation
@@ -1015,7 +1016,7 @@ contains
     doy = met(6,1)   ! Day of year
     rainfall = rainfall_time(1) ! rainfall (kgH2O/m2/s)
     wind_spd = met(15,1) ! wind speed (m/s)
-    vpd_kPa = met(16,1)*1d-3 ! vapour pressure deficit (Pa)
+    vpd_kPa = met(16,1)*1d-3 ! vapour pressure deficit (Pa->kPa)
     meant = meant_time(1)
     leafT = maxt     ! initial canopy temperature (oC)
     maxt_lag1 = maxt
@@ -1031,34 +1032,62 @@ contains
     canopy_age_vector = 0d0
     marginal_loss_avg = 0d0 ; marginal_gain_avg = 0d0 ! reset gain average
     leaf_loss_possible = 0
+ 
+    ! NOTE: that this current initial canopy distribution model implicitly
+    ! assumes a canopy turnover of < 1 year. Alternatives will be needed.
 
-    oldest_leaf = nint(leaf_life) ! number of days to cover initial leaf life span
+    ! Determine the youngest leaf age, based on mean age - distribution range
+    youngest_leaf = max(1,nint(pars(25) - pars(45)))
+    ! determine the oldest leaf are, based on mean age + distribution range
+    oldest_leaf = pars(25) + pars(45)
     ! determine the vector position at which mean canopy age is located
-    canopy_age = min(dble(oldest_leaf-1),pars(25))
-    ! set lower bound to prevent errors in array selection
-    canopy_age = max(canopy_age,1d0) ; oldest_leaf = max(oldest_leaf,1)
+    canopy_age = pars(25) ! is this still needed?
 
-    ! estimate gradient needed using the integral of 0-canopy age (2 comes re-arranging the integral of the linear equation)
-    ! to assign 50% (i.e. 0.5) of the canopy. Note that this must be scalable for simulations at different time steps
+    ! estimate gradient needed using the integral of canopy_age-youngest_leaf (2 comes
+    ! re-arranging the integral of the linear equation)
+    ! to assign 50% (i.e. 0.5) of the canopy. Note that this must be scalable
+    ! for simulations at different time steps
     !tmp = ((0.5d0 * 2d0) / canopy_age ** 2)
-    tmp = canopy_age ** (-2d0)
+    tmp = (canopy_age - youngest_leaf) ** (-2d0)
     tmp = POOLS(1,2) * tmp
     ! assign foliar biomass to first half of the distribution
-!    do n = 1, nint(canopy_age), 1
-!       canopy_age_vector(n) = tmp * dble(n)
-!    end do
     canopy_age_vector(1:nint(canopy_age)) = canopy_days(1:nint(canopy_age)) * tmp
 
     ! now repeat the process for the second part of the distribution
     !tmp = ((0.5d0 * 2d0) / (dble(oldest_leaf) - canopy_age) ** 2)
     tmp = (dble(oldest_leaf) - canopy_age) ** (-2d0)
     tmp = POOLS(1,2) * tmp
-!    do n = nint(canopy_age+1d0), oldest_leaf, 1
-!       canopy_age_vector(n) = tmp * dble(oldest_leaf-n)
-!    end do
     canopy_age_vector((nint(canopy_age)+1):oldest_leaf) = tmp * &
                                       (dble(oldest_leaf) - canopy_days((nint(canopy_age)+1):oldest_leaf))
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!    oldest_leaf = nint(leaf_life) ! number of days to cover initial leaf life span
+!    ! determine the vector position at which mean canopy age is located
+!    canopy_age = min(dble(oldest_leaf-1),pars(25))
+!    ! set lower bound to prevent errors in array selection
+!    canopy_age = max(canopy_age,1d0) ; oldest_leaf = max(oldest_leaf,1)
+!
+!    ! estimate gradient needed using the integral of 0-canopy age (2 comes re-arranging the integral of the linear equation)
+!    ! to assign 50% (i.e. 0.5) of the canopy. Note that this must be scalable for simulations at different time steps
+!    !tmp = ((0.5d0 * 2d0) / canopy_age ** 2)
+!    tmp = canopy_age ** (-2d0)
+!    tmp = POOLS(1,2) * tmp
+!    ! assign foliar biomass to first half of the distribution
+!!    do n = 1, nint(canopy_age), 1
+!!       canopy_age_vector(n) = tmp * dble(n)
+!!    end do
+!    canopy_age_vector(1:nint(canopy_age)) = canopy_days(1:nint(canopy_age)) * tmp
+!
+!    ! now repeat the process for the second part of the distribution
+!    !tmp = ((0.5d0 * 2d0) / (dble(oldest_leaf) - canopy_age) ** 2)
+!    tmp = (dble(oldest_leaf) - canopy_age) ** (-2d0)
+!    tmp = POOLS(1,2) * tmp
+!!    do n = nint(canopy_age+1d0), oldest_leaf, 1
+!!       canopy_age_vector(n) = tmp * dble(oldest_leaf-n)
+!!    end do
+!    canopy_age_vector((nint(canopy_age)+1):oldest_leaf) = tmp * &
+!                                      (dble(oldest_leaf) - canopy_days((nint(canopy_age)+1):oldest_leaf))
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! check / adjust mass balance
     tmp = POOLS(1,2) / sum(canopy_age_vector(1:oldest_leaf))
     canopy_age_vector(1:oldest_leaf) = canopy_age_vector(1:oldest_leaf) * tmp
@@ -1072,7 +1101,7 @@ contains
                                         ,canopy_maturation_lag,canopy_optimum_period,canopy_zero_efficiency)
     end do
 
-    ! reset disturbance
+    ! reset disturbance at the beginning of iteration
     disturbance_residue_to_litter = 0d0 ; disturbance_loss_from_litter = 0d0
     disturbance_residue_to_som = 0d0 ; disturbance_loss_from_som = 0d0
     disturbance_residue_to_cwd = 0d0 ; disturbance_loss_from_cwd = 0d0
@@ -1266,8 +1295,7 @@ contains
       Rm_leaf = Rm_reich_N(Q10_adjustment,CN_leaf,pars(36),pars(37))*tmp*POOLS(n,2)
       Rm_root = Rm_reich_N(Q10_adjustment,CN_root,pars(38),pars(39))*tmp*POOLS(n,3)
       Rm_wood = Rm_reich_N(Q10_adjustment,CN_wood,pars(40),pars(41))*tmp*POOLS(n,4)
-!print*,Rm_leaf > Rm_wood,(Rm_leaf/POOLS(n,2)) > (Rm_wood/POOLS(n,4))
-!print*,Rm_leaf / (Rm_leaf+Rm_wood+Rm_root),Rm_leaf / FLUXES(n,1)
+
       ! reset overall value as this is used in flag later
       Rm_deficit = 0d0
       ! determine if there is greater demand for Rm than available labile C
@@ -1467,7 +1495,7 @@ contains
       Rg_from_labile = Rg_from_labile + (FLUXES(n,7)*Rg_fraction) ; FLUXES(n,7) = FLUXES(n,7) * one_Rg_fraction
       ! now update the Ra flux with Rg
       FLUXES(n,3) = FLUXES(n,3) + Rg_from_labile
-!print*,Rg_from_labile / FLUXES(n,3)
+
       !!!!!!!!!!
       ! update pools for next timestep
       !!!!!!!!!!
@@ -1487,15 +1515,6 @@ contains
       POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)-FLUXES(n,14))*deltat(n)
       ! cwd pool
       POOLS(n+1,7) = POOLS(n,7) + (FLUXES(n,11)-FLUXES(n,20))*deltat(n)
-
-      ! Mass balance check, precision errors can cause ~1d-12 level errors which can accumulate
-      ! POOLS(n+1,1) = max(0d0,POOLS(n+1,1))
-      ! POOLS(n+1,2) = max(0d0,POOLS(n+1,2))
-      ! POOLS(n+1,3) = max(0d0,POOLS(n+1,3))
-      ! POOLS(n+1,4) = max(0d0,POOLS(n+1,4))
-      ! POOLS(n+1,5) = max(0d0,POOLS(n+1,5))
-      ! POOLS(n+1,6) = max(0d0,POOLS(n+1,6))
-      ! POOLS(n+1,7) = max(0d0,POOLS(n+1,7))
 
       !!!!!!!!!!
       ! Update soil water balance
@@ -1524,7 +1543,6 @@ contains
       endif
 
       ! reset values
-      !FLUXES(n,17) = 0d0 ; FLUXES(n,21:25) = 0d0
       harvest_management = 0 ; burnt_area = 0d0
 
       if (met(8,n) > 0d0) then
@@ -3408,7 +3426,7 @@ contains
     call calculate_field_capacity
 
     ! final sanity check for porosity
-    where (porosity <= field_capacity) porosity = field_capacity + 0.01d0
+    where (porosity <= field_capacity) porosity = field_capacity + 0.05d0
 
   end subroutine initialise_soils
   !
@@ -4381,11 +4399,12 @@ contains
     ! local variables..
     double precision ::soil_wp
 
-    ! calculate the soil water potential (MPa)..
-    ! note that some modifications to scaling values have been made compared to
-    ! SPA src to reduce computational cost
-    soil_wp = potA( water_retention_pass ) * xin**potB( water_retention_pass )
-    water_retention_saxton_eqns = -1d0 * soil_wp + 10d0    ! 10 kPa represents air-entry swp
+!    ! calculate the soil water potential (kPa)..
+!    soil_WP = -0.001 * potA( water_retention_pass ) * xin**potB( water_retention_pass )
+!    water_retention_saxton_eqns = 1000. * soil_wp + 10.    ! 10 kPa represents air-entry swp
+    ! calculate the soil water potential (kPa)..
+    soil_wp = -potA( water_retention_pass ) * xin**potB( water_retention_pass )
+    water_retention_saxton_eqns = soil_wp + 10d0    ! 10 kPa represents air-entry swp    
 
     return
 

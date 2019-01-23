@@ -216,18 +216,19 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
          end where
          out_var2(i,8) = sum(resid_fol) / dble(nodays)
      else
+         hak = 0 
          ! foliage
-         resid_fol(1:nodays) = FLUXES(1:nodays,10)
-         resid_fol(1:nodays) = resid_fol(1:nodays) &
-                             / POOLS(1:nodays,2)
+         resid_fol(1:nodays) = FLUXES(1:nodays,10) + FLUXES(1:nodays,23)
+         resid_fol(1:nodays) = resid_fol(1:nodays) / POOLS(1:nodays,2)
          ! division by zero results in NaN plus obviously I can't have turned
          ! anything over if there was nothing to start out with...
          where ( POOLS(1:nodays,2) == 0 )
                 hak = 1 ; resid_fol(1:nodays) = 0d0
          end where
-         out_var2(i,4) = sum(resid_fol) /dble(nodays-sum(hak))
+         out_var2(i,4) = sum(resid_fol) / dble(nodays-sum(hak))
 
          ! wood
+         hak = 0
          resid_fol(1:nodays)   = FLUXES(1:nodays,11)
          resid_fol(1:nodays)   = resid_fol(1:nodays) &
                                / POOLS(1:nodays,4)
@@ -238,6 +239,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
          end where
          out_var2(i,5) = sum(resid_fol) /dble(nodays-sum(hak))
          ! roots
+         hak = 0
          resid_fol(1:nodays)   = FLUXES(1:nodays,12)
          resid_fol(1:nodays)   = resid_fol(1:nodays) &
                                / POOLS(1:nodays,3)
@@ -263,11 +265,11 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
   end do ! nos_iter loop
 
   ! moving this out of the loop to calculate fractions to years residence times
-  out_var2(1:nos_iter,4) = (out_var2(1:nos_iter,4)*365.25)**(-1.0) ! fol
-  out_var2(1:nos_iter,5) = (out_var2(1:nos_iter,5)*365.25)**(-1.0) ! wood
-  out_var2(1:nos_iter,6) = (out_var2(1:nos_iter,6)*365.25)**(-1.0) ! root
-  out_var2(1:nos_iter,7) = (out_var2(1:nos_iter,7)*365.25)**(-1.0) ! som
-  out_var2(1:nos_iter,8) = (out_var2(1:nos_iter,8)*365.25)**(-1.0) ! CWD + Litter
+  out_var2(1:nos_iter,4) = (out_var2(1:nos_iter,4)*365.25d0)**(-1d0) ! fol
+  out_var2(1:nos_iter,5) = (out_var2(1:nos_iter,5)*365.25d0)**(-1d0) ! wood
+  out_var2(1:nos_iter,6) = (out_var2(1:nos_iter,6)*365.25d0)**(-1d0) ! root
+  out_var2(1:nos_iter,7) = (out_var2(1:nos_iter,7)*365.25d0)**(-1d0) ! som
+  out_var2(1:nos_iter,8) = (out_var2(1:nos_iter,8)*365.25d0)**(-1d0) ! CWD + Litter
 
   ! deallocate harvested variable
   deallocate(itemp,ivpd,iphoto)

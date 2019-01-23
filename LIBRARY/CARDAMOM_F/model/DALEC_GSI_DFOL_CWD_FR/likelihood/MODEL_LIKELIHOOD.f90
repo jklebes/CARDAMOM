@@ -38,15 +38,16 @@ module model_likelihood_module
     ! declare local variables
     type ( mcmc_output ) :: MCOUT_EDC
     type ( mcmc_options ) :: MCOPT_EDC
-    integer :: n, counter_local
-    double precision :: PEDC
+    integer :: n, counter_local, iter
+    double precision :: PEDC, ML, ML_prior
+    double precision, allocatable :: iter_EDC_pars(:)
 
     ! initialise output for this EDC search
     call initialise_mcmc_output(PI,MCOUT_EDC)
 
     ! set MCMC options needed for EDC run
     MCOPT_EDC%APPEND = 0
-    MCOPT_EDC%nADAPT = 20
+    MCOPT_EDC%nADAPT = 100 !TLS: 20
     MCOPT_EDC%fADAPT = 0.5d0
     MCOPT_EDC%nOUT = 1000
     MCOPT_EDC%nPRINT = 0
@@ -57,10 +58,9 @@ module model_likelihood_module
     MCOPT_EDC%returnpars = .true.
     MCOPT_EDC%fixedpars  = .false.
 
-    ! Set intial parameter stepsize and initial priors to vector
-    PI%stepsize = 0.05d0 ! 0.005 -> 0.05 -> 0.1 TLS
+    ! Set initial priors to vector...
     PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
-    ! assume we need to find random parameters
+    ! ... and assume we need to find random parameters
     PI%parfix = 0
 
     ! if the prior is not missing and we have not told the edc to be random
@@ -69,38 +69,73 @@ module model_likelihood_module
        if (PI%parini(n) /= -9999d0 .and. DATAin%edc_random_search < 1) PI%parfix(n) = 1
     end do ! parameter loop
 
+    ! if this is not a restart run, i.e. we do not already have a starting
+    ! position we must being the EDC search procedure to find an ecologically
+    ! consistent initial parameter set
     if (.not. restart_flag) then
 
-       ! set up edc log likelihood for MHMCMC initial run
-       PEDC = -1
-       counter_local = 0
-       do while (PEDC < 0)
+       ! the EDC search will be iterated to minimise the risk of finding an EDC
+       ! consistent location in parameter space which is very poor with respect
+       ! to our observations
+       allocate(iter_EDC_pars(PI%npars+1)) ; iter_EDC_pars = -9999999999d0
+       do iter = 1, 5
 
-         write(*,*)"Beginning EDC search attempt"
-         ! reset the parameter step size at the beginning of each attempt
-         PI%stepsize(1:PI%npars) = 0.10d0 ! 0.0005 -> 0.005 -> 0.05 -> 0.1 TLS
-         ! call the MHMCMC directing to the appropriate likelihood
-         call MHMCMC(EDC_MODEL_LIKELIHOOD,PI,MCOPT_EDC,MCOUT_EDC)
+          ! set up edc log likelihood for MHMCMC initial run
+          PEDC = -1 ; counter_local = 0
+          do while (PEDC < 0)
 
-         ! store the best parameters from that loop
-         PI%parini(1:PI%npars) = MCOUT_EDC%best_pars(1:PI%npars)
-         ! turn off random selection for initial values
-         MCOPT_EDC%randparini = .false.
+            write(*,*)"Beginning EDC search attempt"
+            ! reset the parameter step size at the beginning of each attempt
+            PI%stepsize(1:PI%npars) = 0.10d0 ! 0.0005 -> 0.005 -> 0.05 -> 0.1 TLS
+            ! call the MHMCMC directing to the appropriate likelihood
+            call MHMCMC(EDC_MODEL_LIKELIHOOD,PI,MCOPT_EDC,MCOUT_EDC)
 
-         ! call edc likelihood function to get final edc probability
-         call edc_model_likelihood(PI,PI%parini,PEDC)
+            ! store the best parameters from that loop
+            PI%parini(1:PI%npars) = MCOUT_EDC%best_pars(1:PI%npars)
+            ! turn off random selection for initial values
+            MCOPT_EDC%randparini = .false.
+  
+            ! call edc likelihood function to get final edc probability
+            call edc_model_likelihood(PI,PI%parini,PEDC,ML_prior)
 
-         ! keep track of attempts
-         counter_local = counter_local+1
-         ! periodically reset the initial conditions
-         ! 3->2 TLS
-         if (PEDC < 0 .and. mod(counter_local,2) == 0) then
-             PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
-             ! reset to select random starting point
-             MCOPT_EDC%randparini = .true.
-         endif
+            ! we want to keep track of which EDC consistent parameter set best
+            ! fits the available observations
+            if (PEDC == 0) then
+                ! determine what the observation based likelihood is for the
+                ! current parameter set
+                call model_likelihood(PI,PI%parini,ML,ML_prior)
+                ! if the current parameter set has a higher likelihood than the
+                ! previous EDC consistent values we will save the new ones
+                if ((ML+ML_prior) > iter_EDC_pars(PI%npars+1)) then
+                    ! store the current EDC consistent parameters
+                    iter_EDC_pars(1:PI%npars) = PI%parini(1:PI%npars)
+                    iter_EDC_pars(PI%npars+1) = ML + ML_prior
+                endif
+                ! and reset to the initial conditions for the next iteration
+                PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
+                ! reset to select random starting point
+                MCOPT_EDC%randparini = .true.
+            endif
 
-       end do ! for while condition
+            ! keep track of attempts
+            counter_local = counter_local+1
+            ! periodically reset the initial conditions
+            if (PEDC < 0 .and. mod(counter_local,3) == 0) then
+                PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
+                ! reset to select random starting point
+                MCOPT_EDC%randparini = .true.
+            endif
+
+          end do ! for while condition
+
+       end do ! for iter = 1, 5
+
+       ! set the initial parameter values to those which best fitted the
+       ! available observations
+       PI%parini(1:PI%npars) = iter_EDC_pars(1:PI%npars)
+
+       ! tidy up before leaving
+       deallocate(iter_EDC_pars)
 
     endif ! if for restart
 
@@ -115,7 +150,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine edc_model_likelihood(PI, PARS, prob_out)
+  subroutine edc_model_likelihood(PI, PARS, ML_obs_out, ML_prior_out)
     use cardamom_structures, only: DATAin
     use MCMCOPT, only: PARAMETER_INFO
     use CARBON_MODEL_MOD, only: carbon_model
@@ -131,7 +166,7 @@ module model_likelihood_module
     type ( parameter_info ), intent(inout) :: PI
     double precision, dimension(PI%npars), intent(inout) :: PARS
     ! output
-    double precision, intent(inout) :: prob_out
+    double precision, intent(inout) :: ML_obs_out, ML_prior_out
 
     ! declare local variables
     integer ::  n
@@ -140,6 +175,7 @@ module model_likelihood_module
     ! if == 0 EDCs are checked only until the first failure occurs
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
     EDCD%DIAG = 1
+    ML_obs_out = 0d0 ; ML_prior_out = 0d0
 
     ! crop or not split....trouble
     if (DATAin%PFT == 1) then
@@ -166,7 +202,7 @@ module model_likelihood_module
     else
 
         ! call EDCs which can be evaluated prior to running the model
-        call EDC1_GSI(PARS,PI%npars,DATAin%meantemp,DATAin%meanrad,EDC1)
+        call EDC1_GSI(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
         ! next need to run the model itself
         call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
@@ -194,20 +230,11 @@ module model_likelihood_module
 !    if (sum(EDCD%PASSFAIL) == 100) then
 !        print*,"Found it!" ; stop
 !    endif
+
     ! convert to a probability
-    prob_out=-0.5d0*(tot_exp*10d0)*DATAin%EDC
+    ML_obs_out = -0.5d0*(tot_exp*10d0)*DATAin%EDC
 
-    ! override probability if parameter set gives NaN or near -infinity output
-    call model_likelihood(PI,PARS,ML)
-
-    ! apply this condition irrespective of EDC flag
-    infini = 0d0
-    if (ML /= ML .or. abs(ML) == abs(log(infini)) ) then
-       prob_out=prob_out-0.5d0*10d0
-    end if
-
-  end subroutine edc_model_likelihood
-  !
+  end subroutine edc_model_likelihood  !
   !------------------------------------------------------------------
   !
   subroutine EDC1_CROP (PARS, npars, meantemp, meanrad, EDC1)
@@ -870,9 +897,10 @@ module model_likelihood_module
 
     ! The average leaf life span be less than 12 years
     ! NOTE: 12 years = 0.0002281542 day-1
-    !    0.15 years = 0.01825234   day-1
-    if ((EDC2 == 1 .or. DIAG == 1) .and. (torfol < 0.0002281542d0 .or. torfol > 0.01825234d0) ) then
-         EDC2 = 0 ; EDCD%PASSFAIL(20) = 0
+    !        6 years = 0.0004563084 day-1
+    !     0.15 years = 0.01825234   day-1
+    if ((EDC2 == 1 .or. DIAG == 1) .and. (torfol < 0.0004563084d0 .or. torfol > 0.01825234d0) ) then
+         EDC2 = 0 ; EDCD%PASSFAIL(23) = 0
     endif
 
     ! derive mean pools for foliage (2), roots (3) and wood (4)
@@ -1452,7 +1480,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine model_likelihood(PI,PARS,ML_out)
+  subroutine model_likelihood(PI,PARS,ML_obs_out,ML_prior_out)
     use MCMCOPT, only:  PARAMETER_INFO
     use CARBON_MODEL_MOD, only: carbon_model
     use CARBON_MODEL_CROP_MOD, only: carbon_model_crop
@@ -1470,13 +1498,13 @@ module model_likelihood_module
 
     double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
     ! output
-    double precision, intent(inout) :: ML_out ! output variables for log-likelihood
-
+    double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
+                                       ML_prior_out   ! prior log-likelihood
     ! declare local variables
-    double precision :: EDC,EDC1,EDC2,EDC_ML
+    double precision :: EDC, EDC1, EDC2
 
     ! initial values
-    ML_out = 0d0
+    ML_obs_out = 0d0 ; ML_prior_out = 0d0
     ! if == 0 EDCs are checked only until the first failure occurs
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
     EDCD%DIAG = 0
@@ -1498,35 +1526,35 @@ module model_likelihood_module
     end if
 
     ! update effect to the probabity
-    ML_out=ML_out+log(EDC)
+    ML_obs_out = ML_obs_out + log(EDC)
 
     ! if first set of EDCs have been passed
     if (EDC == 1) then
        ! calculate parameter log likelihood (assumed we have estimate of
        ! uncertainty)
-       ML_out = ML_out + likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
+       ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
 
        if (DATAin%PFT == 1) then
           ! then this is a crop run....
-           ! run the dalec model
-           call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                                 ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                                 ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft &
-                                 ,DATAin%nopars,DATAin%nomet,DATAin%nopools &
-                                 ,DATAin%nofluxes,DATAin%M_GPP &
-                                 ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
-                                 ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV &
-                                 ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
+          ! run the dalec model
+          call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                                ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                                ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft   &
+                                ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
+                                ,DATAin%nofluxes,DATAin%M_GPP                &
+                                ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
+                                ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
+                                ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
 
            ! check edc2
            call EDC2_CROP(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                          ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                          ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                          ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-       else
+                         ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                         ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                         ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+       else   
 
            ! run the dalec model
-           call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat&
+           call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                             ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
                             ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
                             ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
@@ -1548,9 +1576,12 @@ module model_likelihood_module
        end if
 
        ! add EDC2 log-likelihood
-       ML_out = ML_out + log(EDC)
-       ! calculate final model likelihood when compared to obs
-       ML_out = ML_out + likelihood(PI%npars,PARS)
+       ML_obs_out = ML_obs_out + log(EDC)
+
+       if (EDC == 1) then
+          ! calculate final model likelihood when compared to obs
+          ML_obs_out = ML_obs_out + likelihood(PI%npars,PARS)
+       endif 
 
     end if ! EDC == 1
 
@@ -1626,7 +1657,7 @@ module model_likelihood_module
          ! note that division is the uncertainty
          tot_exp = tot_exp+((DATAin%M_GPP(dn)-DATAin%GPP(dn))/DATAin%GPP_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! LAI log-likelihood
@@ -1648,18 +1679,18 @@ module model_likelihood_module
              tot_exp = tot_exp+(-log(infini))
          endif
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! NEE likelihood
-    tot_exp = 0.
+    tot_exp = 0d0
     if (DATAin%nnee > 0) then
        do n = 1, DATAin%nnee
          dn = DATAin%neepts(n)
          ! note that division is the uncertainty
          tot_exp = tot_exp+((DATAin%M_NEE(dn)-DATAin%NEE(dn))/DATAin%NEE_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Reco likelihood
@@ -1671,7 +1702,7 @@ module model_likelihood_module
          ! note that we calculate the Ecosystem resp from GPP and NEE
          tot_exp = tot_exp+((tmp_var-DATAin%Reco(dn))/DATAin%Reco_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Cwood increment log-likelihood
@@ -1684,7 +1715,7 @@ module model_likelihood_module
          !                   / DATAin%WOO(dn))/log(DATAin%WOO_unc(dn)))**2
          tot_exp = tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%M_POOLS(dn-365,4)) / DATAin%WOO_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Cfoliage log-likelihood
@@ -1696,7 +1727,7 @@ module model_likelihood_module
 !         tot_exp = tot_exp+(log(DATAin%M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2d0
          tot_exp = tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Annual foliar maximum
@@ -1721,7 +1752,7 @@ module model_likelihood_module
          ! note that division is the uncertainty
          tot_exp = tot_exp+((tmp_var-DATAin%Cfolmax_stock(dn)) / DATAin%Cfolmax_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Cwood log-likelihood (i.e. branch, stem and CR)
@@ -1733,7 +1764,7 @@ module model_likelihood_module
 !         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,4)/DATAin%Cwood_stock(dn))/log(2.))**2.
          tot_exp = tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/DATAin%Cwood_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Cagb log-likelihood
@@ -1743,9 +1774,9 @@ module model_likelihood_module
          dn = DATAin%Cagb_stockpts(n)
          ! remove coarse root fraction from wood (pars29)
          tmp_var = DATAin%M_POOLS(dn,4)-(DATAin%M_POOLS(dn,4)*pars(29))
-         tot_exp = tot_exp+((tmp_var-DATAin%Cagb_stock(dn))/DATAin%Cagb_stock_unc(dn))*2
+         tot_exp = tot_exp+((tmp_var-DATAin%Cagb_stock(dn))/DATAin%Cagb_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Cstem log-likelihood
@@ -1757,7 +1788,7 @@ module model_likelihood_module
          tmp_var = DATAin%M_POOLS(dn,4)-( (DATAin%M_POOLS(dn,4)*pars(29))+((DATAin%M_POOLS(dn,4)*pars(28))) )
          tot_exp = tot_exp+((tmp_var-DATAin%Cstem_stock(dn))/(DATAin%Cstem_stock(dn)*DATAin%Cstem_stock_unc(dn)))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Cbranch log-likelihood
@@ -1769,7 +1800,7 @@ module model_likelihood_module
          tmp_var = DATAin%M_POOLS(dn,4)*pars(28)
          tot_exp = tot_exp+((tmp_var-DATAin%Cbranch_stock(dn)) / DATAin%Cbranch_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Ccoarseroot log-likelihood
@@ -1781,7 +1812,7 @@ module model_likelihood_module
          tmp_var = DATAin%M_POOLS(dn,4)*pars(29)
          tot_exp = tot_exp+((tmp_var-DATAin%Ccoarseroot_stock(dn)) / DATAin%Ccoarseroot_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Croots log-likelihood
@@ -1793,7 +1824,7 @@ module model_likelihood_module
 !         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,3)/DATAin%Croots_stock(dn))/log(2.))**2.
          tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Clitter log-likelihood
@@ -1809,7 +1840,7 @@ module model_likelihood_module
          tot_exp = tot_exp+(((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
                            *(DATAin%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
 
     ! Csom log-likelihood
@@ -1821,8 +1852,14 @@ module model_likelihood_module
 !         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,6)/DATAin%Csom_stock(dn))/log(2.))**2.
          tot_exp = tot_exp+((DATAin%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp
+       likelihood = likelihood-tot_exp
     endif
+
+    ! the likelihood scores for each observation are subject to multiplication
+    ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
+    ! multiple datastreams we apply this multiplication to the bulk liklihood
+    ! hear
+    likelihood = likelihood * 0.5d0
 
     ! check that log-likelihood is an actual number
     if (likelihood /= likelihood) then

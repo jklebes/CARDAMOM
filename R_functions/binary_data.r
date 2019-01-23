@@ -316,9 +316,9 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[12]=OBS$plant     ; PARPRIORUNC[12]=OBS$plant_range
       PARPRIORS[15]=OBS$harvest   ; PARPRIORUNC[15]=OBS$harvest_range
       PARPRIORS[21]=-9999         ; PARPRIORUNC[21]=-9999
-      PARPRIORS[38]=OBS$soilwater ; PARPRIORUNC[38]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
+      PARPRIORS[38]=OBS$soilwater ; PARPRIORUNC[38]=OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
     } else {
-      PARPRIORS[41]=OBS$soilwater ; PARPRIORUNC[41]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
+      PARPRIORS[41]=OBS$soilwater ; PARPRIORUNC[41]=OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
       PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=1.32313*2 # NUE prior derived from Kattge et al., (2011)
     } # crop or not
   } else if (modelname == "DALEC_GSI_BUCKET") {
@@ -332,9 +332,9 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[12]=OBS$plant     ; PARPRIORUNC[12]=OBS$plant_range
       PARPRIORS[15]=OBS$harvest   ; PARPRIORUNC[15]=OBS$harvest_range
       PARPRIORS[21]=-9999         ; PARPRIORUNC[21]=-9999
-      PARPRIORS[38]=OBS$soilwater ; PARPRIORUNC[38]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
+      PARPRIORS[38]=OBS$soilwater ; PARPRIORUNC[38]=OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
     } else {
-      PARPRIORS[41]=OBS$soilwater ; PARPRIORUNC[41]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
+      PARPRIORS[41]=OBS$soilwater ; PARPRIORUNC[41]=OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
       # PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=1.32313*2 # NUE prior derived from Kattge et al., (2011)
     } # crop or not
   } else if (modelname == "DALECN_GSI_BUCKET") {
@@ -366,7 +366,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[12]=OBS$plant         ; PARPRIORUNC[12]=OBS$plant_range
       PARPRIORS[15]=OBS$harvest       ; PARPRIORUNC[15]=OBS$harvest_range
       PARPRIORS[21]=-9999             ; PARPRIORUNC[21]=-9999
-      PARPRIORS[38]=OBS$soilwater ; PARPRIORUNC[38]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
+      PARPRIORS[38]=OBS$soilwater ; PARPRIORUNC[38]=OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
     } else {
       # PARPRIORS[2]=51.70631   ; PARPRIORUNC[2]=124.6938 # C:N root (gC/gN) Kattge et al., (2011)
       # PARPRIORS[15]=416.6667  ; PARPRIORUNC[15]=326.3762 # C:N wood (gC/gN) Kattge et al., (2011)
@@ -377,7 +377,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       # PARPRIORS[39]=0.997     ; PARPRIORUNC[39]=0.082   # Rm_root intercept (gC/gN) Reich et al., (2008)
       # PARPRIORS[40]=1.344     ; PARPRIORUNC[40]=0.150   # Rm_wood N**exponent (gC/gN) Reich et al., (2008)
       # PARPRIORS[41]=0.946     ; PARPRIORUNC[41]=0.107   # Rm_wood intercept (gC/gN) Reich et al., (2008)
-      PARPRIORS[44]=OBS$soilwater ; PARPRIORUNC[44]=OBS$soilwater_unc*2 # Initial soil water fraction (GLEAM v3.1a)
+      PARPRIORS[44]=OBS$soilwater ; PARPRIORUNC[44]=OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
     } # Crop or not
   } else if (modelname == "ACM") {
 

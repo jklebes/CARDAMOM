@@ -18,19 +18,14 @@ module MODEL_PARAMETERS
     use cardamom_structures, only: DATAin
 
     ! Subroutine contains a list of parameter ranges for the model.
-    ! These could or
-    ! possibly should go into an alternate file which can be read in.
-    ! This may
-    ! improve the usability when it comes to reading these information
-    ! in for
-    ! different PFTs
+    ! These could or possibly should go into an alternate file which can be read in.
+    ! This may improve the usability when it comes to reading these information
+    ! in for different PFTs
 
     implicit none
 
     ! declare inputs
     type ( parameter_info ), intent(inout) :: PI
-
-!    PI%npars=29 ! dont forget to change in cardamom_io.f90
 
     if (DATAin%PFT == 1) then
        ! crop model will be ran and therefore needs specific parameters to be
@@ -50,40 +45,42 @@ module MODEL_PARAMETERS
        !
 
        ! Decomposition of litter to som (fraction; temperature adjusted)
-       PI%parmin(1)=0.0001368925d0 ! 20  years at 0oC
-       PI%parmax(1)=0.005475702d0  ! 0.5 years at 0oC
+       PI%parmin(1) = 0.0001368925d0 ! 20  years at 0oC
+       PI%parmax(1) = 0.002737851d0  !  1  year  at 0oC
 
        ! Fraction of GPP respired as Rm
-       PI%parmin(2)=0.2d0
-       PI%parmax(2)=0.7d0
+       PI%parmin(2) = 0.3d0
+       PI%parmax(2) = 0.7d0
 
        ! GSI sensitivity for leaf growth
-       PI%parmin(3)=1.00d0
-       PI%parmax(3)=1.02d0 !1.05
+       PI%parmin(3) = 1.00d0
+       PI%parmax(3) = 1.02d0
 
        ! Max labile turnover (fraction) to roots
-       PI%parmin(4)=2d0*0.0001368925d0 ! 20->10 years
-       PI%parmax(4)=0.05d0         ! 20 days
+       PI%parmin(4) = 0.000273785d0 ! 10 years
+       PI%parmax(4) = 0.05d0        ! 20 days
 
        ! GSI max leaf turnover
        PI%parmin(5)=0.00027d0 ! 10 years
        PI%parmax(5)=0.10d0    ! 10 days
 
-       ! TOR wood* - 1% loss per year value
+       ! Turnover fraction of wood
        PI%parmin(6)=0.000009d0 ! 300 years
        PI%parmax(6)=0.001d0    ! 2.73 years
 
        ! Turnover fraction of roots
-       PI%parmin(7)=0.0003422313d0 ! 8    years
-       PI%parmax(7)=0.01d0         ! 0.27 years
+       ! Gill and Jackson (2000), New Phytol., 147, 13–31
+       ! Fig. 6 turnover by diameter class
+       PI%parmin(7) = 0.0109514d0 ! 4    years
+       PI%parmax(7) = 0.01d0      ! 0.27 years
 
        ! Turnover of litter to Rhet (fraction; temperature adjusted)
-       PI%parmin(8)=0.0001368925d0 ! 27 years at 0oC
-       PI%parmax(8)=0.005475702d0  ! 0.50 years at 0oC
+       PI%parmin(8) = 0.0001368925d0 ! 20 years at 0oC
+       PI%parmax(8) = 0.002737851d0  ! 1  year  at 0oC
 
        ! Turnover of som to Rhet (fraction; temperature adjusted)
-       PI%parmin(9)=1.368925d-6    ! 2000 years at 0oC
-       PI%parmax(9)=0.0002737851d0 ! ~ 10 years at 0oC
+       PI%parmin(9) = 2.737851d-06   ! 1000 years at 0oC
+       PI%parmax(9) = 0.0002737851d0 !   10 years at 0oC
 
        ! Exponential coefficient for Rhet temperature response
        PI%parmin(10)=0.018d0
@@ -117,7 +114,7 @@ module MODEL_PARAMETERS
        ! LMA
        ! Kattge et al. 2011,
        PI%parmin(17)=10d0
-       PI%parmax(17)=180d0 !200d0
+       PI%parmax(17)=180d0 
 
        ! GSI max photoperiod threshold (sec)
        PI%parmin(24)=3600d0*6d0  !  6 hours
@@ -133,7 +130,7 @@ module MODEL_PARAMETERS
 
        ! critical GPP for LAI increase (fraction)
        PI%parmin(27)=1d-8
-       PI%parmax(27)=0.20d0 ! 0.20
+       PI%parmax(27)=0.10d0 
 
        ! fraction of Cwood which is branch
        PI%parmin(28)=0.05d0
@@ -156,23 +153,28 @@ module MODEL_PARAMETERS
        PI%parmax(36)=2.0d0
 
        ! Turnover rate for CWD
-       PI%parmin(38)=0.0001 ! 0.00001
-       PI%parmax(38)=1d0/365.25 !0.005  ! 0.01
+       PI%parmin(38) = 0.0001        ! 27 years
+       PI%parmax(38) = 0.001368925d0 ! 2 year
 
        ! BUCKET - root biomass needed to reach 50 % of max depth
-       PI%parmin(39)=50d0
-       PI%parmax(39)=500d0
+       PI%parmin(39) = 50d0
+       PI%parmax(39) = 500d0
 
        ! BUCKET - maximum rooting depth
-       PI%parmin(40)=0.35d0
-       PI%parmax(40)=20d0 !20.0
+       PI%parmin(40) = 0.35d0
+       PI%parmax(40) = 5d0
 
        ! Optimum nitrogen use efficiency (gC/gN per m2 at optimum temperature)
        ! Derived from Vcmax reported in Wullschleger (1993), Journal of
        ! Experimental Botany, Vol 44, No. 262, pp. 907-920.
+       ! ~40 gC/gN/day
        ! TRY database equivalent 2.5 % = 1.648512; 97.5 % = 19.906560
-       PI%parmin(42)= 1.0d0
-       PI%parmax(42)=40.0d0
+       ! Xu et al., (2017):
+       ! Variations of leaf longevity in tropical moist forests predicted by a
+       ! trait-driven carbon optimality model,
+       ! Ecology Letters, doi: 10.1111/ele.12804, upper value of 82 gC/gN/day 
+       PI%parmin(42) =  1.0d0
+       PI%parmax(42) = 80.0d0
 
        !
        ! INITIAL VALUES DECLARED HERE
@@ -191,16 +193,16 @@ module MODEL_PARAMETERS
        PI%parmax(20)=1000d0
 
        ! C_wood
-       PI%parmin(21)=1d0
-       PI%parmax(21)=50000d0
+       PI%parmin(21)=10d0
+       PI%parmax(21)=30000d0
 
        ! C litter
        PI%parmin(22)=1d0
-       PI%parmax(22)=5000d0
+       PI%parmax(22)=2500d0
 
        ! C_som
-       PI%parmin(23)=100d0
-       PI%parmax(23)=100000d0
+       PI%parmin(23)=200d0
+       PI%parmax(23)=90000d0
 
        ! C CWD
        PI%parmin(37)=1d0
