@@ -402,6 +402,16 @@ contains
                        ,coarse_root_residue          &
                        ,soil_loss_with_roots
 
+    ! variables for phenology model update / adjustments
+    double precision :: lai_save, & 
+                  canopy_lw_save, &
+                    soil_lw_save, &
+                  canopy_sw_save, &
+                 canopy_par_save, &
+                    soil_sw_save, & 
+                         gs_save, &
+                         ga_save
+
     integer :: reforest_day, harvest_management, restocking_lag, gsi_lag
 
     ! met drivers are:
@@ -896,6 +906,12 @@ contains
       FLUXES(n,9) = dble_zero  ! leaf turnover
       FLUXES(n,16) = dble_zero ! leaf growth
 
+      ! save original values for re-allocation later
+      canopy_lw_save = canopy_lwrad_Wm2 ; soil_lw_save  = soil_lwrad_Wm2
+      canopy_sw_save = canopy_swrad_MJday ; canopy_par_save  = canopy_par_MJday
+      soil_sw_save = soil_swrad_MJday ; gs_save = stomatal_conductance
+      ga_save = aerodynamic_conductance ; lai_save = lai
+
       ! now update foliage and labile conditions based on gradient calculations
       if (gradient < fol_turn_crit .or. FLUXES(n,18) == dble_zero) then
          ! we are in a decending condition so foliar turnover
@@ -905,18 +921,23 @@ contains
          ! we are in a assending condition so labile turnover
          FLUXES(n,16) = pars(12)*FLUXES(n,18)
          just_grown = 1.5d0
-!         ! check carbon return
-!         tmp = POOLS(n,1)*min(dble_one,dble_one-(dble_one-FLUXES(n,16))**deltat(n))/deltat(n)
-!         tmp = (POOLS(n,2)+tmp)/pars(17)
-!         tmp_lai = lai ; lai = tmp
-!         tmp = max(dble_zero,acm_gpp(stomatal_conductance))
-!         lai = tmp_lai
-!         ! determine if increase in LAI leads to an improvement in GPP greater
-!         ! than
-!         ! critical value, if not then no labile turnover allowed
-!         if ( ((tmp - FLUXES(n,1))/FLUXES(n,1)) < pars(27) ) then
-!             FLUXES(n,16) = dble_zero
-!         endif
+         ! check carbon return
+         tmp = POOLS(n,1)*min(dble_one,dble_one-(dble_one-FLUXES(n,16))**deltat(n))/deltat(n)
+         lai = (POOLS(n,2)+tmp)/pars(17)
+         tmp = lai / lai_save
+         aerodynamic_conductance = aerodynamic_conductance * tmp
+         stomatal_conductance = stomatal_conductance * tmp
+         call calculate_shortwave_balance
+         if (lai_save < vsmall) then
+             call calculate_aerodynamic_conductance
+             call acm_albedo_gc(abs(minlwp),Rtot)
+         endif
+         tmp = max(dble_zero,acm_gpp(stomatal_conductance))
+         ! determine if increase in LAI leads to an improvement in GPP greater
+         ! than critical value, if not then no labile turnover allowed
+         if ( ((tmp - FLUXES(n,1))/FLUXES(n,1)) < pars(27) ) then
+             FLUXES(n,16) = dble_zero
+         endif
       else
          ! probably we want nothing to happen, however if we are at the seasonal
          ! maximum we will consider further growth still
@@ -928,18 +949,31 @@ contains
             ! but possibly gaining some?
             ! determine if this is a good idea based on GPP increment
             tmp = POOLS(n,1)*min(dble_one,dble_one-(dble_one-FLUXES(n,16))**deltat(n))/deltat(n)
-            tmp = (POOLS(n,2)+tmp)/pars(17)
-            tmp_lai = lai ; lai = tmp
+            lai = (POOLS(n,2)+tmp)/pars(17)
+            tmp = lai / lai_save
+            aerodynamic_conductance = aerodynamic_conductance * tmp
+            stomatal_conductance = stomatal_conductance * tmp
+            call calculate_shortwave_balance
+            if (lai_save < vsmall) then
+                call calculate_aerodynamic_conductance
+                call acm_albedo_gc(abs(minlwp),Rtot)
+            endif
             tmp = max(dble_zero,acm_gpp(stomatal_conductance))
-            lai = tmp_lai            ! determine if increase in LAI leads to an improvement in GPP greater
-            ! than
-            ! critical value, if not then no labile turnover allowed
+            ! determine if increase in LAI leads to an improvement in GPP greater
+            ! than critical value, if not then no labile turnover allowed
             if ( (tmp - FLUXES(n,1)) < (pars(27)*FLUXES(n,1)) ) then
                 FLUXES(n,16) = dble_zero
             endif
 
          end if ! Just grown?
       endif ! gradient choice
+
+      ! restore original value back from memory
+      lai = lai_save 
+      !canopy_lwrad_Wm2 = canopy_lw_save ; soil_lwrad_Wm2 = soil_lw_save
+      canopy_swrad_MJday = canopy_sw_save ; canopy_par_MJday = canopy_par_save
+      soil_swrad_MJday = soil_sw_save ; stomatal_conductance = gs_save
+      aerodynamic_conductance = ga_save
 
       ! these allocated if post-processing
       if (allocated(itemp)) then

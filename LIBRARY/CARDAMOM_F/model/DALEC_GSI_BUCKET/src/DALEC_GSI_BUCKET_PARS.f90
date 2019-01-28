@@ -130,7 +130,7 @@ module MODEL_PARAMETERS
 
        ! critical GPP for LAI increase (fraction)
        PI%parmin(27)=1d-8
-       PI%parmax(27)=0.10d0 
+       PI%parmax(27)=0.05d0 
 
        ! fraction of Cwood which is branch
        PI%parmin(28)=0.05d0

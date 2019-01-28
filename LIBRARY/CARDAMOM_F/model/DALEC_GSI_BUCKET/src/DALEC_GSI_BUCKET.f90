@@ -3431,25 +3431,32 @@ contains
              leaf_growth = pot_leaf_growth*GSI(current_step)
              just_grown = 1.5d0
 
-!             ! calculate potential C allocation to leaves
-!             tmp = avail_labile * &
-!                   (dble_one-(dble_one-leaf_growth)**deltat(current_step))*deltat_1(current_step)
-!             ! calculate new leaf area, GPP return
-!             lai = (foliage+tmp) * SLA
-!             call calculate_shortwave_balance
-!             ! calculate stomatal conductance of water
-!             if (lai > vsmall .and. stomatal_conductance > vsmall) then
-!                 tmp = acm_gpp(stomatal_conductance)
-!             else
-!                 tmp = dble_zero
-!             endif
-!             deltaGPP = tmp - GPP_current
+             ! calculate potential C allocation to leaves
+             tmp = avail_labile * &
+                   (dble_one-(dble_one-leaf_growth)**deltat(current_step))*deltat_1(current_step)
+             ! calculate new leaf area, GPP return
+             lai = (foliage+tmp) * SLA
+             tmp = lai / lai_save
+             aerodynamic_conductance = aerodynamic_conductance * tmp
+             stomatal_conductance = stomatal_conductance * tmp
+             call calculate_shortwave_balance
+             if (lai_save < vsmall) then
+                 call calculate_aerodynamic_conductance
+                 call acm_albedo_gc(abs(deltaWP),Rtot)
+             endif
+             ! calculate stomatal conductance of water
+             if (lai > vsmall .and. stomatal_conductance > vsmall) then
+                 tmp = acm_gpp(stomatal_conductance)
+             else
+                 tmp = dble_zero
+             endif
+             deltaGPP = tmp - GPP_current
 
              ! is the marginal return for GPP (over the mean life of leaves)
              ! less than increase in maintenance respiration and C required to
              ! growth?
 
-!             if (deltaGPP < gpp_crit_frac*GPP_current) leaf_growth = dble_zero
+             if (deltaGPP < gpp_crit_frac*GPP_current) leaf_growth = dble_zero
 
           else if (gradient < lab_turn_crit .and. gradient > fol_turn_crit .and. &
                    deltaWP < dble_zero ) then
@@ -3470,7 +3477,14 @@ contains
                       (dble_one-(dble_one-leaf_growth)**deltat(current_step))*deltat_1(current_step)
                 ! calculate new leaf area, GPP return
                 lai = (foliage+tmp) * SLA
+                tmp = lai / lai_save
+                aerodynamic_conductance = aerodynamic_conductance * tmp
+                stomatal_conductance = stomatal_conductance * tmp
                 call calculate_shortwave_balance
+                if (lai_save < vsmall) then
+                    call calculate_aerodynamic_conductance
+                    call acm_albedo_gc(abs(deltaWP),Rtot)
+                endif
                 ! calculate stomatal conductance of water
                 if (lai > vsmall .and. stomatal_conductance > vsmall) then
                     tmp = acm_gpp(stomatal_conductance)
