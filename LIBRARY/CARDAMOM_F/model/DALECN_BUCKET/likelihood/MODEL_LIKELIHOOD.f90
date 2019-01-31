@@ -52,7 +52,7 @@ module model_likelihood_module
 
     ! set MCMC options needed for EDC run
     MCOPT_EDC%APPEND = 0
-    MCOPT_EDC%nADAPT = 20
+    MCOPT_EDC%nADAPT = 20 ! TLS: 20
     MCOPT_EDC%fADAPT = 0.5d0
     MCOPT_EDC%nOUT = 5000
     MCOPT_EDC%nPRINT = 0
@@ -91,7 +91,7 @@ module model_likelihood_module
 
             write(*,*)"Beginning EDC search attempt"
             ! reset the parameter step size at the beginning of each attempt
-            PI%stepsize(1:PI%npars) = 0.1d0 ! 0.0005 -> 0.005 -> 0.05 -> 0.1 TLS
+            PI%stepsize(1:PI%npars) = 0.005d0 ! 0.0005 -> 0.005 -> 0.05 -> 0.1 TLS
             ! call the MHMCMC directing to the appropriate likelihood
             call MHMCMC(EDC_MODEL_LIKELIHOOD,PI,MCOPT_EDC,MCOUT_EDC)
 

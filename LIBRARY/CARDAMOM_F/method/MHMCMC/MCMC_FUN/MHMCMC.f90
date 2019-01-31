@@ -163,7 +163,7 @@ contains
        ! accept or reject, draw uniform distribution (0,1)
        crit1 = log(uniform_random_vector(uniform)) !crit=log(randn(0))
        uniform = uniform + 1
-       crit2 = log(uniform_random_vector(uniform)) 
+       crit2 = log(uniform_random_vector(uniform))
        uniform = uniform + 1
        ! if we are near to the end re-generate some more values
        if (uniform >= size(uniform_random_vector)-4) then
@@ -186,7 +186,7 @@ contains
 !          if (P > P0) BESTPARS = PARS
           if ((P+Pprior) > (P0+P0prior)) BESTPARS = PARS
           ! keep track of how many accepted solutions (global and local)
-          N%ACC = N%ACC + 1 ; N%ACCLOC = N%ACCLOC + 1 
+          N%ACC = N%ACC + 1 ; N%ACCLOC = N%ACCLOC + 1
           P0 = P ; P0prior = Pprior
 
           ! write out parameter, log-likelihood and step if appropriate
@@ -262,11 +262,11 @@ contains
                          sqrt_adaptfac = 1.224745d0
 
 
-    ! calculate minimum step size 
+    ! calculate minimum step size
     ! Should consider whether either of these values should be adjusted to
     ! improve searching efficiency.
-    minstepsize = 10000d0/dble(N%ITER) ! 10000d0
-    if (minstepsize > 0.5d0) minstepsize = 0.5d0 ! 0.01d0
+    minstepsize = 5000d0/dble(N%ITER) ! 10000d0
+    if (minstepsize > 0.05d0) minstepsize = 0.05d0 ! 0.01d0
 
     ! determine local acceptance rate
     N%ACCRATE = dble(N%ACCLOC)/dble(MCO%nADAPT)

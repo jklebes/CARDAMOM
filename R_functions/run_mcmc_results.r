@@ -220,7 +220,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 						# Time invariant but contain uncertainty, shaped into the full spatial grid
 						# i.e. including areas not part of the analysis but within the spatail domain
 						#
-						# Stocks first
+						# Mean stocks first
 						grid_output = list(mean_labile_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1])))
 						grid_output$mean_foliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						grid_output$mean_roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -228,7 +228,16 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 						grid_output$mean_lit_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						grid_output$mean_som_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						grid_output$mean_cwd_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-						# Fluxes second
+            # Final stocks second
+						grid_output$final_labile_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+						grid_output$final_foliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+						grid_output$final_roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+						grid_output$final_wood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+						grid_output$final_lit_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+						grid_output$final_som_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+						grid_output$final_cwd_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+
+						# Fluxes third
 						grid_output$mean_gpp_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						grid_output$mean_rauto_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						grid_output$mean_rhet_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -239,19 +248,21 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 						if (length(which(names(site_output) == "evap")) > 0) {
 								# currently water in the soil surface layer (0-10 cm)
 								grid_output$mean_SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                grid_output$final_SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 								# plant apparent soil water potential (MPa)
 								grid_output$mean_wSWP_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                grid_output$final_wSWP_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 								# evapotranspiration (Etrans + Esoil + Ewetcanopy)
 								grid_output$mean_evap_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						}
 
 						#
 						# Generate the variables needed to contain just the analysis locations
-						# Fully time series provided along with uncertainty information but for the analysis pixels only
+						# Full time series provided along with uncertainty information but for the analysis pixels only
 						# Each pixel will have a corresponding i and j location which related to its lat/long within the overall domain grid
 						#
 
-						# Stocks first
+						# Mean stocks first
 						grid_output$labile_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
 						grid_output$foliage_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
 						grid_output$roots_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
@@ -259,7 +270,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 						grid_output$lit_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
 						grid_output$som_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
 						grid_output$cwd_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-						# Fluxes second
+						# Fluxes third
 						grid_output$gpp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
 						grid_output$rauto_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
 						grid_output$rhet_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
@@ -337,7 +348,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 								}
 
 								# now assign to correct location in array
-								# Stocks first
+								# Mean stocks first
 								grid_output$mean_labile_gCm2[slot_i,slot_j,] = apply(site_output$labile_gCm2,1,mean)
 								grid_output$mean_foliage_gCm2[slot_i,slot_j,] = apply(site_output$foliage_gCm2,1,mean)
 								grid_output$mean_roots_gCm2[slot_i,slot_j,] = apply(site_output$roots_gCm2,1,mean)
@@ -345,7 +356,16 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 								grid_output$mean_lit_gCm2[slot_i,slot_j,] = apply(site_output$lit_gCm2,1,mean)
 								grid_output$mean_som_gCm2[slot_i,slot_j,] = apply(site_output$som_gCm2,1,mean)
 								grid_output$mean_cwd_gCm2[slot_i,slot_j,] = apply(site_output$cwd_gCm2,1,mean)
-								# Fluxes second
+                # Final stocks seconds
+								final_step = dim(site_output$labile_gCm2)[2]
+								grid_output$final_labile_gCm2[slot_i,slot_j,] = site_output$labile_gCm2[,final_step]
+								grid_output$final_foliage_gCm2[slot_i,slot_j,] = site_output$foliage_gCm2[,final_step]
+								grid_output$final_roots_gCm2[slot_i,slot_j,] = site_output$roots_gCm2[,final_step]
+								grid_output$final_wood_gCm2[slot_i,slot_j,] = site_output$wood_gCm2[,final_step]
+								grid_output$final_lit_gCm2[slot_i,slot_j,] = site_output$lit_gCm2[,final_step]
+								grid_output$final_som_gCm2[slot_i,slot_j,] = site_output$som_gCm2[,final_step]
+								grid_output$final_cwd_gCm2[slot_i,slot_j,] = site_output$cwd_gCm2[,final_step]
+								# Fluxes third
 								grid_output$mean_gpp_gCm2day[slot_i,slot_j,] = apply(site_output$gpp_gCm2day,1,mean)
 								grid_output$mean_rauto_gCm2day[slot_i,slot_j,] = apply(site_output$rauto_gCm2day,1,mean)
 								grid_output$mean_rhet_gCm2day[slot_i,slot_j,] = apply(site_output$rhet_gCm2day,1,mean)
@@ -355,8 +375,10 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 								if (length(which(names(site_output) == "evap")) > 0) {
 										# currently water in the soil surface layer (0-10 cm)
 										grid_output$mean_SurfWater_kgH2Om2[slot_i,slot_j,] = apply(site_output$SurfWater_kgH2Om2,1,mean)
+                    grid_output$final_SurfWater_kgH2Om2[slot_i,slot_j,] = site_output$SurfWater_kgH2Om2[,final_step]
 										# plant apparent soil water potential (MPa)
 										grid_output$mean_wSWP_kgH2Om2[slot_i,slot_j,] = apply(site_output$wSWP_kgH2Om2,1,mean)
+                    grid_output$final_wSWP_kgH2Om2[slot_i,slot_j,] = site_output$wSWP_kgH2Om2[,final_step]
 										# evapotranspiration (Etrans + Esoil + Ewetcanopy)
 										grid_output$mean_evap_kgH2Om2day[slot_i,slot_j,] = apply(site_output$evap_kgH2Om2day,1,mean)
 								}

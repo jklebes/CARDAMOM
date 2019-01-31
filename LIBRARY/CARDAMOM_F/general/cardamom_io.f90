@@ -192,6 +192,12 @@ module cardamom_io
            DATAin%nopars = 38
            DATAin%nofluxes = 21
         endif
+    else if (DATAin%ID == 21) then
+        ! ID = 1 - DALEC_CDEA_LU_FIRES
+        ! DALEC_CDEA - 6 pools
+        DATAin%nopools = 6
+        DATAin%nopars = 23
+        DATAin%nofluxes = 28
     else
        write(*,*) "Oh dear... model ID cannot be found"
        stop

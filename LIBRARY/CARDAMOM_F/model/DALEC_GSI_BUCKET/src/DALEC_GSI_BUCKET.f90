@@ -3369,9 +3369,9 @@ contains
       ! for infinity checks
       infi = 0d0
 
-      ! It is the product of 3 limiting factors for temperature, photoperiod and
-      ! vapour pressure deficit that grow linearly from 0 to 1 between a
-      ! calibrated min and max value.
+      ! GSI is the product of 3 limiting factors for temperature, photoperiod and
+      ! vapour pressure deficit that scale linearly between 0 to 1 as a function
+      ! of calibrated min and max value.
       ! Photoperiod, VPD and avgTmin are direct input
 
       ! temperature limitation, then restrict to 0-1; correction for k-> oC

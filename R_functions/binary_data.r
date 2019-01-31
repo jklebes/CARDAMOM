@@ -51,6 +51,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     modelid = 19
   } else if (modelname == "DALEC_BUCKET"){
     modelid = 20
+  } else if (modelname == "DALEC_CDEA_LU_FIRES") {
+    modelid = 21
   } else if (modelname == "AT_DALEC" & parameter_type == "pft_specific" & ctessel_pft == 1){
     # i.e. crop model
     modelid = 4
