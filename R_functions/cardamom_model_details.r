@@ -129,7 +129,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(7,dim=c(length(ctessel_pft)))
     nopars=array(39,dim=c(length(ctessel_pft)))
     nofluxes=array(25,dim=c(length(ctessel_pft)))
-    if (specific_pft == "pft_specific") {nopars[which(ctessel_pft == 1)]=35 ; nofluxes[which(ctessel_pft == 1)]=17 ; nopools[which(ctessel_pft == 1)]=8}
+    if (specific_pft == "pft_specific") {nopars[which(ctessel_pft == 1)]=35 ; nofluxes[which(ctessel_pft == 1)]=21 ; nopools[which(ctessel_pft == 1)]=8}
     cardamom_model_details=list(name="DALEC_GSI_DFOL_CWD_FR",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } else if (modelname == "DALEC_GSI_DFOL_LABILE_FR") {
     # information contains is

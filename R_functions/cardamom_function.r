@@ -259,7 +259,7 @@ skip_UK = read.csv("/home/lsmallma/Desktop/UK_forestry_sites_with_yield_and_biom
 
         # copy files to eddie?
         if (PROJECT$ecdf) {
-          failed=TRUE
+          failed=TRUE ; copy_to = "n" ; failed=FALSE
           while(failed) {
             copy_to=readline("Copy binary driver files to cluster? (y/n)")
             if (copy_to != "y" & copy_to != "n") {failed=TRUE} else {failed=FALSE}
@@ -270,7 +270,7 @@ skip_UK = read.csv("/home/lsmallma/Desktop/UK_forestry_sites_with_yield_and_biom
             print(command)
             ecdf_execute(command)
           }
-        }
+        } # copy to Eddie
 
         # report to the user
         return(paste("CARDAMOM Report: ",stage," completed", sep=""))

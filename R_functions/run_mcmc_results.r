@@ -190,12 +190,14 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 			clusterExport(cl,functions_list)
 			# load R libraries in cluster
 			clusterExport(cl,"load_r_libraries") ; clusterEvalQ(cl, load_r_libraries())
-			dummy=parLapply(cl,nos_plots,fun=run_each_site,PROJECT=PROJECT,stage=stage,repair=repair,grid_override=grid_override,stage5modifiers=stage5modifiers)
+			dummy=parLapply(cl,nos_plots,fun=run_each_site,PROJECT=PROJECT,stage=stage,
+											repair=repair,grid_override=grid_override,stage5modifiers=stage5modifiers)
 			stopCluster(cl)
 		} else {
 			print("...beginning serial operations")
 			# or use serial
-			dummy=lapply(nos_plots,FUN=run_each_site,PROJECT=PROJECT,stage=stage,repair=repair,grid_override=grid_override,stage5modifiers=stage5modifiers)
+			dummy=lapply(nos_plots,FUN=run_each_site,PROJECT=PROJECT,stage=stage,
+									 repair=repair,grid_override=grid_override,stage5modifiers=stage5modifiers)
 		} # parallel option
 
 		# now if this is a gridded run we want to take out individual site specific summary files and combine them into a single file

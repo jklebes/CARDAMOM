@@ -79,19 +79,25 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
     dev.off()
   }
 
+  # create any new variables we should like to plot
+  grid_output$nee = (grid_output$mean_rhet_gCm2day + grid_output$mean_rauto_gCm2day) - grid_output$mean_gpp_gCm2day
+  grid_output$nbp = grid_output$mean_gpp_gCm2day - 
+                   (grid_output$mean_rhet_gCm2day + grid_output$mean_rauto_gCm2day +
+                    grid_output$mean_harvest_gCm2day + grid_output$mean_fire_gCm2day)
+
   # loop through these mean variables, output median and CI range for each of these variables
   for (p in seq(1,length(par_names))) {
 
     # determine position in grid_output list which contains the variable of interest
     pp = which(names(grid_output) == par_names[p])
 
-    jpeg(file=paste(PROJECT$figpath,"grid_mean_map_",par_names[p],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
+    jpeg(file=paste(PROJECT$figpath,"grid_mean_map_",par_names[p],"_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
     info = " " # assume default is no header, but sometimes we add something extra...
     var1 = mean(grid_output[[pp]][,,median_loc], na.rm=TRUE)
     var2 = mean(grid_output[[pp]][,,upper_loc], na.rm=TRUE)
     var3 = mean(grid_output[[pp]][,,lower_loc], na.rm=TRUE)
     var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2)
-    info = paste("Mean estimate: ",par_names[p]," median estimate = ",var1,"; 97.5 % = ",var2,"; 2.5 % = ",var3, sep="")
+    info = paste("Mean estimate: ",par_names[p]," (median estimate = ",var1,"; 97.5 % = ",var2,"; 2.5 % = ",var3,")", sep="")
     image.plot(grid_output[[pp]][,,median_loc], main=info, col = colour_choices, axes=FALSE, cex.main=2.4, legend.width=3.0, cex=1.5, axis.args=list(cex.axis=1.8, hadj=0.1))
     contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
     dev.off()

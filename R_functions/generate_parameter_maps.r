@@ -112,7 +112,7 @@ generate_parameter_maps<-function(PROJECT) {
 		# tmp hack for avgN log10-normal
 		if (PROJECT$model$name == "DALECN_GSI_FR" | PROJECT$model$name == "DALECN_GSI_DFOL_FR"
 		| PROJECT$model$name == "DALEC_GSI_BUCKET"| PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR"
-		| PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET" 
+		| PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET"
 		| PROJECT$model$name == "DALEC_BUCKET") {
 			par_array_median[,,11]=10**par_array_median[,,11]
 			par_array_unc[,,11]=10**par_array_unc[,,11]
@@ -166,7 +166,7 @@ generate_parameter_maps<-function(PROJECT) {
 			#		    tmp=append(tmp,preferenceRange(negDistMat(par_array_tmp[sample(1:dim(par_array_tmp)[1],0.05*dim(par_array_tmp)[1], replace=FALSE),],r=2))[1])
 			#		} ; preference_input=max(mean(tmp[-1]),median(tmp[-1]))
 			#		uk_clusters=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1,sweeps=10, p=preference_input,maxits=1000, convits=100)
-			uk_clusters=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1,sweeps=10, q=0.25,maxits=1000, convits=100)
+			uk_clusters=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1, sweeps=10, q=0.05, maxits=1000, convits=100)
 			nos_uk_clusters=length(uk_clusters@clusters) ; uk_clusters_exemplars=uk_clusters@exemplars
 
 			uk_cluster_pft=array(NA,dim=c(dim(par_array_median_normalised)[1:2]))

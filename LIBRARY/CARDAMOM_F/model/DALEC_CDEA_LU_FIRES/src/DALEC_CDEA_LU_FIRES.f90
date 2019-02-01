@@ -103,7 +103,7 @@ contains
     ! 6th DOY at end of time step
     ! 7th Not used
     ! 8th removed fraction
-    ! 9th burned fraction 
+    ! 9th burned fraction   
 
     ! POOLS are:
     ! 1 = labile

@@ -544,7 +544,7 @@ contains
       ! alloc to autotrophic pool
       FLUXES(n,16) = frac_GPP_resp_auto * GPP_out(n)
       ! harvest yield
-      FLUXES(n,17) = yield / deltat(n)
+      FLUXES(n,21) = yield / deltat(n)
 
       ! labile pool
       POOLS(n+1,1) = stock_labile

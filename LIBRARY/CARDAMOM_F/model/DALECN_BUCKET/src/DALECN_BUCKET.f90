@@ -1032,7 +1032,7 @@ contains
     canopy_age_vector = 0d0
     marginal_loss_avg = 0d0 ; marginal_gain_avg = 0d0 ! reset gain average
     leaf_loss_possible = 0
- 
+
     ! NOTE: that this current initial canopy distribution model implicitly
     ! assumes a canopy turnover of < 1 year. Alternatives will be needed.
 
@@ -1709,7 +1709,7 @@ contains
               CFF(7) = POOLS(n+1,7)*burnt_area*combust_eff(4)
               NCFF(7) = POOLS(n+1,7)*burnt_area*(1d0-combust_eff(4))*(1d0-rfac)
               !/*fires as daily averages to comply with units*/
-              FLUXES(n,17)=(CFF(1)+CFF(2)+CFF(3)+CFF(4)+CFF(5)) * deltat_1(n)
+              FLUXES(n,17) = (CFF(1)+CFF(2)+CFF(3)+CFF(4)+CFF(5)) * deltat_1(n)
 !              !/*update net exchangep*/
 !              NEE(n)=NEE(n)+FLUXES(n,17)
               ! determine the as daily rate impact on live tissues for use in EDC and
@@ -4404,7 +4404,7 @@ contains
 !    water_retention_saxton_eqns = 1000. * soil_wp + 10.    ! 10 kPa represents air-entry swp
     ! calculate the soil water potential (kPa)..
     soil_wp = -potA( water_retention_pass ) * xin**potB( water_retention_pass )
-    water_retention_saxton_eqns = soil_wp + 10d0    ! 10 kPa represents air-entry swp    
+    water_retention_saxton_eqns = soil_wp + 10d0    ! 10 kPa represents air-entry swp
 
     return
 

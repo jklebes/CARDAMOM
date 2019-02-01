@@ -148,7 +148,7 @@ module cardamom_io
            ! then actually this is a crop pixel
            DATAin%nopools = 8
            DATAin%nopars = 35
-           DATAin%nofluxes = 17
+           DATAin%nofluxes = 21
         endif
     else if (DATAin%ID == 17) then
         ! ID = 2 - DALECN_GSI_BUCKET
@@ -361,13 +361,13 @@ module cardamom_io
             ,temp_matrix(dim_1*dim_2))
 
     ! read in left daughter to temp vector
-    a=1 ; start=100+1 ; finish=start+(dim_1*dim_2)-1
+    a = 1 ; start = 100+1 ; finish = start+(dim_1*dim_2)-1
     do i = start, finish
        read(input_unit) temp_matrix(a)
        a = a + 1
     end do
     ! restructure left daughter into matrix
-    a=1
+    a = 1
     do j = 1, dim_2
        do i = 1, dim_1
           leftDaughter(i,j)=temp_matrix(a) ; a = a + 1
@@ -375,13 +375,13 @@ module cardamom_io
     end do
 
     ! read in right daughter into temp vector
-    a=1 ; start=finish+1 ; finish=start+(dim_1*dim_2)-1
+    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
     do i = start, finish
        read(input_unit) temp_matrix(a)
        a = a + 1
     end do
     ! restructure right daughter into matrix
-    a=1
+    a = 1
     do j = 1, dim_2
        do i = 1, dim_1
           rightDaughter(i,j)=temp_matrix(a) ; a = a + 1
@@ -389,13 +389,13 @@ module cardamom_io
     end do
 
     ! read in nodestatus into temp vector
-    a=1 ; start=finish+1 ; finish=start+(dim_1*dim_2)-1
+    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
     do i = start, finish
        read(input_unit) temp_matrix(a)
        a = a + 1
     end do
     ! restructure nodestatus into matrix
-    a=1
+    a = 1
     do j = 1, dim_2
        do i = 1, dim_1
           nodestatus(i,j)=temp_matrix(a) ; a = a + 1
@@ -403,13 +403,13 @@ module cardamom_io
     end do
 
     ! read in xbestsplit into temp vector
-    a=1 ; start=finish+1 ; finish=start+(dim_1*dim_2)-1
+    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
     do i = start, finish
        read(input_unit) temp_matrix(a)
        a = a + 1
     end do
     ! restructure xbestsplit into matrix
-    a=1
+    a = 1
     do j = 1, dim_2
        do i = 1, dim_1
           xbestsplit(i,j)=temp_matrix(a) ; a = a + 1
@@ -417,13 +417,13 @@ module cardamom_io
     end do
 
     ! read in nodepred into temp vector
-    a=1 ; start=finish+1 ; finish=start+(dim_1*dim_2)-1
+    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
     do i = start, finish
        read(input_unit) temp_matrix(a)
        a = a + 1
     end do
     ! restructure nodepred into matrix
-    a=1
+    a = 1
     do j = 1, dim_2
        do i = 1, dim_1
           nodepred(i,j)=temp_matrix(a) ; a = a + 1
@@ -431,13 +431,13 @@ module cardamom_io
     end do
 
     ! read in bestvar into temp vector
-    a=1 ; start=finish+1 ; finish=start+(dim_1*dim_2)-1
+    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
     do i = start, finish
        read(input_unit) temp_matrix(a)
        a = a + 1
     end do
     ! restructure bestvar into matrix
-    a=1
+    a = 1
     do j = 1, dim_2
        do i = 1, dim_1
           bestvar(i,j)=temp_matrix(a) ; a = a + 1
@@ -469,9 +469,9 @@ module cardamom_io
     ! declare local variables
 
     ! parameter file unit
-    pfile_unit=10
+    pfile_unit = 10
     ! step file unit
-    sfile_unit=11
+    sfile_unit = 11
 
     ! open both files now
     open(pfile_unit,file=trim(parname),form="UNFORMATTED",access="stream",status="UNKNOWN")
@@ -932,7 +932,7 @@ module cardamom_io
 
     ! defining hardcoded MCMC options
     MCO%append = 1
-    MCO%nADAPT = 200
+    MCO%nADAPT = 500
     MCO%fADAPT = 0.5d0
     MCO%randparini = .false.
     MCO%returnpars = .false.

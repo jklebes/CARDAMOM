@@ -54,7 +54,7 @@ module MODEL_PARAMETERS
 
        ! GSI sensitivity for leaf growth
        PI%parmin(3) = 1.00d0
-       PI%parmax(3) = 1.02d0 
+       PI%parmax(3) = 1.02d0
 
        ! Fraction of (1-fgpp) to roots*/
        PI%parmin(4) = 0.01d0
@@ -100,11 +100,11 @@ module MODEL_PARAMETERS
        PI%parmax(13)=0.35d0
 
        ! GSI min temperature threshold (oC)
-       PI%parmin(14)=225d0
+       PI%parmin(14)=235d0
        PI%parmax(14)=330d0
 
        ! GSI max temperature threshold (oC)
-       PI%parmin(15)=225d0
+       PI%parmin(15)=235d0
        PI%parmax(15)=330d0
 
        ! GSI min photoperiod threshold (sec)
@@ -114,7 +114,7 @@ module MODEL_PARAMETERS
        ! LMA
        ! Kattge et al. 2011,
        PI%parmin(17)=10d0
-       PI%parmax(17)=180d0 
+       PI%parmax(17)=180d0
 
        ! GSI max photoperiod threshold (sec)
        PI%parmin(24)=3600d0*6d0  !  6 hours
@@ -130,7 +130,7 @@ module MODEL_PARAMETERS
 
        ! critical GPP for LAI increase (fraction)
        PI%parmin(27)=1d-8
-       PI%parmax(27)=0.05d0
+       PI%parmax(27)=0.01d0
 
        ! fraction of Cwood which is branch
        PI%parmin(28)=0.05d0
@@ -164,7 +164,7 @@ module MODEL_PARAMETERS
        ! Xu et al., (2017):
        ! Variations of leaf longevity in tropical moist forests predicted by a
        ! trait-driven carbon optimality model,
-       ! Ecology Letters, doi: 10.1111/ele.12804, upper value of 82 gC/gN/day 
+       ! Ecology Letters, doi: 10.1111/ele.12804, upper value of 82 gC/gN/day
        PI%parmin(39) =  1.0d0
        PI%parmax(39) = 80.0d0
 

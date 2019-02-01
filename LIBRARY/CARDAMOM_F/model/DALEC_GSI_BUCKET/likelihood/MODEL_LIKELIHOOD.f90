@@ -47,7 +47,7 @@ module model_likelihood_module
 
     ! set MCMC options needed for EDC run
     MCOPT_EDC%APPEND = 0
-    MCOPT_EDC%nADAPT = 20
+    MCOPT_EDC%nADAPT = 100
     MCOPT_EDC%fADAPT = 0.5d0
     MCOPT_EDC%nOUT = 5000
     MCOPT_EDC%nPRINT = 0
@@ -94,7 +94,7 @@ module model_likelihood_module
             PI%parini(1:PI%npars) = MCOUT_EDC%best_pars(1:PI%npars)
             ! turn off random selection for initial values
             MCOPT_EDC%randparini = .false.
-  
+
             ! call edc likelihood function to get final edc probability
             call edc_model_likelihood(PI,PI%parini,PEDC,ML_prior)
 
@@ -987,14 +987,14 @@ module model_likelihood_module
       if ((EDC2 == 1 .or. DIAG == 1) .and. (rNPP < 0.05d0 .or. rNPP > 0.85d0 .or. wNPP > 0.85d0)) then
           EDC2 = 0 ; EDCD%PASSFAIL(31) = 0
       endif
-!print*,"EDC2-31",EDC2    
+!print*,"EDC2-31",EDC2
      ! NOTE that within the current framework NPP is split between fol, root, wood and that remaining in labile.
      ! Thus fail conditions fNPP + rNPP + wNPP > 1.0 .or. fNPP + rNPP + wNPP < 0.95, i.e. lNPP cannot be > 0.05 (-0.1)
      ! tmp = 1d0 - rNPP - wNPP - fNPP
      ! if ((EDC2 == 1 .or. DIAG == 1) .and. abs(tmp) > 0.1d0) then
      !     EDC2 = 0 ; EDCD%PASSFAIL(32) = 0
      ! endif
-    
+
      ! Ra:GPP ratio is unlikely to be outside of 0.2 > Ra:GPP < 0.80
      if ((EDC2 == 1 .or. DIAG == 1) .and. (fauto > 0.80d0 .or. fauto < 0.20d0) ) then
          EDC2 = 0 ; EDCD%PASSFAIL(33) = 0
@@ -1063,7 +1063,7 @@ module model_likelihood_module
     ! this is a big set of arrays to run through so only do so when we have
     ! reached this point and still need them
     if (EDC2 == 1 .or. DIAG == 1) then
-    
+
         ! calculate input and output ratios for all pools
         if (maxval(met(8,1:nodays)) > 0.99d0 .and. disturb_end == nodays) then
            ! there has been a replacement level event, but there is less than 2
@@ -1159,7 +1159,7 @@ module model_likelihood_module
            !                  +disturbance_loss_from_cwd(1:nodays) &
            !                  +disturbance_loss_from_som(1:nodays))
         endif ! what to do with in:out ratios and disturbance
-    
+
         ! roots input / output ratio
         if (abs(log(in_out_root)) > EQF1_5) then
            EDC2 = 0 ; EDCD%PASSFAIL(37) = 0
@@ -1185,7 +1185,7 @@ module model_likelihood_module
         ! if (abs(log(in_out_dead)) > EQF2) then
         !    EDC2 = 0 ; EDCD%PASSFAIL(42) = 0
         ! endif
-    
+
         ! in case of disturbance
         if (maxval(met(8,:)) > 0.99d0 .and. disturb_end < (nodays-nint(steps_per_year)-1)) then
             ! roots input / output ratio
@@ -1197,7 +1197,7 @@ module model_likelihood_module
                EDC2 = 0 ; EDCD%PASSFAIL(44) = 0
             endif
         endif ! been cleared
-    
+
     endif ! doing the big arrays then?
 !print*,"EDC2-43",EDC2
     !
@@ -1557,7 +1557,7 @@ module model_likelihood_module
                          ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
                          ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                          ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-       else   
+       else
 
            ! run the dalec model
            call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
@@ -1587,7 +1587,7 @@ module model_likelihood_module
        if (EDC == 1) then
           ! calculate final model likelihood when compared to obs
           ML_obs_out = ML_obs_out + likelihood(PI%npars,PARS)
-       endif 
+       endif
 
     end if ! EDC == 1
 

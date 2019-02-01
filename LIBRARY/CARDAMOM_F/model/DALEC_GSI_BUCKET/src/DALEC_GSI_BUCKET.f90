@@ -1385,7 +1385,7 @@ contains
               !/*fires as daily averages to comply with units*/
               FLUXES(n,17)=(CFF(1)+CFF(2)+CFF(3)+CFF(4)+CFF(5)) * deltat_1(n)
 !              !/*update net exchangep*/
-!              NEE(n)=NEE(n)+FLUXES(n,17)
+!              NEE_out(n) = NEE_out(n)+FLUXES(n,17)
               ! determine the as daily rate impact on live tissues for use in EDC and
               ! MTT calculations
               FLUXES(n,22) = FLUXES(n,22) + ((CFF(1) + NCFF(1)) * deltat_1(n)) ! labile
@@ -1431,7 +1431,7 @@ contains
          endif
       enddo
 
-      if (FLUXES(n,1) < 0d0 .or. FLUXES(n,1) /= FLUXES(n,1) .or. & 
+      if (FLUXES(n,1) < 0d0 .or. FLUXES(n,1) /= FLUXES(n,1) .or. &
           FLUXES(n,19) /= FLUXES(n,19)) then
           print*,"step",n, nxp
           print*,"met",met(:,n)
@@ -1440,7 +1440,7 @@ contains
           print*,"wSWP",wSWP
           print*,"waterfrac",soil_waterfrac
           stop
-      endif 
+      endif
 
     end do ! nodays loop
 
@@ -3771,7 +3771,7 @@ contains
 !    water_retention_saxton_eqns = 1000. * soil_wp + 10.    ! 10 kPa represents air-entry swp
     ! calculate the soil water potential (kPa)..
     soil_wp = -potA( water_retention_pass ) * xin**potB( water_retention_pass )
-    water_retention_saxton_eqns = soil_wp + 10d0    ! 10 kPa represents air-entry swp    
+    water_retention_saxton_eqns = soil_wp + 10d0    ! 10 kPa represents air-entry swp
 
     return
 

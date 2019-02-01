@@ -63,20 +63,20 @@ program cardamom_framework
 
  write(*,*) "Running model version ", DATAin%ID
 
- ! begin search for initial conditions
+ ! Begin search for initial conditions
  write(*,*) "Beginning search for initial parameter conditions"
  ! Determine initial values, this requires using the MHMCMC
  call find_edc_initial_values(PI)
- ! reset stepsize
- PI%stepsize = 0.1d0 ! 0.01
+ ! Reset stepsize
+ PI%stepsize = 0.05d0 ! 0.01
 
- ! initialise MCMC output
+ ! Initialise MCMC output
  call initialise_mcmc_output(PI,MCOUT)
 
-  ! restore module variables needed for the run
+  ! Restore module variables needed for the run
  call read_options(MCO,solution_wanted,freq_print,freq_write,outfile)
 
- ! open the relevant output files
+ ! Open the relevant output files
  call open_output_files(MCO%outfile,MCO%stepfile)
 
  if (restart_flag) then

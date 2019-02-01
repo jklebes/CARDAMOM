@@ -147,9 +147,9 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat 
      out_var(i,1:nodays,11) = POOLS(1:nodays,1) ! labile
      out_var(i,1:nodays,12) = POOLS(1:nodays,2) ! foliage
      if (pft == 1) then
-         out_var(i,1:nodays,13) = FLUXES(1:nodays,17) ! replace with crop model yield
+         out_var(i,1:nodays,13) = FLUXES(1:nodays,21) ! replace with crop model yield
      else
-         out_var(i,1:nodays,13) = FLUXES(1:nodays,17) ! harvested material
+         out_var(i,1:nodays,13) = FLUXES(1:nodays,21) ! harvested material
      endif
      if (pft == 1) then
         out_var(i,1:nodays,14) = 0d0

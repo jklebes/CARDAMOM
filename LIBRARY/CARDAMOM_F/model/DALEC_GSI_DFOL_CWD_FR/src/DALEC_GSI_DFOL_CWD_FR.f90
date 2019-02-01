@@ -403,12 +403,12 @@ contains
                        ,soil_loss_with_roots
 
     ! variables for phenology model update / adjustments
-    double precision :: lai_save, & 
+    double precision :: lai_save, &
                   canopy_lw_save, &
                     soil_lw_save, &
                   canopy_sw_save, &
                  canopy_par_save, &
-                    soil_sw_save, & 
+                    soil_sw_save, &
                          gs_save, &
                          ga_save
 
@@ -969,7 +969,7 @@ contains
       endif ! gradient choice
 
       ! restore original value back from memory
-      lai = lai_save 
+      lai = lai_save
       !canopy_lwrad_Wm2 = canopy_lw_save ; soil_lwrad_Wm2 = soil_lw_save
       canopy_swrad_MJday = canopy_sw_save ; canopy_par_MJday = canopy_par_save
       soil_swrad_MJday = soil_sw_save ; stomatal_conductance = gs_save
@@ -1217,8 +1217,8 @@ contains
               NCFF(7) = POOLS(n+1,7)*burnt_area*(dble_one-combust_eff(4))*(dble_one-rfac)
               !/*fires as daily averages to comply with units*/
               FLUXES(n,17)=(CFF(1)+CFF(2)+CFF(3)+CFF(4)+CFF(5)) * deltat_1(n)
-!              !/*update net exchangep*/
-!              NEE(n)=NEE(n)+FLUXES(n,17)
+              !/*update net exchangep*/
+              NEE_out(n) = NEE_out(n) + FLUXES(n,17)
               ! determine the as daily rate impact on live tissues for use in EDC and
               ! MTT calculations
               FLUXES(n,22) = FLUXES(n,22) + ((CFF(1) + NCFF(1)) * deltat_1(n)) ! labile
