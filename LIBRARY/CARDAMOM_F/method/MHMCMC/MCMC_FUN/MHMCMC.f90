@@ -112,6 +112,7 @@ contains
     ! assume this is a restart which we want to load previous values
     if (restart_flag) then
         N%ACC = accepted_so_far
+        N%ITER = nint(dble(N%ACC) / 0.23d0)
     endif
 
     ! add something here to delete previous files if wanted later
@@ -265,12 +266,12 @@ contains
     ! calculate minimum step size
     ! Should consider whether either of these values should be adjusted to
     ! improve searching efficiency.
-    minstepsize = 1000d0/dble(N%ITER) ! 10000d0
-    if (minstepsize > 0.05d0) minstepsize = 0.05d0 ! 0.01d0
+    minstepsize = 500d0/dble(N%ITER) ! 10000d0 -> 1000d0
+    if (minstepsize > 0.025d0) minstepsize = 0.025d0 ! 0.01d0
 
     ! determine local acceptance rate
     N%ACCRATE = dble(N%ACCLOC)/dble(MCO%nADAPT)
-!print*,"...................................",minstepsize,N%ACCRATE
+!print*,"...minstep = ",minstepsize," ACCRATE = ",N%ACCRATE," minval(step) = ",minval(PI%stepsize)
     ! default stepsize increment
     if (N%ACCLOC > 0 .and. N%ACCRATE < 0.23d0) then
         ! make step size smaller
@@ -282,14 +283,12 @@ contains
 
     ! Next do dimension / parameter specific adjustments
     ! this is the adaptive part (Bloom & Williams 2015)
-    ! NOTE: original value was > 3, however this result in a biased estimate of
-    ! the standard deviation to a lower value.
-    if (N%ACCLOC > 5 .and. N%ACCRATE < 0.23d0) then
+    if (N%ACCLOC > 3 .and. N%ACCRATE < 0.23d0) then
         do p = 1, PI%npars
            do i = 1, N%ACCLOC
               norparvec(i) = par2nor(PARSALL((PI%npars*(i-1))+p),PI%parmin(p),PI%parmax(p))
            end do ! i
-           ! calculate standard deviation (variability)
+           ! calculate standards deviation (variability)
            norparstd = std(norparvec,N%ACCLOC)
            ! if stepsize is smaller than the variability in accepted parameters,
            ! and acceptance rate is low, this indicates that we are stuck in a
@@ -312,7 +311,7 @@ contains
     ! if stepsize below minimum allowed value increase
     where (PI%stepsize < minstepsize) PI%stepsize = PI%stepsize * adaptfac
     ! if stepsize still below minimum allowed value then set to minimum
-    where (PI%stepsize < minstepsize) PI%stepsize = minstepsize
+    !where (PI%stepsize < minstepsize) PI%stepsize = minstepsize
 
   end subroutine adapt_step_size
   !

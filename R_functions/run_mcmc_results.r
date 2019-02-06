@@ -19,13 +19,13 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
 	if (file.exists(outfile1) == FALSE | repair == 1) {
 		# load only the desired latter fraction of the parameter vectors
 		# output is order dimensions(npar+1,iter,chain)
-		parameters=read_parameter_chains(PROJECT,n,3)
+		parameters = read_parameter_chains(PROJECT,n,3)
 
 		# ok so if we actually have some parameters we will
 		if (parameters[1] != -9999) {
 			# test for convergence and whether or not there is any single chain which can be removed in they do not converge
 			if (dim(parameters)[3] > 2) {
-				converged=have_chains_converged(parameters)
+				converged = have_chains_converged(parameters)
 				# if log-likelihood has passed then we are not interested
 				if (converged[length(converged)] == "FAIL") {
 					notconv = TRUE ; i = 1 ; max_likelihood = rep(NA, length.out=dim(parameters)[3]) ; CI90 = rep(NA,length.out=c(2))
@@ -50,7 +50,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
 						# if we have tried removing each chain and we still have not converged then give up anyway
 						#if (i > dim(parameters)[3] & notconv) {notconv=FALSE ; i=-9999}
 						# or actually just remove the lowest average likelihood chain
-						if (i > dim(parameters)[3] & notconv) {notconv=FALSE ; i=which(max_likelihood == min(max_likelihood)) ; i=i[1]}
+						if (i > dim(parameters)[3] & notconv) {notconv = FALSE ; i = which(max_likelihood == min(max_likelihood)) ; i = i[1]}
 					} # while to removing chains
 					# if we successfully found only chain to remove then remove it from the rest of the analysis.
 					if (i > 0) {parameters = parameters[,,-i] ; print(paste("chain rejected = ",i,sep=""))}
@@ -91,8 +91,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
 			# run subsample of parameters for full results / propogation
 			soil_info = c(drivers$top_sand,drivers$bot_sand,drivers$top_clay,drivers$bot_clay)
 			states_all = simulate_all(n,PROJECT,PROJECT$model$name,drivers$met,sub_parameter[1:PROJECT$model$nopars[n],,],
-																drivers$lat,PROJECT$ctessel_pft[n],PROJECT$parameter_type,
-																PROJECT$exepath,soil_info)
+						drivers$lat,PROJECT$ctessel_pft[n],PROJECT$parameter_type,
+				 		PROJECT$exepath,soil_info)
 			# pass to local variable for saving
 			site_ctessel_pft = PROJECT$ctessel_pft[n]
 			aNPP = states_all$aNPP
@@ -114,11 +114,14 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
 				som_gCm2 = apply(states_all$som,2,quantile,prob=num_quantiles),
 				cwd_gCm2 = apply(states_all$litwood,2,quantile,prob=num_quantiles),
 				# Fluxes second
+                                nee_gCm2day = apply(states_all$nee,2,quantile,prob=num_quantiles),
 				gpp_gCm2day = apply(states_all$gpp,2,quantile,prob=num_quantiles),
 				rauto_gCm2day = apply(states_all$rauto,2,quantile,prob=num_quantiles),
 				rhet_gCm2day = apply(states_all$rhet,2,quantile,prob=num_quantiles),
 				harvest_gCm2day = apply(states_all$harvest_C,2,quantile,prob=num_quantiles),
 				fire_gCm2day = apply(states_all$fire,2,quantile,prob=num_quantiles))
+                                # Some derived fluxes
+                                site_output$nbp_gCm2day = apply(states_all$nee + states_all$fire,2,quantile,prob=num_quantiles)
 				# Finally water cycle specific if available
 				if (length(which(names(states_all) == "evap")) > 0) {
 						# currently water in the soil surface layer (0-10 cm)
@@ -204,12 +207,12 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 		if (PROJECT$spatial_type == "grid" & grid_override == FALSE) {
 
 				# update the user
-				print("...combing pixel level stock / flux output into single array")
+				print("...combining pixel level stock / flux output into single array")
 
 				# determine what the output file name is here, so that we can check if one already exists
 				outfile_grid = paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep="")
 
-				if (file.exists(outfile_grid) == FALSE) {
+				if (file.exists(outfile_grid) == FALSE | repair == 1) {
 
 						# make a list of all the files we will be reading in
 						to_do = list.files(PROJECT$results_processedpath, full.names=TRUE)
@@ -230,7 +233,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 						grid_output$mean_lit_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						grid_output$mean_som_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						grid_output$mean_cwd_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-            # Final stocks second
+						# Final stocks second
 						grid_output$final_labile_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						grid_output$final_foliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						grid_output$final_roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -238,22 +241,22 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 						grid_output$final_lit_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						grid_output$final_som_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						grid_output$final_cwd_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-
 						# Fluxes third
+                                                grid_output$mean_nee_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						grid_output$mean_gpp_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						grid_output$mean_rauto_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						grid_output$mean_rhet_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						grid_output$mean_harvest_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						grid_output$mean_fire_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-
+						grid_output$mean_nbp_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						# Finally water cycle specific if available
-						if (length(which(names(site_output) == "evap")) > 0) {
+						if (length(which(names(site_output) == "evap_kgH2Om2day")) > 0) {
 								# currently water in the soil surface layer (0-10 cm)
 								grid_output$mean_SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-                grid_output$final_SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+								grid_output$final_SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 								# plant apparent soil water potential (MPa)
 								grid_output$mean_wSWP_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-                grid_output$final_wSWP_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+								grid_output$final_wSWP_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 								# evapotranspiration (Etrans + Esoil + Ewetcanopy)
 								grid_output$mean_evap_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
 						}
@@ -273,14 +276,15 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 						grid_output$som_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
 						grid_output$cwd_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
 						# Fluxes third
+						grid_output$nee_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
 						grid_output$gpp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
 						grid_output$rauto_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
 						grid_output$rhet_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
 						grid_output$harvest_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
 						grid_output$fire_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-
+						grid_output$nbp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
 						# Finally water cycle specific if available
-						if (length(which(names(site_output) == "evap")) > 0) {
+						if (length(which(names(site_output) == "evap_kgH2Om2day")) > 0) {
 								# currently water in the soil surface layer (0-10 cm)
 								grid_output$SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
 								# plant apparent soil water potential (MPa)
@@ -318,9 +322,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 								# load the site
 								load(outfile2)
 								# determine the lat / long location within the grid
-					      slot_j=as.numeric(PROJECT$sites[n])/PROJECT$long_dim
-					      slot_i=as.numeric(PROJECT$sites[n])-(floor(slot_j)*PROJECT$long_dim)
-					      if(slot_i == 0) {slot_i = PROJECT$long_dim} ; slot_j=ceiling(slot_j)
+								slot_j=as.numeric(PROJECT$sites[n])/PROJECT$long_dim
+								slot_i=as.numeric(PROJECT$sites[n])-(floor(slot_j)*PROJECT$long_dim)
+								if(slot_i == 0) {slot_i = PROJECT$long_dim} ; slot_j=ceiling(slot_j)
 								# save for later
 								grid_output$i_location[n] = slot_i ; grid_output$j_location[n] = slot_j
 
@@ -334,13 +338,15 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 								grid_output$som_gCm2[n,,] = site_output$som_gCm2
 								grid_output$cwd_gCm2[n,,] = site_output$cwd_gCm2
 								# Fluxes second
+								grid_output$nee_gCm2day[n,,] = site_output$nee_gCm2day
 								grid_output$gpp_gCm2day[n,,] = site_output$gpp_gCm2day
 								grid_output$rauto_gCm2day[n,,] = site_output$rauto_gCm2day
 								grid_output$rhet_gCm2day[n,,] = site_output$rhet_gCm2day
 								grid_output$harvest_gCm2day[n,,] = site_output$harvest_gCm2day
 								grid_output$fire_gCm2day[n,,] = site_output$fire_gCm2day
+								grid_output$nbp_gCm2day[n,,] = site_output$nbp_gCm2day
 								# Finally water cycle specific if available
-								if (length(which(names(site_output) == "evap")) > 0) {
+								if (length(which(names(site_output) == "evap_kgH2Om2day")) > 0) {
 										# currently water in the soil surface layer (0-10 cm)
 										grid_output$SurfWater_kgH2Om2[n,,] = site_output$SurfWater_kgH2Om2
 										# plant apparent soil water potential (MPa)
@@ -358,7 +364,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 								grid_output$mean_lit_gCm2[slot_i,slot_j,] = apply(site_output$lit_gCm2,1,mean)
 								grid_output$mean_som_gCm2[slot_i,slot_j,] = apply(site_output$som_gCm2,1,mean)
 								grid_output$mean_cwd_gCm2[slot_i,slot_j,] = apply(site_output$cwd_gCm2,1,mean)
-                # Final stocks seconds
+								# Final stocks seconds
 								final_step = dim(site_output$labile_gCm2)[2]
 								grid_output$final_labile_gCm2[slot_i,slot_j,] = site_output$labile_gCm2[,final_step]
 								grid_output$final_foliage_gCm2[slot_i,slot_j,] = site_output$foliage_gCm2[,final_step]
@@ -369,18 +375,20 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 								grid_output$final_cwd_gCm2[slot_i,slot_j,] = site_output$cwd_gCm2[,final_step]
 								# Fluxes third
 								grid_output$mean_gpp_gCm2day[slot_i,slot_j,] = apply(site_output$gpp_gCm2day,1,mean)
+								grid_output$mean_nee_gCm2day[slot_i,slot_j,] = apply(site_output$nee_gCm2day,1,mean)
 								grid_output$mean_rauto_gCm2day[slot_i,slot_j,] = apply(site_output$rauto_gCm2day,1,mean)
 								grid_output$mean_rhet_gCm2day[slot_i,slot_j,] = apply(site_output$rhet_gCm2day,1,mean)
 								grid_output$mean_harvest_gCm2day[slot_i,slot_j,] = apply(site_output$harvest_gCm2day,1,mean)
 								grid_output$mean_fire_gCm2day[slot_i,slot_j,] = apply(site_output$fire_gCm2day,1,mean)
+								grid_output$mean_nbp_gCm2day[slot_i,slot_j,] = apply(site_output$nbp_gCm2day,1,mean)
 								# Finally water cycle specific if available
-								if (length(which(names(site_output) == "evap")) > 0) {
+								if (length(which(names(site_output) == "evap_kgH2Om2day")) > 0) {
 										# currently water in the soil surface layer (0-10 cm)
 										grid_output$mean_SurfWater_kgH2Om2[slot_i,slot_j,] = apply(site_output$SurfWater_kgH2Om2,1,mean)
-                    grid_output$final_SurfWater_kgH2Om2[slot_i,slot_j,] = site_output$SurfWater_kgH2Om2[,final_step]
+										grid_output$final_SurfWater_kgH2Om2[slot_i,slot_j,] = site_output$SurfWater_kgH2Om2[,final_step]
 										# plant apparent soil water potential (MPa)
 										grid_output$mean_wSWP_kgH2Om2[slot_i,slot_j,] = apply(site_output$wSWP_kgH2Om2,1,mean)
-                    grid_output$final_wSWP_kgH2Om2[slot_i,slot_j,] = site_output$wSWP_kgH2Om2[,final_step]
+										grid_output$final_wSWP_kgH2Om2[slot_i,slot_j,] = site_output$wSWP_kgH2Om2[,final_step]
 										# evapotranspiration (Etrans + Esoil + Ewetcanopy)
 										grid_output$mean_evap_kgH2Om2day[slot_i,slot_j,] = apply(site_output$evap_kgH2Om2day,1,mean)
 								}

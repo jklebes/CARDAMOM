@@ -29,10 +29,10 @@ extract_avitabile_biomass<- function(timestep_days,spatial_type,resolution,grid_
             }
 
             # work out average areas
-            average_i=max(1,(i1-radius)):min(dim(Cwood_all$biomass_all)[1],(i1+radius)) ; average_j=max(1,(j1-radius)):min(dim(Cwood_all$biomass_all)[2],(j1+radius))
+            average_i = max(1,(i1-radius)):min(dim(Cwood_all$biomass_all)[1],(i1+radius)) ; average_j=max(1,(j1-radius)):min(dim(Cwood_all$biomass_all)[2],(j1+radius))
             # carry out averaging
-            Cwood=mean(Cwood_all$biomass_all[average_i,average_j], na.rm=TRUE)
-            Cwood_unc=mean(Cwood_all$biomass_all_unc[average_i,average_j], na.rm=TRUE)
+            Cwood = mean(Cwood_all$biomass_all[average_i,average_j], na.rm=TRUE)
+            Cwood_unc = mean(Cwood_all$biomass_all_unc[average_i,average_j], na.rm=TRUE)
 
             # convert missing data back to -9999
             Cwood[which(is.na(Cwood))]=-9999.0 ; Cwood_unc[which(is.na(Cwood_unc))]=-9999.0

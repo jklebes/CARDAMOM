@@ -346,10 +346,10 @@ module cardamom_io
     end do
 
     ! allocate the default run information
-    nos_trees=int(statdat(2))
-    dim_1=int(statdat(3))
-    dim_2=int(statdat(4))
-    nos_inputs=int(statdat(5))
+    nos_trees = int(statdat(2))
+    dim_1 = int(statdat(3))
+    dim_2 = int(statdat(4))
+    nos_inputs = int(statdat(5))
 
     ! tidy
     deallocate(statdat)
@@ -932,7 +932,7 @@ module cardamom_io
 
     ! defining hardcoded MCMC options
     MCO%append = 1
-    MCO%nADAPT = 500
+    MCO%nADAPT = 1000
     MCO%fADAPT = 0.5d0
     MCO%randparini = .false.
     MCO%returnpars = .false.

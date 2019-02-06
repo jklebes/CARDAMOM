@@ -33,10 +33,6 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
     stop("valid spatial grid option not selected (UK, or wgs84)")
   }
 
-  # extract a list of all the variables stored in the output object
-  par_names = names(grid_output)
-  # filter for those related to the 'mean' status
-  par_names = par_names[grepl("mean", par_names)]
   # determine the array value for the median,
   num_quantiles = dim(grid_output$mean_labile_gCm2)[3]
   if (num_quantiles == 5) {
@@ -50,15 +46,15 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
   }
 
   # calculate land mask
-  landmask=array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+  landmask = array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
   # load colour palette
   colour_choices_upper = colorRampPalette((brewer.pal(11,"Spectral")))
   # array sizes are always the same so
   colour_choices = colour_choices_upper(length(area))
 
   # determine correct height and widths
-  fig_height=4000 ; fig_width=7200
-  if (PROJECT$grid_type == "UK") { fig_height=8000 ; fig_width=7200 }
+  fig_height = 7000 ; fig_width = ((PROJECT$long_dim/PROJECT$lat_dim)+0.25) * fig_height#7200
+#  if (PROJECT$grid_type == "UK") { fig_height=8000 ; fig_width=7200 }
 
   mean_rooting_depth = NA
   if (PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET") {
@@ -79,11 +75,10 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
     dev.off()
   }
 
-  # create any new variables we should like to plot
-  grid_output$nee = (grid_output$mean_rhet_gCm2day + grid_output$mean_rauto_gCm2day) - grid_output$mean_gpp_gCm2day
-  grid_output$nbp = grid_output$mean_gpp_gCm2day - 
-                   (grid_output$mean_rhet_gCm2day + grid_output$mean_rauto_gCm2day +
-                    grid_output$mean_harvest_gCm2day + grid_output$mean_fire_gCm2day)
+  # extract a list of all the variables stored in the output object
+  par_names = names(grid_output)
+  # filter for those related to the 'mean' status
+  par_names = par_names[grepl("mean", par_names)]
 
   # loop through these mean variables, output median and CI range for each of these variables
   for (p in seq(1,length(par_names))) {

@@ -1743,17 +1743,18 @@ contains
                   POOLS(n+1,2) = sum(canopy_age_vector(1:oldest_leaf))
               endif
 
-              ! some variable needed for the EDCs
-              ! reallocation fluxes for the residues
-              disturbance_residue_to_litter(n) = (NCFF(1)+NCFF(2)+NCFF(3))
-              disturbance_residue_to_som(n)    = (NCFF(4)+NCFF(5)+NCFF(7))
-              disturbance_loss_from_litter(n)  = CFF(5)+NCFF(5)
-              disturbance_loss_from_cwd(n)     = CFF(7) - NCFF(7)
+              ! Some variable needed for the EDCs
+              ! Reallocation fluxes for the residues, remember to
               ! convert to daily rate for consistency with the EDCs
-              disturbance_residue_to_litter(n) = disturbance_residue_to_litter(n)  * deltat_1(n)
-              disturbance_residue_to_som(n)    = disturbance_residue_to_som(n) * deltat_1(n)
-              disturbance_loss_from_litter(n)  = disturbance_loss_from_litter(n) * deltat_1(n)
-              disturbance_loss_from_cwd(n)     = disturbance_loss_from_cwd(n) * deltat_1(n)
+              ! NOTE: accumulation because fire and removal may occur concurrently...
+              disturbance_residue_to_litter(n) = disturbance_residue_to_litter(n) &
+                                               + ((NCFF(1)+NCFF(2)+NCFF(3)) * deltat_1(n))
+              disturbance_residue_to_som(n)    = disturbance_residue_to_som(n) &
+                                               + ((NCFF(4)+NCFF(5)+NCFF(7)) * deltat_1(n))
+              disturbance_loss_from_litter(n)  = disturbance_loss_from_litter(n) &
+                                               + ((CFF(5) + NCFF(5)) * deltat_1(n))
+              disturbance_loss_from_cwd(n)     = disturbance_loss_from_cwd(n) &
+                                               + ((CFF(7) - NCFF(7)) * deltat_1(n))
 
           endif ! burn area > 0
 

@@ -54,19 +54,19 @@ module MODEL_PARAMETERS
 
        ! GSI sensitivity for leaf growth
        PI%parmin(3) = 1.00d0
-       PI%parmax(3) = 1.02d0
+       PI%parmax(3) = 1.005d0
 
        ! Max labile turnover (fraction) to roots
        PI%parmin(4) = 0.000273785d0 ! 10 years
        PI%parmax(4) = 0.05d0        ! 20 days
 
        ! GSI max leaf turnover
-       PI%parmin(5)=0.00027d0 ! 10 years
-       PI%parmax(5)=0.10d0    ! 10 days
+       PI%parmin(5) = 0.00027d0 ! 10 years
+       PI%parmax(5) = 0.10d0    ! 10 days
 
        ! Turnover fraction of wood
-       PI%parmin(6)=0.000009d0 ! 300 years
-       PI%parmax(6)=0.001d0    ! 2.73 years
+       PI%parmin(6) = 0.000009d0 ! 300 years
+       PI%parmax(6) = 0.001d0    ! 2.73 years
 
        ! Turnover fraction of roots
        ! Gill and Jackson (2000), New Phytol., 147, 13–31
@@ -104,8 +104,11 @@ module MODEL_PARAMETERS
        PI%parmax(14)=330d0
 
        ! GSI max temperature threshold (oC)
-       PI%parmin(15)=235d0
-       PI%parmax(15)=330d0
+       !PI%parmin(15)=235d0
+       !PI%parmax(15)=330d0
+       ! GSI range for temperature threshold (oC)
+       PI%parmin(15)=1d0
+       PI%parmax(15)=95d0
 
        ! GSI min photoperiod threshold (sec)
        PI%parmin(16)=3600d0*6d0  !  6 hours
@@ -117,20 +120,26 @@ module MODEL_PARAMETERS
        PI%parmax(17)=180d0
 
        ! GSI max photoperiod threshold (sec)
-       PI%parmin(24)=3600d0*6d0  !  6 hours
-       PI%parmax(24)=3600d0*18d0 ! 18 hours
+       !PI%parmin(24)=3600d0*6d0  !  6 hours
+       !PI%parmax(24)=3600d0*18d0 ! 18 hours
+       ! GSI photoperiod range (sec)
+       PI%parmin(24)=1d0
+       PI%parmax(24)=43200d0
 
        ! GSI min VPD threshold (Pa)
        PI%parmin(25)=1d0
-       PI%parmax(25)=5500d0 ! possibly should be ~3500
+       PI%parmax(25)=5500d0
 
        ! GSI max VPD threshold (Pa)
+       !PI%parmin(26)=1d0
+       !PI%parmax(26)=5500d0
+       ! GSI VPD range (Pa)
        PI%parmin(26)=1d0
        PI%parmax(26)=5500d0
 
        ! critical GPP for LAI increase (fraction)
        PI%parmin(27)=1d-8
-       PI%parmax(27)=0.01d0 
+       PI%parmax(27)=0.01d0
 
        ! fraction of Cwood which is branch
        PI%parmin(28)=0.05d0
@@ -141,12 +150,12 @@ module MODEL_PARAMETERS
        PI%parmax(29)=0.30d0 !0.45
 
        ! GSI senstivity for leaf senescence
-       PI%parmin(34)=0.97d0
+       PI%parmin(34)=0.995d0
        PI%parmax(34)=1.00d0
 
        ! GSI - have I just left a growing state (>1)
-       PI%parmin(35)=0.5d0
-       PI%parmax(35)=1.5d0
+       PI%parmin(35)=0.75d0
+       PI%parmax(35)=1.25d0
 
        ! GSI - initial GSI value
        PI%parmin(36)=1.0d0

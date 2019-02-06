@@ -102,7 +102,7 @@ load_mpi_biomass_fields_for_extraction<-function(latlon_in,Cwood_source,Cwood_in
 	rm(biomass_hold,unc_biomass_hold,max_lat,min_lat,max_long,min_long,keep_lat,keep_long) ; gc(reset=TRUE,verbose=FALSE)
 	
 	# output variables; adjust from kgC.m-2 to gC.m-2 
-	return(list(biomass_all=(biomass_out*1e3),biomass_all_unc=(unc_biomass_out*1e3),doy_obs=doy_out,lat=lat,long=long,missing_years=missing_years))
+	return(list(biomass_all = (biomass_out*1e3), biomass_all_unc = (unc_biomass_out*1e3), doy_obs = doy_out, lat = lat, long = long,missing_years = missing_years))
 
     } else if (Cwood_initial_source == "Avitabile"){
 
@@ -116,7 +116,7 @@ load_mpi_biomass_fields_for_extraction<-function(latlon_in,Cwood_source,Cwood_in
 	lat=ncvar_get(data1, "lat") ; long=ncvar_get(data1, "long")
 
 	# read the biomass estimates and uncertainty
-	biomass=ncvar_get(data1, "Biomass") ; biomass_uncertainty=ncvar_get(data1, "Biomass_Uncertainty")
+	biomass = ncvar_get(data1, "Biomass") ; biomass_uncertainty = ncvar_get(data1, "Biomass_Uncertainty")
 	# set actual missing data to -9999
 	biomass[which(is.na(as.vector(biomass)))] = -9999 ; biomass_uncertainty[which(is.na(as.vector(biomass_uncertainty)))] = -9999
 
@@ -137,15 +137,15 @@ load_mpi_biomass_fields_for_extraction<-function(latlon_in,Cwood_source,Cwood_in
 	keep_long_min=min(which(long[,1] > min_long))
 	keep_long_max=max(which(long[,1] < max_long))
 	# remove data outside of target area
-	biomass=biomass[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max] 
-	biomass_uncertainty=biomass_uncertainty[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max] 
-	lat=lat[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max] ; long=long[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max]
+	biomass = biomass[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max] 
+	biomass_uncertainty = biomass_uncertainty[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max] 
+	lat = lat[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max] ; long = long[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max]
 
 	# clean up variables
 	gc(reset=TRUE,verbose=FALSE)
 	
 	# output variables; convert MgCha-> gCm-2
-	return(list(biomass_all=biomass*1e2,biomass_uncertainty=biomass_uncertainty*1e2,lat=lat,long=long))
+	return(list(biomass_all = biomass*1e2, biomass_all_unc = biomass_uncertainty*1e2,lat = lat, long = long))
 
     } # if MPI biomass
 

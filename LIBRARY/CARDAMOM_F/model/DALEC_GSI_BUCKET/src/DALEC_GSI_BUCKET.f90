@@ -958,11 +958,17 @@ contains
 
     ! assign climate sensitivities
     gsi_lag = gsi_lag_remembered ! added to prevent loss from memory
-    fol_turn_crit=pars(34)-dble_one
-    lab_turn_crit=pars(3)-dble_one
-    Tfac_range_1 = (pars(15)-pars(14))**(-1d0)
-    Photofac_range_1 = (pars(24)-pars(16))**(-1d0)
-    VPDfac_range_1 = abs(pars(26)-pars(25))**(-1d0)
+    fol_turn_crit = pars(34)-1d0
+    lab_turn_crit = pars(3)-1d0
+    ! Calculate GSI ranges
+    ! Tfac_range_1 = (pars(15)-pars(14))**(-1d0)
+    ! Photofac_range_1 = (pars(24)-pars(16))**(-1d0)
+    ! VPDfac_range_1 = abs(pars(26)-pars(25))**(-1d0)
+    ! TLS: alternate
+    Tfac_range_1 = pars(15)**(-1d0)
+    Photofac_range_1 = pars(24)**(-1d0)
+    VPDfac_range_1 = pars(26)**(-1d0)
+!print*,"gsi-ranges",pars(15),pars(24),pars(26)
     SLA = pars(17)**(-1d0)
 
     !!!!!!!!!!!!
@@ -1302,7 +1308,6 @@ contains
               POOLS(n+1,5) = max(dble_zero, POOLS(n+1,5) + (labile_residue+foliar_residue+roots_residue))
               POOLS(n+1,6) = max(dble_zero, POOLS(n+1,6) - soil_loss_with_roots)
               POOLS(n+1,7) = max(dble_zero, POOLS(n+1,7) + wood_residue)
-
               ! Some variable needed for the EDCs
               ! reallocation fluxes for the residues
               disturbance_residue_to_litter(n) = labile_residue+foliar_residue+roots_residue
@@ -1403,18 +1408,18 @@ contains
               POOLS(n+1,6) = max(dble_zero,POOLS(n+1,6)+NCFF(4)+NCFF(5)+NCFF(7))
               POOLS(n+1,7) = max(dble_zero,POOLS(n+1,7)-CFF(7)-NCFF(7))
 
-              ! some variable needed for the EDCs
-              ! reallocation fluxes for the residues
-              disturbance_residue_to_litter(n) = (NCFF(1)+NCFF(2)+NCFF(3))
-              disturbance_residue_to_som(n)    = (NCFF(4)+NCFF(5)+NCFF(7))
-              disturbance_loss_from_litter(n)  = CFF(5)+NCFF(5)
-              disturbance_loss_from_cwd(n)     = CFF(7) - NCFF(7)
+              ! Some variable needed for the EDCs
+              ! Reallocation fluxes for the residues, remember to
               ! convert to daily rate for consistency with the EDCs
-              disturbance_residue_to_litter(n) = disturbance_residue_to_litter(n)  * deltat_1(n)
-              disturbance_residue_to_som(n)    = disturbance_residue_to_som(n) * deltat_1(n)
-              disturbance_loss_from_litter(n)  = disturbance_loss_from_litter(n) * deltat_1(n)
-              disturbance_loss_from_cwd(n)     = disturbance_loss_from_cwd(n) * deltat_1(n)
-
+              ! NOTE: accumulation because fire and removal may occur concurrently...
+              disturbance_residue_to_litter(n) = disturbance_residue_to_litter(n) &
+                                               + ((NCFF(1)+NCFF(2)+NCFF(3)) * deltat_1(n))
+              disturbance_residue_to_som(n)    = disturbance_residue_to_som(n) &
+                                               + ((NCFF(4)+NCFF(5)+NCFF(7)) * deltat_1(n))
+              disturbance_loss_from_litter(n)  = disturbance_loss_from_litter(n) &
+                                               + ((CFF(5) + NCFF(5)) * deltat_1(n))
+              disturbance_loss_from_cwd(n)     = disturbance_loss_from_cwd(n) &
+                                               + ((CFF(7) - NCFF(7)) * deltat_1(n))
           endif ! burn area > 0
 
       endif ! fire activity
@@ -3393,6 +3398,7 @@ contains
 
       ! calculate and store the GSI index
       GSI(current_step) = Tfac*Photofac*VPDfac
+!print*,"GSI",GSI(current_step),Tfac,Photofac,VPDfac
 
       ! we will load up some needed variables
       m = nint(tmp_m(current_step))

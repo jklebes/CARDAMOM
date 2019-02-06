@@ -54,7 +54,7 @@ module MODEL_PARAMETERS
 
        ! GSI sensitivity for leaf growth
        PI%parmin(3) = 1.00d0
-       PI%parmax(3) = 1.02d0
+       PI%parmax(3) = 1.005d0
 
        ! Fraction of (1-fgpp) to roots*/
        PI%parmin(4) = 0.01d0
@@ -141,7 +141,7 @@ module MODEL_PARAMETERS
        PI%parmax(29)=0.30d0 !0.45
 
        ! GSI senstivity for leaf senescence
-       PI%parmin(34)=0.97d0
+       PI%parmin(34)=0.995d0
        PI%parmax(34)=1.00d0
 
        ! GSI - have I just left a growing state (>1)

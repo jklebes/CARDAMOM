@@ -47,7 +47,7 @@ module model_likelihood_module
 
     ! set MCMC options needed for EDC run
     MCOPT_EDC%APPEND = 0
-    MCOPT_EDC%nADAPT = 100 !TLS: 20
+    MCOPT_EDC%nADAPT = 100
     MCOPT_EDC%fADAPT = 0.5d0
     MCOPT_EDC%nOUT = 1000
     MCOPT_EDC%nPRINT = 0
@@ -139,7 +139,8 @@ module model_likelihood_module
 
     endif ! if for restart
 
-    ! reset
+    ! reset so that currently saved parameters will be used
+    ! starting point in main MCMC
     PI%parfix(1:PI%npars) = 0
     MCOUT_EDC%best_pars = 0d0
 

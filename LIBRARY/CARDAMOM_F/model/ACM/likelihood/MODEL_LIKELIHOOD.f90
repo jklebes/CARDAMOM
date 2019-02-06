@@ -47,7 +47,7 @@ module model_likelihood_module
 
     ! set MCMC options needed for EDC run
     MCOPT_EDC%APPEND = 0
-    MCOPT_EDC%nADAPT = 100 !TLS: 20
+    MCOPT_EDC%nADAPT = 100
     MCOPT_EDC%fADAPT = 0.5d0
     MCOPT_EDC%nOUT = 1000
     MCOPT_EDC%nPRINT = 0
@@ -86,7 +86,7 @@ module model_likelihood_module
 
             write(*,*)"Beginning EDC search attempt"
             ! reset the parameter step size at the beginning of each attempt
-            PI%stepsize(1:PI%npars) = 0.10d0 ! 0.0005 -> 0.005 -> 0.05 -> 0.1 TLS
+            PI%stepsize(1:PI%npars) = 0.005d0 ! 0.0005 -> 0.005 -> 0.05 -> 0.1 TLS
             ! call the MHMCMC directing to the appropriate likelihood
             call MHMCMC(EDC_MODEL_LIKELIHOOD,PI,MCOPT_EDC,MCOUT_EDC)
 
@@ -94,7 +94,7 @@ module model_likelihood_module
             PI%parini(1:PI%npars) = MCOUT_EDC%best_pars(1:PI%npars)
             ! turn off random selection for initial values
             MCOPT_EDC%randparini = .false.
-  
+
             ! call edc likelihood function to get final edc probability
             call edc_model_likelihood(PI,PI%parini,PEDC,ML_prior)
 
@@ -139,7 +139,8 @@ module model_likelihood_module
 
     endif ! if for restart
 
-    ! reset
+    ! reset so that currently saved parameters will be used
+    ! starting point in main MCMC
     PI%parfix(1:PI%npars) = 0
     MCOUT_EDC%best_pars = 0d0
 
@@ -490,7 +491,7 @@ module model_likelihood_module
                          ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
                          ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                          ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-       else   
+       else
 
            ! run the dalec model
            call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
@@ -520,7 +521,7 @@ module model_likelihood_module
        if (EDC == 1) then
           ! calculate final model likelihood when compared to obs
           ML_obs_out = ML_obs_out + likelihood(PI%npars,PARS)
-       endif 
+       endif
 
     end if ! EDC == 1
 

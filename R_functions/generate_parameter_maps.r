@@ -58,6 +58,8 @@ generate_parameter_maps<-function(PROJECT) {
 					obs_lai_sigma=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 					obs_wood_estimate=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 					obs_wood_uncertainty=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+                                        obs_som_estimate=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+                                        obs_som_uncertainty=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 				}
 				# now load parameter information into the array
 				slot_j=as.numeric(PROJECT$sites[n])/PROJECT$long_dim
@@ -70,10 +72,20 @@ generate_parameter_maps<-function(PROJECT) {
 				obs_lai_max[slot_i,slot_j]=max(drivers$obs[,2])
 				obs_lai_mean[slot_i,slot_j]=mean(drivers$obs[which(drivers$obs[,2] != -9999),2])
 				obs_lai_sigma[slot_i,slot_j]=sd(drivers$obs[which(drivers$obs[,2] != -9999),2])
-				if (length(which(drivers$obs[,7] > -9999)) > 0) {
-					obs_wood_estimate[slot_i,slot_j]=max(drivers$obs[which(drivers$obs[,7] != -9999),7],na.rm=TRUE)
-					obs_wood_uncertainty[slot_i,slot_j]=max(drivers$obs[which(drivers$obs[,7] != -9999),18],na.rm=TRUE)
-				}
+				if (length(which(drivers$obs[,13] > -9999)) > 0) {
+					obs_wood_estimate[slot_i,slot_j]=max(drivers$obs[which(drivers$obs[,13] != -9999),13],na.rm=TRUE)
+					obs_wood_uncertainty[slot_i,slot_j]=max(drivers$obs[which(drivers$obs[,14] != -9999),14],na.rm=TRUE)
+				} else if (drivers$parpriors[21] > 0) {
+                                        obs_wood_estimate[slot_i,slot_j]=drivers$parpriors[21]
+                                        obs_wood_uncertainty[slot_i,slot_j]=drivers$parpriorunc[21]
+  				}
+                                if (length(which(drivers$obs[,19] > -9999)) > 0) {
+                                        obs_som_estimate[slot_i,slot_j] = max (drivers$obs[which(drivers$obs[,19] != -9999),19],na.rm=TRUE)
+                                        obs_som_uncertainty[slot_i,slot_j] = max(drivers$obs[which(drivers$obs[,20] != -9999),20],na.rm=TRUE)
+                                } else if (drivers$parpriors[23] > 0) {
+                                        obs_som_estimate[slot_i,slot_j] = drivers$parpriors[23]
+                                        obs_som_uncertainty[slot_i,slot_j] = drivers$parpriorunc[23]
+                                }
 				par_array_converged[slot_i,slot_j,]=0
 				converged=have_chains_converged(parameters)
 				par_array_converged[slot_i,slot_j,which(converged=="PASS")]=1
@@ -162,11 +174,11 @@ generate_parameter_maps<-function(PROJECT) {
 			# Looping to find preference_input, the preferenceRange() returns 2 values, the first of which minimises the number of clusters,
 			# while the seconds would return as many clusters as there are observations.
 			# It is the responsibility of the user to ensure the most appropriate use of these information to result in an appropriate number of clusters for error propagation
-			#		for (i in seq(1,100)) {
-			#		    tmp=append(tmp,preferenceRange(negDistMat(par_array_tmp[sample(1:dim(par_array_tmp)[1],0.05*dim(par_array_tmp)[1], replace=FALSE),],r=2))[1])
-			#		} ; preference_input=max(mean(tmp[-1]),median(tmp[-1]))
-			#		uk_clusters=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1,sweeps=10, p=preference_input,maxits=1000, convits=100)
-			uk_clusters=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1, sweeps=10, q=0.05, maxits=1000, convits=100)
+			for (i in seq(1,10)) {
+			    tmp=append(tmp,preferenceRange(negDistMat(par_array_tmp[sample(1:dim(par_array_tmp)[1],0.05*dim(par_array_tmp)[1], replace=FALSE),],r=2))[1])
+			} ; preference_input=max(mean(tmp[-1]),median(tmp[-1]))
+			uk_clusters=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1,sweeps=10, p=preference_input,maxits=1000, convits=100)
+			#uk_clusters=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1, sweeps=10, q=0.05, maxits=1000, convits=100)
 			nos_uk_clusters=length(uk_clusters@clusters) ; uk_clusters_exemplars=uk_clusters@exemplars
 
 			uk_cluster_pft=array(NA,dim=c(dim(par_array_median_normalised)[1:2]))
@@ -190,7 +202,8 @@ generate_parameter_maps<-function(PROJECT) {
 	par_names=c(paste(character_bit,number_bit,sep=""),"log-likelihood")
 	# determine correct height and widths
 	hist_height=4000 ; hist_width=7200
-	fig_height=4000 ; fig_width=7200
+        fig_height=7000 ; fig_width = ((PROJECT$long_dim/PROJECT$lat_dim)+0.25) * fig_height #7200
+	#fig_height=4000 ; fig_width=7200
 	#fig_height=4000 ; fig_width=7200 ; proj="+init=epsg:4326"
 	if (PROJECT$grid_type == "UK") { fig_height=8000 ; fig_width=7200 }
 	# load colour palette
@@ -484,6 +497,7 @@ generate_parameter_maps<-function(PROJECT) {
 		,mean_precipitation_array,mean_temperature_array,mean_radiation_array,mean_vpd_array
 		,par_array_median,par_array_unc,par_array_converged
 		,obs_lai_max,obs_lai_mean,obs_lai_sigma,obs_wood_estimate,obs_wood_uncertainty
+		,obs_som_estimate,obs_som_uncertainty
 		,pixel_yield_class_array,pixel_initial_age_array,pft_array,aNPP_array_median,aNPP_array_unc
 		,resid_time_array_median,resid_time_array_unc,file=outfile)#, compress="gzip")
 

@@ -52,9 +52,9 @@ module model_likelihood_module
 
     ! set MCMC options needed for EDC run
     MCOPT_EDC%APPEND = 0
-    MCOPT_EDC%nADAPT = 20 ! TLS: 20
+    MCOPT_EDC%nADAPT = 100
     MCOPT_EDC%fADAPT = 0.5d0
-    MCOPT_EDC%nOUT = 5000
+    MCOPT_EDC%nOUT = 1000
     MCOPT_EDC%nPRINT = 0
     MCOPT_EDC%nWRITE = 0
     ! the next two lines ensure that parameter inputs are either given or
@@ -83,7 +83,7 @@ module model_likelihood_module
        ! consistent location in parameter space which is very poor with respect
        ! to our observations
        allocate(iter_EDC_pars(PI%npars+1)) ; iter_EDC_pars = -9999999999d0
-       do iter = 1, 5
+       do iter = 1, 3
 
           ! set up edc log likelihood for MHMCMC initial run
           PEDC = -1 ; counter_local = 0
@@ -99,7 +99,7 @@ module model_likelihood_module
             PI%parini(1:PI%npars) = MCOUT_EDC%best_pars(1:PI%npars)
             ! turn off random selection for initial values
             MCOPT_EDC%randparini = .false.
-  
+
             ! call edc likelihood function to get final edc probability
             call edc_model_likelihood(PI,PI%parini,PEDC,ML_prior)
 
@@ -133,7 +133,7 @@ module model_likelihood_module
 
           end do ! for while condition
 
-       end do ! for iter = 1, 5
+       end do ! for iter = 1, 3
 
        ! set the initial parameter values to those which best fitted the
        ! available observations
@@ -144,7 +144,8 @@ module model_likelihood_module
 
     endif ! if for restart
 
-    ! reset
+    ! reset so that currently saved parameters will be used
+    ! starting point in main MCMC
     PI%parfix(1:PI%npars) = 0
     MCOUT_EDC%best_pars = 0d0
 
@@ -1074,7 +1075,7 @@ module model_likelihood_module
      if ((EDC2 == 1 .or. DIAG == 1) .and. (fNPP < 0.1d0 .or. fNPP > 0.5d0)) then
          EDC2 = 0 ; EDCD%PASSFAIL(35) = 0
      endif
-     
+
      ! for both roots and wood the NPP > 0.85 is added to prevent large labile
      ! pools being used to support growth that photosynthesis cannot provide over
      ! the long term.
@@ -1599,7 +1600,7 @@ module model_likelihood_module
                          ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
                          ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                          ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-       else   
+       else
 
            ! run the dalec model
            call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
@@ -1629,7 +1630,7 @@ module model_likelihood_module
        if (EDC == 1) then
           ! calculate final model likelihood when compared to obs
           ML_obs_out = ML_obs_out + likelihood(PI%npars,PARS)
-       endif 
+       endif
 
     end if ! EDC == 1
 
@@ -1655,7 +1656,7 @@ module model_likelihood_module
     integer :: n
 
     ! set initial value
-    likelihood_p = 0d0 
+    likelihood_p = 0d0
 
     ! now loop through defined parameters for their uncertainties
     do n = 1, npars
@@ -1704,23 +1705,44 @@ module model_likelihood_module
     ! GPP Log-likelihood
     tot_exp = 0d0
     if (DATAin%ngpp > 0) then
-       do n = 1, DATAin%ngpp
-         dn = DATAin%gpppts(n)
-         ! note that division is the uncertainty
-         tot_exp = tot_exp+((DATAin%M_GPP(dn)-DATAin%GPP(dn))/DATAin%GPP_unc(dn))**2
-       end do
+       ! do n = 1, DATAin%ngpp
+       !   dn = DATAin%gpppts(n)
+       !   ! note that division is the uncertainty
+       !   tot_exp = tot_exp+((DATAin%M_GPP(dn)-DATAin%GPP(dn))/DATAin%GPP_unc(dn))**2
+       ! end do
+       tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
+                       /DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2)
        likelihood = likelihood-tot_exp
     endif
+
+    ! ! LAI log-likelihood
+    ! tot_exp = 0d0
+    ! if (DATAin%nlai > 0) then
+    !    ! loop split to allow vectorisation
+    !    do n = 1, DATAin%nlai
+    !      dn = DATAin%laipts(n)
+    !      ! note that division is the uncertainty
+    !      tot_exp = tot_exp + ((DATAin%M_LAI(dn)-DATAin%LAI(dn))/DATAin%LAI_unc(dn))**2
+    !    end do
+    !    do n = 1, DATAin%nlai
+    !      dn = DATAin%laipts(n)
+    !      ! if zero or greater allow calculation with min condition to prevent
+    !      ! errors of zero LAI which occur in managed systems
+    !      if (DATAin%M_LAI(dn) < 0d0) then
+    !          ! if not then we have unrealistic negative values or NaN so indue
+    !          ! error
+    !          tot_exp = tot_exp+(-log(infini))
+    !      endif
+    !    end do
+    !    likelihood = likelihood-tot_exp
+    ! endif
 
     ! LAI log-likelihood
     tot_exp = 0d0
     if (DATAin%nlai > 0) then
        ! loop split to allow vectorisation
-       do n = 1, DATAin%nlai
-         dn = DATAin%laipts(n)
-         ! note that division is the uncertainty
-         tot_exp = tot_exp + ((DATAin%M_LAI(dn)-DATAin%LAI(dn))/DATAin%LAI_unc(dn))**2
-       end do
+       tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+                       /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
        do n = 1, DATAin%nlai
          dn = DATAin%laipts(n)
          ! if zero or greater allow calculation with min condition to prevent
@@ -1737,11 +1759,13 @@ module model_likelihood_module
     ! NEE likelihood
     tot_exp = 0d0
     if (DATAin%nnee > 0) then
-       do n = 1, DATAin%nnee
-         dn = DATAin%neepts(n)
-         ! note that division is the uncertainty
-         tot_exp = tot_exp+((DATAin%M_NEE(dn)-DATAin%NEE(dn))/DATAin%NEE_unc(dn))**2
-       end do
+!       do n = 1, DATAin%nnee
+!         dn = DATAin%neepts(n)
+!         ! note that division is the uncertainty
+!         tot_exp = tot_exp+((DATAin%M_NEE(dn)-DATAin%NEE(dn))/DATAin%NEE_unc(dn))**2
+!       end do
+       tot_exp = sum(((DATAin%M_NEE(DATAin%neepts(1:DATAin%nnee))-DATAin%NEE(DATAin%neepts(1:DATAin%nnee))) &
+                       /DATAin%NEE_unc(DATAin%neepts(1:DATAin%nnee)))**2)
        likelihood = likelihood-tot_exp
     endif
 

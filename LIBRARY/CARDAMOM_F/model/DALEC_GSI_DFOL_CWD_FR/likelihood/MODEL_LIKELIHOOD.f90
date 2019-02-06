@@ -47,9 +47,9 @@ module model_likelihood_module
 
     ! set MCMC options needed for EDC run
     MCOPT_EDC%APPEND = 0
-    MCOPT_EDC%nADAPT = 20 ! TLS: 20
+    MCOPT_EDC%nADAPT = 100
     MCOPT_EDC%fADAPT = 0.5d0
-    MCOPT_EDC%nOUT = 5000
+    MCOPT_EDC%nOUT = 1000
     MCOPT_EDC%nPRINT = 0
     MCOPT_EDC%nWRITE = 0
     ! the next two lines ensure that parameter inputs are either given or
@@ -78,7 +78,7 @@ module model_likelihood_module
        ! consistent location in parameter space which is very poor with respect
        ! to our observations
        allocate(iter_EDC_pars(PI%npars+1)) ; iter_EDC_pars = -9999999999d0
-       do iter = 1, 5
+       do iter = 1, 3
 
           ! set up edc log likelihood for MHMCMC initial run
           PEDC = -1 ; counter_local = 0
@@ -94,7 +94,7 @@ module model_likelihood_module
             PI%parini(1:PI%npars) = MCOUT_EDC%best_pars(1:PI%npars)
             ! turn off random selection for initial values
             MCOPT_EDC%randparini = .false.
-  
+
             ! call edc likelihood function to get final edc probability
             call edc_model_likelihood(PI,PI%parini,PEDC,ML_prior)
 
@@ -128,7 +128,7 @@ module model_likelihood_module
 
           end do ! for while condition
 
-       end do ! for iter = 1, 5
+       end do ! for iter = 1, 3
 
        ! set the initial parameter values to those which best fitted the
        ! available observations
@@ -139,7 +139,8 @@ module model_likelihood_module
 
     endif ! if for restart
 
-    ! reset
+    ! reset so that currently saved parameters will be used
+    ! starting point in main MCMC
     PI%parfix(1:PI%npars) = 0
     MCOUT_EDC%best_pars = 0d0
 
@@ -714,7 +715,7 @@ module model_likelihood_module
               ,disturb_begin, disturb_end
     double precision :: mean_pools(nopools), G, decay_coef, meangpp &
                        ,infi, sumgpp, sumnpp, model_living_C &
-                       ,target_living_C(2),hold, steps_per_year
+                       ,target_living_C(2),hold, steps_per_year, tmp1
     double precision, dimension(nodays) :: mean_ratio, resid_fol,resid_lab
     integer, dimension(nodays) :: hak ! variable to determine number of NaN in foliar residence time calculation
     double precision, dimension(:), allocatable :: mean_annual_pools,tmp
@@ -876,6 +877,24 @@ module model_likelihood_module
     ! Begin EDCs here
     !
 
+    ! C stocks can always be lower than their steady state, but it is unlikely
+    ! that a system should be significantly above its steady state. 
+
+    ! Estimate steady state approximation for wood based on mean inputs over
+    ! natural turnover, i.e. gCm-2day-1 / day-1 = gCm-2
+    tmp1 = ((sumwood/dble(nodays)) / pars(6)) ! the steady state approximation of wood (gC/m2/day)
+    if ((EDC2 == 1 .or. DIAG == 1) .and. pars(21) > tmp*2d0) then
+       EDC2 = 0 ; EDCD%PASSFAIL(18) = 0
+    end if
+    ! Similarly it is unlikely that the amount of coarse woody debris can be
+    ! greater than the steady state of wood. A restriction based on wood rather
+    ! than CWD inputs is to allow for the possibility of disturbance related
+    ! inputs and the fact that turnver of cwd is explicitly enforced to be
+    ! greater than wood. See EDC 5.
+    if ((EDC2 == 1 .or. DIAG == 1) .and. pars(37) > tmp*2d0) then
+       EDC2 = 0 ; EDCD%PASSFAIL(19) = 0
+    end if
+
     ! tissue expantion has poorly described physiological limits, however we can
     ! safely constrain foliar(8), root(6) and wood(7) growth the < 20
     ! gCm-2.day-1
@@ -886,13 +905,13 @@ module model_likelihood_module
     ! GPP allocation to foliage and labile cannot be 5 orders of magnitude
     ! difference from GPP allocation to roots
     if ((EDC2 == 1 .or. DIAG == 1) .and. (ffol > (5d0*froot) .or. (ffol*5d0) < froot)) then
-       EDC2 = 0 ; EDCD%PASSFAIL(18) = 0
+       EDC2 = 0 ; EDCD%PASSFAIL(21) = 0
     endif
 
     ! Part of the GSI test, we will assess EDC(3) here
     ! average turnover of foliage should not be less than wood
     if ((EDC2 == 1 .or. DIAG == 1) .and. torfol < pars(6) ) then
-         EDC2 = 0 ; EDCD%PASSFAIL(19) = 0
+         EDC2 = 0 ; EDCD%PASSFAIL(22) = 0
     endif
 
     ! The average leaf life span be less than 12 years
@@ -1551,7 +1570,7 @@ module model_likelihood_module
                          ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
                          ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                          ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-       else   
+       else
 
            ! run the dalec model
            call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
@@ -1581,7 +1600,7 @@ module model_likelihood_module
        if (EDC == 1) then
           ! calculate final model likelihood when compared to obs
           ML_obs_out = ML_obs_out + likelihood(PI%npars,PARS)
-       endif 
+       endif
 
     end if ! EDC == 1
 
@@ -1652,23 +1671,44 @@ module model_likelihood_module
     ! GPP Log-likelihood
     tot_exp = 0d0
     if (DATAin%ngpp > 0) then
-       do n = 1, DATAin%ngpp
-         dn = DATAin%gpppts(n)
-         ! note that division is the uncertainty
-         tot_exp = tot_exp+((DATAin%M_GPP(dn)-DATAin%GPP(dn))/DATAin%GPP_unc(dn))**2
-       end do
+       ! do n = 1, DATAin%ngpp
+       !   dn = DATAin%gpppts(n)
+       !   ! note that division is the uncertainty
+       !   tot_exp = tot_exp+((DATAin%M_GPP(dn)-DATAin%GPP(dn))/DATAin%GPP_unc(dn))**2
+       ! end do
+       tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
+                       /DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2)
        likelihood = likelihood-tot_exp
     endif
+
+    ! ! LAI log-likelihood
+    ! tot_exp = 0d0
+    ! if (DATAin%nlai > 0) then
+    !    ! loop split to allow vectorisation
+    !    do n = 1, DATAin%nlai
+    !      dn = DATAin%laipts(n)
+    !      ! note that division is the uncertainty
+    !      tot_exp = tot_exp + ((DATAin%M_LAI(dn)-DATAin%LAI(dn))/DATAin%LAI_unc(dn))**2
+    !    end do
+    !    do n = 1, DATAin%nlai
+    !      dn = DATAin%laipts(n)
+    !      ! if zero or greater allow calculation with min condition to prevent
+    !      ! errors of zero LAI which occur in managed systems
+    !      if (DATAin%M_LAI(dn) < 0d0) then
+    !          ! if not then we have unrealistic negative values or NaN so indue
+    !          ! error
+    !          tot_exp = tot_exp+(-log(infini))
+    !      endif
+    !    end do
+    !    likelihood = likelihood-tot_exp
+    ! endif
 
     ! LAI log-likelihood
     tot_exp = 0d0
     if (DATAin%nlai > 0) then
        ! loop split to allow vectorisation
-       do n = 1, DATAin%nlai
-         dn = DATAin%laipts(n)
-         ! note that division is the uncertainty
-         tot_exp = tot_exp + ((DATAin%M_LAI(dn)-DATAin%LAI(dn))/DATAin%LAI_unc(dn))**2
-       end do
+       tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+                       /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
        do n = 1, DATAin%nlai
          dn = DATAin%laipts(n)
          ! if zero or greater allow calculation with min condition to prevent
@@ -1685,11 +1725,13 @@ module model_likelihood_module
     ! NEE likelihood
     tot_exp = 0d0
     if (DATAin%nnee > 0) then
-       do n = 1, DATAin%nnee
-         dn = DATAin%neepts(n)
-         ! note that division is the uncertainty
-         tot_exp = tot_exp+((DATAin%M_NEE(dn)-DATAin%NEE(dn))/DATAin%NEE_unc(dn))**2
-       end do
+!       do n = 1, DATAin%nnee
+!         dn = DATAin%neepts(n)
+!         ! note that division is the uncertainty
+!         tot_exp = tot_exp+((DATAin%M_NEE(dn)-DATAin%NEE(dn))/DATAin%NEE_unc(dn))**2
+!       end do
+       tot_exp = sum(((DATAin%M_NEE(DATAin%neepts(1:DATAin%nnee))-DATAin%NEE(DATAin%neepts(1:DATAin%nnee))) &
+                       /DATAin%NEE_unc(DATAin%neepts(1:DATAin%nnee)))**2)
        likelihood = likelihood-tot_exp
     endif
 

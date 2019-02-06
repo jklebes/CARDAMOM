@@ -767,8 +767,13 @@ contains
 
     ! assign climate sensitivities
     gsi_lag = gsi_lag_remembered ! added to prevent loss from memory
-    fol_turn_crit=pars(34)-1d0
-    lab_turn_crit=pars(3)-1d0
+    fol_turn_crit = pars(34)-1d0
+    lab_turn_crit = pars(3)-1d0
+    ! extracted from global GSI model
+    !> median(as.vector(par_array_median[,,3]), na.rm=TRUE)-1
+    ![1] 0.002795797
+    !> median(as.vector(par_array_median[,,34]), na.rm=TRUE)-1
+    ![1] -0.002105454
 
     !
     ! Begin looping through each time step
@@ -1236,17 +1241,18 @@ contains
               POOLS(n+1,6) = max(dble_zero,POOLS(n+1,6)+NCFF(4)+NCFF(5)+NCFF(7))
               POOLS(n+1,7) = max(dble_zero,POOLS(n+1,7)-CFF(7)-NCFF(7))
 
-              ! some variable needed for the EDCs
-              ! reallocation fluxes for the residues
-              disturbance_residue_to_litter(n) = (NCFF(1)+NCFF(2)+NCFF(3))
-              disturbance_residue_to_som(n)    = (NCFF(4)+NCFF(5)+NCFF(7))
-              disturbance_loss_from_litter(n)  = CFF(5)+NCFF(5)
-              disturbance_loss_from_cwd(n)     = CFF(7) - NCFF(7)
+              ! Some variable needed for the EDCs
+              ! Reallocation fluxes for the residues, remember to
               ! convert to daily rate for consistency with the EDCs
-              disturbance_residue_to_litter(n) = disturbance_residue_to_litter(n)  * deltat_1(n)
-              disturbance_residue_to_som(n)    = disturbance_residue_to_som(n) * deltat_1(n)
-              disturbance_loss_from_litter(n)  = disturbance_loss_from_litter(n) * deltat_1(n)
-              disturbance_loss_from_cwd(n)     = disturbance_loss_from_cwd(n) * deltat_1(n)
+              ! NOTE: accumulation because fire and removal may occur concurrently...
+              disturbance_residue_to_litter(n) = disturbance_residue_to_litter(n) &
+                                               + ((NCFF(1)+NCFF(2)+NCFF(3)) * deltat_1(n))
+              disturbance_residue_to_som(n)    = disturbance_residue_to_som(n) &
+                                               + ((NCFF(4)+NCFF(5)+NCFF(7)) * deltat_1(n))
+              disturbance_loss_from_litter(n)  = disturbance_loss_from_litter(n) &
+                                               + ((CFF(5) + NCFF(5)) * deltat_1(n))
+              disturbance_loss_from_cwd(n)     = disturbance_loss_from_cwd(n) &
+                                               + ((CFF(7) - NCFF(7)) * deltat_1(n))
 
           endif ! burn area > 0
 
