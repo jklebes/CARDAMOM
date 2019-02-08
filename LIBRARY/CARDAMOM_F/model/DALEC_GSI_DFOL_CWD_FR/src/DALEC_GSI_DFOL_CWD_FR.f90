@@ -1223,7 +1223,7 @@ contains
               !/*fires as daily averages to comply with units*/
               FLUXES(n,17)=(CFF(1)+CFF(2)+CFF(3)+CFF(4)+CFF(5)) * deltat_1(n)
               !/*update net exchangep*/
-              NEE_out(n) = NEE_out(n) + FLUXES(n,17)
+              !NEE_out(n) = NEE_out(n) + FLUXES(n,17)
               ! determine the as daily rate impact on live tissues for use in EDC and
               ! MTT calculations
               FLUXES(n,22) = FLUXES(n,22) + ((CFF(1) + NCFF(1)) * deltat_1(n)) ! labile

@@ -82,8 +82,8 @@ module model_likelihood_module
        ! the EDC search will be iterated to minimise the risk of finding an EDC
        ! consistent location in parameter space which is very poor with respect
        ! to our observations
-       allocate(iter_EDC_pars(PI%npars+1)) ; iter_EDC_pars = -9999999999d0
-       do iter = 1, 3
+!       allocate(iter_EDC_pars(PI%npars+1)) ; iter_EDC_pars = -9999999999d0
+!       do iter = 1, 3
 
           ! set up edc log likelihood for MHMCMC initial run
           PEDC = -1 ; counter_local = 0
@@ -103,29 +103,29 @@ module model_likelihood_module
             ! call edc likelihood function to get final edc probability
             call edc_model_likelihood(PI,PI%parini,PEDC,ML_prior)
 
-            ! we want to keep track of which EDC consistent parameter set best
-            ! fits the available observations
-            if (PEDC == 0) then
-                ! determine what the observation based likelihood is for the
-                ! current parameter set
-                call model_likelihood(PI,PI%parini,ML,ML_prior)
-                ! if the current parameter set has a higher likelihood than the
-                ! previous EDC consistent values we will save the new ones
-                if ((ML+ML_prior) > iter_EDC_pars(PI%npars+1)) then
-                    ! store the current EDC consistent parameters
-                    iter_EDC_pars(1:PI%npars) = PI%parini(1:PI%npars)
-                    iter_EDC_pars(PI%npars+1) = ML + ML_prior
-                endif
-                ! and reset to the initial conditions for the next iteration
-                PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
-                ! reset to select random starting point
-                MCOPT_EDC%randparini = .true.
-            endif
+!            ! we want to keep track of which EDC consistent parameter set best
+!            ! fits the available observations
+!            if (PEDC == 0d0) then
+!                ! determine what the observation based likelihood is for the
+!                ! current parameter set
+!                call model_likelihood(PI,PI%parini,ML,ML_prior)
+!                ! if the current parameter set has a higher likelihood than the
+!                ! previous EDC consistent values we will save the new ones
+!                if ((ML+ML_prior) > iter_EDC_pars(PI%npars+1)) then
+!                    ! store the current EDC consistent parameters
+!                    iter_EDC_pars(1:PI%npars) = PI%parini(1:PI%npars)
+!                    iter_EDC_pars(PI%npars+1) = ML + ML_prior
+!                endif
+!                ! and reset to the initial conditions for the next iteration
+!                PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
+!                ! reset to select random starting point
+!                MCOPT_EDC%randparini = .true.
+!            endif
 
             ! keep track of attempts
             counter_local = counter_local+1
             ! periodically reset the initial conditions
-            if (PEDC < 0 .and. mod(counter_local,3) == 0) then
+            if (PEDC < 0d0 .and. mod(counter_local,3) == 0) then
                 PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
                 ! reset to select random starting point
                 MCOPT_EDC%randparini = .true.
@@ -133,14 +133,14 @@ module model_likelihood_module
 
           end do ! for while condition
 
-       end do ! for iter = 1, 3
+!       end do ! for iter = 1, 3
 
        ! set the initial parameter values to those which best fitted the
        ! available observations
-       PI%parini(1:PI%npars) = iter_EDC_pars(1:PI%npars)
+!       PI%parini(1:PI%npars) = iter_EDC_pars(1:PI%npars)
 
        ! tidy up before leaving
-       deallocate(iter_EDC_pars)
+!       deallocate(iter_EDC_pars)
 
     endif ! if for restart
 
@@ -565,6 +565,12 @@ module model_likelihood_module
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(9) > pars(1) ) then
        EDC1 = 0 ; EDCD%PASSFAIL(1) = 0
     endif
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(9) > pars(8) ) then
+       EDC1 = 0 ; EDCD%PASSFAIL(2) = 0
+    endif
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(9) > pars(16) ) then
+       EDC1 = 0 ; EDCD%PASSFAIL(3) = 0
+    endif
 
     ! decomposition : mineralisation rato for litter should be between 0.25-0.75
     ! see various N cycling / microbial decomposition models which frame litter decomposition
@@ -572,32 +578,36 @@ module model_likelihood_module
     tmp = pars(1)/(pars(1)+pars(8))
     if ((EDC1 == 1 .or. DIAG == 1) .and. &
        (tmp < 0.25 .or. tmp > 0.75) ) then
-       EDC1 = 0 ; EDCD%PASSFAIL(3) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(4) = 0
     endif
 
     ! turnover of cwd (pars(16)) should be slower than litter (pars(1) + pars(8))
     if ((EDC1 == 1 .or. DIAG == 1) .and. ( pars(16) > (pars(1)+pars(8)) ) ) then
-       EDC1 = 0 ; EDCD%PASSFAIL(4) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(5) = 0
     endif
 
     ! turnover of cwd (pars(16)) should be faster than wood (pars(6))
     tmp = (pars(16)*temp_response)
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(6) > tmp) ) then
-       EDC1 = 0 ; EDCD%PASSFAIL(5) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(6) = 0
     endif
     ! turnover of cwd (pars(16)) should be slower than that of roots (pars(6))
     if ((EDC1 == 1 .or. DIAG == 1) .and. tmp > pars(7) ) then
-       EDC1 = 0 ; EDCD%PASSFAIL(6) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(7) = 0
     endif
 
     ! root turnover (pars(7)) should be greater than som turnover (pars(9)) at mean temperature
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(9)*temp_response) > pars(7)) then
-       EDC1 = 0 ; EDCD%PASSFAIL(7) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(8) = 0
+    endif
+    ! wood turnover (pars(6)) should be greater than som turnover (pars(9)) at mean temperature
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(9)*temp_response) > pars(6)) then
+       EDC1 = 0 ; EDCD%PASSFAIL(9) = 0
     endif
 
     ! turnover of roots (pars(7)) should be faster than that of wood (pars(6))
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(6) > pars(7)) then
-       EDC1 = 0 ; EDCD%PASSFAIL(8) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(10) = 0
     endif
 
 !     ! replanting 30 = labile ; 31 = foliar ; 32 = roots ; 33 = wood
@@ -841,6 +851,7 @@ module model_likelihood_module
                        ,sumfol      &
                        ,sumroot     &
                        ,sumwood     &
+                       ,sumcwd      &
                        ,fNPP        & ! fraction of NPP to foliage
                        ,rNPP        & ! fraction of NPP to roots
                        ,wNPP        & ! fraction of NPP to wood
@@ -952,6 +963,7 @@ module model_likelihood_module
     sumfol = sum(M_FLUXES(1:nodays,8))
     sumroot = sum(M_FLUXES(1:nodays,6))
     sumwood = sum(M_FLUXES(1:nodays,7))
+    sumcwd = sum(M_FLUXES(1:nodays,11))
 
     ! initialise and then calculate mean gpp values
     fauto = sumrauto / sumgpp            ! i.e. Ra:GPP = 1-CUE
@@ -975,6 +987,30 @@ module model_likelihood_module
     !!!!!!!!!!
     ! Deal with emergent ecosystem traits
     !!!!!!!!!!
+
+    ! C stocks can always be lower than their steady state, but it is unlikely
+    ! that a system should be significantly above its steady state.
+
+    ! Estimate steady state approximation for wood based on mean inputs over natural
+    ! turnover, i.e. gCm-2day-1 / day-1 = gCm-2
+    tmp = ((sumwood/dble(nodays)) / pars(6))  ! the steady state approximation of wood (gC/m2)
+    tmp1 = ((sumcwd/dble(nodays)) / pars(16)) ! the steady state approximation of cwd (gC/m2)
+    if ((EDC2 == 1 .or. DIAG == 1) .and. pars(21) > tmp*1.5d0) then
+       EDC2 = 0 ; EDCD%PASSFAIL(18) = 0
+    end if
+    ! Similarly it is unlikely that the amount of coarse woody debris can be
+    ! greater than the steady state of wood. A restriction based on wood rather
+    ! than CWD inputs is to allow for the possibility of disturbance related
+    ! inputs and the fact that turnver of cwd is explicitly enforced to be
+    ! greater than wood. See EDC 5.
+    if ((EDC2 == 1 .or. DIAG == 1) .and. pars(24) > tmp1*1.5d0) then
+       EDC2 = 0 ; EDCD%PASSFAIL(19) = 0
+    end if
+    ! finally the steady-state estimate of CWD should be less than that of wood
+    ! See Brovkin et al., (2012)
+    if ((EDC2 == 1 .or. DIAG == 1) .and. tmp1 > tmp*0.5d0) then
+       EDC2 = 0 ; EDCD%PASSFAIL(20) = 0
+    endif
 
 !     ! tissue expansion has poorly described physiological limits,
 !     ! however we can safely constrain foliar(8), root(6) and wood(7)
@@ -1017,7 +1053,8 @@ module model_likelihood_module
      ! lived, particularly in forests.
      ! Richardson et al (2015) New Phytologist, Clab residence time = 11 +/- 7.4 yrs (95CI = 18 yr)
      ! NOTE: 18 years = 0.0001521028 day-1
-     if ((EDC2 == 1 .or. DIAG == 1) .and. torlab < 0.0001521028d0) then
+     !       11 years = 0.0002488955 day-1
+     if ((EDC2 == 1 .or. DIAG == 1) .and. torlab < 0.0002488955d0) then
          EDC2 = 0 ; EDCD%PASSFAIL(31) = 0
      endif
 
@@ -1053,15 +1090,15 @@ module model_likelihood_module
          end if
      endif !
 
-!     ! EDC 9
-!     ! Mature forest maximum foliar biomass (gC.m-2) can be expected to be
-!     ! between 430 gC.m-2 and 768 gC.m-2, assume 50 % uncertainty (Loblolly Pine)
-!     ! Black et al Sitka Spruce estimates (gC.m-2)
-!     ! Lower CI = 379.2800 median = 477.1640 upper CI = 575.1956
-!     ! Harwood = 1200 ; Griffin = 960
-! !    if ((EDC2 == 1 .or. DIAG == 1) .and. mean_pools(2) > 1200d0 ) then
-! !       EDC2 = 0 ; EDCD%PASSFAIL(34) = 0
-! !    endif
+    ! EDC 9
+    ! Mature forest maximum foliar biomass (gC.m-2) can be expected to be
+    ! between 430 gC.m-2 and 768 gC.m-2, assume 50 % uncertainty (Loblolly Pine)
+    ! Black et al Sitka Spruce estimates (gC.m-2)
+    ! Lower CI = 379.2800 median = 477.1640 upper CI = 575.1956
+    ! Harwood = 1200 ; Griffin = 960
+    if ((EDC2 == 1 .or. DIAG == 1) .and. mean_pools(2) > 1200d0 ) then
+       EDC2 = 0 ; EDCD%PASSFAIL(34) = 0
+    endif
 
      !
      ! EDC 14 - Fractional allocation to foliar biomass is well constrained
@@ -1088,15 +1125,15 @@ module model_likelihood_module
 
      ! NOTE that within the current framework NPP is split between fol, root, wood and that remaining in labile.
      ! Thus fail conditions fNPP + rNPP + wNPP > 1.0 .or. fNPP + rNPP + wNPP < 0.95, i.e. lNPP cannot be > 0.05 (-0.1)
-!     tmp = 1d0 - rNPP - wNPP - fNPP
-!     if ((EDC2 == 1 .or. DIAG == 1) .and. abs(tmp) > 0.1d0) then
-!          EDC2 = 0 ; EDCD%PASSFAIL(37) = 0
-!     endif
+     tmp = 1d0 - rNPP - wNPP - fNPP
+     if ((EDC2 == 1 .or. DIAG == 1) .and. abs(tmp) > 0.1d0) then
+          EDC2 = 0 ; EDCD%PASSFAIL(37) = 0
+     endif
 
-!     ! Ra:GPP ratio is unlikely to be outside of 0.2 > Ra:GPP < 0.80
-!     if ((EDC2 == 1 .or. DIAG == 1) .and. (fauto > 0.80d0 .or. fauto < 0.20d0) ) then
-!         EDC2 = 0 ; EDCD%PASSFAIL(38) = 0
-!     end if
+     ! Ra:GPP ratio is unlikely to be outside of 0.2 > Ra:GPP < 0.80
+     if ((EDC2 == 1 .or. DIAG == 1) .and. (fauto > 0.80d0 .or. fauto < 0.20d0) ) then
+         EDC2 = 0 ; EDCD%PASSFAIL(38) = 0
+     end if
 
     !!!!!!!!!
     ! Deal with ecosystem dynamics

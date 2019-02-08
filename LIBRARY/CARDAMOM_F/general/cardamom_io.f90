@@ -932,7 +932,7 @@ module cardamom_io
 
     ! defining hardcoded MCMC options
     MCO%append = 1
-    MCO%nADAPT = 1000
+    MCO%nADAPT = 5000
     MCO%fADAPT = 0.5d0
     MCO%randparini = .false.
     MCO%returnpars = .false.

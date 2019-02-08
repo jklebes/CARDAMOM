@@ -1455,8 +1455,8 @@ contains
 
     ! calculate NEE
     NEE_out(1:nodays) = -FLUXES(1:nodays,1) & ! GPP
-                        +FLUXES(1:nodays,3)+FLUXES(1:nodays,13)+FLUXES(1:nodays,14) & ! Respiration
-                        +FLUXES(1:nodays,17)  ! fire
+                        +FLUXES(1:nodays,3)+FLUXES(1:nodays,13)+FLUXES(1:nodays,14) !& ! Respiration
+                        !+FLUXES(1:nodays,17)  ! fire
     ! load GPP
     GPP_out(1:nodays) = FLUXES(1:nodays,1)
 
