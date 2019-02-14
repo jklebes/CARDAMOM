@@ -37,18 +37,20 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
   num_quantiles = dim(grid_output$mean_labile_gCm2)[3]
   if (num_quantiles == 5) {
     # then we assume we are dealing with 0.025, 0.25, 0.5, 0.75, 0.975 quantiles
-    median_loc = 3 ; lower_loc = 1 ; upper_loc = 5
+    median_loc = 3 ; loc_25 = 2 ; loc_75 = 4; lower_loc = 1 ; upper_loc = 5
   } else {
     # otherwise we need to approximate it...
     median_loc = round(num_quantiles / 2,digits=0)
     lower_loc = ceiling(num_quantile * 0.025)
     upper_loc = floor(num_quantile * 0.975)
+    loc_25 = ceiling(num_quantile * 0.25)
+    loc_75 = floor(num_quantile * 0.75)
   }
 
   # calculate land mask
   landmask = array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
   # load colour palette
-  colour_choices_upper = colorRampPalette((brewer.pal(11,"Spectral")))
+  colour_choices_upper = colorRampPalette(brewer.pal(11,"Spectral"))
   # array sizes are always the same so
   colour_choices = colour_choices_upper(length(area))
 
@@ -86,15 +88,24 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
     # determine position in grid_output list which contains the variable of interest
     pp = which(names(grid_output) == par_names[p])
 
+    # create maps
     jpeg(file=paste(PROJECT$figpath,"grid_mean_map_",par_names[p],"_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
     info = " " # assume default is no header, but sometimes we add something extra...
     var1 = mean(grid_output[[pp]][,,median_loc], na.rm=TRUE)
     var2 = mean(grid_output[[pp]][,,upper_loc], na.rm=TRUE)
     var3 = mean(grid_output[[pp]][,,lower_loc], na.rm=TRUE)
-    var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2)
-    info = paste("Mean estimate: ",par_names[p]," (median estimate = ",var1,"; 97.5 % = ",var2,"; 2.5 % = ",var3,")", sep="")
+    var4 = mean(grid_output[[pp]][,,loc_25], na.rm=TRUE)
+    var5 = mean(grid_output[[pp]][,,loc_75], na.rm=TRUE)
+    var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2) ; var4 = round(var4,digit=2) ; var5 = round(var5,digit=2)
+    info = paste("Mean estimate: ",par_names[p]," (97.5 % = ",var2,"; 75 % = ",var5,"; 50 % = ",var1,"; 25 % = ",var4,"; 2.5 % = ",var3,")", sep="")
     image.plot(grid_output[[pp]][,,median_loc], main=info, col = colour_choices, axes=FALSE, cex.main=2.4, legend.width=3.0, cex=1.5, axis.args=list(cex.axis=1.8, hadj=0.1))
-    contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+    contour(landmask, add = TRUE, lwd = 1.0, nlevels = 1,axes = FALSE,drawlabels = FALSE,col = "black")
+    dev.off()
+
+    # create distribution information
+    jpeg(file=paste(PROJECT$figpath,"grid_mean_hist_",par_names[p],"_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+    info = paste("Distribution of median estimates: ",par_names[p], sep="")
+    hist(as.vector(grid_output[[pp]][,,median_loc]), main=info, col = "grey", cex.main=2.4, cex=1.5)
     dev.off()
 
   } # loop through all "grid_output" objects
@@ -115,8 +126,10 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
     var1 = mean(grid_output[[pp]][,,median_loc], na.rm=TRUE)
     var2 = mean(grid_output[[pp]][,,upper_loc], na.rm=TRUE)
     var3 = mean(grid_output[[pp]][,,lower_loc], na.rm=TRUE)
-    var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2)
-    info = paste("Final estimate: ",par_names[p]," (median estimate = ",var1,"; 97.5 % = ",var2,"; 2.5 % = ",var3,")", sep="")
+    var4 = mean(grid_output[[pp]][,,loc_25], na.rm=TRUE)
+    var5 = mean(grid_output[[pp]][,,loc_75], na.rm=TRUE)
+    var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2) ; var4 = round(var4,digit=2) ; var5 = round(var5,digit=2)
+    info = paste("Final estimate: ",par_names[p]," (97.5 % = ",var2,"; 75 % = ",var5,"; 50 % = ",var1,"; 25 % = ",var4,"; 2.5 % = ",var3,")", sep="")
     image.plot(grid_output[[pp]][,,median_loc], main=info, col = colour_choices, axes=FALSE, cex.main=2.4, legend.width=3.0, cex=1.5, axis.args=list(cex.axis=1.8, hadj=0.1))
     contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
     dev.off()

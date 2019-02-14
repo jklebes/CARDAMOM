@@ -195,7 +195,7 @@ cardamom <-function (projname,model,method,stage) {
   ## Begin Stage 1
 
   if (stage == 1) {
-#skip_UK = read.csv("/home/lsmallma/Desktop/UK_forestry_sites_with_yield_and_biomass.csv",header=TRUE)
+skip_UK = read.csv("/home/lsmallma/Desktop/UK_forestry_sites_with_yield_and_biomass.csv",header=TRUE)
     print("Beginning creation of binary input files")
     # flag for met drivers load
     loaded_all = FALSE ; met_all = 0 ; lai_all = 0 ; Csom_all = 0 ; forest_all = 0 ; Cwood_all = 0

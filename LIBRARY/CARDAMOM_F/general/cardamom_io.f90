@@ -314,7 +314,7 @@ module cardamom_io
                                                   ,temp_matrix
 
     ! specify the input file unit
-    input_unit=13
+    input_unit = 13
 
     ! convert PFT into character value for use in file search
     if (DATAin%PFT < 10) then
@@ -778,55 +778,55 @@ module cardamom_io
     m = 1 ; o = 1 ; s = 1
     do day = 1, DATAin%nodays
        if (DATAin%GPP(day) > -9998d0) then
-          DATAin%gpppts(b)=day ; b=b+1
+          DATAin%gpppts(b) = day ; b = b+1
        endif
        if (DATAin%LAI(day) > -9998d0) then
-          DATAin%laipts(x)=day ; x=x+1
+          DATAin%laipts(x) = day ; x = x+1
        endif
        if (DATAin%NEE(day) > -9998d0) then
-          DATAin%neepts(y)=day ; y=y+1
+          DATAin%neepts(y) = day ; y = y+1
        endif
        if (DATAin%WOO(day) > -9998d0) then
-           DATAin%woopts(z)=day ; z=z+1
+           DATAin%woopts(z) = day ; z = z+1
        endif ! data present condition
        if (DATAin%Reco(day) > -9998d0) then
-           DATAin%recopts(c)=day ; c=c+1
+           DATAin%recopts(c) = day ; c = c+1
        endif ! data present condition
        if (DATAin%Cfol_stock(day) > -9998d0) then
-           DATAin%Cfol_stockpts(d)=day ; d=d+1
+           DATAin%Cfol_stockpts(d) = day ; d = d+1
        endif ! data present condition
        if (DATAin%Cwood_stock(day) > -9998d0) then
-           DATAin%Cwood_stockpts(e)=day ; e=e+1
+           DATAin%Cwood_stockpts(e) = day ; e = e+1
        endif ! data present condition
        if (DATAin%Croots_stock(day) > -9998d0) then
-           DATAin%Croots_stockpts(f)=day ; f=f+1
+           DATAin%Croots_stockpts(f) = day ; f = f+1
        endif ! data present condition
        if (DATAin%Clit_stock(day) > -9998d0) then
-           DATAin%Clit_stockpts(j)=day ; j=j+1
+           DATAin%Clit_stockpts(j) = day ; j = j+1
        endif ! data present condition
        if (DATAin%Csom_stock(day) > -9998d0) then
-           DATAin%Csom_stockpts(k)=day ; k=k+1
+           DATAin%Csom_stockpts(k) = day ; k = k+1
        endif ! data present condition
        if (DATAin%Cstem_stock(day) > -9998d0) then
-           DATAin%Cstem_stockpts(g)=day ; g=g+1
+           DATAin%Cstem_stockpts(g) = day ; g = g+1
        endif ! data present condition
        if (DATAin%Cbranch_stock(day) > -9998d0) then
-           DATAin%Cbranch_stockpts(h)=day ; h=h+1
+           DATAin%Cbranch_stockpts(h) = day ; h = h+1
        endif ! data present condition
        if (DATAin%Ccoarseroot_stock(day) > -9998d0) then
-           DATAin%Ccoarseroot_stockpts(i)=day ; i=i+1
+           DATAin%Ccoarseroot_stockpts(i) = day ; i = i+1
        endif ! data present condition
        if (DATAin%Cfolmax_stock(day) > -9998d0) then
-           DATAin%Cfolmax_stockpts(l)=day ; l=l+1
+           DATAin%Cfolmax_stockpts(l) = day ; l = l+1
        endif ! data present condition
        if (DATAin%Cagb_stock(day) > -9998d0) then
-           DATAin%Cagb_stockpts(l)=day ; l=l+1
+           DATAin%Cagb_stockpts(l) = day ; l = l+1
        endif ! data present condition
        if (DATAin%Evap(day) > -9998d0) then
-           DATAin%Evappts(o)=day ; o=o+1
+           DATAin%Evappts(o) = day ; o = o+1
        endif ! data present condition
        if (DATAin%SWE(day) > -9998d0) then
-           DATAin%SWEpts(s)=day ; s=s+1
+           DATAin%SWEpts(s) = day ; s = s+1
        endif ! data present condition
     end do ! day loop
 
@@ -838,11 +838,11 @@ module cardamom_io
     ! next determine the mean temperature and mean radiation values
     do day = 1, DATAin%nodays
        ! minimum temperature component
-       DATAin%meantemp=DATAin%meantemp+(0.5d0*(DATAin%met(2,day)/dble(DATAin%nodays)))
+       DATAin%meantemp = DATAin%meantemp+(0.5d0*(DATAin%met(2,day)/dble(DATAin%nodays)))
        ! maximum temperature component
-       DATAin%meantemp=DATAin%meantemp+(0.5d0*(DATAin%met(3,day)/dble(DATAin%nodays)))
+       DATAin%meantemp = DATAin%meantemp+(0.5d0*(DATAin%met(3,day)/dble(DATAin%nodays)))
        ! radiation
-       DATAin%meanrad=DATAin%meanrad+(DATAin%met(4,day)/dble(DATAin%nodays))
+       DATAin%meanrad = DATAin%meanrad+(DATAin%met(4,day)/dble(DATAin%nodays))
     end do ! day loop
 
     ! print the mean temperature and radiation variables
@@ -892,7 +892,7 @@ module cardamom_io
     write(*,*)"Created fields for model output"
 
     ! Begin allocating parameter info
-    PI%npars=DATAin%nopars
+    PI%npars = DATAin%nopars
     allocate(PI%parmin(PI%npars),PI%parmax(PI%npars),PI%parini(PI%npars) &
             ,PI%parfix(PI%npars),PI%stepsize(PI%npars))
     ! force zero
@@ -908,7 +908,7 @@ module cardamom_io
 !    end if
 
     ! defining MHMCMC stepsize
-    PI%stepsize=0.02d0
+    PI%stepsize = 0.1d0
 
     ! report back to user
     write(*,*) "Done with parameter definitions"
@@ -932,7 +932,7 @@ module cardamom_io
 
     ! defining hardcoded MCMC options
     MCO%append = 1
-    MCO%nADAPT = 5000
+    MCO%nADAPT = 10000 ! TLS: 1000 -> 5000 -> 10000
     MCO%fADAPT = 0.5d0
     MCO%randparini = .false.
     MCO%returnpars = .false.

@@ -89,6 +89,7 @@ public :: CARBON_MODEL        &
          ,dayl_seconds_1   &
          ,dayl_seconds     &
          ,dayl_hours       &
+         ,Rg_from_labile   &
          ,disturbance_residue_to_litter &
          ,disturbance_residue_to_cwd    &
          ,disturbance_residue_to_som    &
@@ -225,12 +226,12 @@ double precision, parameter :: &
 integer :: gsi_lag_remembered
 ! local variables for GSI phenology model
 double precision :: Tfac,Photofac,VPDfac & ! oC, seconds, Pa
-                   ,Rg_from_labile       &
                    ,delta_gsi,tmp,tmp_lai,gradient         &
                    ,fol_turn_crit,lab_turn_crit    &
                    ,gsi_history(22),just_grown
 
-double precision, allocatable, dimension(:) :: extracted_C,itemp,ivpd,iphoto, &
+double precision, allocatable, dimension(:) :: Rg_from_labile,                &
+                                               extracted_C,itemp,ivpd,iphoto, &
                                                disturbance_residue_to_litter, &
                                                disturbance_residue_to_som,    &
                                                disturbance_residue_to_cwd,    &
@@ -709,7 +710,7 @@ contains
     if (.not.allocated(tmp_x)) then
         ! 21 days is the maximum potential so we will fill the maximum potential
         ! + 1 for safety
-        allocate(tmp_x(22),tmp_m(nodays))
+        allocate(tmp_x(22),tmp_m(nodays),Rg_from_labile(nodays))
         do f = 1, 22
            tmp_x(f) = f
         end do
@@ -1023,10 +1024,10 @@ contains
 
       ! calculate growth respiration and adjust allocation to pools assuming
       ! 0.21875 of total C allocation towards each pool (i.e. 0.28 .eq. xNPP)
-      ! foliage
-      Rg_from_labile = FLUXES(n,8)*0.21875d0 ; FLUXES(n,8) = FLUXES(n,8) * 0.78125d0
+      ! foliage. NOTE: that in the current version only Rg_fol comes from Clabile
+      Rg_from_labile(n) = FLUXES(n,8)*0.21875d0 ; FLUXES(n,8) = FLUXES(n,8) * 0.78125d0
       ! now update the Ra flux
-      FLUXES(n,3) = FLUXES(n,3) + Rg_from_labile
+      FLUXES(n,3) = FLUXES(n,3) + Rg_from_labile(n)
       ! roots
       FLUXES(n,3) = FLUXES(n,3) + (FLUXES(n,6)*0.21875d0) ; FLUXES(n,6) = FLUXES(n,6) * 0.78125d0
       ! wood
@@ -1042,7 +1043,7 @@ contains
       !
 
       ! labile pool
-      POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8)-Rg_from_labile)*deltat(n)
+      POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8)-Rg_from_labile(n))*deltat(n)
       ! foliar pool
       POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,4)-FLUXES(n,10)+FLUXES(n,8))*deltat(n)
       ! wood pool

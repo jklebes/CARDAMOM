@@ -347,7 +347,6 @@ module model_likelihood_module
     fsom = fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(8))
     flit = (froot+flab+ffol)
 
-
     ! derive mean pools
     do n = 1, nopools
        mean_pools(n) = cal_mean_pools(M_POOLS,n,nodays+1,nopools)

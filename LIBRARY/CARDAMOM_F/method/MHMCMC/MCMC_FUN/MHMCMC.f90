@@ -266,8 +266,8 @@ contains
     ! calculate minimum step size
     ! Should consider whether either of these values should be adjusted to
     ! improve searching efficiency.
-    minstepsize = 500d0/dble(N%ITER) ! 10000d0 -> 1000d0
-    if (minstepsize > 0.025d0) minstepsize = 0.025d0 ! 0.01d0
+    minstepsize = 1000d0/dble(N%ITER) ! 10000d0 -> 1000d0
+    if (minstepsize > 0.001d0) minstepsize = 0.001d0 ! 0.01d0
 
     ! determine local acceptance rate
     N%ACCRATE = dble(N%ACCLOC)/dble(MCO%nADAPT)
