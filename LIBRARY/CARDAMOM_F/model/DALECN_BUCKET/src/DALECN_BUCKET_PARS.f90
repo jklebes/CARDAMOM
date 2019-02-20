@@ -46,19 +46,19 @@ module MODEL_PARAMETERS
 
        ! Decomposition of litter to som (fraction; temperature adjusted)
        PI%parmin(1) = 0.0001368925d0 ! 20 years at 0oC
-       PI%parmax(1) = 0.002737851d0  ! 1  year  at 0oC
+       PI%parmax(1) = 0.002737851d0  !  1 year  at 0oC
 
        ! CN_Root (gC/gN; Kattge et al., 2011)
        PI%parmin(2) = 13.85d0
        PI%parmax(2) = 192.31d0
 
-       ! Days past optimum at which canopy NUE = 0
-       PI%parmin(3) = 3d0
-       PI%parmax(3) = 365.25d0*6d0
+       ! Initial Mean NUE (gC/gN/day)
+       PI%parmin(3) = 1d0
+       PI%parmax(3) = 80d0
 
        ! Max labile turnover (fraction) to roots
-       PI%parmin(4) = 0.000273785 ! 10 years
-       PI%parmax(4) = 0.05d0      ! 20 days
+       PI%parmin(4) = 0.000273785d0 ! 10 years
+       PI%parmax(4) = 0.05d0        ! 20 days
 
        ! Leaf growth sensitivity period (days)
        PI%parmin(5) = 1.5d0
@@ -132,7 +132,7 @@ module MODEL_PARAMETERS
        ! Xu et al., (2017):
        ! Variations of leaf longevity in tropical moist forests predicted by a
        ! trait-driven carbon optimality model,
-       ! Ecology Letters, doi: 10.1111/ele.12804, upper value of 82 gC/gN/day 
+       ! Ecology Letters, doi: 10.1111/ele.12804, upper value of 82 gC/gN/day
        PI%parmin(26) =  1.0d0
        PI%parmax(26) = 80.0d0
 
@@ -154,7 +154,7 @@ module MODEL_PARAMETERS
 
        ! BUCKET - maximum rooting depth (m)
        PI%parmin(35) = 0.35d0
-       PI%parmax(35) = 5d0 
+       PI%parmax(35) = 5d0
 
        ! Reich - Leaf N linked respiration exponential coefficient
        PI%parmin(36) = 0.935d0 ! 1.639-0.01
@@ -190,13 +190,27 @@ module MODEL_PARAMETERS
        PI%parmin(42) = 1.5d0
        PI%parmax(42) = 30d0
 
-       ! intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
-       PI%parmin(43) = 5d-8
-       PI%parmax(43) = 5d-6 
+       ! Potential  NUE decline after maturation
+       PI%parmin(43) = 0.0006844627d0
+       PI%parmax(43) = 0.05d0
 
        ! Period (days) over which initial canopy is distributed
        PI%parmin(45) = 1d0
        PI%parmax(45) = 30d0
+
+       ! Min temperature threshold for NUE decline
+       PI%parmin(46) = -10d0
+       PI%parmax(46) =  30d0
+       ! Max temperature threshold for NUE decline
+       PI%parmin(47) = -10d0
+       PI%parmax(47) =  30d0
+
+       ! Min VPD threshold for NUE decline
+       PI%parmin(48) = 1d0
+       PI%parmax(48) = 5500d0
+       ! Max VPD threshold for NUE decline
+       PI%parmin(49) = 1d0
+       PI%parmax(49) = 5500d0
 
 !       ! CN_wood coefficient for increase due to C_wood (deltalCN per gC.m-2)
 !       ! NOTE: values in log scale
@@ -227,11 +241,11 @@ module MODEL_PARAMETERS
 
        ! C litter
        PI%parmin(22) = 1d0
-       PI%parmax(22) = 2500d0 
+       PI%parmax(22) = 2500d0
 
        ! C_som
-       PI%parmin(23)=200d0
-       PI%parmax(23)=90000d0
+       PI%parmin(23) = 200d0
+       PI%parmax(23) = 90000d0
 
        ! C CWD
        PI%parmin(24) = 1d0
@@ -246,20 +260,20 @@ module MODEL_PARAMETERS
        !
 
        ! C labile
-       PI%parmin(30)=1d0
-       PI%parmax(30)=500d0
+       PI%parmin(30) = 1d0
+       PI%parmax(30) = 500d0
 
        ! C foliar
-       PI%parmin(31)=1d0
-       PI%parmax(31)=500d0
+       PI%parmin(31) = 1d0
+       PI%parmax(31) = 500d0
 
        ! C roots
-       PI%parmin(32)=1d0
-       PI%parmax(32)=500d0
+       PI%parmin(32) = 1d0
+       PI%parmax(32) = 500d0
 
        ! C_wood
-       PI%parmin(33)=1d0
-       PI%parmax(33)=1000d0
+       PI%parmin(33) = 1d0
+       PI%parmax(33) = 1000d0
 
     endif ! crop / default split
 

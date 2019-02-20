@@ -261,7 +261,6 @@ double precision, parameter :: &
 ! local variables for GSI phenology model
 double precision :: SLA & ! Specific leaf area
                    ,avail_labile,Rg_from_labile    &
-                   ,NUE_decay_acceleration         &
                    ,Cfol_turnover_gradient         &
                    ,Cfol_turnover_half_saturation  &
                    ,Cwood_labile_release_gradient  &
@@ -299,8 +298,6 @@ double precision :: deltaGPP, deltaRm, Rm_deficit, &
                     leaf_cost,leaf_life,       &
                     wood_cost,canopy_age,      &
                     leaf_life_max,             &
-                    canopy_optimum_period,     &
-                    canopy_zero_efficiency,    &
                     canopy_maturation_lag
 
 ! Declare canopy age class related variables
@@ -309,6 +306,7 @@ double precision :: deltaGPP, deltaRm, Rm_deficit, &
 integer, dimension(5480) :: leaf_loss_possible
 double precision, dimension(5480) :: canopy_age_vector, &
                                 canopy_days,NUE_vector, &
+                                     NUE_vector_mature, &
                                      marginal_loss_avg
 
 ! hydraulic model variables
@@ -377,7 +375,8 @@ double precision :: root_reach, root_biomass, &
 double precision :: delta_gs, & ! day length corrected gs increment mmolH2O/m2/dayl
                        avN, & ! average foliar N (gN/m2)
                       iWUE, & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
-                  NUE_mean, & !
+                  NUE_mean, & ! mean annual Nitrogen use efficiency
+              NUE_mean_lag, & ! mean annual NUE update for the current year
                NUE_optimum, & ! NUE but without age correction applied
                        NUE, & ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
                               ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
@@ -463,7 +462,8 @@ contains
     ! respiration is divided between growth (fixed fraction of new tissue) and maintenance (determine by Reich et al 2008).
     !
     ! This version was coded by T. Luke Smallman (t.l.smallman@ed.ac.uk).
-    ! Version 1: 05/08/2018
+    ! Version 1.0: 05/08/2018
+    ! Version 1.1: 17/02/2019 - Inclusion of GSI type model in decline of NUE
 
     implicit none
 
@@ -601,7 +601,7 @@ contains
 
     ! p(1) = Litter to SOM conversion rate (fraction)
     ! p(2) = CN_root (gC/gN)
-    ! p(3) = Days past optimum at which canopy NUE = 0
+    ! p(3) = Initial mean NUE
     ! p(4) = Max labile turnover to roots (fraction)
     ! p(5) = Leaf marginal growth sensitivity (days)
     ! p(6) = Turnover rate of wood (fraction)
@@ -690,7 +690,7 @@ contains
     max_lai_par_reflection     = 1.623013d-01  ! Max fraction of PAR reflected by canopy
     lai_half_par_reflection    = 1.114360d+00  ! LAI at which canopy PAR reflected = 50 %
     lai_half_lwrad_reflected   = 1.126214d+00  ! LAI at which 50 % LW is reflected back to sky
-    iWUE                       = pars(43) !1.602503d-06  ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
+    iWUE                       = 1.602503d-06  ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
     soil_swrad_absorption      = 6.643079d-01  ! Fraction of SW rad absorbed by soil
     max_lai_par_transmitted    = 8.079519d-01  ! Max fractional reduction in PAR transmittance by canopy
     lai_half_par_transmitted   = 9.178784d-01  ! LAI at which PAR transmittance reduction = 50 %
@@ -702,17 +702,15 @@ contains
 
     ! mean number of model steps per year
     mean_days_per_step = sum(deltat) ! sum nos days
-    steps_per_year = nint(mean_days_per_step/365.25d0)
+    steps_per_year = nint(mean_days_per_step*0.002737851d0) ! 0.002737851 = 1/365.25
     steps_per_year = nint(mean_days_per_step/dble(steps_per_year))
     mean_days_per_step = nint(mean_days_per_step / dble(nodays)) ! now update to mean
 
     ! Parameters related to ACM-GPP-ET, but not actually parameters of the ACM-GPP-ET model
     avN = 10d0**pars(11)             ! Average foliar Nitrogen content gN/m2leaf
     deltaWP = minlwp                 ! leafWP-soilWP (i.e. -2-0 MPa)
-    Rtot = 1d0                  ! Reset Total hydraulic resistance to 1
-    canopy_zero_efficiency = pars(3) ! canopy age (days) past peak at which NUE = 0
+    Rtot = 1d0                       ! Reset Total hydraulic resistance to 1
     canopy_maturation_lag = pars(14) ! canopy age (days) before peak NUE
-    canopy_optimum_period = 1d0      ! period of time the canopy is at optimum NUE
     ! estimate the canopy growth sensitivity variable (i.e. period over which to average marginal returns)
     leaf_growth_period = ceiling(pars(5))/mean_days_per_step
     leaf_growth_period_1 = leaf_growth_period**(-1d0)
@@ -734,9 +732,9 @@ contains
     !root_life = pars(7)**(-1d0)
     ! Assign initial leaf lifespan used in marginal return calculations
     leaf_life = pars(27)
-    ! Determine the maximum possible leaf life span
-    !leaf_life_max = canopy_zero_efficiency + canopy_maturation_lag + canopy_optimum_period
-    call estimate_mean_NUE
+    ! load initial mean canopy NUE
+    NUE_mean = pars(3)
+    NUE_mean_lag = NUE_mean
 
     !
     ! Components to be initialised if this call is at the beginning of the model analysis.
@@ -776,7 +774,7 @@ contains
        ! buffer for maximum value at which leaves become photosynthetically
        ! useless
        canopy_age_vector = 0d0 ; canopy_days = 0d0 ; marginal_loss_avg = 0d0
-       NUE_vector = 0d0 ; leaf_loss_possible = 0
+       NUE_vector = 0d0 ; NUE_vector_mature = 0d0; leaf_loss_possible = 0
 
        ! first those linked to the time period of the analysis
        do n = 1, nodays
@@ -818,6 +816,7 @@ contains
        Croot_labile_release_gradient = 0.1962d0 ; Croot_labile_half_saturation = 15.0d0
        Cwood_labile_release_gradient = 0.2355d0 ; Cwood_labile_half_saturation = 17.5d0
        ! calculate temperature limitation on potential wood/root growth
+       ! NOTE: could consider linear approximation between upper and lower bounds...?
        Cwood_labile_release_coef = (1d0+exp(-Cwood_labile_release_gradient* &
                                  (meant_time-Cwood_labile_half_saturation)))**(-1d0)
        Croot_labile_release_coef = (1d0+exp(-Croot_labile_release_gradient* &
@@ -1026,7 +1025,6 @@ contains
     ! Calculate logistic temperature response function of leaf turnover
 !    Cfol_turnover_gradient = 0.5d0 ; Cfol_turnover_half_saturation = pars(42)
 !    Cfol_turnover_coef = (1d0+exp(Cfol_turnover_gradient*(met(2,:)-Cfol_turnover_half_saturation)))**(-1d0)
-!    NUE_decay_acceleration = pars(43) ! acceleration (days) of NUE decay due to environmental effects (func(temperature))
 
     ! initialise foliage age distribution
     canopy_age_vector = 0d0
@@ -1059,35 +1057,6 @@ contains
     tmp = POOLS(1,2) * tmp
     canopy_age_vector((nint(canopy_age)+1):oldest_leaf) = tmp * &
                                       (dble(oldest_leaf) - canopy_days((nint(canopy_age)+1):oldest_leaf))
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!    oldest_leaf = nint(leaf_life) ! number of days to cover initial leaf life span
-!    ! determine the vector position at which mean canopy age is located
-!    canopy_age = min(dble(oldest_leaf-1),pars(25))
-!    ! set lower bound to prevent errors in array selection
-!    canopy_age = max(canopy_age,1d0) ; oldest_leaf = max(oldest_leaf,1)
-!
-!    ! estimate gradient needed using the integral of 0-canopy age (2 comes re-arranging the integral of the linear equation)
-!    ! to assign 50% (i.e. 0.5) of the canopy. Note that this must be scalable for simulations at different time steps
-!    !tmp = ((0.5d0 * 2d0) / canopy_age ** 2)
-!    tmp = canopy_age ** (-2d0)
-!    tmp = POOLS(1,2) * tmp
-!    ! assign foliar biomass to first half of the distribution
-!!    do n = 1, nint(canopy_age), 1
-!!       canopy_age_vector(n) = tmp * dble(n)
-!!    end do
-!    canopy_age_vector(1:nint(canopy_age)) = canopy_days(1:nint(canopy_age)) * tmp
-!
-!    ! now repeat the process for the second part of the distribution
-!    !tmp = ((0.5d0 * 2d0) / (dble(oldest_leaf) - canopy_age) ** 2)
-!    tmp = (dble(oldest_leaf) - canopy_age) ** (-2d0)
-!    tmp = POOLS(1,2) * tmp
-!!    do n = nint(canopy_age+1d0), oldest_leaf, 1
-!!       canopy_age_vector(n) = tmp * dble(oldest_leaf-n)
-!!    end do
-!    canopy_age_vector((nint(canopy_age)+1):oldest_leaf) = tmp * &
-!                                      (dble(oldest_leaf) - canopy_days((nint(canopy_age)+1):oldest_leaf))
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! check / adjust mass balance
     tmp = POOLS(1,2) / sum(canopy_age_vector(1:oldest_leaf))
     canopy_age_vector(1:oldest_leaf) = canopy_age_vector(1:oldest_leaf) * tmp
@@ -1096,10 +1065,22 @@ contains
                / POOLS(1,2) !sum(canopy_age_vector(1:oldest_leaf))
 
     ! estimate canopy age class specific NUE
-    do n = 1, size(canopy_days)
-       NUE_vector(n) = age_dependent_NUE(canopy_days(n),NUE_optimum &
-                                        ,canopy_maturation_lag,canopy_optimum_period,canopy_zero_efficiency)
+    ! Assume linear reklationship for maturity...
+    do n = 1, nint(canopy_maturation_lag)
+       NUE_vector(n) = age_dependent_NUE(canopy_days(n),NUE_optimum,canopy_maturation_lag)
     end do
+    ! ...then set remaining canopy to oldest_leaf as optimun
+    NUE_vector(nint(canopy_maturation_lag):size(NUE_vector)) = NUE_optimum
+    ! store the theoretical NUE in the abscense of environmental damanage
+    NUE_vector_mature = NUE_vector
+    ! If the oldest leaf is passed maturity we will assume a linear decay of NUE linked to the initial leaf lifespan
+    if (oldest_leaf > nint(canopy_maturation_lag)) then
+        do n = nint(canopy_maturation_lag+1d0), oldest_leaf
+        NUE_vector(n) = NUE_vector(n) &
+                      * (1d0 - (dble(n)-canopy_maturation_lag)/leaf_life-canopy_maturation_lag)
+        end do
+        NUE_vector(oldest_leaf+1:size(NUE_vector)) = 0d0
+    endif
 
     ! reset disturbance at the beginning of iteration
     disturbance_residue_to_litter = 0d0 ; disturbance_loss_from_litter = 0d0
@@ -1172,6 +1153,9 @@ contains
       days_per_step = deltat(n)
       days_per_step_1 = deltat_1(n)
 
+      ! Apply todays environmentally related NUE decline
+      call calculate_NUE_decline(pars(43),pars(46),pars(47),pars(48),pars(49))
+
       ! Estimate the current canopy NUE as a function of age
       if (sum(canopy_age_vector(1:oldest_leaf)) == 0d0 ) then
           ! if all the leaves have gone zero the age
@@ -1188,6 +1172,8 @@ contains
       FLUXES(n,18) = canopy_age
       ! estimate the new NUE as function of canopy age
       NUE = canopy_aggregate_NUE(1,oldest_leaf)
+      ! track rolling mean of NUE
+      NUE_mean_lag = ( NUE_mean_lag * (1d0 - (deltat(n) * 0.002737851d0)) ) + ( NUE * (deltat(n) * 0.002737851d0) )
 
       ! snowing or not...?
       if (mint < 0d0 .and. maxt > 0d0) then
@@ -1461,7 +1447,8 @@ contains
              tmp = tmp * leaf_life_weighting
              leaf_life = tmp + (leaf_life * (1d0 - leaf_life_weighting))
              ! if we have updated the leaf_life we should also update the canopy NUE_mean
-             call estimate_mean_NUE
+             !call estimate_mean_NUE
+             NUE_mean = NUE_mean_lag
           end if
       endif ! n /= 1 and new calendar year
 
@@ -1469,10 +1456,6 @@ contains
       ! those with temperature AND time dependancies
       !!!!!!!!!!
 
-      ! temprate (i.e. temperature modified rate of metabolic activity))
-      ! as met drivers all known this is time set once at the beginning of each
-      ! parameter iteration
-!      FLUXES(n,2) = exp(pars(10)*meant)
       ! respiration heterotrophic litter
       FLUXES(n,13) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))*deltat_1(n)
       ! respiration heterotrophic som
@@ -2057,9 +2040,9 @@ contains
 
     ! local variables
     double precision :: denom, isothermal, deltaTemp, deltaR
-    double precision, parameter :: max_gs = 2500d0, &   ! mmolH2O/m2leaf/s
-                                   min_gs = 0.0001d0, & ! mmolH2O/m2leaf/s
-                                   tol_gs = 4d0         ! mmolH2O/m2leaf/s
+    double precision, parameter :: max_gs = 500d0, &   ! mmolH2O/m2leaf/s
+                                   min_gs = 0.001d0, & ! mmolH2O/m2leaf/s
+                                   tol_gs = 4d0        ! mmolH2O/m2leaf/s
 
     !!!!!!!!!!
     ! Calculate stomatal conductance under H2O and CO2 limitations
@@ -2934,14 +2917,14 @@ contains
     ! local variables
     integer :: i, hr
     double precision :: a, through_fall, max_storage, max_storage_1, daily_addition, wetcanopy_evaporation &
-                       ,potential_drainage_rate ,drain_rate, evap_rate, initial_canopy, co_mass_balance, dx, tmp1, tmp2, tmp3
+                       ,potential_drainage_rate ,drain_rate, evap_rate, initial_canopy, co_mass_balance, dx, tmp(3)
     ! local parameters
-    double precision, parameter :: CanIntFrac = -0.5d0,  & ! Coefficient scaling rainfall interception fraction with LAI
-                                  CanStorFrac = 0.1d0,   & ! Coefficient scaling canopy water storage with LAI
-                                 RefDrainRate = 0.002d0, & ! Reference drainage rate (mm/min; Rutter et al 1975)
-                                  RefDrainLAI = 0.952381,& ! Reference drainage 1/LAI (m2/m2; Rutter et al 1975, 1/1.05)
-                                 RefDrainCoef = 3.7d0,   & ! Reference drainage Coefficient (Rutter et al 1975)
-                               RefDrainCoef_1 = RefDrainCoef ** (-1d0)
+    double precision, parameter :: CanIntFrac = -0.5d0,     & ! Coefficient scaling rainfall interception fraction with LAI
+                                  CanStorFrac = 0.1d0,      & ! Coefficient scaling canopy water storage with LAI
+                                 RefDrainRate = 0.002d0,    & ! Reference drainage rate (mm/min; Rutter et al 1975)
+                                  RefDrainLAI = 0.952381d0, & ! Reference drainage 1/LAI (m2/m2; Rutter et al 1975, 1/1.05)
+                                 RefDrainCoef = 3.7d0,      & ! Reference drainage Coefficient (Rutter et al 1975)
+                               RefDrainCoef_1 = RefDrainCoef ** (-dble_one)
 
     ! hold initial canopy storage in memory
     initial_canopy = storage
@@ -2984,10 +2967,11 @@ contains
                ! Allows estimation of the mean drainage rate between starting point and max_storage,
                ! thus the time period appropriate for co-access can be quantified. NOTE 1440 = minutes / day
                dx = storage - ((storage + max_storage)*0.5d0)
-               tmp1 = exp(a + (RefDrainCoef * storage))
-               tmp2 = exp(a + (RefDrainCoef * max_storage))
-               tmp3 = exp(a + (RefDrainCoef * (storage+dx)))
-               potential_drainage_rate = 0.5d0 * dx * ((tmp1 + tmp2) + 2d0 * tmp3)
+               tmp(1) = a + (RefDrainCoef * storage)
+               tmp(2) = a + (RefDrainCoef * max_storage)
+               tmp(3) = a + (RefDrainCoef * (storage+dx))
+               tmp = exp(tmp)
+               potential_drainage_rate = 0.5d0 * dx * ((tmp(1) + tmp(2)) + 2d0 * tmp(3))
                potential_drainage_rate = potential_drainage_rate * 1440d0
 
                ! restrict evaporation and drainage to the quantity above max_storage
@@ -3607,15 +3591,18 @@ contains
     double precision, intent(out) :: ustar_Uh ! ratio of friction velocity over wind speed at canopy top
     ! local variables
     double precision  sqrt_cd1_lai &
-                     ,local_lai &
-                     ,phi_h       ! roughness sublayer influence function
+                     ,local_lai
     double precision, parameter :: cd1 = 7.5d0,   & ! Canopy drag parameter; fitted to data
                                     Cs = 0.003d0, & ! Substrate drag coefficient
                                     Cr = 0.3d0,   & ! Roughness element drag coefficient
 !                          ustar_Uh_max = 0.3,   & ! Maximum observed ratio of
                                                    ! (friction velocity / canopy top wind speed) (m.s-1)
                           ustar_Uh_max = 1d0, ustar_Uh_min = 0.2d0, &
-                                    Cw = 2d0      ! Characterises roughness sublayer depth (m)
+                                    Cw = 2d0, &    ! Characterises roughness sublayer depth (m)
+                                    phi_h = 0.19314718056d0 ! Roughness sublayer influence function;
+                                                            ! describes the departure of the velocity profile from just above the
+                                                            ! roughness from the intertial sublayer log law
+
 
     ! assign new value to min_lai to avoid max min calls
     local_lai = max(min_lai,lai)
@@ -3631,7 +3618,7 @@ contains
     ! calculate roughness sublayer influence function;
     ! this describes the departure of the velocity profile from just above the
     ! roughness from the intertial sublayer log law
-    phi_h = 0.19314718056d0
+    !phi_h = 0.19314718056d0
 !    phi_h = log(Cw)-1d0+Cw**(-1d0) ! DO NOT FORGET TO UPDATE IF Cw CHANGES
 
     ! finally calculate roughness length, dependant on displacement, friction
@@ -3646,6 +3633,41 @@ contains
 !    endif
 
   end subroutine z0_displacement
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine calculate_NUE_decline(NUE_pot_decay,min_temp,max_temp,min_vpd,max_vpd)
+
+      ! Subroutine calcualte the local GSI based on minimum time step
+      ! temperature and vaoour pressure deficit. This GSI defines the decay in NUE
+      ! of age classes past maturity
+
+      implicie none
+
+      ! declare arguments
+      double precision, intent(in) :: NUE_pot_decay, !
+                                           min_temp, &
+                                           max_temp, &
+                                            min_vpd, &
+                                            max_vpd
+
+      ! declare local variables
+      integer :: start, a, b, c, d, age_by_time
+      double precision :: Tfac, VPDfac, NUE_decay, tmp
+
+      ! Calculate GSI style Components
+      Tfac = 1d0 - ((mint - min_temp) / (max_temp - min_temp))    ! oC
+      VPDfac = (vpd_kPa - min_vpd) / (max_vpd - min_vpd)  ! kPa
+
+      ! calculate actual decay rate
+      start = nint(canopy_maturation_lag+1d0)
+      NUE_decay = NUE_pot_decay * VPDfac * Tfac
+
+      ! apply decay to the canopy
+      NUE_vector(start:oldest_leaf) = NUE_vector(start:oldest_leaf) - &
+                                     (NUE_vector(start:oldest_leaf) * NUE_pot_decay * Tfac * VPDfac * days_per_step)
+
+  end subroutine calculate_NUE_decline
   !
   !------------------------------------------------------------------
   !
@@ -3742,17 +3764,22 @@ contains
           ! We need to track the marginal return estimates for the age classes first...
           marginal_loss_avg(d) = sum( marginal_loss_avg((oldest_leaf-b):oldest_leaf) &
                                 * canopy_age_vector((oldest_leaf-b):oldest_leaf) )
+          NUE_vector(d) = sum(NUE_vector((oldest_leaf-b):oldest_leaf) &
+                          * canopy_age_vector((oldest_leaf-b):oldest_leaf))
+
           ! ...as these need to be weighted by their biomass stocks...
           tmp = sum(canopy_age_vector((oldest_leaf-b):oldest_leaf))
           marginal_loss_avg(d) = marginal_loss_avg(d) / tmp
+          NUE_vector(d) = NUE_vector(d) / tmp
           ! move along the counter for number of times the age class has been assessed too
           leaf_loss_possible(d) = sum(leaf_loss_possible((oldest_leaf-b):oldest_leaf))
-
           ! accumulate the over spill in the final age class
           canopy_age_vector(d) = tmp
+
           ! empty the previous days
           canopy_age_vector((oldest_leaf-b):oldest_leaf) = 0d0
           marginal_loss_avg((oldest_leaf-b):oldest_leaf) = 0d0
+          NUE_vector((oldest_leaf-b):oldest_leaf) = 0d0
           leaf_loss_possible((oldest_leaf-b):oldest_leaf) = 0
 
       endif ! oldest_leaf+age_by_time > size(canopy_age_vector)
@@ -3767,6 +3794,7 @@ contains
       do a = oldest_leaf, 1, -1
          canopy_age_vector(a+age_by_time) = canopy_age_vector(a)
          marginal_loss_avg(a+age_by_time) = marginal_loss_avg(a)
+         NUE_vector(a+age_by_time) = NUE_vector(a)
          leaf_loss_possible(a+age_by_time) = leaf_loss_possible(a)
       end do ; a = 1
 
@@ -3777,6 +3805,8 @@ contains
       canopy_age_vector(1:age_by_time) = 0d0
       marginal_loss_avg(1:age_by_time) = 0d0
       leaf_loss_possible(1:age_by_time) = 0
+      ! overlay the default values for the maturing canopy
+      NUE_vector(1:nint(canopy_maturation_lag)) = NUE_vector_mature(1:nint(canopy_maturation_lag))
 
       !
       ! Marginal return of leaf loss
@@ -3823,7 +3853,7 @@ contains
                    deltaGPP = 0d0
                endif
                ! Estimate marginal return of leaf loss vs cost of regrowth
-               marginal_loss = deltaRm-deltaGPP! instantaneous costs of continued life
+               marginal_loss = deltaRm - deltaGPP! instantaneous costs of continued life
                marginal_loss = marginal_loss / deltaC ! scaled to per gC/m2
                ! pass to marginal_loss_avg vector
                marginal_loss_avg(a) = marginal_loss_avg(a) * (1d0 - leaf_mortality_period_1) &
@@ -4171,71 +4201,71 @@ contains
   !
   !------------------------------------------------------------------
   !
-  subroutine estimate_mean_NUE
-
-     ! Estimate mean NUE over the life time of the canopy
-
-     implicit none
-
-     ! local variables
-     double precision :: NUE_zero_days, day_zero
-
-     ! first estimate the total (parameterised) period for which NUE > 0
-     day_zero = canopy_maturation_lag + canopy_optimum_period + canopy_zero_efficiency
-     if (leaf_life > day_zero) then
-
-         ! current mean leaf life span is greater than period where NUE > 0
-
-         ! estimate time period at which NUE = 0
-         NUE_zero_days = leaf_life - day_zero
-         ! estimate weighted average over between the different canopy phases.
-         ! Note that 0.5 is because the mean NUE over the maturaing and aging phases is half the NUE_optimum
-         ! as they are bound by zero. Whereas the midphase is at the optimum itself
-         NUE_mean = (NUE_optimum * 0.5d0 * canopy_maturation_lag) &
-                  + (NUE_optimum * 0.5d0 * canopy_zero_efficiency) &
-                  + (NUE_optimum * canopy_optimum_period)
-         NUE_mean = NUE_mean / (canopy_maturation_lag+canopy_optimum_period+canopy_zero_efficiency+NUE_zero_days)
-
-     else
-
-         ! current leaf life span is within the period where NUE > 0
-
-         ! estimate NUE at expected end of leaf life
-         NUE_mean = age_dependent_NUE(leaf_life,NUE_optimum, &
-                                      canopy_maturation_lag,canopy_optimum_period,canopy_zero_efficiency)
-
-         if (leaf_life > canopy_maturation_lag + canopy_optimum_period) then
-
-             ! current leaf life span ends within NUE decay phase
-
-             ! find average for the mature period and apply timing weighting
-             NUE_mean = (NUE_optimum + NUE_mean) * 0.5d0 * (leaf_life-canopy_maturation_lag-canopy_optimum_period)
-             ! weight maturating and optimum periods with the mature period
-             NUE_mean = ((NUE_optimum * 0.5d0 * canopy_maturation_lag) + (NUE_optimum * canopy_optimum_period) + NUE_mean)
-             NUE_mean = NUE_mean / leaf_life
-
-         else if (leaf_life > canopy_maturation_lag) then
-
-             ! current leaf life span end within optimum phase
-
-             ! find average for the mature period and apply timing weighting
-             NUE_mean = (NUE_optimum + NUE_mean) * 0.5d0 * (leaf_life-canopy_maturation_lag)
-             ! weight maturating period with the optimum period
-             NUE_mean = (NUE_optimum * 0.5d0 * canopy_maturation_lag) + NUE_mean
-             NUE_mean = NUE_mean / leaf_life
-
-         else
-
-             ! current leaf life span must end within maturation phase...
-
-             ! weight maturating period with the mature period
-             NUE_mean = (NUE_mean * 0.5d0 * canopy_maturation_lag) / leaf_life
-
-         endif ! leaf_life ends in maturation, optimum or decaying phases?
-
-     endif ! leaf_life > day_zero
-
-  end subroutine estimate_mean_NUE
+  ! subroutine estimate_mean_NUE
+  !
+  !    ! Estimate mean NUE over the life time of the canopy
+  !
+  !    implicit none
+  !
+  !    ! local variables
+  !    double precision :: NUE_zero_days, day_zero
+  !
+  !    ! first estimate the total (parameterised) period for which NUE > 0
+  !    day_zero = canopy_maturation_lag + canopy_optimum_period + canopy_zero_efficiency
+  !    if (leaf_life > day_zero) then
+  !
+  !        ! current mean leaf life span is greater than period where NUE > 0
+  !
+  !        ! estimate time period at which NUE = 0
+  !        NUE_zero_days = leaf_life - day_zero
+  !        ! estimate weighted average over between the different canopy phases.
+  !        ! Note that 0.5 is because the mean NUE over the maturaing and aging phases is half the NUE_optimum
+  !        ! as they are bound by zero. Whereas the midphase is at the optimum itself
+  !        NUE_mean = (NUE_optimum * 0.5d0 * canopy_maturation_lag) &
+  !                 + (NUE_optimum * 0.5d0 * canopy_zero_efficiency) &
+  !                 + (NUE_optimum * canopy_optimum_period)
+  !        NUE_mean = NUE_mean / (canopy_maturation_lag+canopy_optimum_period+canopy_zero_efficiency+NUE_zero_days)
+  !
+  !    else
+  !
+  !        ! current leaf life span is within the period where NUE > 0
+  !
+  !        ! estimate NUE at expected end of leaf life
+  !        NUE_mean = age_dependent_NUE(leaf_life,NUE_optimum, &
+  !                                     canopy_maturation_lag,canopy_optimum_period,canopy_zero_efficiency)
+  !
+  !        if (leaf_life > canopy_maturation_lag + canopy_optimum_period) then
+  !
+  !            ! current leaf life span ends within NUE decay phase
+  !
+  !            ! find average for the mature period and apply timing weighting
+  !            NUE_mean = (NUE_optimum + NUE_mean) * 0.5d0 * (leaf_life-canopy_maturation_lag-canopy_optimum_period)
+  !            ! weight maturating and optimum periods with the mature period
+  !            NUE_mean = ((NUE_optimum * 0.5d0 * canopy_maturation_lag) + (NUE_optimum * canopy_optimum_period) + NUE_mean)
+  !            NUE_mean = NUE_mean / leaf_life
+  !
+  !        else if (leaf_life > canopy_maturation_lag) then
+  !
+  !            ! current leaf life span end within optimum phase
+  !
+  !            ! find average for the mature period and apply timing weighting
+  !            NUE_mean = (NUE_optimum + NUE_mean) * 0.5d0 * (leaf_life-canopy_maturation_lag)
+  !            ! weight maturating period with the optimum period
+  !            NUE_mean = (NUE_optimum * 0.5d0 * canopy_maturation_lag) + NUE_mean
+  !            NUE_mean = NUE_mean / leaf_life
+  !
+  !        else
+  !
+  !            ! current leaf life span must end within maturation phase...
+  !
+  !            ! weight maturating period with the mature period
+  !            NUE_mean = (NUE_mean * 0.5d0 * canopy_maturation_lag) / leaf_life
+  !
+  !        endif ! leaf_life ends in maturation, optimum or decaying phases?
+  !
+  !    endif ! leaf_life > day_zero
+  !
+  ! end subroutine estimate_mean_NUE
   !
   !------------------------------------------------------------------
   !
@@ -4265,7 +4295,7 @@ contains
 
     numerator   = t - 25d0
     denominator = t + freeze
-    arrhenious  = a * exp( b * 1d0 * numerator / denominator )
+    arrhenious  = a * exp( b * numerator / denominator )
 
     return
 
@@ -4413,7 +4443,7 @@ contains
   !
   !------------------------------------------------------------------
   !
-  double precision function age_dependent_NUE(age,optimum,pre_lag,opt_lag,post_lag)
+  double precision function age_dependent_NUE(age,optimum,pre_lag)
 
     !
     ! Estimate leaf age photosynthetic nitrogen use efficiency (gC/gN/m2leaf/day).
@@ -4427,32 +4457,63 @@ contains
     implicit none
 
     ! arguments
-    double precision, intent(in) :: age, optimum, pre_lag, opt_lag, post_lag
+    double precision, intent(in) :: age, optimum, pre_lag
 
     ! update NUE as function of age
     if (age < pre_lag) then
         ! canopy has not yet matured
         age_dependent_NUE = optimum * (1d0 - (pre_lag-age)/pre_lag)
-    else if (age >= pre_lag .and. age <= pre_lag+opt_lag) then
+    else
         ! canopy is at optimum
         age_dependent_NUE = optimum
-    else if (age > pre_lag+opt_lag) then
-        ! canopy past optimum
-        age_dependent_NUE = optimum * (1d0 - (age-pre_lag-opt_lag)/post_lag)
-    else
-        ! we have missed something here...
-        print*,"Error in 'age_dependent_NUE'"
-        print*,"Current canopy age = ",age,"optimum NUE = ",optimum
-        print*,"pre_period = ",pre_lag,"opt_period = ",opt_lag,"post_period = ",post_lag
-        stop
     endif
-
-    ! cannot be negative
-    age_dependent_NUE = max(0d0,age_dependent_NUE)
 
     return
 
   end function age_dependent_NUE
+  !
+  !------------------------------------------------------------------
+  !
+  ! double precision function age_dependent_NUE(age,optimum,pre_lag,opt_lag,post_lag)
+  !
+  !   !
+  !   ! Estimate leaf age photosynthetic nitrogen use efficiency (gC/gN/m2leaf/day).
+  !   ! Modified version of Xu et al., (2017), using here a combination of 3 (instead of 2) linear equations governing NUE.
+  !   !
+  !   ! Xu et al., (2017):
+  !   ! Variations of leaf longevity in tropical moist forests predicted by a trait-driven carbon optimality model,
+  !   ! Ecology Letters, doi: 10.1111/ele.12804
+  !
+  !
+  !   implicit none
+  !
+  !   ! arguments
+  !   double precision, intent(in) :: age, optimum, pre_lag, opt_lag, post_lag
+  !
+  !   ! update NUE as function of age
+  !   if (age < pre_lag) then
+  !       ! canopy has not yet matured
+  !       age_dependent_NUE = optimum * (1d0 - (pre_lag-age)/pre_lag)
+  !   else if (age >= pre_lag .and. age <= pre_lag+opt_lag) then
+  !       ! canopy is at optimum
+  !       age_dependent_NUE = optimum
+  !   else if (age > pre_lag+opt_lag) then
+  !       ! canopy past optimum
+  !       age_dependent_NUE = optimum * (1d0 - (age-pre_lag-opt_lag)/post_lag)
+  !   else
+  !       ! we have missed something here...
+  !       print*,"Error in 'age_dependent_NUE'"
+  !       print*,"Current canopy age = ",age,"optimum NUE = ",optimum
+  !       print*,"pre_period = ",pre_lag,"opt_period = ",opt_lag,"post_period = ",post_lag
+  !       stop
+  !   endif
+  !
+  !   ! cannot be negative
+  !   age_dependent_NUE = max(0d0,age_dependent_NUE)
+  !
+  !   return
+  !
+  ! end function age_dependent_NUE
   !
   !------------------------------------------------------------------
   !
@@ -4813,7 +4874,7 @@ contains
 
     ! local variables..
     integer            :: iter
-    integer, parameter :: ITMAX = 30
+    integer, parameter :: ITMAX = 20
     double precision   :: a,b,c,d,e,fa,fb,fc,p,q,r,s,tol1,xm
     double precision, parameter :: EPS = 3d-8
 

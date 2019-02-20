@@ -45,8 +45,8 @@ module MODEL_PARAMETERS
        !
 
        ! Decomposition of litter to som (fraction; temperature adjusted)
-       PI%parmin(1) = 0.0001368925d0 ! 20  years at 0oC
-       PI%parmax(1) = 0.002737851d0  !  1  year  at 0oC
+       PI%parmin(1) = 0.0001368925d0 ! 20 years at 0oC
+       PI%parmax(1) = 0.002737851d0  !  1 year  at 0oC
 
        ! Fraction of GPP respired as Rm
        PI%parmin(2) = 0.3d0
@@ -83,83 +83,83 @@ module MODEL_PARAMETERS
        PI%parmax(9) = 0.0002737851d0 !   10 years at 0oC
 
        ! Exponential coefficient for Rhet temperature response
-       PI%parmin(10)=0.018d0
-       PI%parmax(10)=0.06d0
+       PI%parmin(10) = 0.018d0
+       PI%parmax(10) = 0.06d0
 
        ! log10 avg foliar N (gN.m-2)
        ! Kattge et al., (2011) (Quantiles 2.5% / 97.5%)
-       PI%parmin(11)=-0.2218487d0
-       PI%parmax(11)=0.6382028d0! 0.5563025d0
+       PI%parmin(11) = -0.2218487d0
+       PI%parmax(11) = 0.6382028d0! 0.5563025d0
 
        ! Max labile turnover fraction to foliage
-       PI%parmin(12)=0.0006844627d0 ! 4 years 0.0001368925d0 ! 20 years
-       PI%parmax(12)=0.05d0         ! 20 days
+       PI%parmin(12) = 0.0006844627d0 ! 4 years 0.0001368925d0 ! 20 years
+       PI%parmax(12) = 0.05d0         ! 20 days
 
        ! Max labile turnover fraction to wood
-       PI%parmin(13)=0.0006844627d0 ! 4 years 0.0001368925d0 ! 20 years
-       PI%parmax(13)=0.05d0         ! 20 days
+       PI%parmin(13) = 0.0006844627d0 ! 4 years 0.0001368925d0 ! 20 years
+       PI%parmax(13) = 0.05d0         ! 20 days
 
        ! GSI min temperature threshold (oC)
-       PI%parmin(14)=235d0
-       PI%parmax(14)=330d0
+       PI%parmin(14) = 235d0
+       PI%parmax(14) = 330d0-30d0
 
        ! GSI max temperature threshold (oC)
        !PI%parmin(15)=235d0
-       !PI%parmax(15)=330d0
+       !PI%parmax(15)=330d0-30d0
        ! GSI range for temperature threshold (oC)
-       PI%parmin(15)=1d0
-       PI%parmax(15)=95d0
+       PI%parmin(15) = 1d0
+       PI%parmax(15) = 95d0 * 0.5d0
 
        ! GSI min photoperiod threshold (sec)
-       PI%parmin(16)=3600d0*6d0  !  6 hours
-       PI%parmax(16)=3600d0*18d0 ! 18 hours
+       PI%parmin(16) = 3600d0*1d0  !  1 hours
+       PI%parmax(16) = 3600d0*12d0 ! 12 hours
 
        ! LMA
        ! Kattge et al. 2011,
-       PI%parmin(17)=10d0
-       PI%parmax(17)=180d0
+       PI%parmin(17) = 10d0
+       PI%parmax(17) = 180d0
 
        ! GSI max photoperiod threshold (sec)
        !PI%parmin(24)=3600d0*6d0  !  6 hours
        !PI%parmax(24)=3600d0*18d0 ! 18 hours
        ! GSI photoperiod range (sec)
-       PI%parmin(24)=1d0
-       PI%parmax(24)=43200d0
+       PI%parmin(24) = 1d0
+       PI%parmax(24) = 43200d0
 
        ! GSI min VPD threshold (Pa)
-       PI%parmin(25)=1d0
-       PI%parmax(25)=5500d0
+       PI%parmin(25) = 1d0
+       PI%parmax(25) = 5500d0
 
        ! GSI max VPD threshold (Pa)
        !PI%parmin(26)=1d0
        !PI%parmax(26)=5500d0
        ! GSI VPD range (Pa)
-       PI%parmin(26)=1d0
-       PI%parmax(26)=5500d0
+       PI%parmin(26) = 1d0
+       PI%parmax(26) = 5500d0
 
        ! critical GPP for LAI increase (fraction)
-       PI%parmin(27)=1d-8
-       PI%parmax(27)=0.01d0
+       PI%parmin(27) = 1d-8
+       PI%parmax(27) = 0.01d0
 
        ! fraction of Cwood which is branch
-       PI%parmin(28)=0.05d0
-       PI%parmax(28)=0.40d0 !0.65
+       PI%parmin(28) = 0.05d0
+       PI%parmax(28) = 0.40d0 !0.65
 
        ! fraction of Cwood which is coarse root
-       PI%parmin(29)=0.15d0
-       PI%parmax(29)=0.30d0 !0.45
+       PI%parmin(29) = 0.15d0
+       PI%parmax(29) = 0.30d0 !0.45
 
        ! GSI senstivity for leaf senescence
-       PI%parmin(34)=0.995d0
-       PI%parmax(34)=1.00d0
+       PI%parmin(34) = 0.995d0
+       PI%parmax(34) = 1.00d0
 
        ! GSI - have I just left a growing state (>1)
-       PI%parmin(35)=0.75d0
-       PI%parmax(35)=1.25d0
+       PI%parmin(35) = 0.75d0
+       PI%parmax(35) = 1.25d0
 
        ! GSI - initial GSI value
-       PI%parmin(36)=1.0d0
-       PI%parmax(36)=2.0d0
+       PI%parmin(36) = 1.0d0
+       PI%parmax(36) = 2.0d0
 
        ! Turnover rate for CWD
        PI%parmin(38) = 0.0001        ! 27 years

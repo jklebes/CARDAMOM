@@ -1054,11 +1054,11 @@ contains
       ! fine root mass ! *2*2 => *RS*C->Bio
       root_biomass = max(min_root,POOLS(n,3)*2d0)
       ! estimate drythick for the current step
-      drythick = max(min_drythick, top_soil_depth * min(dble_one,dble_one - (soil_waterfrac(1) / porosity(1))))
+      drythick = max(min_drythick, top_soil_depth * min(1d0,1d0 - (soil_waterfrac(1) / porosity(1))))
       call calculate_Rtot(Rtot)
       ! Pass wSWP to output variable and update deltaWP between minlwp and
       ! current weighted soil WP
-      wSWP_time(n) = wSWP ; deltaWP = min(dble_zero,minlwp-wSWP)
+      wSWP_time(n) = wSWP ; deltaWP = min(0d0,minlwp-wSWP)
 
       !!!!!!!!!!
       ! Calculate surface exchange coefficients
@@ -1100,7 +1100,7 @@ contains
       ! adjustments
 
       ! reset output variable
-      if (lai > vsmall .and. stomatal_conductance > vsmall) then
+      if (stomatal_conductance > vsmall) then
           ! Gross primary productivity (gC/m2/day)
           FLUXES(n,1) = max(0d0,acm_gpp(stomatal_conductance))
           ! Canopy transpiration (kgH2O/m2/day)
@@ -1122,7 +1122,7 @@ contains
       ! autotrophic respiration (gC.m-2.day-1)
       FLUXES(n,3) = pars(2)*FLUXES(n,1)
       ! labile production (gC.m-2.day-1)
-      FLUXES(n,5) = (FLUXES(n,1)-FLUXES(n,3))
+      FLUXES(n,5) = FLUXES(n,1)-FLUXES(n,3)
 
       !!!!!!!!!!
       ! calculate canopy phenology
@@ -1517,7 +1517,7 @@ contains
     ! calculate internal CO2 concentration (ppm or umol/mol)
     mult = co2+qq-pp
     ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
-    ci = min(ci,co2) ! C3 can't have more CO2 than is in the atmosphere
+    !ci = min(ci,co2) ! C3 can't have more CO2 than is in the atmosphere
     ci_global = ci
     ! calculate CO2 limited rate of photosynthesis (gC.m-2.day-1)
     pd = (gc * (co2-ci)) * umol_to_gC
@@ -1649,9 +1649,9 @@ contains
 
     ! local variables
     double precision :: denom, isothermal, deltaTemp, deltaR
-    double precision, parameter :: max_gs = 2500d0, &   ! mmolH2O/m2leaf/s
-                                   min_gs = 0.0001d0, & ! mmolH2O/m2leaf/s
-                                   tol_gs = 4d0         ! mmolH2O/m2leaf/s
+    double precision, parameter :: max_gs = 500d0, &   ! mmolH2O/m2leaf/s
+                                   min_gs = 0.001d0, & ! mmolH2O/m2leaf/s
+                                   tol_gs = 4d0        ! mmolH2O/m2leaf/s
 
     !!!!!!!!!!
     ! Calculate stomatal conductance under H2O and CO2 limitations
@@ -2132,12 +2132,6 @@ contains
     dayl_hours = 12d0 * ( 1d0 + 2d0 * asin( aob ) * pi_1 )
     dayl_seconds = dayl_hours * seconds_per_hour
 
-    ! estimate sun rise and run set hours
-!    sunrise = 12 - nint(dayl_hours*0.5d0) ; sunset = sunrise + nint(dayl_hours)
-
-    ! estimate the solar cosine zenith angle for 12 noon
-!    cos_solar_zenith_angle = sinld + cosld
-
     ! return to user
     return
 
@@ -2499,8 +2493,8 @@ contains
     ! determine effective resistance (MPa.s-1.m-2.mmol-1)
     Rtot = sum(demand) / sum_water_flux
 
-    ! finally convert transpiration flux (mmol.m-2.s-1)
-    ! into kg.m-2.step-1 for consistency with ET in "calculate_update_soil_water"
+    ! finally convert transpiration flux (mmolH2O.m-2.s-1)
+    ! into kgH2O.m-2.step-1 for consistency with ET in "calculate_update_soil_water"
     water_flux = water_flux * mmol_to_kg_water * seconds_per_step
 
     ! and return
@@ -2526,14 +2520,14 @@ contains
     ! local variables
     integer :: i, hr
     double precision :: a, through_fall, max_storage, max_storage_1, daily_addition, wetcanopy_evaporation &
-                       ,potential_drainage_rate ,drain_rate, evap_rate, initial_canopy, co_mass_balance, dx, tmp1, tmp2, tmp3
+                       ,potential_drainage_rate ,drain_rate, evap_rate, initial_canopy, co_mass_balance, dx, tmp(3)
     ! local parameters
-    double precision, parameter :: CanIntFrac = -0.5d0,  & ! Coefficient scaling rainfall interception fraction with LAI
-                                  CanStorFrac = 0.1d0,   & ! Coefficient scaling canopy water storage with LAI
-                                 RefDrainRate = 0.002d0, & ! Reference drainage rate (mm/min; Rutter et al 1975)
-                                  RefDrainLAI = 0.952381,& ! Reference drainage 1/LAI (m2/m2; Rutter et al 1975, 1/1.05)
-                                 RefDrainCoef = 3.7d0,   & ! Reference drainage Coefficient (Rutter et al 1975)
-                               RefDrainCoef_1 = RefDrainCoef ** (-1d0)
+    double precision, parameter :: CanIntFrac = -0.5d0,     & ! Coefficient scaling rainfall interception fraction with LAI
+                                  CanStorFrac = 0.1d0,      & ! Coefficient scaling canopy water storage with LAI
+                                 RefDrainRate = 0.002d0,    & ! Reference drainage rate (mm/min; Rutter et al 1975)
+                                  RefDrainLAI = 0.952381d0, & ! Reference drainage 1/LAI (m2/m2; Rutter et al 1975, 1/1.05)
+                                 RefDrainCoef = 3.7d0,      & ! Reference drainage Coefficient (Rutter et al 1975)
+                               RefDrainCoef_1 = RefDrainCoef ** (-dble_one)
 
     ! hold initial canopy storage in memory
     initial_canopy = storage
@@ -2576,10 +2570,11 @@ contains
                ! Allows estimation of the mean drainage rate between starting point and max_storage,
                ! thus the time period appropriate for co-access can be quantified. NOTE 1440 = minutes / day
                dx = storage - ((storage + max_storage)*0.5d0)
-               tmp1 = exp(a + (RefDrainCoef * storage))
-               tmp2 = exp(a + (RefDrainCoef * max_storage))
-               tmp3 = exp(a + (RefDrainCoef * (storage+dx)))
-               potential_drainage_rate = 0.5d0 * dx * ((tmp1 + tmp2) + 2d0 * tmp3)
+               tmp(1) = a + (RefDrainCoef * storage)
+               tmp(2) = a + (RefDrainCoef * max_storage)
+               tmp(3) = a + (RefDrainCoef * (storage+dx))
+               tmp = exp(tmp)
+               potential_drainage_rate = 0.5d0 * dx * ((tmp(1) + tmp(2)) + 2d0 * tmp(3))
                potential_drainage_rate = potential_drainage_rate * 1440d0
 
                ! restrict evaporation and drainage to the quantity above max_storage
@@ -2714,13 +2709,6 @@ contains
       ! determine drainage flux between surface -> sub surface and sub surface
       call gravitational_drainage
 
-      ! update soil water status with drainage
-!      soil_waterfrac(1:nos_soil_layers) = ((soil_waterfrac(1:nos_soil_layers)*layer_thickness(1:nos_soil_layers)) &
-!                                           + watergain(1:nos_soil_layers) - waterloss(1:nos_soil_layers)) &
-!                                        / layer_thickness(1:nos_soil_layers)
-      ! reset soil water flux variables
-!      waterloss = 0d0 ; watergain = 0d0
-
       !!!!!!!!!!
       ! Rainfall infiltration drainage
       !!!!!!!!!!
@@ -2736,8 +2724,6 @@ contains
       soil_waterfrac(1:nos_soil_layers) = ((soil_waterfrac(1:nos_soil_layers)*layer_thickness(1:nos_soil_layers)) &
                                            + watergain(1:nos_soil_layers) - waterloss(1:nos_soil_layers)) &
                                         / layer_thickness(1:nos_soil_layers)
-      ! reset soil water flux variables
-!      waterloss = 0d0 ; watergain = 0d0
 
       ! mass balance check, at this point do not try and adjust evaporation to
       ! correct for lack of supply. Simply allow for drought in next time step
@@ -3267,15 +3253,18 @@ contains
     double precision, intent(out) :: ustar_Uh ! ratio of friction velocity over wind speed at canopy top
     ! local variables
     double precision  sqrt_cd1_lai &
-                     ,local_lai &
-                     ,phi_h       ! roughness sublayer influence function
+                     ,local_lai
     double precision, parameter :: cd1 = 7.5d0,   & ! Canopy drag parameter; fitted to data
                                     Cs = 0.003d0, & ! Substrate drag coefficient
                                     Cr = 0.3d0,   & ! Roughness element drag coefficient
 !                          ustar_Uh_max = 0.3,   & ! Maximum observed ratio of
                                                    ! (friction velocity / canopy top wind speed) (m.s-1)
                           ustar_Uh_max = 1d0, ustar_Uh_min = 0.2d0, &
-                                    Cw = 2d0      ! Characterises roughness sublayer depth (m)
+                                    Cw = 2d0, &    ! Characterises roughness sublayer depth (m)
+                                    phi_h = 0.19314718056d0 ! Roughness sublayer influence function;
+                                                            ! describes the departure of the velocity profile from just above the
+                                                            ! roughness from the intertial sublayer log law
+
 
     ! assign new value to min_lai to avoid max min calls
     local_lai = max(min_lai,lai)
@@ -3291,7 +3280,7 @@ contains
     ! calculate roughness sublayer influence function;
     ! this describes the departure of the velocity profile from just above the
     ! roughness from the intertial sublayer log law
-    phi_h = 0.19314718056d0
+    !phi_h = 0.19314718056d0
 !    phi_h = log(Cw)-1d0+Cw**(-1d0) ! DO NOT FORGET TO UPDATE IF Cw CHANGES
 
     ! finally calculate roughness length, dependant on displacement, friction
@@ -3639,7 +3628,7 @@ contains
 
     numerator   = t - 25d0
     denominator = t + freeze
-    answer      = a * exp( b * dble_one * numerator / denominator )
+    answer      = a * exp( b * numerator / denominator )
     arrhenious  = answer
 
   end function arrhenious
@@ -3856,7 +3845,7 @@ contains
 
     ! local variables..
     integer            :: iter
-    integer, parameter :: ITMAX = 30
+    integer, parameter :: ITMAX = 20
     double precision   :: a,b,c,d,e,fa,fb,fc,p,q,r,s,tol1,xm
     double precision, parameter :: EPS = 3d-8
 

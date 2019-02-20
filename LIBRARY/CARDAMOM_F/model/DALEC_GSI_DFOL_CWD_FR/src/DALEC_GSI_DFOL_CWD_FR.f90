@@ -1493,9 +1493,9 @@ contains
 
     ! local variables
     double precision :: denom, isothermal, deltaTemp, deltaR
-    double precision, parameter :: max_gs = 2500d0, & ! mmolH2O.m-2.s-1
-                                   min_gs = 0.0001d0, & !
-                                   tol_gs = 4d0!4d0       !
+    double precision, parameter :: max_gs = 500d0, &   ! mmolH2O.m-2.s-1
+                                   min_gs = 0.001d0, & !
+                                   tol_gs = 4d0        !
 
     !!!!!!!!!!
     ! Calculate stomatal conductance under H2O and CO2 limitations
@@ -2005,15 +2005,18 @@ contains
     double precision, intent(out) :: ustar_Uh ! ratio of friction velocity over wind speed at canopy top
     ! local variables
     double precision  sqrt_cd1_lai &
-                     ,local_lai &
-                     ,phi_h       ! roughness sublayer influence function
+                     ,local_lai
     double precision, parameter :: cd1 = 7.5d0,   & ! Canopy drag parameter; fitted to data
                                     Cs = 0.003d0, & ! Substrate drag coefficient
                                     Cr = 0.3d0,   & ! Roughness element drag coefficient
 !                          ustar_Uh_max = 0.3,   & ! Maximum observed ratio of
                                                    ! (friction velocity / canopy top wind speed) (m.s-1)
                           ustar_Uh_max = 1d0, ustar_Uh_min = 0.2d0, &
-                                    Cw = 2d0      ! Characterises roughness sublayer depth (m)
+                                    Cw = 2d0, &    ! Characterises roughness sublayer depth (m)
+                                    phi_h = 0.19314718056d0 ! Roughness sublayer influence function;
+                                                            ! describes the departure of the velocity profile from just above the
+                                                            ! roughness from the intertial sublayer log law
+
 
     ! assign new value to min_lai to avoid max min calls
     local_lai = max(min_lai,lai)
@@ -2021,7 +2024,7 @@ contains
 
     ! calculate displacement (m); assume minimum lai 1.0 or 1.5 as height is not
     ! varied
-    displacement = (dble_one-((dble_one-exp(-sqrt_cd1_lai))/sqrt_cd1_lai))*canopy_height
+    displacement = (1d0-((1d0-exp(-sqrt_cd1_lai))/sqrt_cd1_lai))*canopy_height
 
     ! calculate estimate of ratio of friction velocity / canopy wind speed; with
     ! max value set at
@@ -2029,12 +2032,12 @@ contains
     ! calculate roughness sublayer influence function;
     ! this describes the departure of the velocity profile from just above the
     ! roughness from the intertial sublayer log law
-    phi_h = 0.19314718056d0
-!    phi_h = log(Cw)-dble_one+Cw**(-dble_one) ! DO NOT FORGET TO UPDATE IF Cw CHANGES
+    !phi_h = 0.19314718056d0
+!    phi_h = log(Cw)-1d0+Cw**(-1d0) ! DO NOT FORGET TO UPDATE IF Cw CHANGES
 
     ! finally calculate roughness length, dependant on displacement, friction
     ! velocity and lai.
-    roughl = ((dble_one-displacement/canopy_height)*exp(-vonkarman*ustar_Uh-phi_h))*canopy_height
+    roughl = ((1d0-displacement/canopy_height)*exp(-vonkarman*ustar_Uh-phi_h))*canopy_height
 
     ! sanity check
 !    if (roughl /= roughl) then
@@ -2066,7 +2069,7 @@ contains
 
     numerator   = t - 25d0
     denominator = t + freeze
-    answer      = a * exp( b * dble_one * numerator / denominator )
+    answer      = a * exp( b * numerator / denominator )
     arrhenious  = answer
 
   end function arrhenious
@@ -2217,7 +2220,7 @@ contains
 
     ! local variables..
     integer            :: iter
-    integer, parameter :: ITMAX = 30
+    integer, parameter :: ITMAX = 20
     double precision   :: a,b,c,d,e,fa,fb,fc,p,q,r,s,tol1,xm
     double precision, parameter :: EPS = 3d-8
 
