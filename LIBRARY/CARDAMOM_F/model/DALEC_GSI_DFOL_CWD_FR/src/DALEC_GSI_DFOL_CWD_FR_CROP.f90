@@ -147,7 +147,7 @@ contains
     use CARBON_MODEL_MOD, only: arrhenious,acm_gpp,meteorological_constants,acm_albedo_gc &
                                ,calculate_shortwave_balance,calculate_longwave_isothermal                 &
                                ,calculate_daylength,vsmall,co2_half_saturation,co2_compensation_point     &
-                               ,freeze,co2comp_saturation      &
+                               ,freeze,co2comp_saturation,pn_airt_scaling,pn_airt_scaling_time            &
                                ,co2comp_half_sat_conc,kc_saturation,kc_half_sat_conc   &
                                ,calculate_Rtot,calculate_aerodynamic_conductance,dayl_hours  &
                                ,seconds_per_day,dayl_seconds,dayl_seconds_1,seconds_per_step,root_biomass &
@@ -160,7 +160,7 @@ contains
                                ,lai_half_par_transmitted,max_lai_nir_transmitted,lai_half_nir_transmitted &
                                ,max_lai_lwrad_reflected,lai_half_lwrad_reflected,soil_swrad_absorption    &
                                ,max_lai_lwrad_release,lai_half_lwrad_release,mint,maxt,swrad,co2,doy,leafT&
-                               ,wind_spd,vpd_pa,lai,days_per_step,days_per_step_1
+                               ,wind_spd,vpd_pa,lai,days_per_step,days_per_step_1,opt_max_scaling
 
     ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
     ! Evergreen Analytical (DALEC_CDEA) model. The subroutine calls the
@@ -376,12 +376,14 @@ contains
     ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
     if (.not.allocated(deltat_1)) then
 
-       allocate(deltat_1(nodays),co2_compensation_point(nodays),co2_half_saturation(nodays))
+       allocate(deltat_1(nodays),co2_compensation_point(nodays),co2_half_saturation(nodays), &
+                pn_airt_scaling_time(nodays))
        do n = 1, nodays
           ! Temperature adjustments for Michaelis-Menten coefficients
           ! for CO2 (kc) and O2 (ko) and CO2 compensation point.
           co2_compensation_point(n) = arrhenious(co2comp_saturation,co2comp_half_sat_conc,met(3,n))
           co2_half_saturation(n) = arrhenious(kc_saturation,kc_half_sat_conc,met(3,n))
+          pn_airt_scaling_time(n) = opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,met(3,n))
        end do
        deltat_1 = deltat**(-1d0)
     endif
@@ -422,6 +424,8 @@ contains
       ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
       co2_half_sat   = co2_half_saturation(n)
       co2_comp_point = co2_compensation_point(n)
+      ! temperature response for metabolically limited photosynthesis
+      pn_airt_scaling = pn_airt_scaling_time(n)
 
       ! calculate daylength in hours and seconds
       call calculate_daylength((doy-(deltat(n)*0.5d0)),lat)

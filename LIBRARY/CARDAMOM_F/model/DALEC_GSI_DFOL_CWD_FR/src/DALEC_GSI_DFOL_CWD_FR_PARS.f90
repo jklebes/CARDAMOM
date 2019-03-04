@@ -100,16 +100,16 @@ module MODEL_PARAMETERS
        PI%parmax(13)=0.35d0
 
        ! GSI min temperature threshold (oC)
-       PI%parmin(14)=235d0
-       PI%parmax(14)=330d0-30d0
+       PI%parmin(14) = 235d0
+       PI%parmax(14) = 300d0
 
        ! GSI max temperature threshold (oC)
-       PI%parmin(15)=235d0
-       PI%parmax(15)=330d0-20d0
+       PI%parmin(15) = 268.15d0 !235d0
+       PI%parmax(15) = 330d0
 
        ! GSI min photoperiod threshold (sec)
-       PI%parmin(16)=3600d0*1d0  !  1 hours
-       PI%parmax(16)=3600d0*12d0 ! 12 hours
+       PI%parmin(16) = 3600d0*4d0  !  4 hours
+       PI%parmax(16) = 3600d0*18d0 ! 18 hours
 
        ! LMA
        ! Kattge et al. 2011,
@@ -117,12 +117,12 @@ module MODEL_PARAMETERS
        PI%parmax(17)=180d0
 
        ! GSI max photoperiod threshold (sec)
-       PI%parmin(24)=3600d0*1d0  !  1 hours
-       PI%parmax(24)=3600d0*18d0 ! 18 hours
+       PI%parmin(24) = 3600d0*4d0  !  4 hours
+       PI%parmax(24) = 3600d0*18d0 ! 18 hours
 
        ! GSI min VPD threshold (Pa)
-       PI%parmin(25)=1d0
-       PI%parmax(25)=5500d0 ! possibly should be ~3500
+       PI%parmin(25) = 1d0
+       PI%parmax(25) = 3000d0 
 
        ! GSI max VPD threshold (Pa)
        PI%parmin(26)=1d0

@@ -51,7 +51,7 @@ module math_functions
   double precision :: idum
 
   ! rand(), narray(), rnstrt() related
-  integer, parameter  :: kk=100, ll=37, mm=2**30, tt=70, kkk=kk+kk-1
+  integer, parameter  :: kk = 100, ll = 37, mm = 2**30, tt = 70, kkk = kk+kk-1
   integer, save       :: ranx(kk)
 
   contains
@@ -71,22 +71,25 @@ module math_functions
     double precision, dimension(n), intent(in) :: a
 
     ! declare local variables
-    double precision mean, sq_diff_sum, diff, variance
-    integer i
+    integer :: i
+    double precision :: mean, sq_diff_sum, diff, variance, sample
 
     ! if no length has been returned then provide value which ensures crash (i.e.
     ! infinity)
-    if (n == 0) then
-        std=0d0
-        write(*,*) "no sample size has been provided to std function"
-        return
-    endif
+!    if (n == 0) then
+!        std = 0d0
+!        write(*,*) "no sample size has been provided to std function"
+!        return
+!    endif
+
+    ! multiple use variable
+    sample = dble(n)
 
     ! first calculate the mean
-    mean=sum(a)/dble(n)
+    mean = sum(a) / sample
 
     ! ensure zero values
-    diff = 0d0 ; sq_diff_sum = 0d0
+    sq_diff_sum = 0d0
 
     ! calculate cumulative square difference
     do i = 1, n
@@ -95,7 +98,7 @@ module math_functions
     end do
 
     ! calculate the variance
-    variance = sq_diff_sum/dble(n-1)
+    variance = sq_diff_sum / (sample-1d0)
 
     ! return the standard deviation
     std = sqrt(variance)
@@ -118,16 +121,16 @@ module math_functions
     ! modified based on blooms C code to alter range of random numbers
 
     implicit none
-    integer IA,IM,IQ,IR,NTAB,NDIV,option
-    double precision AM,EPS,RNMX,const,r1,r2,pi
-    parameter(IA=16807,IM=2147483647,AM=1d0/dble(IM),IQ=127773,IR=2836,NTAB=32,NDIV=1+(IM-1)/NTAB,EPS=1.2d-30,RNMX=1d0-EPS)
-    integer j,k,iv(NTAB),iy
+    integer :: IA,IM,IQ,IR,NTAB,NDIV,option
+    double precision :: AM,EPS,RNMX,const,r1,r2,pi
+    parameter(IA = 16807,IM = 2147483647,AM=1d0/dble(IM),IQ=127773,IR=2836,NTAB=32,NDIV=1+(IM-1)/NTAB,EPS=1.2d-30,RNMX=1d0-EPS)
+    integer :: j,k,iv(NTAB),iy
     SAVE iv,iy
     DATA iv /NTAB*0/
     DATA iy /0/
 
-    const=1d0
-    pi=3.141592653589793d0
+    const = 1d0
+    pi = 3.141592653589793d0
 
     if (option == 0) then
       if (idum < 0d0 .or. iy == 0) then

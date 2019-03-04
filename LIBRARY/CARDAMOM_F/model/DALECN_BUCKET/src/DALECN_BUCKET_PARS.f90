@@ -196,15 +196,15 @@ module MODEL_PARAMETERS
        PI%parmax(45) = 28d0
 
        ! Min temperature threshold for NUE decline
-       PI%parmin(46) = -10d0
+       PI%parmin(46) = -38d0
        PI%parmax(46) =  30d0
        ! Max temperature threshold for NUE decline
-       PI%parmin(47) = -10d0
+       PI%parmin(47) = -38d0
        PI%parmax(47) =  30d0
 
        ! Min VPD threshold for NUE decline (kPa)
        PI%parmin(48) = 1d-3
-       PI%parmax(48) = 5.5d0
+       PI%parmax(48) = 3.0d0
        ! Max VPD threshold for NUE decline (kPa)
        PI%parmin(49) = 1d-3
        PI%parmax(49) = 5.5d0

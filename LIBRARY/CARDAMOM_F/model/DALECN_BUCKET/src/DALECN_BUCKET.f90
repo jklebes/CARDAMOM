@@ -26,6 +26,7 @@ module CARBON_MODEL_MOD
            ,co2comp_half_sat_conc         &
            ,co2_half_saturation           &
            ,co2_compensation_point        &
+           ,pn_airt_scaling_time          &
            ,kc_saturation                 &
            ,kc_half_sat_conc              &
            ,calculate_update_soil_water   &
@@ -83,6 +84,7 @@ module CARBON_MODEL_MOD
            ,pn_kurtosis                   &
            ,e0                            &
            ,co2_half_sat                  &
+           ,pn_airt_scaling               &
            ,co2_comp_point                &
            ,minlwp                        &
            ,max_lai_lwrad_transmitted     &
@@ -409,6 +411,7 @@ module CARBON_MODEL_MOD
                    NUE_optimum, & !
                            NUE, & ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
                                   ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
+               pn_airt_scaling, & ! temperature response for metabolic limited photosynthesis
                   co2_half_sat, & ! CO2 at which photosynthesis is 50 % of maximum (ppm)
                 co2_comp_point    ! CO2 at which photosynthesis > 0 (ppm)
 
@@ -424,6 +427,7 @@ module CARBON_MODEL_MOD
                  snow_melt, & ! snow melt (kgH2O/m2/s)
                   wind_spd, & ! wind speed (m/s)
                    vpd_kPa, & ! Vapour pressure deficit (kPa)
+                     lai_1, & ! inverse of LAI
                        lai    ! leaf area index (m2/m2)
 
   ! Module level varoables for step specific timing information
@@ -445,10 +449,12 @@ module CARBON_MODEL_MOD
                                             rainfall_time, &
                                       co2_half_saturation, & ! (ppm)
                                    co2_compensation_point, & ! (ppm)
+                                     pn_airt_scaling_time, &
                                       air_density_kg_time, &
                                    convert_ms1_mol_1_time, &
                                    lambda_time,psych_time, &
                                                slope_time, &
+                                      ET_demand_coef_time, &
                               water_vapour_diffusion_time, &
                                    dynamic_viscosity_time, &
                                  kinematic_viscosity_time, &
@@ -757,8 +763,9 @@ contains
       co2_half_saturation(nodays),co2_compensation_point(nodays), &
       air_density_kg_time(nodays),convert_ms1_mol_1_time(nodays), &
       lambda_time(nodays),psych_time(nodays),slope_time(nodays),  &
-      water_vapour_diffusion_time(nodays),                        &
-      dynamic_viscosity_time(nodays),kinematic_viscosity_time(nodays))
+      water_vapour_diffusion_time(nodays),pn_airt_scaling_time(nodays), &
+      dynamic_viscosity_time(nodays),kinematic_viscosity_time(nodays), &
+      ET_demand_coef_time(nodays))
 
       !
       ! Timing variables which are needed first
@@ -788,6 +795,7 @@ contains
         ! for CO2 (kc) and O2 (ko) and CO2 compensation point.
         co2_compensation_point(n) = arrhenious(co2comp_saturation,co2comp_half_sat_conc,met(3,n))
         co2_half_saturation(n) = arrhenious(kc_saturation,kc_half_sat_conc,met(3,n))
+        pn_airt_scaling_time(n) = opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,met(3,n))
         ! calculate some temperature dependent meteorologial properties
         call meteorological_constants(met(3,n),met(3,n)+freeze)
         ! pass variables into memory objects so we don't have to keep re-calculating them
@@ -796,6 +804,7 @@ contains
         lambda_time(n) = lambda
         psych_time(n) = psych
         slope_time(n) = slope
+        ET_demand_coef_time(n) = ET_demand_coef
         water_vapour_diffusion_time(n) = water_vapour_diffusion
         dynamic_viscosity_time(n) = dynamic_viscosity
         kinematic_viscosity_time(n) = kinematic_viscosity
@@ -1167,6 +1176,8 @@ contains
       ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
       co2_half_sat   = co2_half_saturation(n)
       co2_comp_point = co2_compensation_point(n)
+      ! temperature response for metabolically limited photosynthesis
+      pn_airt_scaling = pn_airt_scaling_time(n)
 
       ! extract timing related values
       dayl_hours = daylength_hours(n)
@@ -1248,7 +1259,7 @@ contains
       air_density_kg = air_density_kg_time(n)
       convert_ms1_mol_1 = convert_ms1_mol_1_time(n)
       lambda = lambda_time(n) ; psych = psych_time(n)
-      slope = slope_time(n)
+      slope = slope_time(n) ; ET_demand_coef = ET_demand_coef_time(n)
       water_vapour_diffusion = water_vapour_diffusion_time(n)
       dynamic_viscosity = dynamic_viscosity_time(n)
       kinematic_viscosity = kinematic_viscosity_time(n)
@@ -1922,7 +1933,8 @@ contains
 
     ! maximum rate of temperature and nitrogen (canopy efficiency) limited
     ! photosynthesis (gC.m-2.day-1)
-    pn = lai*avN*NUE*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
+    !pn = lai*avN*NUE*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
+    pn = lai*avN*NUE*pn_airt_scaling
 
     !
     ! Diffusion limited photosynthesis
@@ -2005,7 +2017,7 @@ contains
     gpp_high = acm_gpp(gs_high)
 
     ! determine impact of gs increment on pd and how far we are from iWUE
-    find_gs_iWUE = iWUE - ((gpp_high - gpp_low)/lai)
+    find_gs_iWUE = iWUE - ((gpp_high - gpp_low) * lai_1)
 
     ! remember to return back to the user
     return
@@ -2051,7 +2063,7 @@ contains
     call calculate_transpiration(evap_high)
 
     ! estimate marginal return on GPP for water loss, less water use efficiency criterion (gC.kgH2O-1.m-2.s-1)
-    find_gs_WUE = ((gpp_high - gpp_low)/(evap_high - evap_low)) / lai
+    find_gs_WUE = ((gpp_high - gpp_low)/(evap_high - evap_low)) * lai_1
     find_gs_WUE = find_gs_WUE - iWUE
 
     ! return original stomatal value back into memory
@@ -2118,6 +2130,8 @@ contains
       if (stomatal_conductance /= max_gs .or. do_iWUE ) then
         ! If there is a positive demand for water then we will solve for photosynthesis limits on gs through iterative solution
         delta_gs = 1d-3 * lai ! mmolH2O/m2leaf/day
+        ! estimate inverse of LAI to avoid division in optimisation
+        lai_1 = lai**(-1d0)
         if (do_iWUE) then
           ! intrinsic WUE optimisation
           stomatal_conductance = zbrent('acm_albedo_gc:find_gs_iWUE',find_gs_iWUE,min_gs,stomatal_conductance,tol_gs)
@@ -2422,7 +2436,7 @@ contains
     ! for momentum absorption within the canopy; Harman & Finnigan (2007)
     ! and mixing length (lm) for vertical momentum within the canopy Harman & Finnigan (2008)
     local_lai = max(min_lai,lai)
-    length_scale_momentum = (4d0*canopy_height) / lai
+    length_scale_momentum = (4d0*canopy_height) / local_lai
     mixing_length_momentum = 2d0*(ustar_Uh**3)*length_scale_momentum
 
     ! based on Harman & Finnigan (2008); neutral conditions only
@@ -2457,7 +2471,7 @@ contains
     double precision, parameter :: leaf_width = 0.04d0, & ! leaf width (m) (original 0.08)
                                  leaf_width_1 = leaf_width ** (-1d0), &
                                            Pr = 0.72d0, & ! Prandtl number
-                                      Pr_coef = 1.18d0*(Pr**(0.33d0))
+                                      Pr_coef = 1.05877d0 !1.18d0*(Pr**(0.33d0))
     ! local variables
     double precision :: &
          nusselt_forced & ! Nusselt value under forced convection

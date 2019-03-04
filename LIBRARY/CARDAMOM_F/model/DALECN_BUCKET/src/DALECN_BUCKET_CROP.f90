@@ -150,6 +150,7 @@ contains
                                ,calculate_update_soil_water,calculate_daylength,drythick,vsmall           &
                                ,co2_half_saturation,co2_compensation_point,freeze,co2comp_saturation      &
                                ,co2comp_half_sat_conc,kc_saturation,kc_half_sat_conc   &
+                               ,pn_airt_scaling,pn_airt_scaling_time                   &
                                ,calculate_Rtot,calculate_aerodynamic_conductance,saxton_parameters        &
                                ,initialise_soils,min_drythick,soil_frac_clay,soil_frac_sand,dayl_hours    &
                                ,seconds_per_day,dayl_seconds,dayl_seconds_1,seconds_per_step,root_biomass &
@@ -166,7 +167,7 @@ contains
                                ,max_lai_lwrad_release,lai_half_lwrad_release,mint,maxt,swrad,co2,doy,leafT&
                                ,rainfall,wind_spd,vpd_kpa,lai,days_per_step,days_per_step_1,canopy_storage&
                                ,intercepted_rainfall,snow_storage,snow_melt,airt_zero_fraction,snowfall   &
-                               ,update_soil_initial_conditions,aerodynamic_conductance
+                               ,update_soil_initial_conditions,aerodynamic_conductance,opt_max_scaling
 
     ! DALEC crop model modified from Sus et al., (2010)
 
@@ -397,12 +398,14 @@ contains
         if (.not.allocated(deltat_1)) then
 
            allocate(deltat_1(nodays),soilwatermm(nodays),wSWP_time(nodays), &
-                    co2_compensation_point(nodays),co2_half_saturation(nodays))
+                    co2_compensation_point(nodays),co2_half_saturation(nodays), &
+                    pn_airt_scaling_time(nodays))
            do n = 1, nodays
               ! Temperature adjustments for Michaelis-Menten coefficients
               ! for CO2 (kc) and O2 (ko) and CO2 compensation point.
               co2_compensation_point(n) = arrhenious(co2comp_saturation,co2comp_half_sat_conc,met(3,n))
               co2_half_saturation(n) = arrhenious(kc_saturation,kc_half_sat_conc,met(3,n))
+              pn_airt_scaling_time(n) = opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,met(3,n))
            end do
            deltat_1 = deltat**(-1d0)
            ! zero variables not done elsewhere
@@ -499,6 +502,8 @@ contains
       ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
       co2_half_sat   = co2_half_saturation(n)
       co2_comp_point = co2_compensation_point(n)
+      ! temperature response for metabolically limited photosynthesis
+      pn_airt_scaling = pn_airt_scaling_time(n)
 
       ! calculate daylength in hours and seconds
       call calculate_daylength((doy-(deltat(n)*0.5d0)),lat)

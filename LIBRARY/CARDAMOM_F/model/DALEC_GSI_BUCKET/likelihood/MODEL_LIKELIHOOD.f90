@@ -602,24 +602,24 @@ module model_likelihood_module
     ! TLS: some added specifically to deal with GSI conditions
     ! Note that the EDC numbers do not run on
 
-    ! ! avgTmin min threshold should not be larger than max
-    ! if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(14) > pars(15)) ) then
-    !    EDC1 = 0 ; EDCD%PASSFAIL(16) = 0
-    ! endif
-    !
-    ! ! photoperiod, min threshold should not be larger than max
-    ! if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(16) > pars(24)) ) then
-    !    EDC1 = 0 ; EDCD%PASSFAIL(17) = 0
-    ! endif
-    !
-    ! ! VPD min threshold should not be larger than max
-    ! if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(25) > pars(26)) ) then
-    !    EDC1 = 0 ; EDCD%PASSFAIL(18) = 0
-    ! endif
-    ! photoperiod, min threshold should not be larger than max
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(16) + pars(24)) > 86400d0) then
-       EDC1 = 0 ; EDCD%PASSFAIL(16) = 0
+    ! avgTmin min threshold should not be larger than max
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(14) > pars(15)) ) then
+         EDC1 = 0 ; EDCD%PASSFAIL(16) = 0
     endif
+
+    ! photoperiod, min threshold should not be larger than max
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(16) > pars(24)) ) then
+         EDC1 = 0 ; EDCD%PASSFAIL(17) = 0
+    endif
+
+    ! VPD min threshold should not be larger than max
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(25) > pars(26)) ) then
+         EDC1 = 0 ; EDCD%PASSFAIL(18) = 0
+    endif
+    ! photoperiod, min threshold should not be larger than max
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(16) + pars(24)) > 86400d0) then
+!       EDC1 = 0 ; EDCD%PASSFAIL(16) = 0
+!    endif
 
     ! CN ratio of leaf should also be between 95CI(+5% of CR for safety) of trait database values
     ! Kattge et al (2011) (10.8 < CN_foliar < 43.76895).

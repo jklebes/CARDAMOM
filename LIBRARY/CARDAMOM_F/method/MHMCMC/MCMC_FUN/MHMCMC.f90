@@ -267,7 +267,7 @@ contains
     ! Should consider whether either of these values should be adjusted to
     ! improve searching efficiency.
     minstepsize = 1000d0/dble(N%ITER) ! 10000d0 -> 1000d0
-    if (minstepsize > 0.001d0) minstepsize = 0.001d0 ! 0.01d0
+    if (minstepsize > 0.01d0) minstepsize = 0.01d0 ! 0.01d0
 
     ! determine local acceptance rate
     N%ACCRATE = dble(N%ACCLOC)/dble(MCO%nADAPT)
@@ -324,7 +324,7 @@ contains
 
     ! converting parameters on log scale between 0-1 for min/max values
     implicit none
-    double precision initial_par, min_par, max_par
+    double precision, intent(in) :: initial_par, min_par, max_par
 
 !    if (max_par > 0d0 .and. min_par < 0d0) then
         ! then normalise without logs and we cross zero
@@ -345,7 +345,7 @@ contains
     ! Converting values back from normalised (0-1) to 'real' numbers
 
     implicit none
-    double precision initial_par, min_par, max_par
+    double precision, intent(in) :: initial_par, min_par, max_par
 
     ! determine whether we used log normalisation or not
 !    if ( max_par > 0d0 .and. min_par < 0d0) then
@@ -374,7 +374,7 @@ contains
     ! declare input variables
     type ( parameter_info ), intent(in) :: PI
     double precision, dimension(PI%npars), intent(inout) :: pars0 & ! current set of parameters
-                                                 ,pars    ! next set of parameters
+                                                           ,pars    ! next set of parameters
 
     ! declare local variables
     integer :: n, fp

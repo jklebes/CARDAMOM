@@ -51,7 +51,7 @@ cardamom <-function (projname,model,method,stage) {
         PROJECT$ctessel_pft = rep(0, length.out=PROJECT$nosites)
       }
     } else {
-      site_info=how_many_points(sites_cardamom_lat,sites_cardamom_long,cardamom_resolution,cardamom_grid_type)
+      site_info=how_many_points(sites_cardamom_lat,sites_cardamom_long,cardamom_resolution,cardamom_grid_type,sites_cardamom)
       PROJECT$nosites=site_info$nosites
       PROJECT$sites=site_info$sites
       PROJECT$landsea=site_info$landsea

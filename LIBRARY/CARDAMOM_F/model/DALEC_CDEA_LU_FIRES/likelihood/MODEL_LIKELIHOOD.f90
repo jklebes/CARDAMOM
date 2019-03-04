@@ -40,7 +40,6 @@ module model_likelihood_module
     type ( mcmc_options ) :: MCOPT_EDC
     integer :: n, counter_local, iter
     double precision :: PEDC, ML, ML_prior
-    double precision, allocatable :: iter_EDC_pars(:)
 
     ! initialise output for this EDC search
     call initialise_mcmc_output(PI,MCOUT_EDC)
@@ -74,12 +73,6 @@ module model_likelihood_module
     ! consistent initial parameter set
     if (.not. restart_flag) then
 
-       ! the EDC search will be iterated to minimise the risk of finding an EDC
-       ! consistent location in parameter space which is very poor with respect
-       ! to our observations
-       !allocate(iter_EDC_pars(PI%npars+1)) ; iter_EDC_pars = -9999999999d0
-       !do iter = 1, 3
-
           ! set up edc log likelihood for MHMCMC initial run
           PEDC = -1 ; counter_local = 0
           do while (PEDC < 0)
@@ -98,25 +91,6 @@ module model_likelihood_module
             ! call edc likelihood function to get final edc probability
             call edc_model_likelihood(PI,PI%parini,PEDC,ML_prior)
 
-            ! we want to keep track of which EDC consistent parameter set best
-            ! fits the available observations
-!            if (PEDC == 0) then
-!                ! determine what the observation based likelihood is for the
-!                ! current parameter set
-!                call model_likelihood(PI,PI%parini,ML,ML_prior)
-!                ! if the current parameter set has a higher likelihood than the
-!                ! previous EDC consistent values we will save the new ones
-!                if ((ML+ML_prior) > iter_EDC_pars(PI%npars+1)) then
-!                    ! store the current EDC consistent parameters
-!                    iter_EDC_pars(1:PI%npars) = PI%parini(1:PI%npars)
-!                    iter_EDC_pars(PI%npars+1) = ML + ML_prior
-!                endif
-!                ! and reset to the initial conditions for the next iteration
-!                PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
-!                ! reset to select random starting point
-!                MCOPT_EDC%randparini = .true.
-!            endif
-
             ! keep track of attempts
             counter_local = counter_local+1
             ! periodically reset the initial conditions
@@ -127,15 +101,6 @@ module model_likelihood_module
             endif
 
           end do ! for while condition
-
-!       end do ! for iter = 1, 3
-
-       ! set the initial parameter values to those which best fitted the
-       ! available observations
-!       PI%parini(1:PI%npars) = iter_EDC_pars(1:PI%npars)
-
-       ! tidy up before leaving
-       deallocate(iter_EDC_pars)
 
     endif ! if for restart
 

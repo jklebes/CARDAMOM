@@ -8,104 +8,107 @@ module CARBON_MODEL_MOD
 
   ! explicit publics
   public :: CARBON_MODEL        &
-          ,vsmall              &
-          ,arrhenious          &
-          ,acm_gpp             &
-          ,acm_albedo_gc       &
-          ,meteorological_constants  &
-          ,calculate_shortwave_balance   &
-          ,calculate_longwave_isothermal &
-          ,calculate_daylength           &
-          ,freeze              &
-          ,co2comp_saturation  &
-          ,co2comp_half_sat_conc &
-          ,co2_half_saturation &
-          ,co2_compensation_point &
-          ,kc_saturation       &
-          ,kc_half_sat_conc    &
-          ,calculate_Rtot      &
-          ,calculate_aerodynamic_conductance &
-          ,linear_model_gradient &
-          ,seconds_per_day     &
-          ,seconds_per_hour    &
-          ,seconds_per_step    &
-          ,root_biomass        &
-          ,root_reach          &
-          ,min_root            &
-          ,max_depth           &
-          ,root_k              &
-          ,top_soil_depth      &
-          ,mid_soil_depth      &
-          ,soil_depth          &
-          ,previous_depth      &
-          ,nos_root_layers     &
-          ,deltat_1            &
-          ,water_flux          &
-          ,layer_thickness     &
-          ,min_layer        &
-          ,nos_soil_layers  &
-          ,soil_frac_clay   &
-          ,soil_frac_sand   &
-          ,meant            &
-          ,meant_K          &
-          ,stomatal_conductance &
-          ,avN              &
-          ,iWUE             &
-          ,NUE                           &
-          ,pn_max_temp                   &
-          ,pn_opt_temp                   &
-          ,pn_kurtosis                   &
-          ,e0                            &
-          ,co2_half_sat                  &
-          ,co2_comp_point                &
-          ,minlwp                        &
-          ,max_lai_lwrad_transmitted     &
-          ,lai_half_lwrad_transmitted    &
-          ,max_lai_nir_reflection        &
-          ,lai_half_nir_reflection       &
-          ,max_lai_par_reflection        &
-          ,lai_half_par_reflection       &
-          ,max_lai_par_transmitted       &
-          ,lai_half_par_transmitted      &
-          ,max_lai_nir_transmitted       &
-          ,lai_half_nir_transmitted      &
-          ,max_lai_lwrad_reflected       &
-          ,lai_half_lwrad_reflected      &
-          ,soil_swrad_absorption         &
-          ,max_lai_lwrad_release         &
-          ,lai_half_lwrad_release        &
-          ,leafT                         &
-          ,mint             &
-          ,maxt             &
-          ,swrad            &
-          ,co2              &
-          ,doy              &
-          ,wind_spd         &
-          ,vpd_pa           &
-          ,lai              &
-          ,days_per_step    &
-          ,days_per_step_1  &
-          ,dayl_seconds_1   &
-          ,dayl_seconds     &
-          ,dayl_hours       &
-          ,Rg_from_labile   &
-          ,disturbance_residue_to_litter &
-          ,disturbance_residue_to_cwd    &
-          ,disturbance_residue_to_som    &
-          ,disturbance_loss_from_litter  &
-          ,disturbance_loss_from_cwd     &
-          ,disturbance_loss_from_som     &
-          ,itemp,ivpd,iphoto&
-          ,extracted_C      &
-          ,dim_1,dim_2      &
-          ,nos_trees        &
-          ,nos_inputs       &
-          ,leftDaughter     &
-          ,rightDaughter    &
-          ,nodestatus       &
-          ,xbestsplit       &
-          ,nodepred         &
-          ,bestvar
+           ,vsmall              &
+           ,arrhenious          &
+           ,opt_max_scaling     &
+           ,acm_gpp             &
+           ,acm_albedo_gc       &
+           ,meteorological_constants  &
+           ,calculate_shortwave_balance   &
+           ,calculate_longwave_isothermal &
+           ,calculate_daylength           &
+           ,freeze              &
+           ,co2comp_saturation  &
+           ,co2comp_half_sat_conc &
+           ,co2_half_saturation &
+           ,co2_compensation_point &
+           ,pn_airt_scaling_time &
+           ,kc_saturation       &
+           ,kc_half_sat_conc    &
+           ,calculate_Rtot      &
+           ,calculate_aerodynamic_conductance &
+           ,linear_model_gradient &
+           ,seconds_per_day     &
+           ,seconds_per_hour    &
+           ,seconds_per_step    &
+           ,root_biomass        &
+           ,root_reach          &
+           ,min_root            &
+           ,max_depth           &
+           ,root_k              &
+           ,top_soil_depth      &
+           ,mid_soil_depth      &
+           ,soil_depth          &
+           ,previous_depth      &
+           ,nos_root_layers     &
+           ,deltat_1            &
+           ,water_flux          &
+           ,layer_thickness     &
+           ,min_layer        &
+           ,nos_soil_layers  &
+           ,soil_frac_clay   &
+           ,soil_frac_sand   &
+           ,meant            &
+           ,meant_K          &
+           ,stomatal_conductance &
+           ,avN              &
+           ,iWUE             &
+           ,NUE                           &
+           ,pn_max_temp                   &
+           ,pn_opt_temp                   &
+           ,pn_kurtosis                   &
+           ,e0                            &
+           ,co2_half_sat                  &
+           ,co2_comp_point                &
+           ,pn_airt_scaling               &
+           ,minlwp                        &
+           ,max_lai_lwrad_transmitted     &
+           ,lai_half_lwrad_transmitted    &
+           ,max_lai_nir_reflection        &
+           ,lai_half_nir_reflection       &
+           ,max_lai_par_reflection        &
+           ,lai_half_par_reflection       &
+           ,max_lai_par_transmitted       &
+           ,lai_half_par_transmitted      &
+           ,max_lai_nir_transmitted       &
+           ,lai_half_nir_transmitted      &
+           ,max_lai_lwrad_reflected       &
+           ,lai_half_lwrad_reflected      &
+           ,soil_swrad_absorption         &
+           ,max_lai_lwrad_release         &
+           ,lai_half_lwrad_release        &
+           ,leafT                         &
+           ,mint             &
+           ,maxt             &
+           ,swrad            &
+           ,co2              &
+           ,doy              &
+           ,wind_spd         &
+           ,vpd_pa           &
+           ,lai              &
+           ,days_per_step    &
+           ,days_per_step_1  &
+           ,dayl_seconds_1   &
+           ,dayl_seconds     &
+           ,dayl_hours       &
+           ,Rg_from_labile   &
+           ,disturbance_residue_to_litter &
+           ,disturbance_residue_to_cwd    &
+           ,disturbance_residue_to_som    &
+           ,disturbance_loss_from_litter  &
+           ,disturbance_loss_from_cwd     &
+           ,disturbance_loss_from_som     &
+           ,itemp,ivpd,iphoto&
+           ,extracted_C      &
+           ,dim_1,dim_2      &
+           ,nos_trees        &
+           ,nos_inputs       &
+           ,leftDaughter     &
+           ,rightDaughter    &
+           ,nodestatus       &
+           ,xbestsplit       &
+           ,nodepred         &
+           ,bestvar
 
   !!!!!!!!!!
   ! Random Forest GPP emulator
@@ -306,6 +309,7 @@ module CARBON_MODEL_MOD
                            avN, & ! average foliar N (gN/m2)
                            NUE, & ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
                                   ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
+               pn_airt_scaling, & ! temperature response for metabolic limited photosynthesis
                   co2_half_sat, & ! CO2 at which photosynthesis is 50 % of maximum (ppm)
                 co2_comp_point    ! CO2 at which photosynthesis > 0 (ppm)
 
@@ -318,6 +322,7 @@ module CARBON_MODEL_MOD
                        doy, & ! Day of year
                   wind_spd, & ! wind speed (m/s)
                     vpd_pa, & ! Vapour pressure deficit (Pa)
+                     lai_1, & ! inverse of LAI
                        lai    ! leaf area index (m2/m2)
 
   ! Module level varoables for step specific timing information
@@ -333,6 +338,7 @@ module CARBON_MODEL_MOD
                                                   meant_time, &
                                          co2_half_saturation, & ! (ppm)
                                       co2_compensation_point, & ! (ppm)
+                                        pn_airt_scaling_time, &
                                          air_density_kg_time, &
                                       convert_ms1_mol_1_time, &
                                       lambda_time,psych_time, &
@@ -734,7 +740,7 @@ contains
       co2_half_saturation(nodays),co2_compensation_point(nodays), &
       air_density_kg_time(nodays),convert_ms1_mol_1_time(nodays), &
       lambda_time(nodays),psych_time(nodays),slope_time(nodays),  &
-      water_vapour_diffusion_time(nodays),                        &
+      water_vapour_diffusion_time(nodays),pn_airt_scaling_time(nodays), &
       dynamic_viscosity_time(nodays),kinematic_viscosity_time(nodays))
 
       ! inverse of time step (days-1) to avoid divisions
@@ -746,6 +752,7 @@ contains
         ! for CO2 (kc) and O2 (ko) and CO2 compensation point.
         co2_compensation_point(n) = arrhenious(co2comp_saturation,co2comp_half_sat_conc,met(3,n))
         co2_half_saturation(n) = arrhenious(kc_saturation,kc_half_sat_conc,met(3,n))
+        pn_airt_scaling_time(n) = opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,met(3,n))
         ! calculate some temperature dependent meteorologial properties
         call meteorological_constants(met(3,n),met(3,n)+freeze)
         ! pass variables into memory objects so we don't have to keep re-calculating them
@@ -809,6 +816,8 @@ contains
       ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
       co2_half_sat   = co2_half_saturation(n)
       co2_comp_point = co2_compensation_point(n)
+      ! temperature response for metabolically limited photosynthesis
+      pn_airt_scaling = pn_airt_scaling_time(n)
 
       ! extract timing related values
       call calculate_daylength((doy-(deltat(n)*0.5d0)),lat)
@@ -1314,7 +1323,8 @@ contains
 
     ! maximum rate of temperature and nitrogen (canopy efficiency) limited
     ! photosynthesis (gC.m-2.day-1)
-    pn = lai*avN*NUE*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
+    !pn = lai*avN*NUE*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
+    pn = lai*avN*NUE*pn_airt_scaling
 
     !
     ! Diffusion limited photosynthesis
@@ -1359,6 +1369,7 @@ contains
     acm_gpp = pl*pd/(pl+pd)
     ! sanity check
     if (acm_gpp /= acm_gpp) acm_gpp = 0d0
+
     ! don't forget to return
     return
 
@@ -1388,7 +1399,7 @@ contains
     gpp_high = acm_gpp(gs_high)
 
     ! Determine impact of gs increment on pd and how far we are from iWUE
-    find_gs_iWUE = iWUE - ((gpp_high - gpp_low)/lai)
+    find_gs_iWUE = iWUE - ((gpp_high - gpp_low)*lai_1)
 
   end function find_gs_iWUE
   !
@@ -1422,7 +1433,7 @@ contains
     ! for momentum absorption within the canopy; Harman & Finnigan (2007)
     ! and mixing length (lm) for vertical momentum within the canopy Harman & Finnigan (2008)
     local_lai = max(min_lai,lai)
-    length_scale_momentum = (4d0*canopy_height) / lai
+    length_scale_momentum = (4d0*canopy_height) / local_lai
     mixing_length_momentum = 2d0*(ustar_Uh**3)*length_scale_momentum
 
     ! based on Harman & Finnigan (2008); neutral conditions only
@@ -1457,7 +1468,7 @@ contains
     double precision, parameter :: leaf_width = 0.04d0, & ! leaf width (m) (original 0.08)
                                  leaf_width_1 = leaf_width ** (-1d0), &
                                            Pr = 0.72d0, & ! Prandtl number
-                                      Pr_coef = 1.18d0*(Pr**(0.33d0))
+                                      Pr_coef = 1.05877d0 !1.18d0*(Pr**(0.33d0))
     ! local variables
     double precision :: &
          nusselt_forced & ! Nusselt value under forced convection
@@ -1468,7 +1479,7 @@ contains
     Re = (leaf_width*canopy_wind)/kinematic_viscosity
     ! calculate nusselt value under forced convection conditions
 !    nusselt_forced = (1.18d0*(Pr**(0.33d0))*(sqrt(Re)))
-    nusselt_forced = Pr_coef*(sqrt(Re))
+    nusselt_forced = Pr_coef*sqrt(Re)
     ! update specific Sherwood numbers
     Sh_forced = 0.962d0*nusselt_forced
     ! Estimate the the forced conductance of water vapour
@@ -1532,6 +1543,8 @@ contains
       if (stomatal_conductance /= max_gs) then
         ! If there is a positive demand for water then we will solve for photosynthesis limits on gs through iterative solution
         delta_gs = 1d-3*lai ! mmolH2O/m2leaf/day
+        ! estimate inverse of LAI to avoid division in optimisation
+        lai_1 = lai**(-1d0)
         ! intrinsic WUE optimisation
         stomatal_conductance = zbrent('acm_albedo_gc:find_gs_iWUE',find_gs_iWUE,min_gs,stomatal_conductance,tol_gs)
       end if
