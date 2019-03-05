@@ -158,7 +158,7 @@ contains
                                ,min_layer,wSWP,SWP,SWP_initial,deltat_1,water_flux,soilwatermm,wSWP_time  &
                                ,layer_thickness,minlwp,soil_waterfrac,soil_waterfrac_initial              &
                                ,porosity,porosity_initial,field_capacity,field_capacity_initial,meant     &
-                               ,stomatal_conductance,avN,iWUE,NUE,pn_max_temp,pn_opt_temp         &
+                               ,stomatal_conductance,avN,iWUE,NUE,ceff,pn_max_temp,pn_opt_temp            &
                                ,pn_kurtosis,e0,co2_half_sat,co2_comp_point,max_lai_lwrad_transmitted      &
                                ,lai_half_lwrad_transmitted,max_lai_nir_reflection,lai_half_nir_reflection &
                                ,max_lai_par_reflection,lai_half_par_reflection,max_lai_par_transmitted    &
@@ -170,7 +170,6 @@ contains
                                ,update_soil_initial_conditions,aerodynamic_conductance,opt_max_scaling
 
     ! DALEC crop model modified from Sus et al., (2010)
-
 
     implicit none
 
@@ -302,6 +301,8 @@ contains
 
     ! load some values
     avN = 10d0**pars(11) !TLS 1 ! foliar N
+    ! update combined canopy efficiency
+    ceff = avN*NUE
     deltaWP = minlwp !-2.0  ! leafWP-soilWP (i.e. -2-0)
     Rtot = 1d0 ! totaly hydraulic resistance ! p12 from ACM recal (updated)
 

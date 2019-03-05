@@ -158,7 +158,7 @@ contains
                                ,min_layer,wSWP,SWP,SWP_initial,deltat_1,water_flux,soilwatermm,wSWP_time  &
                                ,layer_thickness,minlwp,soil_waterfrac,soil_waterfrac_initial              &
                                ,porosity,porosity_initial,field_capacity,field_capacity_initial,meant     &
-                               ,stomatal_conductance,avN,iWUE,NUE,pn_max_temp,pn_opt_temp         &
+                               ,stomatal_conductance,avN,iWUE,NUE,pn_max_temp,pn_opt_temp,ceff            &
                                ,pn_kurtosis,e0,co2_half_sat,co2_comp_point,max_lai_lwrad_transmitted      &
                                ,lai_half_lwrad_transmitted,max_lai_nir_reflection,lai_half_nir_reflection &
                                ,max_lai_par_reflection,lai_half_par_reflection,max_lai_par_transmitted    &
@@ -297,11 +297,11 @@ contains
     FLUXES(1:nodays,1:nofluxes) = 0d0 ; POOLS(1:nodays,1:nopools) = 0d0
 
     ! load ACM-GPP-ET parameters
-    NUE                        = 1.182549d+01  ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
-                                               ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
-    ! load some values
-    avN = 10d0**pars(11) !TLS 1 ! foliar N
-    deltaWP = minlwp !-2.0  ! leafWP-soilWP (i.e. -2-0)
+    NUE = 1.182549d+01   ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
+                         ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
+    avN = 10d0**pars(11) ! foliar N
+    ceff = avN*NUE
+    deltaWP = minlwp     ! leafWP-soilWP (i.e. -2-0)
     Rtot = 1d0 ! totaly hydraulic resistance ! p12 from ACM recal (updated)
 
     ! plus ones being calibrated

@@ -866,10 +866,10 @@ contains
       ! GPP (gC.m-2.day-1)
       !!!!!!!!!!
 
-      if (stomatal_conductance > 0d0) then
-        FLUXES(n,1) = acm_gpp(stomatal_conductance)
+      if (stomatal_conductance > vsmall) then
+          FLUXES(n,1) = max(0d0,acm_gpp(stomatal_conductance))
       else
-        FLUXES(n,1) = 0d0
+          FLUXES(n,1) = 0d0
       endif
 
       ! temprate (i.e. temperature modified rate of metabolic activity))
@@ -1153,13 +1153,15 @@ contains
                                * soil_loss_frac(harvest_management)
 
           ! Update pools
-          POOLS(n+1,1) = max(0d0,POOLS(n+1,1)-labile_loss)
-          POOLS(n+1,2) = max(0d0,POOLS(n+1,2)-foliar_loss)
-          POOLS(n+1,3) = max(0d0,POOLS(n+1,3)-roots_loss)
-          POOLS(n+1,4) = max(0d0,POOLS(n+1,4)-wood_loss)
-          POOLS(n+1,5) = max(0d0, POOLS(n+1,5) + (labile_residue+foliar_residue+roots_residue))
-          POOLS(n+1,6) = max(0d0, POOLS(n+1,6) - soil_loss_with_roots)
-          POOLS(n+1,7) = max(0d0, POOLS(n+1,7) + wood_residue)
+          POOLS(n+1,1) = POOLS(n+1,1)-labile_loss
+          POOLS(n+1,2) = POOLS(n+1,2)-foliar_loss
+          POOLS(n+1,3) = POOLS(n+1,3)-roots_loss
+          POOLS(n+1,4) = POOLS(n+1,4)-wood_loss
+          POOLS(n+1,5) = POOLS(n+1,5) + (labile_residue+foliar_residue+roots_residue)
+          POOLS(n+1,6) = POOLS(n+1,6) - soil_loss_with_roots
+          POOLS(n+1,7) = POOLS(n+1,7) + wood_residue
+          ! mass balance check
+          where (POOLS(n+1,1:7) < 0d0) POOLS(n+1,1:7) = 0d0
 
           ! Some variable needed for the EDCs
           ! reallocation fluxes for the residues
@@ -1253,13 +1255,15 @@ contains
 
           !// update pools
           !/*Adding all fire pool transfers here*/
-          POOLS(n+1,1) = max(0d0,POOLS(n+1,1)-CFF(1)-NCFF(1))
-          POOLS(n+1,2) = max(0d0,POOLS(n+1,2)-CFF(2)-NCFF(2))
-          POOLS(n+1,3) = max(0d0,POOLS(n+1,3)-CFF(3)-NCFF(3))
-          POOLS(n+1,4) = max(0d0,POOLS(n+1,4)-CFF(4)-NCFF(4))
-          POOLS(n+1,5) = max(0d0,POOLS(n+1,5)-CFF(5)-NCFF(5)+NCFF(1)+NCFF(2)+NCFF(3))
-          POOLS(n+1,6) = max(0d0,POOLS(n+1,6)+NCFF(4)+NCFF(5)+NCFF(7))
-          POOLS(n+1,7) = max(0d0,POOLS(n+1,7)-CFF(7)-NCFF(7))
+          POOLS(n+1,1) = POOLS(n+1,1)-CFF(1)-NCFF(1)
+          POOLS(n+1,2) = POOLS(n+1,2)-CFF(2)-NCFF(2)
+          POOLS(n+1,3) = POOLS(n+1,3)-CFF(3)-NCFF(3)
+          POOLS(n+1,4) = POOLS(n+1,4)-CFF(4)-NCFF(4)
+          POOLS(n+1,5) = POOLS(n+1,5)-CFF(5)-NCFF(5)+NCFF(1)+NCFF(2)+NCFF(3)
+          POOLS(n+1,6) = POOLS(n+1,6)+NCFF(4)+NCFF(5)+NCFF(7)
+          POOLS(n+1,7) = POOLS(n+1,7)-CFF(7)-NCFF(7)
+          ! mass balance check
+          where (POOLS(n+1,1:7) < 0d0) POOLS(n+1,1:7) = 0d0
 
           ! Some variable needed for the EDCs
           ! Reallocation fluxes for the residues, remember to
@@ -1736,6 +1740,7 @@ contains
     ! local variables
     double precision :: absorbed_nir_fraction_soil &
                        ,absorbed_par_fraction_soil &
+                       ,par,nir                    &
                        ,soil_par_MJday             &
                        ,soil_nir_MJday             &
                        ,trans_nir_MJday            &
@@ -1772,13 +1777,17 @@ contains
     ! Estimate canopy absorption of incoming shortwave radiation
     !!!!!!!!!!
 
+    ! estimate multiple use par and nir components
+    par = sw_par_fraction * swrad
+    nir = (1d0 - sw_par_fraction) * swrad
+
     ! Estimate incoming shortwave radiation absorbed, transmitted and reflected by the canopy (MJ.m-2.day-1)
-    canopy_par_MJday = (sw_par_fraction * swrad * absorbed_par_fraction)
-    canopy_nir_MJday = ((1d0 - sw_par_fraction) * swrad * absorbed_nir_fraction)
-    trans_par_MJday = (sw_par_fraction * swrad * trans_par_fraction)
-    trans_nir_MJday = ((1d0 - sw_par_fraction) * swrad * trans_nir_fraction)
-    refl_par_MJday = (sw_par_fraction * swrad * reflected_par_fraction)
-    refl_nir_MJday = ((1d0 - sw_par_fraction) * swrad * reflected_nir_fraction)
+    canopy_par_MJday = par * absorbed_par_fraction
+    canopy_nir_MJday = nir * absorbed_nir_fraction
+    trans_par_MJday = par * trans_par_fraction
+    trans_nir_MJday = nir * trans_nir_fraction
+    refl_par_MJday = par * reflected_par_fraction
+    refl_nir_MJday = nir * reflected_nir_fraction
 
     !!!!!!!!!
     ! Estimate soil absorption of shortwave passing through the canopy
@@ -1800,12 +1809,15 @@ contains
     ! of incoming radiation is explicitly accounted for in the energy balance.
     !!!!!!!!!
 
+    ! calculate multiple use variables
+    par = trans_par_MJday-soil_par_MJday
+    nir = trans_nir_MJday-soil_nir_MJday
     ! Update the canopy radiation absorption based on the reflected radiation (MJ.m-2.day-1)
-    canopy_par_MJday = canopy_par_MJday + ((trans_par_MJday-soil_par_MJday) * absorbed_par_fraction)
-    canopy_nir_MJday = canopy_nir_MJday + ((trans_nir_MJday-soil_nir_MJday) * absorbed_nir_fraction)
+    canopy_par_MJday = canopy_par_MJday + (par * absorbed_par_fraction)
+    canopy_nir_MJday = canopy_nir_MJday + (nir * absorbed_nir_fraction)
     ! Update the total radiation reflected back into the sky, i.e. that which is now transmitted through the canopy
-    refl_par_MJday = refl_par_MJday + ((trans_par_MJday-soil_par_MJday) * trans_par_fraction)
-    refl_nir_MJday = refl_nir_MJday + ((trans_nir_MJday-soil_nir_MJday) * trans_nir_fraction)
+    refl_par_MJday = refl_par_MJday + (par * trans_par_fraction)
+    refl_nir_MJday = refl_nir_MJday + (nir * trans_nir_fraction)
 
     ! Combine to estimate total shortwave canopy absorbed radiation
     canopy_swrad_MJday = canopy_par_MJday + canopy_nir_MJday

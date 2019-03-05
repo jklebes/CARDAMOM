@@ -79,6 +79,7 @@ module CARBON_MODEL_MOD
            ,avN                           &
            ,NUE_optimum                   &
            ,NUE                           &
+           ,ceff                          &
            ,pn_max_temp                   &
            ,pn_opt_temp                   &
            ,pn_kurtosis                   &
@@ -406,6 +407,7 @@ module CARBON_MODEL_MOD
   ! Module level variables for ACM_GPP_ET parameters
   double precision :: delta_gs, & ! day length corrected gs increment mmolH2O/m2/dayl
                            avN, & ! average foliar N (gN/m2)
+                          ceff, & ! canopy efficiency, ceff = avN*NUE
                       NUE_mean, &
                   NUE_mean_lag, &
                    NUE_optimum, & !
@@ -1207,6 +1209,8 @@ contains
 
       ! estimate the new NUE as function of canopy age
       if (POOLS(n,2) > 0d0) NUE = canopy_aggregate_NUE(1,oldest_leaf)
+      ! update combined canopy efficiency
+      ceff = avN*NUE
       ! track rolling mean of NUE
       NUE_mean_lag = ( NUE_mean_lag * (1d0 - (deltat(n) * 0.002737851d0)) ) + ( NUE * (deltat(n) * 0.002737851d0) )
 !print*,"NUE",NUE
@@ -1934,7 +1938,7 @@ contains
     ! maximum rate of temperature and nitrogen (canopy efficiency) limited
     ! photosynthesis (gC.m-2.day-1)
     !pn = lai*avN*NUE*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
-    pn = lai*avN*NUE*pn_airt_scaling
+    pn = lai*ceff*pn_airt_scaling
 
     !
     ! Diffusion limited photosynthesis
@@ -2316,11 +2320,6 @@ contains
         wetcanopy_evap = 0d0
     endif
 
-    ! dew is unlikely to occur (if we had energy balance) if mint > 0
-    !    if (wetcanopy_evap < 0d0 .and. mint > 0d0) wetcanopy_evap = 0d0
-    ! Sublimation is unlikely to occur (if we had energy balance) if maxt < 0
-    !    if (wetcanopy_evap > 0d0 .and. maxt < 0d0) wetcanopy_evap = 0d0
-
     ! Remember potential evaporation to later calculation of the potential
     ! actual ratio
     act_pot_ratio = wetcanopy_evap
@@ -2689,7 +2688,7 @@ contains
     double precision :: balance                    &
                        ,absorbed_nir_fraction_soil &
                        ,absorbed_par_fraction_soil &
-                       ,fsnow                      &
+                       ,fsnow,nir,par              &
                        ,soil_par_MJday             &
                        ,soil_nir_MJday             &
                        ,trans_nir_MJday            &
@@ -2730,13 +2729,17 @@ contains
     ! Estimate canopy absorption of incoming shortwave radiation
     !!!!!!!!!!
 
+    ! estimate multiple use par and nir components
+    par = sw_par_fraction * swrad
+    nir = (1d0 - sw_par_fraction) * swrad
+
     ! Estimate incoming shortwave radiation absorbed, transmitted and reflected by the canopy (MJ.m-2.day-1)
-    canopy_par_MJday = (sw_par_fraction * swrad * absorbed_par_fraction)
-    canopy_nir_MJday = ((1d0 - sw_par_fraction) * swrad * absorbed_nir_fraction)
-    trans_par_MJday = (sw_par_fraction * swrad * trans_par_fraction)
-    trans_nir_MJday = ((1d0 - sw_par_fraction) * swrad * trans_nir_fraction)
-    refl_par_MJday = (sw_par_fraction * swrad * reflected_par_fraction)
-    refl_nir_MJday = ((1d0 - sw_par_fraction) * swrad * reflected_nir_fraction)
+    canopy_par_MJday = par * absorbed_par_fraction
+    canopy_nir_MJday = nir * absorbed_nir_fraction
+    trans_par_MJday = par * trans_par_fraction
+    trans_nir_MJday = nir * trans_nir_fraction
+    refl_par_MJday = par * reflected_par_fraction
+    refl_nir_MJday = nir * reflected_nir_fraction
 
     !!!!!!!!!
     ! Estimate soil absorption of shortwave passing through the canopy
@@ -2764,12 +2767,15 @@ contains
     ! of incoming radiation is explicitly accounted for in the energy balance.
     !!!!!!!!!
 
+    ! calculate multiple use variables
+    par = trans_par_MJday-soil_par_MJday
+    nir = trans_nir_MJday-soil_nir_MJday
     ! Update the canopy radiation absorption based on the reflected radiation (MJ.m-2.day-1)
-    canopy_par_MJday = canopy_par_MJday + ((trans_par_MJday-soil_par_MJday) * absorbed_par_fraction)
-    canopy_nir_MJday = canopy_nir_MJday + ((trans_nir_MJday-soil_nir_MJday) * absorbed_nir_fraction)
+    canopy_par_MJday = canopy_par_MJday + (par * absorbed_par_fraction)
+    canopy_nir_MJday = canopy_nir_MJday + (nir * absorbed_nir_fraction)
     ! Update the total radiation reflected back into the sky, i.e. that which is now transmitted through the canopy
-    refl_par_MJday = refl_par_MJday + ((trans_par_MJday-soil_par_MJday) * trans_par_fraction)
-    refl_nir_MJday = refl_nir_MJday + ((trans_nir_MJday-soil_nir_MJday) * trans_nir_fraction)
+    refl_par_MJday = refl_par_MJday + (par * trans_par_fraction)
+    refl_nir_MJday = refl_nir_MJday + (nir * trans_nir_fraction)
 
     ! Combine to estimate total shortwave canopy absorbed radiation
     canopy_swrad_MJday = canopy_par_MJday + canopy_nir_MJday
@@ -3744,33 +3750,34 @@ contains
     integer :: a, b, c, d, tmp_int, &
          death_point, oldest_point, &
                        age_by_time
-    double precision :: infi      &
-                       ,tmp       &
-                       ,loss      &
-                     ,life_remain &
-                       ,deltaGPP  &
-                       ,deltaRm   &
-                       ,deltaC    &
-                       ,old_GPP   &
-                       ,alt_GPP   &
-                   ,marginal_gain &
-                   ,marginal_loss &
-                       ,NUE_save  &
-                       ,lai_save  &
-                  ,canopy_lw_save &
-                  ,canopy_sw_save &
-                 ,canopy_par_save &
-                    ,soil_lw_save &
-                    ,soil_sw_save &
-                    ,gs_save      &
-                    ,ga_save      &
-                 ,canopy_age_save
+    double precision :: infi            &
+                       ,tmp             &
+                       ,loss            &
+                       ,life_remain     &
+                       ,deltaGPP        &
+                       ,deltaRm         &
+                       ,deltaC          &
+                       ,old_GPP         &
+                       ,alt_GPP         &
+                       ,marginal_gain   &
+                       ,marginal_loss   &
+                       ,NUE_save        &
+                       ,ceff_save       &
+                       ,lai_save        &
+                       ,canopy_lw_save  &
+                       ,canopy_sw_save  &
+                       ,canopy_par_save &
+                       ,soil_lw_save    &
+                       ,soil_sw_save    &
+                       ,gs_save         &
+                       ,ga_save         &
+                       ,canopy_age_save
 
     ! save original values for re-allocation later
     canopy_lw_save = canopy_lwrad_Wm2 ; soil_lw_save  = soil_lwrad_Wm2
     canopy_sw_save = canopy_swrad_MJday ; canopy_par_save  = canopy_par_MJday
     soil_sw_save = soil_swrad_MJday ; gs_save = stomatal_conductance
-    ga_save = aerodynamic_conductance
+    ga_save = aerodynamic_conductance ; ceff = ceff_save
     lai_save = lai ; NUE_save = NUE ; canopy_age_save = canopy_age
 
     ! for infinity checks
@@ -3880,6 +3887,8 @@ contains
           ! update NUE as function of age
           !NUE = canopy_aggregate_NUE(a,a)
           NUE = NUE_vector(a)
+          ! update combined canopy efficiency
+          ceff = avN*NUE
           ! use proportional scaling of radiation, stomatal conductance and aerodynamics conductances
           tmp = lai / lai_save
           stomatal_conductance = gs_save * tmp ; aerodynamic_conductance = ga_save * tmp
@@ -3956,7 +3965,7 @@ contains
       end do ! from oldest leaf back to NUE decline phases
 
       ! restore original value back from memory
-      lai = lai_save ; NUE = NUE_save ; canopy_age = canopy_age_save
+      lai = lai_save ; ceff = ceff_save ; NUE = NUE_save ; canopy_age = canopy_age_save
       !canopy_lwrad_Wm2 = canopy_lw_save ; soil_lwrad_Wm2 = soil_lw_save
       canopy_swrad_MJday = canopy_sw_save ; canopy_par_MJday = canopy_par_save
       soil_swrad_MJday = soil_sw_save ; stomatal_conductance = gs_save
@@ -4014,14 +4023,14 @@ contains
       !
 
       ! overwrite current age specific NUE with the leaf lifetime NUE
-      NUE = NUE_mean
+      NUE = NUE_mean ; ceff = avN*NUE
       ! estimate stomatal conductance under the new NUE
       call acm_albedo_gc(abs(deltaWP),Rtot)
       ! and estimate the equivalent GPP for current LAI
       if (stomatal_conductance > vsmall) then
-        old_GPP = acm_gpp(stomatal_conductance)
+          old_GPP = acm_gpp(stomatal_conductance)
       else
-        old_GPP = 0d0
+          old_GPP = 0d0
       endif
 
       !
@@ -4048,9 +4057,9 @@ contains
       endif
      ! now estimate GPP with new LAI
       if (stomatal_conductance > vsmall) then
-        alt_GPP = acm_gpp(stomatal_conductance)
+          alt_GPP = acm_gpp(stomatal_conductance)
       else
-        alt_GPP = 0d0
+          alt_GPP = 0d0
       endif
       deltaGPP = alt_GPP - old_GPP
       ! is the marginal return for GPP (over the mean life of leaves)
@@ -4065,7 +4074,7 @@ contains
       marginal_gain * (leaf_growth_period_1)
 
       ! restore original value back from memory
-      lai = lai_save ; NUE = NUE_save ; canopy_age = canopy_age_save
+      lai = lai_save ; ceff = ceff_save ; NUE = NUE_save ; canopy_age = canopy_age_save
       !canopy_lwrad_Wm2 = canopy_lw_save ; soil_lwrad_Wm2 = soil_lw_save
       canopy_swrad_MJday = canopy_sw_save ; canopy_par_MJday = canopy_par_save
       soil_swrad_MJday = soil_sw_save ; stomatal_conductance = gs_save
