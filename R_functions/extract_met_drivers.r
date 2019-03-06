@@ -239,7 +239,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
 
 	    if (doy[1] != -9999) {
           # how many time steps before we change days?
-          i = floor(doy[1]) ; j=1
+          i = floor(doy[1]) ; j = 1
           while (i == floor(doy[j])) {
              j = j + 1
           }
@@ -262,16 +262,17 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
           }
 	    } else {
           # currently assumed defaults
-          input_step_size = 1 # hours
           steps_in_day = 24   #
-	    }
+          input_step_size = 1 # hours
+	    } # doy[1] != -9999
 
-	    maxt=read_site_specific_obs("maxt",infile) # oC
-	    mint=read_site_specific_obs("mint",infile) # oC
-	    airt=read_site_specific_obs("airt",infile) # oC
-      # if no mean air temperature available assume mean of max / min
+      # Max, min and average timestep air temperatures (oC)
+	    maxt = read_site_specific_obs("maxt",infile)
+	    mint = read_site_specific_obs("mint",infile)
+	    airt = read_site_specific_obs("airt",infile)       # if no mean air temperature available assume mean of max / min
       if (airt[1] == -9999) {airt = (maxt + mint) * 0.5}
-      swrad=read_site_specific_obs("sw_rad",infile) # W.m-2
+
+      swrad = read_site_specific_obs("sw_rad",infile) # W.m-2
       if (swrad[1] == -9999) {
         # try and look for shortwave in MJ/m2/day
         swrad=read_site_specific_obs("sw_rad_MJm2day",infile) # MJ/m2/day
@@ -279,11 +280,17 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
         # assume we have got the W/m2, which we need to conver to MJ/m2/day
         swrad = swrad * input_step_size * 3600 * 1e-6
       }
-	    co2=read_site_specific_obs("co2",infile) # ppm
+
+      # atmospheric CO2 concentration (ppm)
+	    co2 = read_site_specific_obs("co2",infile)
       # if no co2 provided assume global mean value
 	    if (co2[1] == -9999) {co2=rep(400,length.out=length(doy))}
-	    precip=read_site_specific_obs("precip",infile) # kg.m-2.s-1
-	    vpd=read_site_specific_obs("vpd",infile) # kPa, units converted below
+
+      # liquid + ice precipitation (kgH2O.m-2.s-1)
+	    precip = read_site_specific_obs("precip",infile)
+
+      # vapour pressure deficit kPa, units converted below
+	    vpd = read_site_specific_obs("vpd",infile)
       if (vpd[1] == -9999) {
           # if no VPD search for relative humidity
           vpd = read_site_specific_obs("rh",infile)
@@ -298,9 +305,12 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
               # assume VPD has been found successfully
               vpd = vpd * 1000 # kPa->Pa
       } # vpd or not?
-      wind_spd=read_site_specific_obs("wind_spd",infile) # m.s-1
+
+      # Wind speed (m/s)
+      wind_spd=read_site_specific_obs("wind_spd",infile)
       # if now wind speed data use global mean
 	    if (wind_spd[1] == -9999) {wind_spd=rep(3.23,length.out=length(doy))} # CRU global mean wind speed (m.s-1)
+
       # Construct day of year time series
       years_to_load=as.numeric(start_year):as.numeric(end_year)
       for (yr in seq(1,length(years_to_load))) {
@@ -310,12 +320,15 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
                doy = append(doy,1:nos_days_in_year(years_to_load[yr]))
            }
       }
+      # timestep_days is of length == 1 when using a daily time step, for many of the calculations below
+      # required timestep_days to be a vector of length equal to the analysis...make it so...
+      if (length(timestep_days) == 1) {timestep_days = rep(timestep_days, length.out = length(doy))}
 
 	    # declare output variables
 	    maxt_out = 0 ; mint_out = 0 ; swrad_out = 0 ; co2_out = 0 ; precip_out = 0 ; vpd_out = 0 ; avgTemp_out = 0 ; wind_spd_out = 0
 	    vpd_lagged_out = 0 ; photoperiod_out = 0 ; avgTmin_out = 0
 
-      if (steps_in_day >= 1) {
+      if (steps_in_day > 1) {
          # loop through days to generate daily mean values first
          # lagged variables for GSI calculated afterwards
 	       for (daily in seq(1,length(swrad),steps_in_day)) {
@@ -353,14 +366,14 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       } else {
 
          # currently provided drivers cover greater than a day, so just pass drivers directly
-         maxt_out=maxt ; mint_out=mint ; avgTemp_out=airt ; avgTmin_out=mint
-         swrad_out=swrad ; precip_out=precip ; wind_spd_out=wind_spd
-         co2_out=co2 ; vpd_out=vpd
+         maxt_out = maxt ; mint_out = mint ; avgTemp_out = airt ; avgTmin_out = mint
+         swrad_out = swrad ; precip_out = precip ; wind_spd_out = wind_spd
+         co2_out = co2 ; vpd_out = vpd
 
       } # if there are more than 1 time step per day...
 
       # determine the actual daily positions
-      run_day_selector=cumsum(timestep_days)
+      run_day_selector = cumsum(timestep_days)
 
       # to allow for consistency of the rolling mean calculations we need to expand each value
       # by the number of days each represents...
@@ -380,9 +393,9 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
 	    vpd_lagged_out=append(vpd_lagged_out[1:(avg_days-1)],vpd_lagged_out)
 	    # construct output
 	    met=list(run_day=run_day_selector,mint=mint_out,maxt=maxt_out,swrad=swrad_out,co2=co2_out
-        ,doy=doy[run_day_selector],precip=precip_out,avgTmin=avgTmin_out[run_day_selector]
-        ,photoperiod=photoperiod_out[run_day_selector],vpd_lagged=vpd_lagged_out[run_day_selector]
-        ,avgTemp=avgTemp_out,vpd=vpd_out,wind_spd=wind_spd_out)
+              ,doy=doy[run_day_selector],precip=precip_out,avgTmin=avgTmin_out[run_day_selector]
+              ,photoperiod=photoperiod_out[run_day_selector],vpd_lagged=vpd_lagged_out[run_day_selector]
+              ,avgTemp=avgTemp_out,vpd=vpd_out,wind_spd=wind_spd_out)
 
 	} else {
 

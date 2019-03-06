@@ -1589,6 +1589,10 @@ module model_likelihood_module
          endif
        end do
        likelihood = likelihood-tot_exp
+!print*,"----------------"
+!print*,DATAin%laipts(1:DATAin%nlai)
+!print*,"----------------"
+!print*,"LAI",sum(DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))) / dble(DATAin%nlai)
     endif
 
     ! NEE likelihood
@@ -1765,7 +1769,7 @@ module model_likelihood_module
     ! multiple datastreams we apply this multiplication to the bulk liklihood
     ! hear
     likelihood = likelihood * 0.5d0
-
+!print*,"Total",likelihood
     ! check that log-likelihood is an actual number
     if (likelihood /= likelihood) then
        likelihood = log(infini)
