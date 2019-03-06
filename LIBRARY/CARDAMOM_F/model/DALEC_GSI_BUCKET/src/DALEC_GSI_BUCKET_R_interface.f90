@@ -21,8 +21,8 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
       implicit none
       ! declare inputs
       ! crop specific variables
-      character(pathlength),intent(in) :: exepath
       integer, intent(in) :: pathlength
+      character(pathlength),intent(in) :: exepath
       double precision :: stock_seed_labile
       double precision, allocatable, dimension(:) :: DS_shoot, & !
                                                       DS_root, & !
@@ -40,9 +40,9 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
   end interface
 
   ! declare input variables
+  integer, intent(in) :: pathlength
   character(pathlength), intent(in) :: exepath
   integer, intent(in) :: nopars         & ! number of paremeters in vector
-                        ,pathlength     & !
                         ,output_dim     & !
                         ,aNPP_dim       & ! NPP allocation fraction variable dimension
                         ,pft            & ! plant functional type
@@ -105,13 +105,13 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
   if (allocated(itemp)) deallocate(itemp,ivpd,iphoto)
   allocate(itemp(nodays),ivpd(nodays),iphoto(nodays))
   ! update soil parameters
-  soil_frac_clay=soil_frac_clay_in
-  soil_frac_sand=soil_frac_clay_in
+  soil_frac_clay = soil_frac_clay_in
+  soil_frac_sand = soil_frac_clay_in
 
   ! generate deltat step from input data
   deltat(1) = met(1,1)
   do i = 2, nodays
-     deltat(i)=met(1,i)-met(1,(i-1))
+     deltat(i) = met(1,i)-met(1,(i-1))
   end do
 
   ! when crop model in use should load crop development parameters here
@@ -216,7 +216,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
          end where
          out_var2(i,8) = sum(resid_fol) / dble(nodays)
      else
-         hak = 0 
+         hak = 0
          ! foliage
          resid_fol(1:nodays) = FLUXES(1:nodays,10) + FLUXES(1:nodays,23)
          resid_fol(1:nodays) = resid_fol(1:nodays) / POOLS(1:nodays,2)
@@ -293,8 +293,8 @@ end subroutine rdalecgsibucket
 
     ! declare inputs
     ! crop specific variables
-    character(pathlength),intent(in) :: exepath
     integer,intent(in) :: pathlength
+    character(pathlength),intent(in) :: exepath
     double precision :: stock_seed_labile
     double precision, allocatable, dimension(:) :: DS_shoot, & !
                                                     DS_root, & !
