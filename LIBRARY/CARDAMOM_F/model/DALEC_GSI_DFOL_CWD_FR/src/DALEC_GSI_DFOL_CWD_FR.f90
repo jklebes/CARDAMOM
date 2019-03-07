@@ -12,7 +12,7 @@ module CARBON_MODEL_MOD
            ,arrhenious          &
            ,opt_max_scaling     &
            ,acm_gpp             &
-           ,acm_albedo_gc       &
+           ,calculate_stomatal_conductance       &
            ,meteorological_constants  &
            ,calculate_shortwave_balance   &
            ,calculate_longwave_isothermal &
@@ -84,7 +84,7 @@ module CARBON_MODEL_MOD
            ,co2              &
            ,doy              &
            ,wind_spd         &
-           ,vpd_pa           &
+           ,vpd_kPa           &
            ,lai              &
            ,days_per_step    &
            ,days_per_step_1  &
@@ -232,7 +232,7 @@ module CARBON_MODEL_MOD
             lai_half_par_reflection = 1.114360d+00, & ! LAI at which canopy PAR reflected = 50 %
            lai_half_lwrad_reflected = 1.126214d+00, & ! LAI at which 50 % LW is reflected back to sky
                                iWUE = 1.602503d-06, & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
-              soil_swrad_absorption = 6.643079d-01, & ! Fraction of SW rad absorbed by soil
+              soil_swrad_absorption = 0.98d0,       & ! Fraction of SW rad absorbed by soil
             max_lai_par_transmitted = 8.079519d-01, & ! Max fractional reduction in PAR transmittance by canopy
            lai_half_par_transmitted = 9.178784d-01, & ! LAI at which PAR transmittance reduction = 50 %
             max_lai_nir_transmitted = 8.289803d-01, & ! Max fractional reduction in NIR transmittance by canopy
@@ -282,6 +282,7 @@ module CARBON_MODEL_MOD
                                                     ustar, & ! friction velocity (m.s-1)
                                                  ustar_Uh, &
                                            air_density_kg, & ! air density kg/m3
+                                           ET_demand_coef, & ! air_density_kg * vpd_kPa * cpair
                                                    roughl, & ! roughness length (m)
                                              displacement, & ! zero plane displacement (m)
                                                max_supply, & ! maximum water supply (mmolH2O/m2/day)
@@ -321,7 +322,7 @@ module CARBON_MODEL_MOD
                        co2, & ! CO2 (ppm)
                        doy, & ! Day of year
                   wind_spd, & ! wind speed (m/s)
-                    vpd_pa, & ! Vapour pressure deficit (Pa)
+                   vpd_kpa, & ! Vapour pressure deficit (kPa)
                      lai_1, & ! inverse of LAI
                        lai    ! leaf area index (m2/m2)
 
@@ -340,6 +341,7 @@ module CARBON_MODEL_MOD
                                       co2_compensation_point, & ! (ppm)
                                         pn_airt_scaling_time, &
                                          air_density_kg_time, &
+                                         ET_demand_coef_time, &
                                       convert_ms1_mol_1_time, &
                                       lambda_time,psych_time, &
                                                   slope_time, &
@@ -388,10 +390,10 @@ contains
 
     ! local fire related variables
     double precision :: burnt_area &
-    ,CFF(7) = 0d0, CFF_res(4) = 0d0    & ! combusted and non-combustion fluxes
-    ,NCFF(7) = 0d0, NCFF_res(4) = 0d0  & ! with residue and non-residue seperates
-    ,combust_eff(5)                    & ! combustion efficiency
-    ,rfac                                ! resilience factor
+                       ,CFF(7) = 0d0, CFF_res(4) = 0d0    & ! combusted and non-combustion fluxes
+                       ,NCFF(7) = 0d0, NCFF_res(4) = 0d0  & ! with residue and non-residue seperates
+                       ,combust_eff(5)                    & ! combustion efficiency
+                       ,rfac                                ! resilience factor
 
     ! local deforestation related variables
     double precision, dimension(5) :: post_harvest_burn & ! how much burning to occur after
@@ -551,9 +553,9 @@ contains
 
     ! load ACM-GPP-ET parameters
     NUE = pars(39)      ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
-    ! ,unlimited by CO2, light and
-    ! photoperiod (gC/gN/m2leaf/day)
-    avN = 10d0**pars(11)  ! foliar N gN/m2
+                        ! ,unlimited by CO2, light and
+                        ! photoperiod (gC/gN/m2leaf/day)
+    avN = 10d0**pars(11) ! foliar N gN/m2
 
     if (maxval(met(8,1:nodays)) > 0d0 .or. maxval(met(9,1:nodays)) > 0d0) then
 
@@ -737,11 +739,12 @@ contains
     ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
     if (.not.allocated(deltat_1)) then
       allocate(deltat_1(nodays),meant_time(nodays), &
-      co2_half_saturation(nodays),co2_compensation_point(nodays), &
-      air_density_kg_time(nodays),convert_ms1_mol_1_time(nodays), &
-      lambda_time(nodays),psych_time(nodays),slope_time(nodays),  &
-      water_vapour_diffusion_time(nodays),pn_airt_scaling_time(nodays), &
-      dynamic_viscosity_time(nodays),kinematic_viscosity_time(nodays))
+               co2_half_saturation(nodays),co2_compensation_point(nodays), &
+               air_density_kg_time(nodays),convert_ms1_mol_1_time(nodays), &
+               lambda_time(nodays),psych_time(nodays),slope_time(nodays),  &
+               water_vapour_diffusion_time(nodays),pn_airt_scaling_time(nodays), &
+               dynamic_viscosity_time(nodays),kinematic_viscosity_time(nodays), &
+               ET_demand_coef_time(nodays))
 
       ! inverse of time step (days-1) to avoid divisions
       deltat_1 = deltat**(-1d0)
@@ -754,13 +757,14 @@ contains
         co2_half_saturation(n) = arrhenious(kc_saturation,kc_half_sat_conc,met(3,n))
         pn_airt_scaling_time(n) = opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,met(3,n))
         ! calculate some temperature dependent meteorologial properties
-        call meteorological_constants(met(3,n),met(3,n)+freeze)
+        call meteorological_constants(met(3,n),met(3,n)+freeze,met(16,n)*1d-3)
         ! pass variables into memory objects so we don't have to keep re-calculating them
         air_density_kg_time(n) = air_density_kg
         convert_ms1_mol_1_time(n) = convert_ms1_mol_1
         lambda_time(n) = lambda
         psych_time(n) = psych
         slope_time(n) = slope
+        ET_demand_coef_time(n) = ET_demand_coef
         water_vapour_diffusion_time(n) = water_vapour_diffusion
         dynamic_viscosity_time(n) = dynamic_viscosity
         kinematic_viscosity_time(n) = kinematic_viscosity
@@ -805,7 +809,7 @@ contains
       meant = meant_time(n)  ! mean air temperature (oC)
       meant_K = meant + freeze
       wind_spd = met(15,n) ! wind speed (m/s)
-      vpd_pa = met(16,n)  ! Vapour pressure deficit (Pa)
+      vpd_kPa = met(16,n)*1d-3  ! Vapour pressure deficit (Pa -> kPa)
 
       ! states needed for module variables
       lai_out(n) = POOLS(n,2)/pars(17)
@@ -825,15 +829,6 @@ contains
       seconds_per_step = seconds_per_day * deltat(n)
       days_per_step = deltat(n)
       days_per_step_1 = deltat_1(n)
-
-      !!!!!!!!!!
-      ! calculate soil water potential and total hydraulic resistance
-      !!!!!!!!!!
-
-      ! calculate the minimum soil & root hydraulic resistance based on total
-      ! fine root mass ! *2*2 => *RS*C->Bio
-      root_biomass = max(min_root,POOLS(n,3)*2d0)
-      call calculate_Rtot(Rtot)
 
       !!!!!!!!!!
       ! Calculate surface exchange coefficients
@@ -859,8 +854,17 @@ contains
       call calculate_shortwave_balance
       call calculate_longwave_isothermal(leafT,maxt)
 
+      !!!!!!!!!!
+      ! Calculate physically soil water potential and total hydraulic resistance
+      !!!!!!!!!!
+
+      ! calculate the minimum soil & root hydraulic resistance based on total
+      ! fine root mass ! *2*2 => *RS*C->Bio
+      root_biomass = max(min_root,POOLS(n,3)*2d0)
+      call calculate_Rtot(Rtot)
+
       ! calculate variables used commonly between ACM_GPP and ACM_ET
-      call acm_albedo_gc(abs(minlwp),Rtot)
+      call calculate_stomatal_conductance(abs(minlwp),Rtot)
 
       !!!!!!!!!!
       ! GPP (gC.m-2.day-1)
@@ -955,7 +959,7 @@ contains
         call calculate_shortwave_balance
         if (lai_save < vsmall) then
           call calculate_aerodynamic_conductance
-          call acm_albedo_gc(abs(minlwp),Rtot)
+          call calculate_stomatal_conductance(abs(minlwp),Rtot)
         endif
         tmp = max(0d0,acm_gpp(stomatal_conductance))
         ! determine if increase in LAI leads to an improvement in GPP greater
@@ -981,7 +985,7 @@ contains
           call calculate_shortwave_balance
           if (lai_save < vsmall) then
             call calculate_aerodynamic_conductance
-            call acm_albedo_gc(abs(minlwp),Rtot)
+            call calculate_stomatal_conductance(abs(minlwp),Rtot)
           endif
           tmp = max(0d0,acm_gpp(stomatal_conductance))
           ! determine if increase in LAI leads to an improvement in GPP greater
@@ -1409,6 +1413,142 @@ contains
   !
   !------------------------------------------------------------------
   !
+  subroutine calculate_stomatal_conductance(deltaWP,Rtot)
+
+    ! Determines 1) an approximation of canopy conductance (gc) mmolH2O.m-2.s-1
+    ! based on potential hydraulic flow, air temperature and absorbed radiation.
+    ! 2) calculates absorbed shortwave radiation (W.m-2) as function of LAI
+
+    implicit none
+
+    ! arguments
+    double precision, intent(in) :: deltaWP, & ! minlwp-wSWP (MPa)
+                                       Rtot    ! total hydraulic resistance (MPa.s-1.m-2.mmol-1)
+
+    ! local variables
+    double precision :: denom
+    double precision, parameter :: max_gs = 500d0, &   ! mmolH2O.m-2.s-1
+                                   min_gs = 0.001d0, & !
+                                   tol_gs = 4d0        !
+
+    !!!!!!!!!!
+    ! Calculate stomatal conductance under H2O and CO2 limitations
+    !!!!!!!!!!
+
+    if (deltaWP > vsmall) then
+      ! Determine potential water flow rate (mmolH2O.m-2.dayl-1)
+      max_supply = (deltaWP/Rtot) * seconds_per_day
+    else
+      ! set minimum (computer) precision level flow
+      max_supply = vsmall
+    end if
+
+    if (aerodynamic_conductance > vsmall) then
+
+      ! there is lai therefore we have have stomatal conductance
+
+      ! Invert Penman-Monteith equation to give gs (m.s-1) needed to meet
+      ! maximum possible evaporation for the day.
+      ! This will then be reduced based on CO2 limits for diffusion based
+      ! photosynthesis
+      denom = slope * ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2) &
+            + (ET_demand_coef * aerodynamic_conductance)
+      denom = (denom / (lambda * max_supply * mmol_to_kg_water * dayl_seconds_1)) - slope
+      denom = denom / psych
+      stomatal_conductance = aerodynamic_conductance / denom
+
+      ! convert m.s-1 to mmolH2O.m-2.s-1
+      stomatal_conductance = stomatal_conductance * 1d3 * convert_ms1_mol_1
+      ! if conditions are dew forming then set conductance to maximum as we are not going to be limited by water demand
+      if (stomatal_conductance <= 0d0 .or. stomatal_conductance > max_gs) stomatal_conductance = max_gs
+
+      ! if we are potentially limited by stomatal conductance or we are using instrinsic water use efficiency (rather than WUE)
+      ! then iterate to find optimum gs otherwise just go with the max...
+      if (stomatal_conductance /= max_gs) then
+        ! If there is a positive demand for water then we will solve for photosynthesis limits on gs through iterative solution
+        delta_gs = 1d-3*lai ! mmolH2O/m2leaf/day
+        ! estimate inverse of LAI to avoid division in optimisation
+        lai_1 = lai**(-1d0)
+        ! intrinsic WUE optimisation
+        stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE',find_gs_iWUE,min_gs,stomatal_conductance,tol_gs)
+      end if
+
+    else
+
+      ! if no LAI then there can be no stomatal conductance
+      stomatal_conductance = 0d0
+
+    endif ! if LAI > vsmall
+
+  end subroutine calculate_stomatal_conductance
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine meteorological_constants(input_temperature,input_temperature_K,input_vpd_kPa)
+
+    ! Determine some multiple use constants used by a wide range of functions
+    ! All variables here are linked to air temperature and thus invarient between
+    ! iterations and can be stored in memory...
+
+    implicit none
+
+    ! arguments
+    double precision, intent(in) :: input_temperature, input_temperature_K, &
+                                    input_vpd_kPa
+
+    ! local variables
+    double precision :: s, mult
+
+    !
+    ! Used for soil, canopy evaporation and transpiration
+    !
+
+    ! Density of air (kg/m3)
+    air_density_kg = 353d0/input_temperature_K
+    ! Conversion ratio for m.s-1 -> mol.m-2.s-1
+    convert_ms1_mol_1 = const_sfc_pressure / (input_temperature_K*Rcon)
+    ! latent heat of vapourisation,
+    ! function of air temperature (J.kg-1)
+    if (input_temperature < 1d0) then
+        lambda = 2.835d6
+    else
+        lambda = 2501000d0-2364d0*input_temperature
+    endif
+    ! psychrometric constant (kPa K-1)
+    psych = (0.0646d0*exp(0.00097d0*input_temperature))
+    ! Straight line approximation of the true slope; used in determining
+    ! relationship slope
+    mult = input_temperature+237.3d0
+    ! 2502.935945 = 0.61078*17.269*237.3
+    s = 2502.935945d0*exp(17.269d0*input_temperature/mult)
+    ! Rate of change of saturation vapour pressure with temperature (kPa.K-1)
+    slope = s/(mult*mult)
+
+    ! estimate frequently used atmmospheric demand component
+    ET_demand_coef = air_density_kg*cpair*input_vpd_kPa
+
+    !
+    ! Used for soil evaporation and leaf level conductance
+    !
+
+    ! Determine diffusion coefficient (m2.s-1), temperature dependant (pressure dependence neglected). Jones p51; appendix 2
+    ! Temperature adjusted from standard 20oC (293.15 K), NOTE that 1/293.15 = 0.003411223
+    ! 0.0000242 = conversion to make diffusion specific for water vapor (um2.s-1)
+    water_vapour_diffusion = 0.0000242d0*((input_temperature_K/293.2d0)**1.75d0)
+
+    !
+    ! Used for calculation of leaf level conductance
+    !
+
+    ! Calculate the dynamic viscosity of air (kg.m-2.s-1)
+    dynamic_viscosity = ((input_temperature_K**1.5d0)/(input_temperature_K+120d0))*1.4963d-6
+    ! and kinematic viscosity (m2.s-1)
+    kinematic_viscosity = dynamic_viscosity/air_density_kg
+
+  end subroutine meteorological_constants
+  !
+  !------------------------------------------------------------------
+  !
   subroutine calculate_aerodynamic_conductance
 
     !
@@ -1432,6 +1572,7 @@ contains
     ! stability versions'
     !    ustar = (wind_spd / log((tower_height-displacement)/roughl)) * vonkarman
     ustar = wind_spd * ustar_Uh
+
     ! both length scale and mixing length are considered to be constant within
     ! the canopy (under dense canopy conditions) calculate length scale (lc)
     ! for momentum absorption within the canopy; Harman & Finnigan (2007)
@@ -1493,135 +1634,62 @@ contains
   !
   !------------------------------------------------------------------
   !
-  subroutine acm_albedo_gc(deltaWP,Rtot)
+  subroutine log_law_decay
 
-    ! Determines 1) an approximation of canopy conductance (gc) mmolH2O.m-2.s-1
-    ! based on potential hydraulic flow, air temperature and absorbed radiation.
-    ! 2) calculates absorbed shortwave radiation (W.m-2) as function of LAI
+    ! Standard log-law above canopy wind speed (m.s-1) decay under neutral
+    ! conditions.
+    ! See Harman & Finnigan 2008; Jones 1992 etc for details.
 
     implicit none
 
-    ! arguments
-    double precision, intent(in) :: deltaWP, & ! minlwp-wSWP (MPa)
-                                       Rtot    ! total hydraulic resistance (MPa.s-1.m-2.mmol-1)
+    ! log law decay
+    canopy_wind = (ustar * vonkarman_1) * log((canopy_height-displacement) / roughl)
 
-    ! local variables
-    double precision :: denom
-    double precision, parameter :: max_gs = 500d0, &   ! mmolH2O.m-2.s-1
-                                   min_gs = 0.001d0, & !
-                                   tol_gs = 4d0        !
+    ! set minimum value for wind speed at canopy top (m.s-1)
+    canopy_wind = max(min_wind,canopy_wind)
 
-    !!!!!!!!!!
-    ! Calculate stomatal conductance under H2O and CO2 limitations
-    !!!!!!!!!!
-
-    if (deltaWP > vsmall) then
-      ! Determine potential water flow rate (mmolH2O.m-2.dayl-1)
-      max_supply = (deltaWP/Rtot) * seconds_per_day
-    else
-      ! set minimum (computer) precision level flow
-      max_supply = vsmall
-    end if
-
-    if (aerodynamic_conductance > vsmall) then
-
-      ! there is lai therefore we have have stomatal conductance
-
-      ! Invert Penman-Monteith equation to give gs (m.s-1) needed to meet
-      ! maximum possible evaporation for the day.
-      ! This will then be reduced based on CO2 limits for diffusion based
-      ! photosynthesis
-      denom = slope * ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2) &
-            + (air_density_kg * cpair * vpd_pa * 1d-3 * aerodynamic_conductance)
-      denom = (denom / (lambda * max_supply * mmol_to_kg_water * dayl_seconds_1)) - slope
-      denom = denom / psych
-      stomatal_conductance = aerodynamic_conductance / denom
-
-      ! convert m.s-1 to mmolH2O.m-2.s-1
-      stomatal_conductance = stomatal_conductance * 1d3 * convert_ms1_mol_1
-      ! if conditions are dew forming then set conductance to maximum as we are not going to be limited by water demand
-      if (stomatal_conductance <= 0d0 .or. stomatal_conductance > max_gs) stomatal_conductance = max_gs
-
-      ! if we are potentially limited by stomatal conductance or we are using instrinsic water use efficiency (rather than WUE)
-      ! then iterate to find optimum gs otherwise just go with the max...
-      if (stomatal_conductance /= max_gs) then
-        ! If there is a positive demand for water then we will solve for photosynthesis limits on gs through iterative solution
-        delta_gs = 1d-3*lai ! mmolH2O/m2leaf/day
-        ! estimate inverse of LAI to avoid division in optimisation
-        lai_1 = lai**(-1d0)
-        ! intrinsic WUE optimisation
-        stomatal_conductance = zbrent('acm_albedo_gc:find_gs_iWUE',find_gs_iWUE,min_gs,stomatal_conductance,tol_gs)
-      end if
-
-    else
-
-      ! if no LAI then there can be no stomatal conductance
-      stomatal_conductance = 0d0
-
-    endif ! if LAI > vsmall
-
-  end subroutine acm_albedo_gc
+  end subroutine log_law_decay
   !
   !------------------------------------------------------------------
   !
-  subroutine meteorological_constants(input_temperature,input_temperature_K)
+  subroutine calculate_daylength(doy,lat)
 
-    ! Determine some multiple use constants used by a wide range of functions
-    ! All variables here are linked to air temperature and thus invarient between
-    ! iterations and can be stored in memory...
+    ! Subroutine uses day of year and latitude (-90 / 90 degrees) as inputs,
+    ! combined with trigonomic functions to calculate day length in hours and seconds
 
     implicit none
 
     ! arguments
-    double precision, intent(in) :: input_temperature, input_temperature_K
+    double precision, intent(in) :: doy, lat
 
     ! local variables
-    double precision :: s, mult
+    double precision :: dec, mult, sinld, cosld, aob
 
     !
-    ! Used for soil, canopy evaporation and transpiration
+    ! Estimate solar geometry variables needed
     !
 
-    ! Density of air (kg/m3)
-    air_density_kg = 353d0/input_temperature_K
-    ! Conversion ratio for m.s-1 -> mol.m-2.s-1
-    convert_ms1_mol_1 = const_sfc_pressure / (input_temperature_K*Rcon)
-    ! latent heat of vapourisation,
-    ! function of air temperature (J.kg-1)
-    if (input_temperature < 1d0) then
-      lambda = 2.835d6
-    else
-      lambda = 2501000d0-2364d0*input_temperature
-    endif
-    ! psychrometric constant (kPa K-1)
-    psych = (0.0646d0*exp(0.00097d0*input_temperature))
-    ! Straight line approximation of the true slope; used in determining
-    ! relationship slope
-    mult = input_temperature+237.3d0
-    ! 2502.935945 = 0.61078*17.269*237.3
-    s = 2502.935945d0*exp(17.269d0*input_temperature/mult)
-    ! Rate of change of saturation vapour pressure with temperature (kPa.K-1)
-    slope = s/(mult*mult)
+    ! Declination
+    ! NOTE: 0.002739726d0 = 1/365
+    !    dec = - asin( sin( 23.45d0 * deg_to_rad ) * cos( 2d0 * pi * ( doy + 10d0 ) / 365d0 ) )
+    !    dec = - asin( sin_dayl_deg_to_rad * cos( two_pi * ( doy + 10d0 ) / 365d0 ) )
+    dec = - asin( sin_dayl_deg_to_rad * cos( two_pi * ( doy + 10d0 ) * 0.002739726d0 ) )
 
-    !
-    ! Used for soil evaporation and leaf level conductance
-    !
+    ! latitude in radians
+    mult = lat * deg_to_rad
+    ! day length is estimated as the ratio of sin and cos of the product of declination an latitude in radiation
+    sinld = sin( mult ) * sin( dec )
+    cosld = cos( mult ) * cos( dec )
+    aob = max(-1d0,min(1d0,sinld / cosld))
 
-    ! Determine diffusion coefficient (m2.s-1), temperature dependant (pressure dependence neglected). Jones p51; appendix 2
-    ! Temperature adjusted from standard 20oC (293.15 K), NOTE that 1/293.15 = 0.003411223
-    ! 0.0000242 = conversion to make diffusion specific for water vapor (um2.s-1)
-    water_vapour_diffusion = 0.0000242d0*((input_temperature_K/293.15d0)**1.75d0)
+    ! estimate day length in hours and seconds and upload to module variables
+    dayl_hours = 12d0 * ( 1d0 + 2d0 * asin( aob ) * pi_1 )
+    dayl_seconds = dayl_hours * seconds_per_hour
 
-    !
-    ! Used for calculation of leaf level conductance
-    !
+    ! return to user
+    return
 
-    ! Calculate the dynamic viscosity of air (kg.m-2.s-1)
-    dynamic_viscosity = ((input_temperature_K**1.5d0)/(input_temperature_K+120d0))*1.4963d-6
-    ! and kinematic viscosity (m2.s-1)
-    kinematic_viscosity = dynamic_viscosity/air_density_kg
-
-  end subroutine meteorological_constants
+  end subroutine calculate_daylength
   !
   !------------------------------------------------------------------
   !
@@ -1824,24 +1892,6 @@ contains
 
   end subroutine calculate_shortwave_balance
   !
-  !------------------------------------------------------------------
-  !
-  subroutine log_law_decay
-
-    ! Standard log-law above canopy wind speed (m.s-1) decay under neutral
-    ! conditions.
-    ! See Harman & Finnigan 2008; Jones 1992 etc for details.
-
-    implicit none
-
-    ! log law decay
-    canopy_wind = (ustar * vonkarman_1) * log((canopy_height-displacement) / roughl)
-
-    ! set minimum value for wind speed at canopy top (m.s-1)
-    canopy_wind = max(min_wind,canopy_wind)
-
-  end subroutine log_law_decay
-  !
   !-----------------------------------------------------------------
   !
   subroutine calculate_Rtot(Rtot)
@@ -2000,47 +2050,6 @@ contains
   !
   !------------------------------------------------------------------
   !
-  subroutine calculate_daylength(doy,lat)
-
-    ! Subroutine uses day of year and latitude (-90 / 90 degrees) as inputs,
-    ! combined with trigonomic functions to calculate day length in hours and seconds
-
-    implicit none
-
-    ! arguments
-    double precision, intent(in) :: doy, lat
-
-    ! local variables
-    double precision :: dec, mult, sinld, cosld, aob
-
-    !
-    ! Estimate solar geometry variables needed
-    !
-
-    ! Declination
-    ! NOTE: 0.002739726d0 = 1/365
-    !    dec = - asin( sin( 23.45d0 * deg_to_rad ) * cos( 2d0 * pi * ( doy + 10d0 ) / 365d0 ) )
-    !    dec = - asin( sin_dayl_deg_to_rad * cos( two_pi * ( doy + 10d0 ) / 365d0 ) )
-    dec = - asin( sin_dayl_deg_to_rad * cos( two_pi * ( doy + 10d0 ) * 0.002739726d0 ) )
-
-    ! latitude in radians
-    mult = lat * deg_to_rad
-    ! day length is estimated as the ratio of sin and cos of the product of declination an latitude in radiation
-    sinld = sin( mult ) * sin( dec )
-    cosld = cos( mult ) * cos( dec )
-    aob = max(-1d0,min(1d0,sinld / cosld))
-
-    ! estimate day length in hours and seconds and upload to module variables
-    dayl_hours = 12d0 * ( 1d0 + 2d0 * asin( aob ) * pi_1 )
-    dayl_seconds = dayl_hours * seconds_per_hour
-
-    ! return to user
-    return
-
-  end subroutine calculate_daylength
-  !
-  !------------------------------------------------------------------
-  !
   subroutine z0_displacement(ustar_Uh)
 
     ! dynamic calculation of roughness length and zero place displacement (m)
@@ -2055,8 +2064,8 @@ contains
     double precision, parameter :: cd1 = 7.5d0,   & ! Canopy drag parameter; fitted to data
                                     Cs = 0.003d0, & ! Substrate drag coefficient
                                     Cr = 0.3d0,   & ! Roughness element drag coefficient
-    !                          ustar_Uh_max = 0.3,   & ! Maximum observed ratio of
-                                                      ! (friction velocity / canopy top wind speed) (m.s-1)
+!                            ustar_Uh_max = 0.3,   & ! Maximum observed ratio of
+                                                    ! (friction velocity / canopy top wind speed) (m.s-1)
         ustar_Uh_max = 1d0, ustar_Uh_min = 0.2d0, &
                                         Cw = 2d0, &  ! Characterises roughness sublayer depth (m)
                                      phi_h = 0.19314718056d0 ! Roughness sublayer influence function;
@@ -2086,11 +2095,11 @@ contains
     roughl = ((1d0-displacement/canopy_height)*exp(-vonkarman*ustar_Uh-phi_h))*canopy_height
 
     ! sanity check
-    !    if (roughl /= roughl) then
-    !        write(*,*)"TLS:  ERROR roughness length calculations"
-    !        write(*,*)"Roughness lenght", roughl, "Displacement", displacement
-    !        write(*,*)"canopy height", canopy_height, "lai", lai
-    !    endif
+!    if (roughl /= roughl) then
+!        write(*,*)"TLS:  ERROR roughness length calculations"
+!        write(*,*)"Roughness lenght", roughl, "Displacement", displacement
+!        write(*,*)"canopy height", canopy_height, "lai", lai
+!    endif
 
   end subroutine z0_displacement
   !

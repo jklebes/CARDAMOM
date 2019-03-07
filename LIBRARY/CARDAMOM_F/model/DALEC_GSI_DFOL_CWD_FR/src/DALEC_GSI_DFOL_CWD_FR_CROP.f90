@@ -144,7 +144,7 @@ contains
                        ,stock_seed_labile,DS_shoot,DS_root,fol_frac,stem_frac,root_frac &
                        ,DS_LRLV,LRLV,DS_LRRT,LRRT)
 
-    use CARBON_MODEL_MOD, only: arrhenious,acm_gpp,meteorological_constants,acm_albedo_gc &
+    use CARBON_MODEL_MOD, only: arrhenious,acm_gpp,meteorological_constants,calculate_stomatal_conductance &
                                ,calculate_shortwave_balance,calculate_longwave_isothermal                 &
                                ,calculate_daylength,vsmall,co2_half_saturation,co2_compensation_point     &
                                ,freeze,co2comp_saturation,pn_airt_scaling,pn_airt_scaling_time            &
@@ -160,7 +160,7 @@ contains
                                ,lai_half_par_transmitted,max_lai_nir_transmitted,lai_half_nir_transmitted &
                                ,max_lai_lwrad_reflected,lai_half_lwrad_reflected,soil_swrad_absorption    &
                                ,max_lai_lwrad_release,lai_half_lwrad_release,mint,maxt,swrad,co2,doy,leafT&
-                               ,wind_spd,vpd_pa,lai,days_per_step,days_per_step_1,opt_max_scaling
+                               ,wind_spd,vpd_kPa,lai,days_per_step,days_per_step_1,opt_max_scaling
 
     ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
     ! Evergreen Analytical (DALEC_CDEA) model. The subroutine calls the
@@ -413,7 +413,7 @@ contains
       meant = (maxt+mint) * 0.5d0   ! mean air temperature (oC)
       meant_K = meant + freeze
       wind_spd = met(15,n) ! wind speed (m/s)
-      vpd_pa = met(16,n)  ! Vapour pressure deficit (Pa)
+      vpd_kPa = met(16,n) * 1d-3  ! Vapour pressure deficit (Pa -> kPa)
 
       ! states needed for module variables
       lai_out(n) = POOLS(n,2)/LCA
@@ -440,11 +440,11 @@ contains
       call calculate_Rtot(Rtot)
 
       ! calculate some temperature dependent meteorologial properties
-      call meteorological_constants(maxt,maxt+freeze)
+      call meteorological_constants(maxt,maxt+freeze,vpd_kPa)
       ! calculate radiation absorption and estimate stomatal conductance
       call calculate_aerodynamic_conductance
       call calculate_shortwave_balance ; call calculate_longwave_isothermal(leafT,maxt)
-      call acm_albedo_gc(abs(minlwp),Rtot)
+      call calculate_stomatal_conductance(abs(minlwp),Rtot)
 
       ! reallocate for crop model timings
       doy = met(6,n)

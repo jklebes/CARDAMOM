@@ -16,7 +16,7 @@ module CARBON_MODEL_MOD
            ,calculate_soil_evaporation    &
            ,calculate_shortwave_balance   &
            ,calculate_longwave_isothermal &
-           ,acm_albedo_gc                 &
+           ,calculate_stomatal_conductance&
            ,meteorological_constants      &
            ,update_soil_initial_conditions&
            ,calculate_daylength           &
@@ -65,7 +65,6 @@ module CARBON_MODEL_MOD
            ,drythick                      &
            ,min_drythick                  &
            ,min_layer                     &
-           ,soilwatermm                   &
            ,wSWP_time                     &
            ,soil_frac_clay                &
            ,soil_frac_sand                &
@@ -264,7 +263,7 @@ module CARBON_MODEL_MOD
             lai_half_par_reflection = 1.114360d+00, & ! LAI at which canopy PAR reflected = 50 %
            lai_half_lwrad_reflected = 1.126214d+00, & ! LAI at which 50 % LW is reflected back to sky
                                iWUE = 1.602503d-06, & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
-              soil_swrad_absorption = 6.643079d-01, & ! Fraction of SW rad absorbed by soil
+              soil_swrad_absorption = 0.98d0,       & ! Fraction of SW rad absorbed by soil
             max_lai_par_transmitted = 8.079519d-01, & ! Max fractional reduction in PAR transmittance by canopy
            lai_half_par_transmitted = 9.178784d-01, & ! LAI at which PAR transmittance reduction = 50 %
             max_lai_nir_transmitted = 8.289803d-01, & ! Max fractional reduction in NIR transmittance by canopy
@@ -423,7 +422,6 @@ module CARBON_MODEL_MOD
                                  kinematic_viscosity_time, &
                                 Cwood_labile_release_coef, & ! time series of labile release to wood
                                 Croot_labile_release_coef, & ! time series of labile release to root
-                                              soilwatermm, &
                                                 wSWP_time
 
   save
@@ -801,7 +799,7 @@ module CARBON_MODEL_MOD
                  disturbance_residue_to_som(nodays),disturbance_loss_from_litter(nodays),  &
                  disturbance_loss_from_cwd(nodays),disturbance_loss_from_som(nodays),      &
                  Cwood_labile_release_coef(nodays),Croot_labile_release_coef(nodays),      &
-                 deltat_1(nodays),wSWP_time(nodays),soilwatermm(nodays),                   &
+                 deltat_1(nodays),wSWP_time(nodays),                   &
                  daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
                  co2_half_saturation(nodays),co2_compensation_point(nodays), &
                  airt_zero_fraction_time(nodays),meant_time(nodays),rainfall_time(nodays), &
@@ -834,7 +832,7 @@ module CARBON_MODEL_MOD
            co2_half_saturation(n) = arrhenious(kc_saturation,kc_half_sat_conc,met(3,n))
            pn_airt_scaling_time(n) = opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,met(3,n))
            ! calculate some temperature dependent meteorologial properties
-           call meteorological_constants(met(3,n),met(3,n)+freeze)
+           call meteorological_constants(met(3,n),met(3,n)+freeze,met(16,n)*1d-3)
            ! pass variables into memory objects so we don't have to keep re-calculating them
            air_density_kg_time(n) = air_density_kg
            convert_ms1_mol_1_time(n) = convert_ms1_mol_1
@@ -970,7 +968,7 @@ module CARBON_MODEL_MOD
     layer_thickness(3) = max(min_layer,root_reach-sum(layer_thickness(1:2)))
     layer_thickness(4) = max_depth - sum(layer_thickness(1:3))
     layer_thickness(5) = top_soil_depth
-    previous_depth = max(top_soil_depth,root_reach)
+    previous_depth = sum(layer_thickness(1:3))
     ! Needed to initialise soils
     call calculate_Rtot(Rtot)
     ! Used to initialise soils
@@ -1042,6 +1040,10 @@ module CARBON_MODEL_MOD
        days_per_step = deltat(n)
        days_per_step_1 = deltat_1(n)
 
+       !!!!!!!!!!
+       ! Adjust snow balance balance based on temperture
+       !!!!!!!!!!
+
        ! snowing or not...?
        if (mint < 0d0 .and. maxt > 0d0) then
            ! if minimum temperature is below freezing point then we weight the
@@ -1068,28 +1070,14 @@ module CARBON_MODEL_MOD
        end if
 
        !!!!!!!!!!
-       ! calculate soil water potential and total hydraulic resistance
-       !!!!!!!!!!
-
-       ! calculate the minimum soil & root hydraulic resistance based on total
-       ! fine root mass ! *2*2 => *RS*C->Bio
-       root_biomass = max(min_root,POOLS(n,3)*2d0)
-       ! estimate drythick for the current step
-       drythick = max(min_drythick, top_soil_depth * min(1d0,1d0 - (soil_waterfrac(1) / porosity(1))))
-       call calculate_Rtot(Rtot)
-       ! Pass wSWP to output variable and update deltaWP between minlwp and
-       ! current weighted soil WP
-       wSWP_time(n) = wSWP ; deltaWP = min(0d0,minlwp-wSWP)
-
-       !!!!!!!!!!
        ! Calculate surface exchange coefficients
        !!!!!!!!!!
 
        ! calculate some temperature dependent meteorologial properties
-       !call meteorological_constants(maxt,maxt+freeze)
+       !call meteorological_constants(maxt,maxt+freeze,vpd_kPa)
        ! pass variables from memory objects
        air_density_kg = air_density_kg_time(n)
-       convert_ms1_mol_1 = convert_ms1_mol_1_time(n)
+       convert_ms1_mol_1 = convert_ms1_mol_1_time(n) ; convert_ms1_mmol_1 = convert_ms1_mol_1 * 1d3
        lambda = lambda_time(n) ; psych = psych_time(n)
        slope = slope_time(n) ; ET_demand_coef = ET_demand_coef_time(n)
        water_vapour_diffusion = water_vapour_diffusion_time(n)
@@ -1106,16 +1094,15 @@ module CARBON_MODEL_MOD
        call calculate_longwave_isothermal(leafT,maxt)
 
        !!!!!!!!!!
-       ! Estimate evaporative and photosynthetic fluxes
+       ! Calculate physically constrained evaporation and
+       ! soil water potential and total hydraulic resistance
        !!!!!!!!!!
 
-       ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
-       call calculate_wetcanopy_evaporation(wetcanopy_evap,act_pot_ratio,canopy_storage,0d0)
-
-       ! calculate radiation absorption and estimate stomatal conductance
-       call acm_albedo_gc(abs(deltaWP),Rtot)
-
-       ! if snow present assume that soilevaporation is sublimation of soil first
+       ! Estimate drythick for the current step
+       drythick = max(min_drythick, top_soil_depth * min(1d0,1d0 - (soil_waterfrac(1) / porosity(1))))
+       ! Soil surface (kgH2O.m-2.day-1)
+       call calculate_soil_evaporation(soilevaporation)
+       ! If snow present assume that soilevaporation is sublimation of soil first
        if (snow_storage > 0d0) then
            snow_sublimation = soilevaporation
            if (snow_sublimation*deltat(n) > snow_storage) snow_sublimation = snow_storage * deltat_1(n)
@@ -1124,6 +1111,20 @@ module CARBON_MODEL_MOD
        else
            snow_sublimation = 0d0
        end if
+
+       ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
+       call calculate_wetcanopy_evaporation(wetcanopy_evap,act_pot_ratio,canopy_storage)
+
+       ! calculate the minimum soil & root hydraulic resistance based on total
+       ! fine root mass ! *2*2 => *RS*C->Bio
+       root_biomass = max(min_root,POOLS(n,3)*2d0)
+       call calculate_Rtot(Rtot)
+       ! Pass wSWP to output variable and update deltaWP between minlwp and
+       ! current weighted soil WP
+       wSWP_time(n) = wSWP ; deltaWP = min(0d0,minlwp-wSWP)
+
+       ! calculate radiation absorption and estimate stomatal conductance
+       call calculate_stomatal_conductance(abs(deltaWP),Rtot)
 
        ! Note that soil mass balance will be calculated after phenology
        ! adjustments
@@ -1140,9 +1141,6 @@ module CARBON_MODEL_MOD
            ! assume zero fluxes
            FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; ci_global = 0d0
        endif
-
-       ! Soil surface (kgH2O.m-2.day-1)
-       call calculate_soil_evaporation(soilevaporation)
 
        !!!!!!!!!!
        ! GPP allocation
@@ -1245,6 +1243,7 @@ module CARBON_MODEL_MOD
 
        ! add any snow melt to the rainfall now that we have already dealt with the canopy interception
        rainfall = rainfall + (snow_melt / seconds_per_step)
+
        ! do mass balance (i.e. is there enough water to support ET)
        call calculate_update_soil_water(transpiration,soilevaporation,((rainfall-intercepted_rainfall)*seconds_per_day) &
                                        ,FLUXES(n,19))
@@ -1669,7 +1668,7 @@ module CARBON_MODEL_MOD
   !
   !------------------------------------------------------------------
   !
-  subroutine acm_albedo_gc(deltaWP,Rtot)
+  subroutine calculate_stomatal_conductance(deltaWP,Rtot)
 
     ! Determines 1) an approximation of canopy conductance (gc) mmolH2O.m-2.s-1
     ! based on potential hydraulic flow, air temperature and absorbed radiation.
@@ -1727,10 +1726,10 @@ module CARBON_MODEL_MOD
            lai_1 = lai**(-1d0)
            if (do_iWUE) then
               ! intrinsic WUE optimisation
-              stomatal_conductance = zbrent('acm_albedo_gc:find_gs_iWUE',find_gs_iWUE,min_gs,stomatal_conductance,tol_gs)
+              stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE',find_gs_iWUE,min_gs,stomatal_conductance,tol_gs)
            else
               ! WUE optimisation
-              stomatal_conductance = zbrent('acm_albedo_gc:find_gs_WUE',find_gs_WUE,min_gs,stomatal_conductance,tol_gs)
+              stomatal_conductance = zbrent('calculate_gs:find_gs_WUE',find_gs_WUE,min_gs,stomatal_conductance,tol_gs)
            endif
         end if
 
@@ -1741,11 +1740,11 @@ module CARBON_MODEL_MOD
 
     endif ! if LAI > vsmall
 
-  end subroutine acm_albedo_gc
+  end subroutine calculate_stomatal_conductance
   !
   !------------------------------------------------------------------
   !
-  subroutine meteorological_constants(input_temperature,input_temperature_K)
+  subroutine meteorological_constants(input_temperature,input_temperature_K,input_vpd_kPa)
 
     ! Determine some multiple use constants used by a wide range of functions
     ! All variables here are linked to air temperature and thus invarient between
@@ -1754,7 +1753,8 @@ module CARBON_MODEL_MOD
     implicit none
 
     ! arguments
-    double precision, intent(in) :: input_temperature, input_temperature_K
+    double precision, intent(in) :: input_temperature, input_temperature_K, &
+                                    input_vpd_kPa
 
     ! local variables
     double precision :: s, mult
@@ -1785,7 +1785,7 @@ module CARBON_MODEL_MOD
     slope = s/(mult*mult)
 
     ! estimate frequently used atmmospheric demand component
-    ET_demand_coef = air_density_kg*cpair*vpd_kPa
+    ET_demand_coef = air_density_kg*cpair*input_vpd_kPa
 
     !
     ! Used for soil evaporation and leaf level conductance
@@ -1794,7 +1794,7 @@ module CARBON_MODEL_MOD
     ! Determine diffusion coefficient (m2.s-1), temperature dependant (pressure dependence neglected). Jones p51; appendix 2
     ! Temperature adjusted from standard 20oC (293.15 K), NOTE that 1/293.15 = 0.003411223
     ! 0.0000242 = conversion to make diffusion specific for water vapor (um2.s-1)
-    water_vapour_diffusion = 0.0000242d0*((input_temperature_K/293.15d0)**1.75d0)
+    water_vapour_diffusion = 0.0000242d0*((input_temperature_K/293.2d0)**1.75d0)
 
     !
     ! Used for calculation of leaf level conductance
@@ -1851,7 +1851,7 @@ module CARBON_MODEL_MOD
     ! Calculate canopy evaporative fluxes (kgH2O/m2/day)
     !!!!!!!!!!
 
-    ! Calculate numerator of Penman Montheith (kg.m-2.day-1)
+    ! Calculate numerator of Penman Montheith (kgH2O.m-2.day-1)
     transpiration = (slope*canopy_radiation) + (ET_demand_coef*gb)
     ! Calculate the transpiration flux and restrict by potential water supply
     ! over the day
@@ -1861,7 +1861,7 @@ module CARBON_MODEL_MOD
   !
   !------------------------------------------------------------------
   !
-  subroutine calculate_wetcanopy_evaporation(wetcanopy_evap,act_pot_ratio,storage,transpiration)
+  subroutine calculate_wetcanopy_evaporation(wetcanopy_evap,act_pot_ratio,storage)
 
     ! Estimates evaporation of canopy intercepted rainfall based on the Penman-Monteith model of
     ! evapotranspiration used to estimate SPA's daily evapotranspiration flux
@@ -1870,7 +1870,6 @@ module CARBON_MODEL_MOD
     implicit none
 
     ! arguments
-    double precision, intent(in) :: transpiration      ! kgH2O/m2/day
     double precision, intent(inout) :: storage         ! canopy water storage kgH2O/m2
     double precision, intent(out) :: wetcanopy_evap, & ! kgH2O.m-2.day-1
                                       act_pot_ratio    ! Ratio of potential evaporation to actual
@@ -1902,8 +1901,6 @@ module CARBON_MODEL_MOD
     ! Calculate the potential wet canopy evaporation,
     ! limited by energy used for transpiration
     wetcanopy_evap = (wetcanopy_evap / (lambda*(slope+psych))) * seconds_per_day
-    ! substract transpiration from potential surface evaporation
-    wetcanopy_evap = wetcanopy_evap - transpiration
 
     ! Dew is unlikely to occur (if we had energy balance) if mint > 0
     ! Sublimation is also unlikely to occur (if we had energy balance) if maxt < 0
@@ -1990,6 +1987,10 @@ module CARBON_MODEL_MOD
     soilevap = soilevap / (lambda*(slope+(psych*(1d0+soil_conductance/gws))))
     soilevap = soilevap * dayl_seconds
 
+    ! Dew is unlikely to occur (if we had energy balance) if mint > 0
+    ! Sublimation is unlikely to occur (if we had energy balance) if maxt < 0
+    if ((soilevap < 0d0 .and. mint > 1d0) .or. (soilevap > 0d0 .and. maxt < 1d0)) soilevap = 0d0
+
   end subroutine calculate_soil_evaporation
   !
   !------------------------------------------------------------------
@@ -2032,6 +2033,9 @@ module CARBON_MODEL_MOD
     ! now we are interested in the within canopy wind speed,
     ! here we assume that the wind speed just inside of the canopy is most important.
     canopy_wind = canopy_wind*exp((ustar_Uh*((canopy_height*0.75d0)-canopy_height))/mixing_length_momentum)
+
+    ! calculate_soil_conductance
+    call calculate_soil_conductance(mixing_length_momentum)
 
     ! calculate leaf level conductance (m/s) for water vapour under forced convective conditions
     call average_leaf_conductance(aerodynamic_conductance)
@@ -2660,7 +2664,7 @@ module CARBON_MODEL_MOD
     ! correct intercepted rainfall rate to kgH2O.m-2.s-1
     intercepted_rainfall = intercepted_rainfall - (through_fall * days_per_step_1 * seconds_per_day_1)
 
-    ! sanity checks; note 1e-8 prevents precision errors causing flags
+!    ! sanity checks; note 1e-8 prevents precision errors causing flags
 !    if (intercepted_rainfall > rainfall .or. storage < 0d0 .or. &
 !       (wetcanopy_evaporation * days_per_step_1) > (1d-8 + initial_canopy + (rainfall*seconds_per_day)) ) then
 !        print*,"Condition 1",intercepted_rainfall > rainfall
@@ -2703,11 +2707,12 @@ module CARBON_MODEL_MOD
 
     ! local variables
     integer :: day
-    double precision :: depth_change, water_change
+    double precision :: depth_change, water_change, initial_soilwater, balance
     double precision, dimension(nos_root_layers) :: avail_flux, evaporation_losses
 
     ! reset soil water exchanges
     underflow = 0d0 ; runoff = 0d0 ; corrected_ET = 0d0
+    initial_soilwater = sum(1d3 * soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers))
 
     ! to allow for smooth water balance integration carry this out at daily time step
     do day = 1, nint(days_per_step)
@@ -2722,9 +2727,10 @@ module CARBON_MODEL_MOD
        ! Assume all soil evaporation comes from the soil surface only
        evaporation_losses(1) = evaporation_losses(1) + ET_soil
        ! can not evaporate from soil more than is available (m -> mm)
-!       avail_flux = soil_waterfrac(1:nos_root_layers) * layer_thickness(1:nos_root_layers) * 1d3
-!       where (evaporation_losses > avail_flux) evaporation_losses = avail_flux * 0.999d0
-
+       ! NOTE: This is due to the fact that both soil evaporation and transpiration
+       !       are drawing from the same water supply. Also 0.999 below is to allow for precision error...
+       avail_flux = soil_waterfrac(1:nos_root_layers) * layer_thickness(1:nos_root_layers) * 1d3
+       where (evaporation_losses > avail_flux) evaporation_losses = avail_flux * 0.999d0
        ! this will update the ET estimate outside of the function
        ! days_per_step corrections happens outside of the loop below
        corrected_ET = corrected_ET + sum(evaporation_losses)
@@ -2733,42 +2739,36 @@ module CARBON_MODEL_MOD
        ! convert kg.m-2 (or mm) -> Mg.m-2 (or m)
        waterloss = 0d0 ; watergain = 0d0
        waterloss(1:nos_root_layers) = evaporation_losses(1:nos_root_layers)*1d-3
-       ! update soil water status with evaporative losses
+
+       !!!!!!!!!!
+       ! Gravitational drainage
+       !!!!!!!!!!
+
+       ! determine drainage flux between surface -> sub surface and sub surface
+       call gravitational_drainage
+
+       !!!!!!!!!!
+       ! Rainfall infiltration drainage
+       !!!!!!!!!!
+
+       ! determine infiltration from rainfall (kgH2O/m2/step),
+       ! if rainfall is probably liquid / soil surface is probably not frozen
+       if (rainfall_in > 0d0) then
+           call infiltrate(rainfall_in)
+       else
+           runoff = runoff + (rainfall_in * days_per_step_1)
+       endif ! is there any rain to infiltrate?
+       ! update soil profiles. Convert fraction into depth specific values (rather than m3/m3) then update fluxes
        soil_waterfrac(1:nos_soil_layers) = ((soil_waterfrac(1:nos_soil_layers)*layer_thickness(1:nos_soil_layers)) &
                                          + watergain(1:nos_soil_layers) - waterloss(1:nos_soil_layers)) &
                                          / layer_thickness(1:nos_soil_layers)
-      ! reset soil water flux variables
-      waterloss = 0d0 ; watergain = 0d0
 
-      !!!!!!!!!!
-      ! Gravitational drainage
-      !!!!!!!!!!
-
-      ! determine drainage flux between surface -> sub surface and sub surface
-      call gravitational_drainage
-
-      !!!!!!!!!!
-      ! Rainfall infiltration drainage
-      !!!!!!!!!!
-
-      ! determine infiltration from rainfall (kgH2O/m2/step),
-      ! if rainfall is probably liquid / soil surface is probably not frozen
-      if (rainfall_in > 0d0) then
-          call infiltrate(rainfall_in)
-      else
-          runoff = runoff + (rainfall_in * days_per_step_1)
-      endif ! is there any rain to infiltrate?
-      ! update soil profiles. Convert fraction into depth specific values (rather than m3/m3) then update fluxes
-      soil_waterfrac(1:nos_soil_layers) = ((soil_waterfrac(1:nos_soil_layers)*layer_thickness(1:nos_soil_layers)) &
-                                        + watergain(1:nos_soil_layers) - waterloss(1:nos_soil_layers)) &
-                                        / layer_thickness(1:nos_soil_layers)
-
-      ! mass balance check, at this point do not try and adjust evaporation to
-      ! correct for lack of supply. Simply allow for drought in next time step
-      ! instead...
-      where (soil_waterfrac <= 0d0)
-        soil_waterfrac = vsmall
-      end where
+       ! mass balance check, at this point do not try and adjust evaporation to
+       ! correct for lack of supply. Simply allow for drought in next time step
+!       where (soil_waterfrac <= 0d0)
+!       ! instead...
+!         soil_waterfrac = vsmall
+!       end where
 
     end do ! days_per_step
 
@@ -2781,82 +2781,128 @@ module CARBON_MODEL_MOD
     ! Update soil layer thickness
     !!!!!!!!!!
 
-    depth_change = 0d0 ; water_change = 0d0
+    depth_change = (top_soil_depth+mid_soil_depth+min_layer) ; water_change = 0
     ! if roots extent down into the bucket
-    if (root_reach > (top_soil_depth+mid_soil_depth) .or. previous_depth > (top_soil_depth+mid_soil_depth)) then
+    if (root_reach > depth_change .and. previous_depth <= depth_change) then
 
-        ! how much has root depth extended since last step?
-        depth_change = root_reach - previous_depth
+        !!!!!!!!!!
+        ! Soil profile is within the bucket layer (layer 3)
+        !!!!!!!!!!
+
+        if (previous_depth > depth_change) then
+            ! how much has root depth extended since last step?
+            depth_change = root_reach - previous_depth
+        else
+            ! how much has root depth extended since last step?
+            depth_change = root_reach - depth_change
+        endif
 
         ! if there has been an increase
-        if (depth_change > 0.02d0 .and. root_reach > sum(layer_thickness(1:2))+min_layer) then
+        if (depth_change > 0.05) then
 
             ! determine how much water is within the new volume of soil
             water_change = soil_waterfrac(nos_soil_layers) * depth_change
+
             ! now assign that new volume of water to the deep rooting layer
-            soil_waterfrac(nos_root_layers) = ((soil_waterfrac(nos_root_layers) * layer_thickness(nos_root_layers)) &
-                                            + water_change) / (layer_thickness(nos_root_layers)+depth_change)
+            soil_waterfrac(nos_root_layers) = ((soil_waterfrac(nos_root_layers)*layer_thickness(nos_root_layers))+water_change) &
+                                            / (layer_thickness(nos_root_layers)+depth_change)
+
             ! explicitly update the soil profile if there has been rooting depth
             ! changes
             layer_thickness(1) = top_soil_depth ; layer_thickness(2) = mid_soil_depth
-            layer_thickness(3) = max(min_layer,root_reach-sum(layer_thickness(1:2)))
+            layer_thickness(3) = root_reach - sum(layer_thickness(1:2))
             layer_thickness(4) = max_depth - sum(layer_thickness(1:3))
 
             ! keep track of the previous rooting depth
             previous_depth = root_reach
 
-        elseif (depth_change < -0.02d0 .and. root_reach > layer_thickness(1)+min_layer) then
+        else if (depth_change < -0.05) then
+
+            ! make positive to ensure easier calculations
+            depth_change = -depth_change
 
             ! determine how much water is lost from the old volume of soil
-            water_change = soil_waterfrac(nos_root_layers) * abs(depth_change)
+            water_change = soil_waterfrac(nos_root_layers) * depth_change
             ! now assign that new volume of water to the deep rooting layer
-            soil_waterfrac(nos_soil_layers) = ((soil_waterfrac(nos_soil_layers) * layer_thickness(nos_soil_layers)) &
-                                            + water_change) / (layer_thickness(nos_soil_layers)+abs(depth_change))
+            soil_waterfrac(nos_soil_layers) = ((soil_waterfrac(nos_soil_layers)*layer_thickness(nos_soil_layers))+water_change) &
+                                            / (layer_thickness(nos_soil_layers)+depth_change)
 
-           ! explicitly update the soil profile if there has been rooting depth
-           ! changes
-           layer_thickness(1) = top_soil_depth ; layer_thickness(2) = mid_soil_depth
-           layer_thickness(3) = max(min_layer,root_reach-sum(layer_thickness(1:2)))
-           layer_thickness(4) = max_depth - sum(layer_thickness(1:3))
+            ! explicitly update the soil profile if there has been rooting depth
+            ! changes
+            layer_thickness(1) = top_soil_depth ; layer_thickness(2) = mid_soil_depth
+            layer_thickness(3) = root_reach - sum(layer_thickness(1:2))
+            layer_thickness(4) = max_depth - sum(layer_thickness(1:3))
 
-           ! keep track of the previous rooting depth
-           previous_depth = root_reach
+            ! keep track of the previous rooting depth
+            previous_depth = root_reach
 
         else
 
-           ! we don't want to do anything, just recycle the previous depth
+            ! keep track of the previous rooting depth
+            previous_depth = previous_depth
 
         end if ! depth change
 
-      else
+    else if (root_reach < depth_change .and. previous_depth > depth_change) then
 
-        ! if we are outside of the range when we need to consider rooting depth changes keep track incase we move into a zone when we do
-        previous_depth = root_reach
+        !!!!!!!!!!
+        ! Model has explicitly contracted the bucket layer
+        !!!!!!!!!!
 
-    end if ! root reach beyond top layer
+        ! In this circumstance we want to return the soil profile to it's
+        ! default structure with a minimum sized third layer
+        depth_change = previous_depth - depth_change
+
+        ! determine how much water is lost from the old volume of soil
+        water_change = soil_waterfrac(nos_root_layers) * depth_change
+        ! now assign that new volume of water to the deep rooting layer
+        soil_waterfrac(nos_soil_layers) = ((soil_waterfrac(nos_soil_layers)*layer_thickness(nos_soil_layers))+water_change) &
+                                        / (layer_thickness(nos_soil_layers)+depth_change)
+
+        ! explicitly update the soil profile if there has been rooting depth
+        ! changes
+        layer_thickness(1) = top_soil_depth ; layer_thickness(2) = mid_soil_depth
+        layer_thickness(3) = min_layer
+        layer_thickness(4) = max_depth - sum(layer_thickness(1:3))
+
+        ! keep track of the previous rooting depth
+        previous_depth = min_layer
+
+    else ! root_reach > (top_soil_depth + mid_soil_depth + min_layer)
+
+        ! if we are outside of the range when we need to consider rooting depth changes keep track in case we move into a zone when we do
+        previous_depth = previous_depth
+
+    endif ! root reach beyond top layer
 
     ! finally update soil water potential
     call soil_water_potential
 
-  !   ! sanity check for catastrophic failure
-  !   do soil_layer = 1, nos_soil_layers
-  !      if (soil_waterfrac(soil_layer) < 0d0 .and. soil_waterfrac(soil_layer) > -0.01d0) then
-  !          soil_waterfrac(soil_layer) = 0d0
-  !      endif
-  !      if (soil_waterfrac(soil_layer) < 0d0 .or. soil_waterfrac(soil_layer) /= soil_waterfrac(soil_layer)) then
-  !         print*,'ET',ET,"rainfall",rainfall_in
-  !         print*,'evaporation_losses',evaporation_losses
-  !         print*,"watergain",watergain
-  !         print*,"waterloss",waterloss
-  !         print*,'depth_change',depth_change
-  !         print*,"soil_waterfrac",soil_waterfrac
-  !         print*,"porosity",porosity
-  !         print*,"layer_thicknes",layer_thickness
-  !         print*,"Uptake fraction",uptake_fraction
-  !         print*,"max_depth",max_depth,"root_k",root_k,"root_reach",root_reach
-  !         print*,"fail" ; stop
-  !      endif
-  !   end do
+
+    ! check water balance
+    balance = (rainfall_in - corrected_ET - underflow - runoff) !* days_per_step
+    balance = balance &
+            - (sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers) * 1d3) &
+            - initial_soilwater)
+    if (abs(balance) > 1d-6) then
+        print*,"Soil water miss-balance (mm)",balance
+        print*,"Rainfall",rainfall_in,"ET",corrected_ET,"underflow",underflow,"runoff",runoff !* days_per_step
+!        do soil_layer = 1, nos_soil_layers
+!           if (soil_waterfrac(soil_layer) < 0d0 .or. soil_waterfrac(soil_layer) /= soil_waterfrac(soil_layer)) then
+!               print*,'corrected_ET',corrected_ET,"rainfall",rainfall_in
+!               print*,'evaporation_losses',evaporation_losses
+!               print*,"watergain",watergain
+!               print*,"waterloss",waterloss
+!               print*,'depth_change',depth_change
+!               print*,"soil_waterfrac",soil_waterfrac
+!               print*,"porosity",porosity
+!               print*,"layer_thicknes",layer_thickness
+!               print*,"Uptake fraction",uptake_fraction
+!               print*,"max_depth",max_depth,"root_k",root_k,"root_reach",root_reach
+!               print*,"fail" ; stop
+!           endif
+!        end do ! soil layers
+    end if ! abs(balance) > 1d-10
 
     ! explicit return needed to ensure that function runs all needed code
     return
@@ -2877,23 +2923,24 @@ module CARBON_MODEL_MOD
 
     ! local argumemts
     integer :: i
-    double precision :: add ! surface water available for infiltration (m)
-    double precision, dimension(nos_soil_layers) :: wdiff ! available space in a given soil layer for water to fill (m)
+    double precision :: add, & ! surface water available for infiltration (m)
+                      wdiff    ! available space in a given soil layer for water to fill (m)
 
     ! convert rainfall water from mm -> m (or kgH2O.m-2.day-1 -> MgH2O.m-2.day-1)
     add = rainfall_in * 1d-3
-    ! determine the available pore space in current soil layer
-    wdiff = (porosity(1:nos_soil_layers)-soil_waterfrac(1:nos_soil_layers)) &
-          * layer_thickness(1:nos_soil_layers)-watergain(1:nos_soil_layers)+waterloss(1:nos_soil_layers)
 
     do i = 1 , nos_soil_layers
        ! is the input of water greater than available space
        ! if so fill and subtract from input and move on to the next
        ! layer
-       if (add > wdiff(i)) then
+       ! determine the available pore space in current soil layer
+       wdiff = (porosity(i)-soil_waterfrac(i)) &
+             * layer_thickness(i)-watergain(i)+waterloss(i)
+
+       if (add > wdiff) then
            ! if so fill and subtract from input and move on to the next layer
-           watergain(i) = watergain(i) + wdiff(i)
-           add = add - wdiff(i)
+           watergain(i) = watergain(i) + wdiff
+           add = add - wdiff
        else
            ! otherwise infiltate all in the current layer
            watergain(i) = watergain(i) + add
@@ -3475,7 +3522,7 @@ module CARBON_MODEL_MOD
             call calculate_shortwave_balance
             if (lai_save < vsmall) then
                 call calculate_aerodynamic_conductance
-                call acm_albedo_gc(abs(deltaWP),Rtot)
+                call calculate_stomatal_conductance(abs(deltaWP),Rtot)
             endif ! lai_save < vsmall
             ! calculate stomatal conductance of water
             if (stomatal_conductance > vsmall) then
@@ -3516,7 +3563,7 @@ module CARBON_MODEL_MOD
                 call calculate_shortwave_balance
                 if (lai_save < vsmall) then
                     call calculate_aerodynamic_conductance
-                    call acm_albedo_gc(abs(deltaWP),Rtot)
+                    call calculate_stomatal_conductance(abs(deltaWP),Rtot)
                 endif ! lai_save < vsmall
                 ! calculate stomatal conductance of water
                 if (stomatal_conductance > vsmall) then

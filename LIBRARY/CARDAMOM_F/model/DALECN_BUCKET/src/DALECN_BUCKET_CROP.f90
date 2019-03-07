@@ -145,31 +145,32 @@ contains
                        ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT)
 
     use CARBON_MODEL_MOD, only: arrhenious,acm_gpp,calculate_transpiration,calculate_soil_evaporation     &
-                               ,calculate_wetcanopy_evaporation,meteorological_constants,acm_albedo_gc&
+                               ,calculate_wetcanopy_evaporation,meteorological_constants,calculate_stomatal_conductance&
                                ,calculate_shortwave_balance,calculate_longwave_isothermal                 &
                                ,calculate_update_soil_water,calculate_daylength,drythick,vsmall           &
                                ,co2_half_saturation,co2_compensation_point,freeze,co2comp_saturation      &
-                               ,co2comp_half_sat_conc,kc_saturation,kc_half_sat_conc   &
                                ,pn_airt_scaling,pn_airt_scaling_time                   &
+                               ,co2comp_half_sat_conc,kc_saturation,kc_half_sat_conc,dayl_hours_fraction  &
                                ,calculate_Rtot,calculate_aerodynamic_conductance,saxton_parameters        &
                                ,initialise_soils,min_drythick,soil_frac_clay,soil_frac_sand,dayl_hours    &
                                ,seconds_per_day,dayl_seconds,dayl_seconds_1,seconds_per_step,root_biomass &
                                ,top_soil_depth,mid_soil_depth,root_reach,min_root,max_depth,root_k,previous_depth &
-                               ,min_layer,wSWP,SWP,SWP_initial,deltat_1,water_flux,soilwatermm,wSWP_time  &
+                               ,min_layer,wSWP,SWP,SWP_initial,deltat_1,water_flux,wSWP_time  &
                                ,layer_thickness,minlwp,soil_waterfrac,soil_waterfrac_initial              &
                                ,porosity,porosity_initial,field_capacity,field_capacity_initial,meant     &
-                               ,stomatal_conductance,avN,iWUE,NUE,ceff,pn_max_temp,pn_opt_temp            &
+                               ,stomatal_conductance,avN,iWUE,NUE,pn_max_temp,pn_opt_temp,ceff            &
                                ,pn_kurtosis,e0,co2_half_sat,co2_comp_point,max_lai_lwrad_transmitted      &
                                ,lai_half_lwrad_transmitted,max_lai_nir_reflection,lai_half_nir_reflection &
                                ,max_lai_par_reflection,lai_half_par_reflection,max_lai_par_transmitted    &
                                ,lai_half_par_transmitted,max_lai_nir_transmitted,lai_half_nir_transmitted &
                                ,max_lai_lwrad_reflected,lai_half_lwrad_reflected,soil_swrad_absorption    &
                                ,max_lai_lwrad_release,lai_half_lwrad_release,mint,maxt,swrad,co2,doy,leafT&
-                               ,rainfall,wind_spd,vpd_kpa,lai,days_per_step,days_per_step_1,canopy_storage&
+                               ,rainfall,wind_spd,vpd_kPa,lai,days_per_step,days_per_step_1,canopy_storage &
                                ,intercepted_rainfall,snow_storage,snow_melt,airt_zero_fraction,snowfall   &
-                               ,update_soil_initial_conditions,aerodynamic_conductance,opt_max_scaling
+                               ,update_soil_initial_conditions,opt_max_scaling
 
     ! DALEC crop model modified from Sus et al., (2010)
+
 
     implicit none
 
@@ -296,14 +297,11 @@ contains
     FLUXES(1:nodays,1:nofluxes) = 0d0 ; POOLS(1:nodays,1:nopools) = 0d0
 
     ! load ACM-GPP-ET parameters
-    NUE = 1.182549d+01  ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
-                        ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
-
-    ! load some values
-    avN = 10d0**pars(11) !TLS 1 ! foliar N
-    ! update combined canopy efficiency
+    NUE = 1.182549d+01   ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
+                         ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
+    avN = 10d0**pars(11) ! foliar N
     ceff = avN*NUE
-    deltaWP = minlwp !-2.0  ! leafWP-soilWP (i.e. -2-0)
+    deltaWP = minlwp     ! leafWP-soilWP (i.e. -2-0)
     Rtot = 1d0 ! totaly hydraulic resistance ! p12 from ACM recal (updated)
 
     ! plus ones being calibrated
@@ -398,7 +396,7 @@ contains
         ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
         if (.not.allocated(deltat_1)) then
 
-           allocate(deltat_1(nodays),soilwatermm(nodays),wSWP_time(nodays), &
+           allocate(deltat_1(nodays),wSWP_time(nodays), &
                     co2_compensation_point(nodays),co2_half_saturation(nodays), &
                     pn_airt_scaling_time(nodays))
            do n = 1, nodays
@@ -492,7 +490,7 @@ contains
       meant = (maxt+mint) * 0.5d0   ! mean air temperature (oC)
       airt_zero_fraction = (maxt-0d0) / (maxt-mint) ! fraction of temperture period above freezing
       wind_spd = met(15,n) ! wind speed (m/s)
-      vpd_kpa = met(16,n)*1d-3  ! Vapour pressure deficit (Pa->kPa)
+      vpd_kPa = met(16,n)*1d-3  ! Vapour pressure deficit (Pa)
 
       ! states needed for module variables
       lai_out(n) = POOLS(n,2)/LCA
@@ -509,6 +507,7 @@ contains
       ! calculate daylength in hours and seconds
       call calculate_daylength((doy-(deltat(n)*0.5d0)),lat)
       ! extract timing related values
+      dayl_hours_fraction = dayl_hours * 0.04166667d0 ! 1/24 = 0.04166667
       dayl_seconds_1 = dayl_seconds ** (-1d0)
       seconds_per_step = seconds_per_day * deltat(n)
       days_per_step = deltat(n)
@@ -554,11 +553,11 @@ contains
       wSWP_time(n) = wSWP ; deltaWP = min(0d0,minlwp-wSWP)
 
       ! calculate some temperature dependent meteorologial properties
-      call meteorological_constants(maxt,maxt+freeze)
+      call meteorological_constants(maxt,maxt+freeze,vpd_kPa)
       ! calculate radiation absorption and estimate stomatal conductance
       call calculate_aerodynamic_conductance
       call calculate_shortwave_balance ; call calculate_longwave_isothermal(leafT,maxt)
-      call acm_albedo_gc(abs(deltaWP),Rtot)
+      call calculate_stomatal_conductance(abs(deltaWP),Rtot)
 
       ! reallocate for crop model timings
       doy = met(6,n)
@@ -576,7 +575,7 @@ contains
       gpp_acm = GPP_out(n) * deltat(n)
 
       ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
-      call calculate_wetcanopy_evaporation(wetcanopy_evap,pot_actual_ratio,canopy_storage,transpiration)
+      call calculate_wetcanopy_evaporation(wetcanopy_evap,pot_actual_ratio,canopy_storage)
       ! Soil surface (kgH2O.m-2.day-1)
       call calculate_soil_evaporation(soilevaporation)
       ! restrict transpiration to positive only

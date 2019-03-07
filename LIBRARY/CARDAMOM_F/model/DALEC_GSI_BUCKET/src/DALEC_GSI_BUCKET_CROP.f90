@@ -145,7 +145,7 @@ contains
                        ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT)
 
     use CARBON_MODEL_MOD, only: arrhenious,acm_gpp,calculate_transpiration,calculate_soil_evaporation     &
-                               ,calculate_wetcanopy_evaporation,meteorological_constants,acm_albedo_gc&
+                               ,calculate_wetcanopy_evaporation,meteorological_constants,calculate_stomatal_conductance&
                                ,calculate_shortwave_balance,calculate_longwave_isothermal                 &
                                ,calculate_update_soil_water,calculate_daylength,drythick,vsmall           &
                                ,co2_half_saturation,co2_compensation_point,freeze,co2comp_saturation      &
@@ -155,7 +155,7 @@ contains
                                ,initialise_soils,min_drythick,soil_frac_clay,soil_frac_sand,dayl_hours    &
                                ,seconds_per_day,dayl_seconds,dayl_seconds_1,seconds_per_step,root_biomass &
                                ,top_soil_depth,mid_soil_depth,root_reach,min_root,max_depth,root_k,previous_depth &
-                               ,min_layer,wSWP,SWP,SWP_initial,deltat_1,water_flux,soilwatermm,wSWP_time  &
+                               ,min_layer,wSWP,SWP,SWP_initial,deltat_1,water_flux,wSWP_time  &
                                ,layer_thickness,minlwp,soil_waterfrac,soil_waterfrac_initial              &
                                ,porosity,porosity_initial,field_capacity,field_capacity_initial,meant     &
                                ,stomatal_conductance,avN,iWUE,NUE,pn_max_temp,pn_opt_temp,ceff            &
@@ -396,7 +396,7 @@ contains
         ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
         if (.not.allocated(deltat_1)) then
 
-           allocate(deltat_1(nodays),soilwatermm(nodays),wSWP_time(nodays), &
+           allocate(deltat_1(nodays),wSWP_time(nodays), &
                     co2_compensation_point(nodays),co2_half_saturation(nodays), &
                     pn_airt_scaling_time(nodays))
            do n = 1, nodays
@@ -553,11 +553,11 @@ contains
       wSWP_time(n) = wSWP ; deltaWP = min(0d0,minlwp-wSWP)
 
       ! calculate some temperature dependent meteorologial properties
-      call meteorological_constants(maxt,maxt+freeze)
+      call meteorological_constants(maxt,maxt+freeze,vpd_kPa)
       ! calculate radiation absorption and estimate stomatal conductance
       call calculate_aerodynamic_conductance
       call calculate_shortwave_balance ; call calculate_longwave_isothermal(leafT,maxt)
-      call acm_albedo_gc(abs(deltaWP),Rtot)
+      call calculate_stomatal_conductance(abs(deltaWP),Rtot)
 
       ! reallocate for crop model timings
       doy = met(6,n)
@@ -575,7 +575,7 @@ contains
       gpp_acm = GPP_out(n) * deltat(n)
 
       ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
-      call calculate_wetcanopy_evaporation(wetcanopy_evap,pot_actual_ratio,canopy_storage,transpiration)
+      call calculate_wetcanopy_evaporation(wetcanopy_evap,pot_actual_ratio,canopy_storage)
       ! Soil surface (kgH2O.m-2.day-1)
       call calculate_soil_evaporation(soilevaporation)
       ! restrict transpiration to positive only
