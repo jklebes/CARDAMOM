@@ -954,6 +954,7 @@ module CARBON_MODEL_MOD
     maxt_lag1 = maxt
     seconds_per_step = deltat(1) * seconds_per_day
     days_per_step =  deltat(1)
+    days_per_step_1 =  deltat_1(1)
 
     ! reset disturbance at the beginning of iteration
     disturbance_residue_to_litter = 0d0 ; disturbance_loss_from_litter = 0d0
@@ -2744,7 +2745,7 @@ module CARBON_MODEL_MOD
        ! Gravitational drainage
        !!!!!!!!!!
 
-       ! determine drainage flux between surface -> sub surface and sub surface
+       ! determine drainage flux between surface -> sub surface
        call gravitational_drainage
 
        !!!!!!!!!!
@@ -2878,30 +2879,15 @@ module CARBON_MODEL_MOD
     ! finally update soil water potential
     call soil_water_potential
 
-
     ! check water balance
     balance = (rainfall_in - corrected_ET - underflow - runoff) * days_per_step
     balance = balance &
             - (sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers) * 1d3) &
             - initial_soilwater)
+
     if (abs(balance) > 1d-6) then
         print*,"Soil water miss-balance (mm)",balance
-        print*,"Rainfall",rainfall_in,"ET",corrected_ET,"underflow",underflow,"runoff",runoff !* days_per_step
-!        do soil_layer = 1, nos_soil_layers
-!           if (soil_waterfrac(soil_layer) < 0d0 .or. soil_waterfrac(soil_layer) /= soil_waterfrac(soil_layer)) then
-!               print*,'corrected_ET',corrected_ET,"rainfall",rainfall_in
-!               print*,'evaporation_losses',evaporation_losses
-!               print*,"watergain",watergain
-!               print*,"waterloss",waterloss
-!               print*,'depth_change',depth_change
-!               print*,"soil_waterfrac",soil_waterfrac
-!               print*,"porosity",porosity
-!               print*,"layer_thicknes",layer_thickness
-!               print*,"Uptake fraction",uptake_fraction
-!               print*,"max_depth",max_depth,"root_k",root_k,"root_reach",root_reach
-!               print*,"fail" ; stop
-!           endif
-!        end do ! soil layers
+        print*,"Rainfall",rainfall_in,"ET",corrected_ET,"underflow",underflow,"runoff",runoff
     end if ! abs(balance) > 1d-10
 
     ! explicit return needed to ensure that function runs all needed code
@@ -2934,8 +2920,8 @@ module CARBON_MODEL_MOD
        ! if so fill and subtract from input and move on to the next
        ! layer
        ! determine the available pore space in current soil layer
-       wdiff = (porosity(i)-soil_waterfrac(i)) &
-             * layer_thickness(i)-watergain(i)+waterloss(i)
+       wdiff = ((porosity(i)-soil_waterfrac(i)) &
+             * layer_thickness(i))-watergain(i)+waterloss(i)
 
        if (add > wdiff) then
            ! if so fill and subtract from input and move on to the next layer
@@ -2974,9 +2960,6 @@ module CARBON_MODEL_MOD
                               ,local_drain & ! drainage of current layer (m/nos_minutes)
                  ,iceprop(nos_soil_layers)
 
-    ! local parameters
-    integer, parameter :: nos_hours_per_day = 1440, nos_minutes = 60*8
-
     ! calculate soil ice proportion; at the moment
     ! assume everything liquid
     iceprop = 0d0
@@ -2994,18 +2977,15 @@ module CARBON_MODEL_MOD
        ! initial conditions; i.e. is there liquid water and more water than
        ! layer can hold
        if ( liquid > drainlayer ) then
-           d = 1 ; nos_integrate = nos_hours_per_day / nos_minutes
-           drainage = 0d0 ; local_drain = 0d0
-           do while (d <= nos_integrate .and. liquid > drainlayer)
-              ! estimate drainage rate (m/s)
-              call calculate_soil_conductivity(soil_layer,liquid,local_drain)
-              ! scale to total number of seconds in increment
-              local_drain = local_drain * dble(nos_minutes * 60)
-              local_drain = min(liquid-drainlayer,local_drain)
-              liquid = liquid - local_drain
-              drainage = drainage + local_drain
-              d = d + 1
-           end do ! integrate over time
+
+           ! Trapezium rule for approximating integral of drainage rate
+           dx = liquid - ((liquid + drainlayer)*0.5d0)
+           call calculate_soil_conductivity(soil_layer,liquid,tmp1)
+           call calculate_soil_conductivity(soil_layer,drainlayer,tmp2)
+           call calculate_soil_conductivity(soil_layer,(liquid+dx),tmp3)
+           drainage = 0.5d0 * dx * ((tmp1 + tmp2) + 2d0 * tmp3)
+           drainage = drainage * seconds_per_day
+           drainage = min(drainage,liquid - drainlayer)
 
            ! unsaturated volume of layer below (m3 m-2)
            unsat = max( 0d0 , ( porosity( soil_layer+1 ) - soil_waterfrac( soil_layer+1 ) ) &
@@ -3014,6 +2994,7 @@ module CARBON_MODEL_MOD
            if ( drainage > unsat ) drainage = unsat
            ! water loss from this layer (m3)
            change = drainage * layer_thickness(soil_layer)
+
            ! update soil layer below with drained liquid
            watergain( soil_layer + 1 ) = watergain( soil_layer + 1 ) + change
            waterloss( soil_layer     ) = waterloss( soil_layer     ) + change
