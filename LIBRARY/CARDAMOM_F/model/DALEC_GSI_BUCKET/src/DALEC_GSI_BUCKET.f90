@@ -2880,7 +2880,7 @@ module CARBON_MODEL_MOD
 
 
     ! check water balance
-    balance = (rainfall_in - corrected_ET - underflow - runoff) !* days_per_step
+    balance = (rainfall_in - corrected_ET - underflow - runoff) * days_per_step
     balance = balance &
             - (sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers) * 1d3) &
             - initial_soilwater)
