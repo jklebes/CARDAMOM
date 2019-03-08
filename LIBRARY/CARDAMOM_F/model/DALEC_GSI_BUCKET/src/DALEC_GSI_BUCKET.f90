@@ -1682,7 +1682,7 @@ module CARBON_MODEL_MOD
 
     ! local variables
     double precision :: denom
-    double precision, parameter :: max_gs = 500d0, &   ! mmolH2O/m2leaf/s
+    double precision, parameter :: max_gs = 3500d0, &  ! mmolH2O/m2leaf/s
                                    min_gs = 0.001d0, & ! mmolH2O/m2leaf/s
                                    tol_gs = 4d0        ! mmolH2O/m2leaf/s
 
