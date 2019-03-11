@@ -2709,11 +2709,18 @@ module CARBON_MODEL_MOD
     ! local variables
     integer :: day
     double precision :: depth_change, water_change, initial_soilwater, balance
-    double precision, dimension(nos_root_layers) :: avail_flux, evaporation_losses
+    double precision, dimension(nos_root_layers) :: avail_flux, evaporation_losses, pot_evap_losses
 
     ! reset soil water exchanges
-    underflow = 0d0 ; runoff = 0d0 ; corrected_ET = 0d0
+    underflow = 0d0 ; runoff = 0d0 ; corrected_ET = 0d0 
+    pot_evap_losses = 0d0 ; evaporation_losses = 0d0
     initial_soilwater = sum(1d3 * soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers))
+
+    ! Assume leaf transpiration is drawn from the soil based on the
+    ! update_fraction estimated in calculate_Rtot
+    pot_evap_losses = ET_leaf * uptake_fraction
+    ! Assume all soil evaporation comes from the soil surface only
+    pot_evap_losses(1) = evaporation_losses(1) + ET_soil
 
     ! to allow for smooth water balance integration carry this out at daily time step
     do day = 1, nint(days_per_step)
@@ -2722,11 +2729,8 @@ module CARBON_MODEL_MOD
        ! Evaporative losses
        !!!!!!!!!!
 
-       ! Assume leaf transpiration is drawn from the soil based on the
-       ! update_fraction estimated in calculate_Rtot
-       evaporation_losses = ET_leaf * uptake_fraction
-       ! Assume all soil evaporation comes from the soil surface only
-       evaporation_losses(1) = evaporation_losses(1) + ET_soil
+       ! load potential evaporative losses from the soil profile
+       evaporation_losses = pot_evap_losses
        ! can not evaporate from soil more than is available (m -> mm)
        ! NOTE: This is due to the fact that both soil evaporation and transpiration
        !       are drawing from the same water supply. Also 0.999 below is to allow for precision error...
