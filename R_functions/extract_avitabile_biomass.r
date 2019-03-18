@@ -6,8 +6,8 @@ extract_avitabile_biomass<- function(timestep_days,spatial_type,resolution,grid_
 #        if (latlon_in[1] < max(as.vector(Cwood_all$lat),na.rm=TRUE)+1 & latlon_in[1] > min(as.vector(Cwood_all$lat),na.rm=TRUE)-1 & 
 #            latlon_in[2] < max(as.vector(Cwood_all$lat),na.rm=TRUE)+1 & latlon_in[1] > min(as.vector(Cwood_all$long),na.rm=TRUE)-1) {
             # find the nearest location
-            output=closest2d(1,Cwood_all$lat,Cwood_all$long,latlon_in[1],latlon_in[2],2)
-            i1=unlist(output)[1] ; j1=unlist(output)[2]
+            output = closest2d(1,Cwood_all$lat,Cwood_all$long,latlon_in[1],latlon_in[2],2)
+            i1 = unlist(output)[1] ; j1 = unlist(output)[2]
 
             print(paste("Avitabile Biomass data extracted for current location ",Sys.time(),sep=""))
 
@@ -33,6 +33,8 @@ extract_avitabile_biomass<- function(timestep_days,spatial_type,resolution,grid_
             # carry out averaging
             Cwood = mean(Cwood_all$biomass_all[average_i,average_j], na.rm=TRUE)
             Cwood_unc = mean(Cwood_all$biomass_all_unc[average_i,average_j], na.rm=TRUE)
+            # reduce uncertainty of biomass to ensure appropriate pull on the model
+            Cwood_unc = Cwood_unc * 0.5
 
             # convert missing data back to -9999
             Cwood[which(is.na(Cwood))]=-9999.0 ; Cwood_unc[which(is.na(Cwood_unc))]=-9999.0

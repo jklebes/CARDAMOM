@@ -151,7 +151,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
      out_var(i,1:nodays,6)  = POOLS(1:nodays,4) ! wood
      out_var(i,1:nodays,7)  = POOLS(1:nodays,6) ! som
      out_var(i,1:nodays,8)  = POOLS(1:nodays,1) + POOLS(1:nodays,2) + POOLS(1:nodays,3) & ! common pools
-                              + POOLS(1:nodays,4) + POOLS(1:nodays,5) + POOLS(1:nodays,6) + POOLS(1:nodays,7)
+                              + POOLS(1:nodays,4) !+ POOLS(1:nodays,5) + POOLS(1:nodays,6) + POOLS(1:nodays,7)
      if (pft == 1) out_var(i,1:nodays,8) = out_var(i,1:nodays,8) + POOLS(1:nodays,9) ! crop specific
      out_var(i,1:nodays,9)  = POOLS(1:nodays,3) ! root
      out_var(i,1:nodays,10) = POOLS(1:nodays,5) ! litter

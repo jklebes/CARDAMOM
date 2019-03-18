@@ -986,7 +986,7 @@ module CARBON_MODEL_MOD
     ! Calculate GSI ranges
     Tfac_range_1 = (pars(15)-pars(14))**(-1d0)
     Photofac_range_1 = (pars(24)-pars(16))**(-1d0)
-    VPDfac_range_1 = abs(pars(26)-pars(25))**(-1d0)
+    VPDfac_range_1 = (pars(26)-pars(25))**(-1d0)
     ! specific leaf area (m2/g)
     SLA = pars(17)**(-1d0)
 
@@ -2714,7 +2714,7 @@ module CARBON_MODEL_MOD
     double precision, dimension(nos_root_layers) :: avail_flux, evaporation_losses, pot_evap_losses
 
     ! reset soil water exchanges
-    underflow = 0d0 ; runoff = 0d0 ; corrected_ET = 0d0 
+    underflow = 0d0 ; runoff = 0d0 ; corrected_ET = 0d0
     initial_soilwater = sum(1d3 * soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers))
 
     ! Assume leaf transpiration is drawn from the soil based on the
@@ -3002,7 +3002,7 @@ module CARBON_MODEL_MOD
            ! unsaturated volume of layer below (m3 m-2)
            if (soil_waterfrac( soil_layer + 1 ) >= porosity( soil_layer+1 )) then
                unsat = 0d0
-           else 
+           else
                unsat = ( porosity( soil_layer+1 ) - soil_waterfrac( soil_layer+1 ) ) &
                      * layer_thickness( soil_layer+1 ) / layer_thickness( soil_layer )
            endif
@@ -3499,59 +3499,18 @@ module CARBON_MODEL_MOD
         ! we are in a decending condition so foliar turnover
         leaf_fall = pot_leaf_fall*(1d0-GSI(current_step))
         just_grown = 0.5d0
-    endif
+    else
 
-    ! everything else in here was needed to keep track of GSI values but
-    ! ultimately if there is not labile available no growth can occur
-    if (avail_labile > 0d0) then
+        ! everything else in here was needed to keep track of GSI values but
+        ! ultimately if there is not labile available no growth can occur
+        if (avail_labile > 0d0) then
 
-        ! now update foliage and labile conditions based on gradient calculations
-        if (gradient >= lab_turn_crit .and. deltaWP < 0d0) then
+            ! now update foliage and labile conditions based on gradient calculations
+            if (gradient >= lab_turn_crit .and. deltaWP < 0d0) then
 
-            ! we are in an assending condition so labile turnover
-            leaf_growth = pot_leaf_growth*GSI(current_step)
-            just_grown = 1.5d0
-
-            ! calculate potential C allocation to leaves
-            tmp = avail_labile * &
-                (1d0-(1d0-leaf_growth)**deltat(current_step))*deltat_1(current_step)
-            ! calculate new leaf area, GPP return
-            lai = (foliage+tmp) * SLA
-            tmp = lai / lai_save
-            aerodynamic_conductance = aerodynamic_conductance * tmp
-            stomatal_conductance = stomatal_conductance * tmp
-            call calculate_shortwave_balance
-            if (lai_save < vsmall) then
-                call calculate_aerodynamic_conductance
-                call calculate_stomatal_conductance(abs(deltaWP),Rtot)
-            endif ! lai_save < vsmall
-            ! calculate stomatal conductance of water
-            if (stomatal_conductance > vsmall) then
-                tmp = max(0d0,acm_gpp(stomatal_conductance))
-            else
-                tmp = 0d0
-            endif
-            deltaGPP = tmp - GPP_current
-
-            ! is the marginal return for GPP (over the mean life of leaves)
-            ! less than increase in maintenance respiration and C required to
-            ! growth?
-
-            if (deltaGPP < gpp_crit_frac*GPP_current) leaf_growth = 0d0
-
-        else if (gradient < lab_turn_crit .and. gradient > fol_turn_crit .and. &
-                 deltaWP < 0d0 ) then
-
-            ! probaly we want nothing to happen,
-
-            ! However if we are at the seasonal
-            ! maximum we will consider further growth still
-            if (just_grown >= 1d0) then
-
-                ! we have recently grown so we will not be losing leaves, but we
-                ! might want to grow some more depending on the marginal return
-
+                ! we are in an assending condition so labile turnover
                 leaf_growth = pot_leaf_growth*GSI(current_step)
+                just_grown = 1.5d0
 
                 ! calculate potential C allocation to leaves
                 tmp = avail_labile * &
@@ -3573,17 +3532,60 @@ module CARBON_MODEL_MOD
                     tmp = 0d0
                 endif
                 deltaGPP = tmp - GPP_current
+
                 ! is the marginal return for GPP (over the mean life of leaves)
                 ! less than increase in maintenance respiration and C required to
                 ! growth?
 
-                if (deltaGPP < gpp_crit_frac*GPP_current) leaf_growth = 0d0
+                if (deltaGPP < (gpp_crit_frac*GPP_current)) leaf_growth = 0d0
 
-            end if ! Just grown?
+            else if (gradient < lab_turn_crit .and. gradient > fol_turn_crit .and. &
+                     deltaWP < 0d0 ) then
 
-        endif ! gradient choice
+                ! probaly we want nothing to happen,
 
-    endif ! avail_labile > 0
+                ! However if we are at the seasonal
+                ! maximum we will consider further growth still
+                if (just_grown >= 1d0) then
+
+                    ! we have recently grown so we will not be losing leaves, but we
+                    ! might want to grow some more depending on the marginal return
+
+                    leaf_growth = pot_leaf_growth*GSI(current_step)
+
+                    ! calculate potential C allocation to leaves
+                    tmp = avail_labile * &
+                        (1d0-(1d0-leaf_growth)**deltat(current_step))*deltat_1(current_step)
+                    ! calculate new leaf area, GPP return
+                    lai = (foliage+tmp) * SLA
+                    tmp = lai / lai_save
+                    aerodynamic_conductance = aerodynamic_conductance * tmp
+                    stomatal_conductance = stomatal_conductance * tmp
+                    call calculate_shortwave_balance
+                    if (lai_save < vsmall) then
+                        call calculate_aerodynamic_conductance
+                        call calculate_stomatal_conductance(abs(deltaWP),Rtot)
+                    endif ! lai_save < vsmall
+                    ! calculate stomatal conductance of water
+                    if (stomatal_conductance > vsmall) then
+                        tmp = max(0d0,acm_gpp(stomatal_conductance))
+                    else
+                        tmp = 0d0
+                    endif
+                    deltaGPP = tmp - GPP_current
+                    ! is the marginal return for GPP (over the mean life of leaves)
+                    ! less than increase in maintenance respiration and C required to
+                    ! growth?
+
+                    if (deltaGPP < (gpp_crit_frac*GPP_current)) leaf_growth = 0d0
+
+                end if ! Just grown?
+
+            endif ! gradient choice
+
+        endif ! avail_labile > 0
+
+    end if ! gradient decline / increase choice
 
     ! restore original value back from memory
     lai = lai_save
