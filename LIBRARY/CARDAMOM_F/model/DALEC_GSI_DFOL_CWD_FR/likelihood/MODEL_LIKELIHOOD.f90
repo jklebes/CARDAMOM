@@ -570,60 +570,49 @@ module model_likelihood_module
     ! temperate (max = 4.2 %)
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(30) > ((pars(33)+pars(32))*0.125d0 ) .or. &
                                           pars(30) < ((pars(33)+pars(32))*0.018d0))) then
-        EDC1 = 0 ; EDCD%PASSFAIL(9) = 0
+        EDC1 = 0 ; EDCD%PASSFAIL(8) = 0
     endif
     ! also apply to initial conditions
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(18) > ((pars(21)+pars(20))*0.125d0) .or. &
                                           pars(18) < ((pars(21)+pars(20))*0.018d0))) then
-        EDC1 = 0 ; EDCD%PASSFAIL(10) = 0
+        EDC1 = 0 ; EDCD%PASSFAIL(9) = 0
     endif
 
     ! initial replanting foliage and fine roots ratio must be consistent with
     ! ecological ranges. Because this is the initial condition and not the mean
     ! only the upper foliar:fine root bound is applied
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(32)/pars(31) < 0.04d0) ) then
-       EDC1 = 0 ; EDCD%PASSFAIL(11) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(10) = 0
     endif
     ! also apply to initial conditions
 !    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(20)/pars(19) < 0.04d0) ) then
-!       EDC1 = 0 ; EDCD%PASSFAIL(12) = 0
+!       EDC1 = 0 ; EDCD%PASSFAIL(11) = 0
 !    endif
 
     ! replanting stock of foliage is unlikely to have much lai, thus limit lai
     ! to less than 1 m2/m2
     !if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(31)/pars(17) > 1d0)) then
-    !   EDC1 = 0 ; EDCD%PASSFAIL(13) = 0
+    !   EDC1 = 0 ; EDCD%PASSFAIL(12) = 0
     !endif
-
-    ! initial replanting wood stocks must be sufficient to support intended
-    ! foliar stocks. Again as this is the initial values and not the annual mean /
-    ! maximum stocks we constrain against the minimum foliar:wood stock only.
-    ! We assume that at least as much structural C is needed to hold a given
-    ! leaf mass.
-    ! NOTE: only half that used from Thomas & Williams to allow for non-forested
-    ! systems
-    ! if ((EDC1 == 1 .or. DIAG == 1) .and. ((pars(31) / pars(33)) > 2.0d0) ) then
-    !    EDC1 = 0 ; EDCD%PASSFAIL(14) = 0
-    ! endif
-    ! ! also apply to initial conditions
-    ! if ((EDC1 == 1 .or. DIAG == 1) .and. ((pars(19) / pars(21)) > 2.0d0) ) then
-    !    EDC1 = 0 ; EDCD%PASSFAIL(15) = 0
-    ! endif
 
     ! --------------------------------------------------------------------
     ! TLS: some added specifically to deal with GSI conditions
     ! Note that the EDC numbers do not run on
     ! avgTmin min threshold should not be larger than max
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(14) > pars(15)) ) then
-       EDC1 = 0 ; EDCD%PASSFAIL(16) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(13) = 0
     endif
     ! photoperiod, min threshold should not be larger than max
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(16) > pars(24)) ) then
-       EDC1 = 0 ; EDCD%PASSFAIL(17) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(14) = 0
     endif
     ! VPD min threshold should not be larger than max
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(25) > pars(26)) ) then
-       EDC1 = 0 ; EDCD%PASSFAIL(18) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(15) = 0
+    endif
+    ! VPD min threshold should not be substantially greater than the maximum observed VPD in a given area
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(25) > maxval(DATAin%met(16,:)+100d0) )) then
+         EDC1 = 0 ; EDCD%PASSFAIL(16) = 0
     endif
 
     ! CN ratio of leaf should also be between 95CI(+5% of CR for safety) of trait database values
@@ -633,7 +622,7 @@ module model_likelihood_module
     ! leaves (which have ranges upto ~100)
     tmp = pars(17) / (10d0**pars(11))
     if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 43.76895d0 .or. tmp < 10.82105d0)) then
-       EDC1 = 0 ; EDCD%PASSFAIL(19) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(17) = 0
     endif
 
     ! --------------------------------------------------------------------

@@ -1466,8 +1466,10 @@ module CARBON_MODEL_MOD
               print*,"met",met(:,n)
               print*,"POOLS",POOLS(n,:)
               print*,"FLUXES",FLUXES(n,:)
+              print*,"POOLS+1",POOLS(n+1,:)
               print*,"wSWP",wSWP
               print*,"waterfrac",soil_waterfrac
+              print*,"Etrans",transpiration,"Esoil",soilevaporation,"Ewet",wetcanopy_evap
               stop
           endif
        enddo
@@ -1478,8 +1480,10 @@ module CARBON_MODEL_MOD
            print*,"met",met(:,n)
            print*,"POOLS",POOLS(n,:)
            print*,"FLUXES",FLUXES(n,:)
+           print*,"POOLS+1",POOLS(n+1,:)
            print*,"wSWP",wSWP
            print*,"waterfrac",soil_waterfrac
+           print*,"Etrans",transpiration,"Esoil",soilevaporation,"Ewet",wetcanopy_evap
            stop
        endif
 
@@ -2713,7 +2717,7 @@ module CARBON_MODEL_MOD
     double precision :: depth_change, water_change, initial_soilwater, balance
     double precision, dimension(nos_root_layers) :: avail_flux, evaporation_losses, pot_evap_losses
 
-    ! reset soil water exchanges
+    ! set soil water exchanges
     underflow = 0d0 ; runoff = 0d0 ; corrected_ET = 0d0
     initial_soilwater = sum(1d3 * soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers))
 

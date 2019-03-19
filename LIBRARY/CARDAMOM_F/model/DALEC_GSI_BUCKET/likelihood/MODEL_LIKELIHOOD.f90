@@ -10,10 +10,10 @@ module model_likelihood_module
 
   ! declare needed types
   type EDCDIAGNOSTICS
-    integer :: PASSFAIL(100) ! allow space for 100 possible checks
+    integer :: nedc = 100    ! number of edcs being assessed
+    integer :: PASSFAIL(100) ! allow space for 100 possible checks, dim should equal nedc
     integer :: EDC
     integer :: DIAG
-    integer :: nedc ! number of edcs being assessed
   end type
   type (EDCDIAGNOSTICS), save :: EDCD
 
@@ -92,7 +92,7 @@ module model_likelihood_module
            call edc_model_likelihood(PI,PI%parini,PEDC,ML_prior)
 
            ! keep track of attempts
-           counter_local = counter_local+1
+           counter_local = counter_local + 1
            ! periodically reset the initial conditions
            if (PEDC < 0d0 .and. mod(counter_local,3) == 0) then
                PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
@@ -229,7 +229,6 @@ module model_likelihood_module
     DIAG = EDCD%DIAG
 
     ! set all EDCs to 1 (pass)
-    EDCD%nedc = 100
     EDCD%PASSFAIL(1:EDCD%nedc) = 1
 
     !
@@ -386,7 +385,7 @@ module model_likelihood_module
     EQF = 10d0
 
     ! initialise and then calculate mean gpp values
-    meangpp=sum(M_GPP(1:nodays))/dble(nodays)
+    meangpp = sum(M_GPP(1:nodays))/dble(nodays)
 
     ! EDC 11 - SOM steady state within order magnitude of initial conditions
     if ((EDC2 == 1 .or. DIAG == 1) .and. &
@@ -511,7 +510,6 @@ module model_likelihood_module
     DIAG = EDCD%DIAG
 
     ! set all EDCs to 1 (pass)
-    EDCD%nedc = 100
     EDCD%PASSFAIL(1:EDCD%nedc) = 1
 
     !
@@ -557,7 +555,7 @@ module model_likelihood_module
 
     ! root turnover (pars(7)) should be greater than som turnover (pars(9)) at mean temperature
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(9)*temp_response) > pars(7)) then
-       EDC1 = 0 ; EDCD%PASSFAIL(8) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(7) = 0
     endif
 
     ! replanting 30 = labile ; 31 = foliar ; 32 = roots ; 33 = wood
@@ -573,29 +571,29 @@ module model_likelihood_module
     ! temperate (max = 4.2 %)
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(30) > ((pars(33)+pars(32))*0.125d0 ) .or. &
                                           pars(30) < ((pars(33)+pars(32))*0.018d0))) then
-        EDC1 = 0 ; EDCD%PASSFAIL(11) = 0
+        EDC1 = 0 ; EDCD%PASSFAIL(8) = 0
     endif
     ! also apply to initial conditions
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(18) > ((pars(21)+pars(20))*0.125d0) .or. &
                                           pars(18) < ((pars(21)+pars(20))*0.018d0))) then
-        EDC1 = 0 ; EDCD%PASSFAIL(12) = 0
+        EDC1 = 0 ; EDCD%PASSFAIL(9) = 0
     endif
 
     ! initial replanting foliage and fine roots ratio must be consistent with
     ! ecological ranges. Because this is the initial condition and not the mean
     ! only the upper foliar:fine root bound is applied
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(32)/pars(31) < 0.04d0) ) then
-       EDC1 = 0 ; EDCD%PASSFAIL(13) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(10) = 0
     endif
     ! also apply to initial conditions
 !    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(20)/pars(19) < 0.04d0) ) then
-!       EDC1 = 0 ; EDCD%PASSFAIL(14) = 0
+!       EDC1 = 0 ; EDCD%PASSFAIL(11) = 0
 !    endif
 
     ! replanting stock of foliage is unlikely to have much lai, thus limit lai
     ! to less than 1 m2/m2
     !if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(31)/pars(17) > 1d0)) then
-    !   EDC1 = 0 ; EDCD%PASSFAIL(15) = 0
+    !   EDC1 = 0 ; EDCD%PASSFAIL(12) = 0
     !endif
 
     ! --------------------------------------------------------------------
@@ -604,22 +602,22 @@ module model_likelihood_module
 
     ! avgTmin min threshold should not be larger than max
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(14) > pars(15)) ) then
-         EDC1 = 0 ; EDCD%PASSFAIL(16) = 0
+         EDC1 = 0 ; EDCD%PASSFAIL(13) = 0
     endif
 
     ! photoperiod, min threshold should not be larger than max
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(16) > pars(24)) ) then
-         EDC1 = 0 ; EDCD%PASSFAIL(17) = 0
+         EDC1 = 0 ; EDCD%PASSFAIL(14) = 0
     endif
 
     ! VPD min threshold should not be larger than max
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(25) > pars(26)) ) then
-         EDC1 = 0 ; EDCD%PASSFAIL(18) = 0
+         EDC1 = 0 ; EDCD%PASSFAIL(15) = 0
     endif
-    ! photoperiod, min threshold should not be larger than max
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(16) + pars(24)) > 86400d0) then
-!       EDC1 = 0 ; EDCD%PASSFAIL(16) = 0
-!    endif
+    ! VPD min threshold should not be substantially greater than the maximum observed VPD in a given area
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(25) > maxval(DATAin%met(16,:)+100d0) )) then
+         EDC1 = 0 ; EDCD%PASSFAIL(16) = 0
+    endif
 
     ! CN ratio of leaf should also be between 95CI(+5% of CR for safety) of trait database values
     ! Kattge et al (2011) (10.8 < CN_foliar < 43.76895).
@@ -906,16 +904,9 @@ module model_likelihood_module
     ! Wurth et al (2005) Oecologia, Clab 8 % of living biomass (DM) in tropical forest
     ! Richardson et al (2013), New Phytologist, Clab 2.24 +/- 0.44 % in temperate (max = 4.2 %)
     if (EDC2 == 1 .or. DIAG == 1) then
-      !mean_ratio = M_POOLS(1:nodays,1)/(M_POOLS(1:nodays,4)+M_POOLS(1:nodays,3)) ; hak = 0
-      !where ( M_POOLS(1:nodays,4) == 0d0 .and. M_POOLS(1:nodays,3) == 0d0 )
-      !       hak = 1 ; mean_ratio = 0d0
-      !end where
-      !if (sum(mean_ratio(1:nodays))/dble(nodays-sum(hak)) > 0.125d0) then
-      !    EDC2 = 0 ; EDCD%PASSFAIL(22) = 0
-      !endif
-      if ((mean_pools(1) / (mean_pools(3) + mean_pools(4))) > 0.125d0) then
-          EDC2 = 0 ; EDCD%PASSFAIL(25) = 0
-      endif
+        if ((mean_pools(1) / (mean_pools(3) + mean_pools(4))) > 0.125d0) then
+            EDC2 = 0 ; EDCD%PASSFAIL(25) = 0
+        endif
     endif ! EDC2 == 1 .or. DIAG == 1
 
     ! EDC 6
@@ -1003,7 +994,7 @@ module model_likelihood_module
     if ((EDC2 == 1 .or. DIAG == 1) .and. DATAin%age > -1d0) then
         ! we will do this for the beginning of the simulation only.
         ! calculate sum pools (gC.m-2)
-        model_living_C = M_POOLS(1,4) !M_POOLS(1,2)+M_POOLS(1,3)+M_POOLS(1,4)
+        model_living_C = M_POOLS(1,4)
         ! find out how many years into the simulation this is
         max_location = 1
         ! call for empirical approximation of C accumulation curvies from
@@ -1423,15 +1414,16 @@ module model_likelihood_module
     ! now use the EDCD%EDC flag to determine if effect is kept
     if (DATAin%EDC == 1) then
         EDC = EDC1
+        ! update effect to the probabity
+        ML_obs_out = ML_obs_out + log(EDC)
     else
         EDC = 1
+        ! no update of the ML_obs_out needed here as EDC not applied
     end if
-
-    ! update effect to the probabity
-    ML_obs_out = ML_obs_out + log(EDC)
 
     ! if first set of EDCs have been passed
     if (EDC == 1) then
+
        ! calculate parameter log likelihood (assumed we have estimate of
        ! uncertainty)
        ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
@@ -1473,12 +1465,12 @@ module model_likelihood_module
        ! check if EDCs are switched on
        if (DATAin%EDC == 1) then
            EDC = EDC2
+           ! add EDC2 log-likelihood
+           ML_obs_out = ML_obs_out + log(EDC)
        else
            EDC = 1
+           ! no update of ML_obs_out needed as EDC not used
        end if
-
-       ! add EDC2 log-likelihood
-       ML_obs_out = ML_obs_out + log(EDC)
 
        if (EDC == 1) then
           ! calculate final model likelihood when compared to obs
@@ -1516,7 +1508,7 @@ module model_likelihood_module
        ! if there is actually a value
        if (parpriors(n) > -9999d0) then
            ! uncertainty provided as +/-
-           likelihood_p = likelihood_p-((pars(n)-parpriors(n))/parpriorunc(n))**2
+           likelihood_p = likelihood_p-((pars(n)-parpriors(n))/parpriorunc(n))**2d0
            !likelihood_p = likelihood_p-0.5d0*((pars(n)-parpriors(n))/parpriorunc(n))**2
            ! uncertainty provided as fraction of observed value
            !likelihood_p=likelihood_p-0.5d0*((pars(n)-parpriors(n))/(parpriors(n)*parpriorunc(n)))**2

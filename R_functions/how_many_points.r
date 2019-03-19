@@ -297,7 +297,7 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
         landsea = raster(ncols = 360 / 0.1666667, nrows = 180 / 0.1666667)
     } else if (grid_type=="wgs84") {
         # extract whole grids at resolution of the analysis
-        landsea = raster(ncols = 360 / resolution, nrows = 180 / resolution)
+        landsea = raster(ncols = 360 / max(0.1666667,resolution), nrows = 180 / max(0.1666667,resolution))
     }
     # update the extent information of the raster with that of the source shapefile
     extent(landsea) <- extent(landmask)
@@ -377,22 +377,22 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
 	     if (pft%%2000 == 0 | pft < 500) {print(paste("Ocean filter ",round((pft/length(lat))*100,0),"% complete",sep=""))}
 	     # convert incoming pft to common values (in this case CTESSEL)
 	     if (use_lcm == "LCM2007") {
-	         new_pft=lcm2007_to_ctessel(lcm[output_i[pft],output_j[pft]])
+	         new_pft = lcm2007_to_ctessel(lcm[output_i[pft],output_j[pft]])
 	     } else if (use_lcm == "CORINE2006") {
-	         new_pft=corine2006_to_ctessel(lcm[output_i[pft],output_j[pft]])
+	         new_pft = corine2006_to_ctessel(lcm[output_i[pft],output_j[pft]])
 	     } else if (use_lcm == "CORINE2006_1km") {
-           new_pft=corine2006_to_ctessel(lcm[output_i[pft],output_j[pft]])
+           new_pft = corine2006_to_ctessel(lcm[output_i[pft],output_j[pft]])
 	     } else if (use_lcm == "forestry_commission" | use_lcm == "forestry_commission_LCM2007" | use_lcm == "forestry_commission_public_private") {
-           new_pft=lcm[output_i[pft],output_j[pft]]
+           new_pft = lcm[output_i[pft],output_j[pft]]
            if (new_pft < 0 | length(new_pft) == 0) {new_pft = 0}
        } else if (use_lcm == "ECMWF") {
            new_pft = lcm[output_i[pft]]
        }
        # now exclude if not a land site
        if (new_pft == 0 | new_pft == 14 | new_pft == 15 | landsea[pft] == 0) {
-           remove=append(remove,pft)
+           remove = append(remove,pft)
        } else {
-           pft_keep=append(pft_keep,new_pft)
+           pft_keep = append(pft_keep,new_pft)
        }
     } # sites for loop
 
@@ -400,8 +400,8 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
     pft_keep = pft_keep[-1] ; remove = remove[-1] ; rm(lat_lcm,long_lcm)
 
     # generate the site names prior to removing undesired locations to ensure consistent naming
-    b = 1 ; sites = rep("NA",times=(length(lat)+length(remove)))
-    for (n in seq(1, (length(lat)+length(remove)))) {
+    b = 1 ; sites = rep("NA",times=(length(lat)))
+    for (n in seq(1, length(lat))) {
          if (n%%2000 == 0 | n < 500) {print(paste("Have generated ",round((b/(length(lat)+length(remove)))*100,0),"% of site IDs" ,sep=""))}
          # we want the numbers to match their location within the domain not of the land pixels.
          # this is needed for easy reconstruction later
