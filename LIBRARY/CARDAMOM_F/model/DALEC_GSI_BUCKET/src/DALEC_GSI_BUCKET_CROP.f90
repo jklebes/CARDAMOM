@@ -435,6 +435,7 @@ contains
         lai = POOLS(1,2)/pars(17)
         seconds_per_step = deltat(1) * seconds_per_day
         days_per_step =  deltat(1)
+        days_per_step_1 = deltat_1(1)
         mint = met(2,1)  ! minimum temperature (oC)
         maxt = met(3,1)  ! maximum temperature (oC)
         meant = (maxt+mint)*0.5d0  ! mean air temperature (oC)

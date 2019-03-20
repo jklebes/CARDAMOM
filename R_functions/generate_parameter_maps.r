@@ -58,8 +58,8 @@ generate_parameter_maps<-function(PROJECT) {
 					obs_lai_sigma=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 					obs_wood_estimate=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 					obs_wood_uncertainty=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-                                        obs_som_estimate=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-                                        obs_som_uncertainty=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          obs_som_estimate=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          obs_som_uncertainty=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 				}
 				# now load parameter information into the array
 				slot_j=as.numeric(PROJECT$sites[n])/PROJECT$long_dim
@@ -69,23 +69,23 @@ generate_parameter_maps<-function(PROJECT) {
 				mean_radiation_array[slot_i,slot_j]=mean(drivers$met[,4])
 				mean_vpd_array[slot_i,slot_j]=mean(drivers$met[,12])
 				mean_precipitation_array[slot_i,slot_j]=sum(drivers$met[,7]*timestep_days*seconds_per_day)/nos_years
-				obs_lai_max[slot_i,slot_j]=max(drivers$obs[,2])
-				obs_lai_mean[slot_i,slot_j]=mean(drivers$obs[which(drivers$obs[,2] != -9999),2])
-				obs_lai_sigma[slot_i,slot_j]=sd(drivers$obs[which(drivers$obs[,2] != -9999),2])
+				obs_lai_max[slot_i,slot_j]=max(drivers$obs[,3])
+				obs_lai_mean[slot_i,slot_j]=mean(drivers$obs[which(drivers$obs[,3] != -9999),3])
+				obs_lai_sigma[slot_i,slot_j]=sd(drivers$obs[which(drivers$obs[,3] != -9999),3])
 				if (length(which(drivers$obs[,13] > -9999)) > 0) {
 					obs_wood_estimate[slot_i,slot_j]=max(drivers$obs[which(drivers$obs[,13] != -9999),13],na.rm=TRUE)
 					obs_wood_uncertainty[slot_i,slot_j]=max(drivers$obs[which(drivers$obs[,14] != -9999),14],na.rm=TRUE)
 				} else if (drivers$parpriors[21] > 0) {
-                                        obs_wood_estimate[slot_i,slot_j]=drivers$parpriors[21]
-                                        obs_wood_uncertainty[slot_i,slot_j]=drivers$parpriorunc[21]
-  				}
-                                if (length(which(drivers$obs[,19] > -9999)) > 0) {
-                                        obs_som_estimate[slot_i,slot_j] = max (drivers$obs[which(drivers$obs[,19] != -9999),19],na.rm=TRUE)
-                                        obs_som_uncertainty[slot_i,slot_j] = max(drivers$obs[which(drivers$obs[,20] != -9999),20],na.rm=TRUE)
-                                } else if (drivers$parpriors[23] > 0) {
-                                        obs_som_estimate[slot_i,slot_j] = drivers$parpriors[23]
-                                        obs_som_uncertainty[slot_i,slot_j] = drivers$parpriorunc[23]
-                                }
+          obs_wood_estimate[slot_i,slot_j]=drivers$parpriors[21]
+          obs_wood_uncertainty[slot_i,slot_j]=drivers$parpriorunc[21]
+        }
+        if (length(which(drivers$obs[,19] > -9999)) > 0) {
+            obs_som_estimate[slot_i,slot_j] = max (drivers$obs[which(drivers$obs[,19] != -9999),19],na.rm=TRUE)
+            obs_som_uncertainty[slot_i,slot_j] = max(drivers$obs[which(drivers$obs[,20] != -9999),20],na.rm=TRUE)
+        } else if (drivers$parpriors[23] > 0) {
+            obs_som_estimate[slot_i,slot_j] = drivers$parpriors[23]
+            obs_som_uncertainty[slot_i,slot_j] = drivers$parpriorunc[23]
+        }
 				par_array_converged[slot_i,slot_j,]=0
 				converged=have_chains_converged(parameters)
 				par_array_converged[slot_i,slot_j,which(converged=="PASS")]=1
