@@ -600,22 +600,31 @@ module model_likelihood_module
     ! TLS: some added specifically to deal with GSI conditions
     ! Note that the EDC numbers do not run on
 
-    ! avgTmin min threshold should not be larger than max
+    ! avgTmin min threshold should not be larger than max.
+    ! We also expect that the range between min and maxium should be < 50 K
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(14) > pars(15)) ) then
          EDC1 = 0 ; EDCD%PASSFAIL(13) = 0
     endif
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(15)-pars(14)) > 50d0 ) then
+         EDC1 = 0 ; EDCD%PASSFAIL(13) = 0
+    endif
 
-    ! photoperiod, min threshold should not be larger than max
+    ! photoperiod (seconds), min threshold should not be larger than max
+    ! also we assume that unless day length is 24 that there light can not be totally unlimiting
+    ! i.e. day length of optimum (pars(24)) cannot be smaller than max observed day length
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(16) > pars(24)) ) then
          EDC1 = 0 ; EDCD%PASSFAIL(14) = 0
     endif
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(24) < maxval(DATAin%met(11,:))) ) then
+         EDC1 = 0 ; EDCD%PASSFAIL(14) = 0
+    endif
 
-    ! VPD min threshold should not be larger than max
+    ! VPD min threshold (Pa) should not be larger than max
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(25) > pars(26)) ) then
          EDC1 = 0 ; EDCD%PASSFAIL(15) = 0
     endif
-    ! VPD min threshold should not be substantially greater than the maximum observed VPD in a given area
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(25) > maxval(DATAin%met(16,:)+100d0) )) then
+    ! VPD min threshold (Pa) should not be substantially greater than the maximum observed VPD in a given area
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(25) > maxval(DATAin%met(12,:)+100d0) )) then
          EDC1 = 0 ; EDCD%PASSFAIL(16) = 0
     endif
 

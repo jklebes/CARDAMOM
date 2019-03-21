@@ -266,7 +266,7 @@ contains
     ! calculate minimum step size
     ! Should consider whether either of these values should be adjusted to
     ! improve searching efficiency.
-    minstepsize = 1000d0/dble(N%ITER) ! 10000d0 -> 1000d0
+    minstepsize = 5000d0/dble(N%ITER) ! 10000d0 -> 1000d0
     if (minstepsize > 0.01d0) minstepsize = 0.01d0 ! 0.01d0
 
     ! determine local acceptance rate
@@ -326,12 +326,12 @@ contains
     implicit none
     double precision, intent(in) :: initial_par, min_par, max_par
 
-!    if (max_par > 0d0 .and. min_par < 0d0) then
+    if (max_par > 0d0 .and. min_par < 0d0) then
         ! then normalise without logs and we cross zero
         par2nor = (initial_par-min_par)/(max_par-min_par)
-!    else
-!        par2nor = log(initial_par/min_par)/log(max_par/min_par)
-!    end if
+    else
+        par2nor = log(initial_par/min_par)/log(max_par/min_par)
+    end if
 
     ! explicit return
     return
@@ -348,13 +348,13 @@ contains
     double precision, intent(in) :: initial_par, min_par, max_par
 
     ! determine whether we used log normalisation or not
-!    if ( max_par > 0d0 .and. min_par < 0d0) then
+    if ( max_par > 0d0 .and. min_par < 0d0) then
         ! ...then un-normalise without logs as we cross zero and logs wont work
         nor2par = min_par+(max_par-min_par)*initial_par
-!    else
-!        ! ...then un-normalised assuming logs-normalisation was used
-!        nor2par = min_par*((max_par/min_par)**initial_par)
-!    endif
+    else
+        ! ...then un-normalised assuming logs-normalisation was used
+        nor2par = min_par*((max_par/min_par)**initial_par)
+    endif
 
     ! explicit return
     return

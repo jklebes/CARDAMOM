@@ -128,7 +128,7 @@ module MODEL_PARAMETERS
 
        ! GSI min VPD threshold (Pa)
        PI%parmin(25) = 1d0
-       PI%parmax(25) = 3000d0 
+       PI%parmax(25) = 3000d0
 
        ! GSI max VPD threshold (Pa)
        PI%parmin(26) = 1d0
@@ -138,8 +138,8 @@ module MODEL_PARAMETERS
 !       PI%parmax(26) = 5500d0
 
        ! critical GPP for LAI increase (fraction)
-       PI%parmin(27) = 1d-8
-       PI%parmax(27) = 0.01d0
+       PI%parmin(27) = 1d-5
+       PI%parmax(27) = 0.02d0
 
        ! fraction of Cwood which is branch
        PI%parmin(28) = 0.05d0

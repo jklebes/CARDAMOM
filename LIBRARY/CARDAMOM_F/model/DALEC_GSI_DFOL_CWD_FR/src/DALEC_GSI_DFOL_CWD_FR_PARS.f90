@@ -122,35 +122,35 @@ module MODEL_PARAMETERS
 
        ! GSI min VPD threshold (Pa)
        PI%parmin(25) = 1d0
-       PI%parmax(25) = 3000d0 
+       PI%parmax(25) = 3000d0
 
        ! GSI max VPD threshold (Pa)
-       PI%parmin(26)=1d0
-       PI%parmax(26)=5500d0
+       PI%parmin(26) = 1d0
+       PI%parmax(26) = 5500d0
 
        ! critical GPP for LAI increase (fraction)
-       PI%parmin(27)=1d-8
-       PI%parmax(27)=0.01d0
+       PI%parmin(27) = 1d-5
+       PI%parmax(27) = 0.02d0
 
        ! fraction of Cwood which is branch
-       PI%parmin(28)=0.05d0
-       PI%parmax(28)=0.40d0 !0.65
+       PI%parmin(28) = 0.05d0
+       PI%parmax(28) = 0.40d0 !0.65
 
        ! fraction of Cwood which is coarse root
-       PI%parmin(29)=0.15d0
-       PI%parmax(29)=0.30d0 !0.45
+       PI%parmin(29) = 0.15d0
+       PI%parmax(29) = 0.30d0 !0.45
 
        ! GSI senstivity for leaf senescence
-       PI%parmin(34)=0.995d0
-       PI%parmax(34)=1.00d0
+       PI%parmin(34) = 0.995d0
+       PI%parmax(34) = 1.00d0
 
        ! GSI - have I just left a growing state (>1)
-       PI%parmin(35)=0.50d0
-       PI%parmax(35)=1.5d0
+       PI%parmin(35) = 0.50d0
+       PI%parmax(35) = 1.5d0
 
        ! GSI - initial GSI value
-       PI%parmin(36)=1.0d0
-       PI%parmax(36)=2.0d0
+       PI%parmin(36) = 1.0d0
+       PI%parmax(36) = 2.0d0
 
        ! Turnover rate for CWD
        PI%parmin(38)=0.0001        ! 27 years
