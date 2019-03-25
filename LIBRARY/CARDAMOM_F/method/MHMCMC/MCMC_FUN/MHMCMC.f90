@@ -164,8 +164,8 @@ contains
        ! accept or reject, draw uniform distribution (0,1)
        crit1 = log(uniform_random_vector(uniform)) !crit=log(randn(0))
        uniform = uniform + 1
-       crit2 = log(uniform_random_vector(uniform))
-       uniform = uniform + 1
+!       crit2 = log(uniform_random_vector(uniform))
+!       uniform = uniform + 1
        ! if we are near to the end re-generate some more values
        if (uniform >= size(uniform_random_vector)-4) then
            ! calculate new vector of uniform random values
@@ -177,7 +177,8 @@ contains
        ! determine accept or reject, should this criterion be > crit + ? (or
        ! other limit, such as p = 0.05 -> -3)
 !print*,(P-P0)
-       if ((P-P0) >= crit1 .and. (Pprior-P0prior) >= crit2) then
+!       if ((P-P0) >= crit1 .and. (Pprior-P0prior) >= crit2) then
+       if ( ( (P+Pprior)-(P0+P0prior) ) >= crit1) then
 
           ! store accepted parameter solutions
           ! keep record of all parameters accepted since step adaption
@@ -266,7 +267,7 @@ contains
     ! calculate minimum step size
     ! Should consider whether either of these values should be adjusted to
     ! improve searching efficiency.
-    minstepsize = 5000d0/dble(N%ITER) ! 10000d0 -> 1000d0
+    minstepsize = 1000d0/dble(N%ITER) ! 10000d0 -> 1000d0
     if (minstepsize > 0.01d0) minstepsize = 0.01d0 ! 0.01d0
 
     ! determine local acceptance rate

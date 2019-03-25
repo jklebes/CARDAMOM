@@ -254,7 +254,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
     PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALEC_GSI_DFOL_CWD_FR") {
-    PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
     PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
@@ -266,7 +266,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       # for crops remove the biomass prior
       PARPRIORS[21]=-9999     ; PARPRIORUNC[21]=-9999
     } else {
-      PARPRIORS[39]=11.197440 ; PARPRIORUNC[39]=1.32313*2 # NUE prior derived from Kattge et al., (2011)
+      PARPRIORS[39]=11.197440 ; PARPRIORUNC[39]=1.32313 # NUE prior derived from Kattge et al., (2011)
     }
     } else if (modelname == "DALEC_GSI_DFOL_LABILE_FR") {
     PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.6 #1.617705 # Ceff
@@ -324,7 +324,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=1.32313*2 # NUE prior derived from Kattge et al., (2011)
     } # crop or not
   } else if (modelname == "DALEC_GSI_BUCKET") {
-    PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
     PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
@@ -337,7 +337,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[38]=OBS$soilwater ; PARPRIORUNC[38]=OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
     } else {
       PARPRIORS[41]=OBS$soilwater ; PARPRIORUNC[41]=OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
-      PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=1.32313*2 # NUE prior derived from Kattge et al., (2011)
+      PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=1.32313 # NUE prior derived from Kattge et al., (2011)
     } # crop or not
   } else if (modelname == "DALECN_GSI_BUCKET") {
     PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
@@ -358,7 +358,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[45]=1.344     ; PARPRIORUNC[45]=0.150 # Rm_wood N**exponent (gC/gN) Reich et al., (2008)
     } # Crop or not
   } else if (modelname == "DALECN_BUCKET") {
-    PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
     PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior

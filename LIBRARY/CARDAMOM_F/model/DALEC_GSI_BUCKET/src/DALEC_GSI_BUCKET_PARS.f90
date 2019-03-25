@@ -295,7 +295,7 @@ module MODEL_PARAMETERS
     ! log10 avg foliar N (gN.m-2)
     ! set to parmin=1 for FLUXCOM only
     ! e.g. for wetlands etc.
-    PI%parmin(11)=-0.50d0 ; PI%parmax(11)=0.7d0
+    PI%parmin(11) = -0.2218487d0 ; PI%parmax(11) = 0.6382028d0
 
     ! sow day
     PI%parmin(12)=115d0 ; PI%parmax(12)=350d0

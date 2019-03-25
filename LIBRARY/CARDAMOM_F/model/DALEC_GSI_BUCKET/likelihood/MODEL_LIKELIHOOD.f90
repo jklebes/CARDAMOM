@@ -440,7 +440,7 @@ module model_likelihood_module
 
     ! we know that the crop model should produce some yield - therefore we
     ! reject parameter sets which generate no yield ever!
-    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(1:nodays,21)) < 1d0 ) then
+    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(1:nodays,21)) < (1d0*dble(no_years)) ) then
         EDC2 = 0 ; EDCD%PASSFAIL(20) = 0
     endif
 
@@ -529,12 +529,23 @@ module model_likelihood_module
        EDC1 = 0 ; EDCD%PASSFAIL(2) = 0
     endif
 
-    ! turnover of cwd (pars(38)) should be slower than litter decomposition (pars(1)
-    if ((EDC1 == 1 .or. DIAG == 1) .and. ( pars(38) > pars(1) ) ) then
-        EDC1 = 0 ; EDCD%PASSFAIL(3) = 0
+    ! ratio of maximum rooting depth (pars(40)) and the amount of root biomass needed to reach 50 % depth (pars(39))
+    ! is not expected to fall outside of ratio (pars(39) / pars(40) = 10 - 100)
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(39) / pars(40))  > 100d0) then
+       EDC1 = 0 ; EDCD%PASSFAIL(3) = 0
     endif
+
+!    ! turnover of cwd (pars(38)) should be slower than litter decomposition (pars(1)
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. ( pars(38) > pars(1) ) ) then
+!        EDC1 = 0 ; EDCD%PASSFAIL(3) = 0
+!    endif
+!    ! turnover of cwd (pars(38)) should be slower than litter mineralisation (pars(8))
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. ( pars(38) > pars(8) ) ) then
+!        EDC1 = 0 ; EDCD%PASSFAIL(4) = 0
+!    endif
     ! turnover of cwd (pars(38)) should be slower than litter mineralisation (pars(8))
-    if ((EDC1 == 1 .or. DIAG == 1) .and. ( pars(38) > pars(8) ) ) then
+    ! turnover of cwd (pars(38)) should be slower than litter decomposition (pars(1)
+    if ((EDC1 == 1 .or. DIAG == 1) .and. ( pars(38) > (pars(8)+pars(1)) ) ) then
         EDC1 = 0 ; EDCD%PASSFAIL(4) = 0
     endif
 
@@ -689,7 +700,7 @@ module model_likelihood_module
               ,i, exp_adjust, no_years_adjust, disturb_year, replant_year &
               ,disturb_begin,disturb_end
     double precision :: mean_pools(nopools), G, decay_coef, meangpp &
-                       ,sumgpp, sumnpp, model_living_C, tmp, tmp1 &
+                       ,sumgpp, sumnpp, model_living_C, tmp, tmp1, temp_response &
                        ,target_living_C(2),hold,infi, steps_per_year
     double precision, dimension(nodays) :: mean_ratio, resid_fol,resid_lab
     integer, dimension(nodays) :: hak ! variable to determine number of NaN in foliar residence time calculation
@@ -855,10 +866,13 @@ module model_likelihood_module
     ! C stocks can always be lower than their steady state, but it is unlikely
     ! that a system should be significantly above its steady state.
 
+    ! calculate temperature response of decomposition processes
+    temp_response = exp(pars(10)*meantemp)
+
     ! Estimate steady state approximation for wood based on mean inputs over natural
     ! turnover, i.e. gCm-2day-1 / day-1 = gCm-2
     tmp = ((sumwood/dble(nodays)) / pars(6))  ! the steady state approximation of wood (gC/m2)
-    tmp1 = ((sumcwd/dble(nodays)) / pars(38)) ! the steady state approximation of cwd (gC/m2)
+    tmp1 = ((sumcwd/dble(nodays)) / (pars(38)*temp_response)) ! the steady state approximation of cwd (gC/m2)
     if ((EDC2 == 1 .or. DIAG == 1) .and. pars(21) > tmp*1.1d0) then
        EDC2 = 0 ; EDCD%PASSFAIL(18) = 0
     end if
