@@ -712,7 +712,6 @@ module model_likelihood_module
                        ,in_out_cwd  &
                        ,in_out_som  &
                        ,in_out_dead &
-                       ,temp_response &
                        ,torfol      & ! yearly average turnover
                        ,torlab      & !
                        ,sumrauto    &

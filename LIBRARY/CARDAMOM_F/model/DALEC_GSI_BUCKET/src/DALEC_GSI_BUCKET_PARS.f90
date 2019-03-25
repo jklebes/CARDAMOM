@@ -57,12 +57,12 @@ module MODEL_PARAMETERS
        PI%parmax(3) = 1.005d0
 
        ! Max labile turnover (fraction) to roots
-       PI%parmin(4) = 0.000273785d0 ! 10 years
-       PI%parmax(4) = 0.05d0        ! 20 days
+       PI%parmin(4) = 0.0006844627d0 ! 4 years 0.0001368925d0 ! 20 years
+       PI%parmax(4) = 0.05d0         ! 20 days
 
        ! GSI max leaf turnover
-       PI%parmin(5) = 0.00027d0 ! 10 years
-       PI%parmax(5) = 0.10d0    ! 10 days
+       PI%parmin(5) = 0.000273785d0 ! 10 years
+       PI%parmax(5) = 0.10d0        ! 10 days
 
        ! Turnover fraction of wood
        PI%parmin(6) = 0.000009d0 ! 300 years
