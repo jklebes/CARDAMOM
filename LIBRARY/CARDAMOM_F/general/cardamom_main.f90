@@ -68,7 +68,7 @@ program cardamom_framework
  ! Determine initial values, this requires using the MHMCMC
  call find_edc_initial_values(PI)
  ! Reset stepsize
- PI%stepsize = 0.1d0 ! TLS 0.01 -> 0.05 -> 0.1
+ PI%stepsize = 0.01d0 ! TLS 0.01 -> 0.05 -> 0.1
 
  ! Initialise MCMC output
  call initialise_mcmc_output(PI,MCOUT)

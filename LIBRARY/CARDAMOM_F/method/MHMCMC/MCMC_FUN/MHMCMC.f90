@@ -206,6 +206,7 @@ contains
            ! work out local acceptance rate (i.e. since last adapt)
            N%ACCRATE = dble(N%ACCLOC) / dble(MCO%nADAPT)
 !print*,"acceptance = ",N%ACCRATE
+!print*,"P = ",Pprior+P
            ! have few enough parameters been accepted to consider adapting
            if ((MCO%fADAPT*dble(MCO%nOUT)) > dble(N%ACC)) then
                call adapt_step_size(PARSALL,PI,N,MCO)
@@ -267,12 +268,13 @@ contains
     ! calculate minimum step size
     ! Should consider whether either of these values should be adjusted to
     ! improve searching efficiency.
-    minstepsize = 1000d0/dble(N%ITER) ! 10000d0 -> 1000d0
+    minstepsize = 5000d0/dble(N%ITER) ! 10000d0 -> 1000d0
     if (minstepsize > 0.01d0) minstepsize = 0.01d0 ! 0.01d0
 
     ! determine local acceptance rate
     N%ACCRATE = dble(N%ACCLOC)/dble(MCO%nADAPT)
-!print*,"...minstep = ",minstepsize," ACCRATE = ",N%ACCRATE," minval(step) = ",minval(PI%stepsize)
+!print*,"...minstep = ",minstepsize," ACCRATE = ",N%ACCRATE
+!print*," minval(step) = ",minval(PI%stepsize)," maxval(step) = ",maxval(PI%stepsize)
     ! default stepsize increment
     if (N%ACCLOC > 0 .and. N%ACCRATE < 0.23d0) then
         ! make step size smaller

@@ -155,7 +155,6 @@ module model_likelihood_module
     use cardamom_structures, only: DATAin
     use MCMCOPT, only: PARAMETER_INFO
     use CARBON_MODEL_MOD, only: carbon_model
-    use CARBON_MODEL_CROP_MOD, only: carbon_model_crop
 
     ! Model likelihood function specifically intended for the determination of
     ! appropriate initial parameter choices, consistent with EDCs for DALEC2 /
@@ -233,7 +232,7 @@ module model_likelihood_module
                                    ,meanrad    ! mean radiation (MJ.m-2.day-1)
 
     ! declare local parameters
-    double precision, dimension(10), parameter :: lai = (/0.000001d0,0.03125,0.0625d0,0.125d0,0.25d0,0.5d0,1d0,2.5d0,5d0,10d0/)
+    double precision, dimension(10), parameter :: lai = (/0.000001d0,0.03125d0,0.0625d0,0.125d0,0.25d0,0.5d0,1d0,2.5d0,5d0,10d0/)
 
     ! declare local variables
     integer :: n, DIAG, i
@@ -423,7 +422,6 @@ module model_likelihood_module
   subroutine model_likelihood(PI,PARS,ML_obs_out,ML_prior_out)
     use MCMCOPT, only:  PARAMETER_INFO
     use CARBON_MODEL_MOD, only: carbon_model
-    use CARBON_MODEL_CROP_MOD, only: carbon_model_crop
     use cardamom_structures, only: DATAin
 
     ! this subroutine is responsible, under normal circumstances for the running
@@ -449,14 +447,8 @@ module model_likelihood_module
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
     EDCD%DIAG = 0
 
-    if (DATAin%PFT == 1) then
-       ! then we are crops so run these EDCs instead
-       ! call EDCs which can be evaluated prior to running the model
-       call EDC1_CROP(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
-    else
-       ! call EDCs which can be evaluated prior to running the model
-       call EDC1_GSI(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
-    endif ! crop choice
+    ! call EDCs which can be evaluated prior to running the model
+    call EDC1_GSI(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
     ! now use the EDCD%EDC flag to determine if effect is kept
     if (DATAin%EDC == 1) then
@@ -474,39 +466,18 @@ module model_likelihood_module
        ! uncertainty)
        ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
 
-       if (DATAin%PFT == 1) then
-          ! then this is a crop run....
-          ! run the dalec model
-          call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                                ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                                ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft   &
-                                ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                                ,DATAin%nofluxes,DATAin%M_GPP                &
-                                ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
-                                ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
-                                ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
+       ! run the dalec model
+       call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                        ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                        ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
+                        ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
+                        ,DATAin%M_GPP)
 
-           ! check edc2
-           call EDC2_CROP(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                         ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                         ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                         ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-       else
-
-           ! run the dalec model
-           call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                            ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                            ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
-                            ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                            ,DATAin%M_GPP)
-
-           ! check edc2
-           call EDC2_GSI(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                        ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                        ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                        ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-
-       endif ! crop choice
+       ! check edc2
+       call EDC2_GSI(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+                    ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                    ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                    ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
        ! check if EDCs are switched on
        if (DATAin%EDC == 1) then

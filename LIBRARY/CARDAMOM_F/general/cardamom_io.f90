@@ -908,7 +908,7 @@ module cardamom_io
 !    end if
 
     ! defining MHMCMC stepsize
-    PI%stepsize = 0.1d0
+    PI%stepsize = 0.01d0
 
     ! report back to user
     write(*,*) "Done with parameter definitions"

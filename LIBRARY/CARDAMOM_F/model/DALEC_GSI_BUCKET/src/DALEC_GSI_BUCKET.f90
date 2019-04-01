@@ -52,7 +52,6 @@ module CARBON_MODEL_MOD
            ,deltat_1                      &
            ,water_flux                    &
            ,layer_thickness               &
-           ,waterloss,watergain           &
            ,waterchange                   &
            ,potA,potB                     &
            ,cond1,cond2,cond3             &
@@ -312,8 +311,6 @@ module CARBON_MODEL_MOD
   double precision, dimension(nos_soil_layers+1) :: SWP, & ! soil water potential (MPa)
                                             SWP_initial, &
                                       soil_conductivity, & ! soil conductivity
-                                              waterloss, & ! water loss from specific soil layers (m)
-                                              watergain, & ! water gained by specfic soil layers (m)
                                             waterchange, & ! net water change by specific soil layers (m)
                                          field_capacity, & ! soil field capacity (m3.m-3)
                                  field_capacity_initial, &
@@ -1063,13 +1060,14 @@ module CARBON_MODEL_MOD
        elseif (maxt < 0d0) then
            ! if whole day is below freezing then we should assume that all
            ! precipitation is snowfall
-           snowfall = rainfall ; rainfall = 0d0
+           snowfall = rainfall ; rainfall = 0d0 ; snow_melt = 0d0
            ! Add rainfall to the snowpack and clear rainfall variable
            snow_storage = snow_storage + (snowfall*seconds_per_step)
        else if (mint > 0d0) then
            ! otherwise we assume snow is melting at 10 % per day light hour
            snow_melt = min(snow_storage, snow_storage * dayl_hours * 0.1d0 * deltat(n))
            snow_storage = snow_storage - snow_melt
+           snowfall = 0d0
        end if
 
        !!!!!!!!!!
@@ -1470,6 +1468,8 @@ module CARBON_MODEL_MOD
               print*,"wSWP",wSWP
               print*,"waterfrac",soil_waterfrac
               print*,"Etrans",transpiration,"Esoil",soilevaporation,"Ewet",wetcanopy_evap
+              print*,"field_capacity",field_capacity
+              print*,"porosity",porosity
               stop
           endif
        enddo
@@ -1484,6 +1484,8 @@ module CARBON_MODEL_MOD
            print*,"wSWP",wSWP
            print*,"waterfrac",soil_waterfrac
            print*,"Etrans",transpiration,"Esoil",soilevaporation,"Ewet",wetcanopy_evap
+           print*,"field_capacity",field_capacity
+           print*,"porosity",porosity
            stop
        endif
 
@@ -2123,7 +2125,7 @@ module CARBON_MODEL_MOD
        water_retention_pass = i
        ! field capacity is water content at which SWP = -10 kPa
        field_capacity(i) = zbrent('water_retention:water_retention_saxton_eqns', &
-       water_retention_saxton_eqns , x1 , x2 , 0.001d0 )
+                                   water_retention_saxton_eqns , x1 , x2 , 0.001d0 )
     enddo
 
   end subroutine calculate_field_capacity
@@ -2713,12 +2715,12 @@ module CARBON_MODEL_MOD
     double precision, intent(out) :: corrected_ET     ! water balance corrected evapotranspiration (kgH2O/m2/day)
 
     ! local variables
-    integer :: day
+    integer :: day, a, b
     double precision :: depth_change, water_change, initial_soilwater, balance
     double precision, dimension(nos_root_layers) :: avail_flux, evaporation_losses, pot_evap_losses
 
     ! set soil water exchanges
-    underflow = 0d0 ; runoff = 0d0 ; corrected_ET = 0d0
+    underflow = 0d0 ; runoff = 0d0 ; corrected_ET = 0d0 ; evaporation_losses = 0d0 ; pot_evap_losses = 0d0
     initial_soilwater = sum(1d3 * soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers))
 
     ! Assume leaf transpiration is drawn from the soil based on the
@@ -2726,68 +2728,133 @@ module CARBON_MODEL_MOD
     pot_evap_losses = ET_leaf * uptake_fraction
     ! Assume all soil evaporation comes from the soil surface only
     pot_evap_losses(1) = pot_evap_losses(1) + ET_soil
-!print*,"---------"
-    ! to allow for smooth water balance integration carry this out at daily time step
-    do day = 1, nint(days_per_step)
 
-       !!!!!!!!!!
-       ! Evaporative losses
-       !!!!!!!!!!
-!print*,soil_waterfrac(1),porosity(1) > soil_waterfrac(1), field_capacity(1) > soil_waterfrac(1)
-       ! load potential evaporative losses from the soil profile
-       evaporation_losses = pot_evap_losses
-       ! can not evaporate from soil more than is available (m -> mm)
-       ! NOTE: This is due to the fact that both soil evaporation and transpiration
-       !       are drawing from the same water supply. Also 0.999 below is to allow for precision error...
-       avail_flux = soil_waterfrac(1:nos_root_layers) * layer_thickness(1:nos_root_layers) * 1d3
-       where (evaporation_losses > avail_flux) evaporation_losses = avail_flux * 0.999d0
-       ! this will update the ET estimate outside of the function
-       ! days_per_step corrections happens outside of the loop below
-       corrected_ET = corrected_ET + sum(evaporation_losses)
+! Conditions under which iterative solution should not be needed...
+! Scenario 1
+!          (i) Soil layers at or below field capacity, therefore no drainage
+!         (ii) The existing water supply and rainfall can support evaporative demanded by the canopy and soil
+!     Outcome: Extract all needed water, potentially leaving soil in negetative status, followed by infilatration.
+!              Allow for drainage if soil is above field capacity as a result of this proecss
+! Scenario 2
+!          (1) Soil layers ABOVE field capacity, therefore THERE is drainage
+!         (ii) The existing water supply and rainfall can support evaporative demanded by the canopy and soil
+!     Outcome: Extract allow water and add all infiltration into the soil.
+!              Allow for drainage in the final instance as strongly exponential drainage flow should negate time difference.
+!              NOTE: that this may bias between runoff and underflow estimation
 
-       ! pass information to waterloss variable and zero watergain
+    ! determine whether there is sufficient water to support evaporation
+    water_change = minval((soil_waterfrac(1:nos_root_layers)*layer_thickness(1:nos_root_layers)) &
+                         - (pot_evap_losses * days_per_step * 1d-3))
+
+    if (water_change > 0) then
+
+       ! There is enough water to support evaporation across the whole time period...
+
+       ! Draw all the water required for evaporation...
+       ! adjust water already committed to evaporation
        ! convert kg.m-2 (or mm) -> Mg.m-2 (or m)
-!       waterloss = 0d0 ; watergain = 0d0
-!       waterloss(1:nos_root_layers) = evaporation_losses(1:nos_root_layers)*1d-3
-       waterchange = 0d0
-       waterchange(1:nos_root_layers) = -evaporation_losses(1:nos_root_layers)*1d-3
+       soil_waterfrac(1:nos_root_layers) = soil_waterfrac(1:nos_root_layers) &
+                                         + ((-pot_evap_losses*days_per_step*1d-3) / layer_thickness(1:nos_root_layers))
 
-       !!!!!!!!!!
-       ! Gravitational drainage
-       !!!!!!!!!!
+       ! reset soil water change variable
+       waterchange = 0d0
+
+       ! determine infiltration from rainfall (kgH2O/m2/day),
+       ! if rainfall is probably liquid / soil surface is probably not frozen
+       if (rainfall_in > 0d0) then
+           call infiltrate(rainfall_in * days_per_step)
+       endif ! is there any rain to infiltrate?
+       ! update soil profiles. Convert fraction into depth specific values (rather than m3/m3) then update fluxes
+       soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
+                                         + (waterchange(1:nos_soil_layers) / layer_thickness(1:nos_soil_layers))
+
+       ! reset soil water change variable
+       waterchange = 0d0
 
        ! determine drainage flux between surface -> sub surface
        call gravitational_drainage
 
-       !!!!!!!!!!
-       ! Rainfall infiltration drainage
-       !!!!!!!!!!
-
-       ! determine infiltration from rainfall (kgH2O/m2/step),
-       ! if rainfall is probably liquid / soil surface is probably not frozen
-       if (rainfall_in > 0d0) then
-           call infiltrate(rainfall_in)
-       endif ! is there any rain to infiltrate?
        ! update soil profiles. Convert fraction into depth specific values (rather than m3/m3) then update fluxes
-!       soil_waterfrac(1:nos_soil_layers) = ((soil_waterfrac(1:nos_soil_layers)*layer_thickness(1:nos_soil_layers)) &
-!                                         + watergain(1:nos_soil_layers) - waterloss(1:nos_soil_layers)) &
-!                                         / layer_thickness(1:nos_soil_layers)
-       soil_waterfrac(1:nos_soil_layers) = ((soil_waterfrac(1:nos_soil_layers)*layer_thickness(1:nos_soil_layers)) &
-                                         + waterchange(1:nos_soil_layers)) / layer_thickness(1:nos_soil_layers)
-!print*,sum(watergain-waterloss),sum(waterchange)
-       ! mass balance check, at this point do not try and adjust evaporation to
-       ! correct for lack of supply. Simply allow for drought in next time step
-!       where (soil_waterfrac <= 0d0)
-!       ! instead...
-!         soil_waterfrac = vsmall
-!       end where
+       soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
+                                         + (waterchange(1:nos_soil_layers) / layer_thickness(1:nos_soil_layers))
 
-    end do ! days_per_step
+       ! Pass information to the output ET variable
+       corrected_ET = sum(pot_evap_losses)
+       ! apply time step correction kgH2O/m2/step -> kgH2O/m2/day
+       underflow = underflow * days_per_step_1
+       runoff = runoff * days_per_step_1
 
-    ! apply time step correction kgH2O/m2/step -> kgH2O/m2/day
-    corrected_ET = corrected_ET * days_per_step_1
-    underflow = underflow * days_per_step_1
-    runoff = runoff * days_per_step_1
+    else
+
+       ! to allow for smooth water balance integration carry this out at daily time step
+       do day = 1, nint(days_per_step)
+
+          !!!!!!!!!!
+          ! Evaporative losses
+          !!!!!!!!!!
+
+          ! load potential evaporative losses from the soil profile
+          evaporation_losses = pot_evap_losses
+          ! can not evaporate from soil more than is available (m -> mm)
+          ! NOTE: This is due to the fact that both soil evaporation and transpiration
+          !       are drawing from the same water supply. Also 0.999 below is to allow for precision error...
+          avail_flux = soil_waterfrac(1:nos_root_layers) * layer_thickness(1:nos_root_layers) * 1d3
+          where (evaporation_losses > avail_flux) evaporation_losses = avail_flux * 0.999d0
+          ! this will update the ET estimate outside of the function
+          ! days_per_step corrections happens outside of the loop below
+          corrected_ET = corrected_ET + sum(evaporation_losses)
+
+          ! adjust water already committed to evaporation
+          ! convert kg.m-2 (or mm) -> Mg.m-2 (or m)
+          soil_waterfrac(1:nos_root_layers) = soil_waterfrac(1:nos_root_layers) &
+                                            + ((-evaporation_losses(1:nos_root_layers)*1d-3) / layer_thickness(1:nos_root_layers))
+
+          !!!!!!!!!!
+          ! Rainfall infiltration drainage
+          !!!!!!!!!!
+
+          ! reset soil water change variable
+          waterchange = 0d0
+
+          ! determine infiltration from rainfall (kgH2O/m2/day),
+          ! if rainfall is probably liquid / soil surface is probably not frozen
+          if (rainfall_in > 0d0) then
+              call infiltrate(rainfall_in)
+          endif ! is there any rain to infiltrate?
+
+          ! update soil profiles. Convert fraction into depth specific values (rather than m3/m3) then update fluxes
+          soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
+                                            + (waterchange(1:nos_soil_layers) / layer_thickness(1:nos_soil_layers))
+
+          !!!!!!!!!!
+          ! Gravitational drainage
+          !!!!!!!!!!
+
+          ! reset soil water change variable
+          waterchange = 0d0
+
+          ! determine drainage flux between surface -> sub surface
+          call gravitational_drainage
+
+          ! update soil profiles. Convert fraction into depth specific values (rather than m3/m3) then update fluxes
+          soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
+                                            + (waterchange(1:nos_soil_layers) / layer_thickness(1:nos_soil_layers))
+
+          ! mass balance check, at this point do not try and adjust evaporation to
+          ! correct for lack of supply. Simply allow for drought in next time step
+!          where (soil_waterfrac <= 0d0)
+!          ! instead...
+!            soil_waterfrac = vsmall
+!          end where
+
+       end do ! days_per_step
+
+       ! apply time step correction kgH2O/m2/step -> kgH2O/m2/day
+       corrected_ET = corrected_ET * days_per_step_1
+       underflow = underflow * days_per_step_1
+       runoff = runoff * days_per_step_1
+
+    end if ! water_change > 0
 
     !!!!!!!!!!
     ! Update soil layer thickness
@@ -2896,8 +2963,10 @@ module CARBON_MODEL_MOD
             - (sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers) * 1d3) &
             - initial_soilwater)
 
-    if (abs(balance) > 1d-6) then
+    if (abs(balance) > 1d-6 .or. soil_waterfrac(1) < 0d0) then
         print*,"Soil water miss-balance (mm)",balance
+        print*,"Initial_soilwater",initial_soilwater
+        print*,"Final_soilwater",sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers) * 1d3)
         print*,"Rainfall",rainfall_in,"ET",corrected_ET,"underflow",underflow,"runoff",runoff
     end if ! abs(balance) > 1d-10
 
@@ -2912,6 +2981,8 @@ module CARBON_MODEL_MOD
 
     ! Takes surface_watermm and distributes it among top !
     ! layers. Assumes total infilatration in timestep.   !
+    ! NOTE: Assumes that any previous water movement due to infiltration and evaporation
+    !       has already been updated in soil mass balance
 
     implicit none
 
@@ -2930,21 +3001,15 @@ module CARBON_MODEL_MOD
 
        ! is the input of water greater than available space
        ! if so fill and subtract from input and move on to the next
-       ! layer
-       ! determine the available pore space in current soil layer
-!       wdiff = ((porosity(i)-soil_waterfrac(i)) &
-!             * layer_thickness(i))-watergain(i)+waterloss(i)
-       wdiff = ((porosity(i)-soil_waterfrac(i)) &
-             * layer_thickness(i))-waterchange(i)
-!print*,"wdiff",((porosity(i)-soil_waterfrac(i))*layer_thickness(i))-watergain(i)+waterloss(i),wdiff
+       ! layer determine the available pore space in current soil layer
+       wdiff = ((porosity(i)-soil_waterfrac(i)) * layer_thickness(i))
+
        if (add > wdiff) then
            ! if so fill and subtract from input and move on to the next layer
-!           watergain(i) = watergain(i) + wdiff
            waterchange(i) = waterchange(i) + wdiff
            add = add - wdiff
        else
            ! otherwise infiltate all in the current layer
-!           watergain(i) = watergain(i) + add
            waterchange(i) = waterchange(i) + add
            add = 0d0 ; exit
        end if
@@ -2962,6 +3027,8 @@ module CARBON_MODEL_MOD
   subroutine gravitational_drainage
 
     ! integrator for soil gravitational drainage !
+    ! NOTE: Assumes that any previous water movement due to infiltration and evaporation
+    !       has already been updated in soil mass balance
 
     implicit none
 
@@ -3016,9 +3083,6 @@ module CARBON_MODEL_MOD
            change = drainage * layer_thickness(soil_layer)
 
            ! update soil layer below with drained liquid
-!           watergain( soil_layer + 1 ) = watergain( soil_layer + 1 ) + change
-!           waterloss( soil_layer     ) = waterloss( soil_layer     ) + change
-           ! update soil layer below with drained liquid
            waterchange( soil_layer + 1 ) = waterchange( soil_layer + 1 ) + change
            waterchange( soil_layer     ) = waterchange( soil_layer     ) - change
 
@@ -3028,7 +3092,6 @@ module CARBON_MODEL_MOD
 
     ! estimate drainage from bottom of soil column (kgH2O/m2/day)
     ! NOTES: that underflow is reset outside of the daily soil loop
-!    underflow = underflow + (waterloss(nos_soil_layers) * 1d3)
     underflow = underflow + (waterchange(nos_soil_layers+1) * 1d3)
 
   end subroutine gravitational_drainage
@@ -3268,7 +3331,7 @@ module CARBON_MODEL_MOD
 !                                 act_pot_ratio, & ! ratio of potential to actual evaporation, i.e. (avail / potenial)
 !                                  sfc_exchange, & ! surface exchange conductance (m/s; e.g. stomatal conductance)
 !                                 aero_exchange, & ! aerodynamic exchange conductance (m/s; e.g. aerodynamic conductance)
-!                               vapour_gradient    ! vapour pressure gradient (Pa; either VPD or between air and soil)
+!                               vapour_gradient    ! vapour pressure gradient (kPa; either VPD or between air and soil)
 !    double precision, intent(out) :: deltaTemp, & ! surface temperature difference (K)
 !                                     deltaR    ! surface longwave radiation difference (W/m2); subtract from isothermal longwave
 !
@@ -3314,7 +3377,7 @@ module CARBON_MODEL_MOD
 !    water_resistance = (aerodynamic_resistance + stomatal_resistance)
 !    thermal_gains = (heat_loss_resistance * water_resistance * psych * (isothermal/area_scaling)) &
 !                  / (air_density_kg * cpair * ((psych*water_resistance) + (slope*heat_loss_resistance)))
-!    thermal_losses = (heat_loss_resistance * vapour_gradient * 1d-3) &
+!    thermal_losses = (heat_loss_resistance * vapour_gradient) &
 !                   / ((psych*water_resistance) + (slope*heat_loss_resistance))
 !    ! determine surface temperature difference (K); should be added to the canopy temperature
 !    deltaTemp = thermal_gains - thermal_losses
@@ -4042,4 +4105,4 @@ module CARBON_MODEL_MOD
 !
 !--------------------------------------------------------------------
 !
-end module CARBON_MODEl_MOD
+end module CARBON_MODEL_MOD

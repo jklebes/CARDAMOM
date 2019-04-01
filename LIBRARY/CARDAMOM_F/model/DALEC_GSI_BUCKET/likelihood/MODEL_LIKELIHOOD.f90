@@ -48,7 +48,7 @@ module model_likelihood_module
     MCOPT_EDC%APPEND = 0
     MCOPT_EDC%nADAPT = 100
     MCOPT_EDC%fADAPT = 0.5d0
-    MCOPT_EDC%nOUT = 1000
+    MCOPT_EDC%nOUT = 5000
     MCOPT_EDC%nPRINT = 0
     MCOPT_EDC%nWRITE = 0
     ! the next two lines ensure that parameter inputs are either given or
@@ -596,16 +596,6 @@ module model_likelihood_module
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(32)/pars(31) < 0.04d0) ) then
        EDC1 = 0 ; EDCD%PASSFAIL(10) = 0
     endif
-    ! also apply to initial conditions
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(20)/pars(19) < 0.04d0) ) then
-!       EDC1 = 0 ; EDCD%PASSFAIL(11) = 0
-!    endif
-
-    ! replanting stock of foliage is unlikely to have much lai, thus limit lai
-    ! to less than 1 m2/m2
-    !if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(31)/pars(17) > 1d0)) then
-    !   EDC1 = 0 ; EDCD%PASSFAIL(12) = 0
-    !endif
 
     ! --------------------------------------------------------------------
     ! TLS: some added specifically to deal with GSI conditions
@@ -614,9 +604,12 @@ module model_likelihood_module
     ! avgTmin min threshold should not be larger than max.
     ! We also expect that the range between min and maxium should be < 50 K
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(14) > pars(15)) ) then
-         EDC1 = 0 ; EDCD%PASSFAIL(13) = 0
+         EDC1 = 0 ; EDCD%PASSFAIL(11) = 0
     endif
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(15)-pars(14)) > 50d0 ) then
+         EDC1 = 0 ; EDCD%PASSFAIL(12) = 0
+    endif
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(15)-pars(14)) < 5d0 ) then
          EDC1 = 0 ; EDCD%PASSFAIL(13) = 0
     endif
 
@@ -627,16 +620,16 @@ module model_likelihood_module
          EDC1 = 0 ; EDCD%PASSFAIL(14) = 0
     endif
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(24) < maxval(DATAin%met(11,:))) ) then
-         EDC1 = 0 ; EDCD%PASSFAIL(14) = 0
+         EDC1 = 0 ; EDCD%PASSFAIL(15) = 0
     endif
 
     ! VPD min threshold (Pa) should not be larger than max
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(25) > pars(26)) ) then
-         EDC1 = 0 ; EDCD%PASSFAIL(15) = 0
+         EDC1 = 0 ; EDCD%PASSFAIL(16) = 0
     endif
     ! VPD min threshold (Pa) should not be substantially greater than the maximum observed VPD in a given area
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(25) > maxval(DATAin%met(12,:)+100d0) )) then
-         EDC1 = 0 ; EDCD%PASSFAIL(16) = 0
+         EDC1 = 0 ; EDCD%PASSFAIL(17) = 0
     endif
 
     ! CN ratio of leaf should also be between 95CI(+5% of CR for safety) of trait database values
@@ -646,7 +639,7 @@ module model_likelihood_module
     ! leaves (which have ranges upto ~100)
     tmp = pars(17) / (10d0**pars(11)) ! foliar C:N
     if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 43.76895d0 .or. tmp < 10.82105d0)) then
-       EDC1 = 0 ; EDCD%PASSFAIL(17) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(18) = 0
     endif
 
     ! --------------------------------------------------------------------
@@ -873,30 +866,30 @@ module model_likelihood_module
     tmp = ((sumwood/dble(nodays)) / pars(6))  ! the steady state approximation of wood (gC/m2)
     tmp1 = ((sumcwd/dble(nodays)) / (pars(38)*temp_response)) ! the steady state approximation of cwd (gC/m2)
     if ((EDC2 == 1 .or. DIAG == 1) .and. pars(21) > tmp*1.1d0) then
-       EDC2 = 0 ; EDCD%PASSFAIL(18) = 0
+       EDC2 = 0 ; EDCD%PASSFAIL(19) = 0
     end if
     ! Similarly it is unlikely that the amount of coarse woody debris can be
     ! greater than its steady state. This neglects the possibility of large CWD stores
     ! in a system which has recently been cleared, but as we never have this information it is
     ! appropriate for most cases
     if ((EDC2 == 1 .or. DIAG == 1) .and. pars(37) > tmp1*1.1d0) then
-       EDC2 = 0 ; EDCD%PASSFAIL(19) = 0
+       EDC2 = 0 ; EDCD%PASSFAIL(20) = 0
     end if
     ! finally the steady-state estimate of CWD should be less than that of wood
     ! See Brovkin et al., (2012)
     if ((EDC2 == 1 .or. DIAG == 1) .and. tmp1 > tmp) then
-       EDC2 = 0 ; EDCD%PASSFAIL(20) = 0
+       EDC2 = 0 ; EDCD%PASSFAIL(21) = 0
     endif
 
     ! GPP allocation to foliage and labile cannot be 5 orders of magnitude
     ! difference from GPP allocation to roots
     if ((EDC2 == 1 .or. DIAG == 1) .and. (ffol > (5d0*froot) .or. (ffol*5d0) < froot)) then
-       EDC2 = 0 ; EDCD%PASSFAIL(21) = 0
+       EDC2 = 0 ; EDCD%PASSFAIL(22) = 0
     endif
 
     ! Average turnover of foliage should not be less than wood (pars(6))
     if ((EDC2 == 1 .or. DIAG == 1) .and. torfol < pars(6) ) then
-         EDC2 = 0 ; EDCD%PASSFAIL(22) = 0
+         EDC2 = 0 ; EDCD%PASSFAIL(23) = 0
     endif
 
     ! The average leaf life span be less than 12 years
@@ -904,7 +897,7 @@ module model_likelihood_module
     !        6 years = 0.0004563084 day-1
     !     0.15 years = 0.01825234   day-1
     if ((EDC2 == 1 .or. DIAG == 1) .and. (torfol < 0.0004563084d0 .or. torfol > 0.01825234d0) ) then
-         EDC2 = 0 ; EDCD%PASSFAIL(23) = 0
+         EDC2 = 0 ; EDCD%PASSFAIL(24) = 0
     endif
 
     ! In contrast to the leaf longevity labile carbon stocks can be quite long
@@ -914,7 +907,7 @@ module model_likelihood_module
     !       11 years = 0.0002488955 day-1
     !        6 years = 0.0004563085 day-1
     if ((EDC2 == 1 .or. DIAG == 1) .and. torlab < 0.0002488955d0) then
-        EDC2 = 0 ; EDCD%PASSFAIL(24) = 0
+        EDC2 = 0 ; EDCD%PASSFAIL(25) = 0
     endif
 
     ! Finally we would not expect that the mean labile stock is greater than
@@ -927,7 +920,7 @@ module model_likelihood_module
     ! Richardson et al (2013), New Phytologist, Clab 2.24 +/- 0.44 % in temperate (max = 4.2 %)
     if (EDC2 == 1 .or. DIAG == 1) then
         if ((mean_pools(1) / (mean_pools(3) + mean_pools(4))) > 0.125d0) then
-            EDC2 = 0 ; EDCD%PASSFAIL(25) = 0
+            EDC2 = 0 ; EDCD%PASSFAIL(26) = 0
         endif
     endif ! EDC2 == 1 .or. DIAG == 1
 
@@ -941,7 +934,7 @@ module model_likelihood_module
     if (EDC2 == 1 .or. DIAG == 1) then
         mean_ratio(1) = mean_pools(3)/mean_pools(2)
         if ( mean_ratio(1) < 0.1278d0 .or. mean_ratio(1) > 4.07d0 ) then
-            EDC2 = 0 ; EDCD%PASSFAIL(26) = 0
+            EDC2 = 0 ; EDCD%PASSFAIL(27) = 0
         end if
     endif !
 
@@ -955,24 +948,24 @@ module model_likelihood_module
 
     ! foliar restrictions
     if ((EDC2 == 1 .or. DIAG == 1) .and. (fNPP < 0.1d0 .or. fNPP > 0.5d0)) then
-        EDC2 = 0 ; EDCD%PASSFAIL(27) = 0
+        EDC2 = 0 ; EDCD%PASSFAIL(28) = 0
     endif
     ! for both roots and wood the NPP > 0.85 is added to prevent large labile
     ! pools being used to support growth that photosynthesis cannot provide over
     ! the long term.
     if ((EDC2 == 1 .or. DIAG == 1) .and. (rNPP < 0.05d0 .or. rNPP > 0.85d0 .or. wNPP > 0.85d0)) then
-        EDC2 = 0 ; EDCD%PASSFAIL(28) = 0
+        EDC2 = 0 ; EDCD%PASSFAIL(29) = 0
     endif
     ! NOTE that within the current framework NPP is split between fol, root, wood and that remaining in labile.
     ! Thus fail conditions fNPP + rNPP + wNPP > 1.0 .or. fNPP + rNPP + wNPP < 0.95, i.e. lNPP cannot be > 0.05 (-0.1)
     tmp = 1d0 - rNPP - wNPP - fNPP
     if ((EDC2 == 1 .or. DIAG == 1) .and. abs(tmp) > 0.05d0) then
-        EDC2 = 0 ; EDCD%PASSFAIL(29) = 0
+        EDC2 = 0 ; EDCD%PASSFAIL(30) = 0
     endif
 
     ! Ra:GPP ratio is unlikely to be outside of 0.2 > Ra:GPP < 0.80
     if ((EDC2 == 1 .or. DIAG == 1) .and. (fauto > 0.80d0 .or. fauto < 0.20d0) ) then
-        EDC2 = 0 ; EDCD%PASSFAIL(30) = 0
+        EDC2 = 0 ; EDCD%PASSFAIL(31) = 0
     end if
 
     !!!!!!!!!
@@ -990,7 +983,7 @@ module model_likelihood_module
                                  ,(nodays+1-exp_adjust+1))
            ! next assess the decay coefficient for meetings the EDC criterion
            if (abs(-EQF2/decay_coef) < (365.25d0*dble(no_years_adjust)) .and. decay_coef < 0d0 ) then
-              EDC2 = 0 ; EDCD%PASSFAIL(31) = 0
+              EDC2 = 0 ; EDCD%PASSFAIL(32) = 0
            end if ! EDC conditions
         enddo
     endif
@@ -1002,7 +995,7 @@ module model_likelihood_module
                                  ,(nodays+1-disturb_end+1))
            ! next assess the decay coefficient for meetings the EDC criterion
            if (abs(-EQF2/decay_coef) < (365.25d0*dble(no_years_adjust)) .and. decay_coef < 0d0 ) then
-              EDC2 = 0 ; EDCD%PASSFAIL(32) = 0
+              EDC2 = 0 ; EDCD%PASSFAIL(33) = 0
            end if ! EDC conditions
         enddo
     endif
@@ -1029,7 +1022,7 @@ module model_likelihood_module
         ! negative and of forest reasonable size
         if (target_living_C(2) > 100d0) then
             if (model_living_C < (target_living_C(1)) .or. model_living_C > (target_living_C(2))) then
-                EDC2 = 0 ; EDCD%PASSFAIL(33) = 0
+                EDC2 = 0 ; EDCD%PASSFAIL(34) = 0
              end if
         end if
     endif ! EDC2 .or. DIAG .and. age
@@ -1136,38 +1129,38 @@ module model_likelihood_module
 
         ! roots input / output ratio
         if (abs(log(in_out_root)) > EQF2) then
-            EDC2 = 0 ; EDCD%PASSFAIL(34) = 0
+            EDC2 = 0 ; EDCD%PASSFAIL(35) = 0
         endif
         ! wood input / output ratio
         if (abs(log(in_out_wood)) > EQF2) then
-            EDC2 = 0 ; EDCD%PASSFAIL(35) = 0
+            EDC2 = 0 ; EDCD%PASSFAIL(36) = 0
         endif
         ! litter input / output ratio
         if (abs(log(in_out_lit)) > EQF2) then
-            EDC2 = 0 ; EDCD%PASSFAIL(36) = 0
+            EDC2 = 0 ; EDCD%PASSFAIL(37) = 0
         endif
         ! som input / output ratio
         if (abs(log(in_out_som)) > EQF2) then
-            EDC2 = 0 ; EDCD%PASSFAIL(37) = 0
+            EDC2 = 0 ; EDCD%PASSFAIL(38) = 0
         endif
         ! cwd input / output ratio
         if (abs(log(in_out_cwd)) > EQF2) then
-            EDC2 = 0 ; EDCD%PASSFAIL(38) = 0
+            EDC2 = 0 ; EDCD%PASSFAIL(39) = 0
         endif
         ! total dead organic matter input / output ratio ! Possibly change to EQF2
         if (abs(log(in_out_dead)) > EQF2) then
-            EDC2 = 0 ; EDCD%PASSFAIL(39) = 0
+            EDC2 = 0 ; EDCD%PASSFAIL(40) = 0
         endif
 
         ! in case of disturbance
         if (maxval(met(8,:)) > 0.99d0 .and. disturb_end < (nodays-nint(steps_per_year)-1)) then
             ! roots input / output ratio
             if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(in_out_root_disturb)) > EQF5) then
-               EDC2 = 0 ; EDCD%PASSFAIL(40) = 0
+               EDC2 = 0 ; EDCD%PASSFAIL(41) = 0
             endif
             ! wood input / output ratio
             if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(in_out_wood_disturb)) > EQF20) then
-               EDC2 = 0 ; EDCD%PASSFAIL(41) = 0
+               EDC2 = 0 ; EDCD%PASSFAIL(42) = 0
             endif
         endif ! been cleared
 

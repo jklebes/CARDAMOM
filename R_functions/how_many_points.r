@@ -312,7 +312,7 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
     # Sometimes we want to simulate a particular country, which we will check now...
     country_match = factor(landmask$SOVEREIGNT) ; country_match = levels(country_match)
     country_match = gsub(" ","",country_match,fixed=TRUE)
-
+#sitename =  "Kenya"
     # does our site name (as specified in the grid verison of analysis) correspond to a country name as
     # given in the land mask we are using...?
     if (length(which(grepl(sitename,country_match) == TRUE)) > 0) {
