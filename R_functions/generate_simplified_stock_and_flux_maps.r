@@ -12,9 +12,12 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
   if (file.exists(infile) == FALSE) {stop("grid_outputs for 'generate_simplified_stock_and_flux_maps' missing")}
   load(paste(infile))
   infile=paste(PROJECT$results_processedpath,PROJECT$name,"_parameter_maps.RData",sep="")
-  if (file.exists(infile) == FALSE) {stop("parameter_maps for 'generate_simplified_stock_and_flux_maps' missing")}
-  load(paste(infile))
-
+  if (file.exists(infile) == FALSE & grepl("BUCKET",PROJECT$model$name)) {
+    stop("parameter_maps for 'generate_simplified_stock_and_flux_maps' missing")
+  } else {
+    load(paste(infile))
+  }
+  
   # work out area matrix for the pixels in meters
   # include adjustment for g-> Tg (*1e-12)
   if (PROJECT$grid_type == "UK") {
@@ -57,7 +60,7 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
   # determine correct height and widths
   fig_height = 7000 ; fig_width = ((PROJECT$long_dim/PROJECT$lat_dim)+0.25) * fig_height#7200
 #  if (PROJECT$grid_type == "UK") { fig_height=8000 ; fig_width=7200 }
-
+  
   mean_rooting_depth = NA
   if (PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET") {
     jpeg(file=paste(PROJECT$figpath,"median_root_depth_maps_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
