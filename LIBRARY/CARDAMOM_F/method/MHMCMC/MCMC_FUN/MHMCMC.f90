@@ -268,7 +268,7 @@ contains
     ! calculate minimum step size
     ! Should consider whether either of these values should be adjusted to
     ! improve searching efficiency.
-    minstepsize = 5000d0/dble(N%ITER) ! 10000d0 -> 1000d0
+    minstepsize = 10000d0/dble(N%ITER) ! 10000d0 -> 1000d0
     if (minstepsize > 0.01d0) minstepsize = 0.01d0 ! 0.01d0
 
     ! determine local acceptance rate
@@ -300,7 +300,7 @@ contains
                PI%stepsize(p) = PI%stepsize(p)*(sqrt_adaptfac)
            endif
         end do ! p
-    endif ! if N%ACCLOC > 10
+    endif ! if N%ACCLOC > 3
 
     ! keep track of how long we have been stuck somewhere
     ! if (N%ACCLOC == 0) N%ACCLOC_ZEROS = N%ACCLOC_ZEROS + 1
@@ -312,7 +312,8 @@ contains
     ! step size can't be greater than 1
     where (PI%stepsize > 1d0) PI%stepsize = PI%stepsize * adaptfac_1
     ! if stepsize below minimum allowed value increase
-    where (PI%stepsize < minstepsize) PI%stepsize = PI%stepsize * adaptfac
+    !where (PI%stepsize < minstepsize) PI%stepsize = PI%stepsize * adaptfac
+    if (minval(PI%stepsize) < minstepsize) PI%stepsize = PI%stepsize * adaptfac
     ! if stepsize still below minimum allowed value then set to minimum
     !where (PI%stepsize < minstepsize) PI%stepsize = minstepsize
 
