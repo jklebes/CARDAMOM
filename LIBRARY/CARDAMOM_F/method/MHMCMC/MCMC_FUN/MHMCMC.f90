@@ -313,7 +313,8 @@ contains
     where (PI%stepsize > 1d0) PI%stepsize = PI%stepsize * adaptfac_1
     ! if stepsize below minimum allowed value increase
     !where (PI%stepsize < minstepsize) PI%stepsize = PI%stepsize * adaptfac
-    if (minval(PI%stepsize) < minstepsize) PI%stepsize = PI%stepsize * adaptfac
+    !if (minval(PI%stepsize) < minstepsize) PI%stepsize = PI%stepsize * adaptfac
+    if ((sum(PI%stepsize)/dble(PI%npars)) < minstepsize) PI%stepsize = PI%stepsize * adaptfac
     ! if stepsize still below minimum allowed value then set to minimum
     !where (PI%stepsize < minstepsize) PI%stepsize = minstepsize
 
