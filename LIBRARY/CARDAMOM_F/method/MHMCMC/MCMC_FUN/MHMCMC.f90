@@ -291,6 +291,8 @@ contains
 !    adaptfac=(1d0-((dble(N%ACC)/dble(MCO%nOUT))*0.5d0))*0.001d0+1d0
     ! determine local acceptance rate
     N%ACCRATE = dble_accloc/dble(MCO%nADAPT)
+    ! calculate new minimum stepsize
+    minstepsize = min(0.01,dble(N%iter) / 10000d0)
 !    print*,"...minstep = ",minstepsize," ACCRATE = ",N%ACCRATE
 !    print*," minval(step) = ",minval(PI%stepsize)!," maxval(step) = ",maxval(PI%stepsize)
 !    print*," minval(pstd) = ",minval(PI%parstd)," maxval(pstd) = ",maxval(PI%parstd)
