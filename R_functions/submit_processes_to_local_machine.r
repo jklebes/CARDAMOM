@@ -9,7 +9,7 @@ submit_processes_to_local_machine<-function (PROJECT_in) {
     print('This function should be valid for all CARDAMOM compatible DALEC MCMC functions')
 
     # do we want to remove any previous output files?
-    delete_old=readline("Delete any previous output files for this project name?(y/n)")    
+    delete_old=readline("Delete any previous output files for this project name?(y/n)")
     if (delete_old == "y") {system(paste("rm ",PROJECT_in$resultspath,"/*",sep=""))}
     background=readline("Run jobs in background?(y/n)")
     # begin writing out the file contents
@@ -32,8 +32,10 @@ submit_processes_to_local_machine<-function (PROJECT_in) {
 	       output=paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_",c,"_",sep="")
 	       if (background == "y" | (background == "n" & c != PROJECT_in$nochains)) {
                    system(paste(PROJECT_in$exepath,PROJECT_in$exe," ",infile," ",output," ",as.integer(PROJECT_in$nsamples)," 0 ",as.integer(PROJECT_in$samplerate)," & ",sep=""))
+                   #system(paste(PROJECT_in$exepath,PROJECT_in$exe," ",infile," ",output," ",as.integer(PROJECT_in$nsamples)," 50000 ",as.integer(10)," & ",sep=""))
                    #print(paste(PROJECT_in$exepath,PROJECT_in$exe," ",infile," ",output," ",as.integer(PROJECT_in$nsamples)," 0 ",as.integer(PROJECT_in$samplerate)," & ",sep=""))
 	       } else {
+                   #system(paste(PROJECT_in$exepath,PROJECT_in$exe," ",infile," ",output," ",as.integer(PROJECT_in$nsamples)," 0 ",as.integer(10),sep=""))
                    system(paste(PROJECT_in$exepath,PROJECT_in$exe," ",infile," ",output," ",as.integer(PROJECT_in$nsamples)," 0 ",as.integer(PROJECT_in$samplerate),sep=""))
 	       }
 	 } # chain loop

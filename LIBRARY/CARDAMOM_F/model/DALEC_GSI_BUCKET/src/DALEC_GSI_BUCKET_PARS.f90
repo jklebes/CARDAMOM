@@ -41,12 +41,12 @@ module MODEL_PARAMETERS
        ! generic model
 
        !
-       ! declare parameters
+       ! Declare parameters
        !
 
-       ! Decomposition of litter to som (fraction; temperature adjusted)
-       PI%parmin(1) = 0.0001368925d0 ! 20 years at 0oC
-       PI%parmax(1) = 0.002737851d0  !  1 year  at 0oC
+       ! Decomposition efficiency of litter/CWD to som (fraction)
+       PI%parmin(1) = 0.25d0 
+       PI%parmax(1) = 0.75d0
 
        ! Fraction of GPP respired as Rm
        PI%parmin(2) = 0.3d0
@@ -54,11 +54,14 @@ module MODEL_PARAMETERS
 
        ! GSI sensitivity for leaf growth
        PI%parmin(3) = 1.00d0
-       PI%parmax(3) = 1.005d0
+       PI%parmax(3) = 1.004d0
 
-       ! Max labile turnover (fraction) to roots
-       PI%parmin(4) = 0.0006844627d0 ! 4 years 0.0001368925d0 ! 20 years
-       PI%parmax(4) = 0.05d0         ! 20 days
+!       ! Max labile turnover (fraction) to roots
+!       PI%parmin(4) = 0.001368925 ! 2 years 0.0001368925d0 ! 20 years
+!       PI%parmax(4) = 0.05d0      ! 20 days
+       ! Fraction of (1-fgpp) to roots*/
+       PI%parmin(4) = 0.01d0
+       PI%parmax(4) = 1.0d0 ! 0.6 ?
 
        ! GSI max leaf turnover
        PI%parmin(5) = 0.000273785d0 ! 10 years
@@ -74,9 +77,9 @@ module MODEL_PARAMETERS
        PI%parmin(7) = 0.0109514d0 ! 4    years
        PI%parmax(7) = 0.01d0      ! 0.27 years
 
-       ! Turnover of litter to Rhet (fraction; temperature adjusted)
-       PI%parmin(8) = 0.0001368925d0 ! 20 years at 0oC
-       PI%parmax(8) = 0.002737851d0  ! 1  year  at 0oC
+       ! Turnover of litter (fraction; temperature adjusted)
+       PI%parmin(8) = 0.0003911215d0 ! 7    years at 0oC
+       PI%parmax(8) = 0.0109514d0    ! 0.25 years at 0oC
 
        ! Turnover of som to Rhet (fraction; temperature adjusted)
        PI%parmin(9) = 2.737851d-06   ! 1000 years at 0oC
@@ -96,8 +99,11 @@ module MODEL_PARAMETERS
        PI%parmax(12) = 0.05d0         ! 20 days
 
        ! Max labile turnover fraction to wood
-       PI%parmin(13) = 0.0006844627d0 ! 4 years 0.0001368925d0 ! 20 years
-       PI%parmax(13) = 0.05d0         ! 20 days
+!       PI%parmin(13) = 0.0006844627d0 ! 4 years 0.0001368925d0 ! 20 years
+!       PI%parmax(13) = 0.05d0         ! 20 days
+       ! Fraction to Clab*/
+       PI%parmin(13) = 0.05d0
+       PI%parmax(13) = 0.35d0
 
        ! GSI min temperature threshold (oC)
        PI%parmin(14) = 235d0
@@ -106,9 +112,6 @@ module MODEL_PARAMETERS
        ! GSI max temperature threshold (oC)
        PI%parmin(15) = 268.15d0 !235d0
        PI%parmax(15) = 330d0
-!       ! GSI range for temperature threshold (oC)
-!       PI%parmin(15) = 1d0
-!       PI%parmax(15) = 95d0 * 0.5d0
 
        ! GSI min photoperiod threshold (sec)
        PI%parmin(16) = 3600d0*4d0  !  4 hours
@@ -122,9 +125,6 @@ module MODEL_PARAMETERS
        ! GSI max photoperiod threshold (sec)
        PI%parmin(24) = 3600d0*4d0  !  4 hours
        PI%parmax(24) = 3600d0*18d0 ! 18 hours
-!       ! GSI photoperiod range (sec)
-!       PI%parmin(24) = 1d0
-!       PI%parmax(24) = 43200d0
 
        ! GSI min VPD threshold (Pa)
        PI%parmin(25) = 1d0
@@ -133,13 +133,10 @@ module MODEL_PARAMETERS
        ! GSI max VPD threshold (Pa)
        PI%parmin(26) = 1d0
        PI%parmax(26) = 5500d0
-!       ! GSI VPD range (Pa)
-!       PI%parmin(26) = 1d0
-!       PI%parmax(26) = 5500d0
 
        ! critical GPP for LAI increase (fraction)
-       PI%parmin(27) = 1d-5
-       PI%parmax(27) = 0.02d0
+       PI%parmin(27) = 0.005d0
+       PI%parmax(27) = 0.1d0
 
        ! fraction of Cwood which is branch
        PI%parmin(28) = 0.05d0
@@ -152,7 +149,7 @@ module MODEL_PARAMETERS
        ! GSI senstivity for leaf senescence
        PI%parmin(34) = 0.995d0
        PI%parmax(34) = 1.00d0
-
+!!!! SHOULD THESE BE DITCHED?
        ! GSI - have I just left a growing state (>1)
        PI%parmin(35) = 0.75d0
        PI%parmax(35) = 1.25d0
@@ -160,7 +157,7 @@ module MODEL_PARAMETERS
        ! GSI - initial GSI value
        PI%parmin(36) = 1.0d0
        PI%parmax(36) = 2.0d0
-
+!!!!
        ! Turnover rate for CWD
        PI%parmin(38) = 0.0001        ! 27 years
        PI%parmax(38) = 0.001368925d0 ! 2 year
@@ -190,56 +187,56 @@ module MODEL_PARAMETERS
        !
 
        ! C labile
-       PI%parmin(18)=1d0
-       PI%parmax(18)=1000d0
+       PI%parmin(18) = 1d0
+       PI%parmax(18) = 1000d0
 
        ! C foliar
-       PI%parmin(19)=1d0
-       PI%parmax(19)=1000d0
+       PI%parmin(19) = 1d0
+       PI%parmax(19) = 1000d0
 
        ! C roots
-       PI%parmin(20)=1d0
-       PI%parmax(20)=1000d0
+       PI%parmin(20) = 1d0
+       PI%parmax(20) = 1000d0
 
        ! C_wood
-       PI%parmin(21)=10d0
-       PI%parmax(21)=30000d0
+       PI%parmin(21) = 10d0
+       PI%parmax(21) = 30000d0
 
        ! C litter
-       PI%parmin(22)=1d0
-       PI%parmax(22)=2500d0
+       PI%parmin(22) = 1d0
+       PI%parmax(22) = 2500d0
 
        ! C_som
-       PI%parmin(23)=200d0
-       PI%parmax(23)=90000d0
+       PI%parmin(23) = 200d0
+       PI%parmax(23) = 90000d0
 
        ! C CWD
-       PI%parmin(37)=1d0
-       PI%parmax(37)=10000d0
+       PI%parmin(37) = 1d0
+       PI%parmax(37) = 10000d0
 
        ! Soil water fraction (m3/m3)
-       PI%parmin(41)=0.1d0
-       PI%parmax(41)=0.9d0
+       PI%parmin(41) = 0.15d0
+       PI%parmax(41) = 0.9d0
 
        !
        ! Replanting pools values
        !
 
        ! C labile
-       PI%parmin(30)=1.0d0
-       PI%parmax(30)=500.0d0
+       PI%parmin(30) = 1.0d0
+       PI%parmax(30) = 500.0d0
 
        ! C foliar
-       PI%parmin(31)=1.0d0
-       PI%parmax(31)=500.0d0
+       PI%parmin(31) = 1.0d0
+       PI%parmax(31) = 500.0d0
 
        ! C roots
-       PI%parmin(32)=1.0d0
-       PI%parmax(32)=500.0d0
+       PI%parmin(32) = 1.0d0
+       PI%parmax(32) = 500.0d0
 
        ! C_wood derived from forestry yield curves age = 1
-       PI%parmin(33)=1.0d0
-       PI%parmax(33)=1000.0d0
+       PI%parmin(33) = 1.0d0
+       PI%parmax(33) = 1000.0d0
 
     endif ! crop / default split
 

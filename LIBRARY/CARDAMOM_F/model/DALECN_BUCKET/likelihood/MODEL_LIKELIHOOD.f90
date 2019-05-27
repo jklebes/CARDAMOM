@@ -52,8 +52,8 @@ module model_likelihood_module
     ! set MCMC options needed for EDC run
     MCOPT_EDC%APPEND = 0
     MCOPT_EDC%nADAPT = 100
-    MCOPT_EDC%fADAPT = 0.5d0
-    MCOPT_EDC%nOUT = 1000
+    MCOPT_EDC%fADAPT = 1d0
+    MCOPT_EDC%nOUT = 10000
     MCOPT_EDC%nPRINT = 0
     MCOPT_EDC%nWRITE = 0
     ! the next two lines ensure that parameter inputs are either given or
@@ -73,6 +73,16 @@ module model_likelihood_module
        if (PI%parini(n) /= -9999d0 .and. DATAin%edc_random_search < 1) PI%parfix(n) = 1
     end do ! parameter loop
 
+    ! set the parameter step size at the beginning
+    PI%stepsize(1:PI%npars) = 0.01d0 ! 0.0005 -> 0.005 -> 0.05 -> 0.1 TLS
+    PI%parstd = 1d0 ; PI%Nparstd = 0d0
+    ! Covariance matrix cannot be set to zero therefore set initial value to a
+    ! small positive value along to variance access
+    PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+    do n = 1, PI%npars
+       PI%covariance(n,n) = 1d0
+    end do
+
     ! if this is not a restart run, i.e. we do not already have a starting
     ! position we must being the EDC search procedure to find an ecologically
     ! consistent initial parameter set
@@ -83,8 +93,6 @@ module model_likelihood_module
         do while (PEDC < 0)
 
            write(*,*)"Beginning EDC search attempt"
-           ! reset the parameter step size at the beginning of each attempt
-           PI%stepsize(1:PI%npars) = 0.005d0 ! 0.0005 -> 0.005 -> 0.05 -> 0.1 TLS
            ! call the MHMCMC directing to the appropriate likelihood
            call MHMCMC(EDC_MODEL_LIKELIHOOD,PI,MCOPT_EDC,MCOUT_EDC)
 
@@ -97,12 +105,21 @@ module model_likelihood_module
            call edc_model_likelihood(PI,PI%parini,PEDC,ML_prior)
 
            ! keep track of attempts
-           counter_local = counter_local+1
+           counter_local = counter_local + 1
            ! periodically reset the initial conditions
            if (PEDC < 0d0 .and. mod(counter_local,3) == 0) then
                PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
                ! reset to select random starting point
                MCOPT_EDC%randparini = .true.
+               ! reset the parameter step size at the beginning of each attempt
+               PI%stepsize(1:PI%npars) = 0.01d0 ! 0.0005 -> 0.005 -> 0.05 -> 0.1 TLS
+               PI%parstd = 1d0 ; PI%Nparstd = 0d0
+               ! Covariance matrix cannot be set to zero therefore set initial value to a
+               ! small positive value along to variance access
+               PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+               do n = 1, PI%npars
+                  PI%covariance(n,n) = 1d0
+               end do
            endif
 
         end do ! for while condition
@@ -1047,7 +1064,7 @@ module model_likelihood_module
      ! NOTE that within the current framework NPP is split between fol, root, wood and that remaining in labile.
      ! Thus fail conditions fNPP + rNPP + wNPP > 1.0 .or. fNPP + rNPP + wNPP < 0.95, i.e. lNPP cannot be > 0.05 (-0.1)
      tmp = 1d0 - rNPP - wNPP - fNPP
-     if ((EDC2 == 1 .or. DIAG == 1) .and. abs(tmp) > 0.05d0) then
+     if ((EDC2 == 1 .or. DIAG == 1) .and. abs(tmp) > 0.025d0) then
           EDC2 = 0 ; EDCD%PASSFAIL(37) = 0
      endif
 

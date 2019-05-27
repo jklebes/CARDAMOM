@@ -155,7 +155,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 				# add the data on top if there is any
 				if (length(which(is.na(evap_obs))) != length(evap_obs) ) {
 					points(evap_obs, pch=16, cex=0.8)
-					plotCI(evap_obs,gap=0,uiw=evap_obs*evap_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
+					plotCI(evap_obs,gap=0,uiw=evap_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
 				}
 			} # acm or not
 			dev.off()
@@ -199,7 +199,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 		# add the data on top if there is any
 		if (length(which(is.na(Cfol_obs))) != length(Cfol_obs) ) {
 			points(Cfol_obs, pch=16, cex=0.8)
-			plotCI(Cfol_obs,gap=0,uiw=Cfol_obs*Cfol_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
+			plotCI(Cfol_obs,gap=0,uiw=Cfol_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
 		}
 
 		dev.off()
@@ -296,7 +296,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 			# add the data on top if there is any
 			if (length(which(is.na(gpp_obs))) != length(gpp_obs) ) {
 				points(gpp_obs, pch=16, cex=0.8)
-				plotCI(gpp_obs,gap=0,uiw=gpp_obs*gpp_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
+				plotCI(gpp_obs,gap=0,uiw=gpp_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
 			}
 		} # acm or not
 		dev.off()
@@ -342,7 +342,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 		if (length(which(is.na(nee_obs))) != length(nee_obs) ) {
 			points(nee_obs, pch=16, cex=0.8)
 			if (length(which(is.na(nee_obs)))/length(nee_obs) > 0.01) {
-				plotCI(nee_obs,gap=0,uiw=abs(nee_obs*nee_obs_unc), col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
+				plotCI(nee_obs,gap=0,uiw=nee_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
 			}
 		}
 
@@ -380,7 +380,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 		# add the data on top if there is any
 		if (length(which(is.na(eco_resp_obs))) != length(eco_resp_obs) ) {
 			points(eco_resp_obs, pch=16, cex=0.8)
-			plotCI(eco_resp_obs,gap=0,uiw=eco_resp_obs*eco_resp_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
+			plotCI(eco_resp_obs,gap=0,uiw=eco_resp_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
 		}
 		dev.off()
 
@@ -528,7 +528,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 		# add the data on top if there is any
 		if (length(which(is.na(Clit_obs))) != length(Clit_obs) ) {
 			points(Clit_obs, pch=16, cex=0.8)
-			plotCI(Clit_obs,gap=0,uiw=Clit_obs*Clit_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
+			plotCI(Clit_obs,gap=0,uiw=Clit_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
 		}
 		dev.off()
 
@@ -583,7 +583,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 		# add the data on top if there is any
 		if (length(which(is.na(Croots_obs))) != length(Croots_obs) ) {
 			points(Croots_obs, pch=16, cex=0.8)
-			plotCI(Croots_obs,gap=0,uiw=Croots_obs*Croots_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
+			plotCI(Croots_obs,gap=0,uiw=Croots_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
 		}
 		dev.off()
 
@@ -620,7 +620,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 		# add the data on top if there is any
 		if (length(which(is.na(Cwood_obs))) != length(Cwood_obs) ) {
 			points(Cwood_obs, pch=16, cex=0.8)
-			plotCI(Cwood_obs,gap=0,uiw=Cwood_obs*Cwood_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
+			plotCI(Cwood_obs,gap=0,uiw=Cwood_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
 		}
 		dev.off()
 
@@ -651,7 +651,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 		if (length(which(is.na(Csom_obs))) != length(Csom_obs) ) {
 			# add the data on top
 			points(Csom_obs, pch=16, cex=0.8)
-			plotCI(Csom_obs,gap=0,uiw=Csom_obs*Csom_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
+			plotCI(Csom_obs,gap=0,uiw=Csom_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
 		}
 		dev.off()
 
@@ -729,9 +729,9 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 			bob=rep(0, times=3)
 			if (grepl("DALECN",PROJECT$model$name) || grepl("DFOL",PROJECT$model$name) || grepl("DBio",PROJECT$model$name) || grepl("BUCKET",PROJECT$model$name)) {
 				gsi_input = array(0,dim=c(dim(states_all[[1]])[1],dim(states_all[[1]])[2],3))
-				gsi_input[1:dim(states_all[[16]])[1],,1] = states_all[[16]] ; gsi_input[1:dim(states_all[[16]])[1],,2]=states_all[[17]]
-				gsi_input[1:dim(states_all[[16]])[1],,3] = states_all[[18]]
-				# now calculate the time when the GSI value is having the greatest impact on the gradient that determines leaf growth or senescence
+                                gsi_input[1:dim(states_all[[16]])[1],,1] = states_all$gsi_itemp ; gsi_input[1:dim(states_all[[16]])[1],,2]=states_all$gsi_iphoto
+                                gsi_input[1:dim(states_all[[16]])[1],,3] = states_all$gsi_ivpd
+           			# now calculate the time when the GSI value is having the greatest impact on the gradient that determines leaf growth or senescence
 				bob = gsi_controlling(gsi_input,states_all$gsi,2,timestep_days,tmp_m)
 				bob = quantile(bob[,2],prob=c(0.975,0.50,0.025),na.rm=TRUE)
 			}
@@ -740,7 +740,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 			jpeg(file=paste(PROJECT$figpath,"timeseries_GSI_photoperiod_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
 			# now create the plotting area
 			par(mfrow=c(1,1), mar=c(5,5,3,1))
-			plot(rep(-9999,dim(GSI_var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(GSI_var), prob=c(0.999), na.rm=TRUE)), cex=0.8,ylab="GSI",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8, main=paste(PROJECT$sites[n]," - ",PROJECT$name," ( median = ",round(bob[2],digits=1),", 97.5% = ",round(bob[1],digits=1),", 2.5% = ",round(bob[3],digits=1),")", sep=""))
+			plot(rep(-9999,dim(GSI_var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(GSI_var), prob=c(0.999), na.rm=TRUE)), cex=0.8,ylab="GSI",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8, main=paste(PROJECT$sites[n]," - ",PROJECT$name," ( median = ",round(bob[2],digits=2),", 97.5% = ",round(bob[1],digits=2),", 2.5% = ",round(bob[3],digits=2),")", sep=""))
 			axis(1, at=time_vector[seq(1,length(time_vector),interval)],labels=round(year_vector[seq(1,length(time_vector),interval)], digits=1),tck=-0.02, padj=+0.15, cex.axis=1.9)
 			# add the confidence intervals
 			plotconfidence(GSI_var)
@@ -754,13 +754,13 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 			if (grepl("DALECN",PROJECT$model$name) || grepl("DFOL",PROJECT$model$name) || grepl("DBio",PROJECT$model$name) || grepl("BUCKET",PROJECT$model$name)) {
 				# now calculate the time when the GSI value is having the greatest impact on the gradient that determines leaf growth or senescence
 				bob = gsi_controlling(gsi_input,states_all$gsi,1,timestep_days,tmp_m)
-				bob = quantile(bob,prob=c(0.975,0.50,0.025),na.rm=TRUE)
+				bob = quantile(bob[,1],prob=c(0.975,0.50,0.025),na.rm=TRUE)
 			}
 			# temperature
 			jpeg(file=paste(PROJECT$figpath,"timeseries_GSI_temperature_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
 			# now create the plotting area
 			par(mfrow=c(1,1), mar=c(5,5,3,1))
-			plot(rep(-9999,dim(GSI_var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(GSI_var), prob=c(0.999), na.rm=TRUE)), cex=0.8,ylab="GSI",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8, main=paste(PROJECT$sites[n]," - ",PROJECT$name," ( median = ",round(bob[2],digits=1),", 97.5% = ",round(bob[1],digits=1),", 2.5% = ",round(bob[3],digits=1),")", sep=""))
+			plot(rep(-9999,dim(GSI_var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(GSI_var), prob=c(0.999), na.rm=TRUE)), cex=0.8,ylab="GSI",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8, main=paste(PROJECT$sites[n]," - ",PROJECT$name," ( median = ",round(bob[2],digits=2),", 97.5% = ",round(bob[1],digits=2),", 2.5% = ",round(bob[3],digits=2),")", sep=""))
 			axis(1, at=time_vector[seq(1,length(time_vector),interval)],labels=round(year_vector[seq(1,length(time_vector),interval)], digits=1),tck=-0.02, padj=+0.15, cex.axis=1.9)
 			# add the confidence intervals
 			plotconfidence(GSI_var)
@@ -774,13 +774,13 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 			if (grepl("DALECN",PROJECT$model$name) || grepl("DFOL",PROJECT$model$name) || grepl("DBio",PROJECT$model$name) || grepl("BUCKET",PROJECT$model$name)) {
 				# now calculate the time when the GSI value is having the greatest impact on the gradient that determines leaf growth or senescence
 				bob = gsi_controlling(gsi_input,states_all$gsi,3,timestep_days,tmp_m)
-				bob = quantile(bob,prob=c(0.975,0.50,0.025),na.rm=TRUE)
+				bob = quantile(bob[,3],prob=c(0.975,0.50,0.025),na.rm=TRUE)
 			}
 			# VPD
 			jpeg(file=paste(PROJECT$figpath,"timeseries_GSI_vpd_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
 			# now create the plotting area
 			par(mfrow=c(1,1), mar=c(5,5,3,1))
-			plot(rep(-9999,dim(GSI_var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(GSI_var), prob=c(0.999), na.rm=TRUE)), cex=0.8,ylab="GSI",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8, main=paste(PROJECT$sites[n]," - ",PROJECT$name," ( median = ",round(bob[2],digits=1),", 97.5% = ",round(bob[1],digits=1),", 2.5% = ",round(bob[3],digits=1),")", sep=""))
+			plot(rep(-9999,dim(GSI_var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(GSI_var), prob=c(0.999), na.rm=TRUE)), cex=0.8,ylab="GSI",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8, main=paste(PROJECT$sites[n]," - ",PROJECT$name," ( median = ",round(bob[2],digits=2),", 97.5% = ",round(bob[1],digits=2),", 2.5% = ",round(bob[3],digits=2),")", sep=""))
 			axis(1, at=time_vector[seq(1,length(time_vector),interval)],labels=round(year_vector[seq(1,length(time_vector),interval)], digits=1),tck=-0.02, padj=+0.15, cex.axis=1.9)
 			# add the confidence intervals
 			plotconfidence(GSI_var)

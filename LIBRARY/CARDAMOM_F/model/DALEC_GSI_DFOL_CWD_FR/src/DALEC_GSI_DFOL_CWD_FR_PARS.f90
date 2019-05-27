@@ -44,9 +44,9 @@ module MODEL_PARAMETERS
        ! declare parameters
        !
 
-       ! Decomposition of litter to som (fraction; temperature adjusted)
-       PI%parmin(1) = 0.0001368925d0 ! 20 years at 0oC
-       PI%parmax(1) = 0.002737851d0  ! 1  year  at 0oC
+       ! Decomposition efficiency of litter/CWD to som (fraction)
+       PI%parmin(1) = 0.25d0
+       PI%parmax(1) = 0.75d0
 
        ! Fraction of GPP respired
        PI%parmin(2) = 0.3d0
@@ -54,7 +54,7 @@ module MODEL_PARAMETERS
 
        ! GSI sensitivity for leaf growth
        PI%parmin(3) = 1.00d0
-       PI%parmax(3) = 1.005d0
+       PI%parmax(3) = 1.004d0
 
        ! Fraction of (1-fgpp) to roots*/
        PI%parmin(4) = 0.01d0
@@ -74,9 +74,9 @@ module MODEL_PARAMETERS
        PI%parmin(7) = 0.0109514d0 ! 4    years
        PI%parmax(7) = 0.01d0      ! 0.27 years
 
-       ! Turnover of litter to Rhet (fraction; temperature adjusted)
-       PI%parmin(8) = 0.0001368925d0 ! 20 years at 0oC
-       PI%parmax(8) = 0.002737851d0  ! 1  year  at 0oC
+       ! Turnover of litter (fraction; temperature adjusted)
+       PI%parmin(8) = 0.0003911215d0 ! 7    years at 0oC
+       PI%parmax(8) = 0.0109514d0    ! 0.25 years at 0oC
 
        ! Turnover of som to Rhet (fraction; temperature adjusted)
        PI%parmin(9) = 2.737851d-06   ! 1000 years at 0oC
@@ -129,8 +129,8 @@ module MODEL_PARAMETERS
        PI%parmax(26) = 5500d0
 
        ! critical GPP for LAI increase (fraction)
-       PI%parmin(27) = 1d-5
-       PI%parmax(27) = 0.02d0
+       PI%parmin(27) = 0.005d0
+       PI%parmax(27) = 0.1d0
 
        ! fraction of Cwood which is branch
        PI%parmin(28) = 0.05d0
@@ -221,6 +221,7 @@ module MODEL_PARAMETERS
        PI%parmax(33)=1000.0d0
 
     endif ! crop / default split
+
   end subroutine pars_info
   !
   !------------------------------------------------------------------

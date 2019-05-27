@@ -48,36 +48,46 @@ module MCMCOPT
 
   ! information which is needed determine progress
   type COUNTERS
+    logical :: beta_step = .false.
     integer :: ACC    & ! total number of accepted solutions
               ,ACCLOC & ! number of recently accepted solutions
               ,ITER   & ! number of iterations attempted
-              ,ACCLOC_ZEROS ! number of consecutive adaption periods to pass
-                            ! without any acceptance
+              ,ACCEDC & ! number of EDC complient iterations
+              ,ACCLOC_beta & ! accepted parameters from the beta linked step
+              ,Nbeta
 
-    double precision :: ACCRATE ! local acceptance rate
+    double precision :: ACCRATE, & ! local acceptance rate
+                        ACCRATE_beta ! local acceptance rate for the beta stepping
 
   end type ! COUNTERS
   ! create counters type
 
   ! parameter structure defined here
   type PARAMETER_INFO
-    double precision, allocatable, dimension(:) :: parmax   & ! maximum parameter values
-                                        ,parmin   & ! minimum parameter values
-                                        ,parini   & ! initial parameter values
-                                        ,parfix   & ! do they need fixing (i.e. randomly generated)
-                                        ,stepsize   ! parameter specific stepsize
+    logical :: cov = .false.
+    double precision, allocatable, dimension(:,:) :: covariance ! parameter covariance matrix
+    double precision, allocatable, dimension(:) :: mean_par & ! mean parameter value
+                                                  ,parmax   & ! maximum parameter values
+                                                  ,parmin   & ! minimum parameter values
+                                                  ,parini   & ! initial parameter values
+                                                  ,parfix   & ! do they need fixing (i.e. randomly generated)
+                                                  ,parstd   & ! standard deviation of accepted parameter
+                                                  ,stepsize   ! parameter specific stepsize
+
+    double precision :: Nparstd  ! Number of samples forming standard deviation of accepted parameters
+
     integer :: npars ! number of parameters to be solved
     ! crop specific variables
     double precision :: stock_seed_labile
-    double precision, allocatable, dimension(:)  ::          DS_shoot, & !
-                                                              DS_root, & !
-                                                             fol_frac, & !
-                                                            stem_frac, & !
-                                                            root_frac, & !
-                                                              DS_LRLV, & !
-                                                                 LRLV, & !
-                                                              DS_LRRT, & !
-                                                                 LRRT
+    double precision, allocatable, dimension(:)  ::    DS_shoot, & !
+                                                        DS_root, & !
+                                                       fol_frac, & !
+                                                      stem_frac, & !
+                                                      root_frac, & !
+                                                        DS_LRLV, & !
+                                                           LRLV, & !
+                                                        DS_LRRT, & !
+                                                           LRRT
 
   end type ! PARAMETER_INFO
   ! create parameter info type

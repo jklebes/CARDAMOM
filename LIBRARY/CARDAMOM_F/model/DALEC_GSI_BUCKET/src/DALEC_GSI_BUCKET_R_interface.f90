@@ -146,7 +146,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
      out_var(i,1:nodays,1)  = lai
      out_var(i,1:nodays,2)  = GPP
      out_var(i,1:nodays,3)  = FLUXES(1:nodays,3) ! auto resp
-     out_var(i,1:nodays,4)  = FLUXES(1:nodays,13) + FLUXES(1:nodays,14) ! het resp
+     out_var(i,1:nodays,4)  = FLUXES(1:nodays,13) + FLUXES(1:nodays,14) + FLUXES(1:nodays,4)! het resp
      out_var(i,1:nodays,5)  = NEE
      out_var(i,1:nodays,6)  = POOLS(1:nodays,4) ! wood
      out_var(i,1:nodays,7)  = POOLS(1:nodays,6) ! som
@@ -169,12 +169,12 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
         out_var(i,1:nodays,17) = 0.0 ! GSI vpd component
      else
         out_var(i,1:nodays,14) = FLUXES(1:nodays,18) ! GSI value
-        out_var(i,1:nodays,15) = itemp(1:nodays) ! GSI temp component
-        out_var(i,1:nodays,16) = iphoto(1:nodays) ! GSI photoperiod component
-        out_var(i,1:nodays,17) = ivpd(1:nodays) ! GSI vpd component
+        out_var(i,1:nodays,15) = itemp(1:nodays)     ! GSI temp component
+        out_var(i,1:nodays,16) = iphoto(1:nodays)    ! GSI photoperiod component
+        out_var(i,1:nodays,17) = ivpd(1:nodays)      ! GSI vpd component
      endif
      out_var(i,1:nodays,18) = FLUXES(1:nodays,19) ! Evapotranspiration (kgH2O.m-2.day-1)
-     out_var(i,1:nodays,19) = POOLS(1:nodays,8) ! rootwater (kgH2O.m-2.rootdepth)
+     out_var(i,1:nodays,19) = POOLS(1:nodays,8)   ! rootwater (kgH2O.m-2.10cmdepth)
      out_var(i,1:nodays,20) = wSWP_time(1:nodays) ! Weighted Soil Water Potential (MPa)
      if (pft == 1) then
         ! crop so...
@@ -192,7 +192,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
      ! by comparing the sum alloaction to each pools over the sum NPP.
      fauto = sum(FLUXES(1:nodays,3)) / sum(FLUXES(1:nodays,1))
      sumNPP = (sum(FLUXES(1:nodays,1))*(1.0-fauto))**(-1.0) ! GPP * (1-Ra) fraction
-     out_var2(i,1) = sum(FLUXES(1:nodays,4)+FLUXES(1:nodays,8)) * sumNPP ! foliar
+     out_var2(i,1) = sum(FLUXES(1:nodays,8)) * sumNPP ! foliar
      out_var2(i,2) = sum(FLUXES(1:nodays,7)) * sumNPP ! wood
      out_var2(i,3) = sum(FLUXES(1:nodays,6)) * sumNPP ! fine root
 
@@ -238,6 +238,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
                 hak = 1 ; resid_fol(1:nodays) = 0d0
          end where
          out_var2(i,5) = sum(resid_fol) /dble(nodays-sum(hak))
+
          ! roots
          hak = 0
          resid_fol(1:nodays)   = FLUXES(1:nodays,12)
@@ -249,11 +250,14 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
                 hak = 1 ; resid_fol(1:nodays) = 0d0
          end where
          out_var2(i,6) = sum(resid_fol) /dble(nodays-sum(hak))
-         ! cwd
-         resid_fol(1:nodays)   = (FLUXES(1:nodays,13)+FLUXES(1:nodays,15))
+
+         ! litter + cwd
+         resid_fol(1:nodays)   = FLUXES(1:nodays,13)+FLUXES(1:nodays,15) &
+                                +FLUXES(1:nodays,20)+FLUXES(1:nodays,4)
          resid_fol(1:nodays)   = resid_fol(1:nodays) &
                                / (POOLS(1:nodays,5)+POOLS(1:nodays,7))
          out_var2(i,8) = sum(resid_fol) / dble(nodays)
+
      endif ! crop choice
 
      ! Csom

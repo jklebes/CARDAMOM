@@ -96,33 +96,33 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   }
 
   MET[,1] = met$run_day
-  MET[,2] = met$mint  ; if (min(met$mint) < -200) {stop('mint error in binary_data')}
-  MET[,3] = met$maxt  ; if (min(met$maxt) < -200) {stop('maxt error in binary_data')}
-  MET[,4] = met$swrad ; if (min(met$swrad) < 0) {stop('RAD error in binary_data')}
-  MET[,5] = met$co2#+200
+  MET[,2] = met$mint  ; if (min(met$mint) < -200) {stop('mint error in binary_data')} # Celcius
+  MET[,3] = met$maxt  ; if (min(met$maxt) < -200) {stop('maxt error in binary_data')} # Celcius
+  MET[,4] = met$swrad ; if (min(met$swrad) < 0) {stop('RAD error in binary_data')} # MJ/m2/day
+  MET[,5] = met$co2#+200 # ppm
   MET[,6] = met$doy
-  MET[,7] = pmax(0,met$precip)
-  MET[,8] = OBS$deforestation
-  MET[,9] = OBS$burnt_area
-  MET[,10] = met$avgTmin
-  MET[,11] = met$photoperiod
-  MET[,12] = met$vpd_lagged
-  MET[,13] = OBS$forest_management
+  MET[,7] = pmax(0,met$precip) # kgH2O/m2/s
+  MET[,8] = OBS$deforestation  # fraction
+  MET[,9] = OBS$burnt_area     # fraction
+  MET[,10] = met$avgTmin       # K
+  MET[,11] = met$photoperiod   # Seconds
+  MET[,12] = met$vpd_lagged    # Pa
+  MET[,13] = OBS$forest_management # type
   if (modelname == "ACM") {
-    MET[,14] = met$avgN
-    MET[,15] = met$lai
-    MET[,16] = met$lat
-    MET[,17] = met$wind_spd
-    MET[,18] = met$vpd
-    MET[,19] = met$Rtot
-    MET[,20] = met$top_sand
-    MET[,21] = met$bot_sand
-    MET[,22] = met$top_clay
-    MET[,23] = met$bot_clay
+    MET[,14] = met$avgN        # gN/m2
+    MET[,15] = met$lai         # m2/m2
+    MET[,16] = met$lat         # degree (-90/90)
+    MET[,17] = met$wind_spd    # m/s
+    MET[,18] = met$vpd         # Pa
+    MET[,19] = met$Rtot        # MPa
+    MET[,20] = met$top_sand    # %
+    MET[,21] = met$bot_sand    # %
+    MET[,22] = met$top_clay    # %
+    MET[,23] = met$bot_clay    # %
   } else {
-    MET[,14] = met$avgTemp
-    MET[,15] = pmax(0,met$wind_spd)
-    MET[,16] = pmax(0,met$vpd)
+    MET[,14] = met$avgTemp          # Celcius
+    MET[,15] = pmax(0,met$wind_spd) # m/s
+    MET[,16] = pmax(0,met$vpd)      # Pa
   }
 
   # TEMPLATE FOR ALL DALEC MCMC DATA files
@@ -199,7 +199,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   #PARPRIORS(2)=0.5;PARPRIORUNC(2)=1.2;%P_AUTO
   #PARPRIORS(10)=0.03;PARPRIORUNC(10)=1.25;%Temp_rate (Mahecha 2010)
   #PARPRIORS(17)=70;PARPRIORUNC(17)=2;%LMA - Kattge 2011
-  if (modelname == "DALEC_CDEA") {
+  if (modelname == "DALEC_CDEA" | modelname == "DALEC_CDEA_LU_FIRES") {
     PARPRIORS[11]=20.52048            ; PARPRIORUNC[11]=1.617705 # Ceff
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -266,7 +266,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       # for crops remove the biomass prior
       PARPRIORS[21]=-9999     ; PARPRIORUNC[21]=-9999
     } else {
-      PARPRIORS[39]=11.197440 ; PARPRIORUNC[39]=1.32313 # NUE prior derived from Kattge et al., (2011)
+      PARPRIORS[1]=0.5        ; PARPRIORUNC[1]=0.125 # fraction of litter decomposition to Csom
+      PARPRIORS[39]=11.197440 ; PARPRIORUNC[39]=1.32313*2 # NUE prior derived from Kattge et al., (2011)
     }
     } else if (modelname == "DALEC_GSI_DFOL_LABILE_FR") {
     PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.6 #1.617705 # Ceff
@@ -336,8 +337,9 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[21]=-9999         ; PARPRIORUNC[21]=-9999
       PARPRIORS[38]=OBS$soilwater ; PARPRIORUNC[38]=OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
     } else {
+      PARPRIORS[1]=0.5            ; PARPRIORUNC[1]=0.125 # fraction of litter decomposition to Csom
       PARPRIORS[41]=OBS$soilwater ; PARPRIORUNC[41]=OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
-      PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=1.32313 # NUE prior derived from Kattge et al., (2011)
+      PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=1.32313*2 # NUE prior derived from Kattge et al., (2011)
     } # crop or not
   } else if (modelname == "DALECN_GSI_BUCKET") {
     PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
@@ -372,7 +374,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     } else {
       # PARPRIORS[2]=51.70631   ; PARPRIORUNC[2]=124.6938 # C:N root (gC/gN) Kattge et al., (2011)
       # PARPRIORS[15]=416.6667  ; PARPRIORUNC[15]=326.3762 # C:N wood (gC/gN) Kattge et al., (2011)
-      # PARPRIORS[26]=11.197440 ; PARPRIORUNC[26]=1.32313 # NUE prior derived from Kattge et al., (2011)
+      # PARPRIORS[26]=11.197440 ; PARPRIORUNC[26]=1.32313*2 # NUE prior derived from Kattge et al., (2011)
       # PARPRIORS[36]=1.639     ; PARPRIORUNC[36]=0.125   # Rm_leaf N**exponent (gC/gN) Reich et al., (2008)
       # PARPRIORS[37]=0.778     ; PARPRIORUNC[37]=0.133   # Rm_leaf intercept (gC/gN) Reich et al., (2008)
       # PARPRIORS[38]=1.352     ; PARPRIORUNC[38]=0.150   # Rm_root N**exponent (gC/gN) Reich et al., (2008)
@@ -386,13 +388,13 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     # For ACM_GPP_ET
     # p(1) = nitrogen use efficiency at optimum temperature (oC)
     #,unlimited by CO2, light and photoperiod (34gC/gN)
-        PARPRIORS[1] = 35.65 ; PARPRIORUNC[1] = 26.19
+#    PARPRIORS[1] = 35.65 ; PARPRIORUNC[1] = 26.19
     # p(2) = maximum temperature at which photosynthesis occurs (oC) (59.04677oC)
-        PARPRIORS[2] = 59.04677 ; PARPRIORUNC[2] = 5.0
+#    PARPRIORS[2] = 59.04677 ; PARPRIORUNC[2] = 5.0
     # p(3) = optimum temperature for photosynthesis (oC) (30oC)
-        PARPRIORS[3] = 30.0 ; PARPRIORUNC[3] = 5.0
+#    PARPRIORS[3] = 30.0 ; PARPRIORUNC[3] = 5.0
     # p(4) = kurtosis for temperature response of photosynthesis (0.185912)
-        PARPRIORS[4] = 0.185912 ; PARPRIORUNC[4] = 0.05
+#    PARPRIORS[4] = 0.185912 ; PARPRIORUNC[4] = 0.05
     # p(10) = Maximum (most negative) leaf-soil WP difference (MPa) (i.e. minLWP)
     #    PARPRIORS[10] = -2.0 ; PARPRIORUNC[10] = 0.1
     # p(15) = Soil SW absorption (fraction)

@@ -1,6 +1,6 @@
 # declare function
 bintodec <- function(x) {
-  sum(2^(which(rev(unlist(strsplit(as.character(x), "")) == 1))-1))
+  sum(2^(which(rev(unlist(strsplit(as.character(x), ""), use.names=FALSE) == 1))-1))
 }
 
 extract_copernicus_lai<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in,lai_all,years_to_load) {
@@ -9,7 +9,7 @@ extract_copernicus_lai<- function(timestep_days,spatial_type,resolution,grid_typ
   check1 = which(lai_all$long > 180) ; if (length(check1) > 0) { lai_all$long[check1]=lai_all$long[check1]-360 }
   # find the nearest location
   output = closest2d(1,lai_all$lat,lai_all$long,latlon_in[1],latlon_in[2],2)
-  i1 = unlist(output)[1] ; j1=unlist(output)[2]
+  i1 = unlist(output, use.names=FALSE)[1] ; j1=unlist(output, use.names=FALSE)[2]
   print(paste("LAI data extracted for current location ",Sys.time(),sep=""))
 
   # return long to 0-360
@@ -17,42 +17,41 @@ extract_copernicus_lai<- function(timestep_days,spatial_type,resolution,grid_typ
 
   # work out number of pixels to average over
   if (spatial_type == "grid") {
-    if (grid_type == "wgs84") {
-      # resolution of the product
-      product_res = abs(lai_all$lat[1,2]-lai_all$lat[1,1])+abs(lai_all$long[2,1]-lai_all$long[1,1])
-      product_res = (product_res * 0.5)
-      # radius is ceiling of the ratio of the product vs analysis ratio
-      radius = ceiling(resolution / product_res)
-      max_radius = radius+4
-    } else if (grid_type == "UK") {
-      radius = max(0,floor(1*resolution*1e-3*0.5))
-      max_radius = radius+4
-    } else {
-      stop("have not specified the grid used in this analysis")
-    }
+      if (grid_type == "wgs84") {
+          # resolution of the product
+          product_res = abs(lai_all$lat[1,2]-lai_all$lat[1,1])+abs(lai_all$long[2,1]-lai_all$long[1,1])
+          product_res = (product_res * 0.5)
+          # radius is ceiling of the ratio of the product vs analysis ratio
+          radius = ceiling(resolution / product_res)
+          max_radius = radius+4
+      } else if (grid_type == "UK") {
+          radius = max(0,floor(1*resolution*1e-3*0.5))
+          max_radius = radius+4
+      } else {
+          stop("have not specified the grid used in this analysis")
+      }
   } else {
-    radius = 0
-    max_radius = 4
+      radius = 0
+      max_radius = 4
   }
 
   answer = NA
   while (is.na(answer) == TRUE) {
     # work out average areas
     average_i = max(1,(i1-radius)):min(dim(lai_all$lai_all)[1],(i1+radius))
-    average_j=max(1,(j1-radius)):min(dim(lai_all$lai_all)[2],(j1+radius))
+    average_j = max(1,(j1-radius)):min(dim(lai_all$lai_all)[2],(j1+radius))
     # carry out averaging
-    lai = array(NA, dim=c(dim(lai_all$lai_all)[3]))
-    lai_unc = array(NA, dim=c(dim(lai_all$lai_all)[3]))
+    lai = array(NA, dim=c(dim(lai_all$lai_all)[3])) ; lai_unc = array(NA, dim=c(dim(lai_all$lai_all)[3]))
     for (n in seq(1, dim(lai_all$lai_all)[3])) {
-      lai[n] = mean(lai_all$lai_all[average_i,average_j,n], na.rm=TRUE)
-      lai_unc[n] = mean(lai_all$lai_unc_all[average_i,average_j,n], na.rm=TRUE)
+         lai[n] = mean(as.vector(lai_all$lai_all[average_i,average_j,n]), na.rm=TRUE)
+         lai_unc[n] = mean(as.vector(lai_all$lai_unc_all[average_i,average_j,n]), na.rm=TRUE)
     }
     # are any of the my data points now filled
     answer = max(as.vector(lai),na.rm=TRUE)
     # what proportion of my data points are within a realistic range
     npoints = length(which(lai > 0 & lai < 12))/length(lai)
     # do I have at least 20 % of data points filled
-    if (is.na(answer) | answer == -Inf | npoints < 0.2) {radius = radius+1 ; answer=NA}
+    if (is.na(answer) | answer == -Inf | npoints < 0.2) {radius = radius+1 ; answer = NA}
     # restrict how far to look before giving up
     if (radius >= max_radius) {answer = 1}
   }
@@ -63,22 +62,22 @@ extract_copernicus_lai<- function(timestep_days,spatial_type,resolution,grid_typ
   # next work out how many days we should have in the year
   doy_out=0
   for (i in seq(1, length(years_to_load))) {
-    # is current year a leap or not
-    nos_days = 365
-    mod=as.numeric(years_to_load[i])-round((as.numeric(years_to_load[i])/4))*4
-    if (mod == 0) {
-      nos_days = 366
-      mod=as.numeric(years_to_load[i])-round((as.numeric(years_to_load[i])/100))*100
-      if (mod == 0) {
-        nos_days  = 365
-        mod=as.numeric(years_to_load[i])-round((as.numeric(years_to_load[i])/400))*400
-        if (mod == 0) {
-          nos_days  = 366
-        }
-      }
-    }
-    # count up days needed
-    doy_out = append(doy_out,1:nos_days)
+       # is current year a leap or not
+       nos_days = 365
+       mod=as.numeric(years_to_load[i])-round((as.numeric(years_to_load[i])/4))*4
+       if (mod == 0) {
+           nos_days = 366
+           mod=as.numeric(years_to_load[i])-round((as.numeric(years_to_load[i])/100))*100
+           if (mod == 0) {
+               nos_days  = 365
+               mod=as.numeric(years_to_load[i])-round((as.numeric(years_to_load[i])/400))*400
+               if (mod == 0) {
+                   nos_days  = 366
+               }
+           }
+       }
+       # count up days needed
+       doy_out = append(doy_out,1:nos_days)
   }
   doy_out = doy_out[-1]
 

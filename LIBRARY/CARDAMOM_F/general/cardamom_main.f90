@@ -26,7 +26,7 @@ program cardamom_framework
 
  ! declare local variables
  character(350) :: infile, outfile, solution_wanted_char, freq_print_char, freq_write_char
- integer :: solution_wanted, freq_print, freq_write, time1, time2, time3
+ integer :: solution_wanted, freq_print, freq_write, time1, time2, time3, i
 
  ! user update
  write(*,*)"Beginning read of the command line"
@@ -59,7 +59,7 @@ program cardamom_framework
  ! load module variables needed for restart check
  call read_options(MCO,solution_wanted,freq_print,freq_write,outfile)
  ! check whether this is a restart?
- call check_for_exisiting_output_files(MCO%outfile,MCO%stepfile)
+ call check_for_exisiting_output_files(PI%npars,MCO%outfile,MCO%stepfile)
 
  write(*,*) "Running model version ", DATAin%ID
 
@@ -67,8 +67,15 @@ program cardamom_framework
  write(*,*) "Beginning search for initial parameter conditions"
  ! Determine initial values, this requires using the MHMCMC
  call find_edc_initial_values(PI)
- ! Reset stepsize
- PI%stepsize = 0.01d0 ! TLS 0.01 -> 0.05 -> 0.1
+ ! Reset stepsize, but preserving the existing relative ratio of the stepsize
+ ! from the EDC stage
+ PI%stepsize = 0.01d0 ; PI%parstd = 1.0d0 ; PI%Nparstd = 0d0
+ ! Covariance matrix cannot be set to zero therefore set initial value to a
+ ! small positive value along to variance access
+ PI%covariance = 0.0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+ do i = 1, PI%npars
+    PI%covariance(i,i) = 1.0d0
+ end do
 
  ! Initialise MCMC output
  call initialise_mcmc_output(PI,MCOUT)

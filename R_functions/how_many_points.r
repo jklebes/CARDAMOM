@@ -247,25 +247,25 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
             output=parLapply(cl,1:length(lat),fun=closest2d,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long,nos_dim=1)
             stopCluster(cl)
             # extract the i,j values seperately
-            output_i=unlist(output)
+            output_i=unlist(output, use.names = FALSE)
         } else {
             output=parLapply(cl,1:length(lat),fun=closest2d,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long,nos_dim=2)
             stopCluster(cl)
             # extract the i,j values seperately
-            output_i=unlist(output)[which((1:length(unlist(output))*0.5) != floor(1:length(unlist(output))*0.5))]
-            output_j=unlist(output)[which((1:length(unlist(output))*0.5) == floor(1:length(unlist(output))*0.5))]
+            output_i=unlist(output,use.names=FALSE)[which((1:length(unlist(output, use.names = FALSE))*0.5) != floor(1:length(unlist(output, use.names=FALSE))*0.5))]
+            output_j=unlist(output,use.names=FALSE)[which((1:length(unlist(output, use.names=FALSE))*0.5) == floor(1:length(unlist(output, use.names=FALSE))*0.5))]
         } # ECMWF or not
 
      } else {
 	      if (use_lcm == "ECMWF") {
             output=lapply(1:length(lat),FUN=closest2d,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long,nos_dim=1)
             # extract the i,j values seperately
-            output_i=unlist(output)
+            output_i=unlist(output, use.names=FALSE)
         } else {
             output=lapply(1:length(lat),FUN=closest2d,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long,nos_dim=2)
             # extract the i,j values seperately
-            output_i=unlist(output)[which((1:length(unlist(output))*0.5) != floor(1:length(unlist(output))*0.5))]
-            output_j=unlist(output)[which((1:length(unlist(output))*0.5) == floor(1:length(unlist(output))*0.5))]
+            output_i=unlist(output, use.names=FALSE)[which((1:length(unlist(output, use.names=FALSE))*0.5) != floor(1:length(unlist(output, use.names=FALSE))*0.5))]
+            output_j=unlist(output, use.names=FALSE)[which((1:length(unlist(output, use.names=FALSE))*0.5) == floor(1:length(unlist(output, use.names=FALSE))*0.5))]
         } # ECMWF or not
     }
 
@@ -352,17 +352,17 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
 
     # find locations from the landsea mask which correspond with overall grid defined in the control file
     if (use_parallel) {
-	      cl <- makeCluster(numWorkers, type = "PSOCK")
-	      # load R libraries in cluster
-	      clusterExport(cl,"load_r_libraries") ; clusterEvalQ(cl, load_r_libraries())
-	      output = parLapply(cl,1:length(lat),fun=closest2d,lat=landsea_lat,long=landsea_long,lat_in=lat,long_in=long,nos_dim=1)
-	      stopCluster(cl)
-	      # extract the i,j values seperately
-	      output_k = unlist(output)
+        cl <- makeCluster(numWorkers, type = "PSOCK")
+        # load R libraries in cluster
+        clusterExport(cl,"load_r_libraries") ; clusterEvalQ(cl, load_r_libraries())
+        output = parLapply(cl,1:length(lat),fun=closest2d,lat=landsea_lat,long=landsea_long,lat_in=lat,long_in=long,nos_dim=1)
+        stopCluster(cl)
+        # extract the i,j values seperately
+        output_k = unlist(output, use.names=FALSE)
      } else {
         output = lapply(1:length(lat),FUN=closest2d,lat=landsea_lat,long=landsea_long,lat_in=lat,long_in=long,nos_dim=1)
         # extract the i,j values seperately
-        output_k = unlist(output)
+        output_k = unlist(output, use.names=FALSE)
     }
 
     # selecting only these areas of the landsea mask

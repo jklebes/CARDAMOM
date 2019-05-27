@@ -40,16 +40,15 @@ module model_likelihood_module
     type ( mcmc_options ) :: MCOPT_EDC
     integer :: n, counter_local, iter
     double precision :: PEDC, ML, ML_prior
-    double precision, allocatable :: iter_EDC_pars(:)
 
     ! initialise output for this EDC search
     call initialise_mcmc_output(PI,MCOUT_EDC)
 
     ! set MCMC options needed for EDC run
     MCOPT_EDC%APPEND = 0
-    MCOPT_EDC%nADAPT = 100 !TLS: 20
+    MCOPT_EDC%nADAPT = 100
     MCOPT_EDC%fADAPT = 0.5d0
-    MCOPT_EDC%nOUT = 1000
+    MCOPT_EDC%nOUT = 10000
     MCOPT_EDC%nPRINT = 0
     MCOPT_EDC%nWRITE = 0
     ! the next two lines ensure that parameter inputs are either given or
@@ -69,77 +68,61 @@ module model_likelihood_module
        if (PI%parini(n) /= -9999d0 .and. DATAin%edc_random_search < 1) PI%parfix(n) = 1
     end do ! parameter loop
 
+    ! set the parameter step size at the beginning
+    PI%stepsize(1:PI%npars) = 1.0d0 ! 0.0005 -> 0.005 -> 0.05 -> 0.1 TLS
+    PI%parstd = 1d0 ; PI%Nparstd = 0d0
+    ! Covariance matrix cannot be set to zero therefore set initial value to a
+    ! small positive value along to variance access
+    PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+    do n = 1, PI%npars
+       PI%covariance(n,n) = 1d0
+    end do
+
     ! if this is not a restart run, i.e. we do not already have a starting
     ! position we must being the EDC search procedure to find an ecologically
     ! consistent initial parameter set
     if (.not. restart_flag) then
 
-       ! the EDC search will be iterated to minimise the risk of finding an EDC
-       ! consistent location in parameter space which is very poor with respect
-       ! to our observations
-       allocate(iter_EDC_pars(PI%npars+1)) ; iter_EDC_pars = -9999999999d0
-       do iter = 1, 3
+        ! set up edc log likelihood for MHMCMC initial run
+        PEDC = -1 ; counter_local = 0
+        do while (PEDC < 0)
 
-          ! set up edc log likelihood for MHMCMC initial run
-          PEDC = -1 ; counter_local = 0
-          do while (PEDC < 0)
+           write(*,*)"Beginning EDC search attempt"
+           ! call the MHMCMC directing to the appropriate likelihood
+           call MHMCMC(EDC_MODEL_LIKELIHOOD,PI,MCOPT_EDC,MCOUT_EDC)
 
-            write(*,*)"Beginning EDC search attempt"
-            ! reset the parameter step size at the beginning of each attempt
-            PI%stepsize(1:PI%npars) = 0.10d0 ! 0.0005 -> 0.005 -> 0.05 -> 0.1 TLS
-            ! call the MHMCMC directing to the appropriate likelihood
-            call MHMCMC(EDC_MODEL_LIKELIHOOD,PI,MCOPT_EDC,MCOUT_EDC)
+           ! store the best parameters from that loop
+           PI%parini(1:PI%npars) = MCOUT_EDC%best_pars(1:PI%npars)
+           ! turn off random selection for initial values
+           MCOPT_EDC%randparini = .false.
 
-            ! store the best parameters from that loop
-            PI%parini(1:PI%npars) = MCOUT_EDC%best_pars(1:PI%npars)
-            ! turn off random selection for initial values
-            MCOPT_EDC%randparini = .false.
-  
-            ! call edc likelihood function to get final edc probability
-            call edc_model_likelihood(PI,PI%parini,PEDC,ML_prior)
+           ! call edc likelihood function to get final edc probability
+           call edc_model_likelihood(PI,PI%parini,PEDC,ML_prior)
 
-            ! we want to keep track of which EDC consistent parameter set best
-            ! fits the available observations
-            if (PEDC == 0) then
-                ! determine what the observation based likelihood is for the
-                ! current parameter set
-                call model_likelihood(PI,PI%parini,ML,ML_prior)
-                ! if the current parameter set has a higher likelihood than the
-                ! previous EDC consistent values we will save the new ones
-                if ((ML+ML_prior) > iter_EDC_pars(PI%npars+1)) then
-                    ! store the current EDC consistent parameters
-                    iter_EDC_pars(1:PI%npars) = PI%parini(1:PI%npars)
-                    iter_EDC_pars(PI%npars+1) = ML + ML_prior
-                endif
-                ! and reset to the initial conditions for the next iteration
-                PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
-                ! reset to select random starting point
-                MCOPT_EDC%randparini = .true.
-            endif
+           ! keep track of attempts
+           counter_local = counter_local + 1
+           ! periodically reset the initial conditions
+           if (PEDC < 0d0 .and. mod(counter_local,3) == 0) then
+               PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
+               ! reset to select random starting point
+               MCOPT_EDC%randparini = .true.
+               ! reset the parameter step size at the beginning of each attempt
+               PI%stepsize(1:PI%npars) = 1.0d0 ! 0.0005 -> 0.005 -> 0.05 -> 0.1 TLS
+               PI%parstd = 1d0 ; PI%Nparstd = 0d0
+               ! Covariance matrix cannot be set to zero therefore set initial value to a
+               ! small positive value along to variance access
+               PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+               do n = 1, PI%npars
+                  PI%covariance(n,n) = 1d0
+               end do
+           endif
 
-            ! keep track of attempts
-            counter_local = counter_local+1
-            ! periodically reset the initial conditions
-            if (PEDC < 0 .and. mod(counter_local,3) == 0) then
-                PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
-                ! reset to select random starting point
-                MCOPT_EDC%randparini = .true.
-            endif
-
-          end do ! for while condition
-
-       end do ! for iter = 1, 3
-
-       ! set the initial parameter values to those which best fitted the
-       ! available observations
-       PI%parini(1:PI%npars) = iter_EDC_pars(1:PI%npars)
-
-       ! tidy up before leaving
-       deallocate(iter_EDC_pars)
+        end do ! for while condition
 
     endif ! if for restart
 
-    ! reset
+    ! reset so that currently saved parameters will be used
+    ! starting point in main MCMC
     PI%parfix(1:PI%npars) = 0
     MCOUT_EDC%best_pars = 0d0
 
@@ -754,7 +737,7 @@ module model_likelihood_module
                          ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
                          ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                          ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-       else   
+       else
 
            ! run the dalec model
            call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
@@ -784,7 +767,7 @@ module model_likelihood_module
        if (EDC == 1) then
           ! calculate final model likelihood when compared to obs
           ML_obs_out = ML_obs_out + likelihood(PI%npars,PARS)
-       endif 
+       endif
 
     end if ! EDC == 1
 

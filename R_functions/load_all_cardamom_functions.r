@@ -24,7 +24,7 @@ load_r_libraries()
 
 # get the complete list
 list_o_functions=list.files("./R_functions/", full.names=T)
-print(list_o_functions)
+#print(list_o_functions)
 # remove this file to avoid repetition
 loser_list=grepl("load_all_cardamom_functions.r",list_o_functions)
 loser_list=which(loser_list)
@@ -54,7 +54,7 @@ loser_list=grepl(".r",list_o_functions)
 list_o_functions=list_o_functions[loser_list]
 # now go throught the list can call the files
 for (i in seq(1, length(list_o_functions))) {
-    print(paste("...loading R script = ",list_o_functions[i],sep=""))
+#    print(paste("...loading R script = ",list_o_functions[i],sep=""))
     source(list_o_functions[i])
 }
 

@@ -238,9 +238,9 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
     not_na = is.na(as.vector(lai_hold))
     not_na = which(not_na == FALSE)
 
+    filter = as.vector(lai_hold) == -9999 | as.vector(lai_unc_hold) == -9999
     # now remove the ones that are actual missing data
-    lai_hold[which(as.vector(lai_hold) == -9999)] = NA
-    lai_unc_hold[which(as.vector(lai_unc_hold) == -9999)] = NA
+    lai_hold[filter] = NA ; lai_unc_hold[filter] = NA
     # return spatial structure to data
     lai_out = array(as.vector(lai_hold)[not_na], dim=c(long_dim,lat_dim,length(doy_out)))
     lai_unc_out = array(as.vector(lai_unc_hold)[not_na], dim=c(long_dim,lat_dim,length(doy_out)))

@@ -418,7 +418,8 @@ contains
                        ,soil_loss_with_roots
 
     ! variables for phenology model update / adjustments
-    double precision :: lai_save, &
+    double precision :: C_invest, &
+                        lai_save, &
                   canopy_lw_save, &
                     soil_lw_save, &
                   canopy_sw_save, &
@@ -466,7 +467,7 @@ contains
     ! 1 = GPP
     ! 2 = temprate
     ! 3 = respiration_auto
-    ! 4 = leaf production
+    ! 4 = respiration het cwd
     ! 5 = labile production
     ! 6 = root production
     ! 7 = wood production
@@ -491,7 +492,7 @@ contains
     ! PARAMETERS
     ! 31 process parameters; 7 C pool initial conditions
 
-    ! p(1) = Litter to SOM conversion rate (fraction)
+    ! p(1) decomposition efficiency (fraction to som)
     ! p(2) = RmGPP fraction
     ! p(3) = GSI sensitivity for leaf growth
     ! p(4) = Max labile turnover to roots (fraction)
@@ -880,14 +881,12 @@ contains
       FLUXES(n,2) = exp(pars(10)*meant)
       ! (maintenance) autotrophic respiration (gC.m-2.day-1)
       FLUXES(n,3) = pars(2)*FLUXES(n,1)
-      ! leaf production rate (gC.m-2.day-1)
-      FLUXES(n,4) = 0d0 !(FLUXES(n,1)-FLUXES(n,3))*pars(3)
       ! labile production (gC.m-2.day-1)
-      FLUXES(n,5) = (FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,4))*pars(13)
+      FLUXES(n,5) = (FLUXES(n,1)-FLUXES(n,3))*pars(13)
       ! root production (gC.m-2.day-1)
-      FLUXES(n,6) = (FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,4)-FLUXES(n,5))*pars(4)
+      FLUXES(n,6) = (FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,5))*pars(4)
       ! wood production
-      FLUXES(n,7) = FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,4)-FLUXES(n,5)-FLUXES(n,6)
+      FLUXES(n,7) = FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,5)-FLUXES(n,6)
 
       ! GSI added to fortran version by TLS 24/11/2014
       ! /* 25/09/14 - JFE
@@ -951,7 +950,8 @@ contains
         FLUXES(n,16) = pars(12)*FLUXES(n,18)
         just_grown = 1.5d0
         ! check carbon return
-        tmp = POOLS(n,1)*min(1d0,1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
+        tmp = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
+        C_invest = tmp
         lai = (POOLS(n,2)+tmp)/pars(17)
         tmp = lai / lai_save
         aerodynamic_conductance = aerodynamic_conductance * tmp
@@ -964,7 +964,7 @@ contains
         tmp = max(0d0,acm_gpp(stomatal_conductance))
         ! determine if increase in LAI leads to an improvement in GPP greater
         ! than critical value, if not then no labile turnover allowed
-        if ( (tmp - FLUXES(n,1)) < (pars(27)*FLUXES(n,1)) ) then
+        if ( ((tmp - FLUXES(n,1))/C_invest) < pars(27) ) then
           FLUXES(n,16) = 0d0
         endif
       else
@@ -977,7 +977,8 @@ contains
           FLUXES(n,16) = pars(12)*FLUXES(n,18)
           ! but possibly gaining some?
           ! determine if this is a good idea based on GPP increment
-          tmp = POOLS(n,1)*min(1d0,1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
+          tmp = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
+          C_invest = tmp
           lai = (POOLS(n,2)+tmp)/pars(17)
           tmp = lai / lai_save
           aerodynamic_conductance = aerodynamic_conductance * tmp
@@ -990,7 +991,7 @@ contains
           tmp = max(0d0,acm_gpp(stomatal_conductance))
           ! determine if increase in LAI leads to an improvement in GPP greater
           ! than critical value, if not then no labile turnover allowed
-          if ( (tmp - FLUXES(n,1)) < (pars(27)*FLUXES(n,1)) ) then
+          if ( ((tmp - FLUXES(n,1))/C_invest) < pars(27) ) then
             FLUXES(n,16) = 0d0
           endif
 
@@ -1016,34 +1017,32 @@ contains
       !
 
       ! total labile release
-      FLUXES(n,8)  = POOLS(n,1)*min(1d0,1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
+      FLUXES(n,8)  = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
       ! total leaf litter production
-      FLUXES(n,10) = POOLS(n,2)*min(1d0,1d0-(1d0-FLUXES(n,9))**deltat(n))/deltat(n)
+      FLUXES(n,10) = POOLS(n,2)*(1d0-(1d0-FLUXES(n,9))**deltat(n))/deltat(n)
       ! total wood litter production
-      FLUXES(n,11) = POOLS(n,4)*min(1d0,1d0-(1d0-pars(6))**deltat(n))/deltat(n)
+      FLUXES(n,11) = POOLS(n,4)*(1d0-(1d0-pars(6))**deltat(n))/deltat(n)
       ! total root litter production
-      FLUXES(n,12) = POOLS(n,3)*min(1d0,1d0-(1d0-pars(7))**deltat(n))/deltat(n)
+      FLUXES(n,12) = POOLS(n,3)*(1d0-(1d0-pars(7))**deltat(n))/deltat(n)
 
       !
       ! those with temperature AND time dependancies
       !
 
-      ! respiration heterotrophic litter
-      FLUXES(n,13) = POOLS(n,5)*min(1d0,1d0-(1d0-(FLUXES(n,2)*pars(8)))**deltat(n))/deltat(n)
+      ! turnover of litter
+      tmp = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))/deltat(n)
+      ! respiration heterotrophic litter ; decomposition of litter to som
+      FLUXES(n,13) = tmp * (1d0-pars(1)) ; FLUXES(n,15) = tmp * pars(1)
       ! respiration heterotrophic som
-      FLUXES(n,14) = POOLS(n,6)*min(1d0,1d0-(1d0-(FLUXES(n,2)*pars(9)))**deltat(n))/deltat(n)
-      ! litter to som
-      FLUXES(n,15) = POOLS(n,5)*min(1d0,1d0-(1d0-(FLUXES(n,2)*pars(1)))**deltat(n))/deltat(n)
-      ! CWD to litter
-      FLUXES(n,20) = POOLS(n,7)*min(1d0,1d0-(1d0-(FLUXES(n,2)*pars(38)))**deltat(n))/deltat(n)
+      FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9))**deltat(n))/deltat(n)
 
-      ! mass balance check for decomposition of litter as occurs via two
-      ! pathways
-      if ( (FLUXES(n,13) + FLUXES(n,15))*deltat(n) >= POOLS(n,5) ) then
-        tmp = FLUXES(n,13) / (FLUXES(n,13) + FLUXES(n,15))
-        FLUXES(n,13) = tmp * (POOLS(n,5)/deltat(n))
-        FLUXES(n,15) = (1d0 - tmp) * (POOLS(n,5)/deltat(n))
-      end if
+      ! respiration heterotrophic cwd ; decomposition of CWD to som
+      tmp = POOLS(n,7)*(1d0-(1d0-FLUXES(n,2)*pars(38))**deltat(n))/deltat(n)
+      FLUXES(n,4) = tmp * (1d0-pars(1)) ; FLUXES(n,20) = tmp * pars(1)
+
+      !
+      ! Update Rg, GPP and NEE fluxes
+      !
 
       ! calculate growth respiration and adjust allocation to pools assuming
       ! 0.21875 of total C allocation towards each pool (i.e. 0.28 .eq. xNPP)
@@ -1056,8 +1055,9 @@ contains
       ! wood
       FLUXES(n,3) = FLUXES(n,3) + (FLUXES(n,7)*Rg_fraction) ; FLUXES(n,7) = FLUXES(n,7) * one_Rg_fraction
 
+
       ! calculate the NEE
-      NEE_out(n) = (-FLUXES(n,1)+FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14))
+      NEE_out(n) = (-FLUXES(n,1)+FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14)+FLUXES(n,4))
       ! load GPP
       GPP_out(n) = FLUXES(n,1)
 
@@ -1068,17 +1068,20 @@ contains
       ! labile pool
       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8)-Rg_from_labile(n))*deltat(n)
       ! foliar pool
-      POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,4)-FLUXES(n,10)+FLUXES(n,8))*deltat(n)
+      POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,8)-FLUXES(n,10))*deltat(n)
       ! wood pool
       POOLS(n+1,4) = POOLS(n,4) + (FLUXES(n,7)-FLUXES(n,11))*deltat(n)
       ! root pool
       POOLS(n+1,3) = POOLS(n,3) + (FLUXES(n,6)-FLUXES(n,12))*deltat(n)
       ! litter pool
-      POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)+FLUXES(n,20)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
+!      POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)+FLUXES(n,20)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
+      POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
       ! som pool
-      POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)-FLUXES(n,14))*deltat(n)
+!      POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)-FLUXES(n,14))*deltat(n)
+      POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)+FLUXES(n,20)-FLUXES(n,14))*deltat(n)
       ! cwd pool
-      POOLS(n+1,7) = POOLS(n,7) + (FLUXES(n,11)-FLUXES(n,20))*deltat(n)
+!      POOLS(n+1,7) = POOLS(n,7) + (FLUXES(n,11)-FLUXES(n,20))*deltat(n)
+      POOLS(n+1,7) = POOLS(n,7) + (FLUXES(n,11)-FLUXES(n,20)-FLUXES(n,4))*deltat(n)
 
       !!!!!!!!!!
       ! deal first with deforestation
@@ -1293,6 +1296,7 @@ contains
           print*,"POOLS",POOLS(n,:)
           print*,"FLUXES",FLUXES(n,:)
           print*,"POOLS+1",POOLS(n+1,:)
+          print*,"PARS",pars
           stop
         endif
       enddo

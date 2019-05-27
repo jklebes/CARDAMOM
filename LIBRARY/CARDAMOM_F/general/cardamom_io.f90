@@ -207,7 +207,7 @@ module cardamom_io
   !
   !------------------------------------------------------------------
   !
-  subroutine check_for_exisiting_output_files(parname,stepname)
+  subroutine check_for_exisiting_output_files(npars,parname,stepname)
 
     ! subroutine checks whether both the parameter and step files exist for this
     ! job. If they do we will assume that this is a restart job that we want to
@@ -215,6 +215,7 @@ module cardamom_io
     ! / have runtime limits
     implicit none
     ! declare input variables
+    integer, intent(in) :: npars
     character(350) :: parname,stepname
     ! local variables
     logical :: par_exists,step_exists
@@ -227,6 +228,7 @@ module cardamom_io
 
     ! now determine the correct response
     if (par_exists .and. step_exists) then
+
         ! both files exist therefore this might be a restart run.
         ! lets see if there is anything in the files that we might use
         ! count the number of remaining lines in the file..
@@ -238,7 +240,7 @@ module cardamom_io
           if ( status .ne. 0 ) exit
           num_lines = num_lines + 1
         enddo
-        if (num_lines > 0) then
+        if (num_lines > 10*npars) then
             ! then there is something in the file we we can use it
             restart_flag = .true.
             print*,"...have found parameter file = ",trim(parname)
@@ -246,20 +248,25 @@ module cardamom_io
         else
             ! or the file exists but is empty so treat it as a fresh start
             restart_flag = .false.
-            print*,"the *PAR and *STEP files exist however they are empty so treat as a new job"
+            print*,"output files are present, however they are too small for a retart"
         endif
         ! either way we open the file up later on so now we need to close them
         call close_output_files
+
     elseif (.not.par_exists .and. .not.step_exists) then
+
         ! this is definitely not a restart
         restart_flag=.false.
-    else
+
+    else ! par_exists .and. step_exists
+
         ! then or of these files exists and the other does not so it is
         ! ambiguous whether or not this is a restart
         print*,"either the *PARS or *STEP files exist while the other does not"
         print*,"CARDAMOM can not determine whether this is a new run or a restart so we have stopped"
         stop
-    endif
+
+    endif ! par_exists .and. step_exists
 
   end subroutine check_for_exisiting_output_files
   !
@@ -872,6 +879,7 @@ module cardamom_io
     character(350), intent(in) :: infile
 
     ! declare local variables
+    integer :: i
 
     ! remind us what file we're about to access
     write(*,*) "Input file = ",trim(infile)
@@ -894,10 +902,13 @@ module cardamom_io
     ! Begin allocating parameter info
     PI%npars = DATAin%nopars
     allocate(PI%parmin(PI%npars),PI%parmax(PI%npars),PI%parini(PI%npars) &
-            ,PI%parfix(PI%npars),PI%stepsize(PI%npars))
+            ,PI%parfix(PI%npars),PI%stepsize(PI%npars),PI%parstd(PI%npars) &
+            ,PI%covariance(PI%npars,PI%npars),PI%mean_par(PI%npars))
+
     ! force zero
     PI%parmin(:) = 0d0 ; PI%parmax(:) = 0d0 ; PI%parini(:) = 0d0
-    PI%parfix(:) = 0d0 ; PI%stepsize(:) = 0d0
+    PI%parfix(:) = 0d0 ; PI%stepsize(:) = 0d0 ; PI%parstd(:) = 0d0
+    PI%covariance = 0d0
 
     ! load parameter information
     call pars_info(PI)
@@ -907,8 +918,14 @@ module cardamom_io
 !       call load_emulator_parameters
 !    end if
 
-    ! defining MHMCMC stepsize
-    PI%stepsize = 0.01d0
+    ! defining initial MHMCMC stepsize and standard deviation
+    PI%stepsize = 0.01d0 ; PI%parstd = 1d0 ; PI%Nparstd = 0d0
+    ! Covariance matrix cannot be set to zero therefore set initial value to a
+    ! small positive value along to variance access
+    PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+    do i = 1, PI%npars
+       PI%covariance(i,i) = 1d0
+    end do
 
     ! report back to user
     write(*,*) "Done with parameter definitions"
@@ -971,8 +988,10 @@ module cardamom_io
   !-------------------------------------------------------------------
   !
   subroutine update_for_restart_simulation
+    use MHMCMC_MODULE, only: par2nor
     use MCMCOPT, only: MCO, PI
     use cardamom_structures, only: DATAin
+    use math_functions, only: std, covariance_matrix
 
     ! subroutine is responsible for loading previous parameter and step size
     ! information into the current
@@ -982,7 +1001,7 @@ module cardamom_io
     ! local variables
     integer :: i, j, num_lines, status
     double precision :: dummy
-    double precision,dimension(:,:), allocatable :: tmp
+    double precision,dimension(:,:), allocatable :: tmp,norparvec
 
     ! the parameter and step files should have already been openned so
     ! read the parameter and step files to get to the end
@@ -1007,7 +1026,8 @@ module cardamom_io
     num_lines = num_lines/(DATAin%nopars+1)
 
     ! allocate memory
-    allocate(tmp(num_lines,(DATAin%nopars+1)))
+    allocate(tmp(num_lines,(DATAin%nopars+1)), &
+             norparvec(PI%npars,num_lines))
     ! rewind, this time just parameter file
     rewind(pfile_unit)
 
@@ -1022,7 +1042,18 @@ module cardamom_io
     accepted_so_far = num_lines*MCO%nWRITE
     ! from this extract the final parameter set and load into
     PI%parini(1:DATAin%nopars) = tmp(num_lines,1:DATAin%nopars)
-    deallocate(tmp)
+    ! we must also approximate the covariance matrix
+    PI%Nparstd = accepted_so_far
+    do i = 1, PI%npars
+       call par2nor(num_lines,tmp(1:num_lines,i),PI%parmin(i),PI%parmax(i),norparvec(i,1:num_lines))
+    end do
+    ! estimate variance-covariance matrix based on currently stored output
+    call covariance_matrix(norparvec(1:PI%npars,1:num_lines),PI%mean_par,PI%npars,num_lines,PI%covariance)
+    do i = 1, PI%npars
+       PI%parstd = sqrt(PI%covariance(i,i))
+    end do
+
+    deallocate(tmp,norparvec)
 
     !
     ! Now do step file
@@ -1032,8 +1063,8 @@ module cardamom_io
     status = 0 ; num_lines = 0
     do
       read(sfile_unit,iostat=status) dummy
-      if ( status .ne. 0. ) exit
-      num_lines = num_lines + 1
+       if ( status .ne. 0. ) exit
+       num_lines = num_lines + 1
     enddo
 
     ! update num_lines by number of parameters
@@ -1051,7 +1082,6 @@ module cardamom_io
     end do ! i for combinations
     ! we also want the final step size being used
     PI%stepsize = tmp(num_lines,1:DATAin%nopars)
-
     deallocate(tmp)
 
   end subroutine update_for_restart_simulation

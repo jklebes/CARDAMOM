@@ -127,6 +127,7 @@ module CARBON_MODEL_MOD
            ,disturbance_loss_from_cwd     &
            ,disturbance_loss_from_som     &
            ,rainfall_time                 &
+           ,Rg_from_labile                &
            ,itemp,ivpd,iphoto             &
            ,dim_1,dim_2                   &
            ,nos_trees                     &
@@ -281,7 +282,7 @@ module CARBON_MODEL_MOD
   ! local variables for GSI phenology model
   double precision :: Tfac,Photofac,VPDfac & ! oC, seconds, Pa
                      ,SLA & ! Specific leaf area
-                     ,avail_labile,Rg_from_labile    &
+                     ,avail_labile    &
                      ,Cwood_labile_release_gradient  &
                      ,Cwood_labile_half_saturation   &
                      ,Croot_labile_release_gradient  &
@@ -293,7 +294,8 @@ module CARBON_MODEL_MOD
                      ,fol_turn_crit,lab_turn_crit    &
                      ,gsi_history(22),just_grown
 
-  double precision, allocatable, dimension(:) :: itemp,ivpd,iphoto, &
+  double precision, allocatable, dimension(:) :: Rg_from_labile,    &
+                                     itemp,ivpd,iphoto, &
                                      disturbance_residue_to_litter, &
                                      disturbance_residue_to_som,    &
                                      disturbance_residue_to_cwd,    &
@@ -553,7 +555,7 @@ module CARBON_MODEL_MOD
     ! 1 = GPP
     ! 2 = temprate
     ! 3 = respiration_auto
-    ! 4 = leaf production
+    ! 4 = respiration het cwd
     ! 5 = labile production
     ! 6 = root production
     ! 7 = wood production
@@ -579,7 +581,7 @@ module CARBON_MODEL_MOD
     ! PARAMETERS
     ! 23 process parameters; 7 C pool initial conditions; 1 soil water initial condition
 
-    ! p(1) Litter to SOM conversion rate  - m_r
+    ! p(1) decomposition efficiency (fraction to som)
     ! p(2) Fraction of GPP respired - f_a
     ! p(3) Fraction of NPP allocated to foliage - f_f
     ! p(4) Fraction of NPP allocated to roots - f_r
@@ -587,7 +589,7 @@ module CARBON_MODEL_MOD
     ! p(6) Turnover rate of wood - t_w
     ! p(7) Turnover rate of roots - t_r
     ! p(8) Litter turnover rate - t_l
-    ! p(9) SOM turnover rate  - t_S
+    ! p(9) SOM mineralisation rate  - t_S
     ! p(10) Parameter in exponential term of temperature - \theta
     ! p(11) mean foliar nitrogen content (gN/m2)
     ! p(12) = max labile turnover(GSI)
@@ -875,7 +877,7 @@ module CARBON_MODEL_MOD
         if (.not.allocated(tmp_x)) then
             ! 21 days is the maximum potential so we will fill the maximum potential
             ! + 1 for safety
-            allocate(tmp_x(22),tmp_m(nodays))
+            allocate(tmp_x(22),tmp_m(nodays),Rg_from_labile(nodays))
             do f = 1, 22
                tmp_x(f) = f
             end do
@@ -1150,14 +1152,25 @@ module CARBON_MODEL_MOD
        ! autotrophic respiration (gC.m-2.day-1)
        FLUXES(n,3) = pars(2)*FLUXES(n,1)
        ! labile production (gC.m-2.day-1)
-       FLUXES(n,5) = FLUXES(n,1)-FLUXES(n,3)
+!       FLUXES(n,5) = FLUXES(n,1)-FLUXES(n,3)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+       ! labile production (gC.m-2.day-1)
+       FLUXES(n,5) = (FLUXES(n,1)-FLUXES(n,3))*pars(13) ! p13 -> alloc to fol
+       ! root production (gC.m-2.day-1)
+       FLUXES(n,6) = (FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,5))*pars(4) ! p4 -> alloc to root
+       ! wood production
+       FLUXES(n,7) = FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,5)-FLUXES(n,6) ! remain to wood
 
+! temp allocation of everything to labile pool to allow for mass balance in EDCs
+! and code below
+FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        !!!!!!!!!!
        ! Calculate canopy phenology
        !!!!!!!!!!
 
        ! assign labile C available in current time step
-       avail_labile = POOLS(n,1)
+       avail_labile = POOLS(n,1) * 0.999d0
 
        ! Determine leaf growth and turnover based on GSI model + some economics
        ! NOTE: that turnovers will be bypassed in favour of mortality turnover
@@ -1174,13 +1187,13 @@ module CARBON_MODEL_MOD
        FLUXES(n,8) = avail_labile*min(1d0,1d0-(1d0-FLUXES(n,16))**deltat(n))*deltat_1(n)
        ! Retrict based on available labile stores
        FLUXES(n,8) = min(avail_labile*deltat_1(n),FLUXES(n,8))
-       ! Update available labile supply for fine roots and wood
-       avail_labile = avail_labile - (FLUXES(n,8)*deltat(n))
-
-       ! calculate allocation of labile to roots and wood including, where appropriate, marginal return calculations
-       call calculate_wood_root_growth(n,pars(4),pars(13),deltaWP,Rtot,FLUXES(n,1) &
-                                      ,POOLS(n,3),POOLS(n,4),FLUXES(n,6),FLUXES(n,7))
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!       ! Update available labile supply for fine roots and wood
+!       avail_labile = avail_labile - (FLUXES(n,8)*deltat(n))
+!       ! calculate allocation of labile to roots and wood including, where appropriate, marginal return calculations
+!       call calculate_wood_root_growth(n,pars(4),pars(13),deltaWP,Rtot,FLUXES(n,1) &
+!                                      ,POOLS(n,3),POOLS(n,4),FLUXES(n,6),FLUXES(n,7))
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        !
        ! litter creation with time dependancies
        !
@@ -1196,14 +1209,16 @@ module CARBON_MODEL_MOD
        ! those with temperature AND time dependancies
        !
 
-       ! respiration heterotrophic litter
-       FLUXES(n,13) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))*deltat_1(n)
+       ! turnover of litter
+       tmp = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))*deltat_1(n)
+       ! respiration heterotrophic litter ; decomposition of litter to som
+       FLUXES(n,13) = tmp * (1d0-pars(1)) ; FLUXES(n,15) = tmp * pars(1)
        ! respiration heterotrophic som
        FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9))**deltat(n))*deltat_1(n)
-       ! litter to som
-       FLUXES(n,15) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(1))**deltat(n))*deltat_1(n)
-       ! CWD to litter
-       FLUXES(n,20) = POOLS(n,7)*(1d0-(1d0-FLUXES(n,2)*pars(38))**deltat(n))*deltat_1(n)
+
+       ! respiration heterotrophic cwd ; decomposition of CWD to som
+       tmp = POOLS(n,7)*(1d0-(1d0-FLUXES(n,2)*pars(38))**deltat(n))*deltat_1(n)
+       FLUXES(n,4) = tmp * (1d0-pars(1)) ; FLUXES(n,20) = tmp * pars(1)
 
        !!!!!!!!!!
        ! calculate growth respiration and adjust allocation to pools assuming
@@ -1211,20 +1226,20 @@ module CARBON_MODEL_MOD
        !!!!!!!!!!
 
        ! foliage
-       Rg_from_labile =                   FLUXES(n,8)*Rg_fraction  ; FLUXES(n,8) = FLUXES(n,8) * (one_Rg_fraction)
+       Rg_from_labile(n) =                      FLUXES(n,8)*Rg_fraction  ; FLUXES(n,8) = FLUXES(n,8) * (one_Rg_fraction)
        ! roots
-       Rg_from_labile = Rg_from_labile + (FLUXES(n,6)*Rg_fraction) ; FLUXES(n,6) = FLUXES(n,6) * (one_Rg_fraction)
+       Rg_from_labile(n) = Rg_from_labile(n) + (FLUXES(n,6)*Rg_fraction) ; FLUXES(n,6) = FLUXES(n,6) * (one_Rg_fraction)
        ! wood
-       Rg_from_labile = Rg_from_labile + (FLUXES(n,7)*Rg_fraction) ; FLUXES(n,7) = FLUXES(n,7) * (one_Rg_fraction)
+       Rg_from_labile(n) = Rg_from_labile(n) + (FLUXES(n,7)*Rg_fraction) ; FLUXES(n,7) = FLUXES(n,7) * (one_Rg_fraction)
        ! now update the Ra flux with Rg
-       FLUXES(n,3) = FLUXES(n,3) + Rg_from_labile
+       FLUXES(n,3) = FLUXES(n,3) + Rg_from_labile(n)
 
        !
        ! update pools for next timestep
        !
 
        ! labile pool
-       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8)-FLUXES(n,6)-FLUXES(n,7)-Rg_from_labile)*deltat(n)
+       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8)-FLUXES(n,6)-FLUXES(n,7)-Rg_from_labile(n))*deltat(n) 
        ! foliar pool
        POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,8)-FLUXES(n,10))*deltat(n)
        ! wood pool
@@ -1232,11 +1247,14 @@ module CARBON_MODEL_MOD
        ! root pool
        POOLS(n+1,3) = POOLS(n,3) + (FLUXES(n,6)-FLUXES(n,12))*deltat(n)
        ! litter pool
-       POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)+FLUXES(n,20)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
+!       POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)+FLUXES(n,20)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
+       POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
        ! som pool
-       POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)-FLUXES(n,14))*deltat(n)
+!       POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)-FLUXES(n,14))*deltat(n)
+       POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)+FLUXES(n,20)-FLUXES(n,14))*deltat(n)
        ! cwd pool
-       POOLS(n+1,7) = POOLS(n,7) + (FLUXES(n,11)-FLUXES(n,20))*deltat(n)
+!       POOLS(n+1,7) = POOLS(n,7) + (FLUXES(n,11)-FLUXES(n,20))*deltat(n)
+       POOLS(n+1,7) = POOLS(n,7) + (FLUXES(n,11)-FLUXES(n,20)-FLUXES(n,4))*deltat(n)
 
        !!!!!!!!!!
        ! Update soil water balance
@@ -1330,10 +1348,10 @@ module CARBON_MODEL_MOD
                                     * soil_loss_frac(harvest_management)
 
                ! Update pools
-               POOLS(n+1,1) = POOLS(n+1,1)-labile_loss
-               POOLS(n+1,2) = POOLS(n+1,2)-foliar_loss
-               POOLS(n+1,3) = POOLS(n+1,3)-roots_loss
-               POOLS(n+1,4) = POOLS(n+1,4)-wood_loss
+               POOLS(n+1,1) = POOLS(n+1,1) - labile_loss
+               POOLS(n+1,2) = POOLS(n+1,2) - foliar_loss
+               POOLS(n+1,3) = POOLS(n+1,3) - roots_loss
+               POOLS(n+1,4) = POOLS(n+1,4) - wood_loss
                POOLS(n+1,5) = POOLS(n+1,5) + (labile_residue+foliar_residue+roots_residue)
                POOLS(n+1,6) = POOLS(n+1,6) - soil_loss_with_roots
                POOLS(n+1,7) = POOLS(n+1,7) + wood_residue
@@ -1458,36 +1476,36 @@ module CARBON_MODEL_MOD
 
        endif ! fire activity
 
-       do nxp = 1, nopools
-          if (POOLS(n+1,nxp) /= POOLS(n+1,nxp) .or. POOLS(n+1,nxp) < 0d0) then
-              print*,"step",n, nxp
-              print*,"met",met(:,n)
-              print*,"POOLS",POOLS(n,:)
-              print*,"FLUXES",FLUXES(n,:)
-              print*,"POOLS+1",POOLS(n+1,:)
-              print*,"wSWP",wSWP
-              print*,"waterfrac",soil_waterfrac
-              print*,"Etrans",transpiration,"Esoil",soilevaporation,"Ewet",wetcanopy_evap
-              print*,"field_capacity",field_capacity
-              print*,"porosity",porosity
-              stop
-          endif
-       enddo
-
-       if (FLUXES(n,1) < 0d0 .or. FLUXES(n,1) /= FLUXES(n,1) .or. &
-           FLUXES(n,19) /= FLUXES(n,19)) then
-           print*,"step",n, nxp
-           print*,"met",met(:,n)
-           print*,"POOLS",POOLS(n,:)
-           print*,"FLUXES",FLUXES(n,:)
-           print*,"POOLS+1",POOLS(n+1,:)
-           print*,"wSWP",wSWP
-           print*,"waterfrac",soil_waterfrac
-           print*,"Etrans",transpiration,"Esoil",soilevaporation,"Ewet",wetcanopy_evap
-           print*,"field_capacity",field_capacity
-           print*,"porosity",porosity
-           stop
-       endif
+!       do nxp = 1, nopools
+!          if (POOLS(n+1,nxp) /= POOLS(n+1,nxp) .or. POOLS(n+1,nxp) < 0d0) then
+!              print*,"step",n, nxp
+!              print*,"met",met(:,n)
+!              print*,"POOLS",POOLS(n,:)
+!              print*,"FLUXES",FLUXES(n,:)
+!              print*,"POOLS+1",POOLS(n+1,:)
+!              print*,"wSWP",wSWP
+!              print*,"waterfrac",soil_waterfrac
+!              print*,"Etrans",transpiration,"Esoil",soilevaporation,"Ewet",wetcanopy_evap
+!              print*,"field_capacity",field_capacity
+!              print*,"porosity",porosity
+!              stop
+!          endif
+!       enddo
+!
+!       if (FLUXES(n,1) < 0d0 .or. FLUXES(n,1) /= FLUXES(n,1) .or. &
+!           FLUXES(n,19) /= FLUXES(n,19)) then
+!           print*,"step",n, nxp
+!           print*,"met",met(:,n)
+!           print*,"POOLS",POOLS(n,:)
+!           print*,"FLUXES",FLUXES(n,:)
+!           print*,"POOLS+1",POOLS(n+1,:)
+!           print*,"wSWP",wSWP
+!           print*,"waterfrac",soil_waterfrac
+!           print*,"Etrans",transpiration,"Esoil",soilevaporation,"Ewet",wetcanopy_evap
+!           print*,"field_capacity",field_capacity
+!           print*,"porosity",porosity
+!           stop
+!       endif
 
     end do ! nodays loop
 
@@ -1497,7 +1515,7 @@ module CARBON_MODEL_MOD
 
     ! calculate NEE
     NEE_out(1:nodays) = -FLUXES(1:nodays,1) & ! GPP
-                      + FLUXES(1:nodays,3)+FLUXES(1:nodays,13)+FLUXES(1:nodays,14) !& ! Respiration
+                      + FLUXES(1:nodays,3)+FLUXES(1:nodays,13)+FLUXES(1:nodays,14)+FLUXES(1:nodays,4) !& ! Respiration
                       !+FLUXES(1:nodays,17)  ! fire
     ! load GPP
     GPP_out(1:nodays) = FLUXES(1:nodays,1)
@@ -3500,6 +3518,7 @@ module CARBON_MODEL_MOD
     double precision :: infi     &
                        ,tmp      &
                        ,deltaGPP &
+                       ,C_invest &
                        ,lai_save &
                  ,canopy_lw_save &
                  ,canopy_sw_save &
@@ -3582,6 +3601,7 @@ module CARBON_MODEL_MOD
                 ! calculate potential C allocation to leaves
                 tmp = avail_labile * &
                     (1d0-(1d0-leaf_growth)**deltat(current_step))*deltat_1(current_step)
+                C_invest = tmp
                 ! calculate new leaf area, GPP return
                 lai = (foliage+tmp) * SLA
                 tmp = lai / lai_save
@@ -3598,13 +3618,13 @@ module CARBON_MODEL_MOD
                 else
                     tmp = 0d0
                 endif
-                deltaGPP = tmp - GPP_current
+                deltaGPP = (tmp - GPP_current) / C_invest
 
                 ! is the marginal return for GPP (over the mean life of leaves)
                 ! less than increase in maintenance respiration and C required to
                 ! growth?
 
-                if (deltaGPP < (gpp_crit_frac*GPP_current)) leaf_growth = 0d0
+                if (deltaGPP < gpp_crit_frac) leaf_growth = 0d0
 
             else if (gradient < lab_turn_crit .and. gradient > fol_turn_crit .and. &
                      deltaWP < 0d0 ) then
@@ -3623,6 +3643,7 @@ module CARBON_MODEL_MOD
                     ! calculate potential C allocation to leaves
                     tmp = avail_labile * &
                         (1d0-(1d0-leaf_growth)**deltat(current_step))*deltat_1(current_step)
+                    C_invest = tmp
                     ! calculate new leaf area, GPP return
                     lai = (foliage+tmp) * SLA
                     tmp = lai / lai_save
@@ -3639,12 +3660,12 @@ module CARBON_MODEL_MOD
                     else
                         tmp = 0d0
                     endif
-                    deltaGPP = tmp - GPP_current
+                    deltaGPP = (tmp - GPP_current) / C_invest
                     ! is the marginal return for GPP (over the mean life of leaves)
                     ! less than increase in maintenance respiration and C required to
                     ! growth?
 
-                    if (deltaGPP < (gpp_crit_frac*GPP_current)) leaf_growth = 0d0
+                    if (deltaGPP < gpp_crit_frac) leaf_growth = 0d0
 
                 end if ! Just grown?
 
@@ -3745,7 +3766,7 @@ module CARBON_MODEL_MOD
       root_growth = min(avail_labile*days_per_step_1,root_growth)
       avail_labile = avail_labile - (root_growth*days_per_step)
       ! wood production (gC.m-2.day-1)
-      wood_growth = avail_labile*(1d0-(1d0-wood_growth)**days_per_step)*days_per_step_1
+!      wood_growth = min(current_gpp,avail_labile*(1d0-(1d0-wood_growth)**days_per_step)*days_per_step_1)
       wood_growth = min(avail_labile*days_per_step_1,wood_growth)
       avail_labile = avail_labile - (wood_growth*days_per_step)
 

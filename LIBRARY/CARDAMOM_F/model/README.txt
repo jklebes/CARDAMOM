@@ -26,14 +26,8 @@ Actively maintained models
      Except, root growth is linked to temperature and wood growth is linked to temperature and water stress.
      It is possible that the root and wood growth models will be reverted to fixed fractions as found in DALEC_GSI_DFOL_CWD_FR for full comparison.
 
-  4) DALEC_BUCKET (TLS: IN DEVELOPMENT; NCEO)
-     The active development of the C+H2O cycles model.
-     Full implementation of ACM-GPP-ET.
-     Implementation of maintenance respiration model linked to retrieved tissue C:N based on Reich et al (2008).
-     The phenology model is a simplification of the GSI approach, where the trajectory of GPP increment is used to determine growth and scenesence.
-     This system will form an intermediate step between the C-cycle only system and the C+H2O coupled system with mechanistic phenology.
-
   5) DALECN_BUCKET (TLS: IN DEVELOPMENT; Forests2020 / NCEO)
+NEED TO UPDATE LITTER DECOMP TO WORK FROM DECOMP EFFICIENCT PERSPECTIVE - SEE DALEC_GSI_BUCKET FOR EXAMPLE
      The active development of the C+H2O cycles model.
      Full implementation of ACM-GPP-ET.
      Implementation of maintenance respiration model linked to retrieved tissue C:N based on Reich et al (2008).
@@ -84,3 +78,10 @@ Preserved models (ASSUME NON-FUNCTIONING), project / purpose of code development
       Stepping stone from DALEC_GSI_DFOL_CWD_FR, with an implementation of the Reich et al., (2008) maintenance respiratoin model.
       Used as part basis for the DALECN_BUCKET model.
   15) DALECN_GSI_FR (TLS: Forests2020)
+  16) DALEC_BUCKET (TLS: NCEO)
+      The active development of the C+H2O cycles model.
+      Full implementation of ACM-GPP-ET.
+      Implementation of maintenance respiration model linked to retrieved tissue C:N based on Reich et al (2008).
+      The phenology model is a simplification of the GSI approach, where the trajectory of GPP increment is used to determine growth and scenesence.
+      This system will form an intermediate step between the C-cycle only system and the C+H2O coupled system with mechanistic phenology.
+

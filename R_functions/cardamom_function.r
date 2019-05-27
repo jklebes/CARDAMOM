@@ -83,8 +83,9 @@ cardamom <-function (projname,model,method,stage) {
     # use EDCs
     failed=TRUE
     while (failed){
-      PROJECT$edc=readline("Use EDCs (1/0)?")
-      if (PROJECT$edc != 1 & PROJECT$edc != 0) {failed=TRUE} else {failed=FALSE}
+      tmp=readline("Use EDCs (y/n)?")
+      if (tmp == "y") {PROJECT$edc = 1} else {PROJECT$edc = 0}
+      if (tmp != "y" & tmp != "n") {failed=TRUE} else {failed=FALSE}
     }
     # load start and end year
     PROJECT$start_year=years_to_do[1]
