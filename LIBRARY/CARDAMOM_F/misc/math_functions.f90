@@ -13,7 +13,8 @@ module math_functions
   ! make explicit bits we want others to see
   public :: randn, std, idum, covariance_matrix, &
             random_normal, random_uniform, rnstrt, &
-            random_multivariate, increment_covariance_matrix
+            random_multivariate, increment_covariance_matrix, &
+            par2nor, nor2par
 
   !!!!!!!!!!!
   ! Subroutines rand(), narray() and rnstrt() are from:
@@ -187,6 +188,48 @@ module math_functions
     return
 
   end function std
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine par2nor(niter,initial_par,min_par,max_par,out_par)
+
+    ! functions to normalised log parameter values and return them back to
+    ! un-normalised value.
+
+    ! converting parameters on log scale between 0-1 for min/max values
+    implicit none
+    integer, intent(in) :: niter     ! number of iterations in current vector
+    double precision, intent(in) :: min_par, max_par
+    double precision, dimension(niter), intent(in) :: initial_par
+    double precision, dimension(niter), intent(out) :: out_par
+
+    ! then normalise
+    out_par = (initial_par-min_par)/(max_par-min_par)
+
+    ! explicit return
+    return
+
+  end subroutine par2nor
+  !
+  !---------------------and vise versa ------------------------------
+  !
+  subroutine nor2par(niter,initial_par,min_par,max_par,out_par)
+
+    ! Converting values back from normalised (0-1) to 'real' numbers
+
+    implicit none
+    integer, intent(in) :: niter     ! number of iterations in current vector
+    double precision, intent(in) :: min_par, max_par
+    double precision, dimension(niter), intent(in) :: initial_par
+    double precision, dimension(niter), intent(out) :: out_par
+
+    ! ...then un-normalise without logs as we cross zero and logs wont work
+    out_par = min_par+(max_par-min_par)*initial_par
+
+    ! explicit return
+    return
+
+  end subroutine nor2par
   !
   !------------------------------------------------------------------
   !

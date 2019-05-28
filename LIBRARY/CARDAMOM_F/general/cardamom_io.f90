@@ -988,10 +988,9 @@ module cardamom_io
   !-------------------------------------------------------------------
   !
   subroutine update_for_restart_simulation
-    use MHMCMC_MODULE, only: par2nor
     use MCMCOPT, only: MCO, PI
     use cardamom_structures, only: DATAin
-    use math_functions, only: std, covariance_matrix
+    use math_functions, only: std, covariance_matrix, par2nor
 
     ! subroutine is responsible for loading previous parameter and step size
     ! information into the current

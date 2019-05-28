@@ -10,7 +10,7 @@ implicit none
 private
 
 ! specify what can be seen
-public :: MHMCMC, par2nor
+public :: MHMCMC
 
 ! declare any module level variables needed
 
@@ -27,7 +27,7 @@ contains
   subroutine MHMCMC (model_likelihood_option,PI,MCO,MCOUT)
 !TLS    use, intrinsic :: ieee_arithmetic
     use MCMCOPT, only: MCMC_OUTPUT, MCMC_OPTIONS, PARAMETER_INFO, COUNTERS
-    use math_functions, only: randn, random_uniform
+    use math_functions, only: randn, random_uniform, par2nor, nor2par
     use cardamom_io, only: write_results,restart_flag,accepted_so_far
     implicit none
 
@@ -261,7 +261,8 @@ contains
   !
   subroutine adapt_step_size(PARSALL,PI,N,MCO)
     use MCMCOPT, only: MCMC_OPTIONS, COUNTERS, PARAMETER_INFO
-    use math_functions, only: std, covariance_matrix, increment_covariance_matrix
+    use math_functions, only: nor2par, par2nor, &
+                              std, covariance_matrix, increment_covariance_matrix
 
     implicit none
 
@@ -401,50 +402,9 @@ contains
   !
   !------------------------------------------------------------------
   !
-  subroutine par2nor(niter,initial_par,min_par,max_par,out_par)
-
-    ! functions to normalised log parameter values and return them back to
-    ! un-normalised value.
-
-    ! converting parameters on log scale between 0-1 for min/max values
-    implicit none
-    integer, intent(in) :: niter     ! number of iterations in current vector
-    double precision, intent(in) :: min_par, max_par
-    double precision, dimension(niter), intent(in) :: initial_par
-    double precision, dimension(niter), intent(out) :: out_par
-
-    ! then normalise
-    out_par = (initial_par-min_par)/(max_par-min_par)
-
-    ! explicit return
-    return
-
-  end subroutine par2nor
-  !
-  !---------------------and vise versa ------------------------------
-  !
-  subroutine nor2par(niter,initial_par,min_par,max_par,out_par)
-
-    ! Converting values back from normalised (0-1) to 'real' numbers
-
-    implicit none
-    integer, intent(in) :: niter     ! number of iterations in current vector
-    double precision, intent(in) :: min_par, max_par
-    double precision, dimension(niter), intent(in) :: initial_par
-    double precision, dimension(niter), intent(out) :: out_par
-
-    ! ...then un-normalise without logs as we cross zero and logs wont work
-    out_par = min_par+(max_par-min_par)*initial_par
-
-    ! explicit return
-    return
-
-  end subroutine nor2par
-  !
-  !------------------------------------------------------------------
-  !
   subroutine step(pars0,pars,PI,N)
-    use math_functions, only: random_normal, random_multivariate, random_uniform
+    use math_functions, only: par2nor, nor2par, &
+                              random_normal, random_multivariate, random_uniform
     use MCMCOPT, only: PARAMETER_INFO, COUNTERS
 
     ! carries out the next step to parameters in the MCMC search
