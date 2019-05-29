@@ -194,7 +194,7 @@ contains
           endif
           ! keep track of how many accepted solutions (global and local)
           if (N%beta_step) N%ACCLOC_beta = N%ACCLOC_beta + 1
-          N%ACC = N%ACC + 1 ; N%ACCLOC = N%ACCLOC + 1 
+          N%ACC = N%ACC + 1 ; N%ACCLOC = N%ACCLOC + 1
           P0 = P ; P0prior = Pprior
 
           ! write out parameter, log-likelihood and step if appropriate
@@ -293,7 +293,7 @@ contains
     ! determine local acceptance rate
     N%ACCRATE = dble_accloc/dble(MCO%nADAPT)
     ! calculate new minimum stepsize
-    minstepsize = min(0.01,dble(N%iter) / 10000d0)
+    minstepsize = min(0.01,10000d0/dble(N%iter))
 !    print*,"...minstep = ",minstepsize," ACCRATE = ",N%ACCRATE
 !    print*," minval(step) = ",minval(PI%stepsize)!," maxval(step) = ",maxval(PI%stepsize)
 !    print*," minval(pstd) = ",minval(PI%parstd)," maxval(pstd) = ",maxval(PI%parstd)
@@ -492,7 +492,7 @@ contains
            ! stepping to the number of parameters being retrieved by the analysis.
            ! See Haario et al., (2001) An adaptive Metropolis algorithm. Bernoulli 7.2: 223-242.
            ! and references therein.
-           stepping = rn*(1d0-PI%parfix)*scd 
+           stepping = rn*(1d0-PI%parfix)*scd
            npar_new = npar + stepping
            ! ensure the new parameter value is contrained between 0 and 1
            if (minval(npar_new) > 0d0 .and. maxval(npar_new) < 1d0) fp = 1

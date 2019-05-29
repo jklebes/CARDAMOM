@@ -59,10 +59,6 @@ cardamom_project_setup <- function (paths,PROJECT) {
   # approximate chain runtime estimate in hours (approx 1 our for 1 million iterations)
   cre=nsamples/1.0e6
 
-  # ask the user how long they want to set the simulation to run for
-  chain_runtime=readline(paste("What is the maximum expected runtime for each chain (whole hours)? (NOTE: Given ",nsamples," required parameter vectors per chain, a 1000 timestep chain will take approximately ",cre," hours to run. However, allow for at least twice this time period if possible.)"))
-  if (as.numeric(chain_runtime) > 48 | as.numeric(chain_runtime) < 0.5) {chain_runtime=readline(paste("Maximum number of hours to be submitted to Eddie is 48 hours, please re-select the number of hours"))}
-
   # PROJECT discription
   description=readline("Any other comments?")
 
@@ -82,10 +78,14 @@ cardamom_project_setup <- function (paths,PROJECT) {
   use_eddie=readline("Will you run this PROJECT on Eddie (y/n)")
   if (use_eddie == "y") {
     use_eddie = TRUE
+    # ask the user how long they want to set the simulation to run for
+    chain_runtime=readline(paste("What is the maximum expected runtime for each chain (whole hours)? (NOTE: Given ",nsamples," required parameter vectors per chain, a 1000 timestep chain will take approximately ",cre," hours to run. However, allow for at least twice this time period if possible.)"))
+    if (as.numeric(chain_runtime) > 48 | as.numeric(chain_runtime) < 0.5) {chain_runtime=readline(paste("Maximum number of hours to be submitted to Eddie is 48 hours, please re-select the number of hours"))}
     # do we want an email to notify you of eddie works
     email=readline("Enter your email address for ECDF notification (if you want)")
   } else {
     use_eddie = FALSE
+    chain_runtime = 48
   }
 
   # do I compile on eddie?
