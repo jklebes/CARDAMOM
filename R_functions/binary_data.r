@@ -200,6 +200,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   #PARPRIORS(10)=0.03;PARPRIORUNC(10)=1.25;%Temp_rate (Mahecha 2010)
   #PARPRIORS(17)=70;PARPRIORUNC(17)=2;%LMA - Kattge 2011
   if (modelname == "DALEC_CDEA" | modelname == "DALEC_CDEA_LU_FIRES") {
+    PARPRIORS[2] =0.46                ; PARPRIORUNC[2]=0.12*2  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
     PARPRIORS[11]=20.52048            ; PARPRIORUNC[11]=1.617705 # Ceff
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -261,6 +262,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
     PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
     if (parameter_type == "pft_specific" & ctessel_pft == 1) {
+      PARPRIORS[2] =0.46              ; PARPRIORUNC[2]=0.12*2 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       PARPRIORS[12]=OBS$plant         ; PARPRIORUNC[12]=OBS$plant_range
       PARPRIORS[15]=OBS$harvest       ; PARPRIORUNC[15]=OBS$harvest_range
       # for crops remove the biomass prior
@@ -268,6 +270,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     } else {
       PARPRIORS[1]=0.5        ; PARPRIORUNC[1]=0.125 # fraction of litter decomposition to Csom
       PARPRIORS[39]=11.197440 ; PARPRIORUNC[39]=1.32313*2 # NUE prior derived from Kattge et al., (2011)
+      # other priors
+      OTHERPRIORS[1] = 0.46   ; OTHERPRIORUNC[1] = 0.12*2 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
     }
     } else if (modelname == "DALEC_GSI_DFOL_LABILE_FR") {
     PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.6 #1.617705 # Ceff
@@ -332,6 +336,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
     PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
     if (parameter_type == "pft_specific" & ctessel_pft == 1) {
+      PARPRIORS[2] = 0.46         ; PARPRIORUNC[2] = 0.12*2 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       PARPRIORS[12]=OBS$plant     ; PARPRIORUNC[12]=OBS$plant_range
       PARPRIORS[15]=OBS$harvest   ; PARPRIORUNC[15]=OBS$harvest_range
       PARPRIORS[21]=-9999         ; PARPRIORUNC[21]=-9999
@@ -340,6 +345,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[1]=0.5            ; PARPRIORUNC[1]=0.125 # fraction of litter decomposition to Csom
       PARPRIORS[41]=OBS$soilwater ; PARPRIORUNC[41]=OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
       PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=1.32313*2 # NUE prior derived from Kattge et al., (2011)
+      # other priors
+      OTHERPRIORS[1] = 0.46 ; OTHERPRIORUNC[1] = 0.12*2 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
     } # crop or not
   } else if (modelname == "DALECN_GSI_BUCKET") {
     PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
@@ -349,6 +356,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
     PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
     if (parameter_type == "pft_specific" & ctessel_pft == 1) {
+      PARPRIORS[2] = 0.46             ; PARPRIORUNC[2] = 0.12*2 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       PARPRIORS[12]=OBS$plant         ; PARPRIORUNC[12]=OBS$plant_range
       PARPRIORS[15]=OBS$harvest       ; PARPRIORUNC[15]=OBS$harvest_range
       PARPRIORS[21]=-9999             ; PARPRIORUNC[21]=-9999
@@ -358,6 +366,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[41]=1.639     ; PARPRIORUNC[41]=0.125 # Rm_leaf N**exponent (gC/gN) Reich et al., (2008)
       PARPRIORS[43]=1.352     ; PARPRIORUNC[43]=0.150 # Rm_root N**exponent (gC/gN) Reich et al., (2008)
       PARPRIORS[45]=1.344     ; PARPRIORUNC[45]=0.150 # Rm_wood N**exponent (gC/gN) Reich et al., (2008)
+      # other priors
+      OTHERPRIORS[1] = 0.46 ; OTHERPRIORUNC[1] = 0.12*2 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
     } # Crop or not
   } else if (modelname == "DALECN_BUCKET") {
     PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
@@ -367,6 +377,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
     PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
     if (parameter_type == "pft_specific" & ctessel_pft == 1) {
+      PARPRIORS[2] = 0.46             ; PARPRIORUNC[2] = 0.12*2 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       PARPRIORS[12]=OBS$plant         ; PARPRIORUNC[12]=OBS$plant_range
       PARPRIORS[15]=OBS$harvest       ; PARPRIORUNC[15]=OBS$harvest_range
       PARPRIORS[21]=-9999             ; PARPRIORUNC[21]=-9999
@@ -382,6 +393,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       # PARPRIORS[40]=1.344     ; PARPRIORUNC[40]=0.150   # Rm_wood N**exponent (gC/gN) Reich et al., (2008)
       # PARPRIORS[41]=0.946     ; PARPRIORUNC[41]=0.107   # Rm_wood intercept (gC/gN) Reich et al., (2008)
       PARPRIORS[44]=OBS$soilwater ; PARPRIORUNC[44]=OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
+      # other priors
+      OTHERPRIORS[1] = 0.46 ; OTHERPRIORUNC[1] = 0.12*2 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
     } # Crop or not
   } else if (modelname == "ACM") {
 

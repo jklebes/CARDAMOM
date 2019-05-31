@@ -12,9 +12,8 @@ load_paths<- function() {
     if (file.exists(cardamompathfile) == FALSE) {
 	# ask some information
 	outputsdir=readline("Enter the output location for all your CARDAMOM outputs (e.g. /yourlocaldisk/CARDAMOM/CARDAMOM_OUTPUTS/)")
-#	datadir=readline("Enter the location of CARDAMOM processed driver files (e.g. /yourlocaldisk/CARDAMOM/CARDAMOM_DATA/)")
-	cluster=readline("Enter the cluster address (e.g. eddie3.ecdf.ed.ac.uk)")
-	ecdfdir=readline("Enter the Eddie ECDF CARDAMOM directory (e.g. /exports/work/scratch/yourusername/ or /exports/work/geos_gc_ctessel/CARDAMOM/)")
+	cluster=readline("Enter the remote cluster address (e.g. eddie3.ecdf.ed.ac.uk)")
+	ecdfdir=readline("Enter the CARDAMOM directory on the remote cluster (e.g. /exports/work/geos_gc_ctessel/CARDAMOM/)")
 	# force some slashes
 	outputsdir=paste(outputsdir,"/",sep="")
 	ecdfdir=paste(ecdfdir,"/",sep="")

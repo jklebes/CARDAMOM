@@ -124,7 +124,7 @@ module MODEL_PARAMETERS
 
        ! GSI max photoperiod threshold (sec)
        PI%parmin(24) = 3600d0*4d0  !  4 hours
-       PI%parmax(24) = 3600d0*18d0 ! 18 hours
+       PI%parmax(24) = 3600d0*24d0 ! 24 hours
 
        ! GSI min VPD threshold (Pa)
        PI%parmin(25) = 1d0

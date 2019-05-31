@@ -599,13 +599,15 @@ module model_likelihood_module
          EDC1 = 0 ; EDCD%PASSFAIL(10) = 0
     endif
 
-    ! photoperiod (seconds), min threshold should not be larger than max
-    ! also we assume that unless day length is 24 that there light can not be entirely non-limiting
-    ! i.e. day length of optimum (pars(24)) cannot be smaller than max observed day length
+    ! Photoperiod (seconds), min threshold should not be larger than max.
+    ! We also assume that as in every location where there are growing plants
+    ! day length must at some point be non-limiting. The benefit of create
+    ! growth above this boundary is implicitly accounted for in the sensitivity
+    ! of GPP to new growth mediated through pars(27)
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(16) > pars(24)) ) then
          EDC1 = 0 ; EDCD%PASSFAIL(11) = 0
     endif
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(24) < maxval(DATAin%met(11,:))) ) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(24) > maxval(DATAin%met(11,:))) ) then
          EDC1 = 0 ; EDCD%PASSFAIL(12) = 0
     endif
 

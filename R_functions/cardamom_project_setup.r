@@ -21,20 +21,13 @@ cardamom_project_setup <- function (paths,PROJECT) {
   project_type=PROJECT$type
 
   # create local paths if they do no exist already
-  failed=TRUE
-  while(failed) {
-    yesno=readline("Do you want to automatically generate filepath directories (y/n)")
-    if (yesno != "y" & yesno != "n") {failed=TRUE} else {failed=FALSE}
-  }
-  if (yesno == "y") {
-    if (file.exists(typepath) == FALSE ){system(paste("mkdir ",typepath,sep=""))}
-    if (file.exists(localpath) == FALSE ){system(paste("mkdir ",localpath,sep=""))}
-    if (file.exists(datapath) == FALSE ){system(paste("mkdir ",datapath,sep=""))}
-    if (file.exists(resultspath) == FALSE ){system(paste("mkdir ",resultspath,sep=""))}
-    if (file.exists(results_processedpath) == FALSE ){system(paste("mkdir ",results_processedpath,sep=""))}
-    if (file.exists(figpath) == FALSE ){system(paste("mkdir ",figpath,sep=""))}
-    if (file.exists(exepath) == FALSE ){system(paste("mkdir ",exepath,sep=""))}
-  }
+  if (file.exists(typepath) == FALSE ){system(paste("mkdir ",typepath,sep=""))}
+  if (file.exists(localpath) == FALSE ){system(paste("mkdir ",localpath,sep=""))}
+  if (file.exists(datapath) == FALSE ){system(paste("mkdir ",datapath,sep=""))}
+  if (file.exists(resultspath) == FALSE ){system(paste("mkdir ",resultspath,sep=""))}
+  if (file.exists(results_processedpath) == FALSE ){system(paste("mkdir ",results_processedpath,sep=""))}
+  if (file.exists(figpath) == FALSE ){system(paste("mkdir ",figpath,sep=""))}
+  if (file.exists(exepath) == FALSE ){system(paste("mkdir ",exepath,sep=""))}
 
   # number of chains desired?
   failed=TRUE
@@ -75,14 +68,16 @@ cardamom_project_setup <- function (paths,PROJECT) {
   # define executable name
   exe=paste(PROJECT$name,".exe",sep="")
 
-  use_eddie=readline("Will you run this PROJECT on Eddie (y/n)")
+  use_eddie=readline("Will you run this PROJECT on remote server (y/n)")
   if (use_eddie == "y") {
     use_eddie = TRUE
     # ask the user how long they want to set the simulation to run for
-    chain_runtime=readline(paste("What is the maximum expected runtime for each chain (whole hours)? (NOTE: Given ",nsamples," required parameter vectors per chain, a 1000 timestep chain will take approximately ",cre," hours to run. However, allow for at least twice this time period if possible.)"))
-    if (as.numeric(chain_runtime) > 48 | as.numeric(chain_runtime) < 0.5) {chain_runtime=readline(paste("Maximum number of hours to be submitted to Eddie is 48 hours, please re-select the number of hours"))}
+    chain_runtime=readline(paste("How much run time per chain do you want to request (whole hours)? (NOTE: Given ",nsamples," required parameter vectors per chain, approximately ",cre," hours needed."))
+    if (as.numeric(chain_runtime) > 48 | as.numeric(chain_runtime) < 1) {
+        chain_runtime=readline(paste("Maximum number of hours to be submitted to Eddie is 48 hours, please re-select the number of hours"))
+    }
     # do we want an email to notify you of eddie works
-    email=readline("Enter your email address for ECDF notification (if you want)")
+    email=readline("Enter your email address for remote server notification (if you want)")
   } else {
     use_eddie = FALSE
     chain_runtime = 48

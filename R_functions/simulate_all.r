@@ -487,27 +487,6 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all=list(lai=laiall,gpp=gppall,evap=evapall,soilevap=soilevapall,Rtot=rtotall,wetcanevap=wetevapall)
     }
 
-    #states_all$lai = apply(states_all$lai,2,median)
-    #states_all$nee = apply(states_all$nee,2,median)
-    #states_all$gpp = apply(states_all$gpp,2,median)
-    #states_all$reco = apply(states_all$reco,2,median)
-    #states_all$rauto = apply(states_all$rauto,2,median)
-    #states_all$rhet = apply(states_all$rhet,2,median)
-    #states_all$wood = apply(states_all$wood,2,median)
-    #states_all$root = apply(states_all$root,2,median)
-    #states_all$litwood = apply(states_all$litwood,2,median)
-    #states_all$bio = apply(states_all$bio,2,median)
-    #states_all$som = apply(states_all$som,2,median)
-    #states_all$lit = apply(states_all$lit,2,median)
-    #states_all$lab = apply(states_all$lab,2,median)
-    #states_all$fol = apply(states_all$fol,2,median)
-    #states_all$harvest_C = apply(states_all$harvest_C,2,median)
-    #states_all$gsi = apply(states_all$gsi,2,median)
-    #states_all$gsi_itemp = apply(states_all$gsi_itemp,2,median)
-    #states_all$gsi_ivpd = apply(states_all$gsi_ivpd,2,median)
-    #states_all$gsi_iphoto = apply(states_all$gsi_iphoto,2,median)
-
-
     # return state variable means
     return(states_all) ; gc(verbose=FALSE)
 

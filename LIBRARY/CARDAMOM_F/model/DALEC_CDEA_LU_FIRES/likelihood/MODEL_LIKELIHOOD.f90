@@ -820,7 +820,8 @@ module model_likelihood_module
     do n = 1, npars
        ! if there is actually a value
        if (parpriors(n) > -9999) then
-           likelihood_p = likelihood_p-0.5d0*(log(pars(n)/parpriors(n))/log(parpriorunc(n)))**2
+!           likelihood_p = likelihood_p-0.5d0*(log(pars(n)/parpriors(n))/log(parpriorunc(n)))**2
+           likelihood_p = likelihood_p-0.5d0*((pars(n)-parpriors(n))/parpriorunc(n))**2
        end if
     end do
 

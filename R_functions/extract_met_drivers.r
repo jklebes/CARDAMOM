@@ -380,21 +380,21 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       vpd_lagged_out = rep(vpd_out, times = timestep_days)
 
 	    # rolling averaged for GSI
-	    avg_days=21 # assume that the first 21 days are just the actual values, We expect this should result in a small error only
+	    avg_days = 21 # assume that the first 21 days are just the actual values, We expect this should result in a small error only
 	    # create photoperiod information; add 21 days to the output
-	    photoperiod_out=calc_photoperiod_sec(latlon_wanted[1],c(seq(365,(365-(avg_days-2)),-1),doy))
+	    photoperiod_out = calc_photoperiod_sec(latlon_wanted[1],c(seq(365,(365-(avg_days-2)),-1),doy))
 	    # now take the daily values and turn them into rolling 21 day averages
-	    photoperiod_out=rollapply(photoperiod_out,avg_days,mean,na.rm=FALSE)
-	    avgTmin_out=rollapply(avgTmin_out,avg_days,mean,na.rm=FALSE)
-	    vpd_lagged_out=rollapply(vpd_lagged_out,avg_days,mean,na.rm=FALSE)
+	    photoperiod_out = rollapply(photoperiod_out,avg_days,mean,na.rm=FALSE)
+	    avgTmin_out = rollapply(avgTmin_out,avg_days,mean,na.rm=FALSE)
+	    vpd_lagged_out = rollapply(vpd_lagged_out,avg_days,mean,na.rm=FALSE)
 	    # GSI adjustment
-	    avgTmin_out=append(avgTmin_out[1:(avg_days-1)],avgTmin_out)
-	    vpd_lagged_out=append(vpd_lagged_out[1:(avg_days-1)],vpd_lagged_out)
+	    avgTmin_out = append(avgTmin_out[1:(avg_days-1)],avgTmin_out)
+	    vpd_lagged_out = append(vpd_lagged_out[1:(avg_days-1)],vpd_lagged_out)
 	    # construct output
-	    met=list(run_day=run_day_selector,mint=mint_out,maxt=maxt_out,swrad=swrad_out,co2=co2_out
-              ,doy=doy[run_day_selector],precip=precip_out,avgTmin=avgTmin_out[run_day_selector]
-              ,photoperiod=photoperiod_out[run_day_selector],vpd_lagged=vpd_lagged_out[run_day_selector]
-              ,avgTemp=avgTemp_out,vpd=vpd_out,wind_spd=wind_spd_out)
+	    met = list(run_day=run_day_selector,mint=mint_out,maxt=maxt_out,swrad=swrad_out,co2=co2_out
+                ,doy=doy[run_day_selector],precip=precip_out,avgTmin=avgTmin_out[run_day_selector]
+                ,photoperiod=photoperiod_out[run_day_selector],vpd_lagged=vpd_lagged_out[run_day_selector]
+                ,avgTemp=avgTemp_out,vpd=vpd_out,wind_spd=wind_spd_out)
 
 	} else { # site specific or from global databases
 
@@ -504,6 +504,11 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
           gc(reset=TRUE,verbose=FALSE)
 
 	    } # monthly aggregation etc
+
+      # Temperature information for all analyses provide temperature in Kelvin.
+      # At this final point convert all (except rolling mean) to oC for CARDAMOM
+      mint_out = mint_out - 273.15 ; maxt_out = maxt_out - 273.15
+      avgTemp_out = avgTemp_out - 273.15 ; avgTmin_out = avgTmin_out - 273.15
 
 	    # output variables
 	    met=list(run_day=met_in$run_day[run_day_selector],mint=mint_out,maxt=maxt_out,
