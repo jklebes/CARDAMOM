@@ -4,8 +4,8 @@
 ###
 
 extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_clay_all,crop_man_all
-  ,burnt_all,soilwater_all,ctessel_pft,site_name,start_year,end_year,timestep_days,spatial_type,resolution
-  ,grid_type,modelname) {
+                     ,burnt_all,soilwater_all,ctessel_pft,site_name,start_year,end_year,timestep_days
+                     ,spatial_type,resolution,grid_type,modelname) {
 
     ###
     ## Get some LAI information (m2/m2)
@@ -232,7 +232,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
     ###
     ## Get some Cfoliage information (initial conditions)
     ###
-    #    print("checking Cfoliage initial")
+
     if (Cfol_initial_source == "site_specific") {
       infile=paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
       Cfol_initial=read_site_specific_obs("Cfol_initial",infile)
@@ -251,38 +251,43 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
     ###
 
     if (Cwood_initial_source == "site_specific") {
-      infile=paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
-      Cwood_initial=read_site_specific_obs("Cwood_initial",infile)
-      Cwood_initial_unc=read_site_specific_obs("Cwood_initial_unc",infile)
-      if (Cwood_initial_unc == -9999 & Cwood_initial > 0) {
-        # on the other hand if not then we have no uncertainty info, so use default
-        Cwood_initial_unc = 0.25 * Cwood_initial
-      }
+        infile=paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
+        Cwood_initial=read_site_specific_obs("Cwood_initial",infile)
+        Cwood_initial_unc=read_site_specific_obs("Cwood_initial_unc",infile)
+        if (Cwood_initial_unc == -9999 & Cwood_initial > 0) {
+            # on the other hand if not then we have no uncertainty info, so use default
+            Cwood_initial_unc = 0.25 * Cwood_initial
+        }
+    } else if (Cwood_initial_source == "GlobBIOMASS") {
+        # get Cwood
+        output = extract_globbiomass_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
+        Cwood_initial = output$Cwood_stock
+        Cwood_initial_unc = output$Cwood_stock_unc
     } else if (Cwood_initial_source == "Avitabile") {
-      # get Cwood
-      output = extract_avitabile_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
-      Cwood_initial = output$Cwood_stock
-      Cwood_initial_unc = output$Cwood_stock_unc
+        # get Cwood
+        output = extract_avitabile_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
+        Cwood_initial = output$Cwood_stock
+        Cwood_initial_unc = output$Cwood_stock_unc
     } else if (Cwood_initial_source == "mpi_biomass") {
-      # get Cwood
-      output = extract_mpi_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
-      # locate time time data
-      tmp = which(output$Cwood_stock == max(output$Cwood_stock,na.rm=TRUE))[1]
-      if (length(tmp) > 0) {
-        Cwood_initial = output$Cwood_stock[tmp]
-        Cwood_initial_unc = output$Cwood_stock_unc[tmp]
-      } else {
-        Cwood_initial = -9999 ; Cwood_initial_unc = -9999
-      }
+        # get Cwood
+        output = extract_mpi_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
+        # locate time time data
+        tmp = which(output$Cwood_stock == max(output$Cwood_stock,na.rm=TRUE))[1]
+        if (length(tmp) > 0) {
+            Cwood_initial = output$Cwood_stock[tmp]
+            Cwood_initial_unc = output$Cwood_stock_unc[tmp]
+        } else {
+            Cwood_initial = -9999 ; Cwood_initial_unc = -9999
+        }
     } else {
-      # assume no data available
-      Cwood_initial=-9999 ; Cwood_initial_unc=-9999
+        # assume no data available
+        Cwood_initial=-9999 ; Cwood_initial_unc=-9999
     }
 
     ###
     ## Get some Croots information (initial conditions)
     ###
-    #    print("checking Croots initial")
+
     if (Croots_initial_source == "site_specific") {
       infile=paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
       Croots_initial=read_site_specific_obs("Croots_initial",infile)
@@ -318,28 +323,42 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
     ###
 
     if (Cwood_stock_source == "site_specific") {
-      infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-      Cwood_stock=read_site_specific_obs("Cwood_stock",infile)
-      Cwood_stock_unc=read_site_specific_obs("Cwood_stock_unc",infile)
-      if (length(Cwood_stock_unc) == 1) {
-        # on the other hand if not then we have no uncertainty info, so use default
-        Cwood_stock_unc = rep(-9999,times = length(Cwood_stock))
-        Cwood_stock_unc[which(Cwood_stock != -9999)] = abs(0.25 * Cwood_stock[which(Cwood_stock != -9999)])
-      }
+        infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
+        Cwood_stock=read_site_specific_obs("Cwood_stock",infile)
+        Cwood_stock_unc=read_site_specific_obs("Cwood_stock_unc",infile)
+        if (length(Cwood_stock_unc) == 1) {
+            # on the other hand if not then we have no uncertainty info, so use default
+            Cwood_stock_unc = rep(-9999,times = length(Cwood_stock))
+            Cwood_stock_unc[which(Cwood_stock != -9999)] = abs(0.25 * Cwood_stock[which(Cwood_stock != -9999)])
+        }
+    } else if (Cwood_stock_source == "GlobBIOMASS") {
+
+        # declare output variable
+        Cwood_out=array(-9999, dim=Cwood_all$step_of)
+        Cwood_unc_out=array(-9999, dim=Cwood_all$step_of)
+        # only bother with this if 2010 is within time period
+        if (Cwood_all$obs_step > 0) {
+            # get Cwood
+            output=extract_globbiomass_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
+            # and insert the extracted value into the correct location
+            Cwood_stock[Cwood_all$step_applicable]=output$Cwood_stock
+            Cwood_stock_unc[Cwood_all$step_applicable]=output$Cwood_stock_unc
+        }
+
     } else if (Cwood_stock_source == "mpi_biomass") {
-      # get Cwood
-      output=extract_mpi_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
-      Cwood_stock=output$Cwood_stock
-      Cwood_stock_unc=output$Cwood_stock_unc
+        # get Cwood
+        output=extract_mpi_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
+        Cwood_stock=output$Cwood_stock
+        Cwood_stock_unc=output$Cwood_stock_unc
     } else {
-      # assume no data available
-      Cwood_stock = -9999 ; Cwood_stock_unc = -9999
+        # assume no data available
+        Cwood_stock = -9999 ; Cwood_stock_unc = -9999
     }
 
     ###
     ## Get some Cagb information (stock)
     ###
-    #    print("checking Cagb")
+
     if (Cagb_stock_source == "site_specific") {
       infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
       Cagb_stock=read_site_specific_obs("Cagb_stock",infile)

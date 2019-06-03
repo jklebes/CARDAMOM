@@ -527,9 +527,8 @@ contains
     do p = 1, PI%npars
        call nor2par(1,npar_new(p),PI%parmin(p),PI%parmax(p),pars(p))
     end do
+
 ! SHOULD THE EDCS BE USED TO APPLY A COST ON THE OUTPUTS RATHER THAN BLOCKAGE?
-! SHOULD THERE STILL BE A STEP SIZE
-! SHOULD THE PARAMETER BE STEPPED JUST ONCE AND BOUNDED TO 0 / 1 IF THE STEP IS OUTSIDE OF THESE?
 
   end subroutine step
   !

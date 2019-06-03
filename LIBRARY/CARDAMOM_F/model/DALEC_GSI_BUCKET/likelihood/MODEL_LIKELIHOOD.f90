@@ -608,9 +608,9 @@ module model_likelihood_module
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(16) > pars(24)) ) then
          EDC1 = 0 ; EDCD%PASSFAIL(11) = 0
     endif
-  
+
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(24) > maxval(DATAin%met(11,:))) ) then
- 
+
         EDC1 = 0 ; EDCD%PASSFAIL(12) = 0
     endif
 
@@ -894,7 +894,7 @@ module model_likelihood_module
 
     ! Ecosystems evolve to optimise to their current environment.
     ! Therefore it is reasonable to assume that the GSI index should at some
-    ! point approach an near optimal status. We conservatively assume that GSI 
+    ! point approach an near optimal status. We conservatively assume that GSI
     ! should be > 0.5 at some point in the analysis
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,18)) < 0.5d0) then
         EDC2 = 0 ; EDCD%PASSFAIL(22) = 0
@@ -1740,6 +1740,16 @@ module model_likelihood_module
        end do
        likelihood = likelihood-tot_exp
     endif
+
+    !
+    ! Curiously we will assess other priors here, as the tend to have to do with model state derived values
+    !
+
+    ! Ra:GPP fraction is in this model a derived property
+    if (DATAin%otherpriors(1) > 0) then
+        tot_exp = sum(DATAin%M_FLUXES(:,3)) / sum(DATAin%M_FLUXES(:,1))
+        likelihood = likelihood-((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2d0
+    end if
 
     ! the likelihood scores for each observation are subject to multiplication
     ! by 0.5 in the algebraic formulation. To avoid repeated calculation across

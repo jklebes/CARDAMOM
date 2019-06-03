@@ -170,45 +170,37 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
             # NOTE: that the use of mclapply() is due to reported improved efficiency over creating a virtual cluster.
             # However, mclapply does not (at the time of typing) work on Windows, i.e. Linux and Mac only
             cl <- min(length(load_years),numWorkers)
-            if (met_source == "CHESS" | met_source == "ERA") {
-                var6_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[6],infile_varid=infile_varid[6],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
-                wind_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[7],infile_varid=infile_varid[7],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
-            } else if (met_source == "CRUJRA") {
-                var6_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[6],infile_varid=infile_varid[6],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
-                wind_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[7],infile_varid=infile_varid[7],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
-            }
-            print("...met load 28 %")
             var1_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[1],infile_varid=infile_varid[1],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
-            print("...met load 43 %")
+            print("...met load 14 %")
             var2_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[2],infile_varid=infile_varid[2],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
-            print("...met load 57 %")
+            print("...met load 29 %")
             var3_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[3],infile_varid=infile_varid[3],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
-            print("...met load 71 %")
+            print("...met load 43 %")
             var4_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[4],infile_varid=infile_varid[4],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
-            print("...met load 85 %")
+            print("...met load 57 %")
             var5_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[5],infile_varid=infile_varid[5],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+            print("...met load 71 %")
+            var6_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[6],infile_varid=infile_varid[6],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+            print("...met load 86 %")
+            wind_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[7],infile_varid=infile_varid[7],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
             print("...met load 100 %")
 
         } else {
 
             # or use serial
-            if (met_source == "CHESS" | met_source == "ERA") {
-                var6_out_list=lapply(load_years,FUN=load_met_function,varid=varid[6],infile_varid=infile_varid[6],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
-                wind_out_list=lapply(load_years,FUN=load_met_function,varid=varid[7],infile_varid=infile_varid[7],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
-            } else if (met_source == "CRUJRP") {
-                var6_out_list=lapply(load_years,FUN=load_met_function,varid=varid[6],infile_varid=infile_varid[6],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
-                wind_out_list=lapply(load_years,FUN=load_met_function,varid=varid[7],infile_varid=infile_varid[7],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
-            }
-            print("...met load 28 %")
             var1_out_list=lapply(load_years,FUN=load_met_function,varid=varid[1],infile_varid=infile_varid[1],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
-            print("...met load 43 %")
+            print("...met load 14 %")
             var2_out_list=lapply(load_years,FUN=load_met_function,varid=varid[2],infile_varid=infile_varid[2],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
-            print("...met load 57 %")
+            print("...met load 29 %")
             var3_out_list=lapply(load_years,FUN=load_met_function,varid=varid[3],infile_varid=infile_varid[3],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
-            print("...met load 71 %")
+            print("...met load 43 %")
             var4_out_list=lapply(load_years,FUN=load_met_function,varid=varid[4],infile_varid=infile_varid[4],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
-            print("...met load 85 %")
+            print("...met load 57 %")
             var5_out_list=lapply(load_years,FUN=load_met_function,varid=varid[5],infile_varid=infile_varid[5],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
+            print("...met load 71 %")
+            var6_out_list=lapply(load_years,FUN=load_met_function,varid=varid[6],infile_varid=infile_varid[6],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
+            print("...met load 86 %")
+            wind_out_list=lapply(load_years,FUN=load_met_function,varid=varid[7],infile_varid=infile_varid[7],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
             print("...met load 100 %")
 
         } # parallel option
@@ -226,12 +218,10 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         rm(var4_out_list)
         for (i in seq(1, length(var5_out_list))) {var5_out=append(var5_out,var5_out_list[[i]]$var_out)}
         rm(var5_out_list)
-        if (met_source == "CHESS" | met_source == "ERA" | met_source == "CRUJRA") {
-            for (i in seq(1, length(var6_out_list))) {var6_out=append(var6_out,var6_out_list[[i]]$var_out)}
-            rm(var6_out_list)
-            for (i in seq(1, length(wind_out_list))) {wind_out=append(wind_out,wind_out_list[[i]]$var_out)}
-            rm(wind_out_list)
-        }
+        for (i in seq(1, length(var6_out_list))) {var6_out=append(var6_out,var6_out_list[[i]]$var_out)}
+        rm(var6_out_list)
+        for (i in seq(1, length(wind_out_list))) {wind_out=append(wind_out,wind_out_list[[i]]$var_out)}
+        rm(wind_out_list)
 
         # remove initial value
         var1_out = var1_out[-1] ; var2_out = var2_out[-1]

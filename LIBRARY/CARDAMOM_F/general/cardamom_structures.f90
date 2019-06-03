@@ -71,7 +71,8 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars
                                            ,SWEpts
 
       ! counters for the number of observations per data stream
-      integer :: ngpp               & ! number of GPP observations
+      integer :: total_obs          & ! total number of obervations 
+                ,ngpp               & ! number of GPP observations
                 ,nnee               & ! number of NEE observations
                 ,nlai               & ! number of LAI observations
                 ,nwoo               & ! number of wood increment obervations

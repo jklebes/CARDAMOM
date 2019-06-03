@@ -1893,6 +1893,17 @@ module model_likelihood_module
        likelihood = likelihood-0.5d0*tot_exp
     endif
 
+
+    !
+    ! Curiously we will assess other priors here, as the tend to have to do with model state derived values
+    !
+
+    ! Ra:GPP fraction is in this model a derived property
+    if (DATAin%otherpriors(1) > 0) then
+        tot_exp = sum(DATAin%M_FLUXES(:,3)) / sum(DATAin%M_FLUXES(:,1))
+        likelihood = likelihood-((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2d0
+    end if
+
     ! check that log-likelihood is an actual number
     if (likelihood /= likelihood) then
        likelihood = log(infini)

@@ -80,22 +80,23 @@ extract_modis_lai<- function(timestep_days,spatial_type,resolution,grid_type,lat
   # next work out how many days we should have in the year
   doy_out=0
   for (i in seq(1, length(years_to_load))) {
-    # is current year a leap or not
-    nos_days = 365
-    mod=as.numeric(years_to_load[i])-round((as.numeric(years_to_load[i])/4))*4
-    if (mod == 0) {
-      nos_days = 366
-      mod=as.numeric(years_to_load[i])-round((as.numeric(years_to_load[i])/100))*100
-      if (mod == 0) {
-        nos_days  = 365
-        mod=as.numeric(years_to_load[i])-round((as.numeric(years_to_load[i])/400))*400
-        if (mod == 0) {
-          nos_days  = 366
-        }
-      }
-    }
-    # count up days needed
-    doy_out=append(doy_out,1:nos_days)
+       nos_days = nos_days_in_year(years_to_load[i])
+#       # is current year a leap or not
+#       nos_days = 365
+#       mod=as.numeric(years_to_load[i])-round((as.numeric(years_to_load[i])/4))*4
+#      if (mod == 0) {
+#          nos_days = 366
+#          mod=as.numeric(years_to_load[i])-round((as.numeric(years_to_load[i])/100))*100
+#          if (mod == 0) {
+#              nos_days  = 365
+#              mod=as.numeric(years_to_load[i])-round((as.numeric(years_to_load[i])/400))*400
+#              if (mod == 0) {
+#                  nos_days  = 366
+#              }
+#          }
+#      }
+      # count up days needed
+      doy_out=append(doy_out,1:nos_days)
   }
   doy_out=doy_out[-1]
 

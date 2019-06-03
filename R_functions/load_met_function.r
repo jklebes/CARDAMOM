@@ -14,17 +14,21 @@ load_met_function<- function (year_to_do,varid,infile_varid,remove_lat,remove_lo
         input_file_1 = paste(path_to_met_source,"chess_",varid[1],"_",year_to_do,"0",m,".nc",sep="")
         # open netcdf files
         data1 = nc_open(input_file_1)
+
         # read the met drivers
         var1 = ncvar_get(data1, infile_varid[1]) ; var1=var1[,,1:(dim(var1)[3])]
+
         # close files after use
         nc_close(data1)
 
         # keep count of time steps
         t_grid = dim(var1)[3]
+
         # filter spatial extent
         var1 = var1[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat),]
         # assign correct error value
         var1[is.na(var1)] = -9999
+
         # move through time removing the "chaff"
         var1_out = as.vector(var1[,,1])[wheat]
         for (i in seq(2, t_grid)) {var1_out = append(var1_out,as.vector(var1[,,i])[wheat])}
@@ -41,7 +45,9 @@ load_met_function<- function (year_to_do,varid,infile_varid,remove_lat,remove_lo
              data1 = nc_open(input_file_1)
              # read the met drivers
              var1 = ncvar_get(data1, infile_varid) ; var1=var1[,,1:(dim(var1)[3])]
-             t_grid = t_grid+dim(var1)[3] ; tmp_t = dim(var1)[3]
+             # In February 2013 some of the CHESS drivers incorectly have 29 days present, remove the final one!
+             if (as.numeric(year_to_do) == 2013 & dim(var1)[3] == 29) {var1=var1[,,1:(dim(var1)[3]-1)]}
+             tmp_t = dim(var1)[3] ; t_grid = t_grid + tmp_t
              # close files after use
              nc_close(data1)
 
@@ -103,7 +109,7 @@ load_met_function<- function (year_to_do,varid,infile_varid,remove_lat,remove_lo
              data1=nc_open(input_file_1)
              # read the met drivers
              var1=ncvar_get(data1, infile_varid) ; var1=var1[,,1:(dim(var1)[3])]
-             t_grid=t_grid+dim(var1)[3] ; tmp_t=dim(var1)[3]
+             tmp_t = dim(var1)[3] ; t_grid = t_grid + tmp_t
              # close files after use
              nc_close(data1)
 

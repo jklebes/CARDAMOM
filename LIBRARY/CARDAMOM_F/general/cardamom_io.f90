@@ -630,6 +630,7 @@ module cardamom_io
     mettemp = 0d0 ; obstemp = 0d0
 
     ! zero the obs counters
+    DATAin%total_obs = 0
     DATAin%ngpp = 0
     DATAin%nlai = 0
     DATAin%nnee = 0
@@ -745,6 +746,15 @@ module cardamom_io
        DATAin%SWE_unc(day) = obstemp(34)
 
     end do ! day loop
+
+    ! Count the total number of observations which are to be used.
+    ! This total in some models may be used to inform on a dynamic weighting of the EDCs
+    DATAin%total_obs = DATAin%ngpp + DATAin%nlai + DATAin%nnee &
+                     + DATAin%nwoo + DATAin%nreco + DATAin%nCfol_stock &
+                     + DATAin%nCwood_stock + DATAin%nCroots_stock + DATAin%nCsom_stock &
+                     + DATAin%nClit_stock + DATAin%nCagb_stock + DATAin%nCstem_stock &
+                     + DATAin%nCbranch_stock + DATAin%nCcoarseroot_stock + DATAin%nCfolmax_stock &
+                     + DATAin%nEvap + DATAin%nSWE
 
     ! allocate to time step
     allocate(DATAin%deltat(DATAin%nodays)) ; DATAin%deltat = 0d0

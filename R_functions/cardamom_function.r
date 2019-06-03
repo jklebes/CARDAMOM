@@ -200,7 +200,7 @@ skip_UK = read.csv("/home/lsmallma/Desktop/UK_forestry_sites_with_yield_and_biom
     print("Beginning creation of binary input files")
     # flag for met drivers load
     loaded_all = FALSE ; met_all = 0 ; lai_all = 0 ; Csom_all = 0 ; forest_all = 0 ; Cwood_all = 0
-    # load to PROJECT for perminent use
+    # load from PROJECT time step information
     timestep_days=PROJECT$model$timestep_days
     # start looping through sites to create site specific files of obs and met
     for (n in seq(1, PROJECT$nosites)) {
@@ -230,7 +230,7 @@ skip_UK = read.csv("/home/lsmallma/Desktop/UK_forestry_sites_with_yield_and_biom
             crop_man_all = load_sacks_calendar_fields_for_extraction(latlon,crop_management_source)
             sand_clay_all = load_hwsd_sand_clay_fields_for_extraction(latlon,sand_clay_source)
             forest_all = load_forestry_fields_for_extraction(latlon,deforestation_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
-            Cwood_all = load_mpi_biomass_fields_for_extraction(latlon,Cwood_stock_source,Cwood_initial_source)
+            Cwood_all = load_mpi_biomass_fields_for_extraction(latlon,Cwood_stock_source,Cwood_initial_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
             burnt_all = load_burnt_area_fields_for_extraction(latlon,burnt_area_source,path_to_burnt_area,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year))
             soilwater_all = load_soilwater_fields_for_extraction(latlon,soilwater_initial_source)
             # set flag
@@ -242,9 +242,9 @@ skip_UK = read.csv("/home/lsmallma/Desktop/UK_forestry_sites_with_yield_and_biom
           } #  acm special case
 #if ( length(which(skip_UK$UK_Forest_site_nos == n)) > 0) {
           obs=extract_obs(latlon[n,],lai_all,Csom_all,forest_all,Cwood_all,sand_clay_all,crop_man_all
-            ,burnt_all,soilwater_all
-            ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
-            ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
+                         ,burnt_all,soilwater_all
+                         ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
+                         ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
             # update ctessel pft in the project and potentially the model information
             PROJECT$ctessel_pft[n]=obs$ctessel_pft
             # Load additional model information
