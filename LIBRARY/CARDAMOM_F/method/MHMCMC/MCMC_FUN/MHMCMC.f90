@@ -28,7 +28,7 @@ contains
 !TLS    use, intrinsic :: ieee_arithmetic
     use MCMCOPT, only: MCMC_OUTPUT, MCMC_OPTIONS, PARAMETER_INFO, COUNTERS
     use math_functions, only: randn, random_uniform, par2nor, nor2par
-    use cardamom_io, only: write_results,restart_flag,accepted_so_far
+    use cardamom_io, only: write_results,restart_flag,accepted_so_far,write_covariance_matrix
     implicit none
 
     !/* ***********INPUTS************
@@ -243,6 +243,9 @@ contains
        end if ! write(*,*) to screen or not
 
     end do ! while conditions
+
+    ! write out final covariance matrix for the analysis
+    if (MCO%nWRITE > 0) call write_covariance_matrix (PI)
 
     ! fill MCOUT details
     MCOUT%best_pars(1:PI%npars) = BESTPARS(1:PI%npars)

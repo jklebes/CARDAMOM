@@ -10,21 +10,22 @@ module cardamom_io
   private
 
   ! allow access to specific functions
-  public :: write_results                    &
-           ,update_for_restart_simulation    &
-           ,check_for_exisiting_output_files &
-           ,open_output_files                &
-           ,close_output_files               &
-           ,cardamom_model_library           &
-           ,read_pari_data                   &
-           ,read_options                     &
+  public :: write_results                   &
+           ,write_covariance_matrix         &
+           ,update_for_restart_simulation   &
+           ,check_for_existing_output_files &
+           ,open_output_files               &
+           ,close_output_files              &
+           ,cardamom_model_library          &
+           ,read_pari_data                  &
+           ,read_options                    &
            ,read_binary_data
 
   ! allow access to needed variable
   public :: restart_flag, accepted_so_far
 
   ! declare module level variables
-  integer :: pfile_unit, sfile_unit, accepted_so_far
+  integer :: pfile_unit, sfile_unit, cfile_unit, accepted_so_far
   ! default assumption is that this is not a restart fun
   logical :: restart_flag = .false.
 
@@ -207,7 +208,7 @@ module cardamom_io
   !
   !------------------------------------------------------------------
   !
-  subroutine check_for_exisiting_output_files(npars,parname,stepname)
+  subroutine check_for_existing_output_files(npars,parname,stepname,covname)
 
     ! subroutine checks whether both the parameter and step files exist for this
     ! job. If they do we will assume that this is a restart job that we want to
@@ -216,15 +217,16 @@ module cardamom_io
     implicit none
     ! declare input variables
     integer, intent(in) :: npars
-    character(350) :: parname,stepname
+    character(350), intent(in) :: parname, stepname, covname
     ! local variables
-    logical :: par_exists,step_exists
+    logical :: par_exists,step_exists,cov_exists
     double precision :: dummy
     integer :: num_lines,status
 
     ! test whether BOTH files exist
     inquire(file=trim(parname), exist=par_exists)
     inquire(file=trim(stepname), exist=step_exists)
+    inquire(file=trim(covname), exist=cov_exists)
 
     ! now determine the correct response
     if (par_exists .and. step_exists) then
@@ -233,7 +235,7 @@ module cardamom_io
         ! lets see if there is anything in the files that we might use
         ! count the number of remaining lines in the file..
         ! open the relevant output files
-        call open_output_files(parname,stepname)
+        call open_output_files(parname,stepname,covname)
         status = 0 ; num_lines = 0
         do
           read(pfile_unit,iostat=status) dummy
@@ -268,7 +270,7 @@ module cardamom_io
 
     endif ! par_exists .and. step_exists
 
-  end subroutine check_for_exisiting_output_files
+  end subroutine check_for_existing_output_files
   !
   !------------------------------------------------------------------
   !
@@ -282,6 +284,7 @@ module cardamom_io
     ! close the files we have in memory
     close(pfile_unit)
     close(sfile_unit)
+    close(cfile_unit)
 
   end subroutine close_output_files
   !
@@ -462,7 +465,7 @@ module cardamom_io
   !
   !--------------------------------------------------------------------
   !
-  subroutine open_output_files(parname,stepname)
+  subroutine open_output_files(parname,stepname,covname)
 
     ! subroutine opens the needed output files and destroys any previously
     ! existing files with the same name, just in case mind!
@@ -472,17 +475,20 @@ module cardamom_io
     implicit none
 
     ! declare input variables
-    character(350) :: parname,stepname
+    character(350), intent(in) :: parname, stepname, covname
     ! declare local variables
 
     ! parameter file unit
     pfile_unit = 10
     ! step file unit
     sfile_unit = 11
+    ! covariance file unit
+    cfile_unit = 12
 
     ! open both files now
     open(pfile_unit,file=trim(parname),form="UNFORMATTED",access="stream",status="UNKNOWN")
     open(sfile_unit,file=trim(stepname),form="UNFORMATTED",access="stream",status="UNKNOWN")
+    open(cfile_unit,file=trim(covname),form="UNFORMATTED",access="stream",status="UNKNOWN")
 
   end subroutine open_output_files
   !
@@ -969,29 +975,30 @@ module cardamom_io
 
     ! how many accepted parameters to accept before completion
     if (solutions_wanted > 0) then
-       MCO%nOUT = solutions_wanted
+        MCO%nOUT = solutions_wanted
     else
-       MCO%nOUT = 1000
-       write(*,*)"Default MCO%nOUT value used"
+        MCO%nOUT = 1000
+        write(*,*)"Default MCO%nOUT value used"
     endif
     ! how frequently to print information to screen
     if (freq_print >= 0) then
-       MCO%nPRINT = freq_print
+        MCO%nPRINT = freq_print
     else
-       MCO%nPRINT = 1000
-       write(*,*)"Default MCO%nPRINT value used"
+        MCO%nPRINT = 1000
+        write(*,*)"Default MCO%nPRINT value used"
     end if
     ! how frequently to write information to file
     if (freq_write >= 0) then
-       MCO%nWRITE = freq_write
+        MCO%nWRITE = freq_write
     else
-       MCO%nWRITE = 1000
-       write(*,*)"Default MCO%nWRITE value used"
+        MCO%nWRITE = 1000
+        write(*,*)"Default MCO%nWRITE value used"
     end if
 
     ! construct file names
     write(MCO%outfile,fmt='(A)')trim(outfile)//"PARS"
     write(MCO%stepfile,fmt='(A)')trim(outfile)//"STEP"
+    write(MCO%covfile,fmt='(A)')trim(outfile)//"COV"
 
   end subroutine read_options
   !
@@ -1094,6 +1101,33 @@ module cardamom_io
     deallocate(tmp)
 
   end subroutine update_for_restart_simulation
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine write_covariance_matrix (PI)
+    use MCMCOPT, only: PARAMETER_INFO
+
+    ! subroutine writes MCMC accepted parameters and step values to binary files
+
+    implicit none
+
+    ! declare input variables
+    type ( parameter_info ), intent(in) :: PI
+
+    ! declare local variables
+    integer :: i,j
+
+    ! write out the file. Its binary format has already been determined at the
+    ! openning of the file
+    do i = 1, PI%npars
+       do j = 1, PI%npars
+       write(cfile_unit) PI%covariance(i,j)
+       end do
+    end do
+
+    ! close will occur at the end of the MCMC
+
+  end subroutine write_covariance_matrix
   !
   !------------------------------------------------------------------
   !

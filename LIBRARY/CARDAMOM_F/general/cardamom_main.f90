@@ -5,7 +5,7 @@ program cardamom_framework
  use MCMCOPT, only: MCO, MCOUT, PI, initialise_mcmc_output
  use cardamom_structures, only: DATAin
  use cardamom_io, only: read_pari_data, read_options, open_output_files, &
-                        check_for_exisiting_output_files,restart_flag,   &
+                        check_for_existing_output_files,restart_flag,   &
                         update_for_restart_simulation
  use MHMCMC_module, only: MHMCMC
  use model_likelihood_module, only: model_likelihood, find_edc_initial_values
@@ -59,7 +59,7 @@ program cardamom_framework
  ! load module variables needed for restart check
  call read_options(MCO,solution_wanted,freq_print,freq_write,outfile)
  ! check whether this is a restart?
- call check_for_exisiting_output_files(PI%npars,MCO%outfile,MCO%stepfile)
+ call check_for_existing_output_files(PI%npars,MCO%outfile,MCO%stepfile,MCO%covfile)
 
  write(*,*) "Running model version ", DATAin%ID
 
@@ -84,13 +84,13 @@ program cardamom_framework
  call read_options(MCO,solution_wanted,freq_print,freq_write,outfile)
 
  ! Open the relevant output files
- call open_output_files(MCO%outfile,MCO%stepfile)
+ call open_output_files(MCO%outfile,MCO%stepfile,MCO%covfile)
 
  if (restart_flag) then
-    print*, "beginning restart simulation"
-    ! now begin update of model timing variables and parameter values if this is a
-    ! restart
-    call update_for_restart_simulation
+     print*, "beginning restart simulation"
+     ! now begin update of model timing variables and parameter values if this is a
+     ! restart
+     call update_for_restart_simulation
  endif
  ! update the user
  write(*,*)"Beginning MHMCMC for real..."

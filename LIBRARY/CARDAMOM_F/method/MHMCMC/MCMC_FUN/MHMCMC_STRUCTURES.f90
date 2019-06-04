@@ -24,8 +24,9 @@ module MCMCOPT
     logical :: returnpars = .true. & ! return best fit parameters or not
               ,randparini = .true. & ! use random initial values parameters
               ,fixedpars  = .true.   ! use fixed initial values where inputs are not = -9999
-    character(350) :: outfile   & ! output file name
-                     ,stepfile    ! step file name
+    character(350) :: outfile   & ! parameter output file name
+                     ,stepfile  & ! step file name
+                     ,covfile     ! covariance file name
     double precision :: fADAPT    ! adapt step size for a given fraction of the full run
     integer :: nADAPT     & ! adapt step size after every N iterations
               ,nOUT       & ! number of requested output parameter sets

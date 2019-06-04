@@ -187,7 +187,7 @@ load_mpi_biomass_fields_for_extraction<-function(latlon_in,Cwood_source,Cwood_in
       # For later use determine where within a timeseries where
       # GlobBIOMASS observation would actually be valid.
       # NOTE: here we assume that the biomass estimate is placed at the beginning of the year
-      tmp = seq(start_year,end_year)
+      tmp = seq(as.numeric(start),as.numeric(finish))
       target_year = which(tmp == 2010)
       if (length(target_year) > 0) {
           if (length(timestep_days) == 1 & timestep_days[1] == 1) {
@@ -200,7 +200,7 @@ load_mpi_biomass_fields_for_extraction<-function(latlon_in,Cwood_source,Cwood_in
           obs_step = which(run_day_selector > (target_year * 365.25))[1]
           step_of = length(timestep_days)
       } else {
-          step_of = -9999
+          obs_step = -9999
           step_of = length(timestep_days)
       }
 
