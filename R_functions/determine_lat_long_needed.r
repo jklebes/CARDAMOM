@@ -10,9 +10,9 @@ determine_lat_long_needed<- function(lat,long,resolution,grid_type,remove) {
 
     # generate UK or WGS-84 lat long grid
     if (grid_type == "UK") {
-        output=generate_uk_grid(lat,long,resolution)
+        output = generate_uk_grid(lat,long,resolution)
     } else if (grid_type=="wgs84") {
-        output=generate_wgs84_grid(lat,long,resolution)
+        output = generate_wgs84_grid(lat,long,resolution)
     } else {
         stop('have selected invalid grid type, the valid options are "UK" and "wgs84"')
     }
@@ -33,20 +33,20 @@ determine_lat_long_needed<- function(lat,long,resolution,grid_type,remove) {
     } else if (use_lcm == "ECMWF") {
 
         # load global surfclim file and info file for surfclim
-        data2=nc_open("/home/lsmallma/gcel/ECMWF_ERA_MET_2000_2012/surfclim_all.nc")
+        data2=nc_open("/home/lsmallma/gcel/ECMWF/landcover/surfclim_all.nc")
         # extract high vegetation cover fraction
-        hi_veg_frac=ncvar_get(data2, "CVH")
+        hi_veg_frac=ncvar_get(data2, "cvh")
         # extract low vegetation cover fraction
-        low_veg_frac=ncvar_get(data2, "CVL")
+        low_veg_frac=ncvar_get(data2, "cvl")
         # extract high vegetation type
-        hi_veg_type=ncvar_get(data2, "TVH")
+        hi_veg_type=ncvar_get(data2, "tvh")
         # extract low vegetation type
-        low_veg_type=ncvar_get(data2, "TVL")
+        low_veg_type=ncvar_get(data2, "tvl")
         hi_veg_frac=as.vector(hi_veg_frac) ; low_veg_frac=as.vector(low_veg_frac)
         hi_veg_type=as.vector(hi_veg_type) ; low_veg_type=as.vector(low_veg_type)
         lcm=hi_veg_type ; lcm[which(low_veg_frac > hi_veg_frac)]=low_veg_type[which(low_veg_frac > hi_veg_frac)]
-        lat_lcm=ncvar_get(data2, "lat")
-        long_lcm=ncvar_get(data2, "lon")
+        lat_lcm=ncvar_get(data2, "latitude")
+        long_lcm=ncvar_get(data2, "longitude")
         long_lcm[which(long_lcm > 180)] = long_lcm[which(long_lcm > 180)]-360
 
     } else {
