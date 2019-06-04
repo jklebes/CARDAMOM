@@ -20,6 +20,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
     # load only the desired latter fraction of the parameter vectors
     # output is order dimensions(npar+1,iter,chain)
     parameters = read_parameter_chains(PROJECT,n,3)
+    parameter_covariance = read_parameter_covariance(PROJECT,n)
 
     # ok so if we actually have some parameters we will
     if (parameters[1] != -9999) {
@@ -97,7 +98,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
         site_ctessel_pft = PROJECT$ctessel_pft[n]
         aNPP = states_all$aNPP
         # store the results now in binary file
-        save(parameters,drivers,sub_parameter,site_ctessel_pft,aNPP,file=outfile1)#, compress="gzip")
+        save(parameter_covariance,parameters,drivers,sub_parameter,site_ctessel_pft,aNPP,file=outfile1)#, compress="gzip")
         # determine whether this is a gridded run (or one with the override in place)
         if (PROJECT$spatial_type == "site" | grid_override == TRUE) {
           # ...if this is a site run save the full ensemble and everything else...

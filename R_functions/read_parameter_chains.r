@@ -8,7 +8,7 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
   # search for all output files
   pfile = list.files(paste(PROJECT_in$resultspath,sep=""), full.names=TRUE)
   # select the correct project
-  is_it = grepl(PROJECT_in$name,pfile) ; pfile=pfile[is_it]
+  is_it = grepl(PROJECT_in$name,pfile) ; pfile = pfile[is_it]
   # select the PARS files only
   is_it = grepl("PARS",pfile) ; pfile = pfile[is_it]
   # need to duplicate the list at this point to ensure that we can be certain we do not confuse the chain number and site numbers
