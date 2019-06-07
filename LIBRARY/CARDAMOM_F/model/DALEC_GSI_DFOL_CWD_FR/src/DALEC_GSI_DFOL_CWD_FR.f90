@@ -913,7 +913,7 @@ contains
       VPDfac = min(1d0,max(0d0,VPDfac))
 
       ! calculate and store the GSI index
-      FLUXES(n,18) = Tfac*Photofac*VPDfac
+      FLUXES(n,18) = Tfac*VPDfac*Photofac
 
       ! we will load up some needed variables
       m = tmp_m(n)

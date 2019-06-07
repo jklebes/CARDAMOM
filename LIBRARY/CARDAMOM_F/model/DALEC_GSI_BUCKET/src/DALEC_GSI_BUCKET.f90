@@ -1239,7 +1239,7 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
        !
 
        ! labile pool
-       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8)-FLUXES(n,6)-FLUXES(n,7)-Rg_from_labile(n))*deltat(n) 
+       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8)-FLUXES(n,6)-FLUXES(n,7)-Rg_from_labile(n))*deltat(n)
        ! foliar pool
        POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,8)-FLUXES(n,10))*deltat(n)
        ! wood pool
@@ -3559,7 +3559,7 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
     endif
 
     ! calculate and store the GSI index
-    GSI(current_step) = Tfac*Photofac*VPDfac
+    GSI(current_step) = Tfac*VPDfac*Photofac
 
     ! we will load up some needed variables
     m = nint(tmp_m(current_step))

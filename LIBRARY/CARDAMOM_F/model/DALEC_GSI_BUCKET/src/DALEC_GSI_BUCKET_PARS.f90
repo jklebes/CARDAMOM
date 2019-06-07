@@ -45,7 +45,7 @@ module MODEL_PARAMETERS
        !
 
        ! Decomposition efficiency of litter/CWD to som (fraction)
-       PI%parmin(1) = 0.25d0 
+       PI%parmin(1) = 0.25d0
        PI%parmax(1) = 0.75d0
 
        ! Fraction of GPP respired as Rm
@@ -54,7 +54,7 @@ module MODEL_PARAMETERS
 
        ! GSI sensitivity for leaf growth
        PI%parmin(3) = 1.00d0
-       PI%parmax(3) = 1.004d0
+       PI%parmax(3) = 1.003d0
 
 !       ! Max labile turnover (fraction) to roots
 !       PI%parmin(4) = 0.001368925 ! 2 years 0.0001368925d0 ! 20 years
@@ -127,11 +127,11 @@ module MODEL_PARAMETERS
        PI%parmax(24) = 3600d0*24d0 ! 24 hours
 
        ! GSI min VPD threshold (Pa)
-       PI%parmin(25) = 1d0
+       PI%parmin(25) = 100d0
        PI%parmax(25) = 3000d0
 
        ! GSI max VPD threshold (Pa)
-       PI%parmin(26) = 1d0
+       PI%parmin(26) = 100d0
        PI%parmax(26) = 5500d0
 
        ! critical GPP for LAI increase (fraction)
@@ -140,15 +140,15 @@ module MODEL_PARAMETERS
 
        ! fraction of Cwood which is branch
        PI%parmin(28) = 0.05d0
-       PI%parmax(28) = 0.40d0 !0.65
+       PI%parmax(28) = 0.40d0
 
        ! fraction of Cwood which is coarse root
        PI%parmin(29) = 0.15d0
-       PI%parmax(29) = 0.30d0 !0.45
+       PI%parmax(29) = 0.30d0
 
        ! GSI senstivity for leaf senescence
-       PI%parmin(34) = 0.995d0
-       PI%parmax(34) = 1.00d0
+       PI%parmin(34) = 0.9960d0
+       PI%parmax(34) = 0.9999d0
 !!!! SHOULD THESE BE DITCHED?
        ! GSI - have I just left a growing state (>1)
        PI%parmin(35) = 0.75d0

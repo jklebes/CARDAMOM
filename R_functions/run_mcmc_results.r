@@ -92,8 +92,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
       # run subsample of parameters for full results / propogation
       soil_info = c(drivers$top_sand,drivers$bot_sand,drivers$top_clay,drivers$bot_clay)
       states_all = simulate_all(n,PROJECT,PROJECT$model$name,drivers$met,sub_parameter[1:PROJECT$model$nopars[n],,],
-        drivers$lat,PROJECT$ctessel_pft[n],PROJECT$parameter_type,
-        PROJECT$exepath,soil_info)
+                                drivers$lat,PROJECT$ctessel_pft[n],PROJECT$parameter_type,
+                                PROJECT$exepath,soil_info)
         # pass to local variable for saving
         site_ctessel_pft = PROJECT$ctessel_pft[n]
         aNPP = states_all$aNPP

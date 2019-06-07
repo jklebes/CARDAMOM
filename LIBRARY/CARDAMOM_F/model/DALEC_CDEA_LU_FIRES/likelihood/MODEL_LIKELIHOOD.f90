@@ -14,6 +14,7 @@ module model_likelihood_module
     integer :: DIAG
     integer :: PASSFAIL(100) ! allow space for 100 possible checks
     integer :: nedc ! number of edcs being assessed
+    double precision :: EDC_cost = 5d0
   end type
   type (EDCDIAGNOSTICS), save :: EDCD
 
@@ -61,6 +62,10 @@ module model_likelihood_module
     PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
     ! ... and assume we need to find random parameters
     PI%parfix = 0
+
+    ! Estimate the likelihood cost per EDC failed.
+    ! The aim is to balance the cost between fitting observations and EDCs without absolute accept/reject
+    EDCD%EDC_cost = max(EDCD%EDC_cost,(dble(DATAin%total_obs) * 0.5d0) / 24d0) ! note the 40 = number of EDCs currently in use!
 
     ! if the prior is not missing and we have not told the edc to be random
     ! keep the value
@@ -240,28 +245,28 @@ module model_likelihood_module
 
     ! Turnover of litter faster than turnover of som
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(9) > pars(8))) then
-        EDC1 = 0 ; EDCD%PASSFAIL(1)=0
+        EDC1 = 1 ; EDCD%PASSFAIL(1)=0
     endif
 
     ! litter2som greater than som to atm rate
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(1) < pars(9))) then
-       EDC1 = 0 ; EDCD%PASSFAIL(2)=0
+       EDC1 = 1 ; EDCD%PASSFAIL(2)=0
     endif
 
     ! turnover of foliage faster than turnover of wood
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(6) > torfol) then
-       EDC1 = 0 ; EDCD%PASSFAIL(3)=0
+       EDC1 = 1 ; EDCD%PASSFAIL(3)=0
     end if
 
     ! root turnover greater than som turnover at mean temperature
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(7) < (pars(9)*exp(pars(10)*meantemp)))) then
-       EDC1 = 0 ; EDCD%PASSFAIL(4)=0
+       EDC1 = 1 ; EDCD%PASSFAIL(4)=0
     endif
 
     ! GPP allocation to foliage and labile cannot be 5 orders of magnitude
     ! difference from GPP allocation to roots
     if ((EDC1 == 1 .or. DIAG == 1) .and. ((ffol+flab) > (5.*froot) .or. ((ffol+flab)*5.) < froot)) then
-       EDC1 = 0 ; EDCD%PASSFAIL(5)=0
+       EDC1 = 1 ; EDCD%PASSFAIL(5)=0
     endif
 
     ! could always add more / remove some
@@ -332,7 +337,6 @@ module model_likelihood_module
     ! derive mean pools
     do n = 1, nopools
        mean_pools(n) = cal_mean_pools(M_POOLS,n,nodays+1,nopools)
-    !   print *, n, mean_pools(n),M_POOLS(1,n)
     end do
 
     !
@@ -342,7 +346,7 @@ module model_likelihood_module
     ! EDC 6
     ! ensure ratio between Cfoilar and Croot is less than 5
     if ((EDC2 == 1 .or. DIAG == 1) .and. (mean_pools(2) > (mean_pools(3)*5.) .or. (mean_pools(2)*5.) < mean_pools(3)) ) then
-        EDC2 = 0 ; EDCD%PASSFAIL(6) = 0
+        EDC2 = 1 ; EDCD%PASSFAIL(6) = 0
     end if
 
     ! EDC 7
@@ -364,7 +368,7 @@ module model_likelihood_module
        ! now check the growth rate
        if ((EDC2 == 1 .or. DIAG == 1) .and. &
           ((mean_annual_pools(no_years,n)/mean_annual_pools(1,n)) > (1.+G*real(no_years)))) then
-          EDC2=0 ; EDCD%PASSFAIL(7)=0
+          EDC2 = 1 ; EDCD%PASSFAIL(7+n-1) = 0
        endif
     end do ! pool loop
 
@@ -460,7 +464,7 @@ module model_likelihood_module
     ! iterate to check whether Fin/Fout is within EQF limits
     do n = 1, nopools
         if (abs(log(Fin(n)/Fout(n))) > log(EQF)) then
-            EDC2 = 0 ; EDCD%PASSFAIL(8) = 0
+            EDC2 = 1 ; EDCD%PASSFAIL(13+n-1) = 0
         end if
     end do
 
@@ -475,14 +479,9 @@ module model_likelihood_module
         Sprox0 = Sprox * (mean_pools(n) / mean_annual_pools(1,n))
       !  print *, n, Sprox, Sprox0
         if (abs(Sprox-Sprox0) > fin_fout_lim) then
-            EDC2 = 0 ; EDCD%PASSFAIL(8+n) = 0
+            EDC2 = 1 ; EDCD%PASSFAIL(19+n) = 0
         end if
     end do
-
- !   print *, "EDCs"
- !   do n = 1, 14
- !       print *, n, EDCD%PASSFAIL(n)
- !   end do
 
     !
     ! EDCs done, below are additional fault detection conditions
@@ -493,7 +492,7 @@ module model_likelihood_module
     ! All pools must confirm to the prior ranges
     do n = 1, nopools
        if ((EDC2 == 1 .or. DIAG == 1) .and. (M_POOLS(1,n) > parmax(n+npars-nopools))) then
-          EDC2 = 0 ; EDCD%PASSFAIL(35)=0
+          EDC2 = 0 ; EDCD%PASSFAIL(35) = 0
        end if ! prior ranges conditions
     end do ! loop pools
 
@@ -505,7 +504,7 @@ module model_likelihood_module
           do while (nn <= (nodays+1) .and. PEDC == 1)
              ! now check conditions
              if (M_POOLS(nn,n) < 0. .or. M_POOLS(nn,n) /= M_POOLS(nn,n)) then
-                 EDC2=0 ; PEDC=0 ; EDCD%PASSFAIL(35+n)=0
+                 EDC2 = 0 ; PEDC = 0 ; EDCD%PASSFAIL(35+n) = 0
              end if ! less than zero and is NaN condition
           nn = nn + 1
           end do ! nn < nodays .and. PEDC == 1
@@ -514,14 +513,14 @@ module model_likelihood_module
     end if ! min pool assessment
 
     ! finally assess how meny EDCs passed or failed
-    num_EDC=100
-    if (DIAG == 1) then
-       do n = 1, num_EDC
-          if (EDCD%PASSFAIL(n) == 0) then
-              EDC2 = 0
-          endif
-       end do
-    endif
+!    num_EDC = 100
+!    if (DIAG == 1) then
+!       do n = 1, num_EDC
+!          if (EDCD%PASSFAIL(n) == 0) then
+!              EDC2 = 0
+!          endif
+!       end do
+!    endif
 
     !JFE to print EDCs
     !do n = 1, 14
@@ -736,62 +735,54 @@ module model_likelihood_module
     double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
     ! declare local variables
-    double precision :: EDC, EDC1, EDC2
+    double precision :: EDC1, EDC2
 
     ! initial values
-    ML_obs_out = 0d0 ; ML_prior_out = 0d0
+    ML_obs_out = 0d0 ; ML_prior_out = 0d0 ; EDC1 = 1d0 ; EDC2 = 1d0
     ! if == 0 EDCs are checked only until the first failure occurs
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
-    EDCD%DIAG = 0
+    EDCD%DIAG = 1 !0
 
-    ! call EDCs which can be evaluated prior to running the model
-    call EDC1_CDEA_LU_FIRES(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
-
-    ! now use the EDCD%EDC flag to determine if effect is kept
     if (DATAin%EDC == 1) then
-        EDC = EDC1
-    else
-        EDC = 1
-    end if
 
-    ! update effect to the probabity
-    ML_obs_out = ML_obs_out + log(EDC)
+        ! call EDCs which can be evaluated prior to running the model
+        call EDC1_CDEA_LU_FIRES(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
-    ! if first set of EDCs have been passed
-    if (EDC == 1) then
-       ! calculate parameter log likelihood (assumed we have estimate of
-       ! uncertainty)
-       ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
+        ! update the likelihood score based on EDCs driving total rejection
+        ! proposed parameters
+        ML_obs_out = log(EDC1)
 
-       ! run the dalec model
-       call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                        ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                        ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
-                        ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                        ,DATAin%M_GPP)
+        ! if first set of EDCs have been passed, move on to the second
+        if (EDC1 == 1d0) then
 
-       ! check edc2
-       call EDC2_CDEA_LU_FIRES(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                              ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                              ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                              ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+            ! run the dalec model
+            call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                             ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                             ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
+                             ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
+                             ,DATAin%M_GPP)
 
-       ! check if EDCs are switched on
-       if (DATAin%EDC == 1) then
-           EDC = EDC2
-       else
-           EDC = 1
-       end if
+            ! check edc2
+            call EDC2_CDEA_LU_FIRES(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+                                   ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                                   ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                                   ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
-       ! add EDC2 log-likelihood
-       ML_obs_out = ML_obs_out + log(EDC)
+           ! Add EDC2 log-likelihood to absolute accept reject...
+           ML_obs_out = ML_obs_out + log(EDC2)
+           ! ...then add cost associated with failed EDCs which do not
+           ! reject in absolute rejection of the proposed parameter vector
+           ML_obs_out = ML_obs_out-(EDCD%EDC_cost*sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc)))
 
-       if (EDC == 1) then
-          ! calculate final model likelihood when compared to obs
-          ML_obs_out = ML_obs_out + likelihood(PI%npars,PARS)
-       endif
+        end if ! EDC1 == 1
 
-    end if ! EDC == 1
+    end if ! DATAin%EDC == 1
+
+    ! Calculate log-likelihood associated with priors
+    ! We always want this
+    ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
+    ! calculate final model likelihood when compared to obs
+    ML_obs_out = ML_obs_out + likelihood(PI%npars,PARS)
 
   end subroutine model_likelihood
   !

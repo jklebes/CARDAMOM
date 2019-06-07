@@ -50,10 +50,11 @@ module MCMCOPT
   ! information which is needed determine progress
   type COUNTERS
     logical :: beta_step = .false.
-    integer :: ACC    & ! total number of accepted solutions
-              ,ACCLOC & ! number of recently accepted solutions
-              ,ITER   & ! number of iterations attempted
-              ,ACCEDC & ! number of EDC complient iterations
+    integer :: ACC      & ! total number of accepted solutions
+              ,ACCLOC   & ! number of recently accepted solutions
+              ,ITER     & ! number of iterations attempted
+              ,ACC_beta & ! total number of accepted solutions
+              ,ACCEDC   & ! number of EDC complient iterations
               ,ACCLOC_beta & ! accepted parameters from the beta linked step
               ,Nbeta
 

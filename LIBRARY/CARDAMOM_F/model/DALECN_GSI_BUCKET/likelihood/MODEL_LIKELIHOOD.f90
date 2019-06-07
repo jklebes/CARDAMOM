@@ -1893,7 +1893,6 @@ module model_likelihood_module
        likelihood = likelihood-0.5d0*tot_exp
     endif
 
-
     !
     ! Curiously we will assess other priors here, as the tend to have to do with model state derived values
     !
