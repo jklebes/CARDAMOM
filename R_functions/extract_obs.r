@@ -332,17 +332,16 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
             Cwood_stock_unc[which(Cwood_stock != -9999)] = abs(0.25 * Cwood_stock[which(Cwood_stock != -9999)])
         }
     } else if (Cwood_stock_source == "GlobBIOMASS") {
-
         # declare output variable
-        Cwood_out=array(-9999, dim=Cwood_all$step_of)
-        Cwood_unc_out=array(-9999, dim=Cwood_all$step_of)
+        Cwood_stock=array(-9999, dim=Cwood_all$step_of)
+        Cwood_stock_unc=array(-9999, dim=Cwood_all$step_of)
         # only bother with this if 2010 is within time period
         if (Cwood_all$obs_step > 0) {
             # get Cwood
-            output=extract_globbiomass_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
+            output = extract_globbiomass_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
             # and insert the extracted value into the correct location
-            Cwood_stock[Cwood_all$step_applicable]=output$Cwood_stock
-            Cwood_stock_unc[Cwood_all$step_applicable]=output$Cwood_stock_unc
+            Cwood_stock[Cwood_all$obs_step]=output$Cwood_stock
+            Cwood_stock_unc[Cwood_all$obs_step]=output$Cwood_stock_unc
         }
 
     } else if (Cwood_stock_source == "mpi_biomass") {

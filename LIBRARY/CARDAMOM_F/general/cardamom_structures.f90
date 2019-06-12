@@ -70,6 +70,8 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars
                                            ,Evappts              &
                                            ,SWEpts
 
+      double precision :: nobs_scaler
+
       ! counters for the number of observations per data stream
       integer :: total_obs          & ! total number of obervations 
                 ,ngpp               & ! number of GPP observations

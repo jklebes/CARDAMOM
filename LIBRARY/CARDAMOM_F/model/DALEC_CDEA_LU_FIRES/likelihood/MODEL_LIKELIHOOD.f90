@@ -746,35 +746,35 @@ module model_likelihood_module
     if (DATAin%EDC == 1) then
 
         ! call EDCs which can be evaluated prior to running the model
-        call EDC1_CDEA_LU_FIRES(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+        call EDC1_GSI(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
         ML_obs_out = log(EDC1)
 
-        ! if first set of EDCs have been passed, move on to the second
-        if (EDC1 == 1d0) then
+    endif !
 
-            ! run the dalec model
-            call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                             ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                             ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
-                             ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                             ,DATAin%M_GPP)
+    ! run the dalec model
+    call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                     ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
+                     ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
+                     ,DATAin%M_GPP)
 
-            ! check edc2
-            call EDC2_CDEA_LU_FIRES(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                                   ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                                   ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                                   ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+    ! if first set of EDCs have been passed, move on to the second
+    if (DATAin%EDC == 1) then
 
-           ! Add EDC2 log-likelihood to absolute accept reject...
-           ML_obs_out = ML_obs_out + log(EDC2)
-           ! ...then add cost associated with failed EDCs which do not
-           ! reject in absolute rejection of the proposed parameter vector
-           ML_obs_out = ML_obs_out-(EDCD%EDC_cost*sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc)))
+        ! check edc2
+        call EDC2_GSI(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+                     ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                     ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                     ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
-        end if ! EDC1 == 1
+        ! Add EDC2 log-likelihood to absolute accept reject...
+        ML_obs_out = ML_obs_out + log(EDC2)
+        ! ...then add cost associated with failed EDCs which do not
+        ! reject in absolute rejection of the proposed parameter vector
+        ML_obs_out = ML_obs_out-(EDCD%EDC_cost*sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc)))
 
     end if ! DATAin%EDC == 1
 

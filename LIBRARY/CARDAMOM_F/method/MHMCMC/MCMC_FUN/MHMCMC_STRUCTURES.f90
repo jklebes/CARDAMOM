@@ -96,7 +96,6 @@ module MCMCOPT
   type (PARAMETER_INFO), save :: PI
 
   contains
-
   !
   !------------------------------------------------------------------
   !

@@ -30,6 +30,8 @@ contains
     use MCMCOPT, only: MCMC_OUTPUT, MCMC_OPTIONS, PARAMETER_INFO, COUNTERS
     use math_functions, only: randn, random_uniform, par2nor, nor2par
     use cardamom_io, only: write_results,restart_flag,accepted_so_far,write_covariance_matrix
+    use cardamom_structures, only: DATAin
+
     implicit none
 
     !/* ***********INPUTS************
@@ -182,7 +184,7 @@ contains
        endif
 
        ! determine accept or reject the current proposal
-       if ((P-P0) > crit1 .and. (Pprior-P0prior) > crit2) then
+       if (((P-P0)*DATAin%nobs_scaler) > crit1 .and. (Pprior-P0prior) > crit2) then
 
           ! Store accepted parameter solutions
           ! keep record of all parameters accepted since step adaption
@@ -396,12 +398,12 @@ contains
     integer :: p, fp
     !double precision  :: npar(1), npar_new(1), rn(PI%npars), mu(PI%npars)
     double precision  :: npar(PI%npars), npar_new(PI%npars), stepping(PI%npars) &
-                        ,rn(PI%npars), mu(PI%npars), rn2(PI%npars), scd, Id, tmp
-    double precision, parameter :: beta = 0.05d0
+                        ,rn(PI%npars), mu(PI%npars), rn2(PI%npars), Id, tmp
+    double precision, parameter :: beta = 0.05d0, scd = 2.381204d0**2d0 ! scd = optimal scaling parameter
 
     ! reset values
     npar = 0d0 ; npar_new = 0d0 ; rn = 0d0 ; mu = 0d0
-    Id = sqrt(dble(PI%npars)) ; scd = 2.381204d0 / Id
+    Id = sqrt(dble(PI%npars))
 
     ! Begin sampling parameter space, first estimate multivariate random number
     ! Multivariate sample around a mean of zero
@@ -443,7 +445,7 @@ contains
            ! stepping to the number of parameters being retrieved by the analysis.
            ! See Haario et al., (2001) An adaptive Metropolis algorithm. Bernoulli 7.2: 223-242.
            ! and references therein.
-           stepping = rn*(1d0-PI%parfix)*scd
+           stepping = rn * (1d0-PI%parfix) * (scd / dble(PI%npars))
            npar_new = npar + stepping
            ! ensure the new parameter value is contrained between 0 and 1
            if (minval(npar_new) > 0d0 .and. maxval(npar_new) < 1d0) fp = 1

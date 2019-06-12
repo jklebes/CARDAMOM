@@ -761,6 +761,10 @@ module cardamom_io
                      + DATAin%nClit_stock + DATAin%nCagb_stock + DATAin%nCstem_stock &
                      + DATAin%nCbranch_stock + DATAin%nCcoarseroot_stock + DATAin%nCfolmax_stock &
                      + DATAin%nEvap + DATAin%nSWE
+    ! assuming that the MHMCMC will only search effectively if the likelihood is
+    ! less than computer precision for vsmall.
+    ! NOTE: set = 1 to remove its effect
+    DATAin%nobs_scaler = 1d0 !min(1d0,100d0 / dble(DATAin%total_obs))
 
     ! allocate to time step
     allocate(DATAin%deltat(DATAin%nodays)) ; DATAin%deltat = 0d0

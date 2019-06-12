@@ -147,7 +147,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
             # currently water in the soil surface layer (0-10 cm)
             site_output$SurfWater_kgH2Om2 = apply(states_all$rootwater,2,quantile,prob=num_quantiles)
             # plant apparent soil water potential (MPa)
-            site_output$wSWP_kgH2Om2 = apply(states_all$wSWP,2,quantile,prob=num_quantiles)
+            site_output$wSWP_MPa = apply(states_all$wSWP,2,quantile,prob=num_quantiles)
             # evapotranspiration (Etrans + Esoil + Ewetcanopy)
             site_output$evap_kgH2Om2day = apply(states_all$evap,2,quantile,prob=num_quantiles)
           }
@@ -181,7 +181,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
 
     # bundle needed functions down the chain
     functions_list=c("read_parameter_chains","read_binary_file_format","simulate_all",
-    "read_binary_response_surface","crop_development_parameters","have_chains_converged","psrf")
+                     "read_binary_response_surface","crop_development_parameters",
+                     "have_chains_converged","psrf","read_parameter_covariance")
     # start marker
     stime = proc.time()["elapsed"]
 
@@ -297,8 +298,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                 grid_output$mean_SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
                 grid_output$final_SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
                 # plant apparent soil water potential (MPa)
-                grid_output$mean_wSWP_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-                grid_output$final_wSWP_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                grid_output$mean_wSWP_MPa = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                grid_output$final_wSWP_MPa = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
                 # evapotranspiration (Etrans + Esoil + Ewetcanopy)
                 grid_output$mean_evap_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               }
@@ -341,7 +342,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                 # currently water in the soil surface layer (0-10 cm)
                 grid_output$SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                 # plant apparent soil water potential (MPa)
-                grid_output$wSWP_kgH2Om2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                grid_output$wSWP_MPa = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                 # evapotranspiration (Etrans + Esoil + Ewetcanopy)
                 grid_output$evap_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               }
@@ -414,7 +415,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                   # currently water in the soil surface layer (0-10 cm)
                   grid_output$SurfWater_kgH2Om2[n,,] = site_output$SurfWater_kgH2Om2
                   # plant apparent soil water potential (MPa)
-                  grid_output$wSWP_kgH2Om2[n,,] = site_output$wSWP_kgH2Om2
+                  grid_output$wSWP_MPa[n,,] = site_output$wSWP_MPa
                   # evapotranspiration (Etrans + Esoil + Ewetcanopy)
                   grid_output$evap_kgH2Om2day[n,,] = site_output$evap_kgH2Om2day
                 }
@@ -473,8 +474,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                   grid_output$mean_SurfWater_kgH2Om2[slot_i,slot_j,] = apply(site_output$SurfWater_kgH2Om2,1,mean)
                   grid_output$final_SurfWater_kgH2Om2[slot_i,slot_j,] = site_output$SurfWater_kgH2Om2[,final_step]
                   # plant apparent soil water potential (MPa)
-                  grid_output$mean_wSWP_kgH2Om2[slot_i,slot_j,] = apply(site_output$wSWP_kgH2Om2,1,mean)
-                  grid_output$final_wSWP_kgH2Om2[slot_i,slot_j,] = site_output$wSWP_kgH2Om2[,final_step]
+                  grid_output$mean_wSWP_MPa[slot_i,slot_j,] = apply(site_output$wSWP_MPa,1,mean)
+                  grid_output$final_wSWP_MPa[slot_i,slot_j,] = site_output$wSWP_MPa[,final_step]
                   # evapotranspiration (Etrans + Esoil + Ewetcanopy)
                   grid_output$mean_evap_kgH2Om2day[slot_i,slot_j,] = apply(site_output$evap_kgH2Om2day,1,mean)
                 }

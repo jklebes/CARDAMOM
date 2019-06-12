@@ -9,7 +9,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
     # let the user know this might take some time
     print("Loading global met fields for subsequent sub-setting ...")
     # declare timing variables
-    t_grid=0
+    t_grid = 0
 
     if (met_source == "site_specific") {
 
@@ -235,6 +235,11 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         #
         # Unit conversions based on specific datasets
         #
+
+        # convert ERA-Intrim from W/m2 to MJ/m2/day
+        if (met_source == "CHESS" | met_source == "ERA") {
+            var1_out = var1_out * 86400 * 1e-6
+        }
 
         # Mean temperature and temperature range are provided in CHESS,
         # We want to make these into max / min temperature
