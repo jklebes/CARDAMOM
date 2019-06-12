@@ -14,6 +14,7 @@ module model_likelihood_module
     integer :: DIAG
     integer :: PASSFAIL(100) ! allow space for 100 possible checks
     integer :: nedc ! number of edcs being assessed
+    double precision :: EDC_cost = 5d0
   end type
   type (EDCDIAGNOSTICS), save :: EDCD
 
@@ -61,6 +62,10 @@ module model_likelihood_module
     PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
     ! ... and assume we need to find random parameters
     PI%parfix = 0
+
+    ! Estimate the likelihood cost per EDC failed.
+    ! The aim is to balance the cost between fitting observations and EDCs without absolute accept/reject
+    EDCD%EDC_cost = max(EDCD%EDC_cost,(dble(DATAin%total_obs) * 0.5d0) / 11d0) ! note the 11 = number of EDCs currently in use!
 
     ! if the prior is not missing and we have not told the edc to be random
     ! keep the value
@@ -421,62 +426,54 @@ module model_likelihood_module
     double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
     ! declare local variables
-    double precision :: EDC, EDC1, EDC2
+    double precision :: EDC1, EDC2
 
     ! initial values
-    ML_obs_out = 0d0 ; ML_prior_out = 0d0
+    ML_obs_out = 0d0 ; ML_prior_out = 0d0 ; EDC1 = 1d0 ; EDC2 = 1d0
     ! if == 0 EDCs are checked only until the first failure occurs
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
-    EDCD%DIAG = 0
+    EDCD%DIAG = 1 !0
 
-    ! call EDCs which can be evaluated prior to running the model
-    call EDC1_GSI(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
-
-    ! now use the EDCD%EDC flag to determine if effect is kept
     if (DATAin%EDC == 1) then
-        EDC = EDC1
-    else
-        EDC = 1
-    end if
 
-    ! update effect to the probabity
-    ML_obs_out = ML_obs_out + log(EDC)
+        ! call EDCs which can be evaluated prior to running the model
+        call EDC1_GSI(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
-    ! if first set of EDCs have been passed
-    if (EDC == 1) then
-       ! calculate parameter log likelihood (assumed we have estimate of
-       ! uncertainty)
-       ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
+        ! update the likelihood score based on EDCs driving total rejection
+        ! proposed parameters
+        ML_obs_out = log(EDC1)
 
-       ! run the dalec model
-       call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                        ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                        ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
-                        ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                        ,DATAin%M_GPP)
+    endif !
 
-       ! check edc2
-       call EDC2_GSI(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                    ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                    ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                    ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+    ! run the dalec model
+    call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                     ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
+                     ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
+                     ,DATAin%M_GPP)
 
-       ! check if EDCs are switched on
-       if (DATAin%EDC == 1) then
-           EDC = EDC2
-       else
-           EDC = 1
-       end if
+    ! if first set of EDCs have been passed, move on to the second
+    if (DATAin%EDC == 1) then
 
-       ! add EDC2 log-likelihood
-       ML_obs_out = ML_obs_out + log(EDC)
+        ! check edc2
+        call EDC2_GSI(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+                     ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                     ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                     ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
-       if (EDC == 1) then
-          ! calculate final model likelihood when compared to obs
-          ML_obs_out = ML_obs_out + likelihood(PI%npars,PARS)
-       endif
+        ! Add EDC2 log-likelihood to absolute accept reject...
+        ML_obs_out = ML_obs_out + log(EDC2)
+        ! ...then add cost associated with failed EDCs which do not
+        ! reject in absolute rejection of the proposed parameter vector
+        ML_obs_out = ML_obs_out-(EDCD%EDC_cost*sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc)))
 
-    end if ! EDC == 1
+    end if ! DATAin%EDC == 1
+
+    ! Calculate log-likelihood associated with priors
+    ! We always want this
+    ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
+    ! calculate final model likelihood when compared to obs
+    ML_obs_out = ML_obs_out + likelihood(PI%npars,PARS)
 
   end subroutine model_likelihood
   !
