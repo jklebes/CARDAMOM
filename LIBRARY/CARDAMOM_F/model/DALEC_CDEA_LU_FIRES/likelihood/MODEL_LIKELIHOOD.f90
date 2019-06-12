@@ -746,7 +746,7 @@ module model_likelihood_module
     if (DATAin%EDC == 1) then
 
         ! call EDCs which can be evaluated prior to running the model
-        call EDC1_GSI(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+        call EDC1_CDEA_LU_FIRES(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
@@ -765,7 +765,7 @@ module model_likelihood_module
     if (DATAin%EDC == 1) then
 
         ! check edc2
-        call EDC2_GSI(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+        call EDC2_CDEA_LU_FIRES(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
                      ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                      ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
