@@ -761,10 +761,6 @@ module cardamom_io
                      + DATAin%nClit_stock + DATAin%nCagb_stock + DATAin%nCstem_stock &
                      + DATAin%nCbranch_stock + DATAin%nCcoarseroot_stock + DATAin%nCfolmax_stock &
                      + DATAin%nEvap + DATAin%nSWE
-    ! assuming that the MHMCMC will only search effectively if the likelihood is
-    ! less than computer precision for vsmall.
-    ! NOTE: set = 1 to remove its effect
-    DATAin%nobs_scaler = 1d0 !min(1d0,100d0 / dble(DATAin%total_obs))
 
     ! allocate to time step
     allocate(DATAin%deltat(DATAin%nodays)) ; DATAin%deltat = 0d0
@@ -922,13 +918,14 @@ module cardamom_io
     ! Begin allocating parameter info
     PI%npars = DATAin%nopars
     allocate(PI%parmin(PI%npars),PI%parmax(PI%npars),PI%parini(PI%npars) &
-            ,PI%parfix(PI%npars),PI%stepsize(PI%npars),PI%parstd(PI%npars) &
-            ,PI%covariance(PI%npars,PI%npars),PI%mean_par(PI%npars))
+            ,PI%parfix(PI%npars),PI%parstd(PI%npars) &
+            ,PI%covariance(PI%npars,PI%npars),PI%mean_par(PI%npars) &
+            ,PI%iC(PI%npars,PI%npars))
 
     ! force zero
     PI%parmin(:) = 0d0 ; PI%parmax(:) = 0d0 ; PI%parini(:) = 0d0
-    PI%parfix(:) = 0d0 ; PI%stepsize(:) = 0d0 ; PI%parstd(:) = 0d0
-    PI%covariance = 0d0
+    PI%parfix(:) = 0d0 ; PI%parstd(:) = 0d0
+    PI%covariance = 0d0 ; PI%iC = 0d0
 
     ! load parameter information
     call pars_info(PI)
@@ -939,7 +936,7 @@ module cardamom_io
 !    end if
 
     ! defining initial MHMCMC stepsize and standard deviation
-    PI%stepsize = 0.01d0 ; PI%parstd = 1d0 ; PI%Nparstd = 0d0
+    PI%stepsize = 1d0 ; PI%beta_stepsize = 0.01d0 ; PI%parstd = 1d0 ; PI%Nparstd = 0d0
     ! Covariance matrix cannot be set to zero therefore set initial value to a
     ! small positive value along to variance access
     PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
@@ -970,7 +967,7 @@ module cardamom_io
     ! defining hardcoded MCMC options
     MCO%append = 1
     MCO%nADAPT = 1000 ! TLS: 1000 -> 5000 -> 10000
-    MCO%fADAPT = 0.5d0
+    MCO%fADAPT = 1d0 !0.5d0
     MCO%randparini = .false.
     MCO%returnpars = .false.
     MCO%fixedpars  = .false.
@@ -1011,7 +1008,7 @@ module cardamom_io
   subroutine update_for_restart_simulation
     use MCMCOPT, only: MCO, PI
     use cardamom_structures, only: DATAin
-    use math_functions, only: std, covariance_matrix, par2nor
+    use math_functions, only: std, covariance_matrix, inverse_matrix, par2nor
 
     ! subroutine is responsible for loading previous parameter and step size
     ! information into the current
@@ -1072,6 +1069,8 @@ module cardamom_io
     do i = 1, PI%npars
        PI%parstd = sqrt(PI%covariance(i,i))
     end do
+    ! estimate status of the inverse covariance matrix also
+    call inverse_matrix( PI%npars, PI%covariance, PI%iC )
 
     deallocate(tmp,norparvec)
 
@@ -1087,22 +1086,23 @@ module cardamom_io
        num_lines = num_lines + 1
     enddo
 
-    ! update num_lines by number of parameters
-    num_lines = num_lines/(DATAin%nopars)
-    ! allocate memory
-    allocate(tmp(num_lines,(DATAin%nopars)))
+!    ! update num_lines by number of parameters
+!    num_lines = num_lines/(DATAin%nopars)
+!    ! allocate memory
+!    allocate(tmp(num_lines,(DATAin%nopars)))
     ! rewind, this time just parameter file
     rewind(sfile_unit)
 
     ! now read the data for real
     do i = 1, num_lines
-       do j = 1, (DATAin%nopars)
-          read(sfile_unit) tmp(i,j)
-       end do ! j for parameter
+!       do j = 1, (DATAin%nopars)
+!          read(sfile_unit) tmp(i,j)
+           read(sfile_unit) PI%stepsize
+!       end do ! j for parameter
     end do ! i for combinations
     ! we also want the final step size being used
-    PI%stepsize = tmp(num_lines,1:DATAin%nopars)
-    deallocate(tmp)
+!    PI%stepsize = tmp(num_lines,1:DATAin%nopars)
+!    deallocate(tmp)
 
   end subroutine update_for_restart_simulation
   !
@@ -1154,8 +1154,11 @@ module cardamom_io
     ! openning of the file
     do n = 1, PI%npars
        write(pfile_unit) pars(n)
-       write(sfile_unit) PI%stepsize(n)
+!       write(sfile_unit) PI%stepsize(n)
     end do
+
+    ! write out the single step size applied to multivariate distribution
+    write(sfile_unit) PI%stepsize
 
     ! now add the probability
     write(pfile_unit) prob

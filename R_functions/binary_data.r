@@ -269,7 +269,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[21]=-9999     ; PARPRIORUNC[21]=-9999
     } else {
       PARPRIORS[1]=0.5        ; PARPRIORUNC[1]=0.125 # fraction of litter decomposition to Csom
-      PARPRIORS[39]=11.197440 ; PARPRIORUNC[39]=1.32313*2 # NUE prior derived from Kattge et al., (2011)
+      PARPRIORS[39]=11.197440 ; PARPRIORUNC[39]=1.32313*3 # NUE prior derived from Kattge et al., (2011)
       # other priors
       OTHERPRIORS[1] = 0.46   ; OTHERPRIORUNC[1] = 0.12*2 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
     }
@@ -326,7 +326,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[38]=OBS$soilwater ; PARPRIORUNC[38]=OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
     } else {
       PARPRIORS[41]=OBS$soilwater ; PARPRIORUNC[41]=OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
-      PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=1.32313*2 # NUE prior derived from Kattge et al., (2011)
+      PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=1.32313*3 # NUE prior derived from Kattge et al., (2011)
     } # crop or not
   } else if (modelname == "DALEC_GSI_BUCKET") {
     PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
@@ -344,7 +344,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     } else {
       PARPRIORS[1]=0.5            ; PARPRIORUNC[1]=0.125 # fraction of litter decomposition to Csom
       PARPRIORS[41]=OBS$soilwater ; PARPRIORUNC[41]=OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
-      PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=1.32313*2 # NUE prior derived from Kattge et al., (2011)
+      PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=1.32313*3 # NUE prior derived from Kattge et al., (2011)
       # other priors
       OTHERPRIORS[1] = 0.46 ; OTHERPRIORUNC[1] = 0.12*2 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
     } # crop or not
@@ -385,7 +385,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     } else {
       # PARPRIORS[2]=51.70631   ; PARPRIORUNC[2]=124.6938 # C:N root (gC/gN) Kattge et al., (2011)
       # PARPRIORS[15]=416.6667  ; PARPRIORUNC[15]=326.3762 # C:N wood (gC/gN) Kattge et al., (2011)
-      # PARPRIORS[26]=11.197440 ; PARPRIORUNC[26]=1.32313*2 # NUE prior derived from Kattge et al., (2011)
+      # PARPRIORS[26]=11.197440 ; PARPRIORUNC[26]=1.32313*3 # NUE prior derived from Kattge et al., (2011)
       # PARPRIORS[36]=1.639     ; PARPRIORUNC[36]=0.125   # Rm_leaf N**exponent (gC/gN) Reich et al., (2008)
       # PARPRIORS[37]=0.778     ; PARPRIORUNC[37]=0.133   # Rm_leaf intercept (gC/gN) Reich et al., (2008)
       # PARPRIORS[38]=1.352     ; PARPRIORUNC[38]=0.150   # Rm_root N**exponent (gC/gN) Reich et al., (2008)

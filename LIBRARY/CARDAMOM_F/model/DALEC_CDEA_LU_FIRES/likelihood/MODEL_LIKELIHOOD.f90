@@ -14,7 +14,6 @@ module model_likelihood_module
     integer :: DIAG
     integer :: PASSFAIL(100) ! allow space for 100 possible checks
     integer :: nedc ! number of edcs being assessed
-    double precision :: EDC_cost = 5d0
   end type
   type (EDCDIAGNOSTICS), save :: EDCD
 
@@ -39,8 +38,11 @@ module model_likelihood_module
     ! declare local variables
     type ( mcmc_output ) :: MCOUT_EDC
     type ( mcmc_options ) :: MCOPT_EDC
-    integer :: n, counter_local, iter
+    integer :: n, counter_local, EDC_iter
     double precision :: PEDC, ML, ML_prior
+    double precision, dimension(PI%npars+1) :: EDC_pars
+    ! declare parameters
+    integer, parameter :: EDC_iter_max = 2
 
     ! initialise output for this EDC search
     call initialise_mcmc_output(PI,MCOUT_EDC)
@@ -48,8 +50,8 @@ module model_likelihood_module
     ! set MCMC options needed for EDC run
     MCOPT_EDC%APPEND = 0
     MCOPT_EDC%nADAPT = 100
-    MCOPT_EDC%fADAPT = 0.5d0
-    MCOPT_EDC%nOUT = 10000
+    MCOPT_EDC%fADAPT = 1d0
+    MCOPT_EDC%nOUT = 50000
     MCOPT_EDC%nPRINT = 0
     MCOPT_EDC%nWRITE = 0
     ! the next two lines ensure that parameter inputs are either given or
@@ -63,10 +65,6 @@ module model_likelihood_module
     ! ... and assume we need to find random parameters
     PI%parfix = 0
 
-    ! Estimate the likelihood cost per EDC failed.
-    ! The aim is to balance the cost between fitting observations and EDCs without absolute accept/reject
-    EDCD%EDC_cost = max(EDCD%EDC_cost,(dble(DATAin%total_obs) * 0.5d0) / 24d0) ! note the 40 = number of EDCs currently in use!
-
     ! if the prior is not missing and we have not told the edc to be random
     ! keep the value
     do n = 1, PI%npars
@@ -74,55 +72,98 @@ module model_likelihood_module
     end do ! parameter loop
 
     ! set the parameter step size at the beginning
-    PI%stepsize(1:PI%npars) = 0.01d0 ! 0.0005 -> 0.005 -> 0.05 -> 0.1 TLS
+    PI%stepsize = 1d0 ; PI%beta_stepsize = 0.20d0
     PI%parstd = 1d0 ; PI%Nparstd = 0d0
     ! Covariance matrix cannot be set to zero therefore set initial value to a
     ! small positive value along to variance access
     PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+    PI%use_multivariate = .false.
     do n = 1, PI%npars
        PI%covariance(n,n) = 1d0
     end do
+
+    EDC_pars = 1d0
 
     ! if this is not a restart run, i.e. we do not already have a starting
     ! position we must being the EDC search procedure to find an ecologically
     ! consistent initial parameter set
     if (.not. restart_flag) then
 
-        ! set up edc log likelihood for MHMCMC initial run
-        PEDC = -1 ; counter_local = 0
-        do while (PEDC < 0)
+        do EDC_iter = 1, EDC_iter_max
 
-           write(*,*)"Beginning EDC search attempt"
-           ! call the MHMCMC directing to the appropriate likelihood
-           call MHMCMC(EDC_MODEL_LIKELIHOOD,PI,MCOPT_EDC,MCOUT_EDC)
+           ! set up edc log likelihood for MHMCMC initial run
+           PEDC = -1 ; counter_local = 0
+           do while (PEDC < 0)
 
-           ! store the best parameters from that loop
-           PI%parini(1:PI%npars) = MCOUT_EDC%best_pars(1:PI%npars)
-           ! turn off random selection for initial values
-           MCOPT_EDC%randparini = .false.
+              write(*,*)"Beginning EDC search attempt"
+              ! call the MHMCMC directing to the appropriate likelihood
+              call MHMCMC(EDC_MODEL_LIKELIHOOD,PI,MCOPT_EDC,MCOUT_EDC)
 
-           ! call edc likelihood function to get final edc probability
-           call edc_model_likelihood(PI,PI%parini,PEDC,ML_prior)
+              ! store the best parameters from that loop
+              PI%parini(1:PI%npars) = MCOUT_EDC%best_pars(1:PI%npars)
+              ! turn off random selection for initial values
+              MCOPT_EDC%randparini = .false.
 
-           ! keep track of attempts
-           counter_local = counter_local + 1
-           ! periodically reset the initial conditions
-           if (PEDC < 0d0 .and. mod(counter_local,3) == 0) then
+              ! call edc likelihood function to get final edc probability
+              call edc_model_likelihood(PI,PI%parini,PEDC,ML_prior)
+
+              ! keep track of attempts
+              counter_local = counter_local + 1
+              ! periodically reset the initial conditions
+              if (PEDC < 0d0 .and. mod(counter_local,3) == 0) then
+                  PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
+                  ! reset to select random starting point
+                  MCOPT_EDC%randparini = .true.
+                  ! reset the parameter step size at the beginning of each attempt
+                  PI%stepsize = 1d0 ; PI%beta_stepsize = 0.20d0
+                  PI%parstd = 1d0 ; PI%Nparstd = 0d0
+                  ! Covariance matrix cannot be set to zero therefore set initial value to a
+                  ! small positive value along to variance access
+                  PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+                  PI%use_multivariate = .false.
+                  do n = 1, PI%npars
+                     PI%covariance(n,n) = 1d0
+                  end do
+              endif
+
+           end do ! for while condition
+
+           ! check for actual likelihood score
+           call model_Likelihood(PI,PI%parini,ML,ML_prior)
+
+           if (EDC_pars(PI%npars+1) > 0d0 .or. (ML+ML_prior) > EDC_pars(PI%npars+1)) then
+
+               ! either this is our first EDC starting point or a better one, so
+               ! we best make a record of these
+               EDC_pars(1:PI%npars) = PI%parini(1:PI%npars)
+               EDC_pars(PI%npars+1) = ML+ML_prior
+
+           end if ! EDC_pars(PI%npars+1) > 0 .or. (ML+ML_prior) > EDC_pars(PI%npars+1)
+
+           ! unless this is the last time we want to reset to control switches
+           ! to reset the parameters for new staring points
+           if (EDC_iter < EDC_iter_max) then
                PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
                ! reset to select random starting point
                MCOPT_EDC%randparini = .true.
-               ! reset the parameter step size at the beginning of each attempt
-               PI%stepsize(1:PI%npars) = 0.01d0 ! 0.0005 -> 0.005 -> 0.05 -> 0.1 TLS
+               ! reset the parameter step size at the beginning of each
+               ! attempt
+               PI%stepsize = 1d0 ; PI%beta_stepsize = 0.20d0
                PI%parstd = 1d0 ; PI%Nparstd = 0d0
-               ! Covariance matrix cannot be set to zero therefore set initial value to a
+               ! Covariance matrix cannot be set to zero therefore set
+               ! initial value to a
                ! small positive value along to variance access
                PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+               PI%use_multivariate = .false.
                do n = 1, PI%npars
                   PI%covariance(n,n) = 1d0
                end do
-           endif
+           endif ! EDC_iter < EDC_iter_max
 
-        end do ! for while condition
+        end do ! EDC_iter
+
+        ! now pass the best parameter set to the inital value to the main EDC
+        PI%parini(1:PI%npars) = EDC_pars(1:PI%npars)
 
     endif ! if for restart
 
@@ -193,7 +234,8 @@ module model_likelihood_module
 !    endif
 
     ! convert to a probability
-    ML_obs_out = -0.5d0*(tot_exp*10d0)*DATAin%EDC
+!    ML_obs_out = -0.5d0*(tot_exp*10d0)*DATAin%EDC
+    ML_obs_out = -5d0*tot_exp*DATAin%EDC
 
   end subroutine edc_model_likelihood
   !
@@ -245,28 +287,28 @@ module model_likelihood_module
 
     ! Turnover of litter faster than turnover of som
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(9) > pars(8))) then
-        EDC1 = 1 ; EDCD%PASSFAIL(1)=0
+        EDC1 = 0 ; EDCD%PASSFAIL(1) = 0
     endif
 
     ! litter2som greater than som to atm rate
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(1) < pars(9))) then
-       EDC1 = 1 ; EDCD%PASSFAIL(2)=0
+       EDC1 = 0 ; EDCD%PASSFAIL(2) = 0
     endif
 
     ! turnover of foliage faster than turnover of wood
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(6) > torfol) then
-       EDC1 = 1 ; EDCD%PASSFAIL(3)=0
+       EDC1 = 0 ; EDCD%PASSFAIL(3) = 0
     end if
 
     ! root turnover greater than som turnover at mean temperature
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(7) < (pars(9)*exp(pars(10)*meantemp)))) then
-       EDC1 = 1 ; EDCD%PASSFAIL(4)=0
+       EDC1 = 0 ; EDCD%PASSFAIL(4) = 0
     endif
 
     ! GPP allocation to foliage and labile cannot be 5 orders of magnitude
     ! difference from GPP allocation to roots
     if ((EDC1 == 1 .or. DIAG == 1) .and. ((ffol+flab) > (5.*froot) .or. ((ffol+flab)*5.) < froot)) then
-       EDC1 = 1 ; EDCD%PASSFAIL(5)=0
+       EDC1 = 0 ; EDCD%PASSFAIL(5) = 0
     endif
 
     ! could always add more / remove some
@@ -346,7 +388,7 @@ module model_likelihood_module
     ! EDC 6
     ! ensure ratio between Cfoilar and Croot is less than 5
     if ((EDC2 == 1 .or. DIAG == 1) .and. (mean_pools(2) > (mean_pools(3)*5.) .or. (mean_pools(2)*5.) < mean_pools(3)) ) then
-        EDC2 = 1 ; EDCD%PASSFAIL(6) = 0
+        EDC2 = 0 ; EDCD%PASSFAIL(6) = 0
     end if
 
     ! EDC 7
@@ -362,13 +404,13 @@ module model_likelihood_module
        ! over N years. Rapid decay is dealth with in a later EDC
        do y = 1, no_years
           ! derive mean annual pools
-          mean_annual_pools(y,n)=cal_mean_annual_pools(M_POOLS,y,n,nopools,deltat,nodays+1)
+          mean_annual_pools(y,n)=cal_mean_annual_pools(M_POOLS(1:nodays+1,n),y,deltat,nodays+1)
       !    print *, y,n, mean_annual_pools(y,n)
        end do ! year loop
        ! now check the growth rate
        if ((EDC2 == 1 .or. DIAG == 1) .and. &
           ((mean_annual_pools(no_years,n)/mean_annual_pools(1,n)) > (1.+G*real(no_years)))) then
-          EDC2 = 1 ; EDCD%PASSFAIL(7+n-1) = 0
+          EDC2 = 0 ; EDCD%PASSFAIL(7+n-1) = 0
        endif
     end do ! pool loop
 
@@ -392,7 +434,7 @@ module model_likelihood_module
 
     ! SOM attractor - must be within a factor of 2 from Csom0
     ! eqiulibrium factor (in comparison with initial conditions)
-    EQF=2.0 ! JFE replaced 10 by 2 - 27/06/2018
+    EQF = 2d0 ! JFE replaced 10 by 2 - 27/06/2018
 
     ! initialise and then calculate mean gpp values
     !meangpp=sum(M_GPP(1:nodays))/real(nodays)
@@ -464,7 +506,7 @@ module model_likelihood_module
     ! iterate to check whether Fin/Fout is within EQF limits
     do n = 1, nopools
         if (abs(log(Fin(n)/Fout(n))) > log(EQF)) then
-            EDC2 = 1 ; EDCD%PASSFAIL(13+n-1) = 0
+            EDC2 = 0 ; EDCD%PASSFAIL(13+n-1) = 0
         end if
     end do
 
@@ -479,7 +521,7 @@ module model_likelihood_module
         Sprox0 = Sprox * (mean_pools(n) / mean_annual_pools(1,n))
       !  print *, n, Sprox, Sprox0
         if (abs(Sprox-Sprox0) > fin_fout_lim) then
-            EDC2 = 1 ; EDCD%PASSFAIL(19+n) = 0
+            EDC2 = 0 ; EDCD%PASSFAIL(19+n) = 0
         end if
     end do
 
@@ -564,7 +606,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  double precision function cal_mean_annual_pools(pools,year,pool_number,nopools,interval,averaging_period)
+  double precision function cal_mean_annual_pools(pools,year,interval,averaging_period)
 
     ! Function calculates the mean model pools values for each individual year
     ! in the simulation
@@ -572,26 +614,21 @@ module model_likelihood_module
     implicit none
 
     ! declare input variables
-    integer, intent(in) :: nopools     & ! how many pools in the model
-                          ,year        & ! which year are we working on
-                          ,averaging_period & ! number of days in analysis period
-                          ,pool_number   ! which pool are we currently working on
+    integer, intent(in) :: year           & ! which year are we working on
+                          ,averaging_period ! number of days in analysis period
 
-    double precision, intent(in) :: pools(averaging_period,nopools) & ! input pool state variables
-                         ,interval((averaging_period-1))              ! model time step in decimal days
+    double precision, intent(in) :: pools(averaging_period) & ! input pool state variables
+                                 ,interval((averaging_period-1))      ! model time step in decimal days
 
     ! declare local variables
-    integer :: startday, endday, c
-
-    ! initialise the output variable
-    cal_mean_annual_pools=0.
+    double precision :: startday, endday
 
     ! calculate some constants
-    startday=max(floor(365.25*(year-1)/(sum(interval)/(averaging_period-1))),1)
-    endday=floor(365.25*year/(sum(interval)/(averaging_period-1)))
+    startday = floor(365.25d0*dble(year-1)/(sum(interval)/dble(averaging_period-1)))+1
+    endday = floor(365.25d0*dble(year)/(sum(interval)/dble(averaging_period-1)))
 
     ! pool through and work out the annual mean values
-    cal_mean_annual_pools=sum(pools(startday:endday,pool_number))/(endday-startday)
+    cal_mean_annual_pools = sum(pools(startday:endday))/(endday-startday)
 
     ! ensure function returns
     return
@@ -600,7 +637,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  double precision function cal_max_annual_pools(pools,year,pool_number,nopools,interval,averaging_period)
+  double precision function cal_max_annual_pools(pools,year,interval,averaging_period)
 
     ! Function calculates the max model pools values for each individual year
     ! in the simulation
@@ -608,27 +645,21 @@ module model_likelihood_module
     implicit none
 
     ! declare input variables
-    integer, intent(in) :: nopools     & ! how many pools in the model
-                          ,year        & ! which year are we working on
-                          ,averaging_period & ! number of days in analysis period
-                          ,pool_number   ! which pool are we currently working on
+    integer, intent(in) :: year            & ! which year are we working on
+                          ,averaging_period  ! number of days in analysis period
 
-    double precision, intent(in) :: pools(averaging_period,nopools) & ! input pool state variables
-                         ,interval((averaging_period-1))      ! model time step in decimal days
+    double precision, intent(in) :: pools(averaging_period) & ! input pool state variables
+                                 ,interval((averaging_period-1))      ! model time step in decimal days
 
     ! declare local variables
-    integer :: startday, endday, c
-
-    ! initialise the output variable
-    cal_max_annual_pools=0.
+    integer :: startday, endday
 
     ! calculate some constants
-    startday=floor(365.25*(year-1)/(sum(interval)/(averaging_period-1)))+1
-    endday=floor(365.25*year/(sum(interval)/(averaging_period-1)))
-
+    startday = floor(365.25d0*dble(year-1)/(sum(interval)/dble(averaging_period-1)))+1
+    endday = floor(365.25d0*dble(year)/(sum(interval)/dble(averaging_period-1)))
 
     ! pool through and work out the annual max values
-    cal_max_annual_pools=maxval(pools(startday:endday,pool_number))
+    cal_max_annual_pools = maxval(pools(startday:endday))
 
     ! ensure function returns
     return
@@ -637,7 +668,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  double precision function expdecay2(pools,pool_number,interval,nopools,averaging_period)
+  double precision function expdecay2(pools,interval,averaging_period)
 
    ! Function to calculate the exponential decay coefficients used several EDCs.
    ! We assumpe the equation Cexp= a + b*exp(c*t)
@@ -645,54 +676,42 @@ module model_likelihood_module
    implicit none
 
    ! declare input variables
-   integer, intent(in) :: nopools     & ! how many pools in the model
-                         ,averaging_period & ! i.e. nodays + 1
-                         ,pool_number   ! which pool are we currently working on
+   integer, intent(in) :: averaging_period ! i.e. nodays + 1
 
-   double precision, intent(in) :: pools(averaging_period,nopools) & ! input pool state variables
-                                  ,interval((averaging_period-1))    ! model time step in decimal days
+   double precision, intent(in) :: pools(averaging_period) & ! input pool state variables
+                                  ,interval((averaging_period-1))      ! model time step in decimal days
 
    ! declare local variables
-   integer :: n
-   double precision :: P0    & ! initial pool value
-            ,os,aw &
-            ,MP0   & ! mean pool (year 1 to year end-2)
-            ,MP1   & ! mean pool (year 2 to year end-1)
-            ,MP0os & ! mean pool (year 1+os to year end-2+os)
-            ,MP1os & ! mean pool (year 2+os to year end-2+os)
-            ,dcdt1 & ! gradient of exponential over time in second year
-            ,dcdt0   ! gradient of exponential over time in first year
+   integer :: n, aw_int
+   integer, parameter :: os = 1 ! offset days
+   double precision :: aw, aw_1 &
+                      ,MP0   & ! mean pool (year 1 to year end-2)
+                      ,MP1   & ! mean pool (year 2 to year end-1)
+                      ,MP0os & ! mean pool (year 1+os to year end-2+os)
+                      ,MP1os & ! mean pool (year 2+os to year end-2+os)
+                      ,dcdt1 & ! gradient of exponential over time in second year
+                      ,dcdt0   ! gradient of exponential over time in first year
 
    ! declare initial values / constants
-   os = 1 ! offset in days
-   aw = floor(365d0/(sum(interval)/(averaging_period-1))) ! averaging window
-   MP0 = 0. ; MP1 = 0. ; MP0os = 0. ; MP1os = 0.
+   aw = floor(365.25d0/(sum(interval)/dble(averaging_period-1))) ! averaging window
+   aw_1 = aw ** (-1d0) ; aw_int = int(aw)
+   MP0 = 0d0 ; MP1 = 0d0 ; MP0os = 0d0 ; MP1os = 0d0
 
+   ! estimate mean stock for first year
+   MP0 = sum(pools(1:aw_int))
+   MP0 = MP0*aw_1
 
-   ! calculate mean pools within defined averaging window
-   do n = 1, int(aw)
-     MP0=MP0+pools(n,pool_number)
-   end do ! for first year
-   ! now average
-   MP0=MP0/aw
+   ! estimate mean stock for second year
+   MP1 = sum(pools((aw_int+1):(aw_int*2)))
+   MP1 = MP1*aw_1
 
-   do n = int(aw)+1, int(aw*2)
-     MP1=MP1+pools(n,pool_number)
-   end do ! for second year
-   ! now average
-   MP1=MP1/aw
+   ! estimate mean stock for first year with offset
+   MP0os = sum(pools((1+os):(aw+os)))
+   MP0os = MP0os*aw_1
 
-   do n = (1+int(os)), int(aw+os)
-     MP0os=MP0os+pools(n,pool_number)
-   end do ! for first year with offset
-   ! now average
-   MP0os=MP0os/aw
-
-   do n = (int(aw+os)+1), int(aw*2.+os)
-     MP1os=MP1os+pools(n,pool_number)
-   end do ! for second year withoffset
-   ! now average
-   MP1os=MP1os/aw
+   ! estimate mean stock for second year with offset
+   MP1os = sum(pools((aw+os+1):((aw*2)+os)))
+   MP1os = MP1os*aw_1
 
    ! derive mean gradient ratio (dcdt1/dcdt0)
    ! where dcdt1 is the numeric gradient between n+1 and n+365+1
@@ -701,13 +720,14 @@ module model_likelihood_module
    dcdt0 = MP1-MP0
 
    ! using multiple year mean to determine c
-   if ((dcdt1 > 0. .and. dcdt0 < 0.) .or. (dcdt1 < 0. .and. dcdt0 > 0.) &
-       .or. dcdt1 == 0 .or. dcdt0 == 0) then
+   if ((dcdt1 > 0d0 .and. dcdt0 < 0d0) .or. (dcdt1 < 0d0 .and. dcdt0 > 0d0) &
+       .or. dcdt1 == 0d0 .or. dcdt0 == 0d0) then
        ! then return error values
-       expdecay2 = 1
+       expdecay2 = 1d0
    else
-       expdecay2 = log(dcdt1/dcdt0) / (os*(sum(interval)/(averaging_period-1)))
+       expdecay2 = log(dcdt1/dcdt0) / (dble(os)*(sum(interval)/dble(averaging_period-1)))
    end if
+
    ! ensure return
    return
 
@@ -741,7 +761,7 @@ module model_likelihood_module
     ML_obs_out = 0d0 ; ML_prior_out = 0d0 ; EDC1 = 1d0 ; EDC2 = 1d0
     ! if == 0 EDCs are checked only until the first failure occurs
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
-    EDCD%DIAG = 1 !0
+    EDCD%DIAG = 0
 
     if (DATAin%EDC == 1) then
 
@@ -772,9 +792,6 @@ module model_likelihood_module
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
-        ! ...then add cost associated with failed EDCs which do not
-        ! reject in absolute rejection of the proposed parameter vector
-        ML_obs_out = ML_obs_out-(EDCD%EDC_cost*sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc)))
 
     end if ! DATAin%EDC == 1
 
@@ -807,16 +824,25 @@ module model_likelihood_module
 
     ! set initial value
     likelihood_p = 0d0
+
     ! now loop through defined parameters for their uncertainties
     do n = 1, npars
        ! if there is actually a value
-       if (parpriors(n) > -9999) then
-!           likelihood_p = likelihood_p-0.5d0*(log(pars(n)/parpriors(n))/log(parpriorunc(n)))**2
-           likelihood_p = likelihood_p-0.5d0*((pars(n)-parpriors(n))/parpriorunc(n))**2
+       if (parpriors(n) > -9999d0) then
+           ! uncertainty provided as +/-
+           likelihood_p = likelihood_p-((pars(n)-parpriors(n))/parpriorunc(n))**2
+           !likelihood_p = likelihood_p-0.5d0*((pars(n)-parpriors(n))/parpriorunc(n))**2
+           ! uncertainty provided as fraction of observed value
+           !likelihood_p=likelihood_p-0.5d0*((pars(n)-parpriors(n))/(parpriors(n)*parpriorunc(n)))**2
+           ! uncertainty provided in log scale
+           !likelihood_p=likelihood_p-0.5d0*(log(pars(n)/parpriors(n))/log(parpriorunc(n)))**2
        end if
     end do
 
-      ! dont for get to return
+    ! apply the 0.5 multiplicative which is part of the main likelihood calculation, here once.
+    likelihood_p = likelihood_p * 0.5d0
+
+    ! dont for get to return
     return
 
   end function likelihood_p
@@ -837,39 +863,24 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n, dn, no_years, y
-    double precision :: tot_exp, pool_dynamics, tmp_var, infini
+    double precision :: tot_exp, tmp_var, infini
     double precision, allocatable :: mean_annual_pools(:)
 
     ! initial value
     likelihood = 0d0 ; infini = 0d0
 
     ! GPP Log-likelihood
-    tot_exp = 0d0
     if (DATAin%ngpp > 0) then
-       do n = 1, DATAin%ngpp
-         dn = DATAin%gpppts(n)
-         ! note that division is the uncertainty
-         tot_exp = tot_exp+((DATAin%M_GPP(dn)-DATAin%GPP(dn))/DATAin%GPP_unc(dn))**2
-       end do
-       likelihood = likelihood-0.5d0*tot_exp!/DATAin%ngpp
+       tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
+                       /DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2)
+       likelihood = likelihood-tot_exp
     endif
 
     ! LAI log-likelihood
-    tot_exp = 0d0
-  !  print *, 'max modelled lai = ', maxval(DATAin%M_LAI)
     if (DATAin%nlai > 0) then
        ! loop split to allow vectorisation
-       do n = 1, DATAin%nlai
-         dn = DATAin%laipts(n)
-         ! if zero or greater allow calculation with min condition to prevent
-         ! errors of zero LAI which occur in managed systems
-         if (DATAin%M_LAI(dn) >= 0d0) then
-             ! note that division is the uncertainty
-             !tot_exp=tot_exp+(log(max(0.001,DATAin%M_LAI(dn))/max(0.001,DATAin%LAI(dn)))/log(DATAin%LAI_unc(dn)))**2
-             !JFE replace by absolute uncertainty ...
-             tot_exp = tot_exp+((DATAin%M_LAI(dn)-DATAin%LAI(dn))/(DATAin%LAI(dn)*DATAin%LAI_unc(dn)))**2
-         endif
-       end do
+       tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+                       /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
        do n = 1, DATAin%nlai
          dn = DATAin%laipts(n)
          ! if zero or greater allow calculation with min condition to prevent
@@ -880,67 +891,63 @@ module model_likelihood_module
              tot_exp = tot_exp+(-log(infini))
          endif
        end do
-       likelihood = likelihood-0.5d0*tot_exp!/DATAin%nlai
+       likelihood = likelihood-tot_exp
     endif
 
     ! NEE likelihood
-    tot_exp = 0d0
     if (DATAin%nnee > 0) then
-       do n = 1, DATAin%nnee
-         dn = DATAin%neepts(n)
-         ! note that division is the uncertainty
-         tot_exp = tot_exp+((DATAin%M_NEE(dn)-DATAin%NEE(dn))/DATAin%NEE_unc(dn))**2
-       end do
-       likelihood = likelihood-0.5d0*tot_exp!/DATAin%nnee
+       tot_exp = sum(((DATAin%M_NEE(DATAin%neepts(1:DATAin%nnee))-DATAin%NEE(DATAin%neepts(1:DATAin%nnee))) &
+                       /DATAin%NEE_unc(DATAin%neepts(1:DATAin%nnee)))**2)
+       likelihood = likelihood-tot_exp
     endif
 
     ! Reco likelihood
-    tot_exp = 0d0
     if (DATAin%nreco > 0) then
+       tot_exp = 0d0
        do n = 1, DATAin%nreco
          dn = DATAin%recopts(n)
          tmp_var = DATAin%M_NEE(dn)+DATAin%M_GPP(dn)
          ! note that we calculate the Ecosystem resp from GPP and NEE
          tot_exp = tot_exp+((tmp_var-DATAin%Reco(dn))/DATAin%Reco_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp!DATAin%nreco
+       likelihood = likelihood-tot_exp
     endif
 
     ! Cwood increment log-likelihood
-    tot_exp = 0d0
     if (DATAin%nwoo > 0) then
+       tot_exp = 0d0
        do n = 1, DATAin%nwoo
          dn = DATAin%woopts(n)
          ! note that division is the uncertainty
-         tot_exp = tot_exp+(log((DATAin%M_POOLS(dn,4)-DATAin%M_POOLS(dn-365,4)) &
-                           / DATAin%WOO(dn))/log(DATAin%WOO_unc(dn)))**2
+         ! tot_exp = tot_exp+(log((DATAin%M_POOLS(dn,4)-DATAin%M_POOLS(dn-365,4)) &
+         !                   / DATAin%WOO(dn))/log(DATAin%WOO_unc(dn)))**2
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%M_POOLS(dn-365,4)) / DATAin%WOO_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp!/DATAin%nwoo
+       likelihood = likelihood-tot_exp
     endif
 
     ! Cfoliage log-likelihood
-    tot_exp = 0d0
     if (DATAin%nCfol_stock > 0) then
+       tot_exp = 0d0
        do n = 1, DATAin%nCfol_stock
          dn = DATAin%Cfol_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) &
-                            / (DATAin%Cfol_stock(dn)*DATAin%Cfol_stock_unc(dn)))**2
+!         tot_exp = tot_exp+(log(DATAin%M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2d0
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp!/DATAin%nCfol_stock
+       likelihood = likelihood-tot_exp
     endif
 
     ! Annual foliar maximum
-    tot_exp = 0d0
     if (DATAin%nCfolmax_stock > 0) then
-       no_years = int(nint(sum(DATAin%deltat)/365.25))
+       tot_exp = 0d0
+       no_years = int(nint(sum(DATAin%deltat)/365.25d0))
        if (allocated(mean_annual_pools)) deallocate(mean_annual_pools)
        allocate(mean_annual_pools(no_years))
        ! determine the annual max for each pool
        do y = 1, no_years
           ! derive mean annual foliar pool
-           mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS,y,2,DATAin%nopools,DATAin%deltat,DATAin%nodays+1)
+          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
        end do ! year loop
        ! loop through the observations then
        do n = 1, DATAin%nCfolmax_stock
@@ -951,121 +958,84 @@ module model_likelihood_module
          ! load the correct year into the analysis
          tmp_var = mean_annual_pools(y)
          ! note that division is the uncertainty
-         tot_exp=tot_exp+((tmp_var-DATAin%Cfolmax_stock(dn)) &
-                          / (DATAin%Cfolmax_stock(dn)*DATAin%Cfolmax_stock_unc(dn)))**2
+         tot_exp = tot_exp+((tmp_var-DATAin%Cfolmax_stock(dn)) / DATAin%Cfolmax_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp!/DATAin%nCfolmax_stock
+       likelihood = likelihood-tot_exp
     endif
 
     ! Cwood log-likelihood (i.e. branch, stem and CR)
-    tot_exp = 0d0
     if (DATAin%nCwood_stock > 0) then
+       tot_exp = 0d0
        do n = 1, DATAin%nCwood_stock
          dn = DATAin%Cwood_stockpts(n)
          ! note that division is the uncertainty
 !         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,4)/DATAin%Cwood_stock(dn))/log(2.))**2.
-!         tot_exp=tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/(DATAin%Cwood_stock(dn)*0.20))**2.
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/(DATAin%Cwood_stock(dn)*DATAin%Cwood_stock_unc(dn)))**2
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/DATAin%Cwood_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp!/DATAin%nCwood_stock
-    endif
-
-    ! Cagb log-likelihood
-    tot_exp = 0d0
-    if (DATAin%nCagb_stock > 0) then
-       do n = 1, DATAin%nCagb_stock
-         dn = DATAin%Cagb_stockpts(n)
-         ! remove coarse root fraction from wood (pars29)
-         tmp_var = DATAin%M_POOLS(dn,4)-(DATAin%M_POOLS(dn,4)*pars(29))
-         tot_exp = tot_exp+((tmp_var-DATAin%Cagb_stock(dn))/(DATAin%Cagb_stock(dn)*DATAin%Cagb_stock_unc(dn)))**2
-       end do
-       likelihood = likelihood-0.5d0*tot_exp!/DATAin%nCagb_stock
-    endif
-
-    ! Cstem log-likelihood
-    tot_exp = 0d0
-    if (DATAin%nCstem_stock > 0) then
-       do n = 1, DATAin%nCstem_stock
-         dn = DATAin%Cstem_stockpts(n)
-         ! remove coarse root and branches from wood (pars29 and pars28)
-         tmp_var = DATAin%M_POOLS(dn,4)-( (DATAin%M_POOLS(dn,4)*pars(29))+((DATAin%M_POOLS(dn,4)*pars(28))) )
-         tot_exp = tot_exp+((tmp_var-DATAin%Cstem_stock(dn))/(DATAin%Cstem_stock(dn)*DATAin%Cstem_stock_unc(dn)))**2
-       end do
-       likelihood = likelihood-0.5d0*tot_exp!/DATAin%nCstem_stock
-    endif
-
-    ! Cbranch log-likelihood
-    tot_exp = 0d0
-    if (DATAin%nCbranch_stock > 0) then
-       do n = 1, DATAin%nCbranch_stock
-         dn = DATAin%Cbranch_stockpts(n)
-         ! extract branch component from only
-         tmp_var = DATAin%M_POOLS(dn,4)*pars(28)
-         tot_exp = tot_exp+((tmp_var-DATAin%Cbranch_stock(dn)) &
-                            /(DATAin%Cbranch_stock(dn)*DATAin%Cbranch_stock_unc(dn)))**2
-       end do
-       likelihood = likelihood-0.5d0*tot_exp!/DATAin%nCbranch_stock
-    endif
-
-    ! Ccoarseroot log-likelihood
-    tot_exp = 0d0
-    if (DATAin%nCcoarseroot_stock > 0) then
-       do n = 1, DATAin%nCcoarseroot_stock
-         dn = DATAin%Ccoarseroot_stockpts(n)
-         ! extract coarse root component from wood only
-         tmp_var = DATAin%M_POOLS(dn,4)*pars(29)
-         tot_exp = tot_exp+((tmp_var-DATAin%Ccoarseroot_stock(dn)) &
-                            /(DATAin%Ccoarseroot_stock(dn)*DATAin%Ccoarseroot_stock_unc(dn)))**2
-       end do
-       likelihood = likelihood-0.5d0*tot_exp!/DATAin%nCcoarseroot_stock
+       likelihood = likelihood-tot_exp
     endif
 
     ! Croots log-likelihood
-    tot_exp = 0d0
     if (DATAin%nCroots_stock > 0) then
+       tot_exp = 0d0
        do n = 1, DATAin%nCroots_stock
          dn = DATAin%Croots_stockpts(n)
          ! note that division is the uncertainty
 !         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,3)/DATAin%Croots_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) &
-                          / (DATAin%Croots_stock(dn)*DATAin%Croots_stock_unc(dn)))**2
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp!/DATAin%nCroots_stock
+       likelihood = likelihood-tot_exp
     endif
 
     ! Clitter log-likelihood
     ! WARNING WARNING WARNING hack in place to estimate fraction of litter pool
     ! originating from surface pools
-    tot_exp = 0d0
     if (DATAin%nClit_stock > 0) then
+       tot_exp = 0d0
        do n = 1, DATAin%nClit_stock
          dn = DATAin%Clit_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+((log((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12)))*DATAin%M_POOLS(dn,5))/DATAin%Clit_stock(dn))/log(2.))**2d0
+!         tot_exp=tot_exp+((log((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
+!                           *DATAin%M_POOLS(dn,5))/DATAin%Clit_stock(dn))/log(2.))**2d0
          tot_exp = tot_exp+(((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
-                             *(DATAin%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/(DATAin%Clit_stock(dn)*DATAin%Clit_stock_unc(dn)))**2
-      end do
-       likelihood = likelihood-0.5d0*tot_exp!/DATAin%nClit_stock
+                           *(DATAin%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2
+       end do
+       likelihood = likelihood-tot_exp
     endif
 
     ! Csom log-likelihood
-    tot_exp = 0d0
     if (DATAin%nCsom_stock > 0) then
+       tot_exp = 0d0
        do n = 1, DATAin%nCsom_stock
          dn = DATAin%Csom_stockpts(n)
          ! note that division is the uncertainty
 !         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,6)/DATAin%Csom_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/(DATAin%Csom_stock(dn)*DATAin%Csom_stock_unc(dn)))**2
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2
        end do
-       likelihood = likelihood-0.5d0*tot_exp!/DATAin%nCsom_stock
+       likelihood = likelihood-tot_exp
     endif
+
+    !
+    ! Curiously we will assess other priors here, as the tend to have to do with model state derived values
+    !
+
+    ! Ra:GPP fraction is in this model a derived property
+    if (DATAin%otherpriors(1) > 0) then
+        tot_exp = sum(DATAin%M_FLUXES(:,3)) / sum(DATAin%M_FLUXES(:,1))
+        likelihood = likelihood-((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2d0
+    end if
+
+    ! the likelihood scores for each observation are subject to multiplication
+    ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
+    ! multiple datastreams we apply this multiplication to the bulk liklihood
+    ! hear
+    likelihood = likelihood * 0.5d0
 
     ! check that log-likelihood is an actual number
     if (likelihood /= likelihood) then
        likelihood = log(infini)
     end if
     ! don't forget to return
-
     return
 
   end function likelihood

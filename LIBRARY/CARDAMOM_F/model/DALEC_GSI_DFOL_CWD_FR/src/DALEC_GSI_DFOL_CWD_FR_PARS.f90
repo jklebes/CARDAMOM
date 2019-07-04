@@ -48,7 +48,7 @@ module MODEL_PARAMETERS
        PI%parmin(1) = 0.25d0
        PI%parmax(1) = 0.75d0
 
-       ! Fraction of GPP respired
+       ! Fraction of GPP respired as maintenace respiration
        PI%parmin(2) = 0.3d0
        PI%parmax(2) = 0.7d0
 

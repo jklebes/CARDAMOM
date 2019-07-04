@@ -22,23 +22,27 @@ find_pft<- function (lat,long) {
         lcm=ncvar_get(data2,"Corine2006")
     } else if (use_lcm == "ECMWF") {
         # load global surfclim file and info file for surfclim
-        data2=nc_open("/home/lsmallma/gcel/ECMWF_ERA_MET_2000_2012/surfclim_all.nc")
+        data2=nc_open("./R_functions/global_map/ECMWF/surfclim_all.nc")
         # extract high vegetation cover fraction
-        hi_veg_frac=ncvar_get(data2, "CVH")
+        hi_veg_frac=ncvar_get(data2, "cvh")
         # extract low vegetation cover fraction
-        low_veg_frac=ncvar_get(data2, "CVL")
+        low_veg_frac=ncvar_get(data2, "cvl")
         # extract high vegetation type
-        hi_veg_type=ncvar_get(data2, "TVH")
+        hi_veg_type=ncvar_get(data2, "tvh")
         # extract low vegetation type
-        low_veg_type=ncvar_get(data2, "TVL")
+        low_veg_type=ncvar_get(data2, "tvl")
     } else {
         stop("bugger no land cover option found / set")
     }
 
     if (use_lcm == "ECMWF") {
         # download location data
-        lat_lcm=ncvar_get(data2,"lat")
-        long_lcm=ncvar_get(data2,"lon")
+        lat_lcm=ncvar_get(data2,"latitude")
+        long_lcm=ncvar_get(data2,"longitude")
+        # restructure to 2-D array which matches the actual data structure...
+        lat_dim = length(lat_lcm) ; long_dim = length(long_lcm)
+        lat_lcm = array(rep(lat_lcm, each = long_dim), dim=c(long_dim,lat_dim))
+        long_lcm = array(long_lcm, dim=c(long_dim,lat_dim))
     } else {
         # download location data
         lat_lcm=ncvar_get(data2,"lat")

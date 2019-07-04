@@ -49,34 +49,32 @@ module MCMCOPT
 
   ! information which is needed determine progress
   type COUNTERS
-    logical :: beta_step = .false.
+
     integer :: ACC      & ! total number of accepted solutions
               ,ACCLOC   & ! number of recently accepted solutions
               ,ITER     & ! number of iterations attempted
-              ,ACC_beta & ! total number of accepted solutions
-              ,ACCEDC   & ! number of EDC complient iterations
-              ,ACCLOC_beta & ! accepted parameters from the beta linked step
-              ,Nbeta
+              ,ACCEDC     ! number of EDC complient iterations
 
-    double precision :: ACCRATE, & ! local acceptance rate
-                        ACCRATE_beta ! local acceptance rate for the beta stepping
+    double precision :: ACCRATE ! local acceptance rate
 
   end type ! COUNTERS
   ! create counters type
 
   ! parameter structure defined here
   type PARAMETER_INFO
-    logical :: cov = .false.
-    double precision, allocatable, dimension(:,:) :: covariance ! parameter covariance matrix
+    logical :: cov = .false., use_multivariate = .false.
+    double precision, allocatable, dimension(:,:) :: covariance, & ! parameter covariance matrix
+                                                             iC    ! inverse covariance matrix
     double precision, allocatable, dimension(:) :: mean_par & ! mean parameter value
                                                   ,parmax   & ! maximum parameter values
                                                   ,parmin   & ! minimum parameter values
                                                   ,parini   & ! initial parameter values
                                                   ,parfix   & ! do they need fixing (i.e. randomly generated)
-                                                  ,parstd   & ! standard deviation of accepted parameter
-                                                  ,stepsize   ! parameter specific stepsize
+                                                  ,parstd     ! standard deviation of accepted parameter
 
-    double precision :: Nparstd  ! Number of samples forming standard deviation of accepted parameters
+    double precision :: Nparstd, & ! Number of samples forming standard deviation of accepted parameters
+                       stepsize, & !
+                  beta_stepsize    !
 
     integer :: npars ! number of parameters to be solved
     ! crop specific variables

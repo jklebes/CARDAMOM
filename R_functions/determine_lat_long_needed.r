@@ -33,7 +33,7 @@ determine_lat_long_needed<- function(lat,long,resolution,grid_type,remove) {
     } else if (use_lcm == "ECMWF") {
 
         # load global surfclim file and info file for surfclim
-        data2=nc_open("/home/lsmallma/gcel/ECMWF/landcover/surfclim_all.nc")
+        data2=nc_open("./R_functions/global_map/ECMWF/surfclim_all.nc")
         # extract high vegetation cover fraction
         hi_veg_frac=ncvar_get(data2, "cvh")
         # extract low vegetation cover fraction
@@ -47,6 +47,10 @@ determine_lat_long_needed<- function(lat,long,resolution,grid_type,remove) {
         lcm=hi_veg_type ; lcm[which(low_veg_frac > hi_veg_frac)]=low_veg_type[which(low_veg_frac > hi_veg_frac)]
         lat_lcm=ncvar_get(data2, "latitude")
         long_lcm=ncvar_get(data2, "longitude")
+        # restructure to 2-D array which matches the actual data structure...
+        lat_dim = length(lat_lcm) ; long_dim = length(long_lcm)
+        lat_lcm = array(rep(lat_lcm, each = long_dim), dim=c(long_dim,lat_dim))
+        long_lcm = array(long_lcm, dim=c(long_dim,lat_dim))
         long_lcm[which(long_lcm > 180)] = long_lcm[which(long_lcm > 180)]-360
 
     } else {

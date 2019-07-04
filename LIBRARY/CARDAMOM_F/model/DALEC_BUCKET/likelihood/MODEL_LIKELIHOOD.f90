@@ -865,6 +865,20 @@ module model_likelihood_module
     mean_pools(2) = cal_mean_pools(M_POOLS,2,nodays,nopools)
     mean_pools(3) = cal_mean_pools(M_POOLS,3,nodays,nopools)
 
+!    ! EDC 6
+!    ! ensure fine root : foliage ratio is between 0.1 and 0.45 (Albaugh et al
+!    ! 2004; Samuelson et al 2004; Vogel et al 2010; Akers et al 2013
+!    ! Duke ambient plots between 0.1 and 0.55
+!    ! Black et al 2009 Sitka Spruce chronosquence
+!    ! Q1 = 0.1278, median = 0.7488, mean = 1.0560 Q3 = 1.242
+!    ! lower CI = 0.04180938, upper CI = 4.06657167
+!    if (EDC2 == 1 .or. DIAG == 1) then
+!        mean_ratio(1) = mean_pools(3)/mean_pools(2)
+!        if ( mean_ratio(1) < 0.04d0 .or. mean_ratio(1) > 4.07d0 ) then
+!            EDC2 = 0 ; EDCD%PASSFAIL(24) = 0
+!        end if
+!    endif !
+
     ! EDC 6
     ! ensure fine root : foliage ratio is between 0.1 and 0.45 (Albaugh et al
     ! 2004; Samuelson et al 2004; Vogel et al 2010; Akers et al 2013
@@ -872,10 +886,12 @@ module model_likelihood_module
     ! Black et al 2009 Sitka Spruce chronosquence
     ! Q1 = 0.1278, median = 0.7488, mean = 1.0560 Q3 = 1.242
     ! lower CI = 0.04180938, upper CI = 4.06657167
+    ! Field estimates tend to be made at growing season peaks, therefore we will
+    ! consider the max(root)/max(fol) instead
     if (EDC2 == 1 .or. DIAG == 1) then
-        mean_ratio(1) = mean_pools(3)/mean_pools(2)
-        if ( mean_ratio(1) < 0.04d0 .or. mean_ratio(1) > 4.07d0 ) then
-            EDC2 = 0 ; EDCD%PASSFAIL(24) = 0
+        mean_ratio(1) = maxval(M_POOLS(1:nodays,3)) / maxval(M_POOLS(1:nodays,2))
+        if ( mean_ratio(1) < 0.0418093d0 .or. mean_ratio(1) > 4.07d0 ) then
+            EDC2 = 0 ; EDCD%PASSFAIL(25) = 0
         end if
     endif !
 

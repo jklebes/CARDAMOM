@@ -160,6 +160,7 @@ load_met_function<- function (year_to_do,varid,infile_varid,remove_lat,remove_lo
         aggregate_by = t_grid / 365 #  divide by 365 as this dataset neglects leap years, which are dealt with below
 
         if (varid[1] == "dswrf") {
+            # shortwave radiation (W/m2)
             func <- function(var_in, aggregate_by) {
                        answer = rollapply(var_in, FUN = sum, by = aggregate_by, width = aggregate_by, align = "left")
                        answer = answer * 1.157407e-05 # (1/86400)

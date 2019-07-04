@@ -8,7 +8,7 @@ plotconfidence <- function(y) {
     # which must be accounted for this this function
 
     # number of confidence ranges
-    nos_confint=10
+    nos_confint=20
     # choose colours
     colour_choices=colorRampPalette(c("pink", "red"))
     colour_choices=colour_choices(nos_confint)

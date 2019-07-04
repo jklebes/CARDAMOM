@@ -60,23 +60,9 @@ extract_copernicus_lai<- function(timestep_days,spatial_type,resolution,grid_typ
   # convert missing data back to -9999
   lai[which(is.na(lai))]=-9999.0 ; lai_unc[which(is.na(lai_unc))]=-9999.0
   # next work out how many days we should have in the year
-  doy_out=0
+  doy_out = 0 #; print(years_to_load)
   for (i in seq(1, length(years_to_load))) {
        nos_days = nos_days_in_year(years_to_load[i])
-#       # is current year a leap or not
-#       nos_days = 365
-#       mod=as.numeric(years_to_load[i])-round((as.numeric(years_to_load[i])/4))*4
-#       if (mod == 0) {
-#           nos_days = 366
-#           mod=as.numeric(years_to_load[i])-round((as.numeric(years_to_load[i])/100))*100
-#           if (mod == 0) {
-#               nos_days  = 365
-#               mod=as.numeric(years_to_load[i])-round((as.numeric(years_to_load[i])/400))*400
-#               if (mod == 0) {
-#                   nos_days  = 366
-#               }
-#           }
-#       }
        # count up days needed
        doy_out = append(doy_out,1:nos_days)
   }
@@ -84,7 +70,8 @@ extract_copernicus_lai<- function(timestep_days,spatial_type,resolution,grid_typ
 
   # just incase there is no missing data we best make sure there is a value which can be assessed
   if (length(lai_all$missing_years) == 0) { lai_all$missing_years=1066 }
-
+#print(length(lai_all$doy_obs)) ; print(length(doy_out))
+#print(lai_all$doy_obs) ; print(doy_out)
   # declare output variable
   lai_out = array(-9999, dim=length(doy_out))
   lai_unc_out = array(-9999, dim=length(doy_out))
@@ -99,9 +86,10 @@ extract_copernicus_lai<- function(timestep_days,spatial_type,resolution,grid_typ
     } # end if missing year
 
     # but we do keep counting through the total vector length which we expect
-    i = i + 1
+    i = i + 1 #; print(i) ; print(b) ; print(length(lai_all$doy_obs))
+
     # each time we come back to doy_out[i]==1 we need to count on the year
-    if (doy_out[i] == 1) {
+    if (doy_out[i] == 1 & b <= length(lai_all$doy_obs)) {
       # and if we have just been in a missing year we need to count on the missing years vector to
       if (start_year == lai_all$missing_years[a]) { a = min(length(lai_all$missing_years),a+1) }
       start_year = start_year + 1

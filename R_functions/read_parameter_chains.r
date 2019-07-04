@@ -33,7 +33,7 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
   # load the fraction of samples to lose
   frac = as.numeric(PROJECT_in$latter_sample_frac)
   # calculate the number of parameter vectors this is
-  par_vector_length = as.integer(PROJECT_in$nsubsamples*(1-frac))
+  par_vector_length = 100#as.integer(PROJECT_in$nsubsamples*(1-frac))
   # which site are we on now
   print("Beginning parameter extraction and chain merge")
   print(paste("Site = ",PROJECT_in$sites[n]," ",n," of ",PROJECT_in$nosites," ",Sys.time(),sep=""))
@@ -93,17 +93,8 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
 
   } # end of chains loop
 
-  if (PROJECT_in$model$name == "DALEC_CDEA") {
+  if (PROJECT_in$model$name == "DALEC_CDEA" || PROJECT_in$model$name == "DALEC_CDEA_LU_FIRES") {
     param_sets_out[c(12,15),,] = ((param_sets_out[c(12,15),,]-1)%%365.25)+1
-  } else if (PROJECT_in$model$name == "DALEC_CDEA_FR") {
-    #param_sets_out[c(12,15),,]=((param_sets_out[c(12,15),,]-1)%%365.25)+1
-  } else if (PROJECT_in$model$name == "AT_DALEC" & PROJECT_in$parameter_type == "pft_specific" & PROJECT_in$ctessel_pft[n] == 1) {
-    #param_sets_out[16,,]=param_sets_out[12,,]-14
-    #param_sets_out[15,,]=param_sets_out[12,,]-21
-    #for (v in seq(1,60)) {print("don't forget R parameter read modifications")}
-    #param_sets_out[c(12,15,16),,]=((param_sets_out[c(12,15,16),,]-1)%%365.25)+1
-  } else if (PROJECT_in$model$name == "AT_DALEC") {
-    #param_sets_out[c(11,14),,]=((param_sets_out[c(11,14),,]-1)%%365.25)+1
   }
 
   # return the parameter solutions

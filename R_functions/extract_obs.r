@@ -129,14 +129,14 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
     ###
 
     if (woodinc_source == "site_specific") {
-      infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-      woodinc=read_site_specific_obs("woodinc",infile)
-      woodinc_unc=read_site_specific_obs("woodinc_unc",infile)
-      if (length(woodinc_unc) == 1) {
-        # on the other hand if not then we have no uncertainty info, so use default
-        woodinc_unc = rep(-9999,times = length(woodinc))
-        woodinc_unc[which(woodinc > 0)] = 0.25 * woodinc[which(woodinc > 0)]
-      }
+        infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
+        woodinc=read_site_specific_obs("woodinc",infile)
+        woodinc_unc=read_site_specific_obs("woodinc_unc",infile)
+        if (length(woodinc_unc) == 1) {
+            # on the other hand if not then we have no uncertainty info, so use default
+            woodinc_unc = rep(-9999,times = length(woodinc))
+            woodinc_unc[which(woodinc > 0)] = 0.25 * woodinc[which(woodinc > 0)]
+        }
     } else {
       # assume no data available
       woodinc=-9999 ; woodinc_unc=-9999
@@ -147,20 +147,20 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
     ###
 
     if (GPP_source == "site_specific") {
-      infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-      if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")}
-      #	if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater.csv",sep="")}
-      if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_copy.csv",sep="")}
-      GPP = read_site_specific_obs("GPP",infile)
-      GPP_unc = read_site_specific_obs("GPP_unc",infile)
-      if (length(GPP_unc) == 1) {
-        GPP_unc = rep(-9999,times = length(GPP))
-        GPP_unc[which(GPP > 0)] = 0.5 * GPP[which(GPP > 0)] + 0.5
-        if (modelname == "ACM") {GPP_unc = rep(mean(GPP*0.5),times=length(GPP))}
-      }
+        infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
+        if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")}
+        #	if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater.csv",sep="")}
+        if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_copy.csv",sep="")}
+        GPP = read_site_specific_obs("GPP",infile)
+        GPP_unc = read_site_specific_obs("GPP_unc",infile)
+        if (length(GPP_unc) == 1) {
+            GPP_unc = rep(-9999,times = length(GPP))
+            GPP_unc[which(GPP > 0)] = 0.5 * GPP[which(GPP > 0)] + 0.5
+            if (modelname == "ACM") {GPP_unc = rep(mean(GPP*0.5),times=length(GPP))}
+        }
     } else {
-      # assume no data available
-      GPP = -9999 ; GPP_unc = -9999
+        # assume no data available
+        GPP = -9999 ; GPP_unc = -9999
     }
 
     ###
@@ -198,17 +198,17 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
     ###
 
     if (Reco_source == "site_specific") {
-      infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-      Reco=read_site_specific_obs("Reco",infile)
-      Reco_unc=read_site_specific_obs("Reco_unc",infile)
-      if (length(Reco_unc) == 1) {
-        # on the other hand if not then we have no uncertainty info, so use default
-        Reco_unc = rep(-9999,times = length(Reco))
-        Reco_unc[which(Reco > 0)] = 0.50 * Reco[which(Reco > 0)] + 0.5
-      }
+        infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
+        Reco=read_site_specific_obs("Reco",infile)
+        Reco_unc=read_site_specific_obs("Reco_unc",infile)
+        if (length(Reco_unc) == 1) {
+            # on the other hand if not then we have no uncertainty info, so use default
+            Reco_unc = rep(-9999,times = length(Reco))
+            Reco_unc[which(Reco > 0)] = 0.50 * Reco[which(Reco > 0)] + 0.5
+        }
     } else {
-      # assume no data available
-      Reco=-9999 ; Reco_unc=-9999
+        # assume no data available
+        Reco = -9999 ; Reco_unc = -9999
     }
 
     ###
@@ -222,7 +222,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
       if (length(NEE_unc) == 1) {
         # on the other hand if not then we have no uncertainty info, so use default
         NEE_unc = rep(-9999,times = length(NEE))
-        NEE_unc[which(NEE != -9999)] = 1.5 #abs(0.25 * NEE[which(NEE != -9999)]) + 1.0
+        NEE_unc[which(NEE != -9999)] = 1.5
       }
     } else {
       # assume no data available
@@ -278,6 +278,27 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
             Cwood_initial_unc = output$Cwood_stock_unc[tmp]
         } else {
             Cwood_initial = -9999 ; Cwood_initial_unc = -9999
+        }
+    } else if (Cwood_initial_source == "UoL") {
+        # this is a very bespoke modification so leave it here to avoid getting lost
+        agb = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_stable_forest_2015_2017.tif", sep=""))
+        unc = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_std_stable_forest_2015_2017.tif", sep=""))
+        # extract dimension information for the grid, note the axis switching between raster and actual array
+        xdim = dim(agb)[2] ; ydim = dim(agb)[1]
+        # extract the lat / long information needed
+        longitude = coordinates(agb)[,1] ; latitude = coordinates(agb)[,2]
+        # restructure into correct orientation
+        longitude = array(longitude, dim=c(xdim,ydim))
+        latitude = array(latitude, dim=c(xdim,ydim))
+        # break out from the rasters into arrays which we can manipulate
+        agb = array(as.vector(unlist(agb)), dim=c(xdim,ydim))
+        unc = array(as.vector(unlist(unc)), dim=c(xdim,ydim))
+        output = closest2d(1,latitude,longitude,latlon_wanted[1],latlon_wanted[2],2)
+        i1 = unlist(output)[1] ; j1 = unlist(output)[2]
+        if (is.na(agb[i1,j1]) | is.na(unc[i1,j1])) {
+           Cwood_initial = -9999 ; Cwood_initial_unc = -9999
+        } else  {
+           Cwood_initial = agb[i1,j1] ; Cwood_initial_unc = unc[i1,j1]
         }
     } else {
         # assume no data available

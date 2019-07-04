@@ -14,7 +14,8 @@ module math_functions
   public :: randn, std, idum, covariance_matrix, &
             random_normal, random_uniform, rnstrt, &
             random_multivariate, increment_covariance_matrix, &
-            par2nor, nor2par
+            par2nor, nor2par, cholesky_factor, inverse_matrix, &
+            dsymv
 
   !!!!!!!!!!!
   ! Subroutines rand(), narray() and rnstrt() are from:
@@ -146,6 +147,384 @@ module math_functions
   !
   !--------------------------------------------------------------------
   !
+  subroutine inverse_matrix(n,a,c)
+
+     !============================================================
+     ! Inverse for positive definite symmetric matrix
+     ! Method: Based on Doolittle LU factorization for Ax=b
+     ! Alex G. December 2009
+     ! Modifed for CARDAMOM: T. Luke Smallman (June 2019)
+     !                       t.l.smallman@ed.ac.uk
+     ! Warning if matrix not positive definite this function will fail
+     !-----------------------------------------------------------
+     ! input ...
+     ! a(n,n) - array of coefficients for matrix A
+     ! n      - dimension
+     ! output ...
+     ! c(n,n) - inverse matrix of A
+     ! comments ...
+     ! the original matrix a(n,n) will be destroyed
+     ! during the calculation
+     !===========================================================
+
+     implicit none
+
+     ! arguments
+     integer, intent(in) :: n
+     double precision, dimension(n,n), intent(in) :: a
+     double precision, dimension(n,n), intent(out) :: c
+
+     ! local arguments
+     double precision, dimension(n,n) :: L, U, a_local
+     double precision, dimension(n) :: b(n), d(n), x(n)
+     double precision :: coeff
+     integer :: i, j, k
+
+     ! step 0: initialization for matrices L and U and b
+     ! Fortran 90/95 allows such operations on matrices
+     L = 0d0 ; U = 0d0 ; b = 0d0 ; a_local = a
+
+     ! step 1: forward elimination
+     do k=1, n-1
+        do i = k+1,n
+           coeff = a_local(i,k)/a_local(k,k)
+           L(i,k) = coeff
+           do j = k+1,n
+              a_local(i,j) = a_local(i,j)-coeff*a_local(k,j)
+           end do
+        end do
+     end do
+
+     ! Step 2: prepare L and U matrices
+
+     ! L matrix is a matrix of the elimination coefficient
+     ! + the diagonal elements are 1.0
+
+     do i = 1,n
+        L(i,i) = 1d0
+     end do
+
+     ! U matrix is the upper triangular part of A
+     do j = 1,n
+        do i = 1,j
+           U(i,j) = a_local(i,j)
+        end do
+     end do
+
+     ! Step 3: compute columns of the inverse matrix C
+     do k=1,n
+        b(k) = 1d0
+        d(1) = b(1)
+        ! Step 3a: Solve Ld=b using the forward substitution
+        do i = 2,n
+           d(i) = b(i)
+           do j = 1,i-1
+              d(i) = d(i) - L(i,j)*d(j)
+           end do
+        end do
+        ! Step 3b: Solve Ux=d using the back substitution
+        x(n) = d(n)/U(n,n)
+        do i = n-1,1,-1
+           x(i) = d(i)
+           do j = n,i+1,-1
+              x(i) = x(i)-U(i,j)*x(j)
+           end do
+           x(i) = x(i)/U(i,i)
+        end do
+        ! Step 3c: fill the solutions x(n) into column k of C
+        do i = 1, n
+           c(i,k) = x(i)
+        end do
+        b(k) = 0d0
+     end do
+
+     ! return to user
+     return
+
+  end subroutine inverse_matrix
+  !
+  !--------------------------------------------------------------------
+  !
+  subroutine dsymv(uplo,n,alpha,A,lda,X,incx,beta,Y,incy)
+
+    ! Performs the matrix-vector operation
+    ! y := alpha*A*x + beta*y,
+    ! where alpha and beta are scalars, x and y are n element vectors and
+    ! A is an n by n symmetric matrix.
+
+    !  Arguments:
+    !  ==========
+    !
+    ! intent(in) :: UPLO
+    !          UPLO is CHARACTER*1
+    !          On entry, UPLO specifies whether the upper or lower
+    !          triangular part of the array A is to be referenced as
+    !          follows:
+    !
+    !              UPLO = 'U' or 'u'   Only the upper triangular part of A
+    !                                  is to be referenced.
+    !
+    !              UPLO = 'L' or 'l'   Only the lower triangular part of A
+    !                                  is to be referenced.!
+    !
+    ! intent(in) :: N
+    !           N is INTEGER
+    !           On entry, N specifies the order of the matrix A.
+    !           N must be at least zero.
+    !
+    ! intent(in) :: ALPHA
+    !           ALPHA is DOUBLE PRECISION.
+    !           On entry, ALPHA specifies the scalar alpha.
+    !
+    ! intent(in) :: A
+    !           A is DOUBLE PRECISION array, dimension ( LDA, N )
+    !           Before entry with  UPLO = 'U' or 'u', the leading n by n
+    !           upper triangular part of the array A must contain the upper
+    !           triangular part of the symmetric matrix and the strictly
+    !           lower triangular part of A is not referenced.
+    !           Before entry with UPLO = 'L' or 'l', the leading n by n
+    !           lower triangular part of the array A must contain the lower
+    !           triangular part of the symmetric matrix and the strictly
+    !           upper triangular part of A is not referenced.
+    !
+    ! intent(in) :: LDA
+    !           LDA is INTEGER
+    !           On entry, LDA specifies the first dimension of A as declared
+    !           in the calling (sub) program. LDA must be at least
+    !           max( 1, n ).
+    !
+    ! intent(in) :: X
+    !           X is DOUBLE PRECISION array, dimension at least
+    !           ( 1 + ( n - 1 )*abs( INCX ) ).
+    !           Before entry, the incremented array X must contain the n
+    !           element vector x.
+    !
+    ! intent(in) :: INCX
+    !           INCX is INTEGER
+    !           On entry, INCX specifies the increment for the elements of
+    !           X. INCX must not be zero.
+    !
+    ! intent(in) :: BETA
+    !           BETA is DOUBLE PRECISION.
+    !           On entry, BETA specifies the scalar beta. When BETA is
+    !           supplied as zero then Y need not be set on input.
+    !
+    ! intent(inout) :: Y
+    !           Y is DOUBLE PRECISION array, dimension at least
+    !           ( 1 + ( n - 1 )*abs( INCY ) ).
+    !           Before entry, the incremented array Y must contain the n
+    !           element vector y. On exit, Y is overwritten by the updated
+    !           vector y.
+    !
+    ! intent(in) :: INCY
+    !           INCY is INTEGER
+    !           On entry, INCY specifies the increment for the elements of
+    !           Y. INCY must not be zero.
+    !
+    !  Authors:
+    !  ========
+    !
+    ! author Univ. of Tennessee
+    ! author Univ. of California Berkeley
+    ! author Univ. of Colorado Denver
+    ! author NAG Ltd.
+    !
+    ! Date: December 2016
+    !
+    ! Further Details:
+    ! =====================
+    !
+    !  Level 2 Blas routine.
+    !  The vector and matrix arguments are not referenced when N = 0, or M = 0
+    !
+    !  -- Written on 22-October-1986.
+    !     Jack Dongarra, Argonne National Lab.
+    !     Jeremy Du Croz, Nag Central Office.
+    !     Sven Hammarling, Nag Central Office.
+    !     Richard Hanson, Sandia National Labs.
+    !
+    !  -- Code modifed for inclusion into CARDAMOM 27th June 2019
+    !     T. Luke Smallman (UoE; t.l.smallman@ed.ac.uk)
+    !
+    !  =====================================================================
+    !
+    !  -- Reference BLAS level2 routine (version 3.7.0) --
+    !  -- Reference BLAS is a software package provided by Univ. of Tennessee,    --
+    !  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
+    !     December 2016
+
+    ! Arguments
+    double precision, intent(in) :: alpha, beta
+    integer, intent(in) :: incx, incy, lda, n
+    character, intent(in) :: uplo
+    double precision, intent(in) :: X(n)
+    double precision, intent (in) :: A(lda,n)
+    double precision, intent (inout) :: Y(n)
+
+    !
+    !  =====================================================================
+    !
+
+    ! local variables
+    double precision, parameter :: one = 1d0, zero = 0d0
+    double precision :: tmp1,tmp2
+    integer :: i,info,ix,iy,j,jx,jy,kx,ky
+
+    ! Test the input parameters.
+
+    info = 0
+    if (trim(uplo) /= 'U' .and. trim(uplo) /= 'L') THEN
+        info = 1
+    else if (n <= 0) then
+        info = 2
+    else if (lda < max(1,n)) then
+        info = 5
+    else if (incx == 0) then
+        info = 7
+    else if (incy == 0) then
+        info = 10
+    end if
+    if (info /= 0) then
+        print*,"Inputs to dsymv not correct - error code = ",info
+        stop
+    end if
+
+    !     Quick return if possible.
+    if (alpha == zero .and. beta == one) return
+
+    !
+    !     Set up the start points in  X  and  Y.
+    !
+    if (incx > 0) then
+        kx = 1
+    else
+        kx = 1 - (n-1)*incx
+    end if
+    if (incy > 0) then
+        ky = 1
+    else
+        ky = 1 - (n-1)*incy
+    end if
+
+    !     Start the operations. In this version the elements of A are
+    !     accessed sequentially with one pass through the triangular part
+    !     of A.
+    !
+    !     First form  y := beta*y.
+
+    if (beta /= one) then
+        if (incy == 1) then
+            if (beta == zero) then
+                do i = 1,n
+                    y(i) = zero
+                end do
+            else
+                DO i = 1,n
+                    y(i) = beta*y(i)
+                end do
+            end if
+        else
+            iy = ky
+            if (beta == zero) then
+                do i = 1,n
+                    y(iy) = zero
+                    iy = iy + incy
+                end do
+            else
+                do i = 1,n
+                    y(iy) = beta*y(iy)
+                    iy = iy + incy
+                end do
+            end if
+        end if
+    end if
+    ! have done beta effect, no more change will occur if alpha is zero therefore return
+    if (alpha == zero) return
+
+    ! Now apply alpha component on calculation
+
+    if (trim(uplo) == 'U') then
+
+       ! Form  y  when A is stored in upper triangle.
+
+       if ((incx .eq. 1) .and. (incy .eq. 1)) then
+
+           do j = 1,n
+              tmp1 = alpha*x(j)
+              tmp2 = zero
+              do i = 1,j - 1
+                 y(i) = y(i) + tmp1*A(i,j)
+                 tmp2 = tmp2 + a(i,j)*x(i)
+              end do
+              y(j) = y(j) + tmp1*A(j,j) + alpha*tmp2
+           end do
+
+       else
+           jx = kx
+           jy = ky
+           do j = 1,n
+              tmp1 = alpha*x(jx)
+              tmp2 = zero
+              ix = kx
+              iy = ky
+              do i = 1,j - 1
+                 y(iy) = y(iy) + tmp1*a(i,j)
+                 tmp2 = tmp2 + A(i,j)*x(ix)
+                 ix = ix + incx
+                 iy = iy + incy
+              end do
+              y(jy) = y(jy) + tmp1*A(j,j) + alpha*tmp2
+              jx = jx + incx
+              jy = jy + incy
+           end do
+       end if
+
+    else ! assume we must be in lower triangle
+
+    ! Form  y  when A is stored in lower triangle.
+
+       if (incx .eq. 1 .and. incy .eq. 1) then
+           do j = 1,n
+              tmp1 = alpha*x(j)
+              tmp2 = zero
+              y(j) = y(j) + tmp1*A(j,j)
+              do i = j + 1,n
+                 y(i) = y(i) + tmp1*A(i,j)
+                 tmp2 = tmp2 + A(i,j)*x(i)
+              end do
+              y(j) = y(j) + alpha*tmp2
+           end do
+       else ! incx .eq. 1 .and. incy .eq. 1
+           jx = kx
+           jy = ky
+           do j = 1,n
+              tmp1 = alpha*x(jx)
+              tmp2 = zero
+              y(jy) = y(jy) + tmp1*A(j,j)
+              ix = jx
+              iy = jy
+              do i = j + 1,n
+                 ix = ix + incx
+                 iy = iy + incy
+                 y(iy) = y(iy) + tmp1*A(i,j)
+                 tmp2 = tmp2 + A(i,j)*x(ix)
+              end do
+              y(jy) = y(jy) + alpha*tmp2
+              jx = jx + incx
+              jy = jy + incy
+           end do
+
+       end if ! incx .eq. 1 .and. incy .eq. 1
+
+    end if ! (trim(uplo) == 'U')
+
+    ! now return finally to the user
+    return
+
+  end subroutine dsymv
+  !
+  !--------------------------------------------------------------------
+  !
   double precision function std(a,n)
 
     ! Function to determine the standard deviation
@@ -160,14 +539,6 @@ module math_functions
     ! declare local variables
     integer :: i
     double precision :: mean, sq_diff_sum, diff, variance, sample
-
-    ! if no length has been returned then provide value which ensures crash (i.e.
-    ! infinity)
-!    if (n == 0) then
-!        std = 0d0
-!        write(*,*) "no sample size has been provided to std function"
-!        return
-!    endif
 
     ! multiple use variable
     sample = dble(n)
@@ -463,7 +834,7 @@ module math_functions
     call cholesky_factor ( m, r, info )
 
     ! error checking from Cholesky Factor calculation
-    if ( info /= 0) then
+    if ( info /= 0 ) then
 
         ! Normal_multivariate - Fatal error!
         ! The variance-covariance matrix is not positive definite symmetric.

@@ -237,7 +237,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         #
 
         # convert ERA-Intrim from W/m2 to MJ/m2/day
-        if (met_source == "CHESS" | met_source == "ERA") {
+        if (met_source == "CHESS" | met_source == "ERA" | met_source == "CRUJRA") {
             var1_out = var1_out * 86400 * 1e-6
         }
 

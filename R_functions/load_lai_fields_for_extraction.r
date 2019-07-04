@@ -115,7 +115,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
     month_days = rep(31,length.out=12)
     month_days[2] = 28 ; month_days[c(4,6,9,11)] = 30
 
-    lat_done = FALSE ; missing_years=0 ; keepers=0 ; yrs=1
+    lat_done = FALSE ; missing_years = 0 ; keepers = 0 ; yrs = 1
     # loop for year here
     for (yr in seq(1, length(years_to_load))) {
       print(paste("... ",round((yr/length(years_to_load))*100,0),"% completed ",Sys.time(),sep=""))
@@ -128,6 +128,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
         for (yrr in seq(1, length(years_to_load))) {
           # create the prefix to the files we will want for a given year
           input_file_1=paste("c_gls_LAI_",years_to_load[yrr],sep="")
+#          input_file_1=paste("c_gls_LAI300_",years_to_load[yr],sep="")
           # then check whether this pattern is found in the available files
           this_year = grepl(input_file_1, avail_files) ; this_year = which(this_year == TRUE)
           # if we have at least one timestep for this year then we have some information otherwise it is missing!
@@ -142,6 +143,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
 
       # open processed modis files
       input_file_1=paste("c_gls_LAI_",years_to_load[yr],sep="")
+#      input_file_1=paste("c_gls_LAI300_",years_to_load[yr],sep="")
       # then check whether this pattern is found in the available files
       this_year = avail_files[grepl(input_file_1, avail_files)]
 
@@ -184,7 +186,14 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
 
             # read the LAI observations
             var1 = ncvar_get(data1, "LAI") # leaf area index (m2/m2)
-            var2 = ncvar_get(data1, "LAI_ERR") # standard error (m2/m2)
+            # check for erro variable
+            if (length(which(grepl("LAI_ERR",names(data1$var)) == TRUE)) > 0) {
+                var2 = ncvar_get(data1, "LAI_ERR") # standard error (m2/m2)
+            } else if (length(which(grepl("RMSE",names(data1$var)) == TRUE)) > 0) {
+                var2 = ncvar_get(data1, "RMSE") # standard error (m2/m2)
+            } else {
+                stop("LAI error variable cannot be found for copernicus...")
+            }
             # re-structure to matching orientation with the lat / long information
             var1 = var1[,dim(var1)[2]:1] ; var2 = var2[,dim(var2)[2]:1]
             # reduce spatial cover to the desired area only

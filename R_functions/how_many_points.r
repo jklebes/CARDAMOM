@@ -208,20 +208,24 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
         rm(primary_cover,secondary_cover,tertiary_cover,dims,planting_pft,keep_primary,keep_secondary,keep_tertiary)
     } else if (use_lcm == "ECMWF") {
         # load global surfclim file and info file for surfclim
-        data2=nc_open("/home/lsmallma/gcel/ECMWF_ERA_MET_2000_2012/surfclim_all.nc")
+        data2=nc_open("./R_functions/global_map/ECMWF/surfclim_all.nc")
         # extract high vegetation cover fraction
-        hi_veg_frac=ncvar_get(data2, "CVH")
+        hi_veg_frac=ncvar_get(data2, "cvh")
         # extract low vegetation cover fraction
-        low_veg_frac=ncvar_get(data2, "CVL")
+        low_veg_frac=ncvar_get(data2, "cvl")
         # extract high vegetation type
-        hi_veg_type=ncvar_get(data2, "TVH")
+        hi_veg_type=ncvar_get(data2, "tvh")
         # extract low vegetation type
-        low_veg_type=ncvar_get(data2, "TVL")
+        low_veg_type=ncvar_get(data2, "tvl")
         hi_veg_frac=as.vector(hi_veg_frac) ; low_veg_frac=as.vector(low_veg_frac)
         hi_veg_type=as.vector(hi_veg_type) ; low_veg_type=as.vector(low_veg_type)
         lcm=hi_veg_type ; lcm[which(low_veg_frac > hi_veg_frac)]=low_veg_type[which(low_veg_frac > hi_veg_frac)]
-        lat_lcm=ncvar_get(data2, "lat")
-        long_lcm=ncvar_get(data2, "lon")
+        lat_lcm=ncvar_get(data2, "latitude")
+        long_lcm=ncvar_get(data2, "longitude")
+        # restructure to 2-D array which matches the actual data structure...
+        lat_dim = length(lat_lcm) ; long_dim = length(long_lcm)
+        lat_lcm = array(rep(lat_lcm, each = long_dim), dim=c(long_dim,lat_dim))
+        long_lcm = array(long_lcm, dim=c(long_dim,lat_dim))
         long_lcm[which(long_lcm > 180)] = long_lcm[which(long_lcm > 180)]-360
     } else {
         stop("bugger no land cover option found / set")
@@ -231,7 +235,6 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
         lat_lcm=ncvar_get(data2,"lat")
         long_lcm=ncvar_get(data2,"long")
     }
-
     # house keeping
     nc_close(data2)
 
@@ -257,7 +260,7 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
         } # ECMWF or not
 
      } else {
-	      if (use_lcm == "ECMWF") {
+       if (use_lcm == "ECMWF") {
             output=lapply(1:length(lat),FUN=closest2d,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long,nos_dim=1)
             # extract the i,j values seperately
             output_i=unlist(output, use.names=FALSE)
@@ -272,7 +275,7 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
     print("Generating land sea mask")
 
     # load global shape file for land sea mask
-    landmask = shapefile("./R_functions/global_map/ne_10m_admin_0_countries.shx")
+    landmask = shapefile("./R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx")
     # just to be sure enforce the projection to WGS-84
     landmask = spTransform(landmask,CRS("+init=epsg:4326"))
     # extract lat/long information for subsetting
