@@ -13,8 +13,8 @@ module MODEL_PARAMETERS
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info(PI)
-    use MCMCOPT, only: parameter_info
+  subroutine pars_info
+    use MCMCOPT, only: PI
 
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or
@@ -26,10 +26,7 @@ module MODEL_PARAMETERS
 
     implicit none
 
-    ! declare inputs
-    type ( parameter_info ), intent(inout) :: PI
-
-    PI%npars=22;
+    !PI%npars=22;
 
     ! contains 6 fields with min max log for par and par
 

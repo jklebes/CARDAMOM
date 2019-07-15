@@ -70,8 +70,7 @@ extract_copernicus_lai<- function(timestep_days,spatial_type,resolution,grid_typ
 
   # just incase there is no missing data we best make sure there is a value which can be assessed
   if (length(lai_all$missing_years) == 0) { lai_all$missing_years=1066 }
-#print(length(lai_all$doy_obs)) ; print(length(doy_out))
-#print(lai_all$doy_obs) ; print(doy_out)
+
   # declare output variable
   lai_out = array(-9999, dim=length(doy_out))
   lai_unc_out = array(-9999, dim=length(doy_out))
@@ -86,7 +85,7 @@ extract_copernicus_lai<- function(timestep_days,spatial_type,resolution,grid_typ
     } # end if missing year
 
     # but we do keep counting through the total vector length which we expect
-    i = i + 1 #; print(i) ; print(b) ; print(length(lai_all$doy_obs))
+    i = i + 1
 
     # each time we come back to doy_out[i]==1 we need to count on the year
     if (doy_out[i] == 1 & b <= length(lai_all$doy_obs)) {

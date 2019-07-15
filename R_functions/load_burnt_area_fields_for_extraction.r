@@ -40,8 +40,8 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
 
 		# read the burnt fraction estimate
 		var1=ncvar_get(data1, "BurnedFraction")  
-		# set actual missing data to -9999
-		var1[which(is.na(as.vector(var1)))] = -9999
+		# set actual missing data to 0 as missing data is actually no fire
+		var1[which(is.na(as.vector(var1)))] = 0
 		# get time information (month in this case)
 		var2=ncvar_get(data1, "time") ; time_steps_per_year = 12
 		# approximate doy of the mid-month and allocate fire to that point
@@ -79,7 +79,7 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
 	# restructure
 	burnt_area=array(burnt_area, dim=c(length(long),length(lat),length(doy_obs)))
 
-	# output variables; adjust from kgC.m-2 to gC.m-2 
+	# output variables 
 	return(list(burnt_area=burnt_area,doy_obs=doy_obs,lat=lat,long=long,missing_years=missing_years))
 
     } else if (burnt_area_source == " " | burnt_area_source == "site_specific"){

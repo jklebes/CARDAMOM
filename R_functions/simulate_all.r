@@ -173,16 +173,17 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
     output_dim=19
     dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
     if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
-    tmp=.Fortran( "rdaleccdealufires",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
-    ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
-    ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
-    ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
-    ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
-    ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter))
-    output=tmp$out_var ; output=array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
-    aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
-    dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
-    rm(tmp) ; gc()
+        tmp=.Fortran( "rdaleccdealufires",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met))
+                                         ,pars=as.double(pars_in),out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
+                                         ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim))),lat=as.double(lat)
+                                         ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
+                                         ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
+                                         ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
+                                         ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter))
+        output=tmp$out_var ; output=array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
+        aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
+        dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
+        rm(tmp) ; gc()
   } else if (model_name == "DALEC_GSI_FR_LABILE") {
     output_dim=18
     dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
@@ -242,17 +243,18 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
     dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
     crop_file_location=paste(PROJECT$exepath,"winter_wheat_development.csv", sep="")
     if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
-    tmp=.Fortran( "rdalecgsidfolcwdfr",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
-    ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
-    ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
-    ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
-    ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
-    ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
-    ,exepath=as.character(crop_file_location),pathlength=as.integer(nchar(crop_file_location)))
-    output=tmp$out_var ; output=array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
-    aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
-    dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
-    rm(tmp) ; gc()
+        tmp=.Fortran( "rdalecgsidfolcwdfr",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met))
+                                          ,pars=as.double(pars_in),out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
+                                          ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim))),lat=as.double(lat)
+                                          ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
+                                          ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
+                                          ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
+                                          ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
+                                          ,exepath=as.character(crop_file_location),pathlength=as.integer(nchar(crop_file_location)))
+        output=tmp$out_var ; output=array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
+        aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
+        dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
+        rm(tmp) ; gc()
   } else if (model_name == "DALEC_GSI_DFOL_FROOT_FR") {
     output_dim=19
     dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
@@ -370,121 +372,125 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
   evapall=output[,,3]# kgH2Om-2.day-1
   if (model_name == "ACM" & output_dim == 6) {soilevapall=output[,,4] ; rtotall=output[,,5] ; wetevapall=output[,,6]}
   if (model_name != "ACM") {
-    rautoall=output[,,3]#
-    rhetall=output[,,4]#
-    neeall=output[,,5]#
-    woodall=output[,,6]#
-    somall=output[,,7]#
-    bioall=output[,,8]#
-    rooall=output[,,9]#
-    litall=output[,,10]#
-    laball=output[,,11]#
-    folall=output[,,12]#
-    harall=output[,,13]#
+      rautoall=output[,,3]#
+      rhetall=output[,,4]#
+      neeall=output[,,5]#
+      woodall=output[,,6]#
+      somall=output[,,7]#
+      bioall=output[,,8]#
+      rooall=output[,,9]#
+      litall=output[,,10]#
+      laball=output[,,11]#
+      folall=output[,,12]#
+      harall=output[,,13]#
+    if (grepl("CDEA",model_name)) {
+        fire = output[,,14]      
+    }
     if (grepl("GSI",model_name)) {
-      gsiall=output[,,14] # GSI combined
-      gsitempall=output[,,15]# GSI air temperature component
-      gsiphotoall=output[,,16] # GSI photoperiod
-      gsivpdall=output[,,17] # GSI VPD component
+        gsiall=output[,,14] # GSI combined
+        gsitempall=output[,,15]# GSI air temperature component
+        gsiphotoall=output[,,16] # GSI photoperiod
+        gsivpdall=output[,,17] # GSI VPD component
     }
     if (grepl("BUCKET",model_name)) {
-      evapall=output[,,18]   # kgH2Om-2.day-1}
-      rootwater=output[,,19] # kgH2Om-2 root zone
-      wSWP=output[,,20] # Estimates total hydraulic resistance (MPa)
-      litwood=output[,,21]
-      fire=output[,,23]
+        evapall=output[,,18]   # kgH2Om-2.day-1}
+        rootwater=output[,,19] # kgH2Om-2 root zone
+        wSWP=output[,,20] # Estimates total hydraulic resistance (MPa)
+        litwood=output[,,21]
+        fire=output[,,23]
     }
     if (model_name == "DALEC_GSI_DFOL_CWD_FR") {litwood=output[,,18] ; fire=output[,,19]}
     if (model_name == "DALEC_GSI_FR_LABILE") {labile_slow=output[,,18]}
     if (model_name == "DALEC_GSI_DFOL_FROOT_FR") {labroot=output[,,18] ; labwood=output[,,19]}
     if (model_name == "DALEC_GSI_DFOL_LABILE_FR") {labroot=output[,,18] ; labwood=output[,,19] ; litwood=output[,,20]}
     if (model_name == "DALECN_GSI_DFOL_LABILE_FR" | model_name == "DALECN_GSI_DFOL_LABILE_FROOT_FR") {
-      labroot=output[,,18] ; labwood=output[,,19] ; litwood=output[,,20]
-      litN=output[,,21] ; labN=output[,,22] ; DIN=output[,,23]
-      N_mineralisation=output[,,24]
+        labroot=output[,,18] ; labwood=output[,,19] ; litwood=output[,,20]
+        litN=output[,,21] ; labN=output[,,22] ; DIN=output[,,23]
+        N_mineralisation=output[,,24]
     }
     if (model_name == "DALEC_GSI_DBio_FR") {
-      somfast=output[,,18]
-      litroot=output[,,19]
-      litwood=output[,,20]
-      microact=output[,,21]
-      microbial=output[,,22]
+        somfast=output[,,18]
+        litroot=output[,,19]
+        litwood=output[,,20]
+        microact=output[,,21]
+        microbial=output[,,22]
     }
     if (model_name == "DALECN_GSI_FR") {
-      litwood=output[,,18]
-      litN=output[,,19]
-      labN=output[,,20]
-      DIN=output[,,21]
-      N_mineralisation=output[,,22]
+        litwood=output[,,18]
+        litN=output[,,19]
+        labN=output[,,20]
+        DIN=output[,,21]
+        N_mineralisation=output[,,22]
     }
     if (model_name == "DALECN_BUCKET") {
-      canopyage=output[,,14] # mean canopy age (days)
+        canopyage=output[,,14] # mean canopy age (days)
     }
   } # not acm
 
   if (model_name != "ACM") {
-    # combine outputs
-    states_all=list(lai=laiall
-      ,gpp=gppall
-      ,nee=neeall
-      ,reco=neeall+gppall
-      ,rauto=rautoall
-      ,rhet=rhetall
-      ,wood=woodall
-      ,som=somall
-      ,bio=bioall
-      ,root=rooall
-      ,lit=litall
-      ,lab=laball
-      ,fol=folall
-      ,harvest_C=harall
-      ,aNPP=aNPP)
-
-      if (model_name == "DALEC_GSI_FR_LABILE") {states_all$Clabslow=labile_slow}
-      if (model_name == "DALEC_GSI_DFOL_FROOT_FR") {states_all$labroot=labroot ; states_all$labwood=labwood}
-      if (model_name == "DALEC_GSI_DFOL_CWD_FR") {states_all$litwood=litwood ; states_all$fire=fire}
-      if (model_name == "DALEC_GSI_DFOL_LABILE_FR") {states_all$labroot=labroot ; states_all$labwood=labwood ; states_all$litwood=litwood}
-      if (model_name == "DALECN_GSI_DFOL_LABILE_FR" | model_name == "DALECN_GSI_DFOL_LABILE_FROOT_FR") {
-        states_all$labroot=labroot ; states_all$labwood=labwood
-        states_all$litwood=litwood ; states_all$litN=litN
-        states_all$labN=labN ; states_all$DIN=DIN
-        states_all$N_mineralisation=N_mineralisation
-      }
-
-      # something species for DBio model at the moment
-      if (model_name == "DALEC_GSI_DBio_FR") {
-        states_all$somfast=somfast
-        states_all$litroot=litroot
-        states_all$litwood=litwood
-        states_all$microact=microact
-        states_all$microbial=microbial
-      }
-      if (model_name == "DALECN_GSI_FR") {
-        states_all$litwood=litwood
-        states_all$litN=litN
-        states_all$labN=labN
-        states_all$DIN=DIN
-        states_all$N_mineralisation=N_mineralisation
-      }
-      if (grepl("GSI",model_name)) {
-        states_all$gsi=gsiall
-        states_all$gsi_itemp=gsitempall
-        states_all$gsi_iphoto=gsiphotoall
-        states_all$gsi_ivpd=gsivpdall
-      }
-      if (grepl("BUCKET",model_name)) {
-        states_all$litwood=litwood
-        states_all$evap=evapall   # kgH2Om-2.day-1}
-        states_all$rootwater=rootwater # kgH2Om-2 root zone
-        states_all$wSWP=wSWP
-        states_all$fire=fire
-      }
-      if (model_name == "DALECN_BUCKET") {
-        states_all$canopyage = canopyage # mean canopy age (days)
-      }
-    } else {
       # combine outputs
-      states_all=list(lai=laiall,gpp=gppall,evap=evapall,soilevap=soilevapall,Rtot=rtotall,wetcanevap=wetevapall)
+      states_all=list(lai=laiall
+                     ,gpp=gppall
+                     ,nee=neeall
+                     ,reco=neeall+gppall
+                     ,rauto=rautoall
+                     ,rhet=rhetall
+                     ,wood=woodall
+                     ,som=somall
+                     ,bio=bioall
+                     ,root=rooall
+                     ,lit=litall
+                     ,lab=laball
+                     ,fol=folall
+                     ,harvest_C=harall
+                     ,aNPP=aNPP)
+
+       if (model_name == "DALEC_CDEA_LU_FIRES") {states_all$fire = fire}
+       if (model_name == "DALEC_GSI_FR_LABILE") {states_all$Clabslow=labile_slow}
+       if (model_name == "DALEC_GSI_DFOL_FROOT_FR") {states_all$labroot=labroot ; states_all$labwood=labwood}
+       if (model_name == "DALEC_GSI_DFOL_CWD_FR") {states_all$litwood=litwood ; states_all$fire=fire}
+       if (model_name == "DALEC_GSI_DFOL_LABILE_FR") {states_all$labroot=labroot ; states_all$labwood=labwood ; states_all$litwood=litwood}
+       if (model_name == "DALECN_GSI_DFOL_LABILE_FR" | model_name == "DALECN_GSI_DFOL_LABILE_FROOT_FR") {
+           states_all$labroot=labroot ; states_all$labwood=labwood
+           states_all$litwood=litwood ; states_all$litN=litN
+           states_all$labN=labN ; states_all$DIN=DIN
+           states_all$N_mineralisation=N_mineralisation
+       }
+
+       # something species for DBio model at the moment
+       if (model_name == "DALEC_GSI_DBio_FR") {
+           states_all$somfast=somfast
+           states_all$litroot=litroot
+           states_all$litwood=litwood
+           states_all$microact=microact
+           states_all$microbial=microbial
+       }
+       if (model_name == "DALECN_GSI_FR") {
+           states_all$litwood=litwood
+           states_all$litN=litN
+           states_all$labN=labN
+           states_all$DIN=DIN
+           states_all$N_mineralisation=N_mineralisation
+       }
+       if (grepl("GSI",model_name)) {
+           states_all$gsi=gsiall
+           states_all$gsi_itemp=gsitempall
+           states_all$gsi_iphoto=gsiphotoall
+           states_all$gsi_ivpd=gsivpdall
+       }
+       if (grepl("BUCKET",model_name)) {
+           states_all$litwood=litwood
+           states_all$evap=evapall   # kgH2Om-2.day-1}
+           states_all$rootwater=rootwater # kgH2Om-2 root zone
+           states_all$wSWP=wSWP
+           states_all$fire=fire
+       }
+       if (model_name == "DALECN_BUCKET") {
+           states_all$canopyage = canopyage # mean canopy age (days)
+       }
+    } else {
+       # combine outputs
+       states_all=list(lai=laiall,gpp=gppall,evap=evapall,soilevap=soilevapall,Rtot=rtotall,wetcanevap=wetevapall)
     }
 
     # return state variable means

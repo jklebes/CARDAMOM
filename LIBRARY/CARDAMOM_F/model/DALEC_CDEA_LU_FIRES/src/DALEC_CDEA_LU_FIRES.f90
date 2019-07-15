@@ -172,26 +172,26 @@ contains
     ! p(17) = LMA
 
     ! set constants
-    pi = 3.1415927
+    pi = 3.1415927d0
 
     ! load some values
-    gpppars(4) = 1 ! foliar N
+    gpppars(4) = 1d0 ! foliar N
     gpppars(7) = lat
-    gpppars(9) = -2.0 ! leafWP-soilWP
-    gpppars(10) = 1.0 ! totaly hydraulic resistance
+    gpppars(9) = -2d0 ! leafWP-soilWP
+    gpppars(10) = 1d0 ! totaly hydraulic resistance
     gpppars(11) = pi
 
     ! assign acm parameters
     constants(1)=pars(11)
-    constants(2)=0.0156935
-    constants(3)=4.22273
-    constants(4)=208.868
-    constants(5)=0.0453194
-    constants(6)=0.37836
-    constants(7)=7.19298
-    constants(8)=0.011136
-    constants(9)=2.1001
-    constants(10)=0.789798
+    constants(2)=0.0156935d0
+    constants(3)=4.22273d0
+    constants(4)=208.868d0
+    constants(5)=0.0453194d0
+    constants(6)=0.37836d0
+    constants(7)=7.19298d0
+    constants(8)=0.011136d0
+    constants(9)=2.1001d0
+    constants(10)=0.789798d0
 
     if (start == 1) then
        ! assigning initial conditions
@@ -205,33 +205,32 @@ contains
     ! defining phenological variables
     ! release period coefficient, based on duration of labile turnover or leaf
     ! fall durations
-    wf=pars(16)*sqrt(2.)/2.
-    wl=pars(14)*sqrt(2.)/2.
+    wf=pars(16)*sqrt(2d0)/2d0
+    wl=pars(14)*sqrt(2d0)/2d0
 
     ! magnitude coefficient
-    ff=(log(pars(5))-log(pars(5)-1.))/2.
-    fl=(log(1.001)-log(0.001))/2.
+    ff=(log(pars(5))-log(pars(5)-1d0))/2d0
+    fl=(log(1.001d0)-log(0.001d0))/2d0
 
     ! set minium labile life span to one year
-    ml=1.001
+    ml=1.001d0
 
     ! offset for labile and leaf turnovers
     osf=ospolynomial(pars(5),wf)
     osl=ospolynomial(ml,wl)
 
     ! scaling to biyearly sine curve
-    sf=365.25/pi
+    sf=365.25d0/pi
 
     ! JFE added 4 May 2018 - define fire constants
-    cf(1) = 0.1         ! labile combustion efficiency
-    cf(2) = 0.9         ! foliar combustion efficiency
-    cf(3) = 0.1         ! roots combustion efficiency
-    cf(4) = 0.1         ! wood combustion efficiency
-    cf(5) = 0.5         ! litter combustion efficiency
-    cf(6) = 0.01        ! som combustion efficency
+    cf(1) = 0.1d0         ! labile combustion efficiency
+    cf(2) = 0.9d0         ! foliar combustion efficiency
+    cf(3) = 0.1d0         ! roots combustion efficiency
+    cf(4) = 0.1d0         ! wood combustion efficiency
+    cf(5) = 0.5d0         ! litter combustion efficiency
+    cf(6) = 0.01d0        ! som combustion efficency
 
-    rfac = 0.5          ! resilience factor
-
+    rfac = 0.5d0          ! resilience factor
 
     !
     ! Begin looping through each time step
@@ -247,14 +246,14 @@ contains
       gpppars(2)=met(3,n) ! max temp
       gpppars(3)=met(2,n) ! min temp
       gpppars(5)=met(5,n) ! co2
-      gpppars(6)=ceiling(met(6,n)-(deltat(n)*0.5)) ! doy
+      gpppars(6)=ceiling(met(6,n)-(deltat(n)*0.5d0)) ! doy
 !      gpppars(6)=met(6,n)
       gpppars(8)=met(4,n) ! radiation
 
       ! GPP (gC.m-2.day-1)
       FLUXES(n,1) = acm(gpppars,constants)
       ! temprate (i.e. temperature modified rate of metabolic activity))
-      FLUXES(n,2) = exp(pars(10)*0.5*(met(3,n)+met(2,n)))
+      FLUXES(n,2) = exp(pars(10)*0.5d0*(met(3,n)+met(2,n)))
       ! autotrophic respiration (gC.m-2.day-1)
       FLUXES(n,3) = pars(2)*FLUXES(n,1)
       ! leaf production rate (gC.m-2.day-1)
@@ -267,32 +266,32 @@ contains
       FLUXES(n,7) = FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,4)-FLUXES(n,5)-FLUXES(n,6)
 
       ! Labile release and leaffall factors
-      FLUXES(n,9) = (2./(pi**0.5))*(ff/wf)*exp(-((sin((met(1,n)-pars(15)+osf)/sf)*sf/wf)**2.))
-      FLUXES(n,16) = (2./(pi**0.5))*(fl/wl)*exp(-((sin((met(1,n)-pars(12)+osl)/sf)*sf/wl)**2.))
+      FLUXES(n,9) = (2d0/(pi**0.5d0))*(ff/wf)*exp(-((sin((met(1,n)-pars(15)+osf)/sf)*sf/wf)**2d0))
+      FLUXES(n,16) = (2d0/(pi**0.5d0))*(fl/wl)*exp(-((sin((met(1,n)-pars(12)+osl)/sf)*sf/wl)**2d0))
 
       !
       ! those with time dependancies
       !
 
       ! total labile release
-      FLUXES(n,8) = POOLS(n,1)*(1.-(1.-FLUXES(n,16))**deltat(n))/deltat(n)
+      FLUXES(n,8) = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
       ! total leaf litter production
-      FLUXES(n,10) = POOLS(n,2)*(1.-(1.-FLUXES(n,9))**deltat(n))/deltat(n)
+      FLUXES(n,10) = POOLS(n,2)*(1d0-(1d0-FLUXES(n,9))**deltat(n))/deltat(n)
       ! total wood production
-      FLUXES(n,11) = POOLS(n,4)*(1.-(1.-pars(6))**deltat(n))/deltat(n)
+      FLUXES(n,11) = POOLS(n,4)*(1d0-(1d0-pars(6))**deltat(n))/deltat(n)
       ! total root litter production
-      FLUXES(n,12) = POOLS(n,3)*(1.-(1.-pars(7))**deltat(n))/deltat(n)
+      FLUXES(n,12) = POOLS(n,3)*(1d0-(1d0-pars(7))**deltat(n))/deltat(n)
 
       !
       ! those with temperature AND time dependancies
       !
 
       ! respiration heterotrophic litter
-      FLUXES(n,13) = POOLS(n,5)*(1.-(1.-FLUXES(n,2)*pars(8))**deltat(n))/deltat(n)
+      FLUXES(n,13) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))/deltat(n)
       ! respiration heterotrophic som
-      FLUXES(n,14) = POOLS(n,6)*(1.-(1.-FLUXES(n,2)*pars(9))**deltat(n))/deltat(n)
+      FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9))**deltat(n))/deltat(n)
       ! litter to som
-      FLUXES(n,15) = POOLS(n,5)*(1.-(1.-pars(1)*FLUXES(n,2))**deltat(n))/deltat(n)
+      FLUXES(n,15) = POOLS(n,5)*(1d0-(1d0-pars(1)*FLUXES(n,2))**deltat(n))/deltat(n)
 
       ! calculate the NEE
       NEE(n) = (-FLUXES(n,1)+FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14))
@@ -318,14 +317,14 @@ contains
 
 
       ! JFE added 4 May 2018 - remove biomass if necessary
-      if (met(8,n) > 0.) then
-          POOLS(n+1,1) = POOLS(n+1,1)*(1.-met(8,n)) ! remove labile
-          POOLS(n+1,2) = POOLS(n+1,2)*(1.-met(8,n)) ! remove foliar
-          POOLS(n+1,4) = POOLS(n+1,4)*(1.-met(8,n)) ! remove wood
+      if (met(8,n) > 0d0) then
+          POOLS(n+1,1) = POOLS(n+1,1)*(1d0-met(8,n)) ! remove labile
+          POOLS(n+1,2) = POOLS(n+1,2)*(1d0-met(8,n)) ! remove foliar
+          POOLS(n+1,4) = POOLS(n+1,4)*(1d0-met(8,n)) ! remove wood
       end if
 
       ! calculate fire emissions and litter transfer
-      if (met(9,n) > 0.) then
+      if (met(9,n) > 0d0) then
           ! first calculate combustion / emissions fluxes in g C m-2 d-1
           FLUXES(n,18) = POOLS(n+1,1)*met(9,n)*cf(1)/deltat(n) ! labile
           FLUXES(n,19) = POOLS(n+1,2)*met(9,n)*cf(2)/deltat(n) ! foliar
@@ -335,11 +334,11 @@ contains
           FLUXES(n,23) = POOLS(n+1,6)*met(9,n)*cf(6)/deltat(n) ! som
 
           ! second calculate litter transfer fluxes in g C m-2 d-1, all pools except som
-          FLUXES(n,24) = POOLS(n+1,1)*met(9,n)*(1-cf(1))*(1-rfac)/deltat(n) ! labile into litter
-          FLUXES(n,25) = POOLS(n+1,2)*met(9,n)*(1-cf(2))*(1-rfac)/deltat(n) ! foliar into litter
-          FLUXES(n,26) = POOLS(n+1,3)*met(9,n)*(1-cf(3))*(1-rfac)/deltat(n) ! roots into litter
-          FLUXES(n,27) = POOLS(n+1,4)*met(9,n)*(1-cf(4))*(1-rfac)/deltat(n) ! wood into som
-          FLUXES(n,28) = POOLS(n+1,5)*met(9,n)*(1-cf(5))*(1-rfac)/deltat(n) ! litter into som
+          FLUXES(n,24) = POOLS(n+1,1)*met(9,n)*(1d0-cf(1))*(1d0-rfac)/deltat(n) ! labile into litter
+          FLUXES(n,25) = POOLS(n+1,2)*met(9,n)*(1d0-cf(2))*(1d0-rfac)/deltat(n) ! foliar into litter
+          FLUXES(n,26) = POOLS(n+1,3)*met(9,n)*(1d0-cf(3))*(1d0-rfac)/deltat(n) ! roots into litter
+          FLUXES(n,27) = POOLS(n+1,4)*met(9,n)*(1d0-cf(4))*(1d0-rfac)/deltat(n) ! wood into som
+          FLUXES(n,28) = POOLS(n+1,5)*met(9,n)*(1d0-cf(5))*(1d0-rfac)/deltat(n) ! litter into som
 
           ! update pools - first remove burned vegetation
           POOLS(n+1,1) = POOLS(n+1,1) - (FLUXES(n,18) + FLUXES(n,24)) * deltat(n) ! labile
@@ -354,18 +353,18 @@ contains
           FLUXES(n,17) = FLUXES(n,18)+FLUXES(n,19)+FLUXES(n,20)+FLUXES(n,21)+FLUXES(n,22)+FLUXES(n,23)
       else
           ! set fluxes to zero
-          FLUXES(n,17) = 0.
-          FLUXES(n,18) = 0.
-          FLUXES(n,19) = 0.
-          FLUXES(n,20) = 0.
-          FLUXES(n,21) = 0.
-          FLUXES(n,22) = 0.
-          FLUXES(n,23) = 0.
-          FLUXES(n,24) = 0.
-          FLUXES(n,25) = 0.
-          FLUXES(n,26) = 0.
-          FLUXES(n,27) = 0.
-          FLUXES(n,28) = 0.
+          FLUXES(n,17) = 0d0
+          FLUXES(n,18) = 0d0
+          FLUXES(n,19) = 0d0
+          FLUXES(n,20) = 0d0
+          FLUXES(n,21) = 0d0
+          FLUXES(n,22) = 0d0
+          FLUXES(n,23) = 0d0
+          FLUXES(n,24) = 0d0
+          FLUXES(n,25) = 0d0
+          FLUXES(n,26) = 0d0
+          FLUXES(n,27) = 0d0
+          FLUXES(n,28) = 0d0
       end if
 
     end do ! nodays loop
@@ -395,7 +394,7 @@ contains
              ,co2_comp_point,co2_half_sat,lai_coef,lai_const
 
     ! initial values
-    gc=0 ; pp=0 ; qq=0 ; ci=0 ; e0=0 ; dayl=0 ; cps=0 ; dec=0 ; nit=1.
+    gc=0d0 ; pp=0d0 ; qq=0d0 ; ci=0d0 ; e0=0d0 ; dayl=0d0 ; cps=0d0 ; dec=0d0 ; nit=1d0
 
     ! load driver values to correct local vars
     lai = drivers(1)
@@ -423,7 +422,7 @@ contains
     hydraulic_exponent = constants(10)
 
     ! determine temperature range
-    trange=0.5*(maxt-mint)
+    trange=0.5d0*(maxt-mint)
     ! daily canopy conductance
     gc=abs(deltaWP)**(hydraulic_exponent)/((hydraulic_temp_coef*Rtot+trange))
     ! maximum rate of temperature and nitrogen (canopy efficiency) limited photosynthesis (gC.m-2.day-1)
@@ -431,15 +430,15 @@ contains
     ! pp and qq represent limitation by diffusion and metabolites respecitively
     pp=pn/gc ; qq=co2_comp_point-co2_half_sat
     ! calculate internal CO2 concentration (ppm)
-    ci=0.5*(co2+qq-pp+((co2+qq-pp)**2.-4.*(co2*qq-pp*co2_comp_point))**0.5)
+    ci=0.5d0*(co2+qq-pp+((co2+qq-pp)**2d0-4d0*(co2*qq-pp*co2_comp_point))**0.5d0)
     ! limit maximum quantium efficiency by leaf area, hyperbola
-    e0=lai_coef*lai**2./(lai**2.+lai_const)
+    e0=lai_coef*lai**2d0/(lai**2d0+lai_const)
     ! calculate day length (hours)
-    dec = - asin( sin( 23.45 * pi / 180.0 ) * cos( 2.0 * pi * ( doy + 10.0 ) /365.0 ) )
-    sinld = sin( lat*(pi/180.0) ) * sin( dec )
-    cosld = cos( lat*(pi/180.0) ) * cos( dec )
-    aob = max(-1.0,min(1.0,sinld / cosld))
-    dayl = 12.0 * ( 1.0 + 2.0 * asin( aob ) / pi )
+    dec = - asin( sin( 23.45d0 * pi / 180d0 ) * cos( 2d0 * pi * ( doy + 10d0 ) /365d0 ) )
+    sinld = sin( lat*(pi/180d0) ) * sin( dec )
+    cosld = cos( lat*(pi/180d0) ) * cos( dec )
+    aob = max(-1d0,min(1d0,sinld / cosld))
+    dayl = 12d0 * ( 1d0 + 2d0 * asin( aob ) / pi )
 
 !--------------------------------------------------------------
 !    ! calculate day length (hours - not really hours)
@@ -483,21 +482,21 @@ contains
     double precision ::  LLog, mxc(7) ! polynomial coefficients and scaling factor
 
     ! assign polynomial terms
-    mxc(1)=(0.000023599784710)
-    mxc(2)=(0.000332730053021)
-    mxc(3)=(0.000901865258885)
-    mxc(4)=(-0.005437736864888)
-    mxc(5)=(-0.020836027517787)
-    mxc(6)=(0.126972018064287)
-    mxc(7)=(-0.188459767342504)
+    mxc(1)=(0.000023599784710d0)
+    mxc(2)=(0.000332730053021d0)
+    mxc(3)=(0.000901865258885d0)
+    mxc(4)=(-0.005437736864888d0)
+    mxc(5)=(-0.020836027517787d0)
+    mxc(6)=(0.126972018064287d0)
+    mxc(7)=(-0.188459767342504d0)
 
     ! load log of leaf / labile turnovers
-    LLog=log(L-1.)
+    LLog=log(L-1d0)
 
     ! calculate the polynomial function
-    ospolynomial=(mxc(1)*LLog**6. + mxc(2)*LLog**5. + &
-                  mxc(3)*LLog**4. + mxc(4)*LLog**3. + &
-                  mxc(5)*LLog**2. + mxc(6)*LLog     + mxc(7))*w
+    ospolynomial=(mxc(1)*LLog**6d0 + mxc(2)*LLog**5d0 + &
+                  mxc(3)*LLog**4d0 + mxc(4)*LLog**3d0 + &
+                  mxc(5)*LLog**2d0 + mxc(6)*LLog     + mxc(7))*w
 
   end function ospolynomial
 !

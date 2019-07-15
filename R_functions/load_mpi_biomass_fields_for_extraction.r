@@ -197,7 +197,7 @@ load_mpi_biomass_fields_for_extraction<-function(latlon_in,Cwood_source,Cwood_in
           }
           # cumulative so that we can find the target spot
           run_day_selector = cumsum(timestep_days)
-          obs_step = which(run_day_selector > (target_year * 365.25))[1]
+          obs_step = which(run_day_selector >= floor(target_year * 365.25))[1]
           step_of = length(timestep_days)
       } else {
           obs_step = -9999

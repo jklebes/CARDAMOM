@@ -81,7 +81,10 @@ module math_functions
 
     ! local variables
     integer :: i
-    double precision :: deviances(npars,naccepted)
+    double precision, dimension(:,:), allocatable :: deviances
+  
+    ! allocate memory to local variable
+    allocate(deviances(npars,naccepted))
 
     ! calculate components needed for covariance
     do i = 1, npars
@@ -93,6 +96,9 @@ module math_functions
     ! use matrix multiplication to estimate covariance
     ! NOTE: that naccepted-1 makes this the sample covariance
     covariance = matmul(deviances,transpose(deviances)) * dble(naccepted-1)**(-1)
+
+    ! tidy up
+    deallocate(deviances)
 
     ! return to user
     return

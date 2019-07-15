@@ -893,7 +893,7 @@ module CARBON_MODEL_MOD
                    ! greater than 21 days) or all available steps (if n < 21).
                    m = 0 ; test = 0
                    do while (test < 21)
-                      m = m+1 ; test = nint(sum(deltat((n-m):n)))
+                      m = m+1 ; test = nint(sum(deltat(max(1,(n-m)):n)))
                       if (m > (n-1)) test = 21
                    end do
                    tmp_m(n) = m
@@ -2981,11 +2981,13 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
             - (sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers) * 1d3) &
             - initial_soilwater)
 
-    if (abs(balance) > 1d-6 .or. soil_waterfrac(1) < 0d0) then
+    if (abs(balance) > 1d-6 .or. soil_waterfrac(1) < -1d-6) then
         print*,"Soil water miss-balance (mm)",balance
         print*,"Initial_soilwater",initial_soilwater
         print*,"Final_soilwater",sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers) * 1d3)
-        print*,"Rainfall",rainfall_in,"ET",corrected_ET,"underflow",underflow,"runoff",runoff
+        print*,"Top soilwater (fraction)",soil_waterfrac(1)
+        print*,"Rainfall (mm/step)",rainfall_in,"ET",corrected_ET,"underflow",underflow,"runoff",runoff
+        print*,"Rainfall (kgH2O/m2/s)",rainfall
     end if ! abs(balance) > 1d-10
 
     ! explicit return needed to ensure that function runs all needed code

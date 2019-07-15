@@ -2,9 +2,6 @@
 
 extract_globbiomass_biomass<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in,Cwood_all) {
 
-        # Check whether the current site is within the domain of the dataset
-#        if (latlon_in[1] < max(as.vector(Cwood_all$lat),na.rm=TRUE)+1 & latlon_in[1] > min(as.vector(Cwood_all$lat),na.rm=TRUE)-1 &
-#            latlon_in[2] < max(as.vector(Cwood_all$lat),na.rm=TRUE)+1 & latlon_in[1] > min(as.vector(Cwood_all$long),na.rm=TRUE)-1) {
             # find the nearest location
             output = closest2d(1,Cwood_all$lat,Cwood_all$long,latlon_in[1],latlon_in[2],2)
             i1 = unlist(output)[1] ; j1 = unlist(output)[2]
@@ -42,11 +39,5 @@ extract_globbiomass_biomass<- function(timestep_days,spatial_type,resolution,gri
             # pass the information back
             return(list(Cwood_stock=Cwood,Cwood_stock_unc=Cwood_unc))
 
-#        } else {
-
-            # pass the information back
-#            return(list(Cwood_stock=-9999, Cwood_stock_unc=-9999))
-
-#        } # is the site within the extend of the observation being fed in?
 
 } # end of function

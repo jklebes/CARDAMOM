@@ -10,7 +10,8 @@ module cardamom_io
   private
 
   ! allow access to specific functions
-  public :: write_results                   &
+  public :: write_parameters                &
+           ,write_variances                 &
            ,write_covariance_matrix         &
            ,update_for_restart_simulation   &
            ,check_for_existing_output_files &
@@ -25,7 +26,8 @@ module cardamom_io
   public :: restart_flag, accepted_so_far
 
   ! declare module level variables
-  integer :: pfile_unit, sfile_unit, cfile_unit, accepted_so_far
+  integer :: pfile_unit = 10, sfile_unit = 11, cfile_unit = 12, ifile_unit = 13
+  integer :: accepted_so_far
   ! default assumption is that this is not a restart fun
   logical :: restart_flag = .false.
 
@@ -250,7 +252,7 @@ module cardamom_io
         else
             ! or the file exists but is empty so treat it as a fresh start
             restart_flag = .false.
-            print*,"output files are present, however they are too small for a retart"
+            print*,"output files are present, however they are too small for a restart"
         endif
         ! either way we open the file up later on so now we need to close them
         call close_output_files
@@ -258,7 +260,7 @@ module cardamom_io
     elseif (.not.par_exists .and. .not.step_exists) then
 
         ! this is definitely not a restart
-        restart_flag=.false.
+        restart_flag = .false.
 
     else ! par_exists .and. step_exists
 
@@ -290,184 +292,182 @@ module cardamom_io
   !
   !--------------------------------------------------------------------
   !
-  subroutine load_emulator_parameters
-    use cardamom_structures, only: DATAin
-    use CARBON_MODEL_MOD, only: dim_1,dim_2,nos_trees,nos_inputs      &
-                               ,leftDaughter,rightDaughter,nodestatus &
-                               ,xbestsplit,nodepred,bestvar
-
-    ! subroutine opens and reads the PFT specific emulator information needed
-    ! for the randomForest regression trees generated using R package
-    ! randomForest
-    ! 10/10/2014: TLS
-
-    ! TEMPLATE FOR ALL DALEC MCMC DATA files
-    ! Static Elements: 1-100 - use as many as needed
-
-    !STATIC DATA
-    ! 1) PFT
-    ! 2) number of trees in forest
-    ! 3) dimension 1 of response surface (same as interpolation interval)
-    ! 4) dimension 2 of response surface
-    ! 5) number of model inputs needed
-
-    implicit none
-
-    ! declare input variables
-    character(350) :: infile,pft_local
-
-    ! declare local variables
-    integer :: a,i,j,start,finish  &
-              ,input_unit   ! unit number assigned to the input binary
-
-    double precision, dimension(:), allocatable :: statdat & ! static data input
-                                                  ,temp_matrix
-
-    ! specify the input file unit
-    input_unit = 13
-
-    ! convert PFT into character value for use in file search
-    if (DATAin%PFT < 10) then
-        write(pft_local,fmt='(I1)')DATAin%PFT
-    else if (DATAin%PFT >= 10) then
-        write(pft_local,fmt='(I2)')DATAin%PFT
-    else
-        print*,"Incorrect definition of PFT"
-    endif
-
-    ! assume that parameter files have been copied / linked from the
-    ! AT_DALEC/src
-    ! directory to the execution location
-    write(infile,fmt='(A)')"gpp_emulator_parameters_"//trim(pft_local)//".bin"
-    write(*,*)"Reading emulator coefficients for PFT = ",DATAin%PFT
-    write(*,*)"File path = ",trim(infile)
-
-    ! open the binary file, with direct access for binary (unformatted) at
-    ! double precision (double precision = 64 bytes)
-    open(unit=input_unit,file=trim(infile),form="UNFORMATTED",access="stream",status="old")
-    rewind(input_unit)
-
-    ! allocate memory
-    allocate(statdat(100))
-
-    ! now read the static elements (1-100)
-    do i = 1, 100 ! number of static elements
-       read(input_unit) statdat(i)
-    end do
-
-    ! allocate the default run information
-    nos_trees = int(statdat(2))
-    dim_1 = int(statdat(3))
-    dim_2 = int(statdat(4))
-    nos_inputs = int(statdat(5))
-
-    ! tidy
-    deallocate(statdat)
-
-    ! allocate some other variables
-    allocate(leftDaughter(dim_1,dim_2),rightDaughter(dim_1,dim_2) &
-            ,nodestatus(dim_1,dim_2),xbestsplit(dim_1,dim_2)      &
-            ,nodepred(dim_1,dim_2),bestvar(dim_1,dim_2)           &
-            ,temp_matrix(dim_1*dim_2))
-
-    ! read in left daughter to temp vector
-    a = 1 ; start = 100+1 ; finish = start+(dim_1*dim_2)-1
-    do i = start, finish
-       read(input_unit) temp_matrix(a)
-       a = a + 1
-    end do
-    ! restructure left daughter into matrix
-    a = 1
-    do j = 1, dim_2
-       do i = 1, dim_1
-          leftDaughter(i,j)=temp_matrix(a) ; a = a + 1
-       end do
-    end do
-
-    ! read in right daughter into temp vector
-    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
-    do i = start, finish
-       read(input_unit) temp_matrix(a)
-       a = a + 1
-    end do
-    ! restructure right daughter into matrix
-    a = 1
-    do j = 1, dim_2
-       do i = 1, dim_1
-          rightDaughter(i,j)=temp_matrix(a) ; a = a + 1
-       end do
-    end do
-
-    ! read in nodestatus into temp vector
-    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
-    do i = start, finish
-       read(input_unit) temp_matrix(a)
-       a = a + 1
-    end do
-    ! restructure nodestatus into matrix
-    a = 1
-    do j = 1, dim_2
-       do i = 1, dim_1
-          nodestatus(i,j)=temp_matrix(a) ; a = a + 1
-       end do
-    end do
-
-    ! read in xbestsplit into temp vector
-    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
-    do i = start, finish
-       read(input_unit) temp_matrix(a)
-       a = a + 1
-    end do
-    ! restructure xbestsplit into matrix
-    a = 1
-    do j = 1, dim_2
-       do i = 1, dim_1
-          xbestsplit(i,j)=temp_matrix(a) ; a = a + 1
-       end do
-    end do
-
-    ! read in nodepred into temp vector
-    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
-    do i = start, finish
-       read(input_unit) temp_matrix(a)
-       a = a + 1
-    end do
-    ! restructure nodepred into matrix
-    a = 1
-    do j = 1, dim_2
-       do i = 1, dim_1
-          nodepred(i,j)=temp_matrix(a) ; a = a + 1
-       end do
-    end do
-
-    ! read in bestvar into temp vector
-    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
-    do i = start, finish
-       read(input_unit) temp_matrix(a)
-       a = a + 1
-    end do
-    ! restructure bestvar into matrix
-    a = 1
-    do j = 1, dim_2
-       do i = 1, dim_1
-          bestvar(i,j)=temp_matrix(a) ; a = a + 1
-       end do
-    end do
-
-    ! tidy
-    deallocate(temp_matrix)
-    close(input_unit)
-
-    ! inform the user
-    write(*,*)"Have read in GPP emulator coefficients"
-
-  end subroutine load_emulator_parameters
+!  subroutine load_emulator_parameters
+!    use cardamom_structures, only: DATAin
+!    use CARBON_MODEL_MOD, only: dim_1,dim_2,nos_trees,nos_inputs      &
+!                               ,leftDaughter,rightDaughter,nodestatus &
+!                               ,xbestsplit,nodepred,bestvar
+!
+!    ! subroutine opens and reads the PFT specific emulator information needed
+!    ! for the randomForest regression trees generated using R package
+!    ! randomForest
+!    ! 10/10/2014: TLS
+!
+!    ! TEMPLATE FOR ALL DALEC MCMC DATA files
+!    ! Static Elements: 1-100 - use as many as needed
+!
+!    !STATIC DATA
+!    ! 1) PFT
+!    ! 2) number of trees in forest
+!    ! 3) dimension 1 of response surface (same as interpolation interval)
+!    ! 4) dimension 2 of response surface
+!    ! 5) number of model inputs needed
+!
+!    implicit none
+!
+!    ! declare input variables
+!    character(350) :: infile,pft_local
+!
+!    ! declare local variables
+!    integer :: a,i,j,start,finish  &
+!              ,ifile_unit   ! unit number assigned to the input binary
+!
+!    double precision, dimension(:), allocatable :: statdat & ! static data input
+!                                                  ,temp_matrix
+!
+!
+!    ! convert PFT into character value for use in file search
+!    if (DATAin%PFT < 10) then
+!        write(pft_local,fmt='(I1)')DATAin%PFT
+!    else if (DATAin%PFT >= 10) then
+!        write(pft_local,fmt='(I2)')DATAin%PFT
+!    else
+!        print*,"Incorrect definition of PFT"
+!    endif
+!
+!    ! assume that parameter files have been copied / linked from the
+!    ! AT_DALEC/src
+!    ! directory to the execution location
+!    write(infile,fmt='(A)')"gpp_emulator_parameters_"//trim(pft_local)//".bin"
+!    write(*,*)"Reading emulator coefficients for PFT = ",DATAin%PFT
+!    write(*,*)"File path = ",trim(infile)
+!
+!    ! open the binary file, with direct access for binary (unformatted) at
+!    ! double precision (double precision = 64 bytes)
+!    open(unit=ifile_unit,file=trim(infile),form="UNFORMATTED",access="stream",status="old")
+!    rewind(ifile_unit)
+!
+!    ! allocate memory
+!    allocate(statdat(100))
+!
+!    ! now read the static elements (1-100)
+!    do i = 1, 100 ! number of static elements
+!       read(ifile_unit) statdat(i)
+!    end do
+!
+!    ! allocate the default run information
+!    nos_trees = int(statdat(2))
+!    dim_1 = int(statdat(3))
+!    dim_2 = int(statdat(4))
+!    nos_inputs = int(statdat(5))
+!
+!    ! tidy
+!    deallocate(statdat)
+!
+!    ! allocate some other variables
+!    allocate(leftDaughter(dim_1,dim_2),rightDaughter(dim_1,dim_2) &
+!            ,nodestatus(dim_1,dim_2),xbestsplit(dim_1,dim_2)      &
+!            ,nodepred(dim_1,dim_2),bestvar(dim_1,dim_2)           &
+!            ,temp_matrix(dim_1*dim_2))
+!
+!    ! read in left daughter to temp vector
+!    a = 1 ; start = 100+1 ; finish = start+(dim_1*dim_2)-1
+!    do i = start, finish
+!       read(ifile_unit) temp_matrix(a)
+!       a = a + 1
+!    end do
+!    ! restructure left daughter into matrix
+!    a = 1
+!    do j = 1, dim_2
+!       do i = 1, dim_1
+!          leftDaughter(i,j)=temp_matrix(a) ; a = a + 1
+!       end do
+!    end do
+!
+!    ! read in right daughter into temp vector
+!    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
+!    do i = start, finish
+!       read(ifile_unit) temp_matrix(a)
+!       a = a + 1
+!    end do
+!    ! restructure right daughter into matrix
+!    a = 1
+!    do j = 1, dim_2
+!       do i = 1, dim_1
+!          rightDaughter(i,j)=temp_matrix(a) ; a = a + 1
+!       end do
+!    end do
+!
+!    ! read in nodestatus into temp vector
+!    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
+!    do i = start, finish
+!       read(ifile_unit) temp_matrix(a)
+!       a = a + 1
+!    end do
+!    ! restructure nodestatus into matrix
+!    a = 1
+!    do j = 1, dim_2
+!       do i = 1, dim_1
+!          nodestatus(i,j)=temp_matrix(a) ; a = a + 1
+!       end do
+!    end do
+!
+!    ! read in xbestsplit into temp vector
+!    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
+!    do i = start, finish
+!       read(ifile_unit) temp_matrix(a)
+!       a = a + 1
+!    end do
+!    ! restructure xbestsplit into matrix
+!    a = 1
+!    do j = 1, dim_2
+!       do i = 1, dim_1
+!          xbestsplit(i,j)=temp_matrix(a) ; a = a + 1
+!       end do
+!    end do
+!
+!    ! read in nodepred into temp vector
+!    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
+!    do i = start, finish
+!       read(ifile_unit) temp_matrix(a)
+!       a = a + 1
+!    end do
+!    ! restructure nodepred into matrix
+!    a = 1
+!    do j = 1, dim_2
+!       do i = 1, dim_1
+!          nodepred(i,j)=temp_matrix(a) ; a = a + 1
+!       end do
+!    end do
+!
+!    ! read in bestvar into temp vector
+!    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
+!    do i = start, finish
+!       read(ifile_unit) temp_matrix(a)
+!       a = a + 1
+!    end do
+!    ! restructure bestvar into matrix
+!    a = 1
+!    do j = 1, dim_2
+!       do i = 1, dim_1
+!          bestvar(i,j)=temp_matrix(a) ; a = a + 1
+!       end do
+!    end do
+!
+!    ! tidy
+!    deallocate(temp_matrix)
+!    close(ifile_unit)
+!
+!    ! inform the user
+!    write(*,*)"Have read in GPP emulator coefficients"
+!
+!  end subroutine load_emulator_parameters
   !
   !--------------------------------------------------------------------
   !
   subroutine open_output_files(parname,stepname,covname)
 
-    ! subroutine opens the needed output files and destroys any previously
+    ! Subroutine opens the needed output files and destroys any previously
     ! existing files with the same name, just in case mind!
     ! NOTE: that is unless I have not remove the 'UNKNOWN' status in which case
     ! then the files are appended to
@@ -476,19 +476,20 @@ module cardamom_io
 
     ! declare input variables
     character(350), intent(in) :: parname, stepname, covname
-    ! declare local variables
 
-    ! parameter file unit
-    pfile_unit = 10
-    ! step file unit
-    sfile_unit = 11
-    ! covariance file unit
-    cfile_unit = 12
+    ! declare local variables
+    integer :: ios
 
     ! open both files now
-    open(pfile_unit,file=trim(parname),form="UNFORMATTED",access="stream",status="UNKNOWN")
-    open(sfile_unit,file=trim(stepname),form="UNFORMATTED",access="stream",status="UNKNOWN")
-    open(cfile_unit,file=trim(covname),form="UNFORMATTED",access="stream",status="UNKNOWN")
+
+    open(pfile_unit,file=trim(parname),form="UNFORMATTED",access="stream",status="UNKNOWN",iostat=ios)
+    if (ios /= 0) print*,"error ",ios," openning file",trim(parname)
+    open(sfile_unit,file=trim(stepname),form="UNFORMATTED",access="stream",status="UNKNOWN",iostat=ios)
+    if (ios /= 0) print*,"error ",ios," openning file",trim(parname)
+    open(cfile_unit,file=trim(covname),form="UNFORMATTED",access="stream",status="UNKNOWN",iostat=ios)
+    if (ios /= 0) print*,"error ",ios," openning file",trim(parname)
+
+    return
 
   end subroutine open_output_files
   !
@@ -519,7 +520,6 @@ module cardamom_io
     integer :: a,b,c,d,e,f,g,h,i,j,k,l,m,o,x,y,z,day,s &
               ,start      &
               ,finish     &
-              ,input_unit & ! unit number assigned to the input binary
               ,totcol     & ! total number of columns (met + obs)
               ,totread      ! total number of records already read
 
@@ -527,22 +527,19 @@ module cardamom_io
                                         ,mettemp & ! met data input
                                         ,obstemp   ! obs data input
 
-    ! specify the input file unit
-    input_unit = 12
-
     write(*,*)"Input file to be read = ", trim(infile)
 
     ! open the binary file, with direct access for binary (unformatted) at
     ! double precision (double precision = 64 bytes)
-    open(unit=input_unit,file=trim(infile),form="UNFORMATTED",access="stream",status="old")
-    rewind(input_unit)
+    open(unit=ifile_unit,file=trim(infile),form="UNFORMATTED",access="stream",status="old")
+    rewind(ifile_unit)
 
     ! allocate memory
     allocate(statdat(100))
 
     ! now read the static elements (1-100)
     do i = 1, 100 ! number of static elements
-       read(input_unit) statdat(i)
+       read(ifile_unit) statdat(i)
     end do
 
     ! allocate the default run information
@@ -573,28 +570,28 @@ module cardamom_io
     ! read in parameter information
     a = 1
     do i = 101, 200
-       read(input_unit) DATAin%parpriors(a)
+       read(ifile_unit) DATAin%parpriors(a)
        a = a + 1
     end do
 
     ! read in parameter uncertainty
     a = 1
     do i = 201, 300
-       read(input_unit) DATAin%parpriorunc(a)
+       read(ifile_unit) DATAin%parpriorunc(a)
        a = a + 1
     end do
 
     ! read in 'other' parameter priors
     a = 1
     do i = 301, 400
-       read(input_unit) DATAin%otherpriors(a)
+       read(ifile_unit) DATAin%otherpriors(a)
        a = a + 1
     end do
 
     ! read in 'other' parameter priors uncertainties
     a = 1
     do i = 401, 500
-       read(input_unit) DATAin%otherpriorunc(a)
+       read(ifile_unit) DATAin%otherpriorunc(a)
        a = a + 1
     end do
 
@@ -667,13 +664,13 @@ module cardamom_io
        finish = start+DATAin%nomet-1
        b = 1
        do i = start,finish
-          read(input_unit) mettemp(b) ; b=b+1
+          read(ifile_unit) mettemp(b) ; b=b+1
        end do ! met bit
        start = ((day-1)*(totcol))+totread+finish+1
        finish = start+DATAin%noobs-1
        b = 1
        do i = start,finish
-          read(input_unit) obstemp(b) ; b=b+1
+          read(ifile_unit) obstemp(b) ; b=b+1
        end do ! obs bit
        ! assign the extracted met / obs to their type and keep count of how many
        ! of these are actually contain data
@@ -771,7 +768,7 @@ module cardamom_io
     end do
 
     ! close open binary
-    close(input_unit)
+    close(ifile_unit)
 
     ! clean up memory
     deallocate(obstemp,mettemp)
@@ -880,8 +877,8 @@ module cardamom_io
   !
   !------------------------------------------------------------------
   !
-  subroutine READ_PARI_DATA (PI, infile)
-    use MCMCOPT, only: PARAMETER_INFO, initialise_mcmc_output
+  subroutine read_pari_data(infile)
+    use MCMCOPT, only: PI
     use MODEL_PARAMETERS, only: pars_info
     use cardamom_structures, only: DATAin
 
@@ -891,7 +888,6 @@ module cardamom_io
     implicit none
 
     ! declare input variables
-    type ( parameter_info ), intent(inout) :: PI
     character(350), intent(in) :: infile
 
     ! declare local variables
@@ -918,17 +914,18 @@ module cardamom_io
     ! Begin allocating parameter info
     PI%npars = DATAin%nopars
     allocate(PI%parmin(PI%npars),PI%parmax(PI%npars),PI%parini(PI%npars) &
-            ,PI%parfix(PI%npars),PI%parstd(PI%npars) &
+            ,PI%parfix(PI%npars),PI%parstd(PI%npars),PI%beta_stepsize(PI%npars) &
             ,PI%covariance(PI%npars,PI%npars),PI%mean_par(PI%npars) &
-            ,PI%iC(PI%npars,PI%npars))
+            ,PI%iC(PI%npars,PI%npars),PI%stepsize(PI%npars))
 
     ! force zero
-    PI%parmin(:) = 0d0 ; PI%parmax(:) = 0d0 ; PI%parini(:) = 0d0
-    PI%parfix(:) = 0d0 ; PI%parstd(:) = 0d0
+    PI%parmin = 0d0 ; PI%parmax = 0d0 ; PI%parini = 0d0
+    PI%parfix = 0d0 ; PI%parstd = 0d0 
+    PI%stepsize = 0d0 ; PI%beta_stepsize = 0d0
     PI%covariance = 0d0 ; PI%iC = 0d0
 
     ! load parameter information
-    call pars_info(PI)
+    call pars_info
 
 !    ! load response surface if using the AT-DALEC model
 !    if (DATAin%ID == 3 .or. DATAin%ID == 4) then
@@ -939,20 +936,20 @@ module cardamom_io
     PI%stepsize = 1d0 ; PI%beta_stepsize = 0.01d0 ; PI%parstd = 1d0 ; PI%Nparstd = 0d0
     ! Covariance matrix cannot be set to zero therefore set initial value to a
     ! small positive value along to variance access
-    PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+    PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false. ; PI%use_multivariate = .false.
     do i = 1, PI%npars
        PI%covariance(i,i) = 1d0
     end do
 
     ! report back to user
-    write(*,*) "Done with parameter definitions"
+    write(*,*) "Created field for parameter and covariances"
 
-  end subroutine READ_PARI_DATA
+  end subroutine read_pari_data
   !
   !------------------------------------------------------------------
   !
-    subroutine read_options(MCO,solutions_wanted,freq_print,freq_write,outfile)
-    use MCMCOPT, only: MCMC_OPTIONS
+  subroutine read_options(solutions_wanted,freq_print,freq_write,outfile)
+    use MCMCOPT, only: MCO
 
     ! loads required options about the MHMCMC either form hardcoded sources or
     ! from variables which were read form the command line
@@ -960,14 +957,13 @@ module cardamom_io
     implicit none
 
     ! declare input variables
-    type( mcmc_options ), intent(inout) :: MCO
     character(350), intent(in) :: outfile
     integer, intent(in) :: solutions_wanted, freq_print, freq_write
 
     ! defining hardcoded MCMC options
     MCO%append = 1
-    MCO%nADAPT = 1000 ! TLS: 1000 -> 5000 -> 10000
-    MCO%fADAPT = 1d0 !0.5d0
+    MCO%nADAPT = 10000 ! TLS: 1000 -> 5000 -> 10000
+    MCO%fADAPT = 0.5d0
     MCO%randparini = .false.
     MCO%returnpars = .false.
     MCO%fixedpars  = .false.
@@ -1006,7 +1002,7 @@ module cardamom_io
   !-------------------------------------------------------------------
   !
   subroutine update_for_restart_simulation
-    use MCMCOPT, only: MCO, PI
+    use MCMCOPT, only: PI
     use cardamom_structures, only: DATAin
     use math_functions, only: std, covariance_matrix, inverse_matrix, par2nor
 
@@ -1056,7 +1052,7 @@ module cardamom_io
     end do ! i for combinations
 
     ! make note of how many have already been accepted
-    accepted_so_far = num_lines*MCO%nWRITE
+    accepted_so_far = num_lines
     ! from this extract the final parameter set and load into
     PI%parini(1:DATAin%nopars) = tmp(num_lines,1:DATAin%nopars)
     ! we must also approximate the covariance matrix
@@ -1067,7 +1063,8 @@ module cardamom_io
     ! estimate variance-covariance matrix based on currently stored output
     call covariance_matrix(norparvec(1:PI%npars,1:num_lines),PI%mean_par,PI%npars,num_lines,PI%covariance)
     do i = 1, PI%npars
-       PI%parstd = sqrt(PI%covariance(i,i))
+       PI%parstd(i) = sqrt(PI%covariance(i,i))
+       PI%beta_stepsize(i) = PI%covariance(i,i)
     end do
     ! estimate status of the inverse covariance matrix also
     call inverse_matrix( PI%npars, PI%covariance, PI%iC )
@@ -1086,65 +1083,91 @@ module cardamom_io
        num_lines = num_lines + 1
     enddo
 
-!    ! update num_lines by number of parameters
-!    num_lines = num_lines/(DATAin%nopars)
-!    ! allocate memory
-!    allocate(tmp(num_lines,(DATAin%nopars)))
+    ! update num_lines by number of parameters
+    num_lines = num_lines/(DATAin%nopars)
+    ! allocate memory
+    allocate(tmp(num_lines,(DATAin%nopars)))
     ! rewind, this time just parameter file
     rewind(sfile_unit)
 
     ! now read the data for real
     do i = 1, num_lines
-!       do j = 1, (DATAin%nopars)
-!          read(sfile_unit) tmp(i,j)
-           read(sfile_unit) PI%stepsize
-!       end do ! j for parameter
+       do j = 1, (DATAin%nopars)
+          read(sfile_unit) tmp(i,j)
+       end do ! j for parameter
     end do ! i for combinations
     ! we also want the final step size being used
-!    PI%stepsize = tmp(num_lines,1:DATAin%nopars)
-!    deallocate(tmp)
+    PI%beta_stepsize = tmp(num_lines,1:DATAin%nopars)
+
+    deallocate(tmp)
 
   end subroutine update_for_restart_simulation
   !
   !------------------------------------------------------------------
   !
-  subroutine write_covariance_matrix (PI)
-    use MCMCOPT, only: PARAMETER_INFO
+  subroutine write_covariance_matrix(covariance,npars)
 
     ! subroutine writes MCMC accepted parameters and step values to binary files
 
     implicit none
 
-    ! declare input variables
-    type ( parameter_info ), intent(in) :: PI
+    ! arguments
+    integer, intent(in) :: npars
+    double precision, dimension(npars,npars), intent(in) ::covariance
 
     ! declare local variables
     integer :: i,j
 
     ! write out the file. Its binary format has already been determined at the
     ! openning of the file
-    do i = 1, PI%npars
-       do j = 1, PI%npars
-       write(cfile_unit) PI%covariance(i,j)
+
+    do i = 1, npars
+       do j = 1, npars
+          write(cfile_unit) covariance(i,j)
        end do
     end do
 
-    ! close will occur at the end of the MCMC
+    return
 
   end subroutine write_covariance_matrix
   !
   !------------------------------------------------------------------
   !
-  subroutine write_results (pars,prob,PI)
-    use MCMCOPT, only: PARAMETER_INFO
-
-    ! subroutine writes MCMC accepted parameters and step values to binary files
+  subroutine write_variances(variance,npars)
+    
+    ! subroutine writes parameter variance for corresponding parameter values
 
     implicit none
 
     ! declare input variables
-    type ( parameter_info ), intent(in) :: PI
-    double precision, dimension(PI%npars), intent(in) :: pars
+    integer, intent(in) :: npars
+    double precision, dimension(npars), intent(in) :: variance
+    
+    ! declare local variables
+    integer :: n
+
+    ! write out the file. Its binary format has already been determined at the
+    ! openning of the file
+
+    do n = 1, npars
+       write(sfile_unit) variance(n)
+    end do
+   
+    return
+
+  end subroutine write_variances
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine write_parameters(pars,prob,npars)
+
+    ! subroutine writes parameter values to binary file`
+
+    implicit none
+
+    ! declare input variables
+    integer, intent(in) :: npars
+    double precision, dimension(npars), intent(in) :: pars
     double precision, intent(in) :: prob
 
     ! declare local variables
@@ -1152,18 +1175,56 @@ module cardamom_io
 
     ! write out the file. Its binary format has already been determined at the
     ! openning of the file
-    do n = 1, PI%npars
-       write(pfile_unit) pars(n)
-!       write(sfile_unit) PI%stepsize(n)
-    end do
 
-    ! write out the single step size applied to multivariate distribution
-    write(sfile_unit) PI%stepsize
+    do n = 1, npars
+       write(pfile_unit) pars(n)
+    end do
 
     ! now add the probability
     write(pfile_unit) prob
 
     ! close will occur at the end of the MCMC
+
+    ! return back 
+    return
+
+  end subroutine write_parameters
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine write_results(pars,prob)
+    use MCMCOPT, only: PI, MCO
+
+    ! subroutine writes MCMC accepted parameters and step values to binary files
+
+    implicit none
+
+    ! declare input variables
+    double precision, dimension(PI%npars), intent(in) :: pars
+    double precision, intent(in) :: prob
+
+    ! declare local variables
+    integer :: n, val
+
+     ! check that variable linked...
+    !inquire(file=MCO%outfile, number = val)
+
+    ! write out the file. Its binary format has already been determined at the
+    ! openning of the file
+
+
+    do n = 1, PI%npars
+       write(pfile_unit) pars(n)
+ !      write(sfile_unit) PI%beta_stepsize(n)
+    end do
+
+    ! now add the probability
+    write(pfile_unit) prob
+
+    ! close will occur at the end of the MCMC
+
+    ! return to user
+    return
 
   end subroutine write_results
   !

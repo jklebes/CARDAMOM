@@ -13,8 +13,8 @@ module MODEL_PARAMETERS
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info(PI)
-    use MCMCOPT, only: parameter_info
+  subroutine pars_info
+    use MCMCOPT, only: PI
     use cardamom_structures, only: DATAin
 
     ! Subroutine contains a list of parameter ranges for the model.
@@ -23,9 +23,6 @@ module MODEL_PARAMETERS
     ! in for different PFTs
 
     implicit none
-
-    ! declare inputs
-    type ( parameter_info ), intent(inout) :: PI
 
     ! default case is to use global parameters for DALEC_CDEA, however there are
     ! model / PFT specifics available to reduce uncertainties
@@ -38,13 +35,13 @@ module MODEL_PARAMETERS
        stop
     else if (DATAin%ID == 3) then
        ! AT_DALEC generic
-       call at_dalec_parameters(PI)
+       call at_dalec_parameters
     else if (DATAin%ID == 4) then
        ! AT_DALEC with PFT specific parameters
        if (DATAin%PFT == 1) then
           ! crops
-          call at_dalec_pft1(PI)
-          call crop_development_parameters(PI)
+          call at_dalec_pft1
+          call crop_development_parameters
        else if (DATAin%PFT == 2) then
           ! short grass
 
@@ -85,17 +82,14 @@ module MODEL_PARAMETERS
   !
   !------------------------------------------------------------------
   !
-  subroutine at_dalec_parameters(PI)
+  subroutine at_dalec_parameters
 
     ! Subroutine reads specific parameter ranges for the 
     ! generic AT_DALEC model
 
-    use MCMCOPT, only: parameter_info
+    use MCMCOPT, only: PI
 
     implicit none
-
-    ! declare inputs
-    type ( parameter_info ), intent(inout) :: PI
 
     ! 
     ! declare parameters
@@ -202,17 +196,14 @@ module MODEL_PARAMETERS
   !
   !------------------------------------------------------------------
   !
-  subroutine at_dalec_pft1(PI)
+  subroutine at_dalec_pft1
 
     ! Subroutine reads specific parameter ranges for the 
     ! generic AT_DALEC model
 
-    use MCMCOPT, only: parameter_info
+    use MCMCOPT, only: PI
 
     implicit none
-
-    ! declare inputs
-    type ( parameter_info ), intent(inout) :: PI
 
     ! 
     ! declare parameters
@@ -324,18 +315,15 @@ module MODEL_PARAMETERS
   !
   !--------------------------------------------------------------------------------------------------------------------------------!
   !
-  subroutine crop_development_parameters(PI)
+  subroutine crop_development_parameters
 
-    use MCMCOPT, only: parameter_info
+    use MCMCOPT, only: PI
 
     ! subroutine reads in the fixed crop development files which are linked the
     ! the development state of the crops. The development model varies between
     ! which species. e.g. winter wheat and barley, spring wheat and barley
 
     implicit none
-
-    ! declare inputs
-    type ( parameter_info ), intent(inout) :: PI  
 
     ! local variables..
     integer                 :: columns, i, rows, input_crops_unit, ios

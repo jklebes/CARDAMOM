@@ -21,8 +21,8 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine find_edc_initial_values (PI)
-    use MCMCOPT, only: mcmc_output, parameter_info, mcmc_options, initialise_mcmc_output
+  subroutine find_edc_initial_values
+    use MCMCOPT, only: PI, MCOUT, MCO
     use cardamom_structures, only: DATAin ! will need to change due to circular dependance
     use cardamom_io, only: restart_flag
     use MHMCMC_MODULE, only: MHMCMC
@@ -32,33 +32,25 @@ module model_likelihood_module
 
     implicit none
 
-    ! declare inputs
-    type ( parameter_info ), intent(inout) :: PI
-
     ! declare local variables
-    type ( mcmc_output ) :: MCOUT_EDC
-    type ( mcmc_options ) :: MCOPT_EDC
     integer :: n, counter_local, EDC_iter
     double precision :: PEDC, ML, ML_prior
     double precision, dimension(PI%npars+1) :: EDC_pars
     ! declare parameters
-    integer, parameter :: EDC_iter_max = 2
-
-    ! initialise output for this EDC search
-    call initialise_mcmc_output(PI,MCOUT_EDC)
+    integer, parameter :: EDC_iter_max = 1
 
     ! set MCMC options needed for EDC run
-    MCOPT_EDC%APPEND = 0
-    MCOPT_EDC%nADAPT = 100
-    MCOPT_EDC%fADAPT = 1d0
-    MCOPT_EDC%nOUT = 50000
-    MCOPT_EDC%nPRINT = 0
-    MCOPT_EDC%nWRITE = 0
+    MCO%APPEND = 0
+    MCO%nADAPT = 1000
+    MCO%fADAPT = 1d0
+    MCO%nOUT = 100000
+    MCO%nPRINT = 0
+    MCO%nWRITE = 0
     ! the next two lines ensure that parameter inputs are either given or
     ! entered as -9999
-    MCOPT_EDC%randparini = .true.
-    MCOPT_EDC%returnpars = .true.
-    MCOPT_EDC%fixedpars  = .false.
+    MCO%randparini = .true.
+    MCO%returnpars = .true.
+    MCO%fixedpars  = .false.
 
     ! Set initial priors to vector...
     PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
@@ -72,12 +64,12 @@ module model_likelihood_module
     end do ! parameter loop
 
     ! set the parameter step size at the beginning
-    PI%stepsize = 1d0 ; PI%beta_stepsize = 0.20d0
+    PI%stepsize = 1d0 ; PI%beta_stepsize = 0.005d0
     PI%parstd = 1d0 ; PI%Nparstd = 0d0
+    PI%use_multivariate = .false.
     ! Covariance matrix cannot be set to zero therefore set initial value to a
     ! small positive value along to variance access
     PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
-    PI%use_multivariate = .false.
     do n = 1, PI%npars
        PI%covariance(n,n) = 1d0
     end do
@@ -97,25 +89,25 @@ module model_likelihood_module
 
               write(*,*)"Beginning EDC search attempt"
               ! call the MHMCMC directing to the appropriate likelihood
-              call MHMCMC(EDC_MODEL_LIKELIHOOD,PI,MCOPT_EDC,MCOUT_EDC)
+              call MHMCMC(EDC_MODEL_LIKELIHOOD)
 
               ! store the best parameters from that loop
-              PI%parini(1:PI%npars) = MCOUT_EDC%best_pars(1:PI%npars)
+              PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
               ! turn off random selection for initial values
-              MCOPT_EDC%randparini = .false.
+              MCO%randparini = .false.
 
               ! call edc likelihood function to get final edc probability
-              call edc_model_likelihood(PI,PI%parini,PEDC,ML_prior)
+              call edc_model_likelihood(PI%parini,PEDC,ML_prior)
 
               ! keep track of attempts
               counter_local = counter_local + 1
               ! periodically reset the initial conditions
-              if (PEDC < 0d0 .and. mod(counter_local,3) == 0) then
+              if (PEDC < 0d0 .and. mod(counter_local,5) == 0) then
                   PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
                   ! reset to select random starting point
-                  MCOPT_EDC%randparini = .true.
+                  MCO%randparini = .true.
                   ! reset the parameter step size at the beginning of each attempt
-                  PI%stepsize = 1d0 ; PI%beta_stepsize = 0.20d0
+                  PI%stepsize = 1d0 ; PI%beta_stepsize = 0.005d0
                   PI%parstd = 1d0 ; PI%Nparstd = 0d0
                   ! Covariance matrix cannot be set to zero therefore set initial value to a
                   ! small positive value along to variance access
@@ -129,7 +121,7 @@ module model_likelihood_module
            end do ! for while condition
 
            ! check for actual likelihood score
-           call model_Likelihood(PI,PI%parini,ML,ML_prior)
+           call model_Likelihood(PI%parini,ML,ML_prior)
 
            if (EDC_pars(PI%npars+1) > 0d0 .or. (ML+ML_prior) > EDC_pars(PI%npars+1)) then
 
@@ -145,10 +137,10 @@ module model_likelihood_module
            if (EDC_iter < EDC_iter_max) then
                PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
                ! reset to select random starting point
-               MCOPT_EDC%randparini = .true.
+               MCO%randparini = .true.
                ! reset the parameter step size at the beginning of each
                ! attempt
-               PI%stepsize = 1d0 ; PI%beta_stepsize = 0.20d0
+               PI%stepsize = 1d0 ; PI%beta_stepsize = 0.005d0
                PI%parstd = 1d0 ; PI%Nparstd = 0d0
                ! Covariance matrix cannot be set to zero therefore set
                ! initial value to a
@@ -170,18 +162,15 @@ module model_likelihood_module
     ! reset so that currently saved parameters will be used
     ! starting point in main MCMC
     PI%parfix(1:PI%npars) = 0
-    MCOUT_EDC%best_pars = 0d0
-
-    ! clean up some memory
-    deallocate(MCOUT_EDC%best_pars)
+    MCOUT%best_pars = 0d0
 
   end subroutine find_edc_initial_values
   !
   !------------------------------------------------------------------
   !
-  subroutine edc_model_likelihood(PI, PARS, ML_obs_out, ML_prior_out)
+  subroutine edc_model_likelihood(PARS, ML_obs_out, ML_prior_out)
     use cardamom_structures, only: DATAin
-    use MCMCOPT, only: PARAMETER_INFO
+    use MCMCOPT, only: PI
     use CARBON_MODEL_MOD, only: carbon_model
 
     ! Model likelihood function specifically intended for the determination of
@@ -191,7 +180,6 @@ module model_likelihood_module
     implicit none
 
     ! declare inputs
-    type ( parameter_info ), intent(inout) :: PI
     double precision, dimension(PI%npars), intent(inout) :: PARS
     ! output
     double precision, intent(inout) :: ML_obs_out, ML_prior_out
@@ -287,28 +275,28 @@ module model_likelihood_module
 
     ! Turnover of litter faster than turnover of som
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(9) > pars(8))) then
-        EDC1 = 0 ; EDCD%PASSFAIL(1) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(1) = 0
     endif
 
     ! litter2som greater than som to atm rate
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(1) < pars(9))) then
-       EDC1 = 0 ; EDCD%PASSFAIL(2) = 0
+       EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
     endif
 
     ! turnover of foliage faster than turnover of wood
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(6) > torfol) then
-       EDC1 = 0 ; EDCD%PASSFAIL(3) = 0
+       EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
     end if
 
     ! root turnover greater than som turnover at mean temperature
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(7) < (pars(9)*exp(pars(10)*meantemp)))) then
-       EDC1 = 0 ; EDCD%PASSFAIL(4) = 0
+       EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
     endif
 
     ! GPP allocation to foliage and labile cannot be 5 orders of magnitude
     ! difference from GPP allocation to roots
     if ((EDC1 == 1 .or. DIAG == 1) .and. ((ffol+flab) > (5.*froot) .or. ((ffol+flab)*5.) < froot)) then
-       EDC1 = 0 ; EDCD%PASSFAIL(5) = 0
+       EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     endif
 
     ! could always add more / remove some
@@ -388,7 +376,7 @@ module model_likelihood_module
     ! EDC 6
     ! ensure ratio between Cfoilar and Croot is less than 5
     if ((EDC2 == 1 .or. DIAG == 1) .and. (mean_pools(2) > (mean_pools(3)*5.) .or. (mean_pools(2)*5.) < mean_pools(3)) ) then
-        EDC2 = 0 ; EDCD%PASSFAIL(6) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(6) = 0
     end if
 
     ! EDC 7
@@ -410,7 +398,7 @@ module model_likelihood_module
        ! now check the growth rate
        if ((EDC2 == 1 .or. DIAG == 1) .and. &
           ((mean_annual_pools(no_years,n)/mean_annual_pools(1,n)) > (1.+G*real(no_years)))) then
-          EDC2 = 0 ; EDCD%PASSFAIL(7+n-1) = 0
+          EDC2 = 0d0 ; EDCD%PASSFAIL(7+n-1) = 0
        endif
     end do ! pool loop
 
@@ -427,7 +415,7 @@ module model_likelihood_module
     !      decay_coef=expdecay2(M_POOLS,n,deltat,nopools,nodays+1)
           ! next assess the decay coefficient for meetings the EDC criterion
     !      if (abs(-log(2.)/decay_coef) < (365.25*real(no_years)) .and. decay_coef < 0. ) then
-    !         EDC2 = 0 ; EDCD%PASSFAIL(8)=0
+    !         EDC2 = 0d0 ; EDCD%PASSFAIL(8)=0
     !      end if ! EDC conditions
     !   end if ! EDC .or. DIAG condition
     !end do ! pools loop
@@ -442,34 +430,34 @@ module model_likelihood_module
     ! EDC 9 - SOM steady state within order magnitude of initial conditions - 27/06/2018
     ! JFE - EDC9 (steady-state proximity) commented outto match EDCs in PNAS paper
     !if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*fsom)/(pars(9)*exp(pars(10)*meantemp))) > (pars(23)*EQF)) then
-    !   EDC2 = 0 ; EDCD%PASSFAIL(9) = 0
+    !   EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
     !end if
     !if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*fsom)/(pars(9)*exp(pars(10)*meantemp))) < (pars(23)/EQF)) then
-    !   EDC2 = 0 ; EDCD%PASSFAIL(9) = 0
+    !   EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
     !endif
 
     ! EDC 10 - Litter steady state assumptions
     !if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*flit)/(pars(8)*exp(pars(10)*meantemp))) > (pars(22)*EQF)) then
-    !    EDC2 = 0 ; EDCD%PASSFAIL(10) = 0
+    !    EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
     !endif
     !if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*flit)/(pars(8)*exp(pars(10)*meantemp))) < (pars(22)/EQF)) then
-    !    EDC2 = 0 ; EDCD%PASSFAIL(10) = 0
+    !    EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
     !endif
 
     ! EDC 11 - Wood steady state assumptions
     !if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*fwood)/pars(6)) > (pars(21)*EQF)) then
-    !    EDC2 = 0 ; EDCD%PASSFAIL(11) = 0
+    !    EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
     !end if
     !if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*fwood)/pars(6)) < (pars(21)/EQF)) then
-    !    EDC2 = 0 ; EDCD%PASSFAIL(11) = 0
+    !    EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
     !endif
 
     ! EDC 12 - Root steady state assumptions
     !if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*froot)/pars(7)) > (pars(20)*EQF)) then
-    !    EDC2 = 0 ; EDCD%PASSFAIL(12) = 0
+    !    EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
     !endif
     !if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*froot)/pars(7)) < (pars(20)/EQF)) then
-    !    EDC2 = 0 ; EDCD%PASSFAIL(12) = 0
+    !    EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
     !endif
 
     ! 27/06/2018 - JFE new EDC 8 to replace 9-12 to avoid dismissing simulations with early
@@ -506,7 +494,7 @@ module model_likelihood_module
     ! iterate to check whether Fin/Fout is within EQF limits
     do n = 1, nopools
         if (abs(log(Fin(n)/Fout(n))) > log(EQF)) then
-            EDC2 = 0 ; EDCD%PASSFAIL(13+n-1) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
         end if
     end do
 
@@ -521,7 +509,7 @@ module model_likelihood_module
         Sprox0 = Sprox * (mean_pools(n) / mean_annual_pools(1,n))
       !  print *, n, Sprox, Sprox0
         if (abs(Sprox-Sprox0) > fin_fout_lim) then
-            EDC2 = 0 ; EDCD%PASSFAIL(19+n) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(19+n) = 0
         end if
     end do
 
@@ -534,7 +522,7 @@ module model_likelihood_module
     ! All pools must confirm to the prior ranges
     do n = 1, nopools
        if ((EDC2 == 1 .or. DIAG == 1) .and. (M_POOLS(1,n) > parmax(n+npars-nopools))) then
-          EDC2 = 0 ; EDCD%PASSFAIL(35) = 0
+          EDC2 = 0d0 ; EDCD%PASSFAIL(35) = 0
        end if ! prior ranges conditions
     end do ! loop pools
 
@@ -546,7 +534,7 @@ module model_likelihood_module
           do while (nn <= (nodays+1) .and. PEDC == 1)
              ! now check conditions
              if (M_POOLS(nn,n) < 0. .or. M_POOLS(nn,n) /= M_POOLS(nn,n)) then
-                 EDC2 = 0 ; PEDC = 0 ; EDCD%PASSFAIL(35+n) = 0
+                 EDC2 = 0d0 ; PEDC = 0 ; EDCD%PASSFAIL(35+n) = 0
              end if ! less than zero and is NaN condition
           nn = nn + 1
           end do ! nn < nodays .and. PEDC == 1
@@ -559,7 +547,7 @@ module model_likelihood_module
 !    if (DIAG == 1) then
 !       do n = 1, num_EDC
 !          if (EDCD%PASSFAIL(n) == 0) then
-!              EDC2 = 0
+!              EDC2 = 0d0
 !          endif
 !       end do
 !    endif
@@ -735,8 +723,8 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine model_likelihood(PI,PARS,ML_obs_out,ML_prior_out)
-    use MCMCOPT, only:  PARAMETER_INFO
+  subroutine model_likelihood(PARS,ML_obs_out,ML_prior_out)
+    use MCMCOPT, only:  PI
     use CARBON_MODEL_MOD, only: carbon_model
     use cardamom_structures, only: DATAin
 
@@ -748,8 +736,6 @@ module model_likelihood_module
     implicit none
 
     ! declare inputs
-    type ( parameter_info ), intent(inout) :: PI ! parameter information
-
     double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
     ! output
     double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood

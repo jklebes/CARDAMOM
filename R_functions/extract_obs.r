@@ -42,6 +42,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
       lai_unc = -9999
 
     }
+    # Add model structural uncertainty to the uncertainty estimate if present
+    # 0.5 estimates from comparison of LAI uncertainties trials at 0.5 and 0.25, resultant CI in both instances is +/- ~0.5
+    lai_unc[lai_unc > 0] = lai_unc[lai_unc > 0] + 0.5
 
     ###
     ## Get some Cfoliage information (stock; gC/m2)

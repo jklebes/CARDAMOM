@@ -13,8 +13,8 @@ module MODEL_PARAMETERS
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info(PI)
-    use MCMCOPT, only: parameter_info
+  subroutine pars_info
+    use MCMCOPT, only: PI
     use cardamom_structures, only: DATAin
 
     ! Subroutine contains a list of parameter ranges for the model.
@@ -24,13 +24,10 @@ module MODEL_PARAMETERS
 
     implicit none
 
-    ! declare inputs
-    type ( parameter_info ), intent(inout) :: PI
-
     if (DATAin%PFT == 1) then
        ! crop model will be ran and therefore needs specific parameters to be
        ! called
-       call crop_parameters(PI)
+       call crop_parameters
        call crop_development_parameters(PI%stock_seed_labile,PI%DS_shoot &
                                        ,PI%DS_root,PI%fol_frac,PI%stem_frac &
                                        ,PI%root_frac,PI%DS_LRLV,PI%LRLV &
@@ -278,17 +275,14 @@ module MODEL_PARAMETERS
   !
   !------------------------------------------------------------------
   !
-  subroutine crop_parameters(PI)
+  subroutine crop_parameters
 
     ! Subroutine reads specific parameter ranges for the
     ! generic AT_DALEC model
 
-    use MCMCOPT, only: parameter_info
+    use MCMCOPT, only: PI
 
     implicit none
-
-    ! declare inputs
-    type ( parameter_info ), intent(inout) :: PI
 
     !
     ! declare parameters

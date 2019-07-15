@@ -31,13 +31,12 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
 #print(paste("lat_got",burnt_all$lat[j1])) ; print(paste("long_got",burnt_all$long[i1]))
 	# work out average areas
 	average_i=max(1,(i1-radius)):min(dim(burnt_all$burnt_area)[1],(i1+radius)) ; average_j=max(1,(j1-radius)):min(dim(burnt_all$burnt_area)[2],(j1+radius))
-
 	# carry out averaging
 	burnt_area=array(NA, dim=c(dim(burnt_all$burnt_area)[3]))
-	for (n in seq(1, dim(burnt_all$burnt_area)[3])) {burnt_area[n]=mean(burnt_all$burnt_area[average_i,average_j,n], na.rm=TRUE)} #  for loop
+	for (n in seq(1, dim(burnt_all$burnt_area)[3])) {burnt_area[n] = mean(burnt_all$burnt_area[average_i,average_j,n], na.rm=TRUE)} #  for loop
 
 	# convert missing data back to -9999
-	burnt_area[which(is.na(burnt_area))]=-9999.0 
+	#burnt_area[which(is.na(burnt_area))]=-9999.0 
 	# next work out how many days we should have in the year
 	doy_out=0
 	for (i in seq(1, length(years_to_do))) {

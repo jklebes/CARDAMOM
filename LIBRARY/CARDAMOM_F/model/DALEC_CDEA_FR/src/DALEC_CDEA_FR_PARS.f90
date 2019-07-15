@@ -13,8 +13,8 @@ module MODEL_PARAMETERS
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info(PI)
-    use MCMCOPT, only: parameter_info
+  subroutine pars_info
+    use MCMCOPT, only: PI
     use cardamom_structures, only: DATAin
 
     ! Subroutine contains a list of parameter ranges for the model.
@@ -26,9 +26,6 @@ module MODEL_PARAMETERS
     ! different PFTs
 
     implicit none
-
-    ! declare inputs
-    type ( parameter_info ), intent(inout) :: PI
 
 !    PI%npars=26 ! dont forget to change in cardamom_io.f90
 

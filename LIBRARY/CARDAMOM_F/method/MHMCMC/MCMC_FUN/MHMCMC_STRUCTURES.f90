@@ -58,23 +58,21 @@ module MCMCOPT
     double precision :: ACCRATE ! local acceptance rate
 
   end type ! COUNTERS
-  ! create counters type
 
   ! parameter structure defined here
   type PARAMETER_INFO
     logical :: cov = .false., use_multivariate = .false.
     double precision, allocatable, dimension(:,:) :: covariance, & ! parameter covariance matrix
                                                              iC    ! inverse covariance matrix
-    double precision, allocatable, dimension(:) :: mean_par & ! mean parameter value
+    double precision, allocatable, dimension(:) :: stepsize, beta_stepsize &
+                                                  ,mean_par & ! mean parameter value
                                                   ,parmax   & ! maximum parameter values
                                                   ,parmin   & ! minimum parameter values
                                                   ,parini   & ! initial parameter values
                                                   ,parfix   & ! do they need fixing (i.e. randomly generated)
                                                   ,parstd     ! standard deviation of accepted parameter
 
-    double precision :: Nparstd, & ! Number of samples forming standard deviation of accepted parameters
-                       stepsize, & !
-                  beta_stepsize    !
+    double precision :: Nparstd ! Number of samples forming standard deviation of accepted parameters
 
     integer :: npars ! number of parameters to be solved
     ! crop specific variables
@@ -97,22 +95,19 @@ module MCMCOPT
   !
   !------------------------------------------------------------------
   !
-  subroutine initialise_mcmc_output(PI_in,MCOUT_in)
+  subroutine initialise_mcmc_output
 
     ! subroutine allocated memory to the output arrays
 
     implicit none
-    ! declare input variables
-    type ( mcmc_output ), intent(inout) :: MCOUT_in
-    type ( parameter_info ), intent(in) :: PI_in
 
     ! define dimensions for output structure
-    allocate(MCOUT_in%best_pars(PI%npars))
+    allocate(MCOUT%best_pars(PI%npars))
 
     ! set to zero, will become 1 when MCMCM complete
-    MCOUT_in%complete = 0
+    MCOUT%complete = 0
     ! and clear initial memory
-    MCOUT_in%best_pars = 0d0
+    MCOUT%best_pars = 0d0
 
   end subroutine initialise_mcmc_output
   !

@@ -37,7 +37,7 @@ subroutine rdaleccdealufires(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat,n
   double precision, dimension((nodays+1),nopools) :: POOLS
   ! vector of ecosystem fluxes
   double precision, dimension(nodays,nofluxes) :: FLUXES
-  double precision :: sumNPP
+  double precision :: sumNPP,airt_adj
   double precision, dimension(nodays) :: lai & ! leaf area index
                                         ,GPP & ! Gross primary productivity
                                         ,NEE   ! net ecosystem exchange of CO2
@@ -85,14 +85,21 @@ subroutine rdaleccdealufires(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat,n
      out_var(i,1:nodays,11) = POOLS(1:nodays,1) ! labile
      out_var(i,1:nodays,12) = POOLS(1:nodays,2) ! foliage
      out_var(i,1:nodays,13) = extracted_C(1:nodays) ! harvested material
-     out_var(i,1:nodays,14) = FLUXES(1:nodays,18) ! GSI value
+     out_var(i,1:nodays,14) = FLUXES(1:nodays,17) ! Fire value
 
      ! calculate the actual NPP allocation fractions to foliar, wood and fine root pools
      ! by comparing the sum alloaction to each pools over the sum NPP.
      sumNPP = sum(FLUXES(1:nodays,1)*(1-pars(2,i))) ! GPP * (1-Ra) fraction
+     airt_adj = sum(met(3,1:nodays)) / dble(nodays)
+     airt_adj = exp(pars(10,i)*airt_adj)
      out_var2(i,1) = sum(FLUXES(1:nodays,4)+FLUXES(1:nodays,8)) / sumNPP ! foliar
      out_var2(i,2) = sum(FLUXES(1:nodays,7)) / sumNPP ! wood
      out_var2(i,3) = sum(FLUXES(1:nodays,6)) / sumNPP ! fine root
+     out_var2(i,4) = pars(5,i) ! leaf life span (years)
+     out_var2(i,5) = (pars(6,i)*365.25d0) ** (-1d0) ! wood residence time (years)
+     out_var2(i,6) = (pars(7,i)*365.25d0) ** (-1d0) ! root residence time (years)
+     out_var2(i,7) = (pars(9,i) * 365.25d0 * airt_adj) ** (-1d0) ! som
+     out_var2(i,8) = ((pars(1,i) + pars(8,i)) * 365.25d0 * airt_adj) ** (-1d0) ! litter
 
   end do ! nos_iter loop
 

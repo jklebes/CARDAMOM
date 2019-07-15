@@ -13,8 +13,8 @@ module MODEL_PARAMETERS
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info(PI)
-    use MCMCOPT, only: parameter_info
+  subroutine pars_info
+    use MCMCOPT, only: PI
     use cardamom_structures, only: DATAin
 
     ! Subroutine contains a list of parameter ranges for the model.
@@ -24,15 +24,12 @@ module MODEL_PARAMETERS
 
     implicit none
 
-    ! declare inputs
-    type ( parameter_info ), intent(inout) :: PI
-
 !    PI%npars=29 ! dont forget to change in cardamom_io.f90
 
     if (DATAin%PFT == 1) then
        ! crop model will be ran and therefore needs specific parameters to be
        ! called
-       call crop_parameters(PI)
+       call crop_parameters
        call crop_development_parameters(PI)
  
     else 
@@ -202,17 +199,14 @@ module MODEL_PARAMETERS
   !
   !------------------------------------------------------------------
   !
-  subroutine crop_parameters(PI)
+  subroutine crop_parameters
 
     ! Subroutine reads specific parameter ranges for the 
     ! generic AT_DALEC model
 
-    use MCMCOPT, only: parameter_info
+    use MCMCOPT, only: PI
 
     implicit none
-
-    ! declare inputs
-    type ( parameter_info ), intent(inout) :: PI
 
     ! 
     ! declare parameters
@@ -322,9 +316,9 @@ module MODEL_PARAMETERS
   !
   !--------------------------------------------------------------------------------------------------------------------------------!
   !
-  subroutine crop_development_parameters(PI)
+  subroutine crop_development_parameters
 
-    use MCMCOPT, only: parameter_info
+    use MCMCOPT, only: PI
 
     ! subroutine reads in the fixed crop development files which are linked the
     ! the development state of the crops. The development model varies between
@@ -332,11 +326,8 @@ module MODEL_PARAMETERS
 
     implicit none
 
-    ! declare inputs
-    type ( parameter_info ), intent(inout) :: PI  
-
     ! local variables..
-    integer                 :: columns, i, rows, input_crops_unit, ios
+    integer        :: columns, i, rows, input_crops_unit, ios
     character(100) :: variables,filename
 
     ! for the moment hard code the file name

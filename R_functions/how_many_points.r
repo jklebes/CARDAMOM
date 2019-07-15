@@ -223,9 +223,9 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
         lat_lcm=ncvar_get(data2, "latitude")
         long_lcm=ncvar_get(data2, "longitude")
         # restructure to 2-D array which matches the actual data structure...
-        lat_dim = length(lat_lcm) ; long_dim = length(long_lcm)
-        lat_lcm = array(rep(lat_lcm, each = long_dim), dim=c(long_dim,lat_dim))
-        long_lcm = array(long_lcm, dim=c(long_dim,lat_dim))
+        lat_tmp = length(lat_lcm) ; long_tmp = length(long_lcm)
+        lat_lcm = array(rep(lat_lcm, each = long_tmp), dim=c(long_tmp,lat_tmp))
+        long_lcm = array(long_lcm, dim=c(long_tmp,lat_tmp))
         long_lcm[which(long_lcm > 180)] = long_lcm[which(long_lcm > 180)]-360
     } else {
         stop("bugger no land cover option found / set")

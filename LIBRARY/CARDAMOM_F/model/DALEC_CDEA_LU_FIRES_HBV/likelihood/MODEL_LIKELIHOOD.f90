@@ -21,8 +21,8 @@ module model_likelihood_module
   ! 
   !------------------------------------------------------------------
   !
-  subroutine find_edc_initial_values (PI)
-    use MCMCOPT, only: mcmc_output, parameter_info, mcmc_options, initialise_mcmc_output
+  subroutine find_edc_initial_values
+    use MCMCOPT, only: PI, MCOUT, MCOPT
     use cardamom_structures, only: DATAin ! will need to change due to circular dependance
     use cardamom_io, only: restart_flag
     use MHMCMC_MODULE, only: MHMCMC
@@ -32,31 +32,25 @@ module model_likelihood_module
 
     implicit none
 
-    ! declare inputs
-    type ( parameter_info ), intent(inout) :: PI
-
     ! declare local variables
-    type ( mcmc_output ) :: MCOUT_EDC
-    type ( mcmc_options ) :: MCOPT_EDC
-    integer :: n, counter_local, iter
+    integer :: n, counter_local, EDC_iter
     double precision :: PEDC, ML, ML_prior
-    double precision, allocatable :: iter_EDC_pars(:)
-
-    ! initialise output for this EDC search
-    call initialise_mcmc_output(PI,MCOUT_EDC)
+    double precision, dimension(PI%npars+1) :: EDC_pars
+    ! declare parameters
+    integer, parameter :: EDC_iter_max = 1
 
     ! set MCMC options needed for EDC run
-    MCOPT_EDC%APPEND = 0
-    MCOPT_EDC%nADAPT = 100 !TLS: 20
-    MCOPT_EDC%fADAPT = 0.5d0
-    MCOPT_EDC%nOUT = 1000
-    MCOPT_EDC%nPRINT = 0
-    MCOPT_EDC%nWRITE = 0
+    MCO%APPEND = 0
+    MCO%nADAPT = 1000
+    MCO%fADAPT = 1d0
+    MCO%nOUT = 100000
+    MCO%nPRINT = 0
+    MCO%nWRITE = 0
     ! the next two lines ensure that parameter inputs are either given or
     ! entered as -9999
-    MCOPT_EDC%randparini = .true.
-    MCOPT_EDC%returnpars = .true.
-    MCOPT_EDC%fixedpars  = .false.
+    MCO%randparini = .true.
+    MCO%returnpars = .true.
+    MCO%fixedpars  = .false.
 
     ! Set initial priors to vector...
     PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
@@ -69,90 +63,114 @@ module model_likelihood_module
        if (PI%parini(n) /= -9999d0 .and. DATAin%edc_random_search < 1) PI%parfix(n) = 1
     end do ! parameter loop
 
+    ! set the parameter step size at the beginning
+    PI%stepsize = 1d0 ; PI%beta_stepsize = 0.005d0
+    PI%parstd = 1d0 ; PI%Nparstd = 0d0
+    PI%use_multivariate = .false.
+    ! Covariance matrix cannot be set to zero therefore set initial value to a
+    ! small positive value along to variance access
+    PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+    do n = 1, PI%npars
+       PI%covariance(n,n) = 1d0
+    end do
+
+    EDC_pars = 1d0
+
     ! if this is not a restart run, i.e. we do not already have a starting
     ! position we must being the EDC search procedure to find an ecologically
     ! consistent initial parameter set
     if (.not. restart_flag) then
 
-       ! the EDC search will be iterated to minimise the risk of finding an EDC
-       ! consistent location in parameter space which is very poor with respect
-       ! to our observations
-       allocate(iter_EDC_pars(PI%npars+1)) ; iter_EDC_pars = -9999999999d0
-       do iter = 1, 3
+        do EDC_iter = 1, EDC_iter_max
 
-          ! set up edc log likelihood for MHMCMC initial run
-          PEDC = -1 ; counter_local = 0
-          do while (PEDC < 0)
+           ! set up edc log likelihood for MHMCMC initial run
+           PEDC = -1 ; counter_local = 0
+           do while (PEDC < 0)
 
-            write(*,*)"Beginning EDC search attempt"
-            ! reset the parameter step size at the beginning of each attempt
-            PI%stepsize(1:PI%npars) = 0.10d0 ! 0.0005 -> 0.005 -> 0.05 -> 0.1 TLS
-            ! call the MHMCMC directing to the appropriate likelihood
-            call MHMCMC(EDC_MODEL_LIKELIHOOD,PI,MCOPT_EDC,MCOUT_EDC)
+              write(*,*)"Beginning EDC search attempt"
+              ! call the MHMCMC directing to the appropriate likelihood
+              call MHMCMC(EDC_MODEL_LIKELIHOOD)
 
-            ! store the best parameters from that loop
-            PI%parini(1:PI%npars) = MCOUT_EDC%best_pars(1:PI%npars)
-            ! turn off random selection for initial values
-            MCOPT_EDC%randparini = .false.
-  
-            ! call edc likelihood function to get final edc probability
-            call edc_model_likelihood(PI,PI%parini,PEDC,ML_prior)
+              ! store the best parameters from that loop
+              PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
+              ! turn off random selection for initial values
+              MCO%randparini = .false.
 
-            ! we want to keep track of which EDC consistent parameter set best
-            ! fits the available observations
-            if (PEDC == 0) then
-                ! determine what the observation based likelihood is for the
-                ! current parameter set
-                call model_likelihood(PI,PI%parini,ML,ML_prior)
-                ! if the current parameter set has a higher likelihood than the
-                ! previous EDC consistent values we will save the new ones
-                if ((ML+ML_prior) > iter_EDC_pars(PI%npars+1)) then
-                    ! store the current EDC consistent parameters
-                    iter_EDC_pars(1:PI%npars) = PI%parini(1:PI%npars)
-                    iter_EDC_pars(PI%npars+1) = ML + ML_prior
-                endif
-                ! and reset to the initial conditions for the next iteration
-                PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
-                ! reset to select random starting point
-                MCOPT_EDC%randparini = .true.
-            endif
+              ! call edc likelihood function to get final edc probability
+              call edc_model_likelihood(PI%parini,PEDC,ML_prior)
 
-            ! keep track of attempts
-            counter_local = counter_local+1
-            ! periodically reset the initial conditions
-            if (PEDC < 0 .and. mod(counter_local,3) == 0) then
-                PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
-                ! reset to select random starting point
-                MCOPT_EDC%randparini = .true.
-            endif
+              ! keep track of attempts
+              counter_local = counter_local + 1
+              ! periodically reset the initial conditions
+              if (PEDC < 0d0 .and. mod(counter_local,5) == 0) then
+                  PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
+                  ! reset to select random starting point
+                  MCO%randparini = .true.
+                  ! reset the parameter step size at the beginning of each attempt
+                  PI%stepsize = 1d0 ; PI%beta_stepsize = 0.005d0
+                  PI%parstd = 1d0 ; PI%Nparstd = 0d0
+                  ! Covariance matrix cannot be set to zero therefore set initial value to a
+                  ! small positive value along to variance access
+                  PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+                  PI%use_multivariate = .false.
+                  do n = 1, PI%npars
+                     PI%covariance(n,n) = 1d0
+                  end do
+              endif
 
-          end do ! for while condition
+           end do ! for while condition
 
-       end do ! for iter = 1, 3
+           ! check for actual likelihood score
+           call model_Likelihood(PI%parini,ML,ML_prior)
 
-       ! set the initial parameter values to those which best fitted the
-       ! available observations
-       PI%parini(1:PI%npars) = iter_EDC_pars(1:PI%npars)
+           if (EDC_pars(PI%npars+1) > 0d0 .or. (ML+ML_prior) > EDC_pars(PI%npars+1)) then
 
-       ! tidy up before leaving
-       deallocate(iter_EDC_pars)
+               ! either this is our first EDC starting point or a better one, so
+               ! we best make a record of these
+               EDC_pars(1:PI%npars) = PI%parini(1:PI%npars)
+               EDC_pars(PI%npars+1) = ML+ML_prior
+
+           end if ! EDC_pars(PI%npars+1) > 0 .or. (ML+ML_prior) > EDC_pars(PI%npars+1)
+
+           ! unless this is the last time we want to reset to control switches
+           ! to reset the parameters for new staring points
+           if (EDC_iter < EDC_iter_max) then
+               PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
+               ! reset to select random starting point
+               MCO%randparini = .true.
+               ! reset the parameter step size at the beginning of each
+               ! attempt
+               PI%stepsize = 1d0 ; PI%beta_stepsize = 0.005d0
+               PI%parstd = 1d0 ; PI%Nparstd = 0d0
+               ! Covariance matrix cannot be set to zero therefore set
+               ! initial value to a
+               ! small positive value along to variance access
+               PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+               PI%use_multivariate = .false.
+               do n = 1, PI%npars
+                  PI%covariance(n,n) = 1d0
+               end do
+           endif ! EDC_iter < EDC_iter_max
+
+        end do ! EDC_iter
+
+        ! now pass the best parameter set to the inital value to the main EDC
+        PI%parini(1:PI%npars) = EDC_pars(1:PI%npars)
 
     endif ! if for restart
 
-    ! reset
+    ! reset so that currently saved parameters will be used
+    ! starting point in main MCMC
     PI%parfix(1:PI%npars) = 0
-    MCOUT_EDC%best_pars = 0d0
-
-    ! clean up some memory
-    deallocate(MCOUT_EDC%best_pars)
+    MCOUT%best_pars = 0d0
 
   end subroutine find_edc_initial_values
   !
   !------------------------------------------------------------------
   !
-  subroutine edc_model_likelihood(PI, PARS, ML_obs_out, ML_prior_out)
+  subroutine edc_model_likelihood(PARS, ML_obs_out, ML_prior_out)
     use cardamom_structures, only: DATAin
-    use MCMCOPT, only: PARAMETER_INFO
+    use MCMCOPT, only: PI
     use CARBON_MODEL_MOD, only: carbon_model
     use CARBON_MODEL_CROP_MOD, only: carbon_model_crop
 
@@ -163,7 +181,6 @@ module model_likelihood_module
     implicit none
 
     ! declare inputs
-    type ( parameter_info ), intent(inout) :: PI
     double precision, dimension(PI%npars), intent(inout) :: PARS
     ! output
     double precision, intent(inout) :: ML_obs_out, ML_prior_out
@@ -683,8 +700,8 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine model_likelihood(PI,PARS,ML_obs_out,ML_prior_out)
-    use MCMCOPT, only:  PARAMETER_INFO
+  subroutine model_likelihood(PARS,ML_obs_out,ML_prior_out)
+    use MCMCOPT, only:  PI
     use CARBON_MODEL_MOD, only: carbon_model
     use CARBON_MODEL_CROP_MOD, only: carbon_model_crop
     use cardamom_structures, only: DATAin
@@ -697,8 +714,6 @@ module model_likelihood_module
     implicit none
 
     ! declare inputs
-    type ( parameter_info ), intent(inout) :: PI ! parameter information
-
     double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
     ! output
     double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
