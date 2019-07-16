@@ -18,7 +18,7 @@ public :: MHMCMC, par_minstepsize
 integer :: uniform
 double precision, allocatable, dimension(:) :: uniform_random_vector
 ! MHMCMC step size
-double precision, parameter :: par_minstepsize = 0.00001d0 & !0.005d0 & !0.0001d0
+double precision, parameter :: par_minstepsize = 0.0001d0 & !0.005d0 & !0.0001d0
                               ,par_maxstepsize = 1d0 !0.01d0 
 ! Delayed Rejection flag
 double precision :: DR_scaler = 1d0
@@ -224,18 +224,7 @@ contains
 
        else ! we have rejected - apply Delayed Rejection approach to enhance local searching
 
-            crit1 = uniform_random_vector(uniform)
-            uniform = uniform + 1
-            ! if we are near to the end re-generate some more values
-            if (uniform >= size(uniform_random_vector)-4) then
-                ! calculate new vector of uniform random values
-                call random_uniform(uniform_random_vector,size(uniform_random_vector))
-                ! and reset uniform counter
-                uniform = 1
-            endif
-
-!            if (PI%use_multivariate .and. multivariate_proposal) then
-            if (crit1 > 0.5d0 .and. PI%use_multivariate .and. multivariate_proposal) then
+            if (PI%use_multivariate .and. multivariate_proposal) then
 
                 ! Determine whether we will attempt to rescale the covariance matrix via the delayed rejection approach
                 ! Ref: Haario et al., (2006) DRAM: Efficient adaptive MCMC, Statisical Computing, doi: 10.1007/s11222-006-9438-0
@@ -353,9 +342,9 @@ contains
            N%ACCRATE = dble(N%ACCLOC) / dble(MCO%nADAPT)
            ! once covariance matrix has been created just update based on a
            ! single parameter set from each period.
-!           if (PI%cov .and. N%ACCLOC > 0) then
-!               N%ACCLOC = 1 ; PARSALL(1:PI%npars,N%ACCLOC) = norPARS0(1:PI%npars)
-!           endif
+           if (PI%cov .and. N%ACCLOC > 0) then
+               N%ACCLOC = 1 ; PARSALL(1:PI%npars,N%ACCLOC) = norPARS0(1:PI%npars)
+           endif
            ! Are we still in the adaption hase and are there any newly accepted
            ! parameters?
            if (N%ACCLOC > 0 .and. (MCO%fADAPT*dble(MCO%nOUT)) > dble(N%ITER)) then
@@ -449,15 +438,21 @@ contains
         call inverse_matrix( PI%npars, PI%covariance, PI%iC )
 
         ! NOTE: we assume here that if MCO%nWRITE == 0 then this is part of the
-        ! EDC search phase
+        ! EDC search phase, therefore we do not want to vary the beta propsal
+        ! stepsize
         if (MCO%nWRITE > 0 .and. nint(PI%Nparstd) > 10*PI%npars) then
             ! adjust step size by local variance
             do p = 1, PI%npars
                ! calculate standards deviation (variability) for the local window
                ! extracted from the variance
                PI%parstd(p) = sqrt(PI%covariance(p,p))
-               PI%beta_stepsize(p) = min(par_maxstepsize,max(PI%covariance(p,p),par_minstepsize))+par_minstepsize
+               PI%beta_stepsize(p) = min(par_maxstepsize,max(PI%covariance(p,p),par_minstepsize))
             end do ! p
+            if (N%ACCRATE > 0.05d0) then
+                PI%beta_stepsize = PI%beta_stepsize * 1.05d0
+            else
+                PI%beta_stepsize = PI%beta_stepsize * 0.95d0
+            endif
         endif
 
     else ! PI%cov == .true.

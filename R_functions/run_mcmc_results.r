@@ -27,13 +27,14 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
       if (parameters[1] == -9999) {
           error_check = TRUE
       } else {
-          if (min(parameters[PROJECT$model$npars[n]+1,,]) == -Inf) {
+          if (min(parameters[PROJECT$model$nopars[n]+1,,]) == -Inf) {
               error_check = TRUE
           }
       }
 
       # ok so if we actually have some parameters we will
       if (error_check == FALSE) {
+
           # test for convergence and whether or not there is any single chain which can be removed in they do not converge
           if (dim(parameters)[3] > 2) {
               converged = have_chains_converged(parameters)
@@ -177,7 +178,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
 
         dummy = -1
 
-      } # parameters[1] != -9999
+      } # error_check == FALSE
 
   } else {
 

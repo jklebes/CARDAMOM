@@ -4,15 +4,33 @@
 ## subsequently extracted in extract_met_drivers.txt
 ###
 
-load_hwsd_Csom_fields_for_extraction<-function(latlon_in,hwsd_source) {
+load_hwsd_Csom_fields_for_extraction<-function(latlon_in,Csom_source) {
     
-    if (hwsd_source == "HWSD") {
+    if (Csom_source == "SoilGrids") {
+
+         # this is a very bespoke modification so leave it here to avoid getting lost
+        Csom = raster(paste(path_to_Csom,"Csom_gCm2_mean_5km_0to1m.tif", sep=""))
+        Csom_unc = raster(paste(path_to_Csom,"Csom_gCm2_sd_5km_0to1m.tif", sep=""))
+        # extract dimension information for the grid, note the axis switching between raster and actual array
+        xdim = dim(Csom)[2] ; ydim = dim(Csom)[1]
+        # extract the lat / long information needed
+        long = coordinates(Csom)[,1] ; lat = coordinates(Csom)[,2]
+        # restructure into correct orientation
+        long = array(long, dim=c(xdim,ydim))
+        lat = array(lat, dim=c(xdim,ydim))
+        # break out from the rasters into arrays which we can manipulate
+        Csom = array(as.vector(unlist(Csom)), dim=c(xdim,ydim))
+        Csom_unc = array(as.vector(unlist(Csom_unc)), dim=c(xdim,ydim))
+           
+        return(list(Csom = Csom, Csom_unc = Csom_unc, lat = lat,long = long))
+
+    } else if (Csom_source == "HWSD") {
     
 	# let the user know this might take some time
 	print("Loading processed HWSD Csom fields for subsequent sub-setting ...")
 
 	# open processed modis files
-	input_file_1=paste(path_to_hwsd_Csom,"/HWSD_Csom_with_lat_long.nc",sep="") 
+	input_file_1=paste(path_to_Csom,"/HWSD_Csom_with_lat_long.nc",sep="") 
 	data1=nc_open(input_file_1)
 
 	# extract location variables
@@ -39,11 +57,11 @@ load_hwsd_Csom_fields_for_extraction<-function(latlon_in,hwsd_source) {
 	rm(keep_lat,keep_long,max_lat,max_long,min_lat,min_long) ; gc(reset=TRUE,verbose=FALSE)
 
 	# output variables
-	return(list(Csom=hwsd_Csom,lat=lat,long=long))
+	return(list(Csom=hwsd_Csom,Csom_unc = -9999,lat=lat,long=long))
 
     } else {
 	# output variables
-	return(list(Csom=-9999,lat=-9999,long=-9999))
+	return(list(Csom=-9999, Csom_unc-9999, lat=-9999,long=-9999))
     }
 
 } # function end

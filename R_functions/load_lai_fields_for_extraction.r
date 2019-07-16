@@ -127,8 +127,8 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
         nsteps = 0
         for (yrr in seq(1, length(years_to_load))) {
           # create the prefix to the files we will want for a given year
-          input_file_1=paste("c_gls_LAI_",years_to_load[yrr],sep="")
-#          input_file_1=paste("c_gls_LAI300_",years_to_load[yr],sep="")
+#          input_file_1=paste("c_gls_LAI_",years_to_load[yrr],sep="")
+          input_file_1=paste("c_gls_LAI300_",years_to_load[yr],sep="")
           # then check whether this pattern is found in the available files
           this_year = grepl(input_file_1, avail_files) ; this_year = which(this_year == TRUE)
           # if we have at least one timestep for this year then we have some information otherwise it is missing!
@@ -142,8 +142,8 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
       } # first year?
 
       # open processed modis files
-      input_file_1=paste("c_gls_LAI_",years_to_load[yr],sep="")
-#      input_file_1=paste("c_gls_LAI300_",years_to_load[yr],sep="")
+#      input_file_1=paste("c_gls_LAI_",years_to_load[yr],sep="")
+      input_file_1=paste("c_gls_LAI300_",years_to_load[yr],sep="")
       # then check whether this pattern is found in the available files
       this_year = avail_files[grepl(input_file_1, avail_files)]
 

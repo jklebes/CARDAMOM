@@ -16,23 +16,6 @@ extract_hwsd_Csom<- function(spatial_type,resolution,grid_type,latlon_in,Csom_al
 	# return long to 0-360
 	if (length(check1) > 0) { Csom_all$long[check1]=Csom_all$long[check1]+360 }
 
-#	# work out number of pixels to average over
-##	print("NOTE all Csom values are a minimum average of 9 pixels (i.e centre+1 )")
-#	if (spatial_type == "grid") {
-#	    if (grid_type == "wgs84") {
-#		# calculate pixel area and convert from m2 -> km2
-#		area=calc_pixel_area(latlon_in[1],latlon_in[2],resolution)*1e-6
-#		radius=ceiling(max(0,sqrt(area)*0.5) / 45) # ~45 km per degree
-#	    } else if (grid_type == "UK") {
-#		radius=max(0,floor(1*resolution*1e-3*0.5))
-#	    } else {
-#		stop("have not specified the grid used in this analysis")
-#	    }
-#	} else {
-#	    radius=0
-#	    max_radius = 5
-#	}
-
 	# work out number of pixels to average over
 	if (spatial_type == "grid") {
 	    if (grid_type == "wgs84") {

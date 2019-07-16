@@ -6,13 +6,17 @@
 
 load_hwsd_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source) {
     
-    if (sand_clay_source == "HWSD") {
+    if (sand_clay_source == "SoilGrids") {
+
+        stop('have not coded for soil grid extraction for sand / clay information')
+
+    } else if (sand_clay_source == "HWSD") {
     
 	# let the user know this might take some time
 	print("Loading processed HWSD sand clay fields for subsequent sub-setting ...")
 
 	# open processed modis files
-	input_file_1=paste(path_to_hwsd_Csom,"/HWSD_sand_clay_with_lat_long.nc",sep="") 
+	input_file_1=paste(path_to_sand_clay,"/HWSD_sand_clay_with_lat_long.nc",sep="") 
 	data1=nc_open(input_file_1)
 
 	# extract location variables

@@ -70,20 +70,23 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
     ###
 
     if (Csom_source == "HWSD") {
-      # could add other variables such as SOM (gC.m-2)
-      Csom_initial = extract_hwsd_Csom(spatial_type,resolution,grid_type,latlon_wanted,Csom_all)
-      Csom_initial_unc = Csom_initial * 0.24 # see papers assessing uncertainty of HWSD, ~47 %
+        # could add other variables such as SOM (gC.m-2)
+        Csom_initial = extract_hwsd_Csom(spatial_type,resolution,grid_type,latlon_wanted,Csom_all)
+        Csom_initial_unc = Csom_initial * 0.24 # see papers assessing uncertainty of HWSD, ~47 %
+    } else if (Csom_source == "SoilGrids") {
+        Csom_info = extract_soilgrid_Csom(spatial_type,resolution,grid_type,latlon_wanted,Csom_all)
+        Csom_initial = Csom_info$Csom_initial ; Csom_initial_unc = Csom_info$Csom_initial_unc
     } else if (Csom_source == "site_specific") {
-      infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
-      Csom_initial = read_site_specific_obs("Csom_initial",infile)
-      Csom_initial_unc = read_site_specific_obs("Csom_initial_unc",infile)
-      if (Csom_initial_unc == -9999 & Csom_initial > 0) {
-        # on the other hand if not then we have no uncertainty info, so use default
-        Csom_initial_unc = 0.24 * Csom_initial
-      }
+        infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
+        Csom_initial = read_site_specific_obs("Csom_initial",infile)
+        Csom_initial_unc = read_site_specific_obs("Csom_initial_unc",infile)
+        if (Csom_initial_unc == -9999 & Csom_initial > 0) {
+            # on the other hand if not then we have no uncertainty info, so use default
+            Csom_initial_unc = 0.24 * Csom_initial
+        }
     } else {
-      # assume no data available
-      Csom_initial = -9999 ; Csom_initial_unc = -9999
+        # assume no data available
+        Csom_initial = -9999 ; Csom_initial_unc = -9999
     }
 
     ###
