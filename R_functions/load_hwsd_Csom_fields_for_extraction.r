@@ -8,7 +8,7 @@ load_hwsd_Csom_fields_for_extraction<-function(latlon_in,Csom_source) {
     
     if (Csom_source == "SoilGrids") {
 
-         # this is a very bespoke modification so leave it here to avoid getting lost
+        # this is a very bespoke modification so leave it here to avoid getting lost
         Csom = raster(paste(path_to_Csom,"Csom_gCm2_mean_5km_0to1m.tif", sep=""))
         Csom_unc = raster(paste(path_to_Csom,"Csom_gCm2_sd_5km_0to1m.tif", sep=""))
         # extract dimension information for the grid, note the axis switching between raster and actual array

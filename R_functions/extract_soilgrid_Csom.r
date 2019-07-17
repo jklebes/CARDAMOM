@@ -13,7 +13,7 @@ extract_soilgrid_Csom<-function(spatial_type,resolution,grid_type,latlon_wanted,
   if (spatial_type == "grid") {
       if (grid_type == "wgs84") {
           # resolution of the product
-          product_res = (Csom_all$lat[1,2]-Csom_all$lat[1,1])+(Csom_all$long[2,1]-Csom_all$long[1,1])
+          product_res = abs(Csom_all$lat[1,2]-Csom_all$lat[1,1])+abs(Csom_all$long[2,1]-Csom_all$long[1,1])
           product_res = product_res * 0.5
           # radius is ceiling of the ratio of the product vs analysis ratio
           radius = ceiling(resolution / product_res)

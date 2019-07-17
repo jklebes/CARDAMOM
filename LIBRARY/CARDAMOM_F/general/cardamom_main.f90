@@ -60,7 +60,7 @@ program cardamom_framework
  ! load module variables needed for restart check
  call read_options(solution_wanted,freq_print,freq_write,outfile)
  ! check whether this is a restart?
- call check_for_existing_output_files(PI%npars,MCO%outfile,MCO%stepfile,MCO%covfile)
+ call check_for_existing_output_files(PI%npars,MCO%outfile,MCO%stepfile,MCO%covfile,MCO%covifile)
  ! Initialise MCMC output, possibly a bit of a redundent subroutine...
  call initialise_mcmc_output
 
@@ -85,7 +85,7 @@ program cardamom_framework
  call read_options(solution_wanted,freq_print,freq_write,outfile)
 
  ! Open the relevant output files
- call open_output_files(MCO%outfile,MCO%stepfile,MCO%covfile)
+ call open_output_files(MCO%outfile,MCO%stepfile,MCO%covfile,MCO%covifile)
 
  if (restart_flag) then
      print*, "beginning restart simulation"

@@ -33,7 +33,7 @@ contains
     use MCMCOPT, only: PI, MCO, MCOUT, COUNTERS
     use math_functions, only: randn, random_uniform, par2nor, nor2par, dsymv
     use cardamom_io, only: write_parameters,write_variances,write_covariance_matrix &
-                          ,restart_flag,accepted_so_far
+                          ,write_covariance_info,restart_flag,accepted_so_far, accept_rate
 
     implicit none
 
@@ -127,7 +127,7 @@ contains
     if (restart_flag) then
         N%ACC = nint(dble(accepted_so_far) * 0.23d0)
         N%ACCEDC = N%ACC
-        N%ITER = accepted_so_far ! number of iterations is directly linked to the number output
+        N%ITER = MCO%nWRITE*accepted_so_far ! number of iterations is directly linked to the number output
     endif
 
     ! add something here to delete previous files if wanted later
@@ -331,8 +331,10 @@ contains
 
        if (MCO%nWRITE > 0 .and. mod(N%ITER,MCO%nWRITE) == 0) then
 !           call write_results(PARS0,(P0+P0prior))
-           call write_variances(PI%beta_stepsize,PI%npars)
-           call write_parameters(PARS0,(P0+P0prior),PI%npars)
+           call write_variances(PI%beta_stepsize,PI%npars,N%ACCRATE)
+           call write_parameters(PARS0,(P0+P0prior),PI%npars)  
+           call write_covariance_matrix(PI%covariance,PI%npars,.false.)
+           call write_covariance_info(PI%mean_par,PI%Nparstd,PI%npars)
        end if ! write or not to write
 
        ! time to adapt?
@@ -370,7 +372,7 @@ contains
     end do ! while conditions
 
     ! write out final covariance matrix for the analysis
-    if (MCO%nWRITE > 0) call write_covariance_matrix(PI%covariance,PI%npars)
+    if (MCO%nWRITE > 0) call write_covariance_matrix(PI%covariance,PI%npars,.false.)
 
     ! fill MCOUT details
     MCOUT%best_pars(1:PI%npars) = BESTPARS(1:PI%npars)
@@ -389,7 +391,7 @@ contains
   !------------------------------------------------------------------
   !
   subroutine adapt_step_size(PARSALL,N)
-    use cardamom_io, only: write_covariance_matrix
+    use cardamom_io, only: write_covariance_matrix, write_covariance_info
     use MCMCOPT, only: MCO, PI, COUNTERS
     use math_functions, only: nor2par, par2nor, cholesky_factor, &
                               std, covariance_matrix, increment_covariance_matrix, &
@@ -449,9 +451,9 @@ contains
                PI%beta_stepsize(p) = min(par_maxstepsize,max(PI%covariance(p,p),par_minstepsize))
             end do ! p
             if (N%ACCRATE > 0.05d0) then
-                PI%beta_stepsize = PI%beta_stepsize * 1.05d0
+                PI%beta_stepsize = PI%beta_stepsize * 1.20d0
             else
-                PI%beta_stepsize = PI%beta_stepsize * 0.95d0
+                PI%beta_stepsize = PI%beta_stepsize * 0.80d0
             endif
         endif
 
@@ -483,7 +485,10 @@ contains
             call inverse_matrix( PI%npars, PI%covariance, PI%iC )
 
             ! write out first covariance matrix, this will be compared with the final covariance matrix
-            if (MCO%nWRITE > 0) call write_covariance_matrix(PI%covariance,PI%npars)
+            if (MCO%nWRITE > 0) then
+                call write_covariance_matrix(PI%covariance,PI%npars,.true.)
+                call write_covariance_info(PI%mean_par,PI%Nparstd,PI%npars)
+            endif 
 
         end if ! N%ACCLOC > 3
 

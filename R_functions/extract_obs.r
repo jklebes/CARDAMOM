@@ -72,7 +72,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
     if (Csom_source == "HWSD") {
         # could add other variables such as SOM (gC.m-2)
         Csom_initial = extract_hwsd_Csom(spatial_type,resolution,grid_type,latlon_wanted,Csom_all)
-        Csom_initial_unc = Csom_initial * 0.24 # see papers assessing uncertainty of HWSD, ~47 %
+        Csom_initial_unc = Csom_initial * 0.47 # see papers assessing uncertainty of HWSD, ~47 %
     } else if (Csom_source == "SoilGrids") {
         Csom_info = extract_soilgrid_Csom(spatial_type,resolution,grid_type,latlon_wanted,Csom_all)
         Csom_initial = Csom_info$Csom_initial ; Csom_initial_unc = Csom_info$Csom_initial_unc
@@ -88,25 +88,32 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
         # assume no data available
         Csom_initial = -9999 ; Csom_initial_unc = -9999
     }
+    # Now assuming we have actual information we need to add the model structural uncertainty.
+    # A structural of uncertainty has been estimates at ~ 1000 gC/m2 based on Smallman et al., (2017)
+    if (Csom_initial != 9999) {Csom_initial_unc = Csom_initial_unc + 1000}
 
     ###
     ## Get some sand / clay information (%)
     ###
 
     if (sand_clay_source == "HWSD") {
-      sand_clay=extract_hwsd_sand_clay(spatial_type,resolution,grid_type,latlon_wanted,sand_clay_all)
-      top_sand = sand_clay$top_sand ; bot_sand = sand_clay$bot_sand
-      top_clay = sand_clay$top_clay ; bot_clay = sand_clay$bot_clay
+        sand_clay=extract_hwsd_sand_clay(spatial_type,resolution,grid_type,latlon_wanted,sand_clay_all)
+        top_sand = sand_clay$top_sand ; bot_sand = sand_clay$bot_sand
+        top_clay = sand_clay$top_clay ; bot_clay = sand_clay$bot_clay
+    } else if (sand_clay_source == "SoilGrids") {
+        sand_clay=extract_soilgrid_sand_clay(spatial_type,resolution,grid_type,latlon_wanted,sand_clay_all)
+        top_sand = sand_clay$top_sand ; bot_sand = sand_clay$bot_sand
+        top_clay = sand_clay$top_clay ; bot_clay = sand_clay$bot_clay 
     } else if (sand_clay_source == "site_specific") {
-      infile=paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
-      top_sand = read_site_specific_obs("top_sand_initial",infile)
-      bot_sand = read_site_specific_obs("bot_sand_initial",infile)
-      top_clay = read_site_specific_obs("top_clay_initial",infile)
-      bot_clay = read_site_specific_obs("bot_clay_initial",infile)
+        infile=paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
+        top_sand = read_site_specific_obs("top_sand_initial",infile)
+        bot_sand = read_site_specific_obs("bot_sand_initial",infile)
+        top_clay = read_site_specific_obs("top_clay_initial",infile)
+        bot_clay = read_site_specific_obs("bot_clay_initial",infile)
     } else {
-      # assume no data available
-      top_sand = 40 ; bot_sand = 40
-      top_clay = 15 ; bot_clay = 15
+        # assume no data available
+        top_sand = 40 ; bot_sand = 40
+        top_clay = 15 ; bot_clay = 15
     }
 
     ###
@@ -452,6 +459,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
       # assume no data available
       Csom_stock = -9999 ; Csom_stock_unc = -9999
     }
+    # Now assuming we have actual information we need to add the model structural uncertainty.
+    # A structural of uncertainty has been estimates at ~ 1000 gC/m2 based on Smallman et al., (2017)
+    if (Csom_stock != 9999) {Csom_stock_unc = Csom_stock_unc + 1000}
 
     ###
     ## Get some Cstem information (stock)

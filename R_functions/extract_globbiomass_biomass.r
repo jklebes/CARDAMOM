@@ -12,7 +12,7 @@ extract_globbiomass_biomass<- function(timestep_days,spatial_type,resolution,gri
             if (spatial_type == "grid") {
                 if (grid_type == "wgs84") {
                     # resolution of the product
-                    product_res = (Cwood_all$lat[1,2]-Cwood_all$lat[1,1])+(Cwood_all$long[2,1]-Cwood_all$long[1,1])
+                    product_res = abs(Cwood_all$lat[1,2]-Cwood_all$lat[1,1])+abs(Cwood_all$long[2,1]-Cwood_all$long[1,1])
                     product_res = product_res * 0.5
                     # radius is ceiling of the ratio of the product vs analysis ratio
                     radius = ceiling(resolution / product_res)

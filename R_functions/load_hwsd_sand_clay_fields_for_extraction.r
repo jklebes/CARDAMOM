@@ -8,7 +8,34 @@ load_hwsd_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source) 
     
     if (sand_clay_source == "SoilGrids") {
 
-        stop('have not coded for soil grid extraction for sand / clay information')
+        # Read in the data for both the sand and clay
+        # Sand
+        top_sand = raster(paste(path_to_sand_clay,"clay_percent_mean_5km_0to30cm.tif", sep=""))
+        bot_sand = raster(paste(path_to_sand_clay,"clay_percent_mean_5km_30to10cm.tif", sep=""))
+        # Clay
+        top_clay = raster(paste(path_to_sand_clay,"sand_percent_mean_5km_0to30cm.tif", sep=""))
+        bot_clay = raster(paste(path_to_sand_clay,"sand_percent_mean_5km_30to10cm.tif", sep=""))
+
+        # Extract dimension information for the grid.
+        # Note 1) the axis switching between raster and actual array
+        #      2) we only do this once as the lat / long grid for both maps is identical
+        xdim = dim(top_sand)[2] ; ydim = dim(top_sand)[1]
+        # extract the lat / long information needed
+        long = coordinates(top_sand)[,1] ; lat = coordinates(top_sand)[,2]
+        # restructure into correct orientation
+        long = array(long, dim=c(xdim,ydim))
+        lat = array(lat, dim=c(xdim,ydim))
+
+        # Break out from the rasters into arrays which we can manipulate
+        # Sand
+        top_sand = array(as.vector(unlist(top_sand)), dim=c(xdim,ydim))
+        bot_sand = array(as.vector(unlist(bot_sand)), dim=c(xdim,ydim))
+         # Clay
+        top_clay = array(as.vector(unlist(top_clay)), dim=c(xdim,ydim))
+        bot_clay = array(as.vector(unlist(bot_clay)), dim=c(xdim,ydim))
+
+        # output variables
+        return(list(top_sand = top_sand, top_clay = top_clay, bot_sand = bot_sand, bot_clay = bot_clay,lat = lat,long = long))
 
     } else if (sand_clay_source == "HWSD") {
     

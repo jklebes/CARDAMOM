@@ -38,12 +38,12 @@ cardamom_project_setup <- function (paths,PROJECT) {
   # number of samples per chain / accepted parameters
   failed=TRUE
   while(failed) {
-    nsamples=as.integer(readline("How many parameters to accept?"))
+    nsamples=as.integer(readline("How many parameters to sample?"))
     if (nsamples >= 1e4 & nsamples <= 100e6) {failed=FALSE} else {failed=TRUE}
   }
   failed=TRUE
   while(failed) {
-    nsubsamples=as.integer(readline("How many accepted parameters to keep per chain (recommend = 1000)?"))
+    nsubsamples=as.integer(readline("How many parameters to keep per chain (recommend = 1000)?"))
     if (nsubsamples > 1e2 & nsubsamples < 1e6 & nsubsamples < nsamples) {failed=FALSE} else {failed=TRUE}
   }
 

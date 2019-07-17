@@ -13,6 +13,7 @@ module cardamom_io
   public :: write_parameters                &
            ,write_variances                 &
            ,write_covariance_matrix         &
+           ,write_covariance_info           &
            ,update_for_restart_simulation   &
            ,check_for_existing_output_files &
            ,open_output_files               &
@@ -23,11 +24,11 @@ module cardamom_io
            ,read_binary_data
 
   ! allow access to needed variable
-  public :: restart_flag, accepted_so_far
+  public :: restart_flag, accepted_so_far, accept_rate
 
   ! declare module level variables
-  integer :: pfile_unit = 10, sfile_unit = 11, cfile_unit = 12, ifile_unit = 13
-  integer :: accepted_so_far
+  integer :: pfile_unit = 10, sfile_unit = 11, cfile_unit = 12, cifile_unit = 13, ifile_unit = 14
+  integer :: accepted_so_far, accept_rate
   ! default assumption is that this is not a restart fun
   logical :: restart_flag = .false.
 
@@ -210,7 +211,7 @@ module cardamom_io
   !
   !------------------------------------------------------------------
   !
-  subroutine check_for_existing_output_files(npars,parname,stepname,covname)
+  subroutine check_for_existing_output_files(npars,parname,stepname,covname,covinfoname)
 
     ! subroutine checks whether both the parameter and step files exist for this
     ! job. If they do we will assume that this is a restart job that we want to
@@ -219,9 +220,9 @@ module cardamom_io
     implicit none
     ! declare input variables
     integer, intent(in) :: npars
-    character(350), intent(in) :: parname, stepname, covname
+    character(350), intent(in) :: parname, stepname, covname, covinfoname
     ! local variables
-    logical :: par_exists,step_exists,cov_exists
+    logical :: par_exists,step_exists,cov_exists,covinfo_exists
     double precision :: dummy
     integer :: num_lines,status
 
@@ -229,26 +230,29 @@ module cardamom_io
     inquire(file=trim(parname), exist=par_exists)
     inquire(file=trim(stepname), exist=step_exists)
     inquire(file=trim(covname), exist=cov_exists)
+    inquire(file=trim(covinfoname), exist=covinfo_exists)
 
     ! now determine the correct response
-    if (par_exists .and. step_exists) then
+    if (par_exists .and. step_exists .and. cov_exists .and. covinfo_exists) then
 
         ! both files exist therefore this might be a restart run.
         ! lets see if there is anything in the files that we might use
         ! count the number of remaining lines in the file..
         ! open the relevant output files
-        call open_output_files(parname,stepname,covname)
+        call open_output_files(parname,stepname,covname,covinfoname)
         status = 0 ; num_lines = 0
         do
           read(pfile_unit,iostat=status) dummy
           if ( status .ne. 0 ) exit
           num_lines = num_lines + 1
         enddo
-        if (num_lines > 10*npars) then
+        if (num_lines > 10*(npars+1)) then
             ! then there is something in the file we we can use it
             restart_flag = .true.
             print*,"...have found parameter file = ",trim(parname)
             print*,"...have found step file = ",trim(stepname)
+            print*,"...have found cov file = ",trim(covname)
+            print*,"...have found cov_info file = ",trim(covinfoname)
         else
             ! or the file exists but is empty so treat it as a fresh start
             restart_flag = .false.
@@ -257,18 +261,13 @@ module cardamom_io
         ! either way we open the file up later on so now we need to close them
         call close_output_files
 
-    elseif (.not.par_exists .and. .not.step_exists) then
-
-        ! this is definitely not a restart
-        restart_flag = .false.
-
     else ! par_exists .and. step_exists
 
         ! then or of these files exists and the other does not so it is
         ! ambiguous whether or not this is a restart
-        print*,"either the *PARS or *STEP files exist while the other does not"
-        print*,"CARDAMOM can not determine whether this is a new run or a restart so we have stopped"
-        stop
+        print*,"One or more of the analysis files cannot be found."
+        print*,"CARDAMOM must start from scratch... "
+        restart_flag = .false.
 
     endif ! par_exists .and. step_exists
 
@@ -287,6 +286,7 @@ module cardamom_io
     close(pfile_unit)
     close(sfile_unit)
     close(cfile_unit)
+    close(cifile_unit)
 
   end subroutine close_output_files
   !
@@ -465,7 +465,7 @@ module cardamom_io
   !
   !--------------------------------------------------------------------
   !
-  subroutine open_output_files(parname,stepname,covname)
+  subroutine open_output_files(parname,stepname,covname,covinfoname)
 
     ! Subroutine opens the needed output files and destroys any previously
     ! existing files with the same name, just in case mind!
@@ -475,7 +475,7 @@ module cardamom_io
     implicit none
 
     ! declare input variables
-    character(350), intent(in) :: parname, stepname, covname
+    character(350), intent(in) :: parname, stepname, covname,covinfoname
 
     ! declare local variables
     integer :: ios
@@ -485,9 +485,11 @@ module cardamom_io
     open(pfile_unit,file=trim(parname),form="UNFORMATTED",access="stream",status="UNKNOWN",iostat=ios)
     if (ios /= 0) print*,"error ",ios," openning file",trim(parname)
     open(sfile_unit,file=trim(stepname),form="UNFORMATTED",access="stream",status="UNKNOWN",iostat=ios)
-    if (ios /= 0) print*,"error ",ios," openning file",trim(parname)
+    if (ios /= 0) print*,"error ",ios," openning file",trim(stepname)
     open(cfile_unit,file=trim(covname),form="UNFORMATTED",access="stream",status="UNKNOWN",iostat=ios)
-    if (ios /= 0) print*,"error ",ios," openning file",trim(parname)
+    if (ios /= 0) print*,"error ",ios," openning file",trim(covname)
+    open(cifile_unit,file=trim(covinfoname),form="UNFORMATTED",access="stream",status="UNKNOWN",iostat=ios)
+    if (ios /= 0) print*,"error ",ios," openning file",trim(covinfoname)
 
     return
 
@@ -996,6 +998,7 @@ module cardamom_io
     write(MCO%outfile,fmt='(A)')trim(outfile)//"PARS"
     write(MCO%stepfile,fmt='(A)')trim(outfile)//"STEP"
     write(MCO%covfile,fmt='(A)')trim(outfile)//"COV"
+    write(MCO%covifile,fmt='(A)')trim(outfile)//"COVINFO"
 
   end subroutine read_options
   !
@@ -1012,67 +1015,62 @@ module cardamom_io
     implicit none
 
     ! local variables
-    integer :: i, j, num_lines, status
+    integer :: a, b, i, j, num_lines, status
     double precision :: dummy
-    double precision,dimension(:,:), allocatable :: tmp,norparvec
+    double precision,dimension(:,:), allocatable :: tmp
 
     ! the parameter and step files should have already been openned so
     ! read the parameter and step files to get to the end
 
     ! rewind to the beginning
-    rewind(pfile_unit) ; rewind(sfile_unit)
+    rewind(pfile_unit) ; rewind(sfile_unit) ; rewind(cfile_unit) ; rewind(cifile_unit)
 
     !
-    ! Now because the parameter and step files have different dimensions we will
-    ! carry out the reading seperately for simple coding. Parameters first then
-    ! steps
+    ! As this subroutine will only be called once reading each file will occur
+    ! separately to improve simplicity.
     !
 
-    ! count the number of remaining lines in the file..
+    !
+    ! Parameter file - stored as non-normalised values
+    !
+
+    ! count the number of lines in the file..
     status = 0 ; num_lines = 0
     do
       read(pfile_unit,iostat=status) dummy
       if ( status .ne. 0 ) exit
       num_lines = num_lines + 1
     enddo
-    ! update num_lines by number of parameters+1 for the log-likelihood
+    ! Determine the number of complete parameter vectors stored. Note that the +
+    ! 1 is due to the log-likelihood score being saved as well.
     num_lines = num_lines/(DATAin%nopars+1)
 
-    ! allocate memory
-    allocate(tmp(num_lines,(DATAin%nopars+1)), &
-             norparvec(PI%npars,num_lines))
-    ! rewind, this time just parameter file
+    ! Allocate memory to our temperary variable and the normalised parameter
+    ! vector equivalent.
+    allocate(tmp(num_lines,(DATAin%nopars+1)))
+    ! rewind so that we can read the contents now correctly
     rewind(pfile_unit)
 
-    ! now read the data for real
+    ! Read the data for real
     do i = 1, num_lines
        do j = 1, (DATAin%nopars+1)
           read(pfile_unit) tmp(i,j)
        end do ! j for parameter
     end do ! i for combinations
 
-    ! make note of how many have already been accepted
+    ! Make note of how many parameter vectors have been written out.
     accepted_so_far = num_lines
-    ! from this extract the final parameter set and load into
+    ! Extract the final parameter set and load into the initial parameter vector
+    ! for the analysis.
     PI%parini(1:DATAin%nopars) = tmp(num_lines,1:DATAin%nopars)
-    ! we must also approximate the covariance matrix
-    PI%Nparstd = accepted_so_far
-    do i = 1, PI%npars
-       call par2nor(num_lines,tmp(1:num_lines,i),PI%parmin(i),PI%parmax(i),norparvec(i,1:num_lines))
-    end do
-    ! estimate variance-covariance matrix based on currently stored output
-    call covariance_matrix(norparvec(1:PI%npars,1:num_lines),PI%mean_par,PI%npars,num_lines,PI%covariance)
-    do i = 1, PI%npars
-       PI%parstd(i) = sqrt(PI%covariance(i,i))
-       PI%beta_stepsize(i) = PI%covariance(i,i)
-    end do
-    ! estimate status of the inverse covariance matrix also
-    call inverse_matrix( PI%npars, PI%covariance, PI%iC )
+    ! The current parameter set will be normalised on entry into the MHMCMC
+    ! subroutine
 
-    deallocate(tmp,norparvec)
+    ! free up variable for new file
+    deallocate(tmp) 
 
     !
-    ! Now do step file
+    ! Step file - step size used in the beta proposal
     !
 
     ! count the number of remaining lines in the file..
@@ -1083,47 +1081,151 @@ module cardamom_io
        num_lines = num_lines + 1
     enddo
 
-    ! update num_lines by number of parameters
-    num_lines = num_lines/(DATAin%nopars)
-    ! allocate memory
-    allocate(tmp(num_lines,(DATAin%nopars)))
-    ! rewind, this time just parameter file
+    ! Determine the number of actual beta_stepsize vectors are present. Note
+    ! that the + 1 is due to the local acceptance rate being provided too.
+    num_lines = num_lines/(DATAin%nopars+1)
+    ! allocate memory 
+    allocate(tmp(num_lines,(DATAin%nopars+1)))
+    ! rewind, for actual reading
     rewind(sfile_unit)
 
     ! now read the data for real
     do i = 1, num_lines
-       do j = 1, (DATAin%nopars)
+       do j = 1, (DATAin%nopars+1)
           read(sfile_unit) tmp(i,j)
        end do ! j for parameter
     end do ! i for combinations
-    ! we also want the final step size being used
+    ! Store the most recent step size, which corresponds with the saved
+    ! parmeters (above) and covariance matrix (below)
     PI%beta_stepsize = tmp(num_lines,1:DATAin%nopars)
-
+    ! save the current acceptance_rate
+    accept_rate = tmp(num_lines,DATAin%nopars+1)
+    ! tidy up for the next file
     deallocate(tmp)
+
+    !
+    ! Covariance matrix file
+    !
+
+    ! The covariance matrix may contain either 1 or 2 complete matrices. We will
+    ! just want to the latest one.
+    
+    ! count the number of remaining lines in the file..
+    status = 0 ; num_lines = 0
+    do
+      read(cfile_unit,iostat=status) dummy
+       if ( status .ne. 0. ) exit
+       num_lines = num_lines + 1
+    enddo
+
+    ! Determine whether there is 1 or more matrice here
+    if ((num_lines/DATAin%nopars)/DATAin%nopars == 1) then 
+        ! the size of the file is consistent with a single matrix having been
+        ! saved
+        a = 1
+    else if ((num_lines/DATAin%nopars)/DATAin%nopars == 2) then
+        ! 
+        a = 2
+    else
+        ! something has gone wrong - best stop 
+        print*,"Error reading COV file"
+        print*,"DATAin%nopars = ",DATAin%nopars,"COV length = ",num_lines * DATAin%nopars
+        stop
+    endif
+
+    ! rewind, for actual reading
+    rewind(cfile_unit)
+
+    ! now read the data for real
+    do b = 1, a
+       do i = 1, num_lines
+          do j = 1, DATAin%nopars
+             read(cfile_unit) PI%covariance(i,j)
+          end do ! j for parameter
+       end do ! i for combinations
+    end do
+
+    ! extract current variance information
+    do i = 1, PI%npars
+       PI%parstd(i) = sqrt(PI%covariance(i,i))
+    end do
+    ! estimate status of the inverse covariance matrix 
+    call inverse_matrix( PI%npars, PI%covariance, PI%iC )
+
+    ! tidy up
+    deallocate(tmp)
+
+    !
+    ! Covariance information file
+    !
+
+    ! The number of parameters on which the covariance matrix is based must be
+    ! known to allow for correct updating. Similarly the mean normalised
+    ! parameter values are also needed
+
+    ! count the number of remaining lines in the file..
+    status = 0 ; num_lines = 0
+    do
+      read(cifile_unit,iostat=status) dummy
+       if ( status .ne. 0. ) exit
+       num_lines = num_lines + 1
+    enddo
+
+    ! how many parameter vectors have been output. Note the + 1 is accounting
+    ! for the number of samples underlying the mean
+    num_lines = num_lines / (PI%npars + 1)
+    ! allocate memory 
+    allocate(tmp(num_lines,(DATAin%nopars+1)))
+    ! rewind, for actual reading
+    rewind(cifile_unit)
+
+    ! now read the data for real
+    do i = 1, num_lines
+       do j = 1, (DATAin%nopars+1)
+          read(cifile_unit) tmp(i,j)
+       end do ! j for parameter
+    end do ! i for combinations
+    ! Store the most recent step size, which corresponds with the saved
+    ! parmeters (above) and covariance matrix (below)
+    PI%mean_par = tmp(num_lines,1:DATAin%nopars)
+    PI%Nparstd = tmp(num_lines,DATAin%nopars+1)
+
+    return
 
   end subroutine update_for_restart_simulation
   !
   !------------------------------------------------------------------
   !
-  subroutine write_covariance_matrix(covariance,npars)
+  subroutine write_covariance_matrix(covariance,npars,initial_cov)
 
     ! subroutine writes MCMC accepted parameters and step values to binary files
 
     implicit none
 
     ! arguments
+    logical, intent(in) :: initial_cov
     integer, intent(in) :: npars
-    double precision, dimension(npars,npars), intent(in) ::covariance
+    double precision, dimension(npars,npars), intent(in) :: covariance
 
     ! declare local variables
-    integer :: i,j
+    integer :: i,j,irec
+
+    ! If we have already written the initial covariance matrix we want to keep
+    ! over-writing the current matrix. We do this to avoid large files form
+    ! writing out multiple covariance matrices
+    if (.not.initial_cov) then
+        irec = npars * npars
+    else
+        irec = 0
+    end if
 
     ! write out the file. Its binary format has already been determined at the
     ! openning of the file
 
     do i = 1, npars
        do j = 1, npars
-          write(cfile_unit) covariance(i,j)
+          irec = irec + 1
+          write(cfile_unit, pos = irec) covariance(i,j)
        end do
     end do
 
@@ -1133,7 +1235,36 @@ module cardamom_io
   !
   !------------------------------------------------------------------
   !
-  subroutine write_variances(variance,npars)
+  subroutine write_covariance_info(mean_pars,nsample,npars)
+
+    ! subroutine writes MCMC accepted parameters and step values to binary files
+
+    implicit none
+
+    ! arguments
+    integer, intent(in) :: npars
+    double precision, intent(in) :: nsample
+    double precision, dimension(npars), intent(in) :: mean_pars
+
+    ! declare local variables
+    integer :: i,j
+
+    ! write out the file. Its binary format has already been determined at the
+    ! openning of the file
+
+    do i = 1, npars
+       write(cifile_unit) mean_pars(i)
+    end do
+
+    write(cifile_unit) nsample
+
+    return
+
+  end subroutine write_covariance_info
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine write_variances(variance,npars,accept_rate)
     
     ! subroutine writes parameter variance for corresponding parameter values
 
@@ -1142,6 +1273,7 @@ module cardamom_io
     ! declare input variables
     integer, intent(in) :: npars
     double precision, dimension(npars), intent(in) :: variance
+    double precision :: accept_rate ! local acceptance rate
     
     ! declare local variables
     integer :: n
@@ -1152,6 +1284,9 @@ module cardamom_io
     do n = 1, npars
        write(sfile_unit) variance(n)
     end do
+ 
+    ! we will need to know the current acceptance rate for restarts
+    write(sfile_unit) accept_rate
    
     return
 
