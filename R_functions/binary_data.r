@@ -68,26 +68,6 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     OBS$forest_management=array(OBS$forest_management, dim=c(length(met$run_day)))
   }
 
-
-  ###
-  ## REALLY BAD HACK
-  ###
-
-  #if (grepl("Duke",file)) {
-  #    met$mint=met$mint-1.75
-  #    met$maxt=met$maxt-2.00
-  #    met$swrad=met$swrad-0.8698
-  #} else if (grepl("Harwood",file)){
-  #    met$mint=met$mint-1.73
-  #    met$maxt=met$maxt-1.73
-  #}
-
-  #par(mfrow=c(2,3))
-  #plot(met$mint)
-  #plot(met$maxt)
-  #plot(met$swrad)
-  #plot(met$precip)
-
   # extract information from list to array
   if (modelname == "ACM") {
     MET = array(NA,dim=c(length(met$run_day),(length(met)+2)))

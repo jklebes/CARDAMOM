@@ -39,7 +39,7 @@ cardamom_project_setup <- function (paths,PROJECT) {
   failed=TRUE
   while(failed) {
     nsamples=as.integer(readline("How many parameters to sample?"))
-    if (nsamples >= 1e4 & nsamples <= 100e6) {failed=FALSE} else {failed=TRUE}
+    if (nsamples >= 1e4 & nsamples <= 200e6) {failed=FALSE} else {failed=TRUE}
   }
   failed=TRUE
   while(failed) {

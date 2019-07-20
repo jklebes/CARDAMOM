@@ -478,20 +478,33 @@ module cardamom_io
     character(350), intent(in) :: parname, stepname, covname,covinfoname
 
     ! declare local variables
-    integer :: ios
+    integer :: ios, reclen
+    double precision :: a = 1d0
 
-    ! open both files now
+    ! open files now
 
+    ! most of these will require new information to be appended to the end at
+    ! all times - therefore we use the unformatted stream access
     open(pfile_unit,file=trim(parname),form="UNFORMATTED",access="stream",status="UNKNOWN",iostat=ios)
     if (ios /= 0) print*,"error ",ios," openning file",trim(parname)
     open(sfile_unit,file=trim(stepname),form="UNFORMATTED",access="stream",status="UNKNOWN",iostat=ios)
     if (ios /= 0) print*,"error ",ios," openning file",trim(stepname)
-    open(cfile_unit,file=trim(covname),form="UNFORMATTED",access="stream",status="UNKNOWN",iostat=ios)
-    if (ios /= 0) print*,"error ",ios," openning file",trim(covname)
     open(cifile_unit,file=trim(covinfoname),form="UNFORMATTED",access="stream",status="UNKNOWN",iostat=ios)
     if (ios /= 0) print*,"error ",ios," openning file",trim(covinfoname)
+    ! for the covariance matrix we have a fixed size containing two matrices,
+    ! the initial and the current output - therefore we use 
+!    open(cfile_unit,file=trim(covname),form="UNFORMATTED",access="stream",status="UNKNOWN",iostat=ios)
+!    if (ios /= 0) print*,"error ",ios," openning file",trim(covname)
+    inquire(iolength = reclen) a ; print*,reclen
+    open(cfile_unit,file=trim(covname),form="UNFORMATTED",access="direct",recl=reclen,iostat=ios)
+    if (ios /= 0) print*,"error ",ios," openning file",trim(covname)
 
     return
+
+!inquire(iolength = reclen) a
+!open(unit=10, file="bob.out", form="UNFORMATTED", access = "direct", recl=reclen)
+!write(unit = 10, rec = 1) a
+!close(unt = 10)
 
   end subroutine open_output_files
   !
@@ -964,7 +977,7 @@ module cardamom_io
 
     ! defining hardcoded MCMC options
     MCO%append = 1
-    MCO%nADAPT = 1000 ! TLS: 1000 -> 5000 -> 10000
+    MCO%nADAPT = 500 ! TLS: 1000 -> 5000 -> 10000
     MCO%fADAPT = 0.5d0
     MCO%randparini = .false.
     MCO%returnpars = .false.
@@ -1225,7 +1238,7 @@ module cardamom_io
     do i = 1, npars
        do j = 1, npars
           irec = irec + 1
-          write(cfile_unit, pos = irec) covariance(i,j)
+          write(cfile_unit, rec = irec) covariance(i,j)
        end do
     end do
 

@@ -8,7 +8,7 @@ program cardamom_framework
                         check_for_existing_output_files,restart_flag,   &
                         update_for_restart_simulation, write_covariance_matrix, &
                         close_output_files
- use MHMCMC_module, only: MHMCMC, par_minstepsize
+ use MHMCMC_module, only: MHMCMC, par_minstepsize, par_initstepsize
  use model_likelihood_module, only: model_likelihood, find_edc_initial_values
 
  ! This is the main subroutine for the CARDAMOM framework. The specific model
@@ -71,7 +71,7 @@ program cardamom_framework
  ! Determine initial values, this requires using the MHMCMC
  call find_edc_initial_values
  ! Reset stepsize and covariance for main DRAM-MCMC
- PI%stepsize = 1d0 ; PI%beta_stepsize = par_minstepsize
+ PI%stepsize = 1d0 ; PI%beta_stepsize = par_initstepsize !par_minstepsize
  PI%parstd = 1d0 ; PI%Nparstd = 0d0 
  PI%covariance = 0d0 ; PI%mean_par = 0d0 
  PI%cov = .false. ; PI%use_multivariate = .false.

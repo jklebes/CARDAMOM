@@ -2601,7 +2601,7 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
     initial_canopy = storage
     ! determine maximum canopy storage & through fall fraction
 !    through_fall = max(min_throughfall,exp(CanIntFrac*lai))
-    through_fall = exp(CanIntFrac*lai)
+    through_fall = exp(CanIntFrac*lai) * exp(-(wind_spd**2*0.10d0))
     ! maximum canopy storage (mm); minimum is applied to prevent errors in
     ! drainage calculation. Assume minimum capacity due to wood
     max_storage = max(min_storage,CanStorFrac*lai) ; max_storage_1 = max_storage**(-1d0)

@@ -636,7 +636,7 @@ module model_likelihood_module
 
     ! avgTmin min threshold should not be larger than max.
     ! We also expect that the range between min and maxium should be > 5 K and < 50 K
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(15)-pars(14)) > 50d0 .and. (pars(15)-pars(14)) < 5d0) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(15)-pars(14)) > 50d0 .or. (pars(15)-pars(14)) < 5d0) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
     endif
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(14) < minval(DATAin%met(10,:))-5d0 ) then

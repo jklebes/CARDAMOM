@@ -9,8 +9,9 @@ read_parameter_covariance<- function(PROJECT_in,n) {
   cfile = list.files(paste(PROJECT_in$resultspath,sep=""), full.names=TRUE)
   # select the correct project
   is_it = grepl(PROJECT_in$name,cfile) ; cfile = cfile[is_it]
-  # select the PARS files only
+  # select the COV files only
   is_it = grepl("COV",cfile) ; cfile = cfile[is_it]
+  is_it = grepl("COVINFO",cfile) ; cfile = cfile[is_it == FALSE]
   # need to duplicate the list at this point to ensure that we can be certain we do not confuse the chain number and site numbers
   cfile_tmp = gsub(c("_COV"),"",cfile)
   # select the correct site

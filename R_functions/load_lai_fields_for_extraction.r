@@ -111,6 +111,15 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
     # let the user know this might take some time
     print("Loading processed lai fields for subsequent sub-setting ...")
 
+    # check which file prefix we are using today
+    # list all available files which we will then search
+    avail_files = list.files(path_to_lai,full.names=TRUE)
+    if (length(which(grepl("c_gls_LAI_", avail_files)))) {
+        prefix = "c_gls_LAI_"
+    } else { 
+        prefix = "c_gls_LAI300_"
+    }
+
     # timing information on the number of day in a month
     month_days = rep(31,length.out=12)
     month_days[2] = 28 ; month_days[c(4,6,9,11)] = 30
@@ -123,12 +132,13 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
       # first check how many files we have
       if (yr == 1) {
         # list all available files which we will then search
-        avail_files = list.files(path_to_lai,full.names=TRUE)
+#        avail_files = list.files(path_to_lai,full.names=TRUE)
         nsteps = 0
         for (yrr in seq(1, length(years_to_load))) {
           # create the prefix to the files we will want for a given year
+          input_file_1=paste(prefix,years_to_load[yrr],sep="")
 #          input_file_1=paste("c_gls_LAI_",years_to_load[yrr],sep="")
-          input_file_1=paste("c_gls_LAI300_",years_to_load[yr],sep="")
+#          input_file_1=paste("c_gls_LAI300_",years_to_load[yr],sep="")
           # then check whether this pattern is found in the available files
           this_year = grepl(input_file_1, avail_files) ; this_year = which(this_year == TRUE)
           # if we have at least one timestep for this year then we have some information otherwise it is missing!
@@ -142,8 +152,9 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
       } # first year?
 
       # open processed modis files
+      input_file_1=paste(prefix,years_to_load[yr],sep="")
 #      input_file_1=paste("c_gls_LAI_",years_to_load[yr],sep="")
-      input_file_1=paste("c_gls_LAI300_",years_to_load[yr],sep="")
+#      input_file_1=paste("c_gls_LAI300_",years_to_load[yr],sep="")
       # then check whether this pattern is found in the available files
       this_year = avail_files[grepl(input_file_1, avail_files)]
 
