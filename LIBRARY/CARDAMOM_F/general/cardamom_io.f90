@@ -929,13 +929,13 @@ module cardamom_io
     ! Begin allocating parameter info
     PI%npars = DATAin%nopars
     allocate(PI%parmin(PI%npars),PI%parmax(PI%npars),PI%parini(PI%npars) &
-            ,PI%parfix(PI%npars),PI%parstd(PI%npars),PI%beta_stepsize(PI%npars) &
+            ,PI%parfix(PI%npars),PI%parvar(PI%npars),PI%beta_stepsize(PI%npars) &
             ,PI%covariance(PI%npars,PI%npars),PI%mean_par(PI%npars) &
             ,PI%iC(PI%npars,PI%npars),PI%stepsize(PI%npars))
 
     ! force zero
     PI%parmin = 0d0 ; PI%parmax = 0d0 ; PI%parini = 0d0
-    PI%parfix = 0d0 ; PI%parstd = 0d0 
+    PI%parfix = 0d0 ; PI%parvar = 0d0 
     PI%stepsize = 0d0 ; PI%beta_stepsize = 0d0
     PI%covariance = 0d0 ; PI%iC = 0d0
 
@@ -948,7 +948,7 @@ module cardamom_io
 !    end if
 
     ! defining initial MHMCMC stepsize and standard deviation
-    PI%stepsize = 1d0 ; PI%beta_stepsize = 0.01d0 ; PI%parstd = 1d0 ; PI%Nparstd = 0d0
+    PI%stepsize = 1d0 ; PI%beta_stepsize = 0.01d0 ; PI%parvar = 1d0 ; PI%Nparvar = 0d0
     ! Covariance matrix cannot be set to zero therefore set initial value to a
     ! small positive value along to variance access
     PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false. ; PI%use_multivariate = .false.
@@ -1028,7 +1028,7 @@ module cardamom_io
     implicit none
 
     ! local variables
-    integer :: a, b, i, j, num_lines, status
+    integer :: a, b, c, i, j, num_lines, status
     double precision :: dummy
     double precision,dimension(:,:), allocatable :: tmp
 
@@ -1124,9 +1124,9 @@ module cardamom_io
     ! just want to the latest one.
     
     ! count the number of remaining lines in the file..
-    status = 0 ; num_lines = 0
+    status = 0 ; num_lines = 1
     do
-      read(cfile_unit,iostat=status) dummy
+      read(cfile_unit,iostat=status,rec = num_lines) dummy
        if ( status .ne. 0. ) exit
        num_lines = num_lines + 1
     enddo
@@ -1150,23 +1150,23 @@ module cardamom_io
     rewind(cfile_unit)
 
     ! now read the data for real
+    c = 1
     do b = 1, a
-       do i = 1, num_lines
+       do i = 1, DATAin%nopars
           do j = 1, DATAin%nopars
-             read(cfile_unit) PI%covariance(i,j)
+             read(cfile_unit, rec = c) PI%covariance(i,j)
+             c = c + 1
           end do ! j for parameter
        end do ! i for combinations
     end do
 
     ! extract current variance information
     do i = 1, PI%npars
-       PI%parstd(i) = sqrt(PI%covariance(i,i))
+       PI%parvar(i) = PI%covariance(i,i)
     end do
     ! estimate status of the inverse covariance matrix 
     call inverse_matrix( PI%npars, PI%covariance, PI%iC )
 
-    ! tidy up
-    deallocate(tmp)
 
     !
     ! Covariance information file
@@ -1201,7 +1201,7 @@ module cardamom_io
     ! Store the most recent step size, which corresponds with the saved
     ! parmeters (above) and covariance matrix (below)
     PI%mean_par = tmp(num_lines,1:DATAin%nopars)
-    PI%Nparstd = tmp(num_lines,DATAin%nopars+1)
+    PI%Nparvar = tmp(num_lines,DATAin%nopars+1)
 
     return
 
@@ -1337,44 +1337,6 @@ module cardamom_io
     return
 
   end subroutine write_parameters
-  !
-  !------------------------------------------------------------------
-  !
-  subroutine write_results(pars,prob)
-    use MCMCOPT, only: PI, MCO
-
-    ! subroutine writes MCMC accepted parameters and step values to binary files
-
-    implicit none
-
-    ! declare input variables
-    double precision, dimension(PI%npars), intent(in) :: pars
-    double precision, intent(in) :: prob
-
-    ! declare local variables
-    integer :: n, val
-
-     ! check that variable linked...
-    !inquire(file=MCO%outfile, number = val)
-
-    ! write out the file. Its binary format has already been determined at the
-    ! openning of the file
-
-
-    do n = 1, PI%npars
-       write(pfile_unit) pars(n)
- !      write(sfile_unit) PI%beta_stepsize(n)
-    end do
-
-    ! now add the probability
-    write(pfile_unit) prob
-
-    ! close will occur at the end of the MCMC
-
-    ! return to user
-    return
-
-  end subroutine write_results
   !
   !--------------------------------------------------------------------
   !

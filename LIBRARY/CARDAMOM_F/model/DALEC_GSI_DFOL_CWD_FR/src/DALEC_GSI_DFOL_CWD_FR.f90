@@ -733,9 +733,6 @@ contains
       ! allocate GSI history dimension
       gsi_lag_remembered = nint(max(2d0,maxval(tmp_m)))
     end if ! .not.allocated(tmp_x)
-    ! assign our starting value
-    gsi_history = pars(36)-1d0
-    just_grown = pars(35)
 
     ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
     if (.not.allocated(deltat_1)) then
@@ -781,14 +778,12 @@ contains
     call calculate_Rtot(Rtot)
 
     ! assign climate sensitivities
+    ! assign our starting value
+    gsi_history = pars(36)-1d0
+    just_grown = pars(35)
     gsi_lag = gsi_lag_remembered ! added to prevent loss from memory
     fol_turn_crit = pars(34)-1d0
     lab_turn_crit = pars(3)-1d0
-    ! extracted from global GSI model
-    !> median(as.vector(par_array_median[,,3]), na.rm=TRUE)-1
-    ![1] 0.002795797
-    !> median(as.vector(par_array_median[,,34]), na.rm=TRUE)-1
-    ![1] -0.002105454
 
     !
     ! Begin looping through each time step

@@ -25,7 +25,7 @@ double precision, parameter :: par_minstepsize = 0.0001d0 &
 double precision :: DR_scaler = 1d0
 ! Is current proposal multivariate or not?
 logical :: multivariate_proposal = .false.
-integer, parameter :: N_before_mv = 2
+integer, parameter :: N_before_mv = 10
 
 contains
   !
@@ -118,9 +118,9 @@ contains
 
     ! initial values
     P = -1d0 ; Pprior = -1d0
-    uniform = 1
-    N%ACC = 0 ; N%ITER = 0 ; N%ACCEDC = 0
-    N%ACCLOC = 0 ; N%ACCRATE = 0d0
+    uniform = 1 
+    N%ACC = 0 ; N%ITER = 0 ; N%ITER_beta = 0 ; N%ACCEDC = 0
+    N%ACCLOC = 0 ; N%ACCLOC_beta = 0 ; N%ACCRATE = 0d0 ; N%ACCRATE_beta = 0d0
 
     ! calculate initial vector of uniform random values
     allocate(uniform_random_vector(MCO%nADAPT*2))
@@ -169,6 +169,17 @@ contains
     write(*,*) "Starting likelihood = ",P0,"+",P0prior
     Pmax = P0 + P0prior
 
+    ! perform sanity check to ensure that the same parameters generate a
+    ! consistent likelihood in return
+    call model_likelihood_option(PI%parini, P, Pprior)
+    call model_likelihood_option(PI%parini, DR_P, DR_Pprior)
+    if (P0 /= P .or. P0prior /= Pprior .or. P0 /= DR_P .or. P0prior /= DR_Pprior) then
+        print*,"Multiple calls of a common parameter vector returns different likelihood scores,"
+        print*,"this indicates an error in the likelihood or model subroutines..."
+        print*,"P0=",P0,"P1=",P,"P2=",DR_P,"P0prior=",P0prior,"P1prior=",Pprior,"P2prior=",DR_Pprior
+        stop
+    end if
+
     ! checks whether the EDCs (combined with P0 not P0prior) have been met in the initial parameter set
     infini = 0d0
     if (P0 == log(infini)) then
@@ -179,7 +190,7 @@ contains
     do while (N%ITER < MCO%nOUT .and. (P < 0d0 .or. MCO%nWRITE > 0)) ! Correct MCMC assumption
 
        ! take a step in parameter space
-       call step(PARS0,PARS,norPARS0,norPARS,inbound)
+       call step(N,PARS0,PARS,norPARS0,norPARS,inbound,.false.)
 
        ! if parameter proposal in bounds check the model
        if (inbound) then
@@ -223,6 +234,9 @@ contains
           endif
           N%ACC = N%ACC + 1 ; N%ACCLOC = N%ACCLOC + 1
           P0 = P ; P0prior = Pprior
+          if (.not.multivariate_proposal) then
+              N%ACCLOC_beta = N%ACCLOC_beta + 1
+          endif
 
        else ! we have rejected - apply Delayed Rejection approach to enhance local searching
 
@@ -231,7 +245,7 @@ contains
                 DR_scaler = 0.01d0
 
                 ! take a step in parameter space
-                call step(PARS0,PARS2,norPARS0,norPARS2,inbound)
+                call step(N,PARS0,PARS2,norPARS0,norPARS2,inbound,.true.)
 
                 if (inbound) then
 
@@ -315,39 +329,47 @@ contains
        endif
 
        if (MCO%nWRITE > 0 .and. mod(N%ITER,MCO%nWRITE) == 0) then
-!           call write_results(PARS0,(P0+P0prior))
-           call write_variances(PI%beta_stepsize,PI%npars,N%ACCRATE)
+!           call write_variances(PI%beta_stepsize,PI%npars,N%ACCRATE)
+           call write_variances(PI%parvar,PI%npars,N%ACCRATE)
            call write_parameters(PARS0,(P0+P0prior),PI%npars)  
            call write_covariance_matrix(PI%covariance,PI%npars,.false.)
-           call write_covariance_info(PI%mean_par,PI%Nparstd,PI%npars)
+           call write_covariance_info(PI%mean_par,PI%Nparvar,PI%npars)
        end if ! write or not to write
 
        ! time to adapt?
        if (mod(N%ITER,MCO%nADAPT) == 0) then
            ! work out local acceptance rate (i.e. since last adapt)
            N%ACCRATE = dble(N%ACCLOC) / dble(MCO%nADAPT)
+           N%ACCRATE_beta = dble(N%ACCLOC_beta) / (dble(N%ITER_beta))
            ! once covariance matrix has been created just update based on a
            ! single parameter set from each period.
            if (PI%cov .and. N%ACCLOC > 0) then
                N%ACCLOC = 1 ; PARSALL(1:PI%npars,N%ACCLOC) = norPARS0(1:PI%npars)
+!               PARSALL(1:PI%npars,1) = PARSALL(1:PI%npars,N%ACCLOC) ; N%ACCLOC = 1
+           else if (.not.PI%cov .and. N%ACCLOC > 2) then
+               PARSALL(1:PI%npars,2) = PARSALL(1:PI%npars,ceiling(dble(N%ACCLOC)*0.5d0))
+               PARSALL(1:PI%npars,3) = PARSALL(1:PI%npars,N%ACCLOC)
+               N%ACCLOC = 3
            endif
            ! Are we still in the adaption hase and are there any newly accepted
            ! parameters?
-           if ((MCO%fADAPT*dble(MCO%nOUT)) > dble(N%ITER)) then
+           if ((MCO%fADAPT*dble(MCO%nOUT)) > dble(N%ITER) .or. (dble(N%ACC) / dble(N%ITER)) < 0.05d0) then
                call adapt_step_size(PARSALL,N)
            end if !  have enough parameter been accepted
-           ! resets to local counter
-           N%ACCLOC = 0
+           ! resets to local counters
+           N%ACCLOC = 0 ; N%ACCLOC_beta = 0 ; N%ITER_beta = 0 
        end if ! time to adapt?
 
        ! should I be write(*,*)ing to screen or not?
        if (MCO%nPRINT > 0 .and. (mod(N%ITER,MCO%nPRINT) == 0)) then
            write(*,*)"Total accepted = ",N%ACC," out of ",MCO%nOUT
            write(*,*)"Overall acceptance rate  = ",dble(N%ACC) / dble(N%ITER)
-           write(*,*)"Local   acceptance rate  =",N%ACCRATE
+           write(*,*)"Local   acceptance rate  = ",N%ACCRATE
+           write(*,*)"Beta    acceptance rate  = ",N%ACCRATE_beta
            write(*,*)"Current obs   = ",P0,"proposed = ",P," log-likelihood"
            write(*,*)"Current prior = ",P0prior,"proposed = ",Pprior," log-likelihood"
-           write(*,*)"Mean beta_stepsize = ",sum(PI%beta_stepsize) / dble(PI%npars)
+           write(*,*)"Maximum likelihood = ",Pmax
+!           write(*,*)"Mean beta_stepsize = ",sum(PI%beta_stepsize) / dble(PI%npars)
            ! NOTE: that -infinity in current obs only indicates failure of EDCs but
            ! -infinity in both obs and parameter likelihood scores indicates that
            ! proposed parameters are out of bounds
@@ -396,7 +418,8 @@ contains
 
     ! declare local variables
     integer p, i, info ! counters
-    double precision, dimension(PI%npars,PI%npars) :: cholesky
+    double precision, dimension(PI%npars,PI%npars) :: cholesky, local_covariance
+    double precision, dimension(PI%npars) :: local_mean_par
     double precision :: beta_adjust
 
     ! only allow cov matrix calculation / update assuming there has been some
@@ -406,63 +429,40 @@ contains
         ! if we have a covariance matrix then we want to update it, if not then we need to create one
         if (PI%cov) then
 
+            ! save in case of need to reverse the increment
+            !local_covariance = PI%covariance
+            !local_mean_par = PI%mean_par
+
             ! Increment the variance-covariance matrix with new accepted parameter sets
-            ! NOTE: that this also increments the total accepted counter (PI%Nparstd)
+            ! NOTE: that this also increments the total accepted counter (PI%Nparvar)
             call increment_covariance_matrix(PARSALL(1:PI%npars,1:N%ACCLOC),PI%mean_par,PI%npars &
-                                            ,PI%Nparstd,N%ACCLOC,PI%covariance)
+                                            ,PI%Nparvar,N%ACCLOC,PI%covariance)
 
             ! Calculate the cholesky factor as this includes a determination of
             ! whether the covariance matrix is positive definite.
             cholesky = PI%covariance
             call cholesky_factor( PI%npars, cholesky, info )
-            ! If not positive definite then we should not use the multivariat
+            ! If not positive definite then we should not use the multivariate
             ! step at this time.
             if (info /= 0) then
                 PI%use_multivariate = .false.
             else
                 PI%use_multivariate = .true.
+                ! Re-calculate inverse matrix as it may now be used,
+                ! direct inversion of covariance matrix based on Doolittle LU
+                ! factorization
+                call inverse_matrix( PI%npars, PI%covariance, PI%iC )
             endif
-
-            ! Re-calculate inverse matrix as it may now be used,
-            ! direct inversion of covariance matrix based on Doolittle LU
-            ! factorization
-            call inverse_matrix( PI%npars, PI%covariance, PI%iC )
-
-!            ! NOTE: we assume here that if MCO%nWRITE == 0 then this is part of the
-!            ! EDC search phase, therefore we do not want to vary the beta proposal
-!            ! stepsize
-!            if (MCO%nWRITE > 0 .and. nint(PI%Nparstd) > N_before_mv*PI%npars*10) then
-!                ! use local acceptance rate to determine whether we should be
-!                ! expanding or contracting the gaussian search distribution
-!                if (N%ACCRATE < 0.05d0) then
-!                    ! tighten distribution to build up accepted samples
-!                    beta_adjust = 0.50d0
-!                else
-!                    ! try to exapnd the distribution to improve sampling across
-!                    ! parameter space
-!                    beta_adjust = 2d0
-!                endif
-!                ! adjust step size by local variance
-!                do p = 1, PI%npars
-!                   ! calculate standards deviation (variability) for the local window
-!                   ! extracted from the variance
-!                   PI%parstd(p) = sqrt(PI%covariance(p,p))
-!                   PI%beta_stepsize(p) = PI%covariance(p,p)*beta_adjust
-!                end do ! p
-!                ! restrict to max / min bounds
-!                where (PI%beta_stepsize < par_minstepsize) PI%beta_stepsize = par_minstepsize
-!                where (PI%beta_stepsize > par_maxstepsize) PI%beta_stepsize = par_maxstepsize
-!            endif ! MCO%nWRITE > 0 ...
 
         else ! PI%cov == .true.
 
             ! we have not yet created a covariance matrix based on accepted
             ! parameters. Assuming we have some then create one...
-            if (N%ACCLOC > 3) then
+            if (N%ACCLOC > 2) then
 
                 ! estimate covariance matrix
                 call covariance_matrix(PARSALL(1:PI%npars,1:N%ACCLOC),PI%mean_par,PI%npars,N%ACCLOC,PI%covariance)
-                PI%cov = .true. ; PI%Nparstd = dble(N%ACCLOC) 
+                PI%cov = .true. ; PI%Nparvar = dble(N%ACCLOC) 
 
                 ! Calculate the cholesky factor as this includes a determination of
                 ! whether the covariance matrix is positive definite.
@@ -474,50 +474,58 @@ contains
                     PI%use_multivariate = .false.
                 else
                     PI%use_multivariate = .true.
+                    ! Re-calculate inverse matrix as it may now be used,
+                    ! direct inversion of covariance matrix based on Doolittle LU
+                    ! factorization
+                    call inverse_matrix( PI%npars, PI%covariance, PI%iC )
                 endif
-
-                ! Re-calculate inverse matrix as it may now be used,
-                ! direct inversion of covariance matrix based on Doolittle LU
-                ! factorization
-                call inverse_matrix( PI%npars, PI%covariance, PI%iC )
 
                 ! write out first covariance matrix, this will be compared with the final covariance matrix
                 if (MCO%nWRITE > 0) then
                     call write_covariance_matrix(PI%covariance,PI%npars,.true.)
-                    call write_covariance_info(PI%mean_par,PI%Nparstd,PI%npars)
+                    call write_covariance_info(PI%mean_par,PI%Nparvar,PI%npars)
                 endif 
  
-            end if ! N%ACCLOC > 3
+            end if ! N%ACCLOC > 2
 
         end if ! PI%cov == .true.
 
-    end if ! N%ACCLOC > 0
+        ! NOTE: we assume here that if MCO%nWRITE == 0 then this is part of
+        ! the EDC search phase, therefore we do not want to vary the beta
+        ! proposal stepsize
+        if (MCO%nWRITE > 0) then
+            ! adjust step size by local variance
+            do p = 1, PI%npars
+               ! calculate standards deviation (variability) for the local
+               ! window extracted from the variance
+               PI%parvar(p) = PI%covariance(p,p)
+            !   PI%beta_stepsize(p) = PI%covariance(p,p)
+            end do ! p 
 
-    ! NOTE: we assume here that if MCO%nWRITE == 0 then this is part of
-    ! the EDC search phase, therefore we do not want to vary the beta
-    ! proposal stepsize
-    if (MCO%nWRITE > 0 .and. nint(PI%Nparstd) > N_before_mv*PI%npars*10) then
-        ! use local acceptance rate to determine whether we should be
-        ! expanding or contracting the gaussian search distribution
-        if (N%ACCRATE < 0.05d0) then
-            ! tighten distribution to build up accepted samples
-            beta_adjust = 0.50d0
-        else
-            ! try to exapnd the distribution to improve sampling across
-            ! parameter space
-            beta_adjust = 2d0
-        endif
-        ! adjust step size by local variance
-        do p = 1, PI%npars
-           ! calculate standards deviation (variability) for the local
-           ! window extracted from the variance
-           PI%parstd(p) = sqrt(PI%covariance(p,p))
-           PI%beta_stepsize(p) = PI%covariance(p,p)*beta_adjust
-        end do ! p
-        ! restrict to max / min bounds
-        where (PI%beta_stepsize < par_minstepsize) PI%beta_stepsize = par_minstepsize
-        where (PI%beta_stepsize > par_maxstepsize) PI%beta_stepsize = par_maxstepsize
-    endif ! MCO%nWRITE > 0 ...
+        endif ! MCO%nWRITE > 0 ...
+
+!        ! use local acceptance rate to determine whether we should be
+!        ! expanding or contracting the gaussian search distribution
+!        if (N%ACCRATE_beta < 0.05d0) then
+!!!        if (N%ACCRATE_beta < 0.05d0 .and. N%ACCRATE_beta > 0d0) then
+!            ! tighten distribution to build up accepted samples
+!            beta_adjust = 0.80d0
+!        else if (N%ACCRATE_beta > 0.43d0) then
+!            ! try to exapnd the distribution to improve sampling across
+!            ! parameter space
+!            beta_adjust = 1.25d0
+!        else
+!            ! assume we are searching well and don't need any help from the
+!            ! Gaussian step
+!            beta_adjust = 1d0
+!        endif
+!        ! apply beta adjustment based on acceptance rate
+!        PI%beta_stepsize = PI%beta_stepsize * beta_adjust 
+!        ! restrict to max / min bounds
+!        where (PI%beta_stepsize < par_minstepsize) PI%beta_stepsize = par_minstepsize
+!        where (PI%beta_stepsize > par_maxstepsize) PI%beta_stepsize = par_maxstepsize
+
+    end if ! N%ACCLOC > 0
 
     return
 
@@ -525,7 +533,7 @@ contains
   !
   !------------------------------------------------------------------
   !
-  subroutine step(pars0,pars,norpars0,norpars,inbound)
+  subroutine step(N,pars0,pars,norpars0,norpars,inbound,DR_step)
     use math_functions, only: par2nor, nor2par, &
                               random_normal, random_multivariate, random_uniform
     use MCMCOPT, only: PI, COUNTERS
@@ -535,6 +543,8 @@ contains
     implicit none
 
     ! declare input variables
+    type ( counters ), intent(inout) :: N
+    logical, intent(in) :: DR_step
     double precision, dimension(PI%npars), intent(inout) :: norpars0 & ! normalised current parameters
                                                            ,norpars  & ! normalised proposal
                                                            ,pars0    & ! current parameters
@@ -573,7 +583,7 @@ contains
     ! is linked to the need build a covarianc matrix prior to multivariate
     ! sampling.
     ! See Roberts and Rosenthal, Examples of Adaptive MCMC, J. Comp. Graph. Stat. 18:349-367, 2009.
-    if (PI%use_multivariate .and. nint(PI%Nparstd) > N_before_mv*PI%npars .and. tmp > beta) then
+    if (PI%use_multivariate .and. nint(PI%Nparvar) > N_before_mv*PI%npars .and. (tmp > beta .or. DR_step)) then
 
         ! is this step a multivariate proposal or not
         multivariate_proposal = .true.
@@ -598,10 +608,10 @@ contains
             inbound = .false.
         endif
 
-    else ! nint(PI%Nparstd) > 10*PI%npars .and. tmp > beta
+    else ! nint(PI%Nparvar) > N_before_mv*PI%npars .and. tmp > beta
 
        ! is this step a multivariate proposal or not
-       multivariate_proposal = .false.
+       multivariate_proposal = .false. ; N%ITER_beta = N%ITER_beta + 1
 
        ! Sample random normal distribution (mean = 0, sd = 1)
        do p = 1, PI%npars
@@ -613,7 +623,9 @@ contains
        ! stepping to the number of parameters being retrieved by the analysis.
        ! See Haario et al., (2001) An adaptive Metropolis algorithm. Bernoulli 7.2: 223-242.
        ! and references therein.
+!       stepping = (PI%parvar*PI%beta_stepsize*rn2)*(1d0-PI%parfix)
        stepping = (PI%beta_stepsize*rn2)*(1d0-PI%parfix)
+!       stepping = (par_minstepsize*rn2)*(1d0-PI%parfix)
 !       stepping = (PI%beta_stepsize*rn2/dble(PI%npars))*(1d0-PI%parfix)
        norpars = norpars0 + stepping
        ! ensure the new parameter value is contrained between 0 and 1
@@ -623,7 +635,7 @@ contains
            inbound = .false.
        endif
 
-    end if ! nint(PI%Nparstd) > 10*PI%npars .and. tmp > beta
+    end if ! nint(PI%Nparvar) > 10*PI%npars .and. tmp > beta
 
     ! reverse normalisation on the new parameter step
     do p = 1, PI%npars

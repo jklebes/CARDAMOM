@@ -902,9 +902,6 @@ module CARBON_MODEL_MOD
             ! allocate GSI history dimension
             gsi_lag_remembered = max(2,maxval(nint(tmp_m)))
         end if ! .not.allocated(tmp_x)
-        ! assign our starting value
-        gsi_history = pars(36)-1d0
-        just_grown = pars(35)
 
         ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
 
@@ -939,6 +936,10 @@ module CARBON_MODEL_MOD
         call update_soil_initial_conditions(pars(41))
 
     endif
+
+    ! assign our starting value
+    gsi_history = pars(36)-1d0
+    just_grown = pars(35)
 
     ! load some needed module level values
     lai = POOLS(1,2)/pars(17)
@@ -3574,6 +3575,7 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
     endif
     ! calculate gradient
     gradient = linear_model_gradient(tmp_x(1:(gsi_lag)),gsi_history(1:gsi_lag),gsi_lag)
+
     ! adjust gradient to daily rate
     gradient = gradient / dble(nint((sum(deltat((current_step-m+1):current_step))) / dble(gsi_lag-1)))
     gsi_lag_remembered = gsi_lag

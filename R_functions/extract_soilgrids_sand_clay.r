@@ -3,7 +3,7 @@
 ####
 
 
-extract_hwsd_sand_clay<- function(spatial_type,resolution,grid_type,latlon_in,sand_clay_all) {
+extract_soilgrid_sand_clay<- function(spatial_type,resolution,grid_type,latlon_in,sand_clay_all) {
 
 	# convert input data long to conform to what we need
 	check1=which(sand_clay_all$long > 180) ; if (length(check1) > 0) { sand_clay_all$long[check1]=sand_clay_all$long[check1]-360 }

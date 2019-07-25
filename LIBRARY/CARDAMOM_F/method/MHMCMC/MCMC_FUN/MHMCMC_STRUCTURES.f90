@@ -51,12 +51,14 @@ module MCMCOPT
   ! information which is needed determine progress
   type COUNTERS
 
-    integer :: ACC      & ! total number of accepted solutions
-              ,ACCLOC   & ! number of recently accepted solutions
-              ,ITER     & ! number of iterations attempted
-              ,ACCEDC     ! number of EDC complient iterations
+    integer :: ACC         & ! total number of accepted solutions
+              ,ACCLOC      & ! number of recently accepted solutions
+              ,ACCLOC_beta & ! number of recently accepted solutions from beta proposals
+              ,ITER_beta   & ! number of iterations using beta proposal
+              ,ITER        & ! number of iterations attempted
+              ,ACCEDC        ! number of EDC complient iterations
 
-    double precision :: ACCRATE ! local acceptance rate
+    double precision :: ACCRATE_beta, ACCRATE ! local acceptance rate
 
   end type ! COUNTERS
 
@@ -71,9 +73,9 @@ module MCMCOPT
                                                   ,parmin   & ! minimum parameter values
                                                   ,parini   & ! initial parameter values
                                                   ,parfix   & ! do they need fixing (i.e. randomly generated)
-                                                  ,parstd     ! standard deviation of accepted parameter
+                                                  ,parvar     ! variance of accepted parameter
 
-    double precision :: Nparstd ! Number of samples forming standard deviation of accepted parameters
+    double precision :: Nparvar ! Number of samples forming variance of accepted parameters
 
     integer :: npars ! number of parameters to be solved
     ! crop specific variables

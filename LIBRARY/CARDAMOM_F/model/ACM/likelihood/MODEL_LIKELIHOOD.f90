@@ -65,7 +65,7 @@ module model_likelihood_module
 
     ! set the parameter step size at the beginning
     PI%stepsize = 1d0 ; PI%beta_stepsize = 0.005d0
-    PI%parstd = 1d0 ; PI%Nparstd = 0d0
+    PI%parvar = 1d0 ; PI%Nparvar = 0d0
     PI%use_multivariate = .false.
     ! Covariance matrix cannot be set to zero therefore set initial value to a
     ! small positive value along to variance access
@@ -108,7 +108,7 @@ module model_likelihood_module
                   MCO%randparini = .true.
                   ! reset the parameter step size at the beginning of each attempt
                   PI%stepsize = 1d0 ; PI%beta_stepsize = 0.005d0
-                  PI%parstd = 1d0 ; PI%Nparstd = 0d0
+                  PI%parvar = 1d0 ; PI%Nparvar = 0d0
                   ! Covariance matrix cannot be set to zero therefore set initial value to a
                   ! small positive value along to variance access
                   PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
@@ -141,7 +141,7 @@ module model_likelihood_module
                ! reset the parameter step size at the beginning of each
                ! attempt
                PI%stepsize = 1d0 ; PI%beta_stepsize = 0.005d0
-               PI%parstd = 1d0 ; PI%Nparstd = 0d0
+               PI%parvar = 1d0 ; PI%Nparvar = 0d0
                ! Covariance matrix cannot be set to zero therefore set
                ! initial value to a
                ! small positive value along to variance access

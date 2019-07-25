@@ -1,13 +1,13 @@
 
 program cardamom_framework
 
- use math_functions, only: idum, randn, rnstrt
+ use math_functions, only: idum, randn, rnstrt, inverse_matrix
  use MCMCOPT, only: MCO, MCOUT, PI, initialise_mcmc_output
  use cardamom_structures, only: DATAin
  use cardamom_io, only: read_pari_data, read_options, open_output_files, &
                         check_for_existing_output_files,restart_flag,   &
                         update_for_restart_simulation, write_covariance_matrix, &
-                        close_output_files
+                        close_output_files, write_covariance_info
  use MHMCMC_module, only: MHMCMC, par_minstepsize, par_initstepsize
  use model_likelihood_module, only: model_likelihood, find_edc_initial_values
 
@@ -71,13 +71,26 @@ program cardamom_framework
  ! Determine initial values, this requires using the MHMCMC
  call find_edc_initial_values
  ! Reset stepsize and covariance for main DRAM-MCMC
- PI%stepsize = 1d0 ; PI%beta_stepsize = par_initstepsize !par_minstepsize
- PI%parstd = 1d0 ; PI%Nparstd = 0d0 
+ PI%stepsize = 1d0 ; PI%beta_stepsize = par_minstepsize
+ PI%Nparvar = 0d0 ; PI%parvar = 0d0
  PI%covariance = 0d0 ; PI%mean_par = 0d0 
  PI%cov = .false. ; PI%use_multivariate = .false.
  do i = 1, PI%npars
     PI%covariance(i,i) = 1d0
  end do
+
+ ! Reset stepsize and covariance for main DRAM-MCMC
+! PI%stepsize = 1d0 ; PI%beta_stepsize = par_initstepsize !par_minstepsize
+! PI%Nparvar = 1d0
+! PI%covariance = 0d0 ; PI%parvar = par_initstepsize
+! PI%cov = .true. ; PI%use_multivariate = .false. ! .true.
+! do i = 1, PI%npars
+!    PI%covariance(i,i) = par_initstepsize
+! end do
+ ! Re-calculate inverse matrix as it may now be used,
+ ! direct inversion of covariance matrix based on Doolittle LU
+ ! factorization
+! call inverse_matrix( PI%npars, PI%covariance, PI%iC )
 
  ! Restore module variables needed for the run - these components could be split
  ! into two subroutines to avoid double calling of file name creation
@@ -92,9 +105,12 @@ program cardamom_framework
      ! now begin update of model timing variables and parameter values if this is a
      ! restart
      call update_for_restart_simulation
-! else
-!     ! write out first covariance matrix, this will be compared with the final covariance matrix
-!     if (MCO%nWRITE > 0) call write_covariance_matrix
+ else
+     ! write out first covariance matrix, this will be compared with the final covariance matrix
+     if (MCO%nWRITE > 0) then
+         call write_covariance_matrix(PI%covariance,PI%npars,.true.)
+         call write_covariance_info(PI%mean_par,PI%Nparvar,PI%npars)
+     endif
  endif
 
  ! update the user

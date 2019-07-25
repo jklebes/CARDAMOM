@@ -41,7 +41,7 @@ module model_likelihood_module
 
     ! set MCMC options needed for EDC run
     MCO%APPEND = 0
-    MCO%nADAPT = 1000
+    MCO%nADAPT = 500
     MCO%fADAPT = 1d0
     MCO%nOUT = 100000
     MCO%nPRINT = 0
@@ -65,7 +65,7 @@ module model_likelihood_module
 
     ! set the parameter step size at the beginning
     PI%stepsize = 1d0 ; PI%beta_stepsize = 0.005d0
-    PI%parstd = 1d0 ; PI%Nparstd = 0d0
+    PI%parvar = 1d0 ; PI%Nparvar = 0d0
     PI%use_multivariate = .false.
     ! Covariance matrix cannot be set to zero therefore set initial value to a
     ! small positive value along to variance access
@@ -108,7 +108,7 @@ module model_likelihood_module
                   MCO%randparini = .true.
                   ! reset the parameter step size at the beginning of each attempt
                   PI%stepsize = 1d0 ; PI%beta_stepsize = 0.005d0
-                  PI%parstd = 1d0 ; PI%Nparstd = 0d0
+                  PI%parvar = 1d0 ; PI%Nparvar = 0d0
                   ! Covariance matrix cannot be set to zero therefore set initial value to a
                   ! small positive value along to variance access
                   PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
@@ -141,7 +141,7 @@ module model_likelihood_module
                ! reset the parameter step size at the beginning of each
                ! attempt
                PI%stepsize = 1d0 ; PI%beta_stepsize = 0.005d0
-               PI%parstd = 1d0 ; PI%Nparstd = 0d0
+               PI%parvar = 1d0 ; PI%Nparvar = 0d0
                ! Covariance matrix cannot be set to zero therefore set
                ! initial value to a
                ! small positive value along to variance access
@@ -728,7 +728,7 @@ module model_likelihood_module
               ,disturb_begin, disturb_end
     double precision :: mean_pools(nopools), G, decay_coef, meangpp &
                        ,infi, sumgpp, sumnpp, model_living_C, temp_response &
-                       ,target_living_C(2),hold, steps_per_year, tmp1, tmp2, tmp3
+                       ,target_living_C(2),hold, steps_per_year, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6
     double precision, dimension(nodays) :: mean_ratio, resid_fol,resid_lab
     integer, dimension(nodays) :: hak ! variable to determine number of NaN in foliar residence time calculation
     double precision, dimension(:), allocatable :: mean_annual_pools,tmp
@@ -902,9 +902,12 @@ module model_likelihood_module
 
     ! Estimate steady state approximation for wood based on mean inputs over natural
     ! turnover, i.e. gCm-2day-1 / day-1 = gCm-2
-    tmp1 = ((sumwood/dble(nodays)) / pars(6))  ! the steady state approximation of wood (gC/m2)
-    tmp2 = ((sumcwd/dble(nodays)) / (pars(38)*temp_response)) ! the steady state approximation of cwd (gC/m2)
-    tmp3 = ((sumsom/dble(nodays)) / (pars(9)*temp_response)) ! the steady state approximation of som (gC/m2)
+    tmp1 = (sumwood/dble(nodays)) / pars(6)  ! the steady state approximation of wood (gC/m2)
+    tmp2 = (sumcwd/dble(nodays)) / (pars(38)*temp_response) ! the steady state approximation of cwd (gC/m2)
+    tmp3 = (sumsom/dble(nodays)) / (pars(9)*temp_response)  ! the steady state approximation of som (gC/m2)
+    tmp4 = (sumlit/dble(nodays)) / (pars(8)*temp_response)  ! steady state approximation of litter (gC/m2)
+    tmp5 = (sumroot/dble(nodays)) / pars(7) ! steady state approximation of root (gC/m2)
+    tmp6 = (sumfol/dble(nodays)) / torfol   ! steady state approximation of foliage (gC/m2)
     if ((EDC2 == 1 .or. DIAG == 1) .and. pars(21) > tmp1*1.1d0) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
     end if
@@ -927,16 +930,24 @@ module model_likelihood_module
     if ((EDC2 == 1 .or. DIAG == 1) .and. (tmp2 > tmp1 .or. tmp2 > tmp3)) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
     endif
+    ! While it might be less safe to assume the same steady state restriction on
+    ! initial conditions for the fast turning over litter pool (compared with
+    ! CWD above) we can still ensure its steady state is lower than som and the 
+    ! combined foliage + root pools, i.e. its fast supply and ultimate slow
+    ! sink.
+    if ((EDC2 == 1 .or. DIAG == 1) .and. (tmp4 > tmp5+tmp6 .or. tmp4 > tmp3)) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
+    end if
 
     ! GPP allocation to foliage and labile cannot be 5 orders of magnitude
     ! difference from GPP allocation to roots
     if ((EDC2 == 1 .or. DIAG == 1) .and. (ffol > (5d0*froot) .or. (ffol*5d0) < froot)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
     endif
 
     ! Average turnover of foliage should not be less than wood (pars(6))
     if ((EDC2 == 1 .or. DIAG == 1) .and. torfol < pars(6) ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(23) = 0
     endif
 
     ! Ecosystems evolve to optimise to their current environment.
@@ -944,7 +955,7 @@ module model_likelihood_module
     ! point approach an near optimal status. We conservatively assume that GSI
     ! should be > 0.5 at some point in the analysis
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,18)) < 0.5d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(23) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(24) = 0
     endif
 
     ! In contrast to the leaf longevity labile carbon stocks can be quite long
@@ -954,7 +965,7 @@ module model_likelihood_module
     !       11 years = 0.0002488955 day-1
     !        6 years = 0.0004563085 day-1
     if ((EDC2 == 1 .or. DIAG == 1) .and. torlab < 0.0002488955d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(24) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(25) = 0
     endif
 
     ! Finally we would not expect that the mean labile stock is greater than
@@ -967,7 +978,7 @@ module model_likelihood_module
     ! Richardson et al (2013), New Phytologist, Clab 2.24 +/- 0.44 % in temperate (max = 4.2 %)
     if (EDC2 == 1 .or. DIAG == 1) then
         if ((mean_pools(1) / (mean_pools(3) + mean_pools(4))) > 0.125d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(25) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(26) = 0
         endif
     endif ! EDC2 == 1 .or. DIAG == 1
 
@@ -997,27 +1008,27 @@ module model_likelihood_module
 
     ! foliar restrictions
     if ((EDC2 == 1 .or. DIAG == 1) .and. (fNPP < 0.1d0 .or. fNPP > 0.5d0)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(26) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(27) = 0
     endif
     ! for both roots and wood the NPP > 0.85 is added to prevent large labile
     ! pools being used to support growth that photosynthesis cannot provide over
     ! the long term.
     if ((EDC2 == 1 .or. DIAG == 1) .and. (rNPP < 0.05d0 .or. rNPP > 0.85d0 .or. wNPP > 0.85d0)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(27) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(28) = 0
     endif
     if ((EDC2 == 1 .or. DIAG == 1) .and. wNPP > 0.85d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(28) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(29) = 0
     endif
     ! NOTE that within the current framework NPP is split between fol, root, wood and that remaining in labile.
     ! Thus fail conditions fNPP + rNPP + wNPP > 1.0 .or. fNPP + rNPP + wNPP < 0.95, i.e. lNPP cannot be > 0.05 (-0.1)
     tmp1 = 1d0 - rNPP - wNPP - fNPP
     if ((EDC2 == 1 .or. DIAG == 1) .and. abs(tmp1) > 0.025d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(29) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(30) = 0
     endif
 
     ! Ra:GPP ratio is unlikely to be outside of 0.2 > Ra:GPP < 0.80
     if ((EDC2 == 1 .or. DIAG == 1) .and. (fauto > 0.80d0 .or. fauto < 0.20d0) ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(30) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(31) = 0
     end if
 
     !!!!!!!!!
