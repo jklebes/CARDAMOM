@@ -26,11 +26,17 @@ extract_soilgrid_Csom<-function(spatial_type,resolution,grid_type,latlon_wanted,
       radius = 0
   }
 
-  # work out average areas
-  average_i = max(1,(i1-radius)):min(dim(Csom_all$Csom)[1],(i1+radius)) ; average_j=max(1,(j1-radius)):min(dim(Csom_all$Csom)[2],(j1+radius))
-  # carry out averaging
-  Csom = mean(Csom_all$Csom[average_i,average_j], na.rm=TRUE)
-  Csom_unc = mean(Csom_all$Csom_unc[average_i,average_j], na.rm=TRUE)
+  answer = NA
+  while (is.na(answer) == TRUE) {
+    # work out average areas
+    average_i = max(1,(i1-radius)):min(dim(Csom_all$Csom)[1],(i1+radius))
+    average_j = max(1,(j1-radius)):min(dim(Csom_all$Csom)[2],(j1+radius))
+    # carry out averaging
+    Csom = mean(as.vector(Csom_all$Csom[average_i,average_j]), na.rm=TRUE)
+    Csom_unc = mean(as.vector(Csom_all$Csom_unc[average_i,average_j]), na.rm=TRUE)
+    # check for errors
+    if (is.na(Csom) | Csom < 0) {radius = radius+1 ; answer = NA} else {answer = 1}
+  }
 
   # retun back to the user 
   return(list(Csom_initial = Csom, Csom_initial_unc = Csom_unc))
