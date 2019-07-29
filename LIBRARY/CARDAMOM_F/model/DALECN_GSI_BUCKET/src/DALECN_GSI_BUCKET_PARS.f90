@@ -236,8 +236,8 @@ module MODEL_PARAMETERS
        PI%parmax(22)=5000d0
 
        ! C_som
-       PI%parmin(23)=100d0
-       PI%parmax(23)=100000d0
+       PI%parmin(23)=200d0
+       PI%parmax(23) = 250000d0 !90000d0
 
        ! C CWD
        PI%parmin(37)=1d0
