@@ -13,20 +13,17 @@ cardamom <-function (projname,model,method,stage) {
   # this file will contain all information relating the the PROJECT
   PROJECTfile=paste(paths$cardamom_outputs,model,"_",method,"/",projname,"/infofile.RData",sep="")
   PROJECTtype=paste(model,"_",method,sep="")
-  #home_computer="burn.geos.ed.ac.uk" ; stage=4 ; repair=0
-  #use_parallel=FALSE
-  #numWorkers=4 # number of cores to assign to parallel job
   # information to the user
   print(paste("When this all began ",Sys.time(),sep=""))
 
   if (stage == -1 & model == "ACM") {
-    # check the user understand what is about to happen
-    failed=TRUE
-    while (failed){
-      understands=readline("Does the user understand that using the ACM model all datastreams except GPP MUST be set to '  ' and that 'path_to_site_obs' file has all needed information (yes/no)?")
-      if (understands != "yes") {failed=TRUE} else {failed=FALSE}
-      if (understands == "no") {stop('then you need to read the code to figure out what it assumes....')}
-    } # while loop
+      # check the user understand what is about to happen
+      failed=TRUE
+      while (failed){
+        understands=readline("Does the user understand that using the ACM model all datastreams except GPP MUST be set to '  ' and that 'path_to_site_obs' file has all needed information (yes/no)?")
+        if (understands != "yes") {failed=TRUE} else {failed=FALSE}
+        if (understands == "no") {stop('then you need to read the code to figure out what it assumes....')}
+      } # while loop
   } # model ACM
 
   ###
@@ -40,38 +37,38 @@ cardamom <-function (projname,model,method,stage) {
 
     # create sites names file name
     if (cardamom_type == "site") {
-      PROJECT$nosites=length(sites_cardamom)
-      PROJECT$waterpixels=0
-      PROJECT$landsea=0 # 1=sea
-      PROJECT$sites=sites_cardamom
-      if (pft_wanted) {
-        site_info=find_pft(sites_cardamom_lat,sites_cardamom_long)
-        PROJECT$ctessel_pft=site_info$ctessel_pft
-      } else {
-        PROJECT$ctessel_pft = rep(0, length.out=PROJECT$nosites)
-      }
+        PROJECT$nosites=length(sites_cardamom)
+        PROJECT$waterpixels = 0
+        PROJECT$landsea = 0 # 1=sea
+        PROJECT$sites = sites_cardamom
+        if (pft_wanted) {
+            site_info = find_pft(sites_cardamom_lat,sites_cardamom_long)
+            PROJECT$ctessel_pft = site_info$ctessel_pft
+        } else {
+            PROJECT$ctessel_pft = rep(0, length.out=PROJECT$nosites)
+        }
     } else {
-      site_info=how_many_points(sites_cardamom_lat,sites_cardamom_long,cardamom_resolution,cardamom_grid_type,sites_cardamom)
-      PROJECT$nosites=site_info$nosites
-      PROJECT$sites=site_info$sites
-      PROJECT$landsea=site_info$landsea
-      PROJECT$waterpixels=site_info$waterpixels
-      if (pft_wanted) {
-        PROJECT$ctessel_pft=site_info$ctessel_pft
-      } else {
-        PROJECT$ctessel_pft = rep(0,length.out=length(site_info$ctessel_pft))
-      }
-      PROJECT$lat_dim=site_info$lat_dim
-      PROJECT$long_dim=site_info$long_dim
+        site_info = how_many_points(sites_cardamom_lat,sites_cardamom_long,cardamom_resolution,cardamom_grid_type,sites_cardamom)
+        PROJECT$nosites = site_info$nosites
+        PROJECT$sites = site_info$sites
+        PROJECT$landsea = site_info$landsea
+        PROJECT$waterpixels = site_info$waterpixels
+        if (pft_wanted) {
+            PROJECT$ctessel_pft = site_info$ctessel_pft
+        } else {
+            PROJECT$ctessel_pft = rep(0,length.out=length(site_info$ctessel_pft))
+        }
+        PROJECT$lat_dim = site_info$lat_dim
+        PROJECT$long_dim = site_info$long_dim
     }
 
     # whether we use PFT specific or global parameter ranges
     if (pft_specific_parameters) {
-      PROJECT$parameter_type="pft_specific"
+        PROJECT$parameter_type = "pft_specific"
     } else if (pft_specific_parameters == FALSE) {
-      PROJECT$parameter_type="global"
+        PROJECT$parameter_type = "global"
     } else {
-      stop(paste("user has not defined logistic 'pft_specific_parameters' option",sep=""))
+        stop(paste("user has not defined logistic 'pft_specific_parameters' option",sep=""))
     }
 
     # Load additional model information

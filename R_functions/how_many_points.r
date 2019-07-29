@@ -37,7 +37,7 @@ lcm2007_to_ctessel<- function(input_pft) {
     # use input LCM2007 cover type to select and return the ctessel PFT
     lcm2007_to_ctessel=tessel_types[input_pft]
     # if location does not have a pft in the lcm2007 make 0 and this will use default values from ECMWF
-    if (input_pft==0) {lcm2007_to_ctessel=0}
+    if (input_pft == 0) { lcm2007_to_ctessel = 0 }
     # now return needef value
     return(lcm2007_to_ctessel)
 }
@@ -278,32 +278,19 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
     landmask = shapefile("./R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx")
     # just to be sure enforce the projection to WGS-84
     landmask = spTransform(landmask,CRS("+init=epsg:4326"))
-    # extract lat/long information for subsetting
-    #landsea_long = coordinates(landmask)[,1] ; landsea_lat = coordinates(landmask)[,2]
-    # filter to constrain the target area
-    #filter = which(landsea_lat < max(lat)+3)
-    #landsea_long = landsea_long[filter] ; landsea_lat = landsea_lat[filter] ; landmask = landmask[filter,]
-    #filter = which(landsea_lat > min(lat)-3)
-    #landsea_long = landsea_long[filter] ; landsea_lat = landsea_lat[filter] ; landmask = landmask[filter,]
-    #filter = which(landsea_long < max(long)+3)
-    #landsea_long = landsea_long[filter] ; landsea_lat = landsea_lat[filter] ; landmask = landmask[filter,]
-    #filter = which(landsea_long > min(long)-3)
-    #landsea_long = landsea_long[filter] ; landsea_lat = landsea_lat[filter] ; landmask = landmask[filter,]
-    # generate mask at the resolution of the analysis - ok this wont be an exact match
-    # because of the slightly larger area being selected here but it will be close enough for maintaining resolution
-    #landsea = raster(ncols = lat_dim, nrows = long_dim)
 
     # Begin process of creating raster version of the shape file,
     # based on the type of spatial grid we are using and the resolution of the analysis
     if (grid_type == "UK") {
         # 0.1666667 is the limit of resolution of the landsea mask used
         landsea = raster(ncols = 360 / 0.1666667, nrows = 180 / 0.1666667)
-    } else if (grid_type=="wgs84") {
+        # NOTE: THIS NEED TO BE CHECKED WHETHER IT WORKS - I.E. CURRENTLY NOT USED SO NOT TESTED...
+    } else if (grid_type == "wgs84") {
         # extract whole grids at resolution of the analysis
-        landsea = raster(ncols = 360 / max(0.1666667,resolution), nrows = 180 / max(0.1666667,resolution))
+        landsea = raster(xmn = -180, xmx = 180, ymn = -90, ymx = 90, resolution = max(0.1666667,resolution), crs = "+init=epsg:4326")
     }
     # update the extent information of the raster with that of the source shapefile
-    extent(landsea) <- extent(landmask)
+    #extent(landsea) <- extent(landmask) # error; squishes the latitude dimension 
     # create raster, passing the raster values corresponding to the sovereign state
     # NOTE: the actual value assigned is linked the factor levels
     landsea = rasterize(landmask,landsea,factor(landmask$SOVEREIGNT))
@@ -333,26 +320,6 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
         landsea[which(is.na(landsea) == FALSE)] = 1 ; landsea[which(is.na(landsea))] = 0
     }
 
-#    # load the land sea mask 20 km resolution
-#    load("./R_functions/landmask20km.rda")
-#    # 1 = land, 0 = sea
-#    #image(landmask20km[1]) ; length(which(landmask20km[[1]] == 1)) ; length(which(landmask20km[[1]] == 0))
-#    # force a change from the Robinson projection to the WGS-84 lat/long
-#    landmask20km=spTransform(landmask20km,CRS("+init=epsg:4326"))
-#    # extract the lat long coordinate systems
-#    landsea_long=coordinates(landmask20km)[,1] ; landsea_lat=coordinates(landmask20km)[,2]
-#    # extract the land sea mask information
-#    landsea=landmask20km[[1]]
-#    # filter to constrain the target area
-#    filter=which(landsea_lat < max(lat)+0.5)
-#    landsea_long=landsea_long[filter] ; landsea_lat=landsea_lat[filter] ; landsea=landsea[filter]
-#    filter=which(landsea_lat > min(lat)-0.5)
-#    landsea_long=landsea_long[filter] ; landsea_lat=landsea_lat[filter] ; landsea=landsea[filter]
-#    filter=which(landsea_long < max(long)+0.5)
-#    landsea_long=landsea_long[filter] ; landsea_lat=landsea_lat[filter] ; landsea=landsea[filter]
-#    filter=which(landsea_long > min(long)-0.5)
-#    landsea_long=landsea_long[filter] ; landsea_lat=landsea_lat[filter] ; landsea=landsea[filter]
-
     # find locations from the landsea mask which correspond with overall grid defined in the control file
     if (use_parallel) {
         cl <- makeCluster(numWorkers, type = "PSOCK")
@@ -376,19 +343,19 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
     remove = 0 ; pft_keep = 0
     # now iterate through the sites
     for (pft in seq(1, length(lat))) {
-	     # update the user, but only sometimes
-	     if (pft%%2000 == 0 | pft < 500) {print(paste("Ocean filter ",round((pft/length(lat))*100,0),"% complete",sep=""))}
-	     # convert incoming pft to common values (in this case CTESSEL)
-	     if (use_lcm == "LCM2007") {
-	         new_pft = lcm2007_to_ctessel(lcm[output_i[pft],output_j[pft]])
-	     } else if (use_lcm == "CORINE2006") {
-	         new_pft = corine2006_to_ctessel(lcm[output_i[pft],output_j[pft]])
-	     } else if (use_lcm == "CORINE2006_1km") {
-           new_pft = corine2006_to_ctessel(lcm[output_i[pft],output_j[pft]])
-	     } else if (use_lcm == "forestry_commission" | use_lcm == "forestry_commission_LCM2007" | use_lcm == "forestry_commission_public_private") {
-           new_pft = lcm[output_i[pft],output_j[pft]]
-           if (new_pft < 0 | length(new_pft) == 0) {new_pft = 0}
-       } else if (use_lcm == "ECMWF") {
+         # update the user, but only sometimes
+         if (pft%%2000 == 0 | pft < 500) {print(paste("Ocean filter ",round((pft/length(lat))*100,0),"% complete",sep=""))}
+         # convert incoming pft to common values (in this case CTESSEL)
+         if (use_lcm == "LCM2007") {
+             new_pft = lcm2007_to_ctessel(lcm[output_i[pft],output_j[pft]])
+          } else if (use_lcm == "CORINE2006") {
+             new_pft = corine2006_to_ctessel(lcm[output_i[pft],output_j[pft]])
+          } else if (use_lcm == "CORINE2006_1km") {
+            new_pft = corine2006_to_ctessel(lcm[output_i[pft],output_j[pft]])
+          } else if (use_lcm == "forestry_commission" | use_lcm == "forestry_commission_LCM2007" | use_lcm == "forestry_commission_public_private") {
+            new_pft = lcm[output_i[pft],output_j[pft]]
+            if (new_pft < 0 | length(new_pft) == 0) {new_pft = 0}
+          } else if (use_lcm == "ECMWF") {
            new_pft = lcm[output_i[pft]]
        }
        # now exclude if not a land site
