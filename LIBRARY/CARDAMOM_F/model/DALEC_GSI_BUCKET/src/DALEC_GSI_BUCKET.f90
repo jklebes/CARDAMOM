@@ -163,7 +163,8 @@ module CARBON_MODEL_MOD
 
   ! useful technical parameters
   logical :: do_iWUE = .true. ! Use iWUE or WUE for stomatal optimisation
-  double precision, parameter :: vsmall = tiny(0d0)*1d3 ! *1d3 to add a little breathing room
+  double precision, parameter :: vsmall = tiny(0d0)*1d3 & ! *1d3 to add a little breathing room
+                                ,vlarge = huge(0d0)
 
   integer, parameter :: nos_root_layers = 3, nos_soil_layers = nos_root_layers + 1
   double precision, parameter :: pi = 3.1415927d0,  &
@@ -1710,25 +1711,21 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
 
     ! local variables
     double precision :: denom
-    double precision, parameter :: max_gs = 3500d0, &  ! mmolH2O/m2leaf/s
-                                   min_gs = 0.001d0, & ! mmolH2O/m2leaf/s
-                                   tol_gs = 4d0        ! mmolH2O/m2leaf/s
+    double precision, parameter :: max_gs = 3500d0, &  ! mmolH2O.m-2.s-1
+                                   min_gs = 0.001d0, & !
+                                   tol_gs = 4d0
 
     !!!!!!!!!!
     ! Calculate stomatal conductance under H2O and CO2 limitations
     !!!!!!!!!!
 
-    if (deltaWP > vsmall) then
+    if (aerodynamic_conductance > vsmall .and. deltaWP > vsmall) then
+
         ! Determine potential water flow rate (mmolH2O.m-2.dayl-1)
         max_supply = (deltaWP/Rtot) * seconds_per_day
-    else
-        ! set minimum (computer) precision level flow
-        max_supply = vsmall
-    end if
 
-    if (aerodynamic_conductance > vsmall) then
-
-        ! there is lai therefore we have have stomatal conductance
+        ! there is lai and aerodynamic exchange therefore we potentially have
+        ! have stomatal conductance
 
         ! Invert Penman-Monteith equation to give gs (m.s-1) needed to meet
         ! maximum possible evaporation for the day.
@@ -1742,33 +1739,114 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
 
         ! convert m.s-1 to mmolH2O.m-2.s-1
         stomatal_conductance = stomatal_conductance * convert_ms1_mmol_1
-        ! if conditions are dew forming then set conductance to maximum as we are not going to be limited by water demand
+        ! if conditions are dew forming then set conductance to maximum as we
+        ! are not going to be limited by water demand
         if (stomatal_conductance <= 0d0 .or. stomatal_conductance > max_gs) stomatal_conductance = max_gs
 
-        ! if we are potentially limited by stomatal conductance or we are using instrinsic water use efficiency (rather than WUE)
+        ! if we are potentially limited by stomatal conductance or we are using
+        ! instrinsic water use efficiency (rather than WUE)
         ! then iterate to find optimum gs otherwise just go with the max...
         if (stomatal_conductance /= max_gs .or. do_iWUE ) then
-           ! If there is a positive demand for water then we will solve for photosynthesis limits on gs through iterative solution
-           delta_gs = 1d-3 * lai ! mmolH2O/m2leaf/day
-           ! estimate inverse of LAI to avoid division in optimisation
-           lai_1 = lai**(-1d0)
-           if (do_iWUE) then
-              ! intrinsic WUE optimisation
-              stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE',find_gs_iWUE,min_gs,stomatal_conductance,tol_gs)
-           else
-              ! WUE optimisation
-              stomatal_conductance = zbrent('calculate_gs:find_gs_WUE',find_gs_WUE,min_gs,stomatal_conductance,tol_gs)
-           endif
+            ! If there is a positive demand for water then we will solve for
+            ! photosynthesis limits on gs through iterative solution
+            delta_gs = 1d-3*lai ! mmolH2O/m2leaf/day
+            ! estimate inverse of LAI to avoid division in optimisation
+            lai_1 = lai**(-1d0)
+            if (do_iWUE) then
+                ! intrinsic WUE optimisation
+                stomatal_conductance = zbrent('acm_albedo_gc:find_gs_iWUE',find_gs_iWUE,min_gs,stomatal_conductance,tol_gs)
+            else
+                ! WUE optimisation
+                stomatal_conductance = zbrent('acm_albedo_gc:find_gs_WUE',find_gs_WUE,min_gs,stomatal_conductance,tol_gs)
+            endif
         end if
 
     else
 
         ! if no LAI then there can be no stomatal conductance
         stomatal_conductance = 0d0
+        ! set minimum (computer) precision level flow
+        max_supply = vsmall
 
-    endif ! if LAI > vsmall
+    endif ! if aerodynamic conductance > vsmall
 
   end subroutine calculate_stomatal_conductance
+!  !
+!  !-----------------------------------------------------------
+!  !
+!  subroutine calculate_stomatal_conductance(deltaWP,Rtot)
+!
+!    ! Determines 1) an approximation of canopy conductance (gc) mmolH2O.m-2.s-1
+!    ! based on potential hydraulic flow, air temperature and absorbed radiation.
+!    ! 2) calculates absorbed shortwave radiation (W.m-2) as function of LAI
+!
+!    implicit none
+!
+!    ! arguments
+!    double precision, intent(in) :: deltaWP, & ! minlwp-wSWP (MPa)
+!                                       Rtot    ! total hydraulic resistance (MPa.s-1.m-2.mmol-1)
+!
+!    ! local variables
+!    double precision :: denom
+!    double precision, parameter :: max_gs = 3500d0, &  ! mmolH2O/m2leaf/s
+!                                   min_gs = 0.001d0, & ! mmolH2O/m2leaf/s
+!                                   tol_gs = 4d0        ! mmolH2O/m2leaf/s
+!
+!    !!!!!!!!!!
+!    ! Calculate stomatal conductance under H2O and CO2 limitations
+!    !!!!!!!!!!
+!
+!    if (deltaWP > vsmall) then
+!        ! Determine potential water flow rate (mmolH2O.m-2.dayl-1)
+!        max_supply = (deltaWP/Rtot) * seconds_per_day
+!    else
+!        ! set minimum (computer) precision level flow
+!        max_supply = vsmall
+!    end if
+!
+!    if (aerodynamic_conductance > vsmall) then
+!
+!        ! there is lai therefore we have have stomatal conductance
+!
+!        ! Invert Penman-Monteith equation to give gs (m.s-1) needed to meet
+!        ! maximum possible evaporation for the day.
+!        ! This will then be reduced based on CO2 limits for diffusion based
+!        ! photosynthesis
+!        denom = slope * ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2) &
+!              + (ET_demand_coef * aerodynamic_conductance)
+!        denom = (denom / (lambda * max_supply * mmol_to_kg_water * dayl_seconds_1)) - slope
+!        denom = denom / psych
+!        stomatal_conductance = aerodynamic_conductance / denom
+!
+!        ! convert m.s-1 to mmolH2O.m-2.s-1
+!        stomatal_conductance = stomatal_conductance * convert_ms1_mmol_1
+!        ! if conditions are dew forming then set conductance to maximum as we are not going to be limited by water demand
+!        if (stomatal_conductance <= 0d0 .or. stomatal_conductance > max_gs) stomatal_conductance = max_gs
+!
+!        ! if we are potentially limited by stomatal conductance or we are using instrinsic water use efficiency (rather than WUE)
+!        ! then iterate to find optimum gs otherwise just go with the max...
+!        if (stomatal_conductance /= max_gs .or. do_iWUE ) then
+!           ! If there is a positive demand for water then we will solve for photosynthesis limits on gs through iterative solution
+!           delta_gs = 1d-3 * lai ! mmolH2O/m2leaf/day
+!           ! estimate inverse of LAI to avoid division in optimisation
+!           lai_1 = lai**(-1d0)
+!           if (do_iWUE) then
+!              ! intrinsic WUE optimisation
+!              stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE',find_gs_iWUE,min_gs,stomatal_conductance,tol_gs)
+!           else
+!              ! WUE optimisation
+!              stomatal_conductance = zbrent('calculate_gs:find_gs_WUE',find_gs_WUE,min_gs,stomatal_conductance,tol_gs)
+!           endif
+!        end if
+!
+!    else
+!
+!        ! if no LAI then there can be no stomatal conductance
+!        stomatal_conductance = 0d0
+!
+!    endif ! if aerodynamic_conductance > vsmall
+!
+!  end subroutine calculate_stomatal_conductance
   !
   !------------------------------------------------------------------
   !
@@ -2573,7 +2651,7 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
   !
   !-----------------------------------------------------------------
   !
-  subroutine canopy_interception_and_storage(potential_evaporation,storage)
+    subroutine canopy_interception_and_storage(potential_evaporation,storage)
 
     ! Simple daily time step integration of canopy rainfall interception, runoff
     ! and rainfall (kgH2O.m-2.s-1). NOTE: it is possible for intercepted rainfall to be
@@ -2585,11 +2663,12 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
     ! arguments
     double precision, intent(inout) :: storage, & ! canopy water storage (kgH2O/m2)
                          potential_evaporation    ! wet canopy evaporation (kgH2O.m-2.day-1),
-    ! enters as potential but leaves as water balance adjusted
+                                                  ! enters as potential but leaves as water balance adjusted.
+                                                  ! Note that this assumes a completely wet leaf surface
     ! local variables
     integer :: i, hr
     double precision :: a, through_fall, max_storage, max_storage_1, daily_addition, wetcanopy_evaporation &
-                       ,potential_drainage_rate ,drain_rate, evap_rate, initial_canopy, co_mass_balance, dx, tmp(3)
+                       ,potential_drainage_rate ,drain_rate, evap_rate, initial_canopy, co_mass_balance, dx, dz, tmp(3)
     ! local parameters
     double precision, parameter :: CanIntFrac = -0.5d0,     & ! Coefficient scaling rainfall interception fraction with LAI
                                   CanStorFrac = 0.1d0,      & ! Coefficient scaling canopy water storage with LAI
@@ -2601,11 +2680,15 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
     ! hold initial canopy storage in memory
     initial_canopy = storage
     ! determine maximum canopy storage & through fall fraction
-!    through_fall = max(min_throughfall,exp(CanIntFrac*lai))
-    through_fall = exp(CanIntFrac*lai) * exp(-(wind_spd**2*0.10d0))
+    through_fall = max(min_throughfall,exp(CanIntFrac*lai))
     ! maximum canopy storage (mm); minimum is applied to prevent errors in
-    ! drainage calculation. Assume minimum capacity due to wood
-    max_storage = max(min_storage,CanStorFrac*lai) ; max_storage_1 = max_storage**(-1d0)
+    ! drainage calculation. Assume minimum capacity due to wood.
+    ! Wind speed correction reduced effective storage capacity leading to
+    ! greater run(blow)-off. 
+!    max_storage = max(min_storage,CanStorFrac*lai*exp(-(wind_spd**2*0.10d0))) 
+    max_storage = max(min_storage,CanStorFrac*lai)
+    ! caclulate inverse for efficient calculations below
+    max_storage_1 = max_storage**(-1d0)
     ! potential intercepted rainfall (kgH2O.m-2.s-1)
     intercepted_rainfall = rainfall * (1d0 - through_fall)
 
@@ -2636,31 +2719,41 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
                ! evaporation. Water below max_storage is accessable by evaporation only.
 
                ! Trapezium rule for approximating integral of drainage rate.
-               ! Allows estimation of the mean drainage rate between starting point and max_storage,
-               ! thus the time period appropriate for co-access can be quantified. NOTE 1440 = minutes / day
-               dx = storage - ((storage + max_storage)*0.5d0)
-               tmp(1) = a + (RefDrainCoef * storage)
-               tmp(2) = a + (RefDrainCoef * max_storage)
-               tmp(3) = a + (RefDrainCoef * (storage+dx))
+               ! Allows estimation of the mean drainage rate between starting
+               ! point and max_storage, thus the time period appropriate for co-access can be
+               ! quantified. NOTE 1440 = minutes / day
+               ! General Formula: integral(rate) = 0.5 * h((y0 + yn) + 2(y1 + y2 + ... yn-1)
+               ! Where h id the size of the section, y0 is the maximum rate, yn is the final rate.
+               dx = (storage - max_storage)*0.5d0
+               tmp(1) = a + (RefDrainCoef * storage)      ! initial rate
+               tmp(2) = a + (RefDrainCoef * max_storage)  ! final rate
+               tmp(3) = a + (RefDrainCoef * (storage-dx)) ! half-way rate
                tmp = exp(tmp)
                potential_drainage_rate = 0.5d0 * dx * ((tmp(1) + tmp(2)) + 2d0 * tmp(3))
                potential_drainage_rate = potential_drainage_rate * 1440d0
+               ! To protect against un-realistic drainage rates
+               ! due to very high rainfall rates
+               potential_drainage_rate = min(potential_drainage_rate,vlarge)
 
-               ! restrict evaporation and drainage to the quantity above max_storage
-               evap_rate = potential_evaporation ; drain_rate = min(potential_drainage_rate,storage-max_storage)
-
+               dz = storage-max_storage
                ! limit based on available water if total demand is greater than excess
-               co_mass_balance = ((storage-max_storage) / (evap_rate + drain_rate))
-               evap_rate = evap_rate * co_mass_balance ; drain_rate = drain_rate * co_mass_balance
+               co_mass_balance = (dz / (potential_evaporation + potential_drainage_rate))
+               evap_rate = potential_evaporation * co_mass_balance 
+               drain_rate = potential_drainage_rate * co_mass_balance
 
-               ! estimate evaporation from remaining water, less that already removed from storage and evaporation energy used
-               evap_rate = evap_rate + min(potential_evaporation - evap_rate, storage - evap_rate - drain_rate)
+               ! Estimate evaporation from remaining water (i.e. that left after
+               ! initial co-access of evaporation and drainage).
+               ! Assume evaporation is now restricted by: 
+               ! 1) energy already spent on evaporation (the -evap_rate) and 
+               ! 2) linear increase in surface resistance as the leaf surface
+               ! dries (i.e. the 0.5).
+               evap_rate = evap_rate + min((potential_evaporation - evap_rate) * 0.5d0, storage - evap_rate - drain_rate)
 
            else
 
-               ! load dew formation to the current local evap_rate variable
+               ! Load dew formation to the current local evap_rate variable
                evap_rate = potential_evaporation
-               ! restrict drainage the quantity above max_storage, adding dew formation too
+               ! Restrict drainage the quantity above max_storage, adding dew formation too
                drain_rate = (storage - evap_rate) - max_storage
 
            endif
@@ -2671,8 +2764,8 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
            drain_rate = 0d0 ; evap_rate = potential_evaporation
            if (evap_rate > 0d0) then
                ! evaporation restricted by fraction of surface actually covered
-               ! in water
-               evap_rate = evap_rate * storage * max_storage_1
+               ! in water and integrated over period to bare leaf (i.e. the *0.5)
+               evap_rate = evap_rate * storage * max_storage_1 * 0.5d0
                ! and the total amount of water
                evap_rate = min(evap_rate,storage)
            else
@@ -2693,10 +2786,10 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
     intercepted_rainfall = intercepted_rainfall - (through_fall / seconds_per_step)
 
 !    ! sanity checks; note 1e-8 prevents precision errors causing flags
-!    if (intercepted_rainfall > rainfall .or. storage < 0d0 .or. &
+!    if (intercepted_rainfall > rainfall .or. storage < -1d-8 .or. &
 !       (wetcanopy_evaporation * days_per_step_1) > (1d-8 + initial_canopy + (rainfall*seconds_per_day)) ) then
 !        print*,"Condition 1",intercepted_rainfall > rainfall
-!        print*,"Condition 2",storage < 0d0
+!        print*,"Condition 2",storage < -1d-8
 !        print*,"Condition 3",(wetcanopy_evaporation * days_per_step_1) > (1d-8 + initial_canopy + (rainfall*seconds_per_day))
 !        print*,"storage (kgH2O/m2)",storage,"max_storage (kgH2O/m2)",max_storage,"initial storage (kgH2O/m2)", initial_canopy
 !        print*,"rainfall (kgH2O/m2/day)", rainfall*seconds_per_day, "through_fall (kgH2O/m2/day)", (through_fall * days_per_step_1)
@@ -3341,9 +3434,11 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
 !  subroutine update_net_radiation(isothermal,tempC,area_scaling,act_pot_ratio &
 !                                 ,sfc_exchange,aero_exchange,vapour_gradient,deltaTemp,deltaR)
 !
-!    ! Use steady state solution of evaporation, convective (sensible) and radiative heat loss
-!    ! to update isothermal net radiation to net.
-!    ! Area scaling (e.g. lai) is an input to allow for common useage for soil (neglecting ground heat) and canopy
+!    ! Use steady state solution of evaporation, convective (sensible) and
+!    ! radiative heat loss to update isothermal net radiation to net.
+!    ! Area scaling (e.g. lai) is an input to allow for common useage for soil
+!    ! (neglecting ground heat) and canopy. The key assumption here is that all
+!    ! values are make equivalent to ground area
 !
 !    ! arguments
 !    double precision, intent(in) ::      tempC, & ! input surface / air temperature (oC)
@@ -3364,7 +3459,7 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
 !              water_resistance, & ! serial combination of resistances to water evaporation
 ! thermal_gains, thermal_losses
 !
-!    ! ambient temperature C -> K
+!    ! Ambient temperature C -> K
 !    tempK = tempC + freeze
 !
 !    !
@@ -3372,23 +3467,23 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
 !    !
 !
 !    ! First estimate radiative loss term, initially calculated as conductance)
-!    heat_loss_resistance = 4d0 * emissivity * boltz * tempK ** 3 / (air_density_kg * cpair)
-!    ! Combine in parallel with convective conductances with area correction
-!    heat_loss_resistance = heat_loss_resistance + (2d0 * aero_exchange / area_scaling)
-!    ! convert from conductance m/s to s/m
+!    heat_loss_resistance = area_scaling * 4d0 * emissivity * boltz * tempK ** 3 / (air_density_kg * cpair)
+!    ! Combine in parallel radiative with convective conductances
+!    heat_loss_resistance = heat_loss_resistance + (2d0 * aero_exchange)
+!    ! Convert from conductance m/s to s/m
 !    heat_loss_resistance = heat_loss_resistance ** (-1d0)
 !
 !    !
 !    ! Convert aerodynamic and stomatal conductances to reisistance of water flux
 !    !
 !
-!    aerodynamic_resistance = (aero_exchange/area_scaling) ** (-1d0)
-!    if (sfc_exchange == 0d0) then
+!    aerodynamic_resistance = aero_exchange ** (-1d0)
+!    if (sfc_exchange == dble_zero) then
 !        ! if being used for surface water flux
-!        stomatal_resistance = dble_zer!o
+!        stomatal_resistance = dble_zero
 !    else
 !        ! if used for transpiration
-!        stomatal_resistance = (sfc_exchange/area_scaling) ** (-1d0)
+!        stomatal_resistance = sfc_exchange ** (-1d0)
 !    endif
 !
 !    !
@@ -3396,20 +3491,22 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
 !    !
 !
 !    water_resistance = (aerodynamic_resistance + stomatal_resistance)
-!    thermal_gains = (heat_loss_resistance * water_resistance * psych * (isothermal/area_scaling)) &
+!    thermal_gains = (heat_loss_resistance * water_resistance * psych * isothermal) &
 !                  / (air_density_kg * cpair * ((psych*water_resistance) + (slope*heat_loss_resistance)))
 !    thermal_losses = (heat_loss_resistance * vapour_gradient) &
 !                   / ((psych*water_resistance) + (slope*heat_loss_resistance))
-!    ! determine surface temperature difference (K); should be added to the canopy temperature
+!    ! Determine surface temperature difference (K); should be added to the
+!    ! canopy temperature
 !    deltaTemp = thermal_gains - thermal_losses
-!    ! apply actual potential ratio to scale wet surface evaporation when the
+!    ! Apply actual potential ratio to scale wet surface evaporation when the
 !    ! supply of water is limited
 !    deltaTemp = deltaTemp * act_pot_ratio
 !
-!    ! estimate update between isothermal to net radiation (W/m2), including area correction
-!    ! note that this MUST be added from the longwave component outside of this function
+!    ! Estimate update between isothermal to net radiation (W/m2), including area
+!    ! correction
+!    ! note that this MUST be added from the longwave component outside of this
+!    ! function
 !    deltaR = -4d0 * emissivity * boltz * tempK ** 3 * ( deltaTemp )
-!    deltaR = deltaR * area_scaling
 !
 !    ! return to user
 !    return

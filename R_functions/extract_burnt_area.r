@@ -13,12 +13,11 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
 	    if (grid_type == "wgs84") {
 		# resolution of the product
 		product_res = abs(burnt_all$lat[2]-burnt_all$lat[1])+abs(burnt_all$long[2]-burnt_all$long[1])
-		product_res = (product_res * 0.5)
 		# radius is ceiling of the ratio of the product vs analysis ratio
-		radius = ceiling(resolution / product_res)
+		radius = ceiling((resolution / product_res)*0.5)
 		max_radius = radius+4
 	    } else if (grid_type == "UK") {
-		radius=max(0,floor(1*resolution*1e-3*0.5))
+		radius = max(0,floor(1*resolution*1e-3*0.5))
 		max_radius = radius+4
 	    } else {
 		stop("have not specified the grid used in this analysis")
@@ -26,9 +25,7 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
 	} else {
 	    radius=0
 	}
-#print(paste("i =",i1)) ; print(paste("j =",j1))
-#print(paste("lat_wanted",latlon_in[1])) ; print(paste("long_wanted",latlon_in[2]))
-#print(paste("lat_got",burnt_all$lat[j1])) ; print(paste("long_got",burnt_all$long[i1]))
+
 	# work out average areas
 	average_i=max(1,(i1-radius)):min(dim(burnt_all$burnt_area)[1],(i1+radius)) ; average_j=max(1,(j1-radius)):min(dim(burnt_all$burnt_area)[2],(j1+radius))
 	# carry out averaging

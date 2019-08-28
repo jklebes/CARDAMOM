@@ -181,29 +181,29 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
     ###
 
     if (Evap_source == "site_specific") {
-      infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-      if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")}
-      #	if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater.csv",sep="")}
-      if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_copy.csv",sep="")}
-      Evap = read_site_specific_obs("Evap",infile)
-      Evap_unc = read_site_specific_obs("Evap_unc",infile)
-      if (length(Evap_unc) == 1) {
-        Evap_unc = rep(-9999,times = length(Evap))
-        Evap_unc[which(Evap > 0)] = 0.5 * Evap[which(Evap > 0)]
-      }
-      if (modelname == "ACM") {
-        # borrow woody increment for soil evaporation in ACM_ET recalibration
-        woodinc = read_site_specific_obs("soilevap",infile)
-        # borrow Cfol_stock for wet canopy evaporation in ACM_ET recalibration
-        Cfol_stock = read_site_specific_obs("wetevap",infile)
-        # actually lets make uncertainty half mean of total ET
-        Evap_unc = rep(mean(Evap+woodinc+Cfol_stock)*0.5,times=length(Evap))
-        woodinc_unc = Evap_unc
-        Cfol_stock_unc = Evap_unc
-      }
+        infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
+        if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")}
+        #if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater.csv",sep="")}
+        if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_copy.csv",sep="")}
+        Evap = read_site_specific_obs("Evap",infile)
+        Evap_unc = read_site_specific_obs("Evap_unc",infile)
+        if (length(Evap_unc) == 1) {
+            Evap_unc = rep(-9999,times = length(Evap))
+            Evap_unc[which(Evap > 0)] = 0.5 * Evap[which(Evap > 0)]
+        }
+        if (modelname == "ACM") {
+            # borrow woody increment for soil evaporation in ACM_ET recalibration
+            woodinc = read_site_specific_obs("soilevap",infile)
+            # borrow Cfol_stock for wet canopy evaporation in ACM_ET recalibration
+            Cfol_stock = read_site_specific_obs("wetevap",infile)
+            # actually lets make uncertainty half mean of total ET
+            Evap_unc = rep(mean(Evap+woodinc+Cfol_stock)*0.5,times=length(Evap))
+            woodinc_unc = Evap_unc
+            Cfol_stock_unc = Evap_unc
+        }
     } else {
-      # assume no data available
-      Evap = -9999 ; Evap_unc = -9999
+        # assume no data available
+        Evap = -9999 ; Evap_unc = -9999
     }
 
     ###

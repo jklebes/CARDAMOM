@@ -43,11 +43,11 @@ closest2d <- function (id,lat,long,lat_in,long_in,nos_dim) {
       	    # convert all to radians
       	    d = acos(sin(lat1*deg_to_rad)*sin(lat[j]*deg_to_rad)+cos(lat1*deg_to_rad)*cos(lat[j]*deg_to_rad)*cos((long*deg_to_rad)-(long1*deg_to_rad)))*R
       	    if (min(d) < d_old) {
-            		possible_i = which(d == min(d))
-            		if (length(possible_i) > 1 & possible_i[1] == 1 & possible_i[length(possible_i)] == length(long)) {
-            		    possible_i = possible_i[which(long[possible_i] == long1)]
-            		} 
-            		output = list(possible_i[1],j) ; d_old=min(d)
+            	possible_i = which(d == min(d))
+            	if (length(possible_i) > 1 & possible_i[1] == 1 & possible_i[length(possible_i)] == length(long)) {
+            	    possible_i = possible_i[which(long[possible_i] == long1)]
+            	} 
+            	output = list(possible_i[1],j) ; d_old=min(d)
       	    } # min(d) < d_old
       	} # j loop
       	if (d_old > 10) {print(paste("id = ",id," Minimum distance found (",round(d_old,digits=1),") is greater than 10 km from actual location"))}

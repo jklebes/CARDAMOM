@@ -58,7 +58,9 @@ module MCMCOPT
               ,ITER        & ! number of iterations attempted
               ,ACCEDC        ! number of EDC complient iterations
 
-    double precision :: ACCRATE_beta, ACCRATE ! local acceptance rate
+    double precision :: ACCRATE_beta, & ! local beta step acceptance rate  
+                             ACCRATE, & ! local acceptance rate
+                      ACCRATE_GLOBAL    ! global acceptance rate  
 
   end type ! COUNTERS
 

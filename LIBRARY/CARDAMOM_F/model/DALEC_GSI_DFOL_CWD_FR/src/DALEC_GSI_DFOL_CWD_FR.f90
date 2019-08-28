@@ -1434,15 +1434,10 @@ contains
     ! Calculate stomatal conductance under H2O and CO2 limitations
     !!!!!!!!!!
 
-    if (deltaWP > vsmall) then
+    if (aerodynamic_conductance > vsmall .and. deltaWP > vsmall) then
+
       ! Determine potential water flow rate (mmolH2O.m-2.dayl-1)
       max_supply = (deltaWP/Rtot) * seconds_per_day
-    else
-      ! set minimum (computer) precision level flow
-      max_supply = vsmall
-    end if
-
-    if (aerodynamic_conductance > vsmall) then
 
       ! there is lai therefore we have have stomatal conductance
 
@@ -1476,6 +1471,8 @@ contains
 
       ! if no LAI then there can be no stomatal conductance
       stomatal_conductance = 0d0
+      ! set minimum (computer) precision level flow
+      max_supply = vsmall
 
     endif ! if LAI > vsmall
 

@@ -18,12 +18,9 @@ module MODEL_PARAMETERS
     use cardamom_structures, only: DATAin
 
     ! Subroutine contains a list of parameter ranges for the model.
-    ! These could or
-    ! possibly should go into an alternate file which can be read in.
-    ! This may
-    ! improve the usability when it comes to reading these information
-    ! in for
-    ! different PFTs
+    ! These could or possibly should go into an alternate file which can be read in.
+    ! This may improve the usability when it comes to reading these information
+    ! in for different PFTs
 
     implicit none
 
@@ -42,6 +39,7 @@ module MODEL_PARAMETERS
     ! Nitrogen use efficiency (gC/gN per m2 at optimum temperature)
     ! Derived from Vcmax reported in Wullschleger (1993), Journal of
     ! Experimental Botany, Vol 44, No. 262, pp. 907-920.
+    ! More constrain prior range of 3-30 gC/gN/m2/day with a mean of 11.197440 +/-1.32313 Kattge et al., (2011)
     PI%parmin(1)=03d0 
     PI%parmax(1)=40d0 
 
@@ -57,7 +55,7 @@ module MODEL_PARAMETERS
 
     ! light limited photosynthesis
 
-    ! maximum canopy quantum yield (gC/MJ)
+    ! maximum canopy quantum yield (gC/MJ_PAR/m2/day)
     PI%parmin(5)=1d0  !7.19298-(0.9*7.19298)
     PI%parmax(5)=7d0  !7.19298+(0.9*7.19298)
 
@@ -116,7 +114,8 @@ module MODEL_PARAMETERS
     !
 
     ! iWUE (gC/m2leaf/s/mmolH2Ogs)
-    ! Actual value used in SPA is 8.4e-8
+    ! Actual value used in SPA is 8.4e-8 (Williams et al., 1996)
+    ! Other reported values are 9.0e-08 -> 1.8e-07 (Bonan et al., 2014)
     PI%parmin(14)=1d-10  
     PI%parmax(14)=0.0001d0
 

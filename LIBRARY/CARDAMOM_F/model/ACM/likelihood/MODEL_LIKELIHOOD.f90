@@ -22,7 +22,7 @@ module model_likelihood_module
   !------------------------------------------------------------------
   !
   subroutine find_edc_initial_values
-    use MCMCOPT, only: PI, MCOUT, MCOPT
+    use MCMCOPT, only: PI, MCOUT, MCO
     use cardamom_structures, only: DATAin ! will need to change due to circular dependance
     use cardamom_io, only: restart_flag
     use MHMCMC_MODULE, only: MHMCMC
@@ -41,7 +41,7 @@ module model_likelihood_module
 
     ! set MCMC options needed for EDC run
     MCO%APPEND = 0
-    MCO%nADAPT = 1000
+    MCO%nADAPT = 500
     MCO%fADAPT = 1d0
     MCO%nOUT = 100000
     MCO%nPRINT = 0
