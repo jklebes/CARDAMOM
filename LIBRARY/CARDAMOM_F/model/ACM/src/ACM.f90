@@ -1207,8 +1207,9 @@ contains
     soilevap = soilevap * dayl_seconds
 
     ! Dew is unlikely to occur (if we had energy balance) if mint > 0
-    ! Sublimation is unlikely to occur (if we had energy balance) if maxt < 0
-    if ((soilevap < 0d0 .and. mint > 1d0) .or. (soilevap > 0d0 .and. maxt < 1d0)) soilevap = 0d0
+    if (soilevap < 0d0 .and. mint > 0d0 ) soilevap = 0d0
+
+    return
 
   end subroutine calculate_soil_evaporation
   !
@@ -1863,12 +1864,7 @@ contains
                ! 2) linear increase in surface resistance as the leaf surface
                ! dries (i.e. the 0.5).
                evap_rate = evap_rate + min((potential_evaporation - evap_rate) * 0.5d0, storage - evap_rate - drain_rate)
-if (evap_rate /= evap_rate) then
-print*,evap_rate, drain_rate, potential_evaporation, storage, max_storage 
-print*,co_mass_balance, dz, tmp, potential_drainage_rate, potential_evaporation
-print*,daily_addition, initial_canopy, dx, lai
-stop
-end if
+
            else
 
                ! Load dew formation to the current local evap_rate variable
@@ -2294,10 +2290,10 @@ end if
        if ( liquid > drainlayer ) then
 
            ! Trapezium rule for approximating integral of drainage rate
-           dx = liquid - ((liquid + drainlayer)*0.5d0)
+           dx = (liquid - drainlayer)*0.5d0
            call calculate_soil_conductivity(soil_layer,liquid,tmp1)
            call calculate_soil_conductivity(soil_layer,drainlayer,tmp2)
-           call calculate_soil_conductivity(soil_layer,(liquid+dx),tmp3)
+           call calculate_soil_conductivity(soil_layer,(liquid-dx),tmp3)
            drainage = 0.5d0 * dx * ((tmp1 + tmp2) + 2d0 * tmp3)
            drainage = drainage * seconds_per_day
            drainage = min(drainage,liquid - drainlayer)

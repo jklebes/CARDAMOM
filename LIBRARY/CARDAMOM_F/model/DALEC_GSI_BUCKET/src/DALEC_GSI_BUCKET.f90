@@ -2094,8 +2094,9 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
     soilevap = soilevap * dayl_seconds
 
     ! Dew is unlikely to occur (if we had energy balance) if mint > 0
-    ! Sublimation is unlikely to occur (if we had energy balance) if maxt < 0
-    if ((soilevap < 0d0 .and. mint > 1d0) .or. (soilevap > 0d0 .and. maxt < 1d0)) soilevap = 0d0
+    if (soilevap < 0d0 .and. mint > 0d0 ) soilevap = 0d0
+
+    return
 
   end subroutine calculate_soil_evaporation
   !
@@ -3176,10 +3177,10 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
        if ( liquid > drainlayer ) then
 
            ! Trapezium rule for approximating integral of drainage rate
-           dx = liquid - ((liquid + drainlayer)*0.5d0)
+           dx = (liquid - drainlayer)*0.5d0
            call calculate_soil_conductivity(soil_layer,liquid,tmp1)
            call calculate_soil_conductivity(soil_layer,drainlayer,tmp2)
-           call calculate_soil_conductivity(soil_layer,(liquid+dx),tmp3)
+           call calculate_soil_conductivity(soil_layer,(liquid-dx),tmp3)
            drainage = 0.5d0 * dx * ((tmp1 + tmp2) + 2d0 * tmp3)
            drainage = drainage * seconds_per_day
            drainage = min(drainage,liquid - drainlayer)
