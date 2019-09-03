@@ -59,7 +59,88 @@ module math_functions
   integer, save       :: ranx(kk)
 
   contains
+  !
+  !--------------------------------------------------------------------
+  !
+  subroutine calculate_variance(sample,mean_par,naccepted,variance)
 
+    ! Subroutine to estimate the sample variance
+    ! Var = Σ ( Xi - X )*2 / (N-1)
+    ! X = mean for parameter
+    ! Xi = ith member of the vector
+    ! N = number of parameters accepted so far
+
+    implicit none
+
+    ! Arguments
+    integer, intent(in) :: naccepted
+    double precision, intent(in) :: sample(naccepted)
+    double precision, intent(out) :: mean_par, variance
+
+    ! local variables
+    integer :: i
+    double precision, dimension(:), allocatable :: deviances
+
+    ! allocate memory to local variable
+    allocate(deviances(naccepted))
+
+    ! calculate components needed for variance
+    mean_par = sum(sample) / dble(naccepted)
+    ! estimate deviance
+    deviances = sample - mean_par
+    ! estimate the variance
+    ! NOTE: that naccepted-1 makes this the sample variance
+    variance = sum(deviances*deviance) * dble(naccepted-1)**(-1)
+
+    ! tidy up
+    deallocate(deviances)
+
+    ! return to user
+    return
+
+  end subroutine calculate_variance
+  !
+  !--------------------------------------------------------------------
+  !
+  subroutine increment_variance(sample,mean_par,cur,new,variance)
+
+    ! Subroutine for incremental update of the variance
+    ! CMOUT = CM*(N-1)/(N-1+ar) + (N*M'*M-(N+ar)*Mi'*Mi+x'*x*ar)/(N-1+ar)
+    ! M  = mean vector for parameters
+    ! Mi = new mean vector for updated variance_matrix
+    ! ar = number of new parameters to be added
+    ! N = number of parameters accepted so far
+
+    implicit none
+
+    ! Arguments
+    integer, intent(in) :: new
+    double precision, intent(in) :: sample(new)
+    double precision, intent(inout) :: cur, mean_par, variance
+
+    ! local variables
+    integer :: n, i, j
+    double precision :: new_mean_par, nnew
+
+    nnew = 1d0
+    ! loop through each accepted parameter set...
+    do n = 1, new
+       ! ...estimate the new mean value for each parameter...
+       new_mean_par = ((mean_par * cur) + (sample(n) * nnew)) &
+                    / (cur + nnew)
+       ! ...update the variance with each new parameter vector in turn
+       variance = variance*(cur-1d0)/(cur-1d0+nnew) &
+                + (cur*mean_par*mean_par- &
+                  (cur+nnew)*new_mean_par*new_mean_par + &
+                   nnew*sample(n)*sample(n))/(cur-1d0+nnew)
+       ! update running totals and mean for the next iteration
+       cur = cur + 1 ; mean_par = new_mean_par
+    end do ! new_accepted
+
+    ! return to user
+    return
+
+  end subroutine increment_variance
   !
   !--------------------------------------------------------------------
   !
@@ -109,7 +190,7 @@ module math_functions
   !
   subroutine increment_covariance_matrix(PARSALL,mean_par,npars,cur,new,covariance)
 
-    ! Subroutine for incremental update of a the covariance matrix
+    ! Subroutine for incremental update of a covariance matrix
     ! CMOUT = CM*(N-1)/(N-1+ar) + (N*M'*M-(N+ar)*Mi'*Mi+x'*x*ar)/(N-1+ar)
     ! M  = mean vector for parameters
     ! Mi = new mean vector for updated covariance_matrix
