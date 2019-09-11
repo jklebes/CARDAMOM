@@ -388,18 +388,17 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
 #    PARPRIORS[3] = 30.0 ; PARPRIORUNC[3] = 5.0
     # p(4) = kurtosis for temperature response of photosynthesis (0.185912)
 #    PARPRIORS[4] = 0.185912 ; PARPRIORUNC[4] = 0.05
-    # p(10) = Maximum (most negative) leaf-soil WP difference (MPa) (i.e. minLWP)
-    #    PARPRIORS[10] = -2.0 ; PARPRIORUNC[10] = 0.1
+    # p(9) = LAI at which 50 % of par reflectance achieved
+    PARPRIORS[9] = 1 ; PARPRIORUNC[9] = 0.25
+    # p(12) = LAI at which 50 % of nir reflectance achieved
+    PARPRIORS[12] = 1 ; PARPRIORUNC[12] = 0.25
     # p(15) = Soil SW absorption (fraction)
     PARPRIORS[15] = 0.972 ; PARPRIORUNC[15] = 0.05
-    # for GPP temperature optimum = 30oC (Default)
-    # CO2 compensation point and half saturation
-    #    PARPRIORS[3] = 45.29614 ; PARPRIORUNC[3] = 20.54073
-    #	   PARPRIORS[4] = 319.4397 ; PARPRIORUNC[4] = 60.01601
-    # for GPP temperature optimum = 13oC (Arctic)
-    # CO2 compensation point and half saturation
-    #	   PARPRIORS[3] = 4.78419 ; PARPRIORUNC[3] = 4.806224
-    #	   PARPRIORS[4] = 347.4542 ; PARPRIORUNC[4] = 107.3912
+    # p(17) = LAI at which 50 % of nir transmittance reduction achieved
+    PARPRIORS[17] = 1 ; PARPRIORUNC[17] = 0.25
+    # p(19) = LAI at which 50 % of par transmittance achieved
+    PARPRIORS[19] = 1 ; PARPRIORUNC[19] = 0.25
+
   }
 
   # combine the static data

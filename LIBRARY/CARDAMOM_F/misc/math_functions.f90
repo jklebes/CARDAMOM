@@ -15,7 +15,7 @@ module math_functions
             random_normal, random_uniform, rnstrt, &
             random_multivariate, increment_covariance_matrix, &
             par2nor, nor2par, cholesky_factor, inverse_matrix, &
-            dsymv
+            dsymv, calculate_variance, increment_variance
 
   !!!!!!!!!!!
   ! Subroutines rand(), narray() and rnstrt() are from:
@@ -90,7 +90,7 @@ module math_functions
     deviances = sample - mean_par
     ! estimate the variance
     ! NOTE: that naccepted-1 makes this the sample variance
-    variance = sum(deviances*deviance) * dble(naccepted-1)**(-1)
+    variance = sum(deviances*deviances) * dble(naccepted-1)**(-1)
 
     ! tidy up
     deallocate(deviances)

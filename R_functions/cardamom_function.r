@@ -238,7 +238,7 @@ skip_UK = read.csv("/home/lsmallma/Desktop/UK_forestry_sites_with_yield_and_biom
             met = extract_acm_met_drivers(PROJECT,latlon[n,],PROJECT$sites[n])
           } #  acm special case
 #if ( length(which(skip_UK$UK_Forest_site_nos == n)) > 0) {
-          obs=extract_obs(latlon[n,],lai_all,Csom_all,forest_all,Cwood_all,sand_clay_all,crop_man_all
+            obs=extract_obs(latlon[n,],lai_all,Csom_all,forest_all,Cwood_all,sand_clay_all,crop_man_all
                          ,burnt_all,soilwater_all
                          ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
                          ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)

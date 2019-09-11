@@ -61,7 +61,7 @@ load_hwsd_Csom_fields_for_extraction<-function(latlon_in,Csom_source) {
 
     } else {
 	# output variables
-	return(list(Csom=-9999, Csom_unc-9999, lat=-9999,long=-9999))
+	return(list(Csom=-9999, Csom_unc = -9999, lat=-9999,long=-9999))
     }
 
 } # function end

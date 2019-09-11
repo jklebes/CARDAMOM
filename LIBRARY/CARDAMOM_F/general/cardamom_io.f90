@@ -493,18 +493,11 @@ module cardamom_io
     if (ios /= 0) print*,"error ",ios," openning file",trim(covinfoname)
     ! for the covariance matrix we have a fixed size containing two matrices,
     ! the initial and the current output - therefore we use 
-!    open(cfile_unit,file=trim(covname),form="UNFORMATTED",access="stream",status="UNKNOWN",iostat=ios)
-!    if (ios /= 0) print*,"error ",ios," openning file",trim(covname)
     inquire(iolength = reclen) a ; print*,reclen
     open(cfile_unit,file=trim(covname),form="UNFORMATTED",access="direct",recl=reclen,iostat=ios)
     if (ios /= 0) print*,"error ",ios," openning file",trim(covname)
 
     return
-
-!inquire(iolength = reclen) a
-!open(unit=10, file="bob.out", form="UNFORMATTED", access = "direct", recl=reclen)
-!write(unit = 10, rec = 1) a
-!close(unt = 10)
 
   end subroutine open_output_files
   !
@@ -1110,7 +1103,7 @@ module cardamom_io
     end do ! i for combinations
     ! Store the most recent step size, which corresponds with the saved
     ! parmeters (above) and covariance matrix (below)
-    PI%beta_stepsize = tmp(num_lines,1:DATAin%nopars)
+ !   PI%beta_stepsize = tmp(num_lines,1:DATAin%nopars)
     ! save the current acceptance_rate
     accept_rate = tmp(num_lines,DATAin%nopars+1)
     ! tidy up for the next file
@@ -1166,7 +1159,6 @@ module cardamom_io
     end do
     ! estimate status of the inverse covariance matrix 
     call inverse_matrix( PI%npars, PI%covariance, PI%iC )
-
 
     !
     ! Covariance information file

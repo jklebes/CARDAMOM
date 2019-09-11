@@ -1181,8 +1181,8 @@ contains
     soil_radiation = soil_lwrad_Wm2 + (soil_swrad_MJday * 1d6 * dayl_seconds_1)
     ! estimate ground heat flux from statistical approximation, positive if energy moving up profile
     ! NOTE: linear coefficient estimates from SPA simulations
-    Qc = -0.4108826d0 * (maxt - maxt_lag1)
-    soil_radiation = soil_radiation + Qc
+!    Qc = -0.4108826d0 * (maxt - maxt_lag1)
+!    soil_radiation = soil_radiation + Qc
 
     !!!!!!!!!!
     ! Calculate soil evaporative fluxes (kgH2O/m2/day)
@@ -1207,7 +1207,7 @@ contains
     soilevap = soilevap * dayl_seconds
 
     ! Dew is unlikely to occur (if we had energy balance) if mint > 0
-    if (soilevap < 0d0 .and. mint > 0d0 ) soilevap = 0d0
+!    if (soilevap < 0d0 .and. mint > 0d0 ) soilevap = 0d0
 
     return
 
@@ -1400,6 +1400,7 @@ contains
 
     ! local variables
     double precision :: lwrad, & ! downward long wave radiation from sky (W.m-2)
+         transmitted_fraction, & ! fraction of LW which is not incident on the canopy
         longwave_release_soil, & ! emission of long wave radiation from surfaces per m2
       longwave_release_canopy, & ! assuming isothermal condition (W.m-2)
             trans_lw_fraction, &
@@ -1410,8 +1411,13 @@ contains
   canopy_absorption_from_soil, & ! canopy absorbed radiation from soil surface (W.m-2)
                   canopy_loss, & ! longwave radiation released from canopy surface (W.m-2).
                                  ! i.e. this value is released from the top and the bottom
+       soil_incident_from_sky, &
      soil_absorption_from_sky, & ! soil absorbed radiation from sky (W.m-2)
   soil_absorption_from_canopy    ! soil absorbed radiation emitted from canopy (W.m-2)
+
+    ! local parameters
+    double precision, parameter :: clump = 1d0    & ! leaf clumping factor (1 = uniform) 
+                                  ,decay = -0.5d0   ! decay coefficient for incident radiation
 
     ! estimate long wave radiation from atmosphere (W.m-2)
     lwrad = emiss_boltz * (maxt+freeze-20d0) ** 4
@@ -1423,6 +1429,14 @@ contains
     !!!!!!!!!!
     ! Determine fraction of longwave absorbed by canopy and returned to the sky
     !!!!!!!!!!
+
+    ! First, we consider how much radiation is likely to be incident on the
+    ! canopy, or put another way what fraction passes straight through the
+    ! canopy?
+    transmitted_fraction = exp(decay * lai * clump)
+
+    ! second, we partition the radiation which is incident on the canopy into
+    ! that which is transmitted, reflected or absorbed.
 
     ! calculate fraction of longwave radiation coming from the sky to pentrate to the soil surface
     trans_lw_fraction = 1d0 - (max_lai_lwrad_transmitted*lai)/(lai+lai_half_lwrad_transmitted)
@@ -1438,10 +1452,16 @@ contains
     ! Distribute longwave from sky
     !!!!!!!!!!
 
+    ! Estimate the radiation which directly bypasses the canopy...
+    soil_incident_from_sky = lwrad * transmitted_fraction
+    ! ...and update the canopy intercepted radiation
+    lwrad = lwrad - soil_absorption_from_sky
+
     ! long wave absorbed by the canopy from the sky
     canopy_absorption_from_sky = lwrad * absorbed_lw_fraction
     ! Long wave absorbed by soil from the sky, soil absorption assumed to be equal to emissivity
-    soil_absorption_from_sky = trans_lw_fraction * lwrad * emissivity
+    soil_incident_from_sky = soil_incident_from_sky + (trans_lw_fraction * lwrad)
+    soil_absorption_from_sky = soil_incident_from_sky * emissivity
     ! Long wave reflected directly back into sky
     sky_lwrad_Wm2 = lwrad * reflected_lw_fraction
 
@@ -1449,9 +1469,12 @@ contains
     ! Distribute longwave from soil
     !!!!!!!!!!
 
-    ! First, calculate longwave radiation coming up from the soil plus the radiation which is reflected
-    canopy_absorption_from_soil = longwave_release_soil + (trans_lw_fraction * lwrad * (1d0-emissivity))
-    ! Second, use this total to estimate the longwave returning to the sky
+    ! Calculate longwave radiation coming up from the soil plus the radiation which is reflected
+    canopy_absorption_from_soil = longwave_release_soil + (soil_incident_from_sky * (1d0-emissivity))
+    ! First how much directly bypasses the canopy...
+    sky_lwrad_Wm2 = sky_lwrad_Wm2 + (canopy_absorption_from_soil * transmitted_fraction)
+    canopy_absorption_from_soil = canopy_absorption_from_soil * (1d0 - transmitted_fraction)
+    ! Second, use this to estimate the longwave returning to the sky
     sky_lwrad_Wm2 = sky_lwrad_Wm2 + (canopy_absorption_from_soil * trans_lw_fraction)
     ! Third, now calculate the longwave from the soil surface absorbed by the canopy
     canopy_absorption_from_soil = canopy_absorption_from_soil * absorbed_lw_fraction
@@ -1498,6 +1521,7 @@ contains
 
     ! local variables
     double precision :: balance                    &
+                       ,transmitted_fraction       &
                        ,absorbed_nir_fraction_soil &
                        ,absorbed_par_fraction_soil &
                        ,fsnow,par,nir              &
@@ -1516,12 +1540,22 @@ contains
                        ,trans_par_fraction
 
     ! local parameters
-    double precision, parameter :: newsnow_nir_abs = 0.27d0 & ! NIR absorption fraction
+    double precision, parameter :: clump = 1d0    & ! leaf clumping factor (1 = uniform) 
+                                  ,decay = -0.5d0 & ! decay coefficient for incident radiation
+                                  ,newsnow_nir_abs = 0.27d0 & ! NIR absorption fraction
                                   ,newsnow_par_abs = 0.05d0   ! PAR absorption fraction
 
     !!!!!!!!!!
-    ! Determine canopy absorption / reflectance as function of LAI
+    ! Determine canopy absorption, reflectance and transmittance as function of LAI
     !!!!!!!!!!
+
+    ! First, we consider how much radiation is likely to be incident on the
+    ! canopy, or put another way what fraction passes straight through the
+    ! canopy?
+    transmitted_fraction = exp(decay * lai * clump)
+
+    ! Second, of the radiation which is incident on the canopy what fractions
+    ! are transmitted through, reflected from or absorbed by the canopy 
 
     ! Canopy transmitted of PAR & NIR radiation towards the soil
     trans_par_fraction = 1d0 - (lai*max_lai_par_transmitted) &
@@ -1541,15 +1575,22 @@ contains
     ! Estimate canopy absorption of incoming shortwave radiation
     !!!!!!!!!!
 
-    ! estimate multiple use par and nir components
+    ! Estimate multiple use par and nir components
     par = sw_par_fraction * swrad
     nir = (1d0 - sw_par_fraction) * swrad
+
+    ! Estimate the radiation which directly bypasses the canopy...
+    trans_par_MJday = par * transmitted_fraction
+    trans_nir_MJday = nir * transmitted_fraction
+    ! ...and update the canopy intercepted radiation
+    par = par - trans_par_MJday
+    nir = nir - trans_nir_MJday
 
     ! Estimate incoming shortwave radiation absorbed, transmitted and reflected by the canopy (MJ.m-2.day-1)
     canopy_par_MJday = par * absorbed_par_fraction
     canopy_nir_MJday = nir * absorbed_nir_fraction
-    trans_par_MJday = par * trans_par_fraction
-    trans_nir_MJday = nir * trans_nir_fraction
+    trans_par_MJday = trans_par_MJday + (par * trans_par_fraction)
+    trans_nir_MJday = trans_nir_MJday + (nir * trans_nir_fraction)
     refl_par_MJday = par * reflected_par_fraction
     refl_nir_MJday = nir * reflected_nir_fraction
 
@@ -1582,6 +1623,13 @@ contains
     ! calculate multiple use variables
     par = trans_par_MJday-soil_par_MJday
     nir = trans_nir_MJday-soil_nir_MJday
+    ! how much of the reflected radiation directly bypasses the canopy...
+    refl_par_MJday = refl_par_MJday + (par * transmitted_fraction)
+    refl_nir_MJday = refl_nir_MJday + (nir * transmitted_fraction)
+    ! ...and update the canopy on this basis
+    par = par * (1d0-transmitted_fraction)
+    nir = nir * (1d0-transmitted_fraction)
+
     ! Update the canopy radiation absorption based on the reflected radiation (MJ.m-2.day-1)
     canopy_par_MJday = canopy_par_MJday + (par * absorbed_par_fraction)
     canopy_nir_MJday = canopy_nir_MJday + (nir * absorbed_nir_fraction)

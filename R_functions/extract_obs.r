@@ -151,8 +151,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
             woodinc_unc[which(woodinc > 0)] = 0.25 * woodinc[which(woodinc > 0)]
         }
     } else {
-      # assume no data available
-      woodinc=-9999 ; woodinc_unc=-9999
+        # assume no data available
+        woodinc=-9999 ; woodinc_unc=-9999
     }
 
     ###
@@ -197,9 +197,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
             # borrow Cfol_stock for wet canopy evaporation in ACM_ET recalibration
             Cfol_stock = read_site_specific_obs("wetevap",infile)
             # actually lets make uncertainty half mean of total ET
-            Evap_unc = rep(mean(Evap+woodinc+Cfol_stock)*0.5,times=length(Evap))
-            woodinc_unc = Evap_unc
-            Cfol_stock_unc = Evap_unc
+            Evap_unc = rep(mean(Evap)*0.5,times=length(Evap))
+            woodinc_unc = rep(mean(woodinc)*0.5,times=length(Evap))
+            Cfol_stock_unc = rep(mean(Cfol_stock)*0.5,times=length(Evap))
         }
     } else {
         # assume no data available
@@ -309,9 +309,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
         output = closest2d(1,latitude,longitude,latlon_wanted[1],latlon_wanted[2],2)
         i1 = unlist(output)[1] ; j1 = unlist(output)[2]
         if (is.na(agb[i1,j1]) | is.na(unc[i1,j1])) {
-           Cwood_initial = -9999 ; Cwood_initial_unc = -9999
+            Cwood_initial = -9999 ; Cwood_initial_unc = -9999
         } else  {
-           Cwood_initial = agb[i1,j1] ; Cwood_initial_unc = unc[i1,j1]
+            Cwood_initial = agb[i1,j1] ; Cwood_initial_unc = unc[i1,j1]
         }
     } else {
         # assume no data available

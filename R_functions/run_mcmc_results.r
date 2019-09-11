@@ -36,11 +36,14 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
       if (error_check == FALSE) {
 
           # test for convergence and whether or not there is any single chain which can be removed in they do not converge
-          if (dim(parameters)[3] > 2) {
+          notconv = TRUE
+          while (dim(parameters)[3] > 2 & notconv) {
+#          if (dim(parameters)[3] > 2) {
               converged = have_chains_converged(parameters)
               # if log-likelihood has passed then we are not interested
               if (converged[length(converged)] == "FAIL") {
-                  notconv = TRUE ; i = 1 ; max_likelihood = rep(NA, length.out=dim(parameters)[3]) ; CI90 = rep(NA,length.out=c(2))
+#                  notconv = TRUE 
+                  i = 1 ; max_likelihood = rep(NA, length.out=dim(parameters)[3]) ; CI90 = rep(NA,length.out=c(2))
                   while (notconv){
                      max_likelihood[i] = max(parameters[dim(parameters)[1],,i])
                      converged = have_chains_converged(parameters[,,-i]) ; i = i + 1
@@ -67,6 +70,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                   # if we successfully found only chain to remove then remove it from the rest of the analysis.
                  if (i > 0) {parameters = parameters[,,-i] ; print(paste("chain rejected = ",i,sep=""))}
                  if (i < 0) {print(paste("chain ",i*-1," only has been accepted",sep=""))}
+              } else {
+                 # we have conveged
+                 notconv = FALSE
               } # if likelihood not converged
           } # if more than 2 chains
 

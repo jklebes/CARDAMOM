@@ -15,7 +15,7 @@ public :: MHMCMC, par_minstepsize,par_initstepsize
 ! declare any module level variables needed
 
 ! related to random number generator
-integer :: uniform
+integer :: uniform, unif_length
 double precision, allocatable, dimension(:) :: uniform_random_vector
 ! MHMCMC step size
 double precision, parameter :: par_minstepsize = 0.0001d0 & 
@@ -33,9 +33,10 @@ contains
   !
   subroutine MHMCMC (model_likelihood_option)
     use MCMCOPT, only: PI, MCO, MCOUT, COUNTERS
-    use math_functions, only: randn, random_uniform, par2nor, nor2par, dsymv
+    use math_functions, only: randn, random_uniform, par2nor, nor2par, dsymv 
     use cardamom_io, only: write_parameters,write_variances,write_covariance_matrix &
                           ,write_covariance_info,restart_flag,accepted_so_far, accept_rate
+    use cardamom_structures, only: DATAin
 
     implicit none
 
@@ -103,6 +104,7 @@ contains
 
     double precision, dimension(PI%npars,MCO%nADAPT) :: PARSALL ! All accepted normalised parameters since previous step adaption
     double precision :: infini &
+                       ,target_P &
                        ,crit1  & ! random numbers log(0->1) used to accept / reject
                        ,AM_likelihood &
                        ,DR_likelihood &
@@ -119,18 +121,23 @@ contains
     ! initial values
     P = -1d0 ; Pprior = -1d0
     uniform = 1 
-    N%ACC = 0 ; N%ITER = 0 ; N%ITER_beta = 0 ; N%ACCEDC = 0
-    N%ACCLOC = 0 ; N%ACCLOC_beta = 0 ; N%ACCRATE = 0d0 ; N%ACCRATE_beta = 0d0
+    N%ACC = 0 ; N%ITER = 0 
+    N%ACCLOC = 0 ; N%ACCRATE = 0d0 
     N%ACCRATE_GLOBAL = 0d0
 
+    ! Set a somewhat arbitary target likelihood related to the number of
+    ! observations being assimlated. If we have a likelihood score worse than
+    ! the target we will continue DR step and covariance increment
+    target_P = DATAin%total_obs * -0.5d0 * 0.5d0
+
     ! calculate initial vector of uniform random values
-    allocate(uniform_random_vector(MCO%nADAPT*5))
-    call random_uniform(uniform_random_vector,size(uniform_random_vector))
+    unif_length = MCO%nADAPT*5
+    allocate(uniform_random_vector(unif_length))
+    call random_uniform(uniform_random_vector,unif_length)
     ! assume this is a restart which we want to load previous values
     if (restart_flag) then
-        N%ACC = nint(dble(accepted_so_far) * 0.23d0)
-        N%ACCEDC = N%ACC
         N%ITER = MCO%nWRITE*accepted_so_far ! number of iterations is directly linked to the number output
+        N%ACC = accept_rate * N%ITER 
     endif
 
     ! add something here to delete previous files if wanted later
@@ -203,9 +210,9 @@ contains
            crit1 = log(uniform_random_vector(uniform))
            uniform = uniform + 1
            ! if we are near to the end re-generate some more values
-           if (uniform >= size(uniform_random_vector)-4) then
+           if (uniform >= unif_length) then
                ! calculate new vector of uniform random values
-               call random_uniform(uniform_random_vector,size(uniform_random_vector))
+               call random_uniform(uniform_random_vector,unif_length)
                ! and reset uniform counter
                uniform = 1
            endif
@@ -235,13 +242,10 @@ contains
            endif
            N%ACC = N%ACC + 1 ; N%ACCLOC = N%ACCLOC + 1
            P0 = P ; P0prior = Pprior
-           if (.not.multivariate_proposal) then
-               N%ACCLOC_beta = N%ACCLOC_beta + 1
-           endif
 
        else ! we have rejected - apply Delayed Rejection approach to enhance local searching
 
-           if (N%ACCRATE_GLOBAL < 0.23d0 .and. multivariate_proposal) then
+           if (Pmax < target_P .and. multivariate_proposal) then
 
                 DR_scaler = 0.01d0
 
@@ -281,9 +285,9 @@ contains
                     crit1 = log(uniform_random_vector(uniform))
                     uniform = uniform + 1
                     ! if we are near to the end re-generate some more values
-                    if (uniform >= size(uniform_random_vector)-4) then
+                    if (uniform >= unif_length) then
                        ! calculate new vector of uniform random values
-                       call random_uniform(uniform_random_vector,size(uniform_random_vector))
+                       call random_uniform(uniform_random_vector,unif_length)
                        ! and reset uniform counter
                        uniform = 1
                     endif
@@ -300,7 +304,7 @@ contains
                 if ( DR_likelihood > crit1 ) then
 
                    ! accepted DR proposal
-
+   
                    ! Store accepted parameter solutions
                    ! keep record of all parameters accepted since step adaption
                    PARSALL(1:PI%npars,(N%ACCLOC+1)) = norPARS2(1:PI%npars)
@@ -324,10 +328,6 @@ contains
 
        ! count iteration whether the current proposal is accepted or rejected
        N%ITER = N%ITER + 1
-       ! count how many EDC compatible iterations there have been
-       if ((P+Pprior) > log(infini)) then
-           N%ACCEDC = N%ACCEDC + 1
-       endif
 
        if (MCO%nWRITE > 0 .and. mod(N%ITER,MCO%nWRITE) == 0) then
            call write_variances(PI%parvar,PI%npars,N%ACCRATE)
@@ -341,7 +341,6 @@ contains
 
            ! Calculate local acceptance rate (i.e. since last adapt)
            N%ACCRATE = dble(N%ACCLOC) / dble(MCO%nADAPT)
-           N%ACCRATE_beta = dble(N%ACCLOC_beta) / dble(N%ITER_beta)
            ! Calculate global acceptance rate
            N%ACCRATE_GLOBAL = dble(N%ACC) / dble(N%ITER)
 
@@ -349,8 +348,8 @@ contains
            ! parameters in the last period
            if (N%ACCLOC > 0) then
 
-               ! Second, are we still in the adaption phase or are we still poorly sampling parameter space?
-               if ((MCO%fADAPT*dble(MCO%nOUT)) > dble(N%ITER) .or. N%ACCRATE_GLOBAL < 0.05d0) then
+               ! Second, are we still in the adaption phase or have we a poor likelihood score?
+               if ((MCO%fADAPT*dble(MCO%nOUT)) > dble(N%ITER) .or. Pmax < target_P) then
 
                    ! Once covariance matrix has been created just update based on a
                    ! single parameter set from each period.
@@ -369,7 +368,7 @@ contains
            end if ! have any parameters been accepted in the last period?
    
            ! resets to local counters
-           N%ACCLOC = 0 ; N%ACCLOC_beta = 0 ; N%ITER_beta = 0 
+           N%ACCLOC = 0
 
        end if ! time to adapt?
 
@@ -378,11 +377,9 @@ contains
            write(*,*)"Total accepted = ",N%ACC," out of ",MCO%nOUT
            write(*,*)"Overall acceptance rate  = ",dble(N%ACC) / dble(N%ITER)
            write(*,*)"Local   acceptance rate  = ",N%ACCRATE
-           write(*,*)"Beta    acceptance rate  = ",N%ACCRATE_beta
            write(*,*)"Current obs   = ",P0,"proposed = ",P," log-likelihood"
            write(*,*)"Current prior = ",P0prior,"proposed = ",Pprior," log-likelihood"
            write(*,*)"Maximum likelihood = ",Pmax
-!           write(*,*)"Mean beta_stepsize = ",sum(PI%beta_stepsize) / dble(PI%npars)
            ! NOTE: that -infinity in current obs only indicates failure of EDCs but
            ! -infinity in both obs and parameter likelihood scores indicates that
            ! proposed parameters are out of bounds
@@ -544,9 +541,9 @@ contains
     ! Draw from uniform distribution to determine whether multivariate step will be used
     tmp = uniform_random_vector(uniform) ; uniform = uniform + 1
     ! if we are near to the end re-generate some more values
-    if (uniform >= size(uniform_random_vector)-4) then
+    if (uniform >= unif_length) then
         ! calculate new vector of uniform random values
-        call random_uniform(uniform_random_vector,size(uniform_random_vector))
+        call random_uniform(uniform_random_vector,unif_length)
         ! and reset uniform counter
         uniform = 1
     endif
@@ -564,7 +561,7 @@ contains
         ! Draw from multivariate random distribution
         ! NOTE: if covariance matrix provided is not positive definite
         !       a sample form normal distribution is returned
-        call random_multivariate(PI%npars, 1, uniform, size(uniform_random_vector), &
+        call random_multivariate(PI%npars, 1, uniform, unif_length, &
                                  uniform_random_vector, PI%covariance*DR_scaler, mu, rn)
 
         ! Estimate the step to be applied to the current parameter vector to
@@ -584,11 +581,11 @@ contains
     else ! nint(PI%Nparvar) > N_before_mv*PI%npars .and. tmp > beta
 
        ! is this step a multivariate proposal or not
-       multivariate_proposal = .false. ; N%ITER_beta = N%ITER_beta + 1
+       multivariate_proposal = .false. 
 
        ! Sample random normal distribution (mean = 0, sd = 1)
        do p = 1, PI%npars
-          call random_normal(uniform,size(uniform_random_vector),uniform_random_vector,rn2(p))
+          call random_normal(uniform,unif_length,uniform_random_vector,rn2(p))
        end do !
 
        ! Estimate the step to be applied to the current parameter vector to

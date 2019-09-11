@@ -221,7 +221,7 @@ load_met_function<- function (year_to_do,varid,infile_varid,remove_lat,remove_lo
         var1_out = tmp
 
         # clean up
-        rm(var1,tmp,i,m,tmp_t) ; gc(reset=TRUE,verbose=FALSE)
+        rm(var1,tmp,i) ; gc(reset=TRUE,verbose=FALSE)
 
     } # end data source selection
 

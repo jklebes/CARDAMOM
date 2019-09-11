@@ -893,9 +893,9 @@ module model_likelihood_module
     ! if we are running an analysis we can safely assume that it is possible to
     ! grow on. Therefore for some reasonable amount of time the soil must
     ! contain enough water accessible to the plant to support growth
-    if ((EDC2 == 1 .or. DIAG == 1) .and. ((sum(wSWP_time) / dble(nodays)) < -5d0 .or. maxval(wSWP_time) <-2d0) ) then
-       EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
-    endif
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. ((sum(wSWP_time) / dble(nodays)) < -5d0 .or. maxval(wSWP_time) < -2d0) ) then
+!       EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
+!    endif
 
     ! C stocks can always be lower than their steady state, but it is unlikely
     ! that a system should be significantly above its steady state.

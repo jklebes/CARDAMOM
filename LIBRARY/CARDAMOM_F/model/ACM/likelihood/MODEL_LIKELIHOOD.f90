@@ -307,16 +307,24 @@ module model_likelihood_module
        endif
     enddo
 
+    ! Using last values as a upper limit (note above lai == 10). 
+    ! very little of the incident radiation should be transmitted through the
+    ! canopy
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. (nir_trans > 0.30d0 .or. par_trans > 0.30d0) then
+!         EDC1 = 0 ; EDCD%PASSFAIL(6) = 0
+!    endif 
+    
+
     ! maximum temperature for photosythesis cannot be smaller than optimum
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(3) > pars(2)) then
-        EDC1 = 0 ; EDCD%PASSFAIL(6) = 0
+        EDC1 = 0 ; EDCD%PASSFAIL(7) = 0
     endif
 
     ! assume that photosynthesis limitation at 0C should be between 10 % and 20 %
     ! of potential. Fatchi et al (2013), New Phytologist, https://doi.org/10.1111/nph.12614
     tmp = opt_max_scaling(pars(2),pars(3),pars(4),0d0)
     if ((EDC1 == 1 .or. DIAG == 1) .and. tmp > 0.20d0) then
-       EDC1 = 0 ; EDCD%PASSFAIL(7) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(8) = 0
     endif
 
   end subroutine EDC1_GSI
@@ -373,28 +381,28 @@ module model_likelihood_module
                        ,delta_gsi
 
     ! set initial values
-    DIAG=EDCD%DIAG
-    EDC2=1
+    DIAG = EDCD%DIAG
+    EDC2 = 1
 
     !
     ! EDCs done, below are additional fault detection conditions
     !
 
     ! the maximum value for all fluxes must be greater than zero
-    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,1)) < 0.5d0) then
-         EDC2 = 0 ; EDCD%PASSFAIL(8) = 0
-    endif
-    ! the maximum value for all fluxes must be greater than zero
-    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,2)) < 0.5d0) then
+    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,1)) < 0.1d0) then
          EDC2 = 0 ; EDCD%PASSFAIL(9) = 0
     endif
     ! the maximum value for all fluxes must be greater than zero
-    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,3)) < 0.5d0) then
+    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,2)) < 0.1d0) then
          EDC2 = 0 ; EDCD%PASSFAIL(10) = 0
     endif
     ! the maximum value for all fluxes must be greater than zero
-    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,4)) < 0.5d0) then
+    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,3)) < 0.1d0) then
          EDC2 = 0 ; EDCD%PASSFAIL(11) = 0
+    endif
+    ! the maximum value for all fluxes must be greater than zero
+    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,4)) < 0.1d0) then
+         EDC2 = 0 ; EDCD%PASSFAIL(12) = 0
     endif
 
     ! additional faults can be stored in locations 35 - 40 of the PASSFAIL array
@@ -598,16 +606,16 @@ module model_likelihood_module
         likelihood = likelihood-0.5d0*tot_exp
     endif
 
-    ! Borrowed Cfol_stock to provide wet canopy evaporation for ACM recal  (kgH2O.m-2.day-1) Log-likelihood
-    tot_exp = 0d0
-    if (DATAin%nCfol_stock > 0) then
-        do n = 1, DATAin%nCfol_stock
-          dn = DATAin%Cfol_stockpts(n)
-          ! note that division is the uncertainty
-          tot_exp = tot_exp+((DATAin%M_FLUXES(dn,4)-DATAin%Cfol_stock(dn))/DATAin%Cfol_stock_unc(dn))**2
-        end do
-        likelihood = likelihood-0.5d0*tot_exp
-    endif
+!    ! Borrowed Cfol_stock to provide wet canopy evaporation for ACM recal  (kgH2O.m-2.day-1) Log-likelihood
+!    tot_exp = 0d0
+!    if (DATAin%nCfol_stock > 0) then
+!        do n = 1, DATAin%nCfol_stock
+!          dn = DATAin%Cfol_stockpts(n)
+!          ! note that division is the uncertainty
+!          tot_exp = tot_exp+((DATAin%M_FLUXES(dn,4)-DATAin%Cfol_stock(dn))/DATAin%Cfol_stock_unc(dn))**2
+!        end do
+!        likelihood = likelihood-0.5d0*tot_exp
+!    endif
 
     ! check that log-likelihood is an actual number
     if (likelihood /= likelihood) then

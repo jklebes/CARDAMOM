@@ -80,7 +80,7 @@ module MODEL_PARAMETERS
     ! LAI at which radiation absorption is at half saturation (m2/m2)
     ! SPA's radiative transfer scheme absorbs 50 % of shortwave at lai == ~1.65
     PI%parmin(9)=0.1d0
-    PI%parmax(9)=2.5d0
+    PI%parmax(9)=2.0d0
 
     !
     ! canopy conductance (gc) drivers
@@ -99,7 +99,7 @@ module MODEL_PARAMETERS
     PI%parmax(11)=0.99d0
     ! LAI at which radiation absorption is at half saturation
     PI%parmin(12)=0.1d0
-    PI%parmax(12)=2.5d0
+    PI%parmax(12)=2.0d0
 
     !
     ! Longwave reflectance back to sky
@@ -124,7 +124,7 @@ module MODEL_PARAMETERS
     !
 
     ! soil sw radiation absorption (fraction)
-    PI%parmin(15)=0.50d0
+    PI%parmin(15)=0.85d0
     PI%parmax(15)=0.99d0
 
     !
@@ -136,14 +136,14 @@ module MODEL_PARAMETERS
     PI%parmax(16)=1d0
     ! LAI at which 50 % occurs
     PI%parmin(17)=0.1d0
-    PI%parmax(17)=2.5d0
+    PI%parmax(17)=2.0d0
 
     ! max reduction in nir transmitted by canopy (fraction)
     PI%parmin(18)=0.5d0
     PI%parmax(18)=1d0
     ! LAI at which 50 % occurs
     PI%parmin(19)=0.1d0
-    PI%parmax(19)=2.5d0
+    PI%parmax(19)=2.0d0
 
     !
     ! Canopy longwave escape from canopy
