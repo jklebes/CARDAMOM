@@ -88,7 +88,7 @@ contains
     double precision :: gpppars(12)            & ! ACM inputs (LAI+met)
              ,constants(10)          & ! parameters for ACM
              ,wf,wl,ff,fl,osf,osl,sf & ! phenological controls
-             ,pi,ml
+             ,pi,ml, doy
     ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
     double precision :: cf(6),rfac
 

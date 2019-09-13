@@ -340,7 +340,7 @@ module model_likelihood_module
     double precision, intent(out) :: EDC2 ! the response flag for the dynamical set of EDCs
 
     ! declare local variables
-    integer :: n, DIAG, no_years, y, PEDC, nn, steps_per_year, steps_per_month
+    integer :: n, nn, nnn, DIAG, no_years, y, PEDC, steps_per_year, steps_per_month
     double precision :: jan_mean_pools(nopools), mean_pools(nopools), EQF, etol
     double precision :: fauto & ! Fractions of GPP to autotrophic respiration
              ,ffol  & ! Fraction of GPP to foliage
@@ -351,8 +351,7 @@ module model_likelihood_module
              ,flit    ! fraction of GPP to litter under equilibrium conditions
 
     !JFE - 27/06/2018 newly defined variables for updated EDCs
-    double precision :: FT(nofluxes), Fin(nopools), Fout(nopools)
-    double precision :: fin_fout_lim, Sprox, Sprox0
+    double precision :: FT(nofluxes), Fin(nopools), Fout(nopools), Rm, Rs
     integer :: nd, fl
 
     ! update initial values
@@ -378,12 +377,12 @@ module model_likelihood_module
     ! number of years in analysis
     no_years = nint(sum(deltat)/365.25d0)
     ! number of time steps per year
-    steps_per_year = dble(nodays)/dble(no_years)
-    steps_per_month = steps_per_year / 12
+    steps_per_year = nodays/no_years
+    steps_per_month = ceiling(dble(steps_per_year) / 12d0)
     do n = 1, nopools
       do y = 1, no_years
-         nn = steps_per_year * (y - 1)
-         jan_mean_pools(n) = jan_mean_pools(n) + sum(M_POOLS(nn:(nn+deltat(1)),n))
+         nn = 1 + (steps_per_year * (y - 1)) ; nnn = nn + steps_per_month
+         jan_mean_pools(n) = jan_mean_pools(n) + sum(M_POOLS(nn:nnn,n))
       end do
       jan_mean_pools(n) = jan_mean_pools(n) / dble(steps_per_month*no_years)
     end do
