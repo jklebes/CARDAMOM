@@ -9,7 +9,7 @@ module MODEL_PARAMETERS
   public :: pars_info
 
   contains
-  
+
   !
   !------------------------------------------------------------------
   !
@@ -30,17 +30,17 @@ module MODEL_PARAMETERS
 
     ! contains 6 fields with min max log for par and par
 
-    ! 
+    !
     ! declare parameters
-    ! 
+    !
 
     ! Decomposition litter -> som (day-1)
     PI%parmin(1)=0.00001d0
     PI%parmax(1)=0.01d0
 
     ! Fraction of GPP respired as autotrophic
-    PI%parmin(2)=0.3d0
-    PI%parmax(2)=0.7d0
+    PI%parmin(2)=0.2d0
+    PI%parmax(2)=0.8d0
 
     ! Fraction of (1-fgpp) to foliage
     PI%parmin(3)=0.01d0
@@ -78,8 +78,8 @@ module MODEL_PARAMETERS
     ! Canopy Efficiency
     ! set to parmin=1 for FLUXCOM only
     ! e.g. for wetlands etc.
-    PI%parmin(11)=10d0
-    PI%parmax(11)=100d0
+    PI%parmin(11)=5d0
+    PI%parmax(11)=50d0
 
     ! max bud burst day
     PI%parmin(12)=365.25d0
@@ -103,7 +103,7 @@ module MODEL_PARAMETERS
 
     ! LMA (gC.m-2)
     ! Kattge et al. 2011
-    PI%parmin(17)=10d0
+    PI%parmin(17)=5d0
     PI%parmax(17)=200d0
 
     !
@@ -111,11 +111,11 @@ module MODEL_PARAMETERS
     !
 
     ! C labile
-    PI%parmin(18)=20d0
+    PI%parmin(18)=1d0
     PI%parmax(18)=2000d0
 
     ! C foliar
-    PI%parmin(19)=20d0
+    PI%parmin(19)=1d0
     PI%parmax(19)=2000d0
 
     ! C roots
@@ -123,17 +123,17 @@ module MODEL_PARAMETERS
     PI%parmax(20)=2000d0
 
     ! C_wood
-    PI%parmin(21)=100d0
+    PI%parmin(21)=1d0
     PI%parmax(21)=100000d0
 
     ! C litter
-    PI%parmin(22)=20d0
+    PI%parmin(22)=1d0
     PI%parmax(22)=2000d0
 
     ! C_som
-    PI%parmin(23) = 200d0
-    PI%parmax(23) = 250000d0 !90000d0
- 
+    PI%parmin(23) = 1d0
+    PI%parmax(23) = 200000d0 !90000d0
+
   end subroutine pars_info
 
   !
