@@ -967,7 +967,11 @@ contains
 
     ! Determine some multiple use constants used by a wide range of functions
     ! All variables here are linked to air temperature and thus invarient between
-    ! iterations and can be stored in memory...
+    ! iterations and can be stored in memory.
+    ! NOTE: that some are strictly speaking linked to temperature of the surface
+    ! being simulated, i.e. canopy or soil surface. However, those which have
+    ! been identified as strongly sensitive to changes in energy balance are
+    ! calculated in "meteorological_states"
 
     implicit none
 
@@ -1164,7 +1168,7 @@ contains
     double precision, intent(out) :: soilevap ! kgH2O.m-2.day-1
 
     ! local variables
-    double precision :: local_temp     &
+    double precision :: local_temp, soil_water_vapour_diffusion, deltaTemp, deltaR &
                   ,soil_radiation & ! isothermal net radiation (W/m2)
                            ,esurf & ! see code below
                             ,esat & ! soil air space saturation vapour pressure
@@ -1172,6 +1176,8 @@ contains
                               ,Qc
 
     local_temp = maxt + freeze
+
+
 
     !!!!!!!!!!
     ! Estimate energy radiation balance (W.m-2)
@@ -1184,6 +1190,22 @@ contains
 !    Qc = -0.4108826d0 * (maxt - maxt_lag1)
 !    soil_radiation = soil_radiation + Qc
 
+    ! Soil conductance to water vapour diffusion (m s-1)...
+    gws = porosity(1) * water_vapour_diffusion / (tortuosity*drythick)
+
+call update_net_radiation(soil_radiation,maxt,dble_one,dble_one &
+                                   ,gws,soil_conductance,vpd_kPa &
+                                   ,deltaTemp,deltaR)
+! update long wave and soil temperature
+soil_radiation = soil_radiation + deltaR
+local_temp = local_temp + deltaTemp
+
+! Determine diffusion coefficient (m2.s-1), temperature dependant (pressure
+! dependence neglected). Jones p51; appendix 2
+! Temperature adjusted from standard 20oC (293.15 K), NOTE that 1/293.15 = 0.003411223
+! 0.0000242 = conversion to make diffusion specific for water vapor (um2.s-1)
+soil_water_vapour_diffusion = 0.0000242d0*((local_temp/293.2d0)**1.75d0)
+
     !!!!!!!!!!
     ! Calculate soil evaporative fluxes (kgH2O/m2/day)
     !!!!!!!!!!
@@ -1193,7 +1215,7 @@ contains
     air_vapour_pressure = esat - vpd_kPa
 
     ! Soil conductance to water vapour diffusion (m s-1)...
-    gws = porosity(1) * water_vapour_diffusion / (tortuosity*drythick)
+    gws = porosity(1) * soil_water_vapour_diffusion / (tortuosity*drythick)
 
     ! vapour pressure in soil airspace (kPa), dependent on soil water potential
     ! - Jones p.110. partial_molar_vol_water

@@ -515,11 +515,11 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                grid_output$mean_nbp_gCm2day[slot_i,slot_j,] = apply(site_output$nbp_gCm2day,1,mean)
                # For those which we currently have need, estimate the mean annual maximum
                grid_output$annual_max_roots_gCm2[slot_i,slot_j,] = 0
-               for (y in seq(1,no_years)) {
+               for (y in seq(1,nos_years)) {
                     s = 1 + (steps_per_year * (y - 1)) ; f = s + (steps_per_year-1)
                     grid_output$annual_max_roots_gCm2[slot_i,slot_j,] = grid_output$annual_max_roots_gCm2[slot_i,slot_j,] + apply(site_output$roots_gCm2[,s:f],1,max)
                }
-               grid_output$annual_max_roots_gCm2[slot_i,slot_j,] = grid_output$annual_max_roots_gCm2[slot_i,slot_j,] / no_years
+               grid_output$annual_max_roots_gCm2[slot_i,slot_j,] = grid_output$annual_max_roots_gCm2[slot_i,slot_j,] / nos_years
                # Models where we have a CWD pool and therefore a total dead organic matter combination also
                if (length(which(names(site_output) == "cwd_gCm2")) > 0) {
                    grid_output$mean_cwd_gCm2[slot_i,slot_j,] = apply(site_output$cwd_gCm2,1,mean)
