@@ -241,12 +241,15 @@ contains
       ! calculate LAI value
       lai(n)=POOLS(n,2)/pars(17)
 
+      ! estimate multiple use variable
+      doy = ceiling(met(6,n)-(deltat(n)*0.5d0)) ! doy
+
       ! load next met / lai values for ACM
       gpppars(1)=lai(n)
       gpppars(2)=met(3,n) ! max temp
       gpppars(3)=met(2,n) ! min temp
       gpppars(5)=met(5,n) ! co2
-      gpppars(6)=ceiling(met(6,n)-(deltat(n)*0.5d0)) ! doy
+      gpppars(6)=doy
 !      gpppars(6)=met(6,n)
       gpppars(8)=met(4,n) ! radiation
 
@@ -266,8 +269,8 @@ contains
       FLUXES(n,7) = FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,4)-FLUXES(n,5)-FLUXES(n,6)
 
       ! Labile release and leaffall factors
-      FLUXES(n,9) = (2d0/(pi**0.5d0))*(ff/wf)*exp(-((sin((met(1,n)-pars(15)+osf)/sf)*sf/wf)**2d0))
-      FLUXES(n,16) = (2d0/(pi**0.5d0))*(fl/wl)*exp(-((sin((met(1,n)-pars(12)+osl)/sf)*sf/wl)**2d0))
+      FLUXES(n,9) = (2d0/(pi**0.5d0))*(ff/wf)*exp(-((sin((doy-pars(15)+osf)/sf)*sf/wf)**2d0))
+      FLUXES(n,16) = (2d0/(pi**0.5d0))*(fl/wl)*exp(-((sin((doy-pars(12)+osl)/sf)*sf/wl)**2d0))
 
       !
       ! those with time dependancies

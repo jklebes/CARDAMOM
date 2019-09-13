@@ -180,8 +180,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   #PARPRIORS(10)=0.03;PARPRIORUNC(10)=1.25;%Temp_rate (Mahecha 2010)
   #PARPRIORS(17)=70;PARPRIORUNC(17)=2;%LMA - Kattge 2011
   if (modelname == "DALEC_CDEA" | modelname == "DALEC_CDEA_LU_FIRES") {
-    PARPRIORS[2] =0.46                ; PARPRIORUNC[2]=0.12*2  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
-    PARPRIORS[11]=16.9                ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+#    PARPRIORS[2] =0.46                ; PARPRIORUNC[2]=0.12*2  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+#    PARPRIORS[11]=16.9                ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
     PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
@@ -249,7 +249,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[21]=-9999     ; PARPRIORUNC[21]=-9999
     } else {
       PARPRIORS[1]=0.5        ; PARPRIORUNC[1]=0.125 # fraction of litter decomposition to Csom
-      PARPRIORS[39]=11.197440 ; PARPRIORUNC[39]=1.32313*3 # NUE prior derived from Kattge et al., (2011)
+#      PARPRIORS[39]=11.197440 ; PARPRIORUNC[39]=1.32313*3 # NUE prior derived from Kattge et al., (2011)
       # other priors
       OTHERPRIORS[1] = 0.46   ; OTHERPRIORUNC[1] = 0.12*2 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
     }
@@ -324,7 +324,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     } else {
       PARPRIORS[1]=0.5            ; PARPRIORUNC[1]=0.125 # fraction of litter decomposition to Csom
       PARPRIORS[41]=OBS$soilwater ; PARPRIORUNC[41]=OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
-      PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=1.32313*3 # NUE prior derived from Kattge et al., (2011)
+#      PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=1.32313*3 # NUE prior derived from Kattge et al., (2011)
       # other priors
       OTHERPRIORS[1] = 0.46 ; OTHERPRIORUNC[1] = 0.12*2 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
     } # crop or not
