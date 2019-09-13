@@ -255,15 +255,19 @@ module model_likelihood_module
     double precision :: torfol ! yearly leaf loss fraction
 
     ! set initial value
-    torfol = 1d0/(pars(5)*365.25d0)
     EDC1 = 1
     DIAG = EDCD%DIAG
+
+    ! estimate GPP allocation fractions
     fauto = pars(2)
     ffol = (1d0-fauto)*pars(3)
     flab = (1d0-fauto-ffol)*pars(13)
     froot = (1d0-fauto-ffol-flab)*pars(4)
     fwood = 1d0-fauto-ffol-flab-froot
     fsom = fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(8))
+
+    ! yearly leaf loss fraction
+    torfol = 1d0/(pars(5)*365.25d0)
 
     ! set all EDCs to 1 (pass)
     EDCD%nedc = 100
@@ -295,7 +299,7 @@ module model_likelihood_module
 
     ! GPP allocation to foliage and labile cannot be 5 orders of magnitude
     ! difference from GPP allocation to roots
-    if ((EDC1 == 1 .or. DIAG == 1) .and. ((ffol+flab) > (5.*froot) .or. ((ffol+flab)*5.) < froot)) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. ((ffol+flab) > (5d0*froot) .or. ((ffol+flab)*5d0) < froot)) then
        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     endif
 
@@ -336,9 +340,8 @@ module model_likelihood_module
     double precision, intent(out) :: EDC2 ! the response flag for the dynamical set of EDCs
 
     ! declare local variables
-    integer :: n, DIAG, no_years, y, PEDC, nn, num_EDC
-    double precision :: mean_pools(nopools), G, decay_coef, meangpp, EQF
-    double precision, dimension(:,:), allocatable :: mean_annual_pools ! FE - 29/06/2018 changed dimensions to keep
+    integer :: n, DIAG, no_years, y, PEDC, nn, steps_per_year, steps_per_month
+    double precision :: jan_mean_pools(nopools), mean_pools(nopools), EQF, etol
     double precision :: fauto & ! Fractions of GPP to autotrophic respiration
              ,ffol  & ! Fraction of GPP to foliage
              ,flab  & ! Fraction of GPP to labile pool
@@ -352,10 +355,11 @@ module model_likelihood_module
     double precision :: fin_fout_lim, Sprox, Sprox0
     integer :: nd, fl
 
-
     ! update initial values
     DIAG = EDCD%DIAG
     EDC2 = 1
+
+    ! estimate GPP allocation fractions
     fauto = pars(2)
     ffol = (1d0-fauto)*pars(3)
     flab = (1d0-fauto-ffol)*pars(13)
@@ -369,99 +373,36 @@ module model_likelihood_module
        mean_pools(n) = cal_mean_pools(M_POOLS,n,nodays+1,nopools)
     end do
 
+    ! derive mean January pool sizes
+    jan_mean_pools = 0d0 ! reset before averaging
+    ! number of years in analysis
+    no_years = nint(sum(deltat)/365.25d0)
+    ! number of time steps per year
+    steps_per_year = dble(nodays)/dble(no_years)
+    steps_per_month = steps_per_year / 12
+    do n = 1, nopools
+      do y = 1, no_years
+         nn = steps_per_year * (y - 1)
+         jan_mean_pools(n) = jan_mean_pools(n) + sum(M_POOLS(nn:(nn+deltat(1)),n))
+      end do
+      jan_mean_pools(n) = jan_mean_pools(n) / dble(steps_per_month*no_years)
+    end do
+
     !
     ! Begin EDCs here
     !
 
     ! EDC 6
     ! ensure ratio between Cfoilar and Croot is less than 5
-    if ((EDC2 == 1 .or. DIAG == 1) .and. (mean_pools(2) > (mean_pools(3)*5.) .or. (mean_pools(2)*5.) < mean_pools(3)) ) then
+    if ((EDC2 == 1 .or. DIAG == 1) .and. &
+        (mean_pools(2) > (mean_pools(3)*5d0) .or. (mean_pools(2)*5d0) < mean_pools(3)) ) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(6) = 0
     end if
 
-    ! EDC 7
-    ! Assess growth factor over 10 years; order magnitude changes are not
-    ! allowed
-    no_years = int(floor(sum(deltat)/365d0))
-    G = 0.1
-    allocate(mean_annual_pools(no_years,nopools)) ! JFE - 29/06/2018 changed allocated dimensions
-
-    ! generate mean annual pool values
-    do n = 1, nopools
-       ! rapid pool growth is not allowed, increase is restricted by G growth
-       ! over N years. Rapid decay is dealth with in a later EDC
-       do y = 1, no_years
-          ! derive mean annual pools
-          mean_annual_pools(y,n)=cal_mean_annual_pools(M_POOLS(1:nodays+1,n),y,deltat,nodays+1)
-      !    print *, y,n, mean_annual_pools(y,n)
-       end do ! year loop
-       ! now check the growth rate
-       if ((EDC2 == 1 .or. DIAG == 1) .and. &
-          ((mean_annual_pools(no_years,n)/mean_annual_pools(1,n)) > (1.+G*real(no_years)))) then
-          EDC2 = 0d0 ; EDCD%PASSFAIL(7+n-1) = 0
-       endif
-    end do ! pool loop
-
-    ! done now so clean up
-    !deallocate(mean_annual_pools)
-
-    ! EDC 8
-    ! assesses the exponential decay of each model pool
-
-    ! JFE - EDC8 (expdecay) commented out to match EDCs in PNAS paper - 27/06/2018
-    ! loop through each pool in turn
-    !do n = 1, nopools
-    !   if (EDC2 == 1 .or. DIAG == 1) then
-    !      decay_coef=expdecay2(M_POOLS,n,deltat,nopools,nodays+1)
-          ! next assess the decay coefficient for meetings the EDC criterion
-    !      if (abs(-log(2.)/decay_coef) < (365.25*real(no_years)) .and. decay_coef < 0. ) then
-    !         EDC2 = 0d0 ; EDCD%PASSFAIL(8)=0
-    !      end if ! EDC conditions
-    !   end if ! EDC .or. DIAG condition
-    !end do ! pools loop
-
-    ! SOM attractor - must be within a factor of 2 from Csom0
-    ! eqiulibrium factor (in comparison with initial conditions)
+    ! Equilibrium factor (in comparison with initial conditions)
     EQF = 2d0 ! JFE replaced 10 by 2 - 27/06/2018
-
-    ! initialise and then calculate mean gpp values
-    !meangpp=sum(M_GPP(1:nodays))/real(nodays)
-
-    ! EDC 9 - SOM steady state within order magnitude of initial conditions - 27/06/2018
-    ! JFE - EDC9 (steady-state proximity) commented outto match EDCs in PNAS paper
-    !if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*fsom)/(pars(9)*exp(pars(10)*meantemp))) > (pars(23)*EQF)) then
-    !   EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
-    !end if
-    !if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*fsom)/(pars(9)*exp(pars(10)*meantemp))) < (pars(23)/EQF)) then
-    !   EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
-    !endif
-
-    ! EDC 10 - Litter steady state assumptions
-    !if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*flit)/(pars(8)*exp(pars(10)*meantemp))) > (pars(22)*EQF)) then
-    !    EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
-    !endif
-    !if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*flit)/(pars(8)*exp(pars(10)*meantemp))) < (pars(22)/EQF)) then
-    !    EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
-    !endif
-
-    ! EDC 11 - Wood steady state assumptions
-    !if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*fwood)/pars(6)) > (pars(21)*EQF)) then
-    !    EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
-    !end if
-    !if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*fwood)/pars(6)) < (pars(21)/EQF)) then
-    !    EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
-    !endif
-
-    ! EDC 12 - Root steady state assumptions
-    !if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*froot)/pars(7)) > (pars(20)*EQF)) then
-    !    EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
-    !endif
-    !if ((EDC2 == 1 .or. DIAG == 1) .and. ((meangpp*froot)/pars(7)) < (pars(20)/EQF)) then
-    !    EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
-    !endif
-
-    ! 27/06/2018 - JFE new EDC 8 to replace 9-12 to avoid dismissing simulations with early
-    ! fires that could lead to exponential regrowth / decay (see Bloom et al PNAS 2016 SI)
+    ! Pool exponential decay tolerance
+    etol = 0.1d0
 
     ! first calculate total flux for the whole simulation period
     do fl = 1, nofluxes
@@ -491,26 +432,20 @@ module model_likelihood_module
     Fin(6)  = FT(11)+FT(15)+FT(27)+FT(28)
     Fout(6) = FT(14)+FT(23)
 
+    ! Iterate through C pools to determine whether they have their ratio of
+    ! input and outputs are outside of steady state approximation.
+    ! See Bloom et al., 2016 PNAS for details
+
     ! iterate to check whether Fin/Fout is within EQF limits
     do n = 1, nopools
-        if (abs(log(Fin(n)/Fout(n))) > log(EQF)) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
-        end if
-    end do
-
-    ! 27/06/2018 - JFE new EDC 9 to check steady-state proximity
-    ! see Bloom et al PNAS 2016 SI eq. S3, S4 and S5
-    fin_fout_lim = 0.05
-
-    do n = 1, nopools
-        Sprox  = Fin(n) / Fout(n)
-        !Sprox0 = Sprox * (mean_pools(n) / M_POOLS(1,n))
-        ! JFE - 29/06/2018 perform check on first year rather than first time step
-        Sprox0 = Sprox * (mean_pools(n) / mean_annual_pools(1,n))
-      !  print *, n, Sprox, Sprox0
-        if (abs(Sprox-Sprox0) > fin_fout_lim) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(19+n) = 0
-        end if
+       Rm = Fin(n)/Fout(n)
+       Rs = Rm * (jan_mean_pools(n) / M_POOLS(1,n))
+       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Rs)) > log(EQF)) then
+           EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+       end if
+       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(Rs-Rm) > etol) then
+           EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+       end if
     end do
 
     !
@@ -541,24 +476,6 @@ module model_likelihood_module
           n = n + 1
        end do ! for nopools .and. EDC .or. DIAG condition
     end if ! min pool assessment
-
-    ! finally assess how meny EDCs passed or failed
-!    num_EDC = 100
-!    if (DIAG == 1) then
-!       do n = 1, num_EDC
-!          if (EDCD%PASSFAIL(n) == 0) then
-!              EDC2 = 0d0
-!          endif
-!       end do
-!    endif
-
-    !JFE to print EDCs
-    !do n = 1, 14
-   !     print*, n, EDCD%PASSFAIL(n)
-   ! end do
-
-    !JFE - 29/06/2018 now deallocate mean_annual_pools
-    deallocate(mean_annual_pools)
 
   end subroutine EDC2_CDEA_LU_FIRES
   !
