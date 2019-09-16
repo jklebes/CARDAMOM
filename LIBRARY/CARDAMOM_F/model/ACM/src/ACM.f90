@@ -547,7 +547,7 @@ contains
       !!!!!!!!!!
 
       ! estimate drythick for the current step
-      drythick = max(min_drythick, top_soil_depth * min(dble_one,dble_one - (soil_waterfrac(1) / porosity(1))))
+      drythick = max(min_drythick, top_soil_depth * (dble_one - (soil_waterfrac(1) / porosity(1))))
       ! Soil surface (kgH2O.m-2.day-1)
       call calculate_soil_evaporation(soilevaporation)
       ! if snow present assume that soilevaporation is sublimation of soil first
@@ -1168,16 +1168,17 @@ contains
     double precision, intent(out) :: soilevap ! kgH2O.m-2.day-1
 
     ! local variables
-    double precision :: local_temp, soil_water_vapour_diffusion, deltaTemp, deltaR &
-                  ,soil_radiation & ! isothermal net radiation (W/m2)
-                           ,esurf & ! see code below
-                            ,esat & ! soil air space saturation vapour pressure
-                             ,gws & ! water vapour conductance through soil air space (m.s-1)
-                              ,Qc
+double precision :: dx, soilevap_initial,soilevap_final,soilevap_half,tmp_waterfrac_1,tmp_waterfrac_2,drythick_1,drythick_2
+    double precision :: local_temp &
+                        ,numerator &
+                   ,soil_radiation & ! isothermal net radiation (W/m2)
+                            ,esurf & ! see code below
+                             ,esat & ! soil air space saturation vapour pressure
+                              ,gws & ! water vapour conductance through soil air space (m.s-1)
+                               ,Qc
 
+    ! oC -> K for local temperature value
     local_temp = maxt + freeze
-
-
 
     !!!!!!!!!!
     ! Estimate energy radiation balance (W.m-2)
@@ -1190,22 +1191,6 @@ contains
 !    Qc = -0.4108826d0 * (maxt - maxt_lag1)
 !    soil_radiation = soil_radiation + Qc
 
-    ! Soil conductance to water vapour diffusion (m s-1)...
-    gws = porosity(1) * water_vapour_diffusion / (tortuosity*drythick)
-
-call update_net_radiation(soil_radiation,maxt,dble_one,dble_one &
-                                   ,gws,soil_conductance,vpd_kPa &
-                                   ,deltaTemp,deltaR)
-! update long wave and soil temperature
-soil_radiation = soil_radiation + deltaR
-local_temp = local_temp + deltaTemp
-
-! Determine diffusion coefficient (m2.s-1), temperature dependant (pressure
-! dependence neglected). Jones p51; appendix 2
-! Temperature adjusted from standard 20oC (293.15 K), NOTE that 1/293.15 = 0.003411223
-! 0.0000242 = conversion to make diffusion specific for water vapor (um2.s-1)
-soil_water_vapour_diffusion = 0.0000242d0*((local_temp/293.2d0)**1.75d0)
-
     !!!!!!!!!!
     ! Calculate soil evaporative fluxes (kgH2O/m2/day)
     !!!!!!!!!!
@@ -1215,7 +1200,7 @@ soil_water_vapour_diffusion = 0.0000242d0*((local_temp/293.2d0)**1.75d0)
     air_vapour_pressure = esat - vpd_kPa
 
     ! Soil conductance to water vapour diffusion (m s-1)...
-    gws = porosity(1) * soil_water_vapour_diffusion / (tortuosity*drythick)
+    gws = porosity(1) * water_vapour_diffusion / (tortuosity*drythick)
 
     ! vapour pressure in soil airspace (kPa), dependent on soil water potential
     ! - Jones p.110. partial_molar_vol_water
@@ -1224,12 +1209,38 @@ soil_water_vapour_diffusion = 0.0000242d0*((local_temp/293.2d0)**1.75d0)
     esurf = esurf - air_vapour_pressure
 
     ! Estimate potential soil evaporation flux (kgH2O.m-2.day-1)
-    soilevap = (slope*soil_radiation) + (air_density_kg*cpair*esurf*soil_conductance)
-    soilevap = soilevap / (lambda*(slope+(psych*(1d0+soil_conductance/gws))))
-    soilevap = soilevap * dayl_seconds
+    numerator = (slope*soil_radiation) + (air_density_kg*cpair*esurf*soil_conductance)
+    soilevap = numerator / (lambda*(slope+(psych*(1d0+soil_conductance/gws))))
+    soilevap_initial = soilevap * dayl_seconds
 
-    ! Dew is unlikely to occur (if we had energy balance) if mint > 0
-!    if (soilevap < 0d0 .and. mint > 0d0 ) soilevap = 0d0
+dx = 1d0/3d0
+! Draw all the water required for evaporation...
+! adjust water already committed to evaporation
+! convert kg.m-2 (or mm) -> Mg.m-2 (or m)
+tmp_waterfrac_1 = soil_waterfrac(1) &
+                 +((-soilevap_initial*1d-3*dx) / layer_thickness(1))
+! calculate potential drythick
+drythick_1 = max(min_drythick, top_soil_depth * (dble_one - (tmp_waterfrac_1 / porosity(1))))
+! Soil conductance to water vapour diffusion (m s-1)...
+gws = porosity(1) * water_vapour_diffusion / (tortuosity*drythick_1)
+soilevap_half = numerator / (lambda*(slope+(psych*(1d0+soil_conductance/gws))))
+soilevap_half = soilevap_half * dayl_seconds
+
+! Draw all the water required for evaporation...
+! adjust water already committed to evaporation
+! convert kg.m-2 (or mm) -> Mg.m-2 (or m)
+tmp_waterfrac_2 = tmp_waterfrac_1 &
+                 +((-soilevap_half*1d-3*dx) / layer_thickness(1))
+! calculate potential drythick
+drythick_2 = max(min_drythick, top_soil_depth * (dble_one - (tmp_waterfrac_2 / porosity(1))))
+! Soil conductance to water vapour diffusion (m s-1)...
+gws = porosity(1) * water_vapour_diffusion / (tortuosity*drythick_2)
+soilevap_final = numerator / (lambda*(slope+(psych*(1d0+soil_conductance/gws))))
+soilevap_final = soilevap_final * dayl_seconds
+
+soilevap = (soilevap_initial+soilevap_final+soilevap_half) * dx
+! ESTIMATE INTEGRAL OF GWS ON SOILEVAP DUE TO DRYTHICK EXPANSION AT FIELD
+! CAPACITY? DUE TO STRONG NON-LINEAR EFFECTS?
 
     return
 

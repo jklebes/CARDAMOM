@@ -372,16 +372,18 @@ module model_likelihood_module
        mean_pools(n) = cal_mean_pools(M_POOLS,n,nodays+1,nopools)
     end do
 
-    ! derive mean January pool sizes
-    jan_mean_pools = 0d0 ! reset before averaging
     ! number of years in analysis
     no_years = nint(sum(deltat)/365.25d0)
     ! number of time steps per year
     steps_per_year = nodays/no_years
+    ! number of time steps per month
     steps_per_month = ceiling(dble(steps_per_year) / 12d0)
+
+    ! Determine the mean January pool sizes
+    jan_mean_pools = 0d0 ! reset before averaging
     do n = 1, nopools
       do y = 1, no_years
-         nn = 1 + (steps_per_year * (y - 1)) ; nnn = nn + steps_per_month
+         nn = 1 + (steps_per_year * (y - 1)) ; nnn = nn + (steps_per_month - 1)
          jan_mean_pools(n) = jan_mean_pools(n) + sum(M_POOLS(nn:nnn,n))
       end do
       jan_mean_pools(n) = jan_mean_pools(n) / dble(steps_per_month*no_years)
