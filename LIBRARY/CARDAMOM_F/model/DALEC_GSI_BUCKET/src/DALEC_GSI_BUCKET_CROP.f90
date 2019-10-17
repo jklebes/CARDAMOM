@@ -144,30 +144,26 @@ contains
                        ,GPP_out,stock_seed_labile,DS_shoot,DS_root,fol_frac    &
                        ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT)
 
-    use CARBON_MODEL_MOD, only: arrhenious,acm_gpp,calculate_transpiration,calculate_soil_evaporation     &
-                               ,calculate_wetcanopy_evaporation,meteorological_constants,calculate_stomatal_conductance&
-                               ,calculate_shortwave_balance,calculate_longwave_isothermal                 &
-                               ,calculate_update_soil_water,calculate_daylength,drythick,vsmall           &
-                               ,co2_half_saturation,co2_compensation_point,freeze,co2comp_saturation      &
-                               ,pn_airt_scaling,pn_airt_scaling_time                   &
-                               ,co2comp_half_sat_conc,kc_saturation,kc_half_sat_conc,dayl_hours_fraction  &
-                               ,calculate_Rtot,calculate_aerodynamic_conductance,saxton_parameters        &
-                               ,initialise_soils,min_drythick,soil_frac_clay,soil_frac_sand,dayl_hours    &
-                               ,seconds_per_day,dayl_seconds,dayl_seconds_1,seconds_per_step,root_biomass &
-                               ,top_soil_depth,mid_soil_depth,root_reach,min_root,max_depth,root_k,previous_depth &
-                               ,min_layer,wSWP,SWP,SWP_initial,deltat_1,water_flux,wSWP_time  &
-                               ,layer_thickness,minlwp,soil_waterfrac,soil_waterfrac_initial              &
-                               ,porosity,porosity_initial,field_capacity,field_capacity_initial,meant     &
-                               ,stomatal_conductance,avN,iWUE,NUE,pn_max_temp,pn_opt_temp,ceff            &
-                               ,pn_kurtosis,e0,co2_half_sat,co2_comp_point,max_lai_lwrad_transmitted      &
-                               ,lai_half_lwrad_transmitted,max_lai_nir_reflection,lai_half_nir_reflection &
-                               ,max_lai_par_reflection,lai_half_par_reflection,max_lai_par_transmitted    &
-                               ,lai_half_par_transmitted,max_lai_nir_transmitted,lai_half_nir_transmitted &
-                               ,max_lai_lwrad_reflected,lai_half_lwrad_reflected,soil_swrad_absorption    &
-                               ,max_lai_lwrad_release,lai_half_lwrad_release,mint,maxt,swrad,co2,doy,leafT&
-                               ,rainfall,wind_spd,vpd_kPa,lai,days_per_step,days_per_step_1,canopy_storage &
-                               ,intercepted_rainfall,snow_storage,snow_melt,airt_zero_fraction,snowfall   &
-                               ,update_soil_initial_conditions,opt_max_scaling
+    use CARBON_MODEL_MOD, only: arrhenious,acm_gpp,calculate_transpiration,calculate_soil_evaporation      & ! Subroutine / functions
+                               ,calculate_wetcanopy_evaporation,meteorological_constants                   &
+                               ,calculate_stomatal_conductance,calculate_radiation_balance                 &
+                               ,calculate_daylength,opt_max_scaling,calculate_Rtot,saxton_parameters       &
+                               ,calculate_aerodynamic_conductance,calculate_update_soil_water              &
+                               ,initialise_soils,update_soil_initial_conditions                            &
+                               ,freeze,co2comp_half_sat_conc,kc_saturation,kc_half_sat_conc,min_drythick   & ! parameter
+                               ,seconds_per_day,avN,iWUE,NUE,pn_max_temp,pn_opt_temp,pn_kurtosis,vsmall    &
+                               ,min_root,top_soil_depth,max_depth,root_k,minlwp,min_layer                  &
+                               ,soil_frac_clay,soil_frac_sand                                              &
+                               ,co2_half_saturation,co2_compensation_point,co2comp_saturation,drythick     & ! variables
+                               ,pn_airt_scaling,pn_airt_scaling_time,dayl_hours,dayl_seconds,dayl_seconds_1&
+                               ,seconds_per_step,root_biomass,mid_soil_depth,root_reach,previous_depth     &
+                               ,deltat_1,water_flux,layer_thickness,meant,stomatal_conductance             &
+                               ,co2_half_sat,co2_comp_point,mint,maxt,swrad,co2,doy,leafT,ceff             &
+                               ,wind_spd,vpd_kPa,lai,days_per_step,days_per_step_1,dayl_hours_fraction     &
+                               ,wSWP,SWP,SWP_initial,wSWP_time,soil_waterfrac,soil_waterfrac_initial       &
+                               ,porosity,porosity_initial,field_capacity,field_capacity_initial            &
+                               ,rainfall,canopy_storage,intercepted_rainfall,snow_storage,snow_melt        &
+                               ,airt_zero_fraction,snowfall
 
     ! DALEC crop model modified from Sus et al., (2010)
 
@@ -557,7 +553,7 @@ contains
       call meteorological_constants(maxt,maxt+freeze,vpd_kPa)
       ! calculate radiation absorption and estimate stomatal conductance
       call calculate_aerodynamic_conductance
-      call calculate_shortwave_balance ; call calculate_longwave_isothermal(leafT,maxt)
+      call calculate_radiation_balance 
       call calculate_stomatal_conductance(abs(deltaWP),Rtot)
 
       ! reallocate for crop model timings

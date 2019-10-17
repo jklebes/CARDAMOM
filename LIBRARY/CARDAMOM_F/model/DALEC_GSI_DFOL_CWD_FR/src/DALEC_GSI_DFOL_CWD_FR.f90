@@ -14,8 +14,7 @@ module CARBON_MODEL_MOD
            ,acm_gpp             &
            ,calculate_stomatal_conductance       &
            ,meteorological_constants  &
-           ,calculate_shortwave_balance   &
-           ,calculate_longwave_isothermal &
+           ,calculate_radiation_balance &
            ,calculate_daylength           &
            ,freeze              &
            ,co2comp_saturation  &
@@ -28,63 +27,46 @@ module CARBON_MODEL_MOD
            ,calculate_Rtot      &
            ,calculate_aerodynamic_conductance &
            ,linear_model_gradient &
-           ,seconds_per_day     &
-           ,seconds_per_hour    &
-           ,seconds_per_step    &
-           ,root_biomass        &
-           ,root_reach          &
-           ,min_root            &
-           ,max_depth           &
-           ,root_k              &
-           ,top_soil_depth      &
-           ,mid_soil_depth      &
-           ,soil_depth          &
-           ,previous_depth      &
-           ,nos_root_layers     &
-           ,deltat_1            &
-           ,water_flux          &
-           ,layer_thickness     &
+           ,seconds_per_day  &
+           ,seconds_per_hour &
+           ,seconds_per_step &
+           ,root_biomass     &
+           ,root_reach       &
+           ,min_root         &
+           ,max_depth        &
+           ,root_k           &
+           ,top_soil_depth   &
+           ,mid_soil_depth   &
+           ,soil_depth       &
+           ,previous_depth   &
+           ,nos_root_layers  &
+           ,deltat_1         &
+           ,water_flux       &
+           ,layer_thickness  &
            ,min_layer        &
            ,nos_soil_layers  &
            ,soil_frac_clay   &
            ,soil_frac_sand   &
            ,meant            &
-           ,meant_K          &
            ,stomatal_conductance &
            ,avN              &
            ,iWUE             &
-           ,NUE                           &
-           ,pn_max_temp                   &
-           ,pn_opt_temp                   &
-           ,pn_kurtosis                   &
-           ,e0                            &
-           ,co2_half_sat                  &
-           ,co2_comp_point                &
-           ,pn_airt_scaling               &
-           ,minlwp                        &
-           ,max_lai_lwrad_transmitted     &
-           ,lai_half_lwrad_transmitted    &
-           ,max_lai_nir_reflection        &
-           ,lai_half_nir_reflection       &
-           ,max_lai_par_reflection        &
-           ,lai_half_par_reflection       &
-           ,max_lai_par_transmitted       &
-           ,lai_half_par_transmitted      &
-           ,max_lai_nir_transmitted       &
-           ,lai_half_nir_transmitted      &
-           ,max_lai_lwrad_reflected       &
-           ,lai_half_lwrad_reflected      &
-           ,soil_swrad_absorption         &
-           ,max_lai_lwrad_release         &
-           ,lai_half_lwrad_release        &
-           ,leafT                         &
+           ,NUE              &
+           ,pn_max_temp      &
+           ,pn_opt_temp      &
+           ,pn_kurtosis      &
+           ,co2_half_sat     &
+           ,co2_comp_point   &
+           ,pn_airt_scaling  &
+           ,minlwp           &
+           ,leafT            &
            ,mint             &
            ,maxt             &
            ,swrad            &
            ,co2              &
            ,doy              &
            ,wind_spd         &
-           ,vpd_kPa           &
+           ,vpd_kPa          &
            ,lai              &
            ,days_per_step    &
            ,days_per_step_1  &
@@ -213,36 +195,36 @@ module CARBON_MODEL_MOD
 
   ! timing parameters
   double precision, parameter :: &
-                   seconds_per_hour = 3600d0,         & ! Number of seconds per hour
-                    seconds_per_day = 86400d0,        & ! Number of seconds per day
-                  seconds_per_day_1 = 1.157407d-05      ! Inverse of seconds per day
+                   seconds_per_hour = 3600d0,       & ! Number of seconds per hour
+                    seconds_per_day = 86400d0,      & ! Number of seconds per day
+                  seconds_per_day_1 = 1.157407d-05    ! Inverse of seconds per day
 
   ! ACM-GPP-ET parameters
   double precision, parameter :: &
-                        pn_max_temp = 5.994476d+01, & ! Maximum temperature for photosynthesis (oC)
-                        pn_opt_temp = 3.097309d+01, & ! Optimum temperature fpr photosynthesis (oC)
-                        pn_kurtosis = 1.807873d-01, & ! Kurtosis of photosynthesis temperature response
-                                 e0 = 4.947499d+00, & ! Quantum yield gC/MJ/m2/day PAR
-         lai_half_lwrad_transmitted = 1.408342d-01, & ! LAI at which LW transmittance to soil at 50 %
-           lai_half_lwrad_reflected = 2.336847d-03, & ! LAI at which LW reflectance to sky at 50 %
-             max_lai_nir_reflection = 1.536623d-01, & ! Coefficient relating NIR reflectance and LAI
-            lai_half_nir_reflection = 1.052528d-02, & ! LAI at which canopy NIR reflection = 50 %
-                             minlwp =-1.990842d+00, & ! minimum leaf water potential (MPa)
-             max_lai_par_reflection = 1.189590d-01, & ! Max fraction of PAR reflected by canopy
-            lai_half_par_reflection = 2.247624d-02, & ! LAI at which canopy PAR reflected = 50 %
-                      max_lw_escape = 5.809522d-01, & ! Max LW which is released from canopy that escapes in one direction
-                               iWUE = 3.689356d-06, & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
-              soil_swrad_absorption = 9.597167d-01, & ! Fraction of SW rad absorbed by soil
-            max_lai_par_transmitted =-1.643388d-02, & ! Max fraction reduction in PAR transmittance by canopy
-            max_lai_nir_transmitted =-1.205366d-02, & ! Max fraction reduction in NIR transmittance by canopy
-              max_lai_lwrad_release = 9.987600d-01, & ! 1-Max fraction of LW emitted from canopy to be released
-             lai_half_lwrad_release = 2.005504d+00, & ! LAI at which LW emitted from canopy to be released at 50 %
-               soil_iso_to_net_coef =-9.464002d-01, & ! Coefficient relating soil isothermal net radiation to net.
-              soil_iso_to_net_const =-2.461425d+00, & ! Constant relating soil isothermal net radiation to net
-                max_par_transmitted = 1.032857d-01, & ! Max fraction of canopy incident PAR transmitted to soil
-                max_nir_transmitted = 2.892002d-01, & ! Max fraction of canopy incident NIR transmitted to soil
-                  max_par_reflected = 3.897263d-01, & ! Max fraction of canopy incident PAR reflected to sky
-                  max_nir_reflected = 5.467363d-01    ! Max fraction of canopy incident NIR reflected to sky
+                        pn_max_temp = 5.978665d+01, & ! Maximum temperature for photosynthesis (oC)
+                        pn_opt_temp = 3.150166d+01, & ! Optimum temperature fpr photosynthesis (oC)
+                        pn_kurtosis = 1.730812d-01, & ! Kurtosis of photosynthesis temperature response
+                                 e0 = 5.897208d+00, & ! Quantum yield gC/MJ/m2/day PAR
+         lai_half_lwrad_transmitted = 1.639527d-01, & ! LAI at which LW transmittance to soil at 50 %
+           lai_half_lwrad_reflected = 6.746538d-03, & ! LAI at which LW reflectance to sky at 50 %
+             max_lai_nir_reflection = 1.457203d-01, & ! Coefficient relating NIR reflectance and LAI
+            lai_half_nir_reflection = 1.720843d-02, & ! LAI at which canopy NIR reflection = 50 %
+                             minlwp =-1.936111d+00, & ! minimum leaf water potential (MPa)
+             max_lai_par_reflection = 1.774887d-01, & ! Max fraction of PAR reflected by canopy
+            lai_half_par_reflection = 1.094594d-02, & ! LAI at which canopy PAR reflected = 50 %
+                      max_lw_escape = 5.813763d-01, & ! Max LW which is released from canopy that escapes in one direction
+                               iWUE = 3.312080d-06, & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
+              soil_swrad_absorption = 9.641337d-01, & ! Fraction of SW rad absorbed by soil
+            max_lai_par_transmitted =-1.096639d-02, & ! Max fraction reduction in PAR transmittance by canopy
+            max_lai_nir_transmitted =-1.255590d-02, & ! Max fraction reduction in NIR transmittance by canopy
+              max_lai_lwrad_release = 9.989129d-01, & ! 1-Max fraction of LW emitted from canopy to be released
+             lai_half_lwrad_release = 2.009765d+00, & ! LAI at which LW emitted from canopy to be released at 50 %
+               soil_iso_to_net_coef =-9.475060d-01, & ! Coefficient relating soil isothermal net radiation to net.
+              soil_iso_to_net_const =-2.443723d+00, & ! Constant relating soil isothermal net radiation to net
+                max_par_transmitted = 1.392685d-01, & ! Max fraction of canopy incident PAR transmitted to soil
+                max_nir_transmitted = 2.352473d-01, & ! Max fraction of canopy incident NIR transmitted to soil
+                  max_par_reflected = 4.700132d-01, & ! Max fraction of canopy incident PAR reflected to sky
+                  max_nir_reflected = 5.338683d-01    ! Max fraction of canopy incident NIR reflected to sky
 
   !!!!!!!!!
   ! Module level variables
@@ -290,7 +272,6 @@ module CARBON_MODEL_MOD
                                              displacement, & ! zero plane displacement (m)
                                                max_supply, & ! maximum water supply (mmolH2O/m2/day)
                                                     meant, & ! mean air temperature (oC)
-                                                  meant_K, & ! mean air temperature (K)
                                        canopy_swrad_MJday, & ! canopy_absorbed shortwave radiation (MJ.m-2.day-1)
                                          canopy_par_MJday, & ! canopy_absorbed PAR radiation (MJ.m-2.day-1)
                                          soil_swrad_MJday, & ! soil absorbed shortwave radiation (MJ.m-2.day-1)
@@ -803,7 +784,6 @@ contains
        co2 = met(5,n)   ! CO2 (ppm)
        doy = met(6,n)   ! Day of year
        meant = meant_time(n)  ! mean air temperature (oC)
-       meant_K = meant + freeze
        wind_spd = met(15,n) ! wind speed (m/s)
        vpd_kPa = met(16,n)*1d-3  ! Vapour pressure deficit (Pa -> kPa)
 
