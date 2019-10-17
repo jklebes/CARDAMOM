@@ -28,7 +28,8 @@ module cardamom_io
 
   ! declare module level variables
   integer :: pfile_unit = 10, sfile_unit = 11, cfile_unit = 12, cifile_unit = 13, ifile_unit = 14
-  integer :: accepted_so_far, accept_rate
+  integer :: accepted_so_far
+  double precision :: accept_rate
   ! default assumption is that this is not a restart fun
   logical :: restart_flag = .false.
 
@@ -52,7 +53,7 @@ module cardamom_io
         ! ID = 0 - ACM/ACM-ET
         ! DALEC_CDEA - 6 pools
         DATAin%nopools = 2
-        DATAin%nopars = 22
+        DATAin%nopars = 25 
         DATAin%nofluxes = 4
     else if (DATAin%ID == 1) then
         ! ID = 1 - DALEC_CDEA
@@ -198,6 +199,24 @@ module cardamom_io
         endif
     else if (DATAin%ID == 21) then
         ! ID = 1 - DALEC_CDEA_LU_FIRES
+        ! DALEC_CDEA - 6 pools
+        DATAin%nopools = 6
+        DATAin%nopars = 23
+        DATAin%nofluxes = 28
+    else if (DATAin%ID == 22) then
+        ! ID = 1 - DALEC_EVERGREEN
+        ! DALEC_CDEA - 6 pools
+        DATAin%nopools = 5
+        DATAin%nopars = 17
+        DATAin%nofluxes = 28
+    else if (DATAin%ID == 23) then
+        ! ID = 1 - DALEC_CDEA_REDUCED
+        ! DALEC_CDEA - 6 pools
+        DATAin%nopools = 6
+        DATAin%nopars = 23
+        DATAin%nofluxes = 28
+    else if (DATAin%ID == 24) then
+        ! ID = 1 - DALEC_EVERGREEN_no_lit_root
         ! DALEC_CDEA - 6 pools
         DATAin%nopools = 6
         DATAin%nopars = 23

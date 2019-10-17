@@ -236,7 +236,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         # Unit conversions based on specific datasets
         #
 
-        # convert ERA-Intrim from W/m2 to MJ/m2/day
+        # convert ERA from W/m2 to MJ/m2/day
         if (met_source == "CHESS" | met_source == "ERA" | met_source == "CRUJRA") {
             var1_out = var1_out * 86400 * 1e-6
         }
@@ -247,6 +247,11 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
             tmp1 = var2_out + var6_out # max
             tmp2 = var2_out - var6_out # min
             var2_out = tmp1 ; var6_out = tmp2
+        }
+
+        # convert precipitation from kgH2O/m2/day -> per second
+        if (met_source == "ERA") {
+            var3_out = var3_out / 86400
         }
 
         # CHESS and CRUJRA provide specific humidity not vapour pressure deficit.

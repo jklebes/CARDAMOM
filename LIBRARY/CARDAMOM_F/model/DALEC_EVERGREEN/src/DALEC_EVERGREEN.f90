@@ -48,13 +48,15 @@ contains
 !--------------------------------------------------------------------
 !
   subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,lai,NEE,FLUXES,POOLS &
-                       ,nopars,nomet,nopools,nofluxes,GPP)
+                         ,nopars,nomet,nopools,nofluxes,GPP)
 
-    ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
-    ! Evergreen Analytical (DALEC_CDEA) model. The subroutine calls the
-    ! Aggregated Canopy Model to simulate GPP and partitions between various
-    ! ecosystem carbon pools. These pools are subject to turnovers /
-    ! decompostion resulting in ecosystem phenology and fluxes of CO2
+    ! The Data Assimilation Linked Ecosystem Carbon - EVERGREEN. 
+    ! The subroutine calls the Aggregated Canopy Model to simulate GPP 
+    ! and partitions between various ecosystem carbon pools. 
+    ! These pools are subject to turnovers / decompostion resulting 
+    ! in ecosystem phenology and fluxes of CO2
+    ! Ref: Williams et al (2005) An improved analysis of forest carbon dynamics 
+    ! using data assimilation. Global Change Biology 11, 89-105.
 
     ! This version includes the option to simulate fire combustion based
     ! on burned fraction and fixed combusion rates. It also includes the
@@ -77,8 +79,8 @@ contains
                          ,lat                 ! site latitude (degrees)
 
     double precision, dimension(nodays), intent(inout) :: lai & ! leaf area index
-                                               ,GPP & ! Gross primary productivity
-                                               ,NEE   ! net ecosystem exchange of CO2
+                                                         ,GPP & ! Gross primary productivity
+                                                         ,NEE   ! net ecosystem exchange of CO2
 
     double precision, dimension((nodays+1),nopools), intent(inout) :: POOLS ! vector of ecosystem pools
 
@@ -86,11 +88,10 @@ contains
 
     ! declare local variables
     double precision :: gpppars(12)            & ! ACM inputs (LAI+met)
-             ,constants(10)          & ! parameters for ACM
-             ,wf,wl,ff,fl,osf,osl,sf & ! phenological controls
-             ,pi,ml, doy
-    ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
-    double precision :: cf(6),rfac
+                       ,constants(10)          & ! parameters for ACM
+                       ,pi,doy,fol_turn
+    ! Combustion efficiencies and fire resilience
+    double precision :: cf(5),rfac
 
     integer :: p,f,n,ii ! JFE added ii to loop over fluxes
 
@@ -106,70 +107,62 @@ contains
     ! 9th burned fraction   
 
     ! POOLS are:
-    ! 1 = labile
-    ! 2 = foliar
-    ! 3 = root
-    ! 4 = wood
-    ! 5 = litter
-    ! 6 = som
+    ! 1 = foliar
+    ! 2 = root
+    ! 3 = wood
+    ! 4 = litter
+    ! 5 = som
 
     ! FLUXES are:
     ! 1 = GPP
     ! 2 = temprate
     ! 3 = respiration_auto
     ! 4 = leaf production
-    ! 5 = labile production
+    ! 5 = NOT IN USE
     ! 6 = root production
     ! 7 = wood production
-    ! 8 = labile production
-    ! 9 = leaffall factor
+    ! 8 = NOT IN USE
+    ! 9 = NOT IN USE
     ! 10 = leaf litter production
     ! 11 = woodlitter production
     ! 12 = rootlitter production
     ! 13 = respiration het litter
     ! 14 = respiration het som
     ! 15 = litter2som
-    ! 16 = labrelease factor
-
-    ! JFE added 03/05/2018 - start
-    ! emissions of carbon into the atmosphere due to combustion
-    ! 17 = ecosystem fire emission  (sum of fluxes 18 to 23)
-    ! 18 = fire emission from labile
+    ! 16 = NOT IN USE
+    ! 17 = fire emission total
+    ! 18 = NOT IN USE
     ! 19 = fire emission from foliar
     ! 20 = fire emission from roots
     ! 21 = fire emission from wood
     ! 22 = fire emission from litter
     ! 23 = fire emission from soil
-
-    ! mortality due to fire
-    ! 24 = transfer from labile into litter
-    ! 25 = transfer from foliar into litter
-    ! 26 = transfer from roots into litter
-    ! 27 = transfer from wood into som
-    ! 28 = transfer from litter into som
-    ! JFE added 03/05/2018 - stop
-
+    ! 24 = NOT IN USE
+    ! 25 = transfer from foliar to litter
+    ! 26 = transfer from roots to litter
+    ! 27 = transfer from wood to som
+    ! 28 = transfer from litter to som
 
     ! PARAMETERS
-    ! 17 values
+    ! 17 values (including 5 initial conditions)
 
-    ! p(1) Litter to SOM conversion rate  - m_r
-    ! p(2) Fraction of GPP respired - f_a
-    ! p(3) Fraction of NPP allocated to foliage - f_f
-    ! p(4) Fraction of NPP allocated to roots - f_r
-    ! p(5) Leaf lifespan - L_f
-    ! p(6) Turnover rate of wood - t_w
-    ! p(7) Turnover rate of roots - t_r
-    ! p(8) Litter turnover rate - t_l
-    ! p(9) SOM turnover rate  - t_S
-    ! p(10) Parameter in exponential term of temperature - \theta
-    ! p(11) Canopy efficiency parameter - C_eff (part of ACM)
-    ! p(12) = date of Clab release - B_day
-    ! p(13) = Fraction allocated to Clab - f_l
-    ! p(14) = lab release duration period - R_l
-    ! p(15) = date of leaf fall - F_day
-    ! p(16) = leaf fall duration period - R_f
-    ! p(17) = LMA
+    ! p(1) Litter to SOM conversion rate (frac / day)
+    ! p(2) Fraction of GPP respired 
+    ! p(3) Fraction of NPP allocated to foliage 
+    ! p(4) Fraction of NPP allocated to roots 
+    ! p(5) leaf lifespan (years)
+    ! p(6) Cwood turnover rate (frac / day)
+    ! p(7) Croot turnover rate (frac / day)
+    ! p(8) CLitter turnover rate (frac / day)
+    ! p(9) Csom turnover rate (frac / day)
+    ! p(10) Parameter in exponential term of temperature
+    ! p(11) Canopy efficiency parameter (gC/m2leaf/day)
+    ! p(12) = LMA (gC/m2leaf)
+    ! p(13) = initial foliar C (gC/m2)
+    ! p(14) = initial root C (gC/m2)
+    ! p(15) = initial wood C (gC/m2)
+    ! p(16) = initial litter C (gC/m2)
+    ! p(17) = initial soil C (gC/m2)
 
     ! set constants
     pi = 3.1415927d0
@@ -195,42 +188,23 @@ contains
 
     if (start == 1) then
        ! assigning initial conditions
-       POOLS(1,1) = pars(18) ! labile
-       POOLS(1,2) = pars(19) ! foliar
-       POOLS(1,3) = pars(20) ! roots
-       POOLS(1,4) = pars(21) ! wood
-       POOLS(1,5) = pars(22) ! litter
-       POOLS(1,6) = pars(23) ! som
+       POOLS(1,1) = pars(13) ! foliar
+       POOLS(1,2) = pars(14) ! roots
+       POOLS(1,3) = pars(15) ! wood
+       POOLS(1,4) = pars(16) ! litter
+       POOLS(1,5) = pars(17) ! som
     endif
-    ! defining phenological variables
-    ! release period coefficient, based on duration of labile turnover or leaf
-    ! fall durations
-    wf = pars(16)*sqrt(2d0) * 0.5d0
-    wl = pars(14)*sqrt(2d0) * 0.5d0
 
-    ! magnitude coefficient
-    ff = (log(pars(5))-log(pars(5)-1d0)) * 0.5d0
-    fl = (log(1.001d0)-log(0.001d0)) * 0.5d0
+    ! Convert foliage age from years -> frac/day
+    fol_turn = (pars(5) * 365.25d0) ** (-1d0)
 
-    ! set minium labile life span to one year
-    ml = 1.001d0
-
-    ! offset for labile and leaf turnovers
-    osf = ospolynomial(pars(5),wf)
-    osl = ospolynomial(ml,wl)
-
-    ! scaling to biyearly sine curve
-    sf = 365.25d0/pi
-
-    ! JFE added 4 May 2018 - define fire constants
-    cf(1) = 0.1d0         ! labile combustion efficiency
-    cf(2) = 0.9d0         ! foliar combustion efficiency
-    cf(3) = 0.1d0         ! roots combustion efficiency
-    cf(4) = 0.1d0         ! wood combustion efficiency
-    cf(5) = 0.5d0         ! litter combustion efficiency
-    cf(6) = 0.01d0        ! som combustion efficency
-
-    rfac = 0.5d0          ! resilience factor
+    ! Define fire constants
+    cf(1) = 0.9d0  ! foliar combustion efficiency
+    cf(2) = 0.1d0  ! roots combustion efficiency
+    cf(3) = 0.1d0  ! wood combustion efficiency
+    cf(4) = 0.5d0  ! litter combustion efficiency
+    cf(5) = 0.01d0 ! som combustion efficency
+    rfac = 0.5d0   ! resilience factor
 
     !
     ! Begin looping through each time step
@@ -239,11 +213,11 @@ contains
     do n = start, finish
 
       ! calculate LAI value
-      lai(n) = POOLS(n,2)/pars(17)
+      lai(n) = POOLS(n,1)/pars(12)
 
       ! estimate multiple use variable
       doy = met(6,n)-(deltat(n)*0.5d0) ! doy
-!print*,doy,met(6,n),deltat(n)
+
       ! load next met / lai values for ACM
       gpppars(1) = lai(n)
       gpppars(2) = met(3,n) ! max temp
@@ -260,40 +234,32 @@ contains
       FLUXES(n,3) = pars(2)*FLUXES(n,1)
       ! leaf production rate (gC.m-2.day-1)
       FLUXES(n,4) = (FLUXES(n,1)-FLUXES(n,3))*pars(3)
-      ! labile production (gC.m-2.day-1)
-      FLUXES(n,5) = (FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,4))*pars(13)
       ! root production (gC.m-2.day-1)
-      FLUXES(n,6) = (FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,4)-FLUXES(n,5))*pars(4)
+      FLUXES(n,6) = (FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,4))*pars(4)
       ! wood production
-      FLUXES(n,7) = FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,4)-FLUXES(n,5)-FLUXES(n,6)
-
-      ! Labile release and leaffall factors
-      FLUXES(n,9) = (2d0/sqrt(pi))*(ff/wf)*exp(-(sin((doy-pars(15)+osf)/sf)*sf/wf)**2d0)
-      FLUXES(n,16) = (2d0/sqrt(pi))*(fl/wl)*exp(-(sin((doy-pars(12)+osl)/sf)*sf/wl)**2d0)
+      FLUXES(n,7) = FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,4)-FLUXES(n,6)
 
       !
       ! those with time dependancies
       !
 
-      ! total labile release
-      FLUXES(n,8) = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
       ! total leaf litter production
-      FLUXES(n,10) = POOLS(n,2)*(1d0-(1d0-FLUXES(n,9))**deltat(n))/deltat(n)
+      FLUXES(n,10) = POOLS(n,1)*(1d0-(1d0-fol_turn)**deltat(n))/deltat(n)
       ! total wood production
-      FLUXES(n,11) = POOLS(n,4)*(1d0-(1d0-pars(6))**deltat(n))/deltat(n)
+      FLUXES(n,11) = POOLS(n,3)*(1d0-(1d0-pars(6))**deltat(n))/deltat(n)
       ! total root litter production
-      FLUXES(n,12) = POOLS(n,3)*(1d0-(1d0-pars(7))**deltat(n))/deltat(n)
+      FLUXES(n,12) = POOLS(n,2)*(1d0-(1d0-pars(7))**deltat(n))/deltat(n)
 
       !
       ! those with temperature AND time dependancies
       !
 
       ! respiration heterotrophic litter
-      FLUXES(n,13) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))/deltat(n)
+      FLUXES(n,13) = POOLS(n,4)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))/deltat(n)
       ! respiration heterotrophic som
-      FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9))**deltat(n))/deltat(n)
+      FLUXES(n,14) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(9))**deltat(n))/deltat(n)
       ! litter to som
-      FLUXES(n,15) = POOLS(n,5)*(1d0-(1d0-pars(1)*FLUXES(n,2))**deltat(n))/deltat(n)
+      FLUXES(n,15) = POOLS(n,4)*(1d0-(1d0-pars(1)*FLUXES(n,2))**deltat(n))/deltat(n)
 
       ! calculate the NEE
       NEE(n) = (-FLUXES(n,1)+FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14))
@@ -304,69 +270,65 @@ contains
       ! update pools for next timestep
       !
 
-      ! labile pool
-      POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8))*deltat(n)
       ! foliar pool
-      POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,4)-FLUXES(n,10) + FLUXES(n,8))*deltat(n)
-      ! wood pool
-      POOLS(n+1,4) = POOLS(n,4) + (FLUXES(n,7)-FLUXES(n,11))*deltat(n)
+      POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,4)-FLUXES(n,10))*deltat(n)
       ! root pool
-      POOLS(n+1,3) = POOLS(n,3) + (FLUXES(n,6) - FLUXES(n,12))*deltat(n)
+      POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,6)-FLUXES(n,12))*deltat(n)
+      ! wood pool
+      POOLS(n+1,3) = POOLS(n,3) + (FLUXES(n,7)-FLUXES(n,11))*deltat(n)
       ! litter pool
-      POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
+      POOLS(n+1,4) = POOLS(n,4) + (FLUXES(n,10)+FLUXES(n,12)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
       ! som pool
-      POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)-FLUXES(n,14)+FLUXES(n,11))*deltat(n)
-
+      POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,15)-FLUXES(n,14)+FLUXES(n,11))*deltat(n)
 
       ! JFE added 4 May 2018 - remove biomass if necessary
       if (met(8,n) > 0d0) then
-          POOLS(n+1,1) = POOLS(n+1,1)*(1d0-met(8,n)) ! remove labile
-          POOLS(n+1,2) = POOLS(n+1,2)*(1d0-met(8,n)) ! remove foliar
-          POOLS(n+1,4) = POOLS(n+1,4)*(1d0-met(8,n)) ! remove wood
+          if (allocated(extracted_C)) extracted_C(n) = (POOLS(n+1,1)*met(8,n)) + (POOLS(n+1,3)*met(8,n))
+          POOLS(n+1,1) = POOLS(n+1,1)*(1d0-met(8,n)) ! remove foliar
+          POOLS(n+1,3) = POOLS(n+1,3)*(1d0-met(8,n)) ! remove wood
       end if
 
       ! calculate fire emissions and litter transfer
       if (met(9,n) > 0d0) then
+
           ! first calculate combustion / emissions fluxes in g C m-2 d-1
-          FLUXES(n,18) = POOLS(n+1,1)*met(9,n)*cf(1)/deltat(n) ! labile
-          FLUXES(n,19) = POOLS(n+1,2)*met(9,n)*cf(2)/deltat(n) ! foliar
-          FLUXES(n,20) = POOLS(n+1,3)*met(9,n)*cf(3)/deltat(n) ! roots
-          FLUXES(n,21) = POOLS(n+1,4)*met(9,n)*cf(4)/deltat(n) ! wood
-          FLUXES(n,22) = POOLS(n+1,5)*met(9,n)*cf(5)/deltat(n) ! litter
-          FLUXES(n,23) = POOLS(n+1,6)*met(9,n)*cf(6)/deltat(n) ! som
+          FLUXES(n,19) = POOLS(n+1,1)*met(9,n)*cf(1)/deltat(n) ! foliar
+          FLUXES(n,20) = POOLS(n+1,2)*met(9,n)*cf(2)/deltat(n) ! roots
+          FLUXES(n,21) = POOLS(n+1,3)*met(9,n)*cf(3)/deltat(n) ! wood
+          FLUXES(n,22) = POOLS(n+1,4)*met(9,n)*cf(4)/deltat(n) ! litter
+          FLUXES(n,23) = POOLS(n+1,5)*met(9,n)*cf(5)/deltat(n) ! som
 
           ! second calculate litter transfer fluxes in g C m-2 d-1, all pools except som
-          FLUXES(n,24) = POOLS(n+1,1)*met(9,n)*(1d0-cf(1))*(1d0-rfac)/deltat(n) ! labile into litter
-          FLUXES(n,25) = POOLS(n+1,2)*met(9,n)*(1d0-cf(2))*(1d0-rfac)/deltat(n) ! foliar into litter
-          FLUXES(n,26) = POOLS(n+1,3)*met(9,n)*(1d0-cf(3))*(1d0-rfac)/deltat(n) ! roots into litter
-          FLUXES(n,27) = POOLS(n+1,4)*met(9,n)*(1d0-cf(4))*(1d0-rfac)/deltat(n) ! wood into som
-          FLUXES(n,28) = POOLS(n+1,5)*met(9,n)*(1d0-cf(5))*(1d0-rfac)/deltat(n) ! litter into som
+          FLUXES(n,25) = POOLS(n+1,1)*met(9,n)*(1d0-cf(1))*(1d0-rfac)/deltat(n) ! foliar into litter
+          FLUXES(n,26) = POOLS(n+1,2)*met(9,n)*(1d0-cf(2))*(1d0-rfac)/deltat(n) ! roots into litter
+          FLUXES(n,27) = POOLS(n+1,3)*met(9,n)*(1d0-cf(3))*(1d0-rfac)/deltat(n) ! wood into som
+          FLUXES(n,28) = POOLS(n+1,4)*met(9,n)*(1d0-cf(4))*(1d0-rfac)/deltat(n) ! litter into som
 
           ! update pools - first remove burned vegetation
-          POOLS(n+1,1) = POOLS(n+1,1) - (FLUXES(n,18) + FLUXES(n,24)) * deltat(n) ! labile
-          POOLS(n+1,2) = POOLS(n+1,2) - (FLUXES(n,19) + FLUXES(n,25)) * deltat(n) ! foliar
-          POOLS(n+1,3) = POOLS(n+1,3) - (FLUXES(n,20) + FLUXES(n,26)) * deltat(n) ! roots
-          POOLS(n+1,4) = POOLS(n+1,4) - (FLUXES(n,21) + FLUXES(n,27)) * deltat(n) ! wood
+          POOLS(n+1,1) = POOLS(n+1,1) - (FLUXES(n,19) + FLUXES(n,25)) * deltat(n) ! foliar
+          POOLS(n+1,2) = POOLS(n+1,2) - (FLUXES(n,20) + FLUXES(n,26)) * deltat(n) ! roots
+          POOLS(n+1,3) = POOLS(n+1,3) - (FLUXES(n,21) + FLUXES(n,27)) * deltat(n) ! wood
           ! update pools - add litter transfer
-          POOLS(n+1,5) = POOLS(n+1,5) + (FLUXES(n,24) + FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22) - FLUXES(n,28)) * deltat(n)
-          POOLS(n+1,6) = POOLS(n+1,6) + (FLUXES(n,27) + FLUXES(n,28) - FLUXES(n,23)) * deltat(n)
+          POOLS(n+1,4) = POOLS(n+1,4) + (FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22) - FLUXES(n,28)) * deltat(n)
+          POOLS(n+1,5) = POOLS(n+1,5) + (FLUXES(n,27) + FLUXES(n,28) - FLUXES(n,23)) * deltat(n)
 
           ! calculate ecosystem emissions
-          FLUXES(n,17) = FLUXES(n,18)+FLUXES(n,19)+FLUXES(n,20)+FLUXES(n,21)+FLUXES(n,22)+FLUXES(n,23)
+          FLUXES(n,17) = FLUXES(n,19)+FLUXES(n,20)+FLUXES(n,21)+FLUXES(n,22)+FLUXES(n,23)
+
       else
+
           ! set fluxes to zero
           FLUXES(n,17) = 0d0
-          FLUXES(n,18) = 0d0
           FLUXES(n,19) = 0d0
           FLUXES(n,20) = 0d0
           FLUXES(n,21) = 0d0
           FLUXES(n,22) = 0d0
           FLUXES(n,23) = 0d0
-          FLUXES(n,24) = 0d0
           FLUXES(n,25) = 0d0
           FLUXES(n,26) = 0d0
           FLUXES(n,27) = 0d0
           FLUXES(n,28) = 0d0
+
       end if
 
     end do ! nodays loop
@@ -467,43 +429,6 @@ contains
     return
 
   end function acm
-  !
-  !------------------------------------------------------------------
-  !
-  double precision function ospolynomial(L,w)
-
-    ! Function calculates the day offset for Labile release and leaf turnover
-    ! functions
-
-    implicit none
-
-    ! declare input variables
-    double precision, intent(in) ::  L, w ! polynomial coefficients and scaling factor
-
-    ! declare local variables
-    double precision ::  tmp, LLog, mxc(7) ! polynomial coefficients and scaling factor
-
-    ! assign polynomial terms
-    mxc(1) = (0.000023599784710d0)
-    mxc(2) = (0.000332730053021d0)
-    mxc(3) = (0.000901865258885d0)
-    mxc(4) = (-0.005437736864888d0)
-    mxc(5) = (-0.020836027517787d0)
-    mxc(6) = (0.126972018064287d0)
-    mxc(7) = (-0.188459767342504d0)
-
-    ! load log of leaf / labile turnovers
-    LLog = log(L-1d0)
-
-    ! calculate the polynomial function
-    ospolynomial = (mxc(1)*LLog**6d0 + mxc(2)*LLog**5d0 + &
-                    mxc(3)*LLog**4d0 + mxc(4)*LLog**3d0 + &
-                    mxc(5)*LLog**2d0 + mxc(6)*LLog      + mxc(7))*w
-
-    ! back to the user...
-    return
-
-  end function ospolynomial
 !
 !--------------------------------------------------------------------
 !

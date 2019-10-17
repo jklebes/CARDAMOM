@@ -18,11 +18,11 @@ public :: MHMCMC, par_minstepsize,par_initstepsize
 integer :: uniform, unif_length
 double precision, allocatable, dimension(:) :: uniform_random_vector
 ! MHMCMC step size
-double precision, parameter :: par_minstepsize = 0.0001d0 & 
+double precision, parameter :: par_minstepsize = 0.0005d0 & 
                               ,par_maxstepsize = 1d0      &
                               ,par_initstepsize = 0.001d0
 ! Delayed Rejection flag
-double precision :: DR_scaler = 1d0
+double precision :: DR_scaler = 1d0, beta = 0.05d0
 ! Is current proposal multivariate or not?
 logical :: multivariate_proposal = .false.
 integer, parameter :: N_before_mv = 10
@@ -124,6 +124,7 @@ contains
     N%ACC = 0 ; N%ITER = 0 
     N%ACCLOC = 0 ; N%ACCRATE = 0d0 
     N%ACCRATE_GLOBAL = 0d0
+    N%ACCLOC_beta = 0 ; N%ITER_beta = 0 ; N%ACCRATE_beta = 0d0
 
     ! Set a somewhat arbitary target likelihood related to the number of
     ! observations being assimlated. If we have a likelihood score worse than
@@ -137,7 +138,7 @@ contains
     ! assume this is a restart which we want to load previous values
     if (restart_flag) then
         N%ITER = MCO%nWRITE*accepted_so_far ! number of iterations is directly linked to the number output
-        N%ACC = accept_rate * N%ITER 
+        N%ACC = ceiling(accept_rate * dble(N%ITER))
     endif
 
     ! add something here to delete previous files if wanted later
@@ -241,6 +242,7 @@ contains
                BESTPARS = PARS ; Pmax = P+Pprior
            endif
            N%ACC = N%ACC + 1 ; N%ACCLOC = N%ACCLOC + 1
+           if (.not.multivariate_proposal) N%ACCLOC_beta = N%ACCLOC_beta + 1
            P0 = P ; P0prior = Pprior
 
        else ! we have rejected - apply Delayed Rejection approach to enhance local searching
@@ -330,7 +332,7 @@ contains
        N%ITER = N%ITER + 1
 
        if (MCO%nWRITE > 0 .and. mod(N%ITER,MCO%nWRITE) == 0) then
-           call write_variances(PI%parvar,PI%npars,N%ACCRATE)
+           call write_variances(PI%parvar,PI%npars,N%ACCRATE) ! should this be the global rate?
            call write_parameters(PARS0,(P0+P0prior),PI%npars)  
            call write_covariance_matrix(PI%covariance,PI%npars,.false.)
            call write_covariance_info(PI%mean_par,PI%Nparvar,PI%npars)
@@ -341,6 +343,13 @@ contains
 
            ! Calculate local acceptance rate (i.e. since last adapt)
            N%ACCRATE = dble(N%ACCLOC) / dble(MCO%nADAPT)
+           N%ACCRATE_beta = dble(N%ACCLOC_beta) / dble(N%ITER_beta)
+!           if (N%ACCRATE_beta >= N%ACCRATE) then
+!               beta = 0.10d0
+!           else
+!               beta = 0.01d0
+!           end if
+
            ! Calculate global acceptance rate
            N%ACCRATE_GLOBAL = dble(N%ACC) / dble(N%ITER)
 
@@ -368,20 +377,24 @@ contains
            end if ! have any parameters been accepted in the last period?
    
            ! resets to local counters
-           N%ACCLOC = 0
+           N%ACCLOC = 0 ; N%ACCLOC_beta = 0 ; N%ITER_beta = 0
 
        end if ! time to adapt?
 
-       ! should I be write(*,*)ing to screen or not?
+       ! Should I be write(*,*)ing to screen or not?
        if (MCO%nPRINT > 0 .and. (mod(N%ITER,MCO%nPRINT) == 0)) then
+           write(*,*)"Using multivariate sampling = ",PI%use_multivariate
            write(*,*)"Total accepted = ",N%ACC," out of ",MCO%nOUT
-           write(*,*)"Overall acceptance rate  = ",dble(N%ACC) / dble(N%ITER)
-           write(*,*)"Local   acceptance rate  = ",N%ACCRATE
+           write(*,*)"Overall acceptance rate    = ",dble(N%ACC) / dble(N%ITER)
+           write(*,*)"Local   acceptance rate    = ",N%ACCRATE
+           write(*,*)"Local beta acceptance rate = ",N%ACCRATE_beta
            write(*,*)"Current obs   = ",P0,"proposed = ",P," log-likelihood"
            write(*,*)"Current prior = ",P0prior,"proposed = ",Pprior," log-likelihood"
            write(*,*)"Maximum likelihood = ",Pmax
-           ! NOTE: that -infinity in current obs only indicates failure of EDCs but
-           ! -infinity in both obs and parameter likelihood scores indicates that
+           ! NOTE: that -infinity in current obs only indicates failure of EDCs
+           ! but
+           ! -infinity in both obs and parameter likelihood scores indicates
+           ! that
            ! proposed parameters are out of bounds
        end if ! write(*,*) to screen or not
 
@@ -525,7 +538,7 @@ contains
     integer :: p
     double precision  :: stepping(PI%npars),rn(PI%npars), mu(PI%npars), rn2(PI%npars) &
                         ,tmp, scd
-    double precision, parameter :: beta = 0.05d0
+!    double precision, parameter :: beta = 0.05d0
 
     ! reset values
     rn = 0d0 ; mu = 0d0
@@ -582,6 +595,8 @@ contains
 
        ! is this step a multivariate proposal or not
        multivariate_proposal = .false. 
+       ! track information on whether this is a beta step proposal
+       N%ITER_beta = N%ITER_beta + 1 ; 
 
        ! Sample random normal distribution (mean = 0, sd = 1)
        do p = 1, PI%npars

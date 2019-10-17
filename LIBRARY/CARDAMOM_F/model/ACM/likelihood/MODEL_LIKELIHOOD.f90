@@ -216,7 +216,7 @@ module model_likelihood_module
 !       tot_exp=tot_exp+(1d0-EDCD%PASSFAIL(n))
 !       if (EDCD%PASSFAIL(n) /= 1) print*,"failed edcs are: ", n
 !    end do ! checking EDCs
-!    ! for testing purposes, stop the model when start achieved
+!   ! for testing purposes, stop the model when start achieved
 !    if (sum(EDCD%PASSFAIL) == 100) then
 !        print*,"Found it!" ; stop
 !    endif
@@ -253,7 +253,8 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, DIAG, i
     double precision :: tmp, tmp1, tmp2 &
-             ,par_trans, par_refl, nir_trans, nir_refl, lw_trans, lw_refl &
+             ,direct_trans, par_trans, nir_trans &
+             ,par_refl, nir_refl, lw_trans, lw_refl &
              ,fauto & ! Fractions of GPP to autotrophic respiration
              ,ffol  & ! Fraction of GPP to foliage
              ,flab  & ! Fraction of GPP to labile pool
@@ -277,28 +278,22 @@ module model_likelihood_module
     do i = 1,10
 
        ! Canopy transmitted of PAR & NIR radiation towards the soil
-       par_trans = 1d0 - (lai(i)*pars(16)) / (lai(i)+pars(17))
-       nir_trans = 1d0 - (lai(i)*pars(18)) / (lai(i)+pars(19))
-       lw_trans = 1d0 - (lai(i)*pars(6)) / (lai(i)+pars(7))
+       par_trans = max(0d0,pars(16) * lai(i) + pars(22) )
+       nir_trans = max(0d0,pars(17) * lai(i) + pars(23) )
        ! Canopy reflected of near infrared and photosynthetically active radiation
-       nir_refl = (lai(i)*pars(8)) / (lai(i)+pars(9))
-       par_refl = (lai(i)*pars(11)) / (lai(i)+pars(12))
-       lw_refl = (lai(i)*pars(22)) / (lai(i)+pars(13))
+       nir_refl = pars(25) * (1d0 - (((lai(i)*pars(8)) / (lai(i)+pars(9)))))
+       par_refl = pars(24) * (1d0 - (((lai(i)*pars(11)) / (lai(i)+pars(12)))))
 
-       ! the transmittance and reflection of LW radiation should be less than 1
-       if ((EDC1 == 1 .or. DIAG == 1) .and. lw_trans+lw_refl >= 1d0) then
-           EDC1 = 0 ; EDCD%PASSFAIL(1) = 0
-       endif
        ! the transmittance of NIR should always be > than PAR at all LAI values
        if ((EDC1 == 1 .or. DIAG == 1) .and. nir_trans < par_trans) then
            EDC1 = 0 ; EDCD%PASSFAIL(2) = 0
        endif
-       ! reflectance and transmittance of NIR should always be < 1
-       if ((EDC1 == 1 .or. DIAG == 1) .and. nir_trans + nir_refl >= 1d0 ) then
+       ! Reflectance of incident radiation should be greater than transmittance
+       if ((EDC1 == 1 .or. DIAG == 1) .and. nir_trans > nir_refl ) then
            EDC1 = 0 ; EDCD%PASSFAIL(3) = 0
        endif
-       ! reflectance and transmittance of PAR should always be < 1
-       if ((EDC1 == 1 .or. DIAG == 1) .and. par_trans + par_refl >= 1d0 ) then
+       ! Reflectance of incident radiation should be greater than transmittance
+       if ((EDC1 == 1 .or. DIAG == 1) .and. par_trans > par_refl) then
            EDC1 = 0 ; EDCD%PASSFAIL(4) = 0
        endif
        ! reflectance should be greater for NIR than for PAR
@@ -307,24 +302,44 @@ module model_likelihood_module
        endif
     enddo
 
-    ! Using last values as a upper limit (note above lai == 10). 
-    ! very little of the incident radiation should be transmitted through the
-    ! canopy
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. (nir_trans > 0.30d0 .or. par_trans > 0.30d0) then
-!         EDC1 = 0 ; EDCD%PASSFAIL(6) = 0
-!    endif 
-    
+    ! At high LAI the amount of radiation transmitted to the soil surface should
+    ! be very low. On order of < 20 % of original SW input should reach the soil
+    ! by lai > 5. NOTE: 1) 20 % target comes partially from SPA, 2) below code
+    ! assumes implicit 1 MJ/m2/day
 
-    ! maximum temperature for photosythesis cannot be smaller than optimum
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(3) > pars(2)) then
-        EDC1 = 0 ; EDCD%PASSFAIL(7) = 0
+    ! Estimate the fraction which passes directly to surface. 
+    ! NOTE: 1 = clumping factor, -0.5 is decay coefficient
+    direct_trans = exp(-0.5d0 * lai(9) * 1d0)
+    ! Estimate the transmittance fraction of the canopy incident SW
+    par_trans = pars(16) * lai(9) + pars(22) 
+    nir_trans = pars(17) * lai(9) + pars(23) 
+    ! Estimate the fraction of input SW which reaches the surface
+    tmp = (1d0 * (1d0-direct_trans)) ! estimate the SW total incident on the canopy
+    direct_trans = (1d0 * direct_trans) + ((tmp*sw_par_fraction)*par_trans) + ((tmp*(1d0-sw_par_fraction))*nir_trans)
+    if ((EDC1 == 1 .or. DIAG == 1) .and. direct_trans > 0.20d0) then
+         EDC1 = 0 ; EDCD%PASSFAIL(6) = 0
+    endif 
+
+    ! It is highly unlikely that by LAI 5 transmittance should be zero
+    if ((EDC1 == 1 .or. DIAG == 1) .and. par_trans <= 0.0d0) then
+         EDC1 = 0 ; EDCD%PASSFAIL(7) = 0
+    endif
+    if ((EDC1 == 1 .or. DIAG == 1) .and. nir_trans <= 0.0d0) then
+         EDC1 = 0 ; EDCD%PASSFAIL(8) = 0
     endif
 
     ! assume that photosynthesis limitation at 0C should be between 10 % and 20 %
     ! of potential. Fatchi et al (2013), New Phytologist, https://doi.org/10.1111/nph.12614
     tmp = opt_max_scaling(pars(2),pars(3),pars(4),0d0)
     if ((EDC1 == 1 .or. DIAG == 1) .and. tmp > 0.20d0) then
-       EDC1 = 0 ; EDCD%PASSFAIL(8) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(9) = 0
+    endif
+
+    ! Longwave radiation incident on the canopy should be almost entirely absorbed by the canopy
+    ! Here we assume that such a circumstance should occur by LAI >= 1
+    lw_trans = 0.02d0 * (1d0 - (lai(7) / (lai(7)+pars(6)))) ; lw_refl = 0.02d0 * (1d0 - (lai(7) / (lai(7)+pars(7))))
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (1d0 - lw_trans - lw_refl) < 0.99d0) then
+        EDC1 = 0 ; EDCD%PASSFAIL(10) = 0
     endif
 
   end subroutine EDC1_GSI
@@ -388,22 +403,22 @@ module model_likelihood_module
     ! EDCs done, below are additional fault detection conditions
     !
 
-    ! the maximum value for all fluxes must be greater than zero
-    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,1)) < 0.1d0) then
-         EDC2 = 0 ; EDCD%PASSFAIL(9) = 0
-    endif
-    ! the maximum value for all fluxes must be greater than zero
-    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,2)) < 0.1d0) then
-         EDC2 = 0 ; EDCD%PASSFAIL(10) = 0
-    endif
-    ! the maximum value for all fluxes must be greater than zero
-    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,3)) < 0.1d0) then
-         EDC2 = 0 ; EDCD%PASSFAIL(11) = 0
-    endif
-    ! the maximum value for all fluxes must be greater than zero
-    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,4)) < 0.1d0) then
-         EDC2 = 0 ; EDCD%PASSFAIL(12) = 0
-    endif
+!    ! the maximum value for all fluxes must be greater than zero
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,1)) < 0.1d0) then
+!         EDC2 = 0 ; EDCD%PASSFAIL(9) = 0
+!    endif
+!    ! the maximum value for all fluxes must be greater than zero
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,2)) < 0.1d0) then
+!         EDC2 = 0 ; EDCD%PASSFAIL(10) = 0
+!    endif
+!    ! the maximum value for all fluxes must be greater than zero
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,3)) < 0.1d0) then
+!         EDC2 = 0 ; EDCD%PASSFAIL(11) = 0
+!    endif
+!    ! the maximum value for all fluxes must be greater than zero
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,4)) < 0.1d0) then
+!         EDC2 = 0 ; EDCD%PASSFAIL(12) = 0
+!    endif
 
     ! additional faults can be stored in locations 35 - 40 of the PASSFAIL array
 

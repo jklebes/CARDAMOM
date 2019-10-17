@@ -294,8 +294,10 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
         }
     } else if (Cwood_initial_source == "UoL") {
         # this is a very bespoke modification so leave it here to avoid getting lost
-        agb = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_stable_forest_2015_2017.tif", sep=""))
-        unc = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_std_stable_forest_2015_2017.tif", sep=""))
+#        agb = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_stable_forest_2015_2017.tif", sep=""))
+#        unc = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_std_stable_forest_2015_2017.tif", sep=""))
+        agb = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_stable_savannah_2015_2017.tif", sep=""))
+        unc = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_std_stable_savannah_2015_2017.tif", sep=""))
         # extract dimension information for the grid, note the axis switching between raster and actual array
         xdim = dim(agb)[2] ; ydim = dim(agb)[1]
         # extract the lat / long information needed

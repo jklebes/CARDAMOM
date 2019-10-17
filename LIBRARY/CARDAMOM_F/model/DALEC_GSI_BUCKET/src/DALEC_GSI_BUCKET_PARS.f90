@@ -46,8 +46,8 @@ module MODEL_PARAMETERS
        PI%parmax(1) = 0.75d0
 
        ! Fraction of GPP respired as Rm
-       PI%parmin(2) = 0.2d0
-       PI%parmax(2) = 0.7d0
+       PI%parmin(2) = 0.1d0
+       PI%parmax(2) = 0.8d0
 
        ! GSI sensitivity for leaf growth
        PI%parmin(3) = 1.00d0
@@ -71,8 +71,8 @@ module MODEL_PARAMETERS
        ! Turnover fraction of roots
        ! Gill and Jackson (2000), New Phytol., 147, 13–31
        ! Fig. 6 turnover by diameter class
-       PI%parmin(7) = 0.0109514d0 ! 4    years
-       PI%parmax(7) = 0.01d0      ! 0.27 years
+       PI%parmin(7) = 0.0006844627d0 ! 4    years
+       PI%parmax(7) = 0.01d0         ! 0.27 years
 
        ! Turnover of litter (fraction; temperature adjusted)
        PI%parmin(8) = 0.0003911215d0 ! 7    years at 0oC

@@ -20,7 +20,7 @@ plot_parameters<- function(PROJECT,parameters,converged,n) {
       if (PROJECT$parameter_type == "pft_specific" & PROJECT$ctessel_pft[n] == 1) {
 	  par(mfrow=c(7,7),mar=c(5, 4, 4, 2), oma=c(0,0,1,0))
       } else if (PROJECT$model$name == "ACM") {
-	  par(mfrow=c(5,5),mar=c(5, 4, 4, 2), oma=c(0,0,1,0))
+	  par(mfrow=c(5,6),mar=c(5, 4, 4, 2), oma=c(0,0,1,0))
       } else if (PROJECT$model$name == "DALEC_GSI_DBio_FR") {
 	  par(mfrow=c(7,8),mar=c(5, 4, 4, 2), oma=c(0,0,1,0))
       } else if (PROJECT$model$name == "DALECN_GSI_FR" ) {
@@ -44,7 +44,7 @@ plot_parameters<- function(PROJECT,parameters,converged,n) {
       if (PROJECT$parameter_type == "pft_specific" & PROJECT$ctessel_pft[n] == 1) {
 	  par(mfrow=c(7,7),mar=c(5, 4, 4, 2), oma=c(0,0,1,0))
       } else if (PROJECT$model$name == "ACM") {
-	  par(mfrow=c(5,5),mar=c(5, 4, 4, 2), oma=c(0,0,1,0))
+	  par(mfrow=c(5,6),mar=c(5, 4, 4, 2), oma=c(0,0,1,0))
       } else if (PROJECT$model$name == "DALEC_GSI_DBio_FR") {
 	  par(mfrow=c(7,8),mar=c(5, 4, 4, 2), oma=c(0,0,1,0))
       } else if (PROJECT$model$name == "DALECN_GSI_FR") {

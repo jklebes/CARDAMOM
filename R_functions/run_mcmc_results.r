@@ -27,10 +27,14 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
       if (parameters[1] == -9999) {
           error_check = TRUE
       } else {
-          if (min(parameters[PROJECT$model$nopars[n]+1,,]) == -Inf) {
+          if (length(which(as.vector(is.na(parameters)))) > 0 ) {
               error_check = TRUE
-          }
-      }
+          } else {
+              if (min(parameters[PROJECT$model$nopars[n]+1,,]) == -Inf) {
+                  error_check = TRUE
+              } # Inf check
+          } # NaN check
+      } # error check
 
       # ok so if we actually have some parameters we will
       if (error_check == FALSE) {

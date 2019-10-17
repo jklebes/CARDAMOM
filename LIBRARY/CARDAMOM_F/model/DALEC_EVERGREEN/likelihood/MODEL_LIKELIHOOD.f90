@@ -246,11 +246,10 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, DIAG
     double precision :: fauto & ! Fractions of GPP to autotrophic respiration
-             ,ffol  & ! Fraction of GPP to foliage
-             ,flab  & ! Fraction of GPP to labile pool
-             ,froot & ! Fraction of GPP to root
-             ,fwood & ! Fraction of GPP to wood
-             ,fsom    ! fraction of GPP som under eqilibrium conditions
+                       ,ffol  & ! Fraction of GPP to foliage
+                       ,froot & ! Fraction of GPP to root
+                       ,fwood & ! Fraction of GPP to wood
+                       ,fsom    ! fraction of GPP som under eqilibrium conditions
 
     double precision :: torfol ! yearly leaf loss fraction
 
@@ -261,12 +260,11 @@ module model_likelihood_module
     ! estimate GPP allocation fractions
     fauto = pars(2)
     ffol = (1d0-fauto)*pars(3)
-    flab = (1d0-fauto-ffol)*pars(13)
-    froot = (1d0-fauto-ffol-flab)*pars(4)
-    fwood = 1d0-fauto-ffol-flab-froot
-    fsom = fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(8))
+    froot = (1d0-fauto-ffol)*pars(4)
+    fwood = 1d0-fauto-ffol-froot
+    fsom = fwood+(froot+ffol)*pars(1)/(pars(1)+pars(8))
 
-    ! yearly leaf loss fraction
+    ! convert leaf life span in year to fraction per day
     torfol = 1d0/(pars(5)*365.25d0)
 
     ! set all EDCs to 1 (pass)
@@ -299,7 +297,7 @@ module model_likelihood_module
 
     ! GPP allocation to foliage and labile cannot be 5 orders of magnitude
     ! difference from GPP allocation to roots
-    if ((EDC1 == 1 .or. DIAG == 1) .and. ((ffol+flab) > (5d0*froot) .or. ((ffol+flab)*5d0) < froot)) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (ffol > (5d0*froot) .or. (ffol*5d0) < froot)) then
        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     endif
 
@@ -344,7 +342,6 @@ module model_likelihood_module
     double precision :: jan_mean_pools(nopools), mean_pools(nopools), EQF, etol
     double precision :: fauto & ! Fractions of GPP to autotrophic respiration
              ,ffol  & ! Fraction of GPP to foliage
-             ,flab  & ! Fraction of GPP to labile pool
              ,froot & ! Fraction of GPP to root
              ,fwood & ! Fraction of GPP to wood
              ,fsom  & ! fraction of GPP som under eqilibrium conditions
@@ -361,11 +358,10 @@ module model_likelihood_module
     ! estimate GPP allocation fractions
     fauto = pars(2)
     ffol = (1d0-fauto)*pars(3)
-    flab = (1d0-fauto-ffol)*pars(13)
-    froot = (1d0-fauto-ffol-flab)*pars(4)
-    fwood = 1d0-fauto-ffol-flab-froot
-    fsom = fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(8))
-    flit = (froot+flab+ffol)
+    froot = (1d0-fauto-ffol)*pars(4)
+    fwood = 1d0-fauto-ffol-froot
+    fsom = fwood+(froot+ffol)*pars(1)/(pars(1)+pars(8))
+    flit = (froot+ffol)
 
     ! derive mean pools
     do n = 1, nopools
@@ -396,7 +392,7 @@ module model_likelihood_module
     ! EDC 6
     ! ensure ratio between Cfoilar and Croot is less than 5
     if ((EDC2 == 1 .or. DIAG == 1) .and. &
-        (mean_pools(2) > (mean_pools(3)*5d0) .or. (mean_pools(2)*5d0) < mean_pools(3)) ) then
+        (mean_pools(1) > (mean_pools(2)*5d0) .or. (mean_pools(1)*5d0) < mean_pools(2)) ) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(6) = 0
     end if
 
@@ -414,24 +410,21 @@ module model_likelihood_module
     end do
 
     ! get total in and out for each pool
-    ! labile
-    Fin(1)  = FT(5)
-    Fout(1) = FT(8)+FT(18)+FT(24)
     ! foliar
-    Fin(2)  = FT(4)+FT(8)
-    Fout(2) = FT(10)+FT(19)+FT(25)
+    Fin(1)  = FT(4)
+    Fout(1) = FT(10)+FT(19)+FT(25)
     ! root
-    Fin(3)  = FT(6)
-    Fout(3) = FT(12)+FT(20)+FT(26)
+    Fin(2)  = FT(6)
+    Fout(2) = FT(12)+FT(20)+FT(26)
     ! wood
-    Fin(4)  = FT(7)
-    Fout(4) = FT(11)+FT(21)+FT(27)
+    Fin(3)  = FT(7)
+    Fout(3) = FT(11)+FT(21)+FT(27)
     ! litter
-    Fin(5)  = FT(10)+FT(12)+FT(24)+FT(25)+FT(26)
-    Fout(5) = FT(13)+FT(15)+FT(22)+FT(28)
+    Fin(4)  = FT(10)+FT(12)+FT(25)+FT(26)
+    Fout(4) = FT(13)+FT(15)+FT(22)+FT(28)
     ! som
-    Fin(6)  = FT(11)+FT(15)+FT(27)+FT(28)
-    Fout(6) = FT(14)+FT(23)
+    Fin(5)  = FT(11)+FT(15)+FT(27)+FT(28)
+    Fout(5) = FT(14)+FT(23)
 
     ! Iterate through C pools to determine whether they have their ratio of
     ! input and outputs are outside of steady state approximation.
@@ -776,7 +769,7 @@ module model_likelihood_module
     ! GPP Log-likelihood
     if (DATAin%ngpp > 0) then
        tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
-                       /DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2)
+                       /DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2d0)
        likelihood = likelihood-tot_exp
     endif
 
@@ -784,7 +777,7 @@ module model_likelihood_module
     if (DATAin%nlai > 0) then
        ! loop split to allow vectorisation
        tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
-                       /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
+                       /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2d0)
        do n = 1, DATAin%nlai
          dn = DATAin%laipts(n)
          ! if zero or greater allow calculation with min condition to prevent
@@ -801,7 +794,7 @@ module model_likelihood_module
     ! NEE likelihood
     if (DATAin%nnee > 0) then
        tot_exp = sum(((DATAin%M_NEE(DATAin%neepts(1:DATAin%nnee))-DATAin%NEE(DATAin%neepts(1:DATAin%nnee))) &
-                       /DATAin%NEE_unc(DATAin%neepts(1:DATAin%nnee)))**2)
+                       /DATAin%NEE_unc(DATAin%neepts(1:DATAin%nnee)))**2d0)
        likelihood = likelihood-tot_exp
     endif
 
@@ -812,7 +805,7 @@ module model_likelihood_module
          dn = DATAin%recopts(n)
          tmp_var = DATAin%M_NEE(dn)+DATAin%M_GPP(dn)
          ! note that we calculate the Ecosystem resp from GPP and NEE
-         tot_exp = tot_exp+((tmp_var-DATAin%Reco(dn))/DATAin%Reco_unc(dn))**2
+         tot_exp = tot_exp+((tmp_var-DATAin%Reco(dn))/DATAin%Reco_unc(dn))**2d0
        end do
        likelihood = likelihood-tot_exp
     endif
@@ -823,9 +816,9 @@ module model_likelihood_module
        do n = 1, DATAin%nwoo
          dn = DATAin%woopts(n)
          ! note that division is the uncertainty
-         ! tot_exp = tot_exp+(log((DATAin%M_POOLS(dn,4)-DATAin%M_POOLS(dn-365,4)) &
+         ! tot_exp = tot_exp+(log((DATAin%M_POOLS(dn,3)-DATAin%M_POOLS(dn-365,3)) &
          !                   / DATAin%WOO(dn))/log(DATAin%WOO_unc(dn)))**2
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%M_POOLS(dn-365,4)) / DATAin%WOO_unc(dn))**2
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%M_POOLS(dn-365,3)) / DATAin%WOO_unc(dn))**2d0
        end do
        likelihood = likelihood-tot_exp
     endif
@@ -836,8 +829,8 @@ module model_likelihood_module
        do n = 1, DATAin%nCfol_stock
          dn = DATAin%Cfol_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp = tot_exp+(log(DATAin%M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2d0
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2
+!         tot_exp = tot_exp+(log(DATAin%M_POOLS(dn,1)/DATAin%Cfol_stock(dn))/log(2d0))**2d0
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn,1)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2d0
        end do
        likelihood = likelihood-tot_exp
     endif
@@ -851,7 +844,7 @@ module model_likelihood_module
        ! determine the annual max for each pool
        do y = 1, no_years
           ! derive mean annual foliar pool
-          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
+          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),1),y,DATAin%deltat,DATAin%nodays+1)
        end do ! year loop
        ! loop through the observations then
        do n = 1, DATAin%nCfolmax_stock
@@ -862,7 +855,7 @@ module model_likelihood_module
          ! load the correct year into the analysis
          tmp_var = mean_annual_pools(y)
          ! note that division is the uncertainty
-         tot_exp = tot_exp+((tmp_var-DATAin%Cfolmax_stock(dn)) / DATAin%Cfolmax_stock_unc(dn))**2
+         tot_exp = tot_exp+((tmp_var-DATAin%Cfolmax_stock(dn)) / DATAin%Cfolmax_stock_unc(dn))**2d0
        end do
        likelihood = likelihood-tot_exp
     endif
@@ -873,8 +866,8 @@ module model_likelihood_module
        do n = 1, DATAin%nCwood_stock
          dn = DATAin%Cwood_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,4)/DATAin%Cwood_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/DATAin%Cwood_stock_unc(dn))**2
+!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,3)/DATAin%Cwood_stock(dn))/log(2d0))**2d0
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Cwood_stock(dn))/DATAin%Cwood_stock_unc(dn))**2d0
        end do
        likelihood = likelihood-tot_exp
     endif
@@ -885,8 +878,8 @@ module model_likelihood_module
        do n = 1, DATAin%nCroots_stock
          dn = DATAin%Croots_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,3)/DATAin%Croots_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
+!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,2)/DATAin%Croots_stock(dn))/log(2d0))**2d0
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2d0
        end do
        likelihood = likelihood-tot_exp
     endif
@@ -899,10 +892,8 @@ module model_likelihood_module
        do n = 1, DATAin%nClit_stock
          dn = DATAin%Clit_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+((log((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
-!                           *DATAin%M_POOLS(dn,5))/DATAin%Clit_stock(dn))/log(2.))**2d0
          tot_exp = tot_exp+(((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
-                           *(DATAin%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2
+                           *(DATAin%M_POOLS(dn,4))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2d0
        end do
        likelihood = likelihood-tot_exp
     endif
@@ -913,8 +904,8 @@ module model_likelihood_module
        do n = 1, DATAin%nCsom_stock
          dn = DATAin%Csom_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,6)/DATAin%Csom_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2
+!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,5)/DATAin%Csom_stock(dn))/log(2d0))**2d0
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn,5)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2d0
        end do
        likelihood = likelihood-tot_exp
     endif

@@ -54,7 +54,7 @@ submit_processes_to_eddie<-function (PROJECT_in) {
     # task run time
     runtimestr=paste(" -l h_rt=",as.numeric(PROJECT_in$chain_runtime),":00:00 ",sep="")
     # task memory needs
-    memorystr=paste(" -l h_vmem=6G",sep="")
+    memorystr=paste(" -l h_vmem=1G",sep="")
 
     # eddie email link
     if (grepl("@",PROJECT_in$email)) {
