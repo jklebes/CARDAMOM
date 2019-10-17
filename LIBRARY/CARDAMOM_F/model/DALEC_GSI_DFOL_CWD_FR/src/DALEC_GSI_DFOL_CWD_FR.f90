@@ -219,27 +219,30 @@ module CARBON_MODEL_MOD
 
   ! ACM-GPP-ET parameters
   double precision, parameter :: &
-                        pn_max_temp = 5.357174d+01, & ! Maximum temperature for photosynthesis (oC)
-                        pn_opt_temp = 3.137242d+01, & ! Optimum temperature for photosynthesis (oC)
-                        pn_kurtosis = 1.927458d-01, & ! Kurtosis of photosynthesis temperature response
-                                 e0 = 5.875662d+00, & ! Quantum yield gC/MJ/m2/day PAR
-          max_lai_lwrad_transmitted = 7.626683d-01, & ! Max fractional reduction of LW from sky transmitted through canopy
-         lai_half_lwrad_transmitted = 7.160363d-01, & ! LAI at which canopy LW transmittance reduction = 50 %
-             max_lai_nir_reflection = 4.634860d-01, & ! Max fraction of NIR reflected by canopy
-            lai_half_nir_reflection = 1.559148d+00, & ! LAI at which canopy NIR reflected = 50 %
-                             minlwp =-1.996830d+00, & ! minimum leaf water potential (MPa)
-             max_lai_par_reflection = 1.623013d-01, & ! Max fraction of PAR reflected by canopy
-            lai_half_par_reflection = 1.114360d+00, & ! LAI at which canopy PAR reflected = 50 %
-           lai_half_lwrad_reflected = 1.126214d+00, & ! LAI at which 50 % LW is reflected back to sky
-                               iWUE = 1.602503d-06, & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
-              soil_swrad_absorption = 0.98d0,       & ! Fraction of SW rad absorbed by soil
-            max_lai_par_transmitted = 8.079519d-01, & ! Max fractional reduction in PAR transmittance by canopy
-           lai_half_par_transmitted = 9.178784d-01, & ! LAI at which PAR transmittance reduction = 50 %
-            max_lai_nir_transmitted = 8.289803d-01, & ! Max fractional reduction in NIR transmittance by canopy
-           lai_half_nir_transmitted = 1.961831d+00, & ! LAI at which NIR transmittance reduction = 50 %
-              max_lai_lwrad_release = 9.852855d-01, & ! Max fraction of LW emitted (1-par) from canopy to be released
-             lai_half_lwrad_release = 7.535450d-01, & ! LAI at which LW emitted from canopy to be released at 50 %
-            max_lai_lwrad_reflected = 1.955832d-02    ! LAI at which 50 % LW is reflected back to sky
+                        pn_max_temp = 5.994476d+01, & ! Maximum temperature for photosynthesis (oC)
+                        pn_opt_temp = 3.097309d+01, & ! Optimum temperature fpr photosynthesis (oC)
+                        pn_kurtosis = 1.807873d-01, & ! Kurtosis of photosynthesis temperature response
+                                 e0 = 4.947499d+00, & ! Quantum yield gC/MJ/m2/day PAR
+         lai_half_lwrad_transmitted = 1.408342d-01, & ! LAI at which LW transmittance to soil at 50 %
+           lai_half_lwrad_reflected = 2.336847d-03, & ! LAI at which LW reflectance to sky at 50 %
+             max_lai_nir_reflection = 1.536623d-01, & ! Coefficient relating NIR reflectance and LAI
+            lai_half_nir_reflection = 1.052528d-02, & ! LAI at which canopy NIR reflection = 50 %
+                             minlwp =-1.990842d+00, & ! minimum leaf water potential (MPa)
+             max_lai_par_reflection = 1.189590d-01, & ! Max fraction of PAR reflected by canopy
+            lai_half_par_reflection = 2.247624d-02, & ! LAI at which canopy PAR reflected = 50 %
+                      max_lw_escape = 5.809522d-01, & ! Max LW which is released from canopy that escapes in one direction
+                               iWUE = 3.689356d-06, & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
+              soil_swrad_absorption = 9.597167d-01, & ! Fraction of SW rad absorbed by soil
+            max_lai_par_transmitted =-1.643388d-02, & ! Max fraction reduction in PAR transmittance by canopy
+            max_lai_nir_transmitted =-1.205366d-02, & ! Max fraction reduction in NIR transmittance by canopy
+              max_lai_lwrad_release = 9.987600d-01, & ! 1-Max fraction of LW emitted from canopy to be released
+             lai_half_lwrad_release = 2.005504d+00, & ! LAI at which LW emitted from canopy to be released at 50 %
+               soil_iso_to_net_coef =-9.464002d-01, & ! Coefficient relating soil isothermal net radiation to net.
+              soil_iso_to_net_const =-2.461425d+00, & ! Constant relating soil isothermal net radiation to net
+                max_par_transmitted = 1.032857d-01, & ! Max fraction of canopy incident PAR transmitted to soil
+                max_nir_transmitted = 2.892002d-01, & ! Max fraction of canopy incident NIR transmitted to soil
+                  max_par_reflected = 3.897263d-01, & ! Max fraction of canopy incident PAR reflected to sky
+                  max_nir_reflected = 5.467363d-01    ! Max fraction of canopy incident NIR reflected to sky
 
   !!!!!!!!!
   ! Module level variables
@@ -690,12 +693,12 @@ contains
     POOLS(1,7) = pars(37)
 
     if (.not.allocated(disturbance_residue_to_som)) then
-      allocate(disturbance_residue_to_litter(nodays), &
-      disturbance_residue_to_som(nodays),    &
-      disturbance_residue_to_cwd(nodays),    &
-      disturbance_loss_from_litter(nodays),  &
-      disturbance_loss_from_som(nodays),     &
-      disturbance_loss_from_cwd(nodays))
+        allocate(disturbance_residue_to_litter(nodays), &
+        disturbance_residue_to_som(nodays),    &
+        disturbance_residue_to_cwd(nodays),    &
+        disturbance_loss_from_litter(nodays),  &
+        disturbance_loss_from_som(nodays),     &
+        disturbance_loss_from_cwd(nodays))
     endif
     disturbance_residue_to_litter = 0d0 ; disturbance_loss_from_litter = 0d0
     disturbance_residue_to_som = 0d0 ; disturbance_loss_from_som = 0d0
@@ -703,35 +706,32 @@ contains
 
     ! calculate some values once as these are invarient between DALEC runs
     if (.not.allocated(tmp_x)) then
-      ! 21 days is the maximum potential so we will fill the maximum potential
-      ! + 1 for safety
-      allocate(tmp_x(22),tmp_m(nodays),Rg_from_labile(nodays))
-      do f = 1, 22
-        tmp_x(f) = f
-      end do
-      do n = 1, nodays
-        ! calculate the gradient / trend of GSI
-        if (sum(deltat(1:n)) < 21d0) then
-          tmp_m(n) = n-1
-        else
-          ! else we will try and work out the gradient to see what is
-          ! happening
-          ! to the system over all. The default assumption will be to
-          ! consider
-          ! the averaging period of GSI model (i.e. 21 days). If this is not
-          ! possible either the time step of the system is used (if step
-          ! greater
-          ! than 21 days) or all available steps (if n < 21).
-          m = 0 ; test = 0
-          do while (test < 21d0)
-            m = m + 1 ; test = nint(sum(deltat((n-m):n)))
-            if (m > (n-1)) test = 21
-          end do
-          tmp_m(n) = m
-        endif ! for calculating gradient
-      end do ! calc daily values once
-      ! allocate GSI history dimension
-      gsi_lag_remembered = nint(max(2d0,maxval(tmp_m)))
+        ! 21 days is the maximum potential so we will fill the maximum potential
+        ! + 1 for safety
+        allocate(tmp_x(22),tmp_m(nodays),Rg_from_labile(nodays))
+        do f = 1, 22
+           tmp_x(f) = f
+        end do
+        do n = 1, nodays
+           ! calculate the gradient / trend of GSI
+           if (sum(deltat(1:n)) < 21d0) then
+               tmp_m(n) = n-1
+           else
+               ! else we will try and work out the gradient to see what is
+               ! happening to the system over all. The default assumption will be to
+               ! consider the averaging period of GSI model (i.e. 21 days).
+               ! If this is not possible either the time step of the system is used (if step
+               ! greater than 21 days) or all available steps (if n < 21).
+               m = 0 ; test = 0
+               do while (test < 21d0)
+                  m = m + 1 ; test = nint(sum(deltat((n-m):n)))
+                  if (m > (n-1)) test = 21
+               end do
+               tmp_m(n) = m
+           endif ! for calculating gradient
+        end do ! calc daily values once
+        ! allocate GSI history dimension
+        gsi_lag_remembered = nint(max(2d0,maxval(tmp_m)))
     end if ! .not.allocated(tmp_x)
 
     ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
@@ -749,23 +749,23 @@ contains
       ! meant time step temperature
       meant_time = (met(2,1:nodays)+met(3,1:nodays)) * 0.5d0
       do n = 1, nodays
-        ! Temperature adjustments for Michaelis-Menten coefficients
-        ! for CO2 (kc) and O2 (ko) and CO2 compensation point.
-        co2_compensation_point(n) = arrhenious(co2comp_saturation,co2comp_half_sat_conc,met(3,n))
-        co2_half_saturation(n) = arrhenious(kc_saturation,kc_half_sat_conc,met(3,n))
-        pn_airt_scaling_time(n) = opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,met(3,n))
-        ! calculate some temperature dependent meteorologial properties
-        call meteorological_constants(met(3,n),met(3,n)+freeze,met(16,n)*1d-3)
-        ! pass variables into memory objects so we don't have to keep re-calculating them
-        air_density_kg_time(n) = air_density_kg
-        convert_ms1_mol_1_time(n) = convert_ms1_mol_1
-        lambda_time(n) = lambda
-        psych_time(n) = psych
-        slope_time(n) = slope
-        ET_demand_coef_time(n) = ET_demand_coef
-        water_vapour_diffusion_time(n) = water_vapour_diffusion
-        dynamic_viscosity_time(n) = dynamic_viscosity
-        kinematic_viscosity_time(n) = kinematic_viscosity
+         ! Temperature adjustments for Michaelis-Menten coefficients
+         ! for CO2 (kc) and O2 (ko) and CO2 compensation point.
+         co2_compensation_point(n) = arrhenious(co2comp_saturation,co2comp_half_sat_conc,met(3,n))
+         co2_half_saturation(n) = arrhenious(kc_saturation,kc_half_sat_conc,met(3,n))
+         pn_airt_scaling_time(n) = opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,met(3,n))
+         ! calculate some temperature dependent meteorologial properties
+         call meteorological_constants(met(3,n),met(3,n)+freeze,met(16,n)*1d-3)
+         ! pass variables into memory objects so we don't have to keep re-calculating them
+         air_density_kg_time(n) = air_density_kg
+         convert_ms1_mol_1_time(n) = convert_ms1_mol_1
+         lambda_time(n) = lambda
+         psych_time(n) = psych
+         slope_time(n) = slope
+         ET_demand_coef_time(n) = ET_demand_coef
+         water_vapour_diffusion_time(n) = water_vapour_diffusion
+         dynamic_viscosity_time(n) = dynamic_viscosity
+         kinematic_viscosity_time(n) = kinematic_viscosity
       end do
 
     else
@@ -791,510 +791,510 @@ contains
 
     do n = start, finish
 
-      !!!!!!!!!!
-      ! assign drivers and update some prognostic variables
-      !!!!!!!!!!
+       !!!!!!!!!!
+       ! assign drivers and update some prognostic variables
+       !!!!!!!!!!
 
-      ! Incoming drivers
-      mint = met(2,n)  ! minimum temperature (oC)
-      maxt = met(3,n)  ! maximum temperature (oC)
-      leafT = maxt
-      swrad = met(4,n) ! incoming short wave radiation (MJ/m2/day)
-      co2 = met(5,n)   ! CO2 (ppm)
-      doy = met(6,n)   ! Day of year
-      meant = meant_time(n)  ! mean air temperature (oC)
-      meant_K = meant + freeze
-      wind_spd = met(15,n) ! wind speed (m/s)
-      vpd_kPa = met(16,n)*1d-3  ! Vapour pressure deficit (Pa -> kPa)
+       ! Incoming drivers
+       mint = met(2,n)  ! minimum temperature (oC)
+       maxt = met(3,n)  ! maximum temperature (oC)
+       leafT = maxt
+       swrad = met(4,n) ! incoming short wave radiation (MJ/m2/day)
+       co2 = met(5,n)   ! CO2 (ppm)
+       doy = met(6,n)   ! Day of year
+       meant = meant_time(n)  ! mean air temperature (oC)
+       meant_K = meant + freeze
+       wind_spd = met(15,n) ! wind speed (m/s)
+       vpd_kPa = met(16,n)*1d-3  ! Vapour pressure deficit (Pa -> kPa)
 
-      ! states needed for module variables
-      lai_out(n) = POOLS(n,2)/pars(17)
-      lai = lai_out(n) ! leaf area index (m2/m2)
+       ! states needed for module variables
+       lai_out(n) = POOLS(n,2)/pars(17)
+       lai = lai_out(n) ! leaf area index (m2/m2)
 
-      ! Temperature adjustments for Michaelis-Menten coefficients
-      ! for CO2 (kc) and O2 (ko) and CO2 compensation point
-      ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
-      co2_half_sat   = co2_half_saturation(n)
-      co2_comp_point = co2_compensation_point(n)
-      ! temperature response for metabolically limited photosynthesis
-      pn_airt_scaling = pn_airt_scaling_time(n)
+       ! Temperature adjustments for Michaelis-Menten coefficients
+       ! for CO2 (kc) and O2 (ko) and CO2 compensation point
+       ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
+       co2_half_sat   = co2_half_saturation(n)
+       co2_comp_point = co2_compensation_point(n)
+       ! temperature response for metabolically limited photosynthesis
+       pn_airt_scaling = pn_airt_scaling_time(n)
 
-      ! extract timing related values
-      call calculate_daylength((doy-(deltat(n)*0.5d0)),lat)
-      dayl_seconds_1 = dayl_seconds ** (-1d0)
-      seconds_per_step = seconds_per_day * deltat(n)
-      days_per_step = deltat(n)
-      days_per_step_1 = deltat_1(n)
+       ! extract timing related values
+       call calculate_daylength((doy-(deltat(n)*0.5d0)),lat)
+       dayl_seconds_1 = dayl_seconds ** (-1d0)
+       seconds_per_step = seconds_per_day * deltat(n)
+       days_per_step = deltat(n)
+       days_per_step_1 = deltat_1(n)
 
-      !!!!!!!!!!
-      ! Calculate surface exchange coefficients
-      !!!!!!!!!!
+       !!!!!!!!!!
+       ! Calculate surface exchange coefficients
+       !!!!!!!!!!
 
-      ! calculate some temperature dependent meteorologial properties
-      !call meteorological_constants(maxt,maxt+freeze)
-      ! pass variables from memory objects
-      air_density_kg = air_density_kg_time(n)
-      convert_ms1_mol_1 = convert_ms1_mol_1_time(n)
-      lambda = lambda_time(n) ; psych = psych_time(n)
-      slope = slope_time(n)
-      water_vapour_diffusion = water_vapour_diffusion_time(n)
-      dynamic_viscosity = dynamic_viscosity_time(n)
-      kinematic_viscosity = kinematic_viscosity_time(n)
-      ! calculate aerodynamic using consistent approach with SPA
-      call calculate_aerodynamic_conductance
+       ! calculate some temperature dependent meteorologial properties
+       !call meteorological_constants(maxt,maxt+freeze)
+       ! pass variables from memory objects
+       air_density_kg = air_density_kg_time(n)
+       convert_ms1_mol_1 = convert_ms1_mol_1_time(n)
+       lambda = lambda_time(n) ; psych = psych_time(n)
+       slope = slope_time(n)
+       water_vapour_diffusion = water_vapour_diffusion_time(n)
+       dynamic_viscosity = dynamic_viscosity_time(n)
+       kinematic_viscosity = kinematic_viscosity_time(n)
+       ! calculate aerodynamic using consistent approach with SPA
+       call calculate_aerodynamic_conductance
 
-      !!!!!!!!!!
-      ! Determine net shortwave and isothermal longwave energy balance
-      !!!!!!!!!!
+       !!!!!!!!!!
+       ! Determine net shortwave and isothermal longwave energy balance
+       !!!!!!!!!!
 
-      call calculate_shortwave_balance
-      call calculate_longwave_isothermal(leafT,maxt)
+       call calculate_radiation_balance
 
-      !!!!!!!!!!
-      ! Calculate physically soil water potential and total hydraulic resistance
-      !!!!!!!!!!
+       !!!!!!!!!!
+       ! Calculate physically soil water potential and total hydraulic resistance
+       !!!!!!!!!!
 
-      ! calculate the minimum soil & root hydraulic resistance based on total
-      ! fine root mass ! *2*2 => *RS*C->Bio
-      root_biomass = max(min_root,POOLS(n,3)*2d0)
-      call calculate_Rtot(Rtot)
+       ! calculate the minimum soil & root hydraulic resistance based on total
+       ! fine root mass ! *2*2 => *RS*C->Bio
+       root_biomass = max(min_root,POOLS(n,3)*2d0)
+       call calculate_Rtot(Rtot)
 
-      ! calculate variables used commonly between ACM_GPP and ACM_ET
-      call calculate_stomatal_conductance(abs(minlwp),Rtot)
+       ! calculate variables used commonly between ACM_GPP and ACM_ET
+       call calculate_stomatal_conductance(abs(minlwp),Rtot)
 
-      !!!!!!!!!!
-      ! GPP (gC.m-2.day-1)
-      !!!!!!!!!!
+       !!!!!!!!!!
+       ! GPP (gC.m-2.day-1)
+       !!!!!!!!!!
 
-      if (stomatal_conductance > vsmall) then
-          FLUXES(n,1) = max(0d0,acm_gpp(stomatal_conductance))
-      else
-          FLUXES(n,1) = 0d0
-      endif
+       if (stomatal_conductance > vsmall) then
+           FLUXES(n,1) = max(0d0,acm_gpp(stomatal_conductance))
+       else
+           FLUXES(n,1) = 0d0
+       endif
 
-      ! temprate (i.e. temperature modified rate of metabolic activity))
-      FLUXES(n,2) = exp(pars(10)*meant)
-      ! (maintenance) autotrophic respiration (gC.m-2.day-1)
-      FLUXES(n,3) = pars(2)*FLUXES(n,1)
-      ! labile production (gC.m-2.day-1)
-      FLUXES(n,5) = (FLUXES(n,1)-FLUXES(n,3))*pars(13)
-      ! root production (gC.m-2.day-1)
-      FLUXES(n,6) = (FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,5))*pars(4)
-      ! wood production
-      FLUXES(n,7) = FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,5)-FLUXES(n,6)
+       ! temprate (i.e. temperature modified rate of metabolic activity))
+       FLUXES(n,2) = exp(pars(10)*meant)
+       ! (maintenance) autotrophic respiration (gC.m-2.day-1)
+       FLUXES(n,3) = pars(2)*FLUXES(n,1)
+       ! labile production (gC.m-2.day-1)
+       FLUXES(n,5) = (FLUXES(n,1)-FLUXES(n,3))*pars(13)
+       ! root production (gC.m-2.day-1)
+       FLUXES(n,6) = (FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,5))*pars(4)
+       ! wood production
+       FLUXES(n,7) = FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,5)-FLUXES(n,6)
 
-      ! GSI added to fortran version by TLS 24/11/2014
-      ! /* 25/09/14 - JFE
-      ! Here we calculate the Growing Season Index based on
-      ! Jolly et al. A generalized, bioclimatic index to predict foliar
-      ! phenology in response to climate Global Change Biology, Volume 11, page 619-632,
-      ! 2005 (doi: 10.1111/j.1365-2486.2005.00930.x)
-      ! Stoeckli, R., T. Rutishauser, I. Baker, M. A. Liniger, and A. S.
-      ! Denning (2011), A global reanalysis of vegetation phenology, J. Geophys. Res.,
-      ! 116, G03020, doi:10.1029/2010JG001545.
+       ! GSI added to fortran version by TLS 24/11/2014
+       ! /* 25/09/14 - JFE
+       ! Here we calculate the Growing Season Index based on
+       ! Jolly et al. A generalized, bioclimatic index to predict foliar
+       ! phenology in response to climate Global Change Biology, Volume 11, page 619-632,
+       ! 2005 (doi: 10.1111/j.1365-2486.2005.00930.x)
+       ! Stoeckli, R., T. Rutishauser, I. Baker, M. A. Liniger, and A. S.
+       ! Denning (2011), A global reanalysis of vegetation phenology, J. Geophys. Res.,
+       ! 116, G03020, doi:10.1029/2010JG001545.
 
-      ! It is the product of 3 limiting factors for temperature, photoperiod and
-      ! vapour pressure deficit that grow linearly from 0 to 1 between a calibrated
-      ! min and max value. Photoperiod, VPD and avgTmin are direct input
+       ! It is the product of 3 limiting factors for temperature, photoperiod and
+       ! vapour pressure deficit that grow linearly from 0 to 1 between a calibrated
+       ! min and max value. Photoperiod, VPD and avgTmin are direct input
 
-      ! temperature limitation, then restrict to 0-1; correction for k-> oC
-      Tfac = (met(10,n)-(pars(14)-freeze)) / (pars(15)-pars(14))
-      Tfac = min(1d0,max(0d0,Tfac))
-      ! photoperiod limitation
-      Photofac = (met(11,n)-pars(16)) / (pars(24)-pars(16))
-      Photofac = min(1d0,max(0d0,Photofac))
-      ! VPD limitation
-      VPDfac = 1d0 - ( (met(12,n)-pars(25)) / (pars(26)-pars(25)) )
-      VPDfac = min(1d0,max(0d0,VPDfac))
+       ! temperature limitation, then restrict to 0-1; correction for k-> oC
+       Tfac = (met(10,n)-(pars(14)-freeze)) / (pars(15)-pars(14))
+       Tfac = min(1d0,max(0d0,Tfac))
+       ! photoperiod limitation
+       Photofac = (met(11,n)-pars(16)) / (pars(24)-pars(16))
+       Photofac = min(1d0,max(0d0,Photofac))
+       ! VPD limitation
+       VPDfac = 1d0 - ( (met(12,n)-pars(25)) / (pars(26)-pars(25)) )
+       VPDfac = min(1d0,max(0d0,VPDfac))
 
-      ! calculate and store the GSI index
-      FLUXES(n,18) = Tfac*VPDfac*Photofac
+       ! calculate and store the GSI index
+       FLUXES(n,18) = Tfac*VPDfac*Photofac
 
-      ! we will load up some needed variables
-      m = tmp_m(n)
-      ! update gsi_history for the calculation
-      if (n == 1) then
-        ! in first step only we want to take the initial GSI value only
-        gsi_history(gsi_lag) = FLUXES(n,18)
-      else
-        gsi_history((gsi_lag-m):gsi_lag) = FLUXES((n-m):n,18)
-      endif
-      ! calculate gradient
-      gradient = linear_model_gradient(tmp_x(1:(gsi_lag)),gsi_history(1:gsi_lag),gsi_lag)
-      ! adjust gradient to daily rate
-      gradient = gradient /  nint((sum(deltat((n-m+1):n))) / (gsi_lag-1))
-      gsi_lag_remembered = gsi_lag
+       ! we will load up some needed variables
+       m = tmp_m(n)
+       ! update gsi_history for the calculation
+       if (n == 1) then
+           ! in first step only we want to take the initial GSI value only
+           gsi_history(gsi_lag) = FLUXES(n,18)
+       else
+           gsi_history((gsi_lag-m):gsi_lag) = FLUXES((n-m):n,18)
+       endif
+       ! calculate gradient
+       gradient = linear_model_gradient(tmp_x(1:(gsi_lag)),gsi_history(1:gsi_lag),gsi_lag)
+       ! adjust gradient to daily rate
+       gradient = gradient /  nint((sum(deltat((n-m+1):n))) / (gsi_lag-1))
+       gsi_lag_remembered = gsi_lag
 
-      ! first assume that nothing is happening
-      FLUXES(n,9) = 0d0  ! leaf turnover
-      FLUXES(n,16) = 0d0 ! leaf growth
+       ! first assume that nothing is happening
+       FLUXES(n,9) = 0d0  ! leaf turnover
+       FLUXES(n,16) = 0d0 ! leaf growth
 
-      ! save original values for re-allocation later
-      canopy_lw_save = canopy_lwrad_Wm2 ; soil_lw_save  = soil_lwrad_Wm2
-      canopy_sw_save = canopy_swrad_MJday ; canopy_par_save  = canopy_par_MJday
-      soil_sw_save = soil_swrad_MJday ; gs_save = stomatal_conductance
-      ga_save = aerodynamic_conductance ; lai_save = lai
+       ! save original values for re-allocation later
+       canopy_lw_save = canopy_lwrad_Wm2 ; soil_lw_save  = soil_lwrad_Wm2
+       canopy_sw_save = canopy_swrad_MJday ; canopy_par_save  = canopy_par_MJday
+       soil_sw_save = soil_swrad_MJday ; gs_save = stomatal_conductance
+       ga_save = aerodynamic_conductance ; lai_save = lai
 
-      ! now update foliage and labile conditions based on gradient calculations
-      if (gradient < fol_turn_crit .or. FLUXES(n,18) == 0d0) then
-        ! we are in a decending condition so foliar turnover
-        FLUXES(n,9) = pars(5)*(1d0-FLUXES(n,18))
-        just_grown = 0.5d0
-      else if (gradient > lab_turn_crit) then
-        ! we are in a assending condition so labile turnover
-        FLUXES(n,16) = pars(12)*FLUXES(n,18)
-        just_grown = 1.5d0
-        ! check carbon return
-        tmp = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
-        C_invest = tmp
-        lai = (POOLS(n,2)+tmp)/pars(17)
-        tmp = lai / lai_save
-        aerodynamic_conductance = aerodynamic_conductance * tmp
-        stomatal_conductance = stomatal_conductance * tmp
-        call calculate_shortwave_balance
-        if (lai_save < vsmall) then
-          call calculate_aerodynamic_conductance
-          call calculate_stomatal_conductance(abs(minlwp),Rtot)
-        endif
-        tmp = max(0d0,acm_gpp(stomatal_conductance))
-        ! determine if increase in LAI leads to an improvement in GPP greater
-        ! than critical value, if not then no labile turnover allowed
-        if ( ((tmp - FLUXES(n,1))/C_invest) < pars(27) ) then
-          FLUXES(n,16) = 0d0
-        endif
-      else
-        ! probably we want nothing to happen, however if we are at the seasonal
-        ! maximum we will consider further growth still
-        if (just_grown >= 1d0) then
-          ! we are between so definitely not losing foliage and we have
-          ! previously been growing so maybe we still have a marginal return on
-          ! doing so again
-          FLUXES(n,16) = pars(12)*FLUXES(n,18)
-          ! but possibly gaining some?
-          ! determine if this is a good idea based on GPP increment
-          tmp = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
-          C_invest = tmp
-          lai = (POOLS(n,2)+tmp)/pars(17)
-          tmp = lai / lai_save
-          aerodynamic_conductance = aerodynamic_conductance * tmp
-          stomatal_conductance = stomatal_conductance * tmp
-          call calculate_shortwave_balance
-          if (lai_save < vsmall) then
-            call calculate_aerodynamic_conductance
-            call calculate_stomatal_conductance(abs(minlwp),Rtot)
-          endif
-          tmp = max(0d0,acm_gpp(stomatal_conductance))
-          ! determine if increase in LAI leads to an improvement in GPP greater
-          ! than critical value, if not then no labile turnover allowed
-          if ( ((tmp - FLUXES(n,1))/C_invest) < pars(27) ) then
-            FLUXES(n,16) = 0d0
-          endif
+       ! now update foliage and labile conditions based on gradient calculations
+       if (gradient < fol_turn_crit .or. FLUXES(n,18) == 0d0) then
+           ! we are in a decending condition so foliar turnover
+           FLUXES(n,9) = pars(5)*(1d0-FLUXES(n,18))
+           just_grown = 0.5d0
+       else if (gradient > lab_turn_crit) then
+           ! we are in a assending condition so labile turnover
+           FLUXES(n,16) = pars(12)*FLUXES(n,18)
+           just_grown = 1.5d0
+           ! check carbon return
+           tmp = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
+           C_invest = tmp
+           lai = (POOLS(n,2)+tmp)/pars(17)
+           tmp = lai / lai_save
+           aerodynamic_conductance = aerodynamic_conductance * tmp
+           stomatal_conductance = stomatal_conductance * tmp
+           call calculate_shortwave_balance
+           if (lai_save < vsmall) then
+               call calculate_aerodynamic_conductance
+               call calculate_stomatal_conductance(abs(minlwp),Rtot)
+           endif
+           tmp = max(0d0,acm_gpp(stomatal_conductance))
+           ! determine if increase in LAI leads to an improvement in GPP greater
+           ! than critical value, if not then no labile turnover allowed
+           if ( ((tmp - FLUXES(n,1))/C_invest) < pars(27) ) then
+               FLUXES(n,16) = 0d0
+           endif
+       else
+           ! probably we want nothing to happen, however if we are at the seasonal
+           ! maximum we will consider further growth still
+           if (just_grown >= 1d0) then
+               ! we are between so definitely not losing foliage and we have
+               ! previously been growing so maybe we still have a marginal return on
+               ! doing so again
+               FLUXES(n,16) = pars(12)*FLUXES(n,18)
+               ! but possibly gaining some?
+               ! determine if this is a good idea based on GPP increment
+               tmp = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
+               C_invest = tmp
+               lai = (POOLS(n,2)+tmp)/pars(17)
+               tmp = lai / lai_save
+               aerodynamic_conductance = aerodynamic_conductance * tmp
+               stomatal_conductance = stomatal_conductance * tmp
+               call calculate_shortwave_balance
+               if (lai_save < vsmall) then
+                   call calculate_aerodynamic_conductance
+                   call calculate_stomatal_conductance(abs(minlwp),Rtot)
+               endif
+               tmp = max(0d0,acm_gpp(stomatal_conductance))
+               ! determine if increase in LAI leads to an improvement in GPP greater
+               ! than critical value, if not then no labile turnover allowed
+               if ( ((tmp - FLUXES(n,1))/C_invest) < pars(27) ) then
+                  FLUXES(n,16) = 0d0
+               endif
 
-        end if ! Just grown?
-      endif ! gradient choice
+           end if ! Just grown?
 
-      ! restore original value back from memory
-      lai = lai_save
-      !canopy_lwrad_Wm2 = canopy_lw_save ; soil_lwrad_Wm2 = soil_lw_save
-      canopy_swrad_MJday = canopy_sw_save ; canopy_par_MJday = canopy_par_save
-      soil_swrad_MJday = soil_sw_save ; stomatal_conductance = gs_save
-      aerodynamic_conductance = ga_save
+       endif ! gradient choice
 
-      ! these allocated if post-processing
-      if (allocated(itemp)) then
-        itemp(n) = Tfac
-        ivpd(n) = VPDfac
-        iphoto(n) = Photofac
-      endif
+       ! restore original value back from memory
+       lai = lai_save
+       !canopy_lwrad_Wm2 = canopy_lw_save ; soil_lwrad_Wm2 = soil_lw_save
+       canopy_swrad_MJday = canopy_sw_save ; canopy_par_MJday = canopy_par_save
+       soil_swrad_MJday = soil_sw_save ; stomatal_conductance = gs_save
+       aerodynamic_conductance = ga_save
 
-      !
-      ! those with time dependancies
-      !
+       ! these allocated if post-processing
+       if (allocated(itemp)) then
+           itemp(n) = Tfac
+           ivpd(n) = VPDfac
+           iphoto(n) = Photofac
+       endif
 
-      ! total labile release
-      FLUXES(n,8)  = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
-      ! total leaf litter production
-      FLUXES(n,10) = POOLS(n,2)*(1d0-(1d0-FLUXES(n,9))**deltat(n))/deltat(n)
-      ! total wood litter production
-      FLUXES(n,11) = POOLS(n,4)*(1d0-(1d0-pars(6))**deltat(n))/deltat(n)
-      ! total root litter production
-      FLUXES(n,12) = POOLS(n,3)*(1d0-(1d0-pars(7))**deltat(n))/deltat(n)
+       !
+       ! those with time dependancies
+       !
 
-      !
-      ! those with temperature AND time dependancies
-      !
+       ! total labile release
+       FLUXES(n,8)  = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
+       ! total leaf litter production
+       FLUXES(n,10) = POOLS(n,2)*(1d0-(1d0-FLUXES(n,9))**deltat(n))/deltat(n)
+       ! total wood litter production
+       FLUXES(n,11) = POOLS(n,4)*(1d0-(1d0-pars(6))**deltat(n))/deltat(n)
+       ! total root litter production
+       FLUXES(n,12) = POOLS(n,3)*(1d0-(1d0-pars(7))**deltat(n))/deltat(n)
 
-      ! turnover of litter
-      tmp = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))/deltat(n)
-      ! respiration heterotrophic litter ; decomposition of litter to som
-      FLUXES(n,13) = tmp * (1d0-pars(1)) ; FLUXES(n,15) = tmp * pars(1)
-      ! respiration heterotrophic som
-      FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9))**deltat(n))/deltat(n)
+       !
+       ! those with temperature AND time dependancies
+       !
 
-      ! respiration heterotrophic cwd ; decomposition of CWD to som
-      tmp = POOLS(n,7)*(1d0-(1d0-FLUXES(n,2)*pars(38))**deltat(n))/deltat(n)
-      FLUXES(n,4) = tmp * (1d0-pars(1)) ; FLUXES(n,20) = tmp * pars(1)
+       ! turnover of litter
+       tmp = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))/deltat(n)
+       ! respiration heterotrophic litter ; decomposition of litter to som
+       FLUXES(n,13) = tmp * (1d0-pars(1)) ; FLUXES(n,15) = tmp * pars(1)
+       ! respiration heterotrophic som
+       FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9))**deltat(n))/deltat(n)
 
-      !
-      ! Update Rg, GPP and NEE fluxes
-      !
+       ! respiration heterotrophic cwd ; decomposition of CWD to som
+       tmp = POOLS(n,7)*(1d0-(1d0-FLUXES(n,2)*pars(38))**deltat(n))/deltat(n)
+       FLUXES(n,4) = tmp * (1d0-pars(1)) ; FLUXES(n,20) = tmp * pars(1)
 
-      ! calculate growth respiration and adjust allocation to pools assuming
-      ! 0.21875 of total C allocation towards each pool (i.e. 0.28 .eq. xNPP)
-      ! foliage. NOTE: that in the current version only Rg_fol comes from Clabile
-      Rg_from_labile(n) = FLUXES(n,8)*Rg_fraction ; FLUXES(n,8) = FLUXES(n,8) * one_Rg_fraction
-      ! now update the Ra flux
-      FLUXES(n,3) = FLUXES(n,3) + Rg_from_labile(n)
-      ! roots
-      FLUXES(n,3) = FLUXES(n,3) + (FLUXES(n,6)*Rg_fraction) ; FLUXES(n,6) = FLUXES(n,6) * one_Rg_fraction
-      ! wood
-      FLUXES(n,3) = FLUXES(n,3) + (FLUXES(n,7)*Rg_fraction) ; FLUXES(n,7) = FLUXES(n,7) * one_Rg_fraction
+       !
+       ! Update Rg, GPP and NEE fluxes
+       !
+
+       ! calculate growth respiration and adjust allocation to pools assuming
+       ! 0.21875 of total C allocation towards each pool (i.e. 0.28 .eq. xNPP)
+       ! foliage. NOTE: that in the current version only Rg_fol comes from Clabile
+       Rg_from_labile(n) = FLUXES(n,8)*Rg_fraction ; FLUXES(n,8) = FLUXES(n,8) * one_Rg_fraction
+       ! now update the Ra flux
+       FLUXES(n,3) = FLUXES(n,3) + Rg_from_labile(n)
+       ! roots
+       FLUXES(n,3) = FLUXES(n,3) + (FLUXES(n,6)*Rg_fraction) ; FLUXES(n,6) = FLUXES(n,6) * one_Rg_fraction
+       ! wood
+       FLUXES(n,3) = FLUXES(n,3) + (FLUXES(n,7)*Rg_fraction) ; FLUXES(n,7) = FLUXES(n,7) * one_Rg_fraction
 
 
-      ! calculate the NEE
-      NEE_out(n) = (-FLUXES(n,1)+FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14)+FLUXES(n,4))
-      ! load GPP
-      GPP_out(n) = FLUXES(n,1)
+       ! calculate the NEE
+       NEE_out(n) = (-FLUXES(n,1)+FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14)+FLUXES(n,4))
+       ! load GPP
+       GPP_out(n) = FLUXES(n,1)
 
-      !
-      ! update pools for next timestep
-      !
+       !
+       ! update pools for next timestep
+       !
 
-      ! labile pool
-      POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8)-Rg_from_labile(n))*deltat(n)
-      ! foliar pool
-      POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,8)-FLUXES(n,10))*deltat(n)
-      ! wood pool
-      POOLS(n+1,4) = POOLS(n,4) + (FLUXES(n,7)-FLUXES(n,11))*deltat(n)
-      ! root pool
-      POOLS(n+1,3) = POOLS(n,3) + (FLUXES(n,6)-FLUXES(n,12))*deltat(n)
-      ! litter pool
-!      POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)+FLUXES(n,20)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
-      POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
-      ! som pool
-!      POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)-FLUXES(n,14))*deltat(n)
-      POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)+FLUXES(n,20)-FLUXES(n,14))*deltat(n)
-      ! cwd pool
-!      POOLS(n+1,7) = POOLS(n,7) + (FLUXES(n,11)-FLUXES(n,20))*deltat(n)
-      POOLS(n+1,7) = POOLS(n,7) + (FLUXES(n,11)-FLUXES(n,20)-FLUXES(n,4))*deltat(n)
+       ! labile pool
+       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8)-Rg_from_labile(n))*deltat(n)
+       ! foliar pool
+       POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,8)-FLUXES(n,10))*deltat(n)
+       ! wood pool
+       POOLS(n+1,4) = POOLS(n,4) + (FLUXES(n,7)-FLUXES(n,11))*deltat(n)
+       ! root pool
+       POOLS(n+1,3) = POOLS(n,3) + (FLUXES(n,6)-FLUXES(n,12))*deltat(n)
+       ! litter pool
+!       POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)+FLUXES(n,20)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
+       POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
+       ! som pool
+!       POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)-FLUXES(n,14))*deltat(n)
+       POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)+FLUXES(n,20)-FLUXES(n,14))*deltat(n)
+       ! cwd pool
+!       POOLS(n+1,7) = POOLS(n,7) + (FLUXES(n,11)-FLUXES(n,20))*deltat(n)
+       POOLS(n+1,7) = POOLS(n,7) + (FLUXES(n,11)-FLUXES(n,20)-FLUXES(n,4))*deltat(n)
 
-      !!!!!!!!!!
-      ! deal first with deforestation
-      !!!!!!!!!!
+       !!!!!!!!!!
+       ! deal first with deforestation
+       !!!!!!!!!!
 
-      if (n == reforest_day) then
-        POOLS(n+1,1) = pars(30) ! labile
-        POOLS(n+1,2) = pars(31) ! foliar
-        POOLS(n+1,3) = pars(32) ! roots
-        POOLS(n+1,4) = pars(33) ! wood
-      endif
+       if (n == reforest_day) then
+           POOLS(n+1,1) = pars(30) ! labile
+           POOLS(n+1,2) = pars(31) ! foliar
+           POOLS(n+1,3) = pars(32) ! roots
+           POOLS(n+1,4) = pars(33) ! wood
+       endif
 
-      ! reset values
-      FLUXES(n,17) = 0d0 ; FLUXES(n,21:25) = 0d0
-      harvest_management = 0 ; burnt_area = 0d0
+       ! reset values
+       FLUXES(n,17) = 0d0 ; FLUXES(n,21:25) = 0d0
+       harvest_management = 0 ; burnt_area = 0d0
 
-      if (met(8,n) > 0d0) then
+       if (met(8,n) > 0d0) then
 
-        ! pass harvest management to local integer
-        harvest_management = int(met(13,n))
-
-        ! assume that labile is proportionally distributed through the plant
-        ! root and wood and therefore so is the residual fraction
-        C_total = POOLS(n+1,3) + POOLS(n+1,4)
-        ! partition wood into its components
-        Cbranch = POOLS(n+1,4)*Cbranch_part(harvest_management)
-        Crootcr = POOLS(n+1,4)*Crootcr_part(harvest_management)
-        Cstem   = POOLS(n+1,4)-(Cbranch + Crootcr)
-        ! now calculate the labile fraction of residue
-        if (C_total > 0d0) then
-          labile_frac_res = ((POOLS(n+1,3)/C_total) * roots_frac_res(harvest_management)  ) &
-                          + ((Cbranch/C_total)      * branch_frac_res(harvest_management) ) &
-                          + ((Cstem/C_total)        * stem_frac_res(harvest_management)   ) &
-                          + ((Crootcr/C_total)      * rootcr_frac_res(harvest_management) )
-        else
-          labile_frac_res = 0d0
-        endif
-
-        ! you can't remove any biomass if there is none left...
-        if (C_total > vsmall) then
-
-          ! Loss of carbon from each pools
-          labile_loss = POOLS(n+1,1)*met(8,n)
-          foliar_loss = POOLS(n+1,2)*met(8,n)
-          ! roots are not removed under grazing
-          if (harvest_management /= 5) then
-            roots_loss = POOLS(n+1,3)*met(8,n)
-          else
-            roots_loss = 0d0
-          endif
-          wood_loss   = (Cbranch+Crootcr+Cstem)*met(8,n)
-          ! estimate labile loss explicitly from the loss of their storage
-          ! tissues
-          labile_loss = POOLS(n+1,1) * ((roots_loss+wood_loss) / (POOLS(n+1,3)+POOLS(n+1,4)))
-
-          ! For output / EDC updates
-          if (met(8,n) <= 0.99d0) then
-            FLUXES(n,22) = labile_loss * deltat_1(n)
-            FLUXES(n,23) = foliar_loss * deltat_1(n)
-            FLUXES(n,24) = roots_loss * deltat_1(n)
-            FLUXES(n,25) = wood_loss * deltat_1(n)
-          endif
-          ! Transfer fraction of harvest waste to litter or som pools
-          ! easy pools first
-          labile_residue = labile_loss*labile_frac_res
-          foliar_residue = foliar_loss*foliage_frac_res(harvest_management)
-          roots_residue  = roots_loss*roots_frac_res(harvest_management)
-          ! Explicit calculation of the residues from each fraction
-          coarse_root_residue  = Crootcr*met(8,n)*rootcr_frac_res(harvest_management)
-          branch_residue = Cbranch*met(8,n)*branch_frac_res(harvest_management)
-          stem_residue = Cstem*met(8,n)*stem_frac_res(harvest_management)
-          ! Now finally calculate the final wood residue
-          wood_residue = stem_residue + branch_residue + coarse_root_residue
-          ! Mechanical loss of Csom due to coarse root extraction
-          soil_loss_with_roots = Crootcr*met(8,n)*(1d0-rootcr_frac_res(harvest_management)) &
-                               * soil_loss_frac(harvest_management)
-
-          ! Update pools
-          POOLS(n+1,1) = POOLS(n+1,1)-labile_loss
-          POOLS(n+1,2) = POOLS(n+1,2)-foliar_loss
-          POOLS(n+1,3) = POOLS(n+1,3)-roots_loss
-          POOLS(n+1,4) = POOLS(n+1,4)-wood_loss
-          POOLS(n+1,5) = POOLS(n+1,5) + (labile_residue+foliar_residue+roots_residue)
-          POOLS(n+1,6) = POOLS(n+1,6) - soil_loss_with_roots
-          POOLS(n+1,7) = POOLS(n+1,7) + wood_residue
-          ! mass balance check
-          where (POOLS(n+1,1:7) < 0d0) POOLS(n+1,1:7) = 0d0
-
-          ! Some variable needed for the EDCs
-          ! reallocation fluxes for the residues
-          disturbance_residue_to_litter(n) = labile_residue+foliar_residue+roots_residue
-          disturbance_loss_from_litter(n)  = 0d0
-          disturbance_residue_to_cwd(n)    = wood_residue
-          disturbance_loss_from_cwd(n)     = 0d0
-          disturbance_residue_to_som(n)    = 0d0
-          disturbance_loss_from_som(n)     = soil_loss_with_roots
-          ! Convert all to rates to be consistent with the FLUXES in EDCs
-          disturbance_residue_to_litter(n) = disturbance_residue_to_litter(n) * deltat_1(n)
-          disturbance_loss_from_litter(n)  = disturbance_loss_from_litter(n) * deltat_1(n)
-          disturbance_residue_to_cwd(n)    = disturbance_residue_to_cwd(n) * deltat_1(n)
-          disturbance_loss_from_cwd(n)     = disturbance_loss_from_cwd(n) * deltat_1(n)
-          disturbance_residue_to_som(n)    = disturbance_residue_to_som(n) * deltat_1(n)
-          disturbance_loss_from_som(n)     = disturbance_loss_from_som(n) * deltat_1(n)
-          ! estimate total C extraction
-          ! NOTE: this calculation format is to prevent precision error in calculation
-          FLUXES(n,21) = wood_loss + labile_loss + foliar_loss + roots_loss
-          FLUXES(n,21) = FLUXES(n,21) - (wood_residue + labile_residue + foliar_residue + roots_residue)
-          ! Convert to daily rate
-          FLUXES(n,21) = FLUXES(n,21) * deltat_1(n)
-
-        end if ! C_total > vsmall
-
-        ! Total carbon loss from the system
-        C_total = (labile_residue+foliar_residue+roots_residue+wood_residue+sum(NCFF)) &
-                - (labile_loss+foliar_loss+roots_loss+wood_loss+soil_loss_with_roots+sum(CFF))
-
-        ! If total clearance occured then we need to ensure some minimum
-        ! values and reforestation is assumed one year forward
-        if (met(8,n) > 0.99d0) then
-          m = 0 ; test = nint(sum(deltat(n:(n+m))))
-          ! FC Forest Statistics 2015 lag between harvest and restocking ~ 2 year
-          restocking_lag = 365*2
-          do while (test < restocking_lag)
-            m = m + 1 ; test = nint(sum(deltat(n:(n+m))))
-            !  get out clause for hitting the end of the simulation
-            if (m+n >= nodays) test = restocking_lag
-          enddo
-          reforest_day = min((n+m), nodays)
-        endif ! if total clearance
-
-      endif ! end deforestation info
-
-      !!!!!!!!!!
-      ! then deal with fire
-      !!!!!!!!!!
-
-      if (met(9,n) > 0d0 .or.(met(8,n) > 0d0 .and. harvest_management > 0)) then
-
-        burnt_area = met(9,n)
-        if (met(8,n) > 0d0 .and. burnt_area > 0d0) then
           ! pass harvest management to local integer
-          burnt_area = min(1d0,burnt_area + post_harvest_burn(harvest_management))
-        else if (met(8,n) > 0d0 .and. burnt_area <= 0d0) then
-          burnt_area = post_harvest_burn(harvest_management)
-        endif
+          harvest_management = int(met(13,n))
 
-        if (burnt_area > 0d0) then
+          ! assume that labile is proportionally distributed through the plant
+          ! root and wood and therefore so is the residual fraction
+          C_total = POOLS(n+1,3) + POOLS(n+1,4)
+          ! partition wood into its components
+          Cbranch = POOLS(n+1,4)*Cbranch_part(harvest_management)
+          Crootcr = POOLS(n+1,4)*Crootcr_part(harvest_management)
+          Cstem   = POOLS(n+1,4)-(Cbranch + Crootcr)
+          ! now calculate the labile fraction of residue
+          if (C_total > 0d0) then
+              labile_frac_res = ((POOLS(n+1,3)/C_total) * roots_frac_res(harvest_management)  ) &
+                              + ((Cbranch/C_total)      * branch_frac_res(harvest_management) ) &
+                              + ((Cstem/C_total)        * stem_frac_res(harvest_management)   ) &
+                              + ((Crootcr/C_total)      * rootcr_frac_res(harvest_management) )
+          else
+              labile_frac_res = 0d0
+          endif
 
-          !/*first fluxes*/
-          !/*LABILE*/
-          CFF(1) = POOLS(n+1,1)*burnt_area*combust_eff(1)
-          NCFF(1) = POOLS(n+1,1)*burnt_area*(1d0-combust_eff(1))*(1d0-rfac)
-          !/*foliar*/
-          CFF(2) = POOLS(n+1,2)*burnt_area*combust_eff(2)
-          NCFF(2) = POOLS(n+1,2)*burnt_area*(1d0-combust_eff(2))*(1d0-rfac)
-          !/*root*/
-          CFF(3) = 0d0 !POOLS(n+1,3)*burnt_area*combust_eff(3)
-          NCFF(3) = 0d0 !POOLS(n+1,3)*burnt_area*(1d0-combust_eff(3))*(1d0-rfac)
-          !/*wood*/
-          CFF(4) = POOLS(n+1,4)*burnt_area*combust_eff(4)
-          NCFF(4) = POOLS(n+1,4)*burnt_area*(1d0-combust_eff(4))*(1d0-rfac)
-          !/*litter*/
-          CFF(5) = POOLS(n+1,5)*burnt_area*combust_eff(5)
-          NCFF(5) = POOLS(n+1,5)*burnt_area*(1d0-combust_eff(5))*(1d0-rfac)
-          ! CWD; assume same as live wood (should be improved later)
-          CFF(7) = POOLS(n+1,7)*burnt_area*combust_eff(4)
-          NCFF(7) = POOLS(n+1,7)*burnt_area*(1d0-combust_eff(4))*(1d0-rfac)
-          !/*fires as daily averages to comply with units*/
-          FLUXES(n,17)=(CFF(1)+CFF(2)+CFF(3)+CFF(4)+CFF(5)) * deltat_1(n)
-          !/*update net exchangep*/
-          !NEE_out(n) = NEE_out(n) + FLUXES(n,17)
-          ! determine the as daily rate impact on live tissues for use in EDC and
-          ! MTT calculations
-          FLUXES(n,22) = FLUXES(n,22) + ((CFF(1) + NCFF(1)) * deltat_1(n)) ! labile
-          FLUXES(n,23) = FLUXES(n,23) + ((CFF(2) + NCFF(2)) * deltat_1(n)) ! foliar
-          FLUXES(n,24) = FLUXES(n,24) + ((CFF(3) + NCFF(3)) * deltat_1(n)) ! root
-          FLUXES(n,25) = FLUXES(n,25) + ((CFF(4) + NCFF(4)) * deltat_1(n)) ! wood
+          ! you can't remove any biomass if there is none left...
+          if (C_total > vsmall) then
 
-          !// update pools
-          !/*Adding all fire pool transfers here*/
-          POOLS(n+1,1) = POOLS(n+1,1)-CFF(1)-NCFF(1)
-          POOLS(n+1,2) = POOLS(n+1,2)-CFF(2)-NCFF(2)
-          POOLS(n+1,3) = POOLS(n+1,3)-CFF(3)-NCFF(3)
-          POOLS(n+1,4) = POOLS(n+1,4)-CFF(4)-NCFF(4)
-          POOLS(n+1,5) = POOLS(n+1,5)-CFF(5)-NCFF(5)+NCFF(1)+NCFF(2)+NCFF(3)
-          POOLS(n+1,6) = POOLS(n+1,6)+NCFF(4)+NCFF(5)+NCFF(7)
-          POOLS(n+1,7) = POOLS(n+1,7)-CFF(7)-NCFF(7)
-          ! mass balance check
-          where (POOLS(n+1,1:7) < 0d0) POOLS(n+1,1:7) = 0d0
+              ! Loss of carbon from each pools
+              labile_loss = POOLS(n+1,1)*met(8,n)
+              foliar_loss = POOLS(n+1,2)*met(8,n)
+              ! roots are not removed under grazing
+              if (harvest_management /= 5) then
+                  roots_loss = POOLS(n+1,3)*met(8,n)
+              else
+                  roots_loss = 0d0
+              endif
+              wood_loss   = (Cbranch+Crootcr+Cstem)*met(8,n)
+              ! estimate labile loss explicitly from the loss of their storage
+              ! tissues
+              labile_loss = POOLS(n+1,1) * ((roots_loss+wood_loss) / (POOLS(n+1,3)+POOLS(n+1,4)))
 
-          ! Some variable needed for the EDCs
-          ! Reallocation fluxes for the residues, remember to
-          ! convert to daily rate for consistency with the EDCs
-          ! NOTE: accumulation because fire and removal may occur concurrently...
-          disturbance_residue_to_litter(n) = disturbance_residue_to_litter(n) &
-                                           + ((NCFF(1)+NCFF(2)+NCFF(3)) * deltat_1(n))
-          disturbance_residue_to_som(n)    = disturbance_residue_to_som(n) &
-                                           + ((NCFF(4)+NCFF(5)+NCFF(7)) * deltat_1(n))
-          disturbance_loss_from_litter(n)  = disturbance_loss_from_litter(n) &
-                                           + ((CFF(5) + NCFF(5)) * deltat_1(n))
-          disturbance_loss_from_cwd(n)     = disturbance_loss_from_cwd(n) &
-                                           + ((CFF(7) - NCFF(7)) * deltat_1(n))
+              ! For output / EDC updates
+              if (met(8,n) <= 0.99d0) then
+                  FLUXES(n,22) = labile_loss * deltat_1(n)
+                  FLUXES(n,23) = foliar_loss * deltat_1(n)
+                  FLUXES(n,24) = roots_loss * deltat_1(n)
+                  FLUXES(n,25) = wood_loss * deltat_1(n)
+              endif
+              ! Transfer fraction of harvest waste to litter or som pools
+              ! easy pools first
+              labile_residue = labile_loss*labile_frac_res
+              foliar_residue = foliar_loss*foliage_frac_res(harvest_management)
+              roots_residue  = roots_loss*roots_frac_res(harvest_management)
+              ! Explicit calculation of the residues from each fraction
+              coarse_root_residue  = Crootcr*met(8,n)*rootcr_frac_res(harvest_management)
+              branch_residue = Cbranch*met(8,n)*branch_frac_res(harvest_management)
+              stem_residue = Cstem*met(8,n)*stem_frac_res(harvest_management)
+              ! Now finally calculate the final wood residue
+              wood_residue = stem_residue + branch_residue + coarse_root_residue
+              ! Mechanical loss of Csom due to coarse root extraction
+              soil_loss_with_roots = Crootcr*met(8,n)*(1d0-rootcr_frac_res(harvest_management)) &
+                                   * soil_loss_frac(harvest_management)
 
-        endif ! burn area > 0
+              ! Update pools
+              POOLS(n+1,1) = POOLS(n+1,1)-labile_loss
+              POOLS(n+1,2) = POOLS(n+1,2)-foliar_loss
+              POOLS(n+1,3) = POOLS(n+1,3)-roots_loss
+              POOLS(n+1,4) = POOLS(n+1,4)-wood_loss
+              POOLS(n+1,5) = POOLS(n+1,5) + (labile_residue+foliar_residue+roots_residue)
+              POOLS(n+1,6) = POOLS(n+1,6) - soil_loss_with_roots
+              POOLS(n+1,7) = POOLS(n+1,7) + wood_residue
+              ! mass balance check
+              where (POOLS(n+1,1:7) < 0d0) POOLS(n+1,1:7) = 0d0
 
-      endif ! fire activity
+              ! Some variable needed for the EDCs
+              ! reallocation fluxes for the residues
+              disturbance_residue_to_litter(n) = labile_residue+foliar_residue+roots_residue
+              disturbance_loss_from_litter(n)  = 0d0
+              disturbance_residue_to_cwd(n)    = wood_residue
+              disturbance_loss_from_cwd(n)     = 0d0
+              disturbance_residue_to_som(n)    = 0d0
+              disturbance_loss_from_som(n)     = soil_loss_with_roots
+              ! Convert all to rates to be consistent with the FLUXES in EDCs
+              disturbance_residue_to_litter(n) = disturbance_residue_to_litter(n) * deltat_1(n)
+              disturbance_loss_from_litter(n)  = disturbance_loss_from_litter(n) * deltat_1(n)
+              disturbance_residue_to_cwd(n)    = disturbance_residue_to_cwd(n) * deltat_1(n)
+              disturbance_loss_from_cwd(n)     = disturbance_loss_from_cwd(n) * deltat_1(n)
+              disturbance_residue_to_som(n)    = disturbance_residue_to_som(n) * deltat_1(n)
+              disturbance_loss_from_som(n)     = disturbance_loss_from_som(n) * deltat_1(n)
+              ! estimate total C extraction
+              ! NOTE: this calculation format is to prevent precision error in calculation
+              FLUXES(n,21) = wood_loss + labile_loss + foliar_loss + roots_loss
+              FLUXES(n,21) = FLUXES(n,21) - (wood_residue + labile_residue + foliar_residue + roots_residue)
+              ! Convert to daily rate
+              FLUXES(n,21) = FLUXES(n,21) * deltat_1(n)
 
-      do nxp = 1, nopools
-        if (POOLS(n+1,nxp) /= POOLS(n+1,nxp) .or. POOLS(n+1,nxp) < 0d0) then
-          print*,"step",n,"POOL",nxp
-          print*,"met",met(:,n)
-          print*,"POOLS",POOLS(n,:)
-          print*,"FLUXES",FLUXES(n,:)
-          print*,"POOLS+1",POOLS(n+1,:)
-          print*,"PARS",pars
-          stop
-        endif
-      enddo
+          end if ! C_total > vsmall
+
+          ! Total carbon loss from the system
+          C_total = (labile_residue+foliar_residue+roots_residue+wood_residue+sum(NCFF)) &
+                  - (labile_loss+foliar_loss+roots_loss+wood_loss+soil_loss_with_roots+sum(CFF))
+
+          ! If total clearance occured then we need to ensure some minimum
+          ! values and reforestation is assumed one year forward
+          if (met(8,n) > 0.99d0) then
+              m = 0 ; test = nint(sum(deltat(n:(n+m))))
+              ! FC Forest Statistics 2015 lag between harvest and restocking ~ 2 year
+              restocking_lag = 365*2
+              do while (test < restocking_lag)
+                 m = m + 1 ; test = nint(sum(deltat(n:(n+m))))
+                 !  get out clause for hitting the end of the simulation
+                 if (m+n >= nodays) test = restocking_lag
+              enddo
+            reforest_day = min((n+m), nodays)
+          endif ! if total clearance
+
+       endif ! end deforestation info
+
+       !!!!!!!!!!
+       ! then deal with fire
+       !!!!!!!!!!
+
+       if (met(9,n) > 0d0 .or.(met(8,n) > 0d0 .and. harvest_management > 0)) then
+
+           burnt_area = met(9,n)
+           if (met(8,n) > 0d0 .and. burnt_area > 0d0) then
+               ! pass harvest management to local integer
+               burnt_area = min(1d0,burnt_area + post_harvest_burn(harvest_management))
+           else if (met(8,n) > 0d0 .and. burnt_area <= 0d0) then
+               burnt_area = post_harvest_burn(harvest_management)
+           endif
+
+           if (burnt_area > 0d0) then
+
+               !/*first fluxes*/
+               !/*LABILE*/
+               CFF(1) = POOLS(n+1,1)*burnt_area*combust_eff(1)
+               NCFF(1) = POOLS(n+1,1)*burnt_area*(1d0-combust_eff(1))*(1d0-rfac)
+               !/*foliar*/
+               CFF(2) = POOLS(n+1,2)*burnt_area*combust_eff(2)
+               NCFF(2) = POOLS(n+1,2)*burnt_area*(1d0-combust_eff(2))*(1d0-rfac)
+               !/*root*/
+               CFF(3) = 0d0 !POOLS(n+1,3)*burnt_area*combust_eff(3)
+               NCFF(3) = 0d0 !POOLS(n+1,3)*burnt_area*(1d0-combust_eff(3))*(1d0-rfac)
+               !/*wood*/
+               CFF(4) = POOLS(n+1,4)*burnt_area*combust_eff(4)
+               NCFF(4) = POOLS(n+1,4)*burnt_area*(1d0-combust_eff(4))*(1d0-rfac)
+               !/*litter*/
+               CFF(5) = POOLS(n+1,5)*burnt_area*combust_eff(5)
+               NCFF(5) = POOLS(n+1,5)*burnt_area*(1d0-combust_eff(5))*(1d0-rfac)
+               ! CWD; assume same as live wood (should be improved later)
+               CFF(7) = POOLS(n+1,7)*burnt_area*combust_eff(4)
+               NCFF(7) = POOLS(n+1,7)*burnt_area*(1d0-combust_eff(4))*(1d0-rfac)
+               !/*fires as daily averages to comply with units*/
+               FLUXES(n,17)=(CFF(1)+CFF(2)+CFF(3)+CFF(4)+CFF(5)) * deltat_1(n)
+               !/*update net exchangep*/
+               !NEE_out(n) = NEE_out(n) + FLUXES(n,17)
+               ! determine the as daily rate impact on live tissues for use in EDC and
+               ! MTT calculations
+               FLUXES(n,22) = FLUXES(n,22) + ((CFF(1) + NCFF(1)) * deltat_1(n)) ! labile
+               FLUXES(n,23) = FLUXES(n,23) + ((CFF(2) + NCFF(2)) * deltat_1(n)) ! foliar
+               FLUXES(n,24) = FLUXES(n,24) + ((CFF(3) + NCFF(3)) * deltat_1(n)) ! root
+               FLUXES(n,25) = FLUXES(n,25) + ((CFF(4) + NCFF(4)) * deltat_1(n)) ! wood
+
+               !// update pools
+               !/*Adding all fire pool transfers here*/
+               POOLS(n+1,1) = POOLS(n+1,1)-CFF(1)-NCFF(1)
+               POOLS(n+1,2) = POOLS(n+1,2)-CFF(2)-NCFF(2)
+               POOLS(n+1,3) = POOLS(n+1,3)-CFF(3)-NCFF(3)
+               POOLS(n+1,4) = POOLS(n+1,4)-CFF(4)-NCFF(4)
+               POOLS(n+1,5) = POOLS(n+1,5)-CFF(5)-NCFF(5)+NCFF(1)+NCFF(2)+NCFF(3)
+               POOLS(n+1,6) = POOLS(n+1,6)+NCFF(4)+NCFF(5)+NCFF(7)
+               POOLS(n+1,7) = POOLS(n+1,7)-CFF(7)-NCFF(7)
+               ! mass balance check
+               where (POOLS(n+1,1:7) < 0d0) POOLS(n+1,1:7) = 0d0
+
+               ! Some variable needed for the EDCs
+               ! Reallocation fluxes for the residues, remember to
+               ! convert to daily rate for consistency with the EDCs
+               ! NOTE: accumulation because fire and removal may occur concurrently...
+               disturbance_residue_to_litter(n) = disturbance_residue_to_litter(n) &
+                                                + ((NCFF(1)+NCFF(2)+NCFF(3)) * deltat_1(n))
+               disturbance_residue_to_som(n)    = disturbance_residue_to_som(n) &
+                                                + ((NCFF(4)+NCFF(5)+NCFF(7)) * deltat_1(n))
+               disturbance_loss_from_litter(n)  = disturbance_loss_from_litter(n) &
+                                                + ((CFF(5) + NCFF(5)) * deltat_1(n))
+               disturbance_loss_from_cwd(n)     = disturbance_loss_from_cwd(n) &
+                                                + ((CFF(7) - NCFF(7)) * deltat_1(n))
+
+           endif ! burn area > 0
+
+       endif ! fire activity
+
+       do nxp = 1, nopools
+          if (POOLS(n+1,nxp) /= POOLS(n+1,nxp) .or. POOLS(n+1,nxp) < 0d0) then
+              print*,"step",n,"POOL",nxp
+              print*,"met",met(:,n)
+              print*,"POOLS",POOLS(n,:)
+              print*,"FLUXES",FLUXES(n,:)
+              print*,"POOLS+1",POOLS(n+1,:)
+              print*,"PARS",pars
+              stop
+          endif
+       enddo
 
     end do ! nodays loop
     !call cpu_time(done)
@@ -1436,43 +1436,41 @@ contains
 
     if (aerodynamic_conductance > vsmall .and. deltaWP > vsmall) then
 
-      ! Determine potential water flow rate (mmolH2O.m-2.dayl-1)
-      max_supply = (deltaWP/Rtot) * seconds_per_day
+        ! Determine potential water flow rate (mmolH2O.m-2.dayl-1)
+        max_supply = (deltaWP/Rtot) * seconds_per_day
 
-      ! there is lai therefore we have have stomatal conductance
+        ! Invert Penman-Monteith equation to give gs (m.s-1) needed to meet
+        ! maximum possible evaporation for the day.
+        ! This will then be reduced based on CO2 limits for diffusion based
+        ! photosynthesis
+        denom = slope * ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2) &
+              + (ET_demand_coef * aerodynamic_conductance)
+        denom = (denom / (lambda * max_supply * mmol_to_kg_water * dayl_seconds_1)) - slope
+        denom = denom / psych
+        stomatal_conductance = aerodynamic_conductance / denom
 
-      ! Invert Penman-Monteith equation to give gs (m.s-1) needed to meet
-      ! maximum possible evaporation for the day.
-      ! This will then be reduced based on CO2 limits for diffusion based
-      ! photosynthesis
-      denom = slope * ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2) &
-            + (ET_demand_coef * aerodynamic_conductance)
-      denom = (denom / (lambda * max_supply * mmol_to_kg_water * dayl_seconds_1)) - slope
-      denom = denom / psych
-      stomatal_conductance = aerodynamic_conductance / denom
+        ! convert m.s-1 to mmolH2O.m-2.s-1
+        stomatal_conductance = stomatal_conductance * 1d3 * convert_ms1_mol_1
+        ! if conditions are dew forming then set conductance to maximum as we are not going to be limited by water demand
+        if (stomatal_conductance <= 0d0 .or. stomatal_conductance > max_gs) stomatal_conductance = max_gs
 
-      ! convert m.s-1 to mmolH2O.m-2.s-1
-      stomatal_conductance = stomatal_conductance * 1d3 * convert_ms1_mol_1
-      ! if conditions are dew forming then set conductance to maximum as we are not going to be limited by water demand
-      if (stomatal_conductance <= 0d0 .or. stomatal_conductance > max_gs) stomatal_conductance = max_gs
-
-      ! if we are potentially limited by stomatal conductance or we are using instrinsic water use efficiency (rather than WUE)
-      ! then iterate to find optimum gs otherwise just go with the max...
-      if (stomatal_conductance /= max_gs) then
-        ! If there is a positive demand for water then we will solve for photosynthesis limits on gs through iterative solution
-        delta_gs = 1d-3*lai ! mmolH2O/m2leaf/day
-        ! estimate inverse of LAI to avoid division in optimisation
-        lai_1 = lai**(-1d0)
-        ! intrinsic WUE optimisation
-        stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE',find_gs_iWUE,min_gs,stomatal_conductance,tol_gs)
-      end if
+        ! if we are potentially limited by stomatal conductance or we are using instrinsic water use efficiency (rather than WUE)
+        ! then iterate to find optimum gs otherwise just go with the max...
+        if (stomatal_conductance /= max_gs) then
+            ! If there is a positive demand for water then we will solve for photosynthesis limits on gs through iterative solution
+            delta_gs = 1d-3*lai ! mmolH2O/m2leaf/day
+            ! estimate inverse of LAI to avoid division in optimisation
+            lai_1 = lai**(-1d0)
+            ! intrinsic WUE optimisation
+            stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE',find_gs_iWUE,min_gs,stomatal_conductance,tol_gs)
+        end if
 
     else
 
-      ! if no LAI then there can be no stomatal conductance
-      stomatal_conductance = 0d0
-      ! set minimum (computer) precision level flow
-      max_supply = vsmall
+        ! if no LAI then there can be no stomatal conductance
+        stomatal_conductance = 0d0
+        ! set minimum (computer) precision level flow
+        max_supply = vsmall
 
     endif ! if LAI > vsmall
 
@@ -1705,6 +1703,7 @@ contains
 
     ! local variables
     double precision :: lwrad, & ! downward long wave radiation from sky (W.m-2)
+         transmitted_fraction, & ! fraction of LW which is not incident on the canopy
         longwave_release_soil, & ! emission of long wave radiation from surfaces per m2
       longwave_release_canopy, & ! assuming isothermal condition (W.m-2)
             trans_lw_fraction, &
@@ -1714,9 +1713,15 @@ contains
    canopy_absorption_from_sky, & ! canopy absorbed radiation from downward LW (W.m-2)
   canopy_absorption_from_soil, & ! canopy absorbed radiation from soil surface (W.m-2)
                   canopy_loss, & ! longwave radiation released from canopy surface (W.m-2).
-                                 ! i.e. this value is released from the top and the bottom
+                                 ! i.e. this value is released from the top and
+                                 ! the bottom
+       soil_incident_from_sky, &
      soil_absorption_from_sky, & ! soil absorbed radiation from sky (W.m-2)
   soil_absorption_from_canopy    ! soil absorbed radiation emitted from canopy (W.m-2)
+
+    ! local parameters
+    double precision, parameter :: clump = 1d0    & ! leaf clumping factor (1 = uniform)
+                                  ,decay = -0.5d0   ! decay coefficient for incident radiation
 
     ! estimate long wave radiation from atmosphere (W.m-2)
     lwrad = emiss_boltz * (maxt+freeze-20d0) ** 4
@@ -1729,24 +1734,44 @@ contains
     ! Determine fraction of longwave absorbed by canopy and returned to the sky
     !!!!!!!!!!
 
-    ! calculate fraction of longwave radiation coming from the sky to pentrate to the soil surface
-    trans_lw_fraction = 1d0 - (max_lai_lwrad_transmitted*lai)/(lai+lai_half_lwrad_transmitted)
-    ! calculate the fraction of longwave radiation from sky which is reflected back into the sky
-    reflected_lw_fraction = (max_lai_lwrad_reflected*lai) / (lai+lai_half_lwrad_reflected)
-    ! calculate absorbed longwave radiation coming from the sky
+    ! First, we consider how much radiation is likely to be incident on the
+    ! canopy, or put another way what fraction passes straight through the
+    ! canopy?
+    transmitted_fraction = exp(decay * lai * clump)
+
+    ! second, we partition the radiation which is incident on the canopy into
+    ! that which is transmitted, reflected or absorbed.
+
+    ! Likewise we assume that the reflectance and transmittance are equal
+    ! However, the non-linear interception under Beer's Law means that actual
+    ! canopy transmittenace to the soil surface and reflectance back to the sky
+    ! skews towards reduced transmittance at higher LAI. Both transmittance and
+    ! reflectance follow linear a relationship with a common intercept
+    ! NOTE: 0.02 = (1-emissivity) * 0.5
+    trans_lw_fraction     = 0.02d0 * (1d0 - (lai/(lai+lai_half_lwrad_transmitted)))
+    reflected_lw_fraction = 0.02d0 * (1d0 - (lai/(lai+lai_half_lwrad_reflected)))
+    ! Absorption is the residual
     absorbed_lw_fraction = 1d0 - trans_lw_fraction - reflected_lw_fraction
+
     ! Calculate the potential absorption of longwave radiation lost from the
     ! canopy to soil / sky
-    canopy_release_fraction = 1d0 - (max_lai_lwrad_release*lai) / (lai+lai_half_lwrad_release)
+    canopy_release_fraction = max_lw_escape * (1d0 - (max_lai_lwrad_release*lai) / (lai+lai_half_lwrad_release))
 
     !!!!!!!!!!
     ! Distribute longwave from sky
     !!!!!!!!!!
 
+    ! Estimate the radiation which directly bypasses the canopy...
+    soil_incident_from_sky = lwrad * transmitted_fraction
+    ! ...and update the canopy intercepted radiation
+    lwrad = lwrad - soil_incident_from_sky
+
     ! long wave absorbed by the canopy from the sky
     canopy_absorption_from_sky = lwrad * absorbed_lw_fraction
-    ! Long wave absorbed by soil from the sky, soil absorption assumed to be equal to emissivity
-    soil_absorption_from_sky = trans_lw_fraction * lwrad * emissivity
+    ! Long wave absorbed by soil from the sky, soil absorption assumed to be
+    ! equal to emissivity
+    soil_incident_from_sky = soil_incident_from_sky + (trans_lw_fraction * lwrad)
+    soil_absorption_from_sky = soil_incident_from_sky * emissivity
     ! Long wave reflected directly back into sky
     sky_lwrad_Wm2 = lwrad * reflected_lw_fraction
 
@@ -1754,11 +1779,16 @@ contains
     ! Distribute longwave from soil
     !!!!!!!!!!
 
-    ! First, calculate longwave radiation coming up from the soil plus the radiation which is reflected
-    canopy_absorption_from_soil = longwave_release_soil + (trans_lw_fraction * lwrad * (1d0-emissivity))
-    ! Second, use this total to estimate the longwave returning to the sky
+    ! Calculate longwave radiation coming up from the soil plus the radiation
+    ! which is reflected
+    canopy_absorption_from_soil = longwave_release_soil + (soil_incident_from_sky * (1d0-emissivity))
+    ! First how much directly bypasses the canopy...
+    sky_lwrad_Wm2 = sky_lwrad_Wm2 + (canopy_absorption_from_soil * transmitted_fraction)
+    canopy_absorption_from_soil = canopy_absorption_from_soil * (1d0 - transmitted_fraction)
+    ! Second, use this to estimate the longwave returning to the sky
     sky_lwrad_Wm2 = sky_lwrad_Wm2 + (canopy_absorption_from_soil * trans_lw_fraction)
-    ! Third, now calculate the longwave from the soil surface absorbed by the canopy
+    ! Third, now calculate the longwave from the soil surface absorbed by the
+    ! canopy
     canopy_absorption_from_soil = canopy_absorption_from_soil * absorbed_lw_fraction
 
     !!!!!!!!!!
@@ -1784,13 +1814,50 @@ contains
     ! determine isothermal net soil
     soil_lwrad_Wm2 = (soil_absorption_from_sky + soil_absorption_from_canopy) - longwave_release_soil
 
+    !!!!!!!!!!
+    ! Approximate daily impact on isothermal to net longwave
+    !!!!!!!!!!
+
+    ! Isothermal -> net radiation in SPA is largely linear, therefore we
+    ! retrieve the linear correction here
+    soil_lwrad_Wm2 = (soil_lwrad_Wm2 * soil_iso_to_net_coef) + soil_iso_to_net_const
+
   end subroutine calculate_longwave_isothermal
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine calculate_radiation_balance
+
+    implicit none
+
+    ! subroutine call ensures that both shortwave and longwave radiation balance
+    ! are calculated at the same time but with the more readable code split
+    ! between a shortwave and longwave specific subroutines.
+
+    ! NOTE: that this code provides a daily timescale linear correction on
+    ! isothermal longwave balance to net based on soil surface incident shortwave
+    ! radiation
+
+    ! declare local variables
+    double precision :: delta_iso
+
+    ! Estimate shortwave radiation balance
+    call calculate_shortwave_balance
+    ! Estimate isothermal long wave radiation balance
+    call calculate_longwave_isothermal(meant,meant)
+    ! Apply linear correction to soil surface isothermal->net longwave radiation
+    ! balance based on absorbed shortwave radiation
+    delta_iso = soil_iso_to_net_coef * (soil_swrad_MJday * 1d6 * dayl_seconds_1) + soil_iso_to_net_const
+    soil_lwrad_Wm2 = soil_lwrad_Wm2 + delta_iso
+
+  end subroutine calculate_radiation_balance
   !
   !-----------------------------------------------------------------
   !
   subroutine calculate_shortwave_balance
 
-    ! Subroutine estimates the canopy and soil absorbed shortwave radiation (MJ/m2/day).
+    ! Subroutine estimates the canopy and soil absorbed shortwave radiation
+    ! (MJ/m2/day).
     ! Radiation absorption is paritioned into NIR and PAR for canopy, and NIR +
     ! PAR for soil.
 
@@ -1802,8 +1869,8 @@ contains
     implicit none
 
     ! local variables
-    double precision :: absorbed_nir_fraction_soil &
-                       ,absorbed_par_fraction_soil &
+    double precision :: balance                    &
+                       ,transmitted_fraction       &
                        ,par,nir                    &
                        ,soil_par_MJday             &
                        ,soil_nir_MJday             &
@@ -1819,20 +1886,35 @@ contains
                        ,trans_nir_fraction         & !
                        ,trans_par_fraction
 
+    ! local parameters
+    double precision, parameter :: clump = 1d0    & ! leaf clumping factor (1 = uniform)
+                                  ,decay = -0.5d0 & ! decay coefficient for incident radiation
+                                  ,newsnow_nir_abs = 0.27d0 & ! NIR absorption fraction
+                                  ,newsnow_par_abs = 0.05d0   ! PAR absorption fraction
+
     !!!!!!!!!!
-    ! Determine canopy absorption / reflectance as function of LAI
+    ! Determine canopy absorption, reflectance and transmittance as function of
+    ! LAI
     !!!!!!!!!!
 
+    ! First, we consider how much radiation is likely to be incident on the
+    ! canopy, or put another way what fraction passes straight through the
+    ! canopy?
+    transmitted_fraction = exp(decay * lai * clump)
+
+    ! Second, of the radiation which is incident on the canopy what fractions
+    ! are transmitted through, reflected from or absorbed by the canopy
+
     ! Canopy transmitted of PAR & NIR radiation towards the soil
-    trans_par_fraction = 1d0 - (lai*max_lai_par_transmitted) &
-                       / (lai+lai_half_par_transmitted)
-    trans_nir_fraction = 1d0 - (lai*max_lai_nir_transmitted) &
-                       / (lai+lai_half_nir_transmitted)
+    trans_par_fraction = max(0d0,max_lai_par_transmitted * lai + max_par_transmitted)
+    trans_nir_fraction = max(0d0,max_lai_nir_transmitted * lai + max_nir_transmitted)
     ! Canopy reflected of near infrared and photosynthetically active radiation
-    reflected_nir_fraction = (lai*max_lai_nir_reflection) &
-                           / (lai+lai_half_nir_reflection)
-    reflected_par_fraction = (lai*max_lai_par_reflection) &
-                           / (lai+lai_half_par_reflection)
+    reflected_nir_fraction = 1d0 - ( (lai*max_lai_nir_reflection) &
+                                    /(lai+lai_half_nir_reflection) )
+    reflected_par_fraction = 1d0 - ( (lai*max_lai_par_reflection) &
+                                    /(lai+lai_half_par_reflection) )
+    reflected_nir_fraction = max_nir_reflected * reflected_nir_fraction
+    reflected_par_fraction = max_par_reflected * reflected_par_fraction
     ! Canopy absorption of near infrared and photosynthetically active radiation
     absorbed_nir_fraction = 1d0 - reflected_nir_fraction - trans_nir_fraction
     absorbed_par_fraction = 1d0 - reflected_par_fraction - trans_par_fraction
@@ -1841,29 +1923,30 @@ contains
     ! Estimate canopy absorption of incoming shortwave radiation
     !!!!!!!!!!
 
-    ! estimate multiple use par and nir components
+    ! Estimate multiple use par and nir components
     par = sw_par_fraction * swrad
     nir = (1d0 - sw_par_fraction) * swrad
 
-    ! Estimate incoming shortwave radiation absorbed, transmitted and reflected by the canopy (MJ.m-2.day-1)
+    ! Estimate the radiation which directly bypasses the canopy...
+    trans_par_MJday = par * transmitted_fraction
+    trans_nir_MJday = nir * transmitted_fraction
+    ! ...and update the canopy intercepted radiation
+    par = par - trans_par_MJday
+    nir = nir - trans_nir_MJday
+
+    ! Estimate incoming shortwave radiation absorbed, transmitted and reflected
+    ! by the canopy (MJ.m-2.day-1)
     canopy_par_MJday = par * absorbed_par_fraction
     canopy_nir_MJday = nir * absorbed_nir_fraction
-    trans_par_MJday = par * trans_par_fraction
-    trans_nir_MJday = nir * trans_nir_fraction
+    trans_par_MJday = trans_par_MJday + (par * trans_par_fraction)
+    trans_nir_MJday = trans_nir_MJday + (nir * trans_nir_fraction)
     refl_par_MJday = par * reflected_par_fraction
     refl_nir_MJday = nir * reflected_nir_fraction
 
-    !!!!!!!!!
-    ! Estimate soil absorption of shortwave passing through the canopy
-    !!!!!!!!!
-
-    ! Update soil reflectance based on snow cover
-    absorbed_par_fraction_soil = soil_swrad_absorption
-    absorbed_nir_fraction_soil = soil_swrad_absorption
-
-    ! Then the radiation incident and ultimately absorbed by the soil surface itself (MJ.m-2.day-1)
-    soil_par_MJday = trans_par_MJday * absorbed_par_fraction_soil
-    soil_nir_MJday = trans_nir_MJday * absorbed_nir_fraction_soil
+    ! Then the radiation incident and ultimately absorbed by the soil surface
+    ! itself (MJ.m-2.day-1)
+    soil_par_MJday = trans_par_MJday * soil_swrad_absorption
+    soil_nir_MJday = trans_nir_MJday * soil_swrad_absorption
     ! combine totals for use is soil evaporation
     soil_swrad_MJday = soil_nir_MJday + soil_par_MJday
 
@@ -1876,15 +1959,32 @@ contains
     ! calculate multiple use variables
     par = trans_par_MJday-soil_par_MJday
     nir = trans_nir_MJday-soil_nir_MJday
-    ! Update the canopy radiation absorption based on the reflected radiation (MJ.m-2.day-1)
+    ! how much of the reflected radiation directly bypasses the canopy...
+    refl_par_MJday = refl_par_MJday + (par * transmitted_fraction)
+    refl_nir_MJday = refl_nir_MJday + (nir * transmitted_fraction)
+    ! ...and update the canopy on this basis
+    par = par * (1d0-transmitted_fraction)
+    nir = nir * (1d0-transmitted_fraction)
+
+    ! Update the canopy radiation absorption based on the reflected radiation
+    ! (MJ.m-2.day-1)
     canopy_par_MJday = canopy_par_MJday + (par * absorbed_par_fraction)
     canopy_nir_MJday = canopy_nir_MJday + (nir * absorbed_nir_fraction)
-    ! Update the total radiation reflected back into the sky, i.e. that which is now transmitted through the canopy
+    ! Update the total radiation reflected back into the sky, i.e. that which is
+    ! now transmitted through the canopy
     refl_par_MJday = refl_par_MJday + (par * trans_par_fraction)
     refl_nir_MJday = refl_nir_MJday + (nir * trans_nir_fraction)
 
     ! Combine to estimate total shortwave canopy absorbed radiation
     canopy_swrad_MJday = canopy_par_MJday + canopy_nir_MJday
+
+    ! check energy balance
+!    balance = swrad - canopy_par_MJday - canopy_nir_MJday - refl_par_MJday -
+!    refl_nir_MJday - soil_swrad_MJday
+!    if ((balance - swrad) / swrad > 0.01) then
+!        print*,"SW residual frac = ",(balance - swrad) / swrad,"SW residual =
+!        ",balance,"SW in = ",swrad
+!    endif
 
   end subroutine calculate_shortwave_balance
   !

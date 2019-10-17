@@ -556,13 +556,14 @@ contains
       drythick = max(min_drythick, top_soil_depth * (dble_one - (soil_waterfrac(1) / porosity(1))))
       ! Soil surface (kgH2O.m-2.day-1)
       call calculate_soil_evaporation(soilevaporation)
-      ! if snow present assume that soilevaporation is sublimation of soil first
-      snow_sublimation = dble_zero
-      if (snow_storage > dble_zero) then
+      ! If snow present assume that soilevaporation is sublimation of soil first
+      if (snow_storage > 0d0) then
           snow_sublimation = soilevaporation
           if (snow_sublimation*deltat(n) > snow_storage) snow_sublimation = snow_storage * deltat_1(n)
           soilevaporation = soilevaporation - snow_sublimation
           snow_storage = snow_storage - (snow_sublimation * deltat(n))
+      else
+          snow_sublimation = 0d0
       end if
 
       ! If desired calculate the steady-state energy balance
@@ -914,8 +915,6 @@ contains
         ! Determine potential water flow rate (mmolH2O.m-2.dayl-1)
         max_supply = (deltaWP/Rtot) * seconds_per_day
 
-        ! there is lai therefore we have have stomatal conductance
-
         ! Invert Penman-Monteith equation to give gs (m.s-1) needed to meet
         ! maximum possible evaporation for the day.
         ! This will then be reduced based on CO2 limits for diffusion based
@@ -1179,8 +1178,7 @@ contains
                    ,soil_radiation & ! isothermal net radiation (W/m2)
                             ,esurf & ! see code below
                              ,esat & ! soil air space saturation vapour pressure
-                              ,gws & ! water vapour conductance through soil air space (m.s-1)
-                               ,Qc
+                              ,gws   ! water vapour conductance through soil air space (m.s-1)
 
     ! oC -> K for local temperature value
     local_temp = maxt + freeze
@@ -1191,10 +1189,6 @@ contains
 
     ! Absorbed shortwave radiation MJ.m-2.day-1 -> J.m-2.s-1
     soil_radiation = soil_lwrad_Wm2 + (soil_swrad_MJday * 1d6 * dayl_seconds_1)
-    ! estimate ground heat flux from statistical approximation, positive if energy moving up profile
-    ! NOTE: linear coefficient estimates from SPA simulations
-!    Qc = -0.4108826d0 * (maxt - maxt_lag1)
-!    soil_radiation = soil_radiation + Qc
 
     !!!!!!!!!!
     ! Calculate soil evaporative fluxes (kgH2O/m2/day)

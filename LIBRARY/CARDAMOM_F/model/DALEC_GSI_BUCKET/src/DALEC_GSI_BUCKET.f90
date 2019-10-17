@@ -252,27 +252,30 @@ module CARBON_MODEL_MOD
 
   ! ACM-GPP-ET parameters
   double precision, parameter :: &
-                        pn_max_temp = 5.357174d+01, & ! Maximum temperature for photosynthesis (oC)
-                        pn_opt_temp = 3.137242d+01, & ! Optimum temperature for photosynthesis (oC)
-                        pn_kurtosis = 1.927458d-01, & ! Kurtosis of photosynthesis temperature response
-                                 e0 = 5.875662d+00, & ! Quantum yield gC/MJ/m2/day PAR
-          max_lai_lwrad_transmitted = 7.626683d-01, & ! Max fractional reduction of LW from sky transmitted through canopy
-         lai_half_lwrad_transmitted = 7.160363d-01, & ! LAI at which canopy LW transmittance reduction = 50 %
-             max_lai_nir_reflection = 4.634860d-01, & ! Max fraction of NIR reflected by canopy
-            lai_half_nir_reflection = 1.559148d+00, & ! LAI at which canopy NIR reflected = 50 %
-                             minlwp =-1.996830d+00, & ! minimum leaf water potential (MPa)
-             max_lai_par_reflection = 1.623013d-01, & ! Max fraction of PAR reflected by canopy
-            lai_half_par_reflection = 1.114360d+00, & ! LAI at which canopy PAR reflected = 50 %
-           lai_half_lwrad_reflected = 1.126214d+00, & ! LAI at which 50 % LW is reflected back to sky
-                               iWUE = 1.602503d-06, & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
-              soil_swrad_absorption = 0.98d0,       & ! Fraction of SW rad absorbed by soil
-            max_lai_par_transmitted = 8.079519d-01, & ! Max fractional reduction in PAR transmittance by canopy
-           lai_half_par_transmitted = 9.178784d-01, & ! LAI at which PAR transmittance reduction = 50 %
-            max_lai_nir_transmitted = 8.289803d-01, & ! Max fractional reduction in NIR transmittance by canopy
-           lai_half_nir_transmitted = 1.961831d+00, & ! LAI at which NIR transmittance reduction = 50 %
-              max_lai_lwrad_release = 9.852855d-01, & ! Max fraction of LW emitted (1-par) from canopy to be released
-             lai_half_lwrad_release = 7.535450d-01, & ! LAI at which LW emitted from canopy to be released at 50 %
-            max_lai_lwrad_reflected = 1.955832d-02    ! LAI at which 50 % LW is reflected back to sky
+                        pn_max_temp = 5.994476d+01, & ! Maximum temperature for photosynthesis (oC)
+                        pn_opt_temp = 3.097309d+01, & ! Optimum temperature fpr photosynthesis (oC)
+                        pn_kurtosis = 1.807873d-01, & ! Kurtosis of photosynthesis temperature response
+                                 e0 = 4.947499d+00, & ! Quantum yield gC/MJ/m2/day PAR
+         lai_half_lwrad_transmitted = 1.408342d-01, & ! LAI at which LW transmittance to soil at 50 %
+           lai_half_lwrad_reflected = 2.336847d-03, & ! LAI at which LW reflectance to sky at 50 %
+             max_lai_nir_reflection = 1.536623d-01, & ! Coefficient relating NIR reflectance and LAI
+            lai_half_nir_reflection = 1.052528d-02, & ! LAI at which canopy NIR reflection = 50 %
+                             minlwp =-1.990842d+00, & ! minimum leaf water potential (MPa)
+             max_lai_par_reflection = 1.189590d-01, & ! Max fraction of PAR reflected by canopy
+            lai_half_par_reflection = 2.247624d-02, & ! LAI at which canopy PAR reflected = 50 %
+                      max_lw_escape = 5.809522d-01, & ! Max LW which is released from canopy that escapes in one direction
+                               iWUE = 3.689356d-06, & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
+              soil_swrad_absorption = 9.597167d-01, & ! Fraction of SW rad absorbed by soil
+            max_lai_par_transmitted =-1.643388d-02, & ! Max fraction reduction in PAR transmittance by canopy
+            max_lai_nir_transmitted =-1.205366d-02, & ! Max fraction reduction in NIR transmittance by canopy
+              max_lai_lwrad_release = 9.987600d-01, & ! 1-Max fraction of LW emitted from canopy to be released
+             lai_half_lwrad_release = 2.005504d+00, & ! LAI at which LW emitted from canopy to be released at 50 %
+               soil_iso_to_net_coef =-9.464002d-01, & ! Coefficient relating soil isothermal net radiation to net.
+              soil_iso_to_net_const =-2.461425d+00, & ! Constant relating soil isothermal net radiation to net
+                max_par_transmitted = 1.032857d-01, & ! Max fraction of canopy incident PAR transmitted to soil
+                max_nir_transmitted = 2.892002d-01, & ! Max fraction of canopy incident NIR transmitted to soil
+                  max_par_reflected = 3.897263d-01, & ! Max fraction of canopy incident PAR reflected to sky
+                  max_nir_reflected = 5.467363d-01    ! Max fraction of canopy incident NIR reflected to sky
 
   !!!!!!!!!
   ! Module level variables
@@ -343,7 +346,6 @@ module CARBON_MODEL_MOD
                                    displacement, & ! zero plane displacement (m)
                                      max_supply, & ! maximum water supply (mmolH2O/m2/day)
                                           meant, & ! mean air temperature (oC)
-                                      maxt_lag1, &
                                           leafT, & ! canopy temperature (oC)
                                mean_annual_temp, &
                              canopy_swrad_MJday, & ! canopy_absorbed shortwave radiation (MJ.m-2.day-1)
@@ -860,19 +862,19 @@ module CARBON_MODEL_MOD
 
         ! Hydraulic limitation parameters for tissue cell expansion, i.e. growth
         ! NOTE: that these parameters are applied to deltaWP (i.e. minLWP-wSWP)
-        Cwood_hydraulic_gradient = 5d0 ; Cwood_hydraulic_half_saturation = -1.5d0
+!        Cwood_hydraulic_gradient = 5d0 ; Cwood_hydraulic_half_saturation = -1.5d0
 
         ! Temperature limitiation parameters on wood and fine root growth.
         ! Parmeters generated on the assumption of 5 % / 95 % activation at key
         ! temperature values. Roots 1oC/30oC, wood 5oC/30oC.
         ! NOTE: Foliage and root potential turnovers use the same temperature curve
-        Croot_labile_release_gradient = 0.1962d0 ; Croot_labile_half_saturation = 15.0d0
-        Cwood_labile_release_gradient = 0.2355d0 ; Cwood_labile_half_saturation = 17.5d0
+!        Croot_labile_release_gradient = 0.1962d0 ; Croot_labile_half_saturation = 15.0d0
+!        Cwood_labile_release_gradient = 0.2355d0 ; Cwood_labile_half_saturation = 17.5d0
         ! calculate temperature limitation on potential wood/root growth
-        Cwood_labile_release_coef = (1d0+exp(-Cwood_labile_release_gradient* &
-                                    (meant_time-Cwood_labile_half_saturation)))**(-1d0)
-        Croot_labile_release_coef = (1d0+exp(-Croot_labile_release_gradient* &
-                                    (meant_time-Croot_labile_half_saturation)))**(-1d0)
+!        Cwood_labile_release_coef = (1d0+exp(-Cwood_labile_release_gradient* &
+!                                    (meant_time-Cwood_labile_half_saturation)))**(-1d0)
+!        Croot_labile_release_coef = (1d0+exp(-Croot_labile_release_gradient* &
+!                                    (meant_time-Croot_labile_half_saturation)))**(-1d0)
 
         ! calculate some values once as these are invarient between DALEC runs
         if (.not.allocated(tmp_x)) then
@@ -954,7 +956,6 @@ module CARBON_MODEL_MOD
     vpd_kPa = met(16,1)*1d-3 ! vapour pressure deficit (Pa->kPa)
     meant = meant_time(1)
     leafT = maxt     ! initial canopy temperature (oC)
-    maxt_lag1 = maxt
     seconds_per_step = deltat(1) * seconds_per_day
     days_per_step =  deltat(1)
     days_per_step_1 =  deltat_1(1)
@@ -1006,9 +1007,6 @@ module CARBON_MODEL_MOD
        !!!!!!!!!!
        ! assign drivers and update some prognostic variables
        !!!!!!!!!!
-
-       ! set lag information using previous time step value for temperature
-       maxt_lag1 = maxt
 
        ! Incoming drivers
        mint = met(2,n)  ! minimum temperature (oC)
@@ -1095,8 +1093,7 @@ module CARBON_MODEL_MOD
        ! Determine net shortwave and isothermal longwave energy balance
        !!!!!!!!!!
 
-       call calculate_shortwave_balance
-       call calculate_longwave_isothermal(leafT,maxt)
+       call calculate_radiation_balance
 
        !!!!!!!!!!
        ! Calculate physically constrained evaporation and
@@ -1118,7 +1115,12 @@ module CARBON_MODEL_MOD
        end if
 
        ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
-       call calculate_wetcanopy_evaporation(wetcanopy_evap,act_pot_ratio,canopy_storage)
+       if (lai > 0d0) then ! is this conditional needed?
+           call calculate_wetcanopy_evaporation(wetcanopy_evap,act_pot_ratio,canopy_storage)
+       else
+           ! reset pools
+           intercepted_rainfall = 0d0 ; canopy_storage = 0d0 ; wetcanopy_evap = 0d0
+       endif
 
        ! calculate the minimum soil & root hydraulic resistance based on total
        ! fine root mass ! *2*2 => *RS*C->Bio
@@ -1724,9 +1726,6 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
         ! Determine potential water flow rate (mmolH2O.m-2.dayl-1)
         max_supply = (deltaWP/Rtot) * seconds_per_day
 
-        ! there is lai and aerodynamic exchange therefore we potentially have
-        ! have stomatal conductance
-
         ! Invert Penman-Monteith equation to give gs (m.s-1) needed to meet
         ! maximum possible evaporation for the day.
         ! This will then be reduced based on CO2 limits for diffusion based
@@ -1771,82 +1770,6 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
     endif ! if aerodynamic conductance > vsmall
 
   end subroutine calculate_stomatal_conductance
-!  !
-!  !-----------------------------------------------------------
-!  !
-!  subroutine calculate_stomatal_conductance(deltaWP,Rtot)
-!
-!    ! Determines 1) an approximation of canopy conductance (gc) mmolH2O.m-2.s-1
-!    ! based on potential hydraulic flow, air temperature and absorbed radiation.
-!    ! 2) calculates absorbed shortwave radiation (W.m-2) as function of LAI
-!
-!    implicit none
-!
-!    ! arguments
-!    double precision, intent(in) :: deltaWP, & ! minlwp-wSWP (MPa)
-!                                       Rtot    ! total hydraulic resistance (MPa.s-1.m-2.mmol-1)
-!
-!    ! local variables
-!    double precision :: denom
-!    double precision, parameter :: max_gs = 3500d0, &  ! mmolH2O/m2leaf/s
-!                                   min_gs = 0.001d0, & ! mmolH2O/m2leaf/s
-!                                   tol_gs = 4d0        ! mmolH2O/m2leaf/s
-!
-!    !!!!!!!!!!
-!    ! Calculate stomatal conductance under H2O and CO2 limitations
-!    !!!!!!!!!!
-!
-!    if (deltaWP > vsmall) then
-!        ! Determine potential water flow rate (mmolH2O.m-2.dayl-1)
-!        max_supply = (deltaWP/Rtot) * seconds_per_day
-!    else
-!        ! set minimum (computer) precision level flow
-!        max_supply = vsmall
-!    end if
-!
-!    if (aerodynamic_conductance > vsmall) then
-!
-!        ! there is lai therefore we have have stomatal conductance
-!
-!        ! Invert Penman-Monteith equation to give gs (m.s-1) needed to meet
-!        ! maximum possible evaporation for the day.
-!        ! This will then be reduced based on CO2 limits for diffusion based
-!        ! photosynthesis
-!        denom = slope * ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2) &
-!              + (ET_demand_coef * aerodynamic_conductance)
-!        denom = (denom / (lambda * max_supply * mmol_to_kg_water * dayl_seconds_1)) - slope
-!        denom = denom / psych
-!        stomatal_conductance = aerodynamic_conductance / denom
-!
-!        ! convert m.s-1 to mmolH2O.m-2.s-1
-!        stomatal_conductance = stomatal_conductance * convert_ms1_mmol_1
-!        ! if conditions are dew forming then set conductance to maximum as we are not going to be limited by water demand
-!        if (stomatal_conductance <= 0d0 .or. stomatal_conductance > max_gs) stomatal_conductance = max_gs
-!
-!        ! if we are potentially limited by stomatal conductance or we are using instrinsic water use efficiency (rather than WUE)
-!        ! then iterate to find optimum gs otherwise just go with the max...
-!        if (stomatal_conductance /= max_gs .or. do_iWUE ) then
-!           ! If there is a positive demand for water then we will solve for photosynthesis limits on gs through iterative solution
-!           delta_gs = 1d-3 * lai ! mmolH2O/m2leaf/day
-!           ! estimate inverse of LAI to avoid division in optimisation
-!           lai_1 = lai**(-1d0)
-!           if (do_iWUE) then
-!              ! intrinsic WUE optimisation
-!              stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE',find_gs_iWUE,min_gs,stomatal_conductance,tol_gs)
-!           else
-!              ! WUE optimisation
-!              stomatal_conductance = zbrent('calculate_gs:find_gs_WUE',find_gs_WUE,min_gs,stomatal_conductance,tol_gs)
-!           endif
-!        end if
-!
-!    else
-!
-!        ! if no LAI then there can be no stomatal conductance
-!        stomatal_conductance = 0d0
-!
-!    endif ! if aerodynamic_conductance > vsmall
-!
-!  end subroutine calculate_stomatal_conductance
   !
   !------------------------------------------------------------------
   !
@@ -2010,10 +1933,10 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
 
     ! Dew is unlikely to occur (if we had energy balance) if mint > 0
     ! Sublimation is also unlikely to occur (if we had energy balance) if maxt < 0
-    if ((wetcanopy_evap < 0d0 .and. mint > 0d0) .or. &
-        (wetcanopy_evap > 0d0 .and. maxt < 0d0)) then
-        wetcanopy_evap = 0d0
-    endif
+!    if ((wetcanopy_evap < 0d0 .and. mint > 0d0) .or. &
+!        (wetcanopy_evap > 0d0 .and. maxt < 0d0)) then
+!        wetcanopy_evap = 0d0
+!    endif
 
     ! Remember potential evaporation to later calculation of the potential
     ! actual ratio
@@ -2051,13 +1974,14 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
     double precision, intent(out) :: soilevap ! kgH2O.m-2.day-1
 
     ! local variables
-    double precision :: local_temp     &
-                  ,soil_radiation & ! isothermal net radiation (W/m2)
-                           ,esurf & ! see code below
-                            ,esat & ! soil air space saturation vapour pressure
-                             ,gws & ! water vapour conductance through soil air space (m.s-1)
-                              ,Qc
+    double precision :: local_temp &
+                        ,numerator &
+                   ,soil_radiation & ! isothermal net radiation (W/m2)
+                            ,esurf & ! see code below
+                             ,esat & ! soil air space saturation vapour pressure
+                              ,gws   ! water vapour conductance through soil air space (m.s-1)
 
+    ! oC -> K for local temperature value
     local_temp = maxt + freeze
 
     !!!!!!!!!!
@@ -2066,10 +1990,6 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
 
     ! Absorbed shortwave radiation MJ.m-2.day-1 -> J.m-2.s-1
     soil_radiation = soil_lwrad_Wm2 + (soil_swrad_MJday * 1d6 * dayl_seconds_1)
-    ! estimate ground heat flux from statistical approximation, positive if energy moving up profile
-    ! NOTE: linear coefficient estimates from SPA simulations
-    Qc = -0.4108826d0 * (maxt - maxt_lag1)
-    soil_radiation = soil_radiation + Qc
 
     !!!!!!!!!!
     ! Calculate soil evaporative fluxes (kgH2O/m2/day)
@@ -2089,12 +2009,9 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
     esurf = esurf - air_vapour_pressure
 
     ! Estimate potential soil evaporation flux (kgH2O.m-2.day-1)
-    soilevap = (slope*soil_radiation) + (air_density_kg*cpair*esurf*soil_conductance)
-    soilevap = soilevap / (lambda*(slope+(psych*(1d0+soil_conductance/gws))))
+    numerator = (slope*soil_radiation) + (air_density_kg*cpair*esurf*soil_conductance)
+    soilevap = numerator / (lambda*(slope+(psych*(1d0+soil_conductance/gws))))
     soilevap = soilevap * dayl_seconds
-
-    ! Dew is unlikely to occur (if we had energy balance) if mint > 0
-    if (soilevap < 0d0 .and. mint > 0d0 ) soilevap = 0d0
 
     return
 
@@ -2287,6 +2204,7 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
 
     ! local variables
     double precision :: lwrad, & ! downward long wave radiation from sky (W.m-2)
+         transmitted_fraction, & ! fraction of LW which is not incident on the canopy
         longwave_release_soil, & ! emission of long wave radiation from surfaces per m2
       longwave_release_canopy, & ! assuming isothermal condition (W.m-2)
             trans_lw_fraction, &
@@ -2296,9 +2214,15 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
    canopy_absorption_from_sky, & ! canopy absorbed radiation from downward LW (W.m-2)
   canopy_absorption_from_soil, & ! canopy absorbed radiation from soil surface (W.m-2)
                   canopy_loss, & ! longwave radiation released from canopy surface (W.m-2).
-                                 ! i.e. this value is released from the top and the bottom
+                                 ! i.e. this value is released from the top and
+                                 ! the bottom
+       soil_incident_from_sky, &
      soil_absorption_from_sky, & ! soil absorbed radiation from sky (W.m-2)
   soil_absorption_from_canopy    ! soil absorbed radiation emitted from canopy (W.m-2)
+
+    ! local parameters
+    double precision, parameter :: clump = 1d0    & ! leaf clumping factor (1 = uniform)
+                                  ,decay = -0.5d0   ! decay coefficient for incident radiation
 
     ! estimate long wave radiation from atmosphere (W.m-2)
     lwrad = emiss_boltz * (maxt+freeze-20d0) ** 4
@@ -2311,24 +2235,44 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
     ! Determine fraction of longwave absorbed by canopy and returned to the sky
     !!!!!!!!!!
 
-    ! calculate fraction of longwave radiation coming from the sky to pentrate to the soil surface
-    trans_lw_fraction = 1d0 - (max_lai_lwrad_transmitted*lai)/(lai+lai_half_lwrad_transmitted)
-    ! calculate the fraction of longwave radiation from sky which is reflected back into the sky
-    reflected_lw_fraction = (max_lai_lwrad_reflected*lai) / (lai+lai_half_lwrad_reflected)
-    ! calculate absorbed longwave radiation coming from the sky
+    ! First, we consider how much radiation is likely to be incident on the
+    ! canopy, or put another way what fraction passes straight through the
+    ! canopy?
+    transmitted_fraction = exp(decay * lai * clump)
+
+    ! second, we partition the radiation which is incident on the canopy into
+    ! that which is transmitted, reflected or absorbed.
+
+    ! Likewise we assume that the reflectance and transmittance are equal
+    ! However, the non-linear interception under Beer's Law means that actual
+    ! canopy transmittenace to the soil surface and reflectance back to the sky
+    ! skews towards reduced transmittance at higher LAI. Both transmittance and
+    ! reflectance follow linear a relationship with a common intercept
+    ! NOTE: 0.02 = (1-emissivity) * 0.5
+    trans_lw_fraction     = 0.02d0 * (1d0 - (lai/(lai+lai_half_lwrad_transmitted)))
+    reflected_lw_fraction = 0.02d0 * (1d0 - (lai/(lai+lai_half_lwrad_reflected)))
+    ! Absorption is the residual
     absorbed_lw_fraction = 1d0 - trans_lw_fraction - reflected_lw_fraction
+
     ! Calculate the potential absorption of longwave radiation lost from the
     ! canopy to soil / sky
-    canopy_release_fraction = 1d0 - (max_lai_lwrad_release*lai) / (lai+lai_half_lwrad_release)
+    canopy_release_fraction = max_lw_escape * (1d0 - (max_lai_lwrad_release*lai) / (lai+lai_half_lwrad_release))
 
     !!!!!!!!!!
     ! Distribute longwave from sky
     !!!!!!!!!!
 
+    ! Estimate the radiation which directly bypasses the canopy...
+    soil_incident_from_sky = lwrad * transmitted_fraction
+    ! ...and update the canopy intercepted radiation
+    lwrad = lwrad - soil_incident_from_sky
+
     ! long wave absorbed by the canopy from the sky
     canopy_absorption_from_sky = lwrad * absorbed_lw_fraction
-    ! Long wave absorbed by soil from the sky, soil absorption assumed to be equal to emissivity
-    soil_absorption_from_sky = trans_lw_fraction * lwrad * emissivity
+    ! Long wave absorbed by soil from the sky, soil absorption assumed to be
+    ! equal to emissivity
+    soil_incident_from_sky = soil_incident_from_sky + (trans_lw_fraction * lwrad)
+    soil_absorption_from_sky = soil_incident_from_sky * emissivity
     ! Long wave reflected directly back into sky
     sky_lwrad_Wm2 = lwrad * reflected_lw_fraction
 
@@ -2336,11 +2280,16 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
     ! Distribute longwave from soil
     !!!!!!!!!!
 
-    ! First, calculate longwave radiation coming up from the soil plus the radiation which is reflected
-    canopy_absorption_from_soil = longwave_release_soil + (trans_lw_fraction * lwrad * (1d0-emissivity))
-    ! Second, use this total to estimate the longwave returning to the sky
+    ! Calculate longwave radiation coming up from the soil plus the radiation
+    ! which is reflected
+    canopy_absorption_from_soil = longwave_release_soil + (soil_incident_from_sky * (1d0-emissivity))
+    ! First how much directly bypasses the canopy...
+    sky_lwrad_Wm2 = sky_lwrad_Wm2 + (canopy_absorption_from_soil * transmitted_fraction)
+    canopy_absorption_from_soil = canopy_absorption_from_soil * (1d0 - transmitted_fraction)
+    ! Second, use this to estimate the longwave returning to the sky
     sky_lwrad_Wm2 = sky_lwrad_Wm2 + (canopy_absorption_from_soil * trans_lw_fraction)
-    ! Third, now calculate the longwave from the soil surface absorbed by the canopy
+    ! Third, now calculate the longwave from the soil surface absorbed by the
+    ! canopy
     canopy_absorption_from_soil = canopy_absorption_from_soil * absorbed_lw_fraction
 
     !!!!!!!!!!
@@ -2366,13 +2315,50 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
     ! determine isothermal net soil
     soil_lwrad_Wm2 = (soil_absorption_from_sky + soil_absorption_from_canopy) - longwave_release_soil
 
+    !!!!!!!!!!
+    ! Approximate daily impact on isothermal to net longwave
+    !!!!!!!!!!
+
+    ! Isothermal -> net radiation in SPA is largely linear, therefore we
+    ! retrieve the linear correction here
+    soil_lwrad_Wm2 = (soil_lwrad_Wm2 * soil_iso_to_net_coef) + soil_iso_to_net_const
+
   end subroutine calculate_longwave_isothermal
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine calculate_radiation_balance
+
+    implicit none
+
+    ! subroutine call ensures that both shortwave and longwave radiation balance
+    ! are calculated at the same time but with the more readable code split
+    ! between a shortwave and longwave specific subroutines.
+
+    ! NOTE: that this code provides a daily timescale linear correction on
+    ! isothermal longwave balance to net based on soil surface incident shortwave
+    ! radiation
+
+    ! declare local variables
+    double precision :: delta_iso
+
+    ! Estimate shortwave radiation balance
+    call calculate_shortwave_balance
+    ! Estimate isothermal long wave radiation balance
+    call calculate_longwave_isothermal(meant,meant)
+    ! Apply linear correction to soil surface isothermal->net longwave radiation
+    ! balance based on absorbed shortwave radiation
+    delta_iso = soil_iso_to_net_coef * (soil_swrad_MJday * 1d6 * dayl_seconds_1) + soil_iso_to_net_const
+    soil_lwrad_Wm2 = soil_lwrad_Wm2 + delta_iso
+
+  end subroutine calculate_radiation_balance
   !
   !-----------------------------------------------------------------
   !
   subroutine calculate_shortwave_balance
 
-    ! Subroutine estimates the canopy and soil absorbed shortwave radiation (MJ/m2/day).
+    ! Subroutine estimates the canopy and soil absorbed shortwave radiation
+    ! (MJ/m2/day).
     ! Radiation absorption is paritioned into NIR and PAR for canopy, and NIR +
     ! PAR for soil.
 
@@ -2385,6 +2371,7 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
 
     ! local variables
     double precision :: balance                    &
+                       ,transmitted_fraction       &
                        ,absorbed_nir_fraction_soil &
                        ,absorbed_par_fraction_soil &
                        ,fsnow,par,nir              &
@@ -2403,23 +2390,34 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
                        ,trans_par_fraction
 
     ! local parameters
-    double precision, parameter :: newsnow_nir_abs = 0.27d0 & ! NIR absorption fraction
+    double precision, parameter :: clump = 1d0    & ! leaf clumping factor (1 = uniform)
+                                  ,decay = -0.5d0 & ! decay coefficient for incident radiation
+                                  ,newsnow_nir_abs = 0.27d0 & ! NIR absorption fraction
                                   ,newsnow_par_abs = 0.05d0   ! PAR absorption fraction
 
     !!!!!!!!!!
-    ! Determine canopy absorption / reflectance as function of LAI
+    ! Determine canopy absorption, reflectance and transmittance as function of
+    ! LAI
     !!!!!!!!!!
 
+    ! First, we consider how much radiation is likely to be incident on the
+    ! canopy, or put another way what fraction passes straight through the
+    ! canopy?
+    transmitted_fraction = exp(decay * lai * clump)
+
+    ! Second, of the radiation which is incident on the canopy what fractions
+    ! are transmitted through, reflected from or absorbed by the canopy
+
     ! Canopy transmitted of PAR & NIR radiation towards the soil
-    trans_par_fraction = 1d0 - (lai*max_lai_par_transmitted) &
-                       / (lai+lai_half_par_transmitted)
-    trans_nir_fraction = 1d0 - (lai*max_lai_nir_transmitted) &
-                       / (lai+lai_half_nir_transmitted)
+    trans_par_fraction = max(0d0,max_lai_par_transmitted * lai + max_par_transmitted)
+    trans_nir_fraction = max(0d0,max_lai_nir_transmitted * lai + max_nir_transmitted)
     ! Canopy reflected of near infrared and photosynthetically active radiation
-    reflected_nir_fraction = (lai*max_lai_nir_reflection) &
-                           / (lai+lai_half_nir_reflection)
-    reflected_par_fraction = (lai*max_lai_par_reflection) &
-                           / (lai+lai_half_par_reflection)
+    reflected_nir_fraction = 1d0 - ( (lai*max_lai_nir_reflection) &
+                                    /(lai+lai_half_nir_reflection) )
+    reflected_par_fraction = 1d0 - ( (lai*max_lai_par_reflection) &
+                                    /(lai+lai_half_par_reflection) )
+    reflected_nir_fraction = max_nir_reflected * reflected_nir_fraction
+    reflected_par_fraction = max_par_reflected * reflected_par_fraction
     ! Canopy absorption of near infrared and photosynthetically active radiation
     absorbed_nir_fraction = 1d0 - reflected_nir_fraction - trans_nir_fraction
     absorbed_par_fraction = 1d0 - reflected_par_fraction - trans_par_fraction
@@ -2428,15 +2426,23 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
     ! Estimate canopy absorption of incoming shortwave radiation
     !!!!!!!!!!
 
-    ! estimate multiple use par and nir components
+    ! Estimate multiple use par and nir components
     par = sw_par_fraction * swrad
     nir = (1d0 - sw_par_fraction) * swrad
 
-    ! Estimate incoming shortwave radiation absorbed, transmitted and reflected by the canopy (MJ.m-2.day-1)
+    ! Estimate the radiation which directly bypasses the canopy...
+    trans_par_MJday = par * transmitted_fraction
+    trans_nir_MJday = nir * transmitted_fraction
+    ! ...and update the canopy intercepted radiation
+    par = par - trans_par_MJday
+    nir = nir - trans_nir_MJday
+
+    ! Estimate incoming shortwave radiation absorbed, transmitted and reflected
+    ! by the canopy (MJ.m-2.day-1)
     canopy_par_MJday = par * absorbed_par_fraction
     canopy_nir_MJday = nir * absorbed_nir_fraction
-    trans_par_MJday = par * trans_par_fraction
-    trans_nir_MJday = nir * trans_nir_fraction
+    trans_par_MJday = trans_par_MJday + (par * trans_par_fraction)
+    trans_nir_MJday = trans_nir_MJday + (nir * trans_nir_fraction)
     refl_par_MJday = par * reflected_par_fraction
     refl_nir_MJday = nir * reflected_nir_fraction
 
@@ -2454,7 +2460,8 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
         absorbed_nir_fraction_soil = soil_swrad_absorption
     endif
 
-    ! Then the radiation incident and ultimately absorbed by the soil surface itself (MJ.m-2.day-1)
+    ! Then the radiation incident and ultimately absorbed by the soil surface
+    ! itself (MJ.m-2.day-1)
     soil_par_MJday = trans_par_MJday * absorbed_par_fraction_soil
     soil_nir_MJday = trans_nir_MJday * absorbed_nir_fraction_soil
     ! combine totals for use is soil evaporation
@@ -2469,10 +2476,19 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
     ! calculate multiple use variables
     par = trans_par_MJday-soil_par_MJday
     nir = trans_nir_MJday-soil_nir_MJday
-    ! Update the canopy radiation absorption based on the reflected radiation (MJ.m-2.day-1)
+    ! how much of the reflected radiation directly bypasses the canopy...
+    refl_par_MJday = refl_par_MJday + (par * transmitted_fraction)
+    refl_nir_MJday = refl_nir_MJday + (nir * transmitted_fraction)
+    ! ...and update the canopy on this basis
+    par = par * (1d0-transmitted_fraction)
+    nir = nir * (1d0-transmitted_fraction)
+
+    ! Update the canopy radiation absorption based on the reflected radiation
+    ! (MJ.m-2.day-1)
     canopy_par_MJday = canopy_par_MJday + (par * absorbed_par_fraction)
     canopy_nir_MJday = canopy_nir_MJday + (nir * absorbed_nir_fraction)
-    ! Update the total radiation reflected back into the sky, i.e. that which is now transmitted through the canopy
+    ! Update the total radiation reflected back into the sky, i.e. that which is
+    ! now transmitted through the canopy
     refl_par_MJday = refl_par_MJday + (par * trans_par_fraction)
     refl_nir_MJday = refl_nir_MJday + (nir * trans_nir_fraction)
 
@@ -2480,9 +2496,11 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
     canopy_swrad_MJday = canopy_par_MJday + canopy_nir_MJday
 
     ! check energy balance
-!    balance = swrad - canopy_par_MJday - canopy_nir_MJday - refl_par_MJday - refl_nir_MJday - soil_swrad_MJday
+!    balance = swrad - canopy_par_MJday - canopy_nir_MJday - refl_par_MJday -
+!    refl_nir_MJday - soil_swrad_MJday
 !    if ((balance - swrad) / swrad > 0.01) then
-!        print*,"SW residual frac = ",(balance - swrad) / swrad,"SW residual = ",balance,"SW in = ",swrad
+!        print*,"SW residual frac = ",(balance - swrad) / swrad,"SW residual =
+!        ",balance,"SW in = ",swrad
 !    endif
 
   end subroutine calculate_shortwave_balance
@@ -2685,8 +2703,8 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
     ! maximum canopy storage (mm); minimum is applied to prevent errors in
     ! drainage calculation. Assume minimum capacity due to wood.
     ! Wind speed correction reduced effective storage capacity leading to
-    ! greater run(blow)-off. 
-!    max_storage = max(min_storage,CanStorFrac*lai*exp(-(wind_spd**2*0.10d0))) 
+    ! greater run(blow)-off.
+!    max_storage = max(min_storage,CanStorFrac*lai*exp(-(wind_spd**2*0.10d0)))
     max_storage = max(min_storage,CanStorFrac*lai)
     ! caclulate inverse for efficient calculations below
     max_storage_1 = max_storage**(-1d0)
@@ -2739,13 +2757,13 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
                dz = storage-max_storage
                ! limit based on available water if total demand is greater than excess
                co_mass_balance = (dz / (potential_evaporation + potential_drainage_rate))
-               evap_rate = potential_evaporation * co_mass_balance 
+               evap_rate = potential_evaporation * co_mass_balance
                drain_rate = potential_drainage_rate * co_mass_balance
 
                ! Estimate evaporation from remaining water (i.e. that left after
                ! initial co-access of evaporation and drainage).
-               ! Assume evaporation is now restricted by: 
-               ! 1) energy already spent on evaporation (the -evap_rate) and 
+               ! Assume evaporation is now restricted by:
+               ! 1) energy already spent on evaporation (the -evap_rate) and
                ! 2) linear increase in surface resistance as the leaf surface
                ! dries (i.e. the 0.5).
                evap_rate = evap_rate + min((potential_evaporation - evap_rate) * 0.5d0, storage - evap_rate - drain_rate)
@@ -2990,7 +3008,7 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
         endif
 
         ! if there has been an increase
-        if (depth_change > 0.05) then
+        if (depth_change > 0.05d0) then
 
             ! determine how much water is within the new volume of soil
             water_change = soil_waterfrac(nos_soil_layers) * depth_change
@@ -3008,7 +3026,7 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
             ! keep track of the previous rooting depth
             previous_depth = root_reach
 
-        else if (depth_change < -0.05) then
+        else if (depth_change < -0.05d0) then
 
             ! make positive to ensure easier calculations
             depth_change = -depth_change
@@ -3076,14 +3094,14 @@ FLUXES(n,5) = FLUXES(n,5) + FLUXES(n,6) + FLUXES(n,7)
             - (sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers) * 1d3) &
             - initial_soilwater)
 
-    if (abs(balance) > 1d-6 .or. soil_waterfrac(1) < -1d-6) then
-        print*,"Soil water miss-balance (mm)",balance
-        print*,"Initial_soilwater",initial_soilwater
-        print*,"Final_soilwater",sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers) * 1d3)
-        print*,"Top soilwater (fraction)",soil_waterfrac(1)
-        print*,"Rainfall (mm/step)",rainfall_in,"ET",corrected_ET,"underflow",underflow,"runoff",runoff
-        print*,"Rainfall (kgH2O/m2/s)",rainfall
-    end if ! abs(balance) > 1d-10
+!    if (abs(balance) > 1d-6 .or. soil_waterfrac(1) < -1d-6) then
+!        print*,"Soil water miss-balance (mm)",balance
+!        print*,"Initial_soilwater",initial_soilwater
+!        print*,"Final_soilwater",sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers) * 1d3)
+!        print*,"Top soilwater (fraction)",soil_waterfrac(1)
+!        print*,"Rainfall (mm/step)",rainfall_in,"ET",corrected_ET,"underflow",underflow,"runoff",runoff
+!        print*,"Rainfall (kgH2O/m2/s)",rainfall
+!    end if ! abs(balance) > 1d-10
 
     ! explicit return needed to ensure that function runs all needed code
     return
