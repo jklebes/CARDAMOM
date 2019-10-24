@@ -51,16 +51,16 @@ module MCMCOPT
   ! information which is needed determine progress
   type COUNTERS
 
-    integer :: ACC         & ! total number of accepted solutions
-              ,ACCLOC      & ! number of recently accepted solutions
-              ,ACCLOC_beta & ! number of recently accepted solutions from beta proposals
-              ,ITER_beta   & ! number of iterations using beta proposal
-              ,ITER        & ! number of iterations attempted
-              ,ACCEDC        ! number of EDC complient iterations
-
-    double precision :: ACCRATE_beta, & ! local beta step acceptance rate  
-                             ACCRATE, & ! local acceptance rate
-                      ACCRATE_GLOBAL    ! global acceptance rate  
+    double precision :: ACC            & ! total number of accepted solutions
+                       ,ACC_beta       & ! total number of beta accepted solutions
+                       ,ACCLOC         & ! number of recently accepted solutions
+                       ,ACCLOC_beta    & ! number of recently accepted solutions from beta proposals
+                       ,ITER_beta      & ! number of iterations using beta proposal
+                       ,ITER           & ! number of iterations attempted
+                       ,ACCEDC         & ! number of EDC complient iterations
+                       ,ACCRATE_beta   & ! local beta step acceptance rate  
+                       ,ACCRATE        & ! local acceptance rate
+                       ,ACCRATE_GLOBAL   ! global acceptance rate  
 
   end type ! COUNTERS
 

@@ -267,12 +267,12 @@ module math_functions
      double precision :: coeff
      integer :: i, j, k
 
-     ! step 0: initialization for matrices L and U and b
+     ! Step 0: initialization for matrices L and U and b
      ! Fortran 90/95 allows such operations on matrices
      L = 0d0 ; U = 0d0 ; b = 0d0 ; a_local = a
 
-     ! step 1: forward elimination
-     do k=1, n-1
+     ! Step 1: forward elimination
+     do k = 1, n-1
         do i = k+1,n
            coeff = a_local(i,k)/a_local(k,k)
            L(i,k) = coeff
@@ -299,7 +299,7 @@ module math_functions
      end do
 
      ! Step 3: compute columns of the inverse matrix C
-     do k=1,n
+     do k = 1, n
         b(k) = 1d0
         d(1) = b(1)
         ! Step 3a: Solve Ld=b using the forward substitution
@@ -636,7 +636,7 @@ module math_functions
     ! calculate cumulative square difference
     do i = 1, n
        diff = a(i)-mean
-       sq_diff_sum = sq_diff_sum + diff**2d0
+       sq_diff_sum = sq_diff_sum + (diff*diff) 
     end do
     ! calculate the variance
     variance = sq_diff_sum / (sample-1d0)
@@ -693,14 +693,13 @@ module math_functions
   !
   double precision function randn(option)
 
-    ! from Numerical Receipes p271 Press et al., 1986 2nd Edition Chapter 7,
+    ! From Numerical Receipes p271 Press et al., 1986 2nd Edition Chapter 7,
     ! Random Numbers function returns real random number between 0-1 based on an initial start
-    ! point (ran1).
-    ! The start point (default = -1) is reinitialised every time the model runs
-    ! providing the same distribution each run
-    ! To ensure random numbers each time use the sum of the current system time
+    ! point (ran1). The start point (default = -1) is reinitialised every time the model runs
+    ! providing the same distribution each run. To ensure random numbers each time use the 
+    ! sum of the current system time.
 
-    ! modified based on blooms C code to alter range of random numbers
+    ! Modified based on blooms C code to alter range of random numbers
 
     implicit none
     integer :: IA,IM,IQ,IR,NTAB,NDIV,option
@@ -719,7 +718,7 @@ module math_functions
             idum = max(-idum,const)
             do j = (NTAB+8), 1, -1
                k = nint(idum/dble(IQ))
-               idum=dble(IA)*(idum-dble(k*IQ))-dble(IR*k)
+               idum = dble(IA)*(idum-dble(k*IQ))-dble(IR*k)
                if (idum < 0d0) idum = idum + dble(IM)
                if (j < NTAB) iv(j) = nint(idum)
             enddo
@@ -748,8 +747,8 @@ module math_functions
             enddo
             iy = iv(1)
         endif
-        k=nint(idum)/IQ
-        idum=dble(IA)*(idum-dble(k*IQ))-dble(IR*k)
+        k = nint(idum)/IQ
+        idum = dble(IA)*(idum-dble(k*IQ))-dble(IR*k)
         if (idum < 0d0) idum = idum+dble(IM)
         j = 1+iy/NDIV
         iy = iv(j)
@@ -802,7 +801,7 @@ module math_functions
     ! Local variables
     double precision :: u, sumsq
     double precision, save :: v, sln
-    logical, save   :: second = .false.
+    logical, save :: second = .false.
     double precision, parameter :: one = 1d0, vsmall = tiny( one )
     double precision, parameter :: sample_mean = 0d0, sample_std = 1d0
 
@@ -889,7 +888,7 @@ module math_functions
     !    Input, M, the dimension of the space.
     !    Input, N, the number of points.
     !    Input, A(M,M), the variance-covariance
-    !    matrix. A must be positive definite symmetric.
+    !    Matrix. A must be positive definite symmetric.
     !    Input,  MU(M), the mean vector.
     !
     !    Output, X(M), the points.

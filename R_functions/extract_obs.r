@@ -31,9 +31,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
       infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
       lai = read_site_specific_obs("LAI",infile) ; lai_unc = read_site_specific_obs("LAI_unc",infile)
       if (max(lai_unc) == -9999) {
-        lai_unc = rep(-9999,times = length(lai))
-        # borrowed linear approximtion of uncertainty form Copernicus
-        lai_unc[which(lai != -9999)] = 0.25 #lai[which(lai != -9999)] * 0.14028508 + 1.0
+          lai_unc = rep(-9999,times = length(lai))
+          # borrowed linear approximtion of uncertainty form Copernicus
+          lai_unc[which(lai != -9999)] = 0.25 #lai[which(lai != -9999)] * 0.14028508 + 1.0
       }
 
     } else {
@@ -51,18 +51,18 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
     ###
 
     if (Cfol_stock_source == "site_specific") {
-      infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-      Cfol_stock=read_site_specific_obs("Cfol_stock",infile)
-      Cfol_stock_unc=read_site_specific_obs("Cfol_stock_unc",infile)
-      if (length(Cfol_stock_unc) == 1) {
-        # on the other hand if not then we have no uncertainty info, so use default
-        Cfol_stock_unc = rep(-9999,times = length(Cfol_stock))
-        # See Smallman et al., (2017) for uncertainty estimate
-        Cfol_stock_unc[which(Cfol_stock > 0)] = 0.38 * Cfol_stock[which(Cfol_stock > 0)]
-      }
+        infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
+        Cfol_stock=read_site_specific_obs("Cfol_stock",infile)
+        Cfol_stock_unc=read_site_specific_obs("Cfol_stock_unc",infile)
+        if (length(Cfol_stock_unc) == 1) {
+            # on the other hand if not then we have no uncertainty info, so use default
+            Cfol_stock_unc = rep(-9999,times = length(Cfol_stock))
+            # See Smallman et al., (2017) for uncertainty estimate
+            Cfol_stock_unc[which(Cfol_stock > 0)] = 0.38 * Cfol_stock[which(Cfol_stock > 0)]
+        }
     } else {
-      # assume no data available
-      Cfol_stock=-9999 ; Cfol_stock_unc=-9999
+        # assume no data available
+        Cfol_stock = -9999 ; Cfol_stock_unc = -9999
     }
 
     ###
@@ -171,11 +171,13 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
             GPP_unc[which(GPP > 0)] = 0.5 * GPP[which(GPP > 0)] + 0.5
             if (modelname == "ACM") {GPP_unc = rep(mean(GPP*0.5),times=length(GPP))}
         }
+        # apply lower bound in all cases to the uncertainty
+        GPP_unc[GPP_unc >= 0 & GPP_unc < 0.5] = 0.5
     } else {
         # assume no data available
         GPP = -9999 ; GPP_unc = -9999
     }
-
+    
     ###
     ## Get some Evapotranspiration information (time series; kgH2O/m2/day)
     ###
@@ -219,6 +221,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
             Reco_unc = rep(-9999,times = length(Reco))
             Reco_unc[which(Reco > 0)] = 0.50 * Reco[which(Reco > 0)] + 0.5
         }
+        # apply lower bound in all cases to the uncertainty
+        Reco_unc[Reco_unc >= 0 & Reco_unc < 0.5] = 0.5
     } else {
         # assume no data available
         Reco = -9999 ; Reco_unc = -9999
@@ -237,6 +241,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
         NEE_unc = rep(-9999,times = length(NEE))
         NEE_unc[which(NEE != -9999)] = 1.5
       }
+      # apply lower bound in all cases to the uncertainty
+      NEE_unc[NEE_unc >= 0 & NEE_unc < 1.5] = 1.5
     } else {
       # assume no data available
       NEE = -9999 ; NEE_unc = -9999
@@ -294,10 +300,10 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
         }
     } else if (Cwood_initial_source == "UoL") {
         # this is a very bespoke modification so leave it here to avoid getting lost
-#        agb = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_stable_forest_2015_2017.tif", sep=""))
-#        unc = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_std_stable_forest_2015_2017.tif", sep=""))
-        agb = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_stable_savannah_2015_2017.tif", sep=""))
-        unc = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_std_stable_savannah_2015_2017.tif", sep=""))
+        agb = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_stable_forest_2015_2017.tif", sep=""))
+        unc = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_std_stable_forest_2015_2017.tif", sep=""))
+#        agb = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_stable_savannah_2015_2017.tif", sep=""))
+#        unc = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_std_stable_savannah_2015_2017.tif", sep=""))
         # extract dimension information for the grid, note the axis switching between raster and actual array
         xdim = dim(agb)[2] ; ydim = dim(agb)[1]
         # extract the lat / long information needed

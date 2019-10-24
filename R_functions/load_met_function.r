@@ -3,8 +3,6 @@
 ## Load met function
 ###
 
-# This function assumed ERA-Interim data files are being used
-
 load_met_function<- function (year_to_do,varid,infile_varid,remove_lat,remove_long,path_to_met_source,met_source,wheat) {
 
     if (met_source == "CHESS") {
@@ -165,44 +163,44 @@ load_met_function<- function (year_to_do,varid,infile_varid,remove_lat,remove_lo
                        answer = rollapply(var_in, FUN = sum, by = aggregate_by, width = aggregate_by, align = "left")
                        answer = answer * 1.157407e-05 # (1/86400)
                        return(answer)
-                    }
+            } # function
         } else if (varid[1] == "tmax") {
             # daily maximum temperature K
             func <- function(var_in, aggregate_by) {
                        answer = rollapply(var_in, FUN = max, by = aggregate_by, width = aggregate_by, align = "left")
                        return(answer)
-                    }
+            } # function
         } else if (varid[1] == "pre") {
             # mm/6h -> kgH2O/m2/s
             func <- function(var_in, aggregate_by) {
                        answer = rollapply(var_in, FUN = sum, by = aggregate_by, width = aggregate_by, align = "left")
                        answer = answer * 1.157407e-05 # (1/86400)
                        return(answer)
-                    }
+            } # function
         } else if (varid[1] == "spfh") {
             # calculate daily mean specific humidity (kg/kg)
             func <- function(var_in, aggregate_by) {
                        answer = rollapply(var_in, FUN = mean, by = aggregate_by, width = aggregate_by, align = "left")
                        return(answer)
-                    }
+            } # function
         } else if (varid[1] == "pres") {
             # calculate daily mean pressure (Pa)
             func <- function(var_in, aggregate_by) {
                        answer = rollapply(var_in, FUN = mean, by = aggregate_by, width = aggregate_by, align = "left")
                        return(answer)
-                    }
+            } # function
         } else if (varid[1] == "tmin") {
             # daily maximum temperature K
             func <- function(var_in, aggregate_by) {
                        answer = rollapply(var_in, FUN = min, by = aggregate_by, width = aggregate_by, align = "left")
                        return(answer)
-                    }
+            } # function
         } else if (varid[1] == "wsp") {
             # daily mean wind speed m/s
             func <- function(var_in, aggregate_by) {
                        answer = rollapply(var_in, FUN = mean, by = aggregate_by, width = aggregate_by, align = "left")
                        return(answer)
-                    }
+            } # function
         }
         # Use the correct function, in the averaging...
         var1 = apply(var1, c(1,2), func, aggregate_by = aggregate_by)
@@ -211,12 +209,21 @@ load_met_function<- function (year_to_do,varid,infile_varid,remove_lat,remove_lo
         # ...unfortunately this outputs an array which the wrong order for the dimension
         # which we need to fix now...
         # ...fortunately we can do so while we move through time removing the "chaff"
-        tmp = as.vector(var1[i,,])[wheat]
-        for (i in seq(2, t_grid)) {
-             tmp = append(tmp,as.vector(var1[i,,])[wheat])
+        
+        a = 1 ; l = length(wheat) 
+        tmp = rep(NA, t_grid*l)
+        for (i in seq(1, t_grid)) {
+             tmp[a:(a+l-1)] = as.vector(var1[i,,])[wheat]
+             a = a + l
         }
         # if 366 days in the year we need to add a final day as the dataset only contains 365 days...sad-face
         if (nos_days == 366) {tmp = append(tmp,as.vector(var1[t_grid,,])[wheat]) ; t_grid = t_grid + 1}
+#        tmp = as.vector(var1[i,,])[wheat]
+#        for (i in seq(2, t_grid)) {
+#             tmp = append(tmp,as.vector(var1[i,,])[wheat])
+#        }
+#        # if 366 days in the year we need to add a final day as the dataset only contains 365 days...sad-face
+#        if (nos_days == 366) {tmp = append(tmp,as.vector(var1[t_grid,,])[wheat]) ; t_grid = t_grid + 1}
         # now pass to the output variable
         var1_out = tmp
 

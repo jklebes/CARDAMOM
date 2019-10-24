@@ -744,7 +744,7 @@ module model_likelihood_module
               ,disturb_begin,disturb_end
     double precision :: mean_pools(nopools), G, decay_coef, meangpp &
                        ,sumgpp, sumnpp, model_living_C, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, temp_response &
-                       ,target_living_C(2),hold, infi, steps_per_year, steps_per_month, Rs
+                       ,target_living_C(2),hold, infi, steps_per_year, steps_per_month, Rs, dble_nodays
     double precision, dimension(nodays) :: mean_ratio, resid_fol,resid_lab
     double precision, dimension(nopools) :: jan_mean_pools 
     integer, dimension(nodays) :: hak ! variable to determine number of NaN in foliar residence time calculation
@@ -783,7 +783,7 @@ module model_likelihood_module
                                     etol = 0.1d0
 
     ! initial value
-    infi = 0d0
+    infi = 0d0 ; dble_nodays = dble_nodays
 
     ! reset some flags needed for EDC control
     DIAG = EDCD%DIAG
@@ -800,14 +800,14 @@ module model_likelihood_module
     ! update initial values
     hak = 0 ; resid_fol = 0d0
     ! calculate mean turnover rate for leaves
-    resid_fol(1:nodays) = (M_FLUXES(1:nodays,10)+M_FLUXES(1:nodays,23))/M_POOLS(1:nodays,2)
+    resid_fol(:) = (M_FLUXES(:,10)+M_FLUXES(:,23))/M_POOLS(1:nodays,2)
     ! division by zero results in NaN plus obviously I can't have turned
     ! anything over if there was nothing to start out with...
     where ( M_POOLS(1:nodays,2) == 0d0 )
            hak = 1 ; resid_fol = 0d0
     end where
     ! mean fractional loss per day
-    torfol = sum(resid_fol) / dble(nodays-sum(hak))
+    torfol = sum(resid_fol) / (dble_nodays-dble(sum(hak)))
 
     !
     ! Labile turnover
@@ -817,8 +817,8 @@ module model_likelihood_module
     hak = 0 ; resid_lab = 0d0
     ! calculate mean turnover rate for labile pool
     ! NOTE: M_FLUXES(1:nodays,3) may need adding depending on changes to Rm, Rg
-    resid_lab(1:nodays) = (M_FLUXES(1:nodays,8)+M_FLUXES(1:nodays,7) &
-                          +M_FLUXES(1:nodays,6)+M_FLUXES(1:nodays,22)+Rg_from_labile(1:nodays)) / M_POOLS(1:nodays,1)
+    resid_lab(1:nodays) = (M_FLUXES(:,8)+M_FLUXES(:,7) &
+                          +M_FLUXES(:,6)+M_FLUXES(:,22)+Rg_from_labile) / M_POOLS(1:nodays,1)
 
     ! division by zero results in NaN plus obviously I can't have turned
     ! anything over if there was nothing to start out with...
@@ -826,16 +826,16 @@ module model_likelihood_module
            hak = 1 ; resid_lab = 0d0
     end where
     ! mean fractional loss of labile per day
-    torlab = sum(resid_lab) / dble(nodays-sum(hak))
+    torlab = sum(resid_lab) / (dble_nodays-dble(sum(hak)))
 
     !!!!!!!!!!!!
     ! calculate and update / adjust timing variables
     !!!!!!!!!!!!
 
-    ! number of years in analysis
-    no_years = nint(sum(deltat)/365.25d0)
+    ! number of years in analysis, 0.002737851 = 1/365.25
+    no_years = nint(sum(deltat)*0.002737851d0)
     ! number of time steps per year
-    steps_per_year = dble(nodays)/dble(no_years)
+    steps_per_year = dble_nodays/dble(no_years)
     no_years_adjust = no_years
 
 !    !calculate mean annual pool size for foliage
@@ -869,15 +869,15 @@ module model_likelihood_module
           exp_adjust = i
        endif
        ! calculate new number of whole years to assess over
-       no_years_adjust = int(nint(sum(deltat(exp_adjust:nodays))/365.25d0))
+       no_years_adjust = int(nint(sum(deltat(exp_adjust:nodays))*0.002737851d0))
     endif ! there has been a full clearance event
 
     !!!!!!!!!!!!
     ! Estimate mean January pool sizes for dynamics constraints
     !!!!!!!!!!!!
 
-    ! number of time steps per month
-    steps_per_month = ceiling(dble(steps_per_year) / 12d0)
+    ! number of time steps per month, 1/12 = 0.08333333
+    steps_per_month = ceiling(dble(steps_per_year) * 0.08333333d0)
 
     ! Determine the mean January pool sizes
     jan_mean_pools = 0d0 ! reset before averaging
@@ -894,14 +894,14 @@ module model_likelihood_module
     !!!!!!!!!!!!
 
     ! calculate sum fluxes
-    sumgpp = sum(M_FLUXES(1:nodays,1))
-    sumrauto = sum(M_FLUXES(1:nodays,3))
-    sumfol = sum(M_FLUXES(1:nodays,8))
-    sumroot = sum(M_FLUXES(1:nodays,6))
-    sumwood = sum(M_FLUXES(1:nodays,7))
-    sumcwd = sum(M_FLUXES(1:nodays,11))
-    sumlit = sum(M_FLUXES(1:nodays,10)+M_FLUXES(1:nodays,12))
-    sumsom = sum(M_FLUXES(1:nodays,15)+M_FLUXES(1:nodays,20))
+    sumgpp = sum(M_FLUXES(:,1))
+    sumrauto = sum(M_FLUXES(:,3))
+    sumfol = sum(M_FLUXES(:,8))
+    sumroot = sum(M_FLUXES(:,6))
+    sumwood = sum(M_FLUXES(:,7))
+    sumcwd = sum(M_FLUXES(:,11))
+    sumlit = sum(M_FLUXES(:,10)+M_FLUXES(:,12))
+    sumsom = sum(M_FLUXES(:,15)+M_FLUXES(:,20))
 
     ! initialise and then calculate mean gpp values
     fauto = sumrauto / sumgpp            ! i.e. Ra:GPP = 1-CUE
@@ -920,7 +920,7 @@ module model_likelihood_module
 
     ! derive mean pools
     do n = 1, nopools
-       mean_pools(n) = sum(M_POOLS(1:nodays,n)) / dble(nodays)
+       mean_pools(n) = sum(M_POOLS(1:nodays,n)) / dble_nodays
     end do
 
     !
@@ -942,12 +942,12 @@ module model_likelihood_module
 
     ! Estimate steady state approximation for wood based on mean inputs over natural
     ! turnover, i.e. gCm-2day-1 / day-1 = gCm-2
-    tmp = (sumwood/dble(nodays))  /  pars(6)  ! the steady state approximation of wood (gC/m2)
-    tmp1 = (sumcwd/dble(nodays))  / (pars(38)*temp_response) ! steady state approximation of cwd (gC/m2)
-    tmp2 = (sumsom/dble(nodays))  / (pars(9)*temp_response)  ! steady state approximation of som (gC/m2)
-    tmp3 = (sumlit/dble(nodays))  / (pars(8)*temp_response)  ! steady state approximation of litter (gC/m2)
-!    tmp4 = (sumroot/dble(nodays)) /  pars(7) ! steady state approximation of root (gC/m2)
-!    tmp5 = (sumfol/dble(nodays))  / torfol   ! steady state approximation of foliage (gC/m2)
+    tmp = (sumwood/dble_nodays)  /  pars(6)  ! the steady state approximation of wood (gC/m2)
+    tmp1 = (sumcwd/dble_nodays)  / (pars(38)*temp_response) ! steady state approximation of cwd (gC/m2)
+    tmp2 = (sumsom/dble_nodays)  / (pars(9)*temp_response)  ! steady state approximation of som (gC/m2)
+    tmp3 = (sumlit/dble_nodays)  / (pars(8)*temp_response)  ! steady state approximation of litter (gC/m2)
+!    tmp4 = (sumroot/dble_nodays) /  pars(7) ! steady state approximation of root (gC/m2)
+!    tmp5 = (sumfol/dble_nodays)  / torfol   ! steady state approximation of foliage (gC/m2)
 !    if ((EDC2 == 1 .or. DIAG == 1) .and. pars(21) > tmp*1.1d0) then
 !       EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
 !    end if
@@ -1199,19 +1199,19 @@ module model_likelihood_module
            ! no replacement level disturbance so we assume everything must be in
            ! balance
            ! Cfoliage
-           in_out_fol          = sum(M_FLUXES(1:nodays,8)) / sum(M_FLUXES(1:nodays,10)+M_FLUXES(1:nodays,23))
+           in_out_fol          = sum(M_FLUXES(:,8)) / sum(M_FLUXES(:,10)+M_FLUXES(:,23))
            in_out_fol_disturb  = 1d0
-           in_out_root = sumroot / sum(M_FLUXES(1:nodays,12)+M_FLUXES(1:nodays,24))
+           in_out_root = sumroot / sum(M_FLUXES(:,12)+M_FLUXES(:,24))
            in_out_root_disturb = 1d0
-           in_out_wood = sumwood / sum(M_FLUXES(1:nodays,11)+M_FLUXES(1:nodays,25))
+           in_out_wood = sumwood / sum(M_FLUXES(:,11)+M_FLUXES(:,25))
            in_out_wood_disturb = 1d0
-           in_out_lit = sum(M_FLUXES(1:nodays,10)+M_FLUXES(1:nodays,12) &
-                            +disturbance_residue_to_litter(1:nodays)) &
-                      / sum(M_FLUXES(1:nodays,13)+M_FLUXES(1:nodays,15)+disturbance_loss_from_litter(1:nodays))
-           in_out_som = sum(M_FLUXES(1:nodays,15)+M_FLUXES(1:nodays,20)+disturbance_residue_to_som(1:nodays)) &
-                      / sum(M_FLUXES(1:nodays,14)+disturbance_loss_from_som(1:nodays))
-           in_out_cwd = sum(M_FLUXES(1:nodays,11)+disturbance_residue_to_cwd(1:nodays)) &
-                      / sum(M_FLUXES(1:nodays,20)+M_FLUXES(1:nodays,4)+disturbance_loss_from_cwd(1:nodays))
+           in_out_lit = sum(M_FLUXES(:,10)+M_FLUXES(:,12) &
+                            +disturbance_residue_to_litter) &
+                      / sum(M_FLUXES(:,13)+M_FLUXES(:,15)+disturbance_loss_from_litter)
+           in_out_som = sum(M_FLUXES(:,15)+M_FLUXES(:,20)+disturbance_residue_to_som) &
+                      / sum(M_FLUXES(:,14)+disturbance_loss_from_som)
+           in_out_cwd = sum(M_FLUXES(:,11)+disturbance_residue_to_cwd) &
+                      / sum(M_FLUXES(:,20)+M_FLUXES(:,4)+disturbance_loss_from_cwd)
 
         endif ! what to do with in:out ratios and disturbance
 
@@ -1297,8 +1297,8 @@ module model_likelihood_module
        end do
 
        do n = 1, nofluxes
-          if (maxval(abs(M_FLUXES(1:nodays,n))) == abs(log(infi)) .or. &
-             minval(M_FLUXES(1:nodays,n)) /= minval(M_FLUXES(1:nodays,n))) then
+          if (maxval(abs(M_FLUXES(:,n))) == abs(log(infi)) .or. &
+             minval(M_FLUXES(:,n)) /= minval(M_FLUXES(:,n))) then
               EDC2 = 0d0 ; EDCD%PASSFAIL(55+nopools+n) = 0
           endif
        end do
@@ -1624,26 +1624,29 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n
+    double precision, dimension(npars) :: local_likelihood
 
     ! set initial value
-    likelihood_p = 0d0
+    likelihood_p = 0d0 ; local_likelihood = 0d0
 
     ! now loop through defined parameters for their uncertainties
-    do n = 1, npars
-       ! if there is actually a value
-       if (parpriors(n) > -9999d0) then
-           ! uncertainty provided as +/-
-           likelihood_p = likelihood_p-((pars(n)-parpriors(n))/parpriorunc(n))**2
-           !likelihood_p = likelihood_p-0.5d0*((pars(n)-parpriors(n))/parpriorunc(n))**2
-           ! uncertainty provided as fraction of observed value
-           !likelihood_p=likelihood_p-0.5d0*((pars(n)-parpriors(n))/(parpriors(n)*parpriorunc(n)))**2
-           ! uncertainty provided in log scale
-           !likelihood_p=likelihood_p-0.5d0*(log(pars(n)/parpriors(n))/log(parpriorunc(n)))**2
-       end if
-    end do
+    where (parpriors > -9999) local_likelihood = ((pars-parpriors)/parpriorunc)**2
+    likelihood_p = sum(local_likelihood) * -0.5d0
+!    do n = 1, npars
+!       ! if there is actually a value
+!       if (parpriors(n) > -9999d0) then
+!           ! uncertainty provided as +/-
+!           likelihood_p = likelihood_p-((pars(n)-parpriors(n))/parpriorunc(n))**2
+!           !likelihood_p = likelihood_p-0.5d0*((pars(n)-parpriors(n))/parpriorunc(n))**2
+!           ! uncertainty provided as fraction of observed value
+!           !likelihood_p=likelihood_p-0.5d0*((pars(n)-parpriors(n))/(parpriors(n)*parpriorunc(n)))**2
+!           ! uncertainty provided in log scale
+!           !likelihood_p=likelihood_p-0.5d0*(log(pars(n)/parpriors(n))/log(parpriorunc(n)))**2
+!       end if
+!    end do
 
     ! apply the 0.5 multiplicative which is part of the main likelihood calculation, here once.
-    likelihood_p = likelihood_p * 0.5d0
+!    likelihood_p = likelihood_p * 0.5d0
 
     ! dont for get to return
     return
@@ -1672,6 +1675,13 @@ module model_likelihood_module
     ! initial value
     likelihood = 0d0 ; infini = 0d0
 
+    ! Evap Log-likelihood
+    if (DATAin%nEvap > 0) then
+       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),19)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
+                       /DATAin%Evap_unc(DATAin%evappts(1:DATAin%nEvap)))**2)
+       likelihood = likelihood-tot_exp
+    endif
+
     ! GPP Log-likelihood
     if (DATAin%ngpp > 0) then
        tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
@@ -1681,20 +1691,11 @@ module model_likelihood_module
 
     ! LAI log-likelihood
     if (DATAin%nlai > 0) then
-       ! loop split to allow vectorisation
-       tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+        ! loop split to allow vectorisation
+        tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
                        /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
-       do n = 1, DATAin%nlai
-         dn = DATAin%laipts(n)
-         ! if zero or greater allow calculation with min condition to prevent
-         ! errors of zero LAI which occur in managed systems
-         if (DATAin%M_LAI(dn) < 0d0) then
-             ! if not then we have unrealistic negative values or NaN so indue
-             ! error
-             tot_exp = tot_exp+(-log(infini))
-         endif
-       end do
-       likelihood = likelihood-tot_exp
+        if (minval(DATAin%M_LAI) < 0d0) tot_exp = tot_exp + (-log(infini))
+        likelihood = likelihood-tot_exp
     endif
 
     ! NEE likelihood

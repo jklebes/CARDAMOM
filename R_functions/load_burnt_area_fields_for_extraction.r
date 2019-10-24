@@ -38,12 +38,12 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
 		# extract location variables
 		if (lat_done == FALSE) {lat=ncvar_get(data1, "latitude") ; long=ncvar_get(data1, "longitude")}
 
-		# read the burnt fraction estimate
-		var1=ncvar_get(data1, "BurnedFraction")  
+		# read the burnt fraction estimate (units are 0-1)
+		var1 = ncvar_get(data1, "BurnedFraction")  
 		# set actual missing data to 0 as missing data is actually no fire
 		var1[which(is.na(as.vector(var1)))] = 0
 		# get time information (month in this case)
-		var2=ncvar_get(data1, "time") ; time_steps_per_year = 12
+		var2 = ncvar_get(data1, "time") ; time_steps_per_year = 12
 		# approximate doy of the mid-month and allocate fire to that point
 		if (lat_done == FALSE) {
 		    doy_obs = floor((var2*(365.25/12))-(365.25/24))
