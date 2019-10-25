@@ -570,21 +570,18 @@ module model_likelihood_module
     temp_response = exp(pars(10)*meantemp)
     avN = 10d0 ** pars(11)
 
-    ! NUE and avN combination give a Vcmax equivalent, this should range between
-    ! 5-200 gC/m2leaf/day. Wullschleger (1993).
-    ! Kattge et al (2011) offers a more constrained prior of 3.4 - 30.7 gC/m2leaf/day.
-    ! Here, to balance the greater confidence of the newer and larger TRY database while still
-    ! reflecting the possibility of larger values we expand the accepted range
-    ! by halving the 2.5 % and doubling the 97.5 % bounds
-    ! Thus CUE = NUE * avN -> 1.7 / 60.1344
+    ! NUE and avN combination give a Vcmax equivalent.
+    ! Kattge et al (2011) offers a prior of 3.4 - 30.7 gC/m2leaf/day.
+    ! Here, to be cautious we will expand accepted range
+    ! Thus CUE = NUE * avN -> 1.64 / 42.0
     tmp = avN * pars(42)
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 60.1344d0 .or. tmp < 1.700352d0) ) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 42.0d0 .or. tmp < 1.64d0) ) then
        EDC1 = 0d0 ; EDCD%PASSFAIL(1) = 0
     endif
     ! Further constraint can be made by linking into LCA based on the range of
-    ! max photosynthesis per gC leaf Kattge et al (2011) 0.2592 (0.0432 / 1.0584) gC/gC/day.
-    tmp = tmp / pars(17)
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 1.0584d0 .or. tmp < 0.0432d0) ) then
+    ! max photosynthesis per gC leaf Kattge et al (2011) 0.2488 (0.041472 / 1.016064) gC/gC/day.
+    tmp = tmp / pars(17) 
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 1.016064d0 .or. tmp < 0.041472d0) ) then
        EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
     endif
     ! NOTE: that the above two constraints are both needed. Each independently
@@ -1632,21 +1629,6 @@ module model_likelihood_module
     ! now loop through defined parameters for their uncertainties
     where (parpriors > -9999) local_likelihood = ((pars-parpriors)/parpriorunc)**2
     likelihood_p = sum(local_likelihood) * -0.5d0
-!    do n = 1, npars
-!       ! if there is actually a value
-!       if (parpriors(n) > -9999d0) then
-!           ! uncertainty provided as +/-
-!           likelihood_p = likelihood_p-((pars(n)-parpriors(n))/parpriorunc(n))**2
-!           !likelihood_p = likelihood_p-0.5d0*((pars(n)-parpriors(n))/parpriorunc(n))**2
-!           ! uncertainty provided as fraction of observed value
-!           !likelihood_p=likelihood_p-0.5d0*((pars(n)-parpriors(n))/(parpriors(n)*parpriorunc(n)))**2
-!           ! uncertainty provided in log scale
-!           !likelihood_p=likelihood_p-0.5d0*(log(pars(n)/parpriors(n))/log(parpriorunc(n)))**2
-!       end if
-!    end do
-
-    ! apply the 0.5 multiplicative which is part of the main likelihood calculation, here once.
-!    likelihood_p = likelihood_p * 0.5d0
 
     ! dont for get to return
     return

@@ -176,8 +176,9 @@ module MODEL_PARAMETERS
        ! Variations of leaf longevity in tropical moist forests predicted by a
        ! trait-driven carbon optimality model,
        ! Ecology Letters, doi: 10.1111/ele.12804, upper value of 82 gC/gN/day
+       ! Thus we will compromise on the value in the middle (i.e. 40 gC/gN/day)
        PI%parmin(42) =  1.0d0
-       PI%parmax(42) = 80.0d0
+       PI%parmax(42) = 40.0d0
 
        !
        ! INITIAL VALUES DECLARED HERE

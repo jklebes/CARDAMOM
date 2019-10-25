@@ -1426,8 +1426,7 @@ contains
         denom = slope * ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2) &
               + (ET_demand_coef * aerodynamic_conductance)
         denom = (denom / (lambda * max_supply * mmol_to_kg_water * dayl_seconds_1)) - slope
-        denom = denom / psych
-        stomatal_conductance = aerodynamic_conductance / denom
+        stomatal_conductance = aerodynamic_conductance / (denom / psych)
 
         ! convert m.s-1 to mmolH2O.m-2.s-1
         stomatal_conductance = stomatal_conductance * 1d3 * convert_ms1_mol_1
@@ -1595,14 +1594,15 @@ contains
                     ,Re   ! Reynolds number
 
     ! Reynold number
-    Re = (leaf_width*canopy_wind)/kinematic_viscosity
+!    Re = (leaf_width*canopy_wind)/kinematic_viscosity
     ! calculate nusselt value under forced convection conditions
 !    nusselt_forced = (1.18d0*(Pr**(0.33d0))*(sqrt(Re)))
-    nusselt_forced = Pr_coef*sqrt(Re)
+!    nusselt_forced = Pr_coef*(sqrt(Re))
     ! update specific Sherwood numbers
-    Sh_forced = 0.962d0*nusselt_forced
+!    Sh_forced = 0.962d0*nusselt_forced
+    Sh_forced = 0.962d0*Pr_coef*(sqrt((leaf_width*canopy_wind)/kinematic_viscosity))
     ! Estimate the the forced conductance of water vapour
-    gv_forced = ((water_vapour_diffusion*Sh_forced)*leaf_width_1) * 0.5d0 * lai
+    gv_forced = water_vapour_diffusion*Sh_forced*leaf_width_1 * 0.5d0 * lai
 
   end subroutine average_leaf_conductance
   !
@@ -2259,11 +2259,12 @@ contains
     double precision :: dummy
 
     if ( current >= max_val ) then
-      opt_max_scaling = 0d0
+        opt_max_scaling = 0d0
     else
-      dummy     = ( max_val - current ) / ( max_val - optimum )
-      dummy     = exp( log( dummy ) * kurtosis * ( max_val - optimum ) )
-      opt_max_scaling = dummy * exp( kurtosis * ( current - optimum ) )
+!        dummy     = ( max_val - current ) / ( max_val - optimum )
+!        dummy     = exp( log( dummy ) * kurtosis * ( max_val - optimum ) )
+        dummy     = exp( log((max_val - current) / (max_val - optimum)) * kurtosis * (max_val - optimum) )
+        opt_max_scaling = dummy * exp( kurtosis * ( current - optimum ) )
     end if
 
   end function opt_max_scaling

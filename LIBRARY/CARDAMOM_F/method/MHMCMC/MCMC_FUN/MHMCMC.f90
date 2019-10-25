@@ -354,13 +354,9 @@ contains
            call write_covariance_matrix(PI%covariance,PI%npars,.false.)
            call write_covariance_info(PI%mean_par,PI%Nparvar,PI%npars)
        end if ! write or not to write
-
+    
        ! time to adapt?
        if (mod(nint(N%ITER),MCO%nADAPT) == 0) then
-
-           ! Calculate local acceptance rate (i.e. since last adapt)
-           N%ACCRATE = N%ACCLOC / dble(MCO%nADAPT)
-           N%ACCRATE_beta = N%ACCLOC_beta / N%ITER_beta
 
            ! Total accepted values 
            N%ACC = N%ACC + N%ACCLOC
@@ -371,7 +367,6 @@ contains
 
            ! Estimate acceptance rate for the multivariate set only
            if (burn_in_period > N%ITER .and. ((N%ACC-N%ACC_beta) / (N%ITER - N%ITER_beta)) > 0.05d0) then
-!           if (N%ACCRATE_GLOBAL > 0.05d0) then
                do_DR = .false.
            else
                do_DR = .true.
@@ -381,9 +376,12 @@ contains
            ! parameters in the last period
            if (N%ACCLOC > 0d0) then
 
-               ! Second, are we still in the adaption phase or have we a poor likelihood score?
+               ! Calculate local acceptance rate (i.e. since last adapt)
+               N%ACCRATE = N%ACCLOC / dble(MCO%nADAPT)
+!               N%ACCRATE_beta = N%ACCLOC_beta / N%ITER_beta
+
+               ! Second, are we still in the adaption phase?
                if (burn_in_period > N%ITER) then
-!               if ((MCO%fADAPT*dble(MCO%nOUT)) > dble(N%ITER) .or. Pmax < target_P) then
 
                    ! Once covariance matrix has been created just update based on a
                    ! single parameter set from each period.
@@ -400,10 +398,18 @@ contains
 
                end if !  have enough parameter been accepted
 
+           else ! any newly accepted parameters?
+
+               ! no new parameters accepted...
+
+               !...so acceptance rates are zero but no need to update N%ACC or
+               ! N%ACC_beta
+               N%ACCRATE = 0d0 !; N%ACCRATE_beta = 0d0     
+
            end if ! have any parameters been accepted in the last period?
    
            ! resets to local counters
-           N%ACCLOC = 0d0 ; N%ACCLOC_beta = 0d0 ; N%ITER_beta = 0d0
+           N%ACCLOC = 0d0 ; N%ACCLOC_beta = 0d0 !; N%ITER_beta = 0d0
 
        end if ! time to adapt?
 
@@ -412,8 +418,9 @@ contains
            write(*,*)"Using multivariate sampling = ",PI%use_multivariate
            write(*,*)"Total accepted = ",N%ACC," out of ",MCO%nOUT
            write(*,*)"Overall acceptance rate    = ",N%ACC / N%ITER
+           write(*,*)"Overall beta accept rate   = ",N%ACC_beta / N%ITER_beta
            write(*,*)"Local   acceptance rate    = ",N%ACCRATE
-           write(*,*)"Local beta acceptance rate = ",N%ACCRATE_beta
+!           write(*,*)"Local beta acceptance rate = ",N%ACCRATE_beta
            write(*,*)"Current obs   = ",P0,"proposed = ",P," log-likelihood"
            write(*,*)"Current prior = ",P0prior,"proposed = ",Pprior," log-likelihood"
            write(*,*)"Maximum likelihood = ",Pmax
@@ -483,7 +490,7 @@ contains
         call cholesky_factor( PI%npars, cholesky, info )
         ! If not positive definite then we should not use the multivariate
         ! step at this time.
-        if (info /= 0) then
+        if (info /= 0 .or. .not.do_DR) then
             PI%use_multivariate = .false.
         else
             PI%use_multivariate = .true.

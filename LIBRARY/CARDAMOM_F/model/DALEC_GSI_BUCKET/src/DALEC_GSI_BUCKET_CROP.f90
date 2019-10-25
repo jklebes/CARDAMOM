@@ -207,7 +207,6 @@ contains
     ! declare local variables
     double precision :: airt_weighting(3) &
                                       ,ET & ! Evapotranspiration (kg.m-2.day-1)
-                        ,pot_actual_ratio &
                            ,transpiration &
                          ,soilevaporation &
                           ,wetcanopy_evap &
@@ -572,7 +571,7 @@ contains
       gpp_acm = GPP_out(n) * deltat(n)
 
       ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
-      call calculate_wetcanopy_evaporation(wetcanopy_evap,pot_actual_ratio,canopy_storage)
+      call calculate_wetcanopy_evaporation(wetcanopy_evap,canopy_storage)
       ! Soil surface (kgH2O.m-2.day-1)
       call calculate_soil_evaporation(soilevaporation)
       ! restrict transpiration to positive only

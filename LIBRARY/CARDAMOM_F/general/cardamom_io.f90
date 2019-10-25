@@ -990,7 +990,7 @@ module cardamom_io
     ! defining hardcoded MCMC options
     MCO%append = 1
     MCO%nADAPT = 1000 ! TLS: 500 -> 1000 -> 5000 -> 10000
-    MCO%fADAPT = 0.25d0
+    MCO%fADAPT = 0.5d0
     MCO%randparini = .false.
     MCO%returnpars = .false.
     MCO%fixedpars  = .false.

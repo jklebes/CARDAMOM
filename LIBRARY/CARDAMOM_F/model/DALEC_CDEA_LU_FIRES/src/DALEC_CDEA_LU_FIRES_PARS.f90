@@ -76,10 +76,12 @@ module MODEL_PARAMETERS
     PI%parmax(10)=0.08d0
 
     ! Canopy Efficiency
-    ! set to parmin=1 for FLUXCOM only
-    ! e.g. for wetlands etc.
-    PI%parmin(11)=5d0
-    PI%parmax(11)=50d0
+    ! NUE and avN combination give a Vcmax equivalent, the canopy efficiency.
+    ! Kattge et al (2011) offers a prior of 3.4 - 30.7 gC/m2leaf/day.
+    ! Here, to be cautious we will expand accepted range
+    ! Thus CUE = NUE * avN -> 1.64 / 42.0
+    PI%parmin(11)=1.64d0 !5d0
+    PI%parmax(11)=42d0 !50d0
 
     ! max bud burst day
     PI%parmin(12)=365.25d0
