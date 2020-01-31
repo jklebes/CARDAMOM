@@ -103,7 +103,7 @@ corine2006_to_ctessel<- function(input_pft) {
 }
 ## Use byte compile
 corine2006_to_ctessel<-cmpfun(corine2006_to_ctessel)
-
+#lat = sites_cardamom_lat ; long = sites_cardamom_long ; resolution = cardamom_resolution ; grid_type = cardamom_grid_type ; sitename = sites_cardamom
 how_many_points<- function (lat,long,resolution,grid_type,sitename) {
 
     # check input data
@@ -294,10 +294,6 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
     # create raster, passing the raster values corresponding to the sovereign state
     # NOTE: the actual value assigned is linked the factor levels
     landsea = rasterize(landmask,landsea,factor(landmask$SOVEREIGNT))
-    # extract lat/long information for the raster version
-    landsea_long = coordinates(landsea)[,1] ; landsea_lat = coordinates(landsea)[,2]
-    # convert the raster into vector for final filtering and conversion to logistic landsea mask
-    landsea = as.vector(landsea)
 
     # Sometimes we want to simulate a particular country, which we will check now...
     country_match = factor(landmask$SOVEREIGNT) ; country_match = levels(country_match)
@@ -308,17 +304,40 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
     if (length(which(grepl(sitename,country_match) == TRUE)) > 0) {
         # if so then loop through the land areas which fall within the correct country
         country_match = which(sitename == country_match)
-        keep = 0
+        keep = rep(0,length(landsea))
         for (i in seq(1, length(country_match))) {
-             keep = append(keep,which(landsea == country_match[i]))
+             keep[(as.vector(landsea) == country_match[i])] = 1
         }
-        keep = keep[-1]
-        # set all areas to zero, before overlaying just the locations we want
-        landsea[1:length(landsea)] = 0 ; landsea[keep] = 1
     } else {
         # otherwise just assume we are interested in all land areas...
-        landsea[which(is.na(landsea) == FALSE)] = 1 ; landsea[which(is.na(landsea))] = 0
-    }
+        keep = rep(0,length(landsea))
+        keep[is.na(as.vector(landsea)) == FALSE] = 1
+    } # country or all land area filter?
+    landsea[keep == 0] = NA ; landsea[as.vector(landsea) > 0] = 1
+    # trim to the actual data area
+    landsea = trim(landsea, padding = 2) 
+    # set missing data to 0
+    landsea[is.na(as.vector(landsea))] = 0
+    # extract lat/long information for the raster version
+    landsea_long = coordinates(landsea)[,1] ; landsea_lat = coordinates(landsea)[,2]
+    # arrange them into the correct lat / long orientations
+    landsea_dim = dim(landsea)
+    
+
+#    if (length(which(grepl(sitename,country_match) == TRUE)) > 0) {
+#        # if so then loop through the land areas which fall within the correct country
+#        country_match = which(sitename == country_match)
+#        keep = 0
+#        for (i in seq(1, length(country_match))) {
+#             keep = append(keep,which(landsea == country_match[i]))
+#        }
+#        keep = keep[-1]
+#        # set all areas to zero, before overlaying just the locations we want
+#        landsea[1:length(landsea)] = 0 ; landsea[keep] = 1
+#    } else {
+#        # otherwise just assume we are interested in all land areas...
+#        landsea[which(is.na(landsea) == FALSE)] = 1 ; landsea[which(is.na(landsea))] = 0
+#    }
 
     # find locations from the landsea mask which correspond with overall grid defined in the control file
     if (use_parallel) {
@@ -336,7 +355,7 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
     }
 
     # selecting only these areas of the landsea mask
-    landsea = landsea[output_k]
+    landsea = as.vector(landsea)[output_k]
 
     # Check against our plant functional type / land cover maps
     # and determine which location want to keep based on land cover etc.
@@ -348,22 +367,22 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
          # convert incoming pft to common values (in this case CTESSEL)
          if (use_lcm == "LCM2007") {
              new_pft = lcm2007_to_ctessel(lcm[output_i[pft],output_j[pft]])
-          } else if (use_lcm == "CORINE2006") {
+         } else if (use_lcm == "CORINE2006") {
              new_pft = corine2006_to_ctessel(lcm[output_i[pft],output_j[pft]])
-          } else if (use_lcm == "CORINE2006_1km") {
-            new_pft = corine2006_to_ctessel(lcm[output_i[pft],output_j[pft]])
-          } else if (use_lcm == "forestry_commission" | use_lcm == "forestry_commission_LCM2007" | use_lcm == "forestry_commission_public_private") {
-            new_pft = lcm[output_i[pft],output_j[pft]]
-            if (new_pft < 0 | length(new_pft) == 0) {new_pft = 0}
-          } else if (use_lcm == "ECMWF") {
-           new_pft = lcm[output_i[pft]]
-       }
-       # now exclude if not a land site
-       if (new_pft == 0 | new_pft == 14 | new_pft == 15 | landsea[pft] == 0) {
-           remove = append(remove,pft)
-       } else {
-           pft_keep = append(pft_keep,new_pft)
-       }
+         } else if (use_lcm == "CORINE2006_1km") {
+             new_pft = corine2006_to_ctessel(lcm[output_i[pft],output_j[pft]])
+         } else if (use_lcm == "forestry_commission" | use_lcm == "forestry_commission_LCM2007" | use_lcm == "forestry_commission_public_private") {
+             new_pft = lcm[output_i[pft],output_j[pft]]
+             if (new_pft < 0 | length(new_pft) == 0) {new_pft = 0}
+         } else if (use_lcm == "ECMWF") {
+             new_pft = lcm[output_i[pft]]
+         }
+         # now exclude if not a land site
+         if (new_pft == 0 | new_pft == 14 | new_pft == 15 | landsea[pft] == 0) {
+             remove = append(remove,pft)
+         } else {
+             pft_keep = append(pft_keep,new_pft)
+         }
     } # sites for loop
 
     # remove initial value

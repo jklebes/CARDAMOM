@@ -100,7 +100,7 @@ module model_likelihood_module
            ! keep track of attempts
            counter_local = counter_local + 1
            ! periodically reset the initial conditions
-           if (PEDC < 0d0 .and. PEDC <= PEDC_prev .and. mod(counter_local,5) == 0) then
+           if (PEDC < 0d0 .and. PEDC <= PEDC_prev .and. counter_local > 5) then
                ! Reset the previous EDC likelihood score
                PEDC_prev = -1000d0
                ! Reset parameters back to default

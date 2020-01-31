@@ -140,22 +140,21 @@ contains
 !--------------------------------------------------------------------
 !
   subroutine CARBON_MODEL_CROP(start,finish,met,pars,deltat,nodays,lat,lai_out,NEE_out&
-                       ,FLUXES,POOLS,pft,nopars,nomet,nopools,nofluxes,GPP_out &
-                       ,stock_seed_labile,DS_shoot,DS_root,fol_frac,stem_frac,root_frac &
-                       ,DS_LRLV,LRLV,DS_LRRT,LRRT)
+                              ,FLUXES,POOLS,pft,nopars,nomet,nopools,nofluxes,GPP_out &
+                              ,stock_seed_labile,DS_shoot,DS_root,fol_frac,stem_frac,root_frac &
+                              ,DS_LRLV,LRLV,DS_LRRT,LRRT)
 
-    use CARBON_MODEL_MOD, only: arrhenious,acm_gpp,meteorological_constants,calculate_stomatal_conductance & ! subroutine / functions
-                               ,calculate_radiation_balance,calculate_daylength,opt_max_scaling            &
+    use CARBON_MODEL_MOD, only: arrhenious,acm_gpp_stage_1,acm_gpp_stage_2,meteorological_constants        & ! subroutine / functions
+                               ,calculate_stomatal_conductance,calculate_radiation_balance,calculate_daylength  &
                                ,calculate_Rtot,calculate_aerodynamic_conductance                           &
                                ,freeze,co2comp_half_sat_conc,kc_saturation,kc_half_sat_conc                & ! parameter
                                ,seconds_per_day,avN,iWUE,NUE,pn_max_temp,pn_opt_temp,pn_kurtosis,vsmall    &
                                ,min_root,top_soil_depth,max_depth,root_k,minlwp,min_layer                  & 
-                               ,co2_half_saturation,co2_compensation_point,co2comp_saturation              & ! variables
-                               ,pn_airt_scaling,pn_airt_scaling_time,dayl_hours,dayl_seconds,dayl_seconds_1&
+                               ,dayl_hours,dayl_seconds,dayl_seconds_1,dayl_hours_fraction                 & ! variables
                                ,seconds_per_step,root_biomass,mid_soil_depth,root_reach,previous_depth     &
                                ,deltat_1,water_flux,layer_thickness,meant,stomatal_conductance             &
                                ,co2_half_sat,co2_comp_point,mint,maxt,swrad,co2,doy,leafT,wind_spd,vpd_kPa &
-                               ,lai,days_per_step,days_per_step_1
+                               ,lai
 
     ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
     ! Evergreen Analytical (DALEC_CDEA) model. The subroutine calls the
@@ -371,16 +370,9 @@ contains
     ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
     if (.not.allocated(deltat_1)) then
 
-       allocate(deltat_1(nodays),co2_compensation_point(nodays),co2_half_saturation(nodays), &
-                pn_airt_scaling_time(nodays))
-       do n = 1, nodays
-          ! Temperature adjustments for Michaelis-Menten coefficients
-          ! for CO2 (kc) and O2 (ko) and CO2 compensation point.
-          co2_compensation_point(n) = arrhenious(co2comp_saturation,co2comp_half_sat_conc,met(3,n))
-          co2_half_saturation(n) = arrhenious(kc_saturation,kc_half_sat_conc,met(3,n))
-          pn_airt_scaling_time(n) = opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,met(3,n))
-       end do
+       allocate(deltat_1(nodays))
        deltat_1 = deltat**(-1d0)
+
     endif
 
     ! initialise root reach based on initial conditions
@@ -413,20 +405,12 @@ contains
       lai_out(n) = POOLS(n,2)/LCA
       lai = lai_out(n) ! leaf area index (m2/m2)
 
-      ! Temperature adjustments for Michaelis-Menten coefficients
-      ! for CO2 (kc) and O2 (ko) and CO2 compensation point
-      ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
-      co2_half_sat   = co2_half_saturation(n)
-      co2_comp_point = co2_compensation_point(n)
-      ! temperature response for metabolically limited photosynthesis
-      pn_airt_scaling = pn_airt_scaling_time(n)
-
       ! calculate daylength in hours and seconds
       call calculate_daylength((doy-(deltat(n)*0.5d0)),lat)
       ! extract timing related values
+      dayl_hours_fraction = dayl_hours * 0.04166667d0 ! 1/24 = 0.04166667
+      dayl_seconds_1 = dayl_seconds ** (-1d0)
       seconds_per_step = seconds_per_day * deltat(n)
-      days_per_step = deltat(n)
-      days_per_step_1 = deltat_1(n)
 
       ! calculate the minimum soil & root hydraulic resistance based on total
       ! fine root mass ! *2*2 => *RS*C->Bio
@@ -445,9 +429,9 @@ contains
 
       ! GPP (gC.m-2.day-1)
       if (lai > vsmall .and. stomatal_conductance > vsmall) then
-         GPP_out(n) = max(0d0,acm_gpp(stomatal_conductance))
+          call acm_gpp_stage_1 ; GPP_out(n) = max(0d0,acm_gpp_stage_2(stomatal_conductance))
       else
-         GPP_out(n) = 0d0
+          GPP_out(n) = 0d0
       endif
       ! load GPP for crop model daily rate to total
       gpp_acm = GPP_out(n) * deltat(n)

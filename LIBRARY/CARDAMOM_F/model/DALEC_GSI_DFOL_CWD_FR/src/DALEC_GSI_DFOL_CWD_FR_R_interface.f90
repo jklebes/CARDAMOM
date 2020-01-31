@@ -4,7 +4,11 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat 
                              ,nopars,nomet,nofluxes,nopools,pft,pft_specific &
                              ,nodays,deltat,nos_iter,exepath,pathlength)
 
-  use CARBON_MODEL_MOD, only: CARBON_MODEL, extracted_C, itemp, ivpd, iphoto
+  use CARBON_MODEL_MOD, only: CARBON_MODEL, extracted_C, itemp, ivpd, iphoto, &
+                              disturbance_residue_to_litter, disturbance_residue_to_cwd, &
+                              disturbance_residue_to_som, disturbance_loss_from_litter,  &
+                              disturbance_loss_from_cwd,disturbance_loss_from_som   
+
   use CARBON_MODEL_CROP_MOD, only: CARBON_MODEL_CROP
 
   ! subroutine specificially deals with the calling of the fortran code model by
@@ -146,11 +150,8 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat 
      out_var(i,1:nodays,10) = POOLS(1:nodays,5) ! litter
      out_var(i,1:nodays,11) = POOLS(1:nodays,1) ! labile
      out_var(i,1:nodays,12) = POOLS(1:nodays,2) ! foliage
-     if (pft == 1) then
-         out_var(i,1:nodays,13) = FLUXES(1:nodays,21) ! replace with crop model yield
-     else
-         out_var(i,1:nodays,13) = FLUXES(1:nodays,21) ! harvested material
-     endif
+     out_var(i,1:nodays,13) = FLUXES(1:nodays,21) ! harvested material
+     ! Phenology related
      if (pft == 1) then
         out_var(i,1:nodays,14) = 0d0
         out_var(i,1:nodays,15) = 0d0 ! GSI temp component
@@ -200,45 +201,46 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat 
          end where
          out_var2(i,8) = sum(resid_fol) / dble(nodays)
      else
+
+         hak = 0
          ! foliage
          resid_fol(1:nodays) = FLUXES(1:nodays,10) + FLUXES(1:nodays,23)
-         resid_fol(1:nodays) = resid_fol(1:nodays) &
-                             / POOLS(1:nodays,2)
+         resid_fol(1:nodays) = resid_fol(1:nodays) / POOLS(1:nodays,2)
          ! division by zero results in NaN plus obviously I can't have turned
          ! anything over if there was nothing to start out with...
-         hak = 0
-         where ( POOLS(1:nodays,2) == 0d0 )
+         where ( POOLS(1:nodays,2) == 0 )
                 hak = 1 ; resid_fol(1:nodays) = 0d0
          end where
-         out_var2(i,4) = sum(resid_fol) /dble(nodays-sum(hak))
+         out_var2(i,4) = sum(resid_fol) / dble(nodays-sum(hak))
 
          ! wood
-         resid_fol(1:nodays)   = FLUXES(1:nodays,11) + FLUXES(1:nodays,25)
+         hak = 0
+         resid_fol(1:nodays)   = FLUXES(1:nodays,11)+FLUXES(1:nodays,25)
          resid_fol(1:nodays)   = resid_fol(1:nodays) &
                                / POOLS(1:nodays,4)
          ! division by zero results in NaN plus obviously I can't have turned
          ! anything over if there was nothing to start out with...
-         hak = 0
-         where ( POOLS(1:nodays,4) == 0d0 )
+         where ( POOLS(1:nodays,4) == 0 )
                 hak = 1 ; resid_fol(1:nodays) = 0d0
          end where
          out_var2(i,5) = sum(resid_fol) /dble(nodays-sum(hak))
 
          ! roots
-         resid_fol(1:nodays)   = FLUXES(1:nodays,12) + FLUXES(1:nodays,24)
+         hak = 0
+         resid_fol(1:nodays)   = FLUXES(1:nodays,12)+FLUXES(1:nodays,24)
          resid_fol(1:nodays)   = resid_fol(1:nodays) &
                                / POOLS(1:nodays,3)
          ! division by zero results in NaN plus obviously I can't have turned
          ! anything over if there was nothing to start out with...
-         hak = 0
-         where ( POOLS(1:nodays,3) == 0d0 )
+         where ( POOLS(1:nodays,3) == 0 )
                 hak = 1 ; resid_fol(1:nodays) = 0d0
          end where
          out_var2(i,6) = sum(resid_fol) /dble(nodays-sum(hak))
 
          ! litter + cwd
          resid_fol(1:nodays)   = FLUXES(1:nodays,13)+FLUXES(1:nodays,15) &
-                                +FLUXES(1:nodays,20)+FLUXES(1:nodays,4)
+                                +FLUXES(1:nodays,20)+FLUXES(1:nodays,4)  &
+                                 +disturbance_Loss_from_litter+disturbance_loss_from_cwd
          resid_fol(1:nodays)   = resid_fol(1:nodays) &
                                / (POOLS(1:nodays,5)+POOLS(1:nodays,7))
          out_var2(i,8) = sum(resid_fol) / dble(nodays)
@@ -246,7 +248,7 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat 
      endif ! crop / default model split
 
      ! Csom
-     resid_fol(1:nodays)   = FLUXES(1:nodays,14)
+     resid_fol(1:nodays)   = FLUXES(1:nodays,14) + disturbance_loss_from_som
      resid_fol(1:nodays)   = resid_fol(1:nodays) &
                            / POOLS(1:nodays,6)
      out_var2(i,7) = sum(resid_fol) /dble(nodays)

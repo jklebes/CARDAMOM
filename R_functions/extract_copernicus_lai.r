@@ -132,8 +132,9 @@ extract_copernicus_lai<- function(timestep_days,spatial_type,resolution,grid_typ
   rm(i1,j1,check1,lai,i,nos_days,doy_out,radius,n,a) ; gc(reset=TRUE,verbose=FALSE)
 
   # CARDAMOM works best if the uncertainties are the same across each LAI observation as the framework tends towards lower LAI values
-  # Therefore, to make use of the uncertainty information we take the mean for this site and apply it across each value
-  lai_unc_out[which(lai_out >= 0)] = mean(lai_unc_out[which(lai_out >= 0)])
+  # Therefore, to make use of the uncertainty information we take the mean for this site and apply it across each value.
+  # NOTE: we put a book end the upper uncertainty linked to half the mean LAI estimate to ensure that there is some constraint
+  lai_unc_out[lai_out > 0] = min(mean(lai_unc_out[lai_out > 0]), 0.5*mean(lai_out[lai_out > 0]))
 
   # pass the information back
   output = list(lai = lai_out, lai_unc = lai_unc_out)

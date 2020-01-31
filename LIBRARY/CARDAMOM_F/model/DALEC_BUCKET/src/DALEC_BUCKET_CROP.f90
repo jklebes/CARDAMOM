@@ -144,29 +144,26 @@ contains
                        ,GPP_out,stock_seed_labile,DS_shoot,DS_root,fol_frac    &
                        ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT)
 
-    use CARBON_MODEL_MOD, only: arrhenious,acm_gpp,calculate_transpiration,calculate_soil_evaporation     &
-                               ,calculate_wetcanopy_evaporation,acm_meteorological_constants,acm_albedo_gc&
-                               ,calculate_shortwave_balance,calculate_longwave_isothermal                 &
-                               ,calculate_update_soil_water,calculate_daylength,drythick,vsmall           &
-                               ,co2_half_saturation,co2_compensation_point,freeze,co2comp_saturation      &
-                               ,co2comp_half_sat_conc,kc_saturation,kc_half_sat_conc,dble_zero,dble_one   &
-                               ,calculate_Rtot,calculate_aerodynamic_conductance,saxton_parameters        &
-                               ,initialise_soils,min_drythick,soil_frac_clay,soil_frac_sand,dayl_hours    &
-                               ,seconds_per_day,dayl_seconds,dayl_seconds_1,seconds_per_step,root_biomass &
-                               ,top_soil_depth,mid_soil_depth,root_reach,min_root,max_depth,root_k,previous_depth &
-                               ,min_layer,wSWP,SWP,SWP_initial,deltat_1,water_flux,soilwatermm,wSWP_time  &
-                               ,layer_thickness,minlwp,soil_waterfrac,soil_waterfrac_initial              &
-                               ,porosity,porosity_initial,field_capacity,field_capacity_initial,meant     &
-                               ,stomatal_conductance,avN,iWUE,NUE,pn_max_temp,pn_opt_temp         &
-                               ,pn_kurtosis,e0,co2_half_sat,co2_comp_point,max_lai_lwrad_transmitted      &
-                               ,lai_half_lwrad_transmitted,max_lai_nir_reflection,lai_half_nir_reflection &
-                               ,max_lai_par_reflection,lai_half_par_reflection,max_lai_par_transmitted    &
-                               ,lai_half_par_transmitted,max_lai_nir_transmitted,lai_half_nir_transmitted &
-                               ,max_lai_lwrad_reflected,lai_half_lwrad_reflected,soil_swrad_absorption    &
-                               ,max_lai_lwrad_release,lai_half_lwrad_release,mint,maxt,swrad,co2,doy,leafT&
-                               ,rainfall,wind_spd,vpd_pa,lai,days_per_step,days_per_step_1,canopy_storage &
-                               ,intercepted_rainfall,snow_storage,snow_melt,airt_zero_fraction,snowfall   &
-                               ,update_soil_initial_conditions
+    use CARBON_MODEL_MOD, only: arrhenious,acm_gpp_stage_1,acm_gpp_stage_2,calculate_transpiration         & ! Subroutine / functions
+                               ,calculate_soil_evaporation      & 
+                               ,calculate_wetcanopy_evaporation,meteorological_constants                   &
+                               ,calculate_stomatal_conductance,calculate_radiation_balance                 &
+                               ,calculate_daylength,opt_max_scaling,calculate_Rtot,saxton_parameters       &
+                               ,calculate_aerodynamic_conductance,calculate_update_soil_water              &
+                               ,initialise_soils,update_soil_initial_conditions                            &
+                               ,freeze,co2comp_half_sat_conc,kc_saturation,kc_half_sat_conc,min_drythick   & ! parameter
+                               ,seconds_per_day,avN,iWUE,NUE,pn_max_temp,pn_opt_temp,pn_kurtosis,vsmall    &
+                               ,min_root,top_soil_depth,max_depth,root_k,minlwp,min_layer                  &
+                               ,soil_frac_clay,soil_frac_sand                                              &
+                               ,co2comp_saturation,drythick,dayl_hours,dayl_seconds,dayl_seconds_1         & ! variables
+                               ,seconds_per_step,root_biomass,mid_soil_depth,root_reach,previous_depth     &
+                               ,deltat_1,water_flux,layer_thickness,meant,stomatal_conductance             &
+                               ,co2_half_sat,co2_comp_point,mint,maxt,swrad,co2,doy,leafT,ceff             &
+                               ,wind_spd,vpd_kPa,lai,days_per_step,days_per_step_1,dayl_hours_fraction     &
+                               ,wSWP,SWP,SWP_initial,wSWP_time,soil_waterfrac,soil_waterfrac_initial       &
+                               ,porosity,porosity_initial,field_capacity,field_capacity_initial            &
+                               ,rainfall,canopy_storage,intercepted_rainfall,snow_storage,snow_melt        &
+                               ,airt_zero_fraction,snowfall,coarse_root_biomass                          
 
     ! DALEC crop model modified from Sus et al., (2010)
 
@@ -210,7 +207,6 @@ contains
     ! declare local variables
     double precision :: airt_weighting(3) &
                                       ,ET & ! Evapotranspiration (kg.m-2.day-1)
-                        ,pot_actual_ratio &
                            ,transpiration &
                          ,soilevaporation &
                           ,wetcanopy_evap &
@@ -292,39 +288,16 @@ contains
     ! p(35) ! turnover rate of autotrophic C
 
     ! zero some values
-    lai_out(1:nodays) = dble_zero ; NEE_out(1:nodays) = dble_zero ; GPP_out(1:nodays) = dble_zero
-    FLUXES(1:nodays,1:nofluxes) = dble_zero ; POOLS(1:nodays,1:nopools) = dble_zero
+    lai_out(1:nodays) = 0d0 ; NEE_out(1:nodays) = 0d0 ; GPP_out(1:nodays) = 0d0
+    FLUXES(1:nodays,1:nofluxes) = 0d0 ; POOLS(1:nodays,1:nopools) = 0d0
 
     ! load ACM-GPP-ET parameters
-    NUE                        = 1.182549d+01  ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
-                                               ! ,unlimited by CO2, light and
-                                               ! photoperiod (gC/gN/m2leaf/day)
-    pn_max_temp                = 5.357174d+01  ! Maximum temperature for photosynthesis (oC)
-    pn_opt_temp                = 3.137242d+01  ! Optimum temperature for photosynthesis (oC)
-    pn_kurtosis                = 1.927458d-01  ! Kurtosis of photosynthesis temperature response
-    e0                         = 5.875662d+00  ! Quantum yield gC/MJ/m2/day PAR
-    max_lai_lwrad_transmitted  = 7.626683d-01  ! Max fractional reduction of LW from sky transmitted through canopy
-    lai_half_lwrad_transmitted = 7.160363d-01  ! LAI at which canopy LW transmittance reduction = 50 %
-    max_lai_nir_reflection     = 4.634860d-01  ! Max fraction of NIR reflected by canopy
-    lai_half_nir_reflection    = 1.559148d+00  ! LAI at which canopy NIR reflected = 50 %
-    minlwp                     =-1.996830d+00  ! minimum leaf water potential (MPa)
-    max_lai_par_reflection     = 1.623013d-01  ! Max fraction of PAR reflected by canopy
-    lai_half_par_reflection    = 1.114360d+00  ! LAI at which canopy PAR reflected = 50 %
-    lai_half_lwrad_reflected   = 1.126214d+00  ! LAI at which 50 % LW is reflected back to sky
-    iWUE                       = 1.602503d-06  ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
-    soil_swrad_absorption      = 6.643079d-01  ! Fraction of SW rad absorbed by soil
-    max_lai_par_transmitted    = 8.079519d-01  ! Max fractional reduction in PAR transmittance by canopy
-    lai_half_par_transmitted   = 9.178784d-01  ! LAI at which PAR transmittance reduction = 50 %
-    max_lai_nir_transmitted    = 8.289803d-01  ! Max fractional reduction in NIR transmittance by canopy
-    lai_half_nir_transmitted   = 1.961831d+00  ! LAI at which NIR transmittance reduction = 50 %
-    max_lai_lwrad_release      = 9.852855d-01  ! Max fraction of LW emitted (1-par) from canopy to be released
-    lai_half_lwrad_release     = 7.535450d-01  ! LAI at which LW emitted from canopy to be released at 50 %
-    max_lai_lwrad_reflected    = 1.955832d-02  ! LAI at which 50 % LW is reflected back to sky
-
-    ! load some values
-    avN = 10d0**pars(11) !TLS 1 ! foliar N
-    deltaWP = minlwp !-2.0  ! leafWP-soilWP (i.e. -2-0)
-    Rtot = dble_one ! totaly hydraulic resistance ! p12 from ACM recal (updated)
+    NUE = 1.182549d+01   ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
+                         ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
+    avN = 10d0**pars(11) ! foliar N
+    ceff = avN*NUE
+    deltaWP = minlwp     ! leafWP-soilWP (i.e. -2-0)
+    Rtot = 1d0 ! totaly hydraulic resistance ! p12 from ACM recal (updated)
 
     ! plus ones being calibrated
     root_k = pars(36) ; max_depth = pars(37)
@@ -333,7 +306,7 @@ contains
     ts_length = ((sum(deltat)/dble(nodays)) * sec_in_day) / sec_in_hour
     ! steps per day ; set step_of_day to steps_in_day as in CARDAMOM we will
     ! never be running less than daily time step
-    steps_in_day = dble_one/(sum(deltat)/dble(nodays)) ; step_of_day = steps_in_day
+    steps_in_day = 1d0/(sum(deltat)/dble(nodays)) ; step_of_day = steps_in_day
 
     ! parameters from file
     decomposition_rate                = pars(1) / 24d0  ! decomposition rate (day->hr)
@@ -395,40 +368,33 @@ contains
 
         ! pair incoming variables to local module levels
         ! finally set some initial conditions
-        avtemp = dble_zero
-        yield = dble_zero
-        DS = -dble_one
-        DR = dble_zero
-        fV = dble_zero ; fT = dble_zero ; fP = dble_zero
-        mean_alloc_to_storage_organ = dble_zero
-        mean_alloc_to_storage_organ_old = dble_zero
-        PHU = dble_zero
-        VD = dble_zero
-        BM_EX = dble_zero
-        HI = dble_zero
-        stock_dead_foliage = dble_zero
-        alloc_to_labile = dble_zero
+        avtemp = 0d0
+        yield = 0d0
+        DS = -1d0
+        DR = 0d0
+        fV = 0d0 ; fT = 0d0 ; fP = 0d0
+        mean_alloc_to_storage_organ = 0d0
+        mean_alloc_to_storage_organ_old = 0d0
+        PHU = 0d0
+        VD = 0d0
+        BM_EX = 0d0
+        HI = 0d0
+        stock_dead_foliage = 0d0
+        alloc_to_labile = 0d0
         stmob = 0
-        max_raso = dble_zero
-        raso = dble_zero
-        RDRDV = dble_zero
-        max_raso_old = dble_zero
-        raso_old  = dble_zero
+        max_raso = 0d0
+        raso = 0d0
+        RDRDV = 0d0
+        max_raso_old = 0d0
+        raso_old  = 0d0
 
         ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
         if (.not.allocated(deltat_1)) then
 
-           allocate(deltat_1(nodays),soilwatermm(nodays),wSWP_time(nodays), &
-                    co2_compensation_point(nodays),co2_half_saturation(nodays))
-           do n = 1, nodays
-              ! Temperature adjustments for Michaelis-Menten coefficients
-              ! for CO2 (kc) and O2 (ko) and CO2 compensation point.
-              co2_compensation_point(n) = arrhenious(co2comp_saturation,co2comp_half_sat_conc,met(3,n))
-              co2_half_saturation(n) = arrhenious(kc_saturation,kc_half_sat_conc,met(3,n))
-           end do
-           deltat_1 = deltat**(-dble_one)
+           allocate(deltat_1(nodays),wSWP_time(nodays))
+           deltat_1 = deltat**(-1d0)
            ! zero variables not done elsewhere
-           water_flux = dble_zero
+           water_flux = 0d0
            ! initialise some time invarient parameters
            call saxton_parameters(soil_frac_clay,soil_frac_sand)
            call initialise_soils(soil_frac_clay,soil_frac_sand)
@@ -441,7 +407,7 @@ contains
 
         else
 
-           water_flux = dble_zero
+           water_flux = 0d0
            field_capacity = field_capacity_initial
            porosity = porosity_initial
 
@@ -455,15 +421,17 @@ contains
         lai = POOLS(1,2)/pars(17)
         seconds_per_step = deltat(1) * seconds_per_day
         days_per_step =  deltat(1)
+        days_per_step_1 = deltat_1(1)
         mint = met(2,1)  ! minimum temperature (oC)
         maxt = met(3,1)  ! maximum temperature (oC)
         meant = (maxt+mint)*0.5d0  ! mean air temperature (oC)
 
         ! zero evapotranspiration for beginning
-        ET = dble_zero
+        ET = 0d0
         ! initialise root reach based on initial conditions
         root_biomass = max(min_root,POOLS(1,3)*2d0)
-        root_reach = max_depth * root_biomass / (root_k + root_biomass)
+        coarse_root_biomass = root_biomass
+        root_reach = max_depth * coarse_root_biomass / (root_k + coarse_root_biomass)
         ! Determine initial soil layer thickness
         layer_thickness(1) = top_soil_depth ; layer_thickness(2) = mid_soil_depth
         layer_thickness(3) = max(min_layer,root_reach-sum(layer_thickness(1:2)))
@@ -473,7 +441,7 @@ contains
         ! needed to initialise soils
         call calculate_Rtot(Rtot)
         ! used to initialise soils
-        call calculate_update_soil_water(dble_zero,dble_zero,dble_zero,ET) ! assume no evap or rainfall
+        call calculate_update_soil_water(0d0,0d0,0d0,ET) ! assume no evap or rainfall
         ! store soil water content of the rooting zone (mm)
         POOLS(1,8) = 1d3*soil_waterfrac(1)*layer_thickness(1)
 
@@ -485,9 +453,9 @@ contains
     endif ! start == 1
 
     ! reset values
-    intercepted_rainfall = dble_zero ; canopy_storage = dble_zero ; snow_storage = dble_zero
+    intercepted_rainfall = 0d0 ; canopy_storage = 0d0 ; snow_storage = 0d0
 
-    infi = dble_zero
+    infi = 0d0
 
     !
     ! Begin looping through each time step
@@ -506,37 +474,32 @@ contains
       swrad = met(4,n) ! incoming short wave radiation (MJ/m2/day)
       co2 = met(5,n)   ! CO2 (ppm)
       doy = ceiling(met(6,n)-(deltat(n)*0.5d0))   ! Day of year
-      rainfall = max(dble_zero,met(7,n)) ! rainfall (kgH2O/m2/s)
+      rainfall = max(0d0,met(7,n)) ! rainfall (kgH2O/m2/s)
       meant = (maxt+mint) * 0.5d0   ! mean air temperature (oC)
-      airt_zero_fraction = (maxt-dble_zero) / (maxt-mint) ! fraction of temperture period above freezing
+      airt_zero_fraction = (maxt-0d0) / (maxt-mint) ! fraction of temperture period above freezing
       wind_spd = met(15,n) ! wind speed (m/s)
-      vpd_pa = met(16,n)  ! Vapour pressure deficit (Pa)
+      vpd_kPa = met(16,n)*1d-3  ! Vapour pressure deficit (Pa)
 
       ! states needed for module variables
       lai_out(n) = POOLS(n,2)/LCA
       lai = lai_out(n) ! leaf area index (m2/m2)
 
-      ! Temperature adjustments for Michaelis-Menten coefficients
-      ! for CO2 (kc) and O2 (ko) and CO2 compensation point
-      ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
-      co2_half_sat   = co2_half_saturation(n)
-      co2_comp_point = co2_compensation_point(n)
-
       ! calculate daylength in hours and seconds
       call calculate_daylength((doy-(deltat(n)*0.5d0)),lat)
       ! extract timing related values
-      dayl_seconds_1 = dayl_seconds ** (-dble_one)
+      dayl_hours_fraction = dayl_hours * 0.04166667d0 ! 1/24 = 0.04166667
+      dayl_seconds_1 = dayl_seconds ** (-1d0)
       seconds_per_step = seconds_per_day * deltat(n)
       days_per_step = deltat(n)
       days_per_step_1 = deltat_1(n)
 
       ! snowing or not...?
-      snow_melt = dble_zero ; snowfall = dble_zero
-      if (mint < dble_zero .and. maxt > dble_zero) then
+      snow_melt = 0d0 ; snowfall = 0d0
+      if (mint < 0d0 .and. maxt > 0d0) then
           ! if minimum temperature is below freezing point then we weight the
           ! rainfall into snow or rain based on proportion of temperature below
           ! freezing
-          snowfall = dble_one - airt_zero_fraction
+          snowfall = 1d0 - airt_zero_fraction
           snowfall = rainfall * snowfall ; rainfall = rainfall - snowfall
           ! Add rainfall to the snowpack and clear rainfall variable
           snow_storage = snow_storage + (snowfall*seconds_per_step)
@@ -546,13 +509,13 @@ contains
           ! otherwise we assume snow is melting at 10 % per day light hour
           snow_melt = min(snow_storage, snow_melt * snow_storage * dayl_hours * 0.1d0 * deltat(n))
           snow_storage = snow_storage - snow_melt
-      elseif (maxt < dble_zero) then
+      elseif (maxt < 0d0) then
           ! if whole day is below freezing then we should assume that all
           ! precipitation is snowfall
-          snowfall = rainfall ; rainfall = dble_zero
+          snowfall = rainfall ; rainfall = 0d0
           ! Add rainfall to the snowpack and clear rainfall variable
           snow_storage = snow_storage + (snowfall*seconds_per_step)
-      else if (mint > dble_zero) then
+      else if (mint > 0d0) then
           ! otherwise we assume snow is melting at 10 % per day light hour
           snow_melt = min(snow_storage, snow_storage * dayl_hours * 0.1d0 * deltat(n))
           snow_storage = snow_storage - snow_melt
@@ -561,46 +524,47 @@ contains
       ! calculate the minimum soil & root hydraulic resistance based on total
       ! fine root mass ! *2*2 => *RS*C->Bio
       root_biomass = max(min_root,POOLS(n,3)*2d0)
+      coarse_root_biomass = root_biomass
       ! estimate drythick for the current step
-      drythick = max(min_drythick, top_soil_depth * min(dble_one,dble_one - (soil_waterfrac(1) / porosity(1))))
+      drythick = max(min_drythick, top_soil_depth * min(1d0,1d0 - (soil_waterfrac(1) / porosity(1))))
       call calculate_Rtot(Rtot)
 
       ! Pass wSWP to output variable and update deltaWP between minlwp and
       ! current weighted soil WP
-      wSWP_time(n) = wSWP ; deltaWP = min(dble_zero,minlwp-wSWP)
+      wSWP_time(n) = wSWP ; deltaWP = min(0d0,minlwp-wSWP)
 
       ! calculate some temperature dependent meteorologial properties
-      call acm_meteorological_constants(maxt)
+      call meteorological_constants(maxt,maxt+freeze,vpd_kPa)
       ! calculate radiation absorption and estimate stomatal conductance
       call calculate_aerodynamic_conductance
-      call calculate_shortwave_balance ; call calculate_longwave_isothermal(leafT,maxt)
-      call acm_albedo_gc(abs(deltaWP),Rtot)
+      call calculate_radiation_balance
+      call calculate_stomatal_conductance(abs(deltaWP),Rtot)
 
       ! reallocate for crop model timings
       doy = met(6,n)
 
       ! GPP (gC.m-2.day-1)
       if (lai > vsmall .and. stomatal_conductance > vsmall) then
-         GPP_out(n) = max(dble_zero,acm_gpp(stomatal_conductance))
+         call acm_gpp_stage_1 ; GPP_out(n) = max(0d0,acm_gpp_stage_2(stomatal_conductance))
          ! Canopy transpiration (kgH2O/m2/day)
          call calculate_transpiration(transpiration)
       else
-         GPP_out(n) = dble_zero
-         transpiration = dble_zero
+         GPP_out(n) = 0d0
+         transpiration = 0d0
       endif
       ! load GPP for crop model daily rate to total
       gpp_acm = GPP_out(n) * deltat(n)
 
       ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
-      call calculate_wetcanopy_evaporation(wetcanopy_evap,pot_actual_ratio,canopy_storage,transpiration)
+      call calculate_wetcanopy_evaporation(wetcanopy_evap,canopy_storage)
       ! Soil surface (kgH2O.m-2.day-1)
       call calculate_soil_evaporation(soilevaporation)
       ! restrict transpiration to positive only
-      transpiration = max(dble_zero,transpiration)
+      transpiration = max(0d0,transpiration)
 
       ! if snow present assume that soilevaporation is sublimation of soil first
-      snow_sublimation = dble_zero
-      if (snow_storage > dble_zero) then
+      snow_sublimation = 0d0
+      if (snow_storage > 0d0) then
           snow_sublimation = soilevaporation
           if (snow_sublimation*deltat(n) > snow_storage) snow_sublimation = snow_storage * deltat_1(n)
           soilevaporation = soilevaporation - snow_sublimation
@@ -624,7 +588,7 @@ contains
       ! daily average of allocation to storage organ (needed to determine max.
       ! storage organ growth rate)
       mean_alloc_to_storage_organ_old = mean_alloc_to_storage_organ
-      mean_alloc_to_storage_organ     = dble_zero
+      mean_alloc_to_storage_organ     = 0d0
       ! pass relevant variables into crop module memory
       avtemp = met(14,n) !meant
 
@@ -637,7 +601,7 @@ contains
 
       ! Heterotrophic respiration rate (Q10):  doubles with
       ! 10 degree temperature rise resprate from soil file = 0.0693
-      resp_rate = dble_zero
+      resp_rate = 0d0
       resp_rate = resp_rate + ((0.5d0 * exp( resp_rate_temp_coeff * met(3,n) )) * airt_weighting(1))
       resp_rate = resp_rate + ((0.5d0 * exp( resp_rate_temp_coeff * avtemp   )) * airt_weighting(2))
       resp_rate = resp_rate + ((0.5d0 * exp( resp_rate_temp_coeff * met(2,n) )) * airt_weighting(3))
@@ -708,7 +672,7 @@ contains
       POOLS(n+1,9) = stock_storage_organ
 
       do nxp = 1, nopools
-         if (POOLS(n+1,nxp) /= POOLS(n+1,nxp) .or. POOLS(n+1,nxp) < dble_zero) then
+         if (POOLS(n+1,nxp) /= POOLS(n+1,nxp) .or. POOLS(n+1,nxp) < 0d0) then
              print*,"step",n,"FLUXES",nxp
              print*,"met",met(:,n)
              print*,"POOLS",POOLS(n,:)
@@ -740,7 +704,7 @@ contains
 
       do nxp = 1, nofluxes
          if (nxp /= 19) then
-            if (FLUXES(n,nxp) /= FLUXES(n,nxp) .or. FLUXES(n,nxp) < dble_zero) then
+            if (FLUXES(n,nxp) /= FLUXES(n,nxp) .or. FLUXES(n,nxp) < 0d0) then
                  print*,"Special: step",n,"FLUXES",nxp
                  print*,"met",met(:,n)
                  print*,"POOLS",POOLS(n,:)
@@ -800,20 +764,20 @@ contains
          end if
       enddo
 
-      if (stock_labile < dble_zero .or. stock_foliage < dble_zero .or. stock_stem < dble_zero .or. &
-          stock_roots < dble_zero .or. stock_litter < dble_zero .or. stock_soilOrgMatter < dble_zero .or. &
-          stock_storage_organ < dble_zero .or. stock_resp_auto < dble_zero .or. &
+      if (stock_labile < 0d0 .or. stock_foliage < 0d0 .or. stock_stem < 0d0 .or. &
+          stock_roots < 0d0 .or. stock_litter < 0d0 .or. stock_soilOrgMatter < 0d0 .or. &
+          stock_storage_organ < 0d0 .or. stock_resp_auto < 0d0 .or. &
           stock_labile /= stock_labile .or. stock_foliage /= stock_foliage .or. &
           stock_stem /= stock_stem .or. &
           stock_roots /= stock_roots .or. stock_litter /= stock_litter .or. &
           stock_soilOrgMatter /= stock_soilOrgMatter .or. &
           stock_storage_organ /= stock_storage_organ .or. &
           stock_resp_auto /= stock_resp_auto .or.  &
-          gpp_acm < dble_zero .or. gpp_acm /= gpp_acm .or. resp_rate < dble_zero .or. &
-          resp_rate /= resp_rate .or. decomposition < dble_zero .or. alloc_from_labile < dble_zero .or. &
-          resp_cost_labile_to_foliage < dble_zero .or. alloc_to_foliage < dble_zero .or. &
-          alloc_to_stem < dble_zero .or. alloc_to_roots < dble_zero .or. remob < dble_zero .or. &
-          alloc_from_labile < dble_zero .or. resp_cost_labile_to_foliage < dble_zero .or. wSWP /= wSWP) then
+          gpp_acm < 0d0 .or. gpp_acm /= gpp_acm .or. resp_rate < 0d0 .or. &
+          resp_rate /= resp_rate .or. decomposition < 0d0 .or. alloc_from_labile < 0d0 .or. &
+          resp_cost_labile_to_foliage < 0d0 .or. alloc_to_foliage < 0d0 .or. &
+          alloc_to_stem < 0d0 .or. alloc_to_roots < 0d0 .or. remob < 0d0 .or. &
+          alloc_from_labile < 0d0 .or. resp_cost_labile_to_foliage < 0d0 .or. wSWP /= wSWP) then
           print*,"stocks less than zero or NaN", n
           print*,"steps_in_day",steps_in_day
           print*,stock_labile, stock_foliage
@@ -845,7 +809,7 @@ contains
   !
   subroutine calc_pools_crops(DS_LRRT,LRRT)
 
-    use CARBON_MODEL_MOD, only: dble_zero, dble_one, lai, doy
+    use CARBON_MODEL_MOD, only: lai, doy
 
     ! Allocated GPP to NPP and various carbon pools. Based !
     ! this on physiological responses to temperature       !
@@ -874,48 +838,48 @@ contains
     endif
 
     ! Initialise..
-    resp_cost_foliage_to_labile = dble_zero ; yield = dble_zero ; BM_EX = dble_zero
+    resp_cost_foliage_to_labile = 0d0 ; yield = 0d0 ; BM_EX = 0d0
 
     ! respiratory cost of C transfer from labile pool to short-term pool (NPP) (gC.m-2.t-1)
     resp_cost_labile_to_foliage = turnover_rate_labile * resp_cost_labile_trans * resp_rate &
                                 * ts_length * dble(turnover_labile_switch)
-    resp_cost_labile_to_foliage = stock_labile * min(dble_one,resp_cost_labile_to_foliage)
+    resp_cost_labile_to_foliage = stock_labile * min(1d0,resp_cost_labile_to_foliage)
 
     ! allocation flux from labile C pool to NPP (gC.m-2.t-1)
-    alloc_from_labile = turnover_rate_labile * ( dble_one - resp_cost_labile_trans ) * resp_rate &
+    alloc_from_labile = turnover_rate_labile * ( 1d0 - resp_cost_labile_trans ) * resp_rate &
                       * ts_length * dble(turnover_labile_switch)
-    alloc_from_labile = stock_labile * min(dble_one,alloc_from_labile)
+    alloc_from_labile = stock_labile * min(1d0,alloc_from_labile)
 
     ! When GPP is higher than seed C content, remaining seed carbon enters litter
     ! C pool, as seedlings do not fully exhaust their seed (P. de Vries p 48)
     if ( ( gpp_acm .gt. alloc_from_labile ) .and. ( use_seed_labile ) ) then
         stock_litter = stock_litter + stock_labile
-        stock_labile = dble_zero
+        stock_labile = 0d0
         use_seed_labile = .false.
     endif
 
     ! NPP as a fraction of GPP (1-.32=.68 or 68%) + allocation..
-    npp = ( dble_one - frac_GPP_resp_auto ) * gpp_acm + alloc_from_labile
+    npp = ( 1d0 - frac_GPP_resp_auto ) * gpp_acm + alloc_from_labile
     ! from labile pool; = SHORT-TERM POOL
 
-    root_frac_intpol  = max(dble_zero,min(dble_one,root_frac_intpol))
+    root_frac_intpol  = max(0d0,min(1d0,root_frac_intpol))
     alloc_to_roots    = root_frac_intpol * npp         !
-    shoot_frac_intpol = dble_one - root_frac_intpol    !
+    shoot_frac_intpol = 1d0 - root_frac_intpol    !
     npp_shoot         = npp - alloc_to_roots           ! NPP remaining after root growth==SHOOT fraction
     alloc_to_foliage  = fol_frac_intpol  * npp_shoot   !
     alloc_to_stem     = stem_frac_intpol * npp_shoot   !
-    alloc_to_storage_organ = max(dble_zero,npp_shoot - alloc_to_foliage - alloc_to_stem)
-    if ( alloc_to_storage_organ > dble_zero ) then  ! allocation flux to storage organ limited by maximum growth rate
+    alloc_to_storage_organ = max(0d0,npp_shoot - alloc_to_foliage - alloc_to_stem)
+    if ( alloc_to_storage_organ > 0d0 ) then  ! allocation flux to storage organ limited by maximum growth rate
         gso_max  = ( stock_storage_organ + 0.5d0 ) * rel_gso_max / steps_in_day
         alloc_to_storage_organ = min( alloc_to_storage_organ , gso_max )
         if ( sown ) then
            alloc_to_labile = ( npp_shoot - alloc_to_foliage - alloc_to_stem - alloc_to_storage_organ ) &
-                           * ( dble_one - resp_cost_labile_trans )
+                           * ( 1d0 - resp_cost_labile_trans )
            resp_cost_foliage_to_labile =  ( npp_shoot - alloc_to_foliage - alloc_to_stem - alloc_to_storage_organ ) &
                                        * resp_cost_labile_trans
         else
-          alloc_to_labile             = dble_zero
-          resp_cost_foliage_to_labile = dble_zero
+          alloc_to_labile             = 0d0
+          resp_cost_foliage_to_labile = 0d0
         endif
     endif
     mean_alloc_to_storage_organ = mean_alloc_to_storage_organ + alloc_to_storage_organ
@@ -942,16 +906,16 @@ contains
     !  function of shading (RDRSH) or developmental stage (RDRT).
 
     ! GT 0 if LAI GT 4; 0. < RDRSH < RDRSHMAX (usually ~0.03)
-    RDRSH = min( RDRSHMAX , max( dble_zero , RDRSHMAX * ( lai - LAICR ) / LAICR ) )
-    if ( DS < dble_one ) then
-       RDRDV = dble_zero
+    RDRSH = min( RDRSHMAX , max( 0d0 , RDRSHMAX * ( lai - LAICR ) / LAICR ) )
+    if ( DS < 1d0 ) then
+       RDRDV = 0d0
     else
        ! RDRDV dependant on DR and DS, values range typically between 0.02 <
        ! RDRDV < 0.25
 !print*,"!! What RDRDV to use? !!"
 !!$      RDRDV = DR /( max( 0.1 , 2. - DS ) )
 !!$      RDRDV = RDRDV / 24. ! to get hourly senescence rate
-       RDRDV = turnover_rate_foliage * ( dble_one / ( ( max( 2d0 - DS , 0.1d0 ) ) * 8d0 ) ) ** 2
+       RDRDV = turnover_rate_foliage * ( 1d0 / ( ( max( 2d0 - DS , 0.1d0 ) ) * 8d0 ) ) ** 2
     ENDIF
 
     ! relative leaf death rate is the maximum value of the arguments RDRSH and
@@ -959,12 +923,12 @@ contains
     RDR = max( RDRSH , RDRDV )
 
     ! remobilization of foliar C and allocation to dead leaves pool (gC.m-2.t-1)
-    litterfall_foliage = stock_foliage * min(dble_one,ts_length * RDR)
-    litterfall_stem    = stock_stem    * min(dble_one,ts_length * DR * turnover_rate_stem * dble(stmob)) ! remobstem
-    litterfall_roots   = stock_roots   * min(dble_one,ts_length * turnover_rate_roots)
+    litterfall_foliage = stock_foliage * min(1d0,ts_length * RDR)
+    litterfall_stem    = stock_stem    * min(1d0,ts_length * DR * turnover_rate_stem * dble(stmob)) ! remobstem
+    litterfall_roots   = stock_roots   * min(1d0,ts_length * turnover_rate_roots)
 
     ! remobilized C to NPP (from both leaves and stems) (gC.m-2.t-1)
-    remob   = ( litterfall_foliage * 0.5d0 + litterfall_stem ) * ( dble_one - resp_cost_labile_trans )
+    remob   = ( litterfall_foliage * 0.5d0 + litterfall_stem ) * ( 1d0 - resp_cost_labile_trans )
     ! respiratory cost of C transfer (conversion from starch to photosynthates) (gC.m-2.t-1)
     Raremob = ( litterfall_foliage * 0.5d0 + litterfall_stem ) * resp_cost_labile_trans
 
@@ -976,30 +940,30 @@ contains
     decomposition = stock_litter * (decomposition_rate+mineralisation_rate_litter) * resp_rate * ts_length
 
     ! heterotrophic respiration component 1: mineralisation of litter C pool (gC.m-2.t-1)
-    resp_h_litter = decomposition * (dble_one - decomp_efficency)
+    resp_h_litter = decomposition * (1d0 - decomp_efficency)
     ! heterotrophic respiration component 2:  mineralisation of organic matter C pool (gC.m-2.t-1)
-    resp_h_soilOrgMatter = stock_soilOrgMatter * min(dble_one,mineralisation_rate_soilOrgMatter * resp_rate * ts_length)
+    resp_h_soilOrgMatter = stock_soilOrgMatter * min(1d0,mineralisation_rate_soilOrgMatter * resp_rate * ts_length)
 
     ! decomposition of litter to soil organic matter (gC.m-2.t-1)
     decomposition = decomposition - resp_h_litter
 
     ! Recalculate Carbon Pools...
 
-    stock_foliage       = max(dble_zero, stock_foliage + alloc_to_foliage - litterfall_foliage)
-    stock_stem          = max(dble_zero, stock_stem + alloc_to_stem - litterfall_stem)
-    stock_storage_organ = max(dble_zero, stock_storage_organ + alloc_to_storage_organ)
-    stock_roots         = max(dble_zero, stock_roots         + alloc_to_roots   - litterfall_roots)
-    stock_litter        = max(dble_zero, stock_litter + litterfall_roots - resp_h_litter - decomposition)
-    stock_soilOrgMatter = max(dble_zero, stock_soilOrgMatter + decomposition    - resp_h_soilOrgMatter)
-    stock_dead_foliage  = max(dble_zero, stock_dead_foliage  + litterfall_foliage * 0.5d0) ! remainder of litfol is remobilisedi
-    stock_labile        = max(dble_zero, stock_labile + alloc_to_labile  - alloc_from_labile - resp_cost_labile_to_foliage + remob)
+    stock_foliage       = max(0d0, stock_foliage + alloc_to_foliage - litterfall_foliage)
+    stock_stem          = max(0d0, stock_stem + alloc_to_stem - litterfall_stem)
+    stock_storage_organ = max(0d0, stock_storage_organ + alloc_to_storage_organ)
+    stock_roots         = max(0d0, stock_roots         + alloc_to_roots   - litterfall_roots)
+    stock_litter        = max(0d0, stock_litter + litterfall_roots - resp_h_litter - decomposition)
+    stock_soilOrgMatter = max(0d0, stock_soilOrgMatter + decomposition    - resp_h_soilOrgMatter)
+    stock_dead_foliage  = max(0d0, stock_dead_foliage  + litterfall_foliage * 0.5d0) ! remainder of litfol is remobilisedi
+    stock_labile        = max(0d0, stock_labile + alloc_to_labile  - alloc_from_labile - resp_cost_labile_to_foliage + remob)
 
     ! respiratory pool: new photosynthates are added (gC.m-2.t-1)
     stock_resp_auto = stock_resp_auto + frac_GPP_resp_auto * gpp_acm
     ! autotrophic respiration; Ra (typically ~7% of respiratory pool) (gC.m-2.t-1)
-    resp_auto = stock_resp_auto * min(dble_one,turnover_rate_resp_auto * ts_length)
+    resp_auto = stock_resp_auto * min(1d0,turnover_rate_resp_auto * ts_length)
     ! respiratory pool reduced by Ra (amount of C respired by plant)
-    stock_resp_auto = max(dble_zero, stock_resp_auto - resp_auto)
+    stock_resp_auto = max(0d0, stock_resp_auto - resp_auto)
     ! respiratory cost of C transfer from labile pool to short-term pool added
     ! to yield total autotrophic respiration (gC.m-2.t-1)
     resp_auto = resp_auto + resp_cost_labile_to_foliage + resp_cost_foliage_to_labile + Raremob
@@ -1064,8 +1028,6 @@ contains
   !
   subroutine development_stage(days_in_step)
 
-    use CARBON_MODEL_MOD, only: dble_zero, dble_one
-
     ! Based on modified Wang & Engel model (Streck et al., 2003), !
     ! but with only 2 sub-phases, vegetative and reproductive     !
     ! (i.e. only two different DRmax).   O. Sus, May 2010.        !
@@ -1105,12 +1067,12 @@ contains
 
     ! Only calculate temperature coefficient if avtemp lies within (tmin,tmax)
     ! range.
-    ! NOTE: (doptmin+dble_one) < dmaxmin added to allow for EDC search period when "not
+    ! NOTE: (doptmin+1d0) < dmaxmin added to allow for EDC search period when "not
     ! allowed" parameter sets will be tried anyway
-    if ( avtemp > tmin .and. avtemp < tmax .and. (doptmin+dble_one) < dmaxmin ) then
+    if ( avtemp > tmin .and. avtemp < tmax .and. (doptmin+1d0) < dmaxmin ) then
         fT = temperature_impact( doptmin , dmaxmin , dttmin )
     else
-        fT = dble_zero
+        fT = 0d0
     endif
 
     ! calculation of photoperiod coefficient
@@ -1118,7 +1080,7 @@ contains
 
     if ( emerged .and. ( DS < 2d0 ) ) then   ! sum up daily DR values between emergence and maturity (DS=2)
 
-       if ( DS < dble_one ) then  ! in the vegetative phase (before flowering):
+       if ( DS < 1d0 ) then  ! in the vegetative phase (before flowering):
 
           DR = DR_pre * fT * fP   ! DR is affected by temperature, photoperiod...
 
@@ -1142,7 +1104,7 @@ contains
   !
   subroutine management_dates (stock_seed_labile,days_in_step)
 
-    use CARBON_MODEL_MOD, only: dble_zero, dble_one, doy
+    use CARBON_MODEL_MOD, only: doy
 
     ! This routine should be called at the end of each day of a crops  !
     ! simulation.  It checks whether we should plough/sow/harvest, and !
@@ -1201,16 +1163,16 @@ contains
          ! estimate emergence date based on the accumulated phenological heat
          ! units (PHU)
          ! where PHU is the (positive) heat over tmin..
-         tmp = max( avtemp - tmin , dble_zero )*days_in_step
+         tmp = max( avtemp - tmin , 0d0 )*days_in_step
          PHU = PHU + tmp
 
          ! set the development stage and emergence..
          if ( PHU >= PHUem ) then
            emerged = .true.
-           DS = dble_zero
+           DS = 0d0
          else
            emerged = .false.
-           DS = -dble_one
+           DS = -1d0
          endif
 
       endif ! emerged or not
@@ -1234,8 +1196,6 @@ contains
   !
   subroutine harvest
 
-    use CARBON_MODEL_MOD, only: dble_zero, dble_one
-
     implicit none
 
     ! shoot biomass..
@@ -1245,12 +1205,12 @@ contains
     HI = stock_storage_organ / Cshoot
 
     ! the stuff we actually want from the harvest...
-    yield = stock_storage_organ !+ stock_stem * ( dble_one - st_res )
+    yield = stock_storage_organ !+ stock_stem * ( 1d0 - st_res )
 
     ! the biomass that is harvested in addition to the storage-organ..
-    BM_EX  = stock_foliage * ( dble_one - lv_res )          &
-              + stock_stem * ( dble_one - st_res )          &
-               + stock_dead_foliage * ( dble_one - lv_res ) &
+    BM_EX  = stock_foliage * ( 1d0 - lv_res )          &
+              + stock_stem * ( 1d0 - st_res )          &
+               + stock_dead_foliage * ( 1d0 - lv_res ) &
                 + stock_labile
 
     ! what's left (will fall to the ground)..
@@ -1261,12 +1221,12 @@ contains
                        + stock_dead_foliage * lv_res
 
     ! empty the plant stocks..
-    stock_storage_organ = dble_zero
-    stock_foliage       = dble_zero
-    stock_stem          = dble_zero
-    stock_dead_foliage  = dble_zero
-    stock_labile        = dble_zero
-    stock_resp_auto     = dble_zero
+    stock_storage_organ = 0d0
+    stock_foliage       = 0d0
+    stock_stem          = 0d0
+    stock_dead_foliage  = 0d0
+    stock_labile        = 0d0
+    stock_resp_auto     = 0d0
 
     ! roots stay in ground and slowly decompose (until/unless the field is
     ! ploughed)
@@ -1275,7 +1235,7 @@ contains
     sown    = .false.
     emerged = .false.
     ploughed = .false.
-    DS = -dble_one ; fV = dble_zero ; fT = dble_zero ; fP = dble_zero ; VD = dble_zero
+    DS = -1d0 ; fV = 0d0 ; fT = 0d0 ; fP = 0d0 ; VD = 0d0
 
   end subroutine harvest
   !
@@ -1283,7 +1243,7 @@ contains
   !
   double precision function photoperiod_impact( PH_crit , PH_sens )
 
-    use CARBON_MODEL_MOD, only: dble_zero, dble_one, dayl_hours
+    use CARBON_MODEL_MOD, only: dayl_hours
 
     ! Function to determine the coefficient for !
     ! photoperiod impact on developmental rate. !
@@ -1295,15 +1255,13 @@ contains
     double precision,intent(in) :: PH_crit, & ! critical photoperiod below which no development occurs
                                    PH_sens    ! photoperiod sensitivity
 
-    photoperiod_impact = max(dble_zero, dble_one - exp ( - PH_Sens * ( dayl_hours - PH_crit ) ))
+    photoperiod_impact = max(0d0, 1d0 - exp ( - PH_Sens * ( dayl_hours - PH_crit ) ))
 
   end function photoperiod_impact
   !
   !--------------------------------------------------------------------------------------------------------------------------------!
   !
   subroutine plough
-
-    use CARBON_MODEL_MOD, only: dble_zero, dble_one
 
     ! this s/r will reset various carbon pools, to mimic the effect of the
     ! farmer ploughing. !
@@ -1317,17 +1275,17 @@ contains
                           + stock_foliage + stock_labile    &
                            + stock_roots + stock_stem       &
                             + stock_storage_organ
-    stock_dead_foliage  = dble_zero
-    stock_foliage       = dble_zero
-    stock_labile        = dble_zero
-    stock_roots         = dble_zero
-    stock_stem          = dble_zero
-    stock_storage_organ = dble_zero
+    stock_dead_foliage  = 0d0
+    stock_foliage       = 0d0
+    stock_labile        = 0d0
+    stock_roots         = 0d0
+    stock_stem          = 0d0
+    stock_storage_organ = 0d0
 
     ! Reset the development stage & phenological heat units..
-    ploughed = .true. ; DS = -dble_one ; PHU = dble_zero
-    max_raso = dble_zero ; raso = dble_zero ; max_raso_old = dble_zero ; raso_old = dble_zero
-    mean_alloc_to_storage_organ_old = dble_zero ; mean_alloc_to_storage_organ = dble_zero
+    ploughed = .true. ; DS = -1d0 ; PHU = 0d0
+    max_raso = 0d0 ; raso = 0d0 ; max_raso_old = 0d0 ; raso_old = 0d0
+    mean_alloc_to_storage_organ_old = 0d0 ; mean_alloc_to_storage_organ = 0d0
 
   end subroutine plough
   !
@@ -1361,8 +1319,6 @@ contains
   !
   double precision function vernalization( doptmin_v , dmaxmin_v , dttmin_v , days_in_step )
 
-    use CARBON_MODEL_MOD, only: dble_zero, dble_one
-
     ! Function to determine the coefficent for vernalization !
     ! impact on developmental rate. See Streck et al., 2003. !
 
@@ -1383,7 +1339,7 @@ contains
     VD = VD + (fvn*days_in_step)
 
     ! final output value..
-    vernalization = max( dble_zero , min( dble_one , ( VD ** 5 ) / ( ( VDh ** 5 ) + (VD ** 5 ) ) ) )
+    vernalization = max( 0d0 , min( 1d0 , ( VD ** 5 ) / ( ( VDh ** 5 ) + (VD ** 5 ) ) ) )
 
   end function vernalization
   !

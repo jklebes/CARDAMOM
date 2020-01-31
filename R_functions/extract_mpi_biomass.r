@@ -41,19 +41,19 @@ extract_mpi_biomass<- function(timestep_days,spatial_type,resolution,grid_type,l
 	# next work out how many days we should have in the year
 	doy_out=0
 	for (i in seq(1, length(years_to_do))) {
-	    # is current year a leap or not
-	    nos_days = 365
-	    mod=as.numeric(years_to_do[i])-round((as.numeric(years_to_do[i])/4))*4
-	    if (mod == 0) {
-          nos_days = 366
-          mod=as.numeric(years_to_do[i])-round((as.numeric(years_to_do[i])/100))*100
-          if (mod == 0) {
-              nos_days  = 365
-              mod=as.numeric(years_to_do[i])-round((as.numeric(years_to_do[i])/400))*400
-              if (mod == 0) {
-                  nos_days  = 366
-              }
-          }
+ 	    # is current year a leap or not
+ 	    nos_days = 365
+ 	    mod=as.numeric(years_to_do[i])-round((as.numeric(years_to_do[i])/4))*4
+ 	    if (mod == 0) {
+                 nos_days = 366
+                 mod=as.numeric(years_to_do[i])-round((as.numeric(years_to_do[i])/100))*100
+                 if (mod == 0) {
+                     nos_days  = 365
+                     mod=as.numeric(years_to_do[i])-round((as.numeric(years_to_do[i])/400))*400
+                     if (mod == 0) {
+                         nos_days  = 366
+                     }
+                 }
 	    }
 	    # count up days needed
 	    doy_out=append(doy_out,1:nos_days)

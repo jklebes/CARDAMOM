@@ -33,7 +33,7 @@ cardamom_project_setup <- function (paths,PROJECT) {
   failed=TRUE
   while (failed) {
     nochains=as.integer(readline("How many chains?"))
-    if (nochains > 1 & nochains < 8) {failed=FALSE} else {failed=TRUE}
+    if (nochains > 1 & nochains < 11) {failed=FALSE} else {failed=TRUE}
   }
   # number of samples per chain / accepted parameters
   failed=TRUE
@@ -129,45 +129,41 @@ cardamom_project_setup <- function (paths,PROJECT) {
         if (timing) {compiler_options=paste(compiler_options," -pg",sep="")}
         if (debug) {compiler_options=paste(compiler_options," -debug -backtrace",sep="")}
         commands=append(commands,c(paste("rm -r ",ecdf_source,"CARDAMOM_F_BKP",sep="")
-        ,paste("mv ",ecdf_source,"CARDAMOM_F ",ecdf_source,"CARDAMOM_F_BKP",sep="")
-        ,paste("scp -r ",username,"@",home_computer,":",paths$cardamom,"LIBRARY/CARDAMOM_F ",ecdf_source,sep="")
-        ,paste("cd ",ecdf_source,"CARDAMOM_F/executable",sep="")
-        ,paste("rm cardamom.exe")
-        ,paste("rm ",eexepath,"/",exe,sep="")
-        ,paste(compiler," -O2 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
-        " ../model/",modelname,"/src/",modelname,"_CROP.f90",
-        " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90",
-        " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
-        " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep="")
-        ,paste("cp ",ecdf_source,"CARDAMOM_F/executable/cardamom.exe ",eexepath,"/",exe,sep="")))
-        if (modelname == "AT_DALEC") {
-          commands=append(commands,paste("cp ",ecdf_source,"CARDAMOM_F/model/AT_DALEC/src/gpp_emulator_parameters* ",eexepath,"/",sep=""))
-          system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/AT_DALEC/src/gpp_emulator_parameters* ",exepath,"/",sep=""))
-        } #  only for AT_DALEC use the GAM emulator
-        if (modelname == "AT_DALEC" & parameter_type == "pft_specific") {
-          commands=append(commands,paste("cp ",ecdf_source,"CARDAMOM_F/model/AT_DALEC/src/winter_wheat_development.csv ",eexepath,"/",sep=""))
-          system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/AT_DALEC/src/winter_wheat_development.csv ",exepath,"/",sep=""))
-        } #  only for AT_DALEC use the GAM emulator
+                       ,paste("mv ",ecdf_source,"CARDAMOM_F ",ecdf_source,"CARDAMOM_F_BKP",sep="")
+                       ,paste("scp -r ",username,"@",home_computer,":",paths$cardamom,"LIBRARY/CARDAMOM_F ",ecdf_source,sep="")
+                       ,paste("cd ",ecdf_source,"CARDAMOM_F/executable",sep="")
+                       ,paste("rm cardamom.exe")
+                       ,paste("rm ",eexepath,"/",exe,sep="")
+                       ,paste(compiler," -O2 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
+                              " ../model/",modelname,"/src/",modelname,"_CROP.f90",
+                              " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90",
+                              " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
+                              " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep="")
+                       ,paste("cp ",ecdf_source,"CARDAMOM_F/executable/cardamom.exe ",eexepath,"/",exe,sep="")))
         if (modelname == "DALEC_GSI_DFOL_CWD_FR" & parameter_type == "pft_specific") {
-          commands=append(commands,paste("cp ",ecdf_source,"CARDAMOM_F/model/DALEC_GSI_DFOL_CWD_FR/src/winter_wheat_development.csv ",eexepath,"/",sep=""))
-          system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/DALEC_GSI_DFOL_CWD_FR/src/winter_wheat_development.csv ",exepath,"/",sep=""))
-        } #  only for AT_DALEC use the GAM emulator
+            commands=append(commands,paste("cp ",ecdf_source,"CARDAMOM_F/model/DALEC_GSI_DFOL_CWD_FR/src/winter_wheat_development.csv ",eexepath,"/",sep=""))
+            system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/DALEC_GSI_DFOL_CWD_FR/src/winter_wheat_development.csv ",exepath,"/",sep=""))
+        } # 
+        if (modelname == "DALEC" & parameter_type == "pft_specific") {
+            commands=append(commands,paste("cp ",ecdf_source,"CARDAMOM_F/model/DALEC/src/winter_wheat_development.csv ",eexepath,"/",sep=""))
+            system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/DALEC/src/winter_wheat_development.csv ",exepath,"/",sep=""))
+        } #  
         if (modelname == "DALEC_BUCKET" & parameter_type == "pft_specific") {
-          commands=append(commands,paste("cp ",ecdf_source,"CARDAMOM_F/model/DALEC_BUCKET/src/winter_wheat_development.csv ",eexepath,"/",sep=""))
-          system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/DALEC_BUCKET/src/winter_wheat_development.csv ",exepath,"/",sep=""))
-        } #  only for AT_DALEC use the GAM emulato
+            commands=append(commands,paste("cp ",ecdf_source,"CARDAMOM_F/model/DALEC_BUCKET/src/winter_wheat_development.csv ",eexepath,"/",sep=""))
+            system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/DALEC_BUCKET/src/winter_wheat_development.csv ",exepath,"/",sep=""))
+        } #  
         if (modelname == "DALEC_GSI_BUCKET" & parameter_type == "pft_specific") {
-          commands=append(commands,paste("cp ",ecdf_source,"CARDAMOM_F/model/DALEC_GSI_BUCKET/src/winter_wheat_development.csv ",eexepath,"/",sep=""))
-          system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/DALEC_GSI_BUCKET/src/winter_wheat_development.csv ",exepath,"/",sep=""))
-        } #  only for AT_DALEC use the GAM emulator
+            commands=append(commands,paste("cp ",ecdf_source,"CARDAMOM_F/model/DALEC_GSI_BUCKET/src/winter_wheat_development.csv ",eexepath,"/",sep=""))
+            system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/DALEC_GSI_BUCKET/src/winter_wheat_development.csv ",exepath,"/",sep=""))
+        } # 
         if (modelname == "DALECN_GSI_BUCKET" & parameter_type == "pft_specific") {
-          commands=append(commands,paste("cp ",ecdf_source,"CARDAMOM_F/model/DALECN_GSI_BUCKET/src/winter_wheat_development.csv ",eexepath,"/",sep=""))
-          system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/DALECN_GSI_BUCKET/src/winter_wheat_development.csv ",exepath,"/",sep=""))
-        } #  only for AT_DALEC use the GAM emulator
+            commands=append(commands,paste("cp ",ecdf_source,"CARDAMOM_F/model/DALECN_GSI_BUCKET/src/winter_wheat_development.csv ",eexepath,"/",sep=""))
+            system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/DALECN_GSI_BUCKET/src/winter_wheat_development.csv ",exepath,"/",sep=""))
+        } #  
         if (modelname == "DALECN_BUCKET" & parameter_type == "pft_specific") {
-          commands=append(commands,paste("cp ",ecdf_source,"CARDAMOM_F/model/DALECN_BUCKET/src/winter_wheat_development.csv ",eexepath,"/",sep=""))
-          system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/DALECN_BUCKET/src/winter_wheat_development.csv ",exepath,"/",sep=""))
-        } #  only for AT_DALEC use the GAM emulator
+            commands=append(commands,paste("cp ",ecdf_source,"CARDAMOM_F/model/DALECN_BUCKET/src/winter_wheat_development.csv ",eexepath,"/",sep=""))
+            system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/DALECN_BUCKET/src/winter_wheat_development.csv ",exepath,"/",sep=""))
+        } #  
       } else {
         stop('Source code language has not been specified')
       }
@@ -212,7 +208,9 @@ cardamom_project_setup <- function (paths,PROJECT) {
       if (modelname == "AT_DALEC" & parameter_type == "pft_specific") {
         system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/AT_DALEC/src/winter_wheat_development.csv ",exepath,"/",sep=""))
       } #  only for AT_DALEC use the GAM emulator
-      if ((modelname == "DALEC_GSI_DFOL_CWD_FR" | modelname == "DALEC_BUCKET" | modelname == "DALEC_GSI_BUCKET" | modelname == "DALECN_GSI_BUCKET" | modelname == "DALECN_BUCKET") & parameter_type == "pft_specific") {
+      if ((modelname == "DALEC_GSI_DFOL_CWD_FR" | modelname == "DALEC_BUCKET" | modelname == "DALEC" |
+           modelname == "DALEC_GSI_BUCKET" | modelname == "DALECN_GSI_BUCKET" | 
+           modelname == "DALECN_BUCKET") & parameter_type == "pft_specific") {
         system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/",modelname,"/src/winter_wheat_development.csv ",exepath,"/",sep=""))
       } #  only for AT_DALEC use the GAM emulator
       # return to original working directory

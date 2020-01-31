@@ -54,25 +54,25 @@ module MODEL_PARAMETERS
     PI%parmin(5) = 0.15d0 
     PI%parmax(5) = 8d0
 
-    ! TOR wood (2.7 - 109 years)
-    PI%parmin(6) = 0.000025d0
-    PI%parmax(6) = 0.001d0
+    ! TOR wood* - 1% loss per year value
+    PI%parmin(6)=0.000009d0 ! 304  years
+    PI%parmax(6)=0.001d0    ! 2.74 years
 
-    ! TOR roots (0.27 - 27 years)
-    PI%parmin(7) = 0.0001d0
-    PI%parmax(7) = 0.01d0
+    ! TOR roots
+    PI%parmin(7)=0.0006844627d0 ! 4    years
+    PI%parmax(7)=0.01d0         ! 0.27 years
 
-    ! TOR litter (0.27 - 27 years)
-    PI%parmin(8) = 0.0001d0
-    PI%parmax(8) = 0.01d0
+    ! TOR litter
+    PI%parmin(8)=0.0001d0 ! 24.00 years 
+    PI%parmax(8)=0.01d0   !  0.13 years
 
-    ! TOR som (2.7-2737 years)
-    PI%parmin(9) = 0.000001d0
-    PI%parmax(9) = 0.001d0
+    ! TOR SOM
+    PI%parmin(9) = 2.737851d-06   ! 1000 years at 0oC
+    PI%parmax(9) = 0.0001368926d0 !   20 years at 0oC
 
     ! Temp factor* = Q10 = 1.2-1.6
     PI%parmin(10) = 0.018d0
-    PI%parmax(10) = 0.08d0
+    PI%parmax(10) = 0.06d0
 
     ! Canopy Efficiency (gC/m2leaf/day)
     PI%parmin(11) = 5d0

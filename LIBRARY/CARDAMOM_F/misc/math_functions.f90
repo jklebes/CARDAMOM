@@ -14,8 +14,9 @@ module math_functions
   public :: randn, std, idum, covariance_matrix, &
             random_normal, random_uniform, rnstrt, &
             random_multivariate, increment_covariance_matrix, &
-            par2nor, nor2par, cholesky_factor, inverse_matrix, &
-            dsymv, calculate_variance, increment_variance
+            par2nor, nor2par, log_par2nor, log_nor2par, & 
+            cholesky_factor, inverse_matrix, dsymv, &
+            calculate_variance, increment_variance
 
   !!!!!!!!!!!
   ! Subroutines rand(), narray() and rnstrt() are from:
@@ -651,7 +652,7 @@ module math_functions
   !
   subroutine par2nor(niter,initial_par,min_par,max_par,out_par)
 
-    ! functions to normalised log parameter values and return them back to
+    ! functions to normalised parameter values and return them back to
     ! un-normalised value.
 
     ! converting parameters on log scale between 0-1 for min/max values
@@ -688,6 +689,47 @@ module math_functions
     return
 
   end subroutine nor2par
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine log_par2nor(niter,initial_par,min_par,max_par,out_par)
+
+    ! functions to normalised-log parameter values.
+
+    ! converting parameters on log scale between 0-1 for min/max values
+    implicit none
+    integer, intent(in) :: niter     ! number of iterations in current vector
+    double precision, intent(in) :: min_par, max_par
+    double precision, dimension(niter), intent(in) :: initial_par
+    double precision, dimension(niter), intent(out) :: out_par
+
+    ! then normalise
+    out_par = log(initial_par/min_par)/log(max_par/min_par)
+
+    ! explicit return
+    return
+
+  end subroutine log_par2nor
+  !
+  !---------------------and vise versa ------------------------------
+  !
+  subroutine log_nor2par(niter,initial_par,min_par,max_par,out_par)
+
+    ! Converting values back from log-normalised (0-1) to 'real' numbers
+
+    implicit none
+    integer, intent(in) :: niter     ! number of iterations in current vector
+    double precision, intent(in) :: min_par, max_par
+    double precision, dimension(niter), intent(in) :: initial_par
+    double precision, dimension(niter), intent(out) :: out_par
+
+    ! ...then un-normalise without logs as we cross zero and logs wont work
+    out_par = min_par*(max_par/min_par)**initial_par
+
+    ! explicit return
+    return
+
+  end subroutine log_nor2par
   !
   !------------------------------------------------------------------
   !

@@ -33,7 +33,7 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
   # load the fraction of samples to lose
   frac = as.numeric(PROJECT_in$latter_sample_frac)
   # calculate the number of parameter vectors this is
-  par_vector_length = 100#as.integer(PROJECT_in$nsubsamples*(1-frac))
+  par_vector_length = 200#as.integer(PROJECT_in$nsubsamples*(1-frac))
   # which site are we on now
   print("Beginning parameter extraction and chain merge")
   print(paste("Site = ",PROJECT_in$sites[n]," ",n," of ",PROJECT_in$nosites," ",Sys.time(),sep=""))
@@ -93,8 +93,12 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
 
   } # end of chains loop
 
-  if (PROJECT_in$model$name == "DALEC_CDEA" || PROJECT_in$model$name == "DALEC_CDEA_LU_FIRES") {
+  if (PROJECT_in$model$name == "DALEC_CDEA" || PROJECT_in$model$name == "DALEC_CDEA_LU_FIRES" || 
+      PROJECT_in$model$name == "DALEC_CDEA_ACM2") {
     param_sets_out[c(12,15),,] = ((param_sets_out[c(12,15),,]-1)%%365.25)+1
+  }
+  if (PROJECT_in$model$name == "DALEC_CDEA_no_lit_root") {
+    param_sets_out[c(8,11),,] = ((param_sets_out[c(8,11),,]-1)%%365.25)+1
   }
 
   # return the parameter solutions

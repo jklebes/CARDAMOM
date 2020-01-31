@@ -49,24 +49,25 @@ module MODEL_PARAMETERS
        PI%parmin(2) = 0.1d0
        PI%parmax(2) = 0.8d0
 
-       ! GSI sensitivity for leaf growth
-       PI%parmin(3) = 1.00d0
-       PI%parmax(3) = 1.003d0
+       ! Background leaf turnover rate
+       PI%parmin(3) = 0.0002737851d0 ! 10 years
+       PI%parmax(3) = 0.0013689254d0 !  2 year
 
-!       ! Max labile turnover (fraction) to roots
-!       PI%parmin(4) = 0.001368925 ! 2 years 0.0001368925d0 ! 20 years
-!       PI%parmax(4) = 0.05d0      ! 20 days
+!       ! GSI sensitivity for leaf growth
+!       PI%parmin(3) = 1.00d0
+!       PI%parmax(3) = 1.003d0
+
        ! Fraction of (1-fgpp) to roots*/
        PI%parmin(4) = 0.01d0
-       PI%parmax(4) = 1.0d0 ! 0.6 ?
+       PI%parmax(4) = 1.0d0
 
        ! GSI max leaf turnover
-       PI%parmin(5) = 0.000273785d0 ! 10 years
-       PI%parmax(5) = 0.10d0        ! 10 days
+       PI%parmin(5) = 0.001368925d0 ! 2 year 
+       PI%parmax(5) = 0.05d0        ! 20 days
 
        ! Turnover fraction of wood
-       PI%parmin(6) = 0.000009d0 ! 300 years
-       PI%parmax(6) = 0.001d0    ! 2.73 years
+       PI%parmin(6) = 0.000009d0 ! 304  years
+       PI%parmax(6) = 0.001d0    ! 2.74 years
 
        ! Turnover fraction of roots
        ! Gill and Jackson (2000), New Phytol., 147, 13–31
@@ -75,12 +76,14 @@ module MODEL_PARAMETERS
        PI%parmax(7) = 0.01d0         ! 0.27 years
 
        ! Turnover of litter (fraction; temperature adjusted)
-       PI%parmin(8) = 0.0003911215d0 ! 7    years at 0oC
-       PI%parmax(8) = 0.0109514d0    ! 0.25 years at 0oC
+       PI%parmin(8) = 0.00011d0   ! 24.9 years at 0oC
+       PI%parmax(8) = 0.02d0      ! 0.13 years at 0oC
 
        ! Turnover of som to Rhet (fraction; temperature adjusted)
        PI%parmin(9) = 2.737851d-06   ! 1000 years at 0oC
-       PI%parmax(9) = 0.0002737851d0 !   10 years at 0oC
+       PI%parmax(9) = 0.0001368926d0 !   20 years at 0oC
+!       PI%parmin(9) = 0.0000001d0 ! 27378.0 years at 0oC
+!       PI%parmax(9) = 0.001d0     !     2.7 years at 0oC
 
        ! Exponential coefficient for Rhet temperature response
        PI%parmin(10) = 0.018d0
@@ -88,31 +91,30 @@ module MODEL_PARAMETERS
 
        ! log10 avg foliar N (gN.m-2)
        ! Kattge et al., (2011) (Quantiles 2.5% / 97.5%)
-       PI%parmin(11) = -0.2218487d0
-       PI%parmax(11) = 0.6382028d0! 0.5563025d0
+!       PI%parmin(11) = -0.2218487d0
+!       PI%parmax(11) =  0.6382028d0 ! 0.5563025d0
+       PI%parmin(11) =  0d0 !-0.2218487d0 !TLS: restricted to 1 gN/m2leaf
+       PI%parmax(11) =  0.6382028d0 ! 0.5563025d0
 
        ! Max labile turnover fraction to foliage
-       PI%parmin(12) = 0.0006844627d0 ! 4 years 0.0001368925d0 ! 20 years
-       PI%parmax(12) = 0.05d0         ! 20 days
+       PI%parmin(12) = 0.001368925d0 !  2 years
+       PI%parmax(12) = 0.10d0        ! 10 days
 
-       ! Max labile turnover fraction to wood
-!       PI%parmin(13) = 0.0006844627d0 ! 4 years 0.0001368925d0 ! 20 years
-!       PI%parmax(13) = 0.05d0         ! 20 days
        ! Fraction to Clab*/
        PI%parmin(13) = 0.05d0
        PI%parmax(13) = 0.35d0
 
        ! GSI min temperature threshold (oC)
        PI%parmin(14) = 235d0
-       PI%parmax(14) = 300d0
+       PI%parmax(14) = 330d0
 
        ! GSI max temperature threshold (oC)
-       PI%parmin(15) = 268.15d0 !235d0
+       PI%parmin(15) = 235d0
        PI%parmax(15) = 330d0
 
        ! GSI min photoperiod threshold (sec)
-       PI%parmin(16) = 3600d0*4d0  !  4 hours
-       PI%parmax(16) = 3600d0*18d0 ! 18 hours
+       PI%parmin(16) = 3600d0*1d0  !  1 hours
+       PI%parmax(16) = 3600d0*24d0 ! 24 hours
 
        ! LMA
        ! Kattge et al. 2011,
@@ -120,44 +122,47 @@ module MODEL_PARAMETERS
        PI%parmax(17) = 180d0
 
        ! GSI max photoperiod threshold (sec)
-       PI%parmin(24) = 3600d0*4d0  !  4 hours
-       PI%parmax(24) = 3600d0*24d0 ! 24 hours
+       PI%parmin(24) = 3600d0*1d0   !  1 hours
+       PI%parmax(24) = 3600d0*24d0  ! 24 hours
 
        ! GSI min VPD threshold (Pa)
-       PI%parmin(25) = 100d0
-       PI%parmax(25) = 3000d0
+       PI%parmin(25) = 1d0
+       PI%parmax(25) = 6000d0
 
        ! GSI max VPD threshold (Pa)
-       PI%parmin(26) = 100d0
-       PI%parmax(26) = 5500d0
+       PI%parmin(26) = 1d0
+       PI%parmax(26) = 6000d0
 
-       ! critical GPP for LAI increase (fraction)
-       PI%parmin(27) = 0.01d0
+       ! GPP return on new Cfol investment (gCperGPP per gCnewfol)
+       PI%parmin(27) = 0.001d0
        PI%parmax(27) = 0.1d0
 
-       ! fraction of Cwood which is branch
-       PI%parmin(28) = 0.05d0
-       PI%parmax(28) = 0.40d0
+       ! min Leaf Water Potential (MPa)
+       PI%parmin(28) = -4d0
+       PI%parmax(28) = -1d0
+!       ! fraction of Cwood which is branch
+!       PI%parmin(28) = 0.05d0
+!       PI%parmax(28) = 0.40d0
 
        ! fraction of Cwood which is coarse root
        PI%parmin(29) = 0.15d0
        PI%parmax(29) = 0.30d0
 
        ! GSI senstivity for leaf senescence
-       PI%parmin(34) = 0.9960d0
-       PI%parmax(34) = 0.9999d0
-!!!! SHOULD THESE BE DITCHED?
-       ! GSI - have I just left a growing state (>1)
-       PI%parmin(35) = 0.75d0
-       PI%parmax(35) = 1.25d0
+       PI%parmin(34) = 0.996d0
+       PI%parmax(34) = 1.000d0
 
-       ! GSI - initial GSI value
+       ! GSI - have I just left a growing state (>1)
+       PI%parmin(35) = 0.50d0
+       PI%parmax(35) = 1.50d0
+
+       ! GSI - initial GSI value, src substracts 1
        PI%parmin(36) = 1.0d0
        PI%parmax(36) = 2.0d0
-!!!!
+
        ! Turnover rate for CWD
-       PI%parmin(38) = 0.0001        ! 27 years
-       PI%parmax(38) = 0.001368925d0 ! 2 year
+       PI%parmin(38) = 0.000009d0     ! 304 years at 0oC
+       PI%parmax(38) = 0.0005475702d0 !   5 years at 0oC
 
        ! BUCKET - root biomass needed to reach 50 % of max depth
        PI%parmin(39) = 50d0
@@ -197,7 +202,7 @@ module MODEL_PARAMETERS
        PI%parmax(20) = 1000d0
 
        ! C_wood
-       PI%parmin(21) = 10d0
+       PI%parmin(21) = 1d0
        PI%parmax(21) = 30000d0
 
        ! C litter
@@ -212,9 +217,9 @@ module MODEL_PARAMETERS
        PI%parmin(37) = 1d0
        PI%parmax(37) = 10000d0
 
-       ! Soil water fraction (m3/m3)
-       PI%parmin(41) = 0.15d0
-       PI%parmax(41) = 0.99d0
+       ! Initial soil water - fraction of field capacity
+       PI%parmin(41) = 0.50d0
+       PI%parmax(41) = 1.00d0
 
        !
        ! Replanting pools values

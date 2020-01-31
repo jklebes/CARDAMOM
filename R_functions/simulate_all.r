@@ -5,7 +5,6 @@
 
 simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type,exepath,soil_info) {
 
-  noedc=100
   output_dim=17 ; aNPP_dim=8
 
   # restructure pars
@@ -23,44 +22,16 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       pars_in = array(pars, dim=c(length(pars),1))
   }
 
-  # declare output variables
-  # order is npar,chain,step
-  laiall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-  gppall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-  rtotall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-  soilevapall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-  if (model_name != "ACM") {
-      neeall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      somall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      bioall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      rooall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      litall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      laball=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      folall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      rautoall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      rhetall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      harall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      gsiall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      gsitempall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      gsiphotoall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      gsivpdall=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      Clabslow=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      somfast=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      litroot=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      litwood=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      microact=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      microbial=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      litN=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      labN=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-      DIN=array(0,dim=c(dim(pars_in)[2],dim(met)[1]))
-  }
-
   # loop through combinations
   if (model_name == "ACM") {
+      # load the function code from the dalec shared object.
+      # NOTE: that the name of the shared object is hardcoded to dalec.so
+      # while the function call within will be specific to the actual model being called
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       output_dim=6
       if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
-      tmp=.Fortran( "racm",output_dim=as.integer(output_dim),met=as.double(t(met)),pars=as.double(pars_in),out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
+      tmp=.Fortran( "racm",output_dim=as.integer(output_dim),met=as.double(t(met)),pars=as.double(pars_in)
+                          ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
                           ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                           ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
                           ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
@@ -71,26 +42,80 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       output=array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
+      # construct output object
+      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
+                      evap_kgH2Om2day = output[,,3],soilevap_kgH2Om2day = output[,,4],
+                      Rtot_MPasm2mmol = output[,,5],wetcanevap_kgH2Om2day = output[,,6])
   } else if (model_name == "DALEC_BUCKET") {
-      output_dim=23
+      output_dim=24
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       crop_file_location=paste(PROJECT$exepath,"winter_wheat_development.csv", sep="")
       if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
-      tmp=.Fortran( "rdalecbucket",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
-                                  ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
-                                  ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
-                                  ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
-                                  ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
-                                  ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
-                                  ,soil_frac_clay_in=as.double(array(c(soil_info[3],soil_info[3],soil_info[4],soil_info[4]),dim=c(4)))
-                                  ,soil_frac_sand_in=as.double(array(c(soil_info[1],soil_info[1],soil_info[2],soil_info[2]),dim=c(4)))
-                                  ,exepath=as.character(crop_file_location),pathlength=as.integer(nchar(crop_file_location)))
+      tmp=.Fortran( "rdalecbucket",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim)
+                                     ,met=as.double(t(met)),pars=as.double(pars_in)
+                                     ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
+                                     ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
+                                     ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site])
+                                     ,nomet=as.integer(dim(met)[2]),nofluxes=as.integer(PROJECT$model$nofluxes[site])
+                                     ,nopools=as.integer(PROJECT$model$nopools[site]),pft=as.integer(pft)
+                                     ,pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
+                                     ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
+                                     ,soil_frac_clay_in=as.double(array(c(soil_info[3],soil_info[3],soil_info[4],soil_info[4]),dim=c(4)))
+                                     ,soil_frac_sand_in=as.double(array(c(soil_info[1],soil_info[1],soil_info[2],soil_info[2]),dim=c(4)))
+                                     ,exepath=as.character(crop_file_location),pathlength=as.integer(nchar(crop_file_location)))
       output=tmp$out_var ; output=array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
       aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
+      # create output object
+      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
+                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
+                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
+                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
+                      root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
+                      lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
+                      harvest_C_gCm2day = output[,,13], gsi = output[,,14],
+                      gsi_itemp = output[,,15], gsi_iphoto = output[,,16],
+                      gsi_ivpd = output[,,17], evap_kgH2Om2day = output[,,18],
+                      sfc_water_mm = output[,,19], wSWP_MPa = output[,,20],
+                      litwood_gCm2 = output[,,21], fire_gCm2day = output[,,23],
+                      gs_demand_supply = output[,,24], aNPP = aNPP)
+      # add newly calculated variables
+      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
+  } else if (model_name == "DALEC") {
+      output_dim=24
+      dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
+      crop_file_location=paste(PROJECT$exepath,"winter_wheat_development.csv", sep="")
+      if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
+      tmp=.Fortran( "rdalec",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim)
+                            ,met=as.double(t(met)),pars=as.double(pars_in)
+                            ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
+                            ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
+                            ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site])
+                            ,nomet=as.integer(dim(met)[2]),nofluxes=as.integer(PROJECT$model$nofluxes[site])
+                            ,nopools=as.integer(PROJECT$model$nopools[site]),pft=as.integer(pft)
+                            ,pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
+                            ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
+                            ,exepath=as.character(crop_file_location),pathlength=as.integer(nchar(crop_file_location)))
+      output=tmp$out_var ; output=array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
+      aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
+      dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
+      rm(tmp) ; gc()
+      # create output object
+      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
+                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
+                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
+                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
+                      root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
+                      lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
+                      harvest_C_gCm2day = output[,,13], gsi = output[,,14],
+                      gsi_itemp = output[,,15], gsi_iphoto = output[,,16],
+                      gsi_ivpd = output[,,17], litwood_gCm2 = output[,,21], 
+                      fire_gCm2day = output[,,23], aNPP = aNPP)
+      # add newly calculated variables
+      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_GSI_BUCKET") {
-      output_dim=23
+      output_dim=24
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       crop_file_location=paste(PROJECT$exepath,"winter_wheat_development.csv", sep="")
       if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
@@ -110,6 +135,21 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
+      # create output object
+      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
+                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
+                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
+                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
+                      root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
+                      lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
+                      harvest_C_gCm2day = output[,,13], gsi = output[,,14],
+                      gsi_itemp = output[,,15], gsi_iphoto = output[,,16],
+                      gsi_ivpd = output[,,17], evap_kgH2Om2day = output[,,18],
+                      sfc_water_mm = output[,,19], wSWP_MPa = output[,,20],
+                      litwood_gCm2 = output[,,21], fire_gCm2day = output[,,23],
+                      gs_demand_supply = output[,,24], aNPP = aNPP)
+      # add newly calculated variables
+      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALECN_GSI_BUCKET") {
       output_dim=23
       if (is.loaded("rdalecngsibucket") == FALSE) { dyn.load(paste(PROJECT$exepath,"/dalec.so", sep="")) }
@@ -128,6 +168,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
       if (site == PROJECT$sites[length(PROJECT$sites)]) {dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))}
       rm(tmp) ; gc()
+      stop('Code to assign variables to output has not been re-written to current code standard - ooops')
   } else if (model_name == "DALECN_BUCKET") {
       output_dim=23
       if (is.loaded("rdalecnbucket") == FALSE) { dyn.load(paste(PROJECT$exepath,"/dalec.so", sep="")) }
@@ -146,6 +187,19 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
       if (site == PROJECT$sites[length(PROJECT$sites)]) {dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))}
       rm(tmp) ; gc()
+      # create output object
+      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
+                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
+                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
+                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
+                      root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
+                      lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
+                      harvest_C_gCm2day = output[,,13], canopyage_days = output[,,14],
+                      evap_kgH2Om2day = output[,,18],
+                      sfc_water_mm = output[,,19], wSWP_MPa = output[,,20],
+                      litwood_gCm2 = output[,,21], fire_gCm2day = output[,,23], aNPP = aNPP)
+      # add newly calculated variables
+      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_CDEA") {
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       pft_specific = 0
@@ -172,6 +226,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
+      stop('Code to assign variables to output has not been re-written to current code standard - ooops')
   } else if (model_name == "DALEC_CDEA_LU_FIRES") {
       output_dim=19
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
@@ -187,6 +242,69 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
+      # Create the output object
+      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
+                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
+                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
+                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
+                      root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
+                      lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
+                      harvest_C_gCm2day = output[,,13], fire_gCm2day = output[,,14],
+                      aNPP = aNPP)
+      # add newly calculated variables
+      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
+  } else if (model_name == "DALEC_CDEA_ACM2") {
+      output_dim=19
+      dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
+      if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
+      tmp=.Fortran( "rdaleccdeaacm2",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met))
+                                       ,pars=as.double(pars_in),out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
+                                       ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim))),lat=as.double(lat)
+                                       ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
+                                       ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
+                                       ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
+                                       ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter))
+      output=tmp$out_var ; output=array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
+      aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
+      dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
+      rm(tmp) ; gc()
+      # Create the output object
+      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
+                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
+                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
+                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
+                      root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
+                      lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
+                      harvest_C_gCm2day = output[,,13], fire_gCm2day = output[,,14],
+                      aNPP = aNPP)
+      # add newly calculated variables
+      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
+  } else if (model_name == "DALEC_CDEA_no_lit_root") {
+      output_dim=19
+      dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
+      if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
+      tmp=.Fortran( "rdaleccdeanolitroot",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met))
+                                       ,pars=as.double(pars_in),out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
+                                       ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim))),lat=as.double(lat)
+                                       ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
+                                       ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
+                                       ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
+                                       ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter))
+      output=tmp$out_var ; output=array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
+      aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
+      dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
+      rm(tmp) ; gc()
+      # Create the output object
+      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
+                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
+                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
+                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
+                      root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
+                      lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
+                      harvest_C_gCm2day = output[,,13], fire_gCm2day = output[,,14],
+                      aNPP = aNPP)
+      # add newly calculated variables
+      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_EVERGREEN") {
       output_dim=19
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
@@ -202,6 +320,43 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
+      # Create the output object
+      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
+                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
+                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
+                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
+                      root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
+                      lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
+                      harvest_C_gCm2day = output[,,13], fire_gCm2day = output[,,14],
+                      aNPP = aNPP)
+      # add newly calculated variables
+      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
+  } else if (model_name == "DALEC_EVERGREEN_no_lit_root") {
+      output_dim=19
+      dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
+      if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
+      tmp=.Fortran( "rdalecevergreennolitroot",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met))
+                                     ,pars=as.double(pars_in),out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
+                                     ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim))),lat=as.double(lat)
+                                     ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
+                                     ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
+                                     ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
+                                     ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter))
+      output=tmp$out_var ; output=array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
+      aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
+      dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
+      rm(tmp) ; gc()
+      # Create the output object
+      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
+                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
+                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
+                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
+                      root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
+                      lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
+                      harvest_C_gCm2day = output[,,13], fire_gCm2day = output[,,14],
+                      aNPP = aNPP)
+      # add newly calculated variables
+      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_GSI_FR_LABILE") {
       output_dim=18
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
@@ -216,6 +371,18 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
+      # create output object
+      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
+                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
+                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
+                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
+                      root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
+                      lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
+                      harvest_C_gCm2day = output[,,13], gsi = output[,,14],
+                      gsi_itemp = output[,,15], gsi_iphoto = output[,,16],
+                      gsi_ivpd = output[,,17], labile_slow_gCm2 = output[,,18], aNPP = aNPP)
+      # add newly calculated variables
+      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALECN_GSI_FR") {
       output_dim=22
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
@@ -230,6 +397,20 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
+      # create output object
+      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
+                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
+                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
+                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
+                      root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
+                      lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
+                      harvest_C_gCm2day = output[,,13], gsi = output[,,14],
+                      gsi_itemp = output[,,15], gsi_iphoto = output[,,16],
+                      gsi_ivpd = output[,,17], litwood_gCm2 = output[,,18],
+                      litN_gNm2 = output[,,19], labN_gNm2 = output[,,20],
+                      DIN_gNm2 = output[,,21], N_mineralisation_gNm2 = output[,,22], aNPP = aNPP)
+      # add newly calculated variables
+      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_GSI_FR") {
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
@@ -243,6 +424,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
     aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
     dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
     rm(tmp) ; gc()
+    stop('Code to assign variables to output has not been re-written to current code standard - ooops')
   } else if (model_name == "DALEC_GSI_DFOL_FR") {
     dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
     if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
@@ -256,6 +438,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
+      stop('Code to assign variables to output has not been re-written to current code standard - ooops')
   } else if (model_name == "DALEC_GSI_DFOL_CWD_FR") {
       output_dim=19
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
@@ -273,12 +456,25 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
+      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
+                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
+                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
+                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
+                      root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
+                      lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
+                      harvest_C_gCm2day = output[,,13], gsi = output[,,14],
+                      gsi_itemp = output[,,15], gsi_iphoto = output[,,16],
+                      gsi_ivpd = output[,,17], litwood_gCm2 = output[,,18],
+                      fire_gCm2day = output[,,19], aNPP = aNPP)
+      # add newly calculated variables
+      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_GSI_DFOL_FROOT_FR") {
       output_dim=19
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
       tmp=.Fortran( "rdalecgsidfolfrootfr",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
-                                          ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
+                                          ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
+                                          ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
                                           ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                           ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
                                           ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
@@ -287,6 +483,19 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
+      # create output object
+      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
+                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
+                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
+                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
+                      root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
+                      lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
+                      harvest_C_gCm2day = output[,,13], gsi = output[,,14],
+                      gsi_itemp = output[,,15], gsi_iphoto = output[,,16],
+                      gsi_ivpd = output[,,17], labroot_gCm2 = output[,,18],
+                      labwood_gCm2 = output[,,19], aNPP = aNPP)
+      # add newly calculated variables
+      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALECN_GSI_DFOL_LABILE_FR") {
       output_dim=24
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
@@ -301,6 +510,21 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
+      # create output object
+      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
+                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
+                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
+                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
+                      root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
+                      lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
+                      harvest_C_gCm2day = output[,,13], gsi = output[,,14],
+                      gsi_itemp = output[,,15], gsi_iphoto = output[,,16],
+                      gsi_ivpd = output[,,17], labroot_gCm2 = output[,,18],
+                      labwood_gCm2 = output[,,19], litwood_gCm2 = output[,,20],
+                      litN_gNm2 = output[,,21], labN_gNm2 = output[,,22],
+                      DIN_gNm2 = output[,,23], N_mineralisation_gNm2day = output[,,24], aNPP = aNPP)
+      # add newly calculated variables
+      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALECN_GSI_DFOL_LABILE_FROOT_FR") {
       output_dim=24
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
@@ -315,6 +539,21 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
+      # create output object
+      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
+                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
+                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
+                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
+                      root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
+                      lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
+                      harvest_C_gCm2day = output[,,13], gsi = output[,,14],
+                      gsi_itemp = output[,,15], gsi_iphoto = output[,,16],
+                      gsi_ivpd = output[,,17], labroot_gCm2 = output[,,18],
+                      labwood_gCm2 = output[,,19], litwood_gCm2 = output[,,20],
+                      litN_gNm2 = output[,,21], labN_gNm2 = output[,,22],
+                      DIN_gNm2 = output[,,23], N_mineralisation_gNm2day = output[,,24], aNPP = aNPP)
+      # add newly calculated variables
+      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_GSI_DFOL_LABILE_FR") {
       output_dim=20
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
@@ -329,6 +568,19 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
+      # create output object
+      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
+                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
+                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
+                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
+                      root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
+                      lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
+                      harvest_C_gCm2day = output[,,13], gsi = output[,,14],
+                      gsi_itemp = output[,,15], gsi_iphoto = output[,,16],
+                      gsi_ivpd = output[,,17], labroot_gCm2 = output[,,18],
+                      labwood_gCm2 = output[,,19], litwood_gCm2 = output[,,20], aNPP = aNPP)
+      # add newly calculated variables
+      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_GSI_MFOL_FR") {
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
@@ -342,6 +594,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
+      stop('Code to assign variables to output has not been re-written to current code standard - ooops')
   } else if (model_name == "DALEC_GSI_DBio_FR") {
       output_dim=22
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
@@ -356,163 +609,26 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
-  } else if (model_name == "AT_DALEC") {
-      randomForest=read_binary_response_surface(paste(exepath,"/gpp_emulator_parameters_",pft,".bin",sep=""))
-      crop_info=crop_development_parameters(paste(exepath,"/winter_wheat_development.csv",sep=""))
-      dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
-      if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
-      tmp=.Fortran( "ratdalec",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim),met=as.double(t(met)),pars=as.double(pars_in)
-                              ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim))),out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
-                              ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
-                              ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
-                              ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
-                              ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),dim1=as.integer(randomForest$dim_1),dim2=as.integer(randomForest$dim_2)
-                              ,cdim=as.integer(crop_info$crop_dims),dummy_nos_trees=as.integer(randomForest$ntree)
-                              ,dummy_nos_inputs=as.integer(randomForest$nos_inputs),nos_iter=as.integer(nos_iter)
-                              ,stock_seed_labile=as.double(crop_info$stock_seed_labile)
-                              ,tmp1=as.double(randomForest$leftDaughter),tmp2=as.double(randomForest$rightDaughter)
-                              ,tmp3=as.double(randomForest$nodestatus),tmp4=as.double(randomForest$xbestsplit)
-                              ,tmp5=as.double(randomForest$nodepred),tmp6=as.double(randomForest$bestvar)
-                              ,DS_shoot=as.double(crop_info$DS_shoot),fol_frac=as.double(crop_info$fol_frac),stem_frac=as.double(crop_info$stem_frac)
-                              ,DS_root=as.double(crop_info$DS_root),root_frac=as.double(crop_info$root_frac)
-                              ,DS_LRLV=as.double(crop_info$DS_LRLV),LRLV=as.double(crop_info$LRLV)
-                              ,DS_LRRT=as.double(crop_info$DS_LRRT),LRRT=as.double(crop_info$LRRT) )
-      output=tmp$out_var ; output=array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
-      aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
-      dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
-      rm(tmp) ; gc()
+      # create output object
+      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
+                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
+                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
+                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
+                      root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
+                      lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
+                      harvest_C_gCm2day = output[,,13], gsi = output[,,14],
+                      gsi_itemp = output[,,15], gsi_iphoto = output[,,16],
+                      gsi_ivpd = output[,,17], somfast_gCm2 = output[,,18],
+                      litroot_gCm2 = output[,,19], litwood_gCm2 = output[,,20],
+                      microact = output[,,21], microbial_gCm2 = output[,,22], aNPP = aNPP)
+      # add newly calculated variables
+      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else {
       stop(paste("Model choice (",model_name,") does not have corresponding R interface",sep=""))
   }
-  # pass output (iter,nodays)
-  laiall = output[,,1] #
-  gppall = output[,,2] # gCm-2day-1
-  evapall = output[,,3]# kgH2Om-2.day-1
-  if (model_name == "ACM" & output_dim == 6) {soilevapall = output[,,4] ; rtotall = output[,,5] ; wetevapall = output[,,6]}
-  if (model_name != "ACM") {
-      rautoall = output[,,3]#
-      rhetall = output[,,4]#
-      neeall = output[,,5]#
-      woodall = output[,,6]#
-      somall = output[,,7]#
-      bioall = output[,,8]#
-      rooall = output[,,9]#
-      litall = output[,,10]#
-      laball = output[,,11]#
-      folall = output[,,12]#
-      harall = output[,,13]#
-    if (grepl("CDEA",model_name) | grepl("EVERGREEN", model_name)) {
-        fire = output[,,14]      
-    }
-    if (grepl("GSI",model_name)) {
-        gsiall = output[,,14] # GSI combined
-        gsitempall = output[,,15]# GSI air temperature component
-        gsiphotoall = output[,,16] # GSI photoperiod
-        gsivpdall = output[,,17] # GSI VPD component
-    }
-    if (grepl("BUCKET",model_name)) {
-        evapall = output[,,18]   # kgH2Om-2.day-1}
-        rootwater = output[,,19] # kgH2Om-2 root zone
-        wSWP = output[,,20] # Estimates total hydraulic resistance (MPa)
-        litwood = output[,,21]
-        fire = output[,,23]
-    }
-    if (model_name == "DALEC_GSI_DFOL_CWD_FR") {litwood = output[,,18] ; fire = output[,,19]}
-    if (model_name == "DALEC_GSI_FR_LABILE") {labile_slow = output[,,18]}
-    if (model_name == "DALEC_GSI_DFOL_FROOT_FR") {labroot = output[,,18] ; labwood = output[,,19]}
-    if (model_name == "DALEC_GSI_DFOL_LABILE_FR") {labroot = output[,,18] ; labwood = output[,,19] ; litwood = output[,,20]}
-    if (model_name == "DALECN_GSI_DFOL_LABILE_FR" | model_name == "DALECN_GSI_DFOL_LABILE_FROOT_FR") {
-        labroot = output[,,18] ; labwood = output[,,19] ; litwood = output[,,20]
-        litN = output[,,21] ; labN = output[,,22] ; DIN = output[,,23]
-        N_mineralisation = output[,,24]
-    }
-    if (model_name == "DALEC_GSI_DBio_FR") {
-        somfast = output[,,18]
-        litroot = output[,,19]
-        litwood = output[,,20]
-        microact = output[,,21]
-        microbial = output[,,22]
-    }
-    if (model_name == "DALECN_GSI_FR") {
-        litwood = output[,,18]
-        litN = output[,,19]
-        labN = output[,,20]
-        DIN = output[,,21]
-        N_mineralisation = output[,,22]
-    }
-    if (model_name == "DALECN_BUCKET") {
-        canopyage = output[,,14] # mean canopy age (days)
-    }
-  } # not acm
 
-  if (model_name != "ACM") {
-      # combine outputs
-      states_all=list(lai = laiall
-                     ,gpp = gppall
-                     ,nee = neeall
-                     ,reco = neeall+gppall
-                     ,rauto = rautoall
-                     ,rhet = rhetall
-                     ,wood = woodall
-                     ,som = somall
-                     ,bio = bioall
-                     ,root = rooall
-                     ,lit = litall
-                     ,lab = laball
-                     ,fol = folall
-                     ,harvest_C = harall
-                     ,aNPP = aNPP)
-
-       if (model_name == "DALEC_CDEA_LU_FIRES" | model_name == "DALEC_EVERGREEN") {states_all$fire = fire}
-       if (model_name == "DALEC_GSI_FR_LABILE") {states_all$Clabslow = labile_slow}
-       if (model_name == "DALEC_GSI_DFOL_FROOT_FR") {states_all$labroot = labroot ; states_all$labwood = labwood}
-       if (model_name == "DALEC_GSI_DFOL_CWD_FR") {states_all$litwood = litwood ; states_all$fire = fire}
-       if (model_name == "DALEC_GSI_DFOL_LABILE_FR") {states_all$labroot = labroot ; states_all$labwood = labwood ; states_all$litwood = litwood}
-       if (model_name == "DALECN_GSI_DFOL_LABILE_FR" | model_name == "DALECN_GSI_DFOL_LABILE_FROOT_FR") {
-           states_all$labroot = labroot ; states_all$labwood = labwood
-           states_all$litwood = litwood ; states_all$litN = litN
-           states_all$labN = labN ; states_all$DIN = DIN
-           states_all$N_mineralisation = N_mineralisation
-       }
-
-       # something species for DBio model at the moment
-       if (model_name == "DALEC_GSI_DBio_FR") {
-           states_all$somfast = somfast
-           states_all$litroot = litroot
-           states_all$litwood = litwood
-           states_all$microact = microact
-           states_all$microbial = microbial
-       }
-       if (model_name == "DALECN_GSI_FR") {
-           states_all$litwood = litwood
-           states_all$litN = litN
-           states_all$labN = labN
-           states_all$DIN = DIN
-           states_all$N_mineralisation = N_mineralisation
-       }
-       if (grepl("GSI",model_name)) {
-           states_all$gsi = gsiall
-           states_all$gsi_itemp = gsitempall
-           states_all$gsi_iphoto = gsiphotoall
-           states_all$gsi_ivpd = gsivpdall
-       }
-       if (grepl("BUCKET",model_name)) {
-           states_all$litwood = litwood
-           states_all$evap = evapall   # kgH2Om-2.day-1}
-           states_all$rootwater = rootwater # kgH2Om-2 root zone
-           states_all$wSWP = wSWP
-           states_all$fire = fire
-       }
-       if (model_name == "DALECN_BUCKET") {
-           states_all$canopyage = canopyage # mean canopy age (days)
-       }
-    } else {
-       # combine outputs for ACM-GPP-ET
-       states_all = list(lai = laiall,gpp = gppall,evap = evapall,soilevap = soilevapall,Rtot = rtotall,wetcanevap = wetevapall)
-    }
-
-    # return state variable means
-    return(states_all) ; gc(verbose=FALSE)
+  # return state variable means
+  return(states_all) ; gc(verbose=FALSE)
 
   } # end of function
   ## Use byte compile

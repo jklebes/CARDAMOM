@@ -105,58 +105,58 @@ cardamom <-function (projname,model,method,stage) {
 
     # save spatial type
     if (cardamom_type == "grid") {
-      PROJECT$spatial_type="grid"
-      PROJECT$resolution=cardamom_resolution
-      PROJECT$grid_type=cardamom_grid_type
+        PROJECT$spatial_type="grid"
+        PROJECT$resolution=cardamom_resolution
+        PROJECT$grid_type=cardamom_grid_type
     } else if (cardamom_type == "site") {
-      PROJECT$spatial_type="site"
-      PROJECT$resolution=" "
-      PROJECT$grid_type=" "
+        PROJECT$spatial_type="site"
+        PROJECT$resolution=" "
+        PROJECT$grid_type=" "
     } else {
-      stop("missing cardamom_type variable")
+        stop("missing cardamom_type variable")
     }
     # in both cases we will actually want to have the lat / long information
     PROJECT$latitude=sites_cardamom_lat ; PROJECT$longitude=sites_cardamom_long
     PROJECT$model$timestep=timestep_type
 
     if (PROJECT$model$timestep == "monthly") {
-      print("...model will use calender monthly timestep ")
-      all_years=as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)
-      nos_days=nos_days_in_year(all_years[1])
-      if (nos_days == 366) {timestep_days=c(31,29,31,30,31,30,31,31,30,31,30,31)} else {timestep_days=c(31,28,31,30,31,30,31,31,30,31,30,31)}
-      for (y in seq(2, length(all_years))) {
-        # calculate increment
-        nos_days=nos_days_in_year(all_years[y])
-        if (nos_days == 366) {
-          timestep_days=append(timestep_days,c(31,29,31,30,31,30,31,31,30,31,30,31))
-        } else {
-          timestep_days=append(timestep_days,c(31,28,31,30,31,30,31,31,30,31,30,31))
-        }
-      } # loop through days
-      # clean up
-      rm(all_years)
+        print("...model will use calender monthly timestep ")
+        all_years=as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)
+        nos_days=nos_days_in_year(all_years[1])
+        if (nos_days == 366) {timestep_days=c(31,29,31,30,31,30,31,31,30,31,30,31)} else {timestep_days=c(31,28,31,30,31,30,31,31,30,31,30,31)}
+        for (y in seq(2, length(all_years))) {
+             # calculate increment
+             nos_days=nos_days_in_year(all_years[y])
+             if (nos_days == 366) {
+                 timestep_days=append(timestep_days,c(31,29,31,30,31,30,31,31,30,31,30,31))
+             } else {
+                 timestep_days=append(timestep_days,c(31,28,31,30,31,30,31,31,30,31,30,31))
+             }
+        } # loop through days
+        # clean up
+        rm(all_years)
     } else if (PROJECT$model$timestep == "weekly") {
-      print("...model will use weekly timestep ")
-      all_years=as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)
-      nos_days=nos_days_in_year(all_years[1])
-      if (nos_days == 366) {timestep_days=c(rep(7,times=51),9)} else {timestep_days=c(rep(7,times=51),8)}
-      for (y in seq(2, length(all_years))) {
-        # calculate increment
-        nos_days=nos_days_in_year(all_years[y])
-        if (nos_days == 366) {
-          timestep_days=append(timestep_days,c(rep(7,times=51),9))
-        } else {
-          timestep_days=append(timestep_days,c(rep(7,times=51),8))
-        }
-      } # loop through days
-      # clean up
-      rm(all_years)
+        print("...model will use weekly timestep ")
+        all_years=as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)
+        nos_days=nos_days_in_year(all_years[1])
+        if (nos_days == 366) {timestep_days=c(rep(7,times=51),9)} else {timestep_days=c(rep(7,times=51),8)}
+        for (y in seq(2, length(all_years))) {
+             # calculate increment
+             nos_days=nos_days_in_year(all_years[y])
+             if (nos_days == 366) {
+                 timestep_days=append(timestep_days,c(rep(7,times=51),9))
+             } else {
+                 timestep_days=append(timestep_days,c(rep(7,times=51),8))
+             }
+        } # loop through days
+        # clean up
+        rm(all_years)
     } else if (PROJECT$model$timestep == "daily") {
-      print("...model will use daily timestep")
-      timestep_days=1
+        print("...model will use daily timestep")
+        timestep_days=1
     } else {
-      timestep_days=1
-      print("WARNING: user has not specified a time step option ('daily' or 'monthly'), default assumption is daily")
+        timestep_days=1
+        print("WARNING: user has not specified a time step option ('daily' or 'monthly'), default assumption is daily")
     } # time step diagnosis loop
 
     # load to PROJECT for perminent use
@@ -193,7 +193,7 @@ cardamom <-function (projname,model,method,stage) {
   ## Begin Stage 1
 
   if (stage == 1) {
-skip_UK = read.csv("/home/lsmallma/Desktop/UK_forestry_sites_with_yield_and_biomass.csv",header=TRUE)
+#skip_UK = read.csv("/home/lsmallma/Desktop/UK_forestry_sites_with_yield_and_biomass.csv",header=TRUE)
     print("Beginning creation of binary input files")
     # flag for met drivers load
     loaded_all = FALSE ; met_all = 0 ; lai_all = 0 ; Csom_all = 0 ; forest_all = 0 ; Cwood_all = 0
@@ -201,78 +201,79 @@ skip_UK = read.csv("/home/lsmallma/Desktop/UK_forestry_sites_with_yield_and_biom
     timestep_days=PROJECT$model$timestep_days
     # start looping through sites to create site specific files of obs and met
     for (n in seq(1, PROJECT$nosites)) {
-      if (n == 1 & cardamom_type == "grid") {
-        print("Determining number / locations of grid points for this run ...")
-        output=determine_lat_long_needed(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution,PROJECT$grid_type,PROJECT$waterpixels)
-        print("Have now determined grid point locations")
-        latlon=cbind(output$lat,output$long) ; rm(output) ; gc(reset=TRUE,verbose=FALSE)
-      } else if (n == 1 & cardamom_type != "grid") {
-        print("Determining number / locations of grid points for this run ...")
-        latlon=cbind(PROJECT$latitude,PROJECT$longitude)
-        print("Have now determined grid point locations")
-      }
-      print(paste("Site ",n," of ",PROJECT$nosites," ",Sys.time(),sep=""))
-      # create the file name for the met/obs binary
-      filename=paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep="")
+         if (n == 1 & cardamom_type == "grid") {
+             print("Determining number / locations of grid points for this run ...")
+             output=determine_lat_long_needed(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution,PROJECT$grid_type,PROJECT$waterpixels)
+             print("Have now determined grid point locations")
+             latlon=cbind(output$lat,output$long) ; rm(output) ; gc(reset=TRUE,verbose=FALSE)
+         } else if (n == 1 & cardamom_type != "grid") {
+             print("Determining number / locations of grid points for this run ...")
+             latlon=cbind(PROJECT$latitude,PROJECT$longitude)
+             print("Have now determined grid point locations")
+         }
+         print(paste("Site ",n," of ",PROJECT$nosites," ",Sys.time(),sep=""))
+         # create the file name for the met/obs binary
+         filename=paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep="")
 
-      # load met drivers and obs from CTESSEL and convert to daily if needed
-      # these data are site specific so
-      if (file.exists(filename) == FALSE | repair == 1){
-        if (PROJECT$model$name != "ACM") {
-          # if this is the first time of all creating new met files this time round load the whole dataset for rapid access
-          if (loaded_all == FALSE) {
-            met_all = load_met_fields_for_extraction(latlon,met_source,PROJECT$model$name,PROJECT$start_year,PROJECT$end_year)
-            lai_all = load_lai_fields_for_extraction(latlon,lai_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
-            Csom_all = load_hwsd_Csom_fields_for_extraction(latlon,Csom_source)
-            crop_man_all = load_sacks_calendar_fields_for_extraction(latlon,crop_management_source)
-            sand_clay_all = load_hwsd_sand_clay_fields_for_extraction(latlon,sand_clay_source)
-            forest_all = load_forestry_fields_for_extraction(latlon,deforestation_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
-            Cwood_all = load_mpi_biomass_fields_for_extraction(latlon,Cwood_stock_source,Cwood_initial_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
-            burnt_all = load_burnt_area_fields_for_extraction(latlon,burnt_area_source,path_to_burnt_area,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year))
-            soilwater_all = load_soilwater_fields_for_extraction(latlon,soilwater_initial_source)
-            # set flag
-            loaded_all = TRUE }
-            met = extract_met_drivers(n,timestep_days,PROJECT$start_year,PROJECT$end_year,latlon[n,],met_all,met_source,PROJECT$sites[n])
-          } else {
-            # assume ACM special case
-            met = extract_acm_met_drivers(PROJECT,latlon[n,],PROJECT$sites[n])
-          } #  acm special case
+         # load met drivers and obs from CTESSEL and convert to daily if needed
+         # these data are site specific so
+         if (file.exists(filename) == FALSE | repair == 1){
+             if (PROJECT$model$name != "ACM") {
+                 # if this is the first time of all creating new met files this time round load the whole dataset for rapid access
+                 if (loaded_all == FALSE) {
+                     met_all = load_met_fields_for_extraction(latlon,met_source,PROJECT$model$name,PROJECT$start_year,PROJECT$end_year)
+                     lai_all = load_lai_fields_for_extraction(latlon,lai_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
+                     nbe_all = load_nbe_fields_for_extraction(latlon,nbe_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
+                     Csom_all = load_hwsd_Csom_fields_for_extraction(latlon,Csom_source)
+                     crop_man_all = load_sacks_calendar_fields_for_extraction(latlon,crop_management_source)
+                     sand_clay_all = load_hwsd_sand_clay_fields_for_extraction(latlon,sand_clay_source)
+                     forest_all = load_forestry_fields_for_extraction(latlon,deforestation_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
+                     Cwood_all = load_mpi_biomass_fields_for_extraction(latlon,Cwood_stock_source,Cwood_initial_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
+                     burnt_all = load_burnt_area_fields_for_extraction(latlon,burnt_area_source,path_to_burnt_area,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year))
+                     soilwater_all = load_soilwater_fields_for_extraction(latlon,soilwater_initial_source)
+                     # set flag
+                     loaded_all = TRUE }
+                     met = extract_met_drivers(n,timestep_days,PROJECT$start_year,PROJECT$end_year,latlon[n,],met_all,met_source,PROJECT$sites[n])
+                 } else {
+                     # assume ACM special case
+                     met = extract_acm_met_drivers(PROJECT,latlon[n,],PROJECT$sites[n])
+             } #  acm special case
 #if ( length(which(skip_UK$UK_Forest_site_nos == n)) > 0) {
-            obs=extract_obs(latlon[n,],lai_all,Csom_all,forest_all,Cwood_all,sand_clay_all,crop_man_all
-                         ,burnt_all,soilwater_all
-                         ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
-                         ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
-            # update ctessel pft in the project and potentially the model information
-            PROJECT$ctessel_pft[n]=obs$ctessel_pft
-            # Load additional model information
-            PROJECT$model=cardamom_model_details(PROJECT$model$name,pft_specific_parameters,PROJECT$ctessel_pft)
-            # write out the relevant binary files
-            binary_data(met,obs,filename,PROJECT$edc,latlon[n,],PROJECT$ctessel_pft[n],PROJECT$model$name,PROJECT$parameter_type,PROJECT$model$nopars[n])
+             obs=extract_obs(latlon[n,],lai_all,Csom_all,forest_all,Cwood_all,sand_clay_all,crop_man_all
+                            ,burnt_all,soilwater_all,nbe_all
+                            ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
+                            ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
+             # update ctessel pft in the project and potentially the model information
+             PROJECT$ctessel_pft[n]=obs$ctessel_pft
+             # Load additional model information
+             PROJECT$model=cardamom_model_details(PROJECT$model$name,pft_specific_parameters,PROJECT$ctessel_pft)
+             # write out the relevant binary files
+             binary_data(met,obs,filename,PROJECT$edc,latlon[n,],PROJECT$ctessel_pft[n],PROJECT$model$name,PROJECT$parameter_type,PROJECT$model$nopars[n])
 #}
           }
-        } # site loop
+    } # site loop
 
-        # clean up to remove large drains on computer memeory
-        rm(met_all,lai_all) ; gc(reset=TRUE,verbose=FALSE)
+    # clean up to remove large drains on computer memeory
+    rm(met_all,lai_all) ; gc(reset=TRUE,verbose=FALSE)
 
-        # copy files to eddie?
-        if (PROJECT$ecdf) {
-          failed = TRUE ; copy_to = "y" ; failed = FALSE
-          while(failed) {
-            copy_to=readline("Copy binary driver files to cluster? (y/n)")
-            if (copy_to != "y" & copy_to != "n") {failed=TRUE} else {failed=FALSE}
-          }
-          if (copy_to == "y") {
+    # copy files to eddie?
+    if (PROJECT$ecdf) {
+        failed = TRUE ; copy_to = "y" ; failed = FALSE
+        while(failed) {
+              copy_to=readline("Copy binary driver files to cluster? (y/n)")
+              if (copy_to != "y" & copy_to != "n") {failed=TRUE} else {failed=FALSE}
+        }
+        if (copy_to == "y") {
             #home_computer=Sys.info()["nodename"]
             command=paste("scp -r ",username,"@",home_computer,":",PROJECT$datapath,"* ",PROJECT$edatapath,sep="")
             print(command)
             ecdf_execute(command)
-          }
-        } # copy to Eddie
+        }
+    } # copy to Eddie
 
-        # report to the user
-        return(paste("CARDAMOM Report: ",stage," completed", sep=""))
-      }
+    # report to the user
+    return(paste("CARDAMOM Report: ",stage," completed", sep=""))
+  }
 
       ###
       ## Begin Stage 2

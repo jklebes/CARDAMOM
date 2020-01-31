@@ -70,8 +70,8 @@ program cardamom_framework
  write(*,*) "Beginning search for initial parameter conditions"
  ! Determine initial values, this requires using the MHMCMC
  call find_edc_initial_values
+
  ! Reset stepsize and covariance for main DRAM-MCMC
- PI%stepsize = 1d0 ; PI%beta_stepsize = par_minstepsize
  PI%Nparvar = 0d0 ; PI%parvar = 0d0
  PI%covariance = 0d0 ; PI%mean_par = 0d0 
  PI%cov = .false. ; PI%use_multivariate = .false.
@@ -79,24 +79,10 @@ program cardamom_framework
     PI%covariance(i,i) = 1d0
  end do
 
- ! Reset stepsize and covariance for main DRAM-MCMC
-! PI%stepsize = 1d0 ; PI%beta_stepsize = par_initstepsize !par_minstepsize
-! PI%Nparvar = 1d0
-! PI%covariance = 0d0 ; PI%parvar = par_initstepsize
-! PI%cov = .true. ; PI%use_multivariate = .false. ! .true.
-! do i = 1, PI%npars
-!    PI%covariance(i,i) = par_initstepsize
-! end do
- ! Re-calculate inverse matrix as it may now be used,
- ! direct inversion of covariance matrix based on Doolittle LU
- ! factorization
-! call inverse_matrix( PI%npars, PI%covariance, PI%iC )
-
  ! Restore module variables needed for the run - these components could be split
  ! into two subroutines to avoid double calling of file name creation
  ! components...
  call read_options(solution_wanted,freq_print,freq_write,outfile)
-
  ! Open the relevant output files
  call open_output_files(MCO%outfile,MCO%stepfile,MCO%covfile,MCO%covifile)
 
@@ -106,6 +92,7 @@ program cardamom_framework
      ! restart
      call update_for_restart_simulation
  else
+     print*,"writing initial covariance matrix"
      ! write out first covariance matrix, this will be compared with the final covariance matrix
      if (MCO%nWRITE > 0) then
          call write_covariance_matrix(PI%covariance,PI%npars,.true.)
@@ -113,10 +100,10 @@ program cardamom_framework
      endif
  endif
 
- ! update the user
+ ! Update the user
  write(*,*)"Beginning MHMCMC for real..."
- ! call the main MCMC
- call MHMCMC(model_likelihood)
+ ! Call the main MCMC
+ call MHMCMC(1d0,model_likelihood)
  write(*,*)"MHMCMC done now, moving on ..."
 
  ! tidy up by closing all files

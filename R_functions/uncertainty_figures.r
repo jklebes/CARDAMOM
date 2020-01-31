@@ -14,7 +14,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 	timestep=1
 	if (PROJECT$model$timestep == "monthly") {timestep=mean(PROJECT$model$timestep_days)}
 	if (PROJECT$model$timestep == "weekly") {timestep=mean(PROJECT$model$timestep_days)}
-	time_vector=1:dim(states_all$gpp)[2]
+	time_vector=1:dim(states_all$gpp_gCm2day)[2]
 	year_vector=time_vector/(365.25/timestep)
 	year_vector=year_vector+as.numeric(PROJECT$start_year)
 	interval=floor(length(year_vector)/10)
@@ -23,17 +23,20 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 		# incoming data from states_all is dim=c(iter, chain, time)
 		# structure needed by function is dim=c(time,iter)
-		if (length(dim(states_all$lai)) > 2) {
-
+		if (length(dim(states_all$lai_m2m2)) > 2) {
+  
+                } else if (PROJECT$model$name == "DALEC" | PROJECT$model$name == "DALEC_BUCKET") {
+                    # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
+                    var=t(states_all$wood_gCm2)*as.vector(parameters[29,,]) 
 		} else {
-			# flip it to get the right shape
-			var=t(states_all$root)
+                    # flip it to get the right shape
+                    var=t(states_all$root_gCm2)
 		}
 
 		if (PROJECT$ctessel_pft[n] == 1) {
 			# parameter numbers adjusted for crop model
 			var=as.vector(parameters[37,,]) * (var*2) / (as.vector(parameters[36,,]) + (var*2))
-		} else if(PROJECT$model$name == "DALECN_BUCKET") {
+		} else if (PROJECT$model$name == "DALECN_BUCKET") {
 			# Now estimate the rooting depth based on the equation imbedded in DALECN_BUCKET
 			var=as.vector(parameters[35,,]) * (var*2) / (as.vector(parameters[34,,]) + (var*2))
 		} else {
@@ -57,11 +60,11 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 		# incoming data from states_all is dim=c(iter, chain, time)
 		# structure needed by function is dim=c(time,iter)
-		if (length(dim(states_all$lai)) > 2) {
+		if (length(dim(states_all$lai_m2m2)) > 2) {
 
 		} else {
 			# flip it to get the right shape
-			var=t(states_all$wSWP)
+			var=t(states_all$wSWP_MPa)
 		}
 
 		jpeg(file=paste(PROJECT$figpath,"timeseries_wSWP_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
@@ -80,14 +83,14 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 		# incoming data from states_all is dim=c(iter, chain, time)
 		# structure needed by function is dim=c(time,iter)
-		if (length(dim(states_all$lai)) > 2) {
+		if (length(dim(states_all$lai_m2m2)) > 2) {
 
 		} else {
 			# flip it to get the right shape
-			var=t(states_all$rootwater)
+			var=t(states_all$sfc_water_mm)
 		}
 
-		jpeg(file=paste(PROJECT$figpath,"timeseries_rootwater_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
+		jpeg(file=paste(PROJECT$figpath,"timeseries_sfc_water_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
 		# now create the plotting area
 		par(mfrow=c(1,1), mar=c(5,5,3,1))
 		plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE)), cex=0.8,ylab="Water in root zone (kgH2O.m-2)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8, main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
@@ -101,23 +104,23 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 	} else if (which_plot == -2) {
 
-		if (length(which(is.na(as.vector(states_all$evap)) == FALSE)) > 0) {
+		if (length(which(is.na(as.vector(states_all$evap_kgH2Om2day)) == FALSE)) > 0) {
 
 			# incoming data from states_all is dim=c(iter, chain, time)
 			# structure needed by function is dim=c(time,iter)
-			if (length(dim(states_all$evap)) > 2) {
-				iter_dim=dim(states_all$evap)[1]*dim(states_all$evap)[2]
-				time_dim=dim(states_all$evap)[3]
+			if (length(dim(states_all$evap_kgH2Om2day)) > 2) {
+				iter_dim=dim(states_all$evap_kgH2Om2day)[1]*dim(states_all$evap_kgH2Om2day)[2]
+				time_dim=dim(states_all$evap_kgH2Om2day)[3]
 				evap_var=array(NA, dim=c(iter_dim,time_dim))
 				# first merge the iteration / chain dimensions
-				for (i in seq(1,dim(states_all$evap)[3])) {
-					evap_var[,i]=as.vector(states_all$evap[,,i])
+				for (i in seq(1,dim(states_all$evap_kgH2Om2day)[3])) {
+					evap_var[,i]=as.vector(states_all$evap_kgH2Om2day[,,i])
 				}
 				# flip it to get the right shape
 				evap_var=t(evap_var)
 			} else {
 				# flip it to get the right shape
-				evap_var=t(states_all$evap)
+				evap_var=t(states_all$evap_kgH2Om2day)
 			}
 
 			# pass all observations (if any)
@@ -134,15 +137,15 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 				par(mfrow=c(1,1), omi=c(0.1,0.1,0.1,0.1), mai=c(1,1,1,1))
 				maxl=which(as.vector(sub_parameter[dim(sub_parameter)[1],,]) == max(as.vector(sub_parameter[dim(sub_parameter)[1],,])))
 				maxl=maxl[1] # if we happen to have more than one values with the same likelihood we will just pick the first one....
-				plot(states_all$evap[maxl,],evap_obs, ylab="SPA", xlab="ACM", main="Evap (kgH2O.m-2.day-1)",pch=16,cex=0.8,cex.main=1.8,cex.lab=1.8,cex.axis=1.8) ; abline(0,1,col="red", lwd=4)
-				hey=lm(evap_obs~states_all$evap[maxl,]) ; beta1=coef(hey)[2] ; intercept=coef(hey)[1]
-				explained=summary(hey)$adj.r.squared ; trend = mean(states_all$evap[maxl,]-evap_obs) ; error=rmse(evap_obs,states_all$evap[maxl,])
-				prop_error=mean(abs((evap_obs-states_all$evap[maxl,])/evap_obs)*100)
-				text(max(states_all$evap[maxl,])*0.12,max(evap_obs*0.97),label=bquote( SPA == .(round(beta1,3)) * ACM + .(round(intercept,3))), cex=2.)
-				text(max(states_all$evap[maxl,])*0.182,max(evap_obs*0.92),label=paste("R2 = ",round(explained,3)," rmse = ",round(error,3)," bias = ",round(trend,3), sep=""), cex=2.)
-				text(max(states_all$evap[maxl,])*0.074,max(evap_obs*0.87),label=paste("% error = ",round(prop_error,3), sep=""), cex=2.)
-				text(max(states_all$evap[maxl,])*0.146,max(evap_obs*0.81),label=paste("ACM WUE (gC/kgH2O) = ",round(mean(states_all$gpp[maxl,]/states_all$evap[maxl,]),3)," (",round(quantile(states_all$gpp[maxl,]/states_all$evap[maxl,],prob=c(0.025)),3),"/",round(quantile(states_all$gpp[maxl,]/states_all$evap[maxl,],prob=c(0.975)),3),")", sep=""), cex=2.)
-				text(max(states_all$evap[maxl,])*0.143,max(evap_obs*0.76),label=paste("SPA WUE (gC/kgH2O) = ",round(mean(drivers$obs[,1]/evap_obs),3)," (",round(quantile(drivers$obs[,1]/evap_obs,prob=c(0.025)),3),"/",round(quantile(drivers$obs[,1]/evap_obs,prob=c(0.975)),3),")", sep=""), cex=2.)
+				plot(states_all$evap_kgH2Om2day[maxl,],evap_obs, ylab="SPA", xlab="ACM", main="Evap (kgH2O.m-2.day-1)",pch=16,cex=0.8,cex.main=1.8,cex.lab=1.8,cex.axis=1.8) ; abline(0,1,col="red", lwd=4)
+				hey=lm(evap_obs~states_all$evap_kgH2Om2day[maxl,]) ; beta1=coef(hey)[2] ; intercept=coef(hey)[1]
+				explained=summary(hey)$adj.r.squared ; trend = mean(states_all$evap_kgH2Om2day[maxl,]-evap_obs) ; error=rmse(evap_obs,states_all_kgH2Om2day$evap[maxl,])
+				prop_error=mean(abs((evap_obs-states_all$evap_kgH2Om2day[maxl,])/evap_obs)*100)
+				text(max(states_all$evap_kgH2Om2day[maxl,])*0.12,max(evap_obs*0.97),label=bquote( SPA == .(round(beta1,3)) * ACM + .(round(intercept,3))), cex=2.)
+				text(max(states_all$evap_kgH2Om2day[maxl,])*0.182,max(evap_obs*0.92),label=paste("R2 = ",round(explained,3)," rmse = ",round(error,3)," bias = ",round(trend,3), sep=""), cex=2.)
+				text(max(states_all$evap_kgH2Om2day[maxl,])*0.074,max(evap_obs*0.87),label=paste("% error = ",round(prop_error,3), sep=""), cex=2.)
+				text(max(states_all$evap_kgH2Om2day[maxl,])*0.146,max(evap_obs*0.81),label=paste("ACM WUE (gC/kgH2O) = ",round(mean(states_all$gpp_gCm2day[maxl,]/states_all$evap_kgH2Om2day[maxl,]),3)," (",round(quantile(states_all$gpp_gCm2day[maxl,]/states_all$evap_kgH2Om2day[maxl,],prob=c(0.025)),3),"/",round(quantile(states_all$gpp_gCm2day[maxl,]/states_all$evap_kgH2Om2day[maxl,],prob=c(0.975)),3),")", sep=""), cex=2.)
+				text(max(states_all$evap_kgH2Om2day[maxl,])*0.143,max(evap_obs*0.76),label=paste("SPA WUE (gC/kgH2O) = ",round(mean(drivers$obs[,1]/evap_obs),3)," (",round(quantile(drivers$obs[,1]/evap_obs,prob=c(0.025)),3),"/",round(quantile(drivers$obs[,1]/evap_obs,prob=c(0.975)),3),")", sep=""), cex=2.)
 			} else {
 				# now create the plotting area
 				par(mfrow=c(1,1), mar=c(5,5,3,1))
@@ -165,11 +168,11 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 		# incoming data from states_all is dim=c(iter, chain, time)
 		# structure needed by function is dim=c(time,iter)
-		if (length(dim(states_all$lai)) > 2) {
+		if (length(dim(states_all$lai_m2m2)) > 2) {
 
 		} else {
 			# flip it to get the right shape
-			Cfol_var=t(states_all$fol)
+			Cfol_var=t(states_all$fol_gCm2)
 		}
 		# pass observations driver
 		Cfol_obs=drivers$obs[,11] ; Cfol_obs_unc=drivers$obs[,12]
@@ -207,19 +210,19 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 	} else if (which_plot == 1) {
 		# incoming data from states_all is dim=c(iter, chain, time)
 		# structure needed by function is dim=c(time,iter)
-		if (length(dim(states_all$lai)) > 2) {
-			iter_dim=dim(states_all$lai)[1]*dim(states_all$lai)[2]
-			time_dim=dim(states_all$lai)[3]
+		if (length(dim(states_all$lai_m2m2)) > 2) {
+			iter_dim=dim(states_all$lai_m2m2)[1]*dim(states_all$lai_m2m2)[2]
+			time_dim=dim(states_all$lai_m2m2)[3]
 			lai_var=array(NA, dim=c(iter_dim,time_dim))
 			# first merge the iteration / chain dimensions
-			for (i in seq(1,dim(states_all$lai)[3])) {
-				lai_var[,i]=as.vector(states_all$lai[,,i])
+			for (i in seq(1,dim(states_all$lai_m2m2)[3])) {
+				lai_var[,i]=as.vector(states_all$lai_m2m2[,,i])
 			}
 			# flip it to get the right shape
 			lai_var=t(lai_var)
 		} else {
 			# flip it to get the right shape
-			lai_var=t(states_all$lai)
+			lai_var=t(states_all$lai_m2m2)
 		}
 
 		# pass all observations (if any)
@@ -232,7 +235,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 		jpeg(file=paste(PROJECT$figpath,"timeseries_lai_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
 		# now create the plotting area
 		par(mfrow=c(1,1), mar=c(5,5,3,1))
-		plot(lai_obs, pch=16,xaxt="n", ylim=c(0,max(max(lai_obs),quantile(as.vector(lai_var), prob=c(0.999), na.rm=TRUE))), cex=0.8,ylab="LAI (m-2/m-2)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8, main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+		plot(lai_obs, pch=16,xaxt="n", ylim=c(0,max(max(lai_obs),quantile(as.vector(lai_var), prob=c(0.999), na.rm=TRUE))), cex=0.8,ylab="LAI (m2/m2)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8, main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
 		axis(1, at=time_vector[seq(1,length(time_vector),interval)],labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
 		# add the confidence intervals
 		plotconfidence(lai_var)
@@ -246,19 +249,19 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 	} else if (which_plot == 2) {
 		# incoming data from states_all is dim=c(iter, chain, time)
 		# structure needed by function is dim=c(time,iter)
-		if (length(dim(states_all$gpp)) > 2) {
-			iter_dim=dim(states_all$gpp)[1]*dim(states_all$gpp)[2]
-			time_dim=dim(states_all$gpp)[3]
+		if (length(dim(states_all$gpp_gCm2day)) > 2) {
+			iter_dim=dim(states_all$gpp_gCm2day)[1]*dim(states_all$gpp_gCm2day)[2]
+			time_dim=dim(states_all$gpp_gCm2day)[3]
 			gpp_var=array(NA, dim=c(iter_dim,time_dim))
 			# first merge the iteration / chain dimensions
-			for (i in seq(1,dim(states_all$gpp)[3])) {
-				gpp_var[,i]=as.vector(states_all$gpp[,,i])
+			for (i in seq(1,dim(states_all$gpp_gCm2day)[3])) {
+				gpp_var[,i]=as.vector(states_all$gpp_gCm2day[,,i])
 			}
 			# flip it to get the right shape
 			gpp_var=t(gpp_var)
 		} else {
 			# flip it to get the right shape
-			gpp_var=t(states_all$gpp)
+			gpp_var=t(states_all$gpp_gCm2day)
 		}
 
 		# pass all observations (if any)
@@ -275,15 +278,15 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 			par(mfrow=c(1,1), omi=c(0.1,0.1,0.1,0.1), mai=c(1,1,1,1))
 			maxl=which(as.vector(sub_parameter[dim(sub_parameter)[1],,]) == max(as.vector(sub_parameter[dim(sub_parameter)[1],,])))
 			maxl=maxl[1] # if we happen to have more than one values with the same likelihood we will just pick the first one....
-			plot(states_all$gpp[maxl,],drivers$obs[,1], ylab="SPA", xlab="ACM", main="GPP (gC.m-2.day-1)",pch=16,cex=0.8,cex.main=1.8,cex.lab=1.8,cex.axis=1.8) ; abline(0,1,col="red", lwd=4)
-			hey=lm(drivers$obs[,1]~states_all$gpp[maxl,]) ; beta1=coef(hey)[2] ; intercept=coef(hey)[1]
-			explained=summary(hey)$adj.r.squared ; trend = mean(states_all$gpp[maxl,]-drivers$obs[,1]) ; error=rmse(drivers$obs[,1],states_all$gpp[maxl,])
-			prop_error=mean(abs((drivers$obs[,1]-states_all$gpp[maxl,])/drivers$obs[,1])*100)
-			text(max(states_all$gpp[maxl,])*0.12,max(drivers$obs[,1]*0.97),label=bquote( SPA == .(round(beta1,3)) * ACM + .(round(intercept,3))), cex=2.)
-			text(max(states_all$gpp[maxl,])*0.182,max(drivers$obs[,1]*0.92),label=paste("R2 = ",round(explained,3)," rmse = ",round(error,3)," bias = ",round(trend,3), sep=""), cex=2.)
-			text(max(states_all$gpp[maxl,])*0.074,max(drivers$obs[,1]*0.87),label=paste("% error = ",round(prop_error,3), sep=""), cex=2.)
-			text(max(states_all$gpp[maxl,])*0.146,max(drivers$obs[,1]*0.81),label=paste("ACM NUE = ",round(mean(states_all$gpp[maxl,]/drivers$met[,14]),3)," (",round(quantile(states_all$gpp[maxl,]/drivers$met[,14],prob=c(0.025)),3),"/",round(quantile(states_all$gpp[maxl,]/drivers$met[,14],prob=c(0.975)),3),")", sep=""), cex=2.)
-			text(max(states_all$gpp[maxl,])*0.143,max(drivers$obs[,1]*0.76),label=paste("SPA NUE = ",round(mean(gpp_obs/drivers$met[,14]),3)," (",round(quantile(gpp_obs/drivers$met[,14],prob=c(0.025)),3),"/",round(quantile(gpp_obs/drivers$met[,14],prob=c(0.975)),3),")", sep=""), cex=2.)
+			plot(states_all$gpp_gCm2day[maxl,],drivers$obs[,1], ylab="SPA", xlab="ACM", main="GPP (gC.m-2.day-1)",pch=16,cex=0.8,cex.main=1.8,cex.lab=1.8,cex.axis=1.8) ; abline(0,1,col="red", lwd=4)
+			hey=lm(drivers$obs[,1]~states_all$gpp_gCm2day[maxl,]) ; beta1=coef(hey)[2] ; intercept=coef(hey)[1]
+			explained=summary(hey)$adj.r.squared ; trend = mean(states_all$gpp_gCm2day[maxl,]-drivers$obs[,1]) ; error=rmse(drivers$obs[,1],states_all$gpp_gCm2day[maxl,])
+			prop_error=mean(abs((drivers$obs[,1]-states_all$gpp_gCm2day[maxl,])/drivers$obs[,1])*100)
+			text(max(states_all$gpp_gCm2day[maxl,])*0.12,max(drivers$obs[,1]*0.97),label=bquote( SPA == .(round(beta1,3)) * ACM + .(round(intercept,3))), cex=2.)
+			text(max(states_all$gpp_gCm2day[maxl,])*0.182,max(drivers$obs[,1]*0.92),label=paste("R2 = ",round(explained,3)," rmse = ",round(error,3)," bias = ",round(trend,3), sep=""), cex=2.)
+			text(max(states_all$gpp_gCm2day[maxl,])*0.074,max(drivers$obs[,1]*0.87),label=paste("% error = ",round(prop_error,3), sep=""), cex=2.)
+			text(max(states_all$gpp_gCm2day[maxl,])*0.146,max(drivers$obs[,1]*0.81),label=paste("ACM NUE = ",round(mean(states_all$gpp_gCm2day[maxl,]/drivers$met[,14]),3)," (",round(quantile(states_all$gpp_gCm2day[maxl,]/drivers$met[,14],prob=c(0.025)),3),"/",round(quantile(states_all$gpp_gCm2day[maxl,]/drivers$met[,14],prob=c(0.975)),3),")", sep=""), cex=2.)
+			text(max(states_all$gpp_gCm2day[maxl,])*0.143,max(drivers$obs[,1]*0.76),label=paste("SPA NUE = ",round(mean(gpp_obs/drivers$met[,14]),3)," (",round(quantile(gpp_obs/drivers$met[,14],prob=c(0.025)),3),"/",round(quantile(gpp_obs/drivers$met[,14],prob=c(0.975)),3),")", sep=""), cex=2.)
 		} else {
 			# now create the plotting area
 			par(mfrow=c(1,1), mar=c(5,5,3,1))
@@ -304,19 +307,19 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 	} else if (which_plot == 3) {
 		# incoming data from states_all is dim=c(iter, chain, time)
 		# structure needed by function is dim=c(time,iter)
-		if (length(dim(states_all$lai)) > 2) {
-			iter_dim=dim(states_all$lai)[1]*dim(states_all$lai)[2]
-			time_dim=dim(states_all$lai)[3]
+		if (length(dim(states_all$lai_m2m2)) > 2) {
+			iter_dim=dim(states_all$lai_m2m2)[1]*dim(states_all$lai_m2m2)[2]
+			time_dim=dim(states_all$lai_m2m2)[3]
 			nee_var=array(NA, dim=c(iter_dim,time_dim))
 			# first merge the iteration / chain dimensions
-			for (i in seq(1,dim(states_all$lai)[3])) {
-				nee_var[,i]=as.vector(states_all$nee[,,i])
+			for (i in seq(1,dim(states_all$lai_m2m2)[3])) {
+				nee_var[,i]=as.vector(states_all$nee_gCm2day[,,i])
 			}
 			# flip it to get the right shape
 			nee_var=t(nee_var)
 		} else {
 			# flip it to get the right shape
-			nee_var=t(states_all$nee)
+			nee_var=t(states_all$nee_gCm2day)
 		}
 
 		# pass all observations (if any)
@@ -351,11 +354,11 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 	} else if (which_plot == 4) {
 		# incoming data from states_all is dim=c(iter, chain, time)
 		# structure needed by function is dim=c(time,iter)
-		if (length(dim(states_all$lai)) > 2) {
+		if (length(dim(states_all$lai_m2m2)) > 2) {
 
 		} else {
 			# flip it to get the right shape
-			Reco_var=t(states_all$reco)
+			Reco_var=t(states_all$reco_gCm2day)
 		}
 
 		# pass all observations (if any)
@@ -387,11 +390,11 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 	} else if (which_plot == 5) {
 		# incoming data from states_all is dim=c(iter, chain, time)
 		# structure needed by function is dim=c(time,iter)
-		if (length(dim(states_all$lai)) > 2) {
+		if (length(dim(states_all$lai_m2m2)) > 2) {
 
 		} else {
 			# flip it to get the right shape
-			Rhet_var=t(states_all$rhet)
+			Rhet_var=t(states_all$rhet_gCm2day)
 		}
 
 		jpeg(file=paste(PROJECT$figpath,"timeseries_het_resp_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
@@ -409,11 +412,11 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 	} else if (which_plot == 6) {
 		# incoming data from states_all is dim=c(iter, chain, time)
 		# structure needed by function is dim=c(time,iter)
-		if (length(dim(states_all$lai)) > 2) {
+		if (length(dim(states_all$lai_m2m2)) > 2) {
 
 		} else {
 			# flip it to get the right shape
-			Clab_var=t(states_all$lab)
+			Clab_var=t(states_all$lab_gCm2)
 		}
 
 		jpeg(file=paste(PROJECT$figpath,"timeseries_Clab_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
@@ -429,11 +432,11 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 		if (grepl("FROOT",PROJECT$model$name) | grepl("LABILE",PROJECT$model$name)) {
 
-			if (length(dim(states_all$lai)) > 2) {
+			if (length(dim(states_all$lai_m2m2)) > 2) {
 
 			} else {
 				# flip it to get the right shape
-				Clab_var=t(states_all$labroot)
+				Clab_var=t(states_all$labroot_gCm2)
 			}
 
 			jpeg(file=paste(PROJECT$figpath,"timeseries_Clabroot_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
@@ -447,11 +450,11 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 			#lines(apply(Clab_var[1:(dim(Clab_var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
 			dev.off()
 
-			if (length(dim(states_all$lai)) > 2) {
+			if (length(dim(states_all$lai_m2m2)) > 2) {
 
 			} else {
 				# flip it to get the right shape
-				Clab_var=t(states_all$labwood)
+				Clab_var=t(states_all$labwood_gCm2)
 			}
 
 			jpeg(file=paste(PROJECT$figpath,"timeseries_Clabwood_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
@@ -471,11 +474,11 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 			# incoming data from states_all is dim=c(iter, chain, time)
 			# structure needed by function is dim=c(time,iter)
-			if (length(dim(states_all$lai)) > 2) {
+			if (length(dim(states_all$lai_m2m2)) > 2) {
 
 			} else {
 				# flip it to get the right shape
-				Clab_var=t(states_all$Clabslow)
+				Clab_var=t(states_all$Clabslow_gCm2)
 			}
 
 			jpeg(file=paste(PROJECT$figpath,"timeseries_Clabslow_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
@@ -494,11 +497,11 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 	} else if (which_plot == 7) {
 		# incoming data from states_all is dim=c(iter, chain, time)
 		# structure needed by function is dim=c(time,iter)
-		if (length(dim(states_all$lai)) > 2) {
+		if (length(dim(states_all$lai_m2m2)) > 2) {
 
 		} else {
 			# flip it to get the right shape
-			Clit_var=t(states_all$lit)
+			Clit_var=t(states_all$lit_gCm2)
 		}
 
 		# pass all observations (if any)
@@ -536,7 +539,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 			# structure needed by function is dim=c(time,iter)
 			# flip it to get the right shape
-			Clit_var = Clit_var + t(states_all$litroot)
+			Clit_var = Clit_var + t(states_all$litroot_gCm2)
 
 			jpeg(file=paste(PROJECT$figpath,"timeseries_Clit_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
 			# now create the plotting area
@@ -554,11 +557,11 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 	} else if (which_plot == 8) {
 		# incoming data from states_all is dim=c(iter, chain, time)
 		# structure needed by function is dim=c(time,iter)
-		if (length(dim(states_all$lai)) > 2) {
+		if (length(dim(states_all$lai_m2m2)) > 2) {
 
 		} else {
 			# flip it to get the right shape
-			Cr_var=t(states_all$root)
+			Cr_var=t(states_all$root_gCm2)
 		}
 
 		# pass all observations (if any)
@@ -590,11 +593,11 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 	} else if (which_plot == 9) {
 		# incoming data from states_all is dim=c(iter, chain, time)
 		# structure needed by function is dim=c(time,iter)
-		if (length(dim(states_all$lai)) > 2) {
+		if (length(dim(states_all$lai_m2m2)) > 2) {
 
 		} else {
 			# flip it to get the right shape
-			Cw_var=t(states_all$wood)
+			Cw_var=t(states_all$wood_gCm2)
 		}
 
 		# pass all observations (if any)
@@ -627,11 +630,11 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 	} else if (which_plot == 10) {
 		# incoming data from states_all is dim=c(iter, chain, time)
 		# structure needed by function is dim=c(time,iter)
-		if (length(dim(states_all$lai)) > 2) {
+		if (length(dim(states_all$lai_m2m2)) > 2) {
 
 		} else {
 			# flip it to get the right shape
-			Csom_var=t(states_all$som)
+			Csom_var=t(states_all$som_gCm2)
 		}
 		# pass observations driver
 		Csom_obs=drivers$obs[,19] ; Csom_obs_unc=drivers$obs[,20]
@@ -659,7 +662,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 		# structure needed by function is dim=c(time,iter)
 		# flip it to get the right shape
-		Call_var=t(states_all$bio)
+		Call_var=t(states_all$bio_gCm2)
 
 		jpeg(file=paste(PROJECT$figpath,"timeseries_Call_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
 		# now create the plotting area
@@ -792,7 +795,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 		# structure needed by function is dim=c(time,iter)
 		# flip it to get the right shape
-		somfast_var=t(states_all$somfast)
+		somfast_var=t(states_all$somfast_gCm2)
 
 		jpeg(file=paste(PROJECT$figpath,"timeseries_Csomfast_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
 		# now create the plotting area
@@ -807,7 +810,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 		# structure needed by function is dim=c(time,iter)
 		# flip it to get the right shape
-		somfast_var=t(states_all$microbial)
+		somfast_var=t(states_all$microbial_gCm2)
 
 		jpeg(file=paste(PROJECT$figpath,"timeseries_Cmicrobial_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
 		# now create the plotting area
@@ -824,7 +827,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 		# structure needed by function is dim=c(time,iter)
 		# flip it to get the right shape
-		litroot_var=t(states_all$litroot)
+		litroot_var=t(states_all$litroot_gCm2)
 
 		jpeg(file=paste(PROJECT$figpath,"timeseries_Crootlitter_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
 		# now create the plotting area
@@ -842,7 +845,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 		# structure needed by function is dim=c(time,iter)
 		# flip it to get the right shape
-		litwood_var=t(states_all$litwood)
+		litwood_var=t(states_all$litwood_gCm2)
 
 		jpeg(file=paste(PROJECT$figpath,"timeseries_Cwoodlitter_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
 		# now create the plotting area
@@ -860,10 +863,10 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 		# structure needed by function is dim=c(time,iter)
 		# flip it to get the right shape
-		litN_var=t(states_all$litN)
+		litN_var=t(states_all$litN_gNm2)
 
 		# calculate mean litCN
-		info = round(quantile(apply((t(states_all$lit)/litN_var),2,mean),prob=c(0.025,0.5,0.975)),digits=2)
+		info = round(quantile(apply((t(states_all$lit_gCm2)/litN_var),2,mean),prob=c(0.025,0.5,0.975)),digits=2)
 		ymax=quantile(as.vector(litN_var), prob=c(0.999), na.rm=TRUE)
 		xloc=0.15*dim(litN_var)[1] ; yloc=(1-0.05)*ymax
 		jpeg(file=paste(PROJECT$figpath,"timeseries_Nlitter_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
@@ -883,7 +886,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 		# structure needed by function is dim=c(time,iter)
 		# flip it to get the right shape
-		labN_var=t(states_all$labN)
+		labN_var=t(states_all$labN_gNm2)
 
 		ymax=quantile(as.vector(labN_var), prob=c(0.999), na.rm=TRUE)
 		jpeg(file=paste(PROJECT$figpath,"timeseries_Nlabile_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
@@ -902,7 +905,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 		# structure needed by function is dim=c(time,iter)
 		# flip it to get the right shape
-		DIN_var=t(states_all$DIN)
+		DIN_var=t(states_all$DIN_gNm2)
 		# calculate mean DIN
 		info = round(quantile(apply(DIN_var,2,mean),prob=c(0.025,0.5,0.975)),digits=2)
 		ymax=quantile(as.vector(DIN_var), prob=c(0.999), na.rm=TRUE)
@@ -925,7 +928,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 		# structure needed by function is dim=c(time,iter)
 		# flip it to get the right shape
-		DIN_var=t(states_all$N_mineralisation)
+		DIN_var=t(states_all$N_mineralisation_gNm2day)
 		# calculate mean DIN
 		info = round(quantile(apply(DIN_var,2,sum)/(dim(DIN_var)[1]/(365.25/timestep)),prob=c(0.025,0.5,0.975)),digits=2)
 		ymax=quantile(as.vector(DIN_var), prob=c(0.999), na.rm=TRUE)
@@ -949,8 +952,8 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 		# structure needed by function is dim=c(time,iter)
 		# flip it to get the right shape
-		DIN_var=states_all$rauto/states_all$gpp
-		DIN_var[which(states_all$gpp == 0)] = NA
+		DIN_var=states_all$rauto_gCm2day/states_all$gpp_gCm2day
+		DIN_var[which(states_all$gpp_gCm2day == 0)] = NA
 		DIN_var=t(DIN_var)
 
 		# calculate meanRa:GPP
@@ -976,7 +979,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 		# structure needed by function is dim=c(time,iter)
 		# flip it to get the right shape
-		harvestC_var=t(states_all$harvest_C)
+		harvestC_var=t(states_all$harvest_C_gCm2day)
 
 		ymax=quantile(as.vector(harvestC_var), prob=c(0.999), na.rm=TRUE)
 		jpeg(file=paste(PROJECT$figpath,"timeseries_harvestedC_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)
@@ -995,7 +998,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 
 		# structure needed by function is dim=c(time,iter)
 		# flip it to get the right shape
-		canopyage_var=t(states_all$canopyage)
+		canopyage_var=t(states_all$canopyage_days)
 
 		ymax=quantile(as.vector(canopyage_var), prob=c(0.999), na.rm=TRUE)
 		jpeg(file=paste(PROJECT$figpath,"timeseries_CanopyAge_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=300, quality=100)

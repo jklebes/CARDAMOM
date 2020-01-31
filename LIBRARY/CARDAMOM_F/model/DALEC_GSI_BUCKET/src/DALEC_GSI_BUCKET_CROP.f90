@@ -144,7 +144,8 @@ contains
                        ,GPP_out,stock_seed_labile,DS_shoot,DS_root,fol_frac    &
                        ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT)
 
-    use CARBON_MODEL_MOD, only: arrhenious,acm_gpp,calculate_transpiration,calculate_soil_evaporation      & ! Subroutine / functions
+    use CARBON_MODEL_MOD, only: arrhenious,acm_gpp_stage_1,acm_gpp_stage_2,calculate_transpiration         & ! Subroutine / functions
+                               ,calculate_soil_evaporation      & 
                                ,calculate_wetcanopy_evaporation,meteorological_constants                   &
                                ,calculate_stomatal_conductance,calculate_radiation_balance                 &
                                ,calculate_daylength,opt_max_scaling,calculate_Rtot,saxton_parameters       &
@@ -154,8 +155,7 @@ contains
                                ,seconds_per_day,avN,iWUE,NUE,pn_max_temp,pn_opt_temp,pn_kurtosis,vsmall    &
                                ,min_root,top_soil_depth,max_depth,root_k,minlwp,min_layer                  &
                                ,soil_frac_clay,soil_frac_sand                                              &
-                               ,co2_half_saturation,co2_compensation_point,co2comp_saturation,drythick     & ! variables
-                               ,pn_airt_scaling,pn_airt_scaling_time,dayl_hours,dayl_seconds,dayl_seconds_1&
+                               ,co2comp_saturation,drythick,dayl_hours,dayl_seconds,dayl_seconds_1         & ! variables
                                ,seconds_per_step,root_biomass,mid_soil_depth,root_reach,previous_depth     &
                                ,deltat_1,water_flux,layer_thickness,meant,stomatal_conductance             &
                                ,co2_half_sat,co2_comp_point,mint,maxt,swrad,co2,doy,leafT,ceff             &
@@ -163,7 +163,7 @@ contains
                                ,wSWP,SWP,SWP_initial,wSWP_time,soil_waterfrac,soil_waterfrac_initial       &
                                ,porosity,porosity_initial,field_capacity,field_capacity_initial            &
                                ,rainfall,canopy_storage,intercepted_rainfall,snow_storage,snow_melt        &
-                               ,airt_zero_fraction,snowfall
+                               ,airt_zero_fraction,snowfall 
 
     ! DALEC crop model modified from Sus et al., (2010)
 
@@ -391,16 +391,7 @@ contains
         ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
         if (.not.allocated(deltat_1)) then
 
-           allocate(deltat_1(nodays),wSWP_time(nodays), &
-                    co2_compensation_point(nodays),co2_half_saturation(nodays), &
-                    pn_airt_scaling_time(nodays))
-           do n = 1, nodays
-              ! Temperature adjustments for Michaelis-Menten coefficients
-              ! for CO2 (kc) and O2 (ko) and CO2 compensation point.
-              co2_compensation_point(n) = arrhenious(co2comp_saturation,co2comp_half_sat_conc,met(3,n))
-              co2_half_saturation(n) = arrhenious(kc_saturation,kc_half_sat_conc,met(3,n))
-              pn_airt_scaling_time(n) = opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,met(3,n))
-           end do
+           allocate(deltat_1(nodays),wSWP_time(nodays))
            deltat_1 = deltat**(-1d0)
            ! zero variables not done elsewhere
            water_flux = 0d0
@@ -492,14 +483,6 @@ contains
       lai_out(n) = POOLS(n,2)/LCA
       lai = lai_out(n) ! leaf area index (m2/m2)
 
-      ! Temperature adjustments for Michaelis-Menten coefficients
-      ! for CO2 (kc) and O2 (ko) and CO2 compensation point
-      ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
-      co2_half_sat   = co2_half_saturation(n)
-      co2_comp_point = co2_compensation_point(n)
-      ! temperature response for metabolically limited photosynthesis
-      pn_airt_scaling = pn_airt_scaling_time(n)
-
       ! calculate daylength in hours and seconds
       call calculate_daylength((doy-(deltat(n)*0.5d0)),lat)
       ! extract timing related values
@@ -552,7 +535,7 @@ contains
       call meteorological_constants(maxt,maxt+freeze,vpd_kPa)
       ! calculate radiation absorption and estimate stomatal conductance
       call calculate_aerodynamic_conductance
-      call calculate_radiation_balance 
+      call calculate_radiation_balance
       call calculate_stomatal_conductance(abs(deltaWP),Rtot)
 
       ! reallocate for crop model timings
@@ -560,7 +543,7 @@ contains
 
       ! GPP (gC.m-2.day-1)
       if (lai > vsmall .and. stomatal_conductance > vsmall) then
-         GPP_out(n) = max(0d0,acm_gpp(stomatal_conductance))
+         call acm_gpp_stage_1 ; GPP_out(n) = max(0d0,acm_gpp_stage_2(stomatal_conductance))
          ! Canopy transpiration (kgH2O/m2/day)
          call calculate_transpiration(transpiration)
       else

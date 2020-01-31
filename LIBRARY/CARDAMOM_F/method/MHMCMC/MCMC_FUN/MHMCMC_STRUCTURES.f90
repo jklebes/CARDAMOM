@@ -52,6 +52,7 @@ module MCMCOPT
   type COUNTERS
 
     double precision :: ACC            & ! total number of accepted solutions
+                       ,ACC_first      & ! total number of pre-DR accepted solution
                        ,ACC_beta       & ! total number of beta accepted solutions
                        ,ACCLOC         & ! number of recently accepted solutions
                        ,ACCLOC_beta    & ! number of recently accepted solutions from beta proposals
@@ -69,8 +70,7 @@ module MCMCOPT
     logical :: cov = .false., use_multivariate = .false.
     double precision, allocatable, dimension(:,:) :: covariance, & ! parameter covariance matrix
                                                              iC    ! inverse covariance matrix
-    double precision, allocatable, dimension(:) :: stepsize, beta_stepsize &
-                                                  ,mean_par & ! mean parameter value
+    double precision, allocatable, dimension(:) :: mean_par & ! mean parameter value
                                                   ,parmax   & ! maximum parameter values
                                                   ,parmin   & ! minimum parameter values
                                                   ,parini   & ! initial parameter values

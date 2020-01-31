@@ -210,6 +210,10 @@ contains
     ! Begin looping through each time step
     !
 
+    ! These fluxes / pools are not currently in use and should be reset to
+    ! prevent numeric error when checking model sanity
+    FLUXES(:,24) = 0d0
+
     do n = start, finish
 
       ! calculate LAI value

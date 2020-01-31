@@ -28,6 +28,7 @@ generate_uncertainty_figures<-function(PROJECT,n) {
 	nos_plots=0:11
         if (PROJECT$model$name == "DALEC_GSI_BUCKET") {nos_plots=c(-5,-4,-3,-2,nos_plots,12,15,22)}
 	if (PROJECT$model$name == "DALEC_BUCKET") {nos_plots=c(-5,-4,-3,-2,nos_plots,12,15,22)}
+        if (PROJECT$model$name == "DALEC") {nos_plots=c(-5,nos_plots,12,15,22)}
 	if (PROJECT$model$name == "DALECN_GSI_BUCKET") {nos_plots=c(-5,-4,-3,-2,nos_plots,12,15,21,22)}
 	if (PROJECT$model$name == "DALECN_BUCKET") {nos_plots=c(-5,-4,-3,-2,nos_plots,15,21,22,23)}
         if (PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR") {nos_plots=c(nos_plots,12,15,22)}

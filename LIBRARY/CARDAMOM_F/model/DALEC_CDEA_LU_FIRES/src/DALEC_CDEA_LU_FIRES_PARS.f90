@@ -17,18 +17,16 @@ module MODEL_PARAMETERS
     use MCMCOPT, only: PI
 
     ! Subroutine contains a list of parameter ranges for the model.
-    ! These could or
-    ! possibly should go into an alternate file which can be read in.
-    ! This may
-    ! improve the usability when it comes to reading these information
-    ! in for
-    ! different PFTs
+    ! These could or possibly should go into an alternate file which can be read in.
+    ! This may improve the usability when it comes to reading these information
+    ! in for different PFTs
 
     implicit none
 
     PI%npars=23;
 
-    ! contains 6 fields with min max log for par and par
+    ! NOTE: that these parameter ranges have been matched with Bloom's C code
+    ! 22/11/2019 - try not to lose this information as it is needed for comparability
 
     !
     ! declare parameters
@@ -56,20 +54,20 @@ module MODEL_PARAMETERS
     PI%parmax(5)=8d0
 
     ! TOR wood* - 1% loss per year value
-    PI%parmin(6)=0.000025d0
-    PI%parmax(6)=0.001d0
+    PI%parmin(6)=0.000025d0 ! 109  years
+    PI%parmax(6)=0.001d0    ! 2.74 years
 
     ! TOR roots
-    PI%parmin(7)=0.0001d0
-    PI%parmax(7)=0.01d0
+    PI%parmin(7)=0.0001d0   ! 27   years
+    PI%parmax(7)=0.01d0     ! 0.27 years
 
     ! TOR litter
-    PI%parmin(8)=0.0001d0
-    PI%parmax(8)=0.01d0
+    PI%parmin(8)=0.0001d0 ! 24.00 years
+    PI%parmax(8)=0.01d0   !  0.13 years
 
     ! TOR SOM
-    PI%parmin(9)=0.0000001d0
-    PI%parmax(9)=0.001d0
+    PI%parmin(9) = 0.0000001d0 ! 27378.0 years at 0oC
+    PI%parmax(9) = 0.001d0     !     2.7 years at 0oC
 
     ! Temp factor* = Q10 = 1.2-1.6
     PI%parmin(10)=0.018d0
@@ -121,7 +119,7 @@ module MODEL_PARAMETERS
     PI%parmax(19)=2000d0
 
     ! C roots
-    PI%parmin(20)=20d0
+    PI%parmin(20)=1.0d0
     PI%parmax(20)=2000d0
 
     ! C_wood
@@ -134,7 +132,7 @@ module MODEL_PARAMETERS
 
     ! C_som
     PI%parmin(23) = 1d0
-    PI%parmax(23) = 200000d0 !90000d0
+    PI%parmax(23) = 200000d0
 
   end subroutine pars_info
 

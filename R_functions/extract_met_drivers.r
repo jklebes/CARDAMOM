@@ -267,36 +267,36 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       } # doy[1] != -9999
 
       # Max, min and average timestep air temperatures (oC)
-      maxt = read_site_specific_obs("maxt",infile)
+      maxt = read_site_specific_obs("maxt_C",infile)
       if (maxt[1] == -9999) {stop("No max temperature provided: maxt in C must be provided")}
-      mint = read_site_specific_obs("mint",infile)
+      mint = read_site_specific_obs("mint_C",infile)
       if (mint[1] == -9999) {stop("No min temperature provided: mint in C must be provided")}
-      airt = read_site_specific_obs("airt",infile)       # if no mean air temperature available assume mean of max / min
+      airt = read_site_specific_obs("airt_C",infile)       # if no mean air temperature available assume mean of max / min
       if (airt[1] == -9999) {airt = (maxt + mint) * 0.5}
 
-      swrad = read_site_specific_obs("sw_rad",infile) # W.m-2
+      swrad = read_site_specific_obs("swrad_Wm2",infile) # W.m-2
       if (swrad[1] == -9999) {
           # try and look for shortwave in MJ/m2/day
-          swrad=read_site_specific_obs("sw_rad_MJm2day",infile) # MJ/m2/day
-          if (swrad[1] == -9999) {stop("No short wave radiation found: either sw_rad (in W/m2) or sw_rad_MJm2day must be provided")}
+          swrad=read_site_specific_obs("swrad_MJm2day",infile) # MJ/m2/day
+          if (swrad[1] == -9999) {stop("No short wave radiation found: either swrad_Wm2 (in W/m2) or swrad_MJm2day must be provided")}
       } else {
           # assume we have got the W/m2, which we need to conver to MJ/m2/day
           swrad = swrad * input_step_size * 3600 * 1e-6
       }
 
       # atmospheric CO2 concentration (ppm)
-      co2 = read_site_specific_obs("co2",infile)
+      co2 = read_site_specific_obs("co2_ppm",infile)
       # if no co2 provided assume global mean value
       if (co2[1] == -9999) {co2=rep(400,length.out=length(doy))}
 
       # liquid + ice precipitation (kgH2O.m-2.s-1)
-      precip = read_site_specific_obs("precip",infile)
+      precip = read_site_specific_obs("precip_kgm2s",infile)
 
       # vapour pressure deficit kPa, units converted below
-      vpd = read_site_specific_obs("vpd",infile)
+      vpd = read_site_specific_obs("vpd_kPa",infile)
       if (vpd[1] == -9999) {
           # if no VPD search for relative humidity
-          vpd = read_site_specific_obs("rh",infile)
+          vpd = read_site_specific_obs("rh_fraction",infile)
           if (vpd[1] == -9999) {stop('No vapour pressure deficit (vpd; kPa) vpd or relative humidity (rh; 0-1) information has been provided')}
           if (max(vpd) >= 1 | min(vpd) <= 0 ) {
               stop('Relative humidity is out of range (0-1)')
@@ -310,7 +310,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       } # vpd or not?
 
       # Wind speed (m/s)
-      wind_spd=read_site_specific_obs("wind_spd",infile)
+      wind_spd=read_site_specific_obs("wind_spd_ms",infile)
       # if now wind speed data use global mean
       if (wind_spd[1] == -9999) {wind_spd=rep(3.23,length.out=length(doy))} # CRU global mean wind speed (m.s-1)
 

@@ -25,31 +25,29 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars
                                           ,Csom_stock        & ! time specific estimate if som carbon (gC.m-2)
                                           ,Cagb_stock        & ! time specific agb woody estimate (gC.m-2)
                                           ,Clit_stock        & ! time specific estimate of litter carbon (gC.m-2)
-                                          ,Cstem_stock       & ! time specific estimate of stem carbon (gC.m-2)
-                                          ,Cbranch_stock     & ! time specific estimate of branch carbon (gC.m-2)
                                           ,Ccoarseroot_stock & ! time specific estimate of coarse root carbon (gC.m-2)
                                           ,Cfolmax_stock     & ! maximum annual foliar stock (gC.m-2)
                                           ,Evap              & ! Evapotranspiration (kg.m-2.day-1)
-                                          ,SWE                 ! Snow Water Equivalent (mm.day-1)
+                                          ,SWE               & ! Snow Water Equivalent (mm.day-1)
+                                          ,NBE                 ! Net Biome Exchange (gC/m2/day)
 
       ! OBS uncertainties: obv these must be pared with OBS above
-      double precision, allocatable, dimension(:) :: GPP_unc     & ! (gC.m-2.day-1)
-                                          ,NEE_unc               & ! (gC.m-2.day-1)
-                                          ,LAI_unc               & ! (log(m2/m2))
-                                          ,WOO_unc               & ! (log(gC.m-2.yr-1))
-                                          ,Reco_unc              & ! (gC.m-2.day-1)
-                                          ,Cfol_stock_unc        & ! (%)
-                                          ,Cwood_stock_unc       & ! (%)
-                                          ,Croots_stock_unc      & ! (%)
-                                          ,Csom_stock_unc        & ! (%)
-                                          ,Cagb_stock_unc        & ! (%)
-                                          ,Clit_stock_unc        & ! (%)
-                                          ,Cstem_stock_unc       & ! (%)
-                                          ,Cbranch_stock_unc     & ! (%)
-                                          ,Ccoarseroot_stock_unc & ! (%)
-                                          ,Cfolmax_stock_unc     & ! (%)
+      double precision, allocatable, dimension(:) :: GPP_unc     & ! (gC/m2/day)
+                                          ,NEE_unc               & ! (gC/m2/day)
+                                          ,LAI_unc               & ! (m2/m2)
+                                          ,WOO_unc               & ! (gC/m2/yr)
+                                          ,Reco_unc              & ! (gC/m2/day)
+                                          ,Cfol_stock_unc        & ! gC/m2
+                                          ,Cwood_stock_unc       & ! gC/m2
+                                          ,Croots_stock_unc      & ! gC/m2
+                                          ,Csom_stock_unc        & ! gC/m2
+                                          ,Cagb_stock_unc        & ! gC/m2
+                                          ,Clit_stock_unc        & ! gC/m2
+                                          ,Ccoarseroot_stock_unc & ! gC/m2
+                                          ,Cfolmax_stock_unc     & ! gC/m2
                                           ,Evap_unc              & ! (kg.m-2.day-1)
-                                          ,SWE_unc                 ! (mm.day-1)
+                                          ,SWE_unc               & ! (mm.day-1)
+                                          ,NBE_unc                 ! gC/m2/day
 
       ! location of observations in the data stream
       integer, allocatable, dimension(:) :: gpppts               & ! gpppts vector used in deriving ngpp
@@ -58,17 +56,16 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars
                                            ,laipts               & ! same for lai
                                            ,recopts              & ! same for ecosystem respiration
                                            ,Cfol_stockpts        & ! same for Cfoliage
-                                           ,Cwood_stockpts       & ! smae for Cwood
+                                           ,Cwood_stockpts       & ! same for Cwood
                                            ,Croots_stockpts      & ! same for Croots
                                            ,Csom_stockpts        & ! same for Csom
                                            ,Cagb_stockpts        & ! same
                                            ,Clit_stockpts        & ! same for Clitter
-                                           ,Cstem_stockpts       & ! same for Csom
-                                           ,Cbranch_stockpts     & ! same
                                            ,Ccoarseroot_stockpts & ! same for Clitter
                                            ,Cfolmax_stockpts     & !
-                                           ,Evappts              &
-                                           ,SWEpts
+                                           ,Evappts              & !
+                                           ,SWEpts               & !
+                                           ,NBEpts                 !
 
       double precision :: nobs_scaler
 
@@ -85,17 +82,16 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars
                 ,nCsom_stock        & ! number of Csom obervations
                 ,nCagb_stock        & !
                 ,nClit_stock        & ! number of Clitter observations
-                ,nCstem_stock       & !
-                ,nCbranch_stock     & !
                 ,nCcoarseroot_stock & !
                 ,nCfolmax_stock     & !
                 ,nEvap              &
-                ,nSWE
+                ,nSWE               &
+                ,nNBE
 
       ! saving computational speed by allocating memory to model output
       double precision, allocatable, dimension(:) :: M_GPP    & !
-                                          ,M_NEE    & !
-                                          ,M_LAI      !
+                                                    ,M_NEE    & !
+                                                    ,M_LAI      !
       ! timing variable
       double precision, allocatable, dimension(:) :: deltat ! time step (decimal day)
 

@@ -8,7 +8,7 @@ generate_parameter_maps<-function(PROJECT) {
   # how many years of the analysis
   nos_years=length(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year))
   # load timesteps to local variable
-  timestep_days=PROJECT$model$timestep_days ; seconds_per_day = 86400
+  timestep_days = PROJECT$model$timestep_days ; seconds_per_day = 86400
   if (length(timestep_days) == 1) {
       eh = TRUE ; n = 0
       while(eh) {
@@ -106,7 +106,8 @@ generate_parameter_maps<-function(PROJECT) {
                resid_time_array_median[slot_i,slot_j,3]=bob[2] ; resid_time_array_unc[slot_i,slot_j,3]=bob[1]-bob[3]
                bob = quantile(aNPP[,7], prob=c(0.975,0.50,0.025),na.rm=TRUE)
                resid_time_array_median[slot_i,slot_j,4]=bob[2] ; resid_time_array_unc[slot_i,slot_j,4]=bob[1]-bob[3]
-               if (PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_EVERGREEN" | 
+               if (PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_CDEA_ACM2" | 
+                   PROJECT$model$name == "DALEC_EVERGREEN" | PROJECT$model$name == "DALEC" |
                    PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_BUCKET" | 
                    PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" | 
                    PROJECT$model$name == "DALECN_BUCKET" ) {
@@ -127,7 +128,7 @@ generate_parameter_maps<-function(PROJECT) {
       if (PROJECT$model$name == "DALECN_GSI_FR" | PROJECT$model$name == "DALECN_GSI_DFOL_FR"
         | PROJECT$model$name == "DALEC_GSI_BUCKET"| PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR"
         | PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET"
-        | PROJECT$model$name == "DALEC_BUCKET") {
+        | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC") {
           par_array_median[,,11]=10**par_array_median[,,11]
           par_array_unc[,,11]=10**par_array_unc[,,11]
       }
@@ -144,7 +145,8 @@ generate_parameter_maps<-function(PROJECT) {
 
   if (file.exists(outfile) == FALSE | repair == 1) {
       nos_uk_clusters = 1 ; uk_cluster = 1 ; uk_cluster_pft = 1
-      if (PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_GSI_DFOL_FR" | 
+      if (PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_CDEA_ACM2" | 
+          PROJECT$model$name == "DALEC_GSI_DFOL_FR" | PROJECT$model$name == "DALEC" |
           PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_EVERGREEN" |
           PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_GSI_BUCKET" | 
           PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET" ) {
@@ -153,9 +155,9 @@ generate_parameter_maps<-function(PROJECT) {
           initial_conditions=c(18:23)
           par_array_median_normalised=par_array_median[,,-c(initial_conditions)]
           if (PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR") {
-              par_array_median_normalised=par_array_median[,,-c(initial_conditions,28,29,30,31,32,33,35,36,37)]
-          } else if (PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALEC_BUCKET") {
-              par_array_median_normalised=par_array_median[,,-c(initial_conditions,28,29,30,31,32,33,35,36,37)]
+              par_array_median_normalised=par_array_median[,,-c(initial_conditions,30,31,32,33,35,36,37)]
+          } else if (PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC") {
+              par_array_median_normalised=par_array_median[,,-c(initial_conditions,30,31,32,33,35,36,37)]
           } else if (PROJECT$model$name == "DALECN_GSI_BUCKET") {
               par_array_median_normalised=par_array_median[,,-c(initial_conditions,28,29,30,31,32,33,35,36,37)]
           } else if (PROJECT$model$name == "DALECN_GSI_BUCKET") {
@@ -219,7 +221,8 @@ generate_parameter_maps<-function(PROJECT) {
 
   # assuming we have generated one lets create the Cluster analysis map
   if (PROJECT$model$name == "DALEC_GSI_DFOL_FR" | PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_EVERGREEN" |
-      PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_GSI_BUCKET" | 
+      PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_CDEA_ACM2" | PROJECT$model$name == "DALEC_BUCKET" | 
+      PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALEC" |
       PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET") {
       jpeg(file=paste(PROJECT$figpath,"Cluster_map_of_median_parameters_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
@@ -299,7 +302,7 @@ generate_parameter_maps<-function(PROJECT) {
   image.plot(resid_time_array_median[,,4], col=colour_choices, main=paste("Csom residence time median estimate",sep=""),axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
   contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
-  if (PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_BUCKET" 
+  if (PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC" 
     | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" 
     | PROJECT$model$name == "DALECN_BUCKET") {
       jpeg(file=paste(PROJECT$figpath,"parameter_maps_median_","CDeadOrg_residence_time","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
@@ -327,7 +330,8 @@ generate_parameter_maps<-function(PROJECT) {
             ,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(0,quantile(as.vector(resid_time_array_unc[,,3]),prob=c(0.975),na.rm=TRUE)))
   contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
-  if (PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_EVERGREEN" | PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" 
+  if (PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_CDEA_ACM2" | PROJECT$model$name == "DALEC_EVERGREEN" 
+    | PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC"
     | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" 
     | PROJECT$model$name == "DALECN_BUCKET") {
       jpeg(file=paste(PROJECT$figpath,"parameter_maps_median_uncertainty_","CDeadOrg_residence_time","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
@@ -379,7 +383,8 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   hist(as.vector(resid_time_array_median[,,4]), col=colour_choices, main=paste("Csom residence time median estimate",sep=""),   cex.main=2.4      )
   dev.off()
-  if (PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_EVERGREEN" | PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" 
+  if (PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_CDEA_ACM2" | PROJECT$model$name == "DALEC_EVERGREEN" 
+    | PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC"
     | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" 
     | PROJECT$model$name == "DALECN_BUCKET") {
       jpeg(file=paste(PROJECT$figpath,"parameter_hist_median_","CDeadOrg_residence_time","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
@@ -403,7 +408,8 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   hist(as.vector(resid_time_array_unc[,,4]), col=colour_choices, main=paste("Csom residence time uncertainty",sep=""),   cex.main=2.4      )
   dev.off()
-  if (PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_EVERGREEN" | PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" 
+  if (PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_CDEA_ACM2" | PROJECT$model$name == "DALEC_EVERGREEN" 
+    | PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC"
     | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" 
     | PROJECT$model$name == "DALECN_BUCKET") {
       jpeg(file=paste(PROJECT$figpath,"parameter_hist_median_uncertainty_","CDeadOrg_residence_time","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
@@ -490,22 +496,22 @@ generate_parameter_maps<-function(PROJECT) {
   # mean temperature
   jpeg(file=paste(PROJECT$figpath,"mean_temperature_maps_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(mean_temperature_array, col=colour_choices, main="Mean air temperature (oC)",axes=FALSE, cex.main=2.4,legend.width=3.0
+  image.plot(mean_temperature_array, col=rev(colour_choices), main="Mean air temperature (oC)",axes=FALSE, cex.main=2.4,legend.width=3.0
             ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(min(as.vector(mean_temperature_array),na.rm=TRUE),max(as.vector(mean_temperature_array),na.rm=TRUE)))
   contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
   # mean radiation
   jpeg(file=paste(PROJECT$figpath,"mean_radiation_maps_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(mean_radiation_array, col=colour_choices, main="Mean radiation (MJ.m-2.day-1)",axes=FALSE, cex.main=2.4,legend.width=3.0
-            ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(0,max(as.vector(mean_radiation_array),na.rm=TRUE)))
+  image.plot(mean_radiation_array, col=rev(colour_choices), main="Mean radiation (MJ.m-2.day-1)",axes=FALSE, cex.main=2.4,legend.width=3.0
+            ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(min(as.vector(mean_radiation_array),na.rm=TRUE),max(as.vector(mean_radiation_array),na.rm=TRUE)))
   contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
   # mean vpd
   jpeg(file=paste(PROJECT$figpath,"mean_vpd_maps_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(mean_vpd_array, col=colour_choices, main="Mean VPD (Pa)",axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5
-            ,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(0,max(as.vector(mean_vpd_array),na.rm=TRUE)))
+  image.plot(mean_vpd_array, col=rev(colour_choices), main="Mean VPD (Pa)",axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5
+            ,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(min(as.vector(mean_vpd_array),na.rm=TRUE),max(as.vector(mean_vpd_array),na.rm=TRUE)))
   contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
   # mean precipitation

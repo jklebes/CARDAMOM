@@ -152,41 +152,68 @@ load_mpi_biomass_fields_for_extraction<-function(latlon_in,Cwood_source,Cwood_in
       # let the user know this might take some time
       print("Loading processed GlobBIOMASS for subsequent sub-setting ...")
 
-      input_file_1=paste(path_to_biomass,"AGBiomass_stocks_with_lat_long.nc",sep="")
+      # Create the full file paths to both 2010 and 2017 AGB estimates
+      input_file_1=paste(path_to_biomass,"AGBiomass_stocks_2010_with_lat_long.nc",sep="")
+      input_file_2=paste(path_to_biomass,"AGBiomass_stocks_2017_with_lat_long.nc",sep="")
       # open the file
-      data1=nc_open(input_file_1)
+      data1=nc_open(input_file_1) ; data2 = nc_open(input_file_2)
       # extract location variables
-      lat = ncvar_get(data1, "lat") ; long=ncvar_get(data1, "long")
+      lat_2010 = ncvar_get(data1, "lat") ; long_2010=ncvar_get(data1, "long")
+      lat_2017 = ncvar_get(data2, "lat") ; long_2017=ncvar_get(data2, "long")
+
+      ###
+      # Extract target zone for 2010 
 
       # read the biomass estimates and uncertainty
-      biomass = ncvar_get(data1, "AGBiomass") ; biomass_uncertainty = ncvar_get(data1, "AGBiomass_Uncertainty")
+      biomass_2010 = ncvar_get(data1, "AGBiomass") ; biomass_uncertainty_2010 = ncvar_get(data1, "AGBiomass_Uncertainty")
       # set actual missing data to -9999
-      biomass[which(is.na(as.vector(biomass)))] = -9999 ; biomass_uncertainty[which(is.na(as.vector(biomass_uncertainty)))] = -9999
-
+      biomass_2010[which(is.na(as.vector(biomass_2010)))] = -9999 ; biomass_uncertainty_2010[which(is.na(as.vector(biomass_uncertainty_2010)))] = -9999
       # close files after use
-      nc_close(data1)
-
-      # clean up variables
-      gc(reset=TRUE,verbose=FALSE)
-
+      nc_close(data1) ; gc(reset=TRUE,verbose=FALSE)
       # now remove the ones that are actual missing data
-      biomass[which(as.vector(biomass) == -9999)] = NA
-      biomass_uncertainty[which(as.vector(biomass_uncertainty) == -9999)] = NA
+      biomass_2010[which(as.vector(biomass_2010) == -9999)] = NA
+      biomass_uncertainty_2010[which(as.vector(biomass_uncertainty_2010) == -9999)] = NA
       # filter around target area
       max_lat = max(latlon_in[,1])+1.0 ; max_long=max(latlon_in[,2])+1.0
       min_lat = min(latlon_in[,1])-1.0 ; min_long=min(latlon_in[,2])-1.0
-      keep_lat_min = min(which(lat[1,] > min_lat))
-      keep_lat_max = max(which(lat[1,] < max_lat))
-      keep_long_min = min(which(long[,1] > min_long))
-      keep_long_max = max(which(long[,1] < max_long))
+      keep_lat_min = min(which(lat_2010[1,] > min_lat)) ; keep_lat_max = max(which(lat_2010[1,] < max_lat))
+      keep_long_min = min(which(long_2010[,1] > min_long)) ; keep_long_max = max(which(long_2010[,1] < max_long))
       # remove data outside of target area
-      biomass = biomass[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max]
-      biomass_uncertainty = biomass_uncertainty[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max]
-      lat = lat[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max] ; long = long[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max]
+      biomass_2010 = biomass_2010[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max]
+      biomass_uncertainty_2010 = biomass_uncertainty_2010[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max]
+      lat_2010 = lat_2010[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max] 
+      long_2010 = long_2010[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max]
+
+      ###
+      # Extract target zone for 2017 
+
+      # read the biomass estimates and uncertainty
+      biomass_2017 = ncvar_get(data2, "AGBiomass") ; biomass_uncertainty_2017 = ncvar_get(data2, "AGBiomass_Uncertainty")
+      # set actual missing data to -9999
+      biomass_2017[which(is.na(as.vector(biomass_2017)))] = -9999 ; biomass_uncertainty_2017[which(is.na(as.vector(biomass_uncertainty_2017)))] = -9999
+      # close files after use
+      nc_close(data2) ; gc(reset=TRUE,verbose=FALSE)
+      # now remove the ones that are actual missing data
+      biomass_2017[which(as.vector(biomass_2017) == -9999)] = NA
+      biomass_uncertainty_2017[which(as.vector(biomass_uncertainty_2017) == -9999)] = NA
+      # filter around target area
+      max_lat = max(latlon_in[,1])+1.0 ; max_long=max(latlon_in[,2])+1.0
+      min_lat = min(latlon_in[,1])-1.0 ; min_long=min(latlon_in[,2])-1.0
+      keep_lat_min = min(which(lat_2017[1,] > min_lat)) ; keep_lat_max = max(which(lat_2017[1,] < max_lat))
+      keep_long_min = min(which(long_2017[,1] > min_long)) ; keep_long_max = max(which(long_2017[,1] < max_long))
+      # remove data outside of target area
+      biomass_2017 = biomass_2017[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max]
+      biomass_uncertainty_2017 = biomass_uncertainty_2017[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max]
+      lat_2017 = lat_2017[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max]
+      long_2017 = long_2017[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max]
 
       # For later use determine where within a timeseries where
       # GlobBIOMASS observation would actually be valid.
+      # Due to the movement of the Globbiomass approach to create a ESA Biomas CCI we now have 
+      # a method consistent estimate of AGB for 2010 and 2017.
       # NOTE: here we assume that the biomass estimate is placed at the beginning of the year
+
+      # Assess 2010 first...
       tmp = seq(as.numeric(start),as.numeric(finish))
       target_year = which(tmp == 2010)
       if (length(target_year) > 0) {
@@ -204,11 +231,29 @@ load_mpi_biomass_fields_for_extraction<-function(latlon_in,Cwood_source,Cwood_in
           step_of = length(timestep_days)
       }
 
+      # ...2017 next
+      tmp = seq(as.numeric(start),as.numeric(finish))
+      target_year = which(tmp == 2017)
+      if (length(target_year) > 0) {
+          if (length(timestep_days) == 1 & timestep_days[1] == 1) {
+              nos_days = 0
+              for (t in seq(1,length(tmp))) {nos_days = nos_days + nos_days_in_year(tmp[t])}
+              timestep_days = rep(timestep_days,nos_days)
+          }
+          # cumulative so that we can find the target spot
+          run_day_selector = cumsum(timestep_days)
+          obs_step = append(obs_step,which(run_day_selector >= floor(target_year * 365.25))[1])
+      } else {
+          obs_step = append(obs_step,-9999)
+      }
+
       # clean up variables
       gc(reset=TRUE,verbose=FALSE)
 
       # output variables; convert MgCha-> gCm-2
-      return(list(obs_step = obs_step, step_of=step_of, biomass_all = biomass*1e2, biomass_all_unc = biomass_uncertainty*1e2, lat = lat, long = long))
+      return(list(obs_step = obs_step, step_of=step_of, 
+                  biomass_2010 = biomass_2010*1e2, biomass_unc_2010 = biomass_uncertainty_2010*1e2, lat_2010 = lat_2010, long_2010 = long_2010,
+                  biomass_2017 = biomass_2017*1e2, biomass_unc_2017 = biomass_uncertainty_2017*1e2, lat_2017 = lat_2017, long_2017 = long_2017))
 
     } # which biomass source?
 

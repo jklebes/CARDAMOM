@@ -51,19 +51,16 @@ module cardamom_io
     ! choose between included model arrangements
     if (DATAin%ID == 0) then
         ! ID = 0 - ACM/ACM-ET
-        ! DALEC_CDEA - 6 pools
         DATAin%nopools = 2
         DATAin%nopars = 25 
         DATAin%nofluxes = 4
     else if (DATAin%ID == 1) then
         ! ID = 1 - DALEC_CDEA
-        ! DALEC_CDEA - 6 pools
         DATAin%nopools = 6
         DATAin%nopars = 23
         DATAin%nofluxes = 16
     else if (DATAin%ID == 2) then
         ! ID = 2 - DALEC_GSI_BUCKET
-        ! DALEC_BUCKET - 8 pools currently
         DATAin%nopools = 8
         DATAin%nopars = 42
         DATAin%nofluxes = 25
@@ -156,15 +153,14 @@ module cardamom_io
            DATAin%nofluxes = 21
         endif
     else if (DATAin%ID == 17) then
-        ! ID = 2 - DALECN_GSI_BUCKET
-        ! DALEC_BUCKET - 8 pools currently
+        ! DALECN_GSI_BUCKET - 8 pools currently
         DATAin%nopools = 8
-        DATAin%nopars = 48
+        DATAin%nopars = 45
         DATAin%nofluxes = 25
         if (DATAin%PFT == 1) then
            ! then actually this is a crop pixel
            DATAin%nopools = 9
-           DATAin%nopars = 37
+           DATAin%nopars = 38
            DATAin%nofluxes = 21
         endif
     else if (DATAin%ID == 18) then
@@ -175,7 +171,6 @@ module cardamom_io
         !change ID code below to resolve conflict when merging with jeff = 23/10/18
     else if (DATAin%ID == 19) then
         ! ID = 19 - DALECN_BUCKET
-        ! DALEC_BUCKET - 8 pools currently
         DATAin%nopools = 8
         DATAin%nopars = 49!45
         DATAin%nofluxes = 25
@@ -187,9 +182,8 @@ module cardamom_io
         endif
     else if (DATAin%ID == 20) then
         ! ID = 20 - DALEC_BUCKET
-        ! DALEC_BUCKET - 8 pools currently
         DATAin%nopools = 8
-        DATAin%nopars = 42
+        DATAin%nopars = 43
         DATAin%nofluxes = 25
         if (DATAin%PFT == 1) then
            ! then actually this is a crop pixel
@@ -198,29 +192,41 @@ module cardamom_io
            DATAin%nofluxes = 21
         endif
     else if (DATAin%ID == 21) then
-        ! ID = 1 - DALEC_CDEA_LU_FIRES
-        ! DALEC_CDEA - 6 pools
+        ! ID = 21 - DALEC_CDEA_LU_FIRES
         DATAin%nopools = 6
         DATAin%nopars = 23
         DATAin%nofluxes = 28
     else if (DATAin%ID == 22) then
-        ! ID = 1 - DALEC_EVERGREEN
-        ! DALEC_CDEA - 6 pools
+        ! ID = 22 - DALEC_EVERGREEN
         DATAin%nopools = 5
         DATAin%nopars = 17
         DATAin%nofluxes = 28
     else if (DATAin%ID == 23) then
-        ! ID = 1 - DALEC_CDEA_REDUCED
-        ! DALEC_CDEA - 6 pools
-        DATAin%nopools = 6
-        DATAin%nopars = 23
+        ! ID = 23 - DALEC_CDEA_no_lit_root
+        DATAin%nopools = 4
+        DATAin%nopars = 17
         DATAin%nofluxes = 28
     else if (DATAin%ID == 24) then
-        ! ID = 1 - DALEC_EVERGREEN_no_lit_root
-        ! DALEC_CDEA - 6 pools
+        ! ID = 24 - DALEC_EVERGREEN_no_lit_root
+        DATAin%nopools = 3
+        DATAin%nopars = 11
+        DATAin%nofluxes = 28
+    else if (DATAin%ID == 25) then
+        ! ID = 25 - DALEC_CDEA_ACM2
         DATAin%nopools = 6
         DATAin%nopars = 23
         DATAin%nofluxes = 28
+    else if (DATAin%ID == 26) then
+        ! ID = 26 - DALEC
+        DATAin%nopools = 7
+        DATAin%nopars = 43
+        DATAin%nofluxes = 25
+        if (DATAin%PFT == 1) then
+           ! then actually this is a crop pixel
+           DATAin%nopools = 8
+           DATAin%nopars = 37
+           DATAin%nofluxes = 21
+        endif
     else
        write(*,*) "Oh dear... model ID cannot be found"
        stop
@@ -501,7 +507,6 @@ module cardamom_io
     double precision :: a = 1d0
 
     ! open files now
-
     ! most of these will require new information to be appended to the end at
     ! all times - therefore we use the unformatted stream access
     open(pfile_unit,file=trim(parname),form="UNFORMATTED",access="stream",status="UNKNOWN",iostat=ios)
@@ -544,7 +549,7 @@ module cardamom_io
 
     ! declare local variables
     integer :: nopars_dummy
-    integer :: a,b,c,d,e,f,g,h,i,j,k,l,m,o,x,y,z,day,s &
+    integer :: a,b,c,d,e,f,g,h,i,j,k,l,m,o,x,y,z,day,s,t &
               ,start      &
               ,finish     &
               ,totcol     & ! total number of columns (met + obs)
@@ -636,12 +641,11 @@ module cardamom_io
             ,DATAin%Cfol_stock_unc(DATAin%nodays),DATAin%Cwood_stock_unc(DATAin%nodays)          &
             ,DATAin%Croots_stock_unc(DATAin%nodays),DATAin%Clit_stock_unc(DATAin%nodays)         &
             ,DATAin%Csom_stock_unc(DATAin%nodays),DATAin%Cagb_stock_unc(DATAin%nodays)           &
-            ,DATAin%Cstem_stock(DATAin%nodays),DATAin%Cstem_stock_unc(DATAin%nodays)             &
-            ,DATAin%Cbranch_stock(DATAin%nodays),DATAin%Cbranch_stock_unc(DATAin%nodays)         &
             ,DATAin%Ccoarseroot_stock(DATAin%nodays),DATAin%Ccoarseroot_stock_unc(DATAin%nodays) &
             ,DATAin%Cfolmax_stock(DATAin%nodays),DATAin%Cfolmax_stock_unc(DATAin%nodays)         &
             ,DATAin%Evap(DATAin%nodays),DATAin%Evap_unc(DATAin%nodays)                           &
-            ,DATAin%SWE(DATAin%nodays),DATAin%SWE_unc(DATAin%nodays)                           &
+            ,DATAin%SWE(DATAin%nodays),DATAin%SWE_unc(DATAin%nodays)                             &
+            ,DATAin%NBE(DATAin%nodays),DATAin%NBE_unc(DATAin%nodays)                             &
             ,mettemp(DATAin%nomet),obstemp(DATAin%noobs))
 
     ! zero all variables
@@ -651,12 +655,11 @@ module cardamom_io
     DATAin%LAI_unc = 0d0 ; DATAin%WOO_unc = 0d0 ; DATAin%Reco_unc = 0d0 ; DATAin%Cfol_stock_unc = 0d0
     DATAin%Cwood_stock_unc = 0d0 ; DATAin%Croots_stock_unc = 0d0 ; DATAin%Clit_stock_unc = 0d0
     DATAin%Csom_stock_unc = 0d0 ; DATAin%Cagb_stock_unc = 0d0
-    DATAin%Cstem_stock = 0d0 ; DATAin%Cstem_stock_unc = 0d0
-    DATAin%Cbranch_stock = 0d0 ; DATAin%Cbranch_stock_unc = 0d0
     DATAin%Ccoarseroot_stock = 0d0 ; DATAin%Ccoarseroot_stock_unc = 0d0
     DATAin%Cfolmax_stock = 0d0 ; DATAin%Cfolmax_stock_unc = 0d0
     DATAin%Evap = 0d0 ; DATAin%Evap_unc = 0d0
     DATAin%SWE = 0d0 ; DATAin%SWE_unc = 0d0
+    DATAin%NBE = 0d0 ; DATAin%NBE_unc = 0d0
     mettemp = 0d0 ; obstemp = 0d0
 
     ! zero the obs counters
@@ -672,12 +675,11 @@ module cardamom_io
     DATAin%nCsom_stock = 0
     DATAin%nClit_stock = 0
     DATAin%nCagb_stock = 0
-    DATAin%nCstem_stock = 0
-    DATAin%nCbranch_stock = 0
     DATAin%nCcoarseroot_stock = 0
     DATAin%nCfolmax_stock = 0
     DATAin%nEvap = 0
     DATAin%nSWE = 0
+    DATAin%nNBE = 0
 
     ! work out some key variables
     ! DATAin%noobs corresponds to observations and uncertainties
@@ -750,13 +752,15 @@ module cardamom_io
        if (obstemp(21) > -9998d0) DATAin%nCagb_stock = DATAin%nCagb_stock+1
        DATAin%Cagb_stock_unc(day) = obstemp(22)
 
-       DATAin%Cstem_stock(day) = obstemp(23)
-       if (obstemp(23) > -9998d0) DATAin%nCstem_stock = DATAin%nCstem_stock+1
-       DATAin%Cstem_stock_unc(day) = obstemp(24)
-
-       DATAin%Cbranch_stock(day) = obstemp(25)
-       if (obstemp(25) > -9998d0) DATAin%nCbranch_stock = DATAin%nCbranch_stock+1
-       DATAin%Cbranch_stock_unc(day) = obstemp(26)
+! POSITION 23-26 no longer have matching points in code.
+! These can be re-allocated at a future point
+! TLS: 27/11/2019
+!       DATAin%Cstem_stock(day) = obstemp(23)
+!       if (obstemp(23) > -9998d0) DATAin%nCstem_stock = DATAin%nCstem_stock+1
+!       DATAin%Cstem_stock_unc(day) = obstemp(24)
+!       DATAin%Cbranch_stock(day) = obstemp(25)
+!       if (obstemp(25) > -9998d0) DATAin%nCbranch_stock = DATAin%nCbranch_stock+1
+!       DATAin%Cbranch_stock_unc(day) = obstemp(26)
 
        DATAin%Ccoarseroot_stock(day) = obstemp(27)
        if (obstemp(27) > -9998d0) DATAin%nCcoarseroot_stock = DATAin%nCcoarseroot_stock+1
@@ -775,6 +779,10 @@ module cardamom_io
        if (obstemp(33) > -9998d0) DATAin%nSWE = DATAin%nSWE+1
        DATAin%SWE_unc(day) = obstemp(34)
 
+       DATAin%NBE(day) = obstemp(35)
+       if (obstemp(35) > -9998d0) DATAin%nNBE = DATAin%nNBE+1
+       DATAin%NBE_unc(day) = obstemp(36)
+
     end do ! day loop
 
     ! Count the total number of observations which are to be used.
@@ -782,9 +790,8 @@ module cardamom_io
     DATAin%total_obs = DATAin%ngpp + DATAin%nlai + DATAin%nnee &
                      + DATAin%nwoo + DATAin%nreco + DATAin%nCfol_stock &
                      + DATAin%nCwood_stock + DATAin%nCroots_stock + DATAin%nCsom_stock &
-                     + DATAin%nClit_stock + DATAin%nCagb_stock + DATAin%nCstem_stock &
-                     + DATAin%nCbranch_stock + DATAin%nCcoarseroot_stock + DATAin%nCfolmax_stock &
-                     + DATAin%nEvap + DATAin%nSWE
+                     + DATAin%nClit_stock + DATAin%nCagb_stock + DATAin%nCcoarseroot_stock &
+                     + DATAin%nCfolmax_stock + DATAin%nEvap + DATAin%nSWE + DATAin%nNBE
 
     ! allocate to time step
     allocate(DATAin%deltat(DATAin%nodays)) ; DATAin%deltat = 0d0
@@ -812,17 +819,16 @@ module cardamom_io
     if (DATAin%nClit_stock > 0) allocate(DATAin%Clit_stockpts(DATAin%nClit_stock))
     if (DATAin%nCsom_stock > 0) allocate(DATAin%Csom_stockpts(DATAin%nCsom_stock))
     if (DATAin%nCagb_stock > 0) allocate(DATAin%Cagb_stockpts(DATAin%nCagb_stock))
-    if (DATAin%nCstem_stock > 0) allocate(DATAin%Cstem_stockpts(DATAin%nCstem_stock))
-    if (DATAin%nCbranch_stock > 0) allocate(DATAin%Cbranch_stockpts(DATAin%nCbranch_stock))
     if (DATAin%nCcoarseroot_stock > 0) allocate(DATAin%Ccoarseroot_stockpts(DATAin%nCcoarseroot_stock))
     if (DATAin%nCfolmax_stock > 0) allocate(DATAin%Cfolmax_stockpts(DATAin%nCfolmax_stock))
     if (DATAin%nEvap > 0) allocate(DATAin%Evappts(DATAin%nEvap))
     if (DATAin%nSWE > 0) allocate(DATAin%SWEpts(DATAin%nSWE))
+    if (DATAin%nNBE > 0) allocate(DATAin%NBEpts(DATAin%nNBE))
     ! we know how many observations we have and what they are, but now lets work
     ! out where they are in the data sets
     x = 1 ; y = 1 ; z = 1 ; b = 1 ; c = 1 ; d = 1 ; e = 1
     f = 1 ; g = 1 ; h = 1 ; i = 1 ; j = 1 ; k = 1 ; l = 1
-    m = 1 ; o = 1 ; s = 1
+    m = 1 ; o = 1 ; s = 1 ; t = 1
     do day = 1, DATAin%nodays
        if (DATAin%GPP(day) > -9998d0) then
           DATAin%gpppts(b) = day ; b = b+1
@@ -854,12 +860,6 @@ module cardamom_io
        if (DATAin%Csom_stock(day) > -9998d0) then
            DATAin%Csom_stockpts(k) = day ; k = k+1
        endif ! data present condition
-       if (DATAin%Cstem_stock(day) > -9998d0) then
-           DATAin%Cstem_stockpts(g) = day ; g = g+1
-       endif ! data present condition
-       if (DATAin%Cbranch_stock(day) > -9998d0) then
-           DATAin%Cbranch_stockpts(h) = day ; h = h+1
-       endif ! data present condition
        if (DATAin%Ccoarseroot_stock(day) > -9998d0) then
            DATAin%Ccoarseroot_stockpts(i) = day ; i = i+1
        endif ! data present condition
@@ -875,6 +875,9 @@ module cardamom_io
        if (DATAin%SWE(day) > -9998d0) then
            DATAin%SWEpts(s) = day ; s = s+1
        endif ! data present condition
+       if (DATAin%NBE(day) > -9998d0) then
+           DATAin%NBEpts(t) = day ; t = t + 1
+       endif
     end do ! day loop
 
     ! confirm that mean radiation and temperature variables are empty
@@ -883,14 +886,10 @@ module cardamom_io
     write(*,*) "No days = ", DATAin%nodays
 
     ! next determine the mean temperature and mean radiation values
-    do day = 1, DATAin%nodays
-       ! minimum temperature component
-       DATAin%meantemp = DATAin%meantemp+(0.5d0*(DATAin%met(2,day)/dble(DATAin%nodays)))
-       ! maximum temperature component
-       DATAin%meantemp = DATAin%meantemp+(0.5d0*(DATAin%met(3,day)/dble(DATAin%nodays)))
-       ! radiation
-       DATAin%meanrad = DATAin%meanrad+(DATAin%met(4,day)/dble(DATAin%nodays))
-    end do ! day loop
+    ! daily mean temperature component
+    DATAin%meantemp = sum((DATAin%met(2,:) + DATAin%met(3,:)) * 0.5d0) / dble(DATAin%nodays)
+    ! mean SW radiation
+    DATAin%meanrad = sum(DATAin%met(4,:)) / dble(DATAin%nodays)
 
     ! print the mean temperature and radiation variables
     write(*,*) "Mean Rad = ", DATAin%meanrad
@@ -941,14 +940,13 @@ module cardamom_io
     ! Begin allocating parameter info
     PI%npars = DATAin%nopars
     allocate(PI%parmin(PI%npars),PI%parmax(PI%npars),PI%parini(PI%npars) &
-            ,PI%parfix(PI%npars),PI%parvar(PI%npars),PI%beta_stepsize(PI%npars) &
+            ,PI%parfix(PI%npars),PI%parvar(PI%npars) &
             ,PI%covariance(PI%npars,PI%npars),PI%mean_par(PI%npars) &
-            ,PI%iC(PI%npars,PI%npars),PI%stepsize(PI%npars))
+            ,PI%iC(PI%npars,PI%npars))
 
     ! force zero
     PI%parmin = 0d0 ; PI%parmax = 0d0 ; PI%parini = 0d0
     PI%parfix = 0d0 ; PI%parvar = 0d0 
-    PI%stepsize = 0d0 ; PI%beta_stepsize = 0d0
     PI%covariance = 0d0 ; PI%iC = 0d0
 
     ! load parameter information
@@ -960,7 +958,7 @@ module cardamom_io
 !    end if
 
     ! defining initial MHMCMC stepsize and standard deviation
-    PI%stepsize = 1d0 ; PI%beta_stepsize = 0.01d0 ; PI%parvar = 1d0 ; PI%Nparvar = 0d0
+    PI%parvar = 1d0 ; PI%Nparvar = 0d0
     ! Covariance matrix cannot be set to zero therefore set initial value to a
     ! small positive value along to variance access
     PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false. ; PI%use_multivariate = .false.
@@ -989,11 +987,11 @@ module cardamom_io
 
     ! defining hardcoded MCMC options
     MCO%append = 1
-    MCO%nADAPT = 1000 ! TLS: 500 -> 1000 -> 5000 -> 10000
+    MCO%nADAPT = 5000 ! TLS: 500 -> 1000 -> 5000 -> 10000
     MCO%fADAPT = 0.5d0
-    MCO%randparini = .false.
+    MCO%randparini = .false. 
     MCO%returnpars = .false.
-    MCO%fixedpars  = .false.
+    MCO%fixedpars  = .true. ! TLS: changed from .false. for testing 16/12/2019
 
     ! command line options
 
@@ -1095,7 +1093,7 @@ module cardamom_io
     deallocate(tmp) 
 
     !
-    ! Step file - step size used in the beta proposal
+    ! Variance file - stores output of the current parameter variance
     !
 
     ! count the number of remaining lines in the file..
@@ -1106,7 +1104,7 @@ module cardamom_io
        num_lines = num_lines + 1
     enddo
 
-    ! Determine the number of actual beta_stepsize vectors are present. Note
+    ! Determine the number of actual stepsize vectors are present. Note
     ! that the + 1 is due to the local acceptance rate being provided too.
     num_lines = num_lines/(DATAin%nopars+1)
     ! allocate memory 

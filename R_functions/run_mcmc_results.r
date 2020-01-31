@@ -46,7 +46,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               converged = have_chains_converged(parameters)
               # if log-likelihood has passed then we are not interested
               if (converged[length(converged)] == "FAIL") {
-#                  notconv = TRUE 
+#                  notconv = TRUE
                   i = 1 ; max_likelihood = rep(NA, length.out=dim(parameters)[3]) ; CI90 = rep(NA,length.out=c(2))
                   while (notconv){
                      max_likelihood[i] = max(parameters[dim(parameters)[1],,i])
@@ -130,53 +130,54 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               # ...otherwise this is a grid and we want straight forward reduced dataset of common stocks and fluxes
               num_quantiles = c(0.025,0.25,0.5,0.75,0.975)
               # Stocks first
-              site_output = list(labile_gCm2 = apply(states_all$lab,2,quantile,prob=num_quantiles),
-                                 biomass_gCm2 = apply(states_all$bio,2,quantile,prob=num_quantiles),
-                                 lai_m2m2 = apply(states_all$lai,2,quantile,prob=num_quantiles),
-                                 foliage_gCm2 = apply(states_all$fol,2,quantile,prob=num_quantiles),
-                                 roots_gCm2 = apply(states_all$root,2,quantile,prob=num_quantiles),
-                                 wood_gCm2 = apply(states_all$wood,2,quantile,prob=num_quantiles),
-                                 lit_gCm2 = apply(states_all$lit,2,quantile,prob=num_quantiles),
-                                 som_gCm2 = apply(states_all$som,2,quantile,prob=num_quantiles),
+              site_output = list(labile_gCm2 = apply(states_all$lab_gCm2,2,quantile,prob=num_quantiles),
+                                 biomass_gCm2 = apply(states_all$bio_gCm2,2,quantile,prob=num_quantiles),
+                                 lai_m2m2 = apply(states_all$lai_m2m2,2,quantile,prob=num_quantiles),
+                                 foliage_gCm2 = apply(states_all$fol_gCm2,2,quantile,prob=num_quantiles),
+                                 roots_gCm2 = apply(states_all$root_gCm2,2,quantile,prob=num_quantiles),
+                                 wood_gCm2 = apply(states_all$wood_gCm2,2,quantile,prob=num_quantiles),
+                                 lit_gCm2 = apply(states_all$lit_gCm2,2,quantile,prob=num_quantiles),
+                                 som_gCm2 = apply(states_all$som_gCm2,2,quantile,prob=num_quantiles),
               # Fluxes second
-                                 nee_gCm2day = apply(states_all$nee,2,quantile,prob=num_quantiles),
-                                 gpp_gCm2day = apply(states_all$gpp,2,quantile,prob=num_quantiles),
-                                 rauto_gCm2day = apply(states_all$rauto,2,quantile,prob=num_quantiles),
-                                 rhet_gCm2day = apply(states_all$rhet,2,quantile,prob=num_quantiles),
-                                 reco_gCm2day = apply(states_all$rhet+states_all$rauto,2,quantile,prob=num_quantiles),
-                                 npp_gCm2day = apply(states_all$gpp-states_all$rauto,2,quantile,prob=num_quantiles),
-                                 harvest_gCm2day = apply(states_all$harvest_C,2,quantile,prob=num_quantiles),
-                                 fire_gCm2day = apply(states_all$fire,2,quantile,prob=num_quantiles))
+                                 nee_gCm2day = apply(states_all$nee_gCm2day,2,quantile,prob=num_quantiles),
+                                 gpp_gCm2day = apply(states_all$gpp_gCm2day,2,quantile,prob=num_quantiles),
+                                 rauto_gCm2day = apply(states_all$rauto_gCm2day,2,quantile,prob=num_quantiles),
+                                 rhet_gCm2day = apply(states_all$rhet_gCm2day,2,quantile,prob=num_quantiles),
+                                 reco_gCm2day = apply(states_all$rhet_gCm2day+states_all$rauto_gCm2day,2,quantile,prob=num_quantiles),
+                                 npp_gCm2day = apply(states_all$gpp_gCm2day-states_all$rauto_gCm2day,2,quantile,prob=num_quantiles),
+                                 harvest_gCm2day = apply(states_all$harvest_C_gCm2day,2,quantile,prob=num_quantiles),
+                                 fire_gCm2day = apply(states_all$fire_gCm2day,2,quantile,prob=num_quantiles))
+
               # Some derived fluxes / states
-              site_output$nbp_gCm2day = apply(states_all$nee + states_all$fire,2,quantile,prob=num_quantiles)
-              dCbio = states_all$bio - states_all$bio[,1] # difference in biomass from initial
+              site_output$nbe_gCm2day = apply(states_all$nee_gCm2day + states_all$fire_gCm2day,2,quantile,prob=num_quantiles)
+              dCbio = states_all$bio_gCm2 - states_all$bio_gCm2[,1] # difference in biomass from initial
               site_output$dCbio_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles)
-              dCbio = states_all$fol - states_all$fol[,1] # difference in biomass from initial
+              dCbio = states_all$fol_gCm2 - states_all$fol_gCm2[,1] # difference in biomass from initial
               site_output$dCfoliage_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles)
-              dCbio = states_all$root - states_all$root[,1] # difference in root from initial
+              dCbio = states_all$root_gCm2 - states_all$root_gCm2[,1] # difference in root from initial
               site_output$dCroots_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles)
-              dCbio = states_all$wood - states_all$wood[,1] # difference in wood from initial
+              dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
               site_output$dCwood_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles)
-              dCbio = states_all$lit - states_all$lit[,1] # difference in lit from initial
+              dCbio = states_all$lit_gCm2 - states_all$lit_gCm2[,1] # difference in lit from initial
               site_output$dClit_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles)
-              dCbio = states_all$som - states_all$som[,1] # difference in som from initial
+              dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
               site_output$dCsom_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles)
-              if (length(which(names(states_all) == "litwood")) > 0) {
-                  site_output$cwd_gCm2 = apply(states_all$litwood,2,quantile,prob=num_quantiles)
-                  site_output$deadorg_gCm2 = apply(states_all$litwood+states_all$lit,2,quantile,prob=num_quantiles)
-                  dCbio = states_all$litwood - states_all$litwood[,1] # difference in cwd from initial
+              if (length(which(names(states_all) == "litwood_gCm2")) > 0) {
+                  site_output$cwd_gCm2 = apply(states_all$litwood_gCm2,2,quantile,prob=num_quantiles)
+                  site_output$deadorg_gCm2 = apply(states_all$litwood_gCm2+states_all$lit_gCm2,2,quantile,prob=num_quantiles)
+                  dCbio = states_all$litwood_gCm2 - states_all$litwood_gCm2[,1] # difference in cwd from initial
                   site_output$dCcwd_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles)
-                  dCbio = (states_all$litwood+states_all$lit) - (states_all$litwood[,1]+states_all$lit[,1]) # difference in deadorg from initial
+                  dCbio = (states_all$litwood_gCm2+states_all$lit_gCm2) - (states_all$litwood_gCm2[,1]+states_all$lit_gCm2[,1]) # difference in deadorg from initial
                   site_output$dCdeadorg_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles)
               }
               # Finally water cycle specific if available
-              if (length(which(names(states_all) == "evap")) > 0) {
+              if (length(which(names(states_all) == "evap_kgH2Om2day")) > 0) {
                   # currently water in the soil surface layer (0-10 cm)
-                  site_output$SurfWater_kgH2Om2 = apply(states_all$rootwater,2,quantile,prob=num_quantiles)
+                  site_output$SurfWater_kgH2Om2 = apply(states_all$sfc_water_mm,2,quantile,prob=num_quantiles)
                   # plant apparent soil water potential (MPa)
-                  site_output$wSWP_MPa = apply(states_all$wSWP,2,quantile,prob=num_quantiles)
+                  site_output$wSWP_MPa = apply(states_all$wSWP_MPa,2,quantile,prob=num_quantiles)
                   # evapotranspiration (Etrans + Esoil + Ewetcanopy)
-                  site_output$evap_kgH2Om2day = apply(states_all$evap,2,quantile,prob=num_quantiles)
+                  site_output$evap_kgH2Om2day = apply(states_all$evap_kgH2Om2day,2,quantile,prob=num_quantiles)
               }
               # save to pixel specific file for the moment... in "run_mcmc_results" these will be combined into a single grid
               save(site_output,file=outfile2)
@@ -323,7 +324,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$mean_npp_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_harvest_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_fire_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_nbp_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          grid_output$mean_nbe_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           # For those which we currently have need, estimate the mean annual maximum
           grid_output$annual_max_roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           # Models where we have a CWD pool and therefore a total dead organic matter combination also
@@ -379,7 +380,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$npp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$harvest_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$fire_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$nbp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          grid_output$nbe_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           # Models where we have a CWD pool and therefore a total dead organic matter combination also
           if (length(which(names(site_output) == "cwd_gCm2")) > 0) {
               grid_output$cwd_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
@@ -457,7 +458,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                grid_output$npp_gCm2day[n,,] = site_output$npp_gCm2day
                grid_output$harvest_gCm2day[n,,] = site_output$harvest_gCm2day
                grid_output$fire_gCm2day[n,,] = site_output$fire_gCm2day
-               grid_output$nbp_gCm2day[n,,] = site_output$nbp_gCm2day
+               grid_output$nbe_gCm2day[n,,] = site_output$nbe_gCm2day
                # Models where we have a CWD pool and therefore a total dead organic matter combination also
                if (length(which(names(site_output) == "cwd_gCm2")) > 0) {
                    grid_output$cwd_gCm2[n,,] = site_output$cwd_gCm2
@@ -516,7 +517,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                grid_output$mean_npp_gCm2day[slot_i,slot_j,] = apply(site_output$npp_gCm2day,1,mean)
                grid_output$mean_harvest_gCm2day[slot_i,slot_j,] = apply(site_output$harvest_gCm2day,1,mean)
                grid_output$mean_fire_gCm2day[slot_i,slot_j,] = apply(site_output$fire_gCm2day,1,mean)
-               grid_output$mean_nbp_gCm2day[slot_i,slot_j,] = apply(site_output$nbp_gCm2day,1,mean)
+               grid_output$mean_nbe_gCm2day[slot_i,slot_j,] = apply(site_output$nbe_gCm2day,1,mean)
                # For those which we currently have need, estimate the mean annual maximum
                grid_output$annual_max_roots_gCm2[slot_i,slot_j,] = 0
                for (y in seq(1,nos_years)) {

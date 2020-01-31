@@ -19,6 +19,9 @@ module model_likelihood_module
 
   ! module variables
   double precision :: canopy_max_life = -9999 ! initial value (days)
+  
+  ! Has the model sanity check been conducted yet?
+  logical :: sanity_check = .false.
 
   save
 
@@ -27,7 +30,7 @@ module model_likelihood_module
   !------------------------------------------------------------------
   !
   subroutine find_edc_initial_values
-    use MCMCOPT, only: PI, MCOUT, MCOPT
+    use MCMCOPT, only: PI, MCOUT, MCO
     use cardamom_structures, only: DATAin ! will need to change due to circular dependance
     use cardamom_io, only: restart_flag
     use MHMCMC_MODULE, only: MHMCMC
@@ -39,37 +42,36 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n, counter_local, EDC_iter
-    double precision :: PEDC, ML, ML_prior
+    double precision :: PEDC, PEDC_prev, ML, ML_prior, P_target
     double precision, dimension(PI%npars+1) :: EDC_pars
-    ! declare parameters
-    integer, parameter :: EDC_iter_max = 1
 
     ! set MCMC options needed for EDC run
     MCO%APPEND = 0
-    MCO%nADAPT = 1000
+    MCO%nADAPT = 500
     MCO%fADAPT = 1d0
     MCO%nOUT = 100000
     MCO%nPRINT = 0
     MCO%nWRITE = 0
     ! the next two lines ensure that parameter inputs are either given or
     ! entered as -9999
-    MCO%randparini = .true.
+    MCO%randparini = .true. 
     MCO%returnpars = .true.
-    MCO%fixedpars  = .false.
+    MCO%fixedpars  = .true. ! TLS: changed from .false. for testing 16/12/2019
 
     ! Set initial priors to vector...
     PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
     ! ... and assume we need to find random parameters
     PI%parfix = 0
+    ! Target likelihood allows for controlling when the MCMC will stop
+    P_target = 0d0
 
     ! if the prior is not missing and we have not told the edc to be random
     ! keep the value
-    do n = 1, PI%npars
-       if (PI%parini(n) /= -9999d0 .and. DATAin%edc_random_search < 1) PI%parfix(n) = 1
-    end do ! parameter loop
+!    do n = 1, PI%npars
+!       if (PI%parini(n) /= -9999d0 .and. DATAin%edc_random_search < 1) PI%parfix(n) = 1
+!    end do ! parameter loop
 
     ! set the parameter step size at the beginning
-    PI%stepsize = 1d0 ; PI%beta_stepsize = 0.005d0
     PI%parvar = 1d0 ; PI%Nparvar = 0d0
     PI%use_multivariate = .false.
     ! Covariance matrix cannot be set to zero therefore set initial value to a
@@ -79,88 +81,49 @@ module model_likelihood_module
        PI%covariance(n,n) = 1d0
     end do
 
-    EDC_pars = 1d0
-
     ! if this is not a restart run, i.e. we do not already have a starting
     ! position we must being the EDC search procedure to find an ecologically
     ! consistent initial parameter set
     if (.not. restart_flag) then
 
-        do EDC_iter = 1, EDC_iter_max
+        ! set up edc log likelihood for MHMCMC initial run
+        PEDC_prev = -1000d0 ; PEDC = -1d0 ; counter_local = 0
+        do while (PEDC < 0d0)
 
-           ! set up edc log likelihood for MHMCMC initial run
-           PEDC = -1 ; counter_local = 0
-           do while (PEDC < 0)
+           write(*,*)"Beginning EDC search attempt"
+           ! call the MHMCMC directing to the appropriate likelihood
+           call MHMCMC(P_target,EDC_MODEL_LIKELIHOOD)
 
-              write(*,*)"Beginning EDC search attempt"
-              ! call the MHMCMC directing to the appropriate likelihood
-              call MHMCMC(EDC_MODEL_LIKELIHOOD)
+           ! store the best parameters from that loop
+           PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
+           ! turn off random selection for initial values
+           MCO%randparini = .false.
 
-              ! store the best parameters from that loop
-              PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
-              ! turn off random selection for initial values
-              MCO%randparini = .false.
+           ! call edc likelihood function to get final edc probability
+           call edc_model_likelihood(PI%parini,PEDC,ML_prior)
 
-              ! call edc likelihood function to get final edc probability
-              call edc_model_likelihood(PI%parini,PEDC,ML_prior)
-
-              ! keep track of attempts
-              counter_local = counter_local + 1
-              ! periodically reset the initial conditions
-              if (PEDC < 0d0 .and. mod(counter_local,5) == 0) then
-                  PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
-                  ! reset to select random starting point
-                  MCO%randparini = .true.
-                  ! reset the parameter step size at the beginning of each attempt
-                  PI%stepsize = 1d0 ; PI%beta_stepsize = 0.005d0
-                  PI%parvar = 1d0 ; PI%Nparvar = 0d0
-                  ! Covariance matrix cannot be set to zero therefore set initial value to a
-                  ! small positive value along to variance access
-                  PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
-                  PI%use_multivariate = .false.
-                  do n = 1, PI%npars
-                     PI%covariance(n,n) = 1d0
-                  end do
-              endif
-
-           end do ! for while condition
-
-           ! check for actual likelihood score
-           call model_Likelihood(PI%parini,ML,ML_prior)
-
-           if (EDC_pars(PI%npars+1) > 0d0 .or. (ML+ML_prior) > EDC_pars(PI%npars+1)) then
-
-               ! either this is our first EDC starting point or a better one, so
-               ! we best make a record of these
-               EDC_pars(1:PI%npars) = PI%parini(1:PI%npars)
-               EDC_pars(PI%npars+1) = ML+ML_prior
-
-           end if ! EDC_pars(PI%npars+1) > 0 .or. (ML+ML_prior) > EDC_pars(PI%npars+1)
-
-           ! unless this is the last time we want to reset to control switches
-           ! to reset the parameters for new staring points
-           if (EDC_iter < EDC_iter_max) then
+           ! keep track of attempts
+           counter_local = counter_local + 1
+           ! periodically reset the initial conditions
+           if (PEDC < 0d0 .and. PEDC <= PEDC_prev .and. counter_local > 5) then
+               ! Reset the previous EDC likelihood score
+               PEDC_prev = -1000d0
+               ! Reset parameters back to default
                PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
                ! reset to select random starting point
                MCO%randparini = .true.
-               ! reset the parameter step size at the beginning of each
-               ! attempt
-               PI%stepsize = 1d0 ; PI%beta_stepsize = 0.005d0
+               ! reset the parameter step size at the beginning of each attempt
                PI%parvar = 1d0 ; PI%Nparvar = 0d0
-               ! Covariance matrix cannot be set to zero therefore set
-               ! initial value to a
+               ! Covariance matrix cannot be set to zero therefore set initial value to a
                ! small positive value along to variance access
                PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
                PI%use_multivariate = .false.
                do n = 1, PI%npars
                   PI%covariance(n,n) = 1d0
                end do
-           endif ! EDC_iter < EDC_iter_max
+           endif
 
-        end do ! EDC_iter
-
-        ! now pass the best parameter set to the inital value to the main EDC
-        PI%parini(1:PI%npars) = EDC_pars(1:PI%npars)
+        end do ! for while condition
 
     endif ! if for restart
 
@@ -198,6 +161,10 @@ module model_likelihood_module
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
     EDCD%DIAG = 1
     ML_obs_out = 0d0 ; ML_prior_out = 0d0
+
+    ! Perform a more aggressive sanity check which compares the bulk difference
+    ! in all fluxes and pools from multiple runs of the same parameter set
+    if (.not.sanity_check) call model_sanity_check(PI%parini)
 
     ! crop or not split....trouble
     if (DATAin%PFT == 1) then
@@ -258,6 +225,98 @@ module model_likelihood_module
     ML_obs_out = -5d0*tot_exp*DATAin%EDC
 
   end subroutine edc_model_likelihood
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine model_sanity_check(PARS)
+    use cardamom_structures, only: DATAin
+    use MCMCOPT, only: PI
+    use CARBON_MODEL_MOD, only: carbon_model
+    use CARBON_MODEL_CROP_MOD, only: carbon_model_crop
+
+    ! Carries out multiple carbon model iterations using the same parameter set
+    ! to ensure that model outputs are consistent between iterations, i.e. that
+    ! the model is numerically secure. Reproducible outputs from the models is
+    ! essential for successful mcmc anlaysis
+
+    implicit none
+
+    ! Arguments
+    double precision, dimension(PI%npars), intent(in) :: PARS
+
+    ! Local arguments
+    integer :: i
+    double precision, dimension((DATAin%nodays+1),DATAin%nopools) :: local_pools
+    double precision, dimension(DATAin%nodays,DATAin%nofluxes) :: local_fluxes
+    double precision :: pool_error, flux_error
+
+    ! Run model
+
+    ! crop or not split....trouble
+    if (DATAin%PFT == 1) then
+       ! PFT has been provided and is crop! Best try running the crop model
+       ! then...
+
+       ! next need to run the model itself
+       call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                             ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                             ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft   &
+                             ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
+                             ,DATAin%nofluxes,DATAin%M_GPP                &
+                             ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
+                             ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
+                             ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
+
+       call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                             ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                             ,local_fluxes,local_pools,DATAin%pft   &
+                             ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
+                             ,DATAin%nofluxes,DATAin%M_GPP                &
+                             ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
+                             ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
+                             ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
+
+    else
+
+        ! next need to run the model itself
+        call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                       ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                       ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
+                       ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
+                       ,DATAin%M_GPP)
+
+        ! next need to run the model itself
+        call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                       ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                       ,local_fluxes,local_pools,DATAin%nopars &
+                       ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
+                       ,DATAin%M_GPP)
+    end if ! crop or not if
+
+    ! Compare outputs
+    flux_error = sum(abs(DATAin%M_FLUXES - local_fluxes))
+    pool_error = sum(abs(DATAin%M_POOLS - local_pools))
+    ! If error between runs exceeds precision error then we have a problem
+    if (pool_error > (tiny(0d0)*(DATAin%nopools*DATAin%nodays)) .or. &
+        flux_error > (tiny(0d0)*(DATAin%nofluxes*DATAin%nodays))) then
+        print*,"Error: multiple runs of the same parameter set indicates an error"
+        print*,"Cumulative POOL error = ",pool_error
+        print*,"Cumulative FLUX error = ",flux_error
+        do i = 1,DATAin%nofluxes
+           print*,"Sum abs error over time: flux = ",i
+           print*,sum(abs(DATAin%M_FLUXES(:,i) - local_fluxes(:,i)))
+        end do
+        do i = 1, DATAin%nopools
+           print*,"Sum abs error over time: pool = ",i
+           print*,sum(abs(DATAin%M_POOLS(:,i) - local_pools(:,i)))
+        end do
+        stop
+    end if
+
+    ! Set Sanity check as completed
+    sanity_check = .true.
+
+  end subroutine model_sanity_check
   !
   !------------------------------------------------------------------
   !
