@@ -3626,9 +3626,9 @@ double precision :: Creturn_canopy,Creturn_investment
     ! Temperature limitation, then restrict to 0-1; correction for k-> oC
     itemp(current_step) = min(1d0,max(0d0,(mean_min_airt-(Tfac_min-freeze)) * Tfac_range_1))
     ! Photoperiod limitation (seconds)
-    ivpd(current_step) = min(1d0,max(0d0,(mean_daylength-Photofac_min) * Photofac_range_1))
+    iphoto(current_step) = min(1d0,max(0d0,(mean_daylength-Photofac_min) * Photofac_range_1))
     ! VPD limitation (kPa)
-    iphoto(current_step) = min(1d0,max(0d0,1d0 - ((mean_VPD-VPDfac_min) * VPDfac_range_1)))
+    ivpd(current_step) = min(1d0,max(0d0,1d0 - ((mean_VPD-VPDfac_min) * VPDfac_range_1)))
     ! Calculate and store the GSI index
     GSI(current_step) = itemp(current_step) * ivpd(current_step) * iphoto(current_step)
 
