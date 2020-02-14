@@ -14,9 +14,11 @@ submit_processes_to_eddie<-function (PROJECT_in) {
     # begin writing out the file contents
     # construct the file now
     first_pass=TRUE
-    for (n in seq(1, PROJECT_in$nosites)) {
+#    for (n in seq(1, PROJECT_in$nosites)) {
+    for (c in seq(1, PROJECT_in$nochains)) {
 #if (length(which(n == bob$loc)) > 0) {
-         for (c in seq(1, PROJECT_in$nochains)) {
+#         for (c in seq(1, PROJECT_in$nochains)) {
+         for (n in seq(1, PROJECT_in$nosites)) {
               infile=paste(PROJECT_in$edatapath,PROJECT_in$name,"_",PROJECT_in$sites[n],".bin",sep="")
               output=paste(PROJECT_in$eresultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_",c,"_",sep="")
               if (first_pass) {

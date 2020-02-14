@@ -111,7 +111,7 @@ generate_parameter_maps<-function(PROJECT) {
                    PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_BUCKET" | 
                    PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALECN_GSI_BUCKET" | 
                    PROJECT$model$name == "DALECN_BUCKET" ) {
-
+                   # Estimate dead organic matter residence time
                    bob = quantile(aNPP[,8], prob=c(0.975,0.50,0.025),na.rm=TRUE)
                    resid_time_array_median[slot_i,slot_j,5]=bob[2] ; resid_time_array_unc[slot_i,slot_j,5]=bob[1]-bob[3]
                }

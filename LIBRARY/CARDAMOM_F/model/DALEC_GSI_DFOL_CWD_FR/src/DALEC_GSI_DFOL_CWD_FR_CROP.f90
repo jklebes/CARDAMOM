@@ -154,7 +154,7 @@ contains
                                ,seconds_per_step,root_biomass,mid_soil_depth,root_reach,previous_depth     &
                                ,deltat_1,water_flux,layer_thickness,meant,stomatal_conductance             &
                                ,co2_half_sat,co2_comp_point,mint,maxt,swrad,co2,doy,leafT,wind_spd,vpd_kPa &
-                               ,lai
+                               ,lai,fine_root_biomass
 
     ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
     ! Evergreen Analytical (DALEC_CDEA) model. The subroutine calls the
@@ -377,6 +377,7 @@ contains
 
     ! initialise root reach based on initial conditions
     root_biomass = max(min_root,POOLS(1,3)*2d0)
+    fine_root_biomass = root_biomass
     ! needed to initialise soils
     call calculate_Rtot(Rtot)
 
@@ -415,6 +416,7 @@ contains
       ! calculate the minimum soil & root hydraulic resistance based on total
       ! fine root mass ! *2*2 => *RS*C->Bio
       root_biomass = max(min_root,POOLS(n,3)*2d0)
+      fine_root_biomass = root_biomass
       call calculate_Rtot(Rtot)
 
       ! calculate some temperature dependent meteorologial properties

@@ -27,8 +27,8 @@ module CARBON_MODEL_MOD
            ,linear_model_gradient         &
            ,seconds_per_day               &
            ,seconds_per_step              &
+           ,fine_root_biomass             &
            ,root_biomass                  &
-           ,coarse_root_biomass           &
            ,root_reach                    &
            ,min_root                      &
            ,max_depth                     &
@@ -269,7 +269,7 @@ module CARBON_MODEL_MOD
                                                        water_flux    ! potential transpiration flux (mmol.m-2.s-1)
   double precision, dimension(nos_soil_layers+1) :: layer_thickness ! thickness of soil layers (m)
 
-  double precision :: root_reach, coarse_root_biomass, root_biomass, & ! root depth, coarse and fine root biomass
+  double precision :: root_reach, root_biomass, fine_root_biomass, & ! root depth, coarse+fine, and fine root biomass
                                      max_depth, & ! maximum possible root depth (m)
                                         root_k, & ! biomass to reach half max_depth
                       new_depth,previous_depth, & ! depth of bottom of soil profile
@@ -762,8 +762,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     disturbance_residue_to_cwd = 0d0 ; disturbance_loss_from_cwd = 0d0
 
     ! Initialise root reach based on initial coarse root biomass
-    root_biomass = max(min_root,POOLS(1,3)*2d0)
-    coarse_root_biomass = max(min_root,POOLS(1,4)*pars(29)*2d0)
+    fine_root_biomass = max(min_root,POOLS(1,3)*2d0)
+    root_biomass = fine_root_biomass + max(min_root,POOLS(1,4)*pars(29)*2d0)
     ! Needed to initialise soils
     call calculate_Rtot(Rtot)
 
@@ -835,8 +835,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! calculate the minimum soil & root hydraulic resistance based on total
        ! fine root mass ! *2*2 => *RS*C->Bio
-       root_biomass = max(min_root,POOLS(n,3)*2d0)
-       coarse_root_biomass = max(min_root,POOLS(n,4)*pars(29)*2d0)
+       fine_root_biomass = max(min_root,POOLS(n,3)*2d0)
+       root_biomass = fine_root_biomass + max(min_root,POOLS(n,4)*pars(29)*2d0)
        call calculate_Rtot(Rtot)
 
        ! calculate radiation absorption and estimate stomatal conductance
@@ -1986,7 +1986,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !!!!!!!!!!!
 
     ! calculate soil depth to which roots reach
-    root_reach = max_depth * coarse_root_biomass / (root_k + coarse_root_biomass)
+    root_reach = max_depth * root_biomass / (root_k + root_biomass)
     ! Determine initial soil layer thickness
     layer_thickness(1) = top_soil_depth ; layer_thickness(2) = mid_soil_depth
     layer_thickness(3) = max(min_layer,root_reach-sum(layer_thickness(1:2)))
@@ -2005,21 +2005,21 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! soil layer
 
         ! Start by assigning all 50 % of root biomass to the top soil layer
-        root_mass(1) = root_biomass * 0.5d0
+        root_mass(1) = fine_root_biomass * 0.5d0
         ! Then quantify how much additional root is found in the top soil layer
         ! assuming that the top 25 % depth is found somewhere within the top
         ! layer
-        bonus = (root_biomass-root_mass(1)) &
+        bonus = (fine_root_biomass-root_mass(1)) &
               * (layer_thickness(1)-root_depth_50) / (root_reach - root_depth_50)
         root_mass(1) = root_mass(1) + bonus
         ! partition the remaining root biomass between the seconds and third
         ! soil layers
         if (root_reach > sum(layer_thickness(1:2))) then
-            root_mass(2) = (root_biomass - root_mass(1)) &
+            root_mass(2) = (fine_root_biomass - root_mass(1)) &
                          * (layer_thickness(2)/(root_reach-layer_thickness(1)))
-            root_mass(3) = root_biomass - sum(root_mass(1:2))
+            root_mass(3) = fine_root_biomass - sum(root_mass(1:2))
         else
-            root_mass(2) = root_biomass - root_mass(1)
+            root_mass(2) = fine_root_biomass - root_mass(1)
         endif
 
     else if (root_depth_50 > layer_thickness(1) .and. root_depth_50 <= sum(layer_thickness(1:2))) then
@@ -2027,22 +2027,22 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! Greater than 50 % of fine root biomass found in the top two soil
         ! layers. We will divide the root biomass uniformly based on volume,
         ! plus bonus for the second layer (as done above)
-        root_mass(1) = root_biomass * (layer_thickness(1)/root_depth_50)
-        root_mass(2) = root_biomass * ((root_depth_50-layer_thickness(1))/root_depth_50)
+        root_mass(1) = fine_root_biomass * (layer_thickness(1)/root_depth_50)
+        root_mass(2) = fine_root_biomass * ((root_depth_50-layer_thickness(1))/root_depth_50)
         root_mass(1:2) = root_mass(1:2) * 0.5d0
 
         ! determine bonus for the seconds layer
-        bonus = (root_biomass-sum(root_mass(1:2))) &
+        bonus = (fine_root_biomass-sum(root_mass(1:2))) &
               * ((sum(layer_thickness(1:2))-root_depth_50)/(root_reach-root_depth_50))
         root_mass(2) = root_mass(2) + bonus
-        root_mass(3) = root_biomass - sum(root_mass(1:2))
+        root_mass(3) = fine_root_biomass - sum(root_mass(1:2))
 
     else
 
         ! Greater than 50 % of fine root biomass stock spans across all three
         ! layers
-        root_mass(1:2) = root_biomass * 0.5d0 * (layer_thickness(1:2)/root_depth_50)
-        root_mass(3) = root_biomass - sum(root_mass(1:2))
+        root_mass(1:2) = fine_root_biomass * 0.5d0 * (layer_thickness(1:2)/root_depth_50)
+        root_mass(3) = fine_root_biomass - sum(root_mass(1:2))
 
     endif
     ! now convert root mass into lengths

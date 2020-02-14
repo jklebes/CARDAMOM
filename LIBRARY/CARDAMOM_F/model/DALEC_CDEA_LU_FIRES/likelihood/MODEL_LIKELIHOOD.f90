@@ -120,6 +120,17 @@ module model_likelihood_module
 
         end do ! for while condition
 
+        ! Having found an EDC compliant parameter vector, we want to do a short
+        ! search on a sub-sample of observations to quickly move towards the
+        ! general area of the observations
+        write(*,*)"Beginning parameter search on subsample of observations"
+        ! Update the number of iterations to search to 1 million, but maintain
+        ! other parameters from the beginning of the script
+        MCO%nOUT = 1000000
+        call MHMCMC(P_target,sub_model_likelihood)
+        ! store the best parameters from that loop
+        PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
+
     endif ! if for restart
 
     ! reset so that currently saved parameters will be used
@@ -193,6 +204,74 @@ module model_likelihood_module
     ML_obs_out = -5d0*tot_exp*DATAin%EDC
 
   end subroutine edc_model_likelihood
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine sub_model_likelihood(PARS,ML_obs_out,ML_prior_out)
+    use MCMCOPT, only:  PI
+    use CARBON_MODEL_MOD, only: carbon_model
+    use cardamom_structures, only: DATAin
+
+    ! this subroutine is responsible, under normal circumstances for the running
+    ! of the DALEC model, calculation of the log-likelihood for comparison
+    ! assessment of parameter performance and use of the EDCs if they are
+    ! present / selected
+
+    implicit none
+
+    ! declare inputs
+    double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
+    ! output
+    double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
+                                       ML_prior_out   ! prior log-likelihood
+    ! declare local variables
+    double precision :: EDC1, EDC2
+
+    ! initial values
+    ML_obs_out = 0d0 ; ML_prior_out = 0d0 ; EDC1 = 1d0 ; EDC2 = 1d0
+    ! if == 0 EDCs are checked only until the first failure occurs
+    ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
+    EDCD%DIAG = 0
+
+    if (DATAin%EDC == 1) then
+
+        ! call EDCs which can be evaluated prior to running the model
+        call EDC1_CDEA_LU_FIRES(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+
+        ! update the likelihood score based on EDCs driving total rejection
+        ! proposed parameters
+        ML_obs_out = log(EDC1)
+
+    endif !
+
+    ! run the dalec model
+    call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                     ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
+                     ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
+                     ,DATAin%M_GPP)
+
+    ! if first set of EDCs have been passed, move on to the second
+    if (DATAin%EDC == 1) then
+
+        ! check edc2
+        call EDC2_CDEA_LU_FIRES(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+                     ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                     ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                     ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+
+        ! Add EDC2 log-likelihood to absolute accept reject...
+        ML_obs_out = ML_obs_out + log(EDC2)
+
+    end if ! DATAin%EDC == 1
+
+    ! Calculate log-likelihood associated with priors
+    ! We always want this
+    ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
+    ! calculate final model likelihood when compared to obs
+    ML_obs_out = ML_obs_out + sub_likelihood(PI%npars,PARS)
+
+  end subroutine sub_model_likelihood
   !
   !------------------------------------------------------------------
   !
@@ -976,6 +1055,199 @@ module model_likelihood_module
     return
 
   end function likelihood
+  !
+  !------------------------------------------------------------------
+  !
+  double precision function sub_likelihood(npars,pars)
+    use cardamom_structures, only: DATAin
+
+    ! calculates the likelihood of of the model output compared to the available
+    ! observations which have been input to the model
+
+    implicit none
+
+    ! declare arguments
+    integer, intent(in) :: npars
+    double precision, dimension(npars), intent(in) :: pars
+
+    ! declare local variables
+    integer :: n, dn, no_years, y
+    double precision :: tot_exp, tmp_var, infini
+    double precision, allocatable :: mean_annual_pools(:)
+
+    ! initial value
+    sub_likelihood = 0d0 ; infini = 0d0
+
+    ! GPP Log-likelihood
+    if (DATAin%sub_ngpp > 0) then
+       tot_exp = sum(((DATAin%M_GPP(DATAin%sub_gpppts(1:DATAin%sub_ngpp))-DATAin%GPP(DATAin%sub_gpppts(1:DATAin%sub_ngpp))) &
+                       /DATAin%GPP_unc(DATAin%sub_gpppts(1:DATAin%sub_ngpp)))**2)
+       sub_likelihood = sub_likelihood-tot_exp
+    endif
+
+    ! LAI log-likelihood
+    if (DATAin%sub_nlai > 0) then
+       ! loop split to allow vectorisation
+       tot_exp = sum(((DATAin%M_LAI(DATAin%sub_laipts(1:DATAin%sub_nlai))-DATAin%LAI(DATAin%sub_laipts(1:DATAin%sub_nlai))) &
+                       /DATAin%LAI_unc(DATAin%sub_laipts(1:DATAin%sub_nlai)))**2)
+       do n = 1, DATAin%sub_nlai
+         dn = DATAin%sub_laipts(n)
+         ! if zero or greater allow calculation with min condition to prevent
+         ! errors of zero LAI which occur in managed systems
+         if (DATAin%M_LAI(dn) < 0d0) then
+             ! if not then we have unrealistic negative values or NaN so indue
+             ! error
+             tot_exp = tot_exp+(-log(infini))
+         endif
+       end do
+       sub_likelihood = sub_likelihood-tot_exp
+    endif
+
+    ! NEE likelihood
+    if (DATAin%sub_nnee > 0) then
+       tot_exp = sum(((DATAin%M_NEE(DATAin%sub_neepts(1:DATAin%sub_nnee))-DATAin%NEE(DATAin%sub_neepts(1:DATAin%sub_nnee))) &
+                       /DATAin%NEE_unc(DATAin%sub_neepts(1:DATAin%sub_nnee)))**2)
+       sub_likelihood = sub_likelihood-tot_exp
+    endif
+
+    ! Reco likelihood
+    if (DATAin%sub_nreco > 0) then
+       tot_exp = 0d0
+       do n = 1, DATAin%sub_nreco
+         dn = DATAin%sub_recopts(n)
+         tmp_var = DATAin%M_NEE(dn)+DATAin%M_GPP(dn)
+         ! note that we calculate the Ecosystem resp from GPP and NEE
+         tot_exp = tot_exp+((tmp_var-DATAin%Reco(dn))/DATAin%Reco_unc(dn))**2
+       end do
+       sub_likelihood = sub_likelihood-tot_exp
+    endif
+
+    ! Cwood increment log-likelihood
+    if (DATAin%sub_nwoo > 0) then
+       tot_exp = 0d0
+       do n = 1, DATAin%sub_nwoo
+         dn = DATAin%sub_woopts(n)
+         ! note that division is the uncertainty
+         ! tot_exp = tot_exp+(log((DATAin%M_POOLS(dn,4)-DATAin%M_POOLS(dn-365,4)) &
+         !                   / DATAin%WOO(dn))/log(DATAin%WOO_unc(dn)))**2
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%M_POOLS(dn-365,4)) / DATAin%WOO_unc(dn))**2
+       end do
+       sub_likelihood = sub_likelihood-tot_exp
+    endif
+
+    ! Cfoliage log-likelihood
+    if (DATAin%sub_nCfol_stock > 0) then
+       tot_exp = 0d0
+       do n = 1, DATAin%sub_nCfol_stock
+         dn = DATAin%sub_Cfol_stockpts(n)
+         ! note that division is the uncertainty
+!         tot_exp = tot_exp+(log(DATAin%M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2d0
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2
+       end do
+       sub_likelihood = sub_likelihood-tot_exp
+    endif
+
+    ! Annual foliar maximum
+    if (DATAin%sub_nCfolmax_stock > 0) then
+       tot_exp = 0d0
+       no_years = int(nint(sum(DATAin%deltat)/365.25d0))
+       if (allocated(mean_annual_pools)) deallocate(mean_annual_pools)
+       allocate(mean_annual_pools(no_years))
+       ! determine the annual max for each pool
+       do y = 1, no_years
+          ! derive mean annual foliar pool
+          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
+       end do ! year loop
+       ! loop through the observations then
+       do n = 1, DATAin%sub_nCfolmax_stock
+         ! load the observation position in stream
+         dn = DATAin%sub_Cfolmax_stockpts(n)
+         ! determine which years this in in for the simulation
+         y = ceiling( (dble(dn)*(sum(DATAin%deltat)/(DATAin%nodays))) / 365.25d0 )
+         ! load the correct year into the analysis
+         tmp_var = mean_annual_pools(y)
+         ! note that division is the uncertainty
+         tot_exp = tot_exp+((tmp_var-DATAin%Cfolmax_stock(dn)) / DATAin%Cfolmax_stock_unc(dn))**2
+       end do
+       sub_likelihood = sub_likelihood-tot_exp
+    endif
+
+    ! Cwood log-likelihood (i.e. branch, stem and CR)
+    if (DATAin%sub_nCwood_stock > 0) then
+       tot_exp = 0d0
+       do n = 1, DATAin%sub_nCwood_stock
+         dn = DATAin%sub_Cwood_stockpts(n)
+         ! note that division is the uncertainty
+!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,4)/DATAin%Cwood_stock(dn))/log(2.))**2.
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/DATAin%Cwood_stock_unc(dn))**2
+       end do
+       sub_likelihood = sub_likelihood-tot_exp
+    endif
+
+    ! Croots log-likelihood
+    if (DATAin%sub_nCroots_stock > 0) then
+       tot_exp = 0d0
+       do n = 1, DATAin%sub_nCroots_stock
+         dn = DATAin%sub_Croots_stockpts(n)
+         ! note that division is the uncertainty
+!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,3)/DATAin%Croots_stock(dn))/log(2.))**2.
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
+       end do
+       sub_likelihood = sub_likelihood-tot_exp
+    endif
+
+    ! Clitter log-likelihood
+    ! WARNING WARNING WARNING hack in place to estimate fraction of litter pool
+    ! originating from surface pools
+    if (DATAin%sub_nClit_stock > 0) then
+       tot_exp = 0d0
+       do n = 1, DATAin%sub_nClit_stock
+         dn = DATAin%sub_Clit_stockpts(n)
+         ! note that division is the uncertainty
+!         tot_exp=tot_exp+((log((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
+!                           *DATAin%M_POOLS(dn,5))/DATAin%Clit_stock(dn))/log(2.))**2d0
+         tot_exp = tot_exp+(((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
+                           *(DATAin%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2
+       end do
+       sub_likelihood = sub_likelihood-tot_exp
+    endif
+
+    ! Csom log-likelihood
+    if (DATAin%sub_nCsom_stock > 0) then
+       tot_exp = 0d0
+       do n = 1, DATAin%sub_nCsom_stock
+         dn = DATAin%sub_Csom_stockpts(n)
+         ! note that division is the uncertainty
+!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,6)/DATAin%Csom_stock(dn))/log(2.))**2.
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2
+       end do
+       sub_likelihood = sub_likelihood-tot_exp
+    endif
+
+    !
+    ! Curiously we will assess other priors here, as the tend to have to do with model state derived values
+    !
+
+    ! Ra:GPP fraction is in this model a derived property
+    if (DATAin%otherpriors(1) > 0) then
+        tot_exp = sum(DATAin%M_FLUXES(:,3)) / sum(DATAin%M_FLUXES(:,1))
+        sub_likelihood = sub_likelihood-((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2d0
+    end if
+
+    ! the likelihood scores for each observation are subject to multiplication
+    ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
+    ! multiple datastreams we apply this multiplication to the bulk liklihood
+    ! hear
+    sub_likelihood = sub_likelihood * 0.5d0
+
+    ! check that log-likelihood is an actual number
+    if (sub_likelihood /= sub_likelihood) then
+       sub_likelihood = log(infini)
+    end if
+    ! don't forget to return
+    return
+
+  end function sub_likelihood
   !
   !------------------------------------------------------------------
   !

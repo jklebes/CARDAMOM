@@ -50,19 +50,16 @@ module MODEL_PARAMETERS
        PI%parmax(2) = 0.8d0
 
        ! Background leaf turnover rate
-       PI%parmin(3) = 0.0003422313d0  ! 8 years
-       PI%parmax(3) = 0.001825234d0   ! 1.5 year
-!       ! GSI sensitivity for leaf growth
-!       PI%parmin(3) = 1.00d0
-!       PI%parmax(3) = 1.003d0
+       PI%parmin(3) = 0.0002737851d0 ! 10 years
+       PI%parmax(3) = 0.0009126169d0 !  3 year
 
        ! Fraction of (1-fgpp) to roots*/
        PI%parmin(4) = 0.01d0
        PI%parmax(4) = 1.0d0
 
        ! GSI max leaf turnover
-       PI%parmin(5) = 0.001368925d0 ! 2 year !0.000273785d0 ! 10 years
-       PI%parmax(5) = 0.05d0        ! 20 days
+       PI%parmin(5) = 0.002737851d0 ! 1 year 
+       PI%parmax(5) = 0.025d0       ! 40 days
 
        ! Turnover fraction of wood
        PI%parmin(6) = 0.000009d0 ! 304  years
@@ -90,14 +87,13 @@ module MODEL_PARAMETERS
 
        ! log10 avg foliar N (gN.m-2)
        ! Kattge et al., (2011) (Quantiles 2.5% / 97.5%)
-!       PI%parmin(11) = -0.2218487d0
-!       PI%parmax(11) =  0.6382028d0 ! 0.5563025d0
-       PI%parmin(11) =  0d0 !-0.2218487d0 !TLS: restricted to 1 gN/m2leaf
-       PI%parmax(11) =  0.6382028d0 ! 0.5563025d0
+       ! and Thomas et al., (2019) (Aconite canopy paper)
+       PI%parmin(11) = 0d0 !-0.2218487d0 !TLS: restricted to 1 gN/m2leaf
+       PI%parmax(11) = 0.4771213d0 ! 0.5563025d0 ! TLS: restricted to 3 gC/m2leaf
 
        ! Max labile turnover fraction to foliage
-       PI%parmin(12) = 0.001368925d0 !  2 years
-       PI%parmax(12) = 0.10d0        ! 10 days
+       PI%parmin(12) = 0.002737851d0 !  1 years
+       PI%parmax(12) = 0.05d0        ! 20 days
 
        ! Fraction to Clab*/
        PI%parmin(13) = 0.05d0
@@ -112,8 +108,8 @@ module MODEL_PARAMETERS
        PI%parmax(15) = 330d0
 
        ! GSI min photoperiod threshold (sec)
-       PI%parmin(16) = 3600d0*1d0  !  1 hours
-       PI%parmax(16) = 3600d0*24d0 ! 24 hours
+       PI%parmin(16) = 3600d0*3d0  !  1 hours
+       PI%parmax(16) = 3600d0*21d0 ! 18 hours
 
        ! LMA
        ! Kattge et al. 2011,
@@ -121,47 +117,36 @@ module MODEL_PARAMETERS
        PI%parmax(17) = 180d0
 
        ! GSI max photoperiod threshold (sec)
-       PI%parmin(24) = 3600d0*1d0   !  1 hours
-       PI%parmax(24) = 3600d0*24d0  ! 24 hours
+       PI%parmin(24) = 3600d0*3d0   !  6 hours
+       PI%parmax(24) = 3600d0*21d0  ! 24 hours
 
        ! GSI min VPD threshold (Pa)
-       PI%parmin(25) = 1d0
-       PI%parmax(25) = 6000d0
+       PI%parmin(25) = 100d0
+       PI%parmax(25) = 5500d0
 
        ! GSI max VPD threshold (Pa)
-       PI%parmin(26) = 1d0
-       PI%parmax(26) = 6000d0
+       PI%parmin(26) = 1000d0
+       PI%parmax(26) = 5500d0
 
        ! GPP return on new Cfol investment (gCperGPP per gCnewfol)
        PI%parmin(27) = 0.001d0
        PI%parmax(27) = 0.1d0
 
-       ! min Leaf Water Potential (MPa)
-       PI%parmin(28) = -4d0
-       PI%parmax(28) = -1d0
-!       ! fraction of Cwood which is branch
-!       PI%parmin(28) = 0.05d0
-!       PI%parmax(28) = 0.40d0
+       ! Initial GSI value
+       PI%parmin(28) = 0d0
+       PI%parmax(28) = 1d0
 
        ! fraction of Cwood which is coarse root
        PI%parmin(29) = 0.15d0
-       PI%parmax(29) = 0.30d0
+       PI%parmax(29) = 0.50d0 ! increased based on evidence of savannah system 50 % below !0.30d0
 
        ! GSI senstivity for leaf senescence
-       PI%parmin(34) = 0.996d0
-       PI%parmax(34) = 1.000d0
-
-       ! GSI - have I just left a growing state (>1)
-       PI%parmin(35) = 0.50d0
-       PI%parmax(35) = 1.5d0
-
-       ! GSI - initial GSI value, src substracts 1
-       PI%parmin(36) = 1.0d0
-       PI%parmax(36) = 2.0d0
+       PI%parmin(34) = -3d-3
+       PI%parmax(34) = -1d-5
 
        ! Turnover rate for CWD
-       PI%parmin(38) = 0.000009d0     ! 304 years at 0oC
-       PI%parmax(38) = 0.0005475702d0 !   5 years at 0oC
+       PI%parmin(35) = 0.000009d0     ! 304 years at 0oC
+       PI%parmax(35) = 0.0005475702d0 !   5 years at 0oC
 
        ! Optimum nitrogen use efficiency (gC/gN per m2 at optimum temperature)
        ! Derived from Vcmax reported in Wullschleger (1993), Journal of
@@ -172,9 +157,10 @@ module MODEL_PARAMETERS
        ! Variations of leaf longevity in tropical moist forests predicted by a
        ! trait-driven carbon optimality model,
        ! Ecology Letters, doi: 10.1111/ele.12804, upper value of 82 gC/gN/day
-       ! Thus we will compromise on the value in the middle (i.e. 40 gC/gN/day)
-       PI%parmin(39) =  1.0d0
-       PI%parmax(39) = 40.0d0
+       ! Thus we will compromise on the value between these but closer to the
+       ! newer estimate (i.e. 30 gC/gN/day)
+       PI%parmin(36) =  1.6d0
+       PI%parmax(36) = 30.0d0
 
        !
        ! INITIAL VALUES DECLARED HERE

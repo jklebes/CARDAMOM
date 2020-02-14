@@ -92,7 +92,7 @@ module MODEL_PARAMETERS
        PI%parmax(11) = 0.4771213d0 ! 0.5563025d0 ! TLS: restricted to 3 gC/m2leaf
 
        ! Max labile turnover fraction to foliage
-       PI%parmin(12) = 0.005475702d0 ! 6 months!0.002737851d0 !  1 years
+       PI%parmin(12) = 0.002737851d0 !  1 years
        PI%parmax(12) = 0.05d0        ! 20 days
 
        ! Fraction of GPP to Clab*/
@@ -129,7 +129,7 @@ module MODEL_PARAMETERS
        PI%parmax(26) = 5500d0
 
        ! GPP return on new Cfol investment (gCperGPP per gCnewfol)
-       PI%parmin(27) =  1d0
+       PI%parmin(27) = 0.1d0
        PI%parmax(27) = 10d0  
 
        ! Initial GSI value
@@ -150,7 +150,7 @@ module MODEL_PARAMETERS
        ! Reich - Leaf N linked respiration intercept
        ! max/min values based on observed ranges from Reich et al (2008)
        ! Figure 1
-       PI%parmin(36) = 0.50d0 !0.645
+       PI%parmin(36) = 0.10d0 !0.645
        PI%parmax(36) = 1.10d0 !0.911
 
        ! Turnover rate for CWD
@@ -163,7 +163,7 @@ module MODEL_PARAMETERS
 
        ! BUCKET - maximum rooting depth
        PI%parmin(40) = 0.35d0
-       PI%parmax(40) = 5d0
+       PI%parmax(40) = 20d0
 
        ! Optimum nitrogen use efficiency (gC/gN per m2 at optimum temperature)
        ! Derived from Vcmax reported in Wullschleger (1993), Journal of

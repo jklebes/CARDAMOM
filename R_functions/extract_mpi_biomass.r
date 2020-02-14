@@ -16,9 +16,9 @@ extract_mpi_biomass<- function(timestep_days,spatial_type,resolution,grid_type,l
           product_res = product_res * 0.5
           # radius is ceiling of the ratio of the product vs analysis ratio
           radius = ceiling(resolution / product_res)
-      } else if (grid_type == "UK") {
+        } else if (grid_type == "UK") {
           radius=max(0,floor(1*resolution*1e-3*0.5))
-      } else {
+        } else {
           stop("have not specified the grid used in this analysis")
 	    }
 	} else {

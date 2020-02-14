@@ -150,7 +150,7 @@ module MODEL_PARAMETERS
        ! Reich - Leaf N linked respiration intercept
        ! max/min values based on observed ranges from Reich et al (2008)
        ! Figure 1
-       PI%parmin(36) = 0.50d0 !0.645
+       PI%parmin(36) = 0.10d0 !0.645
        PI%parmax(36) = 1.10d0 !0.911
 
        ! Turnover rate for CWD
@@ -163,7 +163,7 @@ module MODEL_PARAMETERS
 
        ! BUCKET - maximum rooting depth
        PI%parmin(40) = 0.35d0
-       PI%parmax(40) = 5d0
+       PI%parmax(40) = 20d0
 
        ! Optimum nitrogen use efficiency (gC/gN per m2 at optimum temperature)
        ! Derived from Vcmax reported in Wullschleger (1993), Journal of

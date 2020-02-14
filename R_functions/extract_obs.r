@@ -424,7 +424,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
             output = extract_globbiomass_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
             # and insert the extracted value into the correct location
             for (a in seq(1,length(Cwood_all$obs_step))) {
-                 if (Cwood_obs$obs_step[a] > 0) {
+                 if (Cwood_all$obs_step[a] > 0) {
                      Cwood_stock[Cwood_all$obs_step[a]]=output$Cwood_stock[a]
                      Cwood_stock_unc[Cwood_all$obs_step[a]]=output$Cwood_stock_unc[a]
                  }

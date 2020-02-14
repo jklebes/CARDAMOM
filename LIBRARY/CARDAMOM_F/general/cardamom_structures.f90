@@ -50,43 +50,75 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars
                                           ,NBE_unc                 ! gC/m2/day
 
       ! location of observations in the data stream
-      integer, allocatable, dimension(:) :: gpppts               & ! gpppts vector used in deriving ngpp
-                                           ,neepts               & ! same for nee
-                                           ,woopts               & ! same for wood
-                                           ,laipts               & ! same for lai
-                                           ,recopts              & ! same for ecosystem respiration
-                                           ,Cfol_stockpts        & ! same for Cfoliage
-                                           ,Cwood_stockpts       & ! same for Cwood
-                                           ,Croots_stockpts      & ! same for Croots
-                                           ,Csom_stockpts        & ! same for Csom
-                                           ,Cagb_stockpts        & ! same
-                                           ,Clit_stockpts        & ! same for Clitter
-                                           ,Ccoarseroot_stockpts & ! same for Clitter
-                                           ,Cfolmax_stockpts     & !
-                                           ,Evappts              & !
-                                           ,SWEpts               & !
-                                           ,NBEpts                 !
+      integer, allocatable, dimension(:) :: gpppts                   & ! gpppts vector used in deriving ngpp
+                                           ,neepts                   & ! same for nee
+                                           ,woopts                   & ! same for wood
+                                           ,laipts                   & ! same for lai
+                                           ,recopts                  & ! same for ecosystem respiration
+                                           ,Cfol_stockpts            & ! same for Cfoliage
+                                           ,Cwood_stockpts           & ! same for Cwood
+                                           ,Croots_stockpts          & ! same for Croots
+                                           ,Csom_stockpts            & ! same for Csom
+                                           ,Cagb_stockpts            & ! same for above ground biomass
+                                           ,Clit_stockpts            & ! same for Clitter
+                                           ,Ccoarseroot_stockpts     & ! same for coarse root
+                                           ,Cfolmax_stockpts         & ! same for seasonal max foliar
+                                           ,Evappts                  & ! same for ecosystem evaportion
+                                           ,SWEpts                   & ! same for snow water equivalent
+                                           ,NBEpts                   & ! same for net biome exchange of CO2
+                                           ,sub_gpppts               & ! as above but for a sub-sample of observations
+                                           ,sub_neepts               & ! 
+                                           ,sub_woopts               & ! 
+                                           ,sub_laipts               & ! 
+                                           ,sub_recopts              & ! 
+                                           ,sub_Cfol_stockpts        & ! 
+                                           ,sub_Cwood_stockpts       & ! 
+                                           ,sub_Croots_stockpts      & ! 
+                                           ,sub_Csom_stockpts        & ! 
+                                           ,sub_Cagb_stockpts        & ! 
+                                           ,sub_Clit_stockpts        & ! 
+                                           ,sub_Ccoarseroot_stockpts & ! 
+                                           ,sub_Cfolmax_stockpts     & !
+                                           ,sub_Evappts              & !
+                                           ,sub_SWEpts               & !
+                                           ,sub_NBEpts
 
       double precision :: nobs_scaler
 
       ! counters for the number of observations per data stream
-      integer :: total_obs          & ! total number of obervations 
-                ,ngpp               & ! number of GPP observations
-                ,nnee               & ! number of NEE observations
-                ,nlai               & ! number of LAI observations
-                ,nwoo               & ! number of wood increment obervations
-                ,nreco              & ! number of Reco observations
-                ,nCfol_stock        & ! number of Cfol observations
-                ,nCwood_stock       & ! number of Cwood observations
-                ,nCroots_stock      & ! number of Croot observations
-                ,nCsom_stock        & ! number of Csom obervations
-                ,nCagb_stock        & !
-                ,nClit_stock        & ! number of Clitter observations
-                ,nCcoarseroot_stock & !
-                ,nCfolmax_stock     & !
-                ,nEvap              &
-                ,nSWE               &
-                ,nNBE
+      integer :: total_obs              & ! total number of obervations 
+                ,ngpp                   & ! number of GPP observations
+                ,nnee                   & ! number of NEE observations
+                ,nlai                   & ! number of LAI observations
+                ,nwoo                   & ! number of wood increment obervations
+                ,nreco                  & ! number of Reco observations
+                ,nCfol_stock            & ! number of Cfol observations
+                ,nCwood_stock           & ! number of Cwood observations
+                ,nCroots_stock          & ! number of Croot observations
+                ,nCsom_stock            & ! number of Csom obervations
+                ,nCagb_stock            & ! number of above ground biomass
+                ,nClit_stock            & ! number of Clitter observations
+                ,nCcoarseroot_stock     & ! number of coarse root 
+                ,nCfolmax_stock         & ! number of seasonal maximum foliar C
+                ,nEvap                  & ! number of ecosystem evaporation observations
+                ,nSWE                   & ! number of snow water equivalent
+                ,nNBE                   & ! number of net biome exchange of CO2
+                ,sub_ngpp               & ! As above but for a subsample of observations
+                ,sub_nnee               & !
+                ,sub_nlai               & ! 
+                ,sub_nwoo               & ! 
+                ,sub_nreco              & ! 
+                ,sub_nCfol_stock        & ! 
+                ,sub_nCwood_stock       & !
+                ,sub_nCroots_stock      & !
+                ,sub_nCsom_stock        & !
+                ,sub_nCagb_stock        & !
+                ,sub_nClit_stock        & !
+                ,sub_nCcoarseroot_stock & !
+                ,sub_nCfolmax_stock     & !
+                ,sub_nEvap              &
+                ,sub_nSWE               &
+                ,sub_nNBE
 
       ! saving computational speed by allocating memory to model output
       double precision, allocatable, dimension(:) :: M_GPP    & !

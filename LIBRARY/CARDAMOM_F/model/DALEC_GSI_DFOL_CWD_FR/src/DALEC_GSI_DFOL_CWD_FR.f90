@@ -28,6 +28,7 @@ module CARBON_MODEL_MOD
            ,seconds_per_day  &
            ,seconds_per_hour &
            ,seconds_per_step &
+           ,fine_root_biomass&
            ,root_biomass     &
            ,root_reach       &
            ,min_root         &
@@ -163,7 +164,7 @@ module CARBON_MODEL_MOD
                              gplant = 5d0,          & ! plant hydraulic conductivity (mmol m-1 s-1 MPa-1)
                         root_resist = 25d0,         & ! Root resistivity (MPa s g mmol−1 H2O)
                           max_depth = 2d0,          & ! max root depth (m)
-                             root_k = 100d0,        & ! root biomass needed to reach 50% depth (gbiomass/m2)
+                             root_k = 800d0,        & ! root biomass needed to reach 50% depth (gbiomass/m2); fine root only value = 100
                         root_radius = 0.00029d0,    & ! root radius (m) Bonen et al 2014 = 0.00029
                                                       !                 Williams et al 1996 = 0.0001
                       root_radius_1 = root_radius**(-1d0), &
@@ -234,8 +235,7 @@ module CARBON_MODEL_MOD
   ! local variables for GSI phenology model
   double precision :: Tfac,Photofac,VPDfac & ! oC, seconds, Pa
                      ,delta_gsi,tmp,tmp_lai,gradient         &
-                     ,fol_turn_crit,lab_turn_crit    &
-                     ,gsi_history(22),just_grown
+                     ,fol_turn_crit
 
   double precision, allocatable, dimension(:) :: Rg_from_labile,                &
                                   extracted_C,itemp,ivpd,iphoto, &
@@ -245,7 +245,7 @@ module CARBON_MODEL_MOD
                                   disturbance_loss_from_litter,  &
                                   disturbance_loss_from_cwd,     &
                                   disturbance_loss_from_som,     &
-                                  tmp_x, tmp_m
+                                  tmp_x, tmp_m, gsi_history
 
   ! Phenological choices
   ! See source below for details of these variables
@@ -260,7 +260,7 @@ module CARBON_MODEL_MOD
                                                            demand, & ! maximum potential canopy hydraulic demand
                                                        water_flux    ! potential transpiration flux (mmol.m-2.s-1)
 
-  double precision :: root_reach, root_biomass,soil_depth, &
+  double precision :: root_reach, root_biomass,fine_root_biomass,soil_depth, &
                                  new_depth,previous_depth, & ! depth of bottom of soil profile
                                               canopy_wind, & ! wind speed (m.s-1) at canopy top
                                                     ustar, & ! friction velocity (m.s-1)
@@ -315,6 +315,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   double precision :: cos_solar_zenith_angle, &
                             seconds_per_step, & !
                                 dayl_seconds, & ! day length in seconds
+                          mean_days_per_step, &
                               dayl_seconds_1, &
                          dayl_hours_fraction, & 
                                   dayl_hours    ! day length in hours
@@ -398,7 +399,7 @@ contains
                          gs_save, &
                          ga_save
 
-    integer :: reforest_day, harvest_management, restocking_lag, gsi_lag
+    integer :: reforest_day, harvest_management, restocking_lag, gsi_lag, interval
 
     ! met drivers are:
     ! 1st run day
@@ -462,9 +463,9 @@ contains
     ! PARAMETERS
     ! 31 process parameters; 7 C pool initial conditions
 
-    ! p(1) decomposition efficiency (fraction to som)
+    ! p(1) = decomposition efficiency (fraction to som)
     ! p(2) = RmGPP fraction
-    ! p(3) = GSI sensitivity for leaf growth
+    ! p(3) = Background leaf turnover
     ! p(4) = Max labile turnover to roots (fraction)
     ! p(5) = Max leaf turnover (GSI; fraction)
     ! p(6) = Turnover rate of wood (fraction)
@@ -489,11 +490,11 @@ contains
     ! p(25) = Min vapour pressure deficit threshold (GSI; Pa)
     ! p(26) = Max vapour pressure deficit (GSI; Pa)
     ! p(27) = GPP return on new Cfol investment (gCperGPP per gCnewfol)
-    ! p(28) = min leaf water potential (MPa)
+    ! p(28) = Initial GSI value
     ! p(29) = Fraction of Cwood which is Ccoarseroot
+    ! p(35) = CWD turnover fraction (fraction)
+    ! p(36) = Nitrogen use efficiency (gC/gN/day)
     ! p(37) = Initial CWD pool (gC/m2)
-    ! p(38) = CWD turnover fraction (fraction)
-    ! p(39) = Nitrogen use efficiency (gC/gN/day)
 
     ! variables related to deforestation
     ! labile_loss = total loss from labile pool from deforestation
@@ -522,12 +523,14 @@ contains
     !call cpu_time(begin)
     !call cpu_time(finish)
 
+    ! Reset all POOLS and FLUXES to prevent precision errors
+    FLUXES = 0d0 ; POOLS = 0d0
+
     ! load ACM-GPP-ET parameters
-    NUE = pars(39)      ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
+    NUE = pars(36)      ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
                         ! ,unlimited by CO2, light and
                         ! photoperiod (gC/gN/m2leaf/day)
     avN = 10d0**pars(11) ! foliar N gN/m2
-    minlwp = pars(28)
 
     if (maxval(met(8,1:nodays)) > 0d0 .or. maxval(met(9,1:nodays)) > 0d0) then
 
@@ -646,44 +649,53 @@ contains
     disturbance_residue_to_som = 0d0 ; disturbance_loss_from_som = 0d0
     disturbance_residue_to_cwd = 0d0 ; disturbance_loss_from_cwd = 0d0
 
-    ! calculate some values once as these are invarient between DALEC runs
-    if (.not.allocated(tmp_x)) then
-        ! 21 days is the maximum potential so we will fill the maximum potential
-        ! + 1 for safety
-        allocate(tmp_x(22),tmp_m(nodays),Rg_from_labile(nodays))
-        do f = 1, 22
-           tmp_x(f) = f
-        end do
-        do n = 1, nodays
-           ! calculate the gradient / trend of GSI
-           if (sum(deltat(1:n)) < 21d0) then
-               tmp_m(n) = n-1
-           else
-               ! else we will try and work out the gradient to see what is
-               ! happening to the system over all. The default assumption will be to
-               ! consider the averaging period of GSI model (i.e. 21 days).
-               ! If this is not possible either the time step of the system is used (if step
-               ! greater than 21 days) or all available steps (if n < 21).
-               m = 0 ; test = 0
-               do while (test < 21d0)
-                  m = m + 1 ; test = nint(sum(deltat((n-m):n)))
-                  if (m > (n-1)) test = 21
-               end do
-               tmp_m(n) = m
-           endif ! for calculating gradient
-        end do ! calc daily values once
-        ! allocate GSI history dimension
-        gsi_lag_remembered = nint(max(2d0,maxval(tmp_m)))
-    end if ! .not.allocated(tmp_x)
+!    ! calculate some values once as these are invarient between DALEC runs
+!    if (.not.allocated(tmp_x)) then
+!        ! 21 days is the maximum potential so we will fill the maximum potential
+!        ! + 1 for safety
+!        allocate(tmp_x(22),tmp_m(nodays),Rg_from_labile(nodays))
+!        do f = 1, 22
+!           tmp_x(f) = f
+!        end do
+!        do n = 1, nodays
+!           ! calculate the gradient / trend of GSI
+!           if (sum(deltat(1:n)) < 21d0) then
+!               tmp_m(n) = n-1
+!           else
+!               ! else we will try and work out the gradient to see what is
+!               ! happening to the system over all. The default assumption will be to
+!               ! consider the averaging period of GSI model (i.e. 21 days).
+!               ! If this is not possible either the time step of the system is used (if step
+!               ! greater than 21 days) or all available steps (if n < 21).
+!               m = 0 ; test = 0
+!               do while (test < 21d0)
+!                  m = m + 1 ; test = nint(sum(deltat((n-m):n)))
+!                  if (m > (n-1)) test = 21
+!               end do
+!               tmp_m(n) = m
+!           endif ! for calculating gradient
+!        end do ! calc daily values once
+!        ! allocate GSI history dimension
+!        gsi_lag_remembered = nint(max(2d0,maxval(tmp_m)))
+!    end if ! .not.allocated(tmp_x)
 
     ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
     if (.not.allocated(deltat_1)) then
 
-        allocate(deltat_1(nodays),meant_time(nodays))
+        allocate(deltat_1(nodays),meant_time(nodays),Rg_from_labile(nodays))
         ! Inverse of time step (days-1) to avoid divisions
         deltat_1 = deltat**(-1d0)
         ! Meant time step temperature
         meant_time = (met(2,1:nodays)+met(3,1:nodays)) * 0.5d0
+        ! mean days per step
+        mean_days_per_step = sum(deltat) / dble(nodays)
+
+        ! Calculate timing components needed for GSI / NCE gradient calculations
+        gsi_lag_remembered = max(2,nint(21d0/mean_days_per_step))
+        allocate(tmp_x(gsi_lag_remembered),gsi_history(gsi_lag_remembered))
+        do f = 1, gsi_lag_remembered
+           tmp_x(f) = dble(f) * mean_days_per_step
+        end do
 
     else
 
@@ -703,17 +715,16 @@ contains
     seconds_per_step = deltat(1) * seconds_per_day
 
     ! initialise root reach based on initial conditions
-    root_biomass = max(min_root,POOLS(1,3)*2d0)
+    fine_root_biomass = max(min_root,POOLS(1,3)*2d0)
+    root_biomass = fine_root_biomass + max(min_root,POOLS(1,4)*pars(29)*2d0)
     ! needed to initialise soils
     call calculate_Rtot(Rtot)
 
     ! assign climate sensitivities
     ! assign our starting value
-    gsi_history = pars(36)-1d0
-    just_grown = pars(35)
+    gsi_history = pars(28)
     gsi_lag = gsi_lag_remembered ! added to prevent loss from memory
-    fol_turn_crit = pars(34)-1d0
-    lab_turn_crit = 0d0 !pars(3)-1d0
+    fol_turn_crit = pars(34)
 
     !
     ! Begin looping through each time step
@@ -767,7 +778,8 @@ contains
 
        ! calculate the minimum soil & root hydraulic resistance based on total
        ! fine root mass ! *2*2 => *RS*C->Bio
-       root_biomass = max(min_root,POOLS(n,3)*2d0)
+       fine_root_biomass = max(min_root,POOLS(n,3)*2d0)
+       root_biomass = fine_root_biomass + max(min_root,POOLS(n,4)*pars(29)*2d0)
        call calculate_Rtot(Rtot)
 
        ! calculate variables used commonly between ACM_GPP and ACM_ET
@@ -822,23 +834,35 @@ contains
        ! calculate and store the GSI index
        FLUXES(n,18) = Tfac*VPDfac*Photofac
 
-       ! we will load up some needed variables
-       m = tmp_m(n)
-       ! update gsi_history for the calculation
-       if (n == 1) then
-           ! in first step only we want to take the initial GSI value only
-           gsi_history(gsi_lag) = FLUXES(n,18)
+       ! load lag for linear regression
+       gsi_lag = gsi_lag_remembered
+
+       !!!
+       ! Estimate of change (i.e. gradient) in the GSI / NCE
+
+       ! Determine GSI / NCE section to have linear regression applied to and
+       ! determine the number of values, i.e. the interval
+       if (n < gsi_lag) then
+           if (n == 1) then
+               gsi_history(2) = FLUXES(n,18)
+               interval = 2
+           else
+               gsi_history(1:n) = FLUXES(1:n,18)
+               interval = n
+           endif
        else
-           gsi_history((gsi_lag-m):gsi_lag) = FLUXES((n-m):n,18)
-       endif
-       ! calculate gradient
-       gradient = linear_model_gradient(tmp_x(1:(gsi_lag)),gsi_history(1:gsi_lag),gsi_lag)
-       ! adjust gradient to daily rate
-       gradient = gradient / nint((sum(deltat((n-m+1):n))) / dble(gsi_lag-1))
+           gsi_history(1:gsi_lag) = FLUXES((n-gsi_lag+1):n,18)
+           interval = gsi_lag
+       end if
+       ! Now calculate the linear gradient
+       gradient = linear_model_gradient(tmp_x(1:interval),gsi_history(1:interval),interval)
+
+       ! store lag to keep fresh in memory - yes this is a hack to get around a
+       ! memory problem
        gsi_lag_remembered = gsi_lag
 
        ! first assume that nothing is happening
-       FLUXES(n,9) = pars(3) !0d0  ! leaf turnover
+       FLUXES(n,9) = 0d0  ! leaf turnover
        FLUXES(n,16) = 0d0 ! leaf growth
 
        ! save original values for re-allocation later
@@ -847,21 +871,22 @@ contains
        soil_sw_save = soil_swrad_MJday ; gs_save = stomatal_conductance
        ga_save = aerodynamic_conductance ; lai_save = lai
 
-       ! now update foliage and labile conditions based on gradient calculations
-!       if (gradient < fol_turn_crit .or. FLUXES(n,18) == 0d0) then
-       if (gradient < fol_turn_crit) then
-           ! we are in a decending condition so foliar turnover
-           FLUXES(n,9) = FLUXES(n,9) + (pars(5)*(1d0-FLUXES(n,18)))
-           just_grown = 0.5d0
-       else if (gradient > lab_turn_crit) then
-           ! we are in a assending condition so labile turnover
+       ! Can we grow?
+       if (gradient > fol_turn_crit .and. POOLS(n,1) > 0d0) then
+
+           ! GSI gradient does not indicate leaf turnover, therefore we will
+           ! consider leaf growth
+     
+           ! Estimate potential leaf growth rate (from labile)
            FLUXES(n,16) = pars(12)*FLUXES(n,18)
-           just_grown = 1.5d0
-           ! check carbon return
+           ! Convert that into potential new leaf area 
            tmp = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
            C_invest = tmp
+           ! Update the canopy
            lai = (POOLS(n,2)+tmp)/pars(17)
            tmp = lai / lai_save
+           ! And estimate the canopy conditions for the new leaf area under the
+           ! current time step
            aerodynamic_conductance = aerodynamic_conductance * tmp
            stomatal_conductance = stomatal_conductance * tmp
            call calculate_shortwave_balance
@@ -869,6 +894,7 @@ contains
                call calculate_aerodynamic_conductance
                call calculate_stomatal_conductance(abs(minlwp),Rtot)
            endif
+           ! And estimate potential GPP
            if (stomatal_conductance > vsmall) then
                 call acm_gpp_stage_1
                tmp = acm_gpp_stage_2(stomatal_conductance)
@@ -878,46 +904,20 @@ contains
            ! Determine if increase in LAI leads to an improvement in GPP greater
            ! than critical value, if not then no labile turnover allowed
            if ( ((tmp - FLUXES(n,1))/C_invest) < pars(27) ) then
-                FLUXES(n,16) = 0d0 ; just_grown = 0.5d0
+                FLUXES(n,16) = 0d0 
            endif
 
-       else
+       endif ! Growth potential?
 
-           ! Probably we want nothing to happen, however if we are at the seasonal
-           ! maximum we will consider further growth still
-           if (just_grown >= 1d0 .and. FLUXES(n,18) > 0d0) then
-               ! we are between so definitely not losing foliage and we have
-               ! previously been growing so maybe we still have a marginal return on
-               ! doing so again
-               FLUXES(n,16) = pars(12)*FLUXES(n,18)
-               ! but possibly gaining some?
-               ! determine if this is a good idea based on GPP increment
-               tmp = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
-               C_invest = tmp
-               lai = (POOLS(n,2)+tmp)/pars(17)
-               tmp = lai / lai_save
-               aerodynamic_conductance = aerodynamic_conductance * tmp
-               stomatal_conductance = stomatal_conductance * tmp
-               call calculate_shortwave_balance
-               if (lai_save < vsmall) then
-                   call calculate_aerodynamic_conductance
-                   call calculate_stomatal_conductance(abs(minlwp),Rtot)
-               endif
-               if (stomatal_conductance > vsmall) then
-                    call acm_gpp_stage_1
-                   tmp = acm_gpp_stage_2(stomatal_conductance)
-               else
-                   tmp = 0d0
-               endif
-               ! determine if increase in LAI leads to an improvement in GPP greater
-               ! than critical value, if not then no labile turnover allowed
-               if ( ((tmp - FLUXES(n,1))/C_invest) < pars(27) ) then
-                  FLUXES(n,16) = 0d0 ; just_grown = 0.5d0
-               endif
+       ! Are we losing leaves?
+       if (gradient < fol_turn_crit .or. FLUXES(n,18) < vsmall) then
 
-           end if ! Just grown?
+           ! We are in a decending environment and therefore losing leaf area
+           FLUXES(n,9) = pars(5)*(1d0-FLUXES(n,18))
 
-       endif ! gradient choice
+       endif ! losing leaves?
+       ! If neither process is occuring assume that there is background turnover
+       if (FLUXES(n,16) == 0d0 .and. FLUXES(n,9) == 0d0) FLUXES(n,9) = pars(3)
 
        ! restore original value back from memory
        lai = lai_save
@@ -959,9 +959,8 @@ contains
        FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9))**deltat(n))/deltat(n)
 
        ! respiration heterotrophic cwd ; decomposition of CWD to som
-       tmp = POOLS(n,7)*(1d0-(1d0-FLUXES(n,2)*pars(38))**deltat(n))/deltat(n)
+       tmp = POOLS(n,7)*(1d0-(1d0-FLUXES(n,2)*pars(35))**deltat(n))/deltat(n)
        FLUXES(n,4) = tmp * (1d0-pars(1)) ; FLUXES(n,20) = tmp * pars(1)
-!       FLUXES(n,4) = tmp * (1d0-pars(3)) ; FLUXES(n,20) = tmp * pars(3)
 
        !
        ! Update Rg, GPP and NEE fluxes
@@ -2043,12 +2042,12 @@ contains
                                                    ,root_length  &
                                                    ,ratio
     double precision, parameter :: root_depth_frac_50 = 0.25d0 ! fractional soil depth above which 50 %
+
     ! of the root mass is assumed to be located
     ! reset water flux
     water_flux = 0d0
     ratio = 0d0 ; ratio(1) = 1d0 ; root_mass = 0d0
-    ! calculate soil depth to which roots reach
-    root_reach = max_depth * root_biomass / (root_k + root_biomass)
+
     ! calculate the plant hydraulic resistance component. Currently unclear
     ! whether this actually varies with height or whether tall trees have a
     ! xylem architecture which keeps the whole plant conductance (gplant) 1-10 (ish).
@@ -2078,21 +2077,21 @@ contains
       ! soil layer
 
       ! Start by assigning all 50 % of root biomass to the top soil layer
-      root_mass(1) = root_biomass * 0.5d0
+      root_mass(1) = fine_root_biomass * 0.5d0
       ! Then quantify how much additional root is found in the top soil layer
       ! assuming that the top 25 % depth is found somewhere within the top
       ! layer
-      bonus = (root_biomass-root_mass(1)) &
+      bonus = (fine_root_biomass-root_mass(1)) &
             * (layer_thickness(1)-root_depth_50) / (root_reach - root_depth_50)
       root_mass(1) = root_mass(1) + bonus
       ! partition the remaining root biomass between the seconds and third
       ! soil layers
       if (root_reach > sum(layer_thickness(1:2))) then
-          root_mass(2) = (root_biomass - root_mass(1)) &
+          root_mass(2) = (fine_root_biomass - root_mass(1)) &
                        * (layer_thickness(2)/(root_reach-layer_thickness(1)))
-          root_mass(3) = root_biomass - sum(root_mass(1:2))
+          root_mass(3) = fine_root_biomass - sum(root_mass(1:2))
       else
-          root_mass(2) = root_biomass - root_mass(1)
+          root_mass(2) = fine_root_biomass - root_mass(1)
       endif
 
     else if (root_depth_50 > layer_thickness(1) .and. root_depth_50 <= sum(layer_thickness(1:2))) then
@@ -2100,24 +2099,21 @@ contains
       ! Greater than 50 % of fine root biomass found in the top two soil
       ! layers. We will divide the root biomass uniformly based on volume,
       ! plus bonus for the second layer (as done above)
-      root_mass(1) = root_biomass * (layer_thickness(1)/root_depth_50)
-      root_mass(2) = root_biomass * ((root_depth_50-layer_thickness(1))/root_depth_50)
+      root_mass(1) = fine_root_biomass * (layer_thickness(1)/root_depth_50)
+      root_mass(2) = fine_root_biomass * ((root_depth_50-layer_thickness(1))/root_depth_50)
       root_mass(1:2) = root_mass(1:2) * 0.5d0
 
       ! determine bonus for the seconds layer
-      bonus = (root_biomass-sum(root_mass(1:2))) &
+      bonus = (fine_root_biomass-sum(root_mass(1:2))) &
             * ((sum(layer_thickness(1:2))-root_depth_50)/(root_reach-root_depth_50))
       root_mass(2) = root_mass(2) + bonus
-      root_mass(3) = root_biomass - sum(root_mass(1:2))
+      root_mass(3) = fine_root_biomass - sum(root_mass(1:2))
 
     else
       ! Greater than 50 % of fine root biomass stock spans across all three
       ! layers
-      root_mass(1:2) = root_biomass * 0.5d0 * (layer_thickness(1:2)/root_depth_50)
-!      root_mass(1) = root_biomass * (layer_thickness(1)/root_depth_50)
-!      root_mass(2) = root_biomass * (layer_thickness(2)/root_depth_50)
-!      root_mass(1:2) = root_mass(1:2) * 0.5d0
-      root_mass(3) = root_biomass - sum(root_mass(1:2))
+      root_mass(1:2) = fine_root_biomass * 0.5d0 * (layer_thickness(1:2)/root_depth_50)
+      root_mass(3) = fine_root_biomass - sum(root_mass(1:2))
     endif
     ! now convert root mass into lengths
     root_length = root_mass * root_mass_length_coef_1
@@ -2282,16 +2278,20 @@ contains
     ! calculate the sum of y
     sum_y = sum(y)
     ! calculate the sum of squares of x
-    sumsq_x = sum(x*x)
+    !sumsq_x = sum(x*x)
     ! calculate the sum of the product of xy
-    sum_product_xy = sum(x*y)
+    !sum_product_xy = sum(x*y)
     ! calculate the gradient
-    linear_model_gradient = ( (dble(interval)*sum_product_xy) - (sum_x*sum_y) ) &
-    / ( (dble(interval)*sumsq_x) - (sum_x*sum_x) )
+    !linear_model_gradient = ( (dble(interval)*sum_product_xy) - (sum_x*sum_y) )
+    !&
+    !                      / ( (dble(interval)*sumsq_x) - (sum_x*sum_x) )
+    ! Linear regression done as single line to reduce assignment requirements
+    linear_model_gradient = ( (dble(interval)*sum(x*y)) - (sum_x*sum_y) ) &
+                          / ( (dble(interval)*sum(x*x)) - (sum_x*sum_x) )
 
     ! for future reference here is how to calculate the intercept
-    !    intercept = ( (sum_y*sumsq_x) - (sum_x*sum_product_xy) ) &
-    !              / ( (dble(interval)*sumsq_x) - (sum_x*sum_x) )
+!    intercept = ( (sum_y*sumsq_x) - (sum_x*sum_product_xy) ) &
+!              / ( (dble(interval)*sumsq_x) - (sum_x*sum_x) )
 
     ! don't forget to return to the user
     return

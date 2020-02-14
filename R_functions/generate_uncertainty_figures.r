@@ -20,7 +20,10 @@ generate_uncertainty_figures<-function(PROJECT,n) {
 	    run_all=readline("Raw results have not been processed therefore we will do it now. Do you want to run all parameter vectors to generate confidence intervals? (y/n)")
 	    if (run_all == "y") {
 		PROJECT$latter_sample_frac=0.5 # readline("What (latter) fraction of accepted parameters to use (e.g. 0.5)?")
-		run_mcmc_results(PROJECT)
+                # Run the parameters
+		run_mcmc_results(PROJECT,stage,repair,grid_override)
+                # and read in the results
+                load(loadfile)
 	    } # if condition
 	} # file exists statement
 

@@ -4,7 +4,7 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
 
 	print(paste("Beginning burned fraction data extraction for current location ",Sys.time(),sep=""))
 	# find the nearest location
-        if (length(dim(burned_all$long)) == 2) {
+        if (length(dim(burnt_all$long)) == 2) {
             output = closest2d(1,burnt_all$lat,burnt_all$long,latlon_in[1],latlon_in[2],2)
         } else {
             output = closest2d(1,burnt_all$lat,burnt_all$long,latlon_in[1],latlon_in[2],3)

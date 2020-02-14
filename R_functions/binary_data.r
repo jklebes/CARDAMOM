@@ -295,8 +295,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
         PARPRIORS[21]=-9999     ; PARPRIORUNC[21]=-9999
     } else {
         PARPRIORS[1]=0.5        ; PARPRIORUNC[1]=0.125 # fraction of litter decomposition to Csom
-        PARPRIORS[28]=-2        ; PARPRIORUNC[28]=0.25 # minLWP prior - TLS: out of use 07/01/2020
-        PARPRIORS[39]=11.197440 ; PARPRIORUNC[39]=9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
+        PARPRIORS[36]=11.197440 ; PARPRIORUNC[36]=9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
         # other priors
         OTHERPRIORS[1] = 0.46   ; OTHERPRIORUNC[1] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
     } #  parameter_type
@@ -395,8 +394,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
         PARPRIORS[21]=-9999         ; PARPRIORUNC[21]=-9999
     } else {
       PARPRIORS[1]=0.5            ; PARPRIORUNC[1]=0.125 # fraction of litter decomposition to Csom
-      PARPRIORS[28]=-2            ; PARPRIORUNC[28]=0.25 # minLWP prior - TLS: out of use 07/01/2020
-      PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=9.3 # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
+      PARPRIORS[36]=11.197440     ; PARPRIORUNC[36]=9.3 # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
       # other priors
       OTHERPRIORS[1] = 0.46        ; OTHERPRIORUNC[1] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       OTHERPRIORS[2]=OBS$soilwater ; OTHERPRIORS[2]=OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)

@@ -340,45 +340,45 @@ cardamom <-function (projname,model,method,stage) {
       ## Begin Stage 4
 
       if (stage == 4 | stage == 4.5) {
-        print("Beginning stage 4: generating stardard outputs")
+          print("Beginning stage 4: generating stardard outputs")
 
-        # assume default latter half of analysis to be kept
-        if ( PROJECT$latter_sample_frac == 0 | PROJECT$latter_sample_frac == 1) {
-          PROJECT$latter_sample_frac = 0.75 #readline("What (latter) fraction of accepted parameters to use (e.g. 0.5)?")
-          save(PROJECT,file=PROJECTfile)
-        }
-
-        if (PROJECT$spatial_type == "site" | grid_override) {
-
-          # will generate site specific information
-          for (n in seq(1,PROJECT$nosites)) {
-            # find relevant parameter information first
-            # output is order dimensions(npar+1,iter,chain)
-            parameters=read_parameter_chains(PROJECT,n,3)
-            if (parameters[1] != -9999) {
-              # true false have the chains converged
-              converged=have_chains_converged(parameters)
-              plot_parameters(PROJECT,parameters,converged,n)
-              # uncertainty simulations
-              generate_uncertainty_figures(PROJECT,n)
-            }
-          } # end of site loop
-        } else if (PROJECT$spatial_type == "grid") {
-
-          # will generate spatial maps instead
-          generate_parameter_maps(PROJECT)
-          if (stage == 4.5) {
-              generate_stocks_and_fluxes_maps(PROJECT)
-          } else {
-              generate_simplified_stock_and_flux_maps(PROJECT)
+          # assume default latter half of analysis to be kept
+          if (PROJECT$latter_sample_frac == 0 | PROJECT$latter_sample_frac == 1) {
+              PROJECT$latter_sample_frac = 0.75 #readline("What (latter) fraction of accepted parameters to use (e.g. 0.5)?")
+              save(PROJECT,file=PROJECTfile)
           }
 
-        } else {
-          stop('missing spatial_type definition (i.e. grid or site)')
-        }
+          if (PROJECT$spatial_type == "site" | grid_override) {
 
-        # report to the user
-        return(paste("CARDAMOM Report: ",stage," completed", sep=""))
+              # will generate site specific information
+              for (n in seq(1,PROJECT$nosites)) {
+                   # find relevant parameter information first
+                   # output is order dimensions(npar+1,iter,chain)
+                   parameters=read_parameter_chains(PROJECT,n,3)
+                   if (parameters[1] != -9999) {
+                       # true false have the chains converged
+                       converged=have_chains_converged(parameters)
+                       plot_parameters(PROJECT,parameters,converged,n)
+                       # uncertainty simulations
+                       generate_uncertainty_figures(PROJECT,n)
+                   }
+              } # end of site loop
+          } else if (PROJECT$spatial_type == "grid") {
+
+              # will generate spatial maps instead
+              generate_parameter_maps(PROJECT)
+              if (stage == 4.5) {
+                  generate_stocks_and_fluxes_maps(PROJECT)
+              } else {
+                  generate_simplified_stock_and_flux_maps(PROJECT)
+              }
+
+          } else {
+              stop('missing spatial_type definition (i.e. grid or site)')
+          }
+
+          # report to the user
+          return(paste("CARDAMOM Report: ",stage," completed", sep=""))
       }
 
       ###

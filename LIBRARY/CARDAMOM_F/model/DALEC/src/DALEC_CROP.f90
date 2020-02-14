@@ -152,11 +152,11 @@ contains
                                ,seconds_per_day,avN,iWUE,NUE,pn_max_temp,pn_opt_temp,pn_kurtosis,vsmall    &
                                ,min_root,top_soil_depth,max_depth,root_k,minlwp,min_layer                  &
                                ,co2comp_saturation,dayl_hours,dayl_seconds,dayl_seconds_1                  & ! variables
-                               ,seconds_per_step,root_biomass,mid_soil_depth,root_reach  &
+                               ,seconds_per_step,fine_root_biomass,mid_soil_depth,root_reach  &
                                ,deltat_1,water_flux,layer_thickness,meant,stomatal_conductance             &
                                ,co2_half_sat,co2_comp_point,mint,maxt,swrad,co2,doy,leafT,ceff             &
                                ,wind_spd,vpd_kPa,lai,dayl_hours_fraction     &
-                               ,coarse_root_biomass                          
+                               ,root_biomass                          
 
     ! DALEC crop model modified from Sus et al., (2010)
 
@@ -389,8 +389,8 @@ contains
         meant = (maxt+mint)*0.5d0  ! mean air temperature (oC)
 
         ! initialise root reach based on initial conditions
-        root_biomass = max(min_root,POOLS(1,3)*2d0)
-        coarse_root_biomass = root_biomass
+        fine_root_biomass = max(min_root,POOLS(1,3)*2d0)
+        root_biomass = fine_root_biomass
         ! needed to initialise soils
         call calculate_Rtot(Rtot)
 
@@ -432,8 +432,8 @@ contains
 
       ! calculate the minimum soil & root hydraulic resistance based on total
       ! fine root mass ! *2*2 => *RS*C->Bio
-      root_biomass = max(min_root,POOLS(n,3)*2d0)
-      coarse_root_biomass = root_biomass
+      fine_root_biomass = max(min_root,POOLS(n,3)*2d0)
+      root_biomass = fine_root_biomass
       call calculate_Rtot(Rtot)
 
       ! calculate some temperature dependent meteorologial properties

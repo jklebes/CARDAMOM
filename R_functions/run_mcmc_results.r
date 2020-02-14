@@ -31,7 +31,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               error_check = TRUE
           } else {
               if (min(parameters[PROJECT$model$nopars[n]+1,,]) == -Inf) {
-                  error_check = TRUE
+                  error_check = TRUE ; print("Inf found in likelihood score")
               } # Inf check
           } # NaN check
       } # error check
@@ -327,6 +327,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$mean_nbe_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           # For those which we currently have need, estimate the mean annual maximum
           grid_output$annual_max_roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          grid_output$annual_max_wood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           # Models where we have a CWD pool and therefore a total dead organic matter combination also
           if (length(which(names(site_output) == "cwd_gCm2")) > 0) {
               grid_output$mean_cwd_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -520,11 +521,14 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                grid_output$mean_nbe_gCm2day[slot_i,slot_j,] = apply(site_output$nbe_gCm2day,1,mean)
                # For those which we currently have need, estimate the mean annual maximum
                grid_output$annual_max_roots_gCm2[slot_i,slot_j,] = 0
+               grid_output$annual_max_wood_gCm2[slot_i,slot_j,] = 0
                for (y in seq(1,nos_years)) {
                     s = 1 + (steps_per_year * (y - 1)) ; f = s + (steps_per_year-1)
                     grid_output$annual_max_roots_gCm2[slot_i,slot_j,] = grid_output$annual_max_roots_gCm2[slot_i,slot_j,] + apply(site_output$roots_gCm2[,s:f],1,max)
+                    grid_output$annual_max_wood_gCm2[slot_i,slot_j,] = grid_output$annual_max_wood_gCm2[slot_i,slot_j,] + apply(site_output$wood_gCm2[,s:f],1,max)
                }
                grid_output$annual_max_roots_gCm2[slot_i,slot_j,] = grid_output$annual_max_roots_gCm2[slot_i,slot_j,] / nos_years
+               grid_output$annual_max_wood_gCm2[slot_i,slot_j,] = grid_output$annual_max_wood_gCm2[slot_i,slot_j,] / nos_years
                # Models where we have a CWD pool and therefore a total dead organic matter combination also
                if (length(which(names(site_output) == "cwd_gCm2")) > 0) {
                    grid_output$mean_cwd_gCm2[slot_i,slot_j,] = apply(site_output$cwd_gCm2,1,mean)

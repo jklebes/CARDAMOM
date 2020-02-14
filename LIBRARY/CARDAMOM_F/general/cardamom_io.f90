@@ -62,7 +62,7 @@ module cardamom_io
     else if (DATAin%ID == 2) then
         ! ID = 2 - DALEC_GSI_BUCKET
         DATAin%nopools = 8
-        DATAin%nopars = 42
+        DATAin%nopars = 40
         DATAin%nofluxes = 25
         if (DATAin%PFT == 1) then
            ! then actually this is a crop pixel
@@ -144,7 +144,7 @@ module cardamom_io
     else if (DATAin%ID == 16) then
         ! DALEC_GSI_DFOL_CWD_FR
         DATAin%nopools = 7
-        DATAin%nopars = 39
+        DATAin%nopars = 37
         DATAin%nofluxes = 25
         if (DATAin%PFT == 1) then
            ! then actually this is a crop pixel
@@ -548,13 +548,13 @@ module cardamom_io
     character(350) :: infile
 
     ! declare local variables
-    integer :: nopars_dummy
+    integer :: nopars_dummy,subsample
     integer :: a,b,c,d,e,f,g,h,i,j,k,l,m,o,x,y,z,day,s,t &
               ,start      &
               ,finish     &
               ,totcol     & ! total number of columns (met + obs)
               ,totread      ! total number of records already read
-
+    double precision :: mz
     double precision, dimension(:), allocatable :: statdat & ! static data input
                                         ,mettemp & ! met data input
                                         ,obstemp   ! obs data input
@@ -664,22 +664,22 @@ module cardamom_io
 
     ! zero the obs counters
     DATAin%total_obs = 0
-    DATAin%ngpp = 0
-    DATAin%nlai = 0
-    DATAin%nnee = 0
-    DATAin%nwoo = 0
-    DATAin%nreco = 0
-    DATAin%nCfol_stock = 0
-    DATAin%nCwood_stock = 0
-    DATAin%nCroots_stock = 0
-    DATAin%nCsom_stock = 0
-    DATAin%nClit_stock = 0
-    DATAin%nCagb_stock = 0
-    DATAin%nCcoarseroot_stock = 0
-    DATAin%nCfolmax_stock = 0
-    DATAin%nEvap = 0
-    DATAin%nSWE = 0
-    DATAin%nNBE = 0
+    DATAin%ngpp = 0               ; DATAin%sub_ngpp = 0
+    DATAin%nlai = 0               ; DATAin%sub_nlai = 0
+    DATAin%nnee = 0               ; DATAin%sub_nnee = 0
+    DATAin%nwoo = 0               ; DATAin%sub_nwoo = 0 
+    DATAin%nreco = 0              ; DATAin%sub_nreco = 0
+    DATAin%nCfol_stock = 0        ; DATAin%sub_nCfol_stock = 0
+    DATAin%nCwood_stock = 0       ; DATAin%sub_nCwood_stock = 0
+    DATAin%nCroots_stock = 0      ; DATAin%sub_nCroots_stock = 0
+    DATAin%nCsom_stock = 0        ; DATAin%sub_nCsom_stock = 0 
+    DATAin%nClit_stock = 0        ; DATAin%sub_nClit_stock = 0 
+    DATAin%nCagb_stock = 0        ; DATAin%sub_nCagb_stock = 0
+    DATAin%nCcoarseroot_stock = 0 ; DATAin%sub_nCcoarseroot_stock = 0
+    DATAin%nCfolmax_stock = 0     ; DATAin%sub_nCfolmax_stock = 0
+    DATAin%nEvap = 0              ; DATAin%sub_nEvap = 0 
+    DATAin%nSWE = 0               ; DATAin%sub_nSWE = 0
+    DATAin%nNBE = 0               ; DATAin%sub_nNBE = 0
 
     ! work out some key variables
     ! DATAin%noobs corresponds to observations and uncertainties
@@ -879,6 +879,250 @@ module cardamom_io
            DATAin%NBEpts(t) = day ; t = t + 1
        endif
     end do ! day loop
+
+    ! Determine a subsample of observations. We assume that we want observations
+    ! covering only 25 % of time steps across all data streams. NOTE: the
+    ! scaling by number of observations per datastream over the total.
+
+    if (DATAin%ngpp > 0) then
+        ! Estimate the maximum number of observations per data stream
+        subsample = ceiling(dble(DATAin%nodays) * 0.25d0 * (dble(DATAin%ngpp)/dble(DATAin%total_obs)))
+        ! Allocate which ever is smaller
+        DATAin%sub_ngpp = min(subsample,DATAin%ngpp)
+        allocate(DATAin%sub_gpppts(DATAin%sub_ngpp))
+        ! Estimate step between draws following: ((to - from)/(length.out - 1))
+        mz = (dble(DATAin%ngpp-1)/dble((DATAin%sub_ngpp-1)))**(-1d0)
+        if (DATAin%ngpp == 1) mz = 1d0 ! Guard against NaN
+        do i = 1, DATAin%sub_ngpp
+           ! Estimate the index of the next value we want
+           DATAin%sub_gpppts(i) = DATAin%gpppts(nint((dble(i-1)/mz)+1))
+        end do  
+    end if
+
+    if (DATAin%nlai > 0) then
+        ! Estimate the maximum number of observations per data stream
+        subsample = ceiling(dble(DATAin%nodays) * 0.25d0 * (dble(DATAin%nlai)/dble(DATAin%total_obs)))
+        ! Allocate which ever is smaller
+        DATAin%sub_nlai = min(subsample,DATAin%nlai)
+        allocate(DATAin%sub_laipts(DATAin%sub_nlai))
+        ! Estimate step between draws following: ((to - from)/(length.out - 1))
+        mz = (dble(DATAin%nlai-1)/dble((DATAin%sub_nlai-1)))**(-1d0)
+        if (DATAin%nlai == 1) mz = 1d0 ! Guard against NaN
+        do i = 1, DATAin%sub_nlai
+           ! Estimate the index of the next value we want
+           DATAin%sub_laipts(i) = DATAin%laipts(nint((dble(i-1)/mz)+1))
+        end do
+    end if
+
+    if (DATAin%nnee > 0) then
+        ! Estimate the maximum number of observations per data stream
+        subsample = ceiling(dble(DATAin%nodays) * 0.25d0 * (dble(DATAin%nnee)/dble(DATAin%total_obs)))
+        ! Allocate which ever is smaller
+        DATAin%sub_nnee = min(subsample,DATAin%nnee)
+        allocate(DATAin%sub_neepts(DATAin%sub_nnee))
+        ! Estimate step between draws following: ((to - from)/(length.out - 1))
+        mz = (dble(DATAin%nnee-1)/dble((DATAin%sub_nnee-1)))**(-1d0)
+        if (DATAin%nnee == 1) mz = 1d0 ! Guard against NaN
+        do i = 1, DATAin%sub_nnee
+           ! Estimate the index of the next value we want
+           DATAin%sub_neepts(i) = DATAin%neepts(nint((dble(i-1)/mz)+1))
+        end do
+    end if
+
+    if (DATAin%nwoo > 0) then
+        ! Estimate the maximum number of observations per data stream
+        subsample = ceiling(dble(DATAin%nodays) * 0.25d0 * (dble(DATAin%nwoo)/dble(DATAin%total_obs)))
+        ! Allocate which ever is smaller
+        DATAin%sub_nwoo = min(subsample,DATAin%nwoo)
+        allocate(DATAin%sub_woopts(DATAin%sub_nwoo))
+        ! Estimate step between draws following: ((to - from)/(length.out - 1))
+        mz = (dble(DATAin%nwoo-1)/dble((DATAin%sub_nwoo-1)))**(-1d0)
+        if (DATAin%nwoo == 1) mz = 1d0 ! Guard against NaN
+        do i = 1, DATAin%sub_nwoo
+           ! Estimate the index of the next value we want
+           DATAin%sub_woopts(i) = DATAin%woopts(nint((dble(i-1)/mz)+1))
+        end do
+    end if
+
+    if (DATAin%nreco > 0) then
+        ! Estimate the maximum number of observations per data stream
+        subsample = ceiling(dble(DATAin%nodays) * 0.25d0 * (dble(DATAin%nreco)/dble(DATAin%total_obs)))
+        ! Allocate which ever is smaller
+        DATAin%sub_nreco = min(subsample,DATAin%nreco)
+        allocate(DATAin%sub_recopts(DATAin%sub_nreco))
+        ! Estimate step between draws following: ((to - from)/(length.out - 1))
+        mz = (dble(DATAin%nreco-1)/dble((DATAin%sub_nreco-1)))**(-1d0)
+        if (DATAin%nreco == 1) mz = 1d0 ! Guard against NaN
+        do i = 1, DATAin%sub_nreco
+           ! Estimate the index of the next value we want
+           DATAin%sub_recopts(i) = DATAin%recopts(nint((dble(i-1)/mz)+1))
+        end do
+    end if
+
+    if (DATAin%nCfol_stock > 0) then
+        ! Estimate the maximum number of observations per data stream
+        subsample = ceiling(dble(DATAin%nodays) * 0.25d0 * (dble(DATAin%nCfol_stock)/dble(DATAin%total_obs)))
+        ! Allocate which ever is smaller
+        DATAin%sub_nCfol_stock = min(subsample,DATAin%nCfol_stock)
+        allocate(DATAin%sub_Cfol_stockpts(DATAin%sub_nCfol_stock))
+        ! Estimate step between draws following: ((to - from)/(length.out - 1))
+        mz = (dble(DATAin%nCfol_stock-1)/dble((DATAin%sub_nCfol_stock-1)))**(-1d0)
+        if (DATAin%nCfol_stock == 1) mz = 1d0 ! Guard against NaN
+        do i = 1, DATAin%sub_nCfol_stock
+           ! Estimate the index of the next value we want
+           DATAin%sub_Cfol_stockpts(i) = DATAin%Cfol_stockpts(nint((dble(i-1)/mz)+1))
+        end do
+    end if
+
+    if (DATAin%nCwood_stock > 0) then
+        ! Estimate the maximum number of observations per data stream
+        subsample = ceiling(dble(DATAin%nodays) * 0.25d0 * (dble(DATAin%nCwood_stock)/dble(DATAin%total_obs)))
+        ! Allocate which ever is smaller
+        DATAin%sub_nCwood_stock = min(subsample,DATAin%nCwood_stock)
+        allocate(DATAin%sub_Cwood_stockpts(DATAin%sub_nCwood_stock))
+        ! Estimate step between draws following: ((to - from)/(length.out - 1)) 
+        mz = (dble(DATAin%nCwood_stock-1)/dble((DATAin%sub_nCwood_stock-1)))**(-1d0)
+        if (DATAin%nCwood_stock == 1) mz = 1d0 ! Guard against NaN
+        do i = 1, DATAin%sub_nCwood_stock
+           ! Estimate the index of the next value we want
+           DATAin%sub_Cwood_stockpts(i) = DATAin%Cwood_stockpts(nint((dble(i-1)/mz)+1))
+        end do
+    end if
+
+    if (DATAin%nCroots_stock > 0) then
+        ! Estimate the maximum number of observations per data stream
+        subsample = ceiling(dble(DATAin%nodays) * 0.25d0 * (dble(DATAin%nCroots_stock)/dble(DATAin%total_obs)))
+        ! Allocate which ever is smaller
+        DATAin%sub_nCroots_stock = min(subsample,DATAin%nCroots_stock)
+        allocate(DATAin%sub_Croots_stockpts(DATAin%sub_nCroots_stock))
+        ! Estimate step between draws following: ((to - from)/(length.out - 1))
+        mz = (dble(DATAin%nCroots_stock-1)/dble((DATAin%sub_nCroots_stock-1)))**(-1d0)
+        if (DATAin%nCroots_stock == 1) mz = 1d0 ! Guard against NaN
+        do i = 1, DATAin%sub_nCroots_stock
+           ! Estimate the index of the next value we want
+           DATAin%sub_Croots_stockpts(i) = DATAin%Croots_stockpts(nint((dble(i-1)/mz)+1))
+        end do
+    end if
+
+    if (DATAin%nClit_stock > 0) then
+        ! Estimate the maximum number of observations per data stream
+        subsample = ceiling(dble(DATAin%nodays) * 0.25d0 * (dble(DATAin%nClit_stock)/dble(DATAin%total_obs)))
+        ! Allocate which ever is smaller
+        DATAin%sub_nClit_stock = min(subsample,DATAin%nClit_stock)
+        allocate(DATAin%sub_Clit_stockpts(DATAin%sub_nClit_stock))
+        ! Estimate step between draws following: ((to - from)/(length.out - 1))
+        mz = (dble(DATAin%nClit_stock-1)/dble((DATAin%sub_nClit_stock-1)))**(-1d0)
+        if (DATAin%nClit_stock == 1) mz = 1d0 ! Guard against NaN
+        do i = 1, DATAin%sub_nClit_stock
+           ! Estimate the index of the next value we want
+           DATAin%sub_Clit_stockpts(i) = DATAin%Clit_stockpts(nint((dble(i-1)/mz)+1))
+        end do
+    end if
+
+    if (DATAin%nCsom_stock > 0) then
+        ! Estimate the maximum number of observations per data stream
+        subsample = ceiling(dble(DATAin%nodays) * 0.25d0 * (dble(DATAin%nCsom_stock)/dble(DATAin%total_obs)))
+        ! Allocate which ever is smaller
+        DATAin%sub_nCsom_stock = min(subsample,DATAin%nCsom_stock)
+        allocate(DATAin%sub_Csom_stockpts(DATAin%sub_nCsom_stock))
+        ! Estimate step between draws following: ((to - from)/(length.out - 1))
+        mz = (dble(DATAin%nCsom_stock-1)/dble((DATAin%sub_nCsom_stock-1)))**(-1d0)
+        if (DATAin%nCsom_stock == 1) mz = 1d0 ! Guard against NaN
+        do i = 1, DATAin%sub_nCsom_stock
+           ! Estimate the index of the next value we want
+           DATAin%sub_Csom_stockpts(i) = DATAin%Csom_stockpts(nint((dble(i-1)/mz)+1))
+        end do
+    end if
+
+    if (DATAin%nCagb_stock > 0) then
+        ! Estimate the maximum number of observations per data stream
+        subsample = ceiling(dble(DATAin%nodays) * 0.25d0 * (dble(DATAin%nCagb_stock)/dble(DATAin%total_obs)))
+        ! Allocate which ever is smaller
+        DATAin%sub_nCagb_stock = min(subsample,DATAin%nCagb_stock)
+        allocate(DATAin%sub_Cagb_stockpts(DATAin%sub_nCagb_stock))
+        ! Estimate step between draws following: ((to - from)/(length.out - 1))
+        mz = (dble(DATAin%nCagb_stock-1)/dble((DATAin%sub_nCagb_stock-1)))**(-1d0)
+        if (DATAin%nCagb_stock == 1) mz = 1d0 ! Guard against NaN
+        do i = 1, DATAin%sub_nCagb_stock
+           ! Estimate the index of the next value we want
+           DATAin%sub_Cagb_stockpts(i) = DATAin%Cagb_stockpts(nint((dble(i-1)/mz)+1))
+        end do
+    end if
+
+    if (DATAin%nCcoarseroot_stock > 0) then
+        ! Estimate the maximum number of observations per data stream
+        subsample = ceiling(dble(DATAin%nodays) * 0.25d0 * (dble(DATAin%nCcoarseroot_stock)/dble(DATAin%total_obs)))
+        ! Allocate which ever is smaller
+        DATAin%sub_nCcoarseroot_stock = min(subsample,DATAin%nCcoarseroot_stock)
+        allocate(DATAin%sub_Ccoarseroot_stockpts(DATAin%sub_nCcoarseroot_stock))
+        ! Estimate step between draws following: ((to - from)/(length.out - 1))
+        mz = (dble(DATAin%nCcoarseroot_stock-1)/dble((DATAin%sub_nCcoarseroot_stock-1)))**(-1d0)
+        if (DATAin%nCcoarseroot_stock == 1) mz = 1d0 ! Guard against NaN
+        do i = 1, DATAin%sub_nCcoarseroot_stock
+           ! Estimate the index of the next value we want
+           DATAin%sub_Ccoarseroot_stockpts(i) = DATAin%Ccoarseroot_stockpts(nint((dble(i-1)/mz)+1))
+        end do
+    end if
+
+    if (DATAin%nCfolmax_stock > 0) then
+        ! Estimate the maximum number of observations per data stream
+        subsample = ceiling(dble(DATAin%nodays) * 0.25d0 * (dble(DATAin%nCfolmax_stock)/dble(DATAin%total_obs)))
+        ! Allocate which ever is smaller
+        DATAin%sub_nCfolmax_stock = min(subsample,DATAin%nCfolmax_stock)
+        allocate(DATAin%sub_Cfolmax_stockpts(DATAin%sub_nCfolmax_stock))
+        ! Estimate step between draws following: ((to - from)/(length.out - 1))
+        mz = (dble(DATAin%nCfolmax_stock-1)/dble((DATAin%sub_nCfolmax_stock-1)))**(-1d0)
+        if (DATAin%nCfolmax_stock == 1) mz = 1d0 ! Guard against NaN
+        do i = 1, DATAin%sub_nCfolmax_stock
+           ! Estimate the index of the next value we want
+           DATAin%sub_Cfolmax_stockpts(i) = DATAin%Cfolmax_stockpts(nint((dble(i-1)/mz)+1))
+        end do
+    end if
+
+    if (DATAin%nEvap > 0) then
+        ! Estimate the maximum number of observations per data stream
+        subsample = ceiling(dble(DATAin%nodays) * 0.25d0 * (dble(DATAin%nEvap)/dble(DATAin%total_obs)))
+        ! Allocate which ever is smaller
+        DATAin%sub_nEvap = min(subsample,DATAin%nEvap)
+        allocate(DATAin%sub_Evappts(DATAin%sub_nEvap))
+        ! Estimate step between draws following: ((to - from)/(length.out - 1))
+        mz = (dble(DATAin%nEvap-1)/dble((DATAin%sub_nEvap-1)))**(-1d0)
+        if (DATAin%nEvap == 1) mz = 1d0 ! Guard against NaN
+        do i = 1, DATAin%sub_nEvap
+           ! Estimate the index of the next value we want
+           DATAin%sub_Evappts(i) = DATAin%Evappts(nint((dble(i-1)/mz)+1))
+        end do
+    end if
+
+    if (DATAin%nSWE > 0) then
+        ! Estimate the maximum number of observations per data stream
+        subsample = ceiling(dble(DATAin%nodays) * 0.25d0 * (dble(DATAin%nSWE)/dble(DATAin%total_obs)))
+        ! Allocate which ever is smaller
+        DATAin%sub_nSWE = min(subsample,DATAin%nSWE)
+        allocate(DATAin%sub_SWEpts(DATAin%sub_nSWE))
+        ! Estimate step between draws following: ((to - from)/(length.out - 1))
+        mz = (dble(DATAin%nSWE-1)/dble((DATAin%sub_nSWE-1)))**(-1d0)
+        if (DATAin%nSWE == 1) mz = 1d0 ! Guard against NaN
+        do i = 1, DATAin%sub_nSWE
+           ! Estimate the index of the next value we want
+           DATAin%sub_SWEpts(i) = DATAin%SWEpts(nint((dble(i-1)/mz)+1))
+        end do
+    end if
+
+    if (DATAin%nNBE > 0) then
+        ! Estimate the maximum number of observations per data stream
+        subsample = ceiling(dble(DATAin%nodays) * 0.25d0 * (dble(DATAin%nNBE)/dble(DATAin%total_obs)))
+        ! Allocate which ever is smaller
+        DATAin%sub_nNBE = min(subsample,DATAin%nNBE)
+        allocate(DATAin%sub_NBEpts(DATAin%sub_nNBE))
+        ! Estimate step between draws following: ((to - from)/(length.out - 1))
+        mz = (dble(DATAin%nNBE-1)/dble((DATAin%sub_nNBE-1)))**(-1d0)
+        if (DATAin%nNBE == 1) mz = 1d0 ! Guard against NaN
+        do i = 1, DATAin%sub_nNBE
+           ! Estimate the index of the next value we want
+           DATAin%sub_NBEpts(i) = DATAin%NBEpts(nint((dble(i-1)/mz)+1))
+        end do
+    end if
 
     ! confirm that mean radiation and temperature variables are empty
     write(*,*) "Mean Rad = ", DATAin%meanrad

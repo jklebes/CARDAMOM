@@ -156,14 +156,14 @@ contains
                                ,min_root,top_soil_depth,max_depth,root_k,minlwp,min_layer                  &
                                ,soil_frac_clay,soil_frac_sand                                              &
                                ,co2comp_saturation,drythick,dayl_hours,dayl_seconds,dayl_seconds_1         & ! variables
-                               ,seconds_per_step,root_biomass,mid_soil_depth,root_reach,previous_depth     &
+                               ,seconds_per_step,fine_root_biomass,mid_soil_depth,root_reach,previous_depth     &
                                ,deltat_1,water_flux,layer_thickness,meant,stomatal_conductance             &
                                ,co2_half_sat,co2_comp_point,mint,maxt,swrad,co2,doy,leafT,ceff             &
                                ,wind_spd,vpd_kPa,lai,days_per_step,days_per_step_1,dayl_hours_fraction     &
                                ,wSWP,SWP,SWP_initial,wSWP_time,soil_waterfrac,soil_waterfrac_initial       &
                                ,porosity,porosity_initial,field_capacity,field_capacity_initial            &
                                ,rainfall,canopy_storage,intercepted_rainfall,snow_storage,snow_melt        &
-                               ,airt_zero_fraction,snowfall,coarse_root_biomass                          
+                               ,airt_zero_fraction,snowfall,root_biomass                          
 
     ! DALEC crop model modified from Sus et al., (2010)
 
@@ -429,9 +429,9 @@ contains
         ! zero evapotranspiration for beginning
         ET = 0d0
         ! initialise root reach based on initial conditions
-        root_biomass = max(min_root,POOLS(1,3)*2d0)
-        coarse_root_biomass = root_biomass
-        root_reach = max_depth * coarse_root_biomass / (root_k + coarse_root_biomass)
+        fine_root_biomass = max(min_root,POOLS(1,3)*2d0)
+        root_biomass = fine_root_biomass
+        root_reach = max_depth * root_biomass / (root_k + root_biomass)
         ! Determine initial soil layer thickness
         layer_thickness(1) = top_soil_depth ; layer_thickness(2) = mid_soil_depth
         layer_thickness(3) = max(min_layer,root_reach-sum(layer_thickness(1:2)))
@@ -523,8 +523,8 @@ contains
 
       ! calculate the minimum soil & root hydraulic resistance based on total
       ! fine root mass ! *2*2 => *RS*C->Bio
-      root_biomass = max(min_root,POOLS(n,3)*2d0)
-      coarse_root_biomass = root_biomass
+      fine_root_biomass = max(min_root,POOLS(n,3)*2d0)
+      root_biomass = fine_root_biomass
       ! estimate drythick for the current step
       drythick = max(min_drythick, top_soil_depth * min(1d0,1d0 - (soil_waterfrac(1) / porosity(1))))
       call calculate_Rtot(Rtot)

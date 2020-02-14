@@ -27,12 +27,17 @@ extract_globbiomass_biomass<- function(timestep_days,spatial_type,resolution,gri
                 radius = 0
             }
 
-            # work out average areas
-            average_i = max(1,(i1-radius)):min(dim(Cwood_all$biomass_2010)[1],(i1+radius)) ; average_j=max(1,(j1-radius)):min(dim(Cwood_all$biomass_2010)[2],(j1+radius))
+            # Work out average areas for 2010
+            average_i = max(1,(i1_2010-radius)):min(dim(Cwood_all$biomass_2010)[1],(i1_2010+radius)) 
+            average_j=max(1,(j1_2010-radius)):min(dim(Cwood_all$biomass_2010)[2],(j1_2010+radius))
             # Carry out averaging
             # 2010 first...
             Cwood = mean(Cwood_all$biomass_2010[average_i,average_j], na.rm=TRUE)
             Cwood_unc = mean(Cwood_all$biomass_unc_2010[average_i,average_j], na.rm=TRUE)
+      
+            # Work out average areas for 2017
+            average_i = max(1,(i1_2017-radius)):min(dim(Cwood_all$biomass_2010)[1],(i1_2017+radius)) 
+            average_j=max(1,(j1_2017-radius)):min(dim(Cwood_all$biomass_2010)[2],(j1_2017+radius))
             # ... append 2017 next
             Cwood = append(Cwood,mean(Cwood_all$biomass_2017[average_i,average_j], na.rm=TRUE))
             Cwood_unc = append(Cwood_unc,mean(Cwood_all$biomass_unc_2017[average_i,average_j], na.rm=TRUE))
