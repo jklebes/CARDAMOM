@@ -29,11 +29,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
       } else {
           if (length(which(as.vector(is.na(parameters)))) > 0 ) {
               error_check = TRUE
-          } else {
-              if (min(parameters[PROJECT$model$nopars[n]+1,,]) == -Inf) {
-                  error_check = TRUE ; print("Inf found in likelihood score")
-              } # Inf check
-          } # NaN check
+              print("NA found in likelihood score")
+           } else if (min(as.vector(parameters)) == -Inf) {
+              error_check = TRUE 
+              print("Inf found in likelihood score")
+          } # NaN / Inf check
       } # error check
 
       # ok so if we actually have some parameters we will
@@ -42,18 +42,21 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
           # test for convergence and whether or not there is any single chain which can be removed in they do not converge
           notconv = TRUE
           while (dim(parameters)[3] > 2 & notconv) {
-#          if (dim(parameters)[3] > 2) {
+              print("begin convergence checking")
               converged = have_chains_converged(parameters)
               # if log-likelihood has passed then we are not interested
               if (converged[length(converged)] == "FAIL") {
-#                  notconv = TRUE
+                  print("...not converged begin removing potential parameter vectors")
                   i = 1 ; max_likelihood = rep(NA, length.out=dim(parameters)[3]) ; CI90 = rep(NA,length.out=c(2))
                   while (notconv){
+                     print(paste("......trying removal of parameter vector ",i,sep=""))
+                     # Track the maximum likelihood across each chain. 
                      max_likelihood[i] = max(parameters[dim(parameters)[1],,i])
                      converged = have_chains_converged(parameters[,,-i]) ; i = i + 1
                      # if removing one of the chains get convergence then great
                      if (converged[length(converged)] == "PASS") {
-                         # but we need to check for the possibility that the chain we have removed is actually better than the others
+                         print(".........convergence found on chain removal")
+                         # likelihoods converge now but we need to check for the possibility that the chain we have removed is actually better than the others
                          CI90[1] = quantile(parameters[dim(parameters)[1],,(i-1)], prob=c(0.10)) ; CI90[2] = quantile(parameters[dim(parameters)[1],,-(i-1)], prob=c(0.90))
                          # if the rejected chain is significantly better (at 90 % CI) than the converged chains then we have a problem
                          if (CI90[1] > CI90[2]) {
@@ -61,22 +64,36 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                              # we will now assume that we use the single good chain instead...
                              parameters = array(parameters[,,(i-1)],dim=c(dim(parameters)[1:2],2))
                              notconv = FALSE ; i = (i-1) * -1
+                             print(paste("............chain ",i*-1," only has been accepted",sep=""))
                          } else {
                              # if the non-converged chain is worse or just the same in likelihood terms as the others then we will ditch it
                              notconv = FALSE ; i = i-1 # converged now?
+                             parameters = parameters[,,-i] 
+                             print(paste("............chain rejected = ",i,sep=""))
                          }
                      }
-                     # if we have tried removing each chain and we still have not converged then give up anyway
-                     #if (i > dim(parameters)[3] & notconv) {notconv=FALSE ; i=-9999}
-                     # or actually just remove the lowest average likelihood chain
-                     if (i > dim(parameters)[3] & notconv) {notconv = FALSE ; i = which(max_likelihood == min(max_likelihood)) ; i = i[1]}
+                     # If removing one chain does not lead to convergence then lowest average likelihood chain
+                     if (i > dim(parameters)[3] & notconv) {
+                         # Which is lowest likelihood
+                         i = which(max_likelihood == min(max_likelihood))
+                         # Remove from array
+                         parameters = parameters[,,-i] 
+                         # Update the maximum likelihood vector also
+                         max_likelihood = max_likelihood[-i]
+                         # Update the user
+                         print(paste(".........single chain removal couldn't find convergence; removing lowest likelihood chain = ",i,sep=""))
+                         # reset counter
+                         i = 1
+                         # If we have removed chains down to 2 (or kept just one) we need to abort
+                         if (dim(parameters)[3] < 3 & notconv) {
+                             notconv = FALSE ; print(".........have removed all low likelihood chains without successful convergence")
+                         }
+                     }
                   } # while to removing chains
-                  # if we successfully found only chain to remove then remove it from the rest of the analysis.
-                 if (i > 0) {parameters = parameters[,,-i] ; print(paste("chain rejected = ",i,sep=""))}
-                 if (i < 0) {print(paste("chain ",i*-1," only has been accepted",sep=""))}
               } else {
-                 # we have conveged
-                 notconv = FALSE
+                  print("All chains converge")
+                  # we have conveged
+                  notconv = FALSE
               } # if likelihood not converged
           } # if more than 2 chains
 
@@ -114,70 +131,72 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
           }
           # run subsample of parameters for full results / propogation
           soil_info = c(drivers$top_sand,drivers$bot_sand,drivers$top_clay,drivers$bot_clay)
+          print("running model ensemble")
           states_all = simulate_all(n,PROJECT,PROJECT$model$name,drivers$met,sub_parameter[1:PROJECT$model$nopars[n],,],
                                     drivers$lat,PROJECT$ctessel_pft[n],PROJECT$parameter_type,
                                     PROJECT$exepath,soil_info)
           # pass to local variable for saving
           site_ctessel_pft = PROJECT$ctessel_pft[n]
-          aNPP = states_all$aNPP
+          aNPP = states_all$aNPP ; MTT = states_all$MTT ; SS = states_all$SS
+          print("processing and storing ensemble output")
           # store the results now in binary file
-          save(parameter_covariance,parameters,drivers,sub_parameter,site_ctessel_pft,aNPP,file=outfile1)#, compress="gzip")
+          save(parameter_covariance,parameters,drivers,sub_parameter,site_ctessel_pft,aNPP,MTT,SS,file=outfile1)#, compress="gzip")
           # determine whether this is a gridded run (or one with the override in place)
           if (PROJECT$spatial_type == "site" | grid_override == TRUE) {
               # ...if this is a site run save the full ensemble and everything else...
-              save(parameters,drivers,states_all,sub_parameter,site_ctessel_pft,aNPP,file=outfile)#, compress="gzip")
+              save(parameters,drivers,states_all,sub_parameter,site_ctessel_pft,file=outfile)#, compress="gzip")
           } else {
               # ...otherwise this is a grid and we want straight forward reduced dataset of common stocks and fluxes
-              num_quantiles = c(0.025,0.25,0.5,0.75,0.975)
+              num_quantiles = c(0.025,0.25,0.5,0.75,0.975) ; na_flag = TRUE
               # Stocks first
-              site_output = list(labile_gCm2 = apply(states_all$lab_gCm2,2,quantile,prob=num_quantiles),
-                                 biomass_gCm2 = apply(states_all$bio_gCm2,2,quantile,prob=num_quantiles),
-                                 lai_m2m2 = apply(states_all$lai_m2m2,2,quantile,prob=num_quantiles),
-                                 foliage_gCm2 = apply(states_all$fol_gCm2,2,quantile,prob=num_quantiles),
-                                 roots_gCm2 = apply(states_all$root_gCm2,2,quantile,prob=num_quantiles),
-                                 wood_gCm2 = apply(states_all$wood_gCm2,2,quantile,prob=num_quantiles),
-                                 lit_gCm2 = apply(states_all$lit_gCm2,2,quantile,prob=num_quantiles),
-                                 som_gCm2 = apply(states_all$som_gCm2,2,quantile,prob=num_quantiles),
+              site_output = list(labile_gCm2 = apply(states_all$lab_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag),
+                                 biomass_gCm2 = apply(states_all$bio_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag),
+                                 lai_m2m2 = apply(states_all$lai_m2m2,2,quantile,prob=num_quantiles,na.rm=na_flag),
+                                 foliage_gCm2 = apply(states_all$fol_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag),
+                                 roots_gCm2 = apply(states_all$root_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag),
+                                 wood_gCm2 = apply(states_all$wood_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag),
+                                 lit_gCm2 = apply(states_all$lit_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag),
+                                 som_gCm2 = apply(states_all$som_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag),
               # Fluxes second
-                                 nee_gCm2day = apply(states_all$nee_gCm2day,2,quantile,prob=num_quantiles),
-                                 gpp_gCm2day = apply(states_all$gpp_gCm2day,2,quantile,prob=num_quantiles),
-                                 rauto_gCm2day = apply(states_all$rauto_gCm2day,2,quantile,prob=num_quantiles),
-                                 rhet_gCm2day = apply(states_all$rhet_gCm2day,2,quantile,prob=num_quantiles),
-                                 reco_gCm2day = apply(states_all$rhet_gCm2day+states_all$rauto_gCm2day,2,quantile,prob=num_quantiles),
-                                 npp_gCm2day = apply(states_all$gpp_gCm2day-states_all$rauto_gCm2day,2,quantile,prob=num_quantiles),
-                                 harvest_gCm2day = apply(states_all$harvest_C_gCm2day,2,quantile,prob=num_quantiles),
-                                 fire_gCm2day = apply(states_all$fire_gCm2day,2,quantile,prob=num_quantiles))
+                                 nee_gCm2day = apply(states_all$nee_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
+                                 gpp_gCm2day = apply(states_all$gpp_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
+                                 rauto_gCm2day = apply(states_all$rauto_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
+                                 rhet_gCm2day = apply(states_all$rhet_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
+                                 reco_gCm2day = apply(states_all$rhet_gCm2day+states_all$rauto_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
+                                 npp_gCm2day = apply(states_all$gpp_gCm2day-states_all$rauto_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
+                                 harvest_gCm2day = apply(states_all$harvest_C_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
+                                 fire_gCm2day = apply(states_all$fire_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag))
 
               # Some derived fluxes / states
-              site_output$nbe_gCm2day = apply(states_all$nee_gCm2day + states_all$fire_gCm2day,2,quantile,prob=num_quantiles)
+              site_output$nbe_gCm2day = apply(states_all$nee_gCm2day + states_all$fire_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
               dCbio = states_all$bio_gCm2 - states_all$bio_gCm2[,1] # difference in biomass from initial
-              site_output$dCbio_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles)
+              site_output$dCbio_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
               dCbio = states_all$fol_gCm2 - states_all$fol_gCm2[,1] # difference in biomass from initial
-              site_output$dCfoliage_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles)
+              site_output$dCfoliage_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
               dCbio = states_all$root_gCm2 - states_all$root_gCm2[,1] # difference in root from initial
-              site_output$dCroots_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles)
+              site_output$dCroots_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
               dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
-              site_output$dCwood_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles)
+              site_output$dCwood_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
               dCbio = states_all$lit_gCm2 - states_all$lit_gCm2[,1] # difference in lit from initial
-              site_output$dClit_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles)
+              site_output$dClit_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
               dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
-              site_output$dCsom_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles)
+              site_output$dCsom_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
               if (length(which(names(states_all) == "litwood_gCm2")) > 0) {
-                  site_output$cwd_gCm2 = apply(states_all$litwood_gCm2,2,quantile,prob=num_quantiles)
-                  site_output$deadorg_gCm2 = apply(states_all$litwood_gCm2+states_all$lit_gCm2,2,quantile,prob=num_quantiles)
+                  site_output$cwd_gCm2 = apply(states_all$litwood_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  site_output$deadorg_gCm2 = apply(states_all$litwood_gCm2+states_all$lit_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
                   dCbio = states_all$litwood_gCm2 - states_all$litwood_gCm2[,1] # difference in cwd from initial
-                  site_output$dCcwd_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles)
+                  site_output$dCcwd_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
                   dCbio = (states_all$litwood_gCm2+states_all$lit_gCm2) - (states_all$litwood_gCm2[,1]+states_all$lit_gCm2[,1]) # difference in deadorg from initial
-                  site_output$dCdeadorg_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles)
+                  site_output$dCdeadorg_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
               }
               # Finally water cycle specific if available
               if (length(which(names(states_all) == "evap_kgH2Om2day")) > 0) {
                   # currently water in the soil surface layer (0-10 cm)
-                  site_output$SurfWater_kgH2Om2 = apply(states_all$sfc_water_mm,2,quantile,prob=num_quantiles)
+                  site_output$SurfWater_kgH2Om2 = apply(states_all$sfc_water_mm,2,quantile,prob=num_quantiles,na.rm=na_flag)
                   # plant apparent soil water potential (MPa)
-                  site_output$wSWP_MPa = apply(states_all$wSWP_MPa,2,quantile,prob=num_quantiles)
+                  site_output$wSWP_MPa = apply(states_all$wSWP_MPa,2,quantile,prob=num_quantiles,na.rm=na_flag)
                   # evapotranspiration (Etrans + Esoil + Ewetcanopy)
-                  site_output$evap_kgH2Om2day = apply(states_all$evap_kgH2Om2day,2,quantile,prob=num_quantiles)
+                  site_output$evap_kgH2Om2day = apply(states_all$evap_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
               }
               # save to pixel specific file for the moment... in "run_mcmc_results" these will be combined into a single grid
               save(site_output,file=outfile2)

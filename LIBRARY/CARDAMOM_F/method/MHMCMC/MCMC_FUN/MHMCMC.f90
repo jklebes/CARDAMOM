@@ -18,7 +18,7 @@ public :: MHMCMC, par_minstepsize,par_initstepsize
 integer :: uniform, unif_length
 double precision, allocatable, dimension(:) :: uniform_random_vector
 ! MHMCMC step size
-double precision, parameter :: par_minstepsize = 0.0005d0 & ! 0.0005
+double precision, parameter :: par_minstepsize = 0.001d0 & ! 0.0005
                               ,par_maxstepsize = 0.01d0  &
                               ,par_initstepsize = 0.005d0
 ! Delayed Rejection flag
@@ -27,7 +27,7 @@ double precision :: DR_scaler = 1d0 &
                                 ! for MCMC search, when applied to  multivariate proposal.
                                 ! NOTE 1: 2.38 / sqrt(npars) sometimes used when applied to the Cholesky
                                 ! factor. NOTE 2: 2.381204 ** 2 = 5.670132
-double precision, parameter :: beta = 0.05d0, delta = 0.5d0
+double precision, parameter :: beta = 0.01d0 !0.01d0!0.05d0!, delta = 0.5d0
 ! Is current proposal multivariate or not?
 logical :: multivariate_proposal = .false.!, do_DR = .true.
 integer, parameter :: N_before_mv = 10d0 !3
@@ -41,8 +41,9 @@ contains
     use math_functions, only: randn, random_uniform, log_par2nor, log_nor2par, par2nor, nor2par &
                              ,dsymv
     use cardamom_io, only: write_parameters,write_variances,write_covariance_matrix &
-                          ,write_covariance_info,restart_flag,accepted_so_far, accept_rate
+                          ,write_covariance_info,restart_flag
     use cardamom_structures, only: DATAin
+    use model_likelihood_module, only: model_likelihood
 
     implicit none
 
@@ -101,6 +102,7 @@ contains
 
     ! declare any local variables
     type ( counters ) :: N
+    logical :: ok_to_stop = .false.
     double precision, dimension(PI%npars) :: deltaPARS2_iC &
                                             ,deltaPARS0_iC &
                                             ,norPARS0      & ! normalised parameter values for current state
@@ -121,6 +123,8 @@ contains
                        ,AM_vs_DR_P &
                        ,DR_vs_current &
                        ,DR_vs_current_pars &
+                       ,outputP0      &
+                       ,outputP0prior  &
                        ,DR_P, DR_Pprior & ! likelihood scores from Delayed Rejection step
                        ,Pmax, P0prior, Pprior & ! as below but for priors only
                        ,P0 & ! previously accepted observation based log-likelihood
@@ -128,7 +132,7 @@ contains
     integer :: i
 
     ! initial values
-    uniform = 1
+    uniform = 1 ; ok_to_stop = .false.
     P = -1d0 ; Pprior = -1d0
     N%ACC = 0d0 ; N%ACC_first = 0d0 ; N%ITER = 0d0 ; N%ACC_beta = 0d0
     N%ACCLOC = 0d0 ; N%ACCRATE = 0d0 ; N%ACCRATE_GLOBAL = 0d0
@@ -149,13 +153,17 @@ contains
     unif_length = MCO%nADAPT * 5
     allocate(uniform_random_vector(unif_length))
     call random_uniform(uniform_random_vector,unif_length)
+
     ! assume this is a restart which we want to load previous values
-    if (restart_flag) then
-        N%ITER = dble(MCO%nWRITE * accepted_so_far) ! number of iterations is directly linked to the number output
-        N%ACC = ceiling(accept_rate * N%ITER)
-        N%ACC_first = N%ACC ! conservative approch to assume all proposals are first accepted
-!        N%ACC_beta = ceiling(N%ACC * beta)
-    endif
+!    if (restart_flag) then
+!!        N%ITER = dble(MCO%nWRITE * accepted_so_far) ! number of iterations is directly linked to the number output
+!!        N%ACC = ceiling(accept_rate * N%ITER)
+!        ! Load the total number of iterations rather than starting from one
+!        N%ITER = MCOUT%nos_iterations
+!        N%ACC = MCOUT%acceptance_rate
+!        N%ACC_first = N%ACC ! conservative approch to assume all proposals are first accepted
+!!        N%ACC_beta = ceiling(N%ACC * beta)
+!    endif
 
     ! add something here to delete previous files if wanted later
     if (MCO%APPEND == 0 .and. MCO%nWRITE > 0) then
@@ -197,38 +205,16 @@ contains
     write(*,*) "Starting likelihood = ",P0,"+",P0prior
     Pmax = P0 + P0prior
 
-    ! TLS 27/01/2020: Commented out as this check should not be taken care of in the
-    ! likelihood.f90 under model_sanity_check() 
-!    ! Perform sanity check to ensure that the same parameters generate a
-!    ! consistent likelihood in return
-!    call model_likelihood_option(PI%parini, P, Pprior)
-!    call model_likelihood_option(PI%parini, DR_P, DR_Pprior)
-!    if (P0 /= P .or. P0prior /= Pprior .or. P0 /= DR_P .or. P0prior /= DR_Pprior) then
-!        print*,"Multiple calls of a common parameter vector returns different likelihood scores,"
-!        print*,"this indicates an error in the likelihood or model subroutines..."
-!        print*,"P0=",P0,"P1=",P,"P2=",DR_P
-!        print*,"P0prior=",P0prior,"P1prior=",Pprior,"P2prior=",DR_Pprior
-!        stop
-!    end if
-
     ! checks whether the EDCs (combined with P0 not P0prior) have been met in the initial parameter set
     infini = 0d0
     if (P0 == log(infini)) then
         write(*,*) "WARNING! P0 = ",P0," - MHMCMC may get stuck, if so please check initial conditins"
     endif
 
-! Possble tweaks
-! 1) likelihood >= crit rather than >
-! 2) step at boundaries as bounce back 
-! 3) DR_scaler = 0.1 -- not effective
-! 4) Remove DR - One out of three worked...
-! 5) Replace DR with Variance scaled Gaussian step without covariance
-! 6) Add beta noise alternatively to the MV step instead of separate after -- Trying
-!     - Achieved 3 / 10 workinged - rerunning with larger beta / delta step sizes
-! 7) Make cov sampling based on par with the maximum likelihood from the vector?
     ! Begin the main MHMCMC loop
-    do while (N%ITER < MCO%nOUT .and. (Pmax < P_target .or. MCO%nWRITE > 0))
-
+!    do while (N%ITER < MCO%nOUT .and. (Pmax < P_target .or. MCO%nWRITE > 0))
+    do while (N%ITER < MCO%nOUT .and. Pmax < 0d0 .and. .not.ok_to_stop)
+!    do while (N%ITER < MCO%nOUT .and. .not.ok_to_stop)
        ! take a step in parameter space
        call step(N,PARS0,PARS,norPARS0,norPARS,.false.)
 
@@ -369,8 +355,13 @@ contains
        N%ITER = N%ITER + 1
 
        if (MCO%nWRITE > 0 .and. mod(nint(N%ITER),MCO%nWRITE) == 0) then
+           ! calculate the likelhooh for the actual uncertainties - this avoid
+           ! issues with different phases of the MCMC which may use sub-samples
+           ! of observations or inflated uncertainties to aid parameter
+           ! searching
+           call model_likelihood(PARS0, outputP0, outputP0prior)
            call write_variances(PI%parvar,PI%npars,N%ACCRATE) ! should this be the global rate?
-           call write_parameters(PARS0,(P0+P0prior),PI%npars)
+           call write_parameters(PARS0,(outputP0+outputP0prior),PI%npars)
            call write_covariance_matrix(PI%covariance,PI%npars,.false.)
            call write_covariance_info(PI%mean_par,PI%Nparvar,PI%npars)
        end if ! write or not to write
@@ -393,7 +384,7 @@ contains
 
            ! First, we can only do a covariance adaption if we have accepted some
            ! parameters in the last period
-           if (N%ACCLOC > 0d0) then
+!           if (N%ACCLOC > 0d0) then
 
                ! Calculate local acceptance rate (i.e. since last adapt)
                N%ACCRATE = N%ACCLOC / dble(MCO%nADAPT)
@@ -417,15 +408,19 @@ contains
 
                end if !  have enough parameter been accepted
 
-           else ! any newly accepted parameters?
+!           else ! any newly accepted parameters?
 
                ! no new parameters accepted...
 
                !...so acceptance rates are zero but no need to update N%ACC or
                ! N%ACC_beta
                N%ACCRATE = 0d0 !; N%ACCRATE_beta = 0d0
+              
+               ! determine whether we have a working covariance matrix and
+               ! achieved a likelihood score better than the target
+               if (Pmax > P_target .and. PI%use_multivariate) ok_to_stop = .true.
 
-           end if ! have any parameters been accepted in the last period?
+!           end if ! have any parameters been accepted in the last period?
 
            ! resets to local counters
            N%ACCLOC = 0d0 !; N%ACCLOC_beta = 0d0
@@ -454,8 +449,12 @@ contains
     ! write out final covariance matrix for the analysis
     if (MCO%nWRITE > 0) call write_covariance_matrix(PI%covariance,PI%npars,.false.)
 
-    ! fill MCOUT details
+    ! record the best single set of parameters
     MCOUT%best_pars(1:PI%npars) = BESTPARS(1:PI%npars)
+    ! set the initial parameter set the final one accepted
+    PI%parini(1:PI%npars) = PARS0(1:PI%npars)
+    ! record how many iterations were taken to complete
+    MCOUT%nos_iterations = MCOUT%nos_iterations + N%ITER
     ! set flag MCMC completed
     MCOUT%complete = 1
     ! tidy up
@@ -677,14 +676,14 @@ contains
        ! create the new proposal. The Beta and Delta steps are intended to
        ! provide a Gaussian proposal but of a small (beta) or large (delta) size 
        ! Draw from uniform distribution to determine which step size is used
-       tmp = uniform_random_vector(uniform) ; uniform = uniform + 1
-       if (tmp < delta) then
-           ! Delta Step
-           norpars = norpars0 + (par_maxstepsize*rn2)
-       else
-           ! Beta Step
+!       tmp = uniform_random_vector(uniform) ; uniform = uniform + 1
+!       if (tmp < delta) then
+!           ! Delta Step
+!           norpars = norpars0 + (par_maxstepsize*rn2)
+!       else
+!           ! Beta Step
            norpars = norpars0 + (par_minstepsize*rn2)
-       endif
+!       endif
 
     end if ! nint(PI%Nparvar) > 10*PI%npars .and. tmp > beta
 

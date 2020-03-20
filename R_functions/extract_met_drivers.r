@@ -405,10 +405,6 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       # Extraction from global databases
       #
 
-      # extract important timing information
-      steps_in_day = met_in$steps_in_day
-      input_step_size = met_in$input_step_size
-
       # calculate approximate offset for time zone
       #offset = round(latlon_wanted[2] * 24 / 360, digits=0)
       ## should I be applying the offset here?
@@ -494,7 +490,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
                vpd_agg[y]=mean(vpd_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
                vpd_lagged_agg[y]=mean(vpd_lagged_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
                photoperiod_agg[y]=mean(photoperiod_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
-		      }
+          }
           # update with new output information
           swrad_out=swrad_agg ; maxt_out=maxt_agg ; mint_out=mint_agg
           precip_out=precip_agg ; vpd_lagged_out=vpd_lagged_agg
@@ -521,8 +517,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
 
       # clean up
       rm(swrad_out,mint_out,maxt_out,precip_out,co2_out,vpd_lagged_out,
-         photoperiod_out,avgTmin_out,avgTemp_out,vpd_out,steps_in_day,
-         input_step_size)
+         photoperiod_out,avgTmin_out,avgTemp_out,vpd_out)
 
   } # conditional for site_specific or global datasets
 

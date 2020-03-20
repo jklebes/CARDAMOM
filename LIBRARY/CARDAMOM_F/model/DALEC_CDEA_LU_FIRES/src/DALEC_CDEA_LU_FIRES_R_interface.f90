@@ -1,6 +1,7 @@
 
 
-subroutine rdaleccdealufires(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat,nopars,nomet &
+subroutine rdaleccdealufires(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,out_var2,out_var3,out_var4 &
+                            ,lat,nopars,nomet &
                             ,nofluxes,nopools,pft,pft_specific,nodays,deltat &
                             ,nos_iter)
 
@@ -15,6 +16,8 @@ subroutine rdaleccdealufires(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat,n
                         ,pft            & ! plant functional type
                         ,output_dim     & !
                         ,aNPP_dim       & ! NPP allocation fraction variable dimension
+                        ,MTT_dim        &
+                        ,SS_dim         &
                         ,pft_specific   & !
                         ,nos_iter       & !
                         ,nomet          & ! number of meteorological fields
@@ -30,6 +33,8 @@ subroutine rdaleccdealufires(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat,n
   ! output declaration
   double precision, intent(out), dimension(nos_iter,nodays,output_dim) :: out_var
   double precision, intent(out), dimension(nos_iter,aNPP_dim) :: out_var2
+  double precision, intent(out), dimension(nos_iter,MTT_dim) :: out_var3
+  double precision, intent(out), dimension(nos_iter,SS_dim) :: out_var4
 
   ! local variables
   ! vector of ecosystem pools
@@ -93,15 +98,27 @@ subroutine rdaleccdealufires(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat,n
      airt_adj = sum(met(3,1:nodays)) / dble(nodays)
      airt_adj = exp(pars(10,i)*airt_adj)
      out_var2(i,1) = sum(FLUXES(1:nodays,4)+FLUXES(1:nodays,8)) / sumNPP ! foliar
-     out_var2(i,2) = sum(FLUXES(1:nodays,7)) / sumNPP ! wood
-     out_var2(i,3) = sum(FLUXES(1:nodays,6)) / sumNPP ! fine root
-     out_var2(i,4) = pars(5,i) ! leaf life span (years)
-     out_var2(i,5) = (pars(6,i)*365.25d0) ** (-1d0) ! wood residence time (years)
-     out_var2(i,6) = (pars(7,i)*365.25d0) ** (-1d0) ! root residence time (years)
-     out_var2(i,7) = (pars(9,i) * 365.25d0 * airt_adj) ** (-1d0) ! som
-     out_var2(i,8) = ((pars(1,i) + pars(8,i)) * 365.25d0 * airt_adj) ** (-1d0) ! litter
+     out_var2(i,2) = sum(FLUXES(1:nodays,6)) / sumNPP ! fine root
+     out_var2(i,3) = sum(FLUXES(1:nodays,7)) / sumNPP ! wood
+     ! Mean transit time
+     out_var3(i,1) = pars(5,i) ! leaf life span (years)
+     out_var3(i,2) = (pars(7,i)*365.25d0) ** (-1d0) ! root residence time (years)
+     out_var3(i,3) = (pars(6,i)*365.25d0) ** (-1d0) ! wood residence time (years)
+     out_var3(i,4) = ((pars(1,i) + pars(8,i)) * 365.25d0 * airt_adj) ** (-1d0) ! litter
+     out_var3(i,5) = (pars(9,i) * 365.25d0 * airt_adj) ** (-1d0) ! som
+
+     ! Calculate the mean inputs to each pool, needed for steady state calculation
+     out_var4(i,1) = sum(FLUXES(1:nodays,4)+FLUXES(1:nodays,8)) ! fol
+     out_var4(i,2) = sum(FLUXES(1:nodays,6)) ! root
+     out_var4(i,3) = sum(FLUXES(1:nodays,7)) ! wood
+     out_var4(i,4) = sum(FLUXES(1:nodays,10)+FLUXES(1:nodays,12)) ! lit
+     out_var4(i,5) = sum(FLUXES(1:nodays,15))! som
 
   end do ! nos_iter loop
+
+  ! Steady state gC/m2
+  out_var4 = (out_var4 / dble(nodays)) * 365.25d0 ! convert to daily mean input
+  out_var4 = out_var4 * out_var3     ! multiply by residence time in years
 
   ! deallocate harvested variable
   deallocate(extracted_C)

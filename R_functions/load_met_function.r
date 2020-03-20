@@ -72,10 +72,8 @@ load_met_function<- function (year_to_do,varid,infile_varid,remove_lat,remove_lo
         input_file_1 = paste(path_to_met_source,varid[1],"_",year_to_do,"0",m,".nc",sep="")
         # open netcdf files
         data1 = nc_open(input_file_1)
-
         # read the met drivers
-        var1 = ncvar_get(data1, infile_varid[1]) ; var1 = var1[,,1:(dim(var1)[3])]
-
+        var1 = ncvar_get(data1, infile_varid[1]) #; var1 = var1[,,1:(dim(var1)[3])]
         # close files after use
         nc_close(data1)
 
@@ -84,16 +82,10 @@ load_met_function<- function (year_to_do,varid,infile_varid,remove_lat,remove_lo
 
         # filter spatial extent
         var1 = var1[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat),]
-        # assign correct error value
-        var1[is.na(var1)] = -9999
 
         # move through time removing the "chaff"
-        tmp = as.vector(var1[,,1])[wheat]
-        for (i in seq(2, t_grid)) {
-             tmp=append(tmp,as.vector(var1[,,i])[wheat])
-        }
-        # now append to the output variable
-        var1_out = tmp
+        var1_out = as.vector(var1[,,1])[wheat]
+        for (i in seq(2, t_grid)) {var1_out=append(var1_out,as.vector(var1[,,i])[wheat])}
 
         # loop through months in the year
         for (m in seq(2, 12)) {
@@ -104,24 +96,20 @@ load_met_function<- function (year_to_do,varid,infile_varid,remove_lat,remove_lo
                  input_file_1=paste(path_to_met_source,varid[1],"_",year_to_do,"0",m,".nc",sep="")
              }
              # open netcdf files
-             data1=nc_open(input_file_1)
+             data1 = nc_open(input_file_1)
              # read the met drivers
-             var1=ncvar_get(data1, infile_varid) ; var1=var1[,,1:(dim(var1)[3])]
+             var1 = ncvar_get(data1, infile_varid) #; var1 = var1[,,1:(dim(var1)[3])]
              tmp_t = dim(var1)[3] ; t_grid = t_grid + tmp_t
              # close files after use
              nc_close(data1)
 
              # update to the correct arrays
              # filter spatial extent
-             var1=var1[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat),]
-             # assign correct error value
-             var1[is.na(var1)] = -9999
+             var1 = var1[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat),]
 
              # move through time removing the "chaff"
-             tmp=as.vector(var1[,,1])[wheat]
-             for (i in seq(2, tmp_t)) {
-                  tmp=append(tmp,as.vector(var1[,,i])[wheat])
-             }
+             tmp = as.vector(var1[,,1])[wheat]
+             for (i in seq(2, tmp_t)) {tmp = append(tmp,as.vector(var1[,,i])[wheat])}
              # now append to the output variable
              var1_out=append(var1_out,tmp)
 
@@ -218,12 +206,6 @@ load_met_function<- function (year_to_do,varid,infile_varid,remove_lat,remove_lo
         }
         # if 366 days in the year we need to add a final day as the dataset only contains 365 days...sad-face
         if (nos_days == 366) {tmp = append(tmp,as.vector(var1[t_grid,,])[wheat]) ; t_grid = t_grid + 1}
-#        tmp = as.vector(var1[i,,])[wheat]
-#        for (i in seq(2, t_grid)) {
-#             tmp = append(tmp,as.vector(var1[i,,])[wheat])
-#        }
-#        # if 366 days in the year we need to add a final day as the dataset only contains 365 days...sad-face
-#        if (nos_days == 366) {tmp = append(tmp,as.vector(var1[t_grid,,])[wheat]) ; t_grid = t_grid + 1}
         # now pass to the output variable
         var1_out = tmp
 

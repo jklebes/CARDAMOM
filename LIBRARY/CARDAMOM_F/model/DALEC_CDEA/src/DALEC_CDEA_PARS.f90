@@ -72,7 +72,7 @@ module MODEL_PARAMETERS
     PI%parmax(9)=0.001
 
     ! Temp factor* = Q10 = 1.2-1.6
-    PI%parmin(10)=0.018
+    PI%parmin(10)=0.019
     PI%parmax(10)=0.08
 
     ! Canopy Efficiency

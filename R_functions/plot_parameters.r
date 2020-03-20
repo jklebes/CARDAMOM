@@ -18,7 +18,7 @@ plot_parameters<- function(PROJECT,parameters,converged,n) {
 
       jpeg(file=paste(PROJECT$figpath,"random_walk_of_parameters_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=400, quality=100)
       if (PROJECT$parameter_type == "pft_specific" & PROJECT$ctessel_pft[n] == 1) {
-	  par(mfrow=c(7,7),mar=c(5, 4, 4, 2), oma=c(0,0,1,0))
+	  par(mfrow=c(7,7),mar=c(3, 3, 3, 1), oma=c(0,0,1,0))
       } else if (PROJECT$model$name == "ACM") {
 	  par(mfrow=c(5,6),mar=c(5, 4, 4, 2), oma=c(0,0,1,0))
       } else if (PROJECT$model$name == "DALEC_GSI_DBio_FR") {
@@ -30,7 +30,7 @@ plot_parameters<- function(PROJECT,parameters,converged,n) {
       } else if (PROJECT$model$name == "DALECN_GSI_DFOL_LABILE_FROOT_FR") {
 	  par(mfrow=c(8,8),mar=c(3, 1.5, 1, 1), oma=c(0,0,1,0))
       } else {
-	  par(mfrow=c(7,7),mar=c(5, 4, 4, 2), oma=c(0,0,1,0))
+	  par(mfrow=c(7,7),mar=c(2.4, 3, 3.75, 1), oma=c(0,0,1,0))
       }
       for (i in seq(1,dim(parameters)[1])) {
 	  plot(as.vector(parameters[i,,]), main=par_names[i],cex.lab=1.4, cex.axis=1.4, cex.main=1.4, ylab="", xlab="")
@@ -42,7 +42,7 @@ plot_parameters<- function(PROJECT,parameters,converged,n) {
 
       jpeg(file=paste(PROJECT$figpath,"/histogram_of_parameters_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=400, quality=100)
       if (PROJECT$parameter_type == "pft_specific" & PROJECT$ctessel_pft[n] == 1) {
-	  par(mfrow=c(7,7),mar=c(5, 4, 4, 2), oma=c(0,0,1,0))
+	  par(mfrow=c(7,7),mar=c(3, 3, 3, 1), oma=c(0,0,1,0))
       } else if (PROJECT$model$name == "ACM") {
 	  par(mfrow=c(5,6),mar=c(5, 4, 4, 2), oma=c(0,0,1,0))
       } else if (PROJECT$model$name == "DALEC_GSI_DBio_FR") {
@@ -54,7 +54,7 @@ plot_parameters<- function(PROJECT,parameters,converged,n) {
       } else if (PROJECT$model$name == "DALECN_GSI_DFOL_LABILE_FROOT_FR") {
 	  par(mfrow=c(8,8),mar=c(3, 1.5, 1, 1), oma=c(0,0,1,0))
       } else {
-	  par(mfrow=c(7,7),mar=c(5, 4, 4, 2), oma=c(0,0,1,0))
+	  par(mfrow=c(7,7),mar=c(2.4, 3, 3.75, 1), oma=c(0,0,1,0))
       }
       for (i in seq(1,dim(parameters)[1])) {
 	  hist(as.vector(parameters[i,,]), main=par_names[i], cex.lab=1.4, cex.axis=1.4, cex.main=1.4, ylab="", xlab="")

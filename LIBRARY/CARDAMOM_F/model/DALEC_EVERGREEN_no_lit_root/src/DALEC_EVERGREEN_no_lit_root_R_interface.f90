@@ -1,6 +1,7 @@
 
 
-subroutine rdalecevergreennolitroot(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat,nopars,nomet &
+subroutine rdalecevergreennolitroot(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,out_var2,out_var3,out_var4 & 
+                                   ,lat,nopars,nomet &
                                    ,nofluxes,nopools,pft,pft_specific,nodays,deltat &
                                    ,nos_iter)
 
@@ -15,6 +16,8 @@ subroutine rdalecevergreennolitroot(output_dim,aNPP_dim,met,pars,out_var,out_var
                         ,pft            & ! plant functional type
                         ,output_dim     & !
                         ,aNPP_dim       & ! NPP allocation fraction variable dimension
+                        ,MTT_dim        &
+                        ,SS_dim         &
                         ,pft_specific   & !
                         ,nos_iter       & !
                         ,nomet          & ! number of meteorological fields
@@ -30,6 +33,8 @@ subroutine rdalecevergreennolitroot(output_dim,aNPP_dim,met,pars,out_var,out_var
   ! output declaration
   double precision, intent(out), dimension(nos_iter,nodays,output_dim) :: out_var
   double precision, intent(out), dimension(nos_iter,aNPP_dim) :: out_var2
+  double precision, intent(out), dimension(nos_iter,MTT_dim) :: out_var3
+  double precision, intent(out), dimension(nos_iter,SS_dim) :: out_var4
 
   ! local variables
   ! vector of ecosystem pools
@@ -92,15 +97,30 @@ subroutine rdalecevergreennolitroot(output_dim,aNPP_dim,met,pars,out_var,out_var
      airt_adj = sum(met(3,1:nodays)) / dble(nodays)
      airt_adj = exp(pars(6,i)*airt_adj)
      out_var2(i,1) = sum(FLUXES(1:nodays,4)) / sumNPP ! foliar
-     out_var2(i,2) = sum(FLUXES(1:nodays,6)) / sumNPP ! wood + root
-     out_var2(i,3) = 0d0
-     out_var2(i,4) = pars(3,i) ! leaf life span (years)
-     out_var2(i,5) = (pars(4,i)*365.25d0) ** (-1d0) ! wood+root residence time (years)
-     out_var2(i,6) = 0d0
-     out_var2(i,7) = (pars(5,i) * 365.25d0 * airt_adj) ** (-1d0) ! som
-     out_var2(i,8) = 0d0
+     out_var2(i,2) = 0d0
+     out_var2(i,3) = sum(FLUXES(1:nodays,6)) / sumNPP ! wood + root
+     ! Mean transit time
+     out_var3(i,1) = pars(3,i) ! leaf life span (years)
+     out_var3(i,2) = 0d0
+     out_var3(i,3) = (pars(4,i)*365.25d0) ** (-1d0) ! wood+root residence time (years)
+     out_var3(i,4) = 0d0
+     out_var3(i,5) = (pars(5,i) * 365.25d0 * airt_adj) ** (-1d0) ! som
+
+     ! Calculate the mean inputs to each pool, needed for steady state calculation
+     out_var4(i,1) = sum(FLUXES(1:nodays,4)) ! fol
+     out_var4(i,2) = 0d0
+     out_var4(i,3) = sum(FLUXES(1:nodays,6)) ! wood
+     out_var4(i,4) = 0d0
+     out_var4(i,5) = sum(FLUXES(1:nodays,10)+FLUXES(1:nodays,11))! som
 
   end do ! nos_iter loop
+
+  ! Steady state gC/m2
+  out_var4 = (out_var4 / dble(nodays)) * 365.25d0 ! convert to daily mean input
+  out_var4 = out_var4 * out_var3     ! multiply by residence time in years
+
+  ! NaN correction
+  out_var4(:,2) = 0d0 ; out_var4(:,4) = 0d0
 
   ! deallocate harvested variable
   deallocate(extracted_C)

@@ -1,6 +1,7 @@
 
 
-subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
+subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,out_var2,out_var3,out_var4 &
+                             ,lat &
                              ,nopars,nomet,nofluxes,nopools,pft,pft_specific &
                              ,nodays,deltat,nos_iter,exepath,pathlength)
 
@@ -49,6 +50,8 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat 
   integer, intent(in) :: nopars         & ! number of paremeters in vector
                         ,output_dim     & !
                         ,aNPP_dim       & ! NPP allocation fraction variable dimension
+                        ,MTT_dim        &
+                        ,SS_dim         &
                         ,pft            & ! plant functional type
                         ,pft_specific   & !
                         ,nos_iter       & !
@@ -66,6 +69,8 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat 
   ! output declaration
   double precision, intent(out), dimension(nos_iter,nodays,output_dim) :: out_var
   double precision, intent(out), dimension(nos_iter,aNPP_dim) :: out_var2
+  double precision, intent(out), dimension(nos_iter,MTT_dim) :: out_var3
+  double precision, intent(out), dimension(nos_iter,SS_dim) :: out_var4
 
   ! local variables
   integer i, j
@@ -158,12 +163,15 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat 
         out_var(i,1:nodays,16) = 0d0 ! GSI photoperiod component
         out_var(i,1:nodays,17) = 0d0 ! GSI vpd component
      else
+!        out_var(i,1:nodays,14) = (sum(FLUXES(:,7)) / sum(FLUXES(:,11)+FLUXES(:,25))) &
+!                               * (sum(POOLS(:,4)) / dble(nodays))
+!        out_var(i,1:nodays,14) = ((out_var(i,1:nodays,14) - 8000d0) / 250d0) ** 2
         out_var(i,1:nodays,14) = FLUXES(1:nodays,18) ! GSI value
-        out_var(i,1:nodays,15) = itemp(1:nodays) ! GSI temp component
-        out_var(i,1:nodays,16) = iphoto(1:nodays) ! GSI photoperiod component
-        out_var(i,1:nodays,17) = ivpd(1:nodays) ! GSI vpd component
+        out_var(i,1:nodays,15) = itemp(1:nodays)     ! GSI temp component
+        out_var(i,1:nodays,16) = iphoto(1:nodays)    ! GSI photoperiod component
+        out_var(i,1:nodays,17) = ivpd(1:nodays)      ! GSI vpd component
      endif
-     out_var(i,1:nodays,18) = POOLS(1:nodays,7) ! CWD or Cauto if crop
+     out_var(i,1:nodays,18) = POOLS(1:nodays,7)   ! CWD or Cauto if crop
      out_var(i,1:nodays,19) = FLUXES(1:nodays,17) ! Fire
 
      !!!
@@ -175,32 +183,48 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat 
      sumNPP = 1d0 / (sum(FLUXES(1:nodays,1))*(1d0-fauto)) ! GPP * (1-Ra) fraction
 !     out_var2(i,1) = sum(FLUXES(1:nodays,4)+FLUXES(1:nodays,8)) * sumNPP ! foliar
      out_var2(i,1) = sum(FLUXES(1:nodays,5)) * sumNPP ! foliar+labile
-     out_var2(i,2) = sum(FLUXES(1:nodays,7)) * sumNPP ! wood
-     out_var2(i,3) = sum(FLUXES(1:nodays,6)) * sumNPP ! fine root
+     out_var2(i,2) = sum(FLUXES(1:nodays,6)) * sumNPP ! fine root
+     out_var2(i,3) = sum(FLUXES(1:nodays,7)) * sumNPP ! wood
 
-     !!!
-     ! now some residence times (years)
-     !!!
-
+     ! Estimate residence times (years) and begin calculation of steady state attractor
+     hak = 0
      if (pft == 1) then
+
+         !
+         ! Residence time
+         !
+
          ! foliage crop system residence time is due to managment < 1 year
-         out_var2(i,4) = 1/365.25d0
-         ! wood crop system residence time is due to managment < 1 year
-         out_var2(i,5) = 1/365.25d0
+         out_var3(i,1) = 1/365.25
          ! roots crop system residence time is due to managment < 1 year
-         out_var2(i,6) = 1/365.25d0
+         out_var3(i,2) = 1/365.25
+         ! wood crop system residence time is due to managment < 1 year
+         out_var3(i,3) = 1/365.25
          ! cwd+litter / litter
          resid_fol(1:nodays)   = (FLUXES(1:nodays,13)+FLUXES(1:nodays,15))
          resid_fol(1:nodays)   = resid_fol(1:nodays) &
                                / POOLS(1:nodays,5)
          ! division by zero results in NaN plus obviously I can't have turned
          ! anything over if there was nothing to start out with...
-         hak = 0
-         where ( POOLS(1:nodays,5) == 0d0 )
+         where ( POOLS(1:nodays,5) == 0 )
                 hak = 1 ; resid_fol(1:nodays) = 0d0
          end where
-         out_var2(i,8) = sum(resid_fol) / dble(nodays)
+         out_var3(i,4) = sum(resid_fol) / dble(nodays)
+
+         ! 
+         ! Estimate pool inputs needed for steady state calculation
+         !
+
+         out_var4(i,1) = 0d0 ! fol
+         out_var4(i,2) = 0d0 ! root
+         out_var4(i,3) = 0d0 ! wood
+         out_var4(i,4) = 0d0 ! lit
+
      else
+
+         !
+         ! Residence times
+         !
 
          hak = 0
          ! foliage
@@ -211,19 +235,7 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat 
          where ( POOLS(1:nodays,2) == 0 )
                 hak = 1 ; resid_fol(1:nodays) = 0d0
          end where
-         out_var2(i,4) = sum(resid_fol) / dble(nodays-sum(hak))
-
-         ! wood
-         hak = 0
-         resid_fol(1:nodays)   = FLUXES(1:nodays,11)+FLUXES(1:nodays,25)
-         resid_fol(1:nodays)   = resid_fol(1:nodays) &
-                               / POOLS(1:nodays,4)
-         ! division by zero results in NaN plus obviously I can't have turned
-         ! anything over if there was nothing to start out with...
-         where ( POOLS(1:nodays,4) == 0 )
-                hak = 1 ; resid_fol(1:nodays) = 0d0
-         end where
-         out_var2(i,5) = sum(resid_fol) /dble(nodays-sum(hak))
+         out_var3(i,1) = sum(resid_fol) / dble(nodays-sum(hak))
 
          ! roots
          hak = 0
@@ -235,7 +247,19 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat 
          where ( POOLS(1:nodays,3) == 0 )
                 hak = 1 ; resid_fol(1:nodays) = 0d0
          end where
-         out_var2(i,6) = sum(resid_fol) /dble(nodays-sum(hak))
+         out_var3(i,2) = sum(resid_fol) /dble(nodays-sum(hak))
+
+         ! wood
+         hak = 0
+         resid_fol(1:nodays)   = FLUXES(1:nodays,11)+FLUXES(1:nodays,25)
+         resid_fol(1:nodays)   = resid_fol(1:nodays) &
+                               / POOLS(1:nodays,4)
+         ! division by zero results in NaN plus obviously I can't have turned
+         ! anything over if there was nothing to start out with...
+         where ( POOLS(1:nodays,4) == 0 )
+                hak = 1 ; resid_fol(1:nodays) = 0d0
+         end where
+         out_var3(i,3) = sum(resid_fol) /dble(nodays-sum(hak))
 
          ! litter + cwd
          resid_fol(1:nodays)   = FLUXES(1:nodays,13)+FLUXES(1:nodays,15) &
@@ -243,24 +267,42 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat 
                                  +disturbance_Loss_from_litter+disturbance_loss_from_cwd
          resid_fol(1:nodays)   = resid_fol(1:nodays) &
                                / (POOLS(1:nodays,5)+POOLS(1:nodays,7))
-         out_var2(i,8) = sum(resid_fol) / dble(nodays)
+         out_var3(i,4) = sum(resid_fol) / dble(nodays)
+
+         ! 
+         ! Estimate pool inputs needed for steady state calculation
+         !
+
+         out_var4(i,1) = sum(FLUXES(:,8)) ! Foliage
+         out_var4(i,2) = sum(FLUXES(:,6)) ! Fine root
+         out_var4(i,3) = sum(FLUXES(:,7)) ! Wood
+         out_var4(i,4) = sum(FLUXES(:,10)+FLUXES(:,11)+FLUXES(:,12)+ &
+                             disturbance_residue_to_litter+disturbance_residue_to_cwd) ! lit + litwood
 
      endif ! crop / default model split
 
-     ! Csom
+     ! Csom - residence time
      resid_fol(1:nodays)   = FLUXES(1:nodays,14) + disturbance_loss_from_som
      resid_fol(1:nodays)   = resid_fol(1:nodays) &
                            / POOLS(1:nodays,6)
-     out_var2(i,7) = sum(resid_fol) /dble(nodays)
+     out_var3(i,5) = sum(resid_fol) /dble(nodays)
+
+     ! Csom - pool inputs needed for steady state calculation
+     out_var4(i,5) = sum(FLUXES(:,15)+FLUXES(:,20)+disturbance_residue_to_som) ! som
 
   end do ! nos_iter loop
 
-  ! moving this out of the loop to calculate fractions to years residence times
-  out_var2(1:nos_iter,4) = 1d0 / (out_var2(1:nos_iter,4)*365.25d0) ! fol
-  out_var2(1:nos_iter,5) = 1d0 / (out_var2(1:nos_iter,5)*365.25d0) ! wood
-  out_var2(1:nos_iter,6) = 1d0 / (out_var2(1:nos_iter,6)*365.25d0) ! root
-  out_var2(1:nos_iter,7) = 1d0 / (out_var2(1:nos_iter,7)*365.25d0) ! som
-  out_var2(1:nos_iter,8) = 1d0 / (out_var2(1:nos_iter,8)*365.25d0) ! CWD + Litter
+  ! MTT - Convert daily fractional loss to years 
+  out_var3 = (out_var3*365.25d0)**(-1d0) ! iter,(fol,root,wood,lit+litwood,som)
+!  out_var3(1:nos_iter,1) = (out_var3(1:nos_iter,1)*365.25d0)**(-1d0) ! fol
+!  out_var3(1:nos_iter,2) = (out_var3(1:nos_iter,2)*365.25d0)**(-1d0) ! root
+!  out_var3(1:nos_iter,3) = (out_var3(1:nos_iter,3)*365.25d0)**(-1d0) ! wood
+!  out_var3(1:nos_iter,4) = (out_var3(1:nos_iter,4)*365.25d0)**(-1d0) ! CWD + Litter
+!  out_var3(1:nos_iter,5) = (out_var3(1:nos_iter,5)*365.25d0)**(-1d0) ! som
+
+  ! Steady state gC/m2
+  out_var4 = (out_var4 / dble(nodays)) * 365.25d0 ! convert to daily mean input
+  out_var4 = out_var4 * out_var3     ! multiply by residence time in years
 
   ! deallocate harvested variable
   deallocate(itemp,ivpd,iphoto)

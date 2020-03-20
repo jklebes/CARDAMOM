@@ -465,6 +465,7 @@ double precision :: Creturn_canopy,Creturn_investment
                 ,Tfac_range_1 &
             ,Photofac_range_1 &
               ,VPDfac_range_1 &
+                         ,fSm &
                      ,deltaWP & ! deltaWP (MPa) minlwp-soilWP
                         ,Rtot & ! Total hydraulic resistance (MPa.s-1.m-2.mmol-1)
                ,transpiration &
@@ -1162,15 +1163,16 @@ double precision :: Creturn_canopy,Creturn_investment
        !
 
        ! turnover of litter
-       tmp = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))*deltat_1(n)
+       fSm = 1d0!0.25d0 + 0.75d0 * soil_waterfrac(1)
+       tmp = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8)*fSm)**deltat(n))*deltat_1(n)
        ! respiration heterotrophic litter ; decomposition of litter to som
        FLUXES(n,13) = tmp * (1d0-pars(1)) ; FLUXES(n,15) = tmp * pars(1)
 
        ! respiration heterotrophic som
-       FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9))**deltat(n))*deltat_1(n)
+       FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9)*fSm)**deltat(n))*deltat_1(n)
 
        ! respiration heterotrophic cwd ; decomposition of CWD to som
-       tmp = POOLS(n,7)*(1d0-(1d0-FLUXES(n,2)*pars(38))**deltat(n))*deltat_1(n)
+       tmp = POOLS(n,7)*(1d0-(1d0-FLUXES(n,2)*pars(38)*fSm)**deltat(n))*deltat_1(n)
        FLUXES(n,4) = tmp * (1d0-pars(1)) ; FLUXES(n,20) = tmp * pars(1)
 
        !!!!!!!!!!
@@ -1206,18 +1208,18 @@ double precision :: Creturn_canopy,Creturn_investment
        POOLS(n+1,1) = POOLS(n,1) + ((FLUXES(n,5)-FLUXES(n,8)-Rg_from_labile(n)-Rm_from_labile(n))*deltat(n))
        ! foliar pool
        POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,8)-FLUXES(n,10))*deltat(n)
-       ! wood pool
-       POOLS(n+1,4) = POOLS(n,4) + (FLUXES(n,7)-FLUXES(n,11))*deltat(n)
        ! root pool
        POOLS(n+1,3) = POOLS(n,3) + (FLUXES(n,6)-FLUXES(n,12))*deltat(n)
+       ! wood pool
+       POOLS(n+1,4) = POOLS(n,4) + (FLUXES(n,7)-FLUXES(n,11))*deltat(n)
        ! litter pool
        POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
        ! som pool
-!       POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)+FLUXES(n,20)-FLUXES(n,14))*deltat(n)
-       POOLS(n+1,6) = POOLS(n,6) + ((FLUXES(n,11)*pars(29))+FLUXES(n,15)+FLUXES(n,20)-FLUXES(n,14))*deltat(n)
-       ! cwd pool
-!       POOLS(n+1,7) = POOLS(n,7) + (FLUXES(n,11)-FLUXES(n,20)-FLUXES(n,4))*deltat(n)
-       POOLS(n+1,7) = POOLS(n,7) + ((FLUXES(n,11)*(1d0-pars(29)))-FLUXES(n,20)-FLUXES(n,4))*deltat(n)
+       POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)+FLUXES(n,20)-FLUXES(n,14))*deltat(n)
+!       POOLS(n+1,6) = POOLS(n,6) + ((FLUXES(n,11)*pars(29))+FLUXES(n,15)+FLUXES(n,20)-FLUXES(n,14))*deltat(n)
+       ! litter wood pool
+       POOLS(n+1,7) = POOLS(n,7) + (FLUXES(n,11)-FLUXES(n,20)-FLUXES(n,4))*deltat(n)
+!       POOLS(n+1,7) = POOLS(n,7) + ((FLUXES(n,11)*(1d0-pars(29)))-FLUXES(n,20)-FLUXES(n,4))*deltat(n)
 
        !!!!!!!!!!
        ! Update soil water balance
@@ -1587,90 +1589,6 @@ double precision :: Creturn_canopy,Creturn_investment
     return
 
   end function acm_gpp_stage_2
-  !
-  !------------------------------------------------------------------
-  !
-!  double precision function acm_gpp(gs)
-!
-!    ! the Aggregated Canopy Model, is a Gross Primary Productivity (i.e.
-!    ! Photosyntheis) emulator which operates at a daily time step. ACM can be
-!    ! paramaterised to provide reasonable results for most ecosystems.
-!
-!    implicit none
-!
-!    ! declare input variables
-!    double precision, intent(in) :: gs
-!
-!    ! declare local variables
-!    double precision :: pn, pd, pp, qq, ci, mult, pl &
-!                       ,gc ,gs_mol, gb_mol
-!
-!!    ! Temperature adjustments for Michaelis-Menten coefficients
-!!    ! for CO2 (kc) and O2 (ko) and CO2 compensation point
-!!    ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
-!!    co2_half_sat   = arrhenious(kc_saturation,kc_half_sat_conc,leafT)
-!!    co2_comp_point = arrhenious(co2comp_saturation,co2comp_half_sat_conc,leafT)
-!
-!    !
-!    ! Metabolic limited photosynthesis
-!    !
-!
-!    ! maximum rate of temperature and nitrogen (canopy efficiency) limited
-!    ! photosynthesis (gC.m-2.day-1)
-!    !pn = lai*avN*NUE*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
-!    pn = lai*ceff*pn_airt_scaling
-!
-!    !
-!    ! Diffusion limited photosynthesis
-!    !
-!
-!    ! daily canopy conductance (mmolH2O.m-2.s-1-> molCO2.m-2.day-1)
-!    ! The ratio of H20:CO2 diffusion is 1.646259 (Jones appendix 2).
-!    ! i.e. gcH2O*1.646259 = gcCO2
-!    gs_mol = gs * seconds_per_day * gs_H2Ommol_CO2mol
-!    ! canopy level boundary layer conductance unit change
-!    ! (m.s-1 -> mol.m-2.day-1) assuming sea surface pressure only.
-!    ! Note the ratio of H20:CO2 diffusion through leaf level boundary layer is
-!    ! 1.37 (Jones appendix 2).
-!    gb_mol = aerodynamic_conductance * seconds_per_day * convert_ms1_mol_1 * gb_H2O_CO2
-!    ! Combining in series the stomatal and boundary layer conductances
-!    gc = (gs_mol ** (-1d0) + gb_mol ** (-1d0)) ** (-1d0)
-!
-!    ! pp and qq represent limitation by metabolic (temperature & N) and
-!    ! diffusion (co2 supply) respectively
-!    pp = (pn*gC_to_umol)/gc ; qq = co2_comp_point-co2_half_sat
-!    ! calculate internal CO2 concentration (ppm or umol/mol)
-!    mult = co2+qq-pp
-!    ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
-!    !ci = min(ci,co2) ! C3 can't have more CO2 than is in the atmosphere
-!    ci_global = ci
-!    ! calculate CO2 limited rate of photosynthesis (gC.m-2.day-1)
-!    pd = (gc * (co2-ci)) * umol_to_gC
-!    ! scale to day light period as this is then consistent with the light
-!    ! capture period (1/24 = 0.04166667)
-!    pd = pd * dayl_hours_fraction
-!
-!    !
-!    ! Light limited photosynthesis
-!    !
-!
-!    ! calculate light limted rate of photosynthesis (gC.m-2.day-1)
-!    pl = e0 * canopy_par_MJday
-!
-!    !
-!    ! CO2 and light co-limitation
-!    !
-!
-!    ! calculate combined light and CO2 limited photosynthesis
-!    acm_gpp = pl*pd/(pl+pd)
-!
-!    ! sanity check
-!    if (acm_gpp /= acm_gpp .or. acm_gpp < 0d0) acm_gpp = 0d0
-!
-!    ! don't forget to return
-!    return
-!
-!  end function acm_gpp
   !
   !----------------------------------------------------------------------
   !
@@ -3600,7 +3518,8 @@ double precision :: Creturn_canopy,Creturn_investment
                        ,deltaGPP &
                         ,deltaRm &
                        ,C_invest &
-                         ,NCE_LL &
+                            ,NCE &
+                          ,iwswp &
                        ,lai_save &
                  ,canopy_lw_save &
                  ,canopy_sw_save &
@@ -3663,18 +3582,29 @@ double precision :: Creturn_canopy,Creturn_investment
     leaf_fall = 0d0   ! leaf turnover
     leaf_growth = 0d0 ! leaf growth
 
+    ! Estimate current NCE
+    NCE = GPP_current - (Rm_leaf_per_gC * foliage)
+
     ! Reset marginal return variables
     deltaGPP = 0d0 ; deltaRm = 0d0 ; deltaNCE = 0d0
     Creturn_canopy = 0d0 ; Creturn_investment = 0d0            ! Marginal return
 
     ! Everything else in here was needed to keep track of GSI values but
-    ! ultimately if there is not labile available no growth can occur
+    ! ultimately if there is not labile available no growth can occur.
+    ! NOTE: that th gradient restriction makes sense as the plant knows
+    ! something about the trend in its environment, i.e. if it is improving and
+    ! economic growth if it is economic but declining it might quickly become no
+    ! longer economic!
     if (gradient > fol_turn_crit .and. deltaWP < 0d0 .and. avail_labile > 0d0) then
+
+!        iwswp =  min(1d0,max(0d0,(wSWP-minlwp) / (0.001d0 - minlwp))) ! 0.001 = field capacity (MPa)
 
         ! Estimate approximate the potential leaf area increment
         ! using the Reich maintence respiration Q10 as proxy for potential
         ! metabolic activity
 !        leaf_growth = pot_leaf_growth*Q10_adjustment(n)
+!        leaf_growth = pot_leaf_growth*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT) &
+!                    * iwswp
         leaf_growth = pot_leaf_growth*GSI(current_step)
         ! calculate potential C allocation to leaves
         tmp = avail_labile * &
@@ -3704,7 +3634,7 @@ double precision :: Creturn_canopy,Creturn_investment
 
         ! Estimate the change in net carbon export by the canopy per day,
         ! then scale by leaf lifespan (days) and substract the initial investment cost
-        ! i.e. gC/m2/LL/gCinvest
+        ! i.e. gCLL/m2/gCinvest
         deltaNCE = (((deltaGPP - deltaRm) * leaf_life) - C_invest) / C_invest
         ! Is the marginal return for GPP (over the mean life of leaves)
         ! less than increase in maintenance respiration and C required
@@ -3715,6 +3645,14 @@ double precision :: Creturn_canopy,Creturn_investment
 
     if (avail_labile < vsmall) then
 
+        ! We want to lose a chunk of leaf quickly!
+        leaf_fall = leaf_fall + pot_leaf_fall
+
+    else if (NCE < 0d0) then
+
+        ! We are not currently growing and the net canopy export of C is
+        ! negative (i.e. leaves are costing more to keep than they generate)
+        
         ! We want to lose a chunk of leaf quickly!
         leaf_fall = leaf_fall + pot_leaf_fall
 

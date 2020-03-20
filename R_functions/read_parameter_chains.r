@@ -33,7 +33,7 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
   # load the fraction of samples to lose
   frac = as.numeric(PROJECT_in$latter_sample_frac)
   # calculate the number of parameter vectors this is
-  par_vector_length = 100#as.integer(PROJECT_in$nsubsamples*(1-frac))
+  par_vector_length = 100
   # which site are we on now
   print("Beginning parameter extraction and chain merge")
   print(paste("Site = ",PROJECT_in$sites[n]," ",n," of ",PROJECT_in$nosites," ",Sys.time(),sep=""))
@@ -44,61 +44,61 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
   param_sets_out = array(NA,dim=c((PROJECT_in$model$nopars[n]+1),par_vector_length,length(chains)))
   # loop through each chain
   for (c in seq(1,length(chains))) {
-    print(paste("...chain ",c," of ",length(chains),sep=""))
-    # open this chains binary file into R, instructing 'r' to read and 'b' for binary
-    bob = file(paste(pfile[c],sep=""),'rb') ; nos_var = 1e6
-    set1 = readBin(bob, double(),nos_var) ; temp = 0
-    # keep reading until we have read all that can be read
-    while (length(temp) > 0) {
-      temp = readBin(bob, double(),nos_var)
-      set1 = append(set1,temp)
-    }
-    # now close this chain
-    close(bob)
-    # re-arrange into correct structure
-    param_sets = array(set1,dim=c((PROJECT_in$model$nopars[n]+1),(length(set1)/(PROJECT_in$model$nopars[n]+1))))
-    set1 = 0 ; rm(set1)
+       print(paste("...chain ",c," of ",length(chains),sep=""))
+       # open this chains binary file into R, instructing 'r' to read and 'b' for binary
+       bob = file(paste(pfile[c],sep=""),'rb') ; nos_var = 1e6
+       set1 = readBin(bob, double(),nos_var) ; temp = 0
+       # keep reading until we have read all that can be read
+       while (length(temp) > 0) {
+          temp = readBin(bob, double(),nos_var)
+          set1 = append(set1,temp)
+       }
+       # now close this chain
+       close(bob)
 
-    # check for inconsistencies
-    if (dim(param_sets)[2] > PROJECT_in$nsubsamples) {
-      print('*************************************************************')
-      print(paste('Warning! Too many parameter vectors in ',pfile[c],sep=""))
-      print('*************************************************************')
-      print('Likely cause is appended solutions in previously existing file')
-      print(paste('To solve this, only the last ',PROJECT_in$nsubsamples,' will be used',sep=""))
-      # keep only the end of the parameter sets
-      param_sets = param_sets[,((dim(param_sets)[2]-PROJECT_in$nsubsamples):dim(param_sets)[2])]
-      status[c] = 2
-    } else if (dim(param_sets)[2] < PROJECT_in$nsubsamples) {
-      print('*************************************************************')
-      print(paste('Warning! Missing parameter vectors in ',pfile[c],sep=""))
-      print('*************************************************************')
-      print('Likely cause is incomplete chain: it may have been stopped by ECDF, or')
-      print('MCMC chain got stuck (happens sometimes). This may also result as an')
-      print('inconsistency between requested number of samples vs PROJECT$nsubsamples')
-      print('CONSIDER DELETING (or re-running) THIS CHAIN!!')
-      print('Likely error will occur next!')
-      status[c] = 1
-    } else {
-      status[c] = 0
-    }
+       # re-arrange into correct structure
+       param_sets = array(set1,dim=c((PROJECT_in$model$nopars[n]+1),(length(set1)/(PROJECT_in$model$nopars[n]+1))))
+       set1 = 0 ; rm(set1)
 
-    # keep only the latter fraction
-    #param_sets=param_sets[,((((dim(param_sets)[2]*(1-frac))+1)):dim(param_sets)[2])]
-    param_sets = param_sets[,(((dim(param_sets)[2]-par_vector_length)+1):dim(param_sets)[2])]
-    # add these output to the final output variable
-    param_sets_out[1:(PROJECT_in$model$nopars[n]+1),,c]=param_sets
-    # clean up
-    param_sets = 0 ; rm(param_sets)
+       # check for inconsistencies
+       if (dim(param_sets)[2] > PROJECT_in$nsubsamples) {
+           print('*************************************************************')
+           print(paste('Warning! Too many parameter vectors in ',pfile[c],sep=""))
+           print('*************************************************************')
+           print('Likely cause is appended solutions in previously existing file')
+           print(paste('To solve this, only the last ',PROJECT_in$nsubsamples,' will be used',sep=""))
+           # keep only the end of the parameter sets
+           param_sets = param_sets[,((dim(param_sets)[2]-PROJECT_in$nsubsamples):dim(param_sets)[2])]
+           status[c] = 2
+       } else if (dim(param_sets)[2] < PROJECT_in$nsubsamples) {
+           print('*************************************************************')
+           print(paste('Warning! Missing parameter vectors in ',pfile[c],sep=""))
+           print('*************************************************************')
+           print('Likely cause is incomplete chain: it may have been stopped by ECDF, or')
+           print('MCMC chain got stuck (happens sometimes). This may also result as an')
+           print('inconsistency between requested number of samples vs PROJECT$nsubsamples')
+           print('CONSIDER DELETING (or re-running) THIS CHAIN!!')
+           print('Likely error will occur next!')
+           status[c] = 1
+       } else {
+           status[c] = 0
+       }
+
+       # keep a sample form the end of the chain
+       param_sets = param_sets[,(((dim(param_sets)[2]-par_vector_length)+1):dim(param_sets)[2])]
+       # add these output to the final output variable
+       param_sets_out[1:(PROJECT_in$model$nopars[n]+1),,c]=param_sets
+       # clean up
+       param_sets = 0 ; rm(param_sets)
 
   } # end of chains loop
 
   if (PROJECT_in$model$name == "DALEC_CDEA" || PROJECT_in$model$name == "DALEC_CDEA_LU_FIRES" || 
-      PROJECT_in$model$name == "DALEC_CDEA_ACM2") {
-    param_sets_out[c(12,15),,] = ((param_sets_out[c(12,15),,]-1)%%365.25)+1
+      PROJECT_in$model$name == "DALEC_CDEA_ACM2" || PROJECT_in$model$name == "DALEC_CDEA_ACM2_BUCKET") {
+      param_sets_out[c(12,15),,] = ((param_sets_out[c(12,15),,]-1)%%365.25)+1
   }
   if (PROJECT_in$model$name == "DALEC_CDEA_no_lit_root") {
-    param_sets_out[c(8,11),,] = ((param_sets_out[c(8,11),,]-1)%%365.25)+1
+      param_sets_out[c(8,11),,] = ((param_sets_out[c(8,11),,]-1)%%365.25)+1
   }
 
   # return the parameter solutions

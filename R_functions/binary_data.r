@@ -63,6 +63,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     modelid = 25
   } else if (modelname == "DALEC") {
     modelid = 26
+  } else if (modelname == "DALEC_CDEA_ACM2_BUCKET") {
+    modelid = 27
   }
 
   # some drivers may be passed as single values assuming this will apply across the whole time series
@@ -80,7 +82,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   }
 
   MET[,1] = met$run_day
-  MET[,2] = met$mint  ; if (min(met$mint) < -200) {stop('mint error in binary_data')} # Celcius
+  MET[,2] = met$mint  ; if (min(met$mint) < -200) {stop('mint error in binary_data') ; print(summary(met$mint))} # Celcius
   MET[,3] = met$maxt  ; if (min(met$maxt) < -200) {stop('maxt error in binary_data')} # Celcius
   MET[,4] = met$swrad ; if (min(met$swrad) < 0) {stop('RAD error in binary_data')} # MJ/m2/day
   MET[,5] = met$co2#+200 # ppm
@@ -181,10 +183,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   OTHERPRIORS = rep(-9999.0,length.out=100)
   OTHERPRIORUNC = rep(-9999.0,length.out=100)
 
-  #introducing some commonly used priors (assumes DALEC_CDEA default parameters)
-  #PARPRIORS(2)=0.5;PARPRIORUNC(2)=1.2;%P_AUTO
-  #PARPRIORS(10)=0.03;PARPRIORUNC(10)=1.25;%Temp_rate (Mahecha 2010)
-  #PARPRIORS(17)=70;PARPRIORUNC(17)=2;%LMA - Kattge 2011
+  # Assign model specific parameter priors
   if (modelname == "DALEC_CDEA" | modelname == "DALEC_CDEA_LU_FIRES") {
 #PARPRIORS[1] = 0.000326013819228502 ; PARPRIORUNC[1] = 0.000879399144451284
 #PARPRIORS[3] = 0.0729399487240177 ; PARPRIORUNC[3] = 0.0997395986670828
@@ -223,6 +222,18 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
       PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
       PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
+  } else if (modelname == "DALEC_CDEA_ACM2_BUCKET") {
+      PARPRIORS[2] =0.46                ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+      PARPRIORS[11]=23.44682            ; PARPRIORUNC[11]=8.534234 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+                                                                   #       Note that this prior is difference from DALEC_CDEA_LU_FIRES
+                                                                   # due to the different temperature response functions used in ACM2 vs ACM 1
+      PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
+      PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
+      PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+      PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+      PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
+      # Other priors
+      OTHERPRIORS[1] = OBS$soilwater ; OTHERPRIORS[1] = OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
   } else if (modelname == "DALEC_EVERGREEN") {
     PARPRIORS[2] = 0.46                 ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
     PARPRIORS[11] = 16.9                ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
@@ -298,6 +309,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
         PARPRIORS[36]=11.197440 ; PARPRIORUNC[36]=9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
         # other priors
         OTHERPRIORS[1] = 0.46   ; OTHERPRIORUNC[1] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+        # POSITION 2 used for water which does not apply here
+        OTHERPRIORS[3] = 27.295        ; OTHERPRIORUNC[3] = 11.03755 # Foliar C:N (gC/gN) prior derived from Kattge et al., (2011)
     } #  parameter_type
   } else if (modelname == "DALEC_GSI_DFOL_LABILE_FR") {
     PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.6 #1.617705 # Ceff
@@ -353,7 +366,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     } else {
       PARPRIORS[1]=0.5            ; PARPRIORUNC[1]=0.125 # fraction of litter decomposition to Csom
       PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
-      PARPRIORS[43]=275.1452      ; PARPRIORUNC[43]=296.2767 # Leaf lifespan prior form Kattge et al., 2011, based on log10 gauusian distribution
+#      PARPRIORS[43]=275.1452      ; PARPRIORUNC[43]=296.2767 # Leaf lifespan prior form Kattge et al., 2011, based on log10 gauusian distribution
       # other priors
       OTHERPRIORS[1] = 0.46          ; OTHERPRIORUNC[1] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
 #NOT IN USE      OTHERPRIORS[2] = OBS$soilwater ; OTHERPRIORS[2] = OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
@@ -374,7 +387,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     } else {
       PARPRIORS[1]=0.5            ; PARPRIORUNC[1]=0.125 # fraction of litter decomposition to Csom
       PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
-      PARPRIORS[43]=275.1452      ; PARPRIORUNC[43]=296.2767 # Leaf lifespan prior form Kattge et al., 2011, based on log10 gauusian distribution
+#      PARPRIORS[43]=275.1452      ; PARPRIORUNC[43]=296.2767 # Leaf lifespan prior form Kattge et al., 2011, based on log10 gauusian distribution
+      PARPRIORS[44]=0.5            ; PARPRIORUNC[44]=0.125 # fraction of wood litter decomposition to Csom
       # other priors
       OTHERPRIORS[1] = 0.46          ; OTHERPRIORUNC[1] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       OTHERPRIORS[2] = OBS$soilwater ; OTHERPRIORS[2] = OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
@@ -398,6 +412,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       # other priors
       OTHERPRIORS[1] = 0.46        ; OTHERPRIORUNC[1] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       OTHERPRIORS[2]=OBS$soilwater ; OTHERPRIORS[2]=OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
+      OTHERPRIORS[3] = 27.295        ; OTHERPRIORUNC[3] = 11.03755 # Foliar C:N (gC/gN) prior derived from Kattge et al., (2011)
     } # crop or not
   } else if (modelname == "DALECN_GSI_BUCKET") {
     PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
@@ -462,6 +477,17 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     # p(15) = Soil SW absorption (fraction)
     PARPRIORS[15] = 0.972 ; PARPRIORUNC[15] = 0.01
   }
+
+  # HACK: If file name contains specific COMPLEX experiment code 
+  # indicating the file should not have any observational constraint reset all
+#  if (grepl("exp1f",file) | grepl("exp2f",file) | grepl("exp3f",file) | grepl("exp4f",file)) {
+#      #ONLY USED FOR LOG NORMALLY PSERIBUTED PARAMETER PRIORS
+#      PARPRIORS = rep(-9999.0,length.out=100)
+#      PARPRIORUNC = rep(-9999.0,length.out=100)
+#      #For all other multiparameter user-defined priors
+#      OTHERPRIORS = rep(-9999.0,length.out=100)
+#      OTHERPRIORUNC = rep(-9999.0,length.out=100)
+#  }
 
   # combine the static data
   DATA_STAT = c(PARPRIORS,PARPRIORUNC,OTHERPRIORS,OTHERPRIORUNC)

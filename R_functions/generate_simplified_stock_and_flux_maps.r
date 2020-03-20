@@ -13,9 +13,9 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
   load(paste(infile))
   # read in the grid parameter information
   infile=paste(PROJECT$results_processedpath,PROJECT$name,"_parameter_maps.RData",sep="")
-  if (file.exists(infile) == FALSE & grepl("BUCKET",PROJECT$model$name)) {stop("parameter_maps for 'generate_simplified_stock_and_flux_maps' missing")} 
+  if (file.exists(infile) == FALSE & grepl("BUCKET",PROJECT$model$name)) {stop("parameter_maps for 'generate_simplified_stock_and_flux_maps' missing")}
   load(paste(infile))
-  
+
   # work out area matrix for the pixels in meters
   # include adjustment for g-> Tg (*1e-12)
   if (PROJECT$grid_type == "UK") {
@@ -64,41 +64,26 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
 
       jpeg(file=paste(PROJECT$figpath,"median_root_depth_maps_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.6), omi=c(0.2, 0.2, 0.2, 0.40))
-      root_biomass = (grid_output$mean_roots_gCm2[,,median_loc]+(grid_output$mean_wood_gCm2[,,median_loc]*par_array_median[,,29]))*2
-      mean_rooting_depth = par_array_median[,,40] * root_biomass / (par_array_median[,,39] + root_biomass)
+      root_biomass = (grid_output$mean_roots_gCm2[,,median_loc]+(grid_output$mean_wood_gCm2[,,median_loc]*grid_parameters$parameters[,,29,median_loc]))*2
+      mean_rooting_depth = grid_parameters$parameters[,,40,median_loc] * root_biomass / (grid_parameters$parameters[,,39,median_loc] + root_biomass)
       z_axis=c(min(as.vector(mean_rooting_depth),na.rm=TRUE),max(as.vector(mean_rooting_depth),na.rm=TRUE))
-      image.plot(mean_rooting_depth,col=colour_choices, main=paste("Median root depth (m)",sep=""),zlim=z_axis,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+      image.plot(mean_rooting_depth,col=colour_choices, main=paste("Median root depth (m)",sep=""),zlim=z_axis,axes=FALSE
+                ,cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
       contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
 
       jpeg(file=paste(PROJECT$figpath,"median_max_root_depth_maps_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.6), omi=c(0.2, 0.2, 0.2, 0.40))
-root_biomass = (grid_output$mean_roots_gCm2[,,median_loc]+(grid_output$mean_wood_gCm2[,,median_loc]*par_array_median[,,29]))*2
-      mean_rooting_depth = par_array_median[,,40] * (grid_output$annual_max_roots_gCm2[,,median_loc]*2) / (par_array_median[,,39] + (grid_output$annual_max_roots_gCm2[,,median_loc]*2))
+      root_biomass = (grid_output$mean_roots_gCm2[,,median_loc]+(grid_output$mean_wood_gCm2[,,median_loc]*grid_parameters$parameters[,,29,median_loc]))*2
+      mean_rooting_depth = ( grid_parameters$parameters[,,40,median_loc] * (grid_output$annual_max_roots_gCm2[,,median_loc]*2)
+                           / (grid_parameters$parameters[,,39,median_loc] + (grid_output$annual_max_roots_gCm2[,,median_loc]*2)) )
       z_axis=c(min(as.vector(mean_rooting_depth),na.rm=TRUE),max(as.vector(mean_rooting_depth),na.rm=TRUE))
-      image.plot(mean_rooting_depth,col=colour_choices, main=paste("Annual max root depth (m)",sep=""),zlim=z_axis,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+      image.plot(mean_rooting_depth,col=colour_choices, main=paste("Annual max root depth (m)",sep=""),zlim=z_axis,axes=FALSE
+                ,cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
       contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
 
-  } else if (PROJECT$model$name == "DALECN_BUCKET") {
-
-      jpeg(file=paste(PROJECT$figpath,"median_root_depth_maps_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
-      par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.6), omi=c(0.2, 0.2, 0.2, 0.40))
-      mean_rooting_depth = par_array_median[,,35] * (grid_output$mean_roots_gCm2[,,median_loc]*2) / (par_array_median[,,34] + (grid_output$mean_roots_gCm2[,,median_loc]*2))
-      z_axis=c(min(as.vector(mean_rooting_depth),na.rm=TRUE),max(as.vector(mean_rooting_depth),na.rm=TRUE))
-      image.plot(mean_rooting_depth,col=colour_choices, main=paste("Median root depth (m)",sep=""),zlim=z_axis,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-      contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
-      dev.off()
-
-      jpeg(file=paste(PROJECT$figpath,"median_max_root_depth_maps_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
-      par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.6), omi=c(0.2, 0.2, 0.2, 0.40))
-      mean_rooting_depth = par_array_median[,,35] * (grid_output$annual_max_roots_gCm2[,,median_loc]*2) / (par_array_median[,,34] + (grid_output$annual_max_roots_gCm2[,,median_loc]*2))
-      z_axis=c(min(as.vector(mean_rooting_depth),na.rm=TRUE),max(as.vector(mean_rooting_depth),na.rm=TRUE))
-      image.plot(mean_rooting_depth,col=colour_choices, main=paste("Annual max root depth (m)",sep=""),zlim=z_axis,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-      contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
-      dev.off()
-
-  }
+  } # rooting depth
 
   # extract a list of all the variables stored in the output object
   par_names = names(grid_output)
@@ -166,5 +151,3 @@ root_biomass = (grid_output$mean_roots_gCm2[,,median_loc]+(grid_output$mean_wood
   gc(reset=TRUE, verbose=FALSE)
 
 } # end function generate_simplified_stock_and_fluxe_maps
-
-

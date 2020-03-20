@@ -5,7 +5,7 @@
 ###
 
 cardamom <-function (projname,model,method,stage) {
-
+#stage = 2
   ## load needed functions into R environment
   paths=load_paths()
 
@@ -80,9 +80,17 @@ cardamom <-function (projname,model,method,stage) {
     # use EDCs
     failed=TRUE
     while (failed){
-      tmp=readline("Use EDCs (y/n)?")
-      if (tmp == "y") {PROJECT$edc = 1} else {PROJECT$edc = 0}
-      if (tmp != "y" & tmp != "n") {failed=TRUE} else {failed=FALSE}
+      if (exists("request_use_EDCs")) {
+          if (request_use_EDCs == TRUE | request_use_EDCs == FALSE) {
+              tmp = request_use_EDCs
+          } else {
+              tmp=readline("Use EDCs (TRUE/FALSE)?")
+          }
+      } else {
+          tmp=readline("Use EDCs (TRUE/FALSE)?")
+      }
+      if (tmp == TRUE) {PROJECT$edc = 1} else {PROJECT$edc = 0}
+      if (tmp != TRUE & tmp != FALSE) {failed=TRUE} else {failed=FALSE}
     }
     # load start and end year
     PROJECT$start_year=years_to_do[1]
@@ -303,7 +311,7 @@ cardamom <-function (projname,model,method,stage) {
         print("NOTE: this will only be effective if cluster has completed its tasks")
 
         if (PROJECT$ecdf) {
-          failed=TRUE
+            failed=TRUE
           while(failed) {
             # do we copy back the files?
             copy_back=readline("Copy results back from cluster? (y/n)")
@@ -319,7 +327,7 @@ cardamom <-function (projname,model,method,stage) {
           }
         } # ecdf condition
         # do we run the parameters yet for analysis
-        run_all = readline("Run all parameter vectors to generate confidence intervals? (y/n)")
+        run_all = "y"#readline("Run all parameter vectors to generate confidence intervals? (y/n)")
         failed = TRUE
         while(failed) {
           if (run_all != "y" & run_all != "n") {run_all=readline("Run all parameter vectors to generate confidence intervals? (y/n)") ; failed=TRUE} else {failed = FALSE}

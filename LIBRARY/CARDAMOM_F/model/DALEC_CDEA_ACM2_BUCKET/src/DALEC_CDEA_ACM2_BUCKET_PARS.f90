@@ -23,8 +23,6 @@ module MODEL_PARAMETERS
 
     implicit none
 
-    PI%npars=23;
-
     ! NOTE: that these parameter ranges have been matched with Bloom's C code
     ! 22/11/2019 - try not to lose this information as it is needed for comparability
 
@@ -108,6 +106,19 @@ module MODEL_PARAMETERS
     PI%parmin(17)=5d0
     PI%parmax(17)=200d0
 
+    ! fraction of Cwood which is coarse root
+    PI%parmin(25) = 0.15d0
+    PI%parmax(25) = 0.50d0 
+
+    ! BUCKET - coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 %
+    ! of max depth
+    PI%parmin(26) = 50d0
+    PI%parmax(26) = 10000d0 !500d0
+
+    ! BUCKET - maximum rooting depth
+    PI%parmin(27) = 0.35d0
+    PI%parmax(27) = 20d0
+
     !
     ! INITIAL VALUES DECLARED HERE
     !
@@ -135,6 +146,11 @@ module MODEL_PARAMETERS
     ! C_som
     PI%parmin(23) = 1d0
     PI%parmax(23) = 200000d0
+
+    ! Initial soil water
+    ! a fraction of field capacity
+    PI%parmin(24) = 0.50d0
+    PI%parmax(24) = 1.00d0
 
   end subroutine pars_info
 

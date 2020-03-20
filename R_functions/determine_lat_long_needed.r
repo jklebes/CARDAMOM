@@ -69,7 +69,7 @@ determine_lat_long_needed<- function(lat,long,resolution,grid_type,remove) {
 
     # output the result
     output=list(lat=lat,long=long)
-    rm(lat_lcm,long_lcm,lat,long) ; gc(reset=TRUE, verbose=FALSE)
+    rm(lat,long) ; gc(reset=TRUE, verbose=FALSE)
     return(output)
 
 }

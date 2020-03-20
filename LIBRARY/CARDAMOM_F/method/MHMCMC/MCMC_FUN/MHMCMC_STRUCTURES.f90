@@ -21,7 +21,10 @@ module MCMCOPT
   ! contains MHMCMC options
   type MCMC_OPTIONS
 
-    logical :: returnpars = .true. & ! return best fit parameters or not
+    double precision :: sub_fraction = 0.250d0, inflation_factor = 6d0
+
+    logical :: sub_sample_complete = .false. & ! Has a sub-sample / inflated uncertainty simulation taken place?
+              ,returnpars = .true. & ! return best fit parameters or not
               ,randparini = .true. & ! use random initial values parameters
               ,fixedpars  = .true.   ! use fixed initial values where inputs are not = -9999
     character(350) :: outfile   & ! parameter output file name
@@ -33,7 +36,7 @@ module MCMCOPT
               ,nOUT       & ! number of requested output parameter sets
               ,nPRINT     & ! print info to screen every N solutions (0 to silent)
               ,nWRITE     & ! write to file every N solutions
-              ,APPEND       ! append to existing output files (0 = delete existing file or 1 = append)
+              ,append       ! append to existing output files (0 = delete existing file or 1 = append)
 
   end type ! MCMC_OPTIONS
   ! create options type
@@ -43,6 +46,8 @@ module MCMCOPT
   type MCMC_OUTPUT
     integer :: complete ! is MHMCMC completed (1 = yes, 0 = no)
     ! further metrics could be added here
+    integer :: nos_iterations
+    double precision :: acceptance_rate
     double precision, allocatable, dimension(:) :: best_pars ! store current best parameter set
   end type ! MCMC_OUTPUT
   ! create output type
@@ -79,7 +84,8 @@ module MCMCOPT
 
     double precision :: Nparvar ! Number of samples forming variance of accepted parameters
 
-    integer :: npars ! number of parameters to be solved
+    integer :: npars  ! number of parameters to be solved
+        
     ! crop specific variables
     double precision :: stock_seed_labile
     double precision, allocatable, dimension(:)  ::    DS_shoot, & !

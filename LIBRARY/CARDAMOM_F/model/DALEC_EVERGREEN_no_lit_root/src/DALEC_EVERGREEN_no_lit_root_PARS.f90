@@ -50,12 +50,12 @@ module MODEL_PARAMETERS
     PI%parmax(4) = 0.01d0     ! 0.27 years
 
     ! TOR litter + som
-    PI%parmin(5) = 2.737851d-06 ! 1000 years 
-    PI%parmax(5) = 0.01d0       ! 0.13 years
+    PI%parmin(5) = 1.368925d-06   ! 2000 years at 0oC
+    PI%parmax(5) = 9.126169d-05   !   30 years at 0oC !0.0001368926d0 !   20 years at 0oC
 
     ! Temp factor* = Q10 = 1.2-1.6
-    PI%parmin(6) = 0.018d0
-    PI%parmax(6) = 0.06d0
+    PI%parmin(6) = 0.019d0
+    PI%parmax(6) = 0.08d0
 
     ! Canopy Efficiency (gC/m2leaf/day)
     PI%parmin(7) = 5d0

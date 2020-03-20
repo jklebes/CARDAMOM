@@ -68,22 +68,22 @@ module MODEL_PARAMETERS
        ! Turnover fraction of roots
        ! Gill and Jackson (2000), New Phytol., 147, 13–31
        ! Fig. 6 turnover by diameter class
-       PI%parmin(7) = 0.0006844627d0 ! 4    years
-       PI%parmax(7) = 0.01d0         ! 0.27 years
+       PI%parmin(7) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
+       PI%parmax(7) = 0.01d0        ! 0.27 years
 
        ! Turnover of litter (fraction; temperature adjusted)
        PI%parmin(8) = 0.00011d0   ! 24.9 years at 0oC
        PI%parmax(8) = 0.02d0      ! 0.13 years at 0oC
 
        ! Turnover of som to Rhet (fraction; temperature adjusted)
-       PI%parmin(9) = 2.737851d-06   ! 1000 years at 0oC
-       PI%parmax(9) = 0.0001368926d0 !   20 years at 0oC
+       PI%parmin(9) = 1.368925d-06   ! 2000 years at 0oC
+       PI%parmax(9) = 9.126169d-05   !   30 years at 0oC !0.0001368926d0 !   20 years at 0oC
 !       PI%parmin(9) = 0.0000001d0 ! 27378.0 years at 0oC
 !       PI%parmax(9) = 0.001d0     !     2.7 years at 0oC
 
        ! Exponential coefficient for Rhet temperature response
-       PI%parmin(10) = 0.018d0
-       PI%parmax(10) = 0.06d0
+       PI%parmin(10) = 0.019d0
+       PI%parmax(10) = 0.08d0
 
        ! log10 avg foliar N (gN.m-2)
        ! Kattge et al., (2011) (Quantiles 2.5% / 97.5%)
@@ -93,19 +93,19 @@ module MODEL_PARAMETERS
 
        ! Max labile turnover fraction to foliage
        PI%parmin(12) = 0.002737851d0 !  1 years
-       PI%parmax(12) = 0.05d0        ! 20 days
+       PI%parmax(12) = 0.025d0       ! 40 days
 
        ! Fraction to Clab*/
        PI%parmin(13) = 0.05d0
        PI%parmax(13) = 0.35d0
 
        ! GSI min temperature threshold (oC)
-       PI%parmin(14) = 235d0
-       PI%parmax(14) = 330d0
+       PI%parmin(14) = 243d0 !235d0
+       PI%parmax(14) = 310d0 !330d0
 
        ! GSI max temperature threshold (oC)
-       PI%parmin(15) = 235d0
-       PI%parmax(15) = 330d0
+       PI%parmin(15) = 243d0 !235d0
+       PI%parmax(15) = 310d0 !330d0
 
        ! GSI min photoperiod threshold (sec)
        PI%parmin(16) = 3600d0*3d0  !  1 hours
@@ -113,7 +113,7 @@ module MODEL_PARAMETERS
 
        ! LMA
        ! Kattge et al. 2011,
-       PI%parmin(17) = 10d0
+       PI%parmin(17) = 20d0
        PI%parmax(17) = 180d0
 
        ! GSI max photoperiod threshold (sec)
@@ -121,11 +121,11 @@ module MODEL_PARAMETERS
        PI%parmax(24) = 3600d0*21d0  ! 24 hours
 
        ! GSI min VPD threshold (Pa)
-       PI%parmin(25) = 100d0
+       PI%parmin(25) = 10d0 !100d0
        PI%parmax(25) = 5500d0
 
        ! GSI max VPD threshold (Pa)
-       PI%parmin(26) = 1000d0
+       PI%parmin(26) = 10d0 !1000d0
        PI%parmax(26) = 5500d0
 
        ! GPP return on new Cfol investment (gCperGPP per gCnewfol)
@@ -142,7 +142,7 @@ module MODEL_PARAMETERS
 
        ! GSI senstivity for leaf senescence
        PI%parmin(34) = -3d-3
-       PI%parmax(34) = -1d-5
+       PI%parmax(34) = -1d-4
 
        ! Optimum nitrogen use efficiency (gC/gN per m2 at optimum temperature)
        ! Derived from Vcmax reported in Wullschleger (1993), Journal of
@@ -160,15 +160,15 @@ module MODEL_PARAMETERS
 
        ! Turnover rate for CWD
        PI%parmin(38) = 0.000009d0     ! 304 years at 0oC
-       PI%parmax(38) = 0.0005475702d0 !   5 years at 0oC
+       PI%parmax(38) = 0.001d0        !   2.74 years at 0oC
 
        ! BUCKET - root biomass needed to reach 50 % of max depth
        PI%parmin(39) = 50d0
-       PI%parmax(39) = 500d0
+       PI%parmax(39) = 3000d0
 
        ! BUCKET - maximum rooting depth
        PI%parmin(40) = 0.35d0
-       PI%parmax(40) = 10d0
+       PI%parmax(40) = 20d0
 
        !
        ! INITIAL VALUES DECLARED HERE

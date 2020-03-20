@@ -6,7 +6,7 @@ module model_likelihood_module
   private
 
   ! which to make open
-  public :: model_likelihood, find_edc_initial_values
+  public :: model_likelihood, find_edc_initial_values, sub_model_likelihood
 
   ! declare needed types
   type EDCDIAGNOSTICS
@@ -192,6 +192,115 @@ module model_likelihood_module
     ML_obs_out = -0.5d0*(tot_exp*10d0)*DATAin%EDC
 
   end subroutine edc_model_likelihood
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine sub_model_likelihood(PARS,ML_obs_out,ML_prior_out)
+    use MCMCOPT, only:  PI
+    use CARBON_MODEL_MOD, only: carbon_model
+    use CARBON_MODEL_CROP_MOD, only: carbon_model_crop
+    use cardamom_structures, only: DATAin
+
+    ! this subroutine is responsible for running the model, 
+    ! calculation of the log-likelihood on a subsample of observation 
+    ! for comparison assessment of parameter performance and use of the EDCs if they are
+    ! present / selected
+
+    implicit none
+
+    ! declare inputs
+    double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
+    ! output
+    double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
+                                       ML_prior_out   ! prior log-likelihood
+    ! declare local variables
+    double precision :: EDC1, EDC2
+
+    ! initial values
+    ML_obs_out = 0d0 ; ML_prior_out = 0d0 ; EDC1 = 1d0 ; EDC2 = 1d0
+    ! if == 0 EDCs are checked only until the first failure occurs
+    ! if == 1 then all EDCs are checked irrespective of whether or not one has
+    ! failed
+    EDCD%DIAG = 0
+
+    if (DATAin%EDC == 1) then
+
+        ! EDCs are intended for use, best calculate them
+        if (DATAin%PFT == 1) then
+           ! then we are crops so run these EDCs instead
+           ! call EDCs which can be evaluated prior to running the model
+           call EDC1_CROP(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+        else
+           ! call EDCs which can be evaluated prior to running the model
+           call EDC1_GSI(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+        endif ! crop choice
+
+        ! update the likelihood score based on EDCs driving total rejection
+        ! proposed parameters
+        ML_obs_out = log(EDC1)
+
+    endif !
+
+    if (DATAin%PFT == 1) then
+
+       ! then this is a crop run....
+       ! run the dalec model
+       call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                             ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                             ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft   &
+                             ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
+                             ,DATAin%nofluxes,DATAin%M_GPP                &
+                             ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
+                             ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
+                             ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
+
+    else ! PFT == 1
+
+        ! run the dalec model
+        call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                         ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                         ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
+                         ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
+                         ,DATAin%M_GPP)
+
+
+    endif ! crop choice
+
+    ! if first set of EDCs have been passed, move on to the second
+    if (DATAin%EDC == 1) then
+
+        if (DATAin%PFT == 1) then
+
+            ! check edc2
+            call EDC2_CROP(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+                          ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                          ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                          ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+
+        else ! PFT == 1
+
+            ! check edc2
+            call EDC2_GSI(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+                         ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                         ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                         ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+
+        endif ! crop choice
+
+        ! Add EDC2 log-likelihood to absolute accept reject...
+        ML_obs_out = ML_obs_out + log(EDC2)
+
+    end if ! DATAin%EDC == 1
+
+    ! Calculate log-likelihood associated with priors
+    ! We always want this
+    ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
+
+    ! calculate final model likelihood when compared to obs
+!    ML_obs_out = ML_obs_out + sub_likelihood(PI%npars,PARS)
+    ML_obs_out = ML_obs_out + inflate_likelihood(PI%npars,PARS)
+
+  end subroutine sub_model_likelihood
   !
   !------------------------------------------------------------------
   !
@@ -672,6 +781,85 @@ module model_likelihood_module
     return
 
   end function likelihood
+  !
+  !------------------------------------------------------------------
+  !
+  double precision function inflate_likelihood(npars,pars)
+    use cardamom_structures, only: DATAin
+    use MCMCOPT, only: MCO
+
+    ! calculates the likelihood of of the model output compared to the available
+    ! observations which have been input to the model
+
+    implicit none
+
+    ! declare arguments
+    integer, intent(in) :: npars
+    double precision, dimension(npars), intent(in) :: pars
+
+    ! declare local variables
+    integer :: n, dn, no_years, y
+    double precision :: tot_exp, pool_dynamics, tmp_var, infini, inflate_factor
+    double precision, allocatable :: mean_annual_pools(:)
+
+    ! initial value
+    inflate_likelihood = 0d0 ; infini = 0d0
+    ! Update inflation factor from module
+    inflate_factor = MCO%inflation_factor
+
+    ! GPP Log-likelihood
+    tot_exp = 0d0
+    if (DATAin%ngpp > 0) then
+        do n = 1, DATAin%ngpp
+          dn = DATAin%gpppts(n)
+          ! note that division is the uncertainty
+          tot_exp = tot_exp+((DATAin%M_GPP(dn)-DATAin%GPP(dn))/(inflate_factor*DATAin%GPP_unc(dn)))**2
+        end do
+        inflate_likelihood = inflate_likelihood-0.5d0*tot_exp
+    endif
+
+    ! Evapotranspiration (kgH2O.m-2.day-1) Log-likelihood
+    ! in this case transpiration only
+    tot_exp = 0d0
+    if (DATAin%nEvap > 0) then
+        do n = 1, DATAin%nEvap
+          dn = DATAin%Evappts(n)
+          ! note that division is the uncertainty
+          tot_exp = tot_exp+((DATAin%M_FLUXES(dn,2)-DATAin%Evap(dn))/(inflate_factor*DATAin%Evap_unc(dn)))**2
+        end do
+        inflate_likelihood = inflate_likelihood-0.5d0*tot_exp
+    endif
+
+    ! Borrowed wood increment to provide soil evaporation for ACM recal  (kgH2O.m-2.day-1) Log-likelihood
+    tot_exp = 0d0
+    if (DATAin%nwoo > 0) then
+        do n = 1, DATAin%nwoo
+          dn = DATAin%woopts(n)
+          ! note that division is the uncertainty
+          tot_exp = tot_exp+((DATAin%M_FLUXES(dn,3)-DATAin%woo(dn))/(inflate_factor*DATAin%woo_unc(dn)))**2
+        end do
+        inflate_likelihood = inflate_likelihood-0.5d0*tot_exp
+    endif
+
+!    ! Borrowed Cfol_stock to provide wet canopy evaporation for ACM recal  (kgH2O.m-2.day-1) Log-likelihood
+!    tot_exp = 0d0
+!    if (DATAin%nCfol_stock > 0) then
+!        do n = 1, DATAin%nCfol_stock
+!          dn = DATAin%Cfol_stockpts(n)
+!          ! note that division is the uncertainty
+!          tot_exp = tot_exp+((DATAin%M_FLUXES(dn,4)-DATAin%Cfol_stock(dn))/(inflate_factor*DATAin%Cfol_stock_unc(dn)))**2
+!        end do
+!        inflate_likelihood = inflate_likelihood-0.5d0*tot_exp
+!    endif
+
+    ! check that log-likelihood is an actual number
+    if (inflate_likelihood /= inflate_likelihood) then
+        inflate_likelihood = log(infini)
+    end if
+    ! don't forget to return
+    return
+
+  end function inflate_likelihood
   !
   !------------------------------------------------------------------
   !

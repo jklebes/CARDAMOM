@@ -985,9 +985,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! litter pool
        POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
        ! som pool
-       POOLS(n+1,6) = POOLS(n,6) + ((FLUXES(n,11)*pars(29))+FLUXES(n,15)+FLUXES(n,20)-FLUXES(n,14))*deltat(n)
-       ! cwd pool
-       POOLS(n+1,7) = POOLS(n,7) + ((FLUXES(n,11)*(1d0-pars(29)))-FLUXES(n,20)-FLUXES(n,4))*deltat(n)
+       POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)+FLUXES(n,20)-FLUXES(n,14))*deltat(n)
+!       POOLS(n+1,6) = POOLS(n,6) + ((FLUXES(n,11)*pars(29))+FLUXES(n,15)+FLUXES(n,20)-FLUXES(n,14))*deltat(n)
+       ! litter wood pool
+       POOLS(n+1,7) = POOLS(n,7) + (FLUXES(n,11)-FLUXES(n,20)-FLUXES(n,4))*deltat(n)
+!       POOLS(n+1,7) = POOLS(n,7) +  ((FLUXES(n,11)*(1d0-pars(29)))-FLUXES(n,20)-FLUXES(n,4))*deltat(n)
 
        !!!!!!!!!!
        ! deal first with deforestation

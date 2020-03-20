@@ -58,21 +58,23 @@ module MODEL_PARAMETERS
     PI%parmin(6)=0.000009d0 ! 304  years
     PI%parmax(6)=0.001d0    ! 2.74 years
 
-    ! TOR roots
-    PI%parmin(7)=0.0006844627d0 ! 4    years
-    PI%parmax(7)=0.01d0         ! 0.27 years
+    ! Turnover fraction of roots
+    ! Gill and Jackson (2000), New Phytol., 147, 13–31
+    ! Fig. 6 turnover by diameter class
+    PI%parmin(7) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
+    PI%parmax(7) = 0.01d0        ! 0.27 years
 
     ! TOR litter
     PI%parmin(8)=0.0001d0 ! 24.00 years 
     PI%parmax(8)=0.01d0   !  0.13 years
 
-    ! TOR SOM
-    PI%parmin(9) = 2.737851d-06   ! 1000 years at 0oC
-    PI%parmax(9) = 0.0001368926d0 !   20 years at 0oC
+    ! Turnover of som to Rhet (fraction; temperature adjusted)
+    PI%parmin(9) = 1.368925d-06   ! 2000 years at 0oC
+    PI%parmax(9) = 9.126169d-05   !   30 years at 0oC !0.0001368926d0 !   20 years at 0oC
 
     ! Temp factor* = Q10 = 1.2-1.6
-    PI%parmin(10) = 0.018d0
-    PI%parmax(10) = 0.06d0
+    PI%parmin(10) = 0.019d0
+    PI%parmax(10) = 0.08d0
 
     ! Canopy Efficiency (gC/m2leaf/day)
     PI%parmin(11) = 5d0

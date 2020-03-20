@@ -30,7 +30,6 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
 
             # Get timing variable
             # The native time step is 6 hours, but we directly average in the load_met_function.r
-            input_step_size = 24 # i.e. hours in day
             steps_in_day = 1
 
             # extract location variables
@@ -63,7 +62,6 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
             data1=nc_open(input_file_1)
 
             # get timing variable
-            input_step_size=24
             steps_in_day=1
 
             # extract location variables
@@ -93,7 +91,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
             data1 = nc_open(input_file_1)
 
             # get timing variable
-            input_step_size = 24 ; steps_in_day = 1
+            steps_in_day = 1
 
             # extract location variables
             lat = ncvar_get(data1, "lat") ; long = ncvar_get(data1, "lon")
@@ -129,23 +127,24 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         remove_long = (remove_long-(floor(remove_lat)*dim(lat)[1]))+1
         remove_lat = ceiling(remove_lat)
         # update new dimensions
-        lat_dim = length(min(remove_lat):max(remove_lat)) ; long_dim=length(min(remove_long):max(remove_long))
-        lat = lat[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)] ; long=long[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
+        lat_dim = length(min(remove_lat):max(remove_lat)) ; long_dim = length(min(remove_long):max(remove_long))
+        lat = lat[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)] ; long = long[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
         # next deal with extracting the wheat from the chaff
         # this should always be the swrad variable as we can easily put a lower limit
         tmp1 = ncvar_get(data1,infile_varid[1])
-        tmp1[is.na(tmp1)] = -9999
-        # now because Burn during its update period has conflicting R packages and this means that it does not always
-        # correctly identify the missing data. So we use the Short Wave Radiation as a condition for searching for this as we know that
-        # swrad cannot be less than 0
+        # Also this should be applied to the first time step only as we want spatial pattern not temporal
+        # Also restrict by the target area
+        tmp1 = tmp1[,,1] ; tmp1 = tmp1[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
+        # Include any pixels where the shortwave radiation is un-realistic. 
+        # We could expand this to other variables to ensure good realism but sw alone is generally sufficient.
         tmp1[tmp1 < 0] = NA
         # this section is key as near land sea borders it is possible for the nearest lat/long location to actually be a sea pixel
-        wheat_from_chaff = which(is.na(tmp1[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat),1]) == FALSE)
+        wheat_from_chaff = which(is.na(tmp1) == FALSE)
 
         # convert input data long to conform to what we need
         check1 = which(long > 180) ; if (length(check1) > 0) { long[check1]=long[check1]-360 }
         # now filter through the reduced dataset for the specific locations
-        # not this selection by met_in$wheat vectorises the lat and long variables therefore we need to use closest2 option 1 (I think...)
+        # NOTE: this selection by met_in$wheat vectorises the lat and long variables therefore we need to use closest2 option 1 (I think...)
         output = lapply(1:dim(latlon_in)[1],FUN=closest2d,lat=lat[wheat_from_chaff],long=long[wheat_from_chaff],lat_in=latlon_in[,1],long_in=latlon_in[,2],nos_dim=1)
         var1_out = unlist(output, use.names=FALSE) ; rm(output)
         # select the correct location values for the original vector form the wheat_from_chaff
@@ -207,7 +206,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
 
         # user update
         print("...beginning restructuring of meteorological datasets")
-        var1_out=0 ; var2_out=0 ; var3_out=0 ; var4_out=0 ; var5_out=0 ; var6_out=0 ; wind_out=0 ; tmp_out=0; t_grid=0
+        var1_out = 0 ; var2_out = 0 ; var3_out = 0 ; var4_out = 0 ; var5_out = 0 ; var6_out = 0 ; wind_out = 0 ; tmp_out = 0; t_grid = 0
         for (i in seq(1, length(var1_out_list))) {var1_out=append(var1_out,var1_out_list[[i]]$var_out) ; t_grid=append(t_grid,var1_out_list[[i]]$t_grid)}
         rm(var1_out_list)
         for (i in seq(1, length(var2_out_list))) {var2_out=append(var2_out,var2_out_list[[i]]$var_out)}
@@ -228,7 +227,6 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         var3_out = var3_out[-1] ; var4_out = var4_out[-1]
         var5_out = var5_out[-1] ; var6_out = var6_out[-1]
         wind_out = wind_out[-1] ; gc()
-
         # we want total t_grid only
         t_grid = sum(t_grid)
 
@@ -300,18 +298,17 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         wind_out = array(wind_out, dim=c(length(wheat_from_chaff),t_grid)) # Wind (m/s)
 
         # output variables
-        met_all = list(input_step_size=input_step_size,steps_in_day=steps_in_day,lat=lat,long=long
-                      ,run_day=run_day,wheat=wheat_from_chaff,t_grid=t_grid,maxt=var2_out,swrad=var1_out
-                      ,co2=co2,doy=doy,precip=var3_out,vpd=var4_out,pressure=var5_out,extra_year=extra_year
-                      ,mint=var6_out,wind_spd=wind_out)
+        met_all = list(lat=lat,long=long,run_day=run_day,wheat=wheat_from_chaff,t_grid=t_grid
+                      ,maxt=var2_out,swrad=var1_out,co2=co2,doy=doy,precip=var3_out,vpd=var4_out
+                      ,pressure=var5_out,mint=var6_out,wind_spd=wind_out,extra_year=extra_year)
 
         # quick sanity check
-        if(min(as.vector(met_all$swrad) < -5)) {print(paste("SW_RAD summary: ",summary(as.vector(met_all$swrad)),sep="")) }
+        if (min(as.vector(met_all$swrad)) < -1) {stop(paste("SW_RAD summary: ",summary(as.vector(met_all$swrad)),sep="")) }
         met_all$swrad[which(met_all$swrad < 0)] = 0
 
         # clean up loose memory
         rm(lat_dim,long_dim,remove_lat,remove_long,years_to_load,load_years,tmp1,check1,nos_days,
-           input_step_size,steps_in_day,lat,long,run_day,wheat_from_chaff,t_grid,var2_out,var1_out,
+           lat,long,run_day,wheat_from_chaff,t_grid,var2_out,var1_out,
            co2,doy,var3_out,var4_out,var5_out,extra_year,var6_out,wind_out)
 
     } # site_specific or not
