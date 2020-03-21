@@ -128,7 +128,7 @@ program cardamom_framework
      ! Report to the user
      write(*,*)"Beginning parameter search on inflated likelihoods"
 
-     MCO%nOUT = nint(dble(nOUT_save) * MCO%sub_fraction)
+     MCO%nOUT = nint(dble(nOUT_save) * MCO%sub_fraction) - MCOUT%nos_iterations
      call MHMCMC(1d0,sub_model_likelihood)
      ! Leave parameter and covariance structures as they come out form the
      ! sub-sample - but reset the number of samples used in the update

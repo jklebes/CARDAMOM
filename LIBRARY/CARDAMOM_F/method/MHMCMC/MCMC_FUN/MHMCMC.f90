@@ -102,7 +102,6 @@ contains
 
     ! declare any local variables
     type ( counters ) :: N
-    logical :: ok_to_stop = .false.
     double precision, dimension(PI%npars) :: deltaPARS2_iC &
                                             ,deltaPARS0_iC &
                                             ,norPARS0      & ! normalised parameter values for current state
@@ -132,7 +131,7 @@ contains
     integer :: i
 
     ! initial values
-    uniform = 1 ; ok_to_stop = .false.
+    uniform = 1 
     P = -1d0 ; Pprior = -1d0
     N%ACC = 0d0 ; N%ACC_first = 0d0 ; N%ITER = 0d0 ; N%ACC_beta = 0d0
     N%ACCLOC = 0d0 ; N%ACCRATE = 0d0 ; N%ACCRATE_GLOBAL = 0d0
@@ -213,8 +212,8 @@ contains
 
     ! Begin the main MHMCMC loop
 !    do while (N%ITER < MCO%nOUT .and. (Pmax < P_target .or. MCO%nWRITE > 0))
-    do while (N%ITER < MCO%nOUT .and. Pmax < 0d0 .and. .not.ok_to_stop)
-!    do while (N%ITER < MCO%nOUT .and. .not.ok_to_stop)
+    do while (N%ITER < MCO%nOUT .and. Pmax < 0d0)
+
        ! take a step in parameter space
        call step(N,PARS0,PARS,norPARS0,norPARS,.false.)
 
@@ -416,10 +415,6 @@ contains
                ! N%ACC_beta
                N%ACCRATE = 0d0 !; N%ACCRATE_beta = 0d0
               
-               ! determine whether we have a working covariance matrix and
-               ! achieved a likelihood score better than the target
-               if (Pmax > P_target .and. PI%use_multivariate) ok_to_stop = .true.
-
 !           end if ! have any parameters been accepted in the last period?
 
            ! resets to local counters
