@@ -134,7 +134,7 @@ program cardamom_framework
      ! sub-sample - but reset the number of samples used in the update
      ! weighting
      if (PI%cov .and. PI%use_multivariate) then
-         PI%Nparvar = 1d0
+!         PI%Nparvar = 1d0
      else
          ! reset the parameter step size at the beginning of each attempt
          PI%parvar = 1d0 ; PI%Nparvar = 0d0

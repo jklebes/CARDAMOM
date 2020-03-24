@@ -55,7 +55,7 @@ module MODEL_PARAMETERS
 
        ! Fraction of (1-fgpp) to roots*/
        PI%parmin(4) = 0.1d0
-       PI%parmax(4) = 1.0d0
+       PI%parmax(4) = 0.75d0
 
        ! GSI max leaf turnover
        PI%parmin(5) = 0.002737851d0 ! 1 year 
@@ -69,7 +69,7 @@ module MODEL_PARAMETERS
        ! Gill and Jackson (2000), New Phytol., 147, 13–31
        ! Fig. 6 turnover by diameter class
        PI%parmin(7) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
-       PI%parmax(7) = 0.01d0        ! 0.27 years
+       PI%parmax(7) = 0.02d0        ! 0.13 years
 
        ! Turnover of litter (fraction; temperature adjusted)
        PI%parmin(8) = 0.00011d0   ! 24.9 years at 0oC
@@ -100,11 +100,11 @@ module MODEL_PARAMETERS
        PI%parmax(13) = 0.55d0 ! 0.35d0 
 
        ! GSI min temperature threshold (oC)
-       PI%parmin(14) = 243d0 !235d0
+       PI%parmin(14) = 283.15d0 !243d0 !235d0
        PI%parmax(14) = 310d0 !330d0
 
        ! GSI max temperature threshold (oC)
-       PI%parmin(15) = 243d0 !235d0
+       PI%parmin(15) = 273.15d0 !243d0 !235d0
        PI%parmax(15) = 310d0 !330d0
 
        ! GSI min photoperiod threshold (sec)

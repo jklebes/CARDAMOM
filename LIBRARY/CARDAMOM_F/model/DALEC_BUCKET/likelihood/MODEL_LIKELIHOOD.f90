@@ -1968,9 +1968,16 @@ module model_likelihood_module
         likelihood = likelihood-((tot_exp-DATAin%otherpriors(3))/DATAin%otherpriorunc(3))**2
     end if
 
+    ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
+    ! kg/m2/day)
+    if (DATAin%otherpriors(4) > -9998) then
+        tot_exp = sum(DATAin%M_FLUXES(:,19)) / sum(DATAin%MET(7,:) * 86400d0)
+        likelihood = likelihood-((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
+    end if
+
     ! the likelihood scores for each observation are subject to multiplication
     ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
-    ! multiple datastreams we apply this multiplication to the bulk liklihood
+    ! multiple datastreams we apply this multiplication to the bulk likelihood
     ! hear
     likelihood = likelihood * 0.5d0
 
@@ -2205,9 +2212,15 @@ module model_likelihood_module
         scale_likelihood = scale_likelihood-((tot_exp-DATAin%otherpriors(3))/DATAin%otherpriorunc(3))**2
     end if
 
+    ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation
+    if (DATAin%otherpriors(4) > -9998) then
+        tot_exp = sum(DATAin%M_FLUXES(:,19)) / sum(DATAin%MET(7,:) * 86400d0)
+        scale_likelihood = scale_likelihood-((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
+    end if
+
     ! the likelihood scores for each observation are subject to multiplication
     ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
-    ! multiple datastreams we apply this multiplication to the bulk liklihood
+    ! multiple datastreams we apply this multiplication to the bulk likelihood
     ! hear
     scale_likelihood = scale_likelihood * 0.5d0
 
