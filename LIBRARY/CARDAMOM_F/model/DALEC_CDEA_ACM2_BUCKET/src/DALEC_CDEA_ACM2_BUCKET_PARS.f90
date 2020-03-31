@@ -60,7 +60,7 @@ module MODEL_PARAMETERS
     PI%parmax(7) = 0.01d0     ! 0.27 years
 
     ! Turnover of litter (fraction; temperature adjusted)
-    PI%parmin(8) = 0.00011d0   ! 24.9 years at 0oC
+    PI%parmin(8) = 0.0001141d0 ! 24   years at 0oC
     PI%parmax(8) = 0.02d0      ! 0.13 years at 0oC
 
     ! Turnover of som to Rhet (fraction; temperature adjusted)
@@ -113,7 +113,7 @@ module MODEL_PARAMETERS
     ! BUCKET - coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 %
     ! of max depth
     PI%parmin(26) = 50d0
-    PI%parmax(26) = 10000d0 !500d0
+    PI%parmax(26) = 2500d0 !500d0
 
     ! BUCKET - maximum rooting depth
     PI%parmin(27) = 0.35d0

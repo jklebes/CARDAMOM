@@ -27,7 +27,7 @@ double precision :: DR_scaler = 1d0 &
                                 ! for MCMC search, when applied to  multivariate proposal.
                                 ! NOTE 1: 2.38 / sqrt(npars) sometimes used when applied to the Cholesky
                                 ! factor. NOTE 2: 2.381204 ** 2 = 5.670132
-double precision, parameter :: beta = 0.01d0 !0.01d0!0.05d0!, delta = 0.5d0
+double precision, parameter :: beta = 0.05d0 !, delta = 0.5d0
 ! Is current proposal multivariate or not?
 logical :: multivariate_proposal = .false.!, do_DR = .true.
 integer, parameter :: N_before_mv = 10d0 !3
@@ -212,7 +212,7 @@ contains
 
     ! Begin the main MHMCMC loop
 !    do while (N%ITER < MCO%nOUT .and. (Pmax < P_target .or. MCO%nWRITE > 0))
-    do while (N%ITER < MCO%nOUT .and. Pmax < 0d0)
+    do while (N%ITER < MCO%nOUT .and. Pmax < P_target)
 
        ! take a step in parameter space
        call step(N,PARS0,PARS,norPARS0,norPARS,.false.)

@@ -2318,9 +2318,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         deltaGPP = (tmp - GPP_current)
 
         ! Estimate the change in net carbon export by the canopy per day,
-        ! then scale by leaf lifespan (days) and substract the initial investment cost
-        ! i.e. gC/m2/LL/gCinvest
-        deltaNCE = (((deltaGPP - deltaRm) * leaf_life) - C_invest) / C_invest
+        ! then scale the initial investment costs by leaf lifespan (days) and
+        ! substract the initial investment cost
+        ! i.e. gC/m2/day/(gCinvest/LL)
+!        deltaNCE = (((deltaGPP - deltaRm) * leaf_life) - C_invest) / C_invest
+        C_invest = C_invest / leaf_life
+        deltaNCE = (((deltaGPP - deltaRm)) - C_invest) / C_invest
         ! Is the marginal return for GPP (over the mean life of leaves)
         ! less than increase in maintenance respiration and C required
         ! to growth?

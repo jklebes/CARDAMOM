@@ -54,12 +54,12 @@ module MODEL_PARAMETERS
        PI%parmax(3) = 0.0009126169d0 !  3 year
 
        ! Fraction of (1-fgpp) to roots*/
-       PI%parmin(4) = 0.1d0
+       PI%parmin(4) = 0.10d0
        PI%parmax(4) = 0.75d0
 
        ! GSI max leaf turnover
        PI%parmin(5) = 0.002737851d0 ! 1 year 
-       PI%parmax(5) = 0.025d0       ! 40 days
+       PI%parmax(5) = 0.016666667d0 ! 60 days
 
        ! Turnover fraction of wood
        PI%parmin(6) = 0.000009d0 ! 304  years
@@ -72,7 +72,7 @@ module MODEL_PARAMETERS
        PI%parmax(7) = 0.02d0        ! 0.13 years
 
        ! Turnover of litter (fraction; temperature adjusted)
-       PI%parmin(8) = 0.00011d0   ! 24.9 years at 0oC
+       PI%parmin(8) = 0.0001141d0 ! 24   years at 0oC
        PI%parmax(8) = 0.02d0      ! 0.13 years at 0oC
 
        ! Turnover of som to Rhet (fraction; temperature adjusted)
@@ -93,10 +93,10 @@ module MODEL_PARAMETERS
 
        ! Max labile turnover fraction to foliage
        PI%parmin(12) = 0.002737851d0 !  1 years
-       PI%parmax(12) = 0.025d0       ! 40 days
+       PI%parmax(12) = 0.016666667d0 ! 60 days
 
        ! Fraction of GPP to Clab*/
-       PI%parmin(13) = 0.25d0 ! 0.05d0
+       PI%parmin(13) = 0.15d0 ! 0.05d0
        PI%parmax(13) = 0.55d0 ! 0.35d0 
 
        ! GSI min temperature threshold (oC)
@@ -108,8 +108,8 @@ module MODEL_PARAMETERS
        PI%parmax(15) = 310d0 !330d0
 
        ! GSI min photoperiod threshold (sec)
-       PI%parmin(16) = 3600d0*3d0  !  1 hours
-       PI%parmax(16) = 3600d0*21d0 ! 18 hours
+       PI%parmin(16) = 3600d0*3d0  !  3 hours
+       PI%parmax(16) = 3600d0*21d0 ! 21 hours
 
        ! LMA
        ! Kattge et al. 2011,
@@ -117,8 +117,8 @@ module MODEL_PARAMETERS
        PI%parmax(17) = 180d0
 
        ! GSI max photoperiod threshold (sec)
-       PI%parmin(24) = 3600d0*3d0   !  6 hours
-       PI%parmax(24) = 3600d0*21d0  ! 24 hours
+       PI%parmin(24) = 3600d0*3d0   !  3 hours
+       PI%parmax(24) = 3600d0*21d0  ! 21 hours
 
        ! GSI min VPD threshold (Pa)
        PI%parmin(25) = 10d0 !100d0
@@ -128,9 +128,9 @@ module MODEL_PARAMETERS
        PI%parmin(26) = 10d0 !1000d0
        PI%parmax(26) = 5500d0
 
-       ! GPP return on new Cfol investment (gCperGPP per gCnewfol)
-       PI%parmin(27) = 0.1d0
-       PI%parmax(27) = 10d0  
+       ! Net Canopy Export due to new leaf (gC/m2/day)
+       PI%parmin(27) = 0.003d0 !0.1d0
+       PI%parmax(27) = 0.025d0  
 
        ! Initial GSI value
        PI%parmin(28) = 0d0
@@ -141,7 +141,7 @@ module MODEL_PARAMETERS
        PI%parmax(29) = 0.50d0 ! increased based on evidence of savannah system 50 % below !0.30d0
 
        ! GSI senstivity for leaf senescence
-       PI%parmin(34) = -3d-3
+       PI%parmin(34) = -2d-3
        PI%parmax(34) = -1d-4
 
        ! Reich - Leaf N linked respiration exponential coefficient
@@ -159,7 +159,7 @@ module MODEL_PARAMETERS
 
        ! BUCKET - coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 % of max depth
        PI%parmin(39) = 50d0
-       PI%parmax(39) = 3000d0 !500d0
+       PI%parmax(39) = 2000d0 !500d0
 
        ! BUCKET - maximum rooting depth
        PI%parmin(40) = 0.35d0
@@ -205,13 +205,13 @@ module MODEL_PARAMETERS
 
        ! C litter
        PI%parmin(22) = 1d0
-       PI%parmax(22) = 2500d0
+       PI%parmax(22) = 2000d0
 
        ! C_som
        PI%parmin(23) = 200d0
        PI%parmax(23) = 250000d0 !90000d0
 
-       ! C CWD
+       ! C wood litter
        PI%parmin(37) = 1d0
        PI%parmax(37) = 10000d0
 

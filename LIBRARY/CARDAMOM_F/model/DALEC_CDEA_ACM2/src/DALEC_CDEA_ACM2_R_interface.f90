@@ -117,7 +117,7 @@ subroutine rdaleccdeaacm2(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,ou
   end do ! nos_iter loop
 
   ! Steady state gC/m2
-  out_var4 = (out_var4 / dble(nodays)) * 365.25d0 ! convert to daily mean input
+  out_var4 = (out_var4 / dble(nodays)) * 365.25d0 ! convert to annual mean input
   out_var4 = out_var4 * out_var3     ! multiply by residence time in years
 
   ! deallocate harvested variable

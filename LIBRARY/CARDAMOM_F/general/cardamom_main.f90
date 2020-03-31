@@ -107,7 +107,6 @@ program cardamom_framework
  endif
 
  do_inflate = .true.
-! if (DATAin%total_obs > 0 .and. .not.restart_flag .and. do_inflate) then
  if (DATAin%total_obs > 0 .and. MCOUT%nos_iterations < (MCO%nOUT*MCO%sub_fraction) .and. do_inflate) then
 
      ! Having found an EDC compliant parameter vector, we want to do a MCMC
@@ -122,19 +121,19 @@ program cardamom_framework
      ! Set flag to indicate this phase has occurred and make a record of the
      ! total iterations to be attempted
      MCO%sub_sample_complete = .true. ; nOUT_save = MCO%nOUT
-     ! Estimate the maximum number of iterations to be used in the analysis
-!     MCO%nOUT = nint(dble(nOUT_save) * MCO%sub_fraction * (1d0/3d0))
 
      ! Report to the user
-     write(*,*)"Beginning parameter search on inflated likelihoods"
+     write(*,*)"Beginning parameter search on sample size normalised likelihoods"
 
      MCO%nOUT = nint(dble(nOUT_save) * MCO%sub_fraction) - MCOUT%nos_iterations
+     write(*,*)"Nos iterations = ",MCO%nOUT
+     MCO%nADAPT = 100 ; MCO%fADAPT = 1d0 
      call MHMCMC(1d0,sub_model_likelihood)
      ! Leave parameter and covariance structures as they come out form the
      ! sub-sample - but reset the number of samples used in the update
      ! weighting
      if (PI%cov .and. PI%use_multivariate) then
-!         PI%Nparvar = 1d0
+         PI%Nparvar = 1d0
      else
          ! reset the parameter step size at the beginning of each attempt
          PI%parvar = 1d0 ; PI%Nparvar = 0d0
@@ -147,128 +146,6 @@ program cardamom_framework
          end do
      endif
 
-     ! Estimate the maximum number of iterations to be used in the inflation analysis
-!     MCO%nOUT = nint(dble(nOUT_save) * MCO%sub_fraction * (1d0/3d0))
-     ! set the factor by which the uncertainty will be inflated by
-!     MCO%inflation_factor = 5d0
-!     do i = 1, 3
-!         ! Report to the user
-!         write(*,*)"Current inflation factor = ",MCO%inflation_factor
-!
-!         ! Run a short MCMC
-!         call MHMCMC(-dble(DATAin%total_obs)/MCO%inflation_factor,sub_model_likelihood)
-!         call MHMCMC(1d0,sub_model_likelihood)
-!         ! use the final accepted parameter set as the starting point (or best?)
-!!         PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)        
-!         ! Leave parameter and covariance structures as they come out form the
-!         ! sub-sample - but reset the number of samples used in the update
-!         ! weighting
-!         if (PI%cov .and. PI%use_multivariate) then
-!             PI%Nparvar = 1d0
-!         else
-!             ! reset the parameter step size at the beginning of each attempt
-!             PI%parvar = 1d0 ; PI%Nparvar = 0d0
-!             ! Covariance matrix cannot be set to zero therefore set initial
-!             ! value to a
-!             ! small positive value along to variance access
-!             PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
-!             PI%use_multivariate = .false.
-!             do n = 1, PI%npars
-!                PI%covariance(n,n) = 1d0
-!             end do
-!         endif
-!
-!         ! update the factor by which the uncertainty will be inflated by
-!         if (i == 1) MCO%inflation_factor = 2d0 !MCO%inflation_factor - 1d0
-!         if (i == 2) MCO%inflation_factor = 1.5d0
-!
-!     end do ! Inflation loop
-
-     ! Check whether we should be running the large inflation stage
-!     if (MCOUT%nos_iterations < nOUT_save*MCO%sub_fraction*(1d0/3d0)) then
-!
-!         ! Report to the user
-!         write(*,*)"Beginning parameter search on large inflated likelihoods"
-!
-!         ! set the factor by which the uncertainty will be inflated by
-!         MCO%inflation_factor = 4.5d0
-!         call MHMCMC(-dble(DATAin%total_obs*0.5d0)/MCO%inflation_factor,sub_model_likelihood)
-!         ! store the best parameters from that loop
-!         PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
-!         ! Leave parameter and covariance structures as they come out form the
-!         ! sub-sample - but reset the number of samples used in the update
-!         ! weighting
-!         if (PI%cov .and. PI%use_multivariate) then
-!             PI%Nparvar = 1d0
-!        ! else
-!             ! reset the parameter step size at the beginning of each attempt
-!             PI%parvar = 1d0 ; PI%Nparvar = 0d0
-!             ! Covariance matrix cannot be set to zero therefore set initial
-!             ! value to a
-!             ! small positive value along to variance access
-!             PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
-!             PI%use_multivariate = .false.
-!             do n = 1, PI%npars
-!                PI%covariance(n,n) = 1d0
-!             end do
-!         endif
-!
-!     end if ! MCOUT%nos_iterations > nOUT_save*MCO%sub_fraction*(1d0/3d0)
-!
-!     ! Check whether we should be running the intermediate inflation stage
-!     if (MCOUT%nos_iterations < nOUT_save*MCO%sub_fraction*(2d0/3d0)) then
-! 
-!         ! Report to the user
-!         write(*,*)"Beginning parameter search on intermediate inflated likelihoods"
-!         MCO%inflation_factor = 3.0d0
-!         call MHMCMC(-dble(DATAin%total_obs*0.5d0)/MCO%inflation_factor,sub_model_likelihood)
-!         ! store the best parameters from that loop
-!         PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
-!         ! Leave parameter and covariance structures as they come out form the
-!         ! sub-sample - but reset the number of samples used in the update
-!         ! weighting
-!         if (PI%cov .and. PI%use_multivariate) then
-!             PI%Nparvar = 1d0
-!         else
-!             ! reset the parameter step size at the beginning of each attempt
-!             PI%parvar = 1d0 ; PI%Nparvar = 0d0
-!             ! Covariance matrix cannot be set to zero therefore set initial
-!             ! value to a small positive value along to variance access
-!             PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
-!             PI%use_multivariate = .false.
-!             do n = 1, PI%npars
-!                PI%covariance(n,n) = 1d0
-!             end do
-!         endif ! PI%cov .and. PI%use_multivariate
-!
-!     end if ! MCOUT%nos_iterations > nOUT_save*MCO%sub_fraction*(2d0/3d0)
-!
-!     ! Well we can assume that if we are in this section that we must at least
-!     ! want to carry out the small inflation...
-!
-!     ! Report to the user
-!     write(*,*)"Beginning parameter search on small inflated likelihoods"
-!     MCO%inflation_factor = 1.5d0
-!     call MHMCMC(-dble(DATAin%total_obs*0.5d0)/MCO%inflation_factor,sub_model_likelihood)
-!     ! store the best parameters from that loop
-!     PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
-!     ! Leave parameter and covariance structures as they come out form the
-!     ! sub-sample - but reset the number of samples used in the update
-!     ! weighting
-!     if (PI%cov .and. PI%use_multivariate) then
-!         PI%Nparvar = 1d0
-!     else
-!         ! reset the parameter step size at the beginning of each attempt
-!         PI%parvar = 1d0 ; PI%Nparvar = 0d0
-!         ! Covariance matrix cannot be set to zero therefore set initial
-!         ! value to a small positive value along to variance access
-!         PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
-!         PI%use_multivariate = .false.
-!         do n = 1, PI%npars
-!            PI%covariance(n,n) = 1d0
-!         end do
-!     endif ! PI%cov .and. PI%use_multivariate
-!
  end if ! restart flag
 
  ! Restore module variables needed for the run - these components could be split

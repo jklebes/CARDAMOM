@@ -1041,13 +1041,13 @@ module model_likelihood_module
 
     ! GPP allocation to foliage and labile cannot be 5 orders of magnitude
     ! difference from GPP allocation to roots
-!    if ((EDC2 == 1 .or. DIAG == 1) .and. (ffol > (5d0*froot) .or. (ffol*5d0) < froot)) then
-!        EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
-!    endif
-    ! Restrict difference between root and foliar turnover to less than 5 fold
-    if ((EDC2 == 1 .or. DIAG == 1) .and. (torfol > pars(7)*5d0 .or. torfol*5d0 < pars(7) )) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
+    if ((EDC2 == 1 .or. DIAG == 1) .and. (ffol > (5d0*froot) .or. (ffol*5d0) < froot)) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
     endif
+    ! Restrict difference between root and foliar turnover to less than 5 fold
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. (torfol > pars(7)*5d0 .or. torfol*5d0 < pars(7) )) then
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
+!    endif
 
     ! Average turnover of foliage should not be less than wood (pars(6))
     if ((EDC2 == 1 .or. DIAG == 1) .and. torfol < pars(6) ) then
@@ -1788,12 +1788,15 @@ module model_likelihood_module
         likelihood = likelihood-((tot_exp-DATAin%otherpriors(3))/DATAin%otherpriorunc(3))**2
     end if
 
-    ! WARNINGS hardcoded prior to constrain the steady state attractor of wood.
-    ! These are specifically a test for Kiuic 2001-2015 experiment
-!    tot_exp = sum(DATAin%M_POOLS(:,4)) / dble(DATAin%nodays)
-!    tot_exp = (sum(DATAin%M_FLUXES(:,7)) / sum(DATAin%M_FLUXES(:,11)+DATAin%M_FLUXES(:,25))) * tot_exp
-!print*,"ss-likelihod",((tot_exp - 8000d0) / 250d0)**2,tot_exp,sum(DATAin%M_POOLS(:,4)) / DATAin%nodays
-!    tot_exp = likelihood - ((tot_exp - 8000d0) / 250d0)**2
+    ! Estimate the biological steady state attractor on the wood pool.
+    ! NOTE: this arrangement explicitly neglects the impact of disturbance on
+    ! residence time (i.e. no fire and biomass removal)
+    if (DATAin%otherpriors(5) > -9998) then
+        ! Estimate the mean annual input to the wood pool (gC.m-2.yr-1) and remove
+        ! the yr-1 by multiplying by residence time (yr)
+        tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
+        likelihood = likelihood - ((tot_exp - DATAin%otherpriors(5)) / DATAin%otherpriorunc(5))**2
+    endif
 
     ! the likelihood scores for each observation are subject to multiplication
     ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
@@ -2017,6 +2020,16 @@ module model_likelihood_module
         tot_exp = pars(17) / (10d0**pars(11))
         scale_likelihood = scale_likelihood-((tot_exp-DATAin%otherpriors(3))/DATAin%otherpriorunc(3))**2
     end if
+
+    ! Estimate the biological steady state attractor on the wood pool.
+    ! NOTE: this arrangement explicitly neglects the impact of disturbance on
+    ! residence time (i.e. no fire and biomass removal)
+    if (DATAin%otherpriors(5) > -9998) then
+        ! Estimate the mean annual input to the wood pool (gC.m-2.day-1) and
+        ! remove the day-1 by multiplying by residence time (day)
+        tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
+        scale_likelihood = scale_likelihood - ((tot_exp - DATAin%otherpriors(5)) / DATAin%otherpriorunc(5))**2
+    endif
 
     ! the likelihood scores for each observation are subject to multiplication
     ! by 0.5 in the algebraic formulation. To avoid repeated calculation across

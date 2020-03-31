@@ -147,6 +147,55 @@ load_mpi_biomass_fields_for_extraction<-function(latlon_in,Cwood_source,Cwood_in
         # output variables; convert MgCha-> gCm-2
         return(list(biomass_all = biomass*1e2, biomass_all_unc = biomass_uncertainty*1e2,lat = lat, long = long))
 
+    } else if (Cwood_initial_source == "INPE_Avitabile") {
+
+        # let the user know this might take some time
+        print("Loading processed combined INPE (Amazon) Avitabile (pan-tropics) biomass priors for subsequent sub-setting ...")
+
+        # Read in the estimate and uncertainty rasters
+        biomass = raster("Cbiomass_gCm2.tif") ; biomass_uncertainty = raster("Cbiomass_uncertainty_gCm2.tif")
+
+        # Store dimension information
+        dims = dim(biomass)[1:2]
+        # Extract latitude / longitude information
+        lat = coordinates(biomass)
+        # Split between long and lat
+        long = lat[,1] ; lat = lat[,2]
+        # Reconstruct the full lat / long grid and flip dimensions as needed
+        long = array(long, dim=c(dims[2],dims[1]))
+        lat = array(lat, dim=c(dims[2],dims[1]))
+        long = long[,dim(long)[2]:1]
+        lat = lat[,dim(lat)[2]:1]
+        # Similarly break apart the raster and re-construct into the correct orientation
+        biomass = array(biomass, dim=c(dims[2],dims[1]))
+        biomass_uncertainty = array(biomass_uncertainty, dim=c(dims[2],dims[1]))
+        biomass = biomass[,dim(biomass)[2]:1]
+        biomass_uncertainty = biomass_uncertainty[,dim(biomass_uncertainty)[2]:1]
+
+        # clean up variables
+        gc(reset=TRUE,verbose=FALSE)
+
+        # now remove the ones that are actual missing data
+        biomass[which(as.vector(biomass) == -9999)] = NA
+        biomass_uncertainty[which(as.vector(biomass_uncertainty) == -9999)] = NA
+        # filter around target area
+        max_lat = max(latlon_in[,1])+1.0 ; max_long=max(latlon_in[,2])+1.0
+        min_lat = min(latlon_in[,1])-1.0 ; min_long=min(latlon_in[,2])-1.0
+        keep_lat_min = min(which(lat[1,] > min_lat))
+        keep_lat_max = max(which(lat[1,] < max_lat))
+        keep_long_min = min(which(long[,1] > min_long))
+        keep_long_max = max(which(long[,1] < max_long))
+        # remove data outside of target area
+        biomass = biomass[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max]
+        biomass_uncertainty = biomass_uncertainty[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max]
+        lat = lat[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max] ; long = long[keep_long_min:keep_long_max,keep_lat_min:keep_lat_max]
+
+        # clean up variables
+        gc(reset=TRUE,verbose=FALSE)
+
+        # output variables
+        return(list(biomass_all = biomass, biomass_all_unc = biomass_uncertainty, lat = lat, long = long))
+
     } else if (Cwood_source == "GlobBIOMASS" | Cwood_initial_source == "GlobBIOMASS") {
 
       # let the user know this might take some time

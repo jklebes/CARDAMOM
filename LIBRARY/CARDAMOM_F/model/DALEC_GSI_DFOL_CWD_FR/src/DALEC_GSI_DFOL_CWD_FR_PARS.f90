@@ -45,7 +45,7 @@ module MODEL_PARAMETERS
        PI%parmin(1) = 0.25d0
        PI%parmax(1) = 0.75d0
 
-       ! Fraction of GPP respired as maintenace respiration
+       ! Fraction of GPP respired as Rm(fol,root,wood)
        PI%parmin(2) = 0.1d0
        PI%parmax(2) = 0.8d0
 
@@ -59,7 +59,7 @@ module MODEL_PARAMETERS
 
        ! GSI max leaf turnover
        PI%parmin(5) = 0.002737851d0 ! 1 year 
-       PI%parmax(5) = 0.025d0       ! 40 days
+       PI%parmax(5) = 0.016666667d0 ! 60 days
 
        ! Turnover fraction of wood
        PI%parmin(6) = 0.000009d0 ! 304  years
@@ -72,7 +72,7 @@ module MODEL_PARAMETERS
        PI%parmax(7) = 0.01d0        ! 0.27 years
 
        ! Turnover of litter (fraction; temperature adjusted)
-       PI%parmin(8) = 0.00011d0   ! 24.9 years at 0oC
+       PI%parmin(8) = 0.0001141d0 ! 24   years at 0oC
        PI%parmax(8) = 0.02d0      ! 0.13 years at 0oC
 
        ! Turnover of som to Rhet (fraction; temperature adjusted)
@@ -95,21 +95,21 @@ module MODEL_PARAMETERS
        PI%parmin(12) = 0.002737851d0 !  1 years
        PI%parmax(12) = 0.025d0       ! 40 days
 
-       ! Fraction to Clab*/
+       ! Fraction of GPP to Clab*/
        PI%parmin(13) = 0.05d0
        PI%parmax(13) = 0.35d0
 
        ! GSI min temperature threshold (oC)
-       PI%parmin(14) = 243d0 !235d0
+       PI%parmin(14) = 283.15d0 !243d0 !235d0
        PI%parmax(14) = 310d0 !330d0
 
        ! GSI max temperature threshold (oC)
-       PI%parmin(15) = 243d0 !235d0
+       PI%parmin(15) = 273.15d0 !243d0 !235d0
        PI%parmax(15) = 310d0 !330d0
 
        ! GSI min photoperiod threshold (sec)
-       PI%parmin(16) = 3600d0*3d0  !  1 hours
-       PI%parmax(16) = 3600d0*21d0 ! 18 hours
+       PI%parmin(16) = 3600d0*3d0  !  3 hours
+       PI%parmax(16) = 3600d0*21d0 ! 21 hours
 
        ! LMA
        ! Kattge et al. 2011,
@@ -117,8 +117,8 @@ module MODEL_PARAMETERS
        PI%parmax(17) = 180d0
 
        ! GSI max photoperiod threshold (sec)
-       PI%parmin(24) = 3600d0*3d0   !  6 hours
-       PI%parmax(24) = 3600d0*21d0  ! 24 hours
+       PI%parmin(24) = 3600d0*3d0   !  3 hours
+       PI%parmax(24) = 3600d0*21d0  ! 21 hours
 
        ! GSI min VPD threshold (Pa)
        PI%parmin(25) = 10d0 !100d0
@@ -184,7 +184,7 @@ module MODEL_PARAMETERS
 
        ! C litter
        PI%parmin(22) = 1d0
-       PI%parmax(22) = 2500d0
+       PI%parmax(22) = 2000d0
 
        ! C_som
        PI%parmin(23) = 200d0

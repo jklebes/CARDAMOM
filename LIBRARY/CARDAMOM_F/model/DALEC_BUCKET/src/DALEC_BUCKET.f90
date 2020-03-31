@@ -1400,7 +1400,7 @@ double precision :: Creturn_canopy,Creturn_investment
                CFF(7) = POOLS(n+1,7)*burnt_area*combust_eff(4)
                NCFF(7) = POOLS(n+1,7)*burnt_area*(1d0-combust_eff(4))*(1d0-rfac)
                !/*fires as daily averages to comply with units*/
-               FLUXES(n,17)=(CFF(1)+CFF(2)+CFF(3)+CFF(4)+CFF(5)) * deltat_1(n)
+               FLUXES(n,17) = (CFF(1)+CFF(2)+CFF(3)+CFF(4)+CFF(5)) * deltat_1(n)
                !              !/*update net exchangep*/
                !              NEE_out(n) = NEE_out(n)+FLUXES(n,17)
                ! determine the as daily rate impact on live tissues for use in EDC and
@@ -3633,9 +3633,11 @@ double precision :: Creturn_canopy,Creturn_investment
         deltaGPP = (tmp - GPP_current)
 
         ! Estimate the change in net carbon export by the canopy per day,
-        ! then scale by leaf lifespan (days) and substract the initial investment cost
-        ! i.e. gCLL/m2/gCinvest
-        deltaNCE = (((deltaGPP - deltaRm) * leaf_life) - C_invest) / C_invest
+        ! then scale the initial investment costs by leaf lifespan (days) and substract the initial investment cost
+        ! i.e. gC/m2/day/(gCinvest/LL)
+!        deltaNCE = (((deltaGPP - deltaRm) * leaf_life) - C_invest) / C_invest
+        C_invest = C_invest / leaf_life
+        deltaNCE = (((deltaGPP - deltaRm)) - C_invest) / C_invest
         ! Is the marginal return for GPP (over the mean life of leaves)
         ! less than increase in maintenance respiration and C required
         ! to growth?

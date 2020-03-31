@@ -62,7 +62,7 @@ module MODEL_PARAMETERS
     PI%parmax(7) = 0.01d0     ! 0.27 years
 
     ! Turnover of litter (fraction; temperature adjusted)
-    PI%parmin(8) = 0.00011d0   ! 24.9 years at 0oC
+    PI%parmin(8) = 0.0001141d0 ! 24   years at 0oC
     PI%parmax(8) = 0.02d0      ! 0.13 years at 0oC
 
     ! Turnover of som to Rhet (fraction; temperature adjusted)

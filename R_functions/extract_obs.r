@@ -327,6 +327,11 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
         output = extract_avitabile_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
         Cwood_initial = output$Cwood_stock
         Cwood_initial_unc = output$Cwood_stock_unc
+    } else if (Cwood_initial_source == "INPE_Avitabile") {
+        # get Cwood
+        output = extract_avitabile_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
+        Cwood_initial = output$Cwood_stock
+        Cwood_initial_unc = output$Cwood_stock_unc
     } else if (Cwood_initial_source == "mpi_biomass") {
         # get Cwood
         output = extract_mpi_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)

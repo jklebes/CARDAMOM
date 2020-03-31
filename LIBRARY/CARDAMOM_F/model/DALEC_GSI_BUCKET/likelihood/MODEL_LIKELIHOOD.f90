@@ -1804,9 +1804,19 @@ module model_likelihood_module
         likelihood = likelihood-((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
     end if
 
+    ! Estimate the biological steady state attractor on the wood pool.
+    ! NOTE: this arrangement explicitly neglects the impact of disturbance on
+    ! residence time (i.e. no fire and biomass removal)
+    if (DATAin%otherpriors(5) > -9998) then
+        ! Estimate the mean annual input to the wood pool (gC.m-2.day-1) and
+        ! remove the day-1 by multiplying by residence time (day)
+        tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
+        likelihood = likelihood - ((tot_exp - DATAin%otherpriors(5)) / DATAin%otherpriorunc(5))**2
+    endif
+
     ! the likelihood scores for each observation are subject to multiplication
     ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
-    ! multiple datastreams we apply this multiplication to the bulk liklihood
+    ! multiple datastreams we apply this multiplication to the bulk likelihood
     ! hear
     likelihood = likelihood * 0.5d0
 
@@ -2047,9 +2057,19 @@ module model_likelihood_module
         scale_likelihood = scale_likelihood-((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
     end if
 
+    ! Estimate the biological steady state attractor on the wood pool.
+    ! NOTE: this arrangement explicitly neglects the impact of disturbance on
+    ! residence time (i.e. no fire and biomass removal)
+    if (DATAin%otherpriors(5) > -9998) then
+        ! Estimate the mean annual input to the wood pool (gC.m-2.day-1) and
+        ! remove the day-1 by multiplying by residence time (day)
+        tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
+        scale_likelihood = scale_likelihood - ((tot_exp - DATAin%otherpriors(5)) / DATAin%otherpriorunc(5))**2
+    endif
+
     ! the likelihood scores for each observation are subject to multiplication
     ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
-    ! multiple datastreams we apply this multiplication to the bulk liklihood
+    ! multiple datastreams we apply this multiplication to the bulk likelihood
     ! hear
     scale_likelihood = scale_likelihood * 0.5d0
 

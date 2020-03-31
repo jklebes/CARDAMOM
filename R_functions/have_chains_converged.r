@@ -17,7 +17,7 @@ have_chains_converged<-function (param_sets) {
       # pass parameters to convergence function
       converged = psrf(var) #; print(converged$R[length(converged$R)])
       # assume critical value of 1 (default is 1.1 but we want to be a little conservative)
-      bob = which(converged$R > 1.1) 
+      bob = which(converged$R > 1.2) 
       # start with all pass assumption
       converged = array("PASS",length(converged$R))
       # changed passes to fails if needed

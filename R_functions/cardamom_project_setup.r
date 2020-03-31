@@ -239,7 +239,7 @@ cardamom_project_setup <- function (paths,PROJECT) {
         if (file.exists(paste(exepath,"/",exe,sep=""))) {system(paste("rm ",exepath,"/",exe,sep=""))}
         # store current working directory so that we can leave it briefly but return later
         cwd=getwd()
-        setwd(paste(paths$cardamom,"LIBRARY/CARDAMOM_F/executable/",sep=""))
+        setwd(paste(paths$cardamom,"LIBRARY/CARDAMOM_F/executable/",sep="")) 
         # issue compile commands
         system(paste(compiler," -O2 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
                      " ../model/",modelname,"/src/",modelname,"_CROP.f90",
