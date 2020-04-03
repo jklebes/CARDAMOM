@@ -749,14 +749,21 @@ module model_likelihood_module
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(24) < pars(16))) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
     end if
-    ! VPD - may not be needed
+    ! VPD
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(26) < pars(25))) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
     end if
 
     ! Photoperiod maximum cannot be greater than the observed maximum day length
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(24) > maxval(DATAin%MET(11,:)))) then
+    ! + 1 hr
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(24) > maxval(DATAin%MET(11,:)+3600d0))) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
+    end if
+
+    ! VPD at which stress in at maximum should be no larger than max(VPDlag21) + 1500 Pa from
+    ! the max VPD tolerated parameter
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(26) > maxval(DATAin%MET(12,:)+1500d0))) then
+         EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     end if
 
     ! NUE and avN combination give a Vcmax equivalent.
@@ -786,7 +793,7 @@ module model_likelihood_module
     ! NOTE: assessment of runs with no EDCs applied shows this is rarely
     ! breached and can probably be ignored
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(9) > (pars(1)*pars(8)) ) then
-       EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
+       EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
     endif
 
     ! Turnover of cwd (pars(38)) should be slower than fine litter turnover pars(8)
@@ -800,7 +807,7 @@ module model_likelihood_module
     ! NOTE: assessment of runs with no EDCs applied shows this is rarely
     ! breached and can probably be ignored
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(9)*temp_response) > pars(7)) then
-       EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
+       EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
     endif
 
     ! replanting 30 = labile ; 31 = foliar ; 32 = roots ; 33 = wood

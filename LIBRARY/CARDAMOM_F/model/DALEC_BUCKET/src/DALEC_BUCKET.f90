@@ -2264,14 +2264,6 @@ double precision :: Creturn_canopy,Creturn_investment
     ! determine isothermal net soil
     soil_lwrad_Wm2 = (soil_absorption_from_sky + soil_absorption_from_canopy) - longwave_release_soil
 
-    !!!!!!!!!!
-    ! Approximate daily impact on isothermal to net longwave
-    !!!!!!!!!!
-
-    ! Isothermal -> net radiation in SPA is largely linear, therefore we
-    ! retrieve the linear correction here
-    soil_lwrad_Wm2 = (soil_lwrad_Wm2 * soil_iso_to_net_coef) + soil_iso_to_net_const
-
   end subroutine calculate_longwave_isothermal
   !
   !------------------------------------------------------------------
@@ -3544,10 +3536,13 @@ double precision :: Creturn_canopy,Creturn_investment
 
     ! Temperature limitation, then restrict to 0-1; correction for k-> oC
     itemp(current_step) = min(1d0,max(0d0,(mean_min_airt-(Tfac_min-freeze)) * Tfac_range_1))
+!    itemp(current_step) = opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
+!    itemp(current_step) = opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,mean_min_airt) 
     ! Photoperiod limitation (seconds)
     iphoto(current_step) = min(1d0,max(0d0,(mean_daylength-Photofac_min) * Photofac_range_1))
     ! VPD limitation (kPa)
     ivpd(current_step) = min(1d0,max(0d0,1d0 - ((mean_VPD-VPDfac_min) * VPDfac_range_1)))
+!    ivpd(current_step) = min(1d0,max(0d0,1d0 - ((deltaWP-VPDfac_min) * VPDfac_range_1)))
     ! Calculate and store the GSI index
     GSI(current_step) = itemp(current_step) * ivpd(current_step) * iphoto(current_step)
 
@@ -3581,6 +3576,23 @@ double precision :: Creturn_canopy,Creturn_investment
     ! first assume that nothing is happening
     leaf_fall = 0d0   ! leaf turnover
     leaf_growth = 0d0 ! leaf growth
+
+! calculate new leaf area, GPP return
+!lai = 1d0 
+!aerodynamic_conductance = aerodynamic_conductance * (lai / lai_save)
+!call calculate_stomatal_conductance(abs(deltaWP),Rtot)
+!call calculate_shortwave_balance
+!if (lai_save < vsmall) then
+!    call calculate_aerodynamic_conductance
+!endif ! lai_save < vsmall
+!! calculate stomatal conductance of water
+!if (stomatal_conductance > vsmall) then
+!    call acm_gpp_stage_1
+!   iphoto(current_step) = acm_gpp_stage_2(stomatal_conductance) - (Rm_leaf_per_gC * (lai / SLA))
+!else
+!   iphoto(current_step) = 0d0 - (Rm_leaf_per_gC * (lai / SLA))
+!endif
+!lai = lai_save
 
     ! Estimate current NCE
     NCE = GPP_current - (Rm_leaf_per_gC * foliage)
@@ -3802,8 +3814,9 @@ double precision :: Creturn_canopy,Creturn_investment
   !
   double precision function opt_max_scaling( max_val , optimum , kurtosis , current )
 
-    ! estimates a 0-1 scaling based on a skewed guassian distribution with a
-    ! given optimum, maximum and kurtosis
+    ! Estimates a 0-1 scaling based on a skewed guassian distribution with a
+    ! given optimum, maximum and kurtosis. Minimum is assumed to be at infinity
+    ! (or near enough)
 
     implicit none
 
@@ -3811,14 +3824,25 @@ double precision :: Creturn_canopy,Creturn_investment
     double precision,intent(in) :: max_val, optimum, kurtosis, current
 
     ! local variables..
-    double precision :: dummy
+    double precision, parameter :: min_val = -1d6
 
-    if ( current >= max_val ) then
-         opt_max_scaling = 0d0
+    ! Code with implicit assumption of min bound at infinity
+!    if ( current >= max_val ) then
+!         opt_max_scaling = 0d0
+!    else
+!         dummy     = exp( log((max_val - current) / (max_val - optimum)) * kurtosis * (max_val - optimum) )
+!         opt_max_scaling = dummy * exp( kurtosis * ( current - optimum ) )
+!    end if
+
+    ! Code with explicit min bound
+    if (current > max_val .or. current < min_val) then
+        opt_max_scaling = 0d0
     else
-         dummy     = exp( log((max_val - current) / (max_val - optimum)) * kurtosis * (max_val - optimum) )
-         opt_max_scaling = dummy * exp( kurtosis * ( current - optimum ) )
-    end if
+        opt_max_scaling = exp( kurtosis * log((max_val-current)/(max_val-optimum)) * (max_val-optimum) ) & 
+                        * exp( kurtosis * log((current-min_val)/(optimum-min_val)) * (optimum-min_val) ) & 
+                        * exp( kurtosis * (current - optimum) / (max_val-min_val) ) 
+    endif 
+
 
   end function opt_max_scaling
   !

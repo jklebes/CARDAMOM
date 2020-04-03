@@ -421,12 +421,13 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
         }
     } else if (Cwood_stock_source == "GlobBIOMASS") {
         # declare output variable
-        Cwood_stock=array(-9999, dim=Cwood_all$step_of)
-        Cwood_stock_unc=array(-9999, dim=Cwood_all$step_of)
+        Cwood_stock=rep(-9999, Cwood_all$step_of)
+        Cwood_stock_unc=rep(-9999, Cwood_all$step_of)
         # only bother with this if 2010 or 2017 is within time period
         if (max(Cwood_all$obs_step) > 0) {
             # get Cwood
             output = extract_globbiomass_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
+
             # and insert the extracted value into the correct location
             for (a in seq(1,length(Cwood_all$obs_step))) {
                  if (Cwood_all$obs_step[a] > 0) {
@@ -688,6 +689,24 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
         soilwater = -9999 ; soilwater_unc = -9999
     }
 
+    ###
+    ## Get some Cwood information (potential stock)
+    ###
+
+#    if (Cwood_potential_source == "site_specific") {
+#        infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
+#        Cwood_potential=read_site_specific_obs("Cwood_potential_gCm2",infile)
+#        Cwood_potential_unc=read_site_specific_obs("Cwood_potential_unc_gCm2",infile)
+#    } else if (Cwood_potential_source == "Avitabile") {
+#        # get Cwood
+#        output = extract_potential_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
+#        Cwood_potential = output$Cwood_stock
+#        Cwood_potential_unc = output$Cwood_stock_unc
+#    } else {
+#        # assume no data available
+        Cwood_potential=-9999 ; Cwood_potential_unc=-9999
+#    }
+
     # return output now
     return(list(LAT = latlon_wanted[1], LAI = lai, LAI_unc = lai_unc, GPP = GPP, GPP_unc = GPP_unc
       ,Evap = Evap, Evap_unc = Evap_unc, NEE = NEE, NEE_unc = NEE_unc, Reco = Reco, Reco_unc = Reco_unc
@@ -702,7 +721,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
       ,deforestation = deforestation, burnt_area = burnt_area, ctessel_pft = ctessel_pft, yield_class = yield_class
       ,age = age, forest_management = forest_management, top_sand = top_sand, bot_sand = bot_sand, top_clay = top_clay
       ,bot_clay = bot_clay, plant = plant, plant_range = plant_range, harvest = harvest, harvest_range = harvest_range
-      ,SWE = SWE, SWE_unc = SWE_unc, soilwater = soilwater, soilwater_unc = soilwater_unc, nbe = nbe, nbe_unc = nbe_unc))
+      ,SWE = SWE, SWE_unc = SWE_unc, soilwater = soilwater, soilwater_unc = soilwater_unc, nbe = nbe, nbe_unc = nbe_unc
+      ,Cwood_potential = Cwood_potential, Cwood_potential_unc = Cwood_potential_unc))
 
 
     }

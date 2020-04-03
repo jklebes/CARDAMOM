@@ -750,6 +750,19 @@ module model_likelihood_module
          EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
     end if
 
+    ! Photoperiod maximum cannot be greater than the observed maximum day length
+    ! + 1 hr
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(24) > maxval(DATAin%MET(11,:)+3600d0))) then
+         EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
+    end if
+
+    ! VPD at which stress in at maximum should be no larger than max(VPDlag21) +
+    ! 1500 Pa from
+    ! the max VPD tolerated parameter
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(26) > maxval(DATAin%MET(12,:)+1500d0))) then
+         EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
+    end if
+
     ! NUE and avN combination give a Vcmax equivalent.
     ! Kattge et al (2011) offers a prior of 3.4 - 30.7 gC/m2leaf/day.
     ! Here, to be cautious we will expand accepted range
@@ -771,7 +784,7 @@ module model_likelihood_module
 
     ! Turnover of litter towards som (pars(1)*pars(8)) should be faster than turnover of som (pars(9))
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(9) > (pars(1)*pars(8)) ) then
-       EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
     endif
 
     ! turnover of cwd (pars(35)) should be slower than fine litter turnover pars(8)
@@ -781,7 +794,7 @@ module model_likelihood_module
 
     ! root turnover (pars(7)) should be greater than som turnover (pars(9)) at mean temperature
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(9)*temp_response) > pars(7)) then
-       EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
     endif
 
     ! replanting 30 = labile ; 31 = foliar ; 32 = roots ; 33 = wood

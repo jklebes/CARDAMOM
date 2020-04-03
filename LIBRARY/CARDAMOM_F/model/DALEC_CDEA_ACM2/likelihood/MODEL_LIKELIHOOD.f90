@@ -1193,7 +1193,7 @@ module model_likelihood_module
 !         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,3)/DATAin%Croots_stock(dn))/log(2.))**2.
          tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
        end do
-       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCroot_stock))
+       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCroots_stock))
     endif
 
     ! Clitter log-likelihood

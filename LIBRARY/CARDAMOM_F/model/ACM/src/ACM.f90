@@ -1514,14 +1514,6 @@ contains
     ! determine isothermal net soil
     soil_lwrad_Wm2 = (soil_absorption_from_sky + soil_absorption_from_canopy) - longwave_release_soil
 
-    !!!!!!!!!!
-    ! Approximate daily impact on isothermal to net longwave
-    !!!!!!!!!!
-
-    ! Isothermal -> net radiation in SPA is largely linear, therefore we
-    ! retrieve the linear correction here
-    soil_lwrad_Wm2 = (soil_lwrad_Wm2 * soil_iso_to_net_coef) + soil_iso_to_net_const
-
   end subroutine calculate_longwave_isothermal
   !
   !------------------------------------------------------------------

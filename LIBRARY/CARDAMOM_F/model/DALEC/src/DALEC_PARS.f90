@@ -100,11 +100,11 @@ module MODEL_PARAMETERS
        PI%parmax(13) = 0.55d0 ! 0.35d0 
 
        ! GSI min temperature threshold (oC)
-       PI%parmin(14) = 283.15d0 !243d0 !235d0
+       PI%parmin(14) = 243d0 !235d0
        PI%parmax(14) = 310d0 !330d0
 
        ! GSI max temperature threshold (oC)
-       PI%parmin(15) = 273.15d0 !243d0 !235d0
+       PI%parmin(15) = 283.15d0 !243d0 !235d0
        PI%parmax(15) = 310d0 !330d0
 
        ! GSI min photoperiod threshold (sec)

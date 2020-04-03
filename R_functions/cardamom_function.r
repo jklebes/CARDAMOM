@@ -5,7 +5,7 @@
 ###
 
 cardamom <-function (projname,model,method,stage) {
-#stage = 2
+#stage = 0
   ## load needed functions into R environment
   paths=load_paths()
 
@@ -28,7 +28,7 @@ cardamom <-function (projname,model,method,stage) {
 
   ###
   ## Begin Stage -1
-  # create or repair PROJECT info file, PROJECT initialiation
+  ## create or repair PROJECT info file, PROJECT initialiation
 
   if (file.exists(PROJECTfile) == FALSE | stage == -1){
 
