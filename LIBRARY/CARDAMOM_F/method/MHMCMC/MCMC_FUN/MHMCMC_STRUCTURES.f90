@@ -21,7 +21,7 @@ module MCMCOPT
   ! contains MHMCMC options
   type MCMC_OPTIONS
 
-    double precision :: sub_fraction = 0.10d0, inflation_factor = 6d0
+    double precision :: sub_fraction = 0.20d0, inflation_factor = 6d0
 
     logical :: sub_sample_complete = .false. & ! Has a sub-sample / inflated uncertainty simulation taken place?
               ,returnpars = .true. & ! return best fit parameters or not
@@ -64,9 +64,9 @@ module MCMCOPT
                        ,ITER_beta      & ! number of iterations using beta proposal
                        ,ITER           & ! number of iterations attempted
                        ,ACCEDC         & ! number of EDC complient iterations
-                       ,ACCRATE_beta   & ! local beta step acceptance rate  
+                       ,ACCRATE_beta   & ! local beta step acceptance rate
                        ,ACCRATE        & ! local acceptance rate
-                       ,ACCRATE_GLOBAL   ! global acceptance rate  
+                       ,ACCRATE_GLOBAL   ! global acceptance rate
 
   end type ! COUNTERS
 
@@ -79,13 +79,14 @@ module MCMCOPT
                                                   ,parmax   & ! maximum parameter values
                                                   ,parmin   & ! minimum parameter values
                                                   ,parini   & ! initial parameter values
+                                                  ,paradj   & ! adjustment to allow log-normalised stepping
                                                   ,parfix   & ! do they need fixing (i.e. randomly generated)
                                                   ,parvar     ! variance of accepted parameter
 
     double precision :: Nparvar ! Number of samples forming variance of accepted parameters
 
     integer :: npars  ! number of parameters to be solved
-        
+
     ! crop specific variables
     double precision :: stock_seed_labile
     double precision, allocatable, dimension(:)  ::    DS_shoot, & !

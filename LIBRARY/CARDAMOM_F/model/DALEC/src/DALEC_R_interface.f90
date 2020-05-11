@@ -1,6 +1,6 @@
 
 
-subroutine rdalec(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,out_var2,out_var3,out_var4 & 
+subroutine rdalec(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,out_var2,out_var3,out_var4 &
                  ,lat &
                  ,nopars,nomet,nofluxes,nopools,pft,pft_specific &
                  ,nodays,deltat,nos_iter,exepath,pathlength)
@@ -8,7 +8,9 @@ subroutine rdalec(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,out_var2,o
   use CARBON_MODEL_MOD, only: CARBON_MODEL, itemp, ivpd, iphoto &
                              ,disturbance_residue_to_litter, disturbance_residue_to_cwd &
                              ,disturbance_residue_to_som, disturbance_loss_from_litter  &
-                             ,disturbance_loss_from_cwd,disturbance_loss_from_som
+                             ,disturbance_loss_from_cwd,disturbance_loss_from_som &
+                             ,gs_demand_supply_ratio &
+                             ,gs_total_canopy, gb_total_canopy, canopy_par_MJday_time
   use CARBON_MODEL_CROP_MOD, only: CARBON_MODEL_CROP
 
   ! subroutine specificially deals with the calling of the fortran code model by
@@ -166,9 +168,9 @@ subroutine rdalec(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,out_var2,o
         out_var(i,1:nodays,16) = iphoto(1:nodays)    ! GSI photoperiod component
         out_var(i,1:nodays,17) = ivpd(1:nodays)      ! GSI vpd component
      endif
-     out_var(i,1:nodays,18) = 0d0
-     out_var(i,1:nodays,19) = 0d0   
-     out_var(i,1:nodays,20) = 0d0
+     out_var(i,1:nodays,18) = gs_demand_supply_ratio(1:nodays)
+     out_var(i,1:nodays,19) = gs_total_canopy(1:nodays)
+     out_var(i,1:nodays,20) = gb_total_canopy(1:nodays)
      if (pft == 1) then
         ! crop so...
         out_var(i,1:nodays,21) = 0d0               ! ...no CWD
@@ -179,7 +181,7 @@ subroutine rdalec(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,out_var2,o
         out_var(i,1:nodays,22) = 0d0 ! no Cauto pool present
      endif
      out_var(i,1:nodays,23) = FLUXES(1:nodays,17)    ! output fire (gC/m2/day)
-     out_var(i,1:nodays,24) = 0d0
+     out_var(i,1:nodays,24) = canopy_par_MJday_time(1:nodays)
 
      ! calculate the actual NPP allocation fractions to foliar, wood and fine root pools
      ! by comparing the sum alloaction to each pools over the sum NPP.
@@ -214,7 +216,7 @@ subroutine rdalec(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,out_var2,o
          end where
          out_var3(i,4) = sum(resid_fol) / dble(nodays)
 
-         ! 
+         !
          ! Estimate pool inputs needed for steady state calculation
          !
 
@@ -272,7 +274,7 @@ subroutine rdalec(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,out_var2,o
          out_var3(i,4) = sum(resid_fol) / dble(nodays)
 
 
-         ! 
+         !
          ! Estimate pool inputs needed for steady state calculation
          !
 
@@ -295,7 +297,7 @@ subroutine rdalec(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,out_var2,o
 
   end do ! nos_iter loop
 
-  ! MTT - Convert daily fractional loss to years 
+  ! MTT - Convert daily fractional loss to years
   out_var3 = (out_var3*365.25d0)**(-1d0) ! iter,(fol,root,wood,lit+litwood,som)
 !  out_var3(1:nos_iter,1) = (out_var3(1:nos_iter,1)*365.25d0)**(-1d0) ! fol
 !  out_var3(1:nos_iter,2) = (out_var3(1:nos_iter,2)*365.25d0)**(-1d0) ! root

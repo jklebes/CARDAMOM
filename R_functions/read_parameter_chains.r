@@ -15,6 +15,8 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
   pfile_tmp = gsub(c("_PARS"),"",pfile)
   # select the correct site
   is_it = grepl(paste("_",PROJECT_in$sites[n],"_",sep=""),pfile_tmp) ; pfile = pfile[is_it] ; rm(pfile_tmp)
+  # Find and remove any files which have no data in them
+  is_it = file.size(pfile) ; is_it = which(is_it > 0) ; pfile = pfile[is_it]
 
   # just in case
   if (length(pfile) <= 1) {return(-9999)}
@@ -38,7 +40,7 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
   print("Beginning parameter extraction and chain merge")
   print(paste("Site = ",PROJECT_in$sites[n]," ",n," of ",PROJECT_in$nosites," ",Sys.time(),sep=""))
   # create error flag, initial value zero
-  status=array(0,dim=c(length(chains)))
+  status = array(0,dim=c(length(chains)))
 
   # define output variable
   param_sets_out = array(NA,dim=c((PROJECT_in$model$nopars[n]+1),par_vector_length,length(chains)))
@@ -61,28 +63,30 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
        set1 = 0 ; rm(set1)
 
        # check for inconsistencies
-       if (dim(param_sets)[2] > PROJECT_in$nsubsamples) {
-           print('*************************************************************')
-           print(paste('Warning! Too many parameter vectors in ',pfile[c],sep=""))
-           print('*************************************************************')
-           print('Likely cause is appended solutions in previously existing file')
-           print(paste('To solve this, only the last ',PROJECT_in$nsubsamples,' will be used',sep=""))
-           # keep only the end of the parameter sets
-           param_sets = param_sets[,((dim(param_sets)[2]-PROJECT_in$nsubsamples):dim(param_sets)[2])]
-           status[c] = 2
-       } else if (dim(param_sets)[2] < PROJECT_in$nsubsamples) {
-           print('*************************************************************')
-           print(paste('Warning! Missing parameter vectors in ',pfile[c],sep=""))
-           print('*************************************************************')
-           print('Likely cause is incomplete chain: it may have been stopped by ECDF, or')
-           print('MCMC chain got stuck (happens sometimes). This may also result as an')
-           print('inconsistency between requested number of samples vs PROJECT$nsubsamples')
-           print('CONSIDER DELETING (or re-running) THIS CHAIN!!')
-           print('Likely error will occur next!')
-           status[c] = 1
-       } else {
-           status[c] = 0
-       }
+       if (abs(dim(param_sets)[2] - PROJECT_in$nsubsamples) > 1) {
+           if (dim(param_sets)[2] > PROJECT_in$nsubsamples ) {
+               print('*************************************************************')
+               print(paste('Warning! Too many parameter vectors in ',pfile[c],sep=""))
+               print('*************************************************************')
+               print('Likely cause is appended solutions in previously existing file')
+               print(paste('To solve this, only the last ',PROJECT_in$nsubsamples,' will be used',sep=""))
+               # keep only the end of the parameter sets
+               param_sets = param_sets[,((dim(param_sets)[2]-PROJECT_in$nsubsamples):dim(param_sets)[2])]
+               status[c] = 2
+           } else if (dim(param_sets)[2] < PROJECT_in$nsubsamples) {
+               print('*************************************************************')
+               print(paste('Warning! Missing parameter vectors in ',pfile[c],sep=""))
+               print('*************************************************************')
+               print('Likely cause is incomplete chain: it may have been stopped by ECDF, or')
+               print('MCMC chain got stuck (happens sometimes). This may also result as an')
+               print('inconsistency between requested number of samples vs PROJECT$nsubsamples')
+               print('CONSIDER DELETING (or re-running) THIS CHAIN!!')
+               print('Likely error will occur next!')
+               status[c] = 1
+           } else {
+               status[c] = 0
+           }
+       } # mismatch between expected and actual parameter outputs > 1
 
        # keep a sample form the end of the chain
        param_sets = param_sets[,(((dim(param_sets)[2]-par_vector_length)+1):dim(param_sets)[2])]
@@ -93,7 +97,7 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
 
   } # end of chains loop
 
-  if (PROJECT_in$model$name == "DALEC_CDEA" || PROJECT_in$model$name == "DALEC_CDEA_LU_FIRES" || 
+  if (PROJECT_in$model$name == "DALEC_CDEA" || PROJECT_in$model$name == "DALEC_CDEA_LU_FIRES" ||
       PROJECT_in$model$name == "DALEC_CDEA_ACM2" || PROJECT_in$model$name == "DALEC_CDEA_ACM2_BUCKET") {
       param_sets_out[c(12,15),,] = ((param_sets_out[c(12,15),,]-1)%%365.25)+1
   }

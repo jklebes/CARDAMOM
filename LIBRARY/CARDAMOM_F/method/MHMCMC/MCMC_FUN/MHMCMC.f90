@@ -18,16 +18,15 @@ public :: MHMCMC, par_minstepsize,par_initstepsize
 integer :: uniform, unif_length
 double precision, allocatable, dimension(:) :: uniform_random_vector
 ! MHMCMC step size
-double precision, parameter :: par_minstepsize = 0.001d0 & ! 0.0005
+double precision, parameter :: par_minstepsize = 0.001d0 & ! 0.0005 -> 0.001 -> 0.01 -> 0.1 -> 0.005
                               ,par_maxstepsize = 0.01d0  &
                               ,par_initstepsize = 0.005d0
-! Delayed Rejection flag
-double precision :: DR_scaler = 1d0 &
-                   ,opt_scaling ! scd = 2.381204 the optimal scaling parameter
+! Optimal scaling vaire for parameter searching
+double precision :: opt_scaling ! scd = 2.381204 the optimal scaling parameter
                                 ! for MCMC search, when applied to  multivariate proposal.
                                 ! NOTE 1: 2.38 / sqrt(npars) sometimes used when applied to the Cholesky
                                 ! factor. NOTE 2: 2.381204 ** 2 = 5.670132
-double precision, parameter :: beta = 0.05d0 !, delta = 0.5d0
+double precision, parameter :: beta = 0.05d0 ! weighting for gaussian step in multivariate proposals
 ! Is current proposal multivariate or not?
 logical :: multivariate_proposal = .false.!, do_DR = .true.
 integer, parameter :: N_before_mv = 10d0 !3
@@ -38,8 +37,7 @@ contains
   !
   subroutine MHMCMC (P_target,model_likelihood_option)
     use MCMCOPT, only: PI, MCO, MCOUT, COUNTERS
-    use math_functions, only: randn, random_uniform, log_par2nor, log_nor2par, par2nor, nor2par &
-                             ,dsymv
+    use math_functions, only: randn, random_uniform, log_par2nor, log_nor2par, par2nor, nor2par
     use cardamom_io, only: write_parameters,write_variances,write_covariance_matrix &
                           ,write_covariance_info,restart_flag
     use cardamom_structures, only: DATAin
@@ -131,11 +129,10 @@ contains
     integer :: i
 
     ! initial values
-    uniform = 1 
+    uniform = 1
     P = -1d0 ; Pprior = -1d0
-    N%ACC = 0d0 ; N%ACC_first = 0d0 ; N%ITER = 0d0 ; N%ACC_beta = 0d0
+    N%ACC = 0d0 ; N%ACC_first = 0d0 ; N%ITER = 0d0
     N%ACCLOC = 0d0 ; N%ACCRATE = 0d0 ; N%ACCRATE_GLOBAL = 0d0
-    N%ACCLOC_beta = 0d0 ; N%ITER_beta = 0d0 ; N%ACCRATE_beta = 0d0
 
     ! Determine how long we will continue to adapt our proposal covariance
     ! matrix and use of Delayed Rejection
@@ -153,17 +150,6 @@ contains
     allocate(uniform_random_vector(unif_length))
     call random_uniform(uniform_random_vector,unif_length)
 
-    ! assume this is a restart which we want to load previous values
-!    if (restart_flag) then
-!!        N%ITER = dble(MCO%nWRITE * accepted_so_far) ! number of iterations is directly linked to the number output
-!!        N%ACC = ceiling(accept_rate * N%ITER)
-!        ! Load the total number of iterations rather than starting from one
-!        N%ITER = MCOUT%nos_iterations
-!        N%ACC = MCOUT%acceptance_rate
-!        N%ACC_first = N%ACC ! conservative approch to assume all proposals are first accepted
-!!        N%ACC_beta = ceiling(N%ACC * beta)
-!    endif
-
     ! add something here to delete previous files if wanted later
     if (MCO%APPEND == 0 .and. MCO%nWRITE > 0) then
         write(*,*) "Oooops have requested that existing files be deleted but you have not finished the code to do so...."
@@ -173,11 +159,11 @@ contains
     PI%parfix = 0d0
     do i = 1, PI%npars
        ! parfix = 1 stay at prior value, parfix = 0 randomly search
-       if (MCO%fixedpars .and. PI%parini(i) /= -9999d0) PI%parfix(i) = 1d0 
+       if (MCO%fixedpars .and. PI%parini(i) /= -9999d0) PI%parfix(i) = 1d0
        ! only assign random parameters if (a) randparini == .true. or (b) PI$parini(n) == -9999)
        if (MCO%randparini .and. PI%parfix(i) == 0d0 .and. .not.restart_flag) then
            call nor2par(1,uniform_random_vector(uniform),PI%parmin(i),PI%parmax(i),PI%parini(i))
-!           call log_nor2par(1,uniform_random_vector(uniform),PI%parmin(i),PI%parmax(i),PI%parini(i))
+!           call log_nor2par(1,uniform_random_vector(uniform),PI%parmin(i),PI%parmax(i),PI%paradj(i),PI%parini(i))
            uniform = uniform + 1
        end if
        ! write(*,*) parameter values to screen
@@ -193,8 +179,8 @@ contains
 
     ! Track normalised initial proposal
     do i = 1, PI%npars
-       call par2nor(1,PARS0(i),PI%parmin(i),PI%parmax(i),norPARS0(i))
-!       call log_par2nor(1,PARS0(i),PI%parmin(i),PI%parmax(i),norPARS0(i))
+!       call par2nor(1,PARS0(i),PI%parmin(i),PI%parmax(i),norPARS0(i))
+       call log_par2nor(1,PARS0(i),PI%parmin(i),PI%parmax(i),PI%paradj(i),norPARS0(i))
     end do
 
     ! calculate the initial probability / log likelihood.
@@ -211,7 +197,6 @@ contains
     endif
 
     ! Begin the main MHMCMC loop
-!    do while (N%ITER < MCO%nOUT .and. (Pmax < P_target .or. MCO%nWRITE > 0))
     do while (N%ITER < MCO%nOUT .and. Pmax < P_target)
 
        ! take a step in parameter space
@@ -253,100 +238,16 @@ contains
            PARSALL(1:PI%npars,(nint(N%ACCLOC)+1)) = norPARS(1:PI%npars)
            PARS0(1:PI%npars) = PARS(1:PI%npars)
            norPARS0(1:PI%npars) = norPARS(1:PI%npars)
-           ! specifically store the best parameter set
+           ! Specifically store the best parameter set
            if ((P+Pprior) >= Pmax) then
                BESTPARS = PARS ; Pmax = P+Pprior
            endif
+           ! Keep count of the number of accepted proposals in this local period
            N%ACCLOC = N%ACCLOC + 1d0
-           if (.not.multivariate_proposal) then
-               ! accepted from beta step proposal
-!               N%ACCLOC_beta = N%ACCLOC_beta + 1d0
-           else
-               ! accepted first proposal from multivarite
-               N%ACC_first = N%ACC_first + 1d0
-           end if
-           P0 = P ; P0prior = Pprior
+           ! Accepted first proposal from multivarite
+           if (multivariate_proposal) N%ACC_first = N%ACC_first + 1d0
 
-!       else ! we have rejected - apply Delayed Rejection approach to enhance local searching
-!
-!           if (do_DR .and. multivariate_proposal) then
-!
-!                DR_scaler = 0.01d0
-!
-!                ! take a step in parameter space
-!                call step(N,PARS0,PARS2,norPARS0,norPARS2,.true.)
-!
-!                if (minval(norPARS2) > 0d0 .and. maxval(norPARS2) < 1d0) then
-!
-!                    ! calculate the model likelihood
-!                    call model_likelihood_option(PARS2, DR_P, DR_Pprior)
-!
-!                    ! Determine whether we accept or reject the DR proposal
-!
-!                    ! First what is the likelihood ratio between the 1st propsal (AM) and the
-!                    ! second propsal (DR), note we are setting maximum weighting towards AM proposal
-!                    ! if DR is worse than AM
-!                    if (P+Pprior == log(infini)) then
-!                        ! set to zero probability
-!                        AM_vs_DR_P = 0d0
-!                    else
-!                        ! extimate in log-likelihood and convert to probability, may be zero frequently
-!                        AM_vs_DR_P = min(1d0,exp((P-DR_P) + (Pprior-DR_Pprior)))
-!                    endif
-!                    ! Second estimate the liklihood of the DR propsal compared to the P0 and P0prior
-!                    DR_vs_current = (DR_P-P0) + (DR_Pprior-P0prior)
-!                    ! Third estimate likelihood based on both the current (just rejected) proposal
-!                    ! and current position in chain assuming mulitvariate gaussian errors between
-!                    call dsymv("U",PI%npars,1d0,PI%iC,PI%npars,norPARS2-norPARS,1,0d0,deltaPARS2_iC,1)
-!                    call dsymv("U",PI%npars,1d0,PI%iC,PI%npars,norPARS0-norPARS,1,0d0,deltaPARS0_iC,1)
-!                    DR_vs_current_pars = -0.5d0 * &
-!                                        (sum(deltaPARS2_iC * (norPARS2 - norPARS)) - &
-!                                         sum(deltaPARS0_iC * (norPARS0 - norPARS)) )
-!                    ! Finally calculate the final likelihood of the DR proposal vs AM and the existing parameter set
-!                    DR_likelihood = DR_vs_current + DR_vs_current_pars + log((1d0-AM_vs_DR_P)/(1d0-exp(AM_likelihood)))
-!
-!                    ! accept or reject, draw uniform distribution (0,1)
-!                    crit1 = log(uniform_random_vector(uniform))
-!                    uniform = uniform + 1
-!                    ! if we are near to the end re-generate some more values
-!                    if (uniform >= unif_length) then
-!                       ! calculate new vector of uniform random values
-!                       call random_uniform(uniform_random_vector,unif_length)
-!                       ! and reset uniform counter
-!                       uniform = 1
-!                    endif
-!
-!                else
-!
-!                    ! parameters are out of bounds
-!                    DR_likelihood = log(infini) ; DR_P = DR_likelihood ; DR_Pprior = DR_P
-!                    crit1 = 0d0
-!
-!                endif ! inbounds?
-!
-!                ! now do we accept or reject the DR step as a function of both PARS0 and PARS
-!                if ( DR_likelihood > crit1 ) then
-!
-!                   ! accepted DR proposal
-!
-!                   ! Store accepted parameter solutions
-!                   ! keep record of all parameters accepted since step adaption
-!                   PARSALL(1:PI%npars,(nint(N%ACCLOC)+1)) = norPARS2(1:PI%npars)
-!                   PARS0(1:PI%npars) = PARS2(1:PI%npars)
-!                   norPARS0(1:PI%npars) = norPARS2(1:PI%npars)
-!                   ! specifically store the best parameter set
-!                   if ((DR_P+DR_Pprior) >= Pmax) then
-!                       BESTPARS = PARS2 ; Pmax = DR_P+DR_Pprior
-!                   endif
-!                   N%ACCLOC = N%ACCLOC + 1d0
-!                   P0 = DR_P ; P0prior = DR_Pprior
-!
-!                end if
-!
-!                ! return DR scaler back to 1d0
-!                DR_scaler = 1d0
-!
-!            endif ! multivariate_proposal
+           P0 = P ; P0prior = Pprior
 
        endif ! accept or reject condition
 
@@ -370,55 +271,32 @@ contains
 
            ! Total accepted values
            N%ACC = N%ACC + N%ACCLOC
-!           N%ACC_beta = N%ACC_beta + N%ACCLOC_beta
            ! Calculate global acceptance rate
            N%ACCRATE_GLOBAL = N%ACC / N%ITER
 
-           ! Estimate acceptance rate for the multivariate set at first proposal only
-!           if (burn_in_period > N%ITER .or. (N%ACC_first / N%ITER) < 0.05d0) then
-!               do_DR = .true.
-!           else
-!               do_DR = .false.
-!           endif
+           ! Calculate local acceptance rate (i.e. since last adapt)
+           N%ACCRATE = N%ACCLOC / dble(MCO%nADAPT)
 
-           ! First, we can only do a covariance adaption if we have accepted some
-           ! parameters in the last period
-!           if (N%ACCLOC > 0d0) then
+           ! Second, are we still in the adaption phase?
+           if (burn_in_period > N%ITER .or. (N%ACC_first / N%ITER) < 0.05d0 .or. .not.PI%use_multivariate) then
 
-               ! Calculate local acceptance rate (i.e. since last adapt)
-               N%ACCRATE = N%ACCLOC / dble(MCO%nADAPT)
-!               N%ACCRATE_beta = N%ACCLOC_beta / N%ITER_beta
+               ! Once covariance matrix has been created just update based on a
+               ! single parameter set from each period.
+               if (PI%cov) then
+                   N%ACCLOC = 1d0 ; PARSALL(1:PI%npars,nint(N%ACCLOC)) = norPARS0(1:PI%npars)
+               else if (N%ACCLOC > 3d0) then
+                   PARSALL(1:PI%npars,2) = PARSALL(1:PI%npars,ceiling(N%ACCLOC*0.5d0))
+                   PARSALL(1:PI%npars,3) = PARSALL(1:PI%npars,N%ACCLOC)
+                   N%ACCLOC = 3d0
+               endif
 
-               ! Second, are we still in the adaption phase?
-               if (burn_in_period > N%ITER .or. (N%ACC_first / N%ITER) < 0.05d0 .or. .not.PI%use_multivariate) then
+               ! adapt the covariance matrix for multivariate proposal
+               call adapt_step_size(PARSALL,N)
 
-                   ! Once covariance matrix has been created just update based on a
-                   ! single parameter set from each period.
-                   if (PI%cov) then
-                       N%ACCLOC = 1d0 ; PARSALL(1:PI%npars,nint(N%ACCLOC)) = norPARS0(1:PI%npars)
-                   else if (N%ACCLOC > 3d0) then
-                       PARSALL(1:PI%npars,2) = PARSALL(1:PI%npars,ceiling(N%ACCLOC*0.5d0))
-                       PARSALL(1:PI%npars,3) = PARSALL(1:PI%npars,N%ACCLOC)
-                       N%ACCLOC = 3d0
-                   endif
+           end if !  have enough parameter been accepted
 
-                   ! adapt the covariance matrix for multivariate proposal
-                   call adapt_step_size(PARSALL,N)
-
-               end if !  have enough parameter been accepted
-
-!           else ! any newly accepted parameters?
-
-               ! no new parameters accepted...
-
-               !...so acceptance rates are zero but no need to update N%ACC or
-               ! N%ACC_beta
-               N%ACCRATE = 0d0 !; N%ACCRATE_beta = 0d0
-              
-!           end if ! have any parameters been accepted in the last period?
-
-           ! resets to local counters
-           N%ACCLOC = 0d0 !; N%ACCLOC_beta = 0d0
+           ! resets to local counter
+           N%ACCLOC = 0d0
 
        end if ! time to adapt?
 
@@ -428,9 +306,7 @@ contains
            write(*,*)"Total proposal = ",N%ITER," out of ",MCO%nOUT
            write(*,*)"Total accepted = ",N%ACC
            write(*,*)"Overall acceptance rate    = ",N%ACC / N%ITER
-!           write(*,*)"Overall beta accept rate   = ",N%ACC_beta / N%ITER_beta
            write(*,*)"Local   acceptance rate    = ",N%ACCRATE
-!           write(*,*)"Local beta acceptance rate = ",N%ACCRATE_beta
            write(*,*)"Current obs   = ",P0,"proposed = ",P," log-likelihood"
            write(*,*)"Current prior = ",P0prior,"proposed = ",Pprior," log-likelihood"
            write(*,*)"Maximum likelihood = ",Pmax
@@ -488,7 +364,7 @@ contains
     integer p, i, info ! counters
     double precision, dimension(PI%npars,PI%npars) :: cholesky, cov_backup
     double precision, dimension(PI%npars) :: mean_par_backup
-    double precision :: Nparvar_backup    
+    double precision :: Nparvar_backup
 
     ! if we have a covariance matrix then we want to update it, if not then we need to create one
     if (PI%cov) then
@@ -508,11 +384,7 @@ contains
         if (info == 0) then
             ! Set multivariate sampling to true
             PI%use_multivariate = .true.
-            ! Re-calculate inverse matrix as it may now be used,
-            ! direct inversion of covariance matrix based on Doolittle LU
-            ! factorization
- !           if (do_DR) call inverse_matrix( PI%npars, PI%covariance, PI%iC )
-        else 
+        else
             ! The current addition of a parameter leads to a matrix which is not
             ! positive definite. If we previously had a matrix which is positive
             ! definite then we should reject totally the new matrix, if not we
@@ -551,10 +423,6 @@ contains
             else
                 ! Positive definite found straight away - might as well use it!
                 PI%use_multivariate = .true.
-                ! Re-calculate inverse matrix as it may now be used,
-                ! direct inversion of covariance matrix based on Doolittle LU
-                ! factorization
-!                if (do_DR) call inverse_matrix( PI%npars, PI%covariance, PI%iC )
             endif
 
             ! write out first covariance matrix, this will be compared with the final covariance matrix
@@ -623,7 +491,6 @@ contains
     ! is linked to the need build a covarianc matrix prior to multivariate
     ! sampling.
     ! See Roberts and Rosenthal, Examples of Adaptive MCMC, J. Comp. Graph. Stat. 18:349-367, 2009.
-!    if (PI%use_multivariate .and. nint(PI%Nparvar) > N_before_mv*PI%npars .and. (tmp > beta .or. DR_step)) then
     if ((PI%use_multivariate .and. nint(PI%Nparvar) > N_before_mv*PI%npars)) then
 
         ! Is this step a multivariate proposal or not
@@ -632,8 +499,6 @@ contains
         ! Draw from multivariate random distribution
         ! NOTE: if covariance matrix provided is not positive definite
         !       a sample form normal distribution is returned
-!        call random_multivariate(PI%npars, 1, uniform, unif_length, &
-!                                 uniform_random_vector, PI%covariance*DR_scaler, mu, rn)
         call random_multivariate(PI%npars, 1, uniform, unif_length, &
                                  uniform_random_vector, PI%covariance, mu, rn)
         ! Sample random normal distribution (mean = 0, sd = 1)
@@ -646,21 +511,13 @@ contains
         ! stepping to the number of parameters being retrieved by the analysis.
         ! See Haario et al., (2001) An adaptive Metropolis algorithm. Bernoulli 7.2: 223-242.
         ! and references therein.
-!        norpars = norpars0 + (rn * opt_scaling)
-!        if (tmp > delta) then
-            ! Do Beta Gaussian step (par_minstepsize)
-            norpars = norpars0 + (rn * opt_scaling * (1d0-beta)) + (par_minstepsize * rn2 * beta)
-!        else
-!            ! Do Delta Gaussian step (par_maxstepsize)
-!            norpars = norpars0 + (rn * opt_scaling * (1d0-beta)) + (par_maxstepsize * rn2 * beta)
-!        endif
+        norpars = norpars0 + (rn * opt_scaling * (1d0-beta)) + (par_minstepsize * rn2 * beta)
+
 
     else ! nint(PI%Nparvar) > N_before_mv*PI%npars .and. tmp > beta
 
        ! is this step a multivariate proposal or not
        multivariate_proposal = .false.
-       ! track information on whether this is a beta step proposal
-!       N%ITER_beta = N%ITER_beta + 1d0
 
        ! Sample random normal distribution (mean = 0, sd = 1)
        do p = 1, PI%npars
@@ -668,24 +525,17 @@ contains
        end do !
 
        ! Estimate the step to be applied to the current parameter vector to
-       ! create the new proposal. The Beta and Delta steps are intended to
-       ! provide a Gaussian proposal but of a small (beta) or large (delta) size 
+       ! create the new proposal. The Beta step is intended to
+       ! provide a Gaussian proposal but of a small size.
        ! Draw from uniform distribution to determine which step size is used
-!       tmp = uniform_random_vector(uniform) ; uniform = uniform + 1
-!       if (tmp < delta) then
-!           ! Delta Step
-!           norpars = norpars0 + (par_maxstepsize*rn2)
-!       else
-!           ! Beta Step
-           norpars = norpars0 + (par_minstepsize*rn2)
-!       endif
+       norpars = norpars0 + (par_minstepsize*rn2)
 
     end if ! nint(PI%Nparvar) > 10*PI%npars .and. tmp > beta
 
     ! reverse normalisation on the new parameter step
     do p = 1, PI%npars
-       call nor2par(1,norpars(p),PI%parmin(p),PI%parmax(p),pars(p))
-!       call log_nor2par(1,norpars(p),PI%parmin(p),PI%parmax(p),pars(p))
+!       call nor2par(1,norpars(p),PI%parmin(p),PI%parmax(p),pars(p))
+       call log_nor2par(1,norpars(p),PI%parmin(p),PI%parmax(p),PI%paradj(p),pars(p))
     end do
 
   end subroutine step

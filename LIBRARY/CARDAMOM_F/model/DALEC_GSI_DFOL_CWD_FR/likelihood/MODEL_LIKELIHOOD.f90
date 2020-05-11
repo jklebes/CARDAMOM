@@ -49,7 +49,7 @@ module model_likelihood_module
     MCO%nWRITE = 0
     ! the next two lines ensure that parameter inputs are either given or
     ! entered as -9999
-    MCO%randparini = .true. 
+    MCO%randparini = .true.
     MCO%returnpars = .true.
     MCO%fixedpars  = .true. ! TLS: changed from .false. for testing 16/12/2019
 
@@ -219,7 +219,7 @@ module model_likelihood_module
 !    ML_obs_out = -0.5d0*tot_exp*10d0*DATAin%EDC
     ML_obs_out = -5d0*tot_exp*DATAin%EDC
 
-  end subroutine edc_model_likelihood  
+  end subroutine edc_model_likelihood
   !
   !------------------------------------------------------------------
   !
@@ -750,17 +750,19 @@ module model_likelihood_module
          EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
     end if
 
-    ! Photoperiod maximum cannot be greater than the observed maximum day length
-    ! + 1 hr
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(24) > maxval(DATAin%MET(11,:)+3600d0))) then
+    ! Photoperiod minimum cannot be substantiall less than the observed minimum day length
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(16) < minval(DATAin%MET(11,:))-14400d0)) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
+    end if
+    ! Photoperiod maximum cannot be greater than the observed maximum day length
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(24) > maxval(DATAin%MET(11,:)))) then
+         EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     end if
 
     ! VPD at which stress in at maximum should be no larger than max(VPDlag21) +
-    ! 1500 Pa from
-    ! the max VPD tolerated parameter
+    ! 1500 Pa from the max VPD tolerated parameter
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(26) > maxval(DATAin%MET(12,:)+1500d0))) then
-         EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
+         EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
     end if
 
     ! NUE and avN combination give a Vcmax equivalent.
@@ -784,7 +786,7 @@ module model_likelihood_module
 
     ! Turnover of litter towards som (pars(1)*pars(8)) should be faster than turnover of som (pars(9))
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(9) > (pars(1)*pars(8)) ) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
     endif
 
     ! turnover of cwd (pars(35)) should be slower than fine litter turnover pars(8)
@@ -794,7 +796,7 @@ module model_likelihood_module
 
     ! root turnover (pars(7)) should be greater than som turnover (pars(9)) at mean temperature
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(9)*temp_response) > pars(7)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
     endif
 
     ! replanting 30 = labile ; 31 = foliar ; 32 = roots ; 33 = wood
@@ -837,7 +839,7 @@ module model_likelihood_module
     ! NOTE: this may be too (insufficiently) restrictive...as it is unclear how
     ! much more
     ! constrained a CN ratio of the whole canopy is compared to individual
-    ! leaves (which have ranges upto ~100). 
+    ! leaves (which have ranges upto ~100).
 !    tmp = pars(17) / avN ! foliar C:N
 !    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 42.2d0 .or. tmp < 12.39d0)) then
 !       EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
@@ -908,8 +910,19 @@ module model_likelihood_module
                        ,in_out_cwd  &
                        ,in_out_som  &
                        ,in_out_dead &
+                       ,in_out_lab_yr1  &
+                       ,in_out_fol_yr1  &
+                       ,in_out_root_yr1 &
+                       ,in_out_wood_yr1 &
+                       ,in_out_lit_yr1  &
+                       ,in_out_cwd_yr1  &
+                       ,in_out_som_yr1  &
                        ,torfol      & ! yearly average turnover
                        ,torlab      & !
+                       ,sumlab_yr1      &
+                       ,sumfol_yr1      &
+                       ,sumroot_yr1     &
+                       ,sumwood_yr1     &
                        ,sumrauto    &
                        ,sumlab      &
                        ,sumfol      &
@@ -934,8 +947,9 @@ module model_likelihood_module
                                    EQF2 = log(2d0),   & ! 10.0 = order magnitude; 2 = double and half
                                    EQF5 = log(5d0),   &
                                    EQF10 = log(10d0), &
+                                   EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                    etol = 0.10d0 !0.05d0
+                                    etol = 0.30d0 !0.10d0 !0.05d0
 
     ! initial value
     infi = 0d0 ; dble_nodays = dble(nodays)
@@ -1023,10 +1037,10 @@ module model_likelihood_module
     ! calculate sum fluxes
     sumgpp = sum(M_FLUXES(:,1))
     sumrauto = sum(M_FLUXES(:,3))
-    sumlab = sum(M_FLUXES(:,5))
-    sumfol = sum(M_FLUXES(:,8))
-    sumroot = sum(M_FLUXES(:,6))
-    sumwood = sum(M_FLUXES(:,7))
+    sumlab = sum(M_FLUXES(:,5)) ; sumlab_yr1 = sum(M_FLUXES(1:steps_per_year,5))
+    sumfol = sum(M_FLUXES(:,8)) ; sumfol_yr1 = sum(M_FLUXES(1:steps_per_year,8))
+    sumroot = sum(M_FLUXES(:,6)) ; sumroot_yr1 = sum(M_FLUXES(1:steps_per_year,6))
+    sumwood = sum(M_FLUXES(:,7)) ; sumwood_yr1 = sum(M_FLUXES(1:steps_per_year,7))
 
     ! initialise and then calculate mean gpp values
     fauto = sumrauto / sumgpp            ! i.e. Ra:GPP = 1-CUE
@@ -1151,28 +1165,38 @@ module model_likelihood_module
         ! Determine the input / output ratio
 
         ! Clabile
-        in_out_lab = sumlab / sum(M_FLUXES(:,8)+Rg_from_labile)
+        in_out_lab     = sumlab / sum(M_FLUXES(:,8)+Rg_from_labile)
+        in_out_lab_yr1 = sumlab_yr1 &
+                       / sum(M_FLUXES(1:steps_per_year,8)+Rg_from_labile(1:steps_per_year))
         ! Cfoliage
         in_out_fol  = sumfol  / sum(M_FLUXES(:,10)+M_FLUXES(:,23))
+        in_out_fol_yr1  = sumfol_yr1  / sum(M_FLUXES(1:steps_per_year,10)+M_FLUXES(1:steps_per_year,23))
         ! Croot
         in_out_root = sumroot / sum(M_FLUXES(:,12)+M_FLUXES(:,24))
+        in_out_root_yr1 = sumroot_yr1 / sum(M_FLUXES(1:steps_per_year,12)+M_FLUXES(1:steps_per_year,24))
         ! Cwood
         in_out_wood = sumwood / sum(M_FLUXES(:,11)+M_FLUXES(:,25))
+        in_out_wood_yr1 = sumwood_yr1 / sum(M_FLUXES(1:steps_per_year,11)+M_FLUXES(1:steps_per_year,25))
         ! Clitter
         in_out_lit = sum(M_FLUXES(:,10)+M_FLUXES(:,12) &
                          +disturbance_residue_to_litter) &
                    / sum(M_FLUXES(:,13)+M_FLUXES(:,15)+disturbance_loss_from_litter)
+        in_out_lit_yr1 = sum(M_FLUXES(1:steps_per_year,10)+M_FLUXES(1:steps_per_year,12) &
+                         +disturbance_residue_to_litter(1:steps_per_year)) &
+                   / sum(M_FLUXES(1:steps_per_year,13)+M_FLUXES(1:steps_per_year,15)+ &
+                         disturbance_loss_from_litter(1:steps_per_year))
         ! Csom
-!        in_out_som = sum((M_FLUXES(:,11)*pars(29))+M_FLUXES(:,15)+M_FLUXES(:,20)+disturbance_residue_to_som) &
-!                   / sum(M_FLUXES(:,14)+disturbance_loss_from_som)
         in_out_som = sum(M_FLUXES(:,15)+M_FLUXES(:,20)+disturbance_residue_to_som) &
                    / sum(M_FLUXES(:,14)+disturbance_loss_from_som)
+        in_out_som_yr1 = sum(M_FLUXES(1:steps_per_year,15)+ &
+                             M_FLUXES(1:steps_per_year,20)+disturbance_residue_to_som(1:steps_per_year)) &
+                   / sum(M_FLUXES(1:steps_per_year,14)+disturbance_loss_from_som(1:steps_per_year))
 
         ! Ccwd
-!        in_out_cwd = sum((M_FLUXES(:,11)*(1d0-pars(29)))+disturbance_residue_to_cwd) &
-!                   / sum(M_FLUXES(:,20)+M_FLUXES(:,4)+disturbance_loss_from_cwd)
         in_out_cwd = sum(M_FLUXES(:,11)+disturbance_residue_to_cwd) &
                    / sum(M_FLUXES(:,20)+M_FLUXES(:,4)+disturbance_loss_from_cwd)
+        in_out_cwd_yr1 = sum(M_FLUXES(1:steps_per_year,11)+disturbance_residue_to_cwd(1:steps_per_year)) &
+                   / sum(M_FLUXES(1:steps_per_year,20)+M_FLUXES(1:steps_per_year,4)+disturbance_loss_from_cwd(1:steps_per_year))
 
         ! Assess pool dynamics relative to their own steady state attractors
         ! Based on Bloom et al (2016), PNAS. Combination of the in/out ratio and
@@ -1183,45 +1207,52 @@ module model_likelihood_module
         ! comparison with EQF assesses the steady state attractor
 
         ! Labile
-        Rs = in_out_lab * (jan_mean_pools(1) / jan_first_pools(1))
-        if (abs(Rs-in_out_lab) > etol .or. abs(log(Rs)) > EQF10) then
+        !Rs = in_out_lab * (jan_mean_pools(1) / jan_first_pools(1))
+        !if (abs(Rs-in_out_lab) > etol .or. abs(log(in_out_lab)) > EQF2) then
+        if (abs(log(in_out_lab_yr1) - log(in_out_lab)) > etol .or. abs(log(in_out_lab)) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
         end if
 
         ! Foliage
-        Rs = in_out_fol * (jan_mean_pools(2) / jan_first_pools(2))
-        if (abs(Rs-in_out_fol) > etol .or. abs(log(Rs)) > EQF10) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
-        end if
-
-        ! Fine roots
-        Rs = in_out_root * (jan_mean_pools(3) / jan_first_pools(3))
-        if (abs(Rs-in_out_root) > etol .or. abs(log(Rs)) > EQF10) then
+        !Rs = in_out_fol * (jan_mean_pools(2) / jan_first_pools(2))
+        !if (abs(Rs-in_out_fol) > etol .or. abs(log(in_out_fol)) > EQF2) then
+        if (abs(log(in_out_fol_yr1) - log(in_out_fol)) > etol .or. abs(log(in_out_fol)) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(23) = 0
         end if
 
-        ! Wood
-        Rs = in_out_wood * (jan_mean_pools(4) / jan_first_pools(4))
-        if (abs(Rs-in_out_wood) > etol .or. abs(log(Rs)) > EQF10) then
+        ! Fine roots
+        !Rs = in_out_root * (jan_mean_pools(3) / jan_first_pools(3))
+        !if (abs(Rs-in_out_root) > etol .or. abs(log(in_out_root)) > EQF2) then
+        if (abs(log(in_out_root_yr1) - log(in_out_root))> etol .or. abs(log(in_out_root)) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(24) = 0
         end if
 
-        ! Foliage and root litter
-        Rs = in_out_lit * (jan_mean_pools(5) / jan_first_pools(5))
-        if (abs(Rs-in_out_lit) > etol .or. abs(log(Rs)) > EQF10) then
+        ! Wood
+        !Rs = in_out_wood * (jan_mean_pools(4) / jan_first_pools(4))
+!        if (abs(Rs-in_out_wood) > etol .or. abs(log(in_out_wood)) > EQF2) then
+        if (abs(log(in_out_wood_yr1) - log(in_out_wood)) > etol .or. abs(log(in_out_wood)) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(25) = 0
         end if
 
-        ! Soil organic matter
-        Rs = in_out_som * (jan_mean_pools(6) / jan_first_pools(6))
-        if (abs(Rs-in_out_som) > etol .or. abs(log(Rs)) > EQF10) then
+        ! Foliage and root litter
+        !Rs = in_out_lit * (jan_mean_pools(5) / jan_first_pools(5))
+!        if (abs(Rs-in_out_lit) > etol .or. abs(log(in_out_lit)) > EQF2) then
+        if (abs(log(in_out_lit_yr1) - log(in_out_lit)) > etol .or. abs(log(in_out_lit)) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(26) = 0
         end if
 
-        ! Coarse woody debris
-        Rs = in_out_cwd * (jan_mean_pools(7) / jan_first_pools(7))
-        if (abs(Rs-in_out_cwd) > etol .or. abs(log(Rs)) > EQF10) then
+        ! Soil organic matter
+        !Rs = in_out_som * (jan_mean_pools(6) / jan_first_pools(6))
+        !if (abs(Rs-in_out_som) > etol .or. abs(log(in_out_som)) > EQF2) then
+        if (abs(log(in_out_som_yr1) - log(in_out_som)) > etol .or. abs(log(in_out_som)) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(27) = 0
+        end if
+
+        ! Coarse woody debris
+!        Rs = in_out_cwd * (jan_mean_pools(7) / jan_first_pools(7))
+!        if (abs(Rs-in_out_cwd) > etol .or. abs(log(in_out_cwd)) > EQF2) then
+        if (abs(log(in_out_cwd_yr1) - log(in_out_cwd)) > etol .or. abs(log(in_out_cwd)) > EQF2) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(28) = 0
         end if
 
         ! Assess between pool steady state conditions
@@ -1351,7 +1382,7 @@ module model_likelihood_module
     endday = floor(365.25d0*dble(year)/(sum(interval)/dble(averaging_period-1)))
 
     ! pool through and work out the annual mean values
-    cal_mean_annual_pools = sum(pools(nint(startday):nint(endday)))/(endday-startday) 
+    cal_mean_annual_pools = sum(pools(nint(startday):nint(endday)))/(endday-startday)
 
     ! ensure function returns
     return

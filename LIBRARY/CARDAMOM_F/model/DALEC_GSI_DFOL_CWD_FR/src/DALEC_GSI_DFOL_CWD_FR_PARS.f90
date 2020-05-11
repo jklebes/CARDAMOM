@@ -54,11 +54,11 @@ module MODEL_PARAMETERS
        PI%parmax(3) = 0.0009126169d0 !  3 year
 
        ! Fraction of (1-fgpp) to roots*/
-       PI%parmin(4) = 0.01d0
-       PI%parmax(4) = 1.0d0
+       PI%parmin(4) = 0.1d0
+       PI%parmax(4) = 0.80d0
 
        ! GSI max leaf turnover
-       PI%parmin(5) = 0.002737851d0 ! 1 year 
+       PI%parmin(5) = 0.002737851d0 ! 1 year
        PI%parmax(5) = 0.016666667d0 ! 60 days
 
        ! Turnover fraction of wood
@@ -69,7 +69,7 @@ module MODEL_PARAMETERS
        ! Gill and Jackson (2000), New Phytol., 147, 13–31
        ! Fig. 6 turnover by diameter class
        PI%parmin(7) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
-       PI%parmax(7) = 0.01d0        ! 0.27 years
+       PI%parmax(7) = 0.02d0        ! 0.13 years
 
        ! Turnover of litter (fraction; temperature adjusted)
        PI%parmin(8) = 0.0001141d0 ! 24   years at 0oC
@@ -86,9 +86,9 @@ module MODEL_PARAMETERS
        PI%parmax(10) = 0.08d0
 
        ! log10 avg foliar N (gN.m-2)
-       ! Kattge et al., (2011) (Quantiles 2.5% / 97.5%)
+       ! Kattge et al., (2011) (Quantiles 25% / 75%)
        ! and Thomas et al., (2019) (Aconite canopy paper)
-       PI%parmin(11) = 0d0 !-0.2218487d0 !TLS: restricted to 1 gN/m2leaf
+       PI%parmin(11) = 0.07918125d0!0d0 !-0.2218487d0 !TLS: restricted to 1.2 gN/m2leaf
        PI%parmax(11) = 0.4771213d0 ! 0.5563025d0 ! TLS: restricted to 3 gC/m2leaf
 
        ! Max labile turnover fraction to foliage
@@ -141,7 +141,7 @@ module MODEL_PARAMETERS
        PI%parmax(29) = 0.50d0 ! increased based on evidence of savannah system 50 % below !0.30d0
 
        ! GSI senstivity for leaf senescence
-       PI%parmin(34) = -3d-3
+       PI%parmin(34) = -1d-3
        PI%parmax(34) = -1d-4
 
        ! Turnover rate for CWD
@@ -160,7 +160,7 @@ module MODEL_PARAMETERS
        ! Thus we will compromise on the value between these but closer to the
        ! newer estimate (i.e. 30 gC/gN/day)
        PI%parmin(36) =  1.6d0
-       PI%parmax(36) = 30.0d0
+       PI%parmax(36) = 40.0d0
 
        !
        ! INITIAL VALUES DECLARED HERE

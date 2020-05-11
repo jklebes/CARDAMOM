@@ -49,7 +49,7 @@ module model_likelihood_module
     MCO%nWRITE = 0
     ! the next two lines ensure that parameter inputs are either given or
     ! entered as -9999
-    MCO%randparini = .true. 
+    MCO%randparini = .true.
     MCO%returnpars = .true.
     MCO%fixedpars  = .true. ! TLS: changed from .false. for testing 16/12/2019
 
@@ -201,8 +201,8 @@ module model_likelihood_module
     use CARBON_MODEL_MOD, only: carbon_model
     use cardamom_structures, only: DATAin
 
-    ! this subroutine is responsible for running the model, 
-    ! calculation of the log-likelihood on a subsample of observation 
+    ! this subroutine is responsible for running the model,
+    ! calculation of the log-likelihood on a subsample of observation
     ! for comparison assessment of parameter performance and use of the EDCs if they are
     ! present / selected
 
@@ -440,20 +440,19 @@ module model_likelihood_module
     double precision, intent(out) :: EDC2 ! the response flag for the dynamical set of EDCs
 
     ! declare local variables
-    integer :: n, nn, nnn, DIAG, no_years, y, PEDC, steps_per_year, steps_per_month
-    double precision :: mean_pools(nopools), EQF, etol
-    double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools
+    integer :: n, nn, nnn, DIAG, no_years, y, PEDC, steps_per_year, steps_per_month, nd, fl
+    double precision :: EQF, etol, no_years_1, infi
+    double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
+                                            mean_pools, Fin, Fout, Rm, Rs, &
+                                            Fin_yr1, Fout_yr1
+    double precision, dimension(nofluxes) :: FT, FT_yr1
     double precision :: fauto & ! Fractions of GPP to autotrophic respiration
-             ,ffol  & ! Fraction of GPP to foliage
-             ,flab  & ! Fraction of GPP to labile pool
-             ,froot & ! Fraction of GPP to root
-             ,fwood & ! Fraction of GPP to wood
-             ,fsom  & ! fraction of GPP som under eqilibrium conditions
-             ,flit    ! fraction of GPP to litter under equilibrium conditions
-
-    !JFE - 27/06/2018 newly defined variables for updated EDCs
-    double precision :: FT(nofluxes), Fin(nopools), Fout(nopools), Rm, Rs
-    integer :: nd, fl
+                       ,ffol  & ! Fraction of GPP to foliage
+                       ,flab  & ! Fraction of GPP to labile pool
+                       ,froot & ! Fraction of GPP to root
+                       ,fwood & ! Fraction of GPP to wood
+                       ,fsom  & ! fraction of GPP som under eqilibrium conditions
+                       ,flit    ! fraction of GPP to litter under equilibrium conditions
 
     ! update initial values
     DIAG = EDCD%DIAG
@@ -503,50 +502,81 @@ module model_likelihood_module
     end if
 
     ! Equilibrium factor (in comparison with initial conditions)
-    EQF = 10d0 ! TLS 06/11/2019 !10d0 ! JFE replaced 10 by 2 - 27/06/2018
+    EQF = 2d0 ! TLS 06/11/2019 !10d0 ! JFE replaced 10 by 2 - 27/06/2018
     ! Pool exponential decay tolerance
-    etol = 0.1d0
+    etol = 0.30d0 !0.1d0
 
     ! first calculate total flux for the whole simulation period
+!    do fl = 1, nofluxes
+!        FT(fl) = 0
+!        do nd = 1, nodays
+!            FT(fl) = FT(fl) + M_FLUXES(nd,fl)*deltat(nd)
+!        end do
+!    end do
+    ! First calculate total flux for the whole simulation period
     do fl = 1, nofluxes
-        FT(fl) = 0
-        do nd = 1, nodays
-            FT(fl) = FT(fl) + M_FLUXES(nd,fl)*deltat(nd)
-        end do
+       FT(fl) = sum(M_FLUXES(1:nodays,fl)*deltat(1:nodays))
+       FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*deltat(1:steps_per_year))
     end do
 
     ! get total in and out for each pool
     ! labile
     Fin(1)  = FT(5)
     Fout(1) = FT(8)+FT(18)+FT(24)
+    Fin_yr1(1)  = FT_yr1(5)
+    Fout_yr1(1) = FT_yr1(8)+FT_yr1(18)+FT_yr1(24)
     ! foliar
     Fin(2)  = FT(4)+FT(8)
     Fout(2) = FT(10)+FT(19)+FT(25)
+    Fin_yr1(2)  = FT_yr1(4)+FT_yr1(8)
+    Fout_yr1(2) = FT_yr1(10)+FT_yr1(19)+FT_yr1(25)
     ! root
     Fin(3)  = FT(6)
     Fout(3) = FT(12)+FT(20)+FT(26)
+    Fin_yr1(3)  = FT_yr1(6)
+    Fout_yr1(3) = FT_yr1(12)+FT_yr1(20)+FT_yr1(26)
     ! wood
     Fin(4)  = FT(7)
     Fout(4) = FT(11)+FT(21)+FT(27)
+    Fin_yr1(4)  = FT_yr1(7)
+    Fout_yr1(4) = FT_yr1(11)+FT_yr1(21)+FT_yr1(27)
     ! litter
     Fin(5)  = FT(10)+FT(12)+FT(24)+FT(25)+FT(26)
     Fout(5) = FT(13)+FT(15)+FT(22)+FT(28)
+    Fin_yr1(5)  = FT_yr1(10)+FT_yr1(12)+FT_yr1(24)+FT_yr1(25)+FT_yr1(26)
+    Fout_yr1(5) = FT_yr1(13)+FT_yr1(15)+FT_yr1(22)+FT_yr1(28)
     ! som
     Fin(6)  = FT(11)+FT(15)+FT(27)+FT(28)
     Fout(6) = FT(14)+FT(23)
+    Fin_yr1(6)  = FT_yr1(11)+FT_yr1(15)+FT_yr1(27)+FT_yr1(28)
+    Fout_yr1(6) = FT_yr1(14)+FT_yr1(23)
 
     ! Iterate through C pools to determine whether they have their ratio of
     ! input and outputs are outside of steady state approximation.
     ! See Bloom et al., 2016 PNAS for details
 
     ! iterate to check whether Fin/Fout is within EQF limits
+!    Rm = Fin/Fout
+!    Rs = Rm * (jan_mean_pools / jan_first_pools
+!    do n = 1, nopools
+!       ! Restrict rates of increase
+!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Rm)) > log(EQF)) then
+!           EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+!       end if
+!       ! Restrict exponential decay
+!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(Rs-Rm) > etol) then
+!           EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!       end if
+!    end do
+
+    ! iterate to check whether Fin/Fout is within EQF limits
     do n = 1, nopools
-       Rm = Fin(n)/Fout(n)
-       Rs = Rm * (jan_mean_pools(n) / jan_first_pools(n))
-       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Rs)) > log(EQF)) then
+       ! Restrict rates of increase
+       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Fin(n)/Fout(n))) > log(EQF)) then
            EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
        end if
-       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(Rs-Rm) > etol) then
+       ! Restrict exponential decay
+       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Fin(n)/Fout(n)) - log(Fin_yr1(n)/Fout_yr1(n))) > etol) then
            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
        end if
     end do

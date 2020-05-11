@@ -12,6 +12,10 @@ module CARBON_MODEL_MOD
            ,soil_frac_sand   &
            ,nos_soil_layers  &
            ,extracted_C      &
+           ,gs_demand_supply_ratio  &
+           ,gs_total_canopy  &
+           ,gb_total_canopy  &
+           ,canopy_par_MJday_time &
            ,dim_1,dim_2      &
            ,nos_trees        &
            ,nos_inputs       &
@@ -42,6 +46,7 @@ module CARBON_MODEL_MOD
                     sw_par_fraction = 0.5d0,          & ! fraction of short-wave radiation which is PAR
                              freeze = 273.15d0,       &
                          gs_H2O_CO2 = 1.646259d0,     & ! The ratio of H20:CO2 diffusion for gs (Jones appendix 2)
+                gs_H2Ommol_CO2mol_day = 142.2368d0,   & ! The ratio of H20:CO2 diffusion for gs, including seconds per day correction
                          gb_H2O_CO2 = 1.37d0,         & ! The ratio of H20:CO2 diffusion for gb (Jones appendix 2)
                    mmol_to_kg_water = 1.8d-5,         & ! milli mole conversion to kg
                          umol_to_gC = 1.2d-5,         & ! conversion of umolC -> gC
@@ -87,7 +92,7 @@ module CARBON_MODEL_MOD
                      top_soil_depth = 0.1d0,        & ! thickness of the top soil layer (m)
                      mid_soil_depth = 0.2d0,        & ! thickness of the second soil layer (m)
                            min_root = 5d0,          & ! minimum root biomass (gBiomass.m-2)
-                            min_lai = 1.0d0           ! minimum LAI assumed for aerodynamic conductance calculations (m2/m2)
+                            min_lai = 0.1d0           ! minimum LAI assumed for aerodynamic conductance calculations (m2/m2)
 
   ! timing parameters
   double precision, parameter :: &
@@ -126,6 +131,11 @@ module CARBON_MODEL_MOD
 
   ! forest rotation specific info
   double precision, allocatable, dimension(:) :: extracted_C
+  ! Metrics on photosynthetic activity
+  double precision, dimension(:), allocatable :: gs_demand_supply_ratio, & ! actual:potential stomatal conductance
+                                                gs_total_canopy, &        ! stomatal conductance (mmolH2O/m2ground/day)
+                                                gb_total_canopy, &        ! boundary conductance (mmolH2O/m2ground/day)
+                                          canopy_par_MJday_time           ! Absorbed PAR by canopy (MJ/m2ground/day)
 
   ! arrays for the emulator, just so we load them once and that is it cos they be
   ! massive
@@ -165,7 +175,9 @@ module CARBON_MODEL_MOD
                               canopy_lwrad_Wm2, & ! canopy absorbed longwave radiation (W.m-2)
                                 soil_lwrad_Wm2, & ! soil absorbed longwave radiation (W.m-2)
                                  sky_lwrad_Wm2, & ! sky absorbed longwave radiation (W.m-2)
-                          stomatal_conductance, & ! maximum stomatal conductance (mmolH2O.m-2.day-1)
+                          stomatal_conductance, & ! stomatal conductance (mmolH2O.m-2ground.s-1)
+                         potential_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
+                           minimum_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
                        aerodynamic_conductance, & ! bulk surface layer conductance (m.s-1)
                              convert_ms1_mol_1, & ! Conversion ratio for m.s-1 -> mol.m-2.s-1
                                         lambda, & ! latent heat of vapourisation (J.kg-1)
@@ -177,11 +189,14 @@ module CARBON_MODEL_MOD
                            kinematic_viscosity    ! kinematic viscosity (m2.s-1)
 
   ! Module level variables for ACM_GPP_ET parameters
-  double precision :: delta_gs, & ! day length corrected gs increment mmolH2O/m2/dayl
-                          Ceff, & ! Canopy efficiency (gC/m2leaf/day)
-               pn_airt_scaling, & ! temperature response for metabolic limited photosynthesis
-                  co2_half_sat, & ! CO2 at which photosynthesis is 50 % of maximum (ppm)
-                co2_comp_point    ! CO2 at which photosynthesis > 0 (ppm)
+  double precision ::   delta_gs, & ! day length corrected gs increment mmolH2O/m2/dayl
+                            Ceff, & ! Canopy efficiency (gC/m2leaf/day)
+metabolic_limited_photosynthesis, &
+    light_limited_photosynthesis, &
+                          gb_mol, &
+                 pn_airt_scaling, & ! temperature response for metabolic limited photosynthesis
+                    co2_half_sat, & ! CO2 at which photosynthesis is 50 % of maximum (ppm)
+                  co2_comp_point    ! CO2 at which photosynthesis > 0 (ppm)
 
   ! Module level variables for step specific met drivers
   double precision :: mint, & ! minimum temperature (oC)
@@ -199,6 +214,7 @@ module CARBON_MODEL_MOD
   double precision :: cos_solar_zenith_angle, &
                             seconds_per_step, & !
                                days_per_step, & !
+                         dayl_hours_fraction, &
                                 dayl_seconds, & ! day length in seconds
                               dayl_seconds_1, &
                                   dayl_hours    ! day length in hours
@@ -212,8 +228,8 @@ module CARBON_MODEL_MOD
 
     ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
     ! Evergreen Analytical - ACMv2(DALEC_CDEA_ACM2) model. The subroutine calls the
-    ! Aggregated Canopy Model version 2 to simulate GPP and partitions 
-    ! between various ecosystem carbon pools. These pools are subject 
+    ! Aggregated Canopy Model version 2 to simulate GPP and partitions
+    ! between various ecosystem carbon pools. These pools are subject
     ! to turnovers / decompostion resulting in ecosystem phenology and fluxes of CO2
 
     ! This version includes the option to simulate fire combustion based
@@ -250,8 +266,8 @@ module CARBON_MODEL_MOD
 
     ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
     double precision :: cf(6),rfac
-
     integer :: p,f,n,ii ! JFE added ii to loop over fluxes
+    real :: start_time, finish_time
 
     ! met drivers are:
     ! 1st run day
@@ -262,7 +278,7 @@ module CARBON_MODEL_MOD
     ! 6th DOY at end of time step
     ! 7th Not used
     ! 8th removed fraction
-    ! 9th burned fraction   
+    ! 9th burned fraction
 
     ! POOLS are:
     ! 1 = labile
@@ -334,15 +350,15 @@ module CARBON_MODEL_MOD
     Ceff = pars(11) ! Canopy efficiency (gC/m2/day)
                     ! This is in the full model the product of Nitrogen use efficiency (gC/gN/m2leaf/day)
                     ! and average foliar nitrogen gC/m2leaf
-    
+
     ! assigning initial conditions
     if (start == 1) then
-       POOLS(1,1) = pars(18) ! labile
-       POOLS(1,2) = pars(19) ! foliar
-       POOLS(1,3) = pars(20) ! roots
-       POOLS(1,4) = pars(21) ! wood
-       POOLS(1,5) = pars(22) ! litter
-       POOLS(1,6) = pars(23) ! som
+        POOLS(1,1) = pars(18) ! labile
+        POOLS(1,2) = pars(19) ! foliar
+        POOLS(1,3) = pars(20) ! roots
+        POOLS(1,4) = pars(21) ! wood
+        POOLS(1,5) = pars(22) ! litter
+        POOLS(1,6) = pars(23) ! som
     endif
 
     ! defining phenological variables
@@ -383,6 +399,13 @@ module CARBON_MODEL_MOD
     ! needed to initialise soils
     call calculate_Rtot(Rtot)
 
+    ! Allocate variables needed
+    if (.not.allocated(gs_demand_supply_ratio)) then
+        allocate(gs_demand_supply_ratio(nodays), &
+                 gs_total_canopy(nodays), gb_total_canopy(nodays), &
+                 canopy_par_MJday_time(nodays))
+    end if
+!call cpu_time(start_time)
     do n = start, finish
 
        !!!!!!!!!!
@@ -404,16 +427,9 @@ module CARBON_MODEL_MOD
        lai_out(n) = POOLS(n,2)/pars(17)
        lai = lai_out(n)
 
-       ! Temperature adjustments for Michaelis-Menten coefficients
-       ! for CO2 (kc) and O2 (ko) and CO2 compensation point
-       ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
-       co2_half_sat   = arrhenious(kc_saturation,kc_half_sat_conc,maxt)
-       co2_comp_point = arrhenious(co2comp_saturation,co2comp_half_sat_conc,maxt)
-       ! temperature response for metabolically limited photosynthesis
-       pn_airt_scaling = opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,maxt)
-
        ! extract timing related values
        call calculate_daylength((doy-(deltat(n)*0.5d0)),lat)
+       dayl_hours_fraction = dayl_hours * 0.04166667d0 ! 1/24 = 0.04166667
        dayl_seconds_1 = dayl_seconds ** (-1d0)
        seconds_per_step = seconds_per_day * deltat(n)
        days_per_step = deltat(n)
@@ -426,12 +442,14 @@ module CARBON_MODEL_MOD
        call meteorological_constants(maxt,maxt+freeze,vpd_kPa)
        ! calculate aerodynamic using consistent approach with SPA
        call calculate_aerodynamic_conductance
+       gb_total_canopy(n) = aerodynamic_conductance * convert_ms1_mol_1 * 1d3
 
        !!!!!!!!!!
        ! Determine net shortwave and isothermal longwave energy balance
        !!!!!!!!!!
 
        call calculate_radiation_balance
+       canopy_par_MJday_time(n) = canopy_par_MJday
 
        !!!!!!!!!!
        ! Calculate physically soil water potential and total hydraulic resistance
@@ -444,13 +462,18 @@ module CARBON_MODEL_MOD
 
        ! calculate variables used commonly between ACM_GPP and ACM_ET
        call calculate_stomatal_conductance(abs(minlwp),Rtot)
+       ! Estimate stomatal conductance relative to its minimum / maximum, i.e. how
+       ! close are we to maxing out supply (note 0.01 taken from min_gs)
+       gs_demand_supply_ratio(n) = (stomatal_conductance - minimum_conductance) / (potential_conductance-minimum_conductance)
+       ! Store the canopy level stomatal conductance (mmolH2O/m2/day)
+       gs_total_canopy(n) = stomatal_conductance
 
        !!!!!!!!!!
        ! GPP (gC.m-2.day-1)
        !!!!!!!!!!
 
        if (stomatal_conductance > vsmall) then
-           FLUXES(n,1) = acm_gpp(stomatal_conductance)
+           call acm_gpp_stage_1 ; FLUXES(n,1) = acm_gpp_stage_2(stomatal_conductance)
        else
            FLUXES(n,1) = 0d0
        endif
@@ -521,6 +544,9 @@ module CARBON_MODEL_MOD
 
        ! JFE added 4 May 2018 - remove biomass if necessary
        if (met(8,n) > 0d0) then
+           if (allocated(extracted_C)) then
+               extracted_C(n) = (POOLS(n+1,1) + POOLS(n+1,2) + POOLS(n+1,4)) * met(8,n)
+           endif
            POOLS(n+1,1) = POOLS(n+1,1)*(1d0-met(8,n)) ! remove labile
            POOLS(n+1,2) = POOLS(n+1,2)*(1d0-met(8,n)) ! remove foliar
            POOLS(n+1,4) = POOLS(n+1,4)*(1d0-met(8,n)) ! remove wood
@@ -551,45 +577,104 @@ module CARBON_MODEL_MOD
            ! update pools - add litter transfer
            POOLS(n+1,5) = POOLS(n+1,5) + (FLUXES(n,24) + FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22) - FLUXES(n,28)) * deltat(n)
            POOLS(n+1,6) = POOLS(n+1,6) + (FLUXES(n,27) + FLUXES(n,28) - FLUXES(n,23)) * deltat(n)
- 
+
            ! calculate ecosystem emissions
            FLUXES(n,17) = FLUXES(n,18)+FLUXES(n,19)+FLUXES(n,20)+FLUXES(n,21)+FLUXES(n,22)+FLUXES(n,23)
        else
            ! set fluxes to zero
-           FLUXES(n,17) = 0d0
-           FLUXES(n,18) = 0d0
-           FLUXES(n,19) = 0d0
-           FLUXES(n,20) = 0d0
-           FLUXES(n,21) = 0d0
-           FLUXES(n,22) = 0d0
-           FLUXES(n,23) = 0d0
-           FLUXES(n,24) = 0d0
-           FLUXES(n,25) = 0d0
-           FLUXES(n,26) = 0d0
-           FLUXES(n,27) = 0d0
-           FLUXES(n,28) = 0d0
+           FLUXES(n,17:28) = 0d0
        end if
 
     end do ! nodays loop
+
+!call cpu_time(finish_time)
+!print*,"...time...",finish_time-start_time
 
   end subroutine CARBON_MODEL
   !
   !------------------------------------------------------------------
   !
-  double precision function acm_gpp(gs)
+!  double precision function acm_gpp(gs)
+!
+!    ! the Aggregated Canopy Model, is a Gross Primary Productivity (i.e.
+!    ! Photosyntheis) emulator which operates at a daily time step. ACM can be
+!    ! paramaterised to provide reasonable results for most ecosystems.
+!
+!    implicit none
+!
+!    ! declare input variables
+!    double precision, intent(in) :: gs
+!
+!    ! declare local variables
+!    double precision :: pn, pd, pp, qq, ci, mult, pl &
+!                       ,gc ,gs_mol, gb_mol
+!
+!    !
+!    ! Metabolic limited photosynthesis
+!    !
+!
+!    ! maximum rate of temperature and nitrogen (canopy efficiency) limited
+!    ! photosynthesis (gC.m-2.day-1)
+!    pn = lai*Ceff*pn_airt_scaling
+!
+!    !
+!    ! Diffusion limited photosynthesis
+!    !
+!
+!    ! daily canopy conductance (mmolH2O.m-2.s-1-> molCO2.m-2.day-1)
+!    ! The ratio of H20:CO2 diffusion is 1.646259 (Jones appendix 2).
+!    ! i.e. gcH2O*1.646259 = gcCO2
+!    gs_mol = gs * 1d-3 * seconds_per_day * gs_H2O_CO2
+!    ! canopy level boundary layer conductance unit change
+!    ! (m.s-1 -> mol.m-2.day-1) assuming sea surface pressure only.
+!    ! Note the ratio of H20:CO2 diffusion through leaf level boundary layer is
+!    ! 1.37 (Jones appendix 2).
+!    gb_mol = aerodynamic_conductance * seconds_per_day * convert_ms1_mol_1 * gb_H2O_CO2
+!    ! Combining in series the stomatal and boundary layer conductances
+!    gc = (gs_mol ** (-1d0) + gb_mol ** (-1d0)) ** (-1d0)
+!
+!    ! pp and qq represent limitation by metabolic (temperature & N) and
+!    ! diffusion (co2 supply) respectively
+!    pp = (pn*gC_to_umol)/gc ; qq = co2_comp_point-co2_half_sat
+!    ! calculate internal CO2 concentration (ppm or umol/mol)
+!    mult = co2+qq-pp
+!    ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
+!    ! calculate CO2 limited rate of photosynthesis (gC.m-2.day-1)
+!    pd = (gc * (co2-ci)) * umol_to_gC
+!    ! scale to day light period as this is then consistent with the light
+!    ! capture period (1/24 = 0.04166667)
+!    pd = pd * dayl_hours * 0.04166667d0
+!
+!    !
+!    ! Light limited photosynthesis
+!    !
+!
+!    ! calculate light limted rate of photosynthesis (gC.m-2.day-1)
+!    pl = e0 * canopy_par_MJday
+!
+!    !
+!    ! CO2 and light co-limitation
+!    !
+!
+!    ! calculate combined light and CO2 limited photosynthesis
+!    acm_gpp = pl*pd/(pl+pd)
+!    ! sanity check
+!    if (acm_gpp /= acm_gpp .or. acm_gpp < 0d0) acm_gpp = 0d0
+!
+!    ! don't forget to return
+!    return
+!
+!  end function acm_gpp
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine acm_gpp_stage_1
 
-    ! the Aggregated Canopy Model, is a Gross Primary Productivity (i.e.
-    ! Photosyntheis) emulator which operates at a daily time step. ACM can be
-    ! paramaterised to provide reasonable results for most ecosystems.
+    ! Estimate the light and temperature limited photosynthesis components.
+    ! See acm_gpp_stage_2() for estimation of CO2 supply limitation and
+    ! combination of light, temperature and CO2 co-limitation
 
     implicit none
-
-    ! declare input variables
-    double precision, intent(in) :: gs
-
-    ! declare local variables
-    double precision :: pn, pd, pp, qq, ci, mult, pl &
-                       ,gc ,gs_mol, gb_mol
 
     !
     ! Metabolic limited photosynthesis
@@ -597,23 +682,67 @@ module CARBON_MODEL_MOD
 
     ! maximum rate of temperature and nitrogen (canopy efficiency) limited
     ! photosynthesis (gC.m-2.day-1)
-    pn = lai*Ceff*pn_airt_scaling
+    metabolic_limited_photosynthesis = lai*ceff*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,maxt)
+
+    !
+    ! Light limited photosynthesis
+    !
+
+    ! calculate light limted rate of photosynthesis (gC.m-2.day-1)
+    light_limited_photosynthesis = e0 * canopy_par_MJday
+
+    !
+    ! Stomatal conductance independent variables for diffusion limited
+    ! photosynthesis
+    !
+
+    ! Canopy level boundary layer conductance unit change
+    ! (m.s-1 -> mol.m-2.day-1) assuming sea surface pressure only.
+    ! Note the ratio of H20:CO2 diffusion through leaf level boundary layer is
+    ! 1.37 (Jones appendix 2).
+    gb_mol = aerodynamic_conductance * seconds_per_day * convert_ms1_mol_1 * gb_H2O_CO2
+
+    ! Temperature adjustments for Michaelis-Menten coefficients
+    ! for CO2 (kc) and O2 (ko) and CO2 compensation point
+    ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
+    co2_half_sat   = arrhenious(kc_saturation,kc_half_sat_conc,maxt)
+    co2_comp_point = arrhenious(co2comp_saturation,co2comp_half_sat_conc,maxt)
+
+    ! don't forget to return
+    return
+
+  end subroutine acm_gpp_stage_1
+  !
+  !------------------------------------------------------------------
+  !
+  double precision function acm_gpp_stage_2(gs)
+
+    ! Combine the temperature (pn) and light (pl) limited gross primary productivity
+    ! estimates with CO2 supply limited via stomatal conductance (gs).
+    ! See acm_gpp_stage_1() for additional details on pn and pl calculation.
+
+    implicit none
+
+    ! declare input variables
+    double precision, intent(in) :: gs
+
+    ! declare local variables
+    double precision :: pp, qq, ci, mult, gc, pl, pn, pd
+
+    ! load into local variables (for code readability)
+    pn = metabolic_limited_photosynthesis
+    pl = light_limited_photosynthesis
 
     !
     ! Diffusion limited photosynthesis
     !
 
-    ! daily canopy conductance (mmolH2O.m-2.s-1-> molCO2.m-2.day-1)
+    ! Daily canopy conductance (mmolH2O.m-2.s-1-> molCO2.m-2.day-1)
     ! The ratio of H20:CO2 diffusion is 1.646259 (Jones appendix 2).
-    ! i.e. gcH2O*1.646259 = gcCO2
-    gs_mol = gs * 1d-3 * seconds_per_day * gs_H2O_CO2
-    ! canopy level boundary layer conductance unit change
-    ! (m.s-1 -> mol.m-2.day-1) assuming sea surface pressure only.
-    ! Note the ratio of H20:CO2 diffusion through leaf level boundary layer is
-    ! 1.37 (Jones appendix 2).
-    gb_mol = aerodynamic_conductance * seconds_per_day * convert_ms1_mol_1 * gb_H2O_CO2
+    ! i.e. gcH2O*1.646259 = gcCO2 then all multiplied by 86400 seconds
+    !
     ! Combining in series the stomatal and boundary layer conductances
-    gc = (gs_mol ** (-1d0) + gb_mol ** (-1d0)) ** (-1d0)
+    gc = ((gs*gs_H2Ommol_CO2mol_day) ** (-1d0) + gb_mol ** (-1d0)) ** (-1d0)
 
     ! pp and qq represent limitation by metabolic (temperature & N) and
     ! diffusion (co2 supply) respectively
@@ -621,32 +750,27 @@ module CARBON_MODEL_MOD
     ! calculate internal CO2 concentration (ppm or umol/mol)
     mult = co2+qq-pp
     ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
+
     ! calculate CO2 limited rate of photosynthesis (gC.m-2.day-1)
     pd = (gc * (co2-ci)) * umol_to_gC
     ! scale to day light period as this is then consistent with the light
     ! capture period (1/24 = 0.04166667)
-    pd = pd * dayl_hours * 0.04166667d0
+    pd = pd * dayl_hours_fraction
 
     !
-    ! Light limited photosynthesis
-    !
-
-    ! calculate light limted rate of photosynthesis (gC.m-2.day-1)
-    pl = e0 * canopy_par_MJday
-
-    !
-    ! CO2 and light co-limitation
+    ! Estimate CO2 and light co-limitation
     !
 
     ! calculate combined light and CO2 limited photosynthesis
-    acm_gpp = pl*pd/(pl+pd)
+    acm_gpp_stage_2 = pl*pd/(pl+pd)
+
     ! sanity check
-    if (acm_gpp /= acm_gpp .or. acm_gpp < 0d0) acm_gpp = 0d0
+    if (acm_gpp_stage_2 /= acm_gpp_stage_2 .or. acm_gpp_stage_2 < 0d0) acm_gpp_stage_2 = 0d0
 
     ! don't forget to return
     return
 
-  end function acm_gpp
+  end function acm_gpp_stage_2
   !
   !----------------------------------------------------------------------
   !
@@ -664,12 +788,12 @@ module CARBON_MODEL_MOD
     double precision :: gs_high, gpp_high, gpp_low
 
     ! Estimate photosynthesis with current estimate of gs
-    gpp_low = acm_gpp(gs_in)
+    gpp_low = acm_gpp_stage_2(gs_in)
 
     ! Increment gs
     gs_high = gs_in + delta_gs
     ! Estimate photosynthesis with incremented gs
-    gpp_high = acm_gpp(gs_high)
+    gpp_high = acm_gpp_stage_2(gs_high)
 
     ! Determine impact of gs increment on pd and how far we are from iWUE
     find_gs_iWUE = iWUE - ((gpp_high - gpp_low)*lai_1)
@@ -691,10 +815,10 @@ module CARBON_MODEL_MOD
                                        Rtot    ! total hydraulic resistance (MPa.s-1.m-2.mmol-1)
 
     ! local variables
-    double precision :: denom
-    double precision, parameter :: max_gs = 3500d0, &  ! mmolH2O.m-2.s-1
-                                   min_gs = 0.001d0, & !
-                                   tol_gs = 4d0        !
+    double precision :: denom, pl, pn, pn_day, iWUE_upper, iWUE_lower
+    double precision, parameter :: max_gs = 2000d0, &  ! mmolH2O.m-2.s-1 (leaf area)
+                                   min_gs = 1d0, &     ! mmolH2O.m-2.s-1 (leaf area)
+                                   tol_gs = 1d0        ! 4d0
 
     !!!!!!!!!!
     ! Calculate stomatal conductance under H2O and CO2 limitations
@@ -702,8 +826,10 @@ module CARBON_MODEL_MOD
 
     if (aerodynamic_conductance > vsmall .and. deltaWP > vsmall) then
 
-        ! Determine potential water flow rate (mmolH2O.m-2.dayl-1)
+        ! Determine potential water flow rate (mmolH2O.m-2.day-1)
         max_supply = (deltaWP/Rtot) * seconds_per_day
+        ! Estimate LAI adjusted lower gs bounds
+        minimum_conductance = min_gs * lai
 
         ! Invert Penman-Monteith equation to give gs (m.s-1) needed to meet
         ! maximum possible evaporation for the day.
@@ -712,28 +838,61 @@ module CARBON_MODEL_MOD
         denom = slope * ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2) &
               + (ET_demand_coef * aerodynamic_conductance)
         denom = (denom / (lambda * max_supply * mmol_to_kg_water * dayl_seconds_1)) - slope
-        stomatal_conductance = aerodynamic_conductance / (denom / psych)
+        potential_conductance = aerodynamic_conductance / (denom / psych)
 
         ! convert m.s-1 to mmolH2O.m-2.s-1
-        stomatal_conductance = stomatal_conductance * 1d3 * convert_ms1_mol_1
+        potential_conductance = potential_conductance * 1d3 * convert_ms1_mol_1
         ! if conditions are dew forming then set conductance to maximum as we are not going to be limited by water demand
-        if (stomatal_conductance <= 0d0 .or. stomatal_conductance > max_gs) stomatal_conductance = max_gs
+        if (potential_conductance <= 0d0 .or. potential_conductance > max_gs*lai) potential_conductance = max_gs*lai
 
-        ! if we are potentially limited by stomatal conductance or we are using instrinsic water use efficiency (rather than WUE)
-        ! then iterate to find optimum gs otherwise just go with the max...
-        if (stomatal_conductance /= max_gs) then
-            ! If there is a positive demand for water then we will solve for photosynthesis limits on gs through iterative solution
-            delta_gs = 1d-3*lai ! mmolH2O/m2leaf/day
-            ! estimate inverse of LAI to avoid division in optimisation
-            lai_1 = lai**(-1d0)
-            ! intrinsic WUE optimisation
-            stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE',find_gs_iWUE,min_gs,stomatal_conductance,tol_gs)
+        ! If there is a positive demand for water then we will solve for photosynthesis limits on gs through iterative solution
+        delta_gs = 1d-3*lai ! mmolH2O/m2leaf/day
+        ! estimate inverse of LAI to avoid division in optimisation
+        lai_1 = lai**(-1d0)
+        ! Calculate stage one acm, temperature and light limitation which
+        ! are independent of stomatal conductance effects
+        call acm_gpp_stage_1
+        ! Intrinsic WUE optimisation
+        ! Check that the water restricted water range brackets the root solution for the bisection
+        iWUE_upper = find_gs_iWUE(potential_conductance) !; iWUE_lower = find_gs_iWUE(min_gs)
+!        if ( iWUE_upper * iWUE_lower > 0d0 ) then
+        if (iWUE_upper < 0d0) then
+            ! Then both proposals indicate that photosynthesis
+            ! would be increased by greater opening of the stomata
+            ! and is therefore water limited!
+            stomatal_conductance = potential_conductance
+            ! Exception being if both are positive - thereforfe assume
+            ! lowest
+!           if (iWUE_upper > 0d0) stomatal_conductance = minimum_conductance
+        else
+            ! In all other cases iterate
+            stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
+                                          find_gs_iWUE,minimum_conductance,potential_conductance,tol_gs*lai)
         end if
+!        ! Empirical fit to outputs generated by bisection procedure.
+!        ! Assumes that water supply is not limiting, thus there is still the need to estimate supply limit and apply as bookend.
+!        ! Note also that the order of covariates reflects their importance in the prediction,
+!        ! i.e. R > 0.9 just for first independent variable
+!        pn = metabolic_limited_photosynthesis
+!        pn_day = metabolic_limited_photosynthesis * dayl_hours_fraction
+!        pl = light_limited_photosynthesis
+!        stomatal_conductance =   50.92693d0 &
+!                             + ( 14.73576d0    * ((pn_day*pl) / (pn_day+pl)) ) &
+!                             + (  1.0555d0     * pn )                          &
+!                             + ((-8.140542d-4) * pn**2d0 )                     &
+!                             + ((-0.7185823d0) * pl )                          &
+!                             + ((-1.565065d0)  * co2_comp_point )              &
+!                             + (( 0.2258834d0) * co2_half_sat )                &
+!                             + ((-2.486837d-4) * co2_half_sat**2d0 )           &
+!                             + (( 4.344512d-2) * co2 )                         &
+!                             + ((-2.969554d-4) * co2**2d0 )                    &
+!                             + ((-41.61914d0)  * iWUE )
+!        stomatal_conductance = max(min_gs,min(stomatal_conductance,potential_conductance))
 
     else
 
         ! if no LAI then there can be no stomatal conductance
-        stomatal_conductance = 0d0
+        potential_conductance = max_gs ; stomatal_conductance = min_gs
         ! set minimum (computer) precision level flow
         max_supply = vsmall
 
@@ -764,19 +923,24 @@ module CARBON_MODEL_MOD
 
     ! Density of air (kg/m3)
     air_density_kg = 353d0/input_temperature_K
+!    air_density_kg = 1.204162d0
     ! Conversion ratio for m.s-1 -> mol.m-2.s-1
     convert_ms1_mol_1 = const_sfc_pressure / (input_temperature_K*Rcon)
+!    convert_ms1_mol_1 = 41.57151d0
     ! latent heat of vapourisation,
     ! function of air temperature (J.kg-1)
     lambda = 2501000d0-2364d0*input_temperature
+!    lambda = 2454720d0
 
     ! psychrometric constant (kPa K-1)
     psych = 0.0646d0*exp(0.00097d0*input_temperature)
+!    psych = 0.06586548d0
     ! Straight line approximation of the true slope; used in determining
     ! relationship slope
     mult = input_temperature+237.3d0
     ! Rate of change of saturation vapour pressure with temperature (kPa.K-1)
     slope = (2502.935945d0*exp(17.269d0*input_temperature/mult)) / (mult*mult)
+!    slope = 0.1447219d0
 
     ! estimate frequently used atmmospheric demand component
     ET_demand_coef = air_density_kg*cpair*input_vpd_kPa
@@ -788,16 +952,23 @@ module CARBON_MODEL_MOD
     ! Determine diffusion coefficient (m2.s-1), temperature dependant (pressure dependence neglected). Jones p51; appendix 2
     ! Temperature adjusted from standard 20oC (293.15 K), NOTE that 1/293.15 = 0.003411223
     ! 0.0000242 = conversion to make diffusion specific for water vapor (um2.s-1)
-    water_vapour_diffusion = 0.0000242d0*((input_temperature_K/293.2d0)**1.75d0)
+    ! NOTE: that variation between -10C -> +40C is -15 and +10 % relative to
+    ! reference value.
+    water_vapour_diffusion = 0.0000242d0*((input_temperature_K*0.003411223d0)**1.75d0)
+!    water_vapour_diffusion = 0.0000242d0
 
     !
     ! Used for calculation of leaf level conductance
     !
 
     ! Calculate the dynamic viscosity of air (kg.m-2.s-1)
+    ! NOTE: variation between -10C -> +40C is -8 and +4 % relative to reference
+    ! value (293.15K)
     dynamic_viscosity = ((input_temperature_K**1.5d0)/(input_temperature_K+120d0))*1.4963d-6
     ! and kinematic viscosity (m2.s-1)
     kinematic_viscosity = dynamic_viscosity/air_density_kg
+!    dynamic_viscosity = 1.817799d-05
+!    kinematic_viscosity = 1.509597d-05
 
   end subroutine meteorological_constants
   !
@@ -819,25 +990,37 @@ module CARBON_MODEL_MOD
            mixing_length_momentum, & ! mixing length parameter for momentum (m)
             length_scale_momentum    ! length scale parameter for momentum (m)
 
+    ! Restrict LAI used here to greater than a minium value which prevents un-realistic outputs
+    local_lai = max(min_lai,lai)
+
     ! calculate the zero plane displacement and roughness length
-    call z0_displacement(ustar_Uh)
+    call z0_displacement(ustar_Uh,local_lai)
     ! calculate friction velocity at tower height (reference height ) (m.s-1)
     ! WARNING neutral conditions only; see WRF module_sf_sfclay.F for 'with
     ! stability versions'
+    !    ustar = (wind_spd / log((tower_height-displacement)/roughl)) * vonkarman
     ustar = wind_spd * ustar_Uh
 
-    ! both length scale and mixing length are considered to be constant within
+    ! Both length scale and mixing length are considered to be constant within
     ! the canopy (under dense canopy conditions) calculate length scale (lc)
     ! for momentum absorption within the canopy; Harman & Finnigan (2007)
     ! and mixing length (lm) for vertical momentum within the canopy Harman & Finnigan (2008)
-    local_lai = max(min_lai,lai)
     length_scale_momentum = (4d0*canopy_height) / local_lai
     mixing_length_momentum = 2d0*(ustar_Uh**3)*length_scale_momentum
 
     ! based on Harman & Finnigan (2008); neutral conditions only
     call log_law_decay
+!    canopy_wind = max(min_wind, ustar * 0.3161471806d0)
 
-    ! now we are interested in the within canopy wind speed,
+    ! log law decay
+    !  NOTE: given canopy height (9 m) the log function reduces
+    ! to a constant value down to ~ 7 decimal place (0.3161471806). Therefore
+    ! 1/vonkarman * 0.31 = 0.7710906. While ustar_Uh also reduces to 0.3 giving a constant
+    ! wind_spd -> ustar relationship.
+    ! Ultimately above canopy wind speed to canopy top (m/s) can be reduced to
+    !canopy_wind = max(min_wind,wind_spd * 0.2313272d0)
+
+    ! Rather than the wind at the top of the canopy we are interested in the within canopy wind speed,
     ! here we assume that the wind speed just inside of the canopy is most important.
     canopy_wind = canopy_wind*exp((ustar_Uh*((canopy_height*0.75d0)-canopy_height))/mixing_length_momentum)
 
@@ -863,19 +1046,20 @@ module CARBON_MODEL_MOD
     double precision, intent(out) :: gv_forced ! canopy conductance (m/s) for water vapour under forced convection
 
     ! local parameters
-    double precision, parameter :: leaf_width = 0.04d0, & ! leaf width (m) (original 0.08)
-                                 leaf_width_1 = leaf_width ** (-1d0), &
-!                                           Pr = 0.72d0, & ! Prandtl number
-                                      Pr_coef = 1.05877d0 !1.18d0*(Pr**(0.33d0))
+    double precision, parameter :: leaf_width_coef = 12.5d0, & ! (1/leaf_width) * 0.5,
+                                                               ! where 0.5 accounts for one half
+                                                               ! of the leaf used in water exchange
+                                        leaf_width = 0.04d0    ! leaf width (m) (original 0.08)
+!                                                Pr = 0.72d0, & ! Prandtl number
+!                                           Pr_coef = 1.05877d0 !1.18d0*(Pr**(0.33d0))
     ! local variables
-    double precision :: &
-              Sh_forced & ! Sherwood number under forced convection
-                    ,Re   ! Reynolds number
+    double precision :: Sh_forced ! Sherwood number under forced convection
 
-    ! Sherwood number under forced convection
-    Sh_forced = 0.962d0*Pr_coef*(sqrt((leaf_width*canopy_wind)/kinematic_viscosity))
+    ! Sherwood number under forced convection. NOTE: 0.962 * Pr_coef = 1.018537
+!    Sh_forced = 0.962d0*Pr_coef*(sqrt((leaf_width*canopy_wind)/kinematic_viscosity))
+    Sh_forced = 1.018537d0*(sqrt((leaf_width*canopy_wind)/kinematic_viscosity))
     ! Estimate the the forced conductance of water vapour
-    gv_forced = water_vapour_diffusion*Sh_forced*leaf_width_1 * 0.5d0 * lai
+    gv_forced = water_vapour_diffusion*Sh_forced*leaf_width_coef * lai
 
   end subroutine average_leaf_conductance
   !
@@ -889,8 +1073,10 @@ module CARBON_MODEL_MOD
 
     implicit none
 
-    ! log law decay
-    canopy_wind = (ustar * vonkarman_1) * log((canopy_height-displacement) / roughl)
+    ! log law decay, NOTE: given canopy height (9 m) the log function reduces
+    ! to a constant value down to ~ 7 decimal place (0.3161471806). Therefore
+    ! 1/vonkarman * 0.31 = 0.7710906
+    canopy_wind = ustar * vonkarman_1 * log((canopy_height-displacement) / roughl)
 
     ! set minimum value for wind speed at canopy top (m.s-1)
     canopy_wind = max(min_wind,canopy_wind)
@@ -1024,7 +1210,7 @@ module CARBON_MODEL_MOD
     soil_incident_from_sky = soil_incident_from_sky + (trans_lw_fraction * lwrad)
     soil_absorption_from_sky = soil_incident_from_sky * emissivity
     ! Long wave reflected directly back into sky
-    sky_lwrad_Wm2 = lwrad * reflected_lw_fraction
+!    sky_lwrad_Wm2 = lwrad * reflected_lw_fraction
 
     !!!!!!!!!!
     ! Distribute longwave from soil
@@ -1034,10 +1220,10 @@ module CARBON_MODEL_MOD
     ! which is reflected
     canopy_absorption_from_soil = longwave_release_soil + (soil_incident_from_sky * (1d0-emissivity))
     ! First how much directly bypasses the canopy...
-    sky_lwrad_Wm2 = sky_lwrad_Wm2 + (canopy_absorption_from_soil * transmitted_fraction)
+!    sky_lwrad_Wm2 = sky_lwrad_Wm2 + (canopy_absorption_from_soil * transmitted_fraction)
     canopy_absorption_from_soil = canopy_absorption_from_soil * (1d0 - transmitted_fraction)
     ! Second, use this to estimate the longwave returning to the sky
-    sky_lwrad_Wm2 = sky_lwrad_Wm2 + (canopy_absorption_from_soil * trans_lw_fraction)
+!    sky_lwrad_Wm2 = sky_lwrad_Wm2 + (canopy_absorption_from_soil * trans_lw_fraction)
     ! Third, now calculate the longwave from the soil surface absorbed by the
     ! canopy
     canopy_absorption_from_soil = canopy_absorption_from_soil * absorbed_lw_fraction
@@ -1051,7 +1237,7 @@ module CARBON_MODEL_MOD
     ! to soil once to sky)
     canopy_loss = longwave_release_canopy * lai * canopy_release_fraction
     ! Calculate longwave absorbed by soil which is released by the canopy itself
-    soil_absorption_from_canopy = canopy_loss * emissivity
+!    soil_absorption_from_canopy = canopy_loss * emissivity
     ! Canopy released longwave returned to the sky
     sky_lwrad_Wm2 = sky_lwrad_Wm2 + canopy_loss
 
@@ -1063,15 +1249,7 @@ module CARBON_MODEL_MOD
     ! upwards and downwards emissions
     canopy_lwrad_Wm2 = (canopy_absorption_from_sky + canopy_absorption_from_soil) - (canopy_loss + canopy_loss)
     ! determine isothermal net soil
-    soil_lwrad_Wm2 = (soil_absorption_from_sky + soil_absorption_from_canopy) - longwave_release_soil
-
-    !!!!!!!!!!
-    ! Approximate daily impact on isothermal to net longwave
-    !!!!!!!!!!
-
-    ! Isothermal -> net radiation in SPA is largely linear, therefore we
-    ! retrieve the linear correction here
-    soil_lwrad_Wm2 = (soil_lwrad_Wm2 * soil_iso_to_net_coef) + soil_iso_to_net_const
+!    soil_lwrad_Wm2 = (soil_absorption_from_sky + soil_absorption_from_canopy) - longwave_release_soil
 
   end subroutine calculate_longwave_isothermal
   !
@@ -1098,8 +1276,8 @@ module CARBON_MODEL_MOD
     call calculate_longwave_isothermal(meant,meant)
     ! Apply linear correction to soil surface isothermal->net longwave radiation
     ! balance based on absorbed shortwave radiation
-    delta_iso = soil_iso_to_net_coef * (soil_swrad_MJday * 1d6 * dayl_seconds_1) + soil_iso_to_net_const
-    soil_lwrad_Wm2 = soil_lwrad_Wm2 + delta_iso
+!    delta_iso = soil_iso_to_net_coef * (soil_swrad_MJday * 1d6 * dayl_seconds_1) + soil_iso_to_net_const
+!    soil_lwrad_Wm2 = soil_lwrad_Wm2 + delta_iso
 
   end subroutine calculate_radiation_balance
   !
@@ -1197,7 +1375,7 @@ module CARBON_MODEL_MOD
     soil_par_MJday = trans_par_MJday * soil_swrad_absorption
     soil_nir_MJday = trans_nir_MJday * soil_swrad_absorption
     ! combine totals for use is soil evaporation
-    soil_swrad_MJday = soil_nir_MJday + soil_par_MJday
+!    soil_swrad_MJday = soil_nir_MJday + soil_par_MJday
 
     !!!!!!!!!
     ! Estimate canopy absorption of soil reflected shortwave radiation
@@ -1384,7 +1562,7 @@ module CARBON_MODEL_MOD
   !
   !------------------------------------------------------------------
   !
-  subroutine z0_displacement(ustar_Uh)
+  subroutine z0_displacement(ustar_Uh,local_lai)
 
     ! dynamic calculation of roughness length and zero place displacement (m)
     ! based on canopy height and lai. Raupach (1994)
@@ -1393,27 +1571,34 @@ module CARBON_MODEL_MOD
 
     ! arguments
     double precision, intent(out) :: ustar_Uh ! ratio of friction velocity over wind speed at canopy top
+    double precision, intent(in) :: local_lai ! LAI which has had minium LAI constraint applied
     ! local variables
-    double precision  sqrt_cd1_lai, local_lai
+    double precision  sqrt_cd1_lai
     double precision, parameter :: cd1 = 7.5d0,   & ! Canopy drag parameter; fitted to data
                                     Cs = 0.003d0, & ! Substrate drag coefficient
                                     Cr = 0.3d0,   & ! Roughness element drag coefficient
-                          ustar_Uh_max = 1d0,     & 
-                          ustar_Uh_min = 0.2d0,   &
-                                        Cw = 2d0, & ! Characterises roughness sublayer depth (m)
-                                     phi_h = 0.19314718056d0 ! Roughness sublayer influence function;
+                          ustar_Uh_max = 0.35d0,  &
+                          ustar_Uh_min = 0.05d0,  &
+                                    Cw = 2d0,     & ! Characterises roughness sublayer depth (m)
+                                 phi_h = 0.19314718056d0 ! Roughness sublayer influence function;
 
-    ! assign new value to min_lai to avoid max min calls
-    local_lai = max(min_lai,lai)
+    ! Estimate LAI scaled canopy drag factor
     sqrt_cd1_lai = sqrt(cd1 * local_lai)
+
+    ! calculate estimate of ratio of friction velocity / canopy wind speed.
+    ! NOTE: under current min LAI and fixed canopy height (9 m) this ratio is
+    ! fixed at 0.3
+!    ustar_Uh = 0.3d0
+    ustar_Uh = max(ustar_Uh_min,min(sqrt(Cs+Cr*local_lai*0.5d0),ustar_Uh_max))
 
     ! calculate displacement (m); assume minimum lai 1.0 or 1.5 as height is not
     ! varied
     displacement = (1d0-((1d0-exp(-sqrt_cd1_lai))/sqrt_cd1_lai))*canopy_height
 
-    ! calculate estimate of ratio of friction velocity / canopy wind speed; with
-    ! max value set at
-    ustar_Uh = max(ustar_Uh_min,min(sqrt(Cs+Cr*local_lai*0.5d0),ustar_Uh_max))
+    ! calculate roughness sublayer influence function;
+    ! this describes the departure of the velocity profile from just above the
+    ! roughness from the intertial sublayer log law
+    ! phi_h = log(Cw)-1d0+Cw**(-1d0) ! DO NOT FORGET TO UPDATE IF Cw CHANGES
 
     ! finally calculate roughness length, dependant on displacement, friction
     ! velocity and lai.
@@ -1483,7 +1668,7 @@ module CARBON_MODEL_MOD
 
     ! arguments
     double precision :: root_mass, & ! root biomass in layer (gbiomass)
-    thickness    ! thickness of soil zone roots are in
+                        thickness    ! thickness of soil zone roots are in
 
     ! calculate root hydraulic resistance
     root_resistance = root_resist / (root_mass*thickness)
@@ -1591,39 +1776,39 @@ module CARBON_MODEL_MOD
 
     ! local variables..
     integer            :: iter
-    integer, parameter :: ITMAX = 20
-    double precision   :: a,b,c,d,e,fa,fb,fc,p,q,r,s,tol1,xm
-    double precision, parameter :: EPS = 3d-8
+    integer, parameter :: ITMAX = 10
+    double precision   :: a,b,c,d,e,fa,fb,fc,p,q,r,s,tol1,tol0,xm
+    double precision, parameter :: EPS = 6d-8
 
     ! calculations...
     a  = x1
     b  = x2
     fa = func( a )
     fb = func( b )
+    tol0 = tol * 0.5d0
 
     ! Check that we haven't (by fluke) already started with the root..
     if ( fa .eq. 0d0 ) then
-      zbrent = a
-      return
+        zbrent = a
+        return
     elseif ( fb .eq. 0d0 ) then
-      zbrent = b
-      return
+        zbrent = b
+        return
     end if
     ! Ensure the supplied x-values give y-values that lie either
     ! side of the root and if not flag an error message...
-    if ( sign(1d0,fa) .eq. sign(1d0,fb) ) then
-      fa = func( a )
-      fb = func( b )
-      ! tell me otherwise what is going on
-      !       print*,"Supplied values must bracket the root of the function.",new_line('x'),  &
-      !         "     ","You supplied x1:",x1,new_line('x'),                     &
-      !         "     "," and x2:",x2,new_line('x'),                             &
-      !         "     "," which give function values of fa :",fa,new_line('x'),  &
-      !         "     "," and fb:",fb," .",new_line('x'),                        &
-      !         " zbrent was called by: ",trim(called_from)
-      !       fa = func( a )
-      !       fb = func( b )
-    end if
+!    if ( sign(1d0,fa) .eq. sign(1d0,fb) ) then
+!    if (fa * fb > 0d0) then
+!        fa = func( a )
+!        fb = func( b )
+        ! tell me otherwise what is going on
+!!       print*,"Supplied values must bracket the root of the function.",new_line('x'),  &
+!!         "     ","You supplied x1:",x1,new_line('x'),                     &
+!!         "     "," and x2:",x2,new_line('x'),                             &
+!!         "     "," which give function values of fa :",fa,new_line('x'),  &
+!!         "     "," and fb:",fb," .",new_line('x'),                        &
+!!         " zbrent was called by: ",trim(called_from)
+!    end if
     c = b
     fc = fb
 
@@ -1631,7 +1816,8 @@ module CARBON_MODEL_MOD
 
       ! If the new value (f(c)) doesn't bracket
       ! the root with f(b) then adjust it..
-      if ( sign(1d0,fb) .eq. sign(1d0,fc) ) then
+!      if ( sign(1d0,fb) .eq. sign(1d0,fc) ) then
+      if (fb * fc > 0d0) then
         c  = a
         fc = fa
         d  = b - a
@@ -1645,7 +1831,7 @@ module CARBON_MODEL_MOD
         fb = fc
         fc = fa
       end if
-      tol1 = 2d0 * EPS * abs(b) + 0.5d0 * tol
+      tol1 = EPS * abs(b) + tol0
       xm   = 0.5d0 * ( c - b )
       if ( ( abs(xm) .le. tol1 ) .or. ( fb .eq. 0d0 ) ) then
         zbrent = b
@@ -1685,12 +1871,15 @@ module CARBON_MODEL_MOD
       fb = func(b)
     enddo
 
-    !    print*,"zbrent has exceeded maximum iterations",new_line('x'),&
-    !           "zbrent was called by: ",trim(called_from)
+!    print*,"zbrent has exceeded maximum iterations",new_line('x'),&
+!           "zbrent was called by: ",trim(called_from)
 
     zbrent = b
 
   end function zbrent
+  !
+  !------------------------------------------------------------------
+  !
 !
 !--------------------------------------------------------------------
 !

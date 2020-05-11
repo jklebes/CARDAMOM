@@ -6,7 +6,9 @@ subroutine racm(output_dim,met,pars,out_var,lat,nopars,nomet &
 
   use CARBON_MODEL_MOD, only: CARBON_MODEL &
                              ,soil_frac_clay, soil_frac_sand &
-                             ,nos_soil_layers, wSWP_time
+                             ,nos_soil_layers, wSWP_time &
+                             ,gs_demand_supply_ratio, canopy_par_MJday_time &
+                             ,gs_total_canopy, gb_total_canopy
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -49,13 +51,13 @@ subroutine racm(output_dim,met,pars,out_var,lat,nopars,nomet &
   lai = 0d0 ; GPP = 0d0 ; NEE = 0d0 ; POOLS = 0d0 ; FLUXES = 0d0 ; out_var = 0d0
 
   ! update soil parameters
-  soil_frac_clay=soil_frac_clay_in
-  soil_frac_sand=soil_frac_sand_in
+  soil_frac_clay = soil_frac_clay_in
+  soil_frac_sand = soil_frac_sand_in
 
   ! generate deltat step from input data
   deltat(1) = met(1,1)
   do i = 2, nodays
-     deltat(i)=met(1,i)-met(1,(i-1))
+     deltat(i) = met(1,i)-met(1,(i-1))
   end do
 
   do i = 1, nos_iter
@@ -79,6 +81,10 @@ subroutine racm(output_dim,met,pars,out_var,lat,nopars,nomet &
          out_var(i,1:nodays,4) = FLUXES(1:nodays,3) ! soil evap (kg.m-2.day-1)
          out_var(i,1:nodays,5) = wSWP_time(1:nodays)
          out_var(i,1:nodays,6) = FLUXES(1:nodays,4) ! wet canopy evap (kg.m-2.day-1)
+         out_var(i,1:nodays,7) = gs_demand_supply_ratio(1:nodays)
+         out_var(i,1:nodays,8) = gs_total_canopy(1:nodays)
+         out_var(i,1:nodays,9) = canopy_par_MJday_time(1:nodays)
+         out_var(i,1:nodays,10) = gb_total_canopy(1:nodays)
      endif
 
   end do ! nos_iter loop

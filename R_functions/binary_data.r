@@ -95,20 +95,20 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   MET[,12] = met$vpd_lagged    # Pa
   MET[,13] = OBS$forest_management # type
   if (modelname == "ACM") {
-    MET[,14] = met$avgN        # gN/m2
-    MET[,15] = met$lai         # m2/m2
-    MET[,16] = met$lat         # degree (-90/90)
-    MET[,17] = met$wind_spd    # m/s
-    MET[,18] = met$vpd         # Pa
-    MET[,19] = met$Rtot        # MPa
-    MET[,20] = met$top_sand    # %
-    MET[,21] = met$bot_sand    # %
-    MET[,22] = met$top_clay    # %
-    MET[,23] = met$bot_clay    # %
+      MET[,14] = met$avgN        # gN/m2
+      MET[,15] = met$lai         # m2/m2
+      MET[,16] = met$lat         # degree (-90/90)
+      MET[,17] = met$wind_spd    # m/s
+      MET[,18] = met$vpd         # Pa
+      MET[,19] = met$Rtot        # MPa
+      MET[,20] = met$top_sand    # %
+      MET[,21] = met$bot_sand    # %
+      MET[,22] = met$top_clay    # %
+      MET[,23] = met$bot_clay    # %
   } else {
-    MET[,14] = met$avgTemp          # Celcius
-    MET[,15] = pmax(0,met$wind_spd) # m/s
-    MET[,16] = pmax(0,met$vpd)      # Pa
+      MET[,14] = met$avgTemp          # Celcius
+      MET[,15] = pmax(0,met$wind_spd) # m/s
+      MET[,16] = pmax(0,met$vpd)      # Pa
   }
 
   # TEMPLATE FOR ALL DALEC MCMC DATA files
@@ -206,14 +206,14 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
 #PARPRIORS[21] = 343.860322325035 ; PARPRIORUNC[21] = 2179.637266161
 #PARPRIORS[22] = 46.4292519839844 ; PARPRIORUNC[22] = 143.496757798946
       PARPRIORS[2] =0.46                ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
-      PARPRIORS[11]=16.9                ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+#      PARPRIORS[11]=16.9                ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
       PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
       PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
       PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
       PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
       PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
       # Other priors
-#      OTHERPRIORS[5] =      ; OtHERPRIORUNC[5] = # Steady state attractor for wood
+      OTHERPRIORS[5] = OBS$Cwood_potential     ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
   } else if (modelname == "DALEC_CDEA_ACM2") {
       PARPRIORS[2] =0.46                ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       PARPRIORS[11]=23.44682            ; PARPRIORUNC[11]=8.534234 # Ceff: derived from multiple trait values from Kattge et al., (2011)
@@ -225,7 +225,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
       PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
       # Other priors
-#      OTHERPRIORS[5] =      ; OtHERPRIORUNC[5] = # Steady state attractor for wood
+      OTHERPRIORS[5] = OBS$Cwood_potential     ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
   } else if (modelname == "DALEC_CDEA_ACM2_BUCKET") {
       PARPRIORS[2] =0.46                ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       PARPRIORS[11]=23.44682            ; PARPRIORUNC[11]=8.534234 # Ceff: derived from multiple trait values from Kattge et al., (2011)
@@ -239,17 +239,17 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       # Other priors
       OTHERPRIORS[1] = OBS$soilwater ; OTHERPRIORUNC[1] = OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
       OTHERPRIORS[4] = 0.66          ; OTHERPRIORUNC[4] = 0.12 # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
-#      OTHERPRIORS[5] =      ; OtHERPRIORUNC[5] = # Steady state attractor for wood
+      OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
   } else if (modelname == "DALEC_EVERGREEN") {
-    PARPRIORS[2] = 0.46                 ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
-    PARPRIORS[11] = 16.9                ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
-    PARPRIORS[13] = OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[13] = OBS$Cfol_initial_unc} # Cfoliar prior
-    PARPRIORS[14] = OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[14] = OBS$Croots_initial_unc} # Croots prior
-    PARPRIORS[15] = OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[15] = OBS$Cwood_initial_unc} # Cwood prior
-    PARPRIORS[16] = OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[16] = OBS$Clit_initial_unc} # Clitter prior
-    PARPRIORS[17] = OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[17] = OBS$Csom_initial_unc} # Csom prior
-    # Other priors
-#      OTHERPRIORS[5] =      ; OtHERPRIORUNC[5] = # Steady state attractor for wood
+      PARPRIORS[2] = 0.46                 ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+      PARPRIORS[11] = 16.9                ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+      PARPRIORS[13] = OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[13] = OBS$Cfol_initial_unc} # Cfoliar prior
+      PARPRIORS[14] = OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[14] = OBS$Croots_initial_unc} # Croots prior
+      PARPRIORS[15] = OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[15] = OBS$Cwood_initial_unc} # Cwood prior
+      PARPRIORS[16] = OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[16] = OBS$Clit_initial_unc} # Clitter prior
+      PARPRIORS[17] = OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[17] = OBS$Csom_initial_unc} # Csom prior
+      # Other priors
+#      OTHERPRIORS[5] =      ; OTHERPRIORUNC[5] = # Steady state attractor for wood
   } else if (modelname == "DALEC_CDEA_no_lit_root") {
     PARPRIORS[1] = 0.46                ; PARPRIORUNC[1]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
     PARPRIORS[7] = 16.9                ; PARPRIORUNC[7]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
@@ -319,7 +319,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
         OTHERPRIORS[1] = 0.46   ; OTHERPRIORUNC[1] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
         # POSITION 2 used for water which does not apply here
         OTHERPRIORS[3] = 27.295 ; OTHERPRIORUNC[3] = 11.03755 # Foliar C:N (gC/gN) prior derived from Kattge et al., (2011)
-#      OTHERPRIORS[5] =      ; OtHERPRIORUNC[5] = # Steady state attractor for wood
+        OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
     } #  parameter_type
   } else if (modelname == "DALEC_GSI_DFOL_LABILE_FR") {
     PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.6 #1.617705 # Ceff
@@ -380,7 +380,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       OTHERPRIORS[1] = 0.46          ; OTHERPRIORUNC[1] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
 #NOT IN USE      OTHERPRIORS[2] = OBS$soilwater ; OTHERPRIORUNC[2] = OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
       OTHERPRIORS[3] = 27.295        ; OTHERPRIORUNC[3] = 11.03755 # Foliar C:N (gC/gN) prior derived from Kattge et al., (2011)
-#      OTHERPRIORS[5] =      ; OtHERPRIORUNC[5] = # Steady state attractor for wood
+      OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
     } # crop or not
   } else if (modelname == "DALEC_BUCKET") {
     PARPRIORS[11]=0.2764618             ; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
@@ -396,15 +396,14 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
         PARPRIORS[21]=-9999         ; PARPRIORUNC[21]=-9999
     } else {
       PARPRIORS[1]=0.5            ; PARPRIORUNC[1]=0.125 # fraction of litter decomposition to Csom
-      PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
+#      PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
 #      PARPRIORS[43]=275.1452      ; PARPRIORUNC[43]=296.2767 # Leaf lifespan prior form Kattge et al., 2011, based on log10 gauusian distribution
-#      PARPRIORS[44]=0.5            ; PARPRIORUNC[44]=0.125 # fraction of wood litter decomposition to Csom
       # other priors
       OTHERPRIORS[1] = 0.46          ; OTHERPRIORUNC[1] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       OTHERPRIORS[2] = OBS$soilwater ; OTHERPRIORUNC[2] = OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
       OTHERPRIORS[3] = 27.295        ; OTHERPRIORUNC[3] = 11.03755 # Foliar C:N (gC/gN) prior derived from Kattge et al., (2011)
       OTHERPRIORS[4] = 0.66          ; OTHERPRIORUNC[4] = 0.12 # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
-#      OTHERPRIORS[5] =      ; OtHERPRIORUNC[5] = # Steady state attractor for wood
+      OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
     } # crop or not
   } else if (modelname == "DALEC_GSI_BUCKET") {
     PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
@@ -426,7 +425,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       OTHERPRIORS[2] = OBS$soilwater ; OTHERPRIORUNC[2] = OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
       OTHERPRIORS[3] = 27.295      ; OTHERPRIORUNC[3] = 11.03755 # Foliar C:N (gC/gN) prior derived from Kattge et al., (2011)
       OTHERPRIORS[4] = 0.66        ; OTHERPRIORUNC[4] = 0.12 # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
-#      OTHERPRIORS[5] =      ; OtHERPRIORUNC[5] = # Steady state attractor for wood
+      OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
     } # crop or not
   } else if (modelname == "DALECN_GSI_BUCKET") {
     PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
@@ -492,7 +491,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     PARPRIORS[15] = 0.972 ; PARPRIORUNC[15] = 0.01
   }
 
-  # HACK: If file name contains specific COMPLEX experiment code 
+  # HACK: If file name contains specific COMPLEX experiment code
   # indicating the file should not have any observational constraint reset all
 #  if (grepl("exp1f",file) | grepl("exp2f",file) | grepl("exp3f",file) | grepl("exp4f",file)) {
 #      #ONLY USED FOR LOG NORMALLY PSERIBUTED PARAMETER PRIORS

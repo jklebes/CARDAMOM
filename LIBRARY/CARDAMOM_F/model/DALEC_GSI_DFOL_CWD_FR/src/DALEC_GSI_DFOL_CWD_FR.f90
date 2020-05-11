@@ -34,6 +34,11 @@ module CARBON_MODEL_MOD
            ,min_root         &
            ,max_depth        &
            ,root_k           &
+           ,gs_demand_supply_ratio        &
+           ,gs_total_canopy               &
+           ,gb_total_canopy               &
+           ,canopy_par_MJday_time         &
+           ,canopy_par_MJday &
            ,top_soil_depth   &
            ,mid_soil_depth   &
            ,soil_depth       &
@@ -47,7 +52,10 @@ module CARBON_MODEL_MOD
            ,soil_frac_clay   &
            ,soil_frac_sand   &
            ,meant            &
+           ,convert_ms1_mol_1 &
+           ,aerodynamic_conductance &
            ,stomatal_conductance &
+           ,potential_conductance &
            ,avN              &
            ,iWUE             &
            ,NUE              &
@@ -188,7 +196,7 @@ module CARBON_MODEL_MOD
                      top_soil_depth = 0.1d0,        & ! thickness of the top soil layer (m)
                      mid_soil_depth = 0.2d0,        & ! thickness of the second soil layer (m)
                            min_root = 5d0,          & ! minimum root biomass (gBiomass.m-2)
-                            min_lai = 1.0d0,        & ! minimum LAI assumed for aerodynamic conductance calculations (m2/m2)
+                            min_lai = 0.1d0,        & ! minimum LAI assumed for aerodynamic conductance calculations (m2/m2)
                     min_throughfall = 0.2d0           ! minimum fraction of precipitation which is through fall
 
   ! timing parameters
@@ -239,6 +247,10 @@ module CARBON_MODEL_MOD
 
   double precision, allocatable, dimension(:) :: Rg_from_labile,                &
                                   extracted_C,itemp,ivpd,iphoto, &
+                                         gs_demand_supply_ratio, & ! actual:potential stomatal conductance
+                                                gs_total_canopy, & ! stomatal conductance (mmolH2O/m2ground/day)
+                                                gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/day)
+                                          canopy_par_MJday_time, & ! Absorbed PAR by canopy (MJ/m2ground/day)
                                   disturbance_residue_to_litter, &
                                   disturbance_residue_to_som,    &
                                   disturbance_residue_to_cwd,    &
@@ -277,7 +289,9 @@ module CARBON_MODEL_MOD
                                          canopy_lwrad_Wm2, & ! canopy absorbed longwave radiation (W.m-2)
                                            soil_lwrad_Wm2, & ! soil absorbed longwave radiation (W.m-2)
                                             sky_lwrad_Wm2, & ! sky absorbed longwave radiation (W.m-2)
-                                     stomatal_conductance, & ! maximum stomatal conductance (mmolH2O.m-2.day-1)
+                                     stomatal_conductance, & ! stomatal conductance (mmolH2O.m-2ground.s-1)
+                                    potential_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
+                                      minimum_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
                                   aerodynamic_conductance, & ! bulk surface layer conductance (m.s-1)
                                         convert_ms1_mol_1, & ! Conversion ratio for m.s-1 -> mol.m-2.s-1
                                                    lambda, & ! latent heat of vapourisation (J.kg-1)
@@ -317,11 +331,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                 dayl_seconds, & ! day length in seconds
                           mean_days_per_step, &
                               dayl_seconds_1, &
-                         dayl_hours_fraction, & 
+                         dayl_hours_fraction, &
                                   dayl_hours    ! day length in hours
 
   double precision, dimension(:), allocatable ::    deltat_1, & ! inverse of decimal days
-                                                  meant_time   
+                                                  meant_time
 
 contains
   !
@@ -574,7 +588,7 @@ contains
         soil_loss_frac(2) = 0.02d0 ! actually between 1-3 %
         ! was the forest burned after deforestation
         post_harvest_burn(2) = 0d0
-  
+
         !## scen 3
         ! harvest residue (fraction); 1 = all remains, 0 = all removed
         foliage_frac_res(3) = 0.5d0
@@ -682,7 +696,9 @@ contains
     ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
     if (.not.allocated(deltat_1)) then
 
-        allocate(deltat_1(nodays),meant_time(nodays),Rg_from_labile(nodays))
+        allocate(deltat_1(nodays),meant_time(nodays),Rg_from_labile(nodays), &
+                 gs_demand_supply_ratio(nodays),canopy_par_MJday_time(nodays), &
+                 gs_total_canopy(nodays), gb_total_canopy(nodays))
         ! Inverse of time step (days-1) to avoid divisions
         deltat_1 = deltat**(-1d0)
         ! Meant time step temperature
@@ -765,12 +781,14 @@ contains
        call meteorological_constants(maxt,maxt+freeze,vpd_kPa)
        ! calculate aerodynamic using consistent approach with SPA
        call calculate_aerodynamic_conductance
+       gb_total_canopy(n) = aerodynamic_conductance * convert_ms1_mol_1 * 1d3
 
        !!!!!!!!!!
        ! Determine net shortwave and isothermal longwave energy balance
        !!!!!!!!!!
 
        call calculate_radiation_balance
+       canopy_par_MJday_time(n) = canopy_par_MJday
 
        !!!!!!!!!!
        ! Calculate physically soil water potential and total hydraulic resistance
@@ -784,6 +802,11 @@ contains
 
        ! calculate variables used commonly between ACM_GPP and ACM_ET
        call calculate_stomatal_conductance(abs(minlwp),Rtot)
+       ! Estimate stomatal conductance relative to its minimum / maximum, i.e. how
+       ! close are we to maxing out supply (note 0.01 taken from min_gs)
+       gs_demand_supply_ratio(n) = (stomatal_conductance - minimum_conductance) / (potential_conductance-minimum_conductance)
+       ! Store the canopy level stomatal conductance (mmolH2O/m2/day)
+       gs_total_canopy(n) = stomatal_conductance
 
        !!!!!!!!!!
        ! GPP (gC.m-2.day-1)
@@ -876,10 +899,10 @@ contains
 
            ! GSI gradient does not indicate leaf turnover, therefore we will
            ! consider leaf growth
-     
+
            ! Estimate potential leaf growth rate (from labile)
            FLUXES(n,16) = pars(12)*FLUXES(n,18)
-           ! Convert that into potential new leaf area 
+           ! Convert that into potential new leaf area
            tmp = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
            C_invest = tmp
            ! Update the canopy
@@ -904,7 +927,7 @@ contains
            ! Determine if increase in LAI leads to an improvement in GPP greater
            ! than critical value, if not then no labile turnover allowed
            if ( ((tmp - FLUXES(n,1))/C_invest) < pars(27) ) then
-                FLUXES(n,16) = 0d0 
+                FLUXES(n,16) = 0d0
            endif
 
        endif ! Growth potential?
@@ -1028,7 +1051,7 @@ contains
           C_total = POOLS(n+1,3) + POOLS(n+1,4)
           ! partition wood into its components
           Crootcr = POOLS(n+1,4)*Crootcr_part(harvest_management)
-          Cstem   = POOLS(n+1,4)-Crootcr 
+          Cstem   = POOLS(n+1,4)-Crootcr
           ! now calculate the labile fraction of residue
           if (C_total > 0d0) then
               labile_frac_res = ((POOLS(n+1,3)/C_total) * roots_frac_res(harvest_management)  ) &
@@ -1299,7 +1322,7 @@ contains
     ! Daily canopy conductance (mmolH2O.m-2.s-1-> molCO2.m-2.day-1)
     ! The ratio of H20:CO2 diffusion is 1.646259 (Jones appendix 2).
     ! i.e. gcH2O*1.646259 = gcCO2 then all multiplied by 86400 seconds
-    ! 
+    !
     ! Combining in series the stomatal and boundary layer conductances
     gc = ((gs*gs_H2Ommol_CO2mol_day) ** (-1d0) + gb_mol ** (-1d0)) ** (-1d0)
 
@@ -1455,10 +1478,10 @@ contains
                                        Rtot    ! total hydraulic resistance (MPa.s-1.m-2.mmol-1)
 
     ! local variables
-    double precision :: denom
-    double precision, parameter :: max_gs = 3500d0, &  ! mmolH2O.m-2.s-1
-                                   min_gs = 0.001d0, & !
-                                   tol_gs = 4d0        !
+    double precision :: denom, pl, pn, pn_day, iWUE_lower, iWUE_upper
+    double precision, parameter :: max_gs = 2000d0, &  ! mmolH2O.m-2.s-1 (leaf area)
+                                   min_gs = 1d0, &     ! mmolH2O.m-2.s-1 (leaf area)
+                                   tol_gs = 1d0        ! 4d0
 
     !!!!!!!!!!
     ! Calculate stomatal conductance under H2O and CO2 limitations
@@ -1468,6 +1491,8 @@ contains
 
         ! Determine potential water flow rate (mmolH2O.m-2.dayl-1)
         max_supply = (deltaWP/Rtot) * seconds_per_day
+        ! Estimate LAI adjusted lower gs bounds
+        minimum_conductance = min_gs * lai
 
         ! Invert Penman-Monteith equation to give gs (m.s-1) needed to meet
         ! maximum possible evaporation for the day.
@@ -1476,31 +1501,60 @@ contains
         denom = slope * ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2) &
               + (ET_demand_coef * aerodynamic_conductance)
         denom = (denom / (lambda * max_supply * mmol_to_kg_water * dayl_seconds_1)) - slope
-        stomatal_conductance = aerodynamic_conductance / (denom / psych)
+        potential_conductance = aerodynamic_conductance / (denom / psych)
 
         ! convert m.s-1 to mmolH2O.m-2.s-1
-        stomatal_conductance = stomatal_conductance * 1d3 * convert_ms1_mol_1
+        potential_conductance = potential_conductance * 1d3 * convert_ms1_mol_1
         ! if conditions are dew forming then set conductance to maximum as we are not going to be limited by water demand
-        if (stomatal_conductance <= 0d0 .or. stomatal_conductance > max_gs) stomatal_conductance = max_gs
+        if (potential_conductance <= 0d0 .or. potential_conductance > max_gs*lai) potential_conductance = max_gs*lai
 
-        ! if we are potentially limited by stomatal conductance or we are using instrinsic water use efficiency (rather than WUE)
-        ! then iterate to find optimum gs otherwise just go with the max...
-        if (stomatal_conductance /= max_gs) then
-            ! If there is a positive demand for water then we will solve for photosynthesis limits on gs through iterative solution
-            delta_gs = 1d-3*lai ! mmolH2O/m2leaf/day
-            ! estimate inverse of LAI to avoid division in optimisation
-            lai_1 = lai**(-1d0)
-            ! Calculate stage one acm, temperature and light limitation which
-            ! are independent of stomatal conductance effects
-            call acm_gpp_stage_1
-            ! intrinsic WUE optimisation
-            stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE',find_gs_iWUE,min_gs,stomatal_conductance,tol_gs)
+        ! If there is a positive demand for water then we will solve for photosynthesis limits on gs through iterative solution
+        delta_gs = 1d-3*lai ! mmolH2O/m2leaf/day
+        ! estimate inverse of LAI to avoid division in optimisation
+        lai_1 = lai**(-1d0)
+        ! Calculate stage one acm, temperature and light limitation which
+        ! are independent of stomatal conductance effects
+        call acm_gpp_stage_1
+        ! Intrinsic WUE optimisation
+        ! Check that the water restricted water range brackets the root solution for the bisection
+        iWUE_upper = find_gs_iWUE(potential_conductance) !; iWUE_lower = find_gs_iWUE(min_gs)
+!        if ( iWUE_upper * iWUE_lower > 0d0 ) then
+        if (iWUE_upper < 0d0) then
+            ! Then both proposals indicate that photosynthesis
+            ! would be increased by greater opening of the stomata
+            ! and is therefore water limited!
+            stomatal_conductance = potential_conductance
+            ! Exception being if both are positive - thereforfe assume
+            ! lowest
+!           if (iWUE_upper > 0d0) stomatal_conductance = minimum_conductance
+        else
+            ! In all other cases iterate
+            stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
+                                          find_gs_iWUE,minimum_conductance,potential_conductance,tol_gs*lai)
         end if
+!        ! Empirical fit to outputs generated by bisection procedure.
+!        ! Assumes that water supply is not limiting, thus there is still the need to estimate supply limit and apply as bookend.
+!        ! Note also that the order of covariates reflects their importance in the prediction,
+!        ! i.e. R > 0.9 just for first independent variable
+!        pn = metabolic_limited_photosynthesis
+!        pn_day = metabolic_limited_photosynthesis * dayl_hours_fraction
+!        pl = light_limited_photosynthesis
+!        stomatal_conductance =   50.92693d0 &
+!                             + ( 14.73576d0    * ((pn_day*pl) / (pn_day+pl)) ) &
+!                             + (  1.0555d0     * pn )                          &
+!                             + ((-8.140542d-4) * pn**2d0 )                     &
+!                             + ((-0.7185823d0) * pl )                          &
+!                             + ((-1.565065d0)  * co2_comp_point )              &
+!                             + (( 0.2258834d0) * co2_half_sat )                &
+!                             + ((-2.486837d-4) * co2_half_sat**2d0 )           &
+!                             + (( 4.344512d-2) * co2 )                         &
+!                             + ((-41.61914d0)  * iWUE )
+!        stomatal_conductance = max(min_gs,min(stomatal_conductance,potential_conductance))
 
     else
 
         ! if no LAI then there can be no stomatal conductance
-        stomatal_conductance = 0d0
+        potential_conductance = max_gs ; stomatal_conductance = min_gs
         ! set minimum (computer) precision level flow
         max_supply = vsmall
 
@@ -1592,8 +1646,11 @@ contains
            mixing_length_momentum, & ! mixing length parameter for momentum (m)
             length_scale_momentum    ! length scale parameter for momentum (m)
 
+    ! Restrict LAI used here to greater than a minium value which prevents un-realistic outputs
+    local_lai = max(min_lai,lai)
+
     ! calculate the zero plane displacement and roughness length
-    call z0_displacement(ustar_Uh)
+    call z0_displacement(ustar_Uh,local_lai)
     ! calculate friction velocity at tower height (reference height ) (m.s-1)
     ! WARNING neutral conditions only; see WRF module_sf_sfclay.F for 'with
     ! stability versions'
@@ -1604,12 +1661,20 @@ contains
     ! the canopy (under dense canopy conditions) calculate length scale (lc)
     ! for momentum absorption within the canopy; Harman & Finnigan (2007)
     ! and mixing length (lm) for vertical momentum within the canopy Harman & Finnigan (2008)
-    local_lai = max(min_lai,lai)
     length_scale_momentum = (4d0*canopy_height) / local_lai
     mixing_length_momentum = 2d0*(ustar_Uh**3)*length_scale_momentum
 
     ! based on Harman & Finnigan (2008); neutral conditions only
     call log_law_decay
+!    canopy_wind = max(min_wind, ustar * 0.3161471806d0)
+
+    ! log law decay
+    !  NOTE: given canopy height (9 m) the log function reduces
+    ! to a constant value down to ~ 7 decimal place (0.3161471806). Therefore
+    ! 1/vonkarman * 0.31 = 0.7710906. While ustar_Uh also reduces to 0.3 giving a constant
+    ! wind_spd -> ustar relationship.
+    ! Ultimately above canopy wind speed to canopy top (m/s) can be reduced to
+    !canopy_wind = max(min_wind,wind_spd * 0.2313272d0)
 
     ! now we are interested in the within canopy wind speed,
     ! here we assume that the wind speed just inside of the canopy is most important.
@@ -1637,26 +1702,22 @@ contains
     double precision, intent(out) :: gv_forced ! canopy conductance (m/s) for water vapour under forced convection
 
     ! local parameters
-    double precision, parameter :: leaf_width = 0.04d0, & ! leaf width (m) (original 0.08)
-                                 leaf_width_1 = leaf_width ** (-1d0), &
-                                           Pr = 0.72d0, & ! Prandtl number
-                                      Pr_coef = 1.05877d0 !1.18d0*(Pr**(0.33d0))
+    double precision, parameter :: leaf_width_coef = 12.5d0, & ! (1/leaf_width) * 0.5,
+                                                               ! where 0.5 accounts for one half
+                                                               ! of the leaf used in water exchange
+                                        leaf_width = 0.04d0    ! leaf width (m) (original 0.08)
+!                                                Pr = 0.72d0, & ! Prandtl number
+!                                           Pr_coef = 1.05877d0 !1.18d0*(Pr**(0.33d0))
     ! local variables
     double precision :: &
-         nusselt_forced & ! Nusselt value under forced convection
-             ,Sh_forced & ! Sherwood number under forced convection
+              Sh_forced & ! Sherwood number under forced convection
                     ,Re   ! Reynolds number
 
-    ! Reynold number
-!    Re = (leaf_width*canopy_wind)/kinematic_viscosity
-    ! calculate nusselt value under forced convection conditions
-!    nusselt_forced = (1.18d0*(Pr**(0.33d0))*(sqrt(Re)))
-!    nusselt_forced = Pr_coef*(sqrt(Re))
-    ! update specific Sherwood numbers
-!    Sh_forced = 0.962d0*nusselt_forced
-    Sh_forced = 0.962d0*Pr_coef*(sqrt((leaf_width*canopy_wind)/kinematic_viscosity))
+    ! Sherwood number under forced convection. NOTE: 0.962 * Pr_coef = 1.018537
+!    Sh_forced = 0.962d0*Pr_coef*(sqrt((leaf_width*canopy_wind)/kinematic_viscosity))
+    Sh_forced = 1.018537d0*(sqrt((leaf_width*canopy_wind)/kinematic_viscosity))
     ! Estimate the the forced conductance of water vapour
-    gv_forced = water_vapour_diffusion*Sh_forced*leaf_width_1 * 0.5d0 * lai
+    gv_forced = water_vapour_diffusion*Sh_forced*leaf_width_coef * lai
 
   end subroutine average_leaf_conductance
   !
@@ -1670,8 +1731,10 @@ contains
 
     implicit none
 
-    ! log law decay
-    canopy_wind = (ustar * vonkarman_1) * log((canopy_height-displacement) / roughl)
+    ! log law decay, NOTE: given canopy height (9 m) the log function reduces
+    ! to a constant value down to ~ 7 decimal place (0.3161471806). Therefore
+    ! 1/vonkarman * 0.31 = 0.7710906
+    canopy_wind = ustar * vonkarman_1 * log((canopy_height-displacement) / roughl)
 
     ! set minimum value for wind speed at canopy top (m.s-1)
     canopy_wind = max(min_wind,canopy_wind)
@@ -1805,9 +1868,9 @@ contains
     ! Long wave absorbed by soil from the sky, soil absorption assumed to be
     ! equal to emissivity
     soil_incident_from_sky = soil_incident_from_sky + (trans_lw_fraction * lwrad)
-    soil_absorption_from_sky = soil_incident_from_sky * emissivity
+    !soil_absorption_from_sky = soil_incident_from_sky * emissivity
     ! Long wave reflected directly back into sky
-    sky_lwrad_Wm2 = lwrad * reflected_lw_fraction
+    !sky_lwrad_Wm2 = lwrad * reflected_lw_fraction
 
     !!!!!!!!!!
     ! Distribute longwave from soil
@@ -1817,10 +1880,10 @@ contains
     ! which is reflected
     canopy_absorption_from_soil = longwave_release_soil + (soil_incident_from_sky * (1d0-emissivity))
     ! First how much directly bypasses the canopy...
-    sky_lwrad_Wm2 = sky_lwrad_Wm2 + (canopy_absorption_from_soil * transmitted_fraction)
+    !sky_lwrad_Wm2 = sky_lwrad_Wm2 + (canopy_absorption_from_soil * transmitted_fraction)
     canopy_absorption_from_soil = canopy_absorption_from_soil * (1d0 - transmitted_fraction)
     ! Second, use this to estimate the longwave returning to the sky
-    sky_lwrad_Wm2 = sky_lwrad_Wm2 + (canopy_absorption_from_soil * trans_lw_fraction)
+    !sky_lwrad_Wm2 = sky_lwrad_Wm2 + (canopy_absorption_from_soil * trans_lw_fraction)
     ! Third, now calculate the longwave from the soil surface absorbed by the
     ! canopy
     canopy_absorption_from_soil = canopy_absorption_from_soil * absorbed_lw_fraction
@@ -1834,7 +1897,7 @@ contains
     ! to soil once to sky)
     canopy_loss = longwave_release_canopy * lai * canopy_release_fraction
     ! Calculate longwave absorbed by soil which is released by the canopy itself
-    soil_absorption_from_canopy = canopy_loss * emissivity
+    !soil_absorption_from_canopy = canopy_loss * emissivity
     ! Canopy released longwave returned to the sky
     sky_lwrad_Wm2 = sky_lwrad_Wm2 + canopy_loss
 
@@ -1846,15 +1909,7 @@ contains
     ! upwards and downwards emissions
     canopy_lwrad_Wm2 = (canopy_absorption_from_sky + canopy_absorption_from_soil) - (canopy_loss + canopy_loss)
     ! determine isothermal net soil
-    soil_lwrad_Wm2 = (soil_absorption_from_sky + soil_absorption_from_canopy) - longwave_release_soil
-
-    !!!!!!!!!!
-    ! Approximate daily impact on isothermal to net longwave
-    !!!!!!!!!!
-
-    ! Isothermal -> net radiation in SPA is largely linear, therefore we
-    ! retrieve the linear correction here
-    soil_lwrad_Wm2 = (soil_lwrad_Wm2 * soil_iso_to_net_coef) + soil_iso_to_net_const
+    !soil_lwrad_Wm2 = (soil_absorption_from_sky + soil_absorption_from_canopy) - longwave_release_soil
 
   end subroutine calculate_longwave_isothermal
   !
@@ -2177,7 +2232,7 @@ contains
   !
   !------------------------------------------------------------------
   !
-  subroutine z0_displacement(ustar_Uh)
+  subroutine z0_displacement(ustar_Uh,local_lai)
 
     ! dynamic calculation of roughness length and zero place displacement (m)
     ! based on canopy height and lai. Raupach (1994)
@@ -2186,32 +2241,34 @@ contains
 
     ! arguments
     double precision, intent(out) :: ustar_Uh ! ratio of friction velocity over wind speed at canopy top
+    double precision, intent(in) :: local_lai
     ! local variables
-    double precision  sqrt_cd1_lai, local_lai
+    double precision  sqrt_cd1_lai
     double precision, parameter :: cd1 = 7.5d0,   & ! Canopy drag parameter; fitted to data
                                     Cs = 0.003d0, & ! Substrate drag coefficient
                                     Cr = 0.3d0,   & ! Roughness element drag coefficient
-!                            ustar_Uh_max = 0.3,   & ! Maximum observed ratio of
+                          ustar_Uh_max = 0.3d0,   & ! Maximum observed ratio of
                                                     ! (friction velocity / canopy top wind speed) (m.s-1)
-        ustar_Uh_max = 1d0, ustar_Uh_min = 0.2d0, &
-                                        Cw = 2d0, &  ! Characterises roughness sublayer depth (m)
-                                     phi_h = 0.19314718056d0 ! Roughness sublayer influence function;
+                          ustar_Uh_min = 0.05d0,  &
+                                    Cw = 2d0,     &  ! Characterises roughness sublayer depth (m)
+                                 phi_h = 0.19314718056d0 ! Roughness sublayer influence function;
 
     ! describes the departure of the velocity profile from just above the
     ! roughness from the intertial sublayer log law
 
-
-    ! assign new value to min_lai to avoid max min calls
-    local_lai = max(min_lai,lai)
+    ! Estimate canopy drag factor
     sqrt_cd1_lai = sqrt(cd1 * local_lai)
+
+    ! calculate estimate of ratio of friction velocity / canopy wind speed.
+    ! NOTE: under current min LAI and fixed canopy height (9 m) this ratio is
+    ! fixed at 0.3
+!    ustar_Uh = 0.3d0
+    ustar_Uh = max(ustar_Uh_min,min(sqrt(Cs+Cr*local_lai*0.5d0),ustar_Uh_max))
 
     ! calculate displacement (m); assume minimum lai 1.0 or 1.5 as height is not
     ! varied
     displacement = (1d0-((1d0-exp(-sqrt_cd1_lai))/sqrt_cd1_lai))*canopy_height
 
-    ! calculate estimate of ratio of friction velocity / canopy wind speed; with
-    ! max value set at
-    ustar_Uh = max(ustar_Uh_min,min(sqrt(Cs+Cr*local_lai*0.5d0),ustar_Uh_max))
     ! calculate roughness sublayer influence function;
     ! this describes the departure of the velocity profile from just above the
     ! roughness from the intertial sublayer log law
@@ -2387,39 +2444,39 @@ contains
 
     ! local variables..
     integer            :: iter
-    integer, parameter :: ITMAX = 20
-    double precision   :: a,b,c,d,e,fa,fb,fc,p,q,r,s,tol1,xm
-    double precision, parameter :: EPS = 3d-8
+    integer, parameter :: ITMAX = 10
+    double precision   :: a,b,c,d,e,fa,fb,fc,p,q,r,s,tol1,tol0,xm
+    double precision, parameter :: EPS = 6d-8
 
     ! calculations...
     a  = x1
     b  = x2
     fa = func( a )
     fb = func( b )
+    tol0 = tol * 0.5d0
 
     ! Check that we haven't (by fluke) already started with the root..
     if ( fa .eq. 0d0 ) then
-      zbrent = a
-      return
+        zbrent = a
+        return
     elseif ( fb .eq. 0d0 ) then
-      zbrent = b
-      return
+        zbrent = b
+        return
     end if
     ! Ensure the supplied x-values give y-values that lie either
     ! side of the root and if not flag an error message...
-    if ( sign(1d0,fa) .eq. sign(1d0,fb) ) then
-      fa = func( a )
-      fb = func( b )
-      ! tell me otherwise what is going on
-      !       print*,"Supplied values must bracket the root of the function.",new_line('x'),  &
-      !         "     ","You supplied x1:",x1,new_line('x'),                     &
-      !         "     "," and x2:",x2,new_line('x'),                             &
-      !         "     "," which give function values of fa :",fa,new_line('x'),  &
-      !         "     "," and fb:",fb," .",new_line('x'),                        &
-      !         " zbrent was called by: ",trim(called_from)
-      !       fa = func( a )
-      !       fb = func( b )
-    end if
+!    if ( sign(1d0,fa) .eq. sign(1d0,fb) ) then
+!    if (fa * fb > 0d0) then
+!        fa = func( a )
+!        fb = func( b )
+        ! tell me otherwise what is going on
+!!       print*,"Supplied values must bracket the root of the function.",new_line('x'),  &
+!!         "     ","You supplied x1:",x1,new_line('x'),                     &
+!!         "     "," and x2:",x2,new_line('x'),                             &
+!!         "     "," which give function values of fa :",fa,new_line('x'),  &
+!!         "     "," and fb:",fb," .",new_line('x'),                        &
+!!         " zbrent was called by: ",trim(called_from)
+!    end if
     c = b
     fc = fb
 
@@ -2427,7 +2484,8 @@ contains
 
       ! If the new value (f(c)) doesn't bracket
       ! the root with f(b) then adjust it..
-      if ( sign(1d0,fb) .eq. sign(1d0,fc) ) then
+!      if ( sign(1d0,fb) .eq. sign(1d0,fc) ) then
+      if (fb * fc > 0d0) then
         c  = a
         fc = fa
         d  = b - a
@@ -2441,7 +2499,7 @@ contains
         fb = fc
         fc = fa
       end if
-      tol1 = 2d0 * EPS * abs(b) + 0.5d0 * tol
+      tol1 = EPS * abs(b) + tol0
       xm   = 0.5d0 * ( c - b )
       if ( ( abs(xm) .le. tol1 ) .or. ( fb .eq. 0d0 ) ) then
         zbrent = b
@@ -2481,8 +2539,8 @@ contains
       fb = func(b)
     enddo
 
-    !    print*,"zbrent has exceeded maximum iterations",new_line('x'),&
-    !           "zbrent was called by: ",trim(called_from)
+!    print*,"zbrent has exceeded maximum iterations",new_line('x'),&
+!           "zbrent was called by: ",trim(called_from)
 
     zbrent = b
 
@@ -2490,7 +2548,7 @@ contains
   !
   !------------------------------------------------------------------
   !
-  !
-  !--------------------------------------------------------------------
-  !
+!
+!--------------------------------------------------------------------
+!
 end module CARBON_MODEl_MOD

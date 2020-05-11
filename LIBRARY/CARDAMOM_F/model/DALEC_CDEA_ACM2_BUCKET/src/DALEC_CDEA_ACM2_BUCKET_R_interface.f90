@@ -5,8 +5,10 @@ subroutine rdaleccdeaacm2bucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_
                                ,nofluxes,nopools,pft,pft_specific,nodays,deltat &
                                ,nos_iter,soil_frac_clay_in,soil_frac_sand_in)
 
-  use CARBON_MODEL_MOD, only: CARBON_MODEL, extracted_C, wSWP_time, gs_demand_supply_ratio &
-                             ,soil_frac_clay, soil_frac_sand, nos_soil_layers 
+  use CARBON_MODEL_MOD, only: CARBON_MODEL, extracted_C, wSWP_time &
+                             ,soil_frac_clay, soil_frac_sand, nos_soil_layers &
+                             ,gs_demand_supply_ratio &
+                             ,gs_total_canopy, gb_total_canopy, canopy_par_MJday_time
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -55,7 +57,7 @@ subroutine rdaleccdeaacm2bucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_
 
   ! update settings
   if (allocated(extracted_C)) deallocate(extracted_C)
-  allocate(extracted_C(nodays+1))
+  allocate(extracted_C(nodays))
 
   ! update soil parameters
   soil_frac_clay = soil_frac_clay_in
@@ -64,7 +66,7 @@ subroutine rdaleccdeaacm2bucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_
   ! generate deltat step from input data
   deltat(1) = met(1,1)
   do i = 2, nodays
-     deltat(i)=met(1,i)-met(1,(i-1))
+     deltat(i) = met(1,i)-met(1,(i-1))
   end do
 
   ! begin iterations
@@ -103,6 +105,9 @@ subroutine rdaleccdeaacm2bucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_
      out_var(i,1:nodays,19) = POOLS(1:nodays,7)   ! rootwater (kgH2O.m-2.10cmdepth)
      out_var(i,1:nodays,20) = wSWP_time(1:nodays) ! Weighted Soil Water Potential (MPa)
      out_var(i,1:nodays,21) = gs_demand_supply_ratio ! ratio of evaporative demand over supply
+     out_var(i,1:nodays,22) = gs_total_canopy(1:nodays)
+     out_var(i,1:nodays,23) = canopy_par_MJday_time(1:nodays)
+     out_var(i,1:nodays,24) = gb_total_canopy(1:nodays)
 
      ! calculate the actual NPP allocation fractions to foliar, wood and fine root pools
      ! by comparing the sum alloaction to each pools over the sum NPP.

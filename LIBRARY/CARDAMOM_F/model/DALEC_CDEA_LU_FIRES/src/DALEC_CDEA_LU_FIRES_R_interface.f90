@@ -52,7 +52,7 @@ subroutine rdaleccdealufires(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var
 
   ! update settings
   if (allocated(extracted_C)) deallocate(extracted_C)
-  allocate(extracted_C(nodays+1))
+  allocate(extracted_C(nodays))
 
   ! generate deltat step from input data
   deltat(1) = met(1,1)
@@ -63,7 +63,7 @@ subroutine rdaleccdealufires(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var
   ! begin iterations
   do i = 1, nos_iter
      ! reset harvest variable
-     extracted_C=0.
+     extracted_C = 0d0
      ! call the models
      call CARBON_MODEL(1,nodays,met,pars(1:nopars,i),deltat,nodays &
                       ,lat,lai,NEE,FLUXES,POOLS &

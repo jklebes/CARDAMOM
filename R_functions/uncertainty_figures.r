@@ -111,7 +111,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
                     maxl=maxl[1] # if we happen to have more than one values with the same likelihood we will just pick the first one....
                     plot(states_all$evap_kgH2Om2day[maxl,],evap_obs, ylab="SPA", xlab="ACM", main="Evap (kgH2O.m-2.day-1)",pch=16,cex=0.8,cex.main=1.8,cex.lab=1.8,cex.axis=1.8) ; abline(0,1,col="red", lwd=4)
                     hey=lm(evap_obs~states_all$evap_kgH2Om2day[maxl,]) ; beta1=coef(hey)[2] ; intercept=coef(hey)[1]
-                    explained=summary(hey)$adj.r.squared ; trend = mean(states_all$evap_kgH2Om2day[maxl,]-evap_obs) ; error=rmse(evap_obs,states_all_kgH2Om2day$evap[maxl,])
+                    explained=summary(hey)$adj.r.squared ; trend = mean(states_all$evap_kgH2Om2day[maxl,]-evap_obs) ; error=rmse(evap_obs,states_all$evap_kgH2Om2day[maxl,])
                     prop_error=mean(abs((evap_obs-states_all$evap_kgH2Om2day[maxl,])/evap_obs)*100)
                     text(max(states_all$evap_kgH2Om2day[maxl,])*0.12,max(evap_obs*0.97),label=bquote( SPA == .(round(beta1,3)) * ACM + .(round(intercept,3))), cex=2.)
                     text(max(states_all$evap_kgH2Om2day[maxl,])*0.182,max(evap_obs*0.92),label=paste("R2 = ",round(explained,3)," rmse = ",round(error,3)," bias = ",round(trend,3), sep=""), cex=2.)
@@ -135,7 +135,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
                 } # acm or not
                 dev.off()
             }
- 
+
         } else if (which_plot == 0) {
 
 		# flip it to get the right shape
@@ -451,7 +451,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 		dev.off()
 
 	} else if (which_plot == 9) {
-		
+
                 # flip it to get the right shape
 		Cw_var=t(states_all$wood_gCm2)
 		# pass observations driver

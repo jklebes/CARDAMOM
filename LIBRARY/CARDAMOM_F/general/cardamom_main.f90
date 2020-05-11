@@ -9,7 +9,7 @@ program cardamom_framework
                         update_for_restart_simulation, write_covariance_matrix, &
                         close_output_files, write_covariance_info
  use MHMCMC_module, only: MHMCMC, par_minstepsize, par_initstepsize
- use model_likelihood_module, only: model_likelihood, & 
+ use model_likelihood_module, only: model_likelihood, &
                                     find_edc_initial_values, &
                                     sub_model_likelihood
 
@@ -30,7 +30,7 @@ program cardamom_framework
  ! declare local variables
  character(350) :: infile, outfile, solution_wanted_char, freq_print_char, freq_write_char
  integer :: solution_wanted, freq_print, freq_write, time1, time2, time3, i, n, nOUT_save
- logical :: do_inflate 
+ logical :: do_inflate
 
  ! user update
  write(*,*)"Beginning read of the command line"
@@ -60,7 +60,7 @@ program cardamom_framework
  ! read input data (DATAin located in module)
  call read_pari_data(infile)
 
- ! load module variables needed for restart check 
+ ! load module variables needed for restart check
  ! NOTE: THIS MUST HAPPEN BEFORE CHECKING FOR RESTART
  call read_options(solution_wanted,freq_print,freq_write,outfile)
  ! check whether this is a restart?
@@ -78,12 +78,15 @@ program cardamom_framework
  write(*,*) "Beginning search for initial parameter conditions"
  ! Determine initial values, this requires using the MHMCMC
  call find_edc_initial_values
+ ! Reset the iterations counter - if not then the wrong number of iterations will be attempted
+ MCOUT%nos_iterations = 0
+
  ! Reset the MCMC parameters for the next stage
  call read_options(solution_wanted,freq_print,freq_write,outfile)
 
  ! Reset stepsize and covariance for main DRAM-MCMC
  PI%Nparvar = 0d0 ; PI%parvar = 0d0
- PI%covariance = 0d0 ; PI%mean_par = 0d0 
+ PI%covariance = 0d0 ; PI%mean_par = 0d0
  PI%cov = .false. ; PI%use_multivariate = .false.
  do n = 1, PI%npars
     PI%covariance(n,n) = 1d0
@@ -126,9 +129,11 @@ program cardamom_framework
      write(*,*)"Beginning parameter search on sample size normalised likelihoods"
 
      MCO%nOUT = nint(dble(nOUT_save) * MCO%sub_fraction) - MCOUT%nos_iterations
-     write(*,*)"Nos iterations = ",MCO%nOUT
-     MCO%nADAPT = 100 ; MCO%fADAPT = 1d0 
+     write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
+     MCO%nADAPT = 100 ; MCO%fADAPT = 1d0
      call MHMCMC(1d0,sub_model_likelihood)
+     ! Use the best parameter set as the starting point for the next stage
+     PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
      ! Leave parameter and covariance structures as they come out form the
      ! sub-sample - but reset the number of samples used in the update
      ! weighting
@@ -155,7 +160,7 @@ program cardamom_framework
 
  ! Update the user
  write(*,*)"Beginning parameter search in real likelihoods"
- write(*,*)"Nos iterations = ",MCO%nOUT
+ write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
  ! Call the main MCMC
  call MHMCMC(1d0,model_likelihood)
  ! Let the user know we are done

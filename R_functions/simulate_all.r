@@ -28,7 +28,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # NOTE: that the name of the shared object is hardcoded to dalec.so
       # while the function call within will be specific to the actual model being called
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
-      output_dim=6
+      output_dim = 10
       if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
       tmp=.Fortran( "racm",output_dim=as.integer(output_dim),met=as.double(t(met)),pars=as.double(pars_in)
                           ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
@@ -45,9 +45,11 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # construct output object
       states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
                       evap_kgH2Om2day = output[,,3],soilevap_kgH2Om2day = output[,,4],
-                      Rtot_MPasm2mmol = output[,,5],wetcanevap_kgH2Om2day = output[,,6])
+                      Rtot_MPasm2mmol = output[,,5],wetcanevap_kgH2Om2day = output[,,6],
+                      gs_demand_supply = output[,,7], gs_total_canopy = output[,,8],
+                      APAR_MJm2day = output[,,9], gb_total_canopy = output[,,10])
   } else if (model_name == "DALEC_BUCKET") {
-      output_dim=24 
+      output_dim=27
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       crop_file_location=paste(PROJECT$exepath,"winter_wheat_development.csv", sep="")
       if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
@@ -84,7 +86,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       gsi_ivpd = output[,,17], evap_kgH2Om2day = output[,,18],
                       sfc_water_mm = output[,,19], wSWP_MPa = output[,,20],
                       litwood_gCm2 = output[,,21], fire_gCm2day = output[,,23],
-                      gs_demand_supply = output[,,24], aNPP = aNPP, MTT = MTT, SS = SS)
+                      gs_demand_supply = output[,,24], gs_total_canopy = output[,,25],
+                      APAR_MJm2day = output[,,26], gb_total_canopy = output[,,27],
+                      aNPP = aNPP, MTT = MTT, SS = SS)
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC") {
@@ -120,12 +124,15 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
                       harvest_C_gCm2day = output[,,13], gsi = output[,,14],
                       gsi_itemp = output[,,15], gsi_iphoto = output[,,16],
-                      gsi_ivpd = output[,,17], litwood_gCm2 = output[,,21], 
-                      fire_gCm2day = output[,,23], aNPP = aNPP, MTT = MTT, SS = SS)
+                      gsi_ivpd = output[,,17], gs_demand_supply = output[,,18],
+                      gs_total_canopy = output[,,19], gb_total_canopy = output[,,20],
+                      litwood_gCm2 = output[,,21], fire_gCm2day = output[,,23],
+                      APAR_MJm2day = output[,,24],
+                      aNPP = aNPP, MTT = MTT, SS = SS)
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_GSI_BUCKET") {
-      output_dim=24
+      output_dim=27
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       crop_file_location=paste(PROJECT$exepath,"winter_wheat_development.csv", sep="")
       if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
@@ -162,7 +169,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       gsi_ivpd = output[,,17], evap_kgH2Om2day = output[,,18],
                       sfc_water_mm = output[,,19], wSWP_MPa = output[,,20],
                       litwood_gCm2 = output[,,21], fire_gCm2day = output[,,23],
-                      gs_demand_supply = output[,,24], aNPP = aNPP, MTT = MTT, SS = SS)
+                      gs_demand_supply = output[,,24], gs_total_canopy = output[,,25],
+                      APAR_MJm2day = output[,,26], gb_total_canopy = output[,,27],
+                      aNPP = aNPP, MTT = MTT, SS = SS)
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALECN_GSI_BUCKET") {
@@ -244,7 +253,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       rm(tmp) ; gc()
       stop('Code to assign variables to output has not been re-written to current code standard - ooops')
   } else if (model_name == "DALEC_CDEA_LU_FIRES") {
-      output_dim=19 
+      output_dim=19
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
       tmp=.Fortran( "rdaleccdealufires",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim)
@@ -277,7 +286,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_CDEA_ACM2") {
-      output_dim=19 
+      output_dim=18
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
       tmp=.Fortran( "rdaleccdeaacm2",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim)
@@ -306,11 +315,13 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
                       lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
                       harvest_C_gCm2day = output[,,13], fire_gCm2day = output[,,14],
+                      gs_demand_supply = output[,,15], gs_total_canopy = output[,,16],
+                      APAR_MJm2day = output[,,17], gb_total_canopy = output[,,18],
                       aNPP = aNPP, MTT = MTT, SS = SS)
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_CDEA_ACM2_BUCKET") {
-      output_dim=21 
+      output_dim=24
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
       tmp=.Fortran( "rdaleccdeaacm2bucket",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim)
@@ -341,13 +352,15 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
                       lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
                       harvest_C_gCm2day = output[,,13], fire_gCm2day = output[,,14],
-                      evap_kgH2Om2day = output[,,18],sfc_water_mm = output[,,19], 
+                      evap_kgH2Om2day = output[,,18],sfc_water_mm = output[,,19],
                       wSWP_MPa = output[,,20],gs_demand_supply = output[,,21],
+                      gs_total_canopy = output[,,22],APAR_MJm2day = output[,,23],
+                      gb_total_canopy = output[,,24],
                       aNPP = aNPP, MTT = MTT, SS = SS)
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_CDEA_no_lit_root") {
-      output_dim=19 
+      output_dim=19
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
       tmp=.Fortran( "rdaleccdeanolitroot",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim)
@@ -380,7 +393,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_EVERGREEN") {
-      output_dim=19 
+      output_dim=19
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
       tmp=.Fortran( "rdalecevergreen",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim)
@@ -528,7 +541,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       rm(tmp) ; gc()
       stop('Code to assign variables to output has not been re-written to current code standard - ooops')
   } else if (model_name == "DALEC_GSI_DFOL_CWD_FR") {
-      output_dim=19
+      output_dim=23
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       crop_file_location=paste(PROJECT$exepath,"winter_wheat_development.csv", sep="")
       if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
@@ -560,7 +573,10 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       harvest_C_gCm2day = output[,,13], gsi = output[,,14],
                       gsi_itemp = output[,,15], gsi_iphoto = output[,,16],
                       gsi_ivpd = output[,,17], litwood_gCm2 = output[,,18],
-                      fire_gCm2day = output[,,19], aNPP = aNPP, MTT = MTT, SS = SS)
+                      fire_gCm2day = output[,,19], gs_demand_supply = output[,,20],
+                      gs_total_canopy = output[,,21], APAR_MJm2day = output[,,22],
+                      gb_total_canopy = output[,,23],
+                      aNPP = aNPP, MTT = MTT, SS = SS)
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_GSI_DFOL_FROOT_FR") {

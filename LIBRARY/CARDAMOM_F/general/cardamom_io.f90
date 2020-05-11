@@ -50,7 +50,7 @@ module cardamom_io
     if (DATAin%ID == 0) then
         ! ID = 0 - ACM/ACM-ET
         DATAin%nopools = 2
-        DATAin%nopars = 25 
+        DATAin%nopars = 25
         DATAin%nofluxes = 4
     else if (DATAin%ID == 1) then
         ! ID = 1 - DALEC_CDEA
@@ -524,7 +524,7 @@ module cardamom_io
     open(cifile_unit,file=trim(covinfoname),form="UNFORMATTED",access="stream",status="UNKNOWN",iostat=ios)
     if (ios /= 0) print*,"error ",ios," openning file",trim(covinfoname)
     ! for the covariance matrix we have a fixed size containing two matrices,
-    ! the initial and the current output - therefore we use 
+    ! the initial and the current output - therefore we use
     inquire(iolength = reclen) a ; print*,reclen
     open(cfile_unit,file=trim(covname),form="UNFORMATTED",access="direct",recl=reclen,iostat=ios)
     if (ios /= 0) print*,"error ",ios," openning file",trim(covname)
@@ -675,17 +675,17 @@ module cardamom_io
     DATAin%ngpp = 0               ; DATAin%sub_ngpp = 0
     DATAin%nlai = 0               ; DATAin%sub_nlai = 0
     DATAin%nnee = 0               ; DATAin%sub_nnee = 0
-    DATAin%nwoo = 0               ; DATAin%sub_nwoo = 0 
+    DATAin%nwoo = 0               ; DATAin%sub_nwoo = 0
     DATAin%nreco = 0              ; DATAin%sub_nreco = 0
     DATAin%nCfol_stock = 0        ; DATAin%sub_nCfol_stock = 0
     DATAin%nCwood_stock = 0       ; DATAin%sub_nCwood_stock = 0
     DATAin%nCroots_stock = 0      ; DATAin%sub_nCroots_stock = 0
-    DATAin%nCsom_stock = 0        ; DATAin%sub_nCsom_stock = 0 
-    DATAin%nClit_stock = 0        ; DATAin%sub_nClit_stock = 0 
+    DATAin%nCsom_stock = 0        ; DATAin%sub_nCsom_stock = 0
+    DATAin%nClit_stock = 0        ; DATAin%sub_nClit_stock = 0
     DATAin%nCagb_stock = 0        ; DATAin%sub_nCagb_stock = 0
     DATAin%nCcoarseroot_stock = 0 ; DATAin%sub_nCcoarseroot_stock = 0
     DATAin%nCfolmax_stock = 0     ; DATAin%sub_nCfolmax_stock = 0
-    DATAin%nEvap = 0              ; DATAin%sub_nEvap = 0 
+    DATAin%nEvap = 0              ; DATAin%sub_nEvap = 0
     DATAin%nSWE = 0               ; DATAin%sub_nSWE = 0
     DATAin%nNBE = 0               ; DATAin%sub_nNBE = 0
 
@@ -906,7 +906,7 @@ module cardamom_io
 !        do i = 1, DATAin%sub_ngpp
 !           ! Estimate the index of the next value we want
 !           DATAin%sub_gpppts(i) = DATAin%gpppts(nint((dble(i-1)/mz)+1))
-!        end do  
+!        end do
 !        print*,"GPP subsample = ",DATAin%sub_ngpp," observations of ",DATAin%ngpp
 !    end if
 !
@@ -1002,7 +1002,7 @@ module cardamom_io
 !        ! Allocate which ever is smaller
 !        DATAin%sub_nCwood_stock = min(subsample,DATAin%nCwood_stock)
 !        allocate(DATAin%sub_Cwood_stockpts(DATAin%sub_nCwood_stock))
-!        ! Estimate step between draws following: ((to - from)/(length.out - 1)) 
+!        ! Estimate step between draws following: ((to - from)/(length.out - 1))
 !        mz = (dble(DATAin%nCwood_stock-1)/dble((DATAin%sub_nCwood_stock-1)))**(-1d0)
 !        if (DATAin%nCwood_stock == 1 .or. DATAin%sub_nCwood_stock == 1) mz = 1d0 ! Guard against NaN
 !        do i = 1, DATAin%sub_nCwood_stock
@@ -1165,22 +1165,21 @@ module cardamom_io
 !        print*,"NBE subsample = ",DATAin%sub_nNBE," observations of ",DATAin%nNBE
 !    end if
 
-    ! confirm that mean radiation and temperature variables are empty
-    write(*,*) "Mean Rad = ", DATAin%meanrad
-    write(*,*) "Mean Temp = ", DATAin%meantemp
-    write(*,*) "No days = ", DATAin%nodays
-
     ! next determine the mean temperature and mean radiation values
-    ! daily mean temperature component
+    ! daily mean temperature component (oC)
     DATAin%meantemp = sum((DATAin%met(2,:) + DATAin%met(3,:)) * 0.5d0) / dble(DATAin%nodays)
-    ! mean SW radiation
+    ! mean SW radiation (MJ/m2/day)
     DATAin%meanrad = sum(DATAin%met(4,:)) / dble(DATAin%nodays)
+    ! mean precipitation (mm/yr)
+    DATAin%meanprecip = sum(DATAin%met(7,:)*84600d0*365.25d0) / dble(DATAin%nodays)
 
     ! print the mean temperature and radiation variables
-    write(*,*) "Total obs = ", DATAin%total_obs
-    write(*,*) "Mean Rad = ", DATAin%meanrad
-    write(*,*) "Mean Temp = ", DATAin%meantemp
-    write(*,*) "No days = ", DATAin%nodays
+    write(*,*) "Mean Rad (MJ/m2/day) = ", DATAin%meanrad
+    write(*,*) "Mean Temp (Celcius) = ", DATAin%meantemp
+    write(*,*) "Mean Precip (mm/yr) = ", DATAin%meanprecip
+    write(*,*) "==========="
+    write(*,*) "Number of timesteps = ", DATAin%nodays
+    write(*,*) "Total number of obs = ", DATAin%total_obs
 
     ! all done
     write(*,*) "Binary input file has been successfully read by CARDAMOM"
@@ -1226,17 +1225,21 @@ module cardamom_io
     ! Begin allocating parameter info
     PI%npars = DATAin%nopars
     allocate(PI%parmin(PI%npars),PI%parmax(PI%npars),PI%parini(PI%npars) &
-            ,PI%parfix(PI%npars),PI%parvar(PI%npars) &
+            ,PI%parfix(PI%npars),PI%parvar(PI%npars),PI%paradj(PI%npars) &
             ,PI%covariance(PI%npars,PI%npars),PI%mean_par(PI%npars) &
             ,PI%iC(PI%npars,PI%npars))
 
     ! force zero
     PI%parmin = 0d0 ; PI%parmax = 0d0 ; PI%parini = 0d0
-    PI%parfix = 0d0 ; PI%parvar = 0d0 
+    PI%parfix = 0d0 ; PI%parvar = 0d0 ; PI%paradj = 0d0
     PI%covariance = 0d0 ; PI%iC = 0d0
 
-    ! load parameter information
+    ! load parameter max/min information
     call pars_info
+    ! For log-normalisation procedure, not parameter can be <=0.
+    ! To facilitate easy of setting parameter ranges to real values
+    ! we here instead calculate the adjustment need to ensure positive only values
+    where (PI%parmin <= 0d0) PI%paradj = abs(PI%parmin) + 1d0
 
 !    ! load response surface if using the AT-DALEC model
 !    if (DATAin%ID == 3 .or. DATAin%ID == 4) then
@@ -1275,7 +1278,7 @@ module cardamom_io
     MCO%append = 1
     MCO%nADAPT = 1000 ! TLS: 500 -> 1000 -> 5000 -> 10000
     MCO%fADAPT = 0.5d0
-    MCO%randparini = .false. 
+    MCO%randparini = .false.
     MCO%returnpars = .false.
     MCO%fixedpars  = .true. ! TLS: changed from .false. for testing 16/12/2019
 
@@ -1306,10 +1309,10 @@ module cardamom_io
     ! Assume that sub-sampling process, if completed, will use 10 % of the
     ! simulation time therefore we want to adjust the output frequency to
     ! correct for this
-    if (MCO%sub_sample_complete) then
+!    if (MCO%sub_sample_complete) then
 !        MCO%nOUT = nint(dble(MCO%nOUT) * (1d0-MCO%sub_fraction))
         MCO%nOUT = max(1,MCO%nOUT - MCOUT%nos_iterations)
-    endif
+!    endif
 
     ! construct file names
     write(MCO%outfile,fmt='(A)')trim(outfile)//"PARS"
@@ -1385,7 +1388,7 @@ module cardamom_io
     ! subroutine
 
     ! free up variable for new file
-    deallocate(tmp) 
+    deallocate(tmp)
 
     !
     ! Variance file - stores output of the current parameter variance
@@ -1402,7 +1405,7 @@ module cardamom_io
     ! Determine the number of actual stepsize vectors are present. Note
     ! that the + 1 is due to the local acceptance rate being provided too.
     num_lines = num_lines/(DATAin%nopars+1)
-    ! allocate memory 
+    ! allocate memory
     allocate(tmp(num_lines,(DATAin%nopars+1)))
     ! rewind, for actual reading
     rewind(sfile_unit)
@@ -1428,7 +1431,7 @@ module cardamom_io
 
     ! The covariance matrix may contain either 1 or 2 complete matrices. We will
     ! just want to the latest one.
-    
+
     ! count the number of remaining lines in the file..
     status = 0 ; num_lines = 1
     do
@@ -1438,15 +1441,15 @@ module cardamom_io
     enddo
 
     ! Determine whether there is 1 or more matrice here
-    if ((num_lines/DATAin%nopars)/DATAin%nopars == 1) then 
+    if ((num_lines/DATAin%nopars)/DATAin%nopars == 1) then
         ! the size of the file is consistent with a single matrix having been
         ! saved
         a = 1
     else if ((num_lines/DATAin%nopars)/DATAin%nopars == 2) then
-        ! 
+        !
         a = 2
     else
-        ! something has gone wrong - best stop 
+        ! something has gone wrong - best stop
         print*,"Error reading COV file"
         print*,"DATAin%nopars = ",DATAin%nopars,"COV length = ",num_lines * DATAin%nopars
         stop
@@ -1470,7 +1473,7 @@ module cardamom_io
     do i = 1, PI%npars
        PI%parvar(i) = PI%covariance(i,i)
     end do
-    ! estimate status of the inverse covariance matrix 
+    ! estimate status of the inverse covariance matrix
     call inverse_matrix( PI%npars, PI%covariance, PI%iC )
 
     !
@@ -1492,7 +1495,7 @@ module cardamom_io
     ! how many parameter vectors have been output. Note the + 1 is accounting
     ! for the number of samples underlying the mean
     num_lines = num_lines / (PI%npars + 1)
-    ! allocate memory 
+    ! allocate memory
     allocate(tmp(num_lines,(DATAin%nopars+1)))
     ! rewind, for actual reading
     rewind(cifile_unit)
@@ -1583,7 +1586,7 @@ module cardamom_io
   !------------------------------------------------------------------
   !
   subroutine write_variances(variance,npars,accept_rate)
-    
+
     ! subroutine writes parameter variance for corresponding parameter values
 
     implicit none
@@ -1592,7 +1595,7 @@ module cardamom_io
     integer, intent(in) :: npars
     double precision, dimension(npars), intent(in) :: variance
     double precision :: accept_rate ! local acceptance rate
-    
+
     ! declare local variables
     integer :: n
 
@@ -1602,10 +1605,10 @@ module cardamom_io
     do n = 1, npars
        write(sfile_unit) variance(n)
     end do
- 
+
     ! we will need to know the current acceptance rate for restarts
     write(sfile_unit) accept_rate
-   
+
     return
 
   end subroutine write_variances
@@ -1638,7 +1641,7 @@ module cardamom_io
 
     ! close will occur at the end of the MCMC
 
-    ! return back 
+    ! return back
     return
 
   end subroutine write_parameters

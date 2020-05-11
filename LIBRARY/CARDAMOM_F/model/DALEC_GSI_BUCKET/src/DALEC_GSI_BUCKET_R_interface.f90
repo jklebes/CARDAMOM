@@ -1,16 +1,18 @@
 
 
-subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,out_var2,out_var3,out_var4 & 
+subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,out_var2,out_var3,out_var4 &
                           ,lat &
                           ,nopars,nomet,nofluxes,nopools,pft,pft_specific &
                           ,nodays,deltat,nos_iter,soil_frac_clay_in,soil_frac_sand_in &
                           ,exepath,pathlength)
 
-  use CARBON_MODEL_MOD, only: CARBON_MODEL, itemp, ivpd, iphoto, wSWP_time, gs_demand_supply_ratio &
+  use CARBON_MODEL_MOD, only: CARBON_MODEL, itemp, ivpd, iphoto, wSWP_time &
                              ,soil_frac_clay, soil_frac_sand, nos_soil_layers &
                              ,disturbance_residue_to_litter, disturbance_residue_to_cwd &
                              ,disturbance_residue_to_som, disturbance_loss_from_litter  &
-                             ,disturbance_loss_from_cwd,disturbance_loss_from_som
+                             ,disturbance_loss_from_cwd,disturbance_loss_from_som &
+                             ,gs_demand_supply_ratio &
+                             ,gs_total_canopy, gb_total_canopy, canopy_par_MJday_time
   use CARBON_MODEL_CROP_MOD, only: CARBON_MODEL_CROP
 
   ! subroutine specificially deals with the calling of the fortran code model by
@@ -194,6 +196,9 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,o
      endif
      out_var(i,1:nodays,23) = FLUXES(1:nodays,17)    ! output fire (gC/m2/day)
      out_var(i,1:nodays,24) = gs_demand_supply_ratio ! ratio of evaporative demand over supply
+     out_var(i,1:nodays,25) = gs_total_canopy(1:nodays)
+     out_var(i,1:nodays,26) = canopy_par_MJday_time(1:nodays)
+     out_var(i,1:nodays,27) = gb_total_canopy(1:nodays)
 
      ! calculate the actual NPP allocation fractions to foliar, wood and fine root pools
      ! by comparing the sum alloaction to each pools over the sum NPP.
@@ -228,7 +233,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,o
          end where
          out_var3(i,4) = sum(resid_fol) / dble(nodays)
 
-         ! 
+         !
          ! Estimate pool inputs needed for steady state calculation
          !
 
@@ -292,7 +297,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,o
 !                               / (POOLS(1:nodays,5)+POOLS(1:nodays,7))
 !         out_var3(i,4) = sum(resid_fol) / dble(nodays)
 
-         ! 
+         !
          ! Estimate pool inputs needed for steady state calculation
          !
 
@@ -320,7 +325,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,o
 
   end do ! nos_iter loop
 
-  ! MTT - Convert daily fractional loss to years 
+  ! MTT - Convert daily fractional loss to years
   out_var3 = (out_var3*365.25d0)**(-1d0) ! iter,(fol,root,wood,lit+litwood,som)
 !  out_var3(1:nos_iter,1) = (out_var3(1:nos_iter,1)*365.25d0)**(-1d0) ! fol
 !  out_var3(1:nos_iter,2) = (out_var3(1:nos_iter,2)*365.25d0)**(-1d0) ! root

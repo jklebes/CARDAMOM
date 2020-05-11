@@ -145,7 +145,7 @@ contains
                        ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT)
 
     use CARBON_MODEL_MOD, only: arrhenious,acm_gpp_stage_1,acm_gpp_stage_2,calculate_transpiration         & ! Subroutine / functions
-                               ,calculate_soil_evaporation      & 
+                               ,calculate_soil_evaporation      &
                                ,calculate_wetcanopy_evaporation,meteorological_constants                   &
                                ,calculate_stomatal_conductance,calculate_radiation_balance                 &
                                ,calculate_daylength,opt_max_scaling,calculate_Rtot,saxton_parameters       &
@@ -163,7 +163,9 @@ contains
                                ,wSWP,SWP,SWP_initial,wSWP_time,soil_waterfrac,soil_waterfrac_initial       &
                                ,porosity,porosity_initial,field_capacity,field_capacity_initial            &
                                ,rainfall,canopy_storage,intercepted_rainfall,snow_storage,snow_melt        &
-                               ,airt_zero_fraction,snowfall,fine_root_biomass
+                               ,airt_zero_fraction,snowfall,fine_root_biomass,gs_demand_supply_ratio       &
+                               ,gs_total_canopy,gb_total_canopy,canopy_par_MJday_time,potential_conductance&
+                               ,aerodynamic_conductance,canopy_par_MJday,convert_ms1_mol_1
 
     ! DALEC crop model modified from Sus et al., (2010)
 
@@ -391,7 +393,9 @@ contains
         ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
         if (.not.allocated(deltat_1)) then
 
-           allocate(deltat_1(nodays),wSWP_time(nodays))
+           allocate(deltat_1(nodays),wSWP_time(nodays),gs_demand_supply_ratio(nodays), &
+                    gs_total_canopy(nodays), gb_total_canopy(nodays), &
+                    canopy_par_MJday_time(nodays))
            deltat_1 = deltat**(-1d0)
            ! zero variables not done elsewhere
            water_flux = 0d0
@@ -537,8 +541,15 @@ contains
       call meteorological_constants(maxt,maxt+freeze,vpd_kPa)
       ! calculate radiation absorption and estimate stomatal conductance
       call calculate_aerodynamic_conductance
+      gb_total_canopy(n) = aerodynamic_conductance * convert_ms1_mol_1 * 1d3
       call calculate_radiation_balance
+      canopy_par_MJday_time(n) = canopy_par_MJday
       call calculate_stomatal_conductance(abs(deltaWP),Rtot)
+      ! Estimate stomatal conductance relative to its minimum / maximum, i.e. how
+      ! close are we to maxing out supply (note 0.01 taken from min_gs)
+      gs_demand_supply_ratio(n) = (stomatal_conductance - 0.01d0) / (potential_conductance-0.01d0)
+      ! Store the canopy level stomatal conductance (mmolH2O/m2/day)
+      gs_total_canopy(n) = stomatal_conductance
 
       ! reallocate for crop model timings
       doy = met(6,n)

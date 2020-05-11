@@ -8,7 +8,9 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_va
   use CARBON_MODEL_MOD, only: CARBON_MODEL, extracted_C, itemp, ivpd, iphoto, &
                               disturbance_residue_to_litter, disturbance_residue_to_cwd, &
                               disturbance_residue_to_som, disturbance_loss_from_litter,  &
-                              disturbance_loss_from_cwd,disturbance_loss_from_som   
+                              disturbance_loss_from_cwd,disturbance_loss_from_som,       &
+                              gs_demand_supply_ratio, &
+                              gs_total_canopy, gb_total_canopy, canopy_par_MJday_time
 
   use CARBON_MODEL_CROP_MOD, only: CARBON_MODEL_CROP
 
@@ -173,6 +175,10 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_va
      endif
      out_var(i,1:nodays,18) = POOLS(1:nodays,7)   ! CWD or Cauto if crop
      out_var(i,1:nodays,19) = FLUXES(1:nodays,17) ! Fire
+     out_var(i,1:nodays,20) = gs_demand_supply_ratio(1:nodays)
+     out_var(i,1:nodays,21) = gs_total_canopy(1:nodays)
+     out_var(i,1:nodays,22) = canopy_par_MJday_time(1:nodays)
+     out_var(i,1:nodays,23) = gb_total_canopy(1:nodays)
 
      !!!
      ! NPP calculation
@@ -211,7 +217,7 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_va
          end where
          out_var3(i,4) = sum(resid_fol) / dble(nodays)
 
-         ! 
+         !
          ! Estimate pool inputs needed for steady state calculation
          !
 
@@ -269,7 +275,7 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_va
                                / (POOLS(1:nodays,5)+POOLS(1:nodays,7))
          out_var3(i,4) = sum(resid_fol) / dble(nodays)
 
-         ! 
+         !
          ! Estimate pool inputs needed for steady state calculation
          !
 
@@ -292,7 +298,7 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_va
 
   end do ! nos_iter loop
 
-  ! MTT - Convert daily fractional loss to years 
+  ! MTT - Convert daily fractional loss to years
   out_var3 = (out_var3*365.25d0)**(-1d0) ! iter,(fol,root,wood,lit+litwood,som)
 !  out_var3(1:nos_iter,1) = (out_var3(1:nos_iter,1)*365.25d0)**(-1d0) ! fol
 !  out_var3(1:nos_iter,2) = (out_var3(1:nos_iter,2)*365.25d0)**(-1d0) ! root

@@ -3,9 +3,19 @@
 ## Function to extract obs needed for CARDAMOM
 ###
 
-extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_clay_all,crop_man_all
-                     ,burnt_all,soilwater_all,nbe_all,ctessel_pft,site_name,start_year,end_year
+extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
+                     ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
+                     ,sand_clay_all,crop_man_all,burnt_all,soilwater_all,nbe_all
+                     ,ctessel_pft,site_name,start_year,end_year
                      ,timestep_days,spatial_type,resolution,grid_type,modelname) {
+
+    # Create useful timing information for multiple functions
+    if (length(timestep_days) == 1) {
+        analysis_years = seq(as.numeric(start),as.numeric(finish))
+        nos_days = 0
+        for (t in seq(1,length(tmp))) {nos_days = nos_days + nos_days_in_year(tmp[t])}
+        timestep_days = rep(timestep_days, nos_days, by = timestep_days)
+    }
 
     ###
     ## Get some NBE information (gC/m2/day); negative is sink
@@ -312,61 +322,38 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
             # on the other hand if not then we have no uncertainty info, so use default
             Cwood_initial_unc = 0.25 * Cwood_initial
         }
-    } else if (Cwood_initial_source == "GlobBIOMASS") {
-        # get Cwood
-        output = extract_globbiomass_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
-        if (abs(as.numeric(start_year) - 2010) < abs(as.numeric(start_year) - 2017)) {
-            Cwood_initial = output$Cwood_stock[1]
-            Cwood_initial_unc = output$Cwood_stock_unc[1]
-        } else { 
-            Cwood_initial = output$Cwood_stock[2]
-            Cwood_initial_unc = output$Cwood_stock_unc[2]
-        }
-    } else if (Cwood_initial_source == "Avitabile") {
-        # get Cwood
-        output = extract_avitabile_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
-        Cwood_initial = output$Cwood_stock
-        Cwood_initial_unc = output$Cwood_stock_unc
-    } else if (Cwood_initial_source == "INPE_Avitabile") {
-        # get Cwood
-        output = extract_avitabile_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
-        Cwood_initial = output$Cwood_stock
-        Cwood_initial_unc = output$Cwood_stock_unc
-    } else if (Cwood_initial_source == "mpi_biomass") {
-        # get Cwood
-        output = extract_mpi_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
-        # locate time time data
-        tmp = which(output$Cwood_stock == max(output$Cwood_stock,na.rm=TRUE))[1]
-        if (length(tmp) > 0) {
-            Cwood_initial = output$Cwood_stock[tmp]
-            Cwood_initial_unc = output$Cwood_stock_unc[tmp]
-        } else {
-            Cwood_initial = -9999 ; Cwood_initial_unc = -9999
-        }
-    } else if (Cwood_initial_source == "UoL") {
-        # this is a very bespoke modification so leave it here to avoid getting lost
-        print("extract from UoL AGB maps")
-        agb = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_stable_forest_2015_2017.tif", sep=""))
-        unc = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_std_stable_forest_2015_2017.tif", sep=""))
+    } else if (Cwood_initial_source == "Avitabile" | Cwood_initial_source == "mpi_biomass" |
+               Cwood_initial_source == "GlobBIOMASS" | Cwood_initial_source == "UoL_stable_forest" |
+               Cwood_initial_source == "UoL_stable_savannah") {
+
+        # All maps converted into common format, therefore a common extraction subroutine can be used
+        output = extract_Cwood_initial(spatial_type,resolution,grid_type,latlon_wanted,Cwood_initial_all)
+        Cwood_initial = output$Cwood_stock ; Cwood_initial_unc = output$Cwood_stock_unc
+
+#    } else if (Cwood_initial_source == "UoL") {
+#        # this is a very bespoke modification so leave it here to avoid getting lost
+#        print("extract from UoL AGB maps")
+#        agb = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_stable_forest_2015_2017.tif", sep=""))
+#        unc = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_std_stable_forest_2015_2017.tif", sep=""))
 #        agb = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_stable_savannah_2015_2017.tif", sep=""))
 #        unc = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_std_stable_savannah_2015_2017.tif", sep=""))
-        # extract dimension information for the grid, note the axis switching between raster and actual array
-        xdim = dim(agb)[2] ; ydim = dim(agb)[1]
-        # extract the lat / long information needed
-        longitude = coordinates(agb)[,1] ; latitude = coordinates(agb)[,2]
-        # restructure into correct orientation
-        longitude = array(longitude, dim=c(xdim,ydim))
-        latitude = array(latitude, dim=c(xdim,ydim))
-        # break out from the rasters into arrays which we can manipulate
-        agb = array(as.vector(unlist(agb)), dim=c(xdim,ydim))
-        unc = array(as.vector(unlist(unc)), dim=c(xdim,ydim))
-        output = closest2d(1,latitude,longitude,latlon_wanted[1],latlon_wanted[2],2)
-        i1 = unlist(output)[1] ; j1 = unlist(output)[2]
-        if (is.na(agb[i1,j1]) | is.na(unc[i1,j1])) {
-            Cwood_initial = -9999 ; Cwood_initial_unc = -9999
-        } else  {
-            Cwood_initial = agb[i1,j1] ; Cwood_initial_unc = unc[i1,j1]
-        }
+#        # extract dimension information for the grid, note the axis switching between raster and actual array
+#        xdim = dim(agb)[2] ; ydim = dim(agb)[1]
+#        # extract the lat / long information needed
+#        longitude = coordinates(agb)[,1] ; latitude = coordinates(agb)[,2]
+#        # restructure into correct orientation
+#        longitude = array(longitude, dim=c(xdim,ydim))
+#        latitude = array(latitude, dim=c(xdim,ydim))
+#        # break out from the rasters into arrays which we can manipulate
+#        agb = array(as.vector(unlist(agb)), dim=c(xdim,ydim))
+#        unc = array(as.vector(unlist(unc)), dim=c(xdim,ydim))
+#        output = closest2d(1,latitude,longitude,latlon_wanted[1],latlon_wanted[2],2)
+#        i1 = unlist(output)[1] ; j1 = unlist(output)[2]
+#        if (is.na(agb[i1,j1]) | is.na(unc[i1,j1])) {
+#            Cwood_initial = -9999 ; Cwood_initial_unc = -9999
+#        } else  {
+#            Cwood_initial = agb[i1,j1] ; Cwood_initial_unc = unc[i1,j1]
+#        }
     } else {
         # assume no data available
         Cwood_initial=-9999 ; Cwood_initial_unc=-9999
@@ -411,87 +398,78 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
     ###
 
     if (Cwood_stock_source == "site_specific") {
-        infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-        Cwood_stock=read_site_specific_obs("Cwood_stock_gCm2",infile)
-        Cwood_stock_unc=read_site_specific_obs("Cwood_stock_unc_gCm2",infile)
+        infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
+        Cwood_stock = read_site_specific_obs("Cwood_stock_gCm2",infile)
+        Cwood_stock_unc = read_site_specific_obs("Cwood_stock_unc_gCm2",infile)
         if (length(Cwood_stock_unc) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
             Cwood_stock_unc = rep(-9999,times = length(Cwood_stock))
             Cwood_stock_unc[which(Cwood_stock != -9999)] = abs(0.25 * Cwood_stock[which(Cwood_stock != -9999)])
         }
-    } else if (Cwood_stock_source == "GlobBIOMASS") {
-        # declare output variable
-        Cwood_stock=rep(-9999, Cwood_all$step_of)
-        Cwood_stock_unc=rep(-9999, Cwood_all$step_of)
-        # only bother with this if 2010 or 2017 is within time period
-        if (max(Cwood_all$obs_step) > 0) {
-            # get Cwood
-            output = extract_globbiomass_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
+    } else if (Cwood_stock_source == "GlobBIOMASS" | Cwood_stock_source == "mpi_biomass" |
+               Cwood_stock_source == "INPE_Avitabile" | Cwood_stock_source == "Avitabile" |
+               Cwood_stock_source == "McNicol") {
 
-            # and insert the extracted value into the correct location
-            for (a in seq(1,length(Cwood_all$obs_step))) {
-                 if (Cwood_all$obs_step[a] > 0) {
-                     Cwood_stock[Cwood_all$obs_step[a]]=output$Cwood_stock[a]
-                     Cwood_stock_unc[Cwood_all$obs_step[a]]=output$Cwood_stock_unc[a]
-                 }
-            }
-        }
-    } else if (Cwood_stock_source == "mpi_biomass") {
-        # get Cwood
-        output=extract_mpi_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
-        Cwood_stock=output$Cwood_stock
-        Cwood_stock_unc=output$Cwood_stock_unc
-    } else if (Cwood_stock_source == "McNicol") {
-        # this is a very bespoke modification so leave it here to avoid getting lost
-        print("extract from McNichol AGB maps")
-        tmp_2007 = raster(paste(path_to_biomass,"mcnicol_AGC2007_0.25d.tif", sep=""))
-        tmp_2008 = raster(paste(path_to_biomass,"mcnicol_AGC2008_0.25d.tif", sep=""))
-        tmp_2009 = raster(paste(path_to_biomass,"mcnicol_AGC2009_0.25d.tif", sep=""))
-        tmp_2010 = raster(paste(path_to_biomass,"mcnicol_AGC2010_0.25d.tif", sep=""))
-        # extract dimension information for the grid, note the axis switching between raster and actual array
-        xdim = dim(tmp_2007)[2] ; ydim = dim(tmp_2007)[1]
-        # extract the lat / long information needed
-        longitude = coordinates(tmp_2007)[,1] ; latitude = coordinates(tmp_2007)[,2]
-        # restructure into correct orientation
-        longitude = array(longitude, dim=c(xdim,ydim))
-        latitude = array(latitude, dim=c(xdim,ydim))
-        # break out from the rasters into arrays which we can manipulate
-        tmp_2007 = array(as.vector(unlist(tmp_2007)), dim=c(xdim,ydim))
-        tmp_2008 = array(as.vector(unlist(tmp_2008)), dim=c(xdim,ydim))
-        tmp_2009 = array(as.vector(unlist(tmp_2009)), dim=c(xdim,ydim))
-        tmp_2010 = array(as.vector(unlist(tmp_2010)), dim=c(xdim,ydim))
-        # Find location - assume that lat / long of each file is identical
-        output = closest2d(1,latitude,longitude,latlon_wanted[1],latlon_wanted[2],2)
-        i1 = unlist(output)[1] ; j1 = unlist(output)[2]
-        # Create the wood stock time series variable - ready filled with -9999
-        if (length(timestep_days) > 1) {
-            # Time step > daily
+        # All maps converted into common format, therefore a common extraction subroutine can be used
+        if (max(Cwood_stock_all$place_obs_in_step) > 0) {
+            output = extract_Cwood_stocks(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_stock_all)
+            Cwood_stock= output$Cwood_stock ; Cwood_stock_unc = output$Cwood_stock_unc
+        } else {
             Cwood_stock = rep(-9999, length(timestep_days))
             Cwood_stock_unc = rep(-9999, length(timestep_days))
-        } else { 
-            stop('Have not coded up McNicol wood extraction to work for daily yet...')
         }
-        # Find start of target year and stick the observation in the middle of it
-        if (as.numeric(start_year) < 2007 & is.na(tmp_2007[i1,j1]) == FALSE) {
-            place = (2007 - as.numeric(start_year))*365.25 ; place = which(cumsum(timestep_days) > place)[1]
-            # Adjust units from MgC/ha -> gC/m2
-            Cwood_stock[place] = tmp_2007[i1,j1] * 1e2 ; Cwood_stock_unc[place] = 250 # 250 gC/m2 is assumption from Mat
-        }
-        if (as.numeric(start_year) < 2008 & is.na(tmp_2008[i1,j1]) == FALSE) {
-            place = (2008 - as.numeric(start_year))*365.25 ; place = which(cumsum(timestep_days) > place)[1]
-            # Adjust units from MgC/ha -> gC/m2
-            Cwood_stock[place] = tmp_2008[i1,j1] * 1e2 ; Cwood_stock_unc[place] = 250 # 250 gC/m2 is assumption from Mat
-        }
-        if (as.numeric(start_year) < 2009 & is.na(tmp_2009[i1,j1]) == FALSE) {
-            place = (2009 - as.numeric(start_year))*365.25 ; place = which(cumsum(timestep_days) > place)[1]
-            # Adjust units from MgC/ha -> gC/m2
-            Cwood_stock[place] = tmp_2009[i1,j1] * 1e2 ; Cwood_stock_unc[place] = 250 # 250 gC/m2 is assumption from Mat
-        }
-        if (as.numeric(start_year) < 2010 & is.na(tmp_2010[i1,j1]) == FALSE) {
-            place = (2010 - as.numeric(start_year))*365.25 ; place = which(cumsum(timestep_days) > place)[1]
-            # Adjust units from MgC/ha -> gC/m2
-            Cwood_stock[place] = tmp_2010[i1,j1] * 1e2 ; Cwood_stock_unc[place] = 250 # 250 gC/m2 is assumption from Mat
-        }
+
+#    } else if (Cwood_stock_source == "McNicol") {
+#        # this is a very bespoke modification so leave it here to avoid getting lost
+#        print("extract from McNichol AGB maps")
+#        tmp_2007 = raster(paste(path_to_biomass,"mcnicol_AGC2007_0.25d.tif", sep=""))
+#        tmp_2008 = raster(paste(path_to_biomass,"mcnicol_AGC2008_0.25d.tif", sep=""))
+#        tmp_2009 = raster(paste(path_to_biomass,"mcnicol_AGC2009_0.25d.tif", sep=""))
+#        tmp_2010 = raster(paste(path_to_biomass,"mcnicol_AGC2010_0.25d.tif", sep=""))
+#        # extract dimension information for the grid, note the axis switching between raster and actual array
+#        xdim = dim(tmp_2007)[2] ; ydim = dim(tmp_2007)[1]
+#        # extract the lat / long information needed
+#        longitude = coordinates(tmp_2007)[,1] ; latitude = coordinates(tmp_2007)[,2]
+#        # restructure into correct orientation
+#        longitude = array(longitude, dim=c(xdim,ydim))
+#        latitude = array(latitude, dim=c(xdim,ydim))
+#        # break out from the rasters into arrays which we can manipulate
+#        tmp_2007 = array(as.vector(unlist(tmp_2007)), dim=c(xdim,ydim))
+#        tmp_2008 = array(as.vector(unlist(tmp_2008)), dim=c(xdim,ydim))
+#        tmp_2009 = array(as.vector(unlist(tmp_2009)), dim=c(xdim,ydim))
+#        tmp_2010 = array(as.vector(unlist(tmp_2010)), dim=c(xdim,ydim))
+#        # Find location - assume that lat / long of each file is identical
+#        output = closest2d(1,latitude,longitude,latlon_wanted[1],latlon_wanted[2],2)
+#        i1 = unlist(output)[1] ; j1 = unlist(output)[2]
+#        # Create the wood stock time series variable - ready filled with -9999
+#        if (length(timestep_days) > 1) {
+#            # Time step > daily
+#            Cwood_stock = rep(-9999, length(timestep_days))
+#            Cwood_stock_unc = rep(-9999, length(timestep_days))
+#        } else {
+#            stop('Have not coded up McNicol wood extraction to work for daily yet...')
+#        }
+#        # Find start of target year and stick the observation in the middle of it
+#        if (as.numeric(start_year) < 2007 & is.na(tmp_2007[i1,j1]) == FALSE) {
+#            place = (2007 - as.numeric(start_year))*365.25 ; place = which(cumsum(timestep_days) > place)[1]
+#            # Adjust units from MgC/ha -> gC/m2
+#            Cwood_stock[place] = tmp_2007[i1,j1] * 1e2 ; Cwood_stock_unc[place] = 250 # 250 gC/m2 is assumption from Mat
+#        }
+#        if (as.numeric(start_year) < 2008 & is.na(tmp_2008[i1,j1]) == FALSE) {
+#            place = (2008 - as.numeric(start_year))*365.25 ; place = which(cumsum(timestep_days) > place)[1]
+#            # Adjust units from MgC/ha -> gC/m2
+#            Cwood_stock[place] = tmp_2008[i1,j1] * 1e2 ; Cwood_stock_unc[place] = 250 # 250 gC/m2 is assumption from Mat
+#        }
+#        if (as.numeric(start_year) < 2009 & is.na(tmp_2009[i1,j1]) == FALSE) {
+#            place = (2009 - as.numeric(start_year))*365.25 ; place = which(cumsum(timestep_days) > place)[1]
+#            # Adjust units from MgC/ha -> gC/m2
+#            Cwood_stock[place] = tmp_2009[i1,j1] * 1e2 ; Cwood_stock_unc[place] = 250 # 250 gC/m2 is assumption from Mat
+#        }
+#        if (as.numeric(start_year) < 2010 & is.na(tmp_2010[i1,j1]) == FALSE) {
+#            place = (2010 - as.numeric(start_year))*365.25 ; place = which(cumsum(timestep_days) > place)[1]
+#            # Adjust units from MgC/ha -> gC/m2
+#            Cwood_stock[place] = tmp_2010[i1,j1] * 1e2 ; Cwood_stock_unc[place] = 250 # 250 gC/m2 is assumption from Mat
+#        }
     } else {
         # assume no data available
         Cwood_stock = -9999 ; Cwood_stock_unc = -9999
@@ -693,19 +671,19 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all,Cwood_all,sand_c
     ## Get some Cwood information (potential stock)
     ###
 
-#    if (Cwood_potential_source == "site_specific") {
-#        infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
-#        Cwood_potential=read_site_specific_obs("Cwood_potential_gCm2",infile)
-#        Cwood_potential_unc=read_site_specific_obs("Cwood_potential_unc_gCm2",infile)
-#    } else if (Cwood_potential_source == "Avitabile") {
-#        # get Cwood
-#        output = extract_potential_biomass(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_all)
-#        Cwood_potential = output$Cwood_stock
-#        Cwood_potential_unc = output$Cwood_stock_unc
-#    } else {
-#        # assume no data available
+    if (Cwood_potential_source == "site_specific") {
+        infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
+        Cwood_potential=read_site_specific_obs("Cwood_potential_gCm2",infile)
+        Cwood_potential_unc=read_site_specific_obs("Cwood_potential_unc_gCm2",infile)
+    } else if (Cwood_potential_source == "UoE_potAGB") {
+        # get Cwood
+        output = extract_Cwood_potential(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_potential_all)
+        Cwood_potential = output$Cwood_stock
+        Cwood_potential_unc = output$Cwood_stock_unc
+    } else {
+        # assume no data available
         Cwood_potential=-9999 ; Cwood_potential_unc=-9999
-#    }
+    }
 
     # return output now
     return(list(LAT = latlon_wanted[1], LAI = lai, LAI_unc = lai_unc, GPP = GPP, GPP_unc = GPP_unc

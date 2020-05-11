@@ -3,7 +3,7 @@
 ## Function to submit processes to eddie
 ###
 
-submit_processes_to_eddie<-function (PROJECT_in) {
+submit_processes_to_cluster<-function (PROJECT_in) {
 
     print('PREPARING TO SUBMIT MCMC TO ECDF')
     print('This function should be valid for all CARDAMOM compatible DALEC MCMC functions')
@@ -105,9 +105,9 @@ submit_processes_to_eddie<-function (PROJECT_in) {
     } # bundle looping
 
     # issue commands to eddie
-    ecdf_execute(commands)
+    ecdf_execute(commands,PROJECT_in$paths$cardamom_cluster)
     print("Command issued to cluster")
 
 } # end of function
 ## Use byte compile
-submit_processes_to_eddie<-cmpfun(submit_processes_to_eddie)
+submit_processes_to_cluster<-cmpfun(submit_processes_to_cluster)

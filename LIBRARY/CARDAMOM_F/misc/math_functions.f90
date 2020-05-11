@@ -14,7 +14,7 @@ module math_functions
   public :: randn, std, idum, covariance_matrix, &
             random_normal, random_uniform, rnstrt, &
             random_multivariate, increment_covariance_matrix, &
-            par2nor, nor2par, log_par2nor, log_nor2par, & 
+            par2nor, nor2par, log_par2nor, log_nor2par, &
             cholesky_factor, inverse_matrix, dsymv, &
             calculate_variance, increment_variance
 
@@ -164,7 +164,7 @@ module math_functions
     ! local variables
     integer :: i
     double precision, dimension(:,:), allocatable :: deviances
-  
+
     ! allocate memory to local variable
     allocate(deviances(npars,naccepted))
 
@@ -637,7 +637,7 @@ module math_functions
     ! calculate cumulative square difference
     do i = 1, n
        diff = a(i)-mean
-       sq_diff_sum = sq_diff_sum + (diff*diff) 
+       sq_diff_sum = sq_diff_sum + (diff*diff)
     end do
     ! calculate the variance
     variance = sq_diff_sum / (sample-1d0)
@@ -692,19 +692,27 @@ module math_functions
   !
   !------------------------------------------------------------------
   !
-  subroutine log_par2nor(niter,initial_par,min_par,max_par,out_par)
+  subroutine log_par2nor(niter,initial_par,min_par,max_par,par_adj,out_par)
 
-    ! functions to normalised-log parameter values.
+    ! Functions to normalised-log parameter values.
 
-    ! converting parameters on log scale between 0-1 for min/max values
+    ! Converting parameters on log scale between 0-1 for min/max values
     implicit none
     integer, intent(in) :: niter     ! number of iterations in current vector
-    double precision, intent(in) :: min_par, max_par
+    double precision, intent(in) :: min_par, max_par, par_adj
     double precision, dimension(niter), intent(in) :: initial_par
     double precision, dimension(niter), intent(out) :: out_par
+    ! local values
+    double precision :: invar(niter), minvar, maxvar
 
-    ! then normalise
-    out_par = log(initial_par/min_par)/log(max_par/min_par)
+    ! Assign inputs to the local variables
+    invar = initial_par + par_adj
+    minvar = min_par + par_adj
+    maxvar = max_par + par_adj
+
+    ! Then normalise
+    !out_par = log(initial_par/min_par)/log(max_par/min_par)
+    out_par = log(invar/minvar)/log(maxvar/minvar)
 
     ! explicit return
     return
@@ -713,18 +721,25 @@ module math_functions
   !
   !---------------------and vise versa ------------------------------
   !
-  subroutine log_nor2par(niter,initial_par,min_par,max_par,out_par)
+  subroutine log_nor2par(niter,initial_par,min_par,max_par,par_adj,out_par)
 
     ! Converting values back from log-normalised (0-1) to 'real' numbers
 
     implicit none
     integer, intent(in) :: niter     ! number of iterations in current vector
-    double precision, intent(in) :: min_par, max_par
+    double precision, intent(in) :: min_par, max_par, par_adj
     double precision, dimension(niter), intent(in) :: initial_par
     double precision, dimension(niter), intent(out) :: out_par
+    ! local values
+    double precision :: minvar, maxvar
+
+    ! Assign inputs to the local variables
+    minvar = min_par + par_adj
+    maxvar = max_par + par_adj
 
     ! ...then un-normalise without logs as we cross zero and logs wont work
-    out_par = min_par*(max_par/min_par)**initial_par
+    !out_par = min_par*(max_par/min_par)**initial_par
+    out_par = (minvar*(maxvar/minvar)**initial_par) - par_adj
 
     ! explicit return
     return
@@ -738,7 +753,7 @@ module math_functions
     ! From Numerical Receipes p271 Press et al., 1986 2nd Edition Chapter 7,
     ! Random Numbers function returns real random number between 0-1 based on an initial start
     ! point (ran1). The start point (default = -1) is reinitialised every time the model runs
-    ! providing the same distribution each run. To ensure random numbers each time use the 
+    ! providing the same distribution each run. To ensure random numbers each time use the
     ! sum of the current system time.
 
     ! Modified based on blooms C code to alter range of random numbers

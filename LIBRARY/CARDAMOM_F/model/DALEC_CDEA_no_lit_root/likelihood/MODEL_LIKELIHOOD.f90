@@ -49,7 +49,7 @@ module model_likelihood_module
     MCO%nWRITE = 0
     ! the next two lines ensure that parameter inputs are either given or
     ! entered as -9999
-    MCO%randparini = .true. 
+    MCO%randparini = .true.
     MCO%returnpars = .true.
     MCO%fixedpars  = .true. ! TLS: changed from .false. for testing 16/12/2019
 
@@ -1095,7 +1095,7 @@ module model_likelihood_module
 !         tot_exp = tot_exp+(log(DATAin%M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2d0
          tot_exp = tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2
        end do
-       likelihood = likelihood-tot_exp
+       scale_likelihood = scale_likelihood-tot_exp
     endif
 
     ! Annual foliar maximum
@@ -1144,7 +1144,7 @@ module model_likelihood_module
 !         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,3)/DATAin%Croots_stock(dn))/log(2.))**2.
          tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
        end do
-       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCroot_stock))
+       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCroots_stock))
     endif
 
     ! Clitter log-likelihood

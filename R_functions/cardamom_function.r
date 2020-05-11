@@ -5,14 +5,14 @@
 ###
 
 cardamom <-function (projname,model,method,stage) {
-#stage = 0
+#stage = 3
   ## load needed functions into R environment
-  paths=load_paths()
+  paths = load_paths()
 
   # define file name for PROJECT file
   # this file will contain all information relating the the PROJECT
-  PROJECTfile=paste(paths$cardamom_outputs,model,"_",method,"/",projname,"/infofile.RData",sep="")
-  PROJECTtype=paste(model,"_",method,sep="")
+  PROJECTfile = paste(paths$cardamom_outputs,model,"_",method,"/",projname,"/infofile.RData",sep="")
+  PROJECTtype = paste(model,"_",method,sep="")
   # information to the user
   print(paste("When this all began ",Sys.time(),sep=""))
 
@@ -21,7 +21,7 @@ cardamom <-function (projname,model,method,stage) {
       failed=TRUE
       while (failed){
         understands=readline("Does the user understand that using the ACM model all datastreams except GPP MUST be set to '  ' and that 'path_to_site_obs' file has all needed information (yes/no)?")
-        if (understands != "yes") {failed=TRUE} else {failed=FALSE}
+        if (understands != "yes") {failed = TRUE} else {failed = FALSE}
         if (understands == "no") {stop('then you need to read the code to figure out what it assumes....')}
       } # while loop
   } # model ACM
@@ -236,7 +236,9 @@ cardamom <-function (projname,model,method,stage) {
                      crop_man_all = load_sacks_calendar_fields_for_extraction(latlon,crop_management_source)
                      sand_clay_all = load_hwsd_sand_clay_fields_for_extraction(latlon,sand_clay_source)
                      forest_all = load_forestry_fields_for_extraction(latlon,deforestation_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
-                     Cwood_all = load_mpi_biomass_fields_for_extraction(latlon,Cwood_stock_source,Cwood_initial_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
+                     Cwood_initial_all = load_initial_biomass_maps_for_extraction(latlon,Cwood_initial_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
+                     Cwood_stock_all = load_biomass_stocks_maps_for_extraction(latlon,Cwood_stock_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
+                     Cwood_potential_all = load_potential_biomass_maps_for_extraction(latlon,Cwood_potential_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
                      burnt_all = load_burnt_area_fields_for_extraction(latlon,burnt_area_source,path_to_burnt_area,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year))
                      soilwater_all = load_soilwater_fields_for_extraction(latlon,soilwater_initial_source)
                      # set flag
@@ -247,8 +249,9 @@ cardamom <-function (projname,model,method,stage) {
                      met = extract_acm_met_drivers(PROJECT,latlon[n,],PROJECT$sites[n])
              } #  acm special case
 #if ( length(which(skip_UK$UK_Forest_site_nos == n)) > 0) {
-             obs=extract_obs(latlon[n,],lai_all,Csom_all,forest_all,Cwood_all,sand_clay_all,crop_man_all
-                            ,burnt_all,soilwater_all,nbe_all
+             obs=extract_obs(latlon[n,],lai_all,Csom_all,forest_all
+                            ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
+                            ,sand_clay_all,crop_man_all,burnt_all,soilwater_all,nbe_all
                             ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
                             ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
              # update ctessel pft in the project and potentially the model information
@@ -275,7 +278,7 @@ cardamom <-function (projname,model,method,stage) {
             #home_computer=Sys.info()["nodename"]
             command=paste("scp -r ",username,"@",home_computer,":",PROJECT$datapath,"* ",PROJECT$edatapath,sep="")
             print(command)
-            ecdf_execute(command)
+            ecdf_execute(command,PROJECT$paths$cardamom_cluster)
         }
     } # copy to Eddie
 
@@ -287,13 +290,13 @@ cardamom <-function (projname,model,method,stage) {
       ## Begin Stage 2
 
       if (stage == 2) {
-
+PROJECT$paths$cardamom_cluster = "eddie.ecdf.ed.ac.uk"
         print('Welcome to Stage 2 - running CARDAMOM')
         print('The code will be run on cluster or your local machine');
 
         if (PROJECT$ecdf) {
           # submit files to eddie
-          submit_processes_to_eddie(PROJECT)
+          submit_processes_to_cluster(PROJECT)
         } else {
           # submit to local machine
           submit_processes_to_local_machine(PROJECT)
@@ -323,7 +326,7 @@ cardamom <-function (projname,model,method,stage) {
               system(paste("rm ",PROJECT$resultspath,"/*",sep=""))
             }
             command=paste("scp -r ",PROJECT$eresultspath,"* ",username,"@",home_computer,":",PROJECT$resultspath,sep="")
-            ecdf_execute(command)
+            ecdf_execute(command,PROJECT$paths$cardamom_cluster)
           }
         } # ecdf condition
         # do we run the parameters yet for analysis

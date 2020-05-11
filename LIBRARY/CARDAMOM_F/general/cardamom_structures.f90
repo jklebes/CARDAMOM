@@ -11,7 +11,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars
 
       ! drivers
       double precision, allocatable, dimension(:,:) :: MET ! contains our met fields
-      double precision ::  meantemp, meanrad ! mean conditions used in some EDCs
+      double precision ::  meantemp, meanrad, meanprecip ! mean conditions used in some EDCs
 
       ! OBS: more can obviously be added
       double precision, allocatable, dimension(:) :: GPP     & ! GPP (gC.m-2.day-1)
@@ -67,17 +67,17 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars
                                            ,SWEpts                   & ! same for snow water equivalent
                                            ,NBEpts                   & ! same for net biome exchange of CO2
                                            ,sub_gpppts               & ! as above but for a sub-sample of observations
-                                           ,sub_neepts               & ! 
-                                           ,sub_woopts               & ! 
-                                           ,sub_laipts               & ! 
-                                           ,sub_recopts              & ! 
-                                           ,sub_Cfol_stockpts        & ! 
-                                           ,sub_Cwood_stockpts       & ! 
-                                           ,sub_Croots_stockpts      & ! 
-                                           ,sub_Csom_stockpts        & ! 
-                                           ,sub_Cagb_stockpts        & ! 
-                                           ,sub_Clit_stockpts        & ! 
-                                           ,sub_Ccoarseroot_stockpts & ! 
+                                           ,sub_neepts               & !
+                                           ,sub_woopts               & !
+                                           ,sub_laipts               & !
+                                           ,sub_recopts              & !
+                                           ,sub_Cfol_stockpts        & !
+                                           ,sub_Cwood_stockpts       & !
+                                           ,sub_Croots_stockpts      & !
+                                           ,sub_Csom_stockpts        & !
+                                           ,sub_Cagb_stockpts        & !
+                                           ,sub_Clit_stockpts        & !
+                                           ,sub_Ccoarseroot_stockpts & !
                                            ,sub_Cfolmax_stockpts     & !
                                            ,sub_Evappts              & !
                                            ,sub_SWEpts               & !
@@ -86,7 +86,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars
       double precision :: nobs_scaler
 
       ! counters for the number of observations per data stream
-      integer :: total_obs              & ! total number of obervations 
+      integer :: total_obs              & ! total number of obervations
                 ,ngpp                   & ! number of GPP observations
                 ,nnee                   & ! number of NEE observations
                 ,nlai                   & ! number of LAI observations
@@ -98,17 +98,17 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars
                 ,nCsom_stock            & ! number of Csom obervations
                 ,nCagb_stock            & ! number of above ground biomass
                 ,nClit_stock            & ! number of Clitter observations
-                ,nCcoarseroot_stock     & ! number of coarse root 
+                ,nCcoarseroot_stock     & ! number of coarse root
                 ,nCfolmax_stock         & ! number of seasonal maximum foliar C
                 ,nEvap                  & ! number of ecosystem evaporation observations
                 ,nSWE                   & ! number of snow water equivalent
                 ,nNBE                   & ! number of net biome exchange of CO2
                 ,sub_ngpp               & ! As above but for a subsample of observations
                 ,sub_nnee               & !
-                ,sub_nlai               & ! 
-                ,sub_nwoo               & ! 
-                ,sub_nreco              & ! 
-                ,sub_nCfol_stock        & ! 
+                ,sub_nlai               & !
+                ,sub_nwoo               & !
+                ,sub_nreco              & !
+                ,sub_nCfol_stock        & !
                 ,sub_nCwood_stock       & !
                 ,sub_nCroots_stock      & !
                 ,sub_nCsom_stock        & !

@@ -114,6 +114,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         lat_dim = dim(lat)[2] ; long_dim = dim(long)[1]
         # convert input data long to conform to what we need
         check1 = which(long > 180) ; if (length(check1) > 0) { long[check1] = long[check1]-360 }
+
         # which locations are within the desired zone
         remove_lat = intersect(which(lat < (max(latlon_in[,1])+1.0)),which(lat > (min(latlon_in[,1])-1.0)))
         remove_long = intersect(which(long < (max(latlon_in[,2])+1.0)),which(long > (min(latlon_in[,2])-1.0)))
@@ -126,6 +127,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         remove_lat = remove_lat/dim(lat)[1]
         remove_long = (remove_long-(floor(remove_lat)*dim(lat)[1]))+1
         remove_lat = ceiling(remove_lat)
+
         # update new dimensions
         lat_dim = length(min(remove_lat):max(remove_lat)) ; long_dim = length(min(remove_long):max(remove_long))
         lat = lat[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)] ; long = long[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
@@ -135,7 +137,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         # Also this should be applied to the first time step only as we want spatial pattern not temporal
         # Also restrict by the target area
         tmp1 = tmp1[,,1] ; tmp1 = tmp1[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
-        # Include any pixels where the shortwave radiation is un-realistic. 
+        # Include any pixels where the shortwave radiation is un-realistic.
         # We could expand this to other variables to ensure good realism but sw alone is generally sufficient.
         tmp1[tmp1 < 0] = NA
         # this section is key as near land sea borders it is possible for the nearest lat/long location to actually be a sea pixel
