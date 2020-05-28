@@ -160,8 +160,8 @@ module MODEL_PARAMETERS
        PI%parmax(36) = 1.10d0 !0.911
 
        ! Turnover rate for CWD
-       PI%parmin(38) = 0.000009d0 ! 304 years at 0oC
-       PI%parmax(38) = 0.001d0    !   2.74 years at 0oC
+       PI%parmin(38) = 1.368925d-05 ! 200.00 years at 0oC
+       PI%parmax(38) = 0.001d0       !   2.74 years at 0oC
 
        ! BUCKET - coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 % of max depth
        PI%parmin(39) = 50d0

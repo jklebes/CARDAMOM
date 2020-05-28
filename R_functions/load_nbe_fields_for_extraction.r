@@ -13,7 +13,9 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load) {
       # check which file prefix we are using today
       # list all available files which we will then search
       avail_files = list.files(path_to_nbe,full.names=TRUE)
-      prefix = "uoe_ln_v1.0.1x1."
+      if (length(which(grepl("uoe_ln_v1.0.1x1.",avail_files) == TRUE)) > 0) {prefix = "uoe_ln_v1.0.1x1."}
+      if (length(which(grepl("uoe_ln_v1.0.4x5.",avail_files) == TRUE)) > 0) {prefix = "uoe_ln_v1.0.4x5."}
+      #prefix = "uoe_ln_v1.0.1x1."
 
       # timing information on the number of day in a month
       month_days = rep(31,length.out=12)
@@ -25,7 +27,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load) {
            print(paste("... ",round((yr/length(years_to_load))*100,0),"% completed ",Sys.time(),sep=""))
 
            # first check how many files we have
-           if (yr == 1) { 
+           if (yr == 1) {
                for (yrr in seq(1, length(years_to_load))) {
                     # create the prefix to the files we will want for a given year
                     input_file_1 = paste(prefix,years_to_load[yrr],sep="")
@@ -33,7 +35,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load) {
                     this_year = grepl(input_file_1, avail_files) ; this_year = which(this_year == TRUE)
                     # if we have at least one timestep for this year then we have some information otherwise it is missing!
                     if (length(this_year) > 0) {
-                         keepers = keepers+1 
+                         keepers = keepers+1
                     } else {
                          missing_years = append(missing_years,years_to_load[yrr])
                     }
@@ -56,7 +58,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load) {
 
                     # get timing variable
                     tmp = strsplit(this_year[t],input_file_1)[[1]][2]
-                    month = as.numeric(substring(tmp,1,2)) 
+                    month = as.numeric(substring(tmp,1,2))
                     day_of_month = ncvar_get(data1, "Day")
                     if (nos_days == 366) {
                         month_days[2] = 29
@@ -148,8 +150,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load) {
       nbe_all = list(nbe_gCm2day = nbe_gCm2day, nbe_unc_gCm2day = nbe_unc_gCm2day,
                      doy_obs = doy_out, lat = lat, long = long, missing_years=missing_years)
       return(nbe_all)
-  
+
   } # if GEOSCHEM
 
 } # function end
-

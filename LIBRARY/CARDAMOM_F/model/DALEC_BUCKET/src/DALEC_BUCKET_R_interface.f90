@@ -6,13 +6,19 @@ subroutine rdalecbucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,out_
                        ,nodays,deltat,nos_iter,soil_frac_clay_in,soil_frac_sand_in &
                        ,exepath,pathlength)
 
-  use CARBON_MODEL_MOD, only: CARBON_MODEL, itemp, ivpd, iphoto, wSWP_time &
-                             ,soil_frac_clay, soil_frac_sand, nos_soil_layers &
-                             ,disturbance_residue_to_litter, disturbance_residue_to_cwd &
-                             ,disturbance_residue_to_som, disturbance_loss_from_litter  &
-                             ,disturbance_loss_from_cwd,disturbance_loss_from_som &
-                             ,gs_demand_supply_ratio &
-                             ,gs_total_canopy, gb_total_canopy, canopy_par_MJday_time
+  use CARBON_MODEL_MOD, only: CARBON_MODEL, itemp, ivpd, iphoto, wSWP_time, &
+                              soil_frac_clay, soil_frac_sand, nos_soil_layers, &
+                              harvest_residue_to_litter, harvest_residue_to_litwood, &
+                              harvest_residue_to_som, harvest_loss_litter, &
+                              harvest_loss_litwood, harvest_loss_som,      &
+                              harvest_loss_labile, harvest_loss_foliar,    &
+                              harvest_loss_roots, harvest_loss_wood,       &
+                              fire_loss_labile, fire_loss_foliar, fire_loss_roots, &
+                              fire_loss_wood, fire_loss_litter, fire_loss_litwood, &
+                              fire_loss_som, fire_residue_to_litter, &
+                              fire_residue_to_litwood,fire_residue_to_som,       &
+                              gs_demand_supply_ratio, &
+                              gs_total_canopy, gb_total_canopy, canopy_par_MJday_time
   use CARBON_MODEL_CROP_MOD, only: CARBON_MODEL_CROP
 
   ! subroutine specificially deals with the calling of the fortran code model by
@@ -247,7 +253,8 @@ subroutine rdalecbucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,out_
 
          hak = 0
          ! foliage
-         resid_fol(1:nodays) = (FLUXES(1:nodays,10) + FLUXES(1:nodays,23)) / POOLS(1:nodays,2)
+         resid_fol(1:nodays) = (FLUXES(1:nodays,10) + fire_loss_foliar + harvest_loss_foliar) &
+                             /  POOLS(1:nodays,2)
          ! division by zero results in NaN plus obviously I can't have turned
          ! anything over if there was nothing to start out with...
          where ( POOLS(1:nodays,2) == 0 )
@@ -257,8 +264,7 @@ subroutine rdalecbucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,out_
 
          ! roots
          hak = 0
-         resid_fol(1:nodays)   = FLUXES(1:nodays,12)+FLUXES(1:nodays,24)
-         resid_fol(1:nodays)   = resid_fol(1:nodays) &
+         resid_fol(1:nodays)   = (FLUXES(1:nodays,12)+fire_loss_roots+harvest_loss_roots) &
                                / POOLS(1:nodays,3)
          ! division by zero results in NaN plus obviously I can't have turned
          ! anything over if there was nothing to start out with...
@@ -269,9 +275,8 @@ subroutine rdalecbucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,out_
 
          ! wood
          hak = 0
-         resid_fol(1:nodays)   = FLUXES(1:nodays,11)+FLUXES(1:nodays,25)
-         resid_fol(1:nodays)   = resid_fol(1:nodays) &
-                               / POOLS(1:nodays,4)
+         resid_fol(1:nodays)   = (FLUXES(1:nodays,11)+fire_loss_wood+harvest_loss_wood) &
+                               /  POOLS(1:nodays,4)
          ! division by zero results in NaN plus obviously I can't have turned
          ! anything over if there was nothing to start out with...
          where ( POOLS(1:nodays,4) == 0 )
@@ -279,10 +284,11 @@ subroutine rdalecbucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,out_
          end where
          out_var3(i,3) = sum(resid_fol) /dble(nodays-sum(hak))
 
-         ! litter + cwd
+         ! litter + litwood
          resid_fol(1:nodays)   = FLUXES(1:nodays,13)+FLUXES(1:nodays,15) &
                                 +FLUXES(1:nodays,20)+FLUXES(1:nodays,4)  &
-                                 +disturbance_Loss_from_litter+disturbance_loss_from_cwd
+                                +fire_loss_litter+fire_loss_litwood      &
+                                +harvest_loss_litter+harvest_loss_litwood
          resid_fol(1:nodays)   = resid_fol(1:nodays) &
                                / (POOLS(1:nodays,5)+POOLS(1:nodays,7))
          out_var3(i,4) = sum(resid_fol) / dble(nodays)
@@ -302,18 +308,18 @@ subroutine rdalecbucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars,out_var,out_
          out_var4(i,2) = sum(FLUXES(:,6)) ! Fine root
          out_var4(i,3) = sum(FLUXES(:,7)) ! Wood
          out_var4(i,4) = sum(FLUXES(:,10)+FLUXES(:,11)+FLUXES(:,12)+ &
-                             disturbance_residue_to_litter+disturbance_residue_to_cwd) ! lit + litwood
+                             fire_residue_to_litter+fire_residue_to_litwood + &
+                             harvest_residue_to_litter+harvest_residue_to_litwood) ! lit + litwood
 
      endif ! crop choice
 
      ! Csom - residence time
-     resid_fol(1:nodays)   = FLUXES(1:nodays,14) + disturbance_loss_from_som
-     resid_fol(1:nodays)   = resid_fol(1:nodays) &
-                           / POOLS(1:nodays,6)
+     resid_fol(1:nodays)   = (FLUXES(1:nodays,14) + harvest_loss_som + fire_loss_som) &
+                           /  POOLS(1:nodays,6)
      out_var3(i,5) = sum(resid_fol) /dble(nodays)
 
      ! Csom - pool inputs needed for steady state calculation
-     out_var4(i,5) = sum(FLUXES(:,15)+FLUXES(:,20)+disturbance_residue_to_som) ! som
+     out_var4(i,5) = sum(FLUXES(:,15)+FLUXES(:,20)+fire_residue_to_som+harvest_residue_to_som) ! som
 
   end do ! nos_iter loop
 

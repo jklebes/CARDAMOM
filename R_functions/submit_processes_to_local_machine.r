@@ -17,7 +17,7 @@ submit_processes_to_local_machine<-function (PROJECT_in) {
     # Determine number of sites to submit concurrently
     if (use_parallel) {
         # In parallel use number of cores into indicate the override 
-        concurrent_sites = ceiling(PROJECT_in$nochains / numWorkers)
+        concurrent_sites = ceiling(numWorkers / PROJECT_in$nochains)
     } else {
         # In serial do not over right 
         concurrent_sites = 1 
@@ -27,7 +27,7 @@ submit_processes_to_local_machine<-function (PROJECT_in) {
     setwd(PROJECT_in$exepath)
     for (n in seq(1, PROJECT_in$nosites)) {
          # Override background request?
-         bg_override = TRUE ; if (n%%3 == 0) {bg_override = FALSE}
+         bg_override = TRUE ; if (n%%concurrent_sites == 0) {bg_override = FALSE}
          for (c in seq(1, PROJECT_in$nochains)) {
               # Create the input / output file names for the current job
 	      infile=paste(PROJECT_in$datapath,PROJECT_in$name,"_",PROJECT_in$sites[n],".bin",sep="")

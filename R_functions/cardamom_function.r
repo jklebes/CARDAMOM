@@ -310,41 +310,42 @@ PROJECT$paths$cardamom_cluster = "eddie.ecdf.ed.ac.uk"
       ## Begin Stage 3
 
       if (stage == 3) {
-        print("Stage 3 will copy files back from cluster and begin postprocessing")
-        print("NOTE: this will only be effective if cluster has completed its tasks")
 
-        if (PROJECT$ecdf) {
-            failed=TRUE
+          print("Stage 3 will copy files back from cluster and begin postprocessing")
+          print("NOTE: this will only be effective if cluster has completed its tasks")
+
+          if (PROJECT$ecdf) {
+              failed = TRUE
+              while(failed) {
+                    # do we copy back the files?
+                    copy_back = readline("Copy results back from cluster? (y/n)")
+                    if (copy_back != "y" & copy_back != "n") {failed=TRUE}else{failed=FALSE}
+              }
+              if (copy_back == "y") {
+                  #home_computer=Sys.info()["nodename"]
+                  if (length(list.files(paste(PROJECT$resultspath,"/*",sep=""))) > 0) {
+                      system(paste("rm ",PROJECT$resultspath,"/*",sep=""))
+                  }
+                  command=paste("scp -r ",PROJECT$eresultspath,"* ",username,"@",home_computer,":",PROJECT$resultspath,sep="")
+                  ecdf_execute(command,PROJECT$paths$cardamom_cluster)
+              } # copy back
+          } # ecdf condition
+          # do we run the parameters yet for analysis
+          run_all = "y"#readline("Run all parameter vectors to generate confidence intervals? (y/n)")
+          failed = TRUE
           while(failed) {
-            # do we copy back the files?
-            copy_back=readline("Copy results back from cluster? (y/n)")
-            if (copy_back != "y" & copy_back != "n") {failed=TRUE}else{failed=FALSE}
+                if (run_all != "y" & run_all != "n") {run_all=readline("Run all parameter vectors to generate confidence intervals? (y/n)") ; failed=TRUE} else {failed = FALSE}
           }
-          if (copy_back == "y") {
-            #home_computer=Sys.info()["nodename"]
-            if (length(list.files(paste(PROJECT$resultspath,"/*",sep=""))) > 0) {
-              system(paste("rm ",PROJECT$resultspath,"/*",sep=""))
-            }
-            command=paste("scp -r ",PROJECT$eresultspath,"* ",username,"@",home_computer,":",PROJECT$resultspath,sep="")
-            ecdf_execute(command,PROJECT$paths$cardamom_cluster)
+          if (run_all == "y") {
+              PROJECT$latter_sample_frac = 0.75 #0.5 # 0.75 #readline("What (latter) fraction of accepted parameters to use (e.g. 0.5)?")
+              run_mcmc_results(PROJECT,stage,repair,grid_override)
           }
-        } # ecdf condition
-        # do we run the parameters yet for analysis
-        run_all = "y"#readline("Run all parameter vectors to generate confidence intervals? (y/n)")
-        failed = TRUE
-        while(failed) {
-          if (run_all != "y" & run_all != "n") {run_all=readline("Run all parameter vectors to generate confidence intervals? (y/n)") ; failed=TRUE} else {failed = FALSE}
-        }
-        if (run_all == "y") {
-          PROJECT$latter_sample_frac = 0.75 #0.5 # 0.75 #readline("What (latter) fraction of accepted parameters to use (e.g. 0.5)?")
-          run_mcmc_results(PROJECT,stage,repair,grid_override)
-        }
 
-        # now save the project
-        save(PROJECT,file=PROJECTfile)
+          # now save the project
+          save(PROJECT,file=PROJECTfile)
 
-        # report to the user
-        return(paste("CARDAMOM Report: ",stage," completed", sep=""))
+          # report to the user
+          return(paste("CARDAMOM Report: ",stage," completed", sep=""))
       }
 
       ###

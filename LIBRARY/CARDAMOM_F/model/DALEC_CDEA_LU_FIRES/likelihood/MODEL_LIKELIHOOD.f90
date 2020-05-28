@@ -258,7 +258,7 @@ module model_likelihood_module
     ! We always want this
     ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
     ! calculate final model likelihood when compared to obs
-!    ML_obs_out = ML_obs_out + inflate_likelihood(PI%npars,PARS)
+
     ML_obs_out = ML_obs_out + scale_likelihood(PI%npars,PARS)
 
   end subroutine sub_model_likelihood
@@ -284,7 +284,10 @@ module model_likelihood_module
     integer :: i
     double precision, dimension((DATAin%nodays+1),DATAin%nopools) :: local_pools
     double precision, dimension(DATAin%nodays,DATAin%nofluxes) :: local_fluxes
-    double precision :: pool_error, flux_error
+    double precision :: pool_error, flux_error, infi
+
+    ! Assign infi value
+    infi = 0d0
 
     ! Run model
 
@@ -307,7 +310,9 @@ module model_likelihood_module
     pool_error = sum(abs(DATAin%M_POOLS - local_pools))
     ! If error between runs exceeds precision error then we have a problem
     if (pool_error > (tiny(0d0)*(DATAin%nopools*DATAin%nodays)) .or. &
-        flux_error > (tiny(0d0)*(DATAin%nofluxes*DATAin%nodays))) then
+        flux_error > (tiny(0d0)*(DATAin%nofluxes*DATAin%nodays)) .or. &
+        abs(pool_error) == abs(log(infi)) .or. abs(flux_error) == abs(log(infi)) .or. &
+        pool_error /= pool_error .or. flux_error /= flux_error) then
         print*,"Error: multiple runs of the same parameter set indicates an error"
         print*,"Cumulative POOL error = ",pool_error
         print*,"Cumulative FLUX error = ",flux_error
@@ -441,11 +446,11 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n, nn, nnn, DIAG, no_years, y, PEDC, steps_per_year, steps_per_month, nd, fl
-    double precision :: EQF, etol, no_years_1, infi
+    double precision :: no_years_1, infi, io_start, io_finish!, EQF, etol
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
                                             mean_pools, Fin, Fout, Rm, Rs, &
-                                            Fin_yr1, Fout_yr1
-    double precision, dimension(nofluxes) :: FT, FT_yr1
+                                            Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
+    double precision, dimension(nofluxes) :: FT, FT_yr1, FT_yr2
     double precision :: fauto & ! Fractions of GPP to autotrophic respiration
                        ,ffol  & ! Fraction of GPP to foliage
                        ,flab  & ! Fraction of GPP to labile pool
@@ -454,9 +459,20 @@ module model_likelihood_module
                        ,fsom  & ! fraction of GPP som under eqilibrium conditions
                        ,flit    ! fraction of GPP to litter under equilibrium conditions
 
+    ! Steady State Attractor:
+    ! Log ratio difference between inputs and outputs of the system.
+    double precision, parameter :: EQF1_5 = log(1.5d0), & ! 10.0 = order magnitude; 2 = double and half
+                                   EQF2 = log(2d0),   & ! 10.0 = order magnitude; 2 = double and half
+                                   EQF5 = log(5d0),   &
+                                   EQF10 = log(10d0), &
+                                   EQF15 = log(15d0), &
+                                   EQF20 = log(20d0), &
+                                    etol = 0.30d0 !0.10d0 !0.05d0
+
     ! update initial values
     DIAG = EDCD%DIAG
     EDC2 = 1
+    infi = 0d0
 
     ! estimate GPP allocation fractions
     fauto = pars(2)
@@ -502,9 +518,9 @@ module model_likelihood_module
     end if
 
     ! Equilibrium factor (in comparison with initial conditions)
-    EQF = 2d0 ! TLS 06/11/2019 !10d0 ! JFE replaced 10 by 2 - 27/06/2018
+!    EQF = 10d0 ! TLS 06/11/2019 !10d0 ! JFE replaced 10 by 2 - 27/06/2018
     ! Pool exponential decay tolerance
-    etol = 0.3d0 !0.1d0
+!    etol = 0.3d0 !0.1d0
 
     ! first calculate total flux for the whole simulation period
 !    do fl = 1, nofluxes
@@ -513,10 +529,14 @@ module model_likelihood_module
 !            FT(fl) = FT(fl) + M_FLUXES(nd,fl)*deltat(nd)
 !        end do
 !    end do
-    ! First calculate total flux for the whole simulation period
+    ! First calculate total flux for the simulation period
+    io_start = (steps_per_year*2) + 1 ; io_finish = nodays
+    if (no_years < 3) io_start = 1
     do fl = 1, nofluxes
-       FT(fl) = sum(M_FLUXES(1:nodays,fl)*deltat(1:nodays))
+!       FT(fl) = sum(M_FLUXES(1:nodays,fl)*deltat(1:nodays))
+       FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*deltat(io_start:io_finish))
        FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*deltat(1:steps_per_year))
+       FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl)*deltat((steps_per_year+1):(steps_per_year*2)))
     end do
 
     ! get total in and out for each pool
@@ -525,31 +545,43 @@ module model_likelihood_module
     Fout(1) = FT(8)+FT(18)+FT(24)
     Fin_yr1(1)  = FT_yr1(5)
     Fout_yr1(1) = FT_yr1(8)+FT_yr1(18)+FT_yr1(24)
+    Fin_yr2(1)  = FT_yr2(5)
+    Fout_yr2(1) = FT_yr2(8)+FT_yr2(18)+FT_yr2(24)
     ! foliar
     Fin(2)  = FT(4)+FT(8)
     Fout(2) = FT(10)+FT(19)+FT(25)
     Fin_yr1(2)  = FT_yr1(4)+FT_yr1(8)
     Fout_yr1(2) = FT_yr1(10)+FT_yr1(19)+FT_yr1(25)
+    Fin_yr2(2)  = FT_yr2(4)+FT_yr2(8)
+    Fout_yr2(2) = FT_yr2(10)+FT_yr2(19)+FT_yr2(25)
     ! root
     Fin(3)  = FT(6)
     Fout(3) = FT(12)+FT(20)+FT(26)
     Fin_yr1(3)  = FT_yr1(6)
     Fout_yr1(3) = FT_yr1(12)+FT_yr1(20)+FT_yr1(26)
+    Fin_yr2(3)  = FT_yr2(6)
+    Fout_yr2(3) = FT_yr2(12)+FT_yr2(20)+FT_yr2(26)
     ! wood
     Fin(4)  = FT(7)
     Fout(4) = FT(11)+FT(21)+FT(27)
     Fin_yr1(4)  = FT_yr1(7)
     Fout_yr1(4) = FT_yr1(11)+FT_yr1(21)+FT_yr1(27)
+    Fin_yr2(4)  = FT_yr2(7)
+    Fout_yr2(4) = FT_yr2(11)+FT_yr2(21)+FT_yr2(27)
     ! litter
     Fin(5)  = FT(10)+FT(12)+FT(24)+FT(25)+FT(26)
     Fout(5) = FT(13)+FT(15)+FT(22)+FT(28)
     Fin_yr1(5)  = FT_yr1(10)+FT_yr1(12)+FT_yr1(24)+FT_yr1(25)+FT_yr1(26)
     Fout_yr1(5) = FT_yr1(13)+FT_yr1(15)+FT_yr1(22)+FT_yr1(28)
+    Fin_yr2(5)  = FT_yr2(10)+FT_yr2(12)+FT_yr2(24)+FT_yr2(25)+FT_yr2(26)
+    Fout_yr2(5) = FT_yr2(13)+FT_yr2(15)+FT_yr2(22)+FT_yr2(28)
     ! som
     Fin(6)  = FT(11)+FT(15)+FT(27)+FT(28)
     Fout(6) = FT(14)+FT(23)
     Fin_yr1(6)  = FT_yr1(11)+FT_yr1(15)+FT_yr1(27)+FT_yr1(28)
     Fout_yr1(6) = FT_yr1(14)+FT_yr1(23)
+    Fin_yr2(6)  = FT_yr2(11)+FT_yr2(15)+FT_yr2(27)+FT_yr2(28)
+    Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)
 
     ! Iterate through C pools to determine whether they have their ratio of
     ! input and outputs are outside of steady state approximation.
@@ -557,29 +589,64 @@ module model_likelihood_module
 
     ! iterate to check whether Fin/Fout is within EQF limits
 !    Rm = Fin/Fout
-!    Rs = Rm * (jan_mean_pools / jan_first_pools
+!    Rs = Rm * (jan_mean_pools / jan_first_pools)
 !    do n = 1, nopools
 !       ! Restrict rates of increase
-!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Rm)) > log(EQF)) then
+!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Rm(n))) > log(EQF)) then
 !           EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
 !       end if
 !       ! Restrict exponential decay
-!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(Rs-Rm) > etol) then
+!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(Rs(n)-Rm(n)) > etol) then
 !           EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !       end if
 !    end do
 
     ! iterate to check whether Fin/Fout is within EQF limits
-    do n = 1, nopools
-       ! Restrict rates of increase
-       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Fin(n)/Fout(n))) > log(EQF)) then
-           EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
-       end if
-       ! Restrict exponential decay
-       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Fin(n)/Fout(n)) - log(Fin_yr1(n)/Fout_yr1(n))) > etol) then
-           EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-       end if
-    end do
+!    do n = 1, nopools
+!       ! Restrict rates of increase
+!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Fin(n)/Fout(n))) > log(EQF)) then
+!           EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+!       end if
+!       ! Restrict exponential decay
+!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Fin(n)/Fout(n)) - log(Fin_yr1(n)/Fout_yr1(n))) > etol) then
+!           EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!       end if
+!    end do
+
+    if (EDC2 == 1 .or. DIAG == 1) then
+
+        ! Living pools
+        do n = 1, 3
+           ! Restrict rates of increase
+           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+               EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+           end if
+           ! Restrict exponential behaviour at initialisation
+           if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
+               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+           end if
+        end do
+        ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
+        n = 4
+        if (abs(log(Fin(n)/Fout(n))) > EQF10) then
+                EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+        end if
+        if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol*2d0) then
+                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+        end if
+        ! Dead pools
+        do n = 5, 6
+           ! Restrict rates of increase
+           if (abs(log(Fin(n)/Fout(n))) > EQF5) then
+               EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+           end if
+           ! Restrict exponential behaviour at initialisation
+           if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
+               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+           end if
+        end do
+
+    end if ! EDC2 == 1 .or. DIAG == 1
 
     !
     ! EDCs done, below are additional fault detection conditions
@@ -596,12 +663,12 @@ module model_likelihood_module
 
     ! ensure minimum pool values are >= 0 and /= NaN
     if (EDC2 == 1 .or. DIAG == 1) then
-       n=1
+       n = 1
        do while (n <= nopools .and. (EDC2 == 1 .or. DIAG == 1))
           nn = 1 ; PEDC = 1
           do while (nn <= (nodays+1) .and. PEDC == 1)
              ! now check conditions
-             if (M_POOLS(nn,n) < 0. .or. M_POOLS(nn,n) /= M_POOLS(nn,n)) then
+             if (M_POOLS(nn,n) < 0d0 .or. M_POOLS(nn,n) /= M_POOLS(nn,n) .or. abs(M_POOLS(nn,n)) == abs(log(infi))) then
                  EDC2 = 0d0 ; PEDC = 0 ; EDCD%PASSFAIL(35+n) = 0
              end if ! less than zero and is NaN condition
           nn = nn + 1
@@ -899,11 +966,19 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n, dn, no_years, y
-    double precision :: tot_exp, tmp_var, infini
+    double precision :: tot_exp, tmp_var, infini, input, output
     double precision, allocatable :: mean_annual_pools(:)
 
     ! initial value
     likelihood = 0d0 ; infini = 0d0
+
+    ! NBE Log-likelihood
+    if (DATAin%nnbe > 0) then
+       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+                       -DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
+                       /DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe)))**2)
+       likelihood = likelihood-tot_exp
+    endif
 
     ! GPP Log-likelihood
     if (DATAin%ngpp > 0) then
@@ -1058,23 +1133,26 @@ module model_likelihood_module
     ! Ra:GPP fraction is in this model a derived property
     if (DATAin%otherpriors(1) > 0) then
         tot_exp = sum(DATAin%M_FLUXES(:,3)) / sum(DATAin%M_FLUXES(:,1))
-        likelihood = likelihood-((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2d0
+        likelihood = likelihood-((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
     end if
 
     ! Estimate the biological steady state attractor on the wood pool.
     ! NOTE: this arrangement explicitly neglects the impact of disturbance on
-    ! residence time (i.e. no fire and biomass removal)
+    ! residence time (i.e. biomass removal)
     if (DATAin%otherpriors(5) > -9998) then
         ! Estimate the mean annual input to the wood pool (gC.m-2.day-1) and
         ! remove the day-1 by multiplying by residence time (day)
-        tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
+        !tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
+        input = sum(DATAin%M_FLUXES(:,7))
+        output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+DATAin%M_FLUXES(:,25)))
+        tot_exp = (input/dble(DATAin%nodays)) * (output/dble(DATAin%nodays))
         likelihood = likelihood - ((tot_exp - DATAin%otherpriors(5)) / DATAin%otherpriorunc(5))**2
     endif
 
     ! the likelihood scores for each observation are subject to multiplication
     ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
     ! multiple datastreams we apply this multiplication to the bulk liklihood
-    ! hear
+    ! here
     likelihood = likelihood * 0.5d0
 
     ! check that log-likelihood is an actual number
@@ -1102,11 +1180,19 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n, dn, no_years, y
-    double precision :: tot_exp, tmp_var, infini
+    double precision :: tot_exp, tmp_var, infini, input, output
     double precision, allocatable :: mean_annual_pools(:)
 
     ! initial value
     scale_likelihood = 0d0 ; infini = 0d0
+
+    ! NBE Log-likelihood
+    if (DATAin%nnbe > 0) then
+       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+                       -DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
+                       /DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe)))**2)
+       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nnbe))
+    endif
 
     ! GPP Log-likelihood
     if (DATAin%ngpp > 0) then
@@ -1261,7 +1347,7 @@ module model_likelihood_module
     ! Ra:GPP fraction is in this model a derived property
     if (DATAin%otherpriors(1) > 0) then
         tot_exp = sum(DATAin%M_FLUXES(:,3)) / sum(DATAin%M_FLUXES(:,1))
-        scale_likelihood = scale_likelihood-((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2d0
+        scale_likelihood = scale_likelihood-((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
     end if
 
     ! Estimate the biological steady state attractor on the wood pool.
@@ -1270,7 +1356,10 @@ module model_likelihood_module
     if (DATAin%otherpriors(5) > -9998) then
         ! Estimate the mean annual input to the wood pool (gC.m-2.day-1) and
         ! remove the day-1 by multiplying by residence time (day)
-        tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
+        !tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
+        input = sum(DATAin%M_FLUXES(:,7))
+        output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+DATAin%M_FLUXES(:,25)))
+        tot_exp = (input/dble(DATAin%nodays)) * (output/dble(DATAin%nodays))
         scale_likelihood = scale_likelihood - ((tot_exp - DATAin%otherpriors(5)) / DATAin%otherpriorunc(5))**2
     endif
 
@@ -1284,399 +1373,11 @@ module model_likelihood_module
     if (scale_likelihood /= scale_likelihood) then
         scale_likelihood = log(infini)
     end if
+
     ! don't forget to return
     return
 
   end function scale_likelihood
-  !
-  !------------------------------------------------------------------
-  !
-  double precision function inflate_likelihood(npars,pars)
-    use cardamom_structures, only: DATAin
-    use MCMCOPT, only: MCO
-
-    ! calculates the likelihood of of the model output compared to the available
-    ! observations which have been input to the model
-
-    implicit none
-
-    ! declare arguments
-    integer, intent(in) :: npars
-    double precision, dimension(npars), intent(in) :: pars
-
-    ! declare local variables
-    integer :: n, dn, no_years, y
-    double precision :: tot_exp, tmp_var, infini, inflate_factor
-    double precision, allocatable :: mean_annual_pools(:)
-
-    ! initial value
-    inflate_likelihood = 0d0 ; infini = 0d0
-    ! Update inflation factor from module
-    inflate_factor = MCO%inflation_factor
-
-    ! GPP Log-likelihood
-    if (DATAin%ngpp > 0) then
-       tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
-                       /(inflate_factor*DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp))))**2)
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! LAI log-likelihood
-    if (DATAin%nlai > 0) then
-       ! loop split to allow vectorisation
-       tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
-                       /(inflate_factor*DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai))))**2)
-       do n = 1, DATAin%nlai
-         dn = DATAin%laipts(n)
-         ! if zero or greater allow calculation with min condition to prevent
-         ! errors of zero LAI which occur in managed systems
-         if (DATAin%M_LAI(dn) < 0d0) then
-             ! if not then we have unrealistic negative values or NaN so indue
-             ! error
-             tot_exp = tot_exp+(-log(infini))
-         endif
-       end do
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! NEE likelihood
-    if (DATAin%nnee > 0) then
-       tot_exp = sum(((DATAin%M_NEE(DATAin%neepts(1:DATAin%nnee))-DATAin%NEE(DATAin%neepts(1:DATAin%nnee))) &
-                       /(inflate_factor*DATAin%NEE_unc(DATAin%neepts(1:DATAin%nnee))))**2)
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! Reco likelihood
-    if (DATAin%nreco > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nreco
-         dn = DATAin%recopts(n)
-         tmp_var = DATAin%M_NEE(dn)+DATAin%M_GPP(dn)
-         ! note that we calculate the Ecosystem resp from GPP and NEE
-         tot_exp = tot_exp+((tmp_var-DATAin%Reco(dn))/(inflate_factor*DATAin%Reco_unc(dn)))**2
-       end do
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! Cwood increment log-likelihood
-    if (DATAin%nwoo > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nwoo
-         dn = DATAin%woopts(n)
-         ! note that division is the uncertainty
-         ! tot_exp = tot_exp+(log((DATAin%M_POOLS(dn,4)-DATAin%M_POOLS(dn-365,4)) &
-         !                   / DATAin%WOO(dn))/log(DATAin%WOO_unc(dn)))**2
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%M_POOLS(dn-365,4)) / (inflate_factor*DATAin%WOO_unc(dn)))**2
-       end do
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! Cfoliage log-likelihood
-    if (DATAin%nCfol_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nCfol_stock
-         dn = DATAin%Cfol_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp = tot_exp+(log(DATAin%M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2d0
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) / (inflate_factor*DATAin%Cfol_stock_unc(dn)))**2
-       end do
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! Annual foliar maximum
-    if (DATAin%nCfolmax_stock > 0) then
-       tot_exp = 0d0
-       no_years = int(nint(sum(DATAin%deltat)/365.25d0))
-       if (allocated(mean_annual_pools)) deallocate(mean_annual_pools)
-       allocate(mean_annual_pools(no_years))
-       ! determine the annual max for each pool
-       do y = 1, no_years
-          ! derive mean annual foliar pool
-          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
-       end do ! year loop
-       ! loop through the observations then
-       do n = 1, DATAin%nCfolmax_stock
-         ! load the observation position in stream
-         dn = DATAin%Cfolmax_stockpts(n)
-         ! determine which years this in in for the simulation
-         y = ceiling( (dble(dn)*(sum(DATAin%deltat)/(DATAin%nodays))) / 365.25d0 )
-         ! load the correct year into the analysis
-         tmp_var = mean_annual_pools(y)
-         ! note that division is the uncertainty
-         tot_exp = tot_exp+((tmp_var-DATAin%Cfolmax_stock(dn)) / (inflate_factor*DATAin%Cfolmax_stock_unc(dn)))**2
-       end do
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! Cwood log-likelihood (i.e. branch, stem and CR)
-    if (DATAin%nCwood_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nCwood_stock
-         dn = DATAin%Cwood_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,4)/DATAin%Cwood_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/(inflate_factor*DATAin%Cwood_stock_unc(dn)))**2
-       end do
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! Croots log-likelihood
-    if (DATAin%nCroots_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nCroots_stock
-         dn = DATAin%Croots_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,3)/DATAin%Croots_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) / (inflate_factor*DATAin%Croots_stock_unc(dn)))**2
-       end do
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! Clitter log-likelihood
-    ! WARNING WARNING WARNING hack in place to estimate fraction of litter pool
-    ! originating from surface pools
-    if (DATAin%nClit_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nClit_stock
-         dn = DATAin%Clit_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp=tot_exp+((log((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
-!                           *DATAin%M_POOLS(dn,5))/DATAin%Clit_stock(dn))/log(2.))**2d0
-         tot_exp = tot_exp+(((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
-                           *(DATAin%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/(inflate_factor*DATAin%Clit_stock_unc(dn)))**2
-       end do
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! Csom log-likelihood
-    if (DATAin%nCsom_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nCsom_stock
-         dn = DATAin%Csom_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,6)/DATAin%Csom_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/(inflate_factor*DATAin%Csom_stock_unc(dn)))**2
-       end do
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    !
-    ! Curiously we will assess other priors here, as the tend to have to do with model state derived values
-    !
-
-    ! Ra:GPP fraction is in this model a derived property
-    if (DATAin%otherpriors(1) > 0) then
-        tot_exp = sum(DATAin%M_FLUXES(:,3)) / sum(DATAin%M_FLUXES(:,1))
-        inflate_likelihood = inflate_likelihood-((tot_exp-DATAin%otherpriors(1))/(DATAin%otherpriorunc(1)))**2d0
-    end if
-
-    ! the likelihood scores for each observation are subject to multiplication
-    ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
-    ! multiple datastreams we apply this multiplication to the bulk liklihood
-    ! hear
-    inflate_likelihood = inflate_likelihood * 0.5d0
-
-    ! check that log-likelihood is an actual number
-    if (inflate_likelihood /= inflate_likelihood) then
-       inflate_likelihood = log(infini)
-    end if
-    ! don't forget to return
-    return
-
-  end function inflate_likelihood
-  !
-  !------------------------------------------------------------------
-  !
-  double precision function sub_likelihood(npars,pars)
-    use cardamom_structures, only: DATAin
-
-    ! calculates the likelihood of of the model output compared to the available
-    ! observations which have been input to the model
-
-    implicit none
-
-    ! declare arguments
-    integer, intent(in) :: npars
-    double precision, dimension(npars), intent(in) :: pars
-
-    ! declare local variables
-    integer :: n, dn, no_years, y
-    double precision :: tot_exp, tmp_var, infini
-    double precision, allocatable :: mean_annual_pools(:)
-
-    ! initial value
-    sub_likelihood = 0d0 ; infini = 0d0
-
-    ! GPP Log-likelihood
-    if (DATAin%sub_ngpp > 0) then
-       tot_exp = sum(((DATAin%M_GPP(DATAin%sub_gpppts(1:DATAin%sub_ngpp))-DATAin%GPP(DATAin%sub_gpppts(1:DATAin%sub_ngpp))) &
-                       /DATAin%GPP_unc(DATAin%sub_gpppts(1:DATAin%sub_ngpp)))**2)
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! LAI log-likelihood
-    if (DATAin%sub_nlai > 0) then
-       ! loop split to allow vectorisation
-       tot_exp = sum(((DATAin%M_LAI(DATAin%sub_laipts(1:DATAin%sub_nlai))-DATAin%LAI(DATAin%sub_laipts(1:DATAin%sub_nlai))) &
-                       /DATAin%LAI_unc(DATAin%sub_laipts(1:DATAin%sub_nlai)))**2)
-       do n = 1, DATAin%sub_nlai
-         dn = DATAin%sub_laipts(n)
-         ! if zero or greater allow calculation with min condition to prevent
-         ! errors of zero LAI which occur in managed systems
-         if (DATAin%M_LAI(dn) < 0d0) then
-             ! if not then we have unrealistic negative values or NaN so indue
-             ! error
-             tot_exp = tot_exp+(-log(infini))
-         endif
-       end do
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! NEE likelihood
-    if (DATAin%sub_nnee > 0) then
-       tot_exp = sum(((DATAin%M_NEE(DATAin%sub_neepts(1:DATAin%sub_nnee))-DATAin%NEE(DATAin%sub_neepts(1:DATAin%sub_nnee))) &
-                       /DATAin%NEE_unc(DATAin%sub_neepts(1:DATAin%sub_nnee)))**2)
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! Reco likelihood
-    if (DATAin%sub_nreco > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%sub_nreco
-         dn = DATAin%sub_recopts(n)
-         tmp_var = DATAin%M_NEE(dn)+DATAin%M_GPP(dn)
-         ! note that we calculate the Ecosystem resp from GPP and NEE
-         tot_exp = tot_exp+((tmp_var-DATAin%Reco(dn))/DATAin%Reco_unc(dn))**2
-       end do
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! Cwood increment log-likelihood
-    if (DATAin%sub_nwoo > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%sub_nwoo
-         dn = DATAin%sub_woopts(n)
-         ! note that division is the uncertainty
-         ! tot_exp = tot_exp+(log((DATAin%M_POOLS(dn,4)-DATAin%M_POOLS(dn-365,4)) &
-         !                   / DATAin%WOO(dn))/log(DATAin%WOO_unc(dn)))**2
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%M_POOLS(dn-365,4)) / DATAin%WOO_unc(dn))**2
-       end do
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! Cfoliage log-likelihood
-    if (DATAin%sub_nCfol_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%sub_nCfol_stock
-         dn = DATAin%sub_Cfol_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp = tot_exp+(log(DATAin%M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2d0
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2
-       end do
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! Annual foliar maximum
-    if (DATAin%sub_nCfolmax_stock > 0) then
-       tot_exp = 0d0
-       no_years = int(nint(sum(DATAin%deltat)/365.25d0))
-       if (allocated(mean_annual_pools)) deallocate(mean_annual_pools)
-       allocate(mean_annual_pools(no_years))
-       ! determine the annual max for each pool
-       do y = 1, no_years
-          ! derive mean annual foliar pool
-          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
-       end do ! year loop
-       ! loop through the observations then
-       do n = 1, DATAin%sub_nCfolmax_stock
-         ! load the observation position in stream
-         dn = DATAin%sub_Cfolmax_stockpts(n)
-         ! determine which years this in in for the simulation
-         y = ceiling( (dble(dn)*(sum(DATAin%deltat)/(DATAin%nodays))) / 365.25d0 )
-         ! load the correct year into the analysis
-         tmp_var = mean_annual_pools(y)
-         ! note that division is the uncertainty
-         tot_exp = tot_exp+((tmp_var-DATAin%Cfolmax_stock(dn)) / DATAin%Cfolmax_stock_unc(dn))**2
-       end do
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! Cwood log-likelihood (i.e. branch, stem and CR)
-    if (DATAin%sub_nCwood_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%sub_nCwood_stock
-         dn = DATAin%sub_Cwood_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,4)/DATAin%Cwood_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/DATAin%Cwood_stock_unc(dn))**2
-       end do
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! Croots log-likelihood
-    if (DATAin%sub_nCroots_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%sub_nCroots_stock
-         dn = DATAin%sub_Croots_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,3)/DATAin%Croots_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
-       end do
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! Clitter log-likelihood
-    ! WARNING WARNING WARNING hack in place to estimate fraction of litter pool
-    ! originating from surface pools
-    if (DATAin%sub_nClit_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%sub_nClit_stock
-         dn = DATAin%sub_Clit_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp=tot_exp+((log((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
-!                           *DATAin%M_POOLS(dn,5))/DATAin%Clit_stock(dn))/log(2.))**2d0
-         tot_exp = tot_exp+(((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
-                           *(DATAin%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2
-       end do
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! Csom log-likelihood
-    if (DATAin%sub_nCsom_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%sub_nCsom_stock
-         dn = DATAin%sub_Csom_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,6)/DATAin%Csom_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2
-       end do
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    !
-    ! Curiously we will assess other priors here, as the tend to have to do with model state derived values
-    !
-
-    ! Ra:GPP fraction is in this model a derived property
-    if (DATAin%otherpriors(1) > 0) then
-        tot_exp = sum(DATAin%M_FLUXES(:,3)) / sum(DATAin%M_FLUXES(:,1))
-        sub_likelihood = sub_likelihood-((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2d0
-    end if
-
-    ! the likelihood scores for each observation are subject to multiplication
-    ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
-    ! multiple datastreams we apply this multiplication to the bulk liklihood
-    ! hear
-    sub_likelihood = sub_likelihood * 0.5d0
-
-    ! check that log-likelihood is an actual number
-    if (sub_likelihood /= sub_likelihood) then
-       sub_likelihood = log(infini)
-    end if
-    ! don't forget to return
-    return
-
-  end function sub_likelihood
   !
   !------------------------------------------------------------------
   !

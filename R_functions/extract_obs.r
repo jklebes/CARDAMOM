@@ -418,7 +418,18 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
             Cwood_stock = rep(-9999, length(timestep_days))
             Cwood_stock_unc = rep(-9999, length(timestep_days))
         }
-
+        # INPE Map is a merge of two separate ones, therefore it is a bad idea to have two time steps,
+        # one from each map as these data are inconsistent.
+        # Therefore, check whether we have two data points and take an average + average location
+        if (Cwood_stock_source == "INPE_Avitabile") {
+            tmp = which(Cwood_stock > 0)
+            if (length(tmp) == 2) {
+                tmp2 = Cwood_stock[tmp] ; tmp3 = Cwood_stock_unc[tmp]
+                Cwood_stock[tmp] = -9999 ; Cwood_stock_unc[tmp] = -9999
+                Cwood_stock[floor(mean(tmp))] = mean(tmp2) ; Cwood_stock_unc[floor(mean(tmp))] = mean(tmp3)
+                rm(tmp,tmp2,tmp3)
+            }
+        }
 #    } else if (Cwood_stock_source == "McNicol") {
 #        # this is a very bespoke modification so leave it here to avoid getting lost
 #        print("extract from McNichol AGB maps")

@@ -193,7 +193,8 @@ contains
     ! checks whether the EDCs (combined with P0 not P0prior) have been met in the initial parameter set
     infini = 0d0
     if (P0 == log(infini)) then
-        write(*,*) "WARNING! P0 = ",P0," - MHMCMC may get stuck, if so please check initial conditins"
+        write(*,*) "WARNING! P0 = ",P0," - MHMCMC will get stuck, if so please check initial conditins"
+        stop
     endif
 
     ! Begin the main MHMCMC loop

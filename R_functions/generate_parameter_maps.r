@@ -42,6 +42,11 @@ generate_parameter_maps<-function(PROJECT) {
       grid_parameters$MTT_root_years=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
       grid_parameters$MTT_som_years=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
       grid_parameters$MTT_DeadOrg_years=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
+      grid_parameters$SS_foliar_gCm2=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
+      grid_parameters$SS_wood_gCm2=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
+      grid_parameters$SS_root_gCm2=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
+      grid_parameters$SS_DeadOrg_gCm2=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
+      grid_parameters$SS_som_gCm2=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
       # Model Driver information
       grid_parameters$mean_temperature_C=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
       grid_parameters$mean_vpd_Pa=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
@@ -100,10 +105,16 @@ generate_parameter_maps<-function(PROJECT) {
                # calculate residence time variables (fol,root,wood,lit+litwood,som)
                # NOTE: that depending on the model DeadOrg may be litter or litter + cwd
                grid_parameters$MTT_foliar_years[slot_i,slot_j,]=quantile(MTT[,1], prob=num_quantiles,na.rm=TRUE)
-               grid_parameters$MTT_wood_years[slot_i,slot_j,]=quantile(MTT[,3], prob=num_quantiles,na.rm=TRUE)
                grid_parameters$MTT_root_years[slot_i,slot_j,]=quantile(MTT[,2], prob=num_quantiles,na.rm=TRUE)
-               grid_parameters$MTT_som_years[slot_i,slot_j,]=quantile(MTT[,5], prob=num_quantiles,na.rm=TRUE)
+               grid_parameters$MTT_wood_years[slot_i,slot_j,]=quantile(MTT[,3], prob=num_quantiles,na.rm=TRUE)
                grid_parameters$MTT_DeadOrg_years[slot_i,slot_j,]=quantile(MTT[,4], prob=num_quantiles,na.rm=TRUE)
+               grid_parameters$MTT_som_years[slot_i,slot_j,]=quantile(MTT[,5], prob=num_quantiles,na.rm=TRUE)
+               # Calculate C stock steady states, as function of natural, fire and biomass extraction
+               grid_parameters$SS_foliar_gCm2[slot_i,slot_j,]=quantile(SS[,1], prob=num_quantiles,na.rm=TRUE)
+               grid_parameters$SS_root_gCm2[slot_i,slot_j,]=quantile(SS[,2], prob=num_quantiles,na.rm=TRUE)
+               grid_parameters$SS_wood_gCm2[slot_i,slot_j,]=quantile(SS[,3], prob=num_quantiles,na.rm=TRUE)
+               grid_parameters$SS_DeadOrg_gCm2[slot_i,slot_j,]=quantile(SS[,4], prob=num_quantiles,na.rm=TRUE)
+               grid_parameters$SS_som_gCm2[slot_i,slot_j,]=quantile(SS[,5], prob=num_quantiles,na.rm=TRUE)
                # loop through parameters + likelihood
                for (p in seq(1, dim(parameters)[1])) {
                     grid_parameters$parameters[slot_i,slot_j,p,] = quantile(as.vector(parameters[p,,]), prob=num_quantiles)
@@ -382,7 +393,7 @@ generate_parameter_maps<-function(PROJECT) {
             ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(0,max(as.vector(grid_parameters$mean_precipitation_kgm2yr),na.rm=TRUE)))
   contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
-  
+
   # output some aggragated values
   # probably best to add some aggregated met drivers to this concoction here
   save(grid_parameters,file=outfile)

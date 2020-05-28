@@ -110,12 +110,26 @@ module CARBON_MODEL_MOD
            ,snow_storage                  &
            ,canopy_storage                &
            ,intercepted_rainfall          &
-           ,disturbance_residue_to_litter &
-           ,disturbance_residue_to_cwd    &
-           ,disturbance_residue_to_som    &
-           ,disturbance_loss_from_litter  &
-           ,disturbance_loss_from_cwd     &
-           ,disturbance_loss_from_som     &
+           ,harvest_residue_to_litter     &
+           ,harvest_residue_to_litwood    &
+           ,harvest_residue_to_som        &
+           ,harvest_loss_litter           &
+           ,harvest_loss_litwood          &
+           ,harvest_loss_som              &
+           ,harvest_loss_labile           &
+           ,harvest_loss_foliar           &
+           ,harvest_loss_roots            &
+           ,harvest_loss_wood             &
+           ,fire_loss_labile              &
+           ,fire_loss_foliar              &
+           ,fire_loss_roots               &
+           ,fire_loss_wood                &
+           ,fire_loss_litter              &
+           ,fire_loss_litwood             &
+           ,fire_loss_som                 &
+           ,fire_residue_to_litter        &
+           ,fire_residue_to_litwood       &
+           ,fire_residue_to_som           &
            ,rainfall_time                 &
            ,Rg_from_labile                &
            ,Rm_from_labile                &
@@ -295,12 +309,26 @@ module CARBON_MODEL_MOD
                                           Rm_leaf, Rm_wood_root, & ! Maintenance respiration (gC/m2/day)
                                           Rg_leaf, Rg_wood_root, &
                                               itemp,ivpd,iphoto, &
-                                  disturbance_residue_to_litter, &
-                                     disturbance_residue_to_som, &
-                                     disturbance_residue_to_cwd, &
-                                   disturbance_loss_from_litter, &
-                                      disturbance_loss_from_cwd, &
-                                      disturbance_loss_from_som
+                                      harvest_residue_to_litter, &
+                                         harvest_residue_to_som, &
+                                     harvest_residue_to_litwood, &
+                                            harvest_loss_litter, &
+                                           harvest_loss_litwood, &
+                                               harvest_loss_som, &
+                                            harvest_loss_labile, &
+                                            harvest_loss_foliar, &
+                                             harvest_loss_roots, &
+                                              harvest_loss_wood, &
+                                               fire_loss_labile, &
+                                               fire_loss_foliar, &
+                                                fire_loss_roots, &
+                                                 fire_loss_wood, &
+                                               fire_loss_litter, &
+                                              fire_loss_litwood, &
+                                                  fire_loss_som, &
+                                         fire_residue_to_litter, &
+                                        fire_residue_to_litwood, &
+                                            fire_residue_to_som
 
   ! hydraulic model variables
   integer :: water_retention_pass, soil_layer
@@ -491,7 +519,7 @@ double precision :: Creturn_canopy,Creturn_investment
     double precision :: burnt_area           &
                        ,CFF(7) = 0d0   & ! combusted and non-combustion fluxes
                        ,NCFF(7) = 0d0  & ! with residue and non-residue seperates
-                       ,combust_eff(5) & ! combustion efficiency
+                       ,combust_eff(7) & ! combustion efficiency
                        ,rfac             ! resilience factor
 
     ! local deforestation related variables
@@ -539,7 +567,7 @@ double precision :: Creturn_canopy,Creturn_investment
     ! 4 = wood   (p21)
     ! 5 = litter (p22)
     ! 6 = som    (p23)
-    ! 7 = cwd    (p37)
+    ! 7 = litwood (p37)
     ! 8 = soil water content (currently assumed to field capacity)
 
     ! p(30) = labile replanting
@@ -551,7 +579,7 @@ double precision :: Creturn_canopy,Creturn_investment
     ! 1 = GPP
     ! 2 = temprate
     ! 3 = respiration_auto
-    ! 4 = respiration het cwd
+    ! 4 = respiration het litwood
     ! 5 = labile production
     ! 6 = root production
     ! 7 = wood production
@@ -567,12 +595,12 @@ double precision :: Creturn_canopy,Creturn_investment
     ! 17 = carbon flux due to fire
     ! 18 = growing season index
     ! 19 = Evapotranspiration (kgH2O.m-2.day-1)
-    ! 20 = CWD turnover to litter
+    ! 20 = litwood turnover to litter
     ! 21 = C extracted as harvest
-    ! 22 = labile loss due to disturbance
-    ! 23 = foliage loss due to disturbance
-    ! 24 = root loss due to disturbance
-    ! 25 = wood loss due to disturbance
+    ! 22 = NOT IN USE
+    ! 23 = NOT IN USE
+    ! 24 = NOT IN USE
+    ! 25 = NOT IN USE
     ! 26 = NOT IN USE
     ! 27 = NOT IN USE
     ! 28 = NOT IN USE
@@ -606,8 +634,8 @@ double precision :: Creturn_canopy,Creturn_investment
     ! p(34) = GSI sensitivity for leaf scenescence
     ! p(35) = Reich Maintenance respiration N leaf exponent
     ! p(36) = Reich Maintenance respiration N leaf baseline
-    ! p(37) = Initial CWD pool
-    ! p(38) = CWD turnover fraction
+    ! p(37) = Initial litwood pool
+    ! p(38) = litwood turnover fraction
     ! p(39) = Fine root (gbiomass.m-2) needed to reach 50% of max depth
     ! p(40) = Maximum rooting depth (m)
     ! p(41) = Fraction of field capacity to set soils at
@@ -762,10 +790,13 @@ double precision :: Creturn_canopy,Creturn_investment
         ! CARDAMOM
         Crootcr_part = pars(29)
 
-        ! declare fire constants (labile, foliar, roots, wood, litter)
+        ! Declare combustion efficiency (labile, foliar, roots, wood, litter, soil, woodlitter)
         combust_eff(1) = 0.1d0 ; combust_eff(2) = 0.9d0
-        combust_eff(3) = 0.1d0 ; combust_eff(4) = 0.5d0
-        combust_eff(5) = 0.3d0 ; rfac = 0.5d0
+        combust_eff(3) = 0.1d0 ; combust_eff(4) = 0.1d0
+        combust_eff(5) = 0.5d0 ; combust_eff(6) = 0.01d0
+        combust_eff(7) = 0.5d0
+        ! Resilience factor for non-combusted tissue
+        rfac = 0.5d0
 
     end if ! disturbance ?
 
@@ -781,9 +812,15 @@ double precision :: Creturn_canopy,Creturn_investment
 
     if (.not.allocated(deltat_1)) then
         ! allocate variables dimension which are fixed per site only the once
-        allocate(disturbance_residue_to_litter(nodays),disturbance_residue_to_cwd(nodays), &
-                 disturbance_residue_to_som(nodays),disturbance_loss_from_litter(nodays), &
-                 disturbance_loss_from_cwd(nodays),disturbance_loss_from_som(nodays),&
+        allocate(harvest_residue_to_litter(nodays),harvest_residue_to_som(nodays),         &
+                 harvest_residue_to_litwood(nodays),harvest_loss_litter(nodays),           &
+                 harvest_loss_som(nodays),harvest_loss_litwood(nodays),                    &
+                 harvest_loss_labile(nodays),harvest_loss_foliar(nodays),                  &
+                 harvest_loss_roots(nodays),harvest_loss_wood(nodays),                     &
+                 fire_loss_labile(nodays),fire_loss_foliar(nodays),fire_loss_roots(nodays),&
+                 fire_loss_wood(nodays),fire_loss_litter(nodays),fire_loss_litwood(nodays),&
+                 fire_loss_som(nodays),fire_residue_to_litter(nodays),                     &
+                 fire_residue_to_litwood(nodays),fire_residue_to_som(nodays),              &
                  Cwood_labile_release_coef(nodays),Croot_labile_release_coef(nodays), &
                  deltat_1(nodays),wSWP_time(nodays),gs_demand_supply_ratio(nodays), &
                  gs_total_canopy(nodays),gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
@@ -907,10 +944,20 @@ double precision :: Creturn_canopy,Creturn_investment
     days_per_step =  deltat(1)
     days_per_step_1 =  deltat_1(1)
 
-    ! reset disturbance at the beginning of iteration
-    disturbance_residue_to_litter = 0d0 ; disturbance_loss_from_litter = 0d0
-    disturbance_residue_to_som = 0d0 ; disturbance_loss_from_som = 0d0
-    disturbance_residue_to_cwd = 0d0 ; disturbance_loss_from_cwd = 0d0
+    ! Reset harvest residue
+    harvest_residue_to_litter = 0d0 ; harvest_residue_to_litwood = 0d0
+    harvest_residue_to_som = 0d0
+    ! Reset harvest loss
+    harvest_loss_labile = 0d0       ; harvest_loss_foliar = 0d0
+    harvest_loss_roots = 0d0        ; harvest_loss_wood = 0d0
+    harvest_loss_litter = 0d0       ; harvest_loss_som = 0d0
+    harvest_loss_litwood = 0d0
+    ! Reset fire loss
+    fire_loss_labile = 0d0 ; fire_loss_foliar = 0d0 ; fire_loss_roots = 0d0
+    fire_loss_wood = 0d0   ; fire_loss_litter = 0d0 ; fire_loss_litwood = 0d0
+    fire_loss_som = 0d0
+    ! Reset fire residue
+    fire_residue_to_litter = 0d0 ; fire_residue_to_litwood = 0d0 ; fire_residue_to_som = 0d0
 
     ! Initialise root reach based on initial coarse root biomass
     fine_root_biomass = max(min_root,POOLS(1,3)*2d0)
@@ -1188,7 +1235,7 @@ double precision :: Creturn_canopy,Creturn_investment
        ! respiration heterotrophic som
        FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9)*fSm)**deltat(n))*deltat_1(n)
 
-       ! respiration heterotrophic cwd ; decomposition of CWD to som
+       ! respiration heterotrophic litwood ; decomposition of litwood to som
        tmp = POOLS(n,7)*(1d0-(1d0-FLUXES(n,2)*pars(38)*fSm)**deltat(n))*deltat_1(n)
        FLUXES(n,4) = tmp * (1d0-pars(1)) ; FLUXES(n,20) = tmp * pars(1)
 
@@ -1304,13 +1351,12 @@ double precision :: Creturn_canopy,Creturn_investment
                ! tissues
                labile_loss = POOLS(n+1,1) * ((roots_loss+wood_loss) / (POOLS(n+1,3)+POOLS(n+1,4)))
 
-               ! For output / EDC updates
-               if (met(8,n) <= 0.99d0) then
-                   FLUXES(n,22) = labile_loss * deltat_1(n)
-                   FLUXES(n,23) = foliar_loss * deltat_1(n)
-                   FLUXES(n,24) = roots_loss * deltat_1(n)
-                   FLUXES(n,25) = wood_loss * deltat_1(n)
-               endif
+               ! For output / EDC updates, convert to daily rate for EDC consistency
+               harvest_loss_labile(n) = labile_loss * deltat_1(n)
+               harvest_loss_foliar(n) = foliar_loss * deltat_1(n)
+               harvest_loss_roots(n) = roots_loss * deltat_1(n)
+               harvest_loss_wood(n) = wood_loss * deltat_1(n)
+
                ! Transfer fraction of harvest waste to litter or som pools
                ! easy pools first
                labile_residue = labile_loss*labile_frac_res
@@ -1339,19 +1385,19 @@ double precision :: Creturn_canopy,Creturn_investment
 
                ! Some variable needed for the EDCs
                ! reallocation fluxes for the residues
-               disturbance_residue_to_litter(n) = labile_residue+foliar_residue+roots_residue
-               disturbance_loss_from_litter(n)  = 0d0
-               disturbance_residue_to_cwd(n)    = wood_residue
-               disturbance_loss_from_cwd(n)     = 0d0
-               disturbance_residue_to_som(n)    = 0d0
-               disturbance_loss_from_som(n)     = soil_loss_with_roots
+               harvest_residue_to_litter(n)  = labile_residue+foliar_residue+roots_residue
+               harvest_loss_litter(n)        = 0d0
+               harvest_residue_to_litwood(n) = wood_residue
+               harvest_loss_litwood(n)       = 0d0
+               harvest_residue_to_som(n)     = 0d0
+               harvest_loss_som(n)           = soil_loss_with_roots
                ! Convert all to rates to be consistent with the FLUXES in EDCs
-               disturbance_residue_to_litter(n) = disturbance_residue_to_litter(n) * deltat_1(n)
-               disturbance_loss_from_litter(n)  = disturbance_loss_from_litter(n) * deltat_1(n)
-               disturbance_residue_to_cwd(n)    = disturbance_residue_to_cwd(n) * deltat_1(n)
-               disturbance_loss_from_cwd(n)     = disturbance_loss_from_cwd(n) * deltat_1(n)
-               disturbance_residue_to_som(n)    = disturbance_residue_to_som(n) * deltat_1(n)
-               disturbance_loss_from_som(n)     = disturbance_loss_from_som(n) * deltat_1(n)
+               harvest_residue_to_litter(n)  = harvest_residue_to_litter(n) * deltat_1(n)
+               harvest_loss_litter(n)        = harvest_loss_litter(n) * deltat_1(n)
+               harvest_residue_to_litwood(n) = harvest_residue_to_litwood(n) * deltat_1(n)
+               harvest_loss_litwood(n)       = harvest_loss_litwood(n) * deltat_1(n)
+               harvest_residue_to_som(n)     = harvest_residue_to_som(n) * deltat_1(n)
+               harvest_loss_som(n)           = harvest_loss_som(n) * deltat_1(n)
                ! estimate total C extraction
                ! NOTE: this calculation format is to prevent precision error in calculation
                FLUXES(n,21) = wood_loss + labile_loss + foliar_loss + roots_loss
@@ -1397,38 +1443,49 @@ double precision :: Creturn_canopy,Creturn_investment
 
            if (burnt_area > 0d0) then
 
-               !/*first fluxes*/
-               !/*LABILE*/
+               ! Calculate combusted flux and non-combusted turnover
+               ! Labile
                CFF(1) = POOLS(n+1,1)*burnt_area*combust_eff(1)
                NCFF(1) = POOLS(n+1,1)*burnt_area*(1d0-combust_eff(1))*(1d0-rfac)
-               !/*foliar*/
+               ! Foliage
                CFF(2) = POOLS(n+1,2)*burnt_area*combust_eff(2)
                NCFF(2) = POOLS(n+1,2)*burnt_area*(1d0-combust_eff(2))*(1d0-rfac)
-               !/*root*/
+               ! Fine root
                CFF(3) = 0d0 !POOLS(n+1,3)*burnt_area*combust_eff(3)
                NCFF(3) = 0d0 !POOLS(n+1,3)*burnt_area*(1d0-combust_eff(3))*(1d0-rfac)
-               !/*wood*/
+               ! Wood (above + below)
                CFF(4) = POOLS(n+1,4)*burnt_area*combust_eff(4)
                NCFF(4) = POOLS(n+1,4)*burnt_area*(1d0-combust_eff(4))*(1d0-rfac)
-               !/*litter*/
+               ! Litter (foliar + fine root)
                CFF(5) = POOLS(n+1,5)*burnt_area*combust_eff(5)
                NCFF(5) = POOLS(n+1,5)*burnt_area*(1d0-combust_eff(5))*(1d0-rfac)
-               ! CWD; assume same as live wood (should be improved later)
-               CFF(7) = POOLS(n+1,7)*burnt_area*combust_eff(4)
-               NCFF(7) = POOLS(n+1,7)*burnt_area*(1d0-combust_eff(4))*(1d0-rfac)
-               !/*fires as daily averages to comply with units*/
-               FLUXES(n,17) = (CFF(1)+CFF(2)+CFF(3)+CFF(4)+CFF(5)) * deltat_1(n)
-               !              !/*update net exchangep*/
-               !              NEE_out(n) = NEE_out(n)+FLUXES(n,17)
-               ! determine the as daily rate impact on live tissues for use in EDC and
-               ! MTT calculations
-               FLUXES(n,22) = FLUXES(n,22) + ((CFF(1) + NCFF(1)) * deltat_1(n)) ! labile
-               FLUXES(n,23) = FLUXES(n,23) + ((CFF(2) + NCFF(2)) * deltat_1(n)) ! foliar
-               FLUXES(n,24) = FLUXES(n,24) + ((CFF(3) + NCFF(3)) * deltat_1(n)) ! root
-               FLUXES(n,25) = FLUXES(n,25) + ((CFF(4) + NCFF(4)) * deltat_1(n)) ! wood
+               ! Soil - can't have a NCFF for soil as there is no where for it to go
+               CFF(6) = POOLS(n+1,6)*burnt_area*combust_eff(6)
+               !NCFF(6) = POOLS(n+1,6)*burnt_area*(1d0-combust_eff(6))*(1d0-rfac)
+               ! Wood litter
+               CFF(7) = POOLS(n+1,7)*burnt_area*combust_eff(7)
+               NCFF(7) = POOLS(n+1,7)*burnt_area*(1d0-combust_eff(7))*(1d0-rfac)
+               ! Fire flux (gC/m2/day)
+               FLUXES(n,17)=(CFF(1)+CFF(2)+CFF(3)+CFF(4)+CFF(5)+CFF(6)+CFF(7)) * deltat_1(n)
 
-               !// update pools
-               !/*Adding all fire pool transfers here*/
+               ! Determine the daily rate impact on live tissues for use in EDC and
+               ! MTT calculations
+               fire_loss_labile(n) = (CFF(1) + NCFF(1)) * deltat_1(n) ! labile
+               fire_loss_foliar(n) = (CFF(2) + NCFF(2)) * deltat_1(n) ! foliar
+               fire_loss_roots(n)  = (CFF(3) + NCFF(3)) * deltat_1(n) ! root
+               fire_loss_wood(n)   = (CFF(4) + NCFF(4)) * deltat_1(n) ! wood
+
+               ! Determine the daily rate impact on dead organic matter for use in EDCs and MTT calculation
+               ! Losses
+               fire_loss_litter(n)  = (CFF(5) + NCFF(5)) * deltat_1(n)
+               fire_loss_som(n)     =  CFF(6) * deltat_1(n)
+               fire_loss_litwood(n) = (CFF(7) + NCFF(7)) * deltat_1(n)
+               ! Residue redistribution
+               fire_residue_to_litter(n) = (NCFF(1)+NCFF(2)+NCFF(3)) * deltat_1(n)
+               fire_residue_to_som(n)    = (NCFF(4)+NCFF(5)+NCFF(7)) * deltat_1(n)
+               fire_residue_to_litwood(n)=  NCFF(4) * deltat_1(n)
+
+               ! Update pools
                POOLS(n+1,1) = POOLS(n+1,1)-CFF(1)-NCFF(1)
                POOLS(n+1,2) = POOLS(n+1,2)-CFF(2)-NCFF(2)
                POOLS(n+1,3) = POOLS(n+1,3)-CFF(3)-NCFF(3)
@@ -1439,18 +1496,6 @@ double precision :: Creturn_canopy,Creturn_investment
                ! mass balance check
                where (POOLS(n+1,1:7) < 0d0) POOLS(n+1,1:7) = 0d0
 
-               ! Some variable needed for the EDCs
-               ! Reallocation fluxes for the residues, remember to
-               ! convert to daily rate for consistency with the EDCs
-               ! NOTE: accumulation because fire and removal may occur concurrently...
-               disturbance_residue_to_litter(n) = disturbance_residue_to_litter(n) &
-                                                + ((NCFF(1)+NCFF(2)+NCFF(3)) * deltat_1(n))
-               disturbance_residue_to_som(n)    = disturbance_residue_to_som(n) &
-                                                + ((NCFF(4)+NCFF(5)+NCFF(7)) * deltat_1(n))
-               disturbance_loss_from_litter(n)  = disturbance_loss_from_litter(n) &
-                                                + ((CFF(5) + NCFF(5)) * deltat_1(n))
-               disturbance_loss_from_cwd(n)     = disturbance_loss_from_cwd(n) &
-                                                + ((CFF(7) - NCFF(7)) * deltat_1(n))
            endif ! burn area > 0
 
        endif ! fire activity
@@ -1586,10 +1631,9 @@ double precision :: Creturn_canopy,Creturn_investment
     ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
 
     ! calculate CO2 limited rate of photosynthesis (gC.m-2.day-1)
-    pd = (gc * (co2-ci)) * umol_to_gC
-    ! scale to day light period as this is then consistent with the light
+    ! Then scale to day light period as this is then consistent with the light
     ! capture period (1/24 = 0.04166667)
-    pd = pd * dayl_hours_fraction
+    pd = (gc * (co2-ci)) * umol_to_gC * dayl_hours_fraction
 
     !
     ! Estimate CO2 and light co-limitation
@@ -2335,17 +2379,14 @@ double precision :: Creturn_canopy,Creturn_investment
     ! isothermal longwave balance to net based on soil surface incident shortwave
     ! radiation
 
-    ! declare local variables
-    double precision :: delta_iso
-
     ! Estimate shortwave radiation balance
     call calculate_shortwave_balance
     ! Estimate isothermal long wave radiation balance
     call calculate_longwave_isothermal(meant,meant)
     ! Apply linear correction to soil surface isothermal->net longwave radiation
     ! balance based on absorbed shortwave radiation
-    delta_iso = soil_iso_to_net_coef * (soil_swrad_MJday * 1d6 * dayl_seconds_1) + soil_iso_to_net_const
-    soil_lwrad_Wm2 = soil_lwrad_Wm2 + delta_iso
+    soil_lwrad_Wm2 = soil_lwrad_Wm2 &
+                   + (soil_iso_to_net_coef * (soil_swrad_MJday * 1d6 * dayl_seconds_1) + soil_iso_to_net_const)
 
   end subroutine calculate_radiation_balance
   !
@@ -2866,18 +2907,23 @@ double precision :: Creturn_canopy,Creturn_investment
        ! convert kg.m-2 (or mm) -> Mg.m-2 (or m)
        soil_waterfrac(1:nos_root_layers) = soil_waterfrac(1:nos_root_layers) &
                                          + ((-pot_evap_losses*days_per_step*1d-3) / layer_thickness(1:nos_root_layers))
-       ! reset soil water change variable
-       waterchange = 0d0
+       ! Correct for dew formation; any water above porosity in the top layer is assumed runoff
+       if (soil_waterfrac(1) > porosity(1)) then
+           runoff = ((soil_waterfrac(1)-porosity(1)) * layer_thickness(1) * 1d3)
+           soil_waterfrac(1) = porosity(1)
+       endif
+
        ! determine infiltration from rainfall (kgH2O/m2/day),
        ! if rainfall is probably liquid / soil surface is probably not frozen
        if (rainfall_in > 0d0) then
+           ! reset soil water change variable
+           waterchange = 0d0
            call infiltrate(rainfall_in * days_per_step)
            ! update soil profiles. Convert fraction into depth specific values
            ! (rather than m3/m3) then update fluxes
            soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
                                              + (waterchange(1:nos_soil_layers) / layer_thickness(1:nos_soil_layers))
-           ! reset soil water change variable
-           waterchange = 0d0
+           ! soil waterchange variable reset in gravitational_drainage()
        endif ! is there any rain to infiltrate?
 
        ! determine drainage flux between surface -> sub surface
@@ -2905,7 +2951,7 @@ double precision :: Creturn_canopy,Creturn_investment
           !       are drawing from the same water supply. Also 0.999 below is to allow for precision error...
           avail_flux = soil_waterfrac(1:nos_root_layers) * layer_thickness(1:nos_root_layers) * 1d3
           do a = 1, nos_root_layers ! note: timed comparison between "where" and do loop supports do loop for smaller vectors
-             evaporation_losses(a) = avail_flux(a) * 0.999d0
+             if (evaporation_losses(a) > avail_flux(a)) evaporation_losses(a) = avail_flux(a) * 0.999d0
           end do
 !          where (evaporation_losses > avail_flux) evaporation_losses = avail_flux * 0.999d0
           ! this will update the ET estimate outside of the function
@@ -2916,23 +2962,27 @@ double precision :: Creturn_canopy,Creturn_investment
           ! convert kg.m-2 (or mm) -> Mg.m-2 (or m)
           soil_waterfrac(1:nos_root_layers) = soil_waterfrac(1:nos_root_layers) &
                                             + ((-evaporation_losses(1:nos_root_layers)*1d-3) / layer_thickness(1:nos_root_layers))
+          ! Correct for dew formation; any water above porosity in the top layer is assumed runoff
+          if (soil_waterfrac(1) > porosity(1)) then
+              runoff = runoff + ((soil_waterfrac(1)-porosity(1)) * layer_thickness(1) * 1d3)
+              soil_waterfrac(1) = porosity(1)
+          endif
+
           !!!!!!!!!!
           ! Rainfall infiltration drainage
           !!!!!!!!!!
 
-          ! reset soil water change variable
-          waterchange = 0d0
-
           ! determine infiltration from rainfall (kgH2O/m2/day),
           ! if rainfall is probably liquid / soil surface is probably not frozen
           if (rainfall_in > 0d0) then
+              ! reset soil water change variable
+              waterchange = 0d0
               call infiltrate(rainfall_in)
               ! update soil profiles. Convert fraction into depth specific values
               ! (rather than m3/m3) then update fluxes
               soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
                                                 + (waterchange(1:nos_soil_layers) / layer_thickness(1:nos_soil_layers))
-              ! reset soil water change variable
-              waterchange = 0d0
+              ! soil waterchange variable reset in gravitational_drainage()
           endif ! is there any rain to infiltrate?
 
           !!!!!!!!!!
@@ -3169,24 +3219,24 @@ double precision :: Creturn_canopy,Creturn_investment
            call calculate_soil_conductivity(t,liquid(t),tmp1)
            call calculate_soil_conductivity(t,field_capacity(t),tmp2)
            call calculate_soil_conductivity(t,halfway(t),tmp3)
-           pot_drainage(t) = 0.5d0 * dx(t) * ((tmp1 + tmp2) + 2d0 * tmp3) * seconds_per_day
+           pot_drainage(t) = 0.5d0 * dx(t) * ((tmp1 + tmp2) + 2d0 * tmp3)
        else
            ! We are at field capacity currently even after rainfall has been infiltrated.
            ! Assume that the potential drainage rate is that at field capacity
            call calculate_soil_conductivity(t,field_capacity(t),pot_drainage(t))
-           pot_drainage(t) = pot_drainage(t) * seconds_per_day
        endif ! water above field capacity to flow?
     end do ! soil layers
+    ! Scale potential drainage from per second to per day
+    pot_drainage = pot_drainage * seconds_per_day
 
     ! Integrate drainage over each day until time period has been reached or
     ! each soil layer has reached field capacity
     t = 1
     do while (t < (time_period_days+1) .and. maxval(soil_waterfrac - field_capacity) > vsmall)
 
-       ! estimate liquid content
-       liquid = soil_waterfrac(1:nos_soil_layers) * ( 1d0 - iceprop(1:nos_soil_layers) )
-       ! estimate how much liquid is available to flow
-       avail_to_flow = liquid - field_capacity(1:nos_soil_layers)
+       ! Estimate liquid content and how much is available to flow / drain
+       avail_to_flow = ( soil_waterfrac(1:nos_soil_layers) * (1d0 - iceprop(1:nos_soil_layers)) ) &
+                     - field_capacity(1:nos_soil_layers)
 
        ! ...then from the top down
        do soil_layer = 1, nos_soil_layers

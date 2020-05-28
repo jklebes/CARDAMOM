@@ -446,11 +446,11 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n, nn, nnn, DIAG, no_years, y, PEDC, steps_per_year, steps_per_month, nd, fl
-    double precision :: EQF, etol, no_years_1, infi
+    double precision :: no_years_1, infi, io_start, io_finish!, EQF, etol
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
                                             mean_pools, Fin, Fout, Rm, Rs, &
-                                            Fin_yr1, Fout_yr1
-    double precision, dimension(nofluxes) :: FT, FT_yr1
+                                            Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
+    double precision, dimension(nofluxes) :: FT, FT_yr1, FT_yr2
     double precision :: fauto & ! Fractions of GPP to autotrophic respiration
                        ,ffol  & ! Fraction of GPP to foliage
                        ,flab  & ! Fraction of GPP to labile pool
@@ -458,6 +458,16 @@ module model_likelihood_module
                        ,fwood & ! Fraction of GPP to wood
                        ,fsom  & ! fraction of GPP som under eqilibrium conditions
                        ,flit    ! fraction of GPP to litter under equilibrium conditions
+
+    ! Steady State Attractor:
+    ! Log ratio difference between inputs and outputs of the system.
+    double precision, parameter :: EQF1_5 = log(1.5d0), & ! 10.0 = order magnitude; 2 = double and half
+                                   EQF2 = log(2d0),   & ! 10.0 = order magnitude; 2 = double and half
+                                   EQF5 = log(5d0),   &
+                                   EQF10 = log(10d0), &
+                                   EQF15 = log(15d0), &
+                                   EQF20 = log(20d0), &
+                                    etol = 0.30d0 !0.10d0 !0.05d0
 
     ! update initial values
     DIAG = EDCD%DIAG
@@ -508,10 +518,16 @@ module model_likelihood_module
         EDC2 = 0d0 ; EDCD%PASSFAIL(6) = 0
     end if
 
+    ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
+    ! the empirical phenology but mechanistic hydrology / photosynthesis
+    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_LAI) > 20d0 ) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(7) = 0
+    end if
+
     ! Equilibrium factor (in comparison with initial conditions)
-    EQF = 2d0 ! TLS 06/11/2019 !10d0 ! JFE replaced 10 by 2 - 27/06/2018
+!    EQF = 10d0 ! TLS 06/11/2019 !10d0 ! JFE replaced 10 by 2 - 27/06/2018
     ! Pool exponential decay tolerance
-    etol = 0.30d0 !0.1d0
+!    etol = 0.3d0 !0.1d0
 
     ! first calculate total flux for the whole simulation period
 !    do fl = 1, nofluxes
@@ -520,10 +536,14 @@ module model_likelihood_module
 !            FT(fl) = FT(fl) + M_FLUXES(nd,fl)*deltat(nd)
 !        end do
 !    end do
-    ! First calculate total flux for the whole simulation period
+    ! First calculate total flux for the simulation period
+    io_start = (steps_per_year*2) + 1 ; io_finish = nodays
+    if (no_years < 3) io_start = 1
     do fl = 1, nofluxes
-       FT(fl) = sum(M_FLUXES(1:nodays,fl)*deltat(1:nodays))
+!       FT(fl) = sum(M_FLUXES(1:nodays,fl)*deltat(1:nodays))
+       FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*deltat(io_start:io_finish))
        FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*deltat(1:steps_per_year))
+       FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl)*deltat((steps_per_year+1):(steps_per_year*2)))
     end do
 
     ! get total in and out for each pool
@@ -532,31 +552,43 @@ module model_likelihood_module
     Fout(1) = FT(8)+FT(18)+FT(24)
     Fin_yr1(1)  = FT_yr1(5)
     Fout_yr1(1) = FT_yr1(8)+FT_yr1(18)+FT_yr1(24)
+    Fin_yr2(1)  = FT_yr2(5)
+    Fout_yr2(1) = FT_yr2(8)+FT_yr2(18)+FT_yr2(24)
     ! foliar
     Fin(2)  = FT(4)+FT(8)
     Fout(2) = FT(10)+FT(19)+FT(25)
     Fin_yr1(2)  = FT_yr1(4)+FT_yr1(8)
     Fout_yr1(2) = FT_yr1(10)+FT_yr1(19)+FT_yr1(25)
+    Fin_yr2(2)  = FT_yr2(4)+FT_yr2(8)
+    Fout_yr2(2) = FT_yr2(10)+FT_yr2(19)+FT_yr2(25)
     ! root
     Fin(3)  = FT(6)
     Fout(3) = FT(12)+FT(20)+FT(26)
     Fin_yr1(3)  = FT_yr1(6)
     Fout_yr1(3) = FT_yr1(12)+FT_yr1(20)+FT_yr1(26)
+    Fin_yr2(3)  = FT_yr2(6)
+    Fout_yr2(3) = FT_yr2(12)+FT_yr2(20)+FT_yr2(26)
     ! wood
     Fin(4)  = FT(7)
     Fout(4) = FT(11)+FT(21)+FT(27)
     Fin_yr1(4)  = FT_yr1(7)
     Fout_yr1(4) = FT_yr1(11)+FT_yr1(21)+FT_yr1(27)
+    Fin_yr2(4)  = FT_yr2(7)
+    Fout_yr2(4) = FT_yr2(11)+FT_yr2(21)+FT_yr2(27)
     ! litter
     Fin(5)  = FT(10)+FT(12)+FT(24)+FT(25)+FT(26)
     Fout(5) = FT(13)+FT(15)+FT(22)+FT(28)
     Fin_yr1(5)  = FT_yr1(10)+FT_yr1(12)+FT_yr1(24)+FT_yr1(25)+FT_yr1(26)
     Fout_yr1(5) = FT_yr1(13)+FT_yr1(15)+FT_yr1(22)+FT_yr1(28)
+    Fin_yr2(5)  = FT_yr2(10)+FT_yr2(12)+FT_yr2(24)+FT_yr2(25)+FT_yr2(26)
+    Fout_yr2(5) = FT_yr2(13)+FT_yr2(15)+FT_yr2(22)+FT_yr2(28)
     ! som
     Fin(6)  = FT(11)+FT(15)+FT(27)+FT(28)
     Fout(6) = FT(14)+FT(23)
     Fin_yr1(6)  = FT_yr1(11)+FT_yr1(15)+FT_yr1(27)+FT_yr1(28)
     Fout_yr1(6) = FT_yr1(14)+FT_yr1(23)
+    Fin_yr2(6)  = FT_yr2(11)+FT_yr2(15)+FT_yr2(27)+FT_yr2(28)
+    Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)
 
     ! Iterate through C pools to determine whether they have their ratio of
     ! input and outputs are outside of steady state approximation.
@@ -564,29 +596,64 @@ module model_likelihood_module
 
     ! iterate to check whether Fin/Fout is within EQF limits
 !    Rm = Fin/Fout
-!    Rs = Rm * (jan_mean_pools / jan_first_pools
+!    Rs = Rm * (jan_mean_pools / jan_first_pools)
 !    do n = 1, nopools
 !       ! Restrict rates of increase
-!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Rm)) > log(EQF)) then
+!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Rm(n))) > log(EQF)) then
 !           EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
 !       end if
 !       ! Restrict exponential decay
-!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(Rs-Rm) > etol) then
+!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(Rs(n)-Rm(n)) > etol) then
 !           EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !       end if
 !    end do
 
     ! iterate to check whether Fin/Fout is within EQF limits
-    do n = 1, 6
-       ! Restrict rates of increase
-       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Fin(n)/Fout(n))) > log(EQF)) then
-           EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
-       end if
-       ! Restrict exponential decay
-       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Fin(n)/Fout(n)) - log(Fin_yr1(n)/Fout_yr1(n))) > etol) then
-           EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-       end if
-    end do
+!    do n = 1, nopools
+!       ! Restrict rates of increase
+!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Fin(n)/Fout(n))) > log(EQF)) then
+!           EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+!       end if
+!       ! Restrict exponential decay
+!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Fin(n)/Fout(n)) - log(Fin_yr1(n)/Fout_yr1(n))) > etol) then
+!           EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!       end if
+!    end do
+
+    if (EDC2 == 1 .or. DIAG == 1) then
+
+        ! Living pools
+        do n = 1, 3
+           ! Restrict rates of increase
+           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+               EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+           end if
+           ! Restrict exponential behaviour at initialisation
+           if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
+               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+           end if
+        end do
+        ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
+        n = 4
+        if (abs(log(Fin(n)/Fout(n))) > EQF10) then
+                EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+        end if
+        if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol*2d0) then
+                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+        end if
+        ! Dead pools
+        do n = 5, 6
+           ! Restrict rates of increase
+           if (abs(log(Fin(n)/Fout(n))) > EQF5) then
+               EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+           end if
+           ! Restrict exponential behaviour at initialisation
+           if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
+               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+           end if
+        end do
+
+    end if ! EDC2 == 1 .or. DIAG == 1
 
     !
     ! EDCs done, below are additional fault detection conditions
@@ -893,11 +960,19 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n, dn, no_years, y
-    double precision :: tot_exp, tmp_var, infini
+    double precision :: tot_exp, tmp_var, infini, input, output
     double precision, allocatable :: mean_annual_pools(:)
 
     ! initial value
     likelihood = 0d0 ; infini = 0d0
+
+    ! NBE Log-likelihood
+    if (DATAin%nnbe > 0) then
+       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+                       -DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
+                       /DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe)))**2)
+       likelihood = likelihood-tot_exp
+    endif
 
     ! GPP Log-likelihood
     if (DATAin%ngpp > 0) then
@@ -1061,7 +1136,7 @@ module model_likelihood_module
     ! is actually assessed against an observation
     if (DATAin%otherpriors(1) > -9998) then
         tot_exp = (DATAin%M_POOLS(1,7) * 1d-3) / layer_thickness(1) ! convert mm -> m3/m3
-        likelihood = likelihood-((tot_exp-DATAin%otherpriors(2))/DATAin%otherpriorunc(1))**2
+        likelihood = likelihood-((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
     end if
 
     ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
@@ -1077,7 +1152,10 @@ module model_likelihood_module
     if (DATAin%otherpriors(5) > -9998) then
         ! Estimate the mean annual input to the wood pool (gC.m-2.day-1) and
         ! remove the day-1 by multiplying by residence time (day)
-        tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
+        !tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
+        input = sum(DATAin%M_FLUXES(:,7))
+        output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+DATAin%M_FLUXES(:,25)))
+        tot_exp = (input/dble(DATAin%nodays)) * (output/dble(DATAin%nodays))
         likelihood = likelihood - ((tot_exp - DATAin%otherpriors(5)) / DATAin%otherpriorunc(5))**2
     endif
 
@@ -1113,11 +1191,19 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n, dn, no_years, y
-    double precision :: tot_exp, tmp_var, infini
+    double precision :: tot_exp, tmp_var, infini, input, output
     double precision, allocatable :: mean_annual_pools(:)
 
     ! initial value
     scale_likelihood = 0d0 ; infini = 0d0
+
+    ! NBE Log-likelihood
+    if (DATAin%nnbe > 0) then
+       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+                       -DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
+                       /DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe)))**2)
+       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nnbe))
+    endif
 
     ! GPP Log-likelihood
     if (DATAin%ngpp > 0) then
@@ -1281,12 +1367,12 @@ module model_likelihood_module
     ! is actually assessed against an observation
     if (DATAin%otherpriors(1) > -9998) then
         tot_exp = (DATAin%M_POOLS(1,7) * 1d-3) / layer_thickness(1) ! convert mm -> m3/m3
-        scale_likelihood = scale_likelihood-((tot_exp-DATAin%otherpriors(2))/DATAin%otherpriorunc(1))**2
+        scale_likelihood = scale_likelihood-((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
     end if
 
     ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation
     if (DATAin%otherpriors(4) > -9998) then
-        tot_exp = sum(DATAin%M_FLUXES(:,19)) / sum(DATAin%MET(7,:) * 86400d0)
+        tot_exp = sum(DATAin%M_FLUXES(:,29)) / sum(DATAin%MET(7,:) * 86400d0)
         scale_likelihood = scale_likelihood-((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
     end if
 
@@ -1296,7 +1382,10 @@ module model_likelihood_module
     if (DATAin%otherpriors(5) > -9998) then
         ! Estimate the mean annual input to the wood pool (gC.m-2.day-1) and
         ! remove the day-1 by multiplying by residence time (day)
-        tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
+        !tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
+        input = sum(DATAin%M_FLUXES(:,7))
+        output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+DATAin%M_FLUXES(:,25)))
+        tot_exp = (input/dble(DATAin%nodays)) * (output/dble(DATAin%nodays))
         scale_likelihood = scale_likelihood - ((tot_exp - DATAin%otherpriors(5)) / DATAin%otherpriorunc(5))**2
     endif
 

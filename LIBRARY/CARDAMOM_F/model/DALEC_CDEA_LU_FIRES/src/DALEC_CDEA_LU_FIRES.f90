@@ -243,7 +243,7 @@ contains
 
       ! estimate multiple use variable
       doy = met(6,n)-(deltat(n)*0.5d0) ! doy
-!print*,doy,met(6,n),deltat(n)
+
       ! load next met / lai values for ACM
       gpppars(1) = lai(n)
       gpppars(2) = met(3,n) ! max temp

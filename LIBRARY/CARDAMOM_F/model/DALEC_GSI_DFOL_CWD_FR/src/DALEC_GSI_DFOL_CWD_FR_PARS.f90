@@ -145,8 +145,8 @@ module MODEL_PARAMETERS
        PI%parmax(34) = -1d-4
 
        ! Turnover rate for CWD
-       PI%parmin(35) = 0.000009d0 ! 304 years at 0oC
-       PI%parmax(35) = 0.001d0    !   2.74 years at 0oC
+       PI%parmin(35) = 1.368925d-05 ! 200.00 years at 0oC
+       PI%parmax(35) = 0.001d0      !   2.74 years at 0oC
 
        ! Optimum nitrogen use efficiency (gC/gN per m2 at optimum temperature)
        ! Derived from Vcmax reported in Wullschleger (1993), Journal of

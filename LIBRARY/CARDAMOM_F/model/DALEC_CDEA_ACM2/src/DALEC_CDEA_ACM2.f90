@@ -387,7 +387,7 @@ metabolic_limited_photosynthesis, &
     cf(3) = 0.1d0         ! roots combustion efficiency
     cf(4) = 0.1d0         ! wood combustion efficiency
     cf(5) = 0.5d0         ! litter combustion efficiency
-    cf(6) = 0.01d0        ! som combustion efficency
+    cf(6) = 0.01d0        ! som combustion efficiency
     rfac = 0.5d0          ! resilience factor
 
     !
@@ -540,7 +540,6 @@ metabolic_limited_photosynthesis, &
        POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
        ! som pool
        POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)-FLUXES(n,14)+FLUXES(n,11))*deltat(n)
-
 
        ! JFE added 4 May 2018 - remove biomass if necessary
        if (met(8,n) > 0d0) then
@@ -752,10 +751,9 @@ metabolic_limited_photosynthesis, &
     ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
 
     ! calculate CO2 limited rate of photosynthesis (gC.m-2.day-1)
-    pd = (gc * (co2-ci)) * umol_to_gC
-    ! scale to day light period as this is then consistent with the light
+    ! Then scale to day light period as this is then consistent with the light
     ! capture period (1/24 = 0.04166667)
-    pd = pd * dayl_hours_fraction
+    pd = (gc * (co2-ci)) * umol_to_gC * dayl_hours_fraction
 
     !
     ! Estimate CO2 and light co-limitation
@@ -1267,17 +1265,14 @@ metabolic_limited_photosynthesis, &
     ! isothermal longwave balance to net based on soil surface incident shortwave
     ! radiation
 
-    ! declare local variables
-    double precision :: delta_iso
-
     ! Estimate shortwave radiation balance
     call calculate_shortwave_balance
     ! Estimate isothermal long wave radiation balance
     call calculate_longwave_isothermal(meant,meant)
     ! Apply linear correction to soil surface isothermal->net longwave radiation
     ! balance based on absorbed shortwave radiation
-!    delta_iso = soil_iso_to_net_coef * (soil_swrad_MJday * 1d6 * dayl_seconds_1) + soil_iso_to_net_const
-!    soil_lwrad_Wm2 = soil_lwrad_Wm2 + delta_iso
+!    soil_lwrad_Wm2 = soil_lwrad_Wm2 &
+!                   + (soil_iso_to_net_coef * (soil_swrad_MJday * 1d6 * dayl_seconds_1) + soil_iso_to_net_const)
 
   end subroutine calculate_radiation_balance
   !

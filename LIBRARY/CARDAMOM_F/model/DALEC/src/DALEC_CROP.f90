@@ -287,7 +287,7 @@ contains
     Rtot = 1d0 ! totaly hydraulic resistance ! p12 from ACM recal (updated)
 
     ! plus ones being calibrated
-    root_k = pars(36) ; max_depth = pars(37)
+    !root_k = pars(36) ; max_depth = pars(37)
 
     ! length of time step in hours..
     ts_length = ((sum(deltat)/dble(nodays)) * sec_in_day) / sec_in_hour

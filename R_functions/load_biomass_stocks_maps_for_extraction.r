@@ -239,7 +239,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                  } # extract lat / long...just the once
 
                  # Similarly break apart the raster and re-construct into the correct orientation
-                 biomass = array(as.vecot(biomass), dim=c(dims[2],dims[1]))
+                 biomass = array(as.vector(biomass), dim=c(dims[2],dims[1]))
                  biomass_uncertainty = array(as.vector(biomass_uncertainty), dim=c(dims[2],dims[1]))
                  biomass = biomass[,dim(biomass)[2]:1]
                  biomass_uncertainty = biomass_uncertainty[,dim(biomass_uncertainty)[2]:1]
@@ -277,8 +277,8 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         } # looping available years
 
         # Convert MgC/ha -> Mg/ha needed for Saatchi et al (2011)
-        biomass_gCm2 = biomass_gCm2 * 2.083333
-        biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 * 2.083333
+        biomass_gCm2 = biomass_gCm2 * 1e-2 * 2.083333 
+        biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 * 1e-2 * 2.083333
         # Use allometry to estimate below ground biomass stock and
         # combined with the above ground (Mg/ha) to give a total woody biomass estimate
         # Saatchi et al., (2011), PNAS, 108, 9899-9904, https://www.pnas.org/content/108/24/9899
