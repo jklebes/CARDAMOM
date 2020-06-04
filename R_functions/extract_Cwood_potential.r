@@ -10,14 +10,17 @@ extract_Cwood_potential<- function(timestep_days,spatial_type,resolution,grid_ty
 
    # work out number of pixels to average over
    if (spatial_type == "grid") {
+       # resolution of the product
+       product_res = abs(Cwood_potential_all$lat[1,2]-Cwood_potential_all$lat[1,1])+abs(Cwood_potential_all$long[2,1]-Cwood_potential_all$long[1,1])
+       product_res = product_res * 0.5 # NOTE: averaging needed for line above
        if (grid_type == "wgs84") {
-           # resolution of the product
-           product_res = abs(Cwood_potential_all$lat[1,2]-Cwood_potential_all$lat[1,1])+abs(Cwood_potential_all$long[2,1]-Cwood_potential_all$long[1,1])
-           product_res = product_res * 0.5
            # radius is ceiling of the ratio of the product vs analysis ratio
-           radius = ceiling(resolution / product_res)
+           radius = round(resolution / product_res, digits=0)
         } else if (grid_type == "UK") {
-           radius = max(0,floor(1*resolution*1e-3*0.5))
+           # Estimate radius for UK grid assuming radius is determine by the longitude size
+           # 6371e3 = mean earth radius (m)
+           radius = round(rad2deg(sqrt((resolution / 6371e3**2))) / product_res, digits=0)
+           #radius = max(0,floor(1*resolution*1e-3*0.5))
         } else {
            stop("have not specified the grid used in this analysis")
         }

@@ -33,7 +33,7 @@ generate_parameter_maps<-function(PROJECT) {
       # Parameter information
       grid_parameters$parameters = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,(max(PROJECT$model$nopars)+1),length(num_quantiles)))
       grid_parameters$parameters_converged=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)+1))
-      # Derived Ecosystem traits
+      # Derived Ecosystem traits (time invarient)
       grid_parameters$NPP_foliar_fraction=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
       grid_parameters$NPP_wood_fraction=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
       grid_parameters$NPP_root_fraction=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
@@ -47,6 +47,12 @@ generate_parameter_maps<-function(PROJECT) {
       grid_parameters$SS_root_gCm2=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
       grid_parameters$SS_DeadOrg_gCm2=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
       grid_parameters$SS_som_gCm2=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
+      # Deried Ecoystem traits (time varient)
+      grid_parameters$aMTT_foliar_years=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_years,length(num_quantiles)))
+      grid_parameters$aMTT_wood_years=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_years,length(num_quantiles)))
+      grid_parameters$aMTT_root_years=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_years,length(num_quantiles)))
+      grid_parameters$aMTT_som_years=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_years,length(num_quantiles)))
+      grid_parameters$aMTT_DeadOrg_years=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_years,length(num_quantiles)))
       # Model Driver information
       grid_parameters$mean_temperature_C=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
       grid_parameters$mean_vpd_Pa=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
@@ -102,13 +108,20 @@ generate_parameter_maps<-function(PROJECT) {
                grid_parameters$NPP_foliar_fraction[slot_i,slot_j,]=quantile(aNPP[,1], prob=num_quantiles,na.rm=TRUE)
                grid_parameters$NPP_wood_fraction[slot_i,slot_j,]=quantile(aNPP[,2], prob=num_quantiles,na.rm=TRUE)
                grid_parameters$NPP_root_fraction[slot_i,slot_j,]=quantile(aNPP[,3], prob=num_quantiles,na.rm=TRUE)
-               # calculate residence time variables (fol,root,wood,lit+litwood,som)
+               # calculate mean residence time variables (fol,root,wood,lit+litwood,som)
                # NOTE: that depending on the model DeadOrg may be litter or litter + cwd
                grid_parameters$MTT_foliar_years[slot_i,slot_j,]=quantile(MTT[,1], prob=num_quantiles,na.rm=TRUE)
                grid_parameters$MTT_root_years[slot_i,slot_j,]=quantile(MTT[,2], prob=num_quantiles,na.rm=TRUE)
                grid_parameters$MTT_wood_years[slot_i,slot_j,]=quantile(MTT[,3], prob=num_quantiles,na.rm=TRUE)
                grid_parameters$MTT_DeadOrg_years[slot_i,slot_j,]=quantile(MTT[,4], prob=num_quantiles,na.rm=TRUE)
                grid_parameters$MTT_som_years[slot_i,slot_j,]=quantile(MTT[,5], prob=num_quantiles,na.rm=TRUE)
+               # calculate annual residence time variables (fol,root,wood,lit+litwood,som)
+               # NOTE: that depending on the model DeadOrg may be litter or litter + cwd
+               grid_parameters$aMTT_foliar_years[slot_i,slot_j,,]=t(apply(aMTT[,1,],2,quantile, prob=num_quantiles,na.rm=TRUE))
+               grid_parameters$aMTT_root_years[slot_i,slot_j,,]=t(apply(aMTT[,2,],2,quantile, prob=num_quantiles,na.rm=TRUE))
+               grid_parameters$aMTT_wood_years[slot_i,slot_j,,]=t(apply(aMTT[,3,],2,quantile, prob=num_quantiles,na.rm=TRUE))
+               grid_parameters$aMTT_DeadOrg_years[slot_i,slot_j,,]=t(apply(aMTT[,4,],2,quantile, prob=num_quantiles,na.rm=TRUE))
+               grid_parameters$aMTT_som_years[slot_i,slot_j,,]=t(apply(aMTT[,5,],2,quantile, prob=num_quantiles,na.rm=TRUE))
                # Calculate C stock steady states, as function of natural, fire and biomass extraction
                grid_parameters$SS_foliar_gCm2[slot_i,slot_j,]=quantile(SS[,1], prob=num_quantiles,na.rm=TRUE)
                grid_parameters$SS_root_gCm2[slot_i,slot_j,]=quantile(SS[,2], prob=num_quantiles,na.rm=TRUE)

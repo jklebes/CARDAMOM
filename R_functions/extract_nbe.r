@@ -13,15 +13,18 @@ extract_nbe<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in
 
   # work out number of pixels to average over
   if (spatial_type == "grid") {
+      # resolution of the product
+      product_res = abs(nbe_all$lat[1,2]-nbe_all$lat[1,1])+abs(nbe_all$long[2,1]-nbe_all$long[1,1])
+      product_res = product_res * 0.5 # NOTE: averaging needed for line above
       if (grid_type == "wgs84") {
-          # resolution of the product
-          product_res = abs(nbe_all$lat[1,2]-nbe_all$lat[1,1])+abs(nbe_all$long[2,1]-nbe_all$long[1,1])
-          product_res = (product_res * 0.5)
           # radius is ceiling of the ratio of the product vs analysis ratio
-          radius = ceiling(resolution / product_res)
+          radius = round(resolution / product_res, digits=0)
           max_radius = radius+4
       } else if (grid_type == "UK") {
-          radius = max(0,floor(1*resolution*1e-3*0.5))
+          # Estimate radius for UK grid assuming radius is determine by the longitude size
+          # 6371e3 = mean earth radius (m)
+          radius = round(rad2deg(sqrt((resolution / 6371e3**2))) / product_res, digits=0)
+          #radius = max(0,floor(1*resolution*1e-3*0.5))
           max_radius = radius+4
       } else {
           stop("have not specified the grid used in this analysis")
@@ -121,4 +124,3 @@ extract_nbe<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in
   return(output)
 
 } # end of function
-

@@ -194,8 +194,8 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         # Create the full file paths to both 2007 and 2013 Total Biomass estimates
         input_file = paste(path_to_Cwood,"Cagb_2007_gCm2.tif",sep="")
         input_file = append(input_file,paste(path_to_Cwood,"Cagb_2013_gCm2.tif",sep=""))
-        input_file_uncertainty = paste(path_to_Cwood,"Cagb_uncertainty_2007_gCm2.tif",sep="")
-        input_file_uncertainty = append(input_file,paste(path_to_Cwood,"Cagb_uncertainty_2013_gCm2.tif",sep=""))
+        input_file_uncertainty = paste(path_to_Cwood,"Cagb_2007_uncertainty_gCm2.tif",sep="")
+        input_file_uncertainty = append(input_file_uncertainty,paste(path_to_Cwood,"Cagb_2013_uncertainty_gCm2.tif",sep=""))
         years_with_obs = c(2007,2013)
 
         # Loop through each year and extract if appropriate
@@ -277,7 +277,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         } # looping available years
 
         # Convert MgC/ha -> Mg/ha needed for Saatchi et al (2011)
-        biomass_gCm2 = biomass_gCm2 * 1e-2 * 2.083333 
+        biomass_gCm2 = biomass_gCm2 * 1e-2 * 2.083333
         biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 * 1e-2 * 2.083333
         # Use allometry to estimate below ground biomass stock and
         # combined with the above ground (Mg/ha) to give a total woody biomass estimate

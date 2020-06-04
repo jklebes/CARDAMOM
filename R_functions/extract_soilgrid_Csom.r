@@ -4,21 +4,24 @@ extract_soilgrid_Csom<-function(spatial_type,resolution,grid_type,latlon_wanted,
   # extract information on soil C content from soil grids database
 
   print(paste("SoilGrids Csom data extracted for current location ",Sys.time(),sep=""))
- 
+
   # find desired lat / long location within the soilgrid database
   output = closest2d(1,Csom_all$lat,Csom_all$long,latlon_wanted[1],latlon_wanted[2],2)
   i1 = unlist(output)[1] ; j1 = unlist(output)[2]
 
   # work out number of pixels to average over
   if (spatial_type == "grid") {
+      # resolution of the product
+      product_res = abs(Csom_all$lat[1,2]-Csom_all$lat[1,1])+abs(Csom_all$long[2,1]-Csom_all$long[1,1])
+      product_res = product_res * 0.5 # NOTE: averaging needed for line above
       if (grid_type == "wgs84") {
-          # resolution of the product
-          product_res = abs(Csom_all$lat[1,2]-Csom_all$lat[1,1])+abs(Csom_all$long[2,1]-Csom_all$long[1,1])
-          product_res = product_res * 0.5
           # radius is ceiling of the ratio of the product vs analysis ratio
-          radius = ceiling(resolution / product_res)
+          radius = round(resolution / product_res, digits=0)
       } else if (grid_type == "UK") {
-          radius = max(0,floor(1*resolution*1e-3*0.5))
+          # Estimate radius for UK grid assuming radius is determine by the longitude size
+          # 6371e3 = mean earth radius (m)
+          radius = round(rad2deg(sqrt((resolution / 6371e3**2))) / product_res, digits=0)
+          #radius = max(0,floor(1*resolution*1e-3*0.5))
       } else {
           stop("have not specified the grid used in this analysis")
       }
@@ -38,8 +41,7 @@ extract_soilgrid_Csom<-function(spatial_type,resolution,grid_type,latlon_wanted,
     if (is.na(Csom) | Csom < 0) {radius = radius+1 ; answer = NA} else {answer = 1}
   }
 
-  # retun back to the user 
+  # retun back to the user
   return(list(Csom_initial = Csom, Csom_initial_unc = Csom_unc))
 
 } # extract_soilgrid_Csom
-

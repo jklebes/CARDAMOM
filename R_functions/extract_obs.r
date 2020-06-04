@@ -418,6 +418,15 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
             Cwood_stock = rep(-9999, length(timestep_days))
             Cwood_stock_unc = rep(-9999, length(timestep_days))
         }
+
+        # GlobBIOMASS / ESA_CCI Biomass maps, there is debate as to whether they can be considered as part of a time series
+        # Therefore for the moment we should consider these to be separate. If our analysis covers both time periods we will
+        # use the first only only as the 2010 appears to be better than the 2017 maps (at least over the UK)
+        if (Cwood_stock_source == "GlobBIOMASS" & length(Cwood_stock_all$place_obs_in_step) > 1) {
+            # We have more than 1 time step with information, therefore we will mask out the the second one
+            Cwood_stock[Cwood_stock_all$place_obs_in_step[2]] = -9999
+            Cwood_stock_unc[Cwood_stock_all$place_obs_in_step[2]] = -9999
+        }
         # INPE Map is a merge of two separate ones, therefore it is a bad idea to have two time steps,
         # one from each map as these data are inconsistent.
         # Therefore, check whether we have two data points and take an average + average location
@@ -700,7 +709,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     return(list(LAT = latlon_wanted[1], LAI = lai, LAI_unc = lai_unc, GPP = GPP, GPP_unc = GPP_unc
       ,Evap = Evap, Evap_unc = Evap_unc, NEE = NEE, NEE_unc = NEE_unc, Reco = Reco, Reco_unc = Reco_unc
       ,woodinc = woodinc, woodinc_unc = woodinc_unc, Cfol_stock = Cfol_stock, Cfol_stock_unc = Cfol_stock_unc
-      ,Cwood_stock = Cwood_stock,Cwood_stock_unc = Cwood_stock_unc, Cagb_stock=Cagb_stock, Cagb_stock_unc = Cagb_stock_unc
+      ,Cwood_stock = Cwood_stock, Cwood_stock_unc = Cwood_stock_unc, Cagb_stock=Cagb_stock, Cagb_stock_unc = Cagb_stock_unc
       ,Croots_stock = Croots_stock, Croots_stock_unc = Croots_stock_unc, Clit_stock = Clit_stock, Clit_stock_unc = Clit_stock_unc
       ,Csom_stock = Csom_stock, Csom_stock_unc = Csom_stock_unc, Ccoarseroot_stock = Ccoarseroot_stock
       ,Ccoarseroot_stock_unc = Ccoarseroot_stock_unc, Cfolmax_stock = Cfolmax_stock, Cfolmax_stock_unc = Cfolmax_stock_unc
@@ -714,4 +723,4 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
       ,Cwood_potential = Cwood_potential, Cwood_potential_unc = Cwood_potential_unc))
 
 
-    }
+    } # end of function

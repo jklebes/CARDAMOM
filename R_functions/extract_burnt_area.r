@@ -4,27 +4,31 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
 
 	print(paste("Beginning burned fraction data extraction for current location ",Sys.time(),sep=""))
 	# find the nearest location
-        if (length(dim(burnt_all$long)) == 2) {
-            output = closest2d(1,burnt_all$lat,burnt_all$long,latlon_in[1],latlon_in[2],2)
-        } else {
-            output = closest2d(1,burnt_all$lat,burnt_all$long,latlon_in[1],latlon_in[2],3)
-        }
+  if (length(dim(burnt_all$long)) == 2) {
+      output = closest2d(1,burnt_all$lat,burnt_all$long,latlon_in[1],latlon_in[2],2)
+  } else {
+      output = closest2d(1,burnt_all$lat,burnt_all$long,latlon_in[1],latlon_in[2],3)
+  }
 	#i1=unlist(output)[2] ; j1=unlist(output)[1]
 	i1 = unlist(output)[1] ; j1=unlist(output)[2]
 
 	# work out number of pixels to average over
 	if (spatial_type == "grid") {
+      # resolution of the product
+      product_res = abs(burnt_all$lat[2]-burnt_all$lat[1])+abs(burnt_all$long[2]-burnt_all$long[1])
+      product_res = product_res * 0.5 # NOTE: averaging needed for line above
 	    if (grid_type == "wgs84") {
-		# resolution of the product
-		product_res = abs(burnt_all$lat[2]-burnt_all$lat[1])+abs(burnt_all$long[2]-burnt_all$long[1])
-		# radius is ceiling of the ratio of the product vs analysis ratio
-		radius = ceiling((resolution / product_res)*0.5)
-		max_radius = radius+4
+          # radius is ceiling of the ratio of the product vs analysis ratio
+          radius = round(resolution / product_res, digits=0)
+          max_radius = radius+4
 	    } else if (grid_type == "UK") {
-		radius = max(0,floor(1*resolution*1e-3*0.5))
-		max_radius = radius+4
+          # Estimate radius for UK grid assuming radius is determine by the longitude size
+          # 6371e3 = mean earth radius (m)
+          radius = round(rad2deg(sqrt((resolution / 6371e3**2))) / product_res, digits=0)
+          #radius = max(0,floor(1*resolution*1e-3*0.5))
+          max_radius = radius+4
 	    } else {
-		stop("have not specified the grid used in this analysis")
+          stop("have not specified the grid used in this analysis")
 	    }
 	} else {
 	    radius=0
@@ -37,7 +41,7 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
 	for (n in seq(1, dim(burnt_all$burnt_area)[3])) {burnt_area[n] = mean(burnt_all$burnt_area[average_i,average_j,n], na.rm=TRUE)} #  for loop
 
 	# convert missing data back to -9999
-	#burnt_area[which(is.na(burnt_area))]=-9999.0 
+	#burnt_area[which(is.na(burnt_area))]=-9999.0
 	# next work out how many days we should have in the year
 	doy_out=0
 	for (i in seq(1, length(years_to_do))) {
@@ -66,7 +70,7 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
 	# declare output variable
 	burnt_area_out=array(0, dim=length(doy_out))
 	# now line up the obs days with all days
-	b=1 ; i=1 ; a=1 ; start_year=as.numeric(years_to_do[1]) 
+	b=1 ; i=1 ; a=1 ; start_year=as.numeric(years_to_do[1])
 	while (b <= length(burnt_all$doy_obs)) {
 	    # if we are in a year which is missing then we do not allow consideration of DOY
 	    if (start_year != burnt_all$missing_years[a]) {
@@ -80,7 +84,7 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
 	    if (i != 1 & doy_out[i-1] > doy_out[i]) {
 		# and if we have just been in a missing year we need to count on the missing years vector to
 		if (start_year == burnt_all$missing_years[a]) {a=min(length(burnt_all$missing_years),a+1)}
-		start_year = start_year+1 
+		start_year = start_year+1
 	    } # end if doy_out[i] == 1
 	} # end while condition
 
@@ -114,4 +118,3 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
 	return(burnt_area=burnt_area_out)
 
 } # end of function
-

@@ -321,11 +321,12 @@ contains
       ! JFE added 4 May 2018 - remove biomass if necessary
       if (met(8,n) > 0d0) then
           if (allocated(extracted_C)) then
-              extracted_C(n) = (POOLS(n+1,1) + POOLS(n+1,2) + POOLS(n+1,4)) * met(8,n)
+              extracted_C(n) = ((POOLS(n+1,1) + POOLS(n+1,2) + POOLS(n+1,4)) * met(8,n)) / deltat(n)
           endif
           POOLS(n+1,1) = POOLS(n+1,1)*(1d0-met(8,n)) ! remove labile
           POOLS(n+1,2) = POOLS(n+1,2)*(1d0-met(8,n)) ! remove foliar
           POOLS(n+1,4) = POOLS(n+1,4)*(1d0-met(8,n)) ! remove wood
+          ! NOTE: fine root is left in system this is an issue...
       end if
 
       ! calculate fire emissions and litter transfer

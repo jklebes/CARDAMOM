@@ -31,7 +31,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               error_check = TRUE
               print("NA found in likelihood score")
            } else if (min(as.vector(parameters)) == -Inf) {
-              error_check = TRUE 
+              error_check = TRUE
               print("Inf found in likelihood score")
           } # NaN / Inf check
       } # error check
@@ -50,7 +50,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                   i = 1 ; max_likelihood = rep(NA, length.out=dim(parameters)[3]) ; CI90 = rep(NA,length.out=c(2))
                   while (notconv){
                      print(paste("......trying removal of parameter vector ",i,sep=""))
-                     # Track the maximum likelihood across each chain. 
+                     # Track the maximum likelihood across each chain.
                      max_likelihood[i] = max(parameters[dim(parameters)[1],,i])
                      converged = have_chains_converged(parameters[,,-i]) ; i = i + 1
                      # if removing one of the chains get convergence then great
@@ -68,7 +68,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                          } else {
                              # if the non-converged chain is worse or just the same in likelihood terms as the others then we will ditch it
                              notconv = FALSE ; i = i-1 # converged now?
-                             parameters = parameters[,,-i] 
+                             parameters = parameters[,,-i]
                              print(paste("............chain rejected = ",i,sep=""))
                          }
                      }
@@ -77,7 +77,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                          # Which is lowest likelihood
                          i = which(max_likelihood == min(max_likelihood))
                          # Remove from array
-                         parameters = parameters[,,-i] 
+                         parameters = parameters[,,-i]
                          # Update the maximum likelihood vector also
                          max_likelihood = max_likelihood[-i]
                          # Update the user
@@ -137,10 +137,10 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                                     PROJECT$exepath,soil_info)
           # pass to local variable for saving
           site_ctessel_pft = PROJECT$ctessel_pft[n]
-          aNPP = states_all$aNPP ; MTT = states_all$MTT ; SS = states_all$SS
+          aNPP = states_all$aNPP ; MTT = states_all$MTT ; aMTT = states_all$aMTT ; SS = states_all$SS
           print("processing and storing ensemble output")
           # store the results now in binary file
-          save(parameter_covariance,parameters,drivers,sub_parameter,site_ctessel_pft,aNPP,MTT,SS,file=outfile1)#, compress="gzip")
+          save(parameter_covariance,parameters,drivers,sub_parameter,site_ctessel_pft,aNPP,MTT,aMTT,SS,file=outfile1)#, compress="gzip")
           # determine whether this is a gridded run (or one with the override in place)
           if (PROJECT$spatial_type == "site" | grid_override == TRUE) {
               # ...if this is a site run save the full ensemble and everything else...

@@ -6,6 +6,7 @@
 simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type,exepath,soil_info) {
 
   output_dim=17 ; aNPP_dim = 3 ; MTT_dim = 5 ; SS_dim = 5
+  noyears = length(c(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
 
   # restructure pars
   if (length(dim(pars)) > 2) {
@@ -60,10 +61,12 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                                      ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
                                      ,out_var3=as.double(array(0,dim=c(nos_iter,MTT_dim)))
                                      ,out_var4=as.double(array(0,dim=c(nos_iter,SS_dim)))
+                                     ,out_var5=as.double(array(0,dim=c(nos_iter,MTT_dim,noyears)))
                                      ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site])
                                      ,nomet=as.integer(dim(met)[2]),nofluxes=as.integer(PROJECT$model$nofluxes[site])
                                      ,nopools=as.integer(PROJECT$model$nopools[site]),pft=as.integer(pft)
                                      ,pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
+                                     ,noyears=as.integer(noyears)
                                      ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
                                      ,soil_frac_clay_in=as.double(array(c(soil_info[3],soil_info[3],soil_info[4],soil_info[4]),dim=c(4)))
                                      ,soil_frac_sand_in=as.double(array(c(soil_info[1],soil_info[1],soil_info[2],soil_info[2]),dim=c(4)))
@@ -72,6 +75,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP = tmp$out_var2  ; aNPP = array(aNPP, dim=c(nos_iter,aNPP_dim))
       MTT = tmp$out_var3   ; MTT = array(MTT, dim=c(nos_iter,MTT_dim))
       SS = tmp$out_var4    ; SS = array(SS, dim=c(nos_iter,SS_dim))
+      aMTT = tmp$out_var5  ; aMTT = array(aMTT, dim=c(nos_iter,MTT_dim,noyears))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
       # create output object
@@ -88,7 +92,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       litwood_gCm2 = output[,,21], fire_gCm2day = output[,,23],
                       gs_demand_supply = output[,,24], gs_total_canopy = output[,,25],
                       APAR_MJm2day = output[,,26], gb_total_canopy = output[,,27],
-                      aNPP = aNPP, MTT = MTT, SS = SS)
+                      aNPP = aNPP, MTT = MTT, SS = SS, aMTT = aMTT)
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC") {
@@ -103,16 +107,19 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                             ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
                             ,out_var3=as.double(array(0,dim=c(nos_iter,MTT_dim)))
                             ,out_var4=as.double(array(0,dim=c(nos_iter,SS_dim)))
+                            ,out_var5=as.double(array(0,dim=c(nos_iter,MTT_dim,noyears)))
                             ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site])
                             ,nomet=as.integer(dim(met)[2]),nofluxes=as.integer(PROJECT$model$nofluxes[site])
                             ,nopools=as.integer(PROJECT$model$nopools[site]),pft=as.integer(pft)
                             ,pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
+                            ,noyears=as.integer(noyears)
                             ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
                             ,exepath=as.character(crop_file_location),pathlength=as.integer(nchar(crop_file_location)))
       output = tmp$out_var ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
       aNPP = tmp$out_var2  ; aNPP = array(aNPP, dim=c(nos_iter,aNPP_dim))
       MTT = tmp$out_var3   ; MTT = array(MTT, dim=c(nos_iter,MTT_dim))
       SS = tmp$out_var4    ; SS = array(SS, dim=c(nos_iter,SS_dim))
+      aMTT = tmp$out_var5  ; aMTT = array(aMTT, dim=c(nos_iter,MTT_dim,noyears))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
       # create output object
@@ -128,7 +135,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       gs_total_canopy = output[,,19], gb_total_canopy = output[,,20],
                       litwood_gCm2 = output[,,21], fire_gCm2day = output[,,23],
                       APAR_MJm2day = output[,,24],
-                      aNPP = aNPP, MTT = MTT, SS = SS)
+                      aNPP = aNPP, MTT = MTT, SS = SS, aMTT = aMTT)
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_GSI_BUCKET") {
@@ -143,10 +150,12 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                                      ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
                                      ,out_var3=as.double(array(0,dim=c(nos_iter,MTT_dim)))
                                      ,out_var4=as.double(array(0,dim=c(nos_iter,SS_dim)))
+                                     ,out_var5=as.double(array(0,dim=c(nos_iter,MTT_dim,noyears)))
                                      ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site])
                                      ,nomet=as.integer(dim(met)[2]),nofluxes=as.integer(PROJECT$model$nofluxes[site])
                                      ,nopools=as.integer(PROJECT$model$nopools[site]),pft=as.integer(pft)
                                      ,pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
+                                     ,noyears=as.integer(noyears)
                                      ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
                                      ,soil_frac_clay_in=as.double(array(c(soil_info[3],soil_info[3],soil_info[4],soil_info[4]),dim=c(4)))
                                      ,soil_frac_sand_in=as.double(array(c(soil_info[1],soil_info[1],soil_info[2],soil_info[2]),dim=c(4)))
@@ -155,6 +164,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP = tmp$out_var2  ; aNPP = array(aNPP, dim=c(nos_iter,aNPP_dim))
       MTT = tmp$out_var3   ; MTT = array(MTT, dim=c(nos_iter,MTT_dim))
       SS = tmp$out_var4    ; SS = array(SS, dim=c(nos_iter,SS_dim))
+      aMTT = tmp$out_var5  ; aMTT = array(aMTT, dim=c(nos_iter,MTT_dim,noyears))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
       # create output object
@@ -171,7 +181,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       litwood_gCm2 = output[,,21], fire_gCm2day = output[,,23],
                       gs_demand_supply = output[,,24], gs_total_canopy = output[,,25],
                       APAR_MJm2day = output[,,26], gb_total_canopy = output[,,27],
-                      aNPP = aNPP, MTT = MTT, SS = SS)
+                      aNPP = aNPP, MTT = MTT, SS = SS, aMTT = aMTT)
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALECN_GSI_BUCKET") {
@@ -263,15 +273,18 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                                        ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
                                        ,out_var3=as.double(array(0,dim=c(nos_iter,MTT_dim)))
                                        ,out_var4=as.double(array(0,dim=c(nos_iter,SS_dim)))
+                                       ,out_var5=as.double(array(0,dim=c(nos_iter,MTT_dim,noyears)))
                                        ,lat=as.double(lat)
                                        ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                        ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
                                        ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
+                                       ,noyears=as.integer(noyears)
                                        ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter))
       output = tmp$out_var ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
       aNPP = tmp$out_var2  ; aNPP = array(aNPP, dim=c(nos_iter,aNPP_dim))
       MTT = tmp$out_var3   ; MTT = array(MTT, dim=c(nos_iter,MTT_dim))
       SS = tmp$out_var4    ; SS = array(SS, dim=c(nos_iter,SS_dim))
+      aMTT = tmp$out_var5  ; aMTT = array(aMTT, dim=c(nos_iter,MTT_dim,noyears))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
       # Create the output object
@@ -282,7 +295,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
                       lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
                       harvest_C_gCm2day = output[,,13], fire_gCm2day = output[,,14],
-                      aNPP = aNPP, MTT = MTT, SS = SS)
+                      aNPP = aNPP, MTT = MTT, SS = SS, aMTT = aMTT)
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_CDEA_ACM2") {
@@ -296,15 +309,18 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                                     ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
                                     ,out_var3=as.double(array(0,dim=c(nos_iter,MTT_dim)))
                                     ,out_var4=as.double(array(0,dim=c(nos_iter,SS_dim)))
+                                    ,out_var5=as.double(array(0,dim=c(nos_iter,MTT_dim,noyears)))
                                     ,lat=as.double(lat)
                                     ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                     ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
                                     ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
+                                    ,noyears=as.integer(noyears)
                                     ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter))
       output = tmp$out_var ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
       aNPP = tmp$out_var2  ; aNPP = array(aNPP, dim=c(nos_iter,aNPP_dim))
       MTT = tmp$out_var3   ; MTT = array(MTT, dim=c(nos_iter,MTT_dim))
       SS = tmp$out_var4    ; SS = array(SS, dim=c(nos_iter,SS_dim))
+      aMTT = tmp$out_var5  ; aMTT = array(aMTT, dim=c(nos_iter,MTT_dim,noyears))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
       # Create the output object
@@ -317,7 +333,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       harvest_C_gCm2day = output[,,13], fire_gCm2day = output[,,14],
                       gs_demand_supply = output[,,15], gs_total_canopy = output[,,16],
                       APAR_MJm2day = output[,,17], gb_total_canopy = output[,,18],
-                      aNPP = aNPP, MTT = MTT, SS = SS)
+                      aNPP = aNPP, MTT = MTT, SS = SS, aMTT = aMTT)
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_CDEA_ACM2_BUCKET") {
@@ -331,10 +347,12 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                                           ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
                                           ,out_var3=as.double(array(0,dim=c(nos_iter,MTT_dim)))
                                           ,out_var4=as.double(array(0,dim=c(nos_iter,SS_dim)))
+                                          ,out_var5=as.double(array(0,dim=c(nos_iter,MTT_dim,noyears)))
                                           ,lat=as.double(lat)
                                           ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                           ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
                                           ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
+                                          ,noyears=as.integer(noyears)
                                           ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
                                           ,soil_frac_clay_in=as.double(array(c(soil_info[3],soil_info[3],soil_info[4],soil_info[4]),dim=c(4)))
                                           ,soil_frac_sand_in=as.double(array(c(soil_info[1],soil_info[1],soil_info[2],soil_info[2]),dim=c(4))))
@@ -342,6 +360,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP = tmp$out_var2  ; aNPP = array(aNPP, dim=c(nos_iter,aNPP_dim))
       MTT = tmp$out_var3   ; MTT = array(MTT, dim=c(nos_iter,MTT_dim))
       SS = tmp$out_var4    ; SS = array(SS, dim=c(nos_iter,SS_dim))
+      aMTT = tmp$out_var5  ; aMTT = array(aMTT, dim=c(nos_iter,MTT_dim,noyears))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
       # Create the output object
@@ -356,7 +375,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       wSWP_MPa = output[,,20],gs_demand_supply = output[,,21],
                       gs_total_canopy = output[,,22],APAR_MJm2day = output[,,23],
                       gb_total_canopy = output[,,24],
-                      aNPP = aNPP, MTT = MTT, SS = SS)
+                      aNPP = aNPP, MTT = MTT, SS = SS, aMTT = aMTT)
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_CDEA_no_lit_root") {
@@ -370,15 +389,18 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                                          ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
                                          ,out_var3=as.double(array(0,dim=c(nos_iter,MTT_dim)))
                                          ,out_var4=as.double(array(0,dim=c(nos_iter,SS_dim)))
+                                         ,out_var5=as.double(array(0,dim=c(nos_iter,MTT_dim,noyears)))
                                          ,lat=as.double(lat)
                                          ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                          ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
                                          ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
+                                         ,noyears=as.integer(noyears)
                                          ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter))
       output = tmp$out_var ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
       aNPP = tmp$out_var2  ; aNPP = array(aNPP, dim=c(nos_iter,aNPP_dim))
       MTT = tmp$out_var3   ; MTT = array(MTT, dim=c(nos_iter,MTT_dim))
       SS = tmp$out_var4    ; SS = array(SS, dim=c(nos_iter,SS_dim))
+      aMTT = tmp$out_var5  ; aMTT = array(aMTT, dim=c(nos_iter,MTT_dim,noyears))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
       # Create the output object
@@ -389,7 +411,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
                       lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
                       harvest_C_gCm2day = output[,,13], fire_gCm2day = output[,,14],
-                      aNPP = aNPP, MTT = MTT, SS = SS)
+                      aNPP = aNPP, MTT = MTT, SS = SS, aMTT = aMTT)
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_EVERGREEN") {
@@ -403,15 +425,18 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                                      ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
                                      ,out_var3=as.double(array(0,dim=c(nos_iter,MTT_dim)))
                                      ,out_var4=as.double(array(0,dim=c(nos_iter,SS_dim)))
+                                     ,out_var5=as.double(array(0,dim=c(nos_iter,MTT_dim,noyears)))
                                      ,lat=as.double(lat)
                                      ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                      ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
                                      ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
+                                     ,noyears=as.integer(noyears)
                                      ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter))
       output = tmp$out_var ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
       aNPP = tmp$out_var2  ; aNPP = array(aNPP, dim=c(nos_iter,aNPP_dim))
       MTT = tmp$out_var3   ; MTT = array(MTT, dim=c(nos_iter,MTT_dim))
       SS = tmp$out_var4    ; SS = array(SS, dim=c(nos_iter,SS_dim))
+      aMTT = tmp$out_var5  ; aMTT = array(aMTT, dim=c(nos_iter,MTT_dim,noyears))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
       # Create the output object
@@ -422,7 +447,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
                       lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
                       harvest_C_gCm2day = output[,,13], fire_gCm2day = output[,,14],
-                      aNPP = aNPP, MTT = MTT, SS = SS)
+                      aNPP = aNPP, MTT = MTT, SS = SS, aMTT = aMTT)
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_EVERGREEN_no_lit_root") {
@@ -436,15 +461,18 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                                      ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
                                      ,out_var3=as.double(array(0,dim=c(nos_iter,MTT_dim)))
                                      ,out_var4=as.double(array(0,dim=c(nos_iter,SS_dim)))
+                                     ,out_var5=as.double(array(0,dim=c(nos_iter,MTT_dim,noyears)))
                                      ,lat=as.double(lat)
                                      ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                      ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
                                      ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
+                                     ,noyears=as.integer(noyears)
                                      ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter))
       output = tmp$out_var ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
       aNPP = tmp$out_var2  ; aNPP = array(aNPP, dim=c(nos_iter,aNPP_dim))
       MTT = tmp$out_var3   ; MTT = array(MTT, dim=c(nos_iter,MTT_dim))
       SS = tmp$out_var4    ; SS = array(SS, dim=c(nos_iter,SS_dim))
+      aMTT = tmp$out_var5  ; aMTT = array(aMTT, dim=c(nos_iter,MTT_dim,noyears))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
       # Create the output object
@@ -455,7 +483,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
                       lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
                       harvest_C_gCm2day = output[,,13], fire_gCm2day = output[,,14],
-                      aNPP = aNPP, MTT = MTT, SS = SS)
+                      aNPP = aNPP, MTT = MTT, SS = SS, aMTT = aMTT)
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_GSI_FR_LABILE") {
@@ -552,16 +580,19 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                                         ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
                                         ,out_var3=as.double(array(0,dim=c(nos_iter,MTT_dim)))
                                         ,out_var4=as.double(array(0,dim=c(nos_iter,SS_dim)))
+                                        ,out_var5=as.double(array(0,dim=c(nos_iter,MTT_dim,noyears)))
                                         ,lat=as.double(lat)
                                         ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                                         ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
                                         ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
+                                        ,noyears=as.integer(noyears)
                                         ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
                                         ,exepath=as.character(crop_file_location),pathlength=as.integer(nchar(crop_file_location)))
       output = tmp$out_var ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
       aNPP = tmp$out_var2  ; aNPP = array(aNPP, dim=c(nos_iter,aNPP_dim))
       MTT = tmp$out_var3   ; MTT = array(MTT, dim=c(nos_iter,MTT_dim))
       SS = tmp$out_var4    ; SS = array(SS, dim=c(nos_iter,SS_dim))
+      aMTT = tmp$out_var5  ; aMTT = array(aMTT, dim=c(nos_iter,MTT_dim,noyears))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
       states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
@@ -576,7 +607,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       fire_gCm2day = output[,,19], gs_demand_supply = output[,,20],
                       gs_total_canopy = output[,,21], APAR_MJm2day = output[,,22],
                       gb_total_canopy = output[,,23],
-                      aNPP = aNPP, MTT = MTT, SS = SS)
+                      aNPP = aNPP, MTT = MTT, SS = SS, aMTT = aMTT)
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_GSI_DFOL_FROOT_FR") {
