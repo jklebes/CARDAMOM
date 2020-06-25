@@ -118,15 +118,15 @@ double precision, parameter :: &
                     canopy_height = 9d0,          & ! canopy height assumed to be 9 m
                      tower_height = canopy_height + 2d0, & ! tower (observation) height assumed to be 2 m above canopy
                          min_wind = 0.2d0,        & ! minimum wind speed at canopy top
-                     min_drythick = 0.01d0,       & ! minimum dry thickness depth (m)
+                     min_drythick = 0.001d0,       & ! minimum dry thickness depth (m)
                         min_layer = 0.03d0,       & ! minimum thickness of the third rooting layer (m)
                       soil_roughl = 0.05d0,       & ! soil roughness length (m)
-                   top_soil_depth = 0.1d0,        & ! thickness of the top soil layer (m)
-                   mid_soil_depth = 0.2d0,        & ! thickness of the second soil layer (m)
+                   top_soil_depth = 0.15d0,        & ! thickness of the top soil layer (m)
+                   mid_soil_depth = 0.15d0,        & ! thickness of the second soil layer (m)
                          min_root = 5d0,          & ! minimum root biomass (gBiomass.m-2)
-                          min_lai = 1.5d0,        & ! minimum LAI assumed for aerodynamic conductance calculations (m2/m2)
+                          min_lai = 0.1d0,        & ! minimum LAI assumed for aerodynamic conductance calculations (m2/m2)
                         max_depth = 2d0,          & ! max rooting depth (m)
-                           root_k = 150d0,        & ! rot biomass needed to reach 50 % of max_depth (g/m2)
+                           root_k = 100d0,        & ! rot biomass needed to reach 50 % of max_depth (g/m2)
                   min_throughfall = 0.1d0,        & ! minimum fraction of precipitation which
                                                     ! is through fall
                       min_storage = 0.1d0           ! minimum canopy water (surface) storage (mm)
@@ -220,18 +220,20 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                     co2_half_sat, & ! CO2 at which photosynthesis is 50 % of maximum (ppm)
                   co2_comp_point, & ! CO2 at which photosynthesis > 0 (ppm)
                           minlwp, & ! min leaf water potential (MPa)
-          max_lai_nir_reflection, & ! Max fraction of NIR reflected by canopy
-         lai_half_nir_reflection, & ! LAI at which canopy NIR refection = 50 %
-          max_lai_par_reflection, & ! Max fraction of PAR refected by canopy
-         lai_half_par_reflection, & ! LAI at which canopy PAR reflection = 50 %
-         max_lai_par_transmitted, & ! minimum transmittance = 1-par
-         max_lai_nir_transmitted, & ! minimum transmittance = 1-par
+!          max_lai_nir_reflection, & ! Max fraction of NIR reflected by canopy
+!         lai_half_nir_reflection, & ! LAI at which canopy NIR refection = 50 %
+!          max_lai_par_reflection, & ! Max fraction of PAR refected by canopy
+!         lai_half_par_reflection, & ! LAI at which canopy PAR reflection = 50 %
+!         max_lai_par_transmitted, & ! minimum transmittance = 1-par
+!         max_lai_nir_transmitted, & ! minimum transmittance = 1-par
                    max_lw_escape, & ! maximum LW originating from canopy which escapes in one direction
-      lai_half_lwrad_transmitted, & ! LAI at which LW transmittance to soil at 50 %
-        lai_half_lwrad_reflected, & ! LAI at which LW reflectance to sky at 50 %
+!      lai_half_lwrad_transmitted, & ! LAI at which LW transmittance to soil at 50 %
+!        lai_half_lwrad_reflected, & ! LAI at which LW reflectance to sky at 50 %
            soil_swrad_absorption, & ! Fraction of SW rad absorbed by soil
             soil_iso_to_net_coef, & ! Coefficient relating soil isothermal net radiation to net.
            soil_iso_to_net_const, & ! Constant relating soil isothermal net radiation to net
+          canopy_iso_to_net_coef, & ! Coefficient relating canopy isothermal net radiation to net.
+         canopy_iso_to_net_const, & ! Constant relating canopy isothermal net radiation to net
            max_lai_lwrad_release, & ! 1-Max fraction of LW emitted from canopy to be
           lai_half_lwrad_release, & ! LAI at which LW emitted from canopy to be released at 50 %
              max_par_transmitted, & !
@@ -374,29 +376,23 @@ contains
                                            ! ,unlimited by CO2, light and photoperiod
                                            ! (gC/gN/m2leaf/day)
     pn_max_temp                = pars(2)   ! Maximum temperature for photosynthesis (oC)
-    pn_opt_temp                = pars(3)   ! Optimum temperature fpr photosynthesis (oC)
+    pn_opt_temp                = pars(3)   ! Optimum temperature for photosynthesis (oC)
     pn_kurtosis                = pars(4)   ! Kurtosis of photosynthesis temperature response
     e0                         = pars(5)   ! Quantum yield gC/MJ/m2/day PAR
-    lai_half_lwrad_transmitted = pars(6)   ! LAI at which LW transmittance to soil at 50 %
-    lai_half_lwrad_reflected   = pars(7)   ! LAI at which LW reflectance to sky at 50 %
-    max_lai_nir_reflection     = pars(8)   ! Max fraction of NIR reflected by canopy
-    lai_half_nir_reflection    = pars(9)   ! LAI at which canopy NIR reflection = 50 %
-    minlwp                     = pars(10)  ! minimum leaf water potential (MPa)
-    max_lai_par_reflection     = pars(11)  ! Max fraction of PAR reflected by canopy
-    lai_half_par_reflection    = pars(12)  ! LAI at which canopy PAR reflected = 50 %
-    max_lw_escape              = pars(13)  ! Max LW which is released from canopy that escapes in one direction
-    iWUE                       = pars(14)  ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
-    soil_swrad_absorption      = pars(15)  ! Fraction of SW rad absorbed by soil
-    max_lai_par_transmitted    = pars(16)  ! Max fraction reduction in PAR transmittance by canopy
-    max_lai_nir_transmitted    = pars(17)  ! Max fraction reduction in NIR transmittance by canopy
-    max_lai_lwrad_release      = pars(18)  ! 1-Max fraction of LW emitted from canopy to be released
-    lai_half_lwrad_release     = pars(19)  ! LAI at which LW emitted from canopy to be released at 50 %
-    soil_iso_to_net_coef       = pars(20)  ! Coefficient relating soil isothermal net radiation to net.
-    soil_iso_to_net_const      = pars(21)  ! Constant relating soil isothermal net radiation to net
-    max_par_transmitted        = pars(22)  ! Max fraction of canopy incident PAR transmitted to soil
-    max_nir_transmitted        = pars(23)  ! Max fraction of canopy incident NIR transmitted to soil
-    max_par_reflected          = pars(24)  ! Max fraction of canopy incident PAR reflected to sky
-    max_nir_reflected          = pars(25)  ! Max fraction of canopy incident NIR reflected to sky
+    minlwp                     = pars(6)   ! minimum leaf water potential (MPa)
+    max_lw_escape              = pars(7)   ! Max LW which is released from canopy that escapes in one direction
+    iWUE                       = pars(8)   ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
+    soil_swrad_absorption      = pars(9)   ! Fraction of SW rad absorbed by soil
+    max_lai_lwrad_release      = pars(10)  ! 1-Max fraction of LW emitted from canopy to be released
+    lai_half_lwrad_release     = pars(11)  ! LAI at which LW emitted from canopy to be released at 50 %
+    soil_iso_to_net_coef       = pars(12)  ! Coefficient relating soil isothermal net radiation to net.
+    soil_iso_to_net_const      = pars(13)  ! Constant relating soil isothermal net radiation to net
+    max_par_transmitted        = pars(14)  ! Max fraction of canopy incident PAR transmitted to soil
+    max_nir_transmitted        = pars(15)  ! Max fraction of canopy incident NIR transmitted to soil
+    max_par_reflected          = pars(16)  ! Max fraction of canopy incident PAR reflected to sky
+    max_nir_reflected          = pars(17)  ! Max fraction of canopy incident NIR reflected to sky
+    canopy_iso_to_net_coef     = pars(18)  ! Coefficient relating canopy isothermal net radiation to net.
+    canopy_iso_to_net_const    = pars(19)  ! Constant relating canopy isothermal net radiation to net
 
     ! load some values
     deltaWP = minlwp ! leafWP-soilWP (i.e. -2-0)
@@ -1569,6 +1565,7 @@ contains
     ! local variables
     double precision :: lwrad, & ! downward long wave radiation from sky (W.m-2)
          transmitted_fraction, & ! fraction of LW which is not incident on the canopy
+  canopy_transmitted_fraction, & !
         longwave_release_soil, & ! emission of long wave radiation from surfaces per m2
       longwave_release_canopy, & ! assuming isothermal condition (W.m-2)
             trans_lw_fraction, &
@@ -1613,8 +1610,10 @@ contains
     ! skews towards reduced transmittance at higher LAI. Both transmittance and
     ! reflectance follow linear a relationship with a common intercept
     ! NOTE: 0.02 = (1-emissivity) * 0.5
-    trans_lw_fraction     = 0.02d0 * (1d0 - (lai/(lai+lai_half_lwrad_transmitted)))
-    reflected_lw_fraction = 0.02d0 * (1d0 - (lai/(lai+lai_half_lwrad_reflected)))
+
+    canopy_transmitted_fraction = exp(decay * lai * 0.5d0 * clump)
+    trans_lw_fraction     = 0.02d0 * canopy_transmitted_fraction
+    reflected_lw_fraction = 0.02d0 * canopy_transmitted_fraction
     ! Absorption is the residual
     absorbed_lw_fraction = 1d0 - trans_lw_fraction - reflected_lw_fraction
 
@@ -1706,6 +1705,10 @@ contains
     ! balance based on absorbed shortwave radiation
     delta_iso = soil_iso_to_net_coef * (soil_swrad_MJday * 1d6 * dayl_seconds_1) + soil_iso_to_net_const
     soil_lwrad_Wm2 = soil_lwrad_Wm2 + delta_iso
+    ! Apply linear correction to canopy isothermal->net longwave radiation
+    ! balance based on absorbed shortwave radiation
+    delta_iso = canopy_iso_to_net_coef * (canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_iso_to_net_const
+    canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + delta_iso
 
   end subroutine calculate_radiation_balance
   !
@@ -1726,23 +1729,24 @@ contains
     implicit none
 
     ! local variables
-    double precision :: balance                    &
-                       ,transmitted_fraction       &
-                       ,absorbed_nir_fraction_soil &
-                       ,absorbed_par_fraction_soil &
-                       ,fsnow,par,nir              &
-                       ,soil_par_MJday             &
-                       ,soil_nir_MJday             &
-                       ,trans_nir_MJday            &
-                       ,trans_par_MJday            &
-                       ,canopy_nir_MJday           &
-                       ,refl_par_MJday             &
-                       ,refl_nir_MJday             &
-                       ,reflected_nir_fraction     & !
-                       ,reflected_par_fraction     & !
-                       ,absorbed_nir_fraction      & !
-                       ,absorbed_par_fraction      & !
-                       ,trans_nir_fraction         & !
+    double precision :: balance                     &
+                       ,transmitted_fraction        &
+                       ,canopy_transmitted_fraction &
+                       ,absorbed_nir_fraction_soil  &
+                       ,absorbed_par_fraction_soil  &
+                       ,fsnow,par,nir               &
+                       ,soil_par_MJday              &
+                       ,soil_nir_MJday              &
+                       ,trans_nir_MJday             &
+                       ,trans_par_MJday             &
+                       ,canopy_nir_MJday            &
+                       ,refl_par_MJday              &
+                       ,refl_nir_MJday              &
+                       ,reflected_nir_fraction      & !
+                       ,reflected_par_fraction      & !
+                       ,absorbed_nir_fraction       & !
+                       ,absorbed_par_fraction       & !
+                       ,trans_nir_fraction          & !
                        ,trans_par_fraction
 
     ! local parameters
@@ -1764,16 +1768,14 @@ contains
     ! Second, of the radiation which is incident on the canopy what fractions
     ! are transmitted through, reflected from or absorbed by the canopy
 
+    canopy_transmitted_fraction = exp(decay * lai * 0.5d0 * clump)
+
     ! Canopy transmitted of PAR & NIR radiation towards the soil
-    trans_par_fraction = max(0d0,max_lai_par_transmitted * lai + max_par_transmitted)
-    trans_nir_fraction = max(0d0,max_lai_nir_transmitted * lai + max_nir_transmitted)
+    trans_par_fraction = canopy_transmitted_fraction * max_par_transmitted
+    trans_nir_fraction = canopy_transmitted_fraction * max_nir_transmitted
     ! Canopy reflected of near infrared and photosynthetically active radiation
-    reflected_nir_fraction = 1d0 - ( (lai*max_lai_nir_reflection) &
-                                    /(lai+lai_half_nir_reflection) )
-    reflected_par_fraction = 1d0 - ( (lai*max_lai_par_reflection) &
-                                    /(lai+lai_half_par_reflection) )
-    reflected_nir_fraction = max_nir_reflected * reflected_nir_fraction
-    reflected_par_fraction = max_par_reflected * reflected_par_fraction
+    reflected_nir_fraction = canopy_transmitted_fraction * max_nir_reflected
+    reflected_par_fraction = canopy_transmitted_fraction * max_par_reflected
     ! Canopy absorption of near infrared and photosynthetically active radiation
     absorbed_nir_fraction = 1d0 - reflected_nir_fraction - trans_nir_fraction
     absorbed_par_fraction = 1d0 - reflected_par_fraction - trans_par_fraction
@@ -2046,7 +2048,9 @@ contains
                        ,potential_drainage_rate ,drain_rate, evap_rate, initial_canopy, co_mass_balance, dx, dz, tmp(3)
     ! local parameters
     double precision, parameter :: CanIntFrac = -0.5d0,     & ! Coefficient scaling rainfall interception fraction with LAI
-                                  CanStorFrac = 0.1d0,      & ! Coefficient scaling canopy water storage with LAI
+                                        clump = 0.75d0,     & ! Clumping factor (1 = uniform, 0 totally clumped)
+                                                              ! He et al., (2012) http://dx.doi.org/10.1016/j.rse.2011.12.008
+                                  CanStorFrac = 0.2d0,      & ! Coefficient scaling canopy water storage with LAI
                                  RefDrainRate = 0.002d0,    & ! Reference drainage rate (mm/min; Rutter et al 1975)
                                   RefDrainLAI = 0.952381d0, & ! Reference drainage 1/LAI (m2/m2; Rutter et al 1975, 1/1.05)
                                  RefDrainCoef = 3.7d0,      & ! Reference drainage Coefficient (Rutter et al 1975)
@@ -2055,7 +2059,8 @@ contains
     ! hold initial canopy storage in memory
     initial_canopy = storage
     ! determine maximum canopy storage & through fall fraction
-    through_fall = max(min_throughfall,exp(CanIntFrac*lai))
+!    through_fall = max(min_throughfall,exp(CanIntFrac*lai))
+    through_fall = exp(CanIntFrac*lai*clump)
     ! maximum canopy storage (mm); minimum is applied to prevent errors in
     ! drainage calculation. Assume minimum capacity due to wood.
     ! Wind speed correction reduced effective storage capacity leading to
@@ -2213,7 +2218,7 @@ contains
 
     ! set soil water exchanges
     underflow = 0d0 ; runoff = 0d0 ; corrected_ET = 0d0 ; evaporation_losses = 0d0 ; pot_evap_losses = 0d0
-    initial_soilwater = sum(1d3 * soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers))
+    initial_soilwater = 1d3 * sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers))
 
     ! Assume leaf transpiration is drawn from the soil based on the
     ! update_fraction estimated in calculate_Rtot
@@ -2228,7 +2233,7 @@ contains
 !     Outcome: Extract all needed water, potentially leaving soil in negetative status, followed by infilatration.
 !              Allow for drainage if soil is above field capacity as a result of this proecss
 ! Scenario 2
-!          (1) Soil layers ABOVE field capacity, therefore THERE is drainage
+!          (i) Soil layers ABOVE field capacity, therefore THERE is drainage
 !         (ii) The existing water supply and rainfall can support evaporative demanded by the canopy and soil
 !     Outcome: Extract allow water and add all infiltration into the soil.
 !              Allow for drainage in the final instance as strongly exponential drainage flow should negate time difference.
@@ -2247,28 +2252,27 @@ contains
        ! convert kg.m-2 (or mm) -> Mg.m-2 (or m)
        soil_waterfrac(1:nos_root_layers) = soil_waterfrac(1:nos_root_layers) &
                                          + ((-pot_evap_losses*days_per_step*1d-3) / layer_thickness(1:nos_root_layers))
-
-       ! reset soil water change variable
-       waterchange = 0d0
+       ! Correct for dew formation; any water above porosity in the top layer is assumed runoff
+       if (soil_waterfrac(1) > porosity(1)) then
+           runoff = ((soil_waterfrac(1)-porosity(1)) * layer_thickness(1) * 1d3)
+           soil_waterfrac(1) = porosity(1)
+       endif
 
        ! determine infiltration from rainfall (kgH2O/m2/day),
        ! if rainfall is probably liquid / soil surface is probably not frozen
        if (rainfall_in > 0d0) then
+           ! reset soil water change variable
+           waterchange = 0d0
            call infiltrate(rainfall_in * days_per_step)
+           ! update soil profiles. Convert fraction into depth specific values
+           ! (rather than m3/m3) then update fluxes
+           soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
+                                             + (waterchange(1:nos_soil_layers) / layer_thickness(1:nos_soil_layers))
+           ! soil waterchange variable reset in gravitational_drainage()
        endif ! is there any rain to infiltrate?
-       ! update soil profiles. Convert fraction into depth specific values (rather than m3/m3) then update fluxes
-       soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
-                                         + (waterchange(1:nos_soil_layers) / layer_thickness(1:nos_soil_layers))
-
-       ! reset soil water change variable
-       waterchange = 0d0
 
        ! determine drainage flux between surface -> sub surface
-       call gravitational_drainage
-
-       ! update soil profiles. Convert fraction into depth specific values (rather than m3/m3) then update fluxes
-       soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
-                                         + (waterchange(1:nos_soil_layers) / layer_thickness(1:nos_soil_layers))
+       call gravitational_drainage(nint(days_per_step))
 
        ! Pass information to the output ET variable
        corrected_ET = sum(pot_evap_losses)
@@ -2291,7 +2295,10 @@ contains
           ! NOTE: This is due to the fact that both soil evaporation and transpiration
           !       are drawing from the same water supply. Also 0.999 below is to allow for precision error...
           avail_flux = soil_waterfrac(1:nos_root_layers) * layer_thickness(1:nos_root_layers) * 1d3
-          where (evaporation_losses > avail_flux) evaporation_losses = avail_flux * 0.999d0
+          do a = 1, nos_root_layers ! note: timed comparison between "where" and do loop supports do loop for smaller vectors
+             if (evaporation_losses(a) > avail_flux(a)) evaporation_losses(a) = avail_flux(a) * 0.999d0
+          end do
+!          where (evaporation_losses > avail_flux) evaporation_losses = avail_flux * 0.999d0
           ! this will update the ET estimate outside of the function
           ! days_per_step corrections happens outside of the loop below
           corrected_ET = corrected_ET + sum(evaporation_losses)
@@ -2300,44 +2307,35 @@ contains
           ! convert kg.m-2 (or mm) -> Mg.m-2 (or m)
           soil_waterfrac(1:nos_root_layers) = soil_waterfrac(1:nos_root_layers) &
                                             + ((-evaporation_losses(1:nos_root_layers)*1d-3) / layer_thickness(1:nos_root_layers))
+          ! Correct for dew formation; any water above porosity in the top layer is assumed runoff
+          if (soil_waterfrac(1) > porosity(1)) then
+              runoff = runoff + ((soil_waterfrac(1)-porosity(1)) * layer_thickness(1) * 1d3)
+              soil_waterfrac(1) = porosity(1)
+          endif
 
           !!!!!!!!!!
           ! Rainfall infiltration drainage
           !!!!!!!!!!
 
-          ! reset soil water change variable
-          waterchange = 0d0
-
           ! determine infiltration from rainfall (kgH2O/m2/day),
           ! if rainfall is probably liquid / soil surface is probably not frozen
           if (rainfall_in > 0d0) then
+              ! reset soil water change variable
+              waterchange = 0d0
               call infiltrate(rainfall_in)
+              ! update soil profiles. Convert fraction into depth specific values
+              ! (rather than m3/m3) then update fluxes
+              soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
+                                                + (waterchange(1:nos_soil_layers) / layer_thickness(1:nos_soil_layers))
+              ! soil waterchange variable reset in gravitational_drainage()
           endif ! is there any rain to infiltrate?
-
-          ! update soil profiles. Convert fraction into depth specific values (rather than m3/m3) then update fluxes
-          soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
-                                            + (waterchange(1:nos_soil_layers) / layer_thickness(1:nos_soil_layers))
-
-          ! reset soil water change variable
-          waterchange = 0d0
 
           !!!!!!!!!!
           ! Gravitational drainage
           !!!!!!!!!!
 
           ! determine drainage flux between surface -> sub surface
-          call gravitational_drainage
-
-          ! update soil profiles. Convert fraction into depth specific values (rather than m3/m3) then update fluxes
-          soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
-                                            + (waterchange(1:nos_soil_layers) / layer_thickness(1:nos_soil_layers))
-
-          ! mass balance check, at this point do not try and adjust evaporation to
-          ! correct for lack of supply. Simply allow for drought in next time step
-!          where (soil_waterfrac <= 0d0)
-!          ! instead...
-!            soil_waterfrac = vsmall
-!          end where
+          call gravitational_drainage(1)
 
        end do ! days_per_step
 
@@ -2369,11 +2367,10 @@ contains
         endif
 
         ! if there has been an increase
-        if (depth_change > 0.05) then
+        if (depth_change > 0.05d0) then
 
             ! determine how much water is within the new volume of soil
             water_change = soil_waterfrac(nos_soil_layers) * depth_change
-
             ! now assign that new volume of water to the deep rooting layer
             soil_waterfrac(nos_root_layers) = ((soil_waterfrac(nos_root_layers)*layer_thickness(nos_root_layers))+water_change) &
                                             / (layer_thickness(nos_root_layers)+depth_change)
@@ -2387,7 +2384,7 @@ contains
             ! keep track of the previous rooting depth
             previous_depth = root_reach
 
-        else if (depth_change < -0.05) then
+        else if (depth_change < -0.05d0) then
 
             ! make positive to ensure easier calculations
             depth_change = -depth_change
@@ -2449,18 +2446,22 @@ contains
     ! finally update soil water potential
     call soil_water_potential
 
-    ! check water balance
-    balance = (rainfall_in - corrected_ET - underflow - runoff) * days_per_step
-    balance = balance &
-            - (sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers) * 1d3) &
-            - initial_soilwater)
+!    ! check water balance
+!    balance = (rainfall_in - corrected_ET - underflow - runoff) * days_per_step
+!    balance = balance &
+!            - (sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers) * 1d3) &
+!            - initial_soilwater)
 
-    if (abs(balance) > 1d-6 .or. soil_waterfrac(1) < 0d0) then
-        print*,"Soil water miss-balance (mm)",balance
-        print*,"Initial_soilwater",initial_soilwater
-        print*,"Final_soilwater",sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers) * 1d3)
-        print*,"Rainfall",rainfall_in,"ET",corrected_ET,"underflow",underflow,"runoff",runoff
-    end if ! abs(balance) > 1d-10
+!    if (abs(balance) > 1d-6 .or. soil_waterfrac(1) < -1d-6 .or. soil_waterfrac(1) > porosity(1)+0.05d0) then
+!        print*,"Soil water miss-balance (mm)",balance
+!        print*,"Initial_soilwater",initial_soilwater
+!        print*,"Final_soilwater",sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers) * 1d3)
+!        print*,"Top soilwater (fraction)",soil_waterfrac(1:3)
+!        print*,"Rainfall (mm/step)",rainfall_in,"ET",corrected_ET,"underflow",underflow,"runoff",runoff
+!        print*,"Rainfall (kgH2O/m2/s)",rainfall
+!        print*,"Porosity(1)",porosity(1:3),"Field Capacity(1)",field_capacity(1:3)
+!        stop
+!    end if ! abs(balance) > 1d-10
 
     ! explicit return needed to ensure that function runs all needed code
     return
@@ -2494,7 +2495,7 @@ contains
        ! is the input of water greater than available space
        ! if so fill and subtract from input and move on to the next
        ! layer determine the available pore space in current soil layer
-       wdiff = ((porosity(i)-soil_waterfrac(i)) * layer_thickness(i))
+       wdiff = max(0d0,(porosity(i)-soil_waterfrac(i)) * layer_thickness(i))
 
        if (add > wdiff) then
            ! if so fill and subtract from input and move on to the next layer
@@ -2516,75 +2517,112 @@ contains
   !
   !-----------------------------------------------------------------
   !
-  subroutine gravitational_drainage
+  subroutine gravitational_drainage(time_period_days)
 
-    ! integrator for soil gravitational drainage !
+    ! Integrator for soil gravitational drainage.
+    ! Due to the longer time steps undertake by ACM / DALEC and the fact that
+    ! drainage is a concurrent processes we assume that drainage occurs at
+    ! the bottom of the column first creating space into which water can drain
+    ! from the top down. Therefore we draing from the bottom first and then the top.
     ! NOTE: Assumes that any previous water movement due to infiltration and evaporation
     !       has already been updated in soil mass balance
 
     implicit none
 
+    ! arguments
+    integer, intent(in) :: time_period_days
+
     ! local variables..
-    integer :: d, nos_integrate
-    double precision  :: tmp1,tmp2,tmp3,dx &
-                                   ,liquid & ! liquid water in local soil layer (m3/m3)
-                               ,drainlayer & ! field capacity of local soil layer (m3/m3)
-                                    ,unsat & ! unsaturated pore space in soil_layer below the current (m3/m3)
-                                   ,change & ! absolute volume of water drainage in current layer (m3)
-                                 ,drainage & ! drainage rate of current layer (m/day)
-                              ,local_drain & ! drainage of current layer (m/nos_minutes)
-                 ,iceprop(nos_soil_layers)
+    integer :: t, d, nos_integrate
+    double precision, dimension(nos_soil_layers) :: dx, & ! range between the start and end points of the integration
+                                               halfway, & ! half way point between start and end point of integration
+                                                liquid, & ! liquid water in local soil layer (m3/m3)
+                                         avail_to_flow, & ! liquid content above field capacity (m3/m3)
+                                               iceprop, & ! fraction of soil layer which is ice
+                                          pot_drainage    ! estimats of time step potential drainage rate (m/s)
+    double precision  :: tmp1,tmp2,tmp3 &
+                                 ,unsat & ! unsaturated pore space in soil_layer below the current (m3/m3)
+                                ,change   ! absolute volume of water drainage in current layer (m3/day)
 
     ! calculate soil ice proportion; at the moment
     ! assume everything liquid
     iceprop = 0d0
+
     ! except the surface layer in the mean daily temperature is < 0oC
     if (meant < 1d0) iceprop(1) = 1d0
 
-    do soil_layer = 1, nos_soil_layers
+    ! zero water fluxes
+    waterchange = 0d0
 
-       ! soil water capacity of the current layer
-       drainlayer = field_capacity( soil_layer )
-       ! liquid content of the soil layer
-       liquid     = soil_waterfrac( soil_layer ) &
-                  * ( 1d0 - iceprop( soil_layer ) )
-
-       ! initial conditions; i.e. is there liquid water and more water than
-       ! layer can hold
-       if ( liquid > drainlayer ) then
-
+    ! estimate potential drainage rate for the current time period
+    liquid = soil_waterfrac(1:nos_soil_layers) * ( 1d0 - iceprop(1:nos_soil_layers) )
+    ! estimate how much liquid is available to flow
+    avail_to_flow = liquid - field_capacity(1:nos_soil_layers)
+    ! trapezium rule scaler and the half-way point between current and field capacity
+    dx = avail_to_flow*0.5d0 ; halfway = liquid - dx
+    do t = 1, nos_soil_layers
+       if (avail_to_flow(t) > 0d0) then
            ! Trapezium rule for approximating integral of drainage rate
-           dx = (liquid - drainlayer)*0.5d0
-           call calculate_soil_conductivity(soil_layer,liquid,tmp1)
-           call calculate_soil_conductivity(soil_layer,drainlayer,tmp2)
-           call calculate_soil_conductivity(soil_layer,(liquid-dx),tmp3)
-           drainage = 0.5d0 * dx * ((tmp1 + tmp2) + 2d0 * tmp3)
-           drainage = drainage * seconds_per_day
-           drainage = min(drainage,liquid - drainlayer)
-
-           ! unsaturated volume of layer below (m3 m-2)
-           if (soil_waterfrac( soil_layer + 1 ) >= porosity( soil_layer+1 )) then
-               unsat = 0d0
-           else
-               unsat = ( porosity( soil_layer+1 ) - soil_waterfrac( soil_layer+1 ) ) &
-                     * layer_thickness( soil_layer+1 ) / layer_thickness( soil_layer )
-           endif
-           ! layer below cannot accept more water than unsat
-           if ( drainage > unsat ) drainage = unsat
-           ! water loss from this layer (m3)
-           change = drainage * layer_thickness(soil_layer)
-
-           ! update soil layer below with drained liquid
-           waterchange( soil_layer + 1 ) = waterchange( soil_layer + 1 ) + change
-           waterchange( soil_layer     ) = waterchange( soil_layer     ) - change
-
-       end if ! some liquid water and drainage possible
-
+           call calculate_soil_conductivity(t,liquid(t),tmp1)
+           call calculate_soil_conductivity(t,field_capacity(t),tmp2)
+           call calculate_soil_conductivity(t,halfway(t),tmp3)
+           pot_drainage(t) = 0.5d0 * dx(t) * ((tmp1 + tmp2) + 2d0 * tmp3)
+       else
+           ! We are at field capacity currently even after rainfall has been infiltrated.
+           ! Assume that the potential drainage rate is that at field capacity
+           call calculate_soil_conductivity(t,field_capacity(t),pot_drainage(t))
+       endif ! water above field capacity to flow?
     end do ! soil layers
+    ! Scale potential drainage from per second to per day
+    pot_drainage = pot_drainage * seconds_per_day
 
-    ! estimate drainage from bottom of soil column (kgH2O/m2/day)
-    ! NOTES: that underflow is reset outside of the daily soil loop
-    underflow = underflow + (waterchange(nos_soil_layers+1) * 1d3)
+    ! Integrate drainage over each day until time period has been reached or
+    ! each soil layer has reached field capacity
+    t = 1
+    do while (t < (time_period_days+1) .and. maxval(soil_waterfrac - field_capacity) > vsmall)
+
+       ! Estimate liquid content and how much is available to flow / drain
+       avail_to_flow = ( soil_waterfrac(1:nos_soil_layers) * (1d0 - iceprop(1:nos_soil_layers)) ) &
+                     - field_capacity(1:nos_soil_layers)
+
+       ! ...then from the top down
+       do soil_layer = 1, nos_soil_layers
+
+          ! initial conditions; i.e. is there liquid water and more water than
+          ! layer can hold
+          if (avail_to_flow(soil_layer) > 0d0 .and. soil_waterfrac(soil_layer+1) < porosity(soil_layer+1)) then
+
+              ! Unsaturated volume of layer below (m3 m-2)
+              unsat = ( porosity(soil_layer+1) - soil_waterfrac(soil_layer+1) ) &
+                    * layer_thickness(soil_layer+1) / layer_thickness(soil_layer)
+              ! Restrict potential rate calculate above for the available water
+              ! and available space in the layer below.
+              ! NOTE: * layer_thickness(soil_layer) converts units from m3/m2 -> (m3)
+              change = min(unsat,min(pot_drainage(soil_layer),avail_to_flow(soil_layer))) * layer_thickness(soil_layer)
+              ! update soil layer below with drained liquid
+              waterchange( soil_layer + 1 ) = waterchange( soil_layer + 1 ) + change
+              waterchange( soil_layer     ) = waterchange( soil_layer     ) - change
+
+          end if ! some liquid water and drainage possible
+
+       end do ! soil layers
+
+       ! update soil water profile
+       soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
+                                         + (waterchange(1:nos_soil_layers)/layer_thickness(1:nos_soil_layers))
+       ! estimate drainage from bottom of soil column (MgH2O/m2/day)
+       ! NOTES: that underflow is reset outside of the daily soil loop
+       underflow = underflow + waterchange(nos_soil_layers+1)
+
+       ! Reset now we have moves that liquid
+       waterchange = 0d0
+       ! integerate through time period
+       t = t + 1
+
+    end do ! while condition
+
+    ! convert underflow from MgH2O/m2/day -> kgH2O/m2/day
+    underflow = underflow * 1d3
 
   end subroutine gravitational_drainage
   !

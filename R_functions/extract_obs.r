@@ -11,9 +11,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
 
     # Create useful timing information for multiple functions
     if (length(timestep_days) == 1) {
-        analysis_years = seq(as.numeric(start),as.numeric(finish))
+        analysis_years = seq(as.numeric(start_year),as.numeric(end_year))
         nos_days = 0
-        for (t in seq(1,length(tmp))) {nos_days = nos_days + nos_days_in_year(tmp[t])}
+        for (t in seq(1,length(analysis_years))) {nos_days = nos_days + nos_days_in_year(analysis_years[t])}
         timestep_days = rep(timestep_days, nos_days, by = timestep_days)
     }
 

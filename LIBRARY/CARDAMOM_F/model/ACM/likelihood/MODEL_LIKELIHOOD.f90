@@ -49,7 +49,7 @@ module model_likelihood_module
     MCO%nWRITE = 0
     ! the next two lines ensure that parameter inputs are either given or
     ! entered as -9999
-    MCO%randparini = .true. 
+    MCO%randparini = .true.
     MCO%returnpars = .true.
     MCO%fixedpars  = .true. ! TLS: changed from .false. for testing 16/12/2019
 
@@ -200,8 +200,8 @@ module model_likelihood_module
     use CARBON_MODEL_MOD, only: carbon_model
     use cardamom_structures, only: DATAin
 
-    ! this subroutine is responsible for running the model, 
-    ! calculation of the log-likelihood on a subsample of observation 
+    ! this subroutine is responsible for running the model,
+    ! calculation of the log-likelihood on a subsample of observation
     ! for comparison assessment of parameter performance and use of the EDCs if they are
     ! present / selected
 
@@ -377,72 +377,53 @@ module model_likelihood_module
     ! begin checking EDCs
     !
 
-    do i = 1,10
-
-       ! Canopy transmitted of PAR & NIR radiation towards the soil
-       par_trans = max(0d0,pars(16) * lai(i) + pars(22) )
-       nir_trans = max(0d0,pars(17) * lai(i) + pars(23) )
-       ! Canopy reflected of near infrared and photosynthetically active radiation
-       nir_refl = pars(25) * (1d0 - (((lai(i)*pars(8)) / (lai(i)+pars(9)))))
-       par_refl = pars(24) * (1d0 - (((lai(i)*pars(11)) / (lai(i)+pars(12)))))
-
-       ! the transmittance of NIR should always be > than PAR at all LAI values
-       if ((EDC1 == 1 .or. DIAG == 1) .and. nir_trans < par_trans) then
-           EDC1 = 0 ; EDCD%PASSFAIL(2) = 0
-       endif
-       ! Reflectance of incident radiation should be greater than transmittance
-       if ((EDC1 == 1 .or. DIAG == 1) .and. nir_trans > nir_refl ) then
-           EDC1 = 0 ; EDCD%PASSFAIL(3) = 0
-       endif
-       ! Reflectance of incident radiation should be greater than transmittance
-       if ((EDC1 == 1 .or. DIAG == 1) .and. par_trans > par_refl) then
-           EDC1 = 0 ; EDCD%PASSFAIL(4) = 0
-       endif
-       ! reflectance should be greater for NIR than for PAR
-       if ((EDC1 == 1 .or. DIAG == 1) .and. nir_refl < par_refl) then
-           EDC1 = 0 ; EDCD%PASSFAIL(5) = 0
-       endif
-    enddo
-
     ! At high LAI the amount of radiation transmitted to the soil surface should
     ! be very low. On order of < 20 % of original SW input should reach the soil
     ! by lai > 5. NOTE: 1) 20 % target comes partially from SPA, 2) below code
     ! assumes implicit 1 MJ/m2/day
 
-    ! Estimate the fraction which passes directly to surface. 
-    ! NOTE: 1 = clumping factor, -0.5 is decay coefficient
-    direct_trans = exp(-0.5d0 * lai(9) * 1d0)
-    ! Estimate the transmittance fraction of the canopy incident SW
-    par_trans = pars(16) * lai(9) + pars(22) 
-    nir_trans = pars(17) * lai(9) + pars(23) 
-    ! Estimate the fraction of input SW which reaches the surface
-    tmp = (1d0 * (1d0-direct_trans)) ! estimate the SW total incident on the canopy
-    direct_trans = (1d0 * direct_trans) + ((tmp*sw_par_fraction)*par_trans) + ((tmp*(1d0-sw_par_fraction))*nir_trans)
-    if ((EDC1 == 1 .or. DIAG == 1) .and. direct_trans > 0.20d0) then
-         EDC1 = 0 ; EDCD%PASSFAIL(6) = 0
-    endif 
+!    ! Estimate the fraction which passes directly to surface.
+!    ! NOTE: 1 = clumping factor, -0.5 is decay coefficient
+!    direct_trans = exp(-0.5d0 * lai(9) * 1d0)
+!    ! Estimate the transmittance fraction of the canopy incident SW
+!    par_trans = pars(16) * lai(9) + pars(22)
+!    nir_trans = pars(17) * lai(9) + pars(23)
+!    ! Estimate the fraction of input SW which reaches the surface
+!    tmp = (1d0 * (1d0-direct_trans)) ! estimate the SW total incident on the canopy
+!    direct_trans = (1d0 * direct_trans) + ((tmp*sw_par_fraction)*par_trans) + ((tmp*(1d0-sw_par_fraction))*nir_trans)
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. direct_trans > 0.20d0) then
+!         EDC1 = 0 ; EDCD%PASSFAIL(6) = 0
+!    endif
 
-    ! It is highly unlikely that by LAI 5 transmittance should be zero
-    if ((EDC1 == 1 .or. DIAG == 1) .and. par_trans <= 0.0d0) then
-         EDC1 = 0 ; EDCD%PASSFAIL(7) = 0
+    ! the transmittance of NIR should always be > than PAR at all LAI values
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(15) < pars(14)) then
+         EDC1 = 0 ; EDCD%PASSFAIL(1) = 0
     endif
-    if ((EDC1 == 1 .or. DIAG == 1) .and. nir_trans <= 0.0d0) then
-         EDC1 = 0 ; EDCD%PASSFAIL(8) = 0
+    ! Reflectance of incident radiation should be greater than transmittance
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(15) > pars(17) ) then
+         EDC1 = 0 ; EDCD%PASSFAIL(2) = 0
     endif
-
+    ! Reflectance of incident radiation should be greater than transmittance
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(14) > pars(16)) then
+         EDC1 = 0 ; EDCD%PASSFAIL(3) = 0
+    endif
+    ! reflectance should be greater for NIR than for PAR
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(17) < pars(16)) then
+         EDC1 = 0 ; EDCD%PASSFAIL(4) = 0
+    endif
     ! assume that photosynthesis limitation at 0C should be between 10 % and 20 %
     ! of potential. Fatchi et al (2013), New Phytologist, https://doi.org/10.1111/nph.12614
     tmp = opt_max_scaling(pars(2),pars(3),pars(4),0d0)
     if ((EDC1 == 1 .or. DIAG == 1) .and. tmp > 0.20d0) then
-       EDC1 = 0 ; EDCD%PASSFAIL(9) = 0
+       EDC1 = 0 ; EDCD%PASSFAIL(5) = 0
     endif
 
     ! Longwave radiation incident on the canopy should be almost entirely absorbed by the canopy
     ! Here we assume that such a circumstance should occur by LAI >= 1
-    lw_trans = 0.02d0 * (1d0 - (lai(7) / (lai(7)+pars(6)))) ; lw_refl = 0.02d0 * (1d0 - (lai(7) / (lai(7)+pars(7))))
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (1d0 - lw_trans - lw_refl) < 0.99d0) then
-        EDC1 = 0 ; EDCD%PASSFAIL(10) = 0
-    endif
+!    lw_trans = 0.02d0 * (1d0 - (lai(7) / (lai(7)+pars(6)))) ; lw_refl = 0.02d0 * (1d0 - (lai(7) / (lai(7)+pars(7))))
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. (1d0 - lw_trans - lw_refl) < 0.99d0) then
+!        EDC1 = 0 ; EDCD%PASSFAIL(10) = 0
+!    endif
 
   end subroutine EDC1_GSI
   !
@@ -723,7 +704,7 @@ module model_likelihood_module
         likelihood = likelihood-0.5d0*tot_exp
     endif
 
-!    ! Borrowed Cfol_stock to provide wet canopy evaporation for ACM recal  (kgH2O.m-2.day-1) Log-likelihood
+    ! Borrowed Cfol_stock to provide wet canopy evaporation for ACM recal  (kgH2O.m-2.day-1) Log-likelihood
 !    tot_exp = 0d0
 !    if (DATAin%nCfol_stock > 0) then
 !        do n = 1, DATAin%nCfol_stock
@@ -788,7 +769,7 @@ module model_likelihood_module
         scale_likelihood = scale_likelihood-0.5d0*(tot_exp/dble(DATAin%nEvap))
     endif
 
-    ! Borrowed wood increment to provide soil evaporation for ACM recal  (kgH2O.m-2.day-1) Log-likelihood
+    ! Borrowed wood increment to provide soil evaporation for ACM recal (kgH2O.m-2.day-1) Log-likelihood
     tot_exp = 0d0
     if (DATAin%nwoo > 0) then
         do n = 1, DATAin%nwoo
@@ -799,7 +780,7 @@ module model_likelihood_module
         scale_likelihood = scale_likelihood-0.5d0*(tot_exp/dble(DATAin%nwoo))
     endif
 
-!    ! Borrowed Cfol_stock to provide wet canopy evaporation for ACM recal  (kgH2O.m-2.day-1) Log-likelihood
+    ! Borrowed Cfol_stock to provide wet canopy evaporation for ACM recal  (kgH2O.m-2.day-1) Log-likelihood
 !    tot_exp = 0d0
 !    if (DATAin%nCfol_stock > 0) then
 !        do n = 1, DATAin%nCfol_stock
@@ -807,7 +788,7 @@ module model_likelihood_module
 !          ! note that division is the uncertainty
 !          tot_exp = tot_exp+((DATAin%M_FLUXES(dn,4)-DATAin%Cfol_stock(dn))/DATAin%Cfol_stock_unc(dn))**2
 !        end do
-!        scale_likelihood = scale_likelihood-0.5d0*tot_exp
+!        scale_likelihood = scale_likelihood-0.5d0*(tot_exp/dble(DATAin%nCfol_stock))
 !    endif
 
     ! check that log-likelihood is an actual number

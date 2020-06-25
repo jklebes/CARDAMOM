@@ -221,31 +221,24 @@ module CARBON_MODEL_MOD
 
   ! ACM-GPP-ET parameters
   double precision, parameter :: &
-                        pn_max_temp = 5.978665d+01, & ! Maximum temperature for photosynthesis (oC)
-                        pn_opt_temp = 3.150166d+01, & ! Optimum temperature fpr photosynthesis (oC)
-                        pn_kurtosis = 1.730812d-01, & ! Kurtosis of photosynthesis temperature response
-                                 e0 = 5.897208d+00, & ! Quantum yield gC/MJ/m2/day PAR
-         lai_half_lwrad_transmitted = 1.639527d-01, & ! LAI at which LW transmittance to soil at 50 %
-           lai_half_lwrad_reflected = 6.746538d-03, & ! LAI at which LW reflectance to sky at 50 %
-             max_lai_nir_reflection = 1.457203d-01, & ! Coefficient relating NIR reflectance and LAI
-            lai_half_nir_reflection = 1.720843d-02, & ! LAI at which canopy NIR reflection = 50 %
-                     minlwp_default =-1.936111d+00, & ! minimum leaf water potential (MPa)
-             max_lai_par_reflection = 1.774887d-01, & ! Max fraction of PAR reflected by canopy
-            lai_half_par_reflection = 1.094594d-02, & ! LAI at which canopy PAR reflected = 50 %
-                      max_lw_escape = 5.813763d-01, & ! Max LW which is released from canopy that escapes in one direction
-                               iWUE = 3.312080d-06, & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
-              soil_swrad_absorption = 9.641337d-01, & ! Fraction of SW rad absorbed by soil
-            max_lai_par_transmitted =-1.096639d-02, & ! Max fraction reduction in PAR transmittance by canopy
-            max_lai_nir_transmitted =-1.255590d-02, & ! Max fraction reduction in NIR transmittance by canopy
-              max_lai_lwrad_release = 9.989129d-01, & ! 1-Max fraction of LW emitted from canopy to be released
-             lai_half_lwrad_release = 2.009765d+00, & ! LAI at which LW emitted from canopy to be released at 50 %
-               soil_iso_to_net_coef =-9.475060d-01, & ! Coefficient relating soil isothermal net radiation to net.
-              soil_iso_to_net_const =-2.443723d+00, & ! Constant relating soil isothermal net radiation to net
-                max_par_transmitted = 1.392685d-01, & ! Max fraction of canopy incident PAR transmitted to soil
-                max_nir_transmitted = 2.352473d-01, & ! Max fraction of canopy incident NIR transmitted to soil
-                  max_par_reflected = 4.700132d-01, & ! Max fraction of canopy incident PAR reflected to sky
-                  max_nir_reflected = 5.338683d-01    ! Max fraction of canopy incident NIR reflected to sky
-
+                   pn_max_temp = 6.416723d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
+                   pn_opt_temp = 3.559088d+01,  & ! Optimum daily max temperature for photosynthesis (oC)
+                   pn_kurtosis = 1.599325d-01,  & ! Kurtosis of photosynthesis temperature response
+                            e0 = 3.707992d+00,  & ! Quantum yield gC/MJ/m2/day PAR
+                minlwp_default =-2.158644d+00,  & ! minimum leaf water potential (MPa)
+                 max_lw_escape = 5.008693d-01,  & ! Max LW which is released from canopy that escapes in one direction
+                          iWUE = 9.387512d-08,  & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
+         soil_swrad_absorption = 9.826268d-01,  & ! Fraction of SW rad absorbed by soil
+         max_lai_lwrad_release = 9.756301d-01,  & ! 1-Max fraction of LW emitted from canopy to be released
+        lai_half_lwrad_release = 3.685006d+00,  & ! LAI at which LW emitted from canopy to be released at 50 %
+          soil_iso_to_net_coef =-2.376724d-05,  & ! Coefficient relating soil isothermal net radiation to net.
+         soil_iso_to_net_const = 1.493317d+00,  & ! Constant relating soil isothermal net radiation to net
+           max_par_transmitted = 1.605450d-01,  & ! Max fraction of canopy incident PAR transmitted to soil
+           max_nir_transmitted = 2.620704d-01,  & ! Max fraction of canopy incident NIR transmitted to soil
+             max_par_reflected = 1.605522d-01,  & ! Max fraction of canopy incident PAR reflected to sky
+             max_nir_reflected = 4.289277d-01,  & ! Max fraction of canopy incident NIR reflected to sky
+        canopy_iso_to_net_coef = 9.999143d-02,  & ! Coefficient relating canopy isothermal net radiation to net.
+       canopy_iso_to_net_const = 1.491501d+00     ! Constant relating canopy isothermal net radiation to net
   double precision :: minlwp = minlwp_default
 
   !!!!!!!!!
@@ -1776,6 +1769,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! local variables
     double precision :: lwrad, & ! downward long wave radiation from sky (W.m-2)
          transmitted_fraction, & ! fraction of LW which is not incident on the canopy
+  canopy_transmitted_fraction, & !
         longwave_release_soil, & ! emission of long wave radiation from surfaces per m2
       longwave_release_canopy, & ! assuming isothermal condition (W.m-2)
             trans_lw_fraction, &
@@ -1792,7 +1786,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   soil_absorption_from_canopy    ! soil absorbed radiation emitted from canopy (W.m-2)
 
     ! local parameters
-    double precision, parameter :: clump = 1d0    & ! leaf clumping factor (1 = uniform)
+    double precision, parameter :: clump = 0.75d0 & ! Clumping factor (1 = uniform, 0 totally clumped)
+                                                    ! He et al., (2012) http://dx.doi.org/10.1016/j.rse.2011.12.008
                                   ,decay = -0.5d0   ! decay coefficient for incident radiation
 
     ! estimate long wave radiation from atmosphere (W.m-2)
@@ -1820,8 +1815,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! skews towards reduced transmittance at higher LAI. Both transmittance and
     ! reflectance follow linear a relationship with a common intercept
     ! NOTE: 0.02 = (1-emissivity) * 0.5
-    trans_lw_fraction     = 0.02d0 * (1d0 - (lai/(lai+lai_half_lwrad_transmitted)))
-    reflected_lw_fraction = 0.02d0 * (1d0 - (lai/(lai+lai_half_lwrad_reflected)))
+
+    canopy_transmitted_fraction = exp(decay * lai * 0.5d0 * clump)
+    trans_lw_fraction     = 0.02d0 * canopy_transmitted_fraction
+    reflected_lw_fraction = 0.02d0 * canopy_transmitted_fraction
     ! Absorption is the residual
     absorbed_lw_fraction = 1d0 - trans_lw_fraction - reflected_lw_fraction
 
@@ -1843,9 +1840,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Long wave absorbed by soil from the sky, soil absorption assumed to be
     ! equal to emissivity
     soil_incident_from_sky = soil_incident_from_sky + (trans_lw_fraction * lwrad)
-    !soil_absorption_from_sky = soil_incident_from_sky * emissivity
+    soil_absorption_from_sky = soil_incident_from_sky * emissivity
     ! Long wave reflected directly back into sky
-    !sky_lwrad_Wm2 = lwrad * reflected_lw_fraction
+    sky_lwrad_Wm2 = lwrad * reflected_lw_fraction
 
     !!!!!!!!!!
     ! Distribute longwave from soil
@@ -1855,10 +1852,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! which is reflected
     canopy_absorption_from_soil = longwave_release_soil + (soil_incident_from_sky * (1d0-emissivity))
     ! First how much directly bypasses the canopy...
-    !sky_lwrad_Wm2 = sky_lwrad_Wm2 + (canopy_absorption_from_soil * transmitted_fraction)
+    sky_lwrad_Wm2 = sky_lwrad_Wm2 + (canopy_absorption_from_soil * transmitted_fraction)
     canopy_absorption_from_soil = canopy_absorption_from_soil * (1d0 - transmitted_fraction)
     ! Second, use this to estimate the longwave returning to the sky
-    !sky_lwrad_Wm2 = sky_lwrad_Wm2 + (canopy_absorption_from_soil * trans_lw_fraction)
+    sky_lwrad_Wm2 = sky_lwrad_Wm2 + (canopy_absorption_from_soil * trans_lw_fraction)
     ! Third, now calculate the longwave from the soil surface absorbed by the
     ! canopy
     canopy_absorption_from_soil = canopy_absorption_from_soil * absorbed_lw_fraction
@@ -1872,9 +1869,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! to soil once to sky)
     canopy_loss = longwave_release_canopy * lai * canopy_release_fraction
     ! Calculate longwave absorbed by soil which is released by the canopy itself
-    !soil_absorption_from_canopy = canopy_loss * emissivity
+    soil_absorption_from_canopy = canopy_loss * emissivity
     ! Canopy released longwave returned to the sky
-    !sky_lwrad_Wm2 = sky_lwrad_Wm2 + canopy_loss
+    sky_lwrad_Wm2 = sky_lwrad_Wm2 + canopy_loss
 
     !!!!!!!!!!
     ! Isothermal net long wave canopy and soil balance (W.m-2)
@@ -1884,7 +1881,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! upwards and downwards emissions
     canopy_lwrad_Wm2 = (canopy_absorption_from_sky + canopy_absorption_from_soil) - (canopy_loss + canopy_loss)
     ! determine isothermal net soil
-    !soil_lwrad_Wm2 = (soil_absorption_from_sky + soil_absorption_from_canopy) - longwave_release_soil
+    soil_lwrad_Wm2 = (soil_absorption_from_sky + soil_absorption_from_canopy) - longwave_release_soil
 
   end subroutine calculate_longwave_isothermal
   !
@@ -1902,14 +1899,21 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! isothermal longwave balance to net based on soil surface incident shortwave
     ! radiation
 
+    ! declare local variables
+    double precision :: delta_iso
+
     ! Estimate shortwave radiation balance
     call calculate_shortwave_balance
     ! Estimate isothermal long wave radiation balance
     call calculate_longwave_isothermal(meant,meant)
     ! Apply linear correction to soil surface isothermal->net longwave radiation
     ! balance based on absorbed shortwave radiation
-!    soil_lwrad_Wm2 = soil_lwrad_Wm2 &
-!                   + (soil_iso_to_net_coef * (soil_swrad_MJday * 1d6 * dayl_seconds_1) + soil_iso_to_net_const)
+    delta_iso = soil_iso_to_net_coef * (soil_swrad_MJday * 1d6 * dayl_seconds_1) + soil_iso_to_net_const
+    soil_lwrad_Wm2 = soil_lwrad_Wm2 + delta_iso
+    ! Apply linear correction to canopy isothermal->net longwave radiation
+    ! balance based on absorbed shortwave radiation
+    delta_iso = canopy_iso_to_net_coef * (canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_iso_to_net_const
+    canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + delta_iso
 
   end subroutine calculate_radiation_balance
   !
@@ -1930,25 +1934,27 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     implicit none
 
     ! local variables
-    double precision :: balance                    &
-                       ,transmitted_fraction       &
-                       ,par,nir                    &
-                       ,soil_par_MJday             &
-                       ,soil_nir_MJday             &
-                       ,trans_nir_MJday            &
-                       ,trans_par_MJday            &
-                       ,canopy_nir_MJday           &
-                       ,refl_par_MJday             &
-                       ,refl_nir_MJday             &
-                       ,reflected_nir_fraction     & !
-                       ,reflected_par_fraction     & !
-                       ,absorbed_nir_fraction      & !
-                       ,absorbed_par_fraction      & !
-                       ,trans_nir_fraction         & !
+    double precision :: balance                     &
+                       ,transmitted_fraction        &
+                       ,canopy_transmitted_fraction &
+                       ,fsnow,par,nir               &
+                       ,soil_par_MJday              &
+                       ,soil_nir_MJday              &
+                       ,trans_nir_MJday             &
+                       ,trans_par_MJday             &
+                       ,canopy_nir_MJday            &
+                       ,refl_par_MJday              &
+                       ,refl_nir_MJday              &
+                       ,reflected_nir_fraction      & !
+                       ,reflected_par_fraction      & !
+                       ,absorbed_nir_fraction       & !
+                       ,absorbed_par_fraction       & !
+                       ,trans_nir_fraction          & !
                        ,trans_par_fraction
 
     ! local parameters
-    double precision, parameter :: clump = 1d0    & ! leaf clumping factor (1 = uniform)
+    double precision, parameter :: clump = 0.75d0 & ! Clumping factor (1 = uniform, 0 totally clumped)
+                                                    ! He et al., (2012) http://dx.doi.org/10.1016/j.rse.2011.12.008
                                   ,decay = -0.5d0   ! decay coefficient for incident radiation
 
     !!!!!!!!!!
@@ -1964,16 +1970,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Second, of the radiation which is incident on the canopy what fractions
     ! are transmitted through, reflected from or absorbed by the canopy
 
+    canopy_transmitted_fraction = exp(decay * lai * 0.5d0 * clump)
+
     ! Canopy transmitted of PAR & NIR radiation towards the soil
-    trans_par_fraction = max(0d0,max_lai_par_transmitted * lai + max_par_transmitted)
-    trans_nir_fraction = max(0d0,max_lai_nir_transmitted * lai + max_nir_transmitted)
+    trans_par_fraction = canopy_transmitted_fraction * max_par_transmitted
+    trans_nir_fraction = canopy_transmitted_fraction * max_nir_transmitted
     ! Canopy reflected of near infrared and photosynthetically active radiation
-    reflected_nir_fraction = 1d0 - ( (lai*max_lai_nir_reflection) &
-                                    /(lai+lai_half_nir_reflection) )
-    reflected_par_fraction = 1d0 - ( (lai*max_lai_par_reflection) &
-                                    /(lai+lai_half_par_reflection) )
-    reflected_nir_fraction = max_nir_reflected * reflected_nir_fraction
-    reflected_par_fraction = max_par_reflected * reflected_par_fraction
+    reflected_nir_fraction = canopy_transmitted_fraction * max_nir_reflected
+    reflected_par_fraction = canopy_transmitted_fraction * max_par_reflected
     ! Canopy absorption of near infrared and photosynthetically active radiation
     absorbed_nir_fraction = 1d0 - reflected_nir_fraction - trans_nir_fraction
     absorbed_par_fraction = 1d0 - reflected_par_fraction - trans_par_fraction
@@ -2042,9 +2046,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     canopy_swrad_MJday = canopy_par_MJday + canopy_nir_MJday
 
     ! check energy balance
-!    balance = swrad - canopy_par_MJday - canopy_nir_MJday - refl_par_MJday - refl_nir_MJday - soil_swrad_MJday
+!    balance = swrad - canopy_par_MJday - canopy_nir_MJday - refl_par_MJday -
+!    refl_nir_MJday - soil_swrad_MJday
 !    if ((balance - swrad) / swrad > 0.01) then
-!        print*,"SW residual frac = ",(balance - swrad) / swrad,"SW residual = ",balance,"SW in = ",swrad
+!        print*,"SW residual frac = ",(balance - swrad) / swrad,"SW residual =
+!        ",balance,"SW in = ",swrad
 !    endif
 
   end subroutine calculate_shortwave_balance

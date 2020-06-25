@@ -254,12 +254,14 @@ cardamom <-function (projname,model,method,stage) {
                             ,sand_clay_all,crop_man_all,burnt_all,soilwater_all,nbe_all
                             ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
                             ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
+
              # update ctessel pft in the project and potentially the model information
              PROJECT$ctessel_pft[n]=obs$ctessel_pft
              # Load additional model information
              PROJECT$model=cardamom_model_details(PROJECT$model$name,pft_specific_parameters,PROJECT$ctessel_pft)
              # write out the relevant binary files
              binary_data(met,obs,filename,PROJECT$edc,latlon[n,],PROJECT$ctessel_pft[n],PROJECT$model$name,PROJECT$parameter_type,PROJECT$model$nopars[n])
+
 #}
           }
     } # site loop

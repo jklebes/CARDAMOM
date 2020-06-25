@@ -15,7 +15,6 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load) {
       avail_files = list.files(path_to_nbe,full.names=TRUE)
       if (length(which(grepl("uoe_ln_v1.0.1x1.",avail_files) == TRUE)) > 0) {prefix = "uoe_ln_v1.0.1x1."}
       if (length(which(grepl("uoe_ln_v1.0.4x5.",avail_files) == TRUE)) > 0) {prefix = "uoe_ln_v1.0.4x5."}
-      #prefix = "uoe_ln_v1.0.1x1."
 
       # timing information on the number of day in a month
       month_days = rep(31,length.out=12)

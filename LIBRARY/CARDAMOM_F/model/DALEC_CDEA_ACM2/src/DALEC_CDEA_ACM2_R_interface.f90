@@ -175,8 +175,8 @@ subroutine rdaleccdeaacm2(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
      out_var4(i,1) = sum(FLUXES(1:nodays,4)+FLUXES(1:nodays,8)) ! fol
      out_var4(i,2) = sum(FLUXES(1:nodays,6)) ! root
      out_var4(i,3) = sum(FLUXES(1:nodays,7)) ! wood
-     out_var4(i,4) = sum(FLUXES(1:nodays,10)+FLUXES(1:nodays,12)) ! lit
-     out_var4(i,5) = sum(FLUXES(1:nodays,15))! som
+     out_var4(i,4) = sum(FLUXES(1:nodays,10)+FLUXES(1:nodays,12)+FLUXES(1:nodays,24)+FLUXES(1:nodays,25)+FLUXES(1:nodays,26)) ! lit
+     out_var4(i,5) = sum(FLUXES(1:nodays,11)+FLUXES(1:nodays,15)+FLUXES(1:nodays,27)+FLUXES(1:nodays,28)) ! som
 
   end do ! nos_iter loop
 

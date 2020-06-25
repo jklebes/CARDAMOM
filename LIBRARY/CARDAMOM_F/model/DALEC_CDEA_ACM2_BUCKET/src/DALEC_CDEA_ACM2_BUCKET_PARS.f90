@@ -119,6 +119,10 @@ module MODEL_PARAMETERS
     PI%parmin(27) = 0.35d0
     PI%parmax(27) = 20d0
 
+    ! minLWP (MPa)
+    PI%parmin(28) = -4d0
+    PI%parmax(28) = -1d0
+
     !
     ! INITIAL VALUES DECLARED HERE
     !

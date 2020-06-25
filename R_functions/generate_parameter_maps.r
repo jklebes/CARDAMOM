@@ -157,7 +157,7 @@ generate_parameter_maps<-function(PROJECT) {
   if (file.exists(outfile) == FALSE | repair == 1) {
       nos_uk_clusters = 1 ; uk_cluster = 1 ; uk_cluster_pft = 1
       if (PROJECT$model$name == "DALEC_EVERGREEN" | PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_CDEA_ACM2" |
-          PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_GSI_BUCKET" |
+          PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET" | PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_GSI_BUCKET" |
           PROJECT$model$name == "DALEC" | PROJECT$model$name == "DALEC_BUCKET") {
 
           # remove non-constrained parameters (i.e. those not actually used in this analysis)
@@ -388,7 +388,7 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(grid_parameters$mean_radiation_MJm2day, col=rev(colour_choices), main="Mean radiation (MJ/m2/day)"
             ,axes=FALSE, cex.main=2.4,legend.width=3.0
-            ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(0,40))
+            ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(0,36))
   contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
   # mean vpd

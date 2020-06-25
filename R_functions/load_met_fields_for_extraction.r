@@ -265,24 +265,52 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         # not to match with the met files just at the moment.
         # This will be corrected later on when the location specific data are extracted
         print("...generating day of year variables")
+
+        # Read in Mauna Loa CO2 (ppm)
+        # Currently not other source is coded for atmospheric CO2 concentrations so we use the Mauna Loa background.
+        # The current dataset is provided with CARDAMOM source code and covers 1959-2019 at monthly time step.
+        # The data are sourced from https://www.esrl.noaa.gov/gmd/ccgg/trends/data.html .
+        # The interpolated (gap-filled) observations were extracted and processed into a simple file for our use.
+        co2_background = read.csv("./R_functions/co2_monthly.csv", header=TRUE)
+        if (years_to_load[1] < co2_background$year[1] | years_to_load[length(years_to_load)] > co2_background$year[dim(co2_background)[1]]) {
+            stop("Available CO2 information in ./R_functions/co2_monthly.csv does not cover project time frame...")
+        }
         for (yr in seq(1,length(years_to_load))) {
              # if this includes the extra year add it on to the beginning
              if (extra_year) {extra_nos_days = nos_days_in_year(load_years[1])}
              # is current year a leap or not
              nos_days = nos_days_in_year(years_to_load[yr])
-
+             # Extract this years CO2
+             co2_annual = co2_background$co2[which(co2_background$year == years_to_load[yr])]
+             if (nos_days == 366) {
+                 days_per_month=c(31,29,31,30,31,30,31,31,30,31,30,31)
+             } else {
+                 days_per_month=c(31,28,31,30,31,30,31,31,30,31,30,31)
+             }
              # reconstruct arrays before doing site level
-            if (yr == 1) {
+             if (yr == 1) {
                 doy = seq(1,nos_days)
-#                co2=rep(c(450,445,440,440,440,430,420,400,390,380,360,350,340,330,330,340,355,370,390,400,420,440,445,450),length.out=(nos_days*steps_in_day), each=floor((nos_days*steps_in_day)/24))
                 # mass of dry air = 28.97(g/mol) ; mass of co2 = 44.01 (g/mol); *1e-6 scale from umol -> mol
-                co2 = rep(380,length.out=(nos_days*steps_in_day)) # default ppm 570 / 370 face
-                if (extra_year) {co2 = append(rep(380,length.out=(extra_nos_days*steps_in_day)),co2)}
-            } else {
+                co2 = rep(co2_annual,times = days_per_month) # specifically generate the right number of days per month
+                co2 = rep(co2, each = steps_in_day)
+                #co2 = rep(380,length.out=(nos_days*steps_in_day)) # default ppm 570 / 370 face
+                if (extra_year) {
+                    if (extra_nos_days == 366) {
+                        days_per_month=c(31,29,31,30,31,30,31,31,30,31,30,31)
+                    } else {
+                        days_per_month=c(31,28,31,30,31,30,31,31,30,31,30,31)
+                    }
+                    extra_co2 = rep(co2_annual,times = days_per_month) # specifically generate the right number of days per month
+                    extra_co2 = rep(extra_co2, each = steps_in_day)
+                    co2 = append(extra_co2,co2)
+                }
+             } else {
                 doy = append(doy,seq(1,nos_days))
-#                co2=append(co2,rep(c(450,445,440,440,440,430,420,400,390,380,360,350,340,330,330,340,355,370,390,400,420,440,445,450),length.out=(nos_days*steps_in_day), each=floor((nos_days*steps_in_day)/24))+(2*yr))
-                co2 = append(co2,rep(380,length.out=(nos_days*steps_in_day)))
-            }
+                extra_co2 = rep(co2_annual,times = days_per_month) # specifically generate the right number of days per month
+                extra_co2 = rep(extra_co2, each = steps_in_day)
+                co2 = append(co2, extra_co2)
+#                co2 = append(co2,rep(380,length.out=(nos_days*steps_in_day)))
+             }
         } # end of years loop
 
         # create day of run variable

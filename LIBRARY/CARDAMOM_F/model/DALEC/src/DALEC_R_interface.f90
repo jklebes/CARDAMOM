@@ -260,10 +260,10 @@ subroutine rdalec(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
          out_var3(i,3) = 1/365.25
          ! Lit+litwood
          out_var3(i,4) = sum( ((FLUXES(1:nodays,13)+FLUXES(1:nodays,15)) &
-                              / POOLS(1:nodays,5) * lit_filter) / dble(nodays-sum(lit_hak)
+                              / POOLS(1:nodays,5)) * lit_filter) / dble(nodays-sum(lit_hak))
          ! Soil
          out_var3(i,5) = sum( ((FLUXES(1:nodays,14)+fire_loss_som + harvest_loss_som) &
-                              / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak)
+                              / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
 
          ! Assume constant residence times for crops at the moment
          out_var5(i,1,:) = out_var3(i,1)
@@ -317,20 +317,20 @@ subroutine rdalec(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
 
          ! Foliage
          out_var3(i,1) = sum( ((FLUXES(1:nodays,10)+fire_loss_foliar + harvest_loss_foliar) &
-                              / POOLS(1:nodays,2)) * fol_filter) / dble(nodays-sum(fol_hak)
+                              / POOLS(1:nodays,2)) * fol_filter) / dble(nodays-sum(fol_hak))
          ! Fine roots
          out_var3(i,2) = sum( ((FLUXES(1:nodays,12)+fire_loss_roots + harvest_loss_roots) &
-                              / POOLS(1:nodays,3)) * root_filter) / dble(nodays-sum(root_hak)
+                              / POOLS(1:nodays,3)) * root_filter) / dble(nodays-sum(root_hak))
          ! Wood
          out_var3(i,3) = sum( ((FLUXES(1:nodays,11)+fire_loss_wood + harvest_loss_wood) &
-                              / POOLS(1:nodays,4)) * wood_filter) / dble(nodays-sum(wood_hak)
+                              / POOLS(1:nodays,4)) * wood_filter) / dble(nodays-sum(wood_hak))
          ! Lit+litwood
          out_var3(i,4) = sum( ((FLUXES(1:nodays,13)+FLUXES(1:nodays,15)+FLUXES(1:nodays,20)+FLUXES(1:nodays,4) &
                                +fire_loss_litter + harvest_loss_litter + fire_loss_litwood + harvest_loss_litwood) &
-                              / (POOLS(1:nodays,5)+POOLS(1:nodays,7))) * lit_filter) / dble(nodays-sum(lit_hak)
+                              / (POOLS(1:nodays,5)+POOLS(1:nodays,7))) * lit_filter) / dble(nodays-sum(lit_hak))
          ! Soil
          out_var3(i,5) = sum( ((FLUXES(1:nodays,14)+fire_loss_som + harvest_loss_som) &
-                              / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak)
+                              / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
 
          !
          ! Annual residence times
@@ -341,7 +341,7 @@ subroutine rdalec(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
             ! Estimate time steps covered by this year
             y_s = 1 + (steps_per_year * (y-1)) ; y_e = steps_per_year * y
             ! Foliage
-            out_var5(i,1,y) = sum( ((FLUXES(y_s:y_e,10) + fire_loss_foliar(y_s:y_e) + harvest_loss_foliar(y_s:y_e) &
+            out_var5(i,1,y) = sum( ((FLUXES(y_s:y_e,10) + fire_loss_foliar(y_s:y_e) + harvest_loss_foliar(y_s:y_e)) &
                                    / POOLS(y_s:y_e,2)) * fol_filter(y_s:y_e)) / dble(steps_per_year-sum(fol_hak(y_s:y_e)))
             ! Fine roots
             out_var5(i,2,y) = sum( ((FLUXES(y_s:y_e,12) + fire_loss_roots(y_s:y_e) + harvest_loss_roots(y_s:y_e)) &

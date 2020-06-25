@@ -50,7 +50,7 @@ module cardamom_io
     if (DATAin%ID == 0) then
         ! ID = 0 - ACM/ACM-ET
         DATAin%nopools = 2
-        DATAin%nopars = 25
+        DATAin%nopars = 19
         DATAin%nofluxes = 4
     else if (DATAin%ID == 1) then
         ! ID = 1 - DALEC_CDEA
@@ -228,7 +228,7 @@ module cardamom_io
     else if (DATAin%ID == 27) then
         ! ID = 25 - DALEC_CDEA_ACM2_BUCKET
         DATAin%nopools = 7
-        DATAin%nopars = 27
+        DATAin%nopars = 28
         DATAin%nofluxes = 29
     else
        write(*,*) "Oh dear... model ID cannot be found"
