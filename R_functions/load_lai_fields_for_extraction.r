@@ -116,7 +116,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
     avail_files = list.files(path_to_lai,full.names=TRUE)
     if (length(which(grepl("c_gls_LAI_", avail_files)))) {
         prefix = "c_gls_LAI_"
-    } else { 
+    } else {
         prefix = "c_gls_LAI300_"
     }
 
@@ -137,8 +137,6 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
         for (yrr in seq(1, length(years_to_load))) {
           # create the prefix to the files we will want for a given year
           input_file_1=paste(prefix,years_to_load[yrr],sep="")
-#          input_file_1=paste("c_gls_LAI_",years_to_load[yrr],sep="")
-#          input_file_1=paste("c_gls_LAI300_",years_to_load[yr],sep="")
           # then check whether this pattern is found in the available files
           this_year = grepl(input_file_1, avail_files) ; this_year = which(this_year == TRUE)
           # if we have at least one timestep for this year then we have some information otherwise it is missing!
@@ -153,8 +151,6 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
 
       # open processed modis files
       input_file_1=paste(prefix,years_to_load[yr],sep="")
-#      input_file_1=paste("c_gls_LAI_",years_to_load[yr],sep="")
-#      input_file_1=paste("c_gls_LAI300_",years_to_load[yr],sep="")
       # then check whether this pattern is found in the available files
       this_year = avail_files[grepl(input_file_1, avail_files)]
 
@@ -175,24 +171,24 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
 
             # extract location variables
             if (lat_done == FALSE) {
-              lat = ncvar_get(data1, "lat") ; long = ncvar_get(data1, "lon")
-              lat = array(rev(lat), dim=c(length(lat),length(long))) ; lat = t(lat)
-              long = array(long, dim=dim(lat))
-              # restrict the spatial extent based on latlong ranges provided
-              remove_lat = intersect(which(lat < (max(latlon_in[,1])+2)),which(lat > (min(latlon_in[,1])-2)))
-              remove_long = intersect(which(long < (max(latlon_in[,2])+2)),which(long > (min(latlon_in[,2])-2)))
-              # now find common where out in both contexts
-              remove_lat = intersect(remove_lat,remove_long)
-              # update both variables because of common matrix
-              remove_long = remove_lat
-              # adjust for matrix rather than vector arrangement
-              remove_lat = remove_lat/dim(lat)[1]
-              remove_long = (remove_long-(floor(remove_lat)*dim(lat)[1]))+1
-              remove_lat = ceiling(remove_lat)
-              # update new dimensions
-              lat_dim = length(min(remove_lat):max(remove_lat)) ; long_dim = length(min(remove_long):max(remove_long))
-              lat = lat[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
-              long = long[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
+                lat = ncvar_get(data1, "lat") ; long = ncvar_get(data1, "lon")
+                lat = array(rev(lat), dim=c(length(lat),length(long))) ; lat = t(lat)
+                long = array(long, dim=dim(lat))
+                # restrict the spatial extent based on latlong ranges provided
+                remove_lat = intersect(which(lat < (max(latlon_in[,1])+2)),which(lat > (min(latlon_in[,1])-2)))
+                remove_long = intersect(which(long < (max(latlon_in[,2])+2)),which(long > (min(latlon_in[,2])-2)))
+                # now find common where out in both contexts
+                remove_lat = intersect(remove_lat,remove_long)
+                # update both variables because of common matrix
+                remove_long = remove_lat
+                # adjust for matrix rather than vector arrangement
+                remove_lat = remove_lat/dim(lat)[1]
+                remove_long = (remove_long-(floor(remove_lat)*dim(lat)[1]))+1
+                remove_lat = ceiling(remove_lat)
+                # update new dimensions
+                lat_dim = length(min(remove_lat):max(remove_lat)) ; long_dim = length(min(remove_long):max(remove_long))
+                lat = lat[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
+                long = long[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
             }
 
             # read the LAI observations

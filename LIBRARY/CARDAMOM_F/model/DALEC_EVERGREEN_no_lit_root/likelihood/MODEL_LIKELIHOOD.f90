@@ -49,7 +49,7 @@ module model_likelihood_module
     MCO%nWRITE = 0
     ! the next two lines ensure that parameter inputs are either given or
     ! entered as -9999
-    MCO%randparini = .true. 
+    MCO%randparini = .true.
     MCO%returnpars = .true.
     MCO%fixedpars  = .true. ! TLS: changed from .false. for testing 16/12/2019
 
@@ -116,6 +116,8 @@ module model_likelihood_module
                do n = 1, PI%npars
                   PI%covariance(n,n) = 1d0
                end do
+           else
+               PEDC_prev = PEDC
            endif
 
         end do ! for while condition

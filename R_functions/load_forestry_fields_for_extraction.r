@@ -33,14 +33,14 @@ load_forestry_fields_for_extraction<-function(latlon_in,forestry_source,years_to
       # tertiary_cover[which(is.na(as.vector(tertiary_pft)))]=-9999
 
       # might not be the most efficient way of doing things but here we go
-      #	keep_primary=which(as.vector(primary_cover) > 0 & 
-      #                    as.vector(primary_cover) > as.vector(secondary_cover) & 
+      #	keep_primary=which(as.vector(primary_cover) > 0 &
+      #                    as.vector(primary_cover) > as.vector(secondary_cover) &
       #                    as.vector(primary_cover) > as.vector(tertiary_cover))
-      # keep_secondary=which(as.vector(secondary_cover) > 0 & 
-      #                      as.vector(secondary_cover) > as.vector(primary_cover) & 
+      # keep_secondary=which(as.vector(secondary_cover) > 0 &
+      #                      as.vector(secondary_cover) > as.vector(primary_cover) &
       #                      as.vector(secondary_cover) > as.vector(tertiary_cover))
-      # keep_tertiary=which(as.vector(tertiary_cover) > 0 & 
-      #                     as.vector(tertiary_cover) > as.vector(primary_cover) & 
+      # keep_tertiary=which(as.vector(tertiary_cover) > 0 &
+      #                     as.vector(tertiary_cover) > as.vector(primary_cover) &
       #                     as.vector(tertiary_cover) > as.vector(secondary_cover))
 
       # create the empty spaces with default value -9999 present
@@ -217,8 +217,8 @@ load_forestry_fields_for_extraction<-function(latlon_in,forestry_source,years_to
 
       for (yrr in seq(1,length(years_to_load))){
 
-          input_file_2=paste(path_to_forestry,"GFW_forest_loss_",years_to_load[yrr],".nc",sep="")
-          data2=nc_open(input_file_2)
+          input_file_2 = paste(path_to_forestry,"GFW_forest_loss_",years_to_load[yrr],".nc",sep="")
+          data2 = nc_open(input_file_2)
 
           if (length(dim(latlon_in)) > 1) {
               max_lat=max(latlon_in[,1])+1.0 ; max_long=max(latlon_in[,2])+1.0
@@ -268,5 +268,3 @@ load_forestry_fields_for_extraction<-function(latlon_in,forestry_source,years_to
   }
 
 } # end of function
-
-

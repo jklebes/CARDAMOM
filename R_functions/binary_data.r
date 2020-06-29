@@ -185,28 +185,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
 
   # Assign model specific parameter priors
   if (modelname == "DALEC_CDEA" | modelname == "DALEC_CDEA_LU_FIRES") {
-#PARPRIORS[1] = 0.000326013819228502 ; PARPRIORUNC[1] = 0.000879399144451284
-#PARPRIORS[3] = 0.0729399487240177 ; PARPRIORUNC[3] = 0.0997395986670828
-#PARPRIORS[4] = 0.106860681632917 ; PARPRIORUNC[4] = 0.174507434726848
-#PARPRIORS[5] = 2.86875225552078 ; PARPRIORUNC[5] = 2.02679771388006
-#PARPRIORS[6] = 9.47128897959764e-05 ; PARPRIORUNC[6] = 0.000162905568493426
-#PARPRIORS[7] = 0.00263102582081576 ; PARPRIORUNC[7] = 0.0024275057248429
-#PARPRIORS[8] = 0.00102082075191553 ; PARPRIORUNC[8] = 0.00164769121470253
-#PARPRIORS[9] = 1.99237245503688e-05 ; PARPRIORUNC[9] = 2.65952316233298e-05
-#PARPRIORS[10] = 0.0332526602831577 ; PARPRIORUNC[10] = 0.0133446953845542
-#PARPRIORS[12] = 728.333729143199 ; PARPRIORUNC[12] = 331.480613174877
-#PARPRIORS[13] = 0.0714983682776275 ; PARPRIORUNC[13] = 0.0984008865916303
-#PARPRIORS[14] = 31.794603039676 ; PARPRIORUNC[14] = 24.6546283489713
-#PARPRIORS[15] = 732.162174761743 ; PARPRIORUNC[15] = 342.884324307051
-#PARPRIORS[16] = 54.9443435243152 ; PARPRIORUNC[16] = 37.4749799108113
-#PARPRIORS[17] = 43.4137003972523 ; PARPRIORUNC[17] = 43.275440337278
-#PARPRIORS[18] = 44.0708827862435 ; PARPRIORUNC[18] = 139.033579609566
-#PARPRIORS[19] = 46.1456977146854 ; PARPRIORUNC[19] = 139.082779561602
-#PARPRIORS[20] = 45.0833531270552 ; PARPRIORUNC[20] = 140.984266165932
-#PARPRIORS[21] = 343.860322325035 ; PARPRIORUNC[21] = 2179.637266161
-#PARPRIORS[22] = 46.4292519839844 ; PARPRIORUNC[22] = 143.496757798946
       PARPRIORS[2] =0.46                ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
-      PARPRIORS[11]=16.9                ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+#      PARPRIORS[11]=16.9                ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
       PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
       PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
       PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
@@ -216,7 +196,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       OTHERPRIORS[5] = OBS$Cwood_potential     ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
   } else if (modelname == "DALEC_CDEA_ACM2") {
       PARPRIORS[2] =0.46                ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
-      PARPRIORS[11]=1.89*15.44065       ; PARPRIORUNC[11]=0.4526408 # Derived from ACM2 recalibration.
+#      PARPRIORS[11]=1.89*15.44065       ; PARPRIORUNC[11]=0.4526408 # Derived from ACM2 recalibration.
                                                                     # Note despite having the same name as ecosystem property of Amax per gN or SPA's kappaC
                                                                     # These observational constraints are not the same and would lead to
                                                                     # overestimation of GPP (SPA = 34, ACM2 = 15), but here multiple by avN (1.89) to get Ceff
@@ -301,7 +281,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
     PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALEC_GSI_DFOL_CWD_FR") {
-    PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[11]=0.2764618           ; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
+#    PARPRIORS[17]=35.5                ; PARPRIORUNC[17]=35.5*0.23 # Kiuic LCA prior
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
     PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
@@ -315,7 +296,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
         PARPRIORS[21]=-9999     ; PARPRIORUNC[21]=-9999
     } else {
         PARPRIORS[1]=0.5        ; PARPRIORUNC[1]=0.125 # fraction of litter decomposition to Csom
-        PARPRIORS[36]=11.197440 ; PARPRIORUNC[36]=9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
+#        PARPRIORS[36]=11.197440 ; PARPRIORUNC[36]=9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
         # other priors
         OTHERPRIORS[1] = 0.46   ; OTHERPRIORUNC[1] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
         # POSITION 2 used for water which does not apply here

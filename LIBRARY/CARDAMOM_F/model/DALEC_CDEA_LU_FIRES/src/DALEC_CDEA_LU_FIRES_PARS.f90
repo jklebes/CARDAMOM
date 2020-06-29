@@ -107,6 +107,8 @@ module MODEL_PARAMETERS
     ! Kattge et al. 2011
     PI%parmin(17) = 20d0
     PI%parmax(17) = 180d0
+!    PI%parmin(17) = 30d0
+!    PI%parmax(17) = 50d0
 
     !
     ! INITIAL VALUES DECLARED HERE

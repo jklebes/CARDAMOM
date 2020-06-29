@@ -120,6 +120,8 @@ module model_likelihood_module
                do n = 1, PI%npars
                   PI%covariance(n,n) = 1d0
                end do
+           else
+               PEDC_prev = PEDC
            endif
 
         end do ! for while condition
