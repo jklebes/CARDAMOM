@@ -332,6 +332,7 @@ module CARBON_MODEL_MOD
 metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limiterd photosynthesis (gC/m2/day)
     light_limited_photosynthesis, & ! light limited photosynthesis (gC/m2/day)
                           gb_mol, & ! Canopy boundary layer conductance (molCO2/m2/day)
+                        rb_mol_1, & ! Canopy boundary layer resistance (day/m2/molCO2)
                     co2_half_sat, & ! CO2 at which photosynthesis is 50 % of maximum (ppm)
                   co2_comp_point    ! CO2 at which photosynthesis > 0 (ppm)
 
@@ -403,7 +404,7 @@ contains
                        ,CFF(7) = 0d0, CFF_res(4) = 0d0    & ! combusted and non-combustion fluxes
                        ,NCFF(7) = 0d0, NCFF_res(4) = 0d0  & ! with residue and non-residue seperates
                        ,combust_eff(7)                    & ! combustion efficiency
-                       ,rfac                                ! resilience factor
+                       ,rfac(7)                             ! resilience factor
 
     ! local deforestation related variables
     double precision, dimension(5) :: post_harvest_burn & ! how much burning to occur after
@@ -660,10 +661,10 @@ contains
         ! Declare combustion efficiency (labile, foliar, roots, wood, litter, soil, woodlitter)
         combust_eff(1) = 0.1d0 ; combust_eff(2) = 0.9d0
         combust_eff(3) = 0.1d0 ; combust_eff(4) = 0.1d0
-        combust_eff(5) = 0.5d0 ; combust_eff(6) = 0.01d0
-        combust_eff(7) = 0.5d0
+        combust_eff(5) = 0.7d0 ; combust_eff(6) = 0.01d0
+        combust_eff(7) = 0.7d0
         ! Resilience factor for non-combusted tissue
-        rfac = 0.5d0
+        rfac = 0.5d0 ; rfac(5) = 0.1d0 ; rfac(6) = 0d0 ; rfac(7) = 0.1d0
 
     end if ! disturbance ?
 
@@ -1192,25 +1193,25 @@ contains
                ! Calculate combusted flux and non-combusted turnover
                ! Labile
                CFF(1) = POOLS(n+1,1)*burnt_area*combust_eff(1)
-               NCFF(1) = POOLS(n+1,1)*burnt_area*(1d0-combust_eff(1))*(1d0-rfac)
+               NCFF(1) = POOLS(n+1,1)*burnt_area*(1d0-combust_eff(1))*(1d0-rfac(1))
                ! Foliage
                CFF(2) = POOLS(n+1,2)*burnt_area*combust_eff(2)
-               NCFF(2) = POOLS(n+1,2)*burnt_area*(1d0-combust_eff(2))*(1d0-rfac)
+               NCFF(2) = POOLS(n+1,2)*burnt_area*(1d0-combust_eff(2))*(1d0-rfac(2))
                ! Fine root
-               CFF(3) = 0d0 !POOLS(n+1,3)*burnt_area*combust_eff(3)
-               NCFF(3) = 0d0 !POOLS(n+1,3)*burnt_area*(1d0-combust_eff(3))*(1d0-rfac)
+               CFF(3) = POOLS(n+1,3)*burnt_area*combust_eff(3)
+               NCFF(3) = POOLS(n+1,3)*burnt_area*(1d0-combust_eff(3))*(1d0-rfac(3))
                ! Wood (above + below)
                CFF(4) = POOLS(n+1,4)*burnt_area*combust_eff(4)
-               NCFF(4) = POOLS(n+1,4)*burnt_area*(1d0-combust_eff(4))*(1d0-rfac)
+               NCFF(4) = POOLS(n+1,4)*burnt_area*(1d0-combust_eff(4))*(1d0-rfac(4))
                ! Litter (foliar + fine root)
                CFF(5) = POOLS(n+1,5)*burnt_area*combust_eff(5)
-               NCFF(5) = POOLS(n+1,5)*burnt_area*(1d0-combust_eff(5))*(1d0-rfac)
+               NCFF(5) = POOLS(n+1,5)*burnt_area*(1d0-combust_eff(5))*(1d0-rfac(5))
                ! Soil - can't have a NCFF for soil as there is no where for it to go
                CFF(6) = POOLS(n+1,6)*burnt_area*combust_eff(6)
-               !NCFF(6) = POOLS(n+1,6)*burnt_area*(1d0-combust_eff(6))*(1d0-rfac)
+               !NCFF(6) = POOLS(n+1,6)*burnt_area*(1d0-combust_eff(6))*(1d0-rfac(6))
                ! Wood litter
                CFF(7) = POOLS(n+1,7)*burnt_area*combust_eff(7)
-               NCFF(7) = POOLS(n+1,7)*burnt_area*(1d0-combust_eff(7))*(1d0-rfac)
+               NCFF(7) = POOLS(n+1,7)*burnt_area*(1d0-combust_eff(7))*(1d0-rfac(7))
                ! Fire flux (gC/m2/day)
                FLUXES(n,17)=(CFF(1)+CFF(2)+CFF(3)+CFF(4)+CFF(5)+CFF(6)+CFF(7)) * deltat_1(n)
 
@@ -1282,9 +1283,8 @@ contains
     !
 
     ! maximum rate of temperature and nitrogen (canopy efficiency) limited
-    ! photosynthesis (gC.m-2.day-1)
-!    pn = lai*avN*NUE*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
-    metabolic_limited_photosynthesis = lai*avN*NUE*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
+    ! photosynthesis (gC.m-2.day-1 -> umolC/m2/day)
+    metabolic_limited_photosynthesis = gC_to_umol*lai*avN*NUE*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
 
     !
     ! Light limited photosynthesis
@@ -1303,6 +1303,7 @@ contains
     ! Note the ratio of H20:CO2 diffusion through leaf level boundary layer is
     ! 1.37 (Jones appendix 2).
     gb_mol = aerodynamic_conductance * seconds_per_day * convert_ms1_mol_1 * gb_H2O_CO2
+    rb_mol_1 = (gb_mol)**(-1d0)
 
     ! Temperature adjustments for Michaelis-Menten coefficients
     ! for CO2 (kc) and O2 (ko) and CO2 compensation point
@@ -1319,8 +1320,7 @@ contains
   !
   double precision function acm_gpp_stage_2(gs)
 
-    ! Combine the temperature (pn) and light (pl) limited gross primary
-    ! productivity
+    ! Combine the temperature (pn) and light (pl) limited gross primary productivity
     ! estimates with CO2 supply limited via stomatal conductance (gs).
     ! See acm_gpp_stage_1() for additional details on pn and pl calculation.
 
@@ -1330,11 +1330,7 @@ contains
     double precision, intent(in) :: gs
 
     ! declare local variables
-    double precision :: pp, qq, ci, mult, gc, pl, pn, pd
-
-    ! load into local variables (for code readability)
-    pn = metabolic_limited_photosynthesis
-    pl = light_limited_photosynthesis
+    double precision :: pp, qq, ci, mult, rc, pd
 
     !
     ! Diffusion limited photosynthesis
@@ -1345,11 +1341,12 @@ contains
     ! i.e. gcH2O*1.646259 = gcCO2 then all multiplied by 86400 seconds
     !
     ! Combining in series the stomatal and boundary layer conductances
-    gc = ((gs*gs_H2Ommol_CO2mol_day) ** (-1d0) + gb_mol ** (-1d0)) ** (-1d0)
+    ! to make canopy resistence
+    rc = (gs*gs_H2Ommol_CO2mol_day) ** (-1d0) + rb_mol_1
 
     ! pp and qq represent limitation by metabolic (temperature & N) and
     ! diffusion (co2 supply) respectively
-    pp = (pn*gC_to_umol)/gc ; qq = co2_comp_point-co2_half_sat
+    pp = metabolic_limited_photosynthesis*rc ; qq = co2_comp_point-co2_half_sat
     ! calculate internal CO2 concentration (ppm or umol/mol)
     mult = co2+qq-pp
     ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
@@ -1357,14 +1354,14 @@ contains
     ! calculate CO2 limited rate of photosynthesis (gC.m-2.day-1)
     ! Then scale to day light period as this is then consistent with the light
     ! capture period (1/24 = 0.04166667)
-    pd = (gc * (co2-ci)) * umol_to_gC * dayl_hours_fraction
+    pd = ((co2-ci)/rc) * umol_to_gC * dayl_hours_fraction
 
     !
     ! Estimate CO2 and light co-limitation
     !
 
     ! calculate combined light and CO2 limited photosynthesis
-    acm_gpp_stage_2 = pl*pd/(pl+pd)
+    acm_gpp_stage_2 = light_limited_photosynthesis*pd/(light_limited_photosynthesis+pd)
 
     ! sanity check
     if (acm_gpp_stage_2 /= acm_gpp_stage_2 .or. acm_gpp_stage_2 < 0d0) acm_gpp_stage_2 = 0d0
@@ -1462,24 +1459,20 @@ contains
     ! Calculate CO2 limited photosynthesis as a function of metabolic limited
     ! photosynthesis (pn), atmospheric CO2 concentration and stomatal
     ! conductance (gs_in). Photosynthesis is calculated twice to allow for
-    ! testing of senstivity to iWUE (iWUE).
+    ! testing of senstivity to iWUE.
 
-    ! Arguments
+    ! arguments
     double precision, intent(in) :: gs_in
 
-    ! Local variables
-    double precision :: gs_high, gpp_high, gpp_low
-
-    ! Estimate photosynthesis with current estimate of gs
-    gpp_low = acm_gpp_stage_2(gs_in)
-
-    ! Increment gs
-    gs_high = gs_in + delta_gs
-    ! Estimate photosynthesis with incremented gs
-    gpp_high = acm_gpp_stage_2(gs_high)
+    !!!!!!!!!!
+    ! Optimise intrinsic water use efficiency
+    !!!!!!!!!!
 
     ! Determine impact of gs increment on pd and how far we are from iWUE
-    find_gs_iWUE = iWUE - ((gpp_high - gpp_low)*lai_1)
+    find_gs_iWUE = iWUE - ((acm_gpp_stage_2(gs_in + delta_gs) - acm_gpp_stage_2(gs_in))*lai_1)
+
+    ! Remember to return back to the user
+    return
 
   end function find_gs_iWUE
   !
@@ -1501,7 +1494,7 @@ contains
     double precision :: denom, pl, pn, pn_day, iWUE_lower, iWUE_upper
     double precision, parameter :: max_gs = 2000d0, &  ! mmolH2O.m-2.s-1 (leaf area)
                                    min_gs = 1d0, &     ! mmolH2O.m-2.s-1 (leaf area)
-                                   tol_gs = 1d0        ! 4d0
+                                   tol_gs = 10d0       ! 4d0
 
     !!!!!!!!!!
     ! Calculate stomatal conductance under H2O and CO2 limitations
@@ -1550,7 +1543,7 @@ contains
         else
             ! In all other cases iterate
             stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
-                                          find_gs_iWUE,minimum_conductance,potential_conductance,tol_gs*lai)
+                                          find_gs_iWUE,minimum_conductance,potential_conductance,tol_gs*lai,iWUE*0.10d0)
         end if
 !        ! Empirical fit to outputs generated by bisection procedure.
 !        ! Assumes that water supply is not limiting, thus there is still the need to estimate supply limit and apply as bookend.
@@ -2450,20 +2443,26 @@ contains
   !
   !------------------------------------------------------------------
   !
-  double precision function zbrent( called_from , func , x1 , x2 , tol )
+  double precision function zbrent( called_from , func , x1 , x2 , tol , toltol)
 
     ! This is a bisection routine. When ZBRENT is called, we provide a    !
-    !  reference to a particular function and also two values which bound !
-    !  the arguments for the function of interest. ZBRENT finds a root of !
-    !  the function (i.e. the point where the function equals zero), that !
-    !  lies between the two bounds.                                       !
+    ! reference to a particular function and also two values which bound  !
+    ! the arguments for the function of interest. ZBRENT finds a root of  !
+    ! the function (i.e. the point where the function equals zero), that  !
+    ! lies between the two bounds.                                        !
+    ! There are five exit conditions:                                     !
+    ! 1) The first proposal for the root of the function equals zero      !
+    ! 2) The proposal range has been reduced to less then tol             !
+    ! 3) The magnitude of the function is less than toltol                !
+    ! 4) Maximum number of iterations has been reached                    !
+    ! 5) The root of the function does now lie between supplied bounds    !
     ! For a full description see Press et al. (1986).                     !
 
     implicit none
 
     ! arguments..
     character(len=*),intent(in) :: called_from    ! name of procedure calling (used to pass through for errors)
-    double precision,intent(in) :: tol, x1, x2
+    double precision,intent(in) :: tol, toltol, x1, x2
 
     ! Interfaces are the correct way to pass procedures as arguments.
     interface
@@ -2474,7 +2473,7 @@ contains
 
     ! local variables..
     integer            :: iter
-    integer, parameter :: ITMAX = 10
+    integer, parameter :: ITMAX = 8
     double precision   :: a,b,c,d,e,fa,fb,fc,p,q,r,s,tol1,tol0,xm
     double precision, parameter :: EPS = 6d-8
 
@@ -2485,20 +2484,17 @@ contains
     fb = func( b )
     tol0 = tol * 0.5d0
 
-    ! Check that we haven't (by fluke) already started with the root..
-    if ( fa .eq. 0d0 ) then
+    ! Check that we haven't (by fluke) already started with the root...
+    if ( abs(fa) < toltol ) then
         zbrent = a
         return
-    elseif ( fb .eq. 0d0 ) then
+    elseif ( abs(fb) < toltol ) then
         zbrent = b
         return
     end if
     ! Ensure the supplied x-values give y-values that lie either
     ! side of the root and if not flag an error message...
-!    if ( sign(1d0,fa) .eq. sign(1d0,fb) ) then
 !    if (fa * fb > 0d0) then
-!        fa = func( a )
-!        fb = func( b )
         ! tell me otherwise what is going on
 !!       print*,"Supplied values must bracket the root of the function.",new_line('x'),  &
 !!         "     ","You supplied x1:",x1,new_line('x'),                     &
@@ -2531,7 +2527,8 @@ contains
       end if
       tol1 = EPS * abs(b) + tol0
       xm   = 0.5d0 * ( c - b )
-      if ( ( abs(xm) .le. tol1 ) .or. ( fb .eq. 0d0 ) ) then
+!      if ( ( abs(xm) .le. tol1 ) .or. ( fb .eq. 0d0 ) ) then
+      if ( ( abs(xm) .le. tol1 ) .or. ( abs(fb) < toltol ) ) then
         zbrent = b
         return
       end if
@@ -2568,9 +2565,6 @@ contains
       end if
       fb = func(b)
     enddo
-
-!    print*,"zbrent has exceeded maximum iterations",new_line('x'),&
-!           "zbrent was called by: ",trim(called_from)
 
     zbrent = b
 

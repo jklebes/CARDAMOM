@@ -90,7 +90,7 @@ contains
              ,wf,wl,ff,fl,osf,osl,sf & ! phenological controls
              ,pi,ml, doy
     ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
-    double precision :: cf(6),rfac
+    double precision :: cf(6),rfac(6)
 
     integer :: p,f,n,ii ! JFE added ii to loop over fluxes
 
@@ -227,10 +227,11 @@ contains
     cf(2) = 0.9d0         ! foliar combustion efficiency
     cf(3) = 0.1d0         ! roots combustion efficiency
     cf(4) = 0.1d0         ! wood combustion efficiency
-    cf(5) = 0.5d0         ! litter combustion efficiency
+    cf(5) = 0.7d0         ! litter combustion efficiency
     cf(6) = 0.01d0        ! som combustion efficency
 
     rfac = 0.5d0          ! resilience factor
+    rfac(4) = 0.1d0
 
     !
     ! Begin looping through each time step
@@ -340,11 +341,11 @@ contains
           FLUXES(n,23) = POOLS(n+1,6)*met(9,n)*cf(6)/deltat(n) ! som
 
           ! second calculate litter transfer fluxes in g C m-2 d-1, all pools except som
-          FLUXES(n,24) = POOLS(n+1,1)*met(9,n)*(1d0-cf(1))*(1d0-rfac)/deltat(n) ! labile into litter
-          FLUXES(n,25) = POOLS(n+1,2)*met(9,n)*(1d0-cf(2))*(1d0-rfac)/deltat(n) ! foliar into litter
-          FLUXES(n,26) = POOLS(n+1,3)*met(9,n)*(1d0-cf(3))*(1d0-rfac)/deltat(n) ! roots into litter
-          FLUXES(n,27) = POOLS(n+1,4)*met(9,n)*(1d0-cf(4))*(1d0-rfac)/deltat(n) ! wood into som
-          FLUXES(n,28) = POOLS(n+1,5)*met(9,n)*(1d0-cf(5))*(1d0-rfac)/deltat(n) ! litter into som
+          FLUXES(n,24) = POOLS(n+1,1)*met(9,n)*(1d0-cf(1))*(1d0-rfac(1))/deltat(n) ! labile into litter
+          FLUXES(n,25) = POOLS(n+1,2)*met(9,n)*(1d0-cf(2))*(1d0-rfac(2))/deltat(n) ! foliar into litter
+          FLUXES(n,26) = POOLS(n+1,3)*met(9,n)*(1d0-cf(3))*(1d0-rfac(3))/deltat(n) ! roots into litter
+          FLUXES(n,27) = POOLS(n+1,4)*met(9,n)*(1d0-cf(4))*(1d0-rfac(4))/deltat(n) ! wood into som
+          FLUXES(n,28) = POOLS(n+1,5)*met(9,n)*(1d0-cf(5))*(1d0-rfac(5))/deltat(n) ! litter into som
 
           ! update pools - first remove burned vegetation
           POOLS(n+1,1) = POOLS(n+1,1) - (FLUXES(n,18) + FLUXES(n,24)) * deltat(n) ! labile

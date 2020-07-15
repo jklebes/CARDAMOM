@@ -86,6 +86,7 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
   ! local variables
   integer :: i, y, y_s, y_e, nos_years, steps_per_year
   integer, dimension(nodays) :: fol_hak, root_hak, wood_hak, lit_hak, som_hak
+  double precision, dimension(nos_iter) :: litwood_to_som_frac
   ! vector of ecosystem pools
   double precision, dimension((nodays+1),nopools) :: POOLS
   ! vector of ecosystem fluxes
@@ -251,6 +252,7 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
                som_hak = 1 ; som_filter(1:nodays) = 0d0
          end where
 
+         ! Initially estimate the mean fractional loss (i.e. day-1)
          ! foliage crop system residence time is due to managment < 1 year
          out_var3(i,1) = 1/365.25
          ! roots crop system residence time is due to managment < 1 year
@@ -275,6 +277,7 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
          ! Estimate pool inputs needed for steady state calculation
          !
 
+         ! Sum of gC/m2/day across time steps
          out_var4(i,1) = 0d0 ! fol
          out_var4(i,2) = 0d0 ! root
          out_var4(i,3) = 0d0 ! wood
@@ -314,6 +317,7 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
                som_hak = 1 ; som_filter(1:nodays) = 0d0
          end where
 
+         ! Initially estimate the mean fractional loss (i.e. day-1)
          ! Foliage
          out_var3(i,1) = sum( ((FLUXES(1:nodays,10)+fire_loss_foliar + harvest_loss_foliar) &
                               / POOLS(1:nodays,2)) * fol_filter) / dble(nodays-sum(fol_hak))
@@ -331,11 +335,14 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
          out_var3(i,5) = sum( ((FLUXES(1:nodays,14)+fire_loss_som + harvest_loss_som) &
                               / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
 
+         ! Keep track of the fraction of wood litter transfer to som, this value is needed for the steady state estimation
+         litwood_to_som_frac(i) = sum( (FLUXES(1:nodays,20) / POOLS(1:nodays,7)) * lit_filter) / dble(nodays-sum(lit_hak))
+
          !
          ! Annual residence times
          !
 
-         ! Now loop through each year to estimate the annual residence time
+         ! Now loop through each year to estimate the annual residence time (day-1)
          do y = 1, nos_years
             ! Estimate time steps covered by this year
             y_s = 1 + (steps_per_year * (y-1)) ; y_e = steps_per_year * y
@@ -363,25 +370,53 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
          ! Estimate pool inputs needed for steady state calculation
          !
 
+         ! Once the canopy has closes the inputs to the live biomass are stable
+         ! and can thus be estimated from the simulated inputs
          out_var4(i,1) = sum(FLUXES(:,8)) ! Foliage
          out_var4(i,2) = sum(FLUXES(:,6)) ! Fine root
          out_var4(i,3) = sum(FLUXES(:,7)) ! Wood
-         out_var4(i,4) = sum(FLUXES(:,10)+FLUXES(:,11)+FLUXES(:,12)+ &
+         ! Foliar and fine root litter can likelise be estimated directly,
+         ! however wood litter and soil C inputs are still changing as the wood pool is not in steady state.
+         ! Therefore, at this point we can account for the fol, fine root, and disturbance inputs but NOT wood.
+         ! The wood input is estimated later based on the steady state its steady state estimate
+         out_var4(i,4) = sum(FLUXES(:,10)+FLUXES(:,12)+ &
                              fire_residue_to_litter+fire_residue_to_litwood + &
                              harvest_residue_to_litter+harvest_residue_to_litwood) ! lit + litwood
-         out_var4(i,5) = sum(FLUXES(:,15)+FLUXES(:,20)+fire_residue_to_som+harvest_residue_to_som) ! som
+         out_var4(i,5) = sum(FLUXES(:,15)+fire_residue_to_som+harvest_residue_to_som) ! som
+!         out_var4(i,4) = sum(FLUXES(:,10)+FLUXES(:,11)+FLUXES(:,12)+ &
+!                             fire_residue_to_litter+fire_residue_to_litwood + &
+!                             harvest_residue_to_litter+harvest_residue_to_litwood) ! lit + litwood
+!         out_var4(i,5) = sum(FLUXES(:,15)+FLUXES(:,20)+fire_residue_to_som+harvest_residue_to_som) ! som
 
      endif ! crop / default model split
 
   end do ! nos_iter loop
 
-  ! MTT - Convert daily fractional loss to years
+  ! Mean Transit Time (MTT; years)
+  ! Convert daily fractional loss to years (day-1 -> yr)
   out_var3 = (out_var3*365.25d0)**(-1d0) ! iter,(fol,root,wood,lit+litwood,som)
   out_var5 = (out_var5*365.25d0)**(-1d0) ! iter,(fol,root,wood,lit+litwood,som)
 
-  ! Steady state gC/m2
+  ! Steady state gC/m2 estimation
+  ! Determine the mean annual input (gC/m2/yr) based on current inputs for all pool,
+  ! litter and soil pools updated below...
   out_var4 = (out_var4 / dble(nodays)) * 365.25d0 ! convert to annual mean input
-  out_var4 = out_var4 * out_var3                  ! multiply by residence time in years
+  if (pft == 1) then
+
+      ! Multiply by residence time in years to give SS
+      out_var4 =  out_var4 * out_var3
+
+  else ! crop / default model split
+
+     ! Then estimate the foliar, fine root and wood steady states.
+     out_var4(:,1:3) =  out_var4(:,1:3) * out_var3(:,1:3) ! multiply by residence time in years
+     ! Using the wood SS estimate (gC/m2) the steady state input to the litter+wood litter pool...
+     out_var4(:,4) = (out_var4(:,4) + (out_var4(:,3) / out_var3(:,3))) * out_var3(:,4)
+     ! ...which is then in turn used to update the soil pool
+     ! NOTE: that because not all wood litter
+     out_var4(:,5) = (out_var4(:,5) + ((out_var4(:,4) / out_var3(:,4))*litwood_to_som_frac) ) * out_var3(:,5)
+
+  end if ! crop / default model split
 
   ! deallocate harvested variable
   deallocate(itemp,ivpd,iphoto)

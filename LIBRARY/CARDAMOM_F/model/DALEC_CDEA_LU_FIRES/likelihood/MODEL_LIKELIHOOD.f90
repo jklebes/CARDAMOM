@@ -628,7 +628,7 @@ module model_likelihood_module
             end do
             ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
             n = 4
-            if (abs(log(Fin(n)/Fout(n))) > EQF10) then
+            if (abs(log(Fin(n)/Fout(n))) > EQF5) then
                 EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
             end if
             if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol*2d0) then

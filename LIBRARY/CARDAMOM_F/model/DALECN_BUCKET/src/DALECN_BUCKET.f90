@@ -1738,8 +1738,8 @@ contains
           CFF(2) = POOLS(n+1,2)*burnt_area*combust_eff(2)
           NCFF(2) = POOLS(n+1,2)*burnt_area*(1d0-combust_eff(2))*(1d0-rfac)
           !/*root*/
-          CFF(3) = 0d0 !POOLS(n+1,3)*burnt_area*combust_eff(3)
-          NCFF(3) = 0d0 !POOLS(n+1,3)*burnt_area*(1d0-combust_eff(3))*(1d0-rfac)
+          CFF(3) = POOLS(n+1,3)*burnt_area*combust_eff(3)
+          NCFF(3) = POOLS(n+1,3)*burnt_area*(1d0-combust_eff(3))*(1d0-rfac)
           !/*wood*/
           CFF(4) = POOLS(n+1,4)*burnt_area*combust_eff(4)
           NCFF(4) = POOLS(n+1,4)*burnt_area*(1d0-combust_eff(4))*(1d0-rfac)

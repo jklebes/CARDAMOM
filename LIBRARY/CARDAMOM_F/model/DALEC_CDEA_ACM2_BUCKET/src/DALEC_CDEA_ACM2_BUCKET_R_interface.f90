@@ -184,12 +184,25 @@ subroutine rdaleccdeaacm2bucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
                                 / POOLS(y_s:y_e,6)) * som_filter(y_s:y_e)) / dble(steps_per_year-sum(som_hak(y_s:y_e)))
      end do
 
-     ! Calculate the mean inputs to each pool, needed for steady state calculation
-     out_var4(i,1) = sum(FLUXES(1:nodays,4)+FLUXES(1:nodays,8)) ! fol
-     out_var4(i,2) = sum(FLUXES(1:nodays,6)) ! root
-     out_var4(i,3) = sum(FLUXES(1:nodays,7)) ! wood
-     out_var4(i,4) = sum(FLUXES(1:nodays,10)+FLUXES(1:nodays,12)+FLUXES(1:nodays,24)+FLUXES(1:nodays,25)+FLUXES(1:nodays,26)) ! lit
-     out_var4(i,5) = sum(FLUXES(1:nodays,11)+FLUXES(1:nodays,15)+FLUXES(1:nodays,27)+FLUXES(1:nodays,28)) ! som
+!     ! Calculate the mean inputs to each pool, needed for steady state calculation
+!     out_var4(i,1) = sum(FLUXES(1:nodays,4)+FLUXES(1:nodays,8)) ! fol
+!     out_var4(i,2) = sum(FLUXES(1:nodays,6)) ! root
+!     out_var4(i,3) = sum(FLUXES(1:nodays,7)) ! wood
+!     out_var4(i,4) = sum(FLUXES(1:nodays,10)+FLUXES(1:nodays,12)+FLUXES(1:nodays,24)+FLUXES(1:nodays,25)+FLUXES(1:nodays,26)) ! lit
+!     out_var4(i,5) = sum(FLUXES(1:nodays,11)+FLUXES(1:nodays,15)+FLUXES(1:nodays,27)+FLUXES(1:nodays,28)) ! som
+
+     ! Once the canopy has closed the inputs to the live biomass are stable
+     ! and can thus be estimated from the simulated inputs. Similarly the litter pool input
+     ! i.e. foliage and fine roots are likely to be in steady state.
+     out_var4(i,1) = sum(FLUXES(:,4)+FLUXES(:,8)) ! Foliage
+     out_var4(i,2) = sum(FLUXES(:,6)) ! Fine root
+     out_var4(i,3) = sum(FLUXES(:,7)) ! Wood
+     out_var4(i,4) = sum(FLUXES(1:nodays,10)+FLUXES(1:nodays,12) &
+                        +FLUXES(1:nodays,24)+FLUXES(1:nodays,25)+FLUXES(1:nodays,26)) ! lit
+     ! However soil C inputs are still changing as the wood pool is not in steady state.
+     ! Therefore, at this point we can account for the fol, fine root, and disturbance inputs but NOT wood.
+     ! The wood input is estimated later based on the steady state its steady state estimate
+     out_var4(i,5) = sum(FLUXES(:,15)+fire_residue_to_som+harvest_residue_to_som) ! som
 
   end do ! nos_iter loop
 
@@ -198,8 +211,24 @@ subroutine rdaleccdeaacm2bucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
   out_var5 = (out_var5*365.25d0)**(-1d0)               ! iter,(fol,root,wood,lit+litwood,som)
 
   ! Steady state gC/m2
+  ! NOTE: That all pools rely on assumption that their inputs are in steady state.
+  ! For foliage, fine roots and wood this may be true given that in most places the canopy is at steady state and thus so is GPP.
+  ! However, for litwood and som this is less likely to be true as wood may still be accumulating.
+  ! Therefore an alternative approach is to estimate the steady state values for fol, root and wood.
+  ! Then use these SS pools combined with their fractional loss rates to estimate the SS inputs to litter, litwood and som.
   out_var4 = (out_var4 / dble(nodays)) * 365.25d0 ! convert to annual mean input
   out_var4 = out_var4 * out_var3                  ! multiply by residence time in years
+
+  ! Steady state gC/m2 estimation
+  ! Determine the mean annual input (gC/m2/yr) based on current inputs for all pool,
+  ! litter and soil pools updated below...
+  out_var4 = (out_var4 / dble(nodays)) * 365.25d0 ! convert to annual mean input
+  ! Multiply by residence time in years to give SS
+  out_var4 =  out_var4 * out_var3
+  ! Then estimate the foliar, fine root, wood and litter steady states.
+  out_var4(:,1:4) = out_var4(:,1:4) * out_var3(:,1:4) ! multiply by residence time in years
+  ! Using the wood SS estimate (gC/m2) the steady state input to the som litter pool...
+  out_var4(:,5) = (out_var4(:,5) + (out_var4(:,3) / out_var3(:,3))) * out_var3(:,5)
 
   ! deallocate harvested variable
   deallocate(extracted_C)

@@ -109,32 +109,6 @@ module CARBON_MODEL_MOD
                   seconds_per_day_1 = 1.157407d-05    ! Inverse of seconds per day
 
   ! ACM-GPP-ET parameters
-!  double precision, parameter :: &
-!                        pn_max_temp = 5.978665d+01, & ! Maximum temperature for photosynthesis (oC)
-!                        pn_opt_temp = 3.150166d+01, & ! Optimum temperature fpr photosynthesis (oC)
-!                        pn_kurtosis = 1.730812d-01, & ! Kurtosis of photosynthesis temperature response
-!                                 e0 = 5.897208d+00, & ! Quantum yield gC/MJ/m2/day PAR
-!         lai_half_lwrad_transmitted = 1.639527d-01, & ! LAI at which LW transmittance to soil at 50 %
-!           lai_half_lwrad_reflected = 6.746538d-03, & ! LAI at which LW reflectance to sky at 50 %
-!             max_lai_nir_reflection = 1.457203d-01, & ! Coefficient relating NIR reflectance and LAI
-!            lai_half_nir_reflection = 1.720843d-02, & ! LAI at which canopy NIR reflection = 50 %
-!                     minlwp_default =-1.936111d+00, & ! minimum leaf water potential (MPa)
-!             max_lai_par_reflection = 1.774887d-01, & ! Max fraction of PAR reflected by canopy
-!            lai_half_par_reflection = 1.094594d-02, & ! LAI at which canopy PAR reflected = 50 %
-!                      max_lw_escape = 5.813763d-01, & ! Max LW which is released from canopy that escapes in one direction
-!                               iWUE = 3.312080d-06, & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
-!              soil_swrad_absorption = 9.641337d-01, & ! Fraction of SW rad absorbed by soil
-!            max_lai_par_transmitted =-1.096639d-02, & ! Max fraction reduction in PAR transmittance by canopy
-!            max_lai_nir_transmitted =-1.255590d-02, & ! Max fraction reduction in NIR transmittance by canopy
-!              max_lai_lwrad_release = 9.989129d-01, & ! 1-Max fraction of LW emitted from canopy to be released
-!             lai_half_lwrad_release = 2.009765d+00, & ! LAI at which LW emitted from canopy to be released at 50 %
-!               soil_iso_to_net_coef =-9.475060d-01, & ! Coefficient relating soil isothermal net radiation to net.
-!              soil_iso_to_net_const =-2.443723d+00, & ! Constant relating soil isothermal net radiation to net
-!                max_par_transmitted = 1.392685d-01, & ! Max fraction of canopy incident PAR transmitted to soil
-!                max_nir_transmitted = 2.352473d-01, & ! Max fraction of canopy incident NIR transmitted to soil
-!                  max_par_reflected = 4.700132d-01, & ! Max fraction of canopy incident PAR reflected to sky
-!                  max_nir_reflected = 5.338683d-01    ! Max fraction of canopy incident NIR reflected to sky
-  ! ACM-GPP-ET parameters
   double precision, parameter :: &
                    pn_max_temp = 6.416723d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
                    pn_opt_temp = 3.559088d+01,  & ! Optimum daily max temperature for photosynthesis (oC)
@@ -251,6 +225,7 @@ module CARBON_MODEL_MOD
 metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limiterd photosynthesis (gC/m2/day)
     light_limited_photosynthesis, & ! light limited photosynthesis (gC/m2/day)
                           gb_mol, & ! Canopy boundary layer conductance (molCO2/m2/day)
+                        rb_mol_1, & ! Canopy boundary layer resistance (day/m2/molCO2)
                     co2_half_sat, & ! CO2 at which photosynthesis is 50 % of maximum (ppm)
                   co2_comp_point    ! CO2 at which photosynthesis > 0 (ppm)
 
@@ -344,7 +319,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   ,wf,wl,ff,fl,osf,osl,sf,ml   ! phenological controls
 
      ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
-    double precision :: cf(6),rfac
+    double precision :: cf(6),rfac(6)
 
     integer :: p,f,n,ii ! JFE added ii to loop over fluxes
 
@@ -441,7 +416,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     intercepted_rainfall = 0d0 ; canopy_storage = 0d0 ; snow_storage = 0d0
 
     ! load ACM-GPP-ET parameters
-    minlwp = pars(28)
+!    minlwp = pars(28)
     deltaWP = minlwp     ! leafWP-soilWP (i.e. -2-0)
     Rtot = 1d0
     Ceff = pars(11) ! Canopy efficiency (gC/m2/day)
@@ -555,9 +530,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     cf(2) = 0.9d0         ! foliar combustion efficiency
     cf(3) = 0.1d0         ! roots combustion efficiency
     cf(4) = 0.1d0         ! wood combustion efficiency
-    cf(5) = 0.5d0         ! litter combustion efficiency
+    cf(5) = 0.7d0         ! litter combustion efficiency
     cf(6) = 0.01d0        ! som combustion efficency
     rfac = 0.5d0          ! resilience factor
+    rfac(4) = 0.1d0
 
     !
     ! Begin looping through each time step
@@ -856,11 +832,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            FLUXES(n,23) = POOLS(n+1,6)*met(9,n)*cf(6)/deltat(n) ! som
 
            ! second calculate litter transfer fluxes in g C m-2 d-1, all pools except som
-           FLUXES(n,24) = POOLS(n+1,1)*met(9,n)*(1d0-cf(1))*(1d0-rfac)/deltat(n) ! labile into litter
-           FLUXES(n,25) = POOLS(n+1,2)*met(9,n)*(1d0-cf(2))*(1d0-rfac)/deltat(n) ! foliar into litter
-           FLUXES(n,26) = POOLS(n+1,3)*met(9,n)*(1d0-cf(3))*(1d0-rfac)/deltat(n) ! roots into litter
-           FLUXES(n,27) = POOLS(n+1,4)*met(9,n)*(1d0-cf(4))*(1d0-rfac)/deltat(n) ! wood into som
-           FLUXES(n,28) = POOLS(n+1,5)*met(9,n)*(1d0-cf(5))*(1d0-rfac)/deltat(n) ! litter into som
+           FLUXES(n,24) = POOLS(n+1,1)*met(9,n)*(1d0-cf(1))*(1d0-rfac(1))/deltat(n) ! labile into litter
+           FLUXES(n,25) = POOLS(n+1,2)*met(9,n)*(1d0-cf(2))*(1d0-rfac(2))/deltat(n) ! foliar into litter
+           FLUXES(n,26) = POOLS(n+1,3)*met(9,n)*(1d0-cf(3))*(1d0-rfac(3))/deltat(n) ! roots into litter
+           FLUXES(n,27) = POOLS(n+1,4)*met(9,n)*(1d0-cf(4))*(1d0-rfac(4))/deltat(n) ! wood into som
+           FLUXES(n,28) = POOLS(n+1,5)*met(9,n)*(1d0-cf(5))*(1d0-rfac(5))/deltat(n) ! litter into som
 
            ! update pools - first remove burned vegetation
            POOLS(n+1,1) = POOLS(n+1,1) - (FLUXES(n,18) + FLUXES(n,24)) * deltat(n) ! labile
@@ -897,9 +873,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !
 
     ! maximum rate of temperature and nitrogen (canopy efficiency) limited
-    ! photosynthesis (gC.m-2.day-1)
-!    pn = lai*avN*NUE*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
-    metabolic_limited_photosynthesis = lai*ceff*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
+    ! photosynthesis (gC.m-2.day-1 -> umolC/m2/day)
+    metabolic_limited_photosynthesis = gC_to_umol*lai*ceff*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
 
     !
     ! Light limited photosynthesis
@@ -918,6 +893,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Note the ratio of H20:CO2 diffusion through leaf level boundary layer is
     ! 1.37 (Jones appendix 2).
     gb_mol = aerodynamic_conductance * seconds_per_day * convert_ms1_mol_1 * gb_H2O_CO2
+    rb_mol_1 = (gb_mol)**(-1d0)
 
     ! Temperature adjustments for Michaelis-Menten coefficients
     ! for CO2 (kc) and O2 (ko) and CO2 compensation point
@@ -944,11 +920,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, intent(in) :: gs
 
     ! declare local variables
-    double precision :: pp, qq, ci, mult, gc, pl, pn, pd
-
-    ! load into local variables (for code readability)
-    pn = metabolic_limited_photosynthesis
-    pl = light_limited_photosynthesis
+    double precision :: pp, qq, ci, mult, rc, pd
 
     !
     ! Diffusion limited photosynthesis
@@ -959,11 +931,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! i.e. gcH2O*1.646259 = gcCO2 then all multiplied by 86400 seconds
     !
     ! Combining in series the stomatal and boundary layer conductances
-    gc = ((gs*gs_H2Ommol_CO2mol_day) ** (-1d0) + gb_mol ** (-1d0)) ** (-1d0)
+    ! to make canopy resistence
+    rc = (gs*gs_H2Ommol_CO2mol_day) ** (-1d0) + rb_mol_1
 
     ! pp and qq represent limitation by metabolic (temperature & N) and
     ! diffusion (co2 supply) respectively
-    pp = (pn*gC_to_umol)/gc ; qq = co2_comp_point-co2_half_sat
+    pp = metabolic_limited_photosynthesis*rc ; qq = co2_comp_point-co2_half_sat
     ! calculate internal CO2 concentration (ppm or umol/mol)
     mult = co2+qq-pp
     ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
@@ -971,14 +944,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! calculate CO2 limited rate of photosynthesis (gC.m-2.day-1)
     ! Then scale to day light period as this is then consistent with the light
     ! capture period (1/24 = 0.04166667)
-    pd = (gc * (co2-ci)) * umol_to_gC * dayl_hours_fraction
+    pd = ((co2-ci)/rc) * umol_to_gC * dayl_hours_fraction
 
     !
     ! Estimate CO2 and light co-limitation
     !
 
     ! calculate combined light and CO2 limited photosynthesis
-    acm_gpp_stage_2 = pl*pd/(pl+pd)
+    acm_gpp_stage_2 = light_limited_photosynthesis*pd/(light_limited_photosynthesis+pd)
 
     ! sanity check
     if (acm_gpp_stage_2 /= acm_gpp_stage_2 .or. acm_gpp_stage_2 < 0d0) acm_gpp_stage_2 = 0d0
@@ -1000,26 +973,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! arguments
     double precision, intent(in) :: gs_in
 
-    ! local variables
-    double precision :: gs_high, gs_store, &
-                        gpp_high, gpp_low
-
     !!!!!!!!!!
     ! Optimise intrinsic water use efficiency
     !!!!!!!!!!
 
-    ! estimate photosynthesis with current estimate of gs
-    gpp_low = acm_gpp_stage_2(gs_in)
+    ! Determine impact of gs increment on pd and how far we are from iWUE
+    find_gs_iWUE = iWUE - ((acm_gpp_stage_2(gs_in + delta_gs) - acm_gpp_stage_2(gs_in))*lai_1)
 
-    ! Increment gs
-    gs_high = gs_in + delta_gs
-    ! estimate photosynthesis with incremented gs
-    gpp_high = acm_gpp_stage_2(gs_high)
-
-    ! determine impact of gs increment on pd and how far we are from iWUE
-    find_gs_iWUE = iWUE - ((gpp_high - gpp_low)*lai_1)
-
-    ! remember to return back to the user
+    ! Remember to return back to the user
     return
 
   end function find_gs_iWUE
@@ -1042,7 +1003,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision :: denom, pl, pn, pn_day, iWUE_lower, iWUE_upper
     double precision, parameter :: max_gs = 2000d0, &  ! mmolH2O.m-2.s-1 (leaf area)
                                    min_gs = 1d0, &     ! mmolH2O.m-2.s-1 (leaf area)
-                                   tol_gs = 1d0        ! 4d0
+                                   tol_gs = 10d0       ! 4d0
 
     !!!!!!!!!!
     ! Calculate stomatal conductance under H2O and CO2 limitations
@@ -1093,7 +1054,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         else
             ! In all other cases iterate
             stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
-                                          find_gs_iWUE,minimum_conductance,potential_conductance,tol_gs*lai)
+                                          find_gs_iWUE,minimum_conductance,potential_conductance,tol_gs*lai,iWUE*0.10d0)
         end if
 !        ! Empirical fit to outputs generated by bisection procedure.
 !        ! Assumes that water supply is not limiting, thus there is still the need to estimate supply limit and apply as bookend.
@@ -1271,10 +1232,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !!!!!!!!!!
 
     ! Calculate numerator of Penman Montheith (kgH2O.m-2.day-1)
-    wetcanopy_evap = (((slope*canopy_radiation) + (ET_demand_coef*gb)) / (lambda*(slope+psych))) * seconds_per_day
+    wetcanopy_evap = max(0d0,(((slope*canopy_radiation) + (ET_demand_coef*gb)) / (lambda*(slope+psych))) * seconds_per_day)
 
     ! assuming there is any rainfall, currently water on the canopy or dew formation
-    if (rainfall > 0d0 .or. storage > 0d0 .or. wetcanopy_evap < 0d0) then
+!    if (rainfall > 0d0 .or. storage > 0d0 .or. wetcanopy_evap < 0d0) then
+    if (rainfall > 0d0 .or. storage > 0d0) then
         ! Update based on canopy water storage
         call canopy_interception_and_storage(wetcanopy_evap,storage)
     else
@@ -1470,7 +1432,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        water_retention_pass = i
        ! field capacity is water content at which SWP = -10 kPa
        field_capacity(i) = zbrent('water_retention:water_retention_saxton_eqns', &
-                                   water_retention_saxton_eqns , x1 , x2 , 0.001d0 )
+                                   water_retention_saxton_eqns , x1 , x2 , 0.001d0, 0d0 )
     enddo
 
   end subroutine calculate_field_capacity
@@ -3014,20 +2976,26 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !------------------------------------------------------------------
   !
-  double precision function zbrent( called_from , func , x1 , x2 , tol )
+  double precision function zbrent( called_from , func , x1 , x2 , tol , toltol)
 
     ! This is a bisection routine. When ZBRENT is called, we provide a    !
-    !  reference to a particular function and also two values which bound !
-    !  the arguments for the function of interest. ZBRENT finds a root of !
-    !  the function (i.e. the point where the function equals zero), that !
-    !  lies between the two bounds.                                       !
+    ! reference to a particular function and also two values which bound  !
+    ! the arguments for the function of interest. ZBRENT finds a root of  !
+    ! the function (i.e. the point where the function equals zero), that  !
+    ! lies between the two bounds.                                        !
+    ! There are five exit conditions:                                     !
+    ! 1) The first proposal for the root of the function equals zero      !
+    ! 2) The proposal range has been reduced to less then tol             !
+    ! 3) The magnitude of the function is less than toltol                !
+    ! 4) Maximum number of iterations has been reached                    !
+    ! 5) The root of the function does now lie between supplied bounds    !
     ! For a full description see Press et al. (1986).                     !
 
     implicit none
 
     ! arguments..
     character(len=*),intent(in) :: called_from    ! name of procedure calling (used to pass through for errors)
-    double precision,intent(in) :: tol, x1, x2
+    double precision,intent(in) :: tol, toltol, x1, x2
 
     ! Interfaces are the correct way to pass procedures as arguments.
     interface
@@ -3038,7 +3006,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! local variables..
     integer            :: iter
-    integer, parameter :: ITMAX = 10
+    integer, parameter :: ITMAX = 8
     double precision   :: a,b,c,d,e,fa,fb,fc,p,q,r,s,tol1,tol0,xm
     double precision, parameter :: EPS = 6d-8
 
@@ -3049,20 +3017,17 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     fb = func( b )
     tol0 = tol * 0.5d0
 
-    ! Check that we haven't (by fluke) already started with the root..
-    if ( fa .eq. 0d0 ) then
+    ! Check that we haven't (by fluke) already started with the root...
+    if ( abs(fa) < toltol ) then
         zbrent = a
         return
-    elseif ( fb .eq. 0d0 ) then
+    elseif ( abs(fb) < toltol ) then
         zbrent = b
         return
     end if
     ! Ensure the supplied x-values give y-values that lie either
     ! side of the root and if not flag an error message...
-!    if ( sign(1d0,fa) .eq. sign(1d0,fb) ) then
 !    if (fa * fb > 0d0) then
-!        fa = func( a )
-!        fb = func( b )
         ! tell me otherwise what is going on
 !!       print*,"Supplied values must bracket the root of the function.",new_line('x'),  &
 !!         "     ","You supplied x1:",x1,new_line('x'),                     &
@@ -3095,7 +3060,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       end if
       tol1 = EPS * abs(b) + tol0
       xm   = 0.5d0 * ( c - b )
-      if ( ( abs(xm) .le. tol1 ) .or. ( fb .eq. 0d0 ) ) then
+!      if ( ( abs(xm) .le. tol1 ) .or. ( fb .eq. 0d0 ) ) then
+      if ( ( abs(xm) .le. tol1 ) .or. ( abs(fb) < toltol ) ) then
         zbrent = b
         return
       end if
@@ -3132,9 +3098,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       end if
       fb = func(b)
     enddo
-
-!    print*,"zbrent has exceeded maximum iterations",new_line('x'),&
-!           "zbrent was called by: ",trim(called_from)
 
     zbrent = b
 
