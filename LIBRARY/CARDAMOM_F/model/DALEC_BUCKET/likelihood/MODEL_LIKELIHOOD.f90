@@ -1201,7 +1201,8 @@ module model_likelihood_module
     ! various but not supported by other literature e.g. Amthor & Baldocchi 2001, Fig. S2.
     ! See Collalti et al., (2019) doi: 10.1111/gcb.14857 for details.
     ! See Thomas et al., (2019) JAMES (The aconite canopy paper) for references
-    ! indicating Rleaf:GPP of 0.24-0.36
+    ! indicating Rleaf:GPP of 0.32-0.36
+    ! NOTE: Atkin et al., (2007) indicates range of 0.1-0.37
 !    tmp1 = sum(Resp_leaf) / sum(M_FLUXES(:,1))
 !    if (tmp1 < 0.20d0 .or. tmp1 > 0.40d0) then
 !        EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0

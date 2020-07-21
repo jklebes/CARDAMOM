@@ -202,7 +202,7 @@ subroutine rdaleccdeaacm2bucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
      ! However soil C inputs are still changing as the wood pool is not in steady state.
      ! Therefore, at this point we can account for the fol, fine root, and disturbance inputs but NOT wood.
      ! The wood input is estimated later based on the steady state its steady state estimate
-     out_var4(i,5) = sum(FLUXES(:,15)+fire_residue_to_som+harvest_residue_to_som) ! som
+     out_var4(i,5) = sum(FLUXES(:,15)+FLUXES(1:nodays,27)+FLUXES(1:nodays,28)) ! som
 
   end do ! nos_iter loop
 

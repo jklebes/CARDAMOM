@@ -680,7 +680,7 @@ double precision :: Creturn_canopy,Creturn_investment
     Rtot = 1d0
 
     ! Estimate time invarient N response for maintenance respiration
-    ! Include scalings from nmolC/g/s -> gC/m2/day
+    ! Include scalings from nmolC/g/s -> gC/gCleaf/day
     ! Note that the mean temperature Q10 will be estimates in loop below where
     ! meant_time calculated
     Rm_leaf_baseline = Rm_reich_N(pars(17)/avN,pars(35),pars(36)) * umol_to_gC * seconds_per_day * 2d-3
@@ -1254,6 +1254,7 @@ double precision :: Creturn_canopy,Creturn_investment
        ! Combine to give total tissue respiration fluxes
        Resp_leaf(n) = Rg_leaf(n) + Rm_leaf(n)
        Resp_wood_root(n) = Rg_wood_root(n) + Rm_wood_root(n)
+
        ! Total Autotrophic respiration
        FLUXES(n,3) = Resp_leaf(n) + Resp_wood_root(n)
        ! Total fluxes from labile pool
@@ -1527,7 +1528,8 @@ double precision :: Creturn_canopy,Creturn_investment
 !       endif
 
     end do ! nodays loop
-
+!print*,sum(Resp_leaf) / (sum(Resp_wood_root) + sum(Resp_leaf))
+!print*,sum(Resp_leaf)/sum(FLUXES(:,1)),sum(Rm_leaf)/(sum(Resp_wood_root+Resp_leaf)),sum(Resp_leaf)/(sum(Resp_wood_root+Resp_leaf))
     !!!!!!!!!!
     ! Calculate Ecosystem diagnostics
     !!!!!!!!!!
