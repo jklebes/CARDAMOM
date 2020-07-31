@@ -189,14 +189,19 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                   dCbio = (states_all$litwood_gCm2+states_all$lit_gCm2) - (states_all$litwood_gCm2[,1]+states_all$lit_gCm2[,1]) # difference in deadorg from initial
                   site_output$dCdeadorg_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
               }
-              # Finally water cycle specific if available
+              # Water cycle specific if available
               if (length(which(names(states_all) == "evap_kgH2Om2day")) > 0) {
-                  # currently water in the soil surface layer (0-10 cm)
+                  # current water in the soil surface layer (0-10 cm)
                   site_output$SurfWater_kgH2Om2 = apply(states_all$sfc_water_mm,2,quantile,prob=num_quantiles,na.rm=na_flag)
                   # plant apparent soil water potential (MPa)
                   site_output$wSWP_MPa = apply(states_all$wSWP_MPa,2,quantile,prob=num_quantiles,na.rm=na_flag)
                   # evapotranspiration (Etrans + Esoil + Ewetcanopy)
                   site_output$evap_kgH2Om2day = apply(states_all$evap_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
+              }
+              # Canopy process information if available
+              if (length(which(names(states_all) == "APAR_MJm2day")) > 0) {
+                  # Extract the absorbed photosynthetically active radiation by the canopy
+                  site_output$APAR_MJm2day = apply(states_all$APAR_MJm2day,2,quantile, prob=num_quantiles, na.rm=na_flag)
               }
               # save to pixel specific file for the moment... in "run_mcmc_results" these will be combined into a single grid
               save(site_output,file=outfile2)
@@ -369,6 +374,11 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               # evapotranspiration (Etrans + Esoil + Ewetcanopy)
               grid_output$mean_evap_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           }
+          # Canopy process variables
+          if (length(which(names(site_output) == "APAR_MJm2day")) > 0) {
+              # Absorbed photosynthetically active radation
+              grid_output$mean_APAR_MJm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          }
 
           #
           # Generate the variables needed to contain just the analysis locations
@@ -416,6 +426,11 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$wSWP_MPa = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # evapotranspiration (Etrans + Esoil + Ewetcanopy)
               grid_output$evap_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          }
+          # Canopy process information
+          if (length(which(names(site_output) == "APAR_MJm2day")) > 0) {
+              # Canopy absorbed photosynthetically active radiation
+              grid_output$APAR_MJm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           }
 
           #
@@ -495,6 +510,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    # evapotranspiration (Etrans + Esoil + Ewetcanopy)
                    grid_output$evap_kgH2Om2day[n,,] = site_output$evap_kgH2Om2day
                }
+               if (length(which(names(site_output) == "APAR_MJm2day")) > 0) {
+                  grid_output$APAR_MJm2day[n,,] = site_output$APAR_MJm2day
+               }
 
                # now assign to correct location in array
                # Mean stocks first
@@ -569,6 +587,10 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$final_wSWP_MPa[slot_i,slot_j,] = site_output$wSWP_MPa[,final_step]
                    # evapotranspiration (Etrans + Esoil + Ewetcanopy)
                    grid_output$mean_evap_kgH2Om2day[slot_i,slot_j,] = apply(site_output$evap_kgH2Om2day,1,mean)
+               }
+               # Canopy process information
+               if (length(which(names(site_output) == "APAR_MJm2day")) > 0) {
+                   grid_output$mean_APAR_MJm2day[slot_i,slot_j,] = apply(site_output$APAR_MJm2day,1,mean)
                }
 
                # now tidy away the file

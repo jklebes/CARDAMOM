@@ -197,21 +197,10 @@ subroutine rdaleccdeaacm2(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
   out_var3(:,2:5) = (out_var3(:,2:5)*365.25d0)**(-1d0) ! iter,(fol,root,wood,lit+litwood,som)
   out_var5 = (out_var5*365.25d0)**(-1d0)               ! iter,(fol,root,wood,lit+litwood,som)
 
-  ! Steady state gC/m2
-  ! NOTE: That all pools rely on assumption that their inputs are in steady state.
-  ! For foliage, fine roots and wood this may be true given that in most places the canopy is at steady state and thus so is GPP.
-  ! However, for litwood and som this is less likely to be true as wood may still be accumulating.
-  ! Therefore an alternative approach is to estimate the steady state values for fol, root and wood.
-  ! Then use these SS pools combined with their fractional loss rates to estimate the SS inputs to litter, litwood and som.
-  out_var4 = (out_var4 / dble(nodays)) * 365.25d0 ! convert to annual mean input
-  out_var4 = out_var4 * out_var3                  ! multiply by residence time in years
-
   ! Steady state gC/m2 estimation
   ! Determine the mean annual input (gC/m2/yr) based on current inputs for all pool,
   ! litter and soil pools updated below...
   out_var4 = (out_var4 / dble(nodays)) * 365.25d0 ! convert to annual mean input
-  ! Multiply by residence time in years to give SS
-  out_var4 =  out_var4 * out_var3
   ! Then estimate the foliar, fine root, wood and litter steady states.
   out_var4(:,1:4) = out_var4(:,1:4) * out_var3(:,1:4) ! multiply by residence time in years
   ! Using the wood SS estimate (gC/m2) the steady state input to the som litter pool...

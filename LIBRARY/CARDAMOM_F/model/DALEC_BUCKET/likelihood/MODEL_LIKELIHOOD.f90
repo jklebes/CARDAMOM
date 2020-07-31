@@ -1220,6 +1220,8 @@ module model_likelihood_module
 !!    end if
 !!    ! Previous model analyses indicate that the emergent Rg:GPP should be less
 !!    ! than 20-30 %
+!!    ! da Costa et al., (2014) https://doi.org/10.1080/17550874.2013.798366
+!!    ! have estimate of Cax throughfall experiment of Rg:Ra = 0.13, 0.9
 !!    tmp = sum(M_FLUXES(:,3)-Rm_leaf-Rm_wood_root) * sumgpp
 !!    if ((EDC2 == 1 .or. DIAG == 1) .and. tmp > 0.3d0 ) then
 !!        EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0

@@ -730,7 +730,6 @@ double precision :: Creturn_canopy,Creturn_investment
         foliage_frac_res(2) = 1d0
         roots_frac_res(2)   = 1d0
         rootcr_frac_res(2) = 1d0
-
         stem_frac_res(2)   = 0.20d0 !
         ! wood partitioning (fraction)
         Crootcr_part(2) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;

@@ -98,7 +98,8 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
   } # end of chains loop
 
   if (PROJECT_in$model$name == "DALEC_CDEA" || PROJECT_in$model$name == "DALEC_CDEA_LU_FIRES" ||
-      PROJECT_in$model$name == "DALEC_CDEA_ACM2" || PROJECT_in$model$name == "DALEC_CDEA_ACM2_BUCKET") {
+      PROJECT_in$model$name == "DALEC_CDEA_ACM2" || PROJECT_in$model$name == "DALEC_CDEA_ACM2_BUCKET" ||
+      PROJECT_in$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg") {
       param_sets_out[c(12,15),,] = ((param_sets_out[c(12,15),,]-1)%%365.25)+1
   }
   if (PROJECT_in$model$name == "DALEC_CDEA_no_lit_root") {

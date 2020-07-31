@@ -141,6 +141,8 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load) {
       missing_years = missing_years[-1] ; missing_years = as.numeric(missing_years)
       # now remove the ones that are actual missing data
       nbe_gCm2day[nbe_gCm2day == -9999] = NA ; nbe_unc_gCm2day[nbe_unc_gCm2day == -9999] = NA
+      # enforce minimum uncertainty value
+      nbe_unc_gCm2day[abs(nbe_unc_gCm2day) < 0.01] = 0.01
       # return spatial structure to data
       nbe_gCm2day = array(as.vector(nbe_gCm2day), dim=c(long_dim,lat_dim,length(doy_out)))
       nbe_unc_gCm2day = array(as.vector(nbe_unc_gCm2day), dim=c(long_dim,lat_dim,length(doy_out)))

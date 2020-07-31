@@ -10,7 +10,8 @@ module cardamom_io
   private
 
   ! allow access to specific functions
-  public :: write_parameters                &
+  public :: write_mcmc_output               &
+           ,write_parameters                &
            ,write_variances                 &
            ,write_covariance_matrix         &
            ,write_covariance_info           &
@@ -227,6 +228,11 @@ module cardamom_io
         endif
     else if (DATAin%ID == 27) then
         ! ID = 25 - DALEC_CDEA_ACM2_BUCKET
+        DATAin%nopools = 7
+        DATAin%nopars = 27
+        DATAin%nofluxes = 29
+    else if (DATAin%ID == 28) then
+        ! ID = 25 - DALEC_CDEA_ACM2_BUCKET_RmRg
         DATAin%nopools = 7
         DATAin%nopars = 27
         DATAin%nofluxes = 29
@@ -1594,7 +1600,7 @@ module cardamom_io
     ! declare input variables
     integer, intent(in) :: npars
     double precision, dimension(npars), intent(in) :: variance
-    double precision :: accept_rate ! local acceptance rate
+    double precision, intent(in) :: accept_rate ! local acceptance rate
 
     ! declare local variables
     integer :: n
@@ -1645,6 +1651,55 @@ module cardamom_io
     return
 
   end subroutine write_parameters
+  !
+  !--------------------------------------------------------------------
+  !
+  subroutine write_mcmc_output(variance, accept_rate, &
+                               covariance, mean_pars, nsample, &
+                               pars, prob, npars)
+    use cardamom_structures, only: io_space
+
+    ! Arguments
+    integer, intent(in) :: npars
+    double precision, dimension(npars,npars), intent(in) :: covariance
+    double precision, dimension(npars), intent(in) :: mean_pars, &
+                                                       variance, &
+                                                           pars
+    double precision, intent(in) :: nsample, accept_rate, prob
+
+    ! Local variables
+    integer :: i
+
+    ! Increment buffer
+    io_space%io_buffer_count = io_space%io_buffer_count + 1
+
+    ! Store information in buffer for later writing
+    io_space%variance_buffer(1:npars,io_space%io_buffer_count) = variance
+    io_space%mean_pars_buffer(1:npars,io_space%io_buffer_count) = mean_pars
+    io_space%pars_buffer(1:npars,io_space%io_buffer_count) = pars
+    io_space%prob_buffer(io_space%io_buffer_count) = prob
+    io_space%nsample_buffer(io_space%io_buffer_count) = nsample
+    io_space%accept_rate_buffer(io_space%io_buffer_count) = accept_rate
+
+    ! Are we storing information in buffer or writing to file?
+    if (io_space%io_buffer_count == io_space%io_buffer) then
+        ! Then we are writing out to file
+
+        ! Only write the most current covariance matrix as this would be an overwrite anyway
+        call write_covariance_matrix(covariance,npars,.false.)
+        ! Everything else loop through the buffered output to write out
+        do i = 1, io_space%io_buffer
+           call write_covariance_info(io_space%mean_pars_buffer(:,i),io_space%nsample_buffer(i),npars)
+           call write_variances(io_space%variance_buffer(:,i),npars,io_space%accept_rate_buffer(i))
+           call write_parameters(io_space%pars_buffer(:,i),io_space%prob_buffer(i),npars)
+        end do
+
+        ! Reset buffer increment
+        io_space%io_buffer_count = 0
+
+    endif
+
+  end subroutine write_mcmc_output
   !
   !--------------------------------------------------------------------
   !

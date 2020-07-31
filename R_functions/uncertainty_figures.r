@@ -42,6 +42,12 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
                 var=t(states_all$root_gCm2) + tmp
                 # Now estimate the rooting depth based on the equation imbedded in DALEC_GSI_BUCKET
                 var=as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
+            }  else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg"){
+                # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
+                tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
+                var=t(states_all$root_gCm2) + tmp
+                # Now estimate the rooting depth based on the equation imbedded in DALEC_GSI_BUCKET
+                var=as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
             }
 
             jpeg(file=paste(PROJECT$figpath,"timeseries_RootDepth_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=280, quality=100)

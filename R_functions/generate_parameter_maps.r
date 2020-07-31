@@ -157,7 +157,8 @@ generate_parameter_maps<-function(PROJECT) {
   if (file.exists(outfile) == FALSE | repair == 1) {
       nos_uk_clusters = 1 ; uk_cluster = 1 ; uk_cluster_pft = 1
       if (PROJECT$model$name == "DALEC_EVERGREEN" | PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_CDEA_ACM2" |
-          PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET" | PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_GSI_BUCKET" |
+          PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET" | PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" |
+          PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg" | PROJECT$model$name == "DALEC_GSI_BUCKET" |
           PROJECT$model$name == "DALEC" | PROJECT$model$name == "DALEC_BUCKET") {
 
           # remove non-constrained parameters (i.e. those not actually used in this analysis)

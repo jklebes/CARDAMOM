@@ -39,7 +39,7 @@ contains
     use MCMCOPT, only: PI, MCO, MCOUT, COUNTERS
     use math_functions, only: randn, random_uniform, log_par2nor, log_nor2par, par2nor, nor2par
     use cardamom_io, only: write_parameters,write_variances,write_covariance_matrix &
-                          ,write_covariance_info,restart_flag
+                          ,write_covariance_info,restart_flag,write_mcmc_output
     use cardamom_structures, only: DATAin
     use model_likelihood_module, only: model_likelihood
 
@@ -256,15 +256,20 @@ contains
        N%ITER = N%ITER + 1
 
        if (MCO%nWRITE > 0 .and. mod(nint(N%ITER),MCO%nWRITE) == 0) then
-           ! calculate the likelhooh for the actual uncertainties - this avoid
+           ! calculate the likelhood for the actual uncertainties - this avoid
            ! issues with different phases of the MCMC which may use sub-samples
            ! of observations or inflated uncertainties to aid parameter
            ! searching
            call model_likelihood(PARS0, outputP0, outputP0prior)
-           call write_variances(PI%parvar,PI%npars,N%ACCRATE) ! should this be the global rate?
-           call write_parameters(PARS0,(outputP0+outputP0prior),PI%npars)
-           call write_covariance_matrix(PI%covariance,PI%npars,.false.)
-           call write_covariance_info(PI%mean_par,PI%Nparvar,PI%npars)
+           ! Now write out to files
+           call write_mcmc_output(PI%parvar,N%ACCRATE, &
+                                  PI%covariance, &
+                                  PI%mean_par,PI%Nparvar, &
+                                  PARS0,(outputP0+outputP0prior),PI%npars)
+!           call write_variances(PI%parvar,PI%npars,N%ACCRATE) ! should this be the global rate?
+!           call write_parameters(PARS0,(outputP0+outputP0prior),PI%npars)
+!           call write_covariance_matrix(PI%covariance,PI%npars,.false.)
+!           call write_covariance_info(PI%mean_par,PI%Nparvar,PI%npars)
        end if ! write or not to write
 
        ! time to adapt?

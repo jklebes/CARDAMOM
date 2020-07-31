@@ -1,6 +1,6 @@
 
 
-subroutine rdaleccdeaacm2bucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
+subroutine rdaleccdeaacm2bucketrmrg(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
                                ,out_var,out_var2,out_var3,out_var4,out_var5 &
                                ,lat,nopars,nomet &
                                ,nofluxes,nopools,pft,pft_specific,nodays,noyears,deltat &
@@ -225,4 +225,4 @@ subroutine rdaleccdeaacm2bucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
   ! return back to the subroutine then
   return
 
-end subroutine rdaleccdeaacm2bucket
+end subroutine rdaleccdeaacm2bucketrmrg

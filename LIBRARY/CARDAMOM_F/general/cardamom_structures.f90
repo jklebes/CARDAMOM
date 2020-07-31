@@ -4,7 +4,7 @@ implicit none
 
 private
 
-public :: data_type, DATAin, emulator_parameters, emulator_pars
+public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
 
   !!!!! such as the data type !!!!!
   type DATA_type
@@ -157,6 +157,22 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars
 
   end type ! DATA_type
   type (DATA_type), save :: DATAin
+
+  type io_buffer_space
+
+    integer :: io_buffer, io_buffer_count
+    double precision, allocatable, dimension(:,:) :: &
+                                    variance_buffer, &
+                                   mean_pars_buffer, &
+                                        pars_buffer
+
+    double precision, allocatable, dimension(:) :: &
+                                   nsample_buffer, &
+                               accept_rate_buffer, &
+                                      prob_buffer
+
+  end type
+  type(io_buffer_space), save :: io_space
 
   type emulator_parameters
 

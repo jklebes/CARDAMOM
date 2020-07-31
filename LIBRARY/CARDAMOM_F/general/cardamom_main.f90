@@ -3,7 +3,7 @@ program cardamom_framework
 
  use math_functions, only: idum, randn, rnstrt, inverse_matrix
  use MCMCOPT, only: MCO, MCOUT, PI, initialise_mcmc_output
- use cardamom_structures, only: DATAin
+ use cardamom_structures, only: DATAin, io_space
  use cardamom_io, only: read_pari_data, read_options, open_output_files, &
                         check_for_existing_output_files,restart_flag,   &
                         update_for_restart_simulation, write_covariance_matrix, &
@@ -70,6 +70,19 @@ program cardamom_framework
  call initialise_mcmc_output
  ! Open the relevant output files
  call open_output_files(MCO%outfile,MCO%stepfile,MCO%covfile,MCO%covifile)
+
+ ! Initialise counters used to track the output of parameter sets
+ io_space%io_buffer_count = 0
+ io_space%io_buffer = max(10,(MCO%nOUT / MCO%nWRITE) / 10)
+ 
+ ! Allocate variables used in io buffering,
+ ! these could probably be moved to a more sensible place within cardamom_io.f90
+ allocate(io_space%variance_buffer(PI%npars,io_space%io_buffer), &
+          io_space%mean_pars_buffer(PI%npars,io_space%io_buffer), &
+          io_space%pars_buffer(PI%npars,io_space%io_buffer), &
+          io_space%prob_buffer(io_space%io_buffer), &
+          io_space%nsample_buffer(io_space%io_buffer), &
+          io_space%accept_rate_buffer(io_space%io_buffer))
 
  ! Report which model ID we are using
  write(*,*) "Running model version ", DATAin%ID
