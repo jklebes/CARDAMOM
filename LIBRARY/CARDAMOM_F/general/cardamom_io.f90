@@ -227,15 +227,25 @@ module cardamom_io
            DATAin%nofluxes = 21
         endif
     else if (DATAin%ID == 27) then
-        ! ID = 25 - DALEC_CDEA_ACM2_BUCKET
+        ! ID = 27 - DALEC_CDEA_ACM2_BUCKET
         DATAin%nopools = 7
         DATAin%nopars = 27
         DATAin%nofluxes = 29
     else if (DATAin%ID == 28) then
-        ! ID = 25 - DALEC_CDEA_ACM2_BUCKET_RmRg
+        ! ID = 28 - DALEC_CDEA_ACM2_BUCKET_RmRg
         DATAin%nopools = 7
         DATAin%nopars = 27
-        DATAin%nofluxes = 29
+        DATAin%nofluxes = 31
+    else if (DATAin%ID == 29) then
+        ! ID = 29 - DALEC_CDEA_ACM2_BUCKET_RmRg_CWD
+        DATAin%nopools = 8
+        DATAin%nopars = 29
+        DATAin%nofluxes = 33
+    else if (DATAin%ID == 30) then
+        ! ID = 30 - DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT
+        DATAin%nopools = 8
+        DATAin%nopars = 30
+        DATAin%nofluxes = 33
     else
        write(*,*) "Oh dear... model ID cannot be found"
        stop

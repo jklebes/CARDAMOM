@@ -309,7 +309,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, dimension(nodays,nofluxes), intent(inout) :: FLUXES ! vector of ecosystem fluxes
 
     ! declare local variables
-    double precision :: infi &
+    double precision :: tmp, infi &
                        ,Rtot & ! Total hydraulic resistance (MPa.s-1.m-2.mmol-1)
               ,transpiration & ! kgH2O/m2/day
             ,soilevaporation & ! kgH2O/m2/day
@@ -533,7 +533,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     cf(5) = 0.7d0         ! litter combustion efficiency
     cf(6) = 0.01d0        ! som combustion efficency
     rfac = 0.5d0          ! resilience factor
-    rfac(4) = 0.1d0
+    rfac(5) = 0.1d0 ; rfac(6) = 0d0
 
     !
     ! Begin looping through each time step
@@ -554,7 +554,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     seconds_per_step = deltat(1) * seconds_per_day
     days_per_step =  deltat(1)
     days_per_step_1 =  deltat_1(1)
-
 
     ! Initialise root reach based on initial coarse root biomass
     fine_root_biomass = max(min_root,POOLS(1,3)*2d0)

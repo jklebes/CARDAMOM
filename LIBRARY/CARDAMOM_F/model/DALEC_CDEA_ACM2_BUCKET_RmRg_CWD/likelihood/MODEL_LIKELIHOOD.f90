@@ -390,6 +390,11 @@ module model_likelihood_module
        EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
     endif
 
+    ! turnover of litwood (pars(29)) should be slower than fine litter turnover pars(8)
+    if ((EDC1 == 1 .or. DIAG == 1) .and. ( pars(29) > pars(8) ) ) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
+    endif
+
     ! turnover of foliage faster than turnover of wood
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(6) > torfol) then
        EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
@@ -503,6 +508,13 @@ module model_likelihood_module
       end do
       jan_mean_pools(n) = jan_mean_pools(n) / dble(steps_per_month*no_years)
     end do
+    ! Bespoke call for lit wood
+    jan_first_pools(8) = sum(M_POOLS(1:steps_per_month,8)) / dble(steps_per_month)
+    do y = 1, no_years
+       nn = 1 + (steps_per_year * (y - 1)) ; nnn = nn + (steps_per_month - 1)
+       jan_mean_pools(8) = jan_mean_pools(8) + sum(M_POOLS(nn:nnn,8))
+    end do
+    jan_mean_pools(8) = jan_mean_pools(8) / dble(steps_per_month*no_years)
 
     !
     ! Begin EDCs here
@@ -582,12 +594,20 @@ module model_likelihood_module
     Fin_yr2(5)  = FT_yr2(10)+FT_yr2(12)+FT_yr2(24)+FT_yr2(25)+FT_yr2(26)
     Fout_yr2(5) = FT_yr2(13)+FT_yr2(15)+FT_yr2(22)+FT_yr2(28)
     ! som
-    Fin(6)  = FT(11)+FT(15)+FT(27)+FT(28)
+    Fin(6)  = FT(15)+FT(27)+FT(28)+FT(31)+FT(33)
     Fout(6) = FT(14)+FT(23)
-    Fin_yr1(6)  = FT_yr1(11)+FT_yr1(15)+FT_yr1(27)+FT_yr1(28)
+    Fin_yr1(6)  = FT_yr1(15)+FT_yr1(27)+FT_yr1(28)+FT_yr1(31)+FT_yr1(33)
     Fout_yr1(6) = FT_yr1(14)+FT_yr1(23)
-    Fin_yr2(6)  = FT_yr2(11)+FT_yr2(15)+FT_yr2(27)+FT_yr2(28)
+    Fin_yr2(6)  = FT_yr2(15)+FT_yr2(27)+FT_yr2(28)+FT_yr2(31)+FT_yr2(33)
     Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)
+
+    ! litwood
+    Fin(8)  = FT(11)
+    Fout(8) = FT(30)+FT(31)+FT(32)+FT(33)
+    Fin_yr1(8)  = FT_yr1(11)
+    Fout_yr1(8) = FT_yr1(30)+FT_yr1(31)+FT_yr1(32)+FT_yr1(33)
+    Fin_yr2(8)  = FT_yr2(11)
+    Fout_yr2(8) = FT_yr2(30)+FT_yr2(31)+FT_yr2(32)+FT_yr2(33)
 
     ! Iterate through C pools to determine whether they have their ratio of
     ! input and outputs are outside of steady state approximation.
@@ -651,6 +671,30 @@ module model_likelihood_module
                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            end if
         end do
+
+        ! Determine the steady state estimate of wood (gC/m2)
+        SSwood = (Fin(4)/Fout(4)) * jan_mean_pools(4)
+        ! Based on the wood SS (gC/m2) and the sum fractional loss per day determine the mean input to litwood...
+        SSlitwood = SSwood * (Fout(4)/jan_mean_pools(4))
+        ! ...then estimate the actual steady state wood litter
+        SSlitwood = (SSlitwood/Fout(8)) * jan_mean_pools(8)
+        ! Steady state of som requires accounting for foliar, fine root and wood litter inputs
+        ! and adjusting for the litwood input already included
+        SSsom = Fin(6) - sum(M_FLUXES(io_start:io_finish,31))
+        ! Now repeat the process as done for litwood to estimate the inputs,
+        ! adjusting for the fraction of litwood output which is respired not decomposed
+        SSsom = SSsom + (SSlitwood * (Fout(8)/jan_mean_pools(8)) * pars(1))
+        ! Accounting for losses and scaling to SSsom
+        SSsom = (SSsom / Fout(6)) * jan_mean_pools(6)
+        ! It is reasonable to assume that the steady state for woody litter
+        ! should be ~ less than half that of woody biomass...
+        if (SSlitwood / SSwood > 0.60d0  ) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(30) = 0
+        end if
+        ! ... and less than soil organic matter
+        if ( SSsom < SSlitwood ) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(31) = 0
+        end if
 
     end if ! EDC2 == 1 .or. DIAG == 1
 

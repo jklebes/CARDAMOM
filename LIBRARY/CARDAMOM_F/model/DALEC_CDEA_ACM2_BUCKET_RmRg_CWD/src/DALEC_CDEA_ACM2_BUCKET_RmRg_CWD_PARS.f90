@@ -127,9 +127,13 @@ module MODEL_PARAMETERS
     PI%parmin(27) = 0.35d0
     PI%parmax(27) = 20d0
 
-    ! Optimum Nitrogen use efficiency (gC/gN/m2/day)
+!    ! Optimum Nitrogen use efficiency (gC/gN/m2/day)
 !    PI%parmin(28) =  1.6d0
 !    PI%parmax(28) = 40.0d0
+
+    ! Turnover rate for CWD
+    PI%parmin(29) = 1.368925d-05 ! 200.00 years at 0oC
+    PI%parmax(29) = 0.001d0      !   2.74 years at 0oC
 
 !    ! minLWP (MPa)
 !    PI%parmin(28) = -4d0
@@ -167,6 +171,10 @@ module MODEL_PARAMETERS
     ! a fraction of field capacity
     PI%parmin(24) = 0.50d0
     PI%parmax(24) = 1.00d0
+
+    ! C CWD
+    PI%parmin(28) = 1d0
+    PI%parmax(28) = 10000d0
 
   end subroutine pars_info
 

@@ -121,30 +121,34 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
 
           }
 
-          # now run the parameters to generate state variables
-          # only use 500 for full propogation of states and fluxes
-          if (dim(parameters)[2] > 500) {
-              print("Note only 500 parameter sets PER CHAIN will be used in full propogation of parameter / flux / state uncertainties")
-              sub_parameter = parameters[,sample(dim(parameters)[2],500,replace=FALSE),]
-          } else {
-              sub_parameter = parameters
-          }
-          # run subsample of parameters for full results / propogation
+          # run parameters for full results / propogation
           soil_info = c(drivers$top_sand,drivers$bot_sand,drivers$top_clay,drivers$bot_clay)
           print("running model ensemble")
-          states_all = simulate_all(n,PROJECT,PROJECT$model$name,drivers$met,sub_parameter[1:PROJECT$model$nopars[n],,],
+          states_all = simulate_all(n,PROJECT,PROJECT$model$name,drivers$met,parameters[1:PROJECT$model$nopars[n],,],
                                     drivers$lat,PROJECT$ctessel_pft[n],PROJECT$parameter_type,
                                     PROJECT$exepath,soil_info)
+
+          # Avoid running with ACM basically where not all fluxes exist
+          if (grepl("DALEC",PROJECT$model$name)) {
+              # Post-hoc calculation of parameter correlations with key C-cycle variables
+              tmp = t(array(as.vector(parameters[1:PROJECT$model$nopars[n],,]),dim=c(PROJECT$model$nopars[n],prod(dim(parameters)[2:3]))))
+              states_all$nee_par_cor = cor(tmp,apply(states_all$nee_gCm2day,1,mean))
+              states_all$gpp_par_cor = cor(tmp,apply(states_all$gpp_gCm2day,1,mean))
+              states_all$rauto_par_cor = cor(tmp,apply(states_all$rauto_gCm2day,1,mean))
+              states_all$rhet_par_cor = cor(tmp,apply(states_all$rhet_gCm2day,1,mean))
+              states_all$fire_par_cor = cor(tmp,apply(states_all$fire_gCm2day,1,mean))
+          }
+
           # pass to local variable for saving
           site_ctessel_pft = PROJECT$ctessel_pft[n]
           aNPP = states_all$aNPP ; MTT = states_all$MTT ; aMTT = states_all$aMTT ; SS = states_all$SS
           print("processing and storing ensemble output")
           # store the results now in binary file
-          save(parameter_covariance,parameters,drivers,sub_parameter,site_ctessel_pft,aNPP,MTT,aMTT,SS,file=outfile1)#, compress="gzip")
+          save(parameter_covariance,parameters,drivers,site_ctessel_pft,aNPP,MTT,aMTT,SS,file=outfile1)#, compress="gzip")
           # determine whether this is a gridded run (or one with the override in place)
           if (PROJECT$spatial_type == "site" | grid_override == TRUE) {
               # ...if this is a site run save the full ensemble and everything else...
-              save(parameters,drivers,states_all,sub_parameter,site_ctessel_pft,file=outfile)#, compress="gzip")
+              save(parameters,drivers,states_all,site_ctessel_pft,file=outfile)#, compress="gzip")
           } else {
               # ...otherwise this is a grid and we want straight forward reduced dataset of common stocks and fluxes
               num_quantiles = c(0.025,0.25,0.5,0.75,0.975) ; na_flag = TRUE
@@ -203,6 +207,13 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                   # Extract the absorbed photosynthetically active radiation by the canopy
                   site_output$APAR_MJm2day = apply(states_all$APAR_MJm2day,2,quantile, prob=num_quantiles, na.rm=na_flag)
               }
+              # C-cycle flux correlation with parameters
+              site_output$nee_par_cor = states_all$nee_par_cor
+              site_output$gpp_par_cor = states_all$gpp_par_cor
+              site_output$rauto_par_cor = states_all$rauto_par_cor
+              site_output$rhet_par_cor = states_all$rhet_par_cor
+              site_output$fire_par_cor = states_all$fire_par_cor
+
               # save to pixel specific file for the moment... in "run_mcmc_results" these will be combined into a single grid
               save(site_output,file=outfile2)
         }
@@ -379,6 +390,14 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               # Absorbed photosynthetically active radation
               grid_output$mean_APAR_MJm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           }
+
+          # Time and uncertainty invarient information,
+          # this is the correlation between ensemble members for parameter and C-cycle flux variables
+          grid_output$nee_par_cor = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
+          grid_output$gpp_par_cor = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
+          grid_output$rauto_par_cor = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
+          grid_output$rhet_par_cor = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
+          grid_output$fire_par_cor = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
 
           #
           # Generate the variables needed to contain just the analysis locations
@@ -592,6 +611,13 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                if (length(which(names(site_output) == "APAR_MJm2day")) > 0) {
                    grid_output$mean_APAR_MJm2day[slot_i,slot_j,] = apply(site_output$APAR_MJm2day,1,mean)
                }
+
+               # Parameter vs C-cycle flux correlation across ensemble member
+               grid_output$nee_par_cor[slot_i,slot_j,] = site_output$nee_par_cor
+               grid_output$gpp_par_cor[slot_i,slot_j,] = site_output$gpp_par_cor
+               grid_output$rauto_par_cor[slot_i,slot_j,] = site_output$rauto_par_cor
+               grid_output$rhet_par_cor[slot_i,slot_j,] = site_output$rhet_par_cor
+               grid_output$fire_par_cor[slot_i,slot_j,] = site_output$fire_par_cor
 
                # now tidy away the file
                file.remove(outfile2)

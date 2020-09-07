@@ -3585,7 +3585,7 @@ double precision :: Creturn_canopy,Creturn_investment
                                     ,Tfac_range_1,Photofac_range_1        &
                                     ,VPDfac_range_1,base_leaf_fall        &
                                     ,pot_leaf_fall,pot_leaf_growth        &
-                                    ,mean_min_airt,mean_daylength,mean_vpd&
+                                    ,mean_max_airt,mean_daylength,mean_vpd&
                                     ,deltaWP,Rtot,GPP_current,foliage     &
                                     ,gpp_crit_frac,GSI,leaf_fall,leaf_growth)
 
@@ -3606,7 +3606,7 @@ double precision :: Creturn_canopy,Creturn_investment
                                           ,foliage & !
                                       ,GPP_current & !
                                     ,gpp_crit_frac & !
-                                    ,mean_min_airt & !
+                                    ,mean_max_airt & !
                                    ,mean_daylength & !
                                          ,mean_vpd & !
                                           ,deltaWP & !
@@ -3654,12 +3654,12 @@ double precision :: Creturn_canopy,Creturn_investment
     ! GSI is the product of 3 limiting factors for temperature, photoperiod and
     ! vapour pressure deficit that scale linearly between 0 to 1 as a function
     ! of calibrated min and max value.
-    ! Photoperiod, VPD and avgTmin are direct input
+    ! Photoperiod, VPD and avgTmax are direct input
 
     ! Temperature limitation, then restrict to 0-1; correction for k-> oC
-    itemp(current_step) = min(1d0,max(0d0,(mean_min_airt-(Tfac_min-freeze)) * Tfac_range_1))
+    itemp(current_step) = min(1d0,max(0d0,(mean_max_airt-(Tfac_min-freeze)) * Tfac_range_1))
 !    itemp(current_step) = opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
-!    itemp(current_step) = opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,mean_min_airt)
+!    itemp(current_step) = opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,mean_max_airt)
     ! Photoperiod limitation (seconds)
     iphoto(current_step) = min(1d0,max(0d0,(mean_daylength-Photofac_min) * Photofac_range_1))
     ! VPD limitation (kPa)

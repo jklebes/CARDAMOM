@@ -35,7 +35,7 @@ extract_acm_met_drivers<-function(PROJECT,latlon_wanted,site_name) {
 
 	# not actually used but maybe one day
 	lagged_precip_out=read_site_specific_obs("lagged_precip",infile)
-	avgTmin_out=read_site_specific_obs("avgTmin",infile)
+	avgTmax_out=read_site_specific_obs("avgTmax",infile)
 	photoperiod_out=read_site_specific_obs("photoperiod",infile)
 	vpd_lagged_out=read_site_specific_obs("vpd_lagged",infile)
 
@@ -44,9 +44,8 @@ extract_acm_met_drivers<-function(PROJECT,latlon_wanted,site_name) {
 
 	# output variables
 	return(list(run_day=run_day,mint=mint_out,maxt=maxt_out,swrad=swrad_out,co2=co2_out,doy=doy_out,lagged_precip=lagged_precip_out
-		   ,avgTmin=avgTmin_out,photoperiod=photoperiod_out,vpd_lagged=vpd_lagged_out,vpd=vpd_out,avgN=avgN_out
+		   ,avgTmax=avgTmax_out,photoperiod=photoperiod_out,vpd_lagged=vpd_lagged_out,vpd=vpd_out,avgN=avgN_out
 		   ,lai=lai_out,lat=lat_out,wind_spd=wind_out,precip=precip_out,Rtot=Rtot_out,top_sand = top_sand
 		   ,bot_sand = bot_sand, top_clay  = top_clay, bot_clay = bot_clay))
 
 } # function end
-

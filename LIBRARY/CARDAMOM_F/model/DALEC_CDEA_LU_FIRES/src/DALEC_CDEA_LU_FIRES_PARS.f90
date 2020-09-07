@@ -23,16 +23,11 @@ module MODEL_PARAMETERS
 
     implicit none
 
-    !PI%npars=23;
-
-    ! NOTE: that these parameter ranges have been matched with Bloom's C code
-    ! 22/11/2019 - try not to lose this information as it is needed for comparability
-
     !
     ! declare parameters
     !
 
-    ! Decomposition litter -> som (day-1)
+    ! Decomposition litter -> som (day-1 at 0oC)
     PI%parmin(1) = 0.00001d0
     PI%parmax(1) = 0.01d0
 
@@ -58,7 +53,7 @@ module MODEL_PARAMETERS
     PI%parmax(6) = 0.001d0    ! 2.74 years
 
     ! TOR roots
-    PI%parmin(7) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
+    PI%parmin(7) = 0.001368925d0 ! 2    years
     PI%parmax(7) = 0.02d0        ! 0.13 years
 
     ! Turnover of litter (fraction; temperature adjusted)
@@ -67,9 +62,7 @@ module MODEL_PARAMETERS
 
     ! Turnover of som to Rhet (fraction; temperature adjusted)
     PI%parmin(9) = 1.368925d-06   ! 2000 years at 0oC
-    PI%parmax(9) = 9.126169d-05   !   30 years at 0oC !0.0001368926d0 !   20 years at 0oC
-!    PI%parmin(9) = 0.0000001d0 ! 27378.0 years at 0oC
-!    PI%parmax(9) = 0.001d0     !     2.7 years at 0oC
+    PI%parmax(9) = 9.126169d-05   !   30 years at 0oC
 
     ! Temp factor* = Q10 = 1.2-1.6
     PI%parmin(10) = 0.019d0
@@ -107,8 +100,6 @@ module MODEL_PARAMETERS
     ! Kattge et al. 2011
     PI%parmin(17) = 20d0
     PI%parmax(17) = 180d0
-!    PI%parmin(17) = 30d0
-!    PI%parmax(17) = 50d0
 
     !
     ! INITIAL VALUES DECLARED HERE
@@ -136,7 +127,7 @@ module MODEL_PARAMETERS
 
     ! C_som
     PI%parmin(23) = 200d0
-    PI%parmax(23) = 250000d0 !90000d0
+    PI%parmax(23) = 250000d0 
 
   end subroutine pars_info
 

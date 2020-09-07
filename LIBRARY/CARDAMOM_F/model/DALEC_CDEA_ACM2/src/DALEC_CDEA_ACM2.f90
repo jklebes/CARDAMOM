@@ -376,14 +376,15 @@ metabolic_limited_photosynthesis, &
     sf = 365.25d0/pi
 
     ! JFE added 4 May 2018 - define fire constants
+    ! Define fire constants
     cf(1) = 0.1d0         ! labile combustion efficiency
     cf(2) = 0.9d0         ! foliar combustion efficiency
     cf(3) = 0.1d0         ! roots combustion efficiency
     cf(4) = 0.1d0         ! wood combustion efficiency
     cf(5) = 0.7d0         ! litter combustion efficiency
-    cf(6) = 0.01d0        ! som combustion efficiency
+    cf(6) = 0.01d0        ! som combustion efficency
     rfac = 0.5d0          ! resilience factor
-    rfac(4) = 0.1d0
+    rfac(5) = 0.1d0 ; rfac(6) = 0d0
 
     !
     ! Begin looping through each time step

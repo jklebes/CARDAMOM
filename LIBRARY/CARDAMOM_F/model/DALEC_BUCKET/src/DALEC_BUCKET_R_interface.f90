@@ -1,5 +1,4 @@
 
-
 subroutine rdalecbucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
                        ,out_var,out_var2,out_var3,out_var4,out_var5 &
                        ,lat &
@@ -387,7 +386,7 @@ subroutine rdalecbucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
          out_var4(i,1) = sum(FLUXES(:,8)) ! Foliage
          out_var4(i,2) = sum(FLUXES(:,6)) ! Fine root
          out_var4(i,3) = sum(FLUXES(:,7)) ! Wood
-         ! Foliar and fine root litter can likelise be estimated directly,
+         ! Foliar and fine root litter can likewise be estimated directly,
          ! however wood litter and soil C inputs are still changing as the wood pool is not in steady state.
          ! Therefore, at this point we can account for the fol, fine root, and disturbance inputs but NOT wood.
          ! The wood input is estimated later based on the steady state its steady state estimate

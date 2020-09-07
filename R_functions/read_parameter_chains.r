@@ -19,7 +19,7 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
   is_it = file.size(pfile) ; is_it = which(is_it > 0) ; pfile = pfile[is_it]
 
   # just in case
-  if (length(pfile) <= 1) {return(-9999)}
+  if (length(pfile) < 1) {return(-9999)}
 
   # search for all output files
   sfile = list.files(paste(PROJECT_in$resultspath,sep=""), full.names=TRUE)
@@ -99,7 +99,8 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
 
   if (PROJECT_in$model$name == "DALEC_CDEA" || PROJECT_in$model$name == "DALEC_CDEA_LU_FIRES" ||
       PROJECT_in$model$name == "DALEC_CDEA_ACM2" || PROJECT_in$model$name == "DALEC_CDEA_ACM2_BUCKET" ||
-      PROJECT_in$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg") {
+      PROJECT_in$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg" || PROJECT_in$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg" ||
+      PROJECT_in$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT") {
       param_sets_out[c(12,15),,] = ((param_sets_out[c(12,15),,]-1)%%365.25)+1
   }
   if (PROJECT_in$model$name == "DALEC_CDEA_no_lit_root") {

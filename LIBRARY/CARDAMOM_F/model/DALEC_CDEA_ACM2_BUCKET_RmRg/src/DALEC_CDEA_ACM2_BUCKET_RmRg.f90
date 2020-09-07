@@ -315,7 +315,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, dimension(nodays,nofluxes), intent(inout) :: FLUXES ! vector of ecosystem fluxes
 
     ! declare local variables
-    double precision :: infi &
+    double precision :: tmp, infi &
                        ,Rtot & ! Total hydraulic resistance (MPa.s-1.m-2.mmol-1)
               ,transpiration & ! kgH2O/m2/day
             ,soilevaporation & ! kgH2O/m2/day
@@ -422,7 +422,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     intercepted_rainfall = 0d0 ; canopy_storage = 0d0 ; snow_storage = 0d0
 
     ! load ACM-GPP-ET parameters
-!    minlwp = pars(28)
     deltaWP = minlwp     ! leafWP-soilWP (i.e. -2-0)
     Rtot = 1d0
     Ceff = pars(11) ! Canopy efficiency (gC/m2/day)
@@ -539,7 +538,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     cf(5) = 0.7d0         ! litter combustion efficiency
     cf(6) = 0.01d0        ! som combustion efficency
     rfac = 0.5d0          ! resilience factor
-    rfac(4) = 0.1d0
+    rfac(5) = 0.1d0 ; rfac(6) = 0d0
 
     !
     ! Begin looping through each time step
@@ -765,11 +764,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !
 
        ! respiration heterotrophic litter
-       FLUXES(n,13) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))/deltat(n)
+       !FLUXES(n,13) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))/deltat(n)
        ! respiration heterotrophic som
        FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9))**deltat(n))/deltat(n)
        ! litter to som
-       FLUXES(n,15) = POOLS(n,5)*(1d0-(1d0-pars(1)*FLUXES(n,2))**deltat(n))/deltat(n)
+       !FLUXES(n,15) = POOLS(n,5)*(1d0-(1d0-pars(1)*FLUXES(n,2))**deltat(n))/deltat(n)
+       ! turnover of litter
+       tmp = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))*deltat_1(n)
+       ! respiration heterotrophic litter ; decomposition of litter to som
+       FLUXES(n,13) = tmp * (1d0-pars(1)) ; FLUXES(n,15) = tmp * pars(1)
 
        !!!!!!!!!!
        ! calculate growth respiration and adjust allocation to pools assuming
@@ -786,10 +789,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,3) = FLUXES(n,3) + Rg_from_labile(n)
        ! foliage - gpp direct
        FLUXES(n,3) = FLUXES(n,3) + (FLUXES(n,4)*Rg_fraction) ; FLUXES(n,4) = FLUXES(n,4) * one_Rg_fraction
-       ! roots
-       FLUXES(n,3) = FLUXES(n,3) + (FLUXES(n,6)*Rg_fraction) ; FLUXES(n,6) = FLUXES(n,6) * one_Rg_fraction
-       ! wood
-       FLUXES(n,3) = FLUXES(n,3) + (FLUXES(n,7)*Rg_fraction) ; FLUXES(n,7) = FLUXES(n,7) * one_Rg_fraction
+!       ! roots
+!       FLUXES(n,3) = FLUXES(n,3) + (FLUXES(n,6)*Rg_fraction) ; FLUXES(n,6) = FLUXES(n,6) * one_Rg_fraction
+!       ! wood
+!       FLUXES(n,3) = FLUXES(n,3) + (FLUXES(n,7)*Rg_fraction) ; FLUXES(n,7) = FLUXES(n,7) * one_Rg_fraction
 
        ! calculate the NEE
        NEE(n) = (-FLUXES(n,1)+FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14))
@@ -801,7 +804,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !
 
        ! labile pool
-       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8))*deltat(n)
+       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8)-Rg_from_labile(n))*deltat(n)
        ! foliar pool
        POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,4)-FLUXES(n,10) + FLUXES(n,8))*deltat(n)
        ! wood pool

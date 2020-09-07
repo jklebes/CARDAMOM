@@ -1,5 +1,4 @@
 
-
 subroutine rdaleccdealufires(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
                             ,out_var,out_var2,out_var3,out_var4,out_var5 &
                             ,lat,nopars,nomet &
@@ -17,11 +16,11 @@ subroutine rdaleccdealufires(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
                         ,pft            & ! plant functional type
                         ,output_dim     & !
                         ,aNPP_dim       & ! NPP allocation fraction variable dimension
-                        ,MTT_dim        &
-                        ,SS_dim         &
-                        ,pft_specific   & !
-                        ,nos_iter       & !
-                        ,noyears        &
+                        ,MTT_dim        & ! Mean Transit time dimension
+                        ,SS_dim         & ! Steady State dimension
+                        ,pft_specific   & ! Crop model switch - kept for code consistency with other versions
+                        ,nos_iter       & ! Number of parameter vectors
+                        ,noyears        & ! Number of years to be simulated
                         ,nomet          & ! number of meteorological fields
                         ,nofluxes       & ! number of model fluxes
                         ,nopools        & ! number of model pools
@@ -32,14 +31,14 @@ subroutine rdaleccdealufires(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
                        ,pars(nopars,nos_iter)         & ! number of parameters
                        ,lat                 ! site latitude (degrees)
 
-  ! output declaration
+  ! Declare output variables
   double precision, intent(out), dimension(nos_iter,nodays,output_dim) :: out_var
   double precision, intent(out), dimension(nos_iter,aNPP_dim) :: out_var2
   double precision, intent(out), dimension(nos_iter,MTT_dim) :: out_var3
   double precision, intent(out), dimension(nos_iter,SS_dim) :: out_var4
   double precision, intent(out), dimension(nos_iter,MTT_dim,noyears) :: out_var5
 
-  ! local variables
+  ! Local variables
   ! vector of ecosystem pools
   integer :: i, y, y_s, y_e, nos_years, steps_per_year
   integer, dimension(nodays) :: fol_hak, root_hak, wood_hak, lit_hak, som_hak
@@ -59,7 +58,7 @@ subroutine rdaleccdealufires(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
   ! zero initial conditions
   lai = 0d0 ; GPP = 0d0 ; NEE = 0d0 ; POOLS = 0d0 ; FLUXES = 0d0 ; out_var = 0d0
 
-  ! update settings
+  ! Create biomass harvest variable
   if (allocated(extracted_C)) deallocate(extracted_C)
   allocate(extracted_C(nodays))
 
@@ -68,10 +67,10 @@ subroutine rdaleccdealufires(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
   do i = 2, nodays
      deltat(i) = met(1,i)-met(1,(i-1))
   end do
-  ! number of years in analysis
+  ! Number of years in analysis
   nos_years = nint(sum(deltat)/365.25d0)
   ! number of time steps per year
-  steps_per_year = nodays/nos_years
+  Steps_per_year = nodays/nos_years
 
   ! begin iterations
   do i = 1, nos_iter
@@ -82,12 +81,6 @@ subroutine rdaleccdealufires(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
      call CARBON_MODEL(1,nodays,met,pars(1:nopars,i),deltat,nodays &
                       ,lat,lai,NEE,FLUXES,POOLS &
                       ,nopars,nomet,nopools,nofluxes,GPP)
-!if (i == 1) then
-!    open(unit=666,file="/home/lsmallma/out.csv", &
-!         status='replace',action='readwrite' )
-!    write(666,*),"GSI",FLUXES(:,14)(1:365)
-!    close(666)
-!endif
 
      ! now allocate the output the our 'output' variable
      out_var(i,1:nodays,1)  = lai
@@ -106,15 +99,17 @@ subroutine rdaleccdealufires(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
      out_var(i,1:nodays,13) = extracted_C(1:nodays) ! harvested material
      out_var(i,1:nodays,14) = FLUXES(1:nodays,17) ! Fire value
 
-     ! calculate the actual NPP allocation fractions to foliar, wood and fine root pools
+     ! Calculate the actual NPP allocation fractions to foliar, wood and fine root pools
      ! by comparing the sum alloaction to each pools over the sum NPP.
+     ! Not strictly needed for this version of DALEC but allows code consistency with more complex versions
      sumNPP = sum(FLUXES(1:nodays,1)*(1d0-pars(2,i))) ! GPP * (1-Ra) fraction
      airt_adj = sum(met(3,1:nodays)) / dble(nodays)
      airt_adj = exp(pars(10,i)*airt_adj)
      out_var2(i,1) = sum(FLUXES(1:nodays,4)+FLUXES(1:nodays,8)) / sumNPP ! foliar
      out_var2(i,2) = sum(FLUXES(1:nodays,6)) / sumNPP ! fine root
      out_var2(i,3) = sum(FLUXES(1:nodays,7)) / sumNPP ! wood
-     ! Mean transit time
+
+     ! Estimate C pool Mean transit (or residence) time
      out_var3(i,1) = pars(5,i) ! leaf life span (years)
      out_var3(i,2) = pars(7,i) ! root residence time (/day)
      out_var3(i,3) = pars(6,i) ! wood residence time (/day)
@@ -148,7 +143,7 @@ subroutine rdaleccdealufires(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
            som_hak = 1 ; som_filter(1:nodays) = 0d0
      end where
 
-     ! Now loop through each year to estimate the annual residence time
+     ! Estimate the MTT for each year individually, accounting for disturbance factors
      do y = 1, nos_years
         ! Estimate time steps covered by this year
         y_s = 1 + (steps_per_year * (y-1)) ; y_e = steps_per_year * y
@@ -168,13 +163,6 @@ subroutine rdaleccdealufires(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
         out_var5(i,5,y) = sum( ((FLUXES(y_s:y_e,14)+FLUXES(y_s:y_e,23)) &
                                 / POOLS(y_s:y_e,6)) * som_filter(y_s:y_e)) / dble(steps_per_year-sum(som_hak(y_s:y_e)))
      end do
-
-!     ! Calculate the mean inputs to each pool, needed for steady state calculation
-!     out_var4(i,1) = sum(FLUXES(1:nodays,4)+FLUXES(1:nodays,8)) ! fol
-!     out_var4(i,2) = sum(FLUXES(1:nodays,6)) ! root
-!     out_var4(i,3) = sum(FLUXES(1:nodays,7)) ! wood
-!     out_var4(i,4) = sum(FLUXES(1:nodays,10)+FLUXES(1:nodays,12)+FLUXES(1:nodays,24)+FLUXES(1:nodays,25)+FLUXES(1:nodays,26)) ! lit
-!     out_var4(i,5) = sum(FLUXES(1:nodays,11)+FLUXES(1:nodays,15)+FLUXES(1:nodays,27)+FLUXES(1:nodays,28)) ! som
 
      ! Once the canopy has closed the inputs to the live biomass are stable
      ! and can thus be estimated from the simulated inputs. Similarly the litter pool input

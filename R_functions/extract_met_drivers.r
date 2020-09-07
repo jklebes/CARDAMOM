@@ -329,7 +329,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
 
       # declare output variables
       maxt_out = 0 ; mint_out = 0 ; swrad_out = 0 ; co2_out = 0 ; precip_out = 0 ; vpd_out = 0 ; avgTemp_out = 0 ; wind_spd_out = 0
-      vpd_lagged_out = 0 ; photoperiod_out = 0 ; avgTmin_out = 0
+      vpd_lagged_out = 0 ; photoperiod_out = 0 ; avgTmax_out = 0
 
       if (steps_in_day > 1) {
           # loop through days to generate daily mean values first
@@ -339,12 +339,12 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
                    maxt_out=append(maxt_out,max(maxt[daily:(daily+steps_in_day-1)]))
                    mint_out=append(mint_out,min(mint[daily:(daily+steps_in_day-1)]))
                    avgTemp_out=append(avgTemp_out,(mint[daily:(daily+steps_in_day-1)]+maxt[daily:(daily+steps_in_day-1)])*0.5)
-                   avgTmin_out=append(avgTmin_out,min(mint[daily:(daily+steps_in_day-1)]))
+                   avgTmax_out=append(avgTmax_out,max(maxt[daily:(daily+steps_in_day-1)]))
                } else {
                    maxt_out=append(maxt_out,max(airt[daily:(daily+steps_in_day-1)]))
                    mint_out=append(mint_out,min(airt[daily:(daily+steps_in_day-1)]))
                    avgTemp_out=append(avgTemp_out,mean(airt[daily:(daily+steps_in_day-1)]))
-                   avgTmin_out=append(avgTmin_out,min(airt[daily:(daily+steps_in_day-1)]))
+                   avgTmax_out=append(avgTmax_out,max(airt[daily:(daily+steps_in_day-1)]))
                }
                # Short wave radiation (W.m-2)
                swrad_out=append(swrad_out,sum(swrad[daily:(daily+steps_in_day-1)]))
@@ -362,13 +362,13 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
          mint_out=mint_out[-1]   ; co2_out=co2_out[-1]
          precip_out=precip_out[-1]
          avgTemp_out=avgTemp_out[-1]
-         avgTmin_out=avgTmin_out[-1]
+         avgTmax_out=avgTmax_out[-1]
          vpd_out=vpd_out[-1] ; wind_spd_out=wind_spd_out[-1]
 
       } else {
 
          # currently provided drivers cover greater than a day, so just pass drivers directly
-         maxt_out = maxt ; mint_out = mint ; avgTemp_out = airt ; avgTmin_out = mint
+         maxt_out = maxt ; mint_out = mint ; avgTemp_out = airt ; avgTmax_out = maxt
          swrad_out = swrad ; precip_out = precip ; wind_spd_out = wind_spd
          co2_out = co2 ; vpd_out = vpd
 
@@ -379,7 +379,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
 
       # to allow for consistency of the rolling mean calculations we need to expand each value
       # by the number of days each represents...
-      avgTmin_out = rep(avgTmin_out, times = timestep_days)
+      avgTmax_out = rep(avgTmax_out, times = timestep_days)
       vpd_lagged_out = rep(vpd_out, times = timestep_days)
 
       # rolling averaged for GSI
@@ -388,14 +388,14 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       photoperiod_out = calc_photoperiod_sec(latlon_wanted[1],c(seq(365,(365-(avg_days-2)),-1),doy))
       # now take the daily values and turn them into rolling 21 day averages
       photoperiod_out = rollapply(photoperiod_out,avg_days,mean,na.rm=FALSE)
-      avgTmin_out = rollapply(avgTmin_out,avg_days,mean,na.rm=FALSE)
+      avgTmax_out = rollapply(avgTmax_out,avg_days,mean,na.rm=FALSE)
       vpd_lagged_out = rollapply(vpd_lagged_out,avg_days,mean,na.rm=FALSE)
       # GSI adjustment
-      avgTmin_out = append(avgTmin_out[1:(avg_days-1)],avgTmin_out)
+      avgTmax_out = append(avgTmax_out[1:(avg_days-1)],avgTmax_out)
       vpd_lagged_out = append(vpd_lagged_out[1:(avg_days-1)],vpd_lagged_out)
       # construct output
       met = list(run_day=run_day_selector,mint=mint_out,maxt=maxt_out,swrad=swrad_out,co2=co2_out
-                ,doy=doy[run_day_selector],precip=precip_out,avgTmin=avgTmin_out[run_day_selector]
+                ,doy=doy[run_day_selector],precip=precip_out,avgTmax=avgTmax_out[run_day_selector]
                 ,photoperiod=photoperiod_out[run_day_selector],vpd_lagged=vpd_lagged_out[run_day_selector]
                 ,avgTemp=avgTemp_out,vpd=vpd_out,wind_spd=wind_spd_out)
 
@@ -413,7 +413,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       swrad_out = met_in$swrad[n,] ; maxt_out = met_in$maxt[n,] ; precip_out = met_in$precip[n,]
       vpd_out = met_in$vpd[n,] ; pressure_out = met_in$pressure[n,]
       mint_out = met_in$mint[n,] ; wind_spd_out = met_in$wind_spd[n,]
-      co2_out = met_in$co2 ; avgTmin_out = mint_out
+      co2_out = met_in$co2 ; avgTmax_out = maxt_out
       avgTemp_out = (mint_out + maxt_out) * 0.5
 
       # user update
@@ -425,7 +425,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
 
       # now take the daily values and turn them into rolling 21 day averages
       photoperiod_out=rollapply(photoperiod_out,avg_days,mean,na.rm=FALSE)
-      avgTmin_out=rollapply(avgTmin_out,avg_days,mean,na.rm=FALSE)
+      avgTmax_out=rollapply(avgTmax_out,avg_days,mean,na.rm=FALSE)
       vpd_lagged_out=rollapply(vpd_out,avg_days,mean,na.rm=FALSE)
 
       # make adjustments to the time series should we have read in an extra year for GSI calculation
@@ -440,15 +440,15 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
           wind_spd_out=wind_spd_out[adjustment_begin:adjustment_end]
           precip_out=precip_out[adjustment_begin:adjustment_end]
           co2_out=co2_out[adjustment_begin:adjustment_end]
-          adjustment_end=length(avgTmin_out) ; adjustment_begin=length(avgTmin_out)-(length(met_in$doy)-1)
-          avgTmin_out=avgTmin_out[adjustment_begin:adjustment_end]
+          adjustment_end=length(avgTmax_out) ; adjustment_begin=length(avgTmax_out)-(length(met_in$doy)-1)
+          avgTmax_out=avgTmax_out[adjustment_begin:adjustment_end]
           vpd_lagged_out=vpd_lagged_out[adjustment_begin:adjustment_end]
           vpd_out=vpd_out[adjustment_begin:adjustment_end]
 
       } else {
 
           # if we do not have all the needed for simplisity we will assume that the first 21 days are repeated
-          avgTmin_out=append(avgTmin_out[1:(avg_days-1)],avgTmin_out)
+          avgTmax_out=append(avgTmax_out[1:(avg_days-1)],avgTmax_out)
           vpd_lagged_out=append(vpd_lagged_out[1:(avg_days-1)],vpd_lagged_out)
 
       } # extra year?
@@ -474,7 +474,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
           swrad_agg=array(NA,dim=length(run_day_selector)) ; maxt_agg=array(NA,dim=length(run_day_selector))
           mint_agg=array(NA,dim=length(run_day_selector))
           precip_agg=array(NA,dim=length(run_day_selector)) ; wind_spd_agg=array(NA,dim=length(run_day_selector))
-          co2_agg=array(NA,dim=length(run_day_selector)) ; avgTmin_agg=array(NA,dim=length(run_day_selector))
+          co2_agg=array(NA,dim=length(run_day_selector)) ; avgTmax_agg=array(NA,dim=length(run_day_selector))
           vpd_agg=array(NA,dim=length(run_day_selector)) ; photoperiod_agg=array(NA,dim=length(run_day_selector))
           vpd_lagged_agg=array(NA,dim=length(run_day_selector))
           avgTemp_agg=array(NA,dim=length(run_day_selector))
@@ -486,7 +486,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
                wind_spd_agg[y]=mean(wind_spd_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
                precip_agg[y]=mean(precip_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
                co2_agg[y]=mean(co2_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
-               avgTmin_agg[y]=mean(avgTmin_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
+               avgTmax_agg[y]=mean(avgTmax_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
                vpd_agg[y]=mean(vpd_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
                vpd_lagged_agg[y]=mean(vpd_lagged_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
                photoperiod_agg[y]=mean(photoperiod_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
@@ -494,11 +494,11 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
           # update with new output information
           swrad_out=swrad_agg ; maxt_out=maxt_agg ; mint_out=mint_agg
           precip_out=precip_agg ; vpd_lagged_out=vpd_lagged_agg
-          co2_out=co2_agg ; avgTmin_out=avgTmin_agg ; vpd_out=vpd_agg ; photoperiod_out=photoperiod_agg
+          co2_out=co2_agg ; avgTmax_out=avgTmax_agg ; vpd_out=vpd_agg ; photoperiod_out=photoperiod_agg
           avgTemp_out=avgTemp_agg ; wind_spd_out = wind_spd_agg
 
           # clean up
-          rm(y,swrad_agg,maxt_agg,mint_agg,precip_agg,co2_agg,avgTmin_agg,
+          rm(y,swrad_agg,maxt_agg,mint_agg,precip_agg,co2_agg,avgTmax_agg,
              vpd_agg,photoperiod_agg,avgTemp_agg,wind_spd_agg)
           gc(reset=TRUE,verbose=FALSE)
 
@@ -507,17 +507,17 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       # Temperature information for all analyses provide temperature in Kelvin.
       # At this final point convert all (except rolling mean) to oC for CARDAMOM
       mint_out = mint_out - 273.15 ; maxt_out = maxt_out - 273.15
-      avgTemp_out = avgTemp_out - 273.15 ; avgTmin_out = avgTmin_out - 273.15
+      avgTemp_out = avgTemp_out - 273.15 ; avgTmax_out = avgTmax_out - 273.15
 
       # output variables
       met=list(run_day=met_in$run_day[run_day_selector],mint=mint_out,maxt=maxt_out,
                swrad=swrad_out,co2=co2_out,doy=met_in$doy[run_day_selector],precip=precip_out,
-               avgTmin=avgTmin_out,photoperiod=photoperiod_out,vpd_lagged=vpd_lagged_out,
+               avgTmax=avgTmax_out,photoperiod=photoperiod_out,vpd_lagged=vpd_lagged_out,
                avgTemp=avgTemp_out,vpd=vpd_out,wind_spd=wind_spd_out)
 
       # clean up
       rm(swrad_out,mint_out,maxt_out,precip_out,co2_out,vpd_lagged_out,
-         photoperiod_out,avgTmin_out,avgTemp_out,vpd_out)
+         photoperiod_out,avgTmax_out,avgTemp_out,vpd_out)
 
   } # conditional for site_specific or global datasets
 
@@ -525,5 +525,3 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
   return(met)
 
 } # function end
-
-
