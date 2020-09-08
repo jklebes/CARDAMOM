@@ -35,13 +35,12 @@ contains
   !
   !--------------------------------------------------------------------
   !
-  subroutine MHMCMC (P_target,model_likelihood_option)
+  subroutine MHMCMC (P_target,model_likelihood_default,model_likelihood_option)
     use MCMCOPT, only: PI, MCO, MCOUT, COUNTERS
     use math_functions, only: randn, random_uniform, log_par2nor, log_nor2par, par2nor, nor2par
     use cardamom_io, only: write_parameters,write_variances,write_covariance_matrix &
                           ,write_covariance_info,restart_flag,write_mcmc_output
     use cardamom_structures, only: DATAin
-    use model_likelihood_module, only: model_likelihood
 
     implicit none
 
@@ -93,6 +92,19 @@ contains
            ! output
            double precision,intent(inout) :: ML_obs_out, ML_prior_out
       end subroutine model_likelihood_option
+    end interface
+
+    interface
+      subroutine model_likelihood_default(param_vector, ML_obs_out, ML_prior_out)
+        use cardamom_structures, only: DATAin, emulator_pars
+        use MCMCOPT, only: PI
+        use CARBON_MODEL_MOD, only: carbon_model
+           implicit none
+           ! declare input variables
+           double precision, dimension(PI%npars), intent(inout) :: param_vector
+           ! output
+           double precision,intent(inout) :: ML_obs_out, ML_prior_out
+      end subroutine model_likelihood_default
     end interface
 
     ! Remaining Arguments
@@ -260,7 +272,7 @@ contains
            ! issues with different phases of the MCMC which may use sub-samples
            ! of observations or inflated uncertainties to aid parameter
            ! searching
-           call model_likelihood(PARS0, outputP0, outputP0prior)
+           call model_likelihood_default(PARS0, outputP0, outputP0prior)
            ! Now write out to files
            call write_mcmc_output(PI%parvar,N%ACCRATE, &
                                   PI%covariance, &
@@ -292,7 +304,7 @@ contains
                    N%ACCLOC = 1d0 ; PARSALL(1:PI%npars,nint(N%ACCLOC)) = norPARS0(1:PI%npars)
                else if (N%ACCLOC > 3d0) then
                    PARSALL(1:PI%npars,2) = PARSALL(1:PI%npars,ceiling(N%ACCLOC*0.5d0))
-                   PARSALL(1:PI%npars,3) = PARSALL(1:PI%npars,N%ACCLOC)
+                   PARSALL(1:PI%npars,3) = PARSALL(1:PI%npars,nint(N%ACCLOC))
                    N%ACCLOC = 3d0
                endif
 

@@ -12,6 +12,7 @@ public :: CARBON_MODEL     &
          ,soil_frac_sand   &
          ,nos_soil_layers  &
          ,extracted_C      &
+         ,CiCa_time        &
          ,dim_1,dim_2      &
          ,nos_trees        &
          ,nos_inputs       &
@@ -23,7 +24,7 @@ public :: CARBON_MODEL     &
          ,bestvar
 
 ! Biomass removal (e.g. due to forest harvest)
-double precision, allocatable, dimension(:) :: extracted_C
+double precision, allocatable, dimension(:) :: extracted_C, CiCa_time
 
 ! Variables needed incase of using random forest functions.
 ! None are currently implemented but variables remain for legacy reasons
@@ -41,6 +42,7 @@ double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daug
 ! Multiple soil layer variables, these are not used in DALEC2 (C1),
 ! but declarations are needed to here ensure compilation compatability with more complex verison of DALEC
 integer, parameter :: nos_root_layers = 2, nos_soil_layers = nos_root_layers + 1
+double precision :: ci
 double precision, dimension(nos_soil_layers) :: soil_frac_clay,soil_frac_sand
 
 contains
@@ -228,6 +230,8 @@ contains
     rfac = 0.5d0          ! resilience factor
     rfac(5) = 0.1d0 ; rfac(6) = 0d0
 
+    if (.not.allocated(CiCa_time)) allocate(CiCa_time(nodays))
+
     !
     ! Begin looping through each time step
     !
@@ -249,7 +253,7 @@ contains
       gpppars(8) = met(4,n) ! radiation
 
       ! GPP (gC.m-2.day-1)
-      FLUXES(n,1) = acm(gpppars,constants)
+      FLUXES(n,1) = acm(gpppars,constants) ; CiCa_time(n) = ci
       ! Exponential temperature modified rate of metabolic activity
       FLUXES(n,2) = exp(pars(10)*0.5d0*(met(3,n)+met(2,n)))
       ! Autotrophic respiration (gC.m-2.day-1)
@@ -400,7 +404,7 @@ contains
                                    ,constants(10) ! ACM parameters
 
     ! declare local variables
-    double precision :: gc, pn, pd, pp, qq, ci, e0, dayl, cps, dec, nit &
+    double precision :: gc, pn, pd, pp, qq, e0, dayl, cps, dec, nit &
                        ,trange, sinld, cosld,aob,pi, mult &
                        ,mint,maxt,radiation,co2,lai,doy,lat &
                        ,deltaWP,Rtot,NUE,temp_exponent,dayl_coef &
@@ -459,14 +463,14 @@ contains
     ! Calculate day length (hours)
     ! This is the old REFLEX project calculation it is less efficient than the commented code above,
     ! however is currently returned for comparison with JPL DALEC version
-    dec=-23.4*cos((360.0*(doy+10.0)/365.0)*pi/180.0)*pi/180.0
-    mult=tan(lat*pi/180.0)*tan(dec)
-    if (mult>=1.0) then
-      dayl=24.0
-    else if (mult<=-1.0) then
-      dayl=0.0
+    dec = -23.4d0*cos((360d0*(doy+10d0)/365d0)*pi/180d0)*pi/180d0
+    mult = tan(lat*pi/180.0)*tan(dec)
+    if (mult >= 1d0) then
+        dayl = 2d0
+    else if (mult <= -1d0) then
+        dayl = 0d0
     else
-      dayl=24.0*acos(-mult)/pi
+        dayl = 24d0*acos(-mult)/pi
     end if
 ! ---------------------------------------------------------------
     ! Calculate CO2 limited rate of photosynthesis (gC/m2/day)

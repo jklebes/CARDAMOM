@@ -87,7 +87,7 @@ module model_likelihood_module
 
            write(*,*)"Beginning EDC search attempt"
            ! call the MHMCMC directing to the appropriate likelihood
-           call MHMCMC(P_target,EDC_MODEL_LIKELIHOOD)
+           call MHMCMC(P_target,model_likelihood,edc_model_likelihood)
 
            ! store the best parameters from that loop
            PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)

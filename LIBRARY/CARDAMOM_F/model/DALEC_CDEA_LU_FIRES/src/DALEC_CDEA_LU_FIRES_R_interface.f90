@@ -5,7 +5,7 @@ subroutine rdaleccdealufires(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
                             ,nofluxes,nopools,pft,pft_specific,nodays,noyears,deltat &
                             ,nos_iter)
 
-  use CARBON_MODEL_MOD, only: CARBON_MODEL, extracted_C
+  use CARBON_MODEL_MOD, only: CARBON_MODEL, extracted_C, CiCa_time
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -98,9 +98,10 @@ subroutine rdaleccdealufires(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
      out_var(i,1:nodays,12) = POOLS(1:nodays,2) ! foliage
      out_var(i,1:nodays,13) = extracted_C(1:nodays) ! harvested material
      out_var(i,1:nodays,14) = FLUXES(1:nodays,17) ! Fire value
+     out_var(i,1:nodays,15) = CiCa_time(1:nodays)
 
      ! Calculate the actual NPP allocation fractions to foliar, wood and fine root pools
-     ! by comparing the sum alloaction to each pools over the sum NPP.
+     ! by comparing the sum allocation to each pools over the sum NPP.
      ! Not strictly needed for this version of DALEC but allows code consistency with more complex versions
      sumNPP = sum(FLUXES(1:nodays,1)*(1d0-pars(2,i))) ! GPP * (1-Ra) fraction
      airt_adj = sum(met(3,1:nodays)) / dble(nodays)

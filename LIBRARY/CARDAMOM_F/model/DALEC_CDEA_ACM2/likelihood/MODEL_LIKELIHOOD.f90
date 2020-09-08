@@ -87,7 +87,7 @@ module model_likelihood_module
 
            write(*,*)"Beginning EDC search attempt"
            ! call the MHMCMC directing to the appropriate likelihood
-           call MHMCMC(P_target,EDC_MODEL_LIKELIHOOD)
+           call MHMCMC(P_target,model_likelihood,edc_model_likelihood)
 
            ! store the best parameters from that loop
            PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
@@ -442,8 +442,9 @@ module model_likelihood_module
     double precision, intent(out) :: EDC2 ! the response flag for the dynamical set of EDCs
 
     ! declare local variables
-    integer :: n, nn, nnn, DIAG, no_years, y, PEDC, steps_per_year, steps_per_month, nd, fl
-    double precision :: no_years_1, infi, io_start, io_finish!, EQF, etol
+    integer :: n, nn, nnn, DIAG, no_years, y, PEDC, steps_per_year, steps_per_month, nd, fl, &
+               io_start, io_finish
+    double precision :: no_years_1, infi!, EQF, etol
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
                                             mean_pools, Fin, Fout, Rm, Rs, &
                                             Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
@@ -721,14 +722,14 @@ module model_likelihood_module
                                  ,interval((averaging_period-1))      ! model time step in decimal days
 
     ! declare local variables
-    double precision :: startday, endday
+    integer :: startday, endday
 
     ! calculate some constants
     startday = floor(365.25d0*dble(year-1)/(sum(interval)/dble(averaging_period-1)))+1
     endday = floor(365.25d0*dble(year)/(sum(interval)/dble(averaging_period-1)))
 
     ! pool through and work out the annual mean values
-    cal_mean_annual_pools = sum(pools(startday:endday))/(endday-startday)
+    cal_mean_annual_pools = sum(pools(startday:endday))/dble(endday-startday)
 
     ! ensure function returns
     return
@@ -806,11 +807,11 @@ module model_likelihood_module
    MP1 = MP1*aw_1
 
    ! estimate mean stock for first year with offset
-   MP0os = sum(pools((1+os):(aw+os)))
+   MP0os = sum(pools((1+os):(aw_int+os)))
    MP0os = MP0os*aw_1
 
    ! estimate mean stock for second year with offset
-   MP1os = sum(pools((aw+os+1):((aw*2)+os)))
+   MP1os = sum(pools((aw_int+os+1):((aw_int*2)+os)))
    MP1os = MP1os*aw_1
 
    ! derive mean gradient ratio (dcdt1/dcdt0)

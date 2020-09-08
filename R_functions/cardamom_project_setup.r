@@ -178,8 +178,8 @@ cardamom_project_setup <- function (paths,PROJECT) {
                        ,paste("mv ",ecdf_source,"CARDAMOM_F ",ecdf_source,"CARDAMOM_F_BKP",sep="")
                        ,paste("scp -r ",username,"@",home_computer,":",paths$cardamom,"LIBRARY/CARDAMOM_F ",ecdf_source,sep="")
                        ,paste("cd ",ecdf_source,"CARDAMOM_F/executable",sep="")
-                       #,paste("rm cardamom.exe")
-                       #,paste("rm ",eexepath,"/",exe,sep="")
+                       ,paste("rm cardamom.exe") # depends on working directory "executable"
+                       ,paste("rm *.mod")        # depends on working directory "executable"
                        ,paste(compiler," -O2 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
                               " ../model/",modelname,"/src/",modelname,"_CROP.f90",
                               " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90",
@@ -241,6 +241,7 @@ cardamom_project_setup <- function (paths,PROJECT) {
         # store current working directory so that we can leave it briefly but return later
         cwd=getwd()
         setwd(paste(paths$cardamom,"LIBRARY/CARDAMOM_F/executable/",sep=""))
+        system("rm *.mod") # depends on being in executable directory
         # issue compile commands
         system(paste(compiler," -O2 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
                      " ../model/",modelname,"/src/",modelname,"_CROP.f90",

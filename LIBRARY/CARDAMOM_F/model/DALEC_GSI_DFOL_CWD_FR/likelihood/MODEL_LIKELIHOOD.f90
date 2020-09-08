@@ -87,7 +87,7 @@ module model_likelihood_module
 
            write(*,*)"Beginning EDC search attempt"
            ! call the MHMCMC directing to the appropriate likelihood
-           call MHMCMC(P_target,EDC_MODEL_LIKELIHOOD)
+           call MHMCMC(P_target,model_likelihood,edc_model_likelihood)
 
            ! store the best parameters from that loop
            PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
@@ -910,11 +910,12 @@ module model_likelihood_module
 
     ! declare local variables
     logical :: found
-    integer :: n, DIAG, no_years, y, PEDC, nn, nnn, num_EDC, i
+    integer :: n, DIAG, no_years, y, PEDC, nn, nnn, num_EDC, i, io_start, io_finish, &
+               steps_per_year, steps_per_month
     double precision :: mean_pools(nopools), meangpp, infi, &
-                        sumgpp, sumnpp, temp_response,hold, steps_per_year, steps_per_month, &
+                        sumgpp, sumnpp, temp_response,hold, &
                         init_dyn_window, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, Rs, dble_nodays, &
-                        mean_step_size, io_start, io_finish
+                        mean_step_size
     double precision, dimension(nodays) :: mean_ratio, resid_fol,resid_lab
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools
     integer, dimension(nodays) :: hak ! variable to determine number of NaN in foliar residence time calculation
@@ -1031,7 +1032,7 @@ module model_likelihood_module
     ! number of years in analysis (0.002737851 = 365.25**-1)
     no_years = nint(sum(deltat)*0.002737851d0)
     ! number of time steps per year
-    steps_per_year = dble_nodays/dble(no_years)
+    steps_per_year = nint(dble_nodays/dble(no_years))
     ! mean step size in days
     mean_step_size = sum(deltat) / dble_nodays
 
@@ -1048,7 +1049,7 @@ module model_likelihood_module
     !!!!!!!!!!!!
 
     ! number of time steps per month (1/12 = 0.08333333)
-    steps_per_month = ceiling(steps_per_year * 0.08333333d0)
+    steps_per_month = ceiling(dble(steps_per_year) * 0.08333333d0)
 
     ! Determine the mean January pool sizes
     jan_mean_pools = 0d0 ; jan_first_pools = 0d0 ! reset before averaging
@@ -1558,14 +1559,14 @@ module model_likelihood_module
                                  ,interval((averaging_period-1))      ! model time step in decimal days
 
     ! declare local variables
-    double precision :: startday, endday
+    integer :: startday, endday
 
     ! calculate some constants
     startday = floor(365.25d0*dble(year-1)/(sum(interval)/dble(averaging_period-1)))+1
     endday = floor(365.25d0*dble(year)/(sum(interval)/dble(averaging_period-1)))
 
     ! pool through and work out the annual mean values
-    cal_mean_annual_pools = sum(pools(nint(startday):nint(endday)))/(endday-startday)
+    cal_mean_annual_pools = sum(pools(startday:endday))/dble(endday-startday)
 
     ! ensure function returns
     return
@@ -1643,11 +1644,11 @@ module model_likelihood_module
    MP1 = MP1*aw_1
 
    ! estimate mean stock for first year with offset
-   MP0os = sum(pools((1+os):(nint(aw)+os)))
+   MP0os = sum(pools((1+os):(aw_int+os)))
    MP0os = MP0os*aw_1
 
    ! estimate mean stock for second year with offset
-   MP1os = sum(pools((nint(aw)+os+1):((nint(aw)*2)+os)))
+   MP1os = sum(pools((aw_int+os+1):((aw_int*2)+os)))
    MP1os = MP1os*aw_1
 
    ! derive mean gradient ratio (dcdt1/dcdt0)
@@ -1800,7 +1801,7 @@ module model_likelihood_module
 
     ! now loop through defined parameters for their uncertainties
     where (parpriors > -9999) local_likelihood = ((pars-parpriors)/parpriorunc)**2
-    likelihood_p = sum(local_likelihood) * -0.5d0
+    likelihood_p = sum(local_likelihood) * (-0.5d0)
 
     ! dont for get to return
     return

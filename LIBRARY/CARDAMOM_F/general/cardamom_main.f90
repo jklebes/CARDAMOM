@@ -74,7 +74,7 @@ program cardamom_framework
  ! Initialise counters used to track the output of parameter sets
  io_space%io_buffer_count = 0
  io_space%io_buffer = max(10,(MCO%nOUT / MCO%nWRITE) / 10)
- 
+
  ! Allocate variables used in io buffering,
  ! these could probably be moved to a more sensible place within cardamom_io.f90
  allocate(io_space%variance_buffer(PI%npars,io_space%io_buffer), &
@@ -144,7 +144,7 @@ program cardamom_framework
      MCO%nOUT = nint(dble(nOUT_save) * MCO%sub_fraction) - MCOUT%nos_iterations
      write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
      MCO%nADAPT = 100 ; MCO%fADAPT = 1d0
-     call MHMCMC(1d0,sub_model_likelihood)
+     call MHMCMC(1d0,model_likelihood,sub_model_likelihood)
      ! Use the best parameter set as the starting point for the next stage
      PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
      ! Leave parameter and covariance structures as they come out form the
@@ -175,7 +175,7 @@ program cardamom_framework
  write(*,*)"Beginning parameter search in real likelihoods"
  write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
  ! Call the main MCMC
- call MHMCMC(1d0,model_likelihood)
+ call MHMCMC(1d0,model_likelihood,model_likelihood)
  ! Let the user know we are done
  write(*,*)"MHMCMC done now, moving on ..."
 

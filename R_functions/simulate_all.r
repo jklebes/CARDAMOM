@@ -266,7 +266,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       rm(tmp) ; gc()
       stop('Code to assign variables to output has not been re-written to current code standard - ooops')
   } else if (model_name == "DALEC_CDEA_LU_FIRES") {
-      output_dim=19
+      output_dim=15
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
       tmp=.Fortran( "rdaleccdealufires",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim)
@@ -298,6 +298,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
                       lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
                       harvest_C_gCm2day = output[,,13], fire_gCm2day = output[,,14],
+                      CiCa = output[,,15],
                       aNPP = aNPP, MTT = MTT, SS = SS, aMTT = aMTT)
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
