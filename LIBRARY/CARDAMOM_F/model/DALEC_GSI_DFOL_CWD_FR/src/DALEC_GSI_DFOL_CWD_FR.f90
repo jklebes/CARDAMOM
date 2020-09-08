@@ -52,6 +52,7 @@ module CARBON_MODEL_MOD
            ,soil_frac_clay   &
            ,soil_frac_sand   &
            ,meant            &
+           ,cica_time        &
            ,convert_ms1_mol_1 &
            ,aerodynamic_conductance &
            ,stomatal_conductance &
@@ -331,6 +332,7 @@ module CARBON_MODEL_MOD
                                     ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
 metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limiterd photosynthesis (gC/m2/day)
     light_limited_photosynthesis, & ! light limited photosynthesis (gC/m2/day)
+                              ci, & ! Internal CO2 concentration (ppm)
                           gb_mol, & ! Canopy boundary layer conductance (molCO2/m2/day)
                         rb_mol_1, & ! Canopy boundary layer resistance (day/m2/molCO2)
                     co2_half_sat, & ! CO2 at which photosynthesis is 50 % of maximum (ppm)
@@ -358,6 +360,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                   dayl_hours    ! day length in hours
 
   double precision, dimension(:), allocatable ::    deltat_1, & ! inverse of decimal days
+                                                   cica_time, & ! Internal vs ambient CO2 concentrations
                                                   meant_time
 
 contains
@@ -719,7 +722,7 @@ contains
 
         allocate(deltat_1(nodays),meant_time(nodays),Rg_from_labile(nodays), &
                  gs_demand_supply_ratio(nodays),canopy_par_MJday_time(nodays), &
-                 gs_total_canopy(nodays), gb_total_canopy(nodays))
+                 gs_total_canopy(nodays),gb_total_canopy(nodays),cica_time(nodays))
         ! Inverse of time step (days-1) to avoid divisions
         deltat_1 = deltat**(-1d0)
         ! Meant time step temperature
@@ -836,8 +839,9 @@ contains
        if (stomatal_conductance > vsmall) then
            ! Gross primary productivity (gC/m2/day)
            call acm_gpp_stage_1 ; FLUXES(n,1) = acm_gpp_stage_2(stomatal_conductance)
+           cica_time(n) = ci / co2
        else
-           FLUXES(n,1) = 0d0
+           FLUXES(n,1) = 0d0 ; cica_time(n) = 0d0
        endif
 
        ! temprate (i.e. temperature modified rate of metabolic activity))
@@ -1330,7 +1334,7 @@ contains
     double precision, intent(in) :: gs
 
     ! declare local variables
-    double precision :: pp, qq, ci, mult, rc, pd
+    double precision :: pp, qq, mult, rc, pd
 
     !
     ! Diffusion limited photosynthesis

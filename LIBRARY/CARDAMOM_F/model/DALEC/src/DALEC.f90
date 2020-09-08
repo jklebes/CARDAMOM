@@ -45,6 +45,7 @@ module CARBON_MODEL_MOD
            ,soil_frac_sand                &
            ,nos_soil_layers               &
            ,meant                         &
+           ,cica_time                     &
            ,convert_ms1_mol_1             &
            ,stomatal_conductance          &
            ,potential_conductance         &
@@ -344,6 +345,7 @@ module CARBON_MODEL_MOD
                                     ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
 metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limiterd photosynthesis (gC/m2/day)
     light_limited_photosynthesis, & ! light limited photosynthesis (gC/m2/day)
+                              ci, & ! Internal CO2 concentration (ppm)
                           gb_mol, & ! Canopy boundary layer conductance (molCO2/m2/day)
                         rb_mol_1, & ! Canopy boundary layer resistance (day/m2/molCO2)
                     co2_half_sat, & ! CO2 at which photosynthesis is 50 % of maximum (ppm)
@@ -371,6 +373,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                   dayl_hours    ! day length in hours
 
   double precision, dimension(:), allocatable :: deltat_1, & ! inverse of decimal days
+                                                cica_time, & ! Internal vs ambient CO2 concentrations
                                                meant_time, &
                                           daylength_hours, &
                                         daylength_seconds, &
@@ -741,7 +744,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                  fire_residue_to_litwood(nodays),fire_residue_to_som(nodays),              &
                  Cwood_labile_release_coef(nodays),Croot_labile_release_coef(nodays), &
                  deltat_1(nodays),daylength_hours(nodays),daylength_seconds(nodays), &
-                 daylength_seconds_1(nodays),meant_time(nodays), &
+                 daylength_seconds_1(nodays),meant_time(nodays),cica_time(nodays), &
                  Rg_from_labile(nodays),Rm_from_labile(nodays),Resp_leaf(nodays), &
                  Resp_wood_root(nodays),Rm_leaf(nodays),Rm_wood_root(nodays),Q10_adjustment(nodays), &
                  Rg_leaf(nodays),Rg_wood_root(nodays),itemp(nodays),ivpd(nodays),iphoto(nodays), &
@@ -913,9 +916,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        if (stomatal_conductance > vsmall) then
            ! Gross primary productivity (gC/m2/day)
            call acm_gpp_stage_1 ; FLUXES(n,1) = acm_gpp_stage_2(stomatal_conductance)
+           cica_time(n) = ci / co2
        else
            ! assume zero fluxes
-           FLUXES(n,1) = 0d0
+           FLUXES(n,1) = 0d0 ; cica_time(n) = 0d0
        endif
 
        !!!!!!!!!!
@@ -1351,7 +1355,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, intent(in) :: gs
 
     ! declare local variables
-    double precision :: pp, qq, ci, mult, rc, pd
+    double precision :: pp, qq, mult, rc, pd
 
     !
     ! Diffusion limited photosynthesis

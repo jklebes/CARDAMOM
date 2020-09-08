@@ -6,7 +6,8 @@ subroutine rdaleccdeaacm2(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
                          ,nos_iter)
 
   use CARBON_MODEL_MOD, only: CARBON_MODEL, extracted_C, gs_demand_supply_ratio, &
-                              gs_total_canopy, gb_total_canopy, canopy_par_MJday_time
+                              gs_total_canopy, gb_total_canopy, canopy_par_MJday_time, &
+                              cica_time
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -108,6 +109,7 @@ subroutine rdaleccdeaacm2(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
      out_var(i,1:nodays,16) = gs_total_canopy(1:nodays)
      out_var(i,1:nodays,17) = canopy_par_MJday_time(1:nodays)
      out_var(i,1:nodays,18) = gb_total_canopy(1:nodays)
+     out_var(i,1:nodays,19) = cica_time(1:nodays)
 
      ! calculate the actual NPP allocation fractions to foliar, wood and fine root pools
      ! by comparing the sum alloaction to each pools over the sum NPP.

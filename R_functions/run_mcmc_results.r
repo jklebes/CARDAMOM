@@ -206,6 +206,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               if (length(which(names(states_all) == "APAR_MJm2day")) > 0) {
                   # Extract the absorbed photosynthetically active radiation by the canopy
                   site_output$APAR_MJm2day = apply(states_all$APAR_MJm2day,2,quantile, prob=num_quantiles, na.rm=na_flag)
+                  # Extract the internal vs ambient CO2 ratio
+                  site_output$CiCa = apply(states_all$CiCa,2,quantile, prob=num_quantiles, na.rm=na_flag)
               }
               # C-cycle flux correlation with parameters
               site_output$nee_par_cor = states_all$nee_par_cor
@@ -389,6 +391,8 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           if (length(which(names(site_output) == "APAR_MJm2day")) > 0) {
               # Absorbed photosynthetically active radation
               grid_output$mean_APAR_MJm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Canopy Ci:Ca
+              grid_output$mean_CiCa = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           }
 
           # Time and uncertainty invarient information,
@@ -450,6 +454,8 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           if (length(which(names(site_output) == "APAR_MJm2day")) > 0) {
               # Canopy absorbed photosynthetically active radiation
               grid_output$APAR_MJm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              # Canopy CiCa
+              grid_output$CiCa = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           }
 
           #
@@ -531,6 +537,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                }
                if (length(which(names(site_output) == "APAR_MJm2day")) > 0) {
                   grid_output$APAR_MJm2day[n,,] = site_output$APAR_MJm2day
+                  grid_output$CiCa[n,,] = site_output$CiCa
                }
 
                # now assign to correct location in array
@@ -610,6 +617,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                # Canopy process information
                if (length(which(names(site_output) == "APAR_MJm2day")) > 0) {
                    grid_output$mean_APAR_MJm2day[slot_i,slot_j,] = apply(site_output$APAR_MJm2day,1,mean)
+                   grid_output$mean_CiCa[slot_i,slot_j,] = apply(site_output$CiCa,1,mean)
                }
 
                # Parameter vs C-cycle flux correlation across ensemble member

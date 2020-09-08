@@ -10,6 +10,7 @@ private
 public :: CARBON_MODEL     &
          ,opt_max_scaling  &
          ,wSWP_time        &
+         ,cica_time        &
          ,soil_frac_clay   &
          ,soil_frac_sand   &
          ,nos_soil_layers  &
@@ -212,6 +213,7 @@ double precision :: &
                                     ! (gC/gN/m2leaf/day)
 metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limiterd photosynthesis (gC/m2/day)
     light_limited_photosynthesis, & ! light limited photosynthesis (gC/m2/day)
+                              ci, & ! Internal CO2 concentration (ppm)
                           gb_mol, & ! Canopy boundary layer conductance (molCO2/m2/day)
                      pn_max_temp, & ! Maximum temperature for photosynthesis (oC)
                      pn_opt_temp, & ! Optimum temperature fpr photosynthesis (oC)
@@ -220,15 +222,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                     co2_half_sat, & ! CO2 at which photosynthesis is 50 % of maximum (ppm)
                   co2_comp_point, & ! CO2 at which photosynthesis > 0 (ppm)
                           minlwp, & ! min leaf water potential (MPa)
-!          max_lai_nir_reflection, & ! Max fraction of NIR reflected by canopy
-!         lai_half_nir_reflection, & ! LAI at which canopy NIR refection = 50 %
-!          max_lai_par_reflection, & ! Max fraction of PAR refected by canopy
-!         lai_half_par_reflection, & ! LAI at which canopy PAR reflection = 50 %
-!         max_lai_par_transmitted, & ! minimum transmittance = 1-par
-!         max_lai_nir_transmitted, & ! minimum transmittance = 1-par
                    max_lw_escape, & ! maximum LW originating from canopy which escapes in one direction
-!      lai_half_lwrad_transmitted, & ! LAI at which LW transmittance to soil at 50 %
-!        lai_half_lwrad_reflected, & ! LAI at which LW reflectance to sky at 50 %
            soil_swrad_absorption, & ! Fraction of SW rad absorbed by soil
             soil_iso_to_net_coef, & ! Coefficient relating soil isothermal net radiation to net.
            soil_iso_to_net_const, & ! Constant relating soil isothermal net radiation to net
@@ -279,6 +273,7 @@ double precision, dimension(:), allocatable ::    deltat_1, & ! inverse of decim
                                  Cwood_labile_release_coef, & ! time series of labile release to wood
                                  Croot_labile_release_coef, & ! time series of labile release to root
                                                soilwatermm, &
+                                                 cica_time, & ! Internal vs ambient CO2 concentrations
                                                  wSWP_time
 
 contains
@@ -415,7 +410,7 @@ contains
       if (.not.allocated(deltat_1)) then
          allocate(deltat_1(nodays),wSWP_time(nodays),soilwatermm(nodays),meant_time(nodays) &
                  ,gs_demand_supply_ratio(nodays),gs_total_canopy(nodays),gb_total_canopy(nodays) &
-                 ,canopy_par_MJday_time(nodays))
+                 ,canopy_par_MJday_time(nodays),cica_time(nodays))
          deltat_1 = deltat**(-dble_one)
          meant_time = (met(2,1:nodays) + met(3,1:nodays)) * 0.5d0
          ! zero variables not done elsewhere
@@ -627,9 +622,11 @@ contains
 
       if (stomatal_conductance > vsmall) then
           call acm_gpp_stage_1 ; FLUXES(n,1) = acm_gpp_stage_2(stomatal_conductance)
+          cica_time(n) = ci / co2
 !          FLUXES(n,1) = max(dble_zero,acm_gpp(stomatal_conductance))
       else
           FLUXES(n,1) = dble_zero
+          cica_time(n) = 0d0
       endif
 
       !!!!!!!!!!
@@ -822,7 +819,7 @@ contains
     double precision, intent(in) :: gs
 
     ! declare local variables
-    double precision :: pp, qq, ci, mult, gc, pl, pn, pd
+    double precision :: pp, qq, mult, gc, pl, pn, pd
 
     ! load into local variables (for code readability)
     pn = metabolic_limited_photosynthesis

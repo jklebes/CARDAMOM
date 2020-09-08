@@ -18,7 +18,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
                               fire_loss_wood, fire_loss_litter, fire_loss_litwood, &
                               fire_loss_som, fire_residue_to_litter, &
                               fire_residue_to_litwood,fire_residue_to_som,       &
-                              gs_demand_supply_ratio, &
+                              gs_demand_supply_ratio, cica_time, &
                               gs_total_canopy, gb_total_canopy, canopy_par_MJday_time
   use CARBON_MODEL_CROP_MOD, only: CARBON_MODEL_CROP
 
@@ -219,6 +219,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
      out_var(i,1:nodays,25) = gs_total_canopy(1:nodays)
      out_var(i,1:nodays,26) = canopy_par_MJday_time(1:nodays)
      out_var(i,1:nodays,27) = gb_total_canopy(1:nodays)
+     out_var(i,1:nodays,28) = cica_time(1:nodays)
 
      !!!
      ! NPP calculation

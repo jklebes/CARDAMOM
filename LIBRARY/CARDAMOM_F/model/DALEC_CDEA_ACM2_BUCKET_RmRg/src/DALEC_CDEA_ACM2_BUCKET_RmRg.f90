@@ -10,6 +10,7 @@ module CARBON_MODEL_MOD
   public :: CARBON_MODEL     &
            ,layer_thickness  &
            ,wSWP_time        &
+           ,cica_time        &
            ,gs_demand_supply_ratio &
            ,gs_total_canopy               &
            ,gb_total_canopy               &
@@ -230,6 +231,7 @@ module CARBON_MODEL_MOD
                                     ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
 metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limiterd photosynthesis (gC/m2/day)
     light_limited_photosynthesis, & ! light limited photosynthesis (gC/m2/day)
+                              ci, & ! Internal CO2 concentration (ppm)
                           gb_mol, & ! Canopy boundary layer conductance (molCO2/m2/day)
                         rb_mol_1, & ! Canopy boundary layer resistance (day/m2/molCO2)
                     co2_half_sat, & ! CO2 at which photosynthesis is 50 % of maximum (ppm)
@@ -269,6 +271,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                         daylength_seconds, &
                                       daylength_seconds_1, &
                                             rainfall_time, &
+                                                cica_time, & ! Internal vs ambient CO2 concentrations
                                                 wSWP_time    ! Soil water potential weighted by root access to water
 
   contains
@@ -447,7 +450,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         allocate(deltat_1(nodays),wSWP_time(nodays),gs_demand_supply_ratio(nodays), &
                  gs_total_canopy(nodays),gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
                  daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
-                 meant_time(nodays),rainfall_time(nodays),Rg_from_labile(nodays))
+                 meant_time(nodays),rainfall_time(nodays),Rg_from_labile(nodays),cica_time(nodays))
 
         !
         ! Timing variables which are needed first
@@ -720,13 +723,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        if (stomatal_conductance > vsmall) then
            ! Gross primary productivity (gC/m2/day)
            call acm_gpp_stage_1 ; FLUXES(n,1) = acm_gpp_stage_2(stomatal_conductance)
+           cica_time(n) = ci / co2
            ! Canopy transpiration (kgH2O/m2/day)
            call calculate_transpiration(transpiration)
            ! restrict transpiration to positive only
            transpiration = max(0d0,transpiration)
        else
            ! assume zero fluxes
-           FLUXES(n,1) = 0d0 ; transpiration = 0d0
+           FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; cica_time(n) = 0d0
        endif
 
        ! temprate (i.e. temperature modified rate of metabolic activity))
@@ -949,7 +953,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, intent(in) :: gs
 
     ! declare local variables
-    double precision :: pp, qq, ci, mult, rc, pd
+    double precision :: pp, qq, mult, rc, pd
 
     !
     ! Diffusion limited photosynthesis

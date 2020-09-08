@@ -45,6 +45,7 @@ module CARBON_MODEL_MOD
            ,previous_depth                &
            ,nos_root_layers               &
            ,wSWP                          &
+           ,cica_time                     &
            ,SWP                           &
            ,SWP_initial                   &
            ,deltat_1                      &
@@ -368,7 +369,6 @@ module CARBON_MODEL_MOD
                                canopy_lwrad_Wm2, & ! canopy absorbed longwave radiation (W.m-2)
                                  soil_lwrad_Wm2, & ! soil absorbed longwave radiation (W.m-2)
                                   sky_lwrad_Wm2, & ! sky absorbed longwave radiation (W.m-2)
-                                      ci_global, & ! internal CO2 concentration (ppm or umol/mol)
                           stomatal_conductance, & ! stomatal conductance (mmolH2O.m-2ground.s-1)
                          potential_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
                            minimum_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
@@ -395,6 +395,7 @@ module CARBON_MODEL_MOD
                                     ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day
 metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limiterd photosynthesis (gC/m2/day)
     light_limited_photosynthesis, & ! light limited photosynthesis (gC/m2/day)
+                              ci, & ! Internal CO2 concentration (ppm)
                           gb_mol, & ! Canopy boundary layer conductance (molCO2/m2/day)
                         rb_mol_1, & ! Canopy boundary layer resistance (day/m2/molCO2)
                     co2_half_sat, & ! CO2 at which photosynthesis is 50 % of maximum (ppm)
@@ -439,6 +440,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                           gs_total_canopy, & ! stomatal conductance (mmolH2O/m2ground/day)
                                           gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/day)
                                     canopy_par_MJday_time, & ! Absorbed PAR by canopy (MJ/m2ground/day)
+                                                cica_time, & ! Internal vs ambient CO2 concentrations
                                                 wSWP_time    ! Soil water potential weighted by root access to water
 
   save
@@ -802,7 +804,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                  gs_total_canopy(nodays),gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
                  daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
                  airt_zero_fraction_time(nodays),meant_time(nodays),rainfall_time(nodays), &
-                 Rg_from_labile(nodays))
+                 Rg_from_labile(nodays),cica_time(nodays))
 
         !
         ! Timing variables which are needed first
@@ -1109,13 +1111,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        if (stomatal_conductance > vsmall) then
            ! Gross primary productivity (gC/m2/day)
            call acm_gpp_stage_1 ; FLUXES(n,1) = acm_gpp_stage_2(stomatal_conductance)
+           cica_time(n) = ci / co2
            ! Canopy transpiration (kgH2O/m2/day)
            call calculate_transpiration(transpiration)
            ! restrict transpiration to positive only
            transpiration = max(0d0,transpiration)
        else
            ! assume zero fluxes
-           FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; ci_global = 0d0
+           FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; cica_time(n) = 0d0
        endif
 
        !!!!!!!!!!
@@ -1539,7 +1542,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, intent(in) :: gs
 
     ! declare local variables
-    double precision :: pp, qq, ci, mult, rc, pd
+    double precision :: pp, qq, mult, rc, pd
 
     !
     ! Diffusion limited photosynthesis
@@ -1581,90 +1584,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   end function acm_gpp_stage_2
   !
   !------------------------------------------------------------------
-  !
-!  double precision function acm_gpp(gs)
-!
-!    ! the Aggregated Canopy Model, is a Gross Primary Productivity (i.e.
-!    ! Photosyntheis) emulator which operates at a daily time step. ACM can be
-!    ! paramaterised to provide reasonable results for most ecosystems.
-!
-!    implicit none
-!
-!    ! declare input variables
-!    double precision, intent(in) :: gs
-!
-!    ! declare local variables
-!    double precision :: pn, pd, pp, qq, ci, mult, pl &
-!                       ,gc ,gs_mol, gb_mol
-!
-!!    ! Temperature adjustments for Michaelis-Menten coefficients
-!!    ! for CO2 (kc) and O2 (ko) and CO2 compensation point
-!!    ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
-!!    co2_half_sat   = arrhenious(kc_saturation,kc_half_sat_conc,leafT)
-!!    co2_comp_point = arrhenious(co2comp_saturation,co2comp_half_sat_conc,leafT)
-!
-!    !
-!    ! Metabolic limited photosynthesis
-!    !
-!
-!    ! maximum rate of temperature and nitrogen (canopy efficiency) limited
-!    ! photosynthesis (gC.m-2.day-1)
-!    !pn = lai*avN*NUE*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
-!    pn = lai*ceff*pn_airt_scaling
-!
-!    !
-!    ! Diffusion limited photosynthesis
-!    !
-!
-!    ! daily canopy conductance (mmolH2O.m-2.s-1-> molCO2.m-2.day-1)
-!    ! The ratio of H20:CO2 diffusion is 1.646259 (Jones appendix 2).
-!    ! i.e. gcH2O*1.646259 = gcCO2
-!    gs_mol = gs * seconds_per_day * gs_H2Ommol_CO2mol
-!    ! canopy level boundary layer conductance unit change
-!    ! (m.s-1 -> mol.m-2.day-1) assuming sea surface pressure only.
-!    ! Note the ratio of H20:CO2 diffusion through leaf level boundary layer is
-!    ! 1.37 (Jones appendix 2).
-!    gb_mol = aerodynamic_conductance * seconds_per_day * convert_ms1_mol_1 * gb_H2O_CO2
-!    ! Combining in series the stomatal and boundary layer conductances
-!    gc = (gs_mol ** (-1d0) + gb_mol ** (-1d0)) ** (-1d0)
-!
-!    ! pp and qq represent limitation by metabolic (temperature & N) and
-!    ! diffusion (co2 supply) respectively
-!    pp = (pn*gC_to_umol)/gc ; qq = co2_comp_point-co2_half_sat
-!    ! calculate internal CO2 concentration (ppm or umol/mol)
-!    mult = co2+qq-pp
-!    ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
-!    !ci = min(ci,co2) ! C3 can't have more CO2 than is in the atmosphere
-!    ci_global = ci
-!    ! calculate CO2 limited rate of photosynthesis (gC.m-2.day-1)
-!    pd = (gc * (co2-ci)) * umol_to_gC
-!    ! scale to day light period as this is then consistent with the light
-!    ! capture period (1/24 = 0.04166667)
-!    pd = pd * dayl_hours_fraction
-!
-!    !
-!    ! Light limited photosynthesis
-!    !
-!
-!    ! calculate light limted rate of photosynthesis (gC.m-2.day-1)
-!    pl = e0 * canopy_par_MJday
-!
-!    !
-!    ! CO2 and light co-limitation
-!    !
-!
-!    ! calculate combined light and CO2 limited photosynthesis
-!    acm_gpp = pl*pd/(pl+pd)
-!
-!    ! sanity check
-!    if (acm_gpp /= acm_gpp .or. acm_gpp < 0d0) acm_gpp = 0d0
-!
-!    ! don't forget to return
-!    return
-!
-!  end function acm_gpp
-  !
-  !----------------------------------------------------------------------
   !
   double precision function find_gs_iWUE(gs_in)
 

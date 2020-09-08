@@ -8,7 +8,7 @@ subroutine rdaleccdeaacm2bucketrmrg(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars 
 
   use CARBON_MODEL_MOD, only: CARBON_MODEL, extracted_C, wSWP_time &
                              ,soil_frac_clay, soil_frac_sand, nos_soil_layers &
-                             ,gs_demand_supply_ratio &
+                             ,gs_demand_supply_ratio, cica_time &
                              ,gs_total_canopy, gb_total_canopy, canopy_par_MJday_time
 
   ! subroutine specificially deals with the calling of the fortran code model by
@@ -121,6 +121,7 @@ subroutine rdaleccdeaacm2bucketrmrg(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars 
      out_var(i,1:nodays,22) = gs_total_canopy(1:nodays)
      out_var(i,1:nodays,23) = canopy_par_MJday_time(1:nodays)
      out_var(i,1:nodays,24) = gb_total_canopy(1:nodays)
+     out_var(i,1:nodays,25) = cica_time(1:nodays)
 
      ! calculate the actual NPP allocation fractions to foliar, wood and fine root pools
      ! by comparing the sum alloaction to each pools over the sum NPP.
@@ -130,24 +131,6 @@ subroutine rdaleccdeaacm2bucketrmrg(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars 
      out_var2(i,1) = sum(FLUXES(1:nodays,4)+FLUXES(1:nodays,8)) / sumNPP ! foliar
      out_var2(i,2) = sum(FLUXES(1:nodays,6)) / sumNPP ! fine root
      out_var2(i,3) = sum(FLUXES(1:nodays,7)) / sumNPP ! wood
-     ! Mean transit time
-     ! Mean transit times
-     ! Foliage (/day)
-     out_var3(i,1) = sum( ((FLUXES(1:nodays,10)+FLUXES(1:nodays,19)+FLUXES(1:nodays,25)) &
-                          / POOLS(1:nodays,2)) * fol_filter) / dble(nodays-sum(fol_hak))
-     ! Fine roots (/day)
-     out_var3(i,2) = sum( ((FLUXES(1:nodays,12)+FLUXES(1:nodays,20)+FLUXES(1:nodays,26)) &
-                          / POOLS(1:nodays,3)) * root_filter) / dble(nodays-sum(root_hak))
-     ! Wood (/day)
-     out_var3(i,3) = sum( ((FLUXES(1:nodays,11)+FLUXES(1:nodays,21)+FLUXES(1:nodays,27)) &
-                             / POOLS(1:nodays,4)) * wood_filter) / dble(nodays-sum(wood_hak))
-     ! Litter (fol+root+wood; /day)
-     out_var3(i,4) = sum( ((FLUXES(1:nodays,13)+FLUXES(1:nodays,15)+FLUXES(1:nodays,22)+FLUXES(1:nodays,28)) &
-                          / (POOLS(1:nodays,5))) * lit_filter) &
-                   / dble(nodays-sum(lit_hak)) ! litter+wood litter (/day)
-     ! Soil (/day)
-     out_var3(i,5) = sum( ((FLUXES(1:nodays,14)+FLUXES(1:nodays,23)) &
-                          / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
 
      ! Determine locations of zeros in pools to correct turnover calculation
      ! Foliage
@@ -175,6 +158,25 @@ subroutine rdaleccdeaacm2bucketrmrg(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars 
      where (POOLS(1:nodays,6) == 0) ! protection against NaN from division by zero
            som_hak = 1 ; som_filter(1:nodays) = 0d0
      end where
+
+     ! Mean transit times
+     ! Foliage (/day)
+     out_var3(i,1) = sum( ((FLUXES(1:nodays,10)+FLUXES(1:nodays,19)+FLUXES(1:nodays,25)) &
+                          / POOLS(1:nodays,2)) * fol_filter) / dble(nodays-sum(fol_hak))
+     ! Fine roots (/day)
+     out_var3(i,2) = sum( ((FLUXES(1:nodays,12)+FLUXES(1:nodays,20)+FLUXES(1:nodays,26)) &
+                          / POOLS(1:nodays,3)) * root_filter) / dble(nodays-sum(root_hak))
+     ! Wood (/day)
+     out_var3(i,3) = sum( ((FLUXES(1:nodays,11)+FLUXES(1:nodays,21)+FLUXES(1:nodays,27)) &
+                             / POOLS(1:nodays,4)) * wood_filter) / dble(nodays-sum(wood_hak))
+     ! Litter (fol+root+wood; /day)
+     out_var3(i,4) = sum( ((FLUXES(1:nodays,13)+FLUXES(1:nodays,15)+FLUXES(1:nodays,22)+FLUXES(1:nodays,28)) &
+                          / (POOLS(1:nodays,5))) * lit_filter) &
+                   / dble(nodays-sum(lit_hak)) ! litter+wood litter (/day)
+     ! Soil (/day)
+     out_var3(i,5) = sum( ((FLUXES(1:nodays,14)+FLUXES(1:nodays,23)) &
+                          / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
+
      ! Now loop through each year to estimate the annual residence time
      do y = 1, nos_years
         ! Estimate time steps covered by this year

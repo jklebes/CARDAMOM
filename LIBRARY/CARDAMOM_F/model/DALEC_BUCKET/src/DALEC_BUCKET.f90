@@ -45,6 +45,7 @@ module CARBON_MODEL_MOD
            ,previous_depth                &
            ,nos_root_layers               &
            ,wSWP                          &
+           ,cica_time                     &
            ,SWP                           &
            ,SWP_initial                   &
            ,deltat_1                      &
@@ -395,6 +396,7 @@ module CARBON_MODEL_MOD
                                     ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
 metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limiterd photosynthesis (gC/m2/day)
     light_limited_photosynthesis, & ! light limited photosynthesis (gC/m2/day)
+                              ci, & ! Internal CO2 concentration (ppm)
                           gb_mol, & ! Canopy boundary layer conductance (molCO2/m2/day)
                         rb_mol_1, & ! Canopy boundary layer resistance (day/m2/molCO2)
                     co2_half_sat, & ! CO2 at which photosynthesis is 50 % of maximum (ppm)
@@ -440,6 +442,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                           gs_total_canopy, & ! stomatal conductance (mmolH2O/m2ground/day)
                                           gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/day)
                                     canopy_par_MJday_time, & ! Absorbed PAR by canopy (MJ/m2ground/day)
+                                                cica_time, & ! Internal vs ambient CO2 concentrations
                                                 wSWP_time    ! Soil water potential weighted by root access to water
 
 double precision :: Creturn_canopy,Creturn_investment
@@ -819,7 +822,7 @@ double precision :: Creturn_canopy,Creturn_investment
                  deltat_1(nodays),wSWP_time(nodays),gs_demand_supply_ratio(nodays), &
                  gs_total_canopy(nodays),gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
                  daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
-                 meant_time(nodays),rainfall_time(nodays), &
+                 meant_time(nodays),rainfall_time(nodays),cica_time(nodays), &
                  Rg_from_labile(nodays),Rm_from_labile(nodays),Resp_leaf(nodays), &
                  Resp_wood_root(nodays),Rm_leaf(nodays),Rm_wood_root(nodays),Q10_adjustment(nodays), &
                  Rg_leaf(nodays),Rg_wood_root(nodays),itemp(nodays),ivpd(nodays),iphoto(nodays))
@@ -1129,13 +1132,14 @@ double precision :: Creturn_canopy,Creturn_investment
        if (stomatal_conductance > vsmall) then
            ! Gross primary productivity (gC/m2/day)
            call acm_gpp_stage_1 ; FLUXES(n,1) = acm_gpp_stage_2(stomatal_conductance)
+           cica_time(n) = ci / co2
            ! Canopy transpiration (kgH2O/m2/day)
            call calculate_transpiration(transpiration)
            ! restrict transpiration to positive only
            transpiration = max(0d0,transpiration)
        else
            ! assume zero fluxes
-           FLUXES(n,1) = 0d0 ; transpiration = 0d0
+           FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; cica_time(n) = 0d0
        endif
 
        !!!!!!!!!!
@@ -1603,7 +1607,7 @@ double precision :: Creturn_canopy,Creturn_investment
     double precision, intent(in) :: gs
 
     ! declare local variables
-    double precision :: pp, qq, ci, mult, rc, pd
+    double precision :: pp, qq, mult, rc, pd
 
     !
     ! Diffusion limited photosynthesis

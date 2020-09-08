@@ -12,6 +12,7 @@ module CARBON_MODEL_MOD
            ,soil_frac_sand   &
            ,nos_soil_layers  &
            ,extracted_C      &
+           ,cica_time        &
            ,gs_demand_supply_ratio  &
            ,gs_total_canopy  &
            ,gb_total_canopy  &
@@ -126,9 +127,10 @@ module CARBON_MODEL_MOD
   double precision, allocatable, dimension(:) :: extracted_C
   ! Metrics on photosynthetic activity
   double precision, dimension(:), allocatable :: gs_demand_supply_ratio, & ! actual:potential stomatal conductance
-                                                gs_total_canopy, &        ! stomatal conductance (mmolH2O/m2ground/day)
-                                                gb_total_canopy, &        ! boundary conductance (mmolH2O/m2ground/day)
-                                          canopy_par_MJday_time           ! Absorbed PAR by canopy (MJ/m2ground/day)
+                                                 gs_total_canopy, &        ! stomatal conductance (mmolH2O/m2ground/day)
+                                                 gb_total_canopy, &        ! boundary conductance (mmolH2O/m2ground/day)
+                                                       cica_time, &        ! Internal vs ambient CO2 concentrations
+                                           canopy_par_MJday_time           ! Absorbed PAR by canopy (MJ/m2ground/day)
 
   ! arrays for the emulator, just so we load them once and that is it cos they be
   ! massive
@@ -186,6 +188,7 @@ module CARBON_MODEL_MOD
                             Ceff, & ! Canopy efficiency (gC/m2leaf/day)
 metabolic_limited_photosynthesis, &
     light_limited_photosynthesis, &
+                              ci, & ! Internal CO2 concentration (ppm)
                           gb_mol, & ! Canopy boundary layer conductance (molCO2/m2/day)
                         rb_mol_1, & ! Canopy boundary layer resistance (day/m2/molCO2)
                  pn_airt_scaling, & ! temperature response for metabolic limited photosynthesis
@@ -399,7 +402,7 @@ metabolic_limited_photosynthesis, &
     if (.not.allocated(gs_demand_supply_ratio)) then
         allocate(gs_demand_supply_ratio(nodays), &
                  gs_total_canopy(nodays), gb_total_canopy(nodays), &
-                 canopy_par_MJday_time(nodays))
+                 canopy_par_MJday_time(nodays),cica_time(nodays))
     end if
 !call cpu_time(start_time)
     do n = start, finish
@@ -470,8 +473,9 @@ metabolic_limited_photosynthesis, &
 
        if (stomatal_conductance > vsmall) then
            call acm_gpp_stage_1 ; FLUXES(n,1) = acm_gpp_stage_2(stomatal_conductance)
+           cica_time(n) = ci / co2
        else
-           FLUXES(n,1) = 0d0
+           FLUXES(n,1) = 0d0 ; cica_time(n) = 0d0
        endif
 
        ! temprate (i.e. temperature modified rate of metabolic activity))
@@ -724,7 +728,7 @@ metabolic_limited_photosynthesis, &
     double precision, intent(in) :: gs
 
     ! declare local variables
-    double precision :: pp, qq, ci, mult, rc, pd
+    double precision :: pp, qq, mult, rc, pd
 
     !
     ! Diffusion limited photosynthesis

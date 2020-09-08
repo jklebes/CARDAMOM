@@ -8,7 +8,7 @@ subroutine racm(output_dim,met,pars,out_var,lat,nopars,nomet &
                              ,soil_frac_clay, soil_frac_sand &
                              ,nos_soil_layers, wSWP_time &
                              ,gs_demand_supply_ratio, canopy_par_MJday_time &
-                             ,gs_total_canopy, gb_total_canopy
+                             ,gs_total_canopy, gb_total_canopy, cica_time
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -85,6 +85,7 @@ subroutine racm(output_dim,met,pars,out_var,lat,nopars,nomet &
          out_var(i,1:nodays,8) = gs_total_canopy(1:nodays)
          out_var(i,1:nodays,9) = canopy_par_MJday_time(1:nodays)
          out_var(i,1:nodays,10) = gb_total_canopy(1:nodays)
+         out_var(i,1:nodays,11) = cica(1:nodays)
      endif
 
   end do ! nos_iter loop
