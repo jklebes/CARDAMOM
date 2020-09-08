@@ -506,7 +506,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       wSWP_MPa = output[,,20],gs_demand_supply = output[,,21],
                       gs_total_canopy = output[,,22],APAR_MJm2day = output[,,23],
                       gb_total_canopy = output[,,24],litwood_gCm2 = output[,,25],
-                      CiCa = output[,,26]
+                      CiCa = output[,,26],
                       aNPP = aNPP, MTT = MTT, SS = SS, aMTT = aMTT)
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
