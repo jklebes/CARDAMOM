@@ -1359,7 +1359,7 @@ module cardamom_io
     ! read the parameter and step files to get to the end
 
     ! rewind to the beginning
-    rewind(pfile_unit) ; rewind(sfile_unit) ; rewind(cfile_unit) ; rewind(cifile_unit)
+    rewind(pfile_unit) ; rewind(sfile_unit) ; rewind(cifile_unit)
 
     !
     ! As this subroutine will only be called once reading each file will occur
@@ -1451,7 +1451,7 @@ module cardamom_io
     ! count the number of remaining lines in the file..
     status = 0 ; num_lines = 1
     do
-      read(cfile_unit,iostat=status,rec = num_lines) dummy
+       read(cfile_unit,iostat=status,rec = num_lines) dummy
        if ( status .ne. 0. ) exit
        num_lines = num_lines + 1
     enddo
@@ -1470,9 +1470,6 @@ module cardamom_io
         print*,"DATAin%nopars = ",DATAin%nopars,"COV length = ",num_lines * DATAin%nopars
         stop
     endif
-
-    ! rewind, for actual reading
-    rewind(cfile_unit)
 
     ! now read the data for real
     c = 1
