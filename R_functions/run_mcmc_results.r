@@ -152,8 +152,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
           } else {
               # ...otherwise this is a grid and we want straight forward reduced dataset of common stocks and fluxes
               num_quantiles = c(0.025,0.25,0.5,0.75,0.975) ; na_flag = TRUE
+              # Estimate multiple use fluxes
+              npp = states_all$gpp_gCm2day - states_all$rauto_gCm2day
               # Stocks first
               site_output = list(labile_gCm2 = apply(states_all$lab_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag),
+#follab_gCm2 = apply(states_all$fol_gCm2+states_all$lab_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag),
                                  biomass_gCm2 = apply(states_all$bio_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag),
                                  lai_m2m2 = apply(states_all$lai_m2m2,2,quantile,prob=num_quantiles,na.rm=na_flag),
                                  foliage_gCm2 = apply(states_all$fol_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag),
@@ -167,10 +170,12 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                                  rauto_gCm2day = apply(states_all$rauto_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
                                  rhet_gCm2day = apply(states_all$rhet_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
                                  reco_gCm2day = apply(states_all$rhet_gCm2day+states_all$rauto_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
-                                 npp_gCm2day = apply(states_all$gpp_gCm2day-states_all$rauto_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
+                                 npp_gCm2day = apply(npp,2,quantile,prob=num_quantiles,na.rm=na_flag),
+                                 fnpp_gCm2day = apply(npp * states_all$aNPP[,1],2,quantile,prob=num_quantiles,na.rm=na_flag),
+                                 rnpp_gCm2day = apply(npp * states_all$aNPP[,2],2,quantile,prob=num_quantiles,na.rm=na_flag),
+                                 wnpp_gCm2day = apply(npp * states_all$aNPP[,3],2,quantile,prob=num_quantiles,na.rm=na_flag),
                                  harvest_gCm2day = apply(states_all$harvest_C_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
                                  fire_gCm2day = apply(states_all$fire_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag))
-
               # Some derived fluxes / states
               site_output$nbe_gCm2day = apply(states_all$nee_gCm2day + states_all$fire_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
               dCbio = states_all$bio_gCm2 - states_all$bio_gCm2[,1] # difference in biomass from initial
@@ -361,6 +366,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$mean_rhet_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_reco_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_npp_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          grid_output$mean_fnpp_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          grid_output$mean_rnpp_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          grid_output$mean_wnpp_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_harvest_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_fire_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_nbe_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -417,6 +425,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$labile_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$biomass_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$foliage_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+#grid_output$follab_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$roots_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$wood_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$lit_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
@@ -435,6 +444,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$rhet_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$reco_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$npp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          grid_output$fnpp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          grid_output$rnpp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          grid_output$wnpp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$harvest_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$fire_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$nbe_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
@@ -503,6 +515,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                # Stocks first
                grid_output$labile_gCm2[n,,] = site_output$labile_gCm2
                grid_output$biomass_gCm2[n,,] = site_output$biomass_gCm2
+#grid_output$follab_gCm2[n,,] = site_output$follab_gCm2
                grid_output$foliage_gCm2[n,,] = site_output$foliage_gCm2
                grid_output$roots_gCm2[n,,] = site_output$roots_gCm2
                grid_output$wood_gCm2[n,,] = site_output$wood_gCm2
@@ -522,6 +535,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                grid_output$rhet_gCm2day[n,,] = site_output$rhet_gCm2day
                grid_output$reco_gCm2day[n,,] = site_output$reco_gCm2day
                grid_output$npp_gCm2day[n,,] = site_output$npp_gCm2day
+               grid_output$fnpp_gCm2day[n,,] = site_output$fnpp_gCm2day
+               grid_output$rnpp_gCm2day[n,,] = site_output$rnpp_gCm2day
+               grid_output$wnpp_gCm2day[n,,] = site_output$wnpp_gCm2day
                grid_output$harvest_gCm2day[n,,] = site_output$harvest_gCm2day
                grid_output$fire_gCm2day[n,,] = site_output$fire_gCm2day
                grid_output$nbe_gCm2day[n,,] = site_output$nbe_gCm2day
@@ -587,6 +603,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                grid_output$mean_rhet_gCm2day[slot_i,slot_j,] = apply(site_output$rhet_gCm2day,1,mean)
                grid_output$mean_reco_gCm2day[slot_i,slot_j,] = apply(site_output$reco_gCm2day,1,mean)
                grid_output$mean_npp_gCm2day[slot_i,slot_j,] = apply(site_output$npp_gCm2day,1,mean)
+               grid_output$mean_fnpp_gCm2day[slot_i,slot_j,] = apply(site_output$fnpp_gCm2day,1,mean)
+               grid_output$mean_rnpp_gCm2day[slot_i,slot_j,] = apply(site_output$rnpp_gCm2day,1,mean)
+               grid_output$mean_wnpp_gCm2day[slot_i,slot_j,] = apply(site_output$wnpp_gCm2day,1,mean)
                grid_output$mean_harvest_gCm2day[slot_i,slot_j,] = apply(site_output$harvest_gCm2day,1,mean)
                grid_output$mean_fire_gCm2day[slot_i,slot_j,] = apply(site_output$fire_gCm2day,1,mean)
                grid_output$mean_nbe_gCm2day[slot_i,slot_j,] = apply(site_output$nbe_gCm2day,1,mean)

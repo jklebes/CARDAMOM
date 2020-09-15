@@ -1105,6 +1105,11 @@ module model_likelihood_module
         EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
     endif
 
+    ! Restrict maximum leaf lifespan
+    if ((EDC2 == 1 .or. DIAG == 1) .and. torfol > 8d0) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+    endif
+
     ! Average turnover of foliage should not be less than wood (pars(6))
     if ((EDC2 == 1 .or. DIAG == 1) .and. torfol < pars(6) ) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0

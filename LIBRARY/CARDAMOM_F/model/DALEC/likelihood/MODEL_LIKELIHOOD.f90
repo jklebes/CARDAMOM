@@ -1094,11 +1094,16 @@ module model_likelihood_module
 
     ! GPP allocation to foliage and labile cannot be 5 orders of magnitude
     ! difference from GPP allocation to roots
-!    if ((EDC2 == 1 .or. DIAG == 1) .and. (ffol > (5d0*froot) .or. (ffol*5d0) < froot)) then
-!        EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
-!    endif
+    if ((EDC2 == 1 .or. DIAG == 1) .and. (ffol > (5d0*froot) .or. (ffol*5d0) < froot)) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
+    endif
     ! Restrict difference between root and foliar turnover to less than 5 fold
-    if ((EDC2 == 1 .or. DIAG == 1) .and. (torfol > pars(7)*5d0 .or. torfol*5d0 < pars(7) )) then
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. (torfol > pars(7)*5d0 .or. torfol*5d0 < pars(7) )) then
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+!    endif
+
+    ! Restrict maximum leaf lifespan
+    if ((EDC2 == 1 .or. DIAG == 1) .and. torfol > 8d0) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
     endif
 

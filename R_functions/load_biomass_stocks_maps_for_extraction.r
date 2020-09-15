@@ -591,6 +591,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
 
         # Create the full file paths estimates...uncertainty is assumed to be 250gC/m2
         input_file = paste(path_to_Cwood,"mcnicol_AGC2007_0.25d.tif",sep="")
+#        years_with_obs = c(2007)
         input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2008_0.25d.tif",sep=""))
         input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2009_0.25d.tif",sep=""))
         input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2010_0.25d.tif",sep=""))

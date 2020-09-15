@@ -1663,7 +1663,7 @@ module cardamom_io
   !
   subroutine write_mcmc_output(variance, accept_rate, &
                                covariance, mean_pars, nsample, &
-                               pars, prob, npars)
+                               pars, prob, npars, dump_now)
     use cardamom_structures, only: io_space
 
     ! Arguments
@@ -1673,6 +1673,7 @@ module cardamom_io
                                                        variance, &
                                                            pars
     double precision, intent(in) :: nsample, accept_rate, prob
+    logical, intent(in) :: dump_now
 
     ! Local variables
     integer :: i
@@ -1689,13 +1690,14 @@ module cardamom_io
     io_space%accept_rate_buffer(io_space%io_buffer_count) = accept_rate
 
     ! Are we storing information in buffer or writing to file?
-    if (io_space%io_buffer_count == io_space%io_buffer) then
+    if (io_space%io_buffer_count == io_space%io_buffer .or. dump_now) then
+
         ! Then we are writing out to file
 
         ! Only write the most current covariance matrix as this would be an overwrite anyway
         call write_covariance_matrix(covariance,npars,.false.)
         ! Everything else loop through the buffered output to write out
-        do i = 1, io_space%io_buffer
+        do i = 1, io_space%io_buffer_count
            call write_covariance_info(io_space%mean_pars_buffer(:,i),io_space%nsample_buffer(i),npars)
            call write_variances(io_space%variance_buffer(:,i),npars,io_space%accept_rate_buffer(i))
            call write_parameters(io_space%pars_buffer(:,i),io_space%prob_buffer(i),npars)

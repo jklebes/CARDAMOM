@@ -28,8 +28,8 @@ double precision :: opt_scaling ! scd = 2.381204 the optimal scaling parameter
                                 ! factor. NOTE 2: 2.381204 ** 2 = 5.670132
 double precision, parameter :: beta = 0.05d0 ! weighting for gaussian step in multivariate proposals
 ! Is current proposal multivariate or not?
-logical :: multivariate_proposal = .false.!, do_DR = .true.
-integer, parameter :: N_before_mv = 10d0 !3
+logical :: multivariate_proposal = .false.
+integer, parameter :: N_before_mv = 10d0
 
 contains
   !
@@ -268,6 +268,7 @@ contains
        N%ITER = N%ITER + 1
 
        if (MCO%nWRITE > 0 .and. mod(nint(N%ITER),MCO%nWRITE) == 0) then
+
            ! calculate the likelhood for the actual uncertainties - this avoid
            ! issues with different phases of the MCMC which may use sub-samples
            ! of observations or inflated uncertainties to aid parameter
@@ -277,11 +278,8 @@ contains
            call write_mcmc_output(PI%parvar,N%ACCRATE, &
                                   PI%covariance, &
                                   PI%mean_par,PI%Nparvar, &
-                                  PARS0,(outputP0+outputP0prior),PI%npars)
-!           call write_variances(PI%parvar,PI%npars,N%ACCRATE) ! should this be the global rate?
-!           call write_parameters(PARS0,(outputP0+outputP0prior),PI%npars)
-!           call write_covariance_matrix(PI%covariance,PI%npars,.false.)
-!           call write_covariance_info(PI%mean_par,PI%Nparvar,PI%npars)
+                                  PARS0,(outputP0+outputP0prior),PI%npars,N%ITER == MCO%nOUT)
+
        end if ! write or not to write
 
        ! time to adapt?
