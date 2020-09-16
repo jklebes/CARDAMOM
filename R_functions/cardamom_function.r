@@ -5,7 +5,7 @@
 ###
 
 cardamom <-function (projname,model,method,stage) {
-#stage = 3
+#stage = 2
   ## load needed functions into R environment
   paths = load_paths()
 

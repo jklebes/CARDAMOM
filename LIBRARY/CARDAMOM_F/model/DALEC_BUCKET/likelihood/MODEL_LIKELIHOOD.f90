@@ -1125,7 +1125,8 @@ module model_likelihood_module
 !        EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
 !    endif
     ! Restrict maximum leaf lifespan
-    if ((EDC2 == 1 .or. DIAG == 1) .and. torfol > 8d0) then
+    ! 0.0003422313 = (8 * 365.25)**-1
+    if ((EDC2 == 1 .or. DIAG == 1) .and. torfol < 0.0003422313d0) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
     endif
 
