@@ -151,7 +151,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               save(parameters,drivers,states_all,site_ctessel_pft,file=outfile)#, compress="gzip")
           } else {
               # ...otherwise this is a grid and we want straight forward reduced dataset of common stocks and fluxes
-              num_quantiles = c(0.025,0.25,0.5,0.75,0.975) ; na_flag = TRUE
+              num_quantiles = c(0.025,0.25,0.5,0.75,0.975) ; num_quantiles_agg = seq(0.001,0.999, length = 100)
+              na_flag = TRUE
               # Estimate multiple use fluxes
               npp = states_all$gpp_gCm2day - states_all$rauto_gCm2day
               # Stocks first
@@ -191,12 +192,36 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
               site_output$dCsom_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
               if (length(which(names(states_all) == "litwood_gCm2")) > 0) {
-                  site_output$cwd_gCm2 = apply(states_all$litwood_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
-                  site_output$deadorg_gCm2 = apply(states_all$litwood_gCm2+states_all$lit_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  # Total C including wood litter
+                  site_output$totalC_gCm2 = apply(states_all$bio_gCm2+states_all$litwood_gCm2+states_all$lit_gCm2+states_all$som_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  dCbio = (states_all$bio_gCm2+states_all$litwood_gCm2+states_all$lit_gCm2+states_all$som_gCm2) 
+                  dCbio = dCbio - (states_all$bio_gCm2[,1]+states_all$litwood_gCm2[,1]+states_all$lit_gCm2[,1]+states_all$som_gCm2[,1]) 
+                  site_output$dCtotalC_gCm2 = apply(dCbio,2,quantile, prob=num_quantiles, na.rm=TRUE)
+                  # DOM (soil + litter + wood litter)
+                  site_output$dom_gCm2 = apply(states_all$litwood_gCm2+states_all$lit_gCm2+states_all$som_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  dCbio = (states_all$litwood_gCm2+states_all$lit_gCm2+states_all$som_gCm2) 
+                  dCbio = dCbio - (states_all$litwood_gCm2[,1]+states_all$lit_gCm2[,1]+states_all$som_gCm2[,1]) 
+                  site_output$dCdom_gCm2 = apply(dCbio,2,quantile, prob=num_quantiles, na.rm=TRUE)
+                  # wood litter 
+                  site_output$litwood_gCm2 = apply(states_all$litwood_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
                   dCbio = states_all$litwood_gCm2 - states_all$litwood_gCm2[,1] # difference in cwd from initial
-                  site_output$dCcwd_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  site_output$dClitwood_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  # Combined litter and wood litter
+                  site_output$deadorg_gCm2 = apply(states_all$litwood_gCm2+states_all$lit_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
                   dCbio = (states_all$litwood_gCm2+states_all$lit_gCm2) - (states_all$litwood_gCm2[,1]+states_all$lit_gCm2[,1]) # difference in deadorg from initial
                   site_output$dCdeadorg_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
+         
+              } else {
+                  # Total C without wood litter
+                  site_output$totalC_gCm2 = apply(states_all$bio_gCm2+states_all$lit_gCm2+states_all$som_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  dCbio = (states_all$bio_gCm2+states_all$lit_gCm2+states_all$som_gCm2)
+                  dCbio = dCbio - (states_all$bio_gCm2[,1]+states_all$lit_gCm2[,1]+states_all$som_gCm2[,1])
+                  site_output$dCtotalC_gCm2 = apply(dCbio,2,quantile, prob=num_quantiles, na.rm=TRUE)
+                  # DOM (soil + litter)
+                  site_output$dom_gCm2 = apply(states_all$lit_gCm2+states_all$som_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  dCbio = (states_all$lit_gCm2+states_all$som_gCm2)
+                  dCbio = dCbio - (states_all$lit_gCm2[,1]+states_all$som_gCm2[,1])
+                  site_output$dCdom_gCm2 = apply(dCbio,2,quantile, prob=num_quantiles, na.rm=TRUE)
               }
               # Water cycle specific if available
               if (length(which(names(states_all) == "evap_kgH2Om2day")) > 0) {
@@ -216,6 +241,98 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                   # Extract the internal vs ambient CO2 ratio
                   site_output$CiCa = apply(states_all$CiCa,2,quantile, prob=num_quantiles, na.rm=na_flag)
               }
+
+              ## Now keeping the whole ensemble extract the pixel level values needed for grid scale aggregates
+              ## All units remain at this point as the are output by DALEC
+              steps_per_year = floor(dim(drivers$met)[1] / ((as.numeric(PROJECT$end_year) - as.numeric(PROJECT$start_year))+1))
+              ss = dim(drivers$met)[1]-steps_per_year ;  ff = dim(drivers$met)[1]
+              # Mean of final year
+              if (length(which(names(states_all) == "litwood_gCm2")) > 0) {
+                  ## With wood litter
+                  # Total C and change
+                  site_output$agg_totalC = quantile(apply(states_all$bio_gCm2[,ss:ff] + 
+                                                          states_all$lit_gCm2[,ss:ff] +
+                                                          states_all$litwood_gCm2[,ss:ff] +
+                                                          states_all$som_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+                  dCbio = states_all$bio_gCm2[,ff] + states_all$lit_gCm2[,ff] + states_all$litwood_gCm2[,ff] + states_all$som_gCm2[,ff]
+                  dCbio = dCbio - (states_all$bio_gCm2[,1] + states_all$lit_gCm2[,1] + states_all$litwood_gCm2[,1] + states_all$som_gCm2[,1])
+                  site_output$agg_dCtotalC = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
+                  # DOM and change
+                  site_output$agg_dom = quantile(apply(states_all$som_gCm2[,ss:ff] + 
+                                                       states_all$lit_gCm2[,ss:ff] + 
+                                                       states_all$litwood_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+                  dCbio = states_all$lit_gCm2[,ff] + states_all$litwood_gCm2[,ff] + states_all$som_gCm2[,ff]
+                  dCbio = dCbio - (states_all$lit_gCm2[,1] + states_all$litwood_gCm2[,1] + states_all$som_gCm2[,1])
+                  site_output$agg_dCdom = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
+                  # Wood litter and change
+                  site_output$agg_litwood = quantile(apply(states_all$litwood_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+                  dCbio = states_all$litwood_gCm2[,ff] - states_all$litwood_gCm2[,1]
+                  site_output$agg_dClitwood = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
+              } else {
+                  ## Without wood litter
+                  # Total C and change
+                  site_output$agg_totalC = quantile(apply(states_all$bio_gCm2[,ss:ff] + 
+                                                          states_all$lit_gCm2[,ss:ff] +
+                                                          states_all$som_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+                  dCbio = states_all$bio_gCm2[,ff] + states_all$lit_gCm2[,ff] + states_all$som_gCm2[,ff]
+                  dCbio = dCbio - (states_all$bio_gCm2[,1] + states_all$lit_gCm2[,1] + states_all$som_gCm2[,1])
+                  site_output$agg_dCtotalC = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
+                  # DOM and change
+                  site_output$agg_dom = quantile(apply(states_all$lit_gCm2[,ss:ff]+states_all$som_gCm2[,ss:ff],1,mean), prob = num_quantiles_agg, na.rm=na_flag)
+                  dCbio = states_all$lit_gCm2[,ff] + states_all$som_gCm2[,ff]
+                  dCbio = dCbio - (states_all$lit_gCm2[,1] + states_all$som_gCm2[,1])
+                  site_output$agg_dCdom = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
+
+              }
+
+              # Biomass and change
+              site_output$agg_biomass = quantile(apply(states_all$bio_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              dCbio = states_all$bio_gCm2[,ff] - states_all$bio_gCm2[,1] # difference in biomass from initial
+              site_output$agg_dCbio = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
+              # Labile and change
+              site_output$agg_labile = quantile(apply(states_all$lab_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              dCbio = states_all$lab_gCm2[,ff] - states_all$lab_gCm2[,1] # difference in biomass from initial
+              site_output$agg_dClabile = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
+              # Foliage and change
+              site_output$agg_foliage = quantile(apply(states_all$fol_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              dCbio = states_all$fol_gCm2[,ff] - states_all$fol_gCm2[,1] # difference in biomass from initial
+              site_output$agg_dCfoliage = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
+              # Fine root and change
+              site_output$agg_root = quantile(apply(states_all$root_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              dCbio = states_all$root_gCm2[,ff] - states_all$root_gCm2[,1] # difference in biomass from initial
+              site_output$agg_dCroot = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
+              # Wood and change
+              site_output$agg_wood = quantile(apply(states_all$wood_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              dCbio = states_all$wood_gCm2[,ff] - states_all$wood_gCm2[,1] # difference in biomass from initial
+              site_output$agg_dCwood = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
+              # Foliar and fine root litter and chaneg
+              site_output$agg_lit = quantile(apply(states_all$lit_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              dCbio = states_all$lit_gCm2[,ff] - states_all$lit_gCm2[,1] # difference in biomass from initial
+              site_output$agg_dClitter = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
+              # Soil C and change
+              site_output$agg_som = quantile(apply(states_all$som_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              dCbio = states_all$som_gCm2[,ff] - states_all$som_gCm2[,1] # difference in biomass from initial
+              site_output$agg_dCsom = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
+
+              ## Mean of whole time period
+              site_output$agg_nbe = quantile(apply(states_all$nee_gCm2day + states_all$fire_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles_agg, na.rm=na_flag)
+              site_output$agg_nee = quantile(apply(states_all$nee_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              site_output$agg_gpp = quantile(apply(states_all$gpp_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              site_output$agg_rauto = quantile(apply(states_all$rauto_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              site_output$agg_rhet = quantile(apply(states_all$rhet_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              site_output$agg_reco = quantile(apply(states_all$reco_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              site_output$agg_harvest = quantile(apply(states_all$harvest_C_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              site_output$agg_fire = quantile(apply(states_all$fire_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              site_output$agg_npp = quantile(apply(npp,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              site_output$agg_fnpp = quantile(apply(npp * states_all$aNPP[,1],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              site_output$agg_rnpp = quantile(apply(npp * states_all$aNPP[,2],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              site_output$agg_wnpp = quantile(apply(npp * states_all$aNPP[,3],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              # Water cycle specific if available
+              if (length(which(names(states_all) == "evap_kgH2Om2day")) > 0) {
+                  # evapotranspiration (Etrans + Esoil + Ewetcanopy)
+                  site_output$agg_evap = quantile(apply(states_all$evap_kgH2Om2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              }
+
               # C-cycle flux correlation with parameters
               site_output$nee_par_cor = states_all$nee_par_cor
               site_output$gpp_par_cor = states_all$gpp_par_cor
@@ -331,12 +448,16 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           #
           # Mean stocks first
           grid_output = list(mean_labile_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1])))
+          grid_output$mean_totalC_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          grid_output$mean_dom_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_biomass_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_foliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_wood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_lit_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_som_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          grid_output$mean_dCtotalC_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          grid_output$mean_dCdom_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_dCbio_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_dCfoliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_dCroots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -346,12 +467,16 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$mean_lai_m2m2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           # Final stocks second
           grid_output$final_labile_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          grid_output$final_totalC_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          grid_output$final_dom_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$final_biomass_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$final_foliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$final_roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$final_wood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$final_lit_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$final_som_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          grid_output$final_dCtotalC_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          grid_output$final_dCdom_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$final_dCbio_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$final_dCfoliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$final_dCroots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -375,12 +500,12 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           # For those which we currently have need, estimate the mean annual maximum
           grid_output$annual_max_roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$annual_max_wood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          # Models where we have a CWD pool and therefore a total dead organic matter combination also
-          if (length(which(names(site_output) == "cwd_gCm2")) > 0) {
-              grid_output$mean_cwd_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_dCcwd_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$final_cwd_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$final_dCcwd_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          # Models where we have a wood litter pool and therefore a total dead organic matter combination also
+          if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
+              grid_output$mean_litwood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_dClitwood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_litwood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_dClitwood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_deadorg_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_dCdeadorg_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$final_deadorg_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -423,6 +548,8 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 
           # Mean stocks first
           grid_output$labile_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          grid_output$totalC_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          grid_output$dom_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$biomass_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$foliage_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
 #grid_output$follab_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
@@ -430,6 +557,8 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$wood_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$lit_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$som_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          grid_output$dCtotalC_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          grid_output$dCdom_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$dCbio_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$dCfoliage_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$dCroots_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
@@ -437,7 +566,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$dClit_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$dCsom_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$lai_m2m2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          # Fluxes third
+          # Fluxes seconds
           grid_output$nee_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$gpp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$rauto_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
@@ -451,9 +580,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$fire_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$nbe_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           # Models where we have a CWD pool and therefore a total dead organic matter combination also
-          if (length(which(names(site_output) == "cwd_gCm2")) > 0) {
-              grid_output$cwd_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-              grid_output$dCcwd_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
+              grid_output$litwood_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$dClitwood_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$dCdeadorg_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$deadorg_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           }
@@ -477,6 +606,58 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           }
 
           #
+          # Generate the variables needed to contain grid aggregate values
+          # These will be 'global' totals in units of TgC/yr, TgC, TgH20/yr or unit specific
+          # Stocks variables will be estimated as the mean stock in the final year
+          # Fluxes variables will be estimated as the mean flux over time
+          #
+
+          # Number of iterations available for resample
+          agg_iter = length(site_output$agg_labile)
+
+          # Mean stocks first
+          grid_output$agg_labile_TgC = array(0, dim=c(agg_iter))
+          grid_output$agg_totalC_TgC = array(0, dim=c(agg_iter))
+          grid_output$agg_dom_TgC = array(0, dim=c(agg_iter))
+          grid_output$agg_biomass_TgC = array(0, dim=c(agg_iter))
+          grid_output$agg_foliage_TgC = array(0, dim=c(agg_iter))
+          grid_output$agg_roots_TgC = array(0, dim=c(agg_iter))
+          grid_output$agg_wood_TgC = array(0, dim=c(agg_iter))
+          grid_output$agg_lit_TgC = array(0, dim=c(agg_iter))
+          grid_output$agg_som_TgC = array(0, dim=c(agg_iter))
+          grid_output$agg_dCtotalC_TgC = array(0, dim=c(agg_iter))
+          grid_output$agg_dCdom_TgC = array(0, dim=c(agg_iter))
+          grid_output$agg_dCbio_TgC = array(0, dim=c(agg_iter))
+          grid_output$agg_dCfoliage_TgC = array(0, dim=c(agg_iter))
+          grid_output$agg_dCroots_TgC = array(0, dim=c(agg_iter))
+          grid_output$agg_dCwood_TgC = array(0, dim=c(agg_iter))
+          grid_output$agg_dClit_TgC = array(0, dim=c(agg_iter))
+          grid_output$agg_dCsom_TgC = array(0, dim=c(agg_iter))
+          # Fluxes seconds
+          grid_output$agg_nee_TgCyr = array(0, dim=c(agg_iter))
+          grid_output$agg_gpp_TgCyr = array(0, dim=c(agg_iter))
+          grid_output$agg_rauto_TgCyr = array(0, dim=c(agg_iter))
+          grid_output$agg_rhet_TgCyr = array(0, dim=c(agg_iter))
+          grid_output$agg_reco_TgCyr = array(0, dim=c(agg_iter))
+          grid_output$agg_npp_TgCyr = array(0, dim=c(agg_iter))
+          grid_output$agg_fnpp_TgCyr = array(0, dim=c(agg_iter))
+          grid_output$agg_rnpp_TgCyr = array(0, dim=c(agg_iter))
+          grid_output$agg_wnpp_TgCyr = array(0, dim=c(agg_iter))
+          grid_output$agg_harvest_TgCyr = array(0, dim=c(agg_iter))
+          grid_output$agg_fire_TgCyr = array(0, dim=c(agg_iter))
+          grid_output$agg_nbe_TgCyr = array(0, dim=c(agg_iter))
+          # Models where we have a CWD pool and therefore a total dead organic matter combination also
+          if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
+              grid_output$agg_litwood_TgC = array(0, dim=c(agg_iter))
+              grid_output$agg_dClitwood_TgC = array(0, dim=c(agg_iter))
+          }
+          # Finally water cycle specific if available
+          if (length(which(names(site_output) == "evap_kgH2Om2day")) > 0) {
+              # evapotranspiration (Etrans + Esoil + Ewetcanopy)
+              grid_output$agg_evap_PgH2Oyr = array(0, dim=c(agg_iter))
+          }
+
+          #
           # Generate the spatial information needed to relate i,j within the grid to long / lat and the summary vs detailed output
           #
 
@@ -485,11 +666,23 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$j_location = rep(NA, length.out = PROJECT$nosites)
 
           # determine the latitude / longitude grid (dimension long = i, lat = j)
-          grid_output$lat = seq(PROJECT$latitude[1],PROJECT$latitude[2],length.out=PROJECT$lat_dim)
-          grid_output$long = seq(PROJECT$longitude[1],PROJECT$longitude[2],length.out=PROJECT$long_dim)
-          grid_output$lat = array(grid_output$lat, dim=c(length(grid_output$lat),length(grid_output$long)))
-          grid_output$lat = t(grid_output$lat)
-          grid_output$long = array(grid_output$long, dim=dim(grid_output$lat))
+##          grid_output$lat = seq(PROJECT$latitude[1],PROJECT$latitude[2],length.out=PROJECT$lat_dim)
+##          grid_output$long = seq(PROJECT$longitude[1],PROJECT$longitude[2],length.out=PROJECT$long_dim)
+#          grid_output$lat = seq(PROJECT$latitude[1]+(PROJECT$resolution*0.5),PROJECT$latitude[2]-(PROJECT$resolution*0.5), length.out = PROJECT$lat_dim)
+#          grid_output$long = seq(PROJECT$longitude[1]+(PROJECT$resolution*0.5),PROJECT$longitude[2]-(PROJECT$resolution*0.5), length.out = PROJECT$long_dim)
+#          grid_output$lat = array(grid_output$lat, dim=c(length(grid_output$lat),length(grid_output$long)))
+#          grid_output$lat = t(grid_output$lat)
+#          grid_output$long = array(grid_output$long, dim=dim(grid_output$lat))
+
+          # generate the lat / long grid again
+          output = generate_wgs84_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
+          grid_output$lat = array(output$lat, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$long = array(output$long,dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+
+          # Determine grid area (m2)
+          grid_output$area = calc_pixel_area(grid_output$lat,grid_output$long,PROJECT$resolution)
+          # this output is in vector form and we need matching array shapes so...
+          grid_output$area = array(grid_output$area, dim=c(PROJECT$long_dim,PROJECT$lat_dim)) 
 
       } else {
 
@@ -511,9 +704,60 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                # save for later
                grid_output$i_location[n] = slot_i ; grid_output$j_location[n] = slot_j
 
+               ## Begin aggregation to grid totals
+
+               # Number of iterations available for resample
+               agg_iter = length(site_output$agg_labile)
+               # Unit adjustment
+               unit_adj = 1e-12 # gC --> TgC ; or kgH2O -> PgH2O
+
+               # Mean stocks first
+               grid_output$agg_labile_TgC  = grid_output$agg_labile_TgC  + sample(site_output$agg_labile*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               grid_output$agg_totalC_TgC  = grid_output$agg_totalC_TgC  + sample(site_output$agg_totalC*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               grid_output$agg_dom_TgC     = grid_output$agg_dom_TgC     + sample(site_output$agg_dom*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               grid_output$agg_biomass_TgC = grid_output$agg_biomass_TgC + sample(site_output$agg_biomass*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               grid_output$agg_foliage_TgC = grid_output$agg_foliage_TgC + sample(site_output$agg_foliage*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               grid_output$agg_roots_TgC   = grid_output$agg_roots_TgC   + sample(site_output$agg_root*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               grid_output$agg_wood_TgC    = grid_output$agg_wood_TgC    + sample(site_output$agg_wood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               grid_output$agg_lit_TgC     = grid_output$agg_lit_TgC     + sample(site_output$agg_lit*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               grid_output$agg_som_TgC     = grid_output$agg_som_TgC     + sample(site_output$agg_som*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               # Stock changes second
+               grid_output$agg_dCtotalC_TgC  = grid_output$agg_dCtotalC_TgC + sample(site_output$agg_dCtotalC*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               grid_output$agg_dCdom_TgC     = grid_output$agg_dCdom_TgC + sample(site_output$agg_dCdom*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               grid_output$agg_dCbio_TgC     = grid_output$agg_dCbio_TgC + sample(site_output$agg_dCbio*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               grid_output$agg_dCfoliage_TgC = grid_output$agg_dCfoliage_TgC + sample(site_output$agg_dCfoliage*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               grid_output$agg_dCroots_TgC   = grid_output$agg_dCroots_TgC + sample(site_output$agg_dCroot*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               grid_output$agg_dCwood_TgC    = grid_output$agg_dCwood_TgC + sample(site_output$agg_dCwood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               grid_output$agg_dClit_TgC     = grid_output$agg_dClit_TgC + sample(site_output$agg_dClitter*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               grid_output$agg_dCsom_TgC     = grid_output$agg_dCsom_TgC + sample(site_output$agg_dCsom*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               # Fluxes third
+               grid_output$agg_nee_TgCyr = grid_output$agg_nee_TgC + sample(site_output$agg_nee*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
+               grid_output$agg_gpp_TgCyr = grid_output$agg_gpp_TgC + sample(site_output$agg_gpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
+               grid_output$agg_rauto_TgCyr = grid_output$agg_rauto_TgC + sample(site_output$agg_rauto*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
+               grid_output$agg_rhet_TgCyr = grid_output$agg_rhet_TgC + sample(site_output$agg_rhet*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
+               grid_output$agg_reco_TgCyr = grid_output$agg_reco_TgC + sample(site_output$agg_reco*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
+               grid_output$agg_npp_TgCyr = grid_output$agg_npp_TgC + sample(site_output$agg_npp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
+               grid_output$agg_fnpp_TgCyr = grid_output$agg_fnpp_TgC + sample(site_output$agg_fnpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
+               grid_output$agg_rnpp_TgCyr = grid_output$agg_rnpp_TgC + sample(site_output$agg_rnpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
+               grid_output$agg_wnpp_TgCyr = grid_output$agg_wnpp_TgC + sample(site_output$agg_wnpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
+               grid_output$agg_harvest_TgCyr = grid_output$agg_harvest_TgC + sample(site_output$agg_harvest*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
+               grid_output$agg_fire_TgCyr = grid_output$agg_fire_TgC + sample(site_output$agg_fire*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
+               grid_output$agg_nbe_TgCyr = grid_output$agg_nbe_TgC + sample(site_output$agg_nbe*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
+               # Models where we have a CWD pool and therefore a total dead organic matter combination also
+               if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
+                   grid_output$agg_litwood_TgC = grid_output$agg_litwood_TgC + sample(site_output$agg_litwood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+                   grid_output$agg_dClitwood_TgC = grid_output$agg_dClitwood_TgC + sample(site_output$agg_dClitwood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               }
+               # Finally water cycle specific if available
+               if (length(which(names(site_output) == "evap_kgH2Om2day")) > 0) {
+                   # evapotranspiration (Etrans + Esoil + Ewetcanopy)
+                   grid_output$agg_evap_PgH2Oyr = grid_output$agg_evap_PgH2Oyr + sample(site_output$agg_evap*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
+               }
                # now assign to correct location in array
                # Stocks first
                grid_output$labile_gCm2[n,,] = site_output$labile_gCm2
+               grid_output$totalC_gCm2[n,,] = site_output$totalC_gCm2
+               grid_output$dom_gCm2[n,,] = site_output$dom_gCm2
                grid_output$biomass_gCm2[n,,] = site_output$biomass_gCm2
 #grid_output$follab_gCm2[n,,] = site_output$follab_gCm2
                grid_output$foliage_gCm2[n,,] = site_output$foliage_gCm2
@@ -521,6 +765,8 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                grid_output$wood_gCm2[n,,] = site_output$wood_gCm2
                grid_output$lit_gCm2[n,,] = site_output$lit_gCm2
                grid_output$som_gCm2[n,,] = site_output$som_gCm2
+               grid_output$dCtotalC_gCm2[n,,] = site_output$dCtotalC_gCm2
+               grid_output$dCdom_gCm2[n,,] = site_output$dCdom_gCm2
                grid_output$dCbio_gCm2[n,,] = site_output$dCbio_gCm2
                grid_output$dCfoliage_gCm2[n,,] = site_output$dCfoliage_gCm2
                grid_output$dCroots_gCm2[n,,] = site_output$dCroots_gCm2
@@ -542,9 +788,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                grid_output$fire_gCm2day[n,,] = site_output$fire_gCm2day
                grid_output$nbe_gCm2day[n,,] = site_output$nbe_gCm2day
                # Models where we have a CWD pool and therefore a total dead organic matter combination also
-               if (length(which(names(site_output) == "cwd_gCm2")) > 0) {
-                   grid_output$cwd_gCm2[n,,] = site_output$cwd_gCm2
-                   grid_output$dCcwd_gCm2[n,,] = site_output$dCcwd_gCm2
+               if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
+                   grid_output$litwood_gCm2[n,,] = site_output$litwood_gCm2
+                   grid_output$dClitwood_gCm2[n,,] = site_output$dClitwood_gCm2
                    grid_output$dCdeadorg_gCm2[n,,] = site_output$dCdeadorg_gCm2
                    grid_output$deadorg_gCm2[n,,] = site_output$deadorg_gCm2
                }
@@ -567,12 +813,16 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                # now assign to correct location in array
                # Mean stocks first
                grid_output$mean_labile_gCm2[slot_i,slot_j,] = apply(site_output$labile_gCm2,1,mean)
+               grid_output$mean_totalC_gCm2[slot_i,slot_j,] = apply(site_output$totalC_gCm2,1,mean)
+               grid_output$mean_dom_gCm2[slot_i,slot_j,] = apply(site_output$dom_gCm2,1,mean)
                grid_output$mean_biomass_gCm2[slot_i,slot_j,] = apply(site_output$biomass_gCm2,1,mean)
                grid_output$mean_foliage_gCm2[slot_i,slot_j,] = apply(site_output$foliage_gCm2,1,mean)
                grid_output$mean_roots_gCm2[slot_i,slot_j,] = apply(site_output$roots_gCm2,1,mean)
                grid_output$mean_wood_gCm2[slot_i,slot_j,] = apply(site_output$wood_gCm2,1,mean)
                grid_output$mean_lit_gCm2[slot_i,slot_j,] = apply(site_output$lit_gCm2,1,mean)
                grid_output$mean_som_gCm2[slot_i,slot_j,] = apply(site_output$som_gCm2,1,mean)
+               grid_output$mean_dCtotalC_gCm2[slot_i,slot_j,] = apply(site_output$dCtotalC_gCm2,1,mean)
+               grid_output$mean_dCdom_gCm2[slot_i,slot_j,] = apply(site_output$dCdom_gCm2,1,mean)
                grid_output$mean_dCbio_gCm2[slot_i,slot_j,] = apply(site_output$dCbio_gCm2,1,mean)
                grid_output$mean_dCfoliage_gCm2[slot_i,slot_j,] = apply(site_output$dCfoliage_gCm2,1,mean)
                grid_output$mean_dCroots_gCm2[slot_i,slot_j,] = apply(site_output$dCroots_gCm2,1,mean)
@@ -583,12 +833,16 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                # Final stocks second
                final_step = dim(site_output$labile_gCm2)[2]
                grid_output$final_labile_gCm2[slot_i,slot_j,] = site_output$labile_gCm2[,final_step]
+               grid_output$final_totalC_gCm2[slot_i,slot_j,] = site_output$totalC_gCm2[,final_step]
+               grid_output$final_dom_gCm2[slot_i,slot_j,] = site_output$dom_gCm2[,final_step]
                grid_output$final_biomass_gCm2[slot_i,slot_j,] = site_output$biomass_gCm2[,final_step]
                grid_output$final_foliage_gCm2[slot_i,slot_j,] = site_output$foliage_gCm2[,final_step]
                grid_output$final_roots_gCm2[slot_i,slot_j,] = site_output$roots_gCm2[,final_step]
                grid_output$final_wood_gCm2[slot_i,slot_j,] = site_output$wood_gCm2[,final_step]
                grid_output$final_lit_gCm2[slot_i,slot_j,] = site_output$lit_gCm2[,final_step]
                grid_output$final_som_gCm2[slot_i,slot_j,] = site_output$som_gCm2[,final_step]
+               grid_output$final_dCtotalC_gCm2[slot_i,slot_j,] = site_output$dCtotalC_gCm2[,final_step]
+               grid_output$final_dCdom_gCm2[slot_i,slot_j,] = site_output$dCdom_gCm2[,final_step]
                grid_output$final_dCbio_gCm2[slot_i,slot_j,] = site_output$dCbio_gCm2[,final_step]
                grid_output$final_dCfoliage_gCm2[slot_i,slot_j,] = site_output$dCfoliage_gCm2[,final_step]
                grid_output$final_dCroots_gCm2[slot_i,slot_j,] = site_output$dCroots_gCm2[,final_step]
@@ -620,13 +874,13 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                grid_output$annual_max_roots_gCm2[slot_i,slot_j,] = grid_output$annual_max_roots_gCm2[slot_i,slot_j,] / nos_years
                grid_output$annual_max_wood_gCm2[slot_i,slot_j,] = grid_output$annual_max_wood_gCm2[slot_i,slot_j,] / nos_years
                # Models where we have a CWD pool and therefore a total dead organic matter combination also
-               if (length(which(names(site_output) == "cwd_gCm2")) > 0) {
-                   grid_output$mean_cwd_gCm2[slot_i,slot_j,] = apply(site_output$cwd_gCm2,1,mean)
-                   grid_output$mean_dCcwd_gCm2[slot_i,slot_j,] = apply(site_output$dCcwd_gCm2,1,mean)
+               if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
+                   grid_output$mean_litwood_gCm2[slot_i,slot_j,] = apply(site_output$litwood_gCm2,1,mean)
+                   grid_output$mean_dClitwood_gCm2[slot_i,slot_j,] = apply(site_output$dClitwood_gCm2,1,mean)
                    grid_output$mean_dCdeadorg_gCm2[slot_i,slot_j,] = apply(site_output$dCdeadorg_gCm2,1,mean)
                    grid_output$mean_deadorg_gCm2[slot_i,slot_j,] = apply(site_output$deadorg_gCm2,1,mean)
-                   grid_output$final_cwd_gCm2[slot_i,slot_j,] = site_output$cwd_gCm2[,final_step]
-                   grid_output$final_dCcwd_gCm2[slot_i,slot_j,] = site_output$dCcwd_gCm2[,final_step]
+                   grid_output$final_litwood_gCm2[slot_i,slot_j,] = site_output$litwood_gCm2[,final_step]
+                   grid_output$final_dClitwood_gCm2[slot_i,slot_j,] = site_output$dClitwood_gCm2[,final_step]
                    grid_output$final_dCdeadorg_gCm2[slot_i,slot_j,] = site_output$dCdeadorg_gCm2[,final_step]
                    grid_output$final_deadorg_gCm2[slot_i,slot_j,] = site_output$deadorg_gCm2[,final_step]
                }

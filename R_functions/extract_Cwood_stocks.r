@@ -40,7 +40,8 @@ extract_Cwood_stocks<- function(timestep_days,spatial_type,resolution,grid_type,
    # estimate average value
    for (t in seq(1, length(Cwood_stock_all$place_obs_in_step))) {
         Cwood_stock[Cwood_stock_all$place_obs_in_step[t]] = mean(Cwood_stock_all$biomass_gCm2[average_i,average_j,t], na.rm=TRUE)
-        Cwood_stock_unc[Cwood_stock_all$place_obs_in_step[t]] = mean(Cwood_stock_all$biomass_uncertainty_gCm2[average_i,average_j,t], na.rm=TRUE)
+        tmp = min(Cwood_stock[Cwood_stock_all$place_obs_in_step[t]], mean(Cwood_stock_all$biomass_uncertainty_gCm2[average_i,average_j,t], na.rm=TRUE))
+        Cwood_stock_unc[Cwood_stock_all$place_obs_in_step[t]] = tmp
    }
 
    # Set any time series values with NaN to missing data flag (-9999)

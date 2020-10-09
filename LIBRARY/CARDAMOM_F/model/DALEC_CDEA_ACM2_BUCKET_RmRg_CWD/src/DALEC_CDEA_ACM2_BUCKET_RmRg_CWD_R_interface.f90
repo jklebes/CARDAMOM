@@ -112,7 +112,7 @@ subroutine rdaleccdeaacm2bucketrmrgcwd(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pa
      out_var(i,1:nodays,11) = POOLS(1:nodays,1) ! labile
      out_var(i,1:nodays,12) = POOLS(1:nodays,2) ! foliage
      out_var(i,1:nodays,13) = extracted_C(1:nodays) ! harvested material
-     out_var(i,1:nodays,14) = FLUXES(1:nodays,17) ! Fire value
+     out_var(i,1:nodays,14) = FLUXES(1:nodays,17) ! Fire flux
 
      out_var(i,1:nodays,18) = FLUXES(1:nodays,29) ! Evapotranspiration (kgH2O.m-2.day-1)
      out_var(i,1:nodays,19) = POOLS(1:nodays,7)   ! rootwater (kgH2O.m-2.10cmdepth)

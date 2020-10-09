@@ -218,7 +218,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         GPP = -9999 ; GPP_unc = -9999
     }
     # apply lower bound in all cases to the uncertainty
-    GPP_unc[GPP_unc >= 0 & GPP_unc < 0.5] = 0.5
+    # Composed of NEE 0.58 gC/m2/day (Hill et al., 2012) plus mass balance mismatch of
+    # 0.16 gC/m2/day, therefore 0.74 gC/m2/day
+    GPP_unc[GPP_unc >= 0 & GPP_unc < 0.74] = 0.74
 
     ###
     ## Get some Evapotranspiration information (time series; kgH2O/m2/day)
@@ -270,7 +272,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         Reco = -9999 ; Reco_unc = -9999
     }
     # apply lower bound in all cases to the uncertainty
-    Reco_unc[Reco_unc >= 0 & Reco_unc < 0.5] = 0.5
+    # Composed of NEE 0.58 gC/m2/day (Hill et al., 2012) plus mass balance mismatch of
+    # 0.16 gC/m2/day, therefore 0.74 gC/m2/day
+    Reco_unc[Reco_unc >= 0 & Reco_unc < 0.74] = 0.74
 
     ###
     ## Get some NEE information (time series; gC/m2/day)

@@ -258,11 +258,14 @@ module CARBON_MODEL_MOD
                    pn_kurtosis = 1.599325d-01,  & ! Kurtosis of photosynthesis temperature response
                             e0 = 3.707992d+00,  & ! Quantum yield gC/MJ/m2/day PAR
                 minlwp_default =-2.158644d+00,  & ! minimum leaf water potential (MPa)
-                 max_lw_escape = 5.008693d-01,  & ! Max LW which is released from canopy that escapes in one direction
+!                 max_lw_escape = 5.008693d-01,  & ! Max LW which is released from canopy that escapes in one direction
+                 max_lw_escape = 1d0,           & ! Max LW which is released from canopy that escapes in one direction
                           iWUE = 9.387512d-08,  & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
          soil_swrad_absorption = 9.826268d-01,  & ! Fraction of SW rad absorbed by soil
-         max_lai_lwrad_release = 9.756301d-01,  & ! 1-Max fraction of LW emitted from canopy to be released
-        lai_half_lwrad_release = 3.685006d+00,  & ! LAI at which LW emitted from canopy to be released at 50 %
+!         max_lai_lwrad_release = 9.756301d-01,  & ! 1-Max fraction of LW emitted from canopy to be released
+!        lai_half_lwrad_release = 3.685006d+00,  & ! LAI at which LW emitted from canopy to be released at 50 %
+         max_lai_lwrad_release = 0.9517081d0,   & ! 1-Max fraction of LW emitted from canopy to be released
+        lai_half_lwrad_release = 4.6917871d0,   & ! LAI at which LW emitted from canopy to be released at 50 %
           soil_iso_to_net_coef =-2.376724d-05,  & ! Coefficient relating soil isothermal net radiation to net.
          soil_iso_to_net_const = 1.493317d+00,  & ! Constant relating soil isothermal net radiation to net
            max_par_transmitted = 1.605450d-01,  & ! Max fraction of canopy incident PAR transmitted to soil
@@ -373,7 +376,7 @@ module CARBON_MODEL_MOD
                                  sky_lwrad_Wm2, & ! sky absorbed longwave radiation (W.m-2)
                           stomatal_conductance, & ! stomatal conductance (mmolH2O.m-2ground.s-1)
                          potential_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
-                           minimum_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
+                           minimum_conductance, & ! minimum stomatal conductance (mmolH2O.m-2ground.s-1)
                        aerodynamic_conductance, & ! bulk surface layer conductance (m.s-1)
                               soil_conductance, & ! soil surface conductance (m.s-1)
                              convert_ms1_mol_1, & ! Conversion ratio for m.s-1 -> mol.m-2.s-1
@@ -1761,7 +1764,8 @@ double precision :: Creturn_canopy,Creturn_investment
 
         ! Determine potential water flow rate (mmolH2O.m-2.dayl-1)
         max_supply = (deltaWP/Rtot) * seconds_per_day
-        ! Estimate LAI adjusted lower gs bounds
+        ! Pass minimum conductance from local parameter to global value
+        ! There is uncertainty whether this should be a leaf area scaled value...
         minimum_conductance = min_gs * lai
 
         ! Invert Penman-Monteith equation to give gs (m.s-1) needed to meet
@@ -1798,9 +1802,9 @@ double precision :: Creturn_canopy,Creturn_investment
                 ! would be increased by greater opening of the stomata
                 ! and is therefore water is limiting!
                 stomatal_conductance = potential_conductance
-                ! Exception being if both are positive - thereforfe assume
+                ! Exception being if both are positive - therefore assume
                 ! lowest
-!                if (iWUE_upper > 0d0) stomatal_conductance = minimum_conductance
+                if (iWUE_upper > 0d0) stomatal_conductance = minimum_conductance
             else
 
                 ! In all other cases iterate
@@ -1829,7 +1833,7 @@ double precision :: Creturn_canopy,Creturn_investment
 !            stomatal_conductance = max(min_gs,min(stomatal_conductance,potential_conductance))
 !       else
 !            ! WUE optimisation
-!            stomatal_conductance = zbrent('calculate_gs:find_gs_WUE',find_gs_WUE,min_gs,potential_conductance,tol_gs)
+!            stomatal_conductance = zbrent('calculate_gs:find_gs_WUE',find_gs_WUE,min_gs,potential_conductance,tol_gs,iWUE*0.10d0)
 !       endif
 
     else
@@ -2272,7 +2276,7 @@ double precision :: Creturn_canopy,Creturn_investment
   soil_absorption_from_canopy    ! soil absorbed radiation emitted from canopy (W.m-2)
 
     ! local parameters
-    double precision, parameter :: clump = 0.75d0 & ! Clumping factor (1 = uniform, 0 totally clumped)
+    double precision, parameter :: clump = 0.75d0 & ! Clumping factor (1 = uniform, 0 totally clumped, mean = 0.75)
                                                     ! He et al., (2012) http://dx.doi.org/10.1016/j.rse.2011.12.008
                                   ,decay = -0.5d0   ! decay coefficient for incident radiation
 
@@ -2308,9 +2312,11 @@ double precision :: Creturn_canopy,Creturn_investment
     ! Absorption is the residual
     absorbed_lw_fraction = 1d0 - trans_lw_fraction - reflected_lw_fraction
 
-    ! Calculate the potential absorption of longwave radiation lost from the
-    ! canopy to soil / sky
-    canopy_release_fraction = max_lw_escape * (1d0 - (max_lai_lwrad_release*lai) / (lai+lai_half_lwrad_release))
+    ! Calculate the potential of longwave radiation lost from the
+    ! canopy to soil / sky. This fraction is applied in each direction.
+!    canopy_release_fraction = max_lw_escape * (1d0 - (max_lai_lwrad_release*lai) / (lai+lai_half_lwrad_release))
+    canopy_release_fraction = max_lw_escape * (1d0 - (max_lai_lwrad_release*lai) / (lai+lai_half_lwrad_release)) &
+                            * (1d0 - transmitted_fraction)
 
     !!!!!!!!!!
     ! Distribute longwave from sky
@@ -2353,7 +2359,8 @@ double precision :: Creturn_canopy,Creturn_investment
     ! calculate two-sided long wave radiation emitted from canopy which is
     ! ultimately lost from to soil or sky (i.e. this value is used twice, once
     ! to soil once to sky)
-    canopy_loss = longwave_release_canopy * lai * canopy_release_fraction
+!    canopy_loss = longwave_release_canopy * lai * canopy_release_fraction
+    canopy_loss = longwave_release_canopy * canopy_release_fraction
     ! Calculate longwave absorbed by soil which is released by the canopy itself
     soil_absorption_from_canopy = canopy_loss * emissivity
     ! Canopy released longwave returned to the sky
@@ -2441,7 +2448,7 @@ double precision :: Creturn_canopy,Creturn_investment
                        ,trans_par_fraction
 
     ! local parameters
-    double precision, parameter :: clump = 0.75d0 &  ! Clumping factor (1 = uniform, 0 totally clumped)
+    double precision, parameter :: clump = 0.75d0 &  ! Clumping factor (1 = uniform, 0 totally clumped, mean 0.75)
                                                      ! He et al., (2012) http://dx.doi.org/10.1016/j.rse.2011.12.008
                                   ,decay = -0.5d0 &  ! decay coefficient for incident radiation
                         ,newsnow_nir_abs = 0.27d0 &  ! NIR absorption fraction
@@ -3667,8 +3674,8 @@ double precision :: Creturn_canopy,Creturn_investment
     ! Photoperiod limitation (seconds)
     iphoto(current_step) = min(1d0,max(0d0,(mean_daylength-Photofac_min) * Photofac_range_1))
     ! VPD limitation (kPa)
-    ivpd(current_step) = min(1d0,max(0d0,1d0 - ((mean_VPD-VPDfac_min) * VPDfac_range_1)))
-!    ivpd(current_step) = min(1d0,max(0d0,1d0 - ((deltaWP-VPDfac_min) * VPDfac_range_1)))
+!    ivpd(current_step) = min(1d0,max(0d0,1d0 - ((mean_VPD-VPDfac_min) * VPDfac_range_1)))
+    ivpd(current_step) = min(1d0,max(0d0,(wSWP-VPDfac_min) * VPDfac_range_1))
     ! Calculate and store the GSI index
     GSI(current_step) = itemp(current_step) * ivpd(current_step) * iphoto(current_step)
 
@@ -3803,7 +3810,7 @@ double precision :: Creturn_canopy,Creturn_investment
 
     end if ! gradient decline / zero GSI
     ! If neither growing or turnover assume that some minimum turnover occurs
-    if (leaf_fall == 0d0 .and. leaf_growth == 0d0) leaf_fall = base_leaf_fall
+    !if (leaf_fall == 0d0 .and. leaf_growth == 0d0) leaf_fall = base_leaf_fall
 
     ! Restore original value back from memory
     lai = lai_save

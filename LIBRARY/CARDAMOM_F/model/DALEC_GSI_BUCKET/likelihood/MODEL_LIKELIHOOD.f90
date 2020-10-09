@@ -747,7 +747,7 @@ module model_likelihood_module
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(24) < pars(16))) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
     end if
-    ! VPD - may not be needed
+    ! VPD / wSWP
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(26) < pars(25))) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
     end if
@@ -763,9 +763,9 @@ module model_likelihood_module
 
     ! VPD at which stress in at maximum should be no larger than max(VPDlag21) +
     ! 1500 Pa from the max VPD tolerated parameter
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(26) > maxval(DATAin%MET(12,:)+1500d0))) then
-         EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
-    end if
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(26) > maxval(DATAin%MET(12,:)+1500d0))) then
+!         EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
+!    end if
 
     ! NUE and avN combination give a Vcmax equivalent.
     ! Kattge et al (2011) offers a prior of 3.4 - 30.7 gC/m2leaf/day.
@@ -1134,6 +1134,9 @@ module model_likelihood_module
         if ((mean_pools(1) / (mean_pools(3) + mean_pools(4))) > 0.125d0) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
         endif
+        if (maxval(M_POOLS(:,1) / (M_POOLS(:,3) + M_POOLS(:,4))) > 0.25d0) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
+        endif
     endif ! EDC2 == 1 .or. DIAG == 1
 
     ! EDC 6
@@ -1156,12 +1159,12 @@ module model_likelihood_module
     ! EDC 14 - Fractional allocation to foliar biomass is well constrained
     ! across dominant ecosystem types (boreal -> temperate evergreen and
     ! deciduous -> tropical), therefore this information can be used to contrain the foliar pool
-    ! further. Through control of the photosynthetically active compoent of the carbon
+    ! further. Through control of the photosynthetically active component of the carbon
     ! balance we can enforce additional contraint on the remainder of the system.
     ! Luyssaert et al (2007)
 
     ! Limits on foliar allocation
-    if ((EDC2 == 1 .or. DIAG == 1) .and. fNPP < 0.1d0) then
+    if ((EDC2 == 1 .or. DIAG == 1) .and. fNPP < 0.05d0) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
     endif
     ! Limits on fine root allocation

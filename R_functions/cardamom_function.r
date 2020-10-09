@@ -5,7 +5,7 @@
 ###
 
 cardamom <-function (projname,model,method,stage) {
-#stage = 2
+#stage = 1 ; repair = 0 ; use_parallel = FALSE
   ## load needed functions into R environment
   paths = load_paths()
 
@@ -292,7 +292,7 @@ cardamom <-function (projname,model,method,stage) {
       ## Begin Stage 2
 
       if (stage == 2) {
-PROJECT$paths$cardamom_cluster = "eddie.ecdf.ed.ac.uk"
+#PROJECT$paths$cardamom_cluster = "eddie.ecdf.ed.ac.uk"
         print('Welcome to Stage 2 - running CARDAMOM')
         print('The code will be run on cluster or your local machine');
 

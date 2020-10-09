@@ -751,7 +751,7 @@ module model_likelihood_module
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(24) < pars(16))) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
     end if
-    ! VPD
+    ! VPD or wSWP
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(26) < pars(25))) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
     end if
@@ -767,9 +767,9 @@ module model_likelihood_module
 
     ! VPD at which stress in at maximum should be no larger than max(VPDlag21) + 1500 Pa from
     ! the max VPD tolerated parameter
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(26) > maxval(DATAin%MET(12,:)+1500d0))) then
-         EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
-    end if
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(26) > maxval(DATAin%MET(12,:)+1500d0))) then
+!         EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
+!    end if
 
     ! NUE and avN combination give a Vcmax equivalent.
     ! Kattge et al (2011) offers a prior of 3.4 - 30.7 gC/m2leaf/day.
@@ -936,7 +936,8 @@ module model_likelihood_module
                         tmp, tmp1, tmp2, tmp3, tmp4, tmp5, temp_response, &
                         hold, infi, Rs, dble_nodays, &
                         mean_step_size
-    double precision, dimension(nodays) :: mean_ratio, resid_fol, resid_lab
+    double precision, allocatable, dimension(:) :: mean_annual_pools
+    double precision, dimension(nodays) :: mean_ratio, resid_fol, resid_lab, biomass_root
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools
     integer, dimension(nodays) :: hak ! variable to determine number of NaN in foliar residence time calculation
     double precision :: SSwood, SSlitwood, SSsom &
@@ -1051,8 +1052,8 @@ module model_likelihood_module
     ! mean step size in days
     mean_step_size = sum(deltat) / dble_nodays
 
-!    !calculate mean annual pool size for foliage
-!    allocate(mean_annual_pools(no_years))
+    !calculate mean annual pool size for foliage
+    allocate(mean_annual_pools(no_years))
 !    mean_annual_pools = 0.0
 !    do y = 1, no_years
 !       ! derive mean annual foliar pool
@@ -1127,21 +1128,21 @@ module model_likelihood_module
     ! Restrict maximum leaf lifespan
     ! 0.0003422313 = (8 * 365.25)**-1
     if ((EDC2 == 1 .or. DIAG == 1) .and. torfol < 0.0003422313d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
     endif
 
     ! Average turnover of foliage should not be less than wood (pars(6))
     ! NOTE: assessment of run with no EDCs indicate that this condition is
     ! rarely breached and could be ignored
     if ((EDC2 == 1 .or. DIAG == 1) .and. torfol < pars(6) ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
     endif
 
     ! The initial leaf life span parameter (pars(43)) should not be too far away from the
     ! actual estimate. Note torfol (frac / day) converted to days
     tmp = torfol**(-1d0)
     if ((EDC2 == 1 .or. DIAG == 1) .and. (tmp > pars(43)+50d0 .or. tmp < pars(43)-50d0) ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
     endif
 
     ! In contrast to the leaf longevity labile carbon stocks can be quite long
@@ -1151,7 +1152,7 @@ module model_likelihood_module
     !       11 years = 0.0002488955 day-1
     !        6 years = 0.0004563085 day-1
     if ((EDC2 == 1 .or. DIAG == 1) .and. torlab < 0.0002488955d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
     endif
 
     ! Finally we would not expect that the mean labile stock is greater than
@@ -1164,11 +1165,28 @@ module model_likelihood_module
     ! Richardson et al (2013), New Phytologist, Clab 2.24 +/- 0.44 % in temperate (max = 4.2 %)
     if (EDC2 == 1 .or. DIAG == 1) then
         if ((mean_pools(1) / (mean_pools(3) + mean_pools(4))) > 0.125d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
-        endif
-        if (maxval(M_POOLS(:,1) / (M_POOLS(:,3) + M_POOLS(:,4))) > 0.25d0) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
         endif
+        if (maxval(M_POOLS(:,1) / (M_POOLS(:,3) + M_POOLS(:,4))) > 0.25d0) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
+        endif
+    endif ! EDC2 == 1 .or. DIAG == 1
+
+    ! We assume that plants should reach near their maximum rooting depth quickly on establishment.
+    ! Therefore, we expect that the mean annual maximum should allow roots to reach > 90 % of their max
+    if (EDC2 == 1 .or. DIAG == 1) then
+       ! Estimate the coarse root pool
+       biomass_root = (DATAin%M_POOLS(1:DATAin%nodays,3) + (DATAin%M_POOLS(1:DATAin%nodays,3) * pars(29))) * 2d0
+       ! Determine the annual max for each pool
+       do y = 1, no_years
+          ! derive mean annual fine + coarse root pool
+          mean_annual_pools(y) = cal_max_annual_pools(biomass_root,y,DATAin%deltat,DATAin%nodays)
+       end do ! year loop
+       ! Calculate root depths for the annual maximums
+       mean_annual_pools = (pars(40) * mean_annual_pools) / (pars(39) + mean_annual_pools)
+       if ( ((sum(mean_annual_pools) / dble(no_years)) / pars(40)) < 0.90d0 ) then
+           EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
+       end if
     endif ! EDC2 == 1 .or. DIAG == 1
 
     ! EDC 6
@@ -1236,12 +1254,12 @@ module model_likelihood_module
     ! EDC 14 - Fractional allocation to foliar biomass is well constrained
     ! across dominant ecosystem types (boreal -> temperate evergreen and
     ! deciduous -> tropical), therefore this information can be used to contrain the foliar pool
-    ! further. Through control of the photosynthetically active compoent of the carbon
+    ! further. Through control of the photosynthetically active component of the carbon
     ! balance we can enforce additional contraint on the remainder of the system.
     ! Luyssaert et al (2007)
 
     ! Limits on foliar allocation
-    if ((EDC2 == 1 .or. DIAG == 1) .and. fNPP < 0.1d0) then
+    if ((EDC2 == 1 .or. DIAG == 1) .and. fNPP < 0.05d0) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
     endif
     ! Limits on fine root allocation

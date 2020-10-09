@@ -1163,12 +1163,12 @@ module model_likelihood_module
     ! EDC 14 - Fractional allocation to foliar biomass is well constrained
     ! across dominant ecosystem types (boreal -> temperate evergreen and
     ! deciduous -> tropical), therefore this information can be used to contrain the foliar pool
-    ! further. Through control of the photosynthetically active compoent of the carbon
+    ! further. Through control of the photosynthetically active component of the carbon
     ! balance we can enforce additional contraint on the remainder of the system.
     ! Luyssaert et al (2007)
 
     ! Limits on foliar allocation
-    if ((EDC2 == 1 .or. DIAG == 1) .and. fNPP < 0.1d0) then
+    if ((EDC2 == 1 .or. DIAG == 1) .and. fNPP < 0.05d0) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
     endif
     ! Limits on fine root allocation

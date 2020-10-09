@@ -85,7 +85,7 @@ subroutine racm(output_dim,met,pars,out_var,lat,nopars,nomet &
          out_var(i,1:nodays,8) = gs_total_canopy(1:nodays)
          out_var(i,1:nodays,9) = canopy_par_MJday_time(1:nodays)
          out_var(i,1:nodays,10) = gb_total_canopy(1:nodays)
-         out_var(i,1:nodays,11) = cica(1:nodays)
+         out_var(i,1:nodays,11) = cica_time(1:nodays)
      endif
 
   end do ! nos_iter loop

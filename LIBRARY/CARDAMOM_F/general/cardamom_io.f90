@@ -272,16 +272,16 @@ module cardamom_io
     double precision :: dummy
     integer :: num_lines,status
 
-    ! test whether BOTH files exist
-    inquire(file=trim(parname), exist=par_exists)
-    inquire(file=trim(stepname), exist=step_exists)
-    inquire(file=trim(covname), exist=cov_exists)
+    ! Check that all files exist
+    inquire(file=trim(parname),     exist=par_exists)
+    inquire(file=trim(stepname),    exist=step_exists)
+    inquire(file=trim(covname),     exist=cov_exists)
     inquire(file=trim(covinfoname), exist=covinfo_exists)
 
     ! now determine the correct response
     if (par_exists .and. step_exists .and. cov_exists .and. covinfo_exists) then
 
-        ! both files exist therefore this might be a restart run.
+        ! All files exist therefore this might be a restart run.
         ! lets see if there is anything in the files that we might use
         ! count the number of remaining lines in the file..
         ! open the relevant output files
@@ -296,23 +296,23 @@ module cardamom_io
         ! restart
         dummy = ((dble(nOUT)/dble(nWRITE)) * sub_fraction) * dble(npars+1)
         if (num_lines > dummy) then
-            ! then there is something in the file we we can use it
+            ! Then there is something in the file we we can use it
             restart_flag = .true.
             print*,"...have found parameter file = ",trim(parname)
             print*,"...have found step file = ",trim(stepname)
             print*,"...have found cov file = ",trim(covname)
             print*,"...have found cov_info file = ",trim(covinfoname)
         else
-            ! or the file exists but is empty so treat it as a fresh start
+            ! The file exists but is empty / no enough so treat it as a fresh start
             restart_flag = .false.
-            print*,"output files are present, however they are too small for a restart"
+            print*,"Output files are present, however they are too small for a restart"
         endif
-        ! either way we open the file up later on so now we need to close them
+        ! Either way we open the file up later on so now we need to close them
         call close_output_files
 
     else ! par_exists .and. step_exists
 
-        ! then or of these files exists and the other does not so it is
+        ! Then or of these files exists and the other does not so it is
         ! ambiguous whether or not this is a restart
         print*,"One or more of the analysis files cannot be found."
         print*,"CARDAMOM must start from scratch... "
@@ -1394,14 +1394,12 @@ module cardamom_io
        end do ! j for parameter
     end do ! i for combinations
 
-    ! Make note of how many parameter vectors have been written out.
-!    accepted_so_far = num_lines
+    ! Determine the total number of iterations processed so far
     MCOUT%nos_iterations = num_lines * MCO%nWRITE
     ! Extract the final parameter set and load into the initial parameter vector
-    ! for the analysis.
+    ! for the analysis. NOTE: This parameter set will be normalised on entry
+    ! into the MHMCMC subroutine
     PI%parini(1:DATAin%nopars) = tmp(num_lines,1:DATAin%nopars)
-    ! The current parameter set will be normalised on entry into the MHMCMC
-    ! subroutine
 
     ! free up variable for new file
     deallocate(tmp)
@@ -1418,8 +1416,8 @@ module cardamom_io
        num_lines = num_lines + 1
     enddo
 
-    ! Determine the number of actual stepsize vectors are present. Note
-    ! that the + 1 is due to the local acceptance rate being provided too.
+    ! Determine the number of actual stepsize vectors present.
+    ! The + 1 is due to the local acceptance rate being provided too.
     num_lines = num_lines/(DATAin%nopars+1)
     ! allocate memory
     allocate(tmp(num_lines,(DATAin%nopars+1)))
@@ -1432,12 +1430,9 @@ module cardamom_io
           read(sfile_unit) tmp(i,j)
        end do ! j for parameter
     end do ! i for combinations
-    ! Store the most recent step size, which corresponds with the saved
-    ! parmeters (above) and covariance matrix (below)
- !   PI%beta_stepsize = tmp(num_lines,1:DATAin%nopars)
-    ! save the current acceptance_rate
+    ! Save the current acceptance_rate
     MCOUT%acceptance_rate = MCOUT%nos_iterations * MCO%nWRITE
-!    accept_rate = tmp(num_lines,DATAin%nopars+1)
+
     ! tidy up for the next file
     deallocate(tmp)
 

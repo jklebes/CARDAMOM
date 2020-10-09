@@ -199,6 +199,7 @@ contains
     ! NOTE: passing P0 -> P is needed during the EDC searching phase where we
     ! could read an EDC consistent parameter set in the first instance
     call model_likelihood_option(PI%parini,P0,P0prior) ; P = P0 ; Pprior = P0prior
+
     write(*,*) "Starting likelihood = ",P0,"+",P0prior
     Pmax = P0 + P0prior
 

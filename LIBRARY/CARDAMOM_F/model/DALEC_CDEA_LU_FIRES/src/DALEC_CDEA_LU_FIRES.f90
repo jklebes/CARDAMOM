@@ -420,9 +420,9 @@ contains
     mint = drivers(3) ! Daily minimum temperature (oC)
     nit = drivers(4)  ! Load foliar N (gN/m2leaf)
     co2 = drivers(5)  ! Atmospheric CO2 (ppm)
-    doy = drivers(6)
-    radiation = drivers(8)
-    lat = drivers(7)
+    doy = drivers(6)  ! Julian Day of year
+    radiation = drivers(8) ! Short wave radation (MJ/m2/day)
+    lat = drivers(7) ! latitude (degrees)
 
     ! Load parameters into correct local vars.
     ! While strictly not needed, it was done to improve readability of the below code

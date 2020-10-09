@@ -100,12 +100,12 @@ module MODEL_PARAMETERS
        PI%parmax(13) = 0.35d0
 
        ! GSI min temperature threshold (oC)
-       PI%parmin(14) = 243d0 !235d0
-       PI%parmax(14) = 313.15d0 !330d0
+       PI%parmin(14) = 235d0
+       PI%parmax(14) = 330d0
 
        ! GSI max temperature threshold (oC)
-       PI%parmin(15) = 283.15d0 !243d0 !235d0
-       PI%parmax(15) = 313.15d0 !330d0
+       PI%parmin(15) = 273.15d0 !243d0 !235d0
+       PI%parmax(15) = 330d0
 
        ! GSI min photoperiod threshold (sec)
        PI%parmin(16) = 3600d0*3d0  !  3 hours
@@ -121,12 +121,18 @@ module MODEL_PARAMETERS
        PI%parmax(24) = 3600d0*21d0  ! 21 hours
 
        ! GSI min VPD threshold (Pa)
-       PI%parmin(25) = 10d0 !100d0
-       PI%parmax(25) = 5500d0
+!       PI%parmin(25) =   10d0 !100d0
+!       PI%parmax(25) =  5500d0
+       ! GSI min SWP threshold (MPa)
+       PI%parmin(25) = -10d0 !10d0 !100d0
+       PI%parmax(25) =   0d0 !5500d0
 
        ! GSI max VPD threshold (Pa)
-       PI%parmin(26) = 10d0 !1000d0
-       PI%parmax(26) = 5500d0
+!       PI%parmin(26) = 10d0 !1000d0
+!       PI%parmax(26) = 5500d0
+       ! GSI max SWP threshold (MPa)
+       PI%parmin(26) = -10d0 !10d0 !1000d0
+       PI%parmax(26) =   0d0 !5500d0
 
        ! GPP return on new Cfol investment (gCperGPP per gCnewfol)
        PI%parmin(27) = 0.001d0

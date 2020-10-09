@@ -48,11 +48,11 @@ generate_uncertainty_figures<-function(PROJECT,n) {
 	    # load R libraries in cluster
 	    clusterExport(cl,c("load_r_libraries","rmse","gsi_controlling"))
 	    clusterEvalQ(cl, load_r_libraries())
-	    dummy=parLapply(cl,nos_plots,fun=uncertainty_figures,PROJECT=PROJECT,states_all=states_all,drivers=drivers,parameters=parameters,sub_parameter=sub_parameter,n=n,plotconfidence=plotconfidence)
+	    dummy=parLapply(cl,nos_plots,fun=uncertainty_figures,PROJECT=PROJECT,states_all=states_all,drivers=drivers,parameters=parameters,n=n,plotconfidence=plotconfidence)
 	    stopCluster(cl)
 	} else {
 	    # or use serial
-	    dummy=lapply(nos_plots,FUN=uncertainty_figures,PROJECT=PROJECT,states_all=states_all,drivers=drivers,parameters=parameters,sub_parameter=sub_parameter,n=n,plotconfidence=plotconfidence)
+	    dummy=lapply(nos_plots,FUN=uncertainty_figures,PROJECT=PROJECT,states_all=states_all,drivers=drivers,parameters=parameters,n=n,plotconfidence=plotconfidence)
 	} # parallel option
 
 	# tidy before leaving

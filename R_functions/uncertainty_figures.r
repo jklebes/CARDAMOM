@@ -8,7 +8,7 @@ rmse <- function(obs, pred) sqrt(mean((obs-pred)^2, na.rm=TRUE))
 ## Use byte compile
 rmse<-cmpfun(rmse)
 
-uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,sub_parameter,n,plotconfidence) {
+uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,n,plotconfidence) {
 
 	# calculate some timing information
 	timestep=1
@@ -125,7 +125,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
                 jpeg(file=paste(PROJECT$figpath,"timeseries_evap_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=280, quality=100)
                 if (PROJECT$model$name == "ACM" & max(as.vector(evap_var),na.rm=TRUE) > 0) {
                     par(mfrow=c(1,1), omi=c(0.1,0.1,0.1,0.1), mai=c(1,1,1,1))
-                    maxl=which(as.vector(sub_parameter[dim(sub_parameter)[1],,]) == max(as.vector(sub_parameter[dim(sub_parameter)[1],,])))
+                    maxl=which(as.vector(parameters[dim(parameters)[1],,]) == max(as.vector(parameters[dim(parameters)[1],,])))
                     maxl=maxl[1] # if we happen to have more than one values with the same likelihood we will just pick the first one....
                     plot(states_all$evap_kgH2Om2day[maxl,],evap_obs, ylab="SPA", xlab="ACM", main="Evap (kgH2O.m-2.day-1)",pch=16,cex=0.8,cex.main=1.8,cex.lab=1.8,cex.axis=1.8) ; abline(0,1,col="red", lwd=4)
                     hey=lm(evap_obs~states_all$evap_kgH2Om2day[maxl,]) ; beta1=coef(hey)[2] ; intercept=coef(hey)[1]
@@ -223,7 +223,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,s
 		jpeg(file=paste(PROJECT$figpath,"timeseries_gpp_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=280, quality=100)
 		if (PROJECT$model$name == "ACM") {
 			par(mfrow=c(1,1), omi=c(0.1,0.1,0.1,0.1), mai=c(1,1,1,1))
-			maxl=which(as.vector(sub_parameter[dim(sub_parameter)[1],,]) == max(as.vector(sub_parameter[dim(sub_parameter)[1],,])))
+			maxl=which(as.vector(parameters[dim(parameters)[1],,]) == max(as.vector(parameters[dim(parameters)[1],,])))
 			maxl=maxl[1] # if we happen to have more than one values with the same likelihood we will just pick the first one....
 			plot(states_all$gpp_gCm2day[maxl,],drivers$obs[,1], ylab="SPA", xlab="ACM", main="GPP (gC.m-2.day-1)",pch=16,cex=0.8,cex.main=1.8,cex.lab=1.8,cex.axis=1.8) ; abline(0,1,col="red", lwd=4)
 			hey=lm(drivers$obs[,1]~states_all$gpp_gCm2day[maxl,]) ; beta1=coef(hey)[2] ; intercept=coef(hey)[1]

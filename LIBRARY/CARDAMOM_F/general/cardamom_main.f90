@@ -73,7 +73,7 @@ program cardamom_framework
 
  ! Initialise counters used to track the output of parameter sets
  io_space%io_buffer_count = 0
- io_space%io_buffer = max(10,(MCO%nOUT / MCO%nWRITE) / 10)
+ io_space%io_buffer = min(1000, max(10,(MCO%nOUT / MCO%nWRITE) / 10))
 
  ! Allocate variables used in io buffering,
  ! these could probably be moved to a more sensible place within cardamom_io.f90

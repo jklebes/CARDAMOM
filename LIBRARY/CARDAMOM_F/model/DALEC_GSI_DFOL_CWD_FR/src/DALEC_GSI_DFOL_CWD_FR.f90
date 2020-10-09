@@ -227,11 +227,14 @@ module CARBON_MODEL_MOD
                    pn_kurtosis = 1.599325d-01,  & ! Kurtosis of photosynthesis temperature response
                             e0 = 3.707992d+00,  & ! Quantum yield gC/MJ/m2/day PAR
                 minlwp_default =-2.158644d+00,  & ! minimum leaf water potential (MPa)
-                 max_lw_escape = 5.008693d-01,  & ! Max LW which is released from canopy that escapes in one direction
+!                 max_lw_escape = 5.008693d-01,  & ! Max LW which is released from canopy that escapes in one direction
+                 max_lw_escape = 1d0,   & ! Max LW which is released from canopy that escapes in one direction
                           iWUE = 9.387512d-08,  & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
          soil_swrad_absorption = 9.826268d-01,  & ! Fraction of SW rad absorbed by soil
-         max_lai_lwrad_release = 9.756301d-01,  & ! 1-Max fraction of LW emitted from canopy to be released
-        lai_half_lwrad_release = 3.685006d+00,  & ! LAI at which LW emitted from canopy to be released at 50 %
+!         max_lai_lwrad_release = 9.756301d-01,  & ! 1-Max fraction of LW emitted from canopy to be released
+!        lai_half_lwrad_release = 3.685006d+00,  & ! LAI at which LW emitted from canopy to be released at 50 %
+         max_lai_lwrad_release = 0.9517081d0,   & ! 1-Max fraction of LW emitted from canopy to be released
+        lai_half_lwrad_release = 4.6917871d0,   & ! LAI at which LW emitted from canopy to be released at 50 %
           soil_iso_to_net_coef =-2.376724d-05,  & ! Coefficient relating soil isothermal net radiation to net.
          soil_iso_to_net_const = 1.493317d+00,  & ! Constant relating soil isothermal net radiation to net
            max_par_transmitted = 1.605450d-01,  & ! Max fraction of canopy incident PAR transmitted to soil
@@ -785,7 +788,7 @@ contains
        doy = met(6,n)   ! Day of year
        meant = meant_time(n)  ! mean air temperature (oC)
        wind_spd = met(15,n) ! wind speed (m/s)
-       vpd_kPa = met(16,n)*1d-3  ! Vapour pressure deficit (Pa -> kPa)
+       vpd_kPa = met(16,n)*1d-3 ! Vapour pressure deficit (Pa -> kPa)
 
        ! states needed for module variables
        lai_out(n) = POOLS(n,2)/pars(17)
@@ -965,7 +968,7 @@ contains
 
        endif ! losing leaves?
        ! If neither process is occuring assume that there is background turnover
-       if (FLUXES(n,16) == 0d0 .and. FLUXES(n,9) == 0d0) FLUXES(n,9) = pars(3)
+       !if (FLUXES(n,16) == 0d0 .and. FLUXES(n,9) == 0d0) FLUXES(n,9) = pars(3)
 
        ! restore original value back from memory
        lai = lai_save
@@ -1508,7 +1511,8 @@ contains
 
         ! Determine potential water flow rate (mmolH2O.m-2.dayl-1)
         max_supply = (deltaWP/Rtot) * seconds_per_day
-        ! Estimate LAI adjusted lower gs bounds
+        ! Pass minimum conductance from local parameter to global value
+        ! There is uncertainty whether this should be a leaf area scaled value...
         minimum_conductance = min_gs * lai
 
         ! Invert Penman-Monteith equation to give gs (m.s-1) needed to meet
@@ -1522,6 +1526,7 @@ contains
 
         ! convert m.s-1 to mmolH2O.m-2.s-1
         potential_conductance = potential_conductance * 1d3 * convert_ms1_mol_1
+
         ! if conditions are dew forming then set conductance to maximum as we are not going to be limited by water demand
         if (potential_conductance <= 0d0 .or. potential_conductance > max_gs*lai) potential_conductance = max_gs*lai
 
@@ -1871,9 +1876,11 @@ contains
     ! Absorption is the residual
     absorbed_lw_fraction = 1d0 - trans_lw_fraction - reflected_lw_fraction
 
-    ! Calculate the potential absorption of longwave radiation lost from the
-    ! canopy to soil / sky
-    canopy_release_fraction = max_lw_escape * (1d0 - (max_lai_lwrad_release*lai) / (lai+lai_half_lwrad_release))
+    ! Calculate the potential of longwave radiation lost from the
+    ! canopy to soil / sky. This fraction is applied in each direction.
+!    canopy_release_fraction = max_lw_escape * (1d0 - (max_lai_lwrad_release*lai) / (lai+lai_half_lwrad_release))
+    canopy_release_fraction = max_lw_escape * (1d0 - (max_lai_lwrad_release*lai) / (lai+lai_half_lwrad_release)) &
+                            * (1d0 - transmitted_fraction)
 
     !!!!!!!!!!
     ! Distribute longwave from sky
@@ -1916,7 +1923,8 @@ contains
     ! calculate two-sided long wave radiation emitted from canopy which is
     ! ultimately lost from to soil or sky (i.e. this value is used twice, once
     ! to soil once to sky)
-    canopy_loss = longwave_release_canopy * lai * canopy_release_fraction
+!    canopy_loss = longwave_release_canopy * lai * canopy_release_fraction
+    canopy_loss = longwave_release_canopy * canopy_release_fraction
     ! Calculate longwave absorbed by soil which is released by the canopy itself
     soil_absorption_from_canopy = canopy_loss * emissivity
     ! Canopy released longwave returned to the sky

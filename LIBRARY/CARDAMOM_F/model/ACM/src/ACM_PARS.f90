@@ -73,8 +73,9 @@ module MODEL_PARAMETERS
     !
 
     ! Maximum amount of LW emitted by canopy which escapes in one direction
-    PI%parmin(7) = 0.25d0
-    PI%parmax(7) = 0.75d0
+    ! Prior from offline SPA calibration = 1.0 +/- 0.0000267 SE
+    PI%parmin(7) = 0.5d0
+    PI%parmax(7) = 1d0
 
     !
     ! GPP / transpiration optimisation
@@ -98,13 +99,15 @@ module MODEL_PARAMETERS
     ! Canopy longwave escape from canopy
     !
 
-    ! max fractional reduction of longwave release from canopy
-    PI%parmin(10) = 0.750d0
-    PI%parmax(10) = 0.999d0
+    ! Max fractional reduction of longwave release from canopy
+    ! Prior from offline SPA calibration = 0.9517081 +/- 0.0001011 SE
+    PI%parmin(10) = 0.94d0 !0.75d0
+    PI%parmax(10) = 0.96d0 !1d0
 
-    ! lai adjustment for long wave release from canopy
+    ! LAI adjustment for long wave release from canopy
+    ! Prior from offline SPA calibration = 4.6917871 +/- 0.0013296 SE
     PI%parmin(11) = 2.0d0
-    PI%parmax(11) = 4.0d0
+    PI%parmax(11) = 6.0d0
 
     !
     ! Linear correction for soil isothermal to net radiation
@@ -117,14 +120,14 @@ module MODEL_PARAMETERS
     ! This is not accounted for here
 
     ! Coefficient linking isothermal->net adjustment and absorbed SW
-    ! SPA based prior is -0.015 (SE +/- 0.00077)
+    ! SPA based prior is -0.015 W/m2 (SE +/- 0.00077)
     PI%parmin(12) = -0.1d0
     PI%parmax(12) =  0.0d0
 
     ! Constant relating isothermal->net adjustment soil radiation (W/m2)
     ! SPA based prior is -1.84 W/m2 (SE +/- 0.078)
-    PI%parmin(13) =-1.5d0
-    PI%parmax(13) = 1.5d0
+    PI%parmin(13) =-2.0d0
+    PI%parmax(13) = 2.0d0
 
     !
     ! Max canopy intercepted PAR and NIR transmittance / reflectance
