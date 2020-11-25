@@ -248,6 +248,11 @@ cardamom_project_setup <- function (paths,PROJECT) {
                      " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90",
                      " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
                      " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep=""))
+#        print(paste(compiler," -O2 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
+#                     " ../model/",modelname,"/src/",modelname,"_CROP.f90",
+#                     " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90",
+#                     " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
+#                     " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep=""))
         system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/executable/cardamom.exe ",exepath,"/",exe,sep=""))
         # now also generate the shared library needed later by R
         system(paste("gfortran -O2 -shared ../model/",modelname,"/src/",modelname,".f90 ",

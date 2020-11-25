@@ -103,6 +103,7 @@ corine2006_to_ctessel<- function(input_pft) {
 }
 ## Use byte compile
 corine2006_to_ctessel<-cmpfun(corine2006_to_ctessel)
+
 #lat = sites_cardamom_lat ; long = sites_cardamom_long ; resolution = cardamom_resolution ; grid_type = cardamom_grid_type ; sitename = sites_cardamom
 how_many_points<- function (lat,long,resolution,grid_type,sitename) {
 
@@ -117,14 +118,37 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
     } else {
         stop('have selected invalid grid type, the valid options are "UK" and "wgs84"')
     }
+    # Extract useful information (output re-used later)
     lat = output$lat ; long = output$long
     lat_dim = output$lat_dim ; long_dim = output$long_dim
+    cardamom_ext = output$cardamom_ext
 
     # now work out how many of these are land points
     # determine whether using LCM 2007 or default ECMWF land cover map
     if (use_lcm == "LCM2007") {
-        data2=nc_open("/home/lsmallma/WORK/GREENHOUSE/LCM2007/LCM2007_with_lat_long.nc")
-        lcm=ncvar_get(data2,"LCM2007")
+#        data2=nc_open("/home/lsmallma/WORK/GREENHOUSE/LCM2007/LCM2007_with_lat_long.nc")
+#        lcm=ncvar_get(data2,"LCM2007")
+        lcm = raster("/home/lsmallma/WORK/GREENHOUSE/LCM2007/Download_lcm2007_143707/lcm-2007-1km_397874/dominant_target_class/LCM2007_GB_1K_Dominant_TargetClass.tif")
+        # Reproject onto the WGS84 grid
+        lcm = projectRaster(lcm,crs = CRS("+init=epsg:4326"), method = "ngb")
+        # Aggregate to approximately the right resolution
+        target_ratio = max(0.1666667,(0.001*(resolution/111))) / res(lcm)
+        agg_fun = function(pixels, na.rm) { 
+           if ((length(which(pixels > 0))/length(pixels)) > 0.2) {
+               return(modal(pixels[pixels > 0], na.rm=na.rm)) 
+           } else { 
+               return(0) 
+           } 
+        }
+        lcm = aggregate(lcm, fact = floor(target_ratio), fun = agg_fun)
+        # Extract lat / long
+        lat_lcm = coordinates(lcm) 
+        # Convert into arrays
+        long_lcm = array(lat_lcm[,1], dim=c(dim(lcm)[2],dim(lcm)[1])) ; lat_lcm = array(lat_lcm[,2], dim=c(dim(lcm)[2],dim(lcm)[1]))
+        lcm = array(lcm, dim=c(dim(lcm)[2],dim(lcm)[1]))
+        # Now flip the lat dimension to get it the right way
+        lat_lcm = lat_lcm[,dim(lat_lcm)[2]:1] ; long_lcm = long_lcm[,dim(long_lcm)[2]:1] ; lcm = lcm[,dim(lcm)[2]:1]
+par(mfrow=c(2,3)) ; image.plot(lat_lcm) ; image.plot(long_lcm) ; image.plot(lcm)
     } else if (use_lcm == "CORINE2006") {
         data2=nc_open("/home/lsmallma/WORK/GREENHOUSE/Corine_lcm/Corine2006_at250m_with_lat_long.nc")
         lcm=ncvar_get(data2,"Corine2006")
@@ -231,12 +255,12 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
         stop("bugger no land cover option found / set")
     }
     # download location data
-    if (use_lcm != "ECMWF") {
+    if (use_lcm != "ECMWF" & use_lcm != "LCM2007") {
         lat_lcm=ncvar_get(data2,"lat")
         long_lcm=ncvar_get(data2,"long")
     }
     # house keeping
-    nc_close(data2)
+    if (exists("data2")) {nc_close(data2)}
 
     # raw total pixels
     print(paste("Raw pixel total is ",length(lat)," next filter for water bodies"))
@@ -256,7 +280,7 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
             stopCluster(cl)
             # extract the i,j values seperately
             output_i=unlist(output,use.names=FALSE)[which((1:length(unlist(output, use.names = FALSE))*0.5) != floor(1:length(unlist(output, use.names=FALSE))*0.5))]
-            output_j=unlist(output,use.names=FALSE)[which((1:length(unlist(output, use.names=FALSE))*0.5) == floor(1:length(unlist(output, use.names=FALSE))*0.5))]
+            output_j=unlist(output,use.names=FALSE)[which((1:length(unlist(output, use.names = FALSE))*0.5) == floor(1:length(unlist(output, use.names=FALSE))*0.5))]
         } # ECMWF or not
 
      } else {
@@ -271,7 +295,6 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
             output_j=unlist(output, use.names=FALSE)[which((1:length(unlist(output, use.names=FALSE))*0.5) == floor(1:length(unlist(output, use.names=FALSE))*0.5))]
         } # ECMWF or not
     }
-
     print("Generating land sea mask")
 
     # load global shape file for land sea mask
@@ -283,7 +306,8 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
     # based on the type of spatial grid we are using and the resolution of the analysis
     if (grid_type == "UK") {
         # 0.1666667 is the limit of resolution of the landsea mask used
-        landsea = raster(ncols = 360 / 0.1666667, nrows = 180 / 0.1666667)
+#        landsea = raster(ncols = round(360 / (0.001*(resolution/111)), digit = 0), nrows = round(180 / (0.001*(resolution/111)), digit = 0) )
+        landsea = raster(xmn = -180, xmx = 180, ymn = -90, ymx = 90, resolution = max(0.1666667,(0.001*(resolution/111))), crs = "+init=epsg:27700")
         # NOTE: THIS NEED TO BE CHECKED WHETHER IT WORKS - I.E. CURRENTLY NOT USED SO NOT TESTED...
     } else if (grid_type == "wgs84") {
         # extract whole grids at resolution of the analysis
@@ -293,12 +317,15 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
     #extent(landsea) <- extent(landmask) # error; squishes the latitude dimension 
     # create raster, passing the raster values corresponding to the sovereign state
     # NOTE: the actual value assigned is linked the factor levels
-    landsea = rasterize(landmask,landsea,factor(landmask$SOVEREIGNT))
-
+    landsea = rasterize(landmask,landsea,factor(landmask$SOVEREIGNT), fun = "last")
+    # Clip to the cardamom domain
+    landsea = crop(landsea,cardamom_ext)
+    # Resample into the cardamom grid
+    landsea = resample(landsea, cardamom_ext, method = "ngb")
     # Sometimes we want to simulate a particular country, which we will check now...
     country_match = factor(landmask$SOVEREIGNT) ; country_match = levels(country_match)
     country_match = gsub(" ","",country_match,fixed=TRUE)
-#sitename =  "Kenya"
+#sitename =  "UK"
     # does our site name (as specified in the grid verison of analysis) correspond to a country name as
     # given in the land mask we are using...?
     if (length(which(grepl(sitename,country_match) == TRUE)) > 0) {
@@ -315,15 +342,14 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
     } # country or all land area filter?
     landsea[keep == 0] = NA ; landsea[as.vector(landsea) > 0] = 1
     # trim to the actual data area
-    landsea = trim(landsea, padding = 2) 
+    landsea = trim(landsea, padding = 3) 
     # set missing data to 0
     landsea[is.na(as.vector(landsea))] = 0
     # extract lat/long information for the raster version
     landsea_long = coordinates(landsea)[,1] ; landsea_lat = coordinates(landsea)[,2]
     # arrange them into the correct lat / long orientations
     landsea_dim = dim(landsea)
-    
-
+#plot(landsea)    
 #    if (length(which(grepl(sitename,country_match) == TRUE)) > 0) {
 #        # if so then loop through the land areas which fall within the correct country
 #        country_match = which(sitename == country_match)

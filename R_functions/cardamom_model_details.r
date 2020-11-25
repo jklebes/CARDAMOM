@@ -10,7 +10,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     # Number of met parameters
     # Number of model parameters to be optimised
     nopools=array(2,dim=c(length(ctessel_pft)))
-    nopars=array(19,dim=c(length(ctessel_pft)))
+    nopars=array(20,dim=c(length(ctessel_pft)))
     nofluxes=array(4,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="ACM",nopools=nopools,nofluxes=nofluxes,nomet=19+4,nopars=nopars)
   } else if (modelname == "DALEC_CDEA") {
@@ -123,6 +123,16 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nofluxes=array(25,dim=c(length(ctessel_pft)))
     if (specific_pft == "pft_specific") {nopars[which(ctessel_pft == 1)]=38 ; nofluxes[which(ctessel_pft == 1)]=21 ; nopools[which(ctessel_pft == 1)]=9}
     cardamom_model_details=list(name="DALEC_BUCKET",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC_BUCKET_CanAGE") {
+    # information contains is
+    # The model name
+    # Number of met parameters
+    # Number of model parameters to be optimised
+    nopools=array(8,dim=c(length(ctessel_pft)))
+    nopars=array(48,dim=c(length(ctessel_pft)))
+    nofluxes=array(25,dim=c(length(ctessel_pft)))
+    if (specific_pft == "pft_specific") {nopars[which(ctessel_pft == 1)]=38 ; nofluxes[which(ctessel_pft == 1)]=21 ; nopools[which(ctessel_pft == 1)]=9}
+    cardamom_model_details=list(name="DALEC_BUCKET_CanAGE",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } else if (modelname == "DALEC_GSI_BUCKET") {
     # information contains is
     # The model name

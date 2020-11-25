@@ -253,7 +253,7 @@ contains
       gpppars(8) = met(4,n) ! radiation
 
       ! GPP (gC.m-2.day-1)
-      FLUXES(n,1) = acm(gpppars,constants) ; CiCa_time(n) = ci
+      FLUXES(n,1) = acm(gpppars,constants) ; CiCa_time(n) = ci / met(5,n)
       ! Exponential temperature modified rate of metabolic activity
       FLUXES(n,2) = exp(pars(10)*0.5d0*(met(3,n)+met(2,n)))
       ! Autotrophic respiration (gC.m-2.day-1)

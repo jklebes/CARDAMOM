@@ -204,14 +204,17 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     if (GPP_source == "site_specific") {
         infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")}
-        #	if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater.csv",sep="")}
-        if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_copy.csv",sep="")}
+        #if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater.csv",sep="")}
+        #if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_copy.csv",sep="")}
+#        if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_avgNlessthan4.csv",sep="")}
+        if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_avgNlessthan4_subsample.csv.csv",sep="")}
         GPP = read_site_specific_obs("GPP_gCm2day",infile)
         GPP_unc = read_site_specific_obs("GPP_unc_gCm2day",infile)
         if (length(GPP_unc) == 1) {
             GPP_unc = rep(-9999,times = length(GPP))
-            GPP_unc[which(GPP > 0)] = 0.5 * GPP[which(GPP > 0)] + 0.5
-            if (modelname == "ACM") {GPP_unc = rep(mean(GPP*0.5),times=length(GPP))}
+            GPP_unc[which(GPP > 0)] = 0.74
+            if (modelname == "ACM") {GPP_unc = rep(mean(GPP)*0.40,times=length(GPP))}
+#            if (modelname == "ACM") {GPP_unc = pmax(0.74, GPP * 0.15)}
         }
     } else {
         # assume no data available
@@ -230,7 +233,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")}
         #if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater.csv",sep="")}
-        if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_copy.csv",sep="")}
+        #if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_copy.csv",sep="")}
+#        if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_avgNlessthan4.csv",sep="")}
+        if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_avgNlessthan4_subsample.csv.csv",sep="")}
         Evap = read_site_specific_obs("Evap_kgH2Om2day",infile)
         Evap_unc = read_site_specific_obs("Evap_unc_kgH2Om2day",infile)
         if (length(Evap_unc) == 1) {
@@ -243,16 +248,21 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
             # borrow Cfol_stock for wet canopy evaporation in ACM_ET recalibration
             Cfol_stock = read_site_specific_obs("wetevap_kgH2Om2day",infile)
             # actually lets make uncertainty half mean of total ET
-            Evap_unc = rep(mean(Evap)*0.5,times=length(Evap))
-            woodinc_unc = rep(mean(woodinc)*0.5,times=length(Evap))
-            Cfol_stock_unc = rep(mean(Cfol_stock)*0.5,times=length(Evap))
+#            tmp = pmax(0.1581019,(Evap + woodinc + Cfol_stock)*0.15)
+#            Evap_unc = pmax(0.105517750,abs(Evap)*0.15)
+#            woodinc_unc = pmax(0.007663118*2,abs(woodinc)*0.15)
+#            Cfol_stock_unc = pmax(0.048333758*2,abs(Cfol_stock)*0.15)
+            Evap_unc = rep(abs(mean(Evap))*0.40, length.out = length(Evap))
+            woodinc_unc = rep(abs(mean(woodinc))*0.40, length.out = length(Evap))
+            Cfol_stock_unc = rep(abs(mean(Cfol_stock))*0.40, length.out = length(Evap))
         }
     } else {
         # assume no data available
         Evap = -9999 ; Evap_unc = -9999
     }
     # Add model structural uncertainty to the observational uncertainty
-    Evap_unc[Evap_unc > 0 & Evap_unc < 0.5] = 0.5
+    Evap_unc[Evap_unc > 0 & Evap_unc < 0.50] = 0.50
+#    Evap_unc[Evap_unc > 0 & Evap_unc < 0.1581019] = 0.1581019
 
     ###
     ## Get some Reco information (time series; gC/m2/day)

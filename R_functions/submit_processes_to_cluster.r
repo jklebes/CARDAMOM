@@ -33,6 +33,10 @@ submit_processes_to_cluster<-function (PROJECT_in) {
 
     # do we want to remove any previous output files?
     delete_old=readline("Delete any previous output files for this project name?(y/n)")
+    while(delete_old != "y" & delete_old != "n") {
+          # do we want to remove the existing files
+          delete_old=readline("Delete any previous output files for this project name?(y/n)")
+    }
     # write commands to clear previous runs and copy new commands
     commands=c(paste("rm ",PROJECT_in$eresultspath,"*",sep="")
 	      ,paste("scp ",username,"@",home_computer,":",outfile," ",PROJECT_in$eexepath,sep="")

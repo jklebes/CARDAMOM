@@ -543,8 +543,8 @@ module model_likelihood_module
     io_start = (steps_per_year*2) + 1 ; io_finish = nodays
     if (no_years < 3) io_start = 1
     do fl = 1, nofluxes
-!       FT(fl) = sum(M_FLUXES(1:nodays,fl)*deltat(1:nodays))
-       FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*deltat(io_start:io_finish))
+       FT(fl) = sum(M_FLUXES(1:nodays,fl)*deltat(1:nodays))
+!       FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*deltat(io_start:io_finish))
        FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*deltat(1:steps_per_year))
        FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl)*deltat((steps_per_year+1):(steps_per_year*2)))
     end do
@@ -598,65 +598,53 @@ module model_likelihood_module
     ! See Bloom et al., 2016 PNAS for details
 
     ! iterate to check whether Fin/Fout is within EQF limits
-!    Rm = Fin/Fout
-!    Rs = Rm * (jan_mean_pools / jan_first_pools)
-!    do n = 1, nopools
-!       ! Restrict rates of increase
-!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Rm(n))) > log(EQF)) then
-!           EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
-!       end if
-!       ! Restrict exponential decay
-!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(Rs(n)-Rm(n)) > etol) then
-!           EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-!       end if
-!    end do
+    Rm = Fin/Fout
+    Rs = Rm * (jan_mean_pools / jan_first_pools)
+    do n = 1, nopools
+       ! Restrict rates of increase
+       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Rm(n))) > log(EQF10)) then
+           EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+       end if
+       ! Restrict exponential decay
+       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(Rs(n)-Rm(n)) > 0.1d0) then
+           EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+       end if
+    end do
 
-    ! iterate to check whether Fin/Fout is within EQF limits
-!    do n = 1, nopools
-!       ! Restrict rates of increase
-!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Fin(n)/Fout(n))) > log(EQF)) then
-!           EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
-!       end if
-!       ! Restrict exponential decay
-!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Fin(n)/Fout(n)) - log(Fin_yr1(n)/Fout_yr1(n))) > etol) then
-!           EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-!       end if
-!    end do
-
-    if (EDC2 == 1 .or. DIAG == 1) then
-
-        ! Living pools
-        do n = 1, 3
-           ! Restrict rates of increase
-           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
-           end if
-           ! Restrict exponential behaviour at initialisation
-           if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-           end if
-        end do
-        ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
-        n = 4
-        if (abs(log(Fin(n)/Fout(n))) > EQF5) then
-                EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
-        end if
-        if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol*2d0) then
-                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-        end if
-        ! Dead pools
-        do n = 5, 6
-           ! Restrict rates of increase
-           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
-           end if
-           ! Restrict exponential behaviour at initialisation
-           if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-           end if
-        end do
-
-    end if ! EDC2 == 1 .or. DIAG == 1
+!    if (EDC2 == 1 .or. DIAG == 1) then
+!
+!        ! Living pools
+!        do n = 1, 3
+!           ! Restrict rates of increase
+!           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+!               EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+!           end if
+!           ! Restrict exponential behaviour at initialisation
+!           if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
+!               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!           end if
+!        end do
+!        ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
+!        n = 4
+!        if (abs(log(Fin(n)/Fout(n))) > EQF5) then
+!                EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+!        end if
+!        if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol*2d0) then
+!                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
+!        ! Dead pools
+!        do n = 5, 6
+!           ! Restrict rates of increase
+!           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+!               EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+!           end if
+!           ! Restrict exponential behaviour at initialisation
+!           if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
+!               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!           end if
+!        end do
+!
+!    end if ! EDC2 == 1 .or. DIAG == 1
 
     !
     ! EDCs done, below are additional fault detection conditions

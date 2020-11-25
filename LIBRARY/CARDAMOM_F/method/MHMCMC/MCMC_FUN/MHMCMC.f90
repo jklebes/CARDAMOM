@@ -29,7 +29,7 @@ double precision :: opt_scaling ! scd = 2.381204 the optimal scaling parameter
 double precision, parameter :: beta = 0.05d0 ! weighting for gaussian step in multivariate proposals
 ! Is current proposal multivariate or not?
 logical :: multivariate_proposal = .false.
-integer, parameter :: N_before_mv = 10d0
+integer, parameter :: N_before_mv = 10
 
 contains
   !
@@ -112,29 +112,19 @@ contains
 
     ! declare any local variables
     type ( counters ) :: N
-    double precision, dimension(PI%npars) :: deltaPARS2_iC &
-                                            ,deltaPARS0_iC &
-                                            ,norPARS0      & ! normalised parameter values for current state
+    double precision, dimension(PI%npars) :: norPARS0      & ! normalised parameter values for current state
                                             ,norPARS       & ! normalised parameter values for current proposal
-                                            ,norPARS2      & ! normalised parameters for the DR proposal
                                             ,PARS0         & ! parameter values for current state
                                             ,PARS          & ! parameter values for current proposal
-                                            ,PARS2         & ! parameters for the DR proposal
                                             ,BESTPARS        ! best set of parameters so far
 
     double precision, dimension(PI%npars,MCO%nADAPT) :: PARSALL ! All accepted normalised parameters since previous step adaption
     double precision :: infini &
-                       ,target_P &
                        ,burn_in_period &
                        ,crit1  & ! random numbers log(0->1) used to accept / reject
                        ,AM_likelihood &
-                       ,DR_likelihood &
-                       ,AM_vs_DR_P &
-                       ,DR_vs_current &
-                       ,DR_vs_current_pars &
                        ,outputP0      &
                        ,outputP0prior  &
-                       ,DR_P, DR_Pprior & ! likelihood scores from Delayed Rejection step
                        ,Pmax, P0prior, Pprior & ! as below but for priors only
                        ,P0 & ! previously accepted observation based log-likelihood
                        ,P    ! current observation based log-likelihood
@@ -342,7 +332,7 @@ contains
     ! set the initial parameter set the final one accepted
     PI%parini(1:PI%npars) = PARS0(1:PI%npars)
     ! record how many iterations were taken to complete
-    MCOUT%nos_iterations = MCOUT%nos_iterations + N%ITER
+    MCOUT%nos_iterations = MCOUT%nos_iterations + dble(N%ITER)
     ! set flag MCMC completed
     MCOUT%complete = 1
     ! tidy up
@@ -485,7 +475,7 @@ contains
     ! declare local variables
     integer :: p
     double precision :: rn(PI%npars), mu(PI%npars), rn2(PI%npars) &
-                       ,tmp, delta_scaler(PI%npars)
+                       ,tmp
 
     ! reset values
     mu = 0d0

@@ -1,16 +1,20 @@
 # Function for creating multiple polygons of confidence intervals for use in MHMCMC
 # Luke Smallman 13/02/2014
 
-plotconfidence <- function(y,x,nos_confint) {
+plotconfidence <- function(y,x,nos_confint,col_start) {
   
     # Input needs to have dimensions of dim(time,params)
     # If however dimensions are equal to 3 then dim(param,time,cluster)
     # which must be accounted for this this function
 
+    # Load library if needed
+    require(colorspace)
+
     # number of confidence ranges
     if (missing(nos_confint)) {nos_confint=20}
     # choose colours
-    colour_choices=colorRampPalette(c("pink", "red"))
+    if (missing(col_start)) {col_start = "red"} 
+    colour_choices=colorRampPalette(c(lighten(col_start, amount = 0.7, space = "HLS", method = "relative"), col_start))
     colour_choices=colour_choices(nos_confint)
     # confidence ranges
     ci_wanted=seq(0.025,0.975,length.out=nos_confint)

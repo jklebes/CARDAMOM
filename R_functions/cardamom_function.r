@@ -5,7 +5,7 @@
 ###
 
 cardamom <-function (projname,model,method,stage) {
-#stage = 1 ; repair = 0 ; use_parallel = FALSE
+#stage = 3 ; repair = 1 ; use_parallel = FALSE
   ## load needed functions into R environment
   paths = load_paths()
 
@@ -297,11 +297,11 @@ cardamom <-function (projname,model,method,stage) {
         print('The code will be run on cluster or your local machine');
 
         if (PROJECT$ecdf) {
-          # submit files to eddie
-          submit_processes_to_cluster(PROJECT)
+            # submit files to eddie
+            submit_processes_to_cluster(PROJECT)
         } else {
-          # submit to local machine
-          submit_processes_to_local_machine(PROJECT)
+            # submit to local machine
+            submit_processes_to_local_machine(PROJECT)
         }
         # report to the user
         return(paste("CARDAMOM Report: ",stage," completed", sep=""))

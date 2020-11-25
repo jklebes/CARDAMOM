@@ -34,75 +34,91 @@ module MODEL_PARAMETERS
     ! Metabolic photosynthesis
     !
 
-    ! Nitrogen use efficiency (gC/gN per m2 at optimum temperature)
+    ! Optimum nitrogen use efficiency (gC/gN per m2 at optimum temperature)
     ! Derived from Vcmax reported in Wullschleger (1993), Journal of
     ! Experimental Botany, Vol 44, No. 262, pp. 907-920.
-    ! More constrain prior range of 3-30 gC/gN/m2/day with a mean of 11.197440 +/-1.32313 Kattge et al., (2011)
+    ! ~40 gC/gN/day
+    ! TRY database equivalent 2.5 % = 1.648512; 97.5 % = 19.906560
+    ! mean of 11.197440 +/-1.32313 Kattge et al., (2011)
+    ! Xu et al., (2017):
+    ! Variations of leaf longevity in tropical moist forests predicted by a
+    ! trait-driven carbon optimality model,
+    ! Ecology Letters, doi: 10.1111/ele.12804, upper value of 82 gC/gN/day
+    ! Thus we will compromise on the value between these but closer to the
+    ! newer estimate (i.e. 30 gC/gN/day)
     PI%parmin(1) = 01d0
-    PI%parmax(1) = 40d0
+    PI%parmax(1) = 42d0
 
     ! max temperature for photosynthesis (oC)
+    ! SPA apparent value = 57.05oC
     PI%parmin(2) = 45d0
-    PI%parmax(2) = 65d0
+    PI%parmax(2) = 70d0
     ! optimum temperature for photosynthesis (oC)
+    ! SPA value = 30oC
     PI%parmin(3) = 20d0
     PI%parmax(3) = 40d0
     ! kurtosis of photosynthesis temperature response
-    PI%parmin(4) = 0.10d0
-    PI%parmax(4) = 0.25d0
+    PI%parmin(4) = 0.12d0
+    PI%parmax(4) = 0.24d0
 
     ! light limited photosynthesis
 
     ! maximum canopy quantum yield (gC/MJ_PAR/m2/day)
     ! SPA apparent canopy quantum yield 3.2
     ! Observational constraints = ~ 1
-
-    PI%parmin(5) = 2d0   !7.19298-(0.9*7.19298)
-    PI%parmax(5) = 5d0   !7.19298+(0.9*7.19298)
+    PI%parmin(5) = 1d0   
+    PI%parmax(5) = 8d0   
 
     !
     ! canopy conductance (gc) drivers
     !
 
     ! leafWP-soilWP (MPa); actual SPA parameter = 2+gplant
-    PI%parmin(6) = -4d0 !-2.01d0 !-4.0
-    PI%parmax(6) = -1d0 !-1.99d0 !-1.0
+    PI%parmin(6) = -3d0
+    PI%parmax(6) = -1d0
 
     !
-    ! Longwave emitted by canopy
+    ! Linear correction for soil isothermal to net radiation
     !
 
-    ! Maximum amount of LW emitted by canopy which escapes in one direction
-    ! Prior from offline SPA calibration = 1.0 +/- 0.0000267 SE
-    PI%parmin(7) = 0.5d0
-    PI%parmax(7) = 1d0
+    ! Coefficient linking isothermal->net adjustment and LAI
+    ! SPA based prior is -2.7108547 W/m2 (SE +/- 0.0222038)
+    PI%parmin(7) = -3.5d0
+    PI%parmax(7) =  0.0d0
 
     !
     ! GPP / transpiration optimisation
     !
 
-    ! iWUE (gC/m2leaf/s/mmolH2Ogs)
+    ! iWUE (gC/m2leaf/dayl/mmolH2Ogs/s)
     ! Actual value used in SPA is 8.4e-8 (Williams et al., 1996)
-    ! Other reported values are 9.0e-08 -> 1.8e-07 (Bonan et al., 2014)
-    PI%parmin(8) = 1d-9
-    PI%parmax(8) = 1e-6
+    ! Other reported values are 9.0e-8 -> 1.8e-7 (Bonan et al., 2014)
+    ! NOTE: As this is applied at daily time step and the 
+    !       hourly time step activities in SPA operate across 
+    !       a non-linear diurnal cycle the true equivalent value is effectively unknown.
+    PI%parmin(8) = 1d-7
+    PI%parmax(8) = 1e-4 
 
     !
     ! Soil shortwave radiation absorption
     !
 
     ! soil sw radiation absorption (fraction)
-    PI%parmin(9) = 0.75d0
-    PI%parmax(9) = 0.99d0
+    PI%parmin(9) = 0.750d0
+    PI%parmax(9) = 0.999d0
 
     !
     ! Canopy longwave escape from canopy
     !
 
+    ! NOTE: The priors are based on the fraction of LW released by the canopy which is lost.
+    !       The priors are very well constrained, however, 
+    !       the amount of long wave loss is different due to multi-layer vs bulk canopy
+
     ! Max fractional reduction of longwave release from canopy
     ! Prior from offline SPA calibration = 0.9517081 +/- 0.0001011 SE
-    PI%parmin(10) = 0.94d0 !0.75d0
-    PI%parmax(10) = 0.96d0 !1d0
+    PI%parmin(10) = 0.25d0
+    PI%parmax(10) = 1d0
 
     ! LAI adjustment for long wave release from canopy
     ! Prior from offline SPA calibration = 4.6917871 +/- 0.0013296 SE
@@ -111,23 +127,24 @@ module MODEL_PARAMETERS
 
     !
     ! Linear correction for soil isothermal to net radiation
+    ! Cont.
     !
 
     ! The magnitude of adjustment between soil isothermal net long wave radiation is found to have
-    ! a linear relationship with absorbed short-wave radiation.
+    ! a linear relationship with absorbed short-wave radiation and LAI.
     ! NOTE: in constrast to the canopy relationship (positive) the soil one has two distinct
-    ! negative relationships divided based on whether the soil is wet or not.
+    ! negative linear relationships divided based on whether the soil is saturated or not.
     ! This is not accounted for here
 
     ! Coefficient linking isothermal->net adjustment and absorbed SW
-    ! SPA based prior is -0.015 W/m2 (SE +/- 0.00077)
-    PI%parmin(12) = -0.1d0
-    PI%parmax(12) =  0.0d0
+    ! SPA based prior is -0.0357603 W/m2 (SE +/- 0.0004877)
+    PI%parmin(12) = -0.04d0
+    PI%parmax(12) =  0.00d0
 
     ! Constant relating isothermal->net adjustment soil radiation (W/m2)
-    ! SPA based prior is -1.84 W/m2 (SE +/- 0.078)
-    PI%parmin(13) =-2.0d0
-    PI%parmax(13) = 2.0d0
+    ! SPA based prior is 3.4806352 W/m2 (SE +/- 0.063849)
+    PI%parmin(13) = 0d0
+    PI%parmax(13) = 10d0
 
     !
     ! Max canopy intercepted PAR and NIR transmittance / reflectance
@@ -145,30 +162,35 @@ module MODEL_PARAMETERS
 
     ! Max PAR reflectance
     ! SPA value = 0.16 (Sitka Spruce 0.07, grass/crop ~ 0.11)
-    PI%parmin(16) = 0.10d0
-    PI%parmax(16) = 0.60d0
+    PI%parmin(16) = 0.05d0
+    PI%parmax(16) = 0.40d0
 
     ! Max NIR reflectance
     ! SPA value = 0.43 (Sitka Spruce 0.16, grass/crop ~ 0.38)
     PI%parmin(17) = 0.10d0
-    PI%parmax(17) = 0.60d0
+    PI%parmax(17) = 0.50d0
 
     !
     ! Linear correction for canopy isothermal to net radiation
     !
 
-    ! The magnitude of adjustment between canopy isothermal net long wave radiation is found to have
-    ! a linear relationship (R2 = 0.74) with absorbed short-wave radiation.
+    ! The magnitude of adjustment between canopy isothermal net long wave radiation (W/m2) is found to have
+    ! a linear relationship (R2 = 0.89) with absorbed short-wave radiation (W/m2) and LAI.
 
     ! Coefficient linking isothermal->net adjustment and absorbed SW
-    ! SPA based prior is 0.0688 (SE +/- 0.00045)
-    PI%parmin(18) = 0.0d0
-    PI%parmax(18) = 0.2d0
+    ! SPA based prior is 0.0154225 (SE +/- 0.0005798)
+    PI%parmin(18) =  0.0d0
+    PI%parmax(18) =  0.1d0
 
     ! Constant relating isothermal->net adjustment canopy radiation (W/m2)
-    ! SPA based prior is 0.888 W/m2 (SE +/- 0.0316)
-    PI%parmin(19) = 0d0
-    PI%parmax(19) = 1.5d0
+    ! SPA based prior is 0.0577857 W/m2 (SE +/- 0.0217731)
+    PI%parmin(19) =  0.0d0
+    PI%parmax(19) =  1.0d0
+
+    ! Coefficient linking isothermal->net adjustment and LAI (m2/m2)
+    ! SPA based prior is 2.4526437 W/m2 (SE +/- 0.0229691)
+    PI%parmin(20) =  0.0d0
+    PI%parmax(20) =  4.0d0
 
   end subroutine pars_info
   !

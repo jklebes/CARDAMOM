@@ -13,6 +13,7 @@ load_r_libraries<-function(){
     require(apcluster)
     require(compiler)
     require(RColorBrewer)
+    require(colorspace)
 } # function to load all libraries needed by the system
 
 ###

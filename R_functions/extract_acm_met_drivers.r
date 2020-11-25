@@ -8,7 +8,9 @@ extract_acm_met_drivers<-function(PROJECT,latlon_wanted,site_name) {
 	# construct assumed name
 	infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
 #	infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater.csv",sep="")
-	infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_copy.csv",sep="")
+	#infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_copy.csv",sep="")
+#        infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_avgNlessthan4.csv",sep="")
+        infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_avgNlessthan4_subsample.csv.csv",sep="")
 	# extract the drivers currently in use
 	maxt_out=read_site_specific_obs("sat_max",infile)
 	mint_out=read_site_specific_obs("sat_min",infile)
@@ -26,7 +28,6 @@ extract_acm_met_drivers<-function(PROJECT,latlon_wanted,site_name) {
 	bot_sand = read_site_specific_obs("sand_bot",infile) # % sand in deep soil
 	top_clay = read_site_specific_obs("clay_top",infile) # % clay in top soil
 	bot_clay = read_site_specific_obs("clay_bot",infile) # % clay in deep soil
-#co2_out = rep(380, length.out=length(co2_out)) ; avgN_out = rep(1.89, length.out=length(avgN_out))
 
   	# update start / end year information
 	year_out=read_site_specific_obs("year",infile)

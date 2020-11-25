@@ -240,14 +240,14 @@ module CARBON_MODEL_MOD
   double precision, parameter :: &
                       canopy_height = 9d0,          & ! canopy height assumed to be 9 m
                        tower_height = canopy_height + 2d0, & ! tower (observation) height assumed to be 2 m above canopy
-                           min_wind = 0.1d0,        & ! minimum wind speed at canopy top
-                       min_drythick = 0.01d0,       & ! minimum dry thickness depth (m)
+                           min_wind = 0.2d0,        & ! minimum wind speed at canopy top
+                       min_drythick = 0.001d0,      & ! minimum dry thickness depth (m)
                           min_layer = 0.03d0,       & ! minimum thickness of the third rooting layer (m)
                         soil_roughl = 0.05d0,       & ! soil roughness length (m)
                      top_soil_depth = 0.1d0,        & ! thickness of the top soil layer (m)
                      mid_soil_depth = 0.2d0,        & ! thickness of the second soil layer (m)
                            min_root = 5d0,          & ! minimum root biomass (gBiomass.m-2)
-                            min_lai = 1.5d0,        & ! minimum LAI assumed for aerodynamic conductance calculations (m2/m2)
+                            min_lai = 0.1d0,        & ! minimum LAI assumed for aerodynamic conductance calculations (m2/m2)
                     min_throughfall = 0.2d0,        & ! minimum fraction of precipitation which
                                                       ! is through fall
                         min_storage = 0.2d0           ! minimum canopy water (surface) storage (mm)
@@ -260,27 +260,29 @@ module CARBON_MODEL_MOD
 
   ! ACM-GPP-ET parameters
   double precision, parameter :: &
-                        pn_max_temp = 5.357174d+01, & ! Maximum temperature for photosynthesis (oC)
-                        pn_opt_temp = 3.137242d+01, & ! Optimum temperature for photosynthesis (oC)
-                        pn_kurtosis = 1.927458d-01, & ! Kurtosis of photosynthesis temperature response
-                                 e0 = 5.875662d+00, & ! Quantum yield gC/MJ/m2/day PAR
-          max_lai_lwrad_transmitted = 7.626683d-01, & ! Max fractional reduction of LW from sky transmitted through canopy
-         lai_half_lwrad_transmitted = 7.160363d-01, & ! LAI at which canopy LW transmittance reduction = 50 %
-             max_lai_nir_reflection = 4.634860d-01, & ! Max fraction of NIR reflected by canopy
-            lai_half_nir_reflection = 1.559148d+00, & ! LAI at which canopy NIR reflected = 50 %
-                             minlwp =-1.996830d+00, & ! minimum leaf water potential (MPa)
-             max_lai_par_reflection = 1.623013d-01, & ! Max fraction of PAR reflected by canopy
-            lai_half_par_reflection = 1.114360d+00, & ! LAI at which canopy PAR reflected = 50 %
-           lai_half_lwrad_reflected = 1.126214d+00, & ! LAI at which 50 % LW is reflected back to sky
-                               iWUE = 1.602503d-06, & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
-              soil_swrad_absorption = 0.98d0,       & ! Fraction of SW rad absorbed by soil
-            max_lai_par_transmitted = 8.079519d-01, & ! Max fractional reduction in PAR transmittance by canopy
-           lai_half_par_transmitted = 9.178784d-01, & ! LAI at which PAR transmittance reduction = 50 %
-            max_lai_nir_transmitted = 8.289803d-01, & ! Max fractional reduction in NIR transmittance by canopy
-           lai_half_nir_transmitted = 1.961831d+00, & ! LAI at which NIR transmittance reduction = 50 %
-              max_lai_lwrad_release = 9.852855d-01, & ! Max fraction of LW emitted (1-par) from canopy to be released
-             lai_half_lwrad_release = 7.535450d-01, & ! LAI at which LW emitted from canopy to be released at 50 %
-            max_lai_lwrad_reflected = 1.955832d-02    ! LAI at which 50 % LW is reflected back to sky
+                   pn_max_temp = 6.416723d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
+                   pn_opt_temp = 3.559088d+01,  & ! Optimum daily max temperature for photosynthesis (oC)
+                   pn_kurtosis = 1.599325d-01,  & ! Kurtosis of photosynthesis temperature response
+                            e0 = 3.707992d+00,  & ! Quantum yield gC/MJ/m2/day PAR
+                minlwp_default =-2.158644d+00,  & ! minimum leaf water potential (MPa)
+!                 max_lw_escape = 5.008693d-01,  & ! Max LW which is released from canopy that escapes in one direction
+                 max_lw_escape = 1d0,           & ! Max LW which is released from canopy that escapes in one direction
+                          iWUE = 9.387512d-08,  & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
+         soil_swrad_absorption = 9.826268d-01,  & ! Fraction of SW rad absorbed by soil
+!         max_lai_lwrad_release = 9.756301d-01,  & ! 1-Max fraction of LW emitted from canopy to be released
+!        lai_half_lwrad_release = 3.685006d+00,  & ! LAI at which LW emitted from canopy to be released at 50 %
+         max_lai_lwrad_release = 0.9517081d0,   & ! 1-Max fraction of LW emitted from canopy to be released
+        lai_half_lwrad_release = 4.6917871d0,   & ! LAI at which LW emitted from canopy to be released at 50 %
+          soil_iso_to_net_coef =-2.376724d-05,  & ! Coefficient relating soil isothermal net radiation to net.
+         soil_iso_to_net_const = 1.493317d+00,  & ! Constant relating soil isothermal net radiation to net
+           max_par_transmitted = 1.605450d-01,  & ! Max fraction of canopy incident PAR transmitted to soil
+           max_nir_transmitted = 2.620704d-01,  & ! Max fraction of canopy incident NIR transmitted to soil
+             max_par_reflected = 1.605522d-01,  & ! Max fraction of canopy incident PAR reflected to sky
+             max_nir_reflected = 4.289277d-01,  & ! Max fraction of canopy incident NIR reflected to sky
+        canopy_iso_to_net_coef = 9.999143d-02,  & ! Coefficient relating canopy isothermal net radiation to net.
+       canopy_iso_to_net_const = 1.491501d+00     ! Constant relating canopy isothermal net radiation to net
+
+  double precision :: minlwp = minlwp_default
 
   !!!!!!!!!
   ! Module level variables
@@ -530,11 +532,11 @@ contains
     integer :: nxp,n,test,m,a,b,c
 
     ! local fire related variables
-    double precision :: burnt_area          &
-                           ,CFF(7) = 0d0 & ! combusted and non-combustion fluxes
-                          ,NCFF(7) = 0d0 & ! with residue and non-residue seperates
-                   ,combust_eff(5)       & ! combustion efficiency
-                            ,rfac          ! fire resilience factor
+    double precision :: burnt_area           &
+                       ,CFF(7) = 0d0   & ! combusted and non-combustion fluxes
+                       ,NCFF(7) = 0d0  & ! with residue and non-residue seperates
+                       ,combust_eff(7) & ! combustion efficiency
+                       ,rfac(7)          ! resilience factor
 
     integer :: steps_per_year ! mean number of steps in a year
 
@@ -715,6 +717,8 @@ contains
 
     ! Parameters related to ACM-GPP-ET, but not actually parameters of the ACM-GPP-ET model
     avN = 10d0**pars(11)             ! Average foliar Nitrogen content gN/m2leaf
+    ceff = avN*NUE       ! canopy efficiency, used to avoid what in most cases is a reductance multiplication
+                         ! NOTE: must be updated any time NUE or avN changes
     deltaWP = minlwp                 ! leafWP-soilWP (i.e. -2-0 MPa)
     Rtot = 1d0                       ! Reset Total hydraulic resistance to 1
     canopy_maturation_lag = pars(14) ! canopy age (days) before peak NUE
@@ -728,6 +732,107 @@ contains
 
     ! Root biomass to reach 50% (root_k) of maximum rooting depth (max_depth)
     root_k = pars(34) ; max_depth = pars(35)
+
+    ! if either of our disturbance drivers indicate disturbance will occur then
+    ! set up these components
+    if (maxval(met(8,:)) > 0d0 .or. maxval(met(9,:)) > 0d0) then
+
+        ! initial values for deforestation variables
+        labile_loss = 0d0    ; foliar_loss = 0d0
+        roots_loss = 0d0     ; wood_loss = 0d0
+        labile_residue = 0d0 ; foliar_residue = 0d0
+        roots_residue = 0d0  ; wood_residue = 0d0
+        stem_residue = 0d0
+        reforest_day = 0
+        soil_loss_with_roots = 0d0
+        coarse_root_residue = 0d0
+        post_harvest_burn = 0d0
+
+        ! now load the hardcoded forest management parameters into their locations
+
+        ! Parameter values for deforestation variables
+        ! scenario 1
+        ! harvest residue (fraction); 1 = all remains, 0 = all removed
+        foliage_frac_res(1) = 1d0
+        roots_frac_res(1)   = 1d0
+        rootcr_frac_res(1) = 1d0
+        stem_frac_res(1)   = 0.20d0 !
+        ! wood partitioning (fraction)
+        Crootcr_part(1) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+        ! Csom loss due to phyical removal with roots
+        ! Morison et al (2012) Forestry Commission Research Note
+        soil_loss_frac(1) = 0.02d0 ! actually between 1-3 %
+        ! was the forest burned after deforestation
+        post_harvest_burn(1) = 1d0
+
+        !## scen 2
+        ! harvest residue (fraction); 1 = all remains, 0 = all removed
+        foliage_frac_res(2) = 1d0
+        roots_frac_res(2)   = 1d0
+        rootcr_frac_res(2) = 1d0
+        stem_frac_res(2)   = 0.20d0 !
+        ! wood partitioning (fraction)
+        Crootcr_part(2) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+        ! Csom loss due to phyical removal with roots
+        ! Morison et al (2012) Forestry Commission Research Note
+        soil_loss_frac(2) = 0.02d0 ! actually between 1-3 %
+        ! was the forest burned after deforestation
+        post_harvest_burn(2) = 0d0
+
+        !## scen 3
+        ! harvest residue (fraction); 1 = all remains, 0 = all removed
+        foliage_frac_res(3) = 0.5d0
+        roots_frac_res(3)   = 1d0
+        rootcr_frac_res(3) = 1d0
+        stem_frac_res(3)   = 0d0 !
+        ! wood partitioning (fraction)
+        Crootcr_part(3) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+        ! Csom loss due to phyical removal with roots
+        ! Morison et al (2012) Forestry Commission Research Note
+        soil_loss_frac(3) = 0.02d0 ! actually between 1-3 %
+        ! was the forest burned after deforestation
+        post_harvest_burn(3) = 0d0
+
+        !## scen 4
+        ! harvest residue (fraction); 1 = all remains, 0 = all removed
+        foliage_frac_res(4) = 0.5d0
+        roots_frac_res(4)   = 1d0
+        rootcr_frac_res(4) = 0d0
+        stem_frac_res(4)   = 0d0
+        ! wood partitioning (fraction)
+        Crootcr_part(4) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+        ! Morison et al (2012) Forestry Commission Research Note
+        soil_loss_frac(4) = 0.02d0 ! actually between 1-3 %
+        ! was the forest burned after deforestation
+        post_harvest_burn(4) = 0d0
+
+        !## scen 5 (grassland grazing / cutting)
+        ! harvest residue (fraction); 1 = all remains, 0 = all removed
+        foliage_frac_res(5) = 0.1d0
+        roots_frac_res(5)   = 0d0
+        rootcr_frac_res(5)  = 0d0
+        stem_frac_res(5)    = 0.12d0
+        ! wood partitioning (fraction)
+        Crootcr_part(5) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+        ! Csom loss due to phyical removal with roots
+        ! Morison et al (2012) Forestry Commission Research Note
+        soil_loss_frac(5) = 0d0 ! actually between 1-3 %
+        ! was the forest burned after deforestation
+        post_harvest_burn(5) = 0d0
+
+        ! for the moment override all paritioning parameters with those coming from
+        ! CARDAMOM
+        Crootcr_part = pars(29)
+
+        ! Declare combustion efficiency (labile, foliar, roots, wood, litter, soil, woodlitter)
+        combust_eff(1) = 0.1d0 ; combust_eff(2) = 0.9d0
+        combust_eff(3) = 0.1d0 ; combust_eff(4) = 0.1d0
+        combust_eff(5) = 0.7d0 ; combust_eff(6) = 0.01d0
+        combust_eff(7) = 0.7d0
+        ! Resilience factor for non-combusted tissue
+        rfac = 0.5d0 ; rfac(5) = 0.1d0 ; rfac(6) = 0d0 ; rfac(7) = 0.1d0
+
+    end if ! disturbance ?
 
     !!!!!!!!!!!!
     ! set time invarient / initial phenology parameters
@@ -870,6 +975,8 @@ contains
       !
 
       water_flux = 0d0
+      soil_waterfrac = soil_waterfrac_initial
+      SWP = SWP_initial
       field_capacity = field_capacity_initial
       porosity = porosity_initial
 
@@ -898,133 +1005,6 @@ contains
     ! reset values
     intercepted_rainfall = 0d0 ; canopy_storage = 0d0 ; snow_storage = 0d0
     root_cost = 0d0 ; leaf_cost = 0d0 ; wood_cost = 0d0
-
-    !
-    ! Initialise the disturbance model
-    !
-
-    if (maxval(met(8,1:nodays)) > 0d0 .or. maxval(met(9,1:nodays)) > 0d0) then
-
-      ! initial values for deforestation variables
-      labile_loss = 0d0    ; foliar_loss = 0d0
-      roots_loss = 0d0     ; wood_loss = 0d0
-      labile_residue = 0d0 ; foliar_residue = 0d0
-      roots_residue = 0d0  ; wood_residue = 0d0
-      stem_residue = 0d0   ; branch_residue = 0d0
-      reforest_day = 0
-      soil_loss_with_roots = 0d0
-      coarse_root_residue = 0d0
-      post_harvest_burn = 0d0
-
-      ! now load the hardcoded forest management parameters into their locations
-
-      ! Parameter values for deforestation variables
-      ! scenario 1
-      ! harvest residue (fraction); 1 = all remains, 0 = all removed
-      foliage_frac_res(1) = 1d0
-      roots_frac_res(1)   = 1d0
-      rootcr_frac_res(1) = 1d0
-      branch_frac_res(1) = 1d0
-      stem_frac_res(1)   = 0d0 !
-      ! wood partitioning (fraction)
-      Crootcr_part(1) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-      ! Black et al 2009; Morison et al 2012)
-      Cbranch_part(1) =  0.20d0 ! (Ares & Brauers 2005)
-      ! actually < 15 years branches = ~25 %
-      !          > 15 years branches = ~15 %.
-      ! Csom loss due to phyical removal with roots
-      ! Morison et al (2012) Forestry Commission Research Note
-      soil_loss_frac(1) = 0.02d0 ! actually between 1-3 %
-      ! was the forest burned after deforestation
-      post_harvest_burn(1) = 1d0
-
-      !## scen 2
-      ! harvest residue (fraction); 1 = all remains, 0 = all removed
-      foliage_frac_res(2) = 1d0
-      roots_frac_res(2)   = 1d0
-      rootcr_frac_res(2) = 1d0
-      branch_frac_res(2) = 1d0
-      stem_frac_res(2)   = 0d0 !
-      ! wood partitioning (fraction)
-      Crootcr_part(2) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-      ! Black et al 2009; Morison et al 2012)
-      Cbranch_part(2) =  0.20d0 ! (Ares & Brauers 2005)
-      ! actually < 15 years branches = ~25 %
-      !          > 15 years branches = ~15 %.
-      ! Csom loss due to phyical removal with roots
-      ! Morison et al (2012) Forestry Commission Research Note
-      soil_loss_frac(2) = 0.02d0 ! actually between 1-3 %
-      ! was the forest burned after deforestation
-      post_harvest_burn(2) = 0d0
-
-      !## scen 3
-      ! harvest residue (fraction); 1 = all remains, 0 = all removed
-      foliage_frac_res(3) = 0.5d0
-      roots_frac_res(3)   = 1d0
-      rootcr_frac_res(3) = 1d0
-      branch_frac_res(3) = 0d0
-      stem_frac_res(3)   = 0d0 !
-      ! wood partitioning (fraction)
-      Crootcr_part(3) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-      ! Black et al 2009; Morison et al 2012)
-      Cbranch_part(3) =  0.20d0 ! (Ares & Brauers 2005)
-      ! actually < 15 years branches = ~25 %
-      !          > 15 years branches = ~15 %.
-      ! Csom loss due to phyical removal with roots
-      ! Morison et al (2012) Forestry Commission Research Note
-      soil_loss_frac(3) = 0.02d0 ! actually between 1-3 %
-      ! was the forest burned after deforestation
-      post_harvest_burn(3) = 0d0
-
-      !## scen 4
-      ! harvest residue (fraction); 1 = all remains, 0 = all removed
-      foliage_frac_res(4) = 0.5d0
-      roots_frac_res(4)   = 1d0
-      rootcr_frac_res(4) = 0d0
-      branch_frac_res(4) = 0d0
-      stem_frac_res(4)   = 0d0
-      ! wood partitioning (fraction)
-      Crootcr_part(4) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-      ! Black et al 2009; Morison et al 2012)
-      Cbranch_part(4) =  0.20d0 ! (Ares & Brauers 2005)
-      ! actually < 15 years branches = ~25 %
-      !          > 15 years branches = ~15 %.
-      ! Csom loss due to phyical removal with roots
-      ! Morison et al (2012) Forestry Commission Research Note
-      soil_loss_frac(4) = 0.02d0 ! actually between 1-3 %
-      ! was the forest burned after deforestation
-      post_harvest_burn(4) = 0d0
-
-      !## scen 5 (grassland grazing / cutting)
-      ! harvest residue (fraction); 1 = all remains, 0 = all removed
-      foliage_frac_res(5) = 0.1d0
-      roots_frac_res(5)   = 0d0
-      rootcr_frac_res(5)  = 0d0
-      branch_frac_res(5)  = 0.1d0
-      stem_frac_res(5)    = 0.1d0
-      ! wood partitioning (fraction)
-      Crootcr_part(5) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-      ! Black et al 2009; Morison et al 2012)
-      Cbranch_part(5) =  0.20d0 ! (Ares & Brauers 2005)
-      ! actually < 15 years branches = ~25 %
-      !          > 15 years branches = ~15 %.
-      ! Csom loss due to phyical removal with roots
-      ! Morison et al (2012) Forestry Commission Research Note
-      soil_loss_frac(5) = 0d0 ! actually between 1-3 %
-      ! was the forest burned after deforestation
-      post_harvest_burn(5) = 0d0
-
-      ! for the moment override all paritioning parameters with those coming from
-      ! CARDAMOM
-      Cbranch_part = pars(28)
-      Crootcr_part = pars(29)
-
-      ! declare fire constants (labile, foliar, roots, wood, litter)
-      combust_eff(1) = 0.1d0 ; combust_eff(2) = 0.9d0
-      combust_eff(3) = 0.1d0 ; combust_eff(4) = 0.5d0
-      combust_eff(5) = 0.3d0 ; rfac = 0.5d0
-
-    end if ! disturbance ?
 
     !
     ! Load all variables which need to be reset between iterations
@@ -3125,9 +3105,6 @@ contains
                                        ,rainfall_in   ! rainfall (kgH2O.m-2.day-1)
     double precision, intent(out) :: corrected_ET     ! water balance corrected evapotranspiration (kgH2O/m2/day)
 
-    ! local variables
-    integer :: day
-    double precision :: depth_change, water_change, initial_soilwater, balance
     ! local variables
     integer :: day
     double precision :: depth_change, water_change, initial_soilwater, balance

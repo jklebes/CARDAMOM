@@ -237,12 +237,10 @@ module CARBON_MODEL_MOD
                        min_drythick = 0.001d0,      & ! minimum dry thickness depth (m)
                           min_layer = 0.03d0,       & ! minimum thickness of the third rooting layer (m)
                         soil_roughl = 0.05d0,       & ! soil roughness length (m)
-                     top_soil_depth = 0.1d0,        & ! thickness of the top soil layer (m)
-                     mid_soil_depth = 0.2d0,        & ! thickness of the second soil layer (m)
+                     top_soil_depth = 0.15d0,       & ! thickness of the top soil layer (m)
+                     mid_soil_depth = 0.15d0,       & ! thickness of the second soil layer (m)
                            min_root = 5d0,          & ! minimum root biomass (gBiomass.m-2)
                             min_lai = 0.1d0,        & ! minimum LAI assumed for aerodynamic conductance calculations (m2/m2)
-                    min_throughfall = 0.2d0,        & ! minimum fraction of precipitation which
-                                                      ! is through fall
                         min_storage = 0.2d0           ! minimum canopy water (surface) storage (mm)
 
   ! timing parameters
@@ -253,27 +251,25 @@ module CARBON_MODEL_MOD
 
   ! ACM-GPP-ET parameters
   double precision, parameter :: &
-                   pn_max_temp = 6.416723d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
-                   pn_opt_temp = 3.559088d+01,  & ! Optimum daily max temperature for photosynthesis (oC)
-                   pn_kurtosis = 1.599325d-01,  & ! Kurtosis of photosynthesis temperature response
-                            e0 = 3.707992d+00,  & ! Quantum yield gC/MJ/m2/day PAR
-                minlwp_default =-2.158644d+00,  & ! minimum leaf water potential (MPa)
-!                 max_lw_escape = 5.008693d-01,  & ! Max LW which is released from canopy that escapes in one direction
-                 max_lw_escape = 1d0,           & ! Max LW which is released from canopy that escapes in one direction
-                          iWUE = 9.387512d-08,  & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
-         soil_swrad_absorption = 9.826268d-01,  & ! Fraction of SW rad absorbed by soil
-!         max_lai_lwrad_release = 9.756301d-01,  & ! 1-Max fraction of LW emitted from canopy to be released
-!        lai_half_lwrad_release = 3.685006d+00,  & ! LAI at which LW emitted from canopy to be released at 50 %
-         max_lai_lwrad_release = 0.9517081d0,   & ! 1-Max fraction of LW emitted from canopy to be released
-        lai_half_lwrad_release = 4.6917871d0,   & ! LAI at which LW emitted from canopy to be released at 50 %
-          soil_iso_to_net_coef =-2.376724d-05,  & ! Coefficient relating soil isothermal net radiation to net.
-         soil_iso_to_net_const = 1.493317d+00,  & ! Constant relating soil isothermal net radiation to net
-           max_par_transmitted = 1.605450d-01,  & ! Max fraction of canopy incident PAR transmitted to soil
-           max_nir_transmitted = 2.620704d-01,  & ! Max fraction of canopy incident NIR transmitted to soil
-             max_par_reflected = 1.605522d-01,  & ! Max fraction of canopy incident PAR reflected to sky
-             max_nir_reflected = 4.289277d-01,  & ! Max fraction of canopy incident NIR reflected to sky
-        canopy_iso_to_net_coef = 9.999143d-02,  & ! Coefficient relating canopy isothermal net radiation to net.
-       canopy_iso_to_net_const = 1.491501d+00     ! Constant relating canopy isothermal net radiation to net
+                   pn_max_temp = 6.842942d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
+                   pn_opt_temp = 3.155960d+01,  & ! Optimum daily max temperature for photosynthesis (oC)
+                   pn_kurtosis = 1.889026d-01,  & ! Kurtosis of photosynthesis temperature response
+                            e0 = 3.661204d+00,  & ! Quantum yield gC/MJ/m2/day PAR
+                minlwp_default =-1.808224d+00,  & ! minimum leaf water potential (MPa)
+      soil_iso_to_net_coef_LAI =-2.717467d+00,  & ! Coefficient relating soil isothermal net radiation to net.
+                          iWUE = 6.431150d-06,  & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
+         soil_swrad_absorption = 9.989852d-01,  & ! Fraction of SW rad absorbed by soil
+         max_lai_lwrad_release = 9.516639d-01,  & ! 1-Max fraction of LW emitted from canopy to be released
+        lai_half_lwrad_release = 4.693329d+00,  & ! LAI at which LW emitted from canopy to be released at 50 %
+       soil_iso_to_net_coef_SW =-3.500964d-02,  & ! Coefficient relating soil isothermal net radiation to net.
+         soil_iso_to_net_const = 3.455772d+00,  & ! Constant relating soil isothermal net radiation to net
+           max_par_transmitted = 1.628077d-01,  & ! Max fraction of canopy incident PAR transmitted to soil
+           max_nir_transmitted = 2.793660d-01,  & ! Max fraction of canopy incident NIR transmitted to soil
+             max_par_reflected = 1.629133d-01,  & ! Max fraction of canopy incident PAR reflected to sky
+             max_nir_reflected = 4.284365d-01,  & ! Max fraction of canopy incident NIR reflected to sky
+     canopy_iso_to_net_coef_SW = 1.480105d-02,  & ! Coefficient relating SW to the adjustment between isothermal and net LW
+       canopy_iso_to_net_const = 3.753067d-03,  & ! Constant relating canopy isothermal net radiation to net
+    canopy_iso_to_net_coef_LAI = 2.455582d+00     ! Coefficient relating LAI to the adjustment between isothermal and net LW
 
   double precision :: minlwp = minlwp_default
 
@@ -395,6 +391,7 @@ module CARBON_MODEL_MOD
   double precision ::   delta_gs, & ! day length corrected gs increment mmolH2O/m2/dayl
                             ceff, & ! canopy efficency, ceff = avN*NUE
                              avN, & ! average foliar N (gN/m2)
+                       iWUE_step, & ! Intrinsic water use efficiency for that day (gC/m2leaf/dayl/mmolH2Ogs)
                              NUE, & ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
                                     ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
 metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limiterd photosynthesis (gC/m2/day)
@@ -611,7 +608,7 @@ double precision :: Creturn_canopy,Creturn_investment
 
     ! p(1) Decomposition efficiency (fraction to som)
     ! p(2) Fraction of GPP respired as maintenance for wood and root
-    ! p(3) Baseline foliar turnover (frac/day)
+    ! p(3) -----NOT IN USE-----
     ! p(4) Fraction of NPP allocated to roots
     ! p(5) max leaf turnover (GSI)
     ! p(6) Turnover rate of wood
@@ -1025,6 +1022,7 @@ double precision :: Creturn_canopy,Creturn_investment
        ! extract timing related values
        dayl_hours = daylength_hours(n)
        dayl_hours_fraction = dayl_hours * 0.04166667d0 ! 1/24 = 0.04166667
+       iWUE_step = iWUE * dayl_hours_fraction
        dayl_seconds = daylength_seconds(n) ; dayl_seconds_1 = daylength_seconds_1(n)
        seconds_per_step = seconds_per_day * deltat(n)
        days_per_step = deltat(n) ; days_per_step_1 = deltat_1(n)
@@ -1169,7 +1167,7 @@ double precision :: Creturn_canopy,Creturn_investment
        Rm_leaf_per_gC = Rm_leaf_baseline * Q10_adjustment(n)
        ! Estimate time step demand on labile pool to support canopy maintenance
        ! NOTE: current Rm costs must be related to current temperature
-       Rm_leaf(n) = min(POOLS(n,1),Q10_adjustment(n) * Rm_leaf_baseline * POOLS(n,2) * deltat(n)) * deltat_1(n)
+       Rm_leaf(n) = min(POOLS(n,1),Rm_leaf_per_gC * POOLS(n,2) * deltat(n)) * deltat_1(n)
 
        !!!!!!!!!!
        ! Calculate canopy phenology
@@ -1564,7 +1562,7 @@ double precision :: Creturn_canopy,Creturn_investment
 
     ! maximum rate of temperature and nitrogen (canopy efficiency) limited
     ! photosynthesis (gC.m-2.day-1 -> umolC/m2/day)
-    metabolic_limited_photosynthesis = gC_to_umol*lai*ceff*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
+    metabolic_limited_photosynthesis = gC_to_umol*lai*ceff*opt_max_scaling(pn_max_temp,-1d6,pn_opt_temp,pn_kurtosis,leafT)
 
     !
     ! Light limited photosynthesis
@@ -1663,22 +1661,12 @@ double precision :: Creturn_canopy,Creturn_investment
     ! arguments
     double precision, intent(in) :: gs_in
 
-    ! local variables
-!    double precision :: gpp_high, gpp_low
-
     !!!!!!!!!!
     ! Optimise intrinsic water use efficiency
     !!!!!!!!!!
 
-    ! estimate photosynthesis with current estimate of gs
-!    gpp_low = acm_gpp_stage_2(gs_in)
-
-    ! Increment gs and estimate photosynthesis
-!    gpp_high = acm_gpp_stage_2(gs_in + delta_gs)
-
     ! Determine impact of gs increment on pd and how far we are from iWUE
-!    find_gs_iWUE = iWUE - ((gpp_high - gpp_low)*lai_1)
-    find_gs_iWUE = iWUE - ((acm_gpp_stage_2(gs_in + delta_gs) - acm_gpp_stage_2(gs_in))*lai_1)
+    find_gs_iWUE = iWUE_step - ((acm_gpp_stage_2(gs_in + delta_gs) - acm_gpp_stage_2(gs_in))*lai_1)
 
     ! Remember to return back to the user
     return
@@ -1751,7 +1739,7 @@ double precision :: Creturn_canopy,Creturn_investment
                                        Rtot    ! total hydraulic resistance (MPa.s-1.m-2.mmol-1)
 
     ! local variables
-    double precision :: denom, pl, pn, pn_day, iWUE_lower, iWUE_upper
+    double precision :: denom, iWUE_lower, iWUE_upper
     double precision, parameter :: max_gs = 2000d0, &  ! mmolH2O.m-2.s-1 (leaf area)
                                    min_gs = 1d0, &     ! mmolH2O.m-2.s-1 (leaf area)
                                    tol_gs = 10d0       ! mmolH2O.m-2.s-1 (leaf area)
@@ -1796,8 +1784,7 @@ double precision :: Creturn_canopy,Creturn_investment
             ! Intrinsic WUE optimisation
             ! Check that the water restricted water range brackets the root solution for the bisection
             iWUE_upper = find_gs_iWUE(potential_conductance) !; iWUE_lower = find_gs_iWUE(min_gs)
-!            if ( iWUE_upper * iWUE_lower > 0d0 ) then
-            if (iWUE_upper < 0d0) then
+            if ( iWUE_upper * find_gs_iWUE(min_gs) > 0d0 ) then
                 ! Then both proposals indicate that photosynthesis
                 ! would be increased by greater opening of the stomata
                 ! and is therefore water is limiting!
@@ -1809,7 +1796,7 @@ double precision :: Creturn_canopy,Creturn_investment
 
                 ! In all other cases iterate
                 stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
-                                              find_gs_iWUE,minimum_conductance,potential_conductance,tol_gs*lai,iWUE*0.10d0)
+                                              find_gs_iWUE,minimum_conductance,potential_conductance,tol_gs*lai,iWUE_step*0.10d0)
 
             end if
 !            ! Empirical fit to outputs generated by bisection procedure.
@@ -1862,7 +1849,7 @@ double precision :: Creturn_canopy,Creturn_investment
                                     input_vpd_kPa
 
     ! local variables
-    double precision :: s, mult, &
+    double precision :: mult, &
               dynamic_viscosity    ! dynamic viscosity (kg.m-2.s-1)
 
     !
@@ -1996,7 +1983,6 @@ double precision :: Creturn_canopy,Creturn_investment
     wetcanopy_evap = max(0d0,(((slope*canopy_radiation) + (ET_demand_coef*gb)) / (lambda*(slope+psych))) * seconds_per_day)
 
     ! assuming there is any rainfall, currently water on the canopy or dew formation
-!    if (rainfall > 0d0 .or. storage > 0d0 .or. wetcanopy_evap < 0d0) then
     if (rainfall > 0d0 .or. storage > 0d0) then
         ! Update based on canopy water storage
         call canopy_interception_and_storage(wetcanopy_evap,storage)
@@ -2055,7 +2041,7 @@ double precision :: Creturn_canopy,Creturn_investment
 
     ! Estimate potential soil evaporation flux (kgH2O.m-2.day-1)
     soilevap = ( ((slope*soil_radiation) + (air_density_kg*cpair*esurf*soil_conductance)) &
-               / (lambda*(slope+(psych*(1d0+soil_conductance/gws)))) ) * dayl_seconds
+               / (lambda*(slope+(psych*(soil_conductance/gws)))) ) * dayl_seconds
 
     return
 
@@ -2099,15 +2085,6 @@ double precision :: Creturn_canopy,Creturn_investment
 
     ! based on Harman & Finnigan (2008); neutral conditions only
     call log_law_decay
-!    canopy_wind = max(min_wind, ustar * 0.3161471806d0)
-
-    ! log law decay
-    !  NOTE: given canopy height (9 m) the log function reduces
-    ! to a constant value down to ~ 7 decimal place (0.3161471806). Therefore
-    ! 1/vonkarman * 0.31 = 0.7710906. While ustar_Uh also reduces to 0.3 giving a constant
-    ! wind_spd -> ustar relationship.
-    ! Ultimately above canopy wind speed to canopy top (m/s) can be reduced to
-    !canopy_wind = max(min_wind,wind_spd * 0.2313272d0)
 
     ! now we are interested in the within canopy wind speed,
     ! here we assume that the wind speed just inside of the canopy is most important.
@@ -2138,10 +2115,10 @@ double precision :: Creturn_canopy,Creturn_investment
     double precision, intent(out) :: gv_forced ! canopy conductance (m/s) for water vapour under forced convection
 
     ! local parameters
-    double precision, parameter :: leaf_width_coef = 12.5d0, & ! (1/leaf_width) * 0.5,
+    double precision, parameter :: leaf_width_coef = 25d0, & ! (1/leaf_width) * 0.5,
                                                                ! where 0.5 accounts for one half
                                                                ! of the leaf used in water exchange
-                                        leaf_width = 0.04d0    ! leaf width (m) (original 0.08)
+                                        leaf_width = 0.02d0    ! leaf width (m) (alternates 0.04, 0.08)
 !                                                Pr = 0.72d0, & ! Prandtl number
 !                                           Pr_coef = 1.05877d0 !1.18d0*(Pr**(0.33d0))
     ! local variables
@@ -2173,7 +2150,7 @@ double precision :: Creturn_canopy,Creturn_investment
     canopy_wind = ustar * vonkarman_1 * log((canopy_height-displacement) / roughl)
 
     ! set minimum value for wind speed at canopy top (m.s-1)
-    canopy_wind = max(min_wind,canopy_wind)
+!    canopy_wind = max(min_wind,canopy_wind)
 
   end subroutine log_law_decay
   !
@@ -2276,9 +2253,11 @@ double precision :: Creturn_canopy,Creturn_investment
   soil_absorption_from_canopy    ! soil absorbed radiation emitted from canopy (W.m-2)
 
     ! local parameters
-    double precision, parameter :: clump = 0.75d0 & ! Clumping factor (1 = uniform, 0 totally clumped, mean = 0.75)
-                                                    ! He et al., (2012) http://dx.doi.org/10.1016/j.rse.2011.12.008
-                                  ,decay = -0.5d0   ! decay coefficient for incident radiation
+    double precision, parameter :: nos_layers = 4d0 & ! Number of canopy layers in source model
+                                  ,nos_layers_1 = nos_layers ** (-1d0) &
+                                  ,clump = 1d0      & ! Clumping factor (1 = uniform, 0 totally clumped, mean = 0.75)
+                                                      ! He et al., (2012) http://dx.doi.org/10.1016/j.rse.2011.12.008
+                                  ,decay = -0.5d0     ! decay coefficient for incident radiation
 
     ! estimate long wave radiation from atmosphere (W.m-2)
     lwrad = emiss_boltz * (maxt+freeze-20d0) ** 4
@@ -2304,19 +2283,21 @@ double precision :: Creturn_canopy,Creturn_investment
     ! canopy transmittenace to the soil surface and reflectance back to the sky
     ! skews towards reduced transmittance at higher LAI. Both transmittance and
     ! reflectance follow linear a relationship with a common intercept
-    ! NOTE: 0.02 = (1-emissivity) * 0.5
-
+    ! NOTE: 0.02 = (1-emissivity) * 0.5.
+    ! NOTE: lai*0.5 reflects that interacting LAI will be somewhere within the canopy
+    !       and this its transmittance or reflectance will not be subject to the entire canopy
     canopy_transmitted_fraction = exp(decay * lai * 0.5d0 * clump)
     trans_lw_fraction     = 0.02d0 * canopy_transmitted_fraction
     reflected_lw_fraction = 0.02d0 * canopy_transmitted_fraction
     ! Absorption is the residual
     absorbed_lw_fraction = 1d0 - trans_lw_fraction - reflected_lw_fraction
 
-    ! Calculate the potential of longwave radiation lost from the
-    ! canopy to soil / sky. This fraction is applied in each direction.
-!    canopy_release_fraction = max_lw_escape * (1d0 - (max_lai_lwrad_release*lai) / (lai+lai_half_lwrad_release))
-    canopy_release_fraction = max_lw_escape * (1d0 - (max_lai_lwrad_release*lai) / (lai+lai_half_lwrad_release)) &
-                            * (1d0 - transmitted_fraction)
+    ! Calculate the potential absorption of longwave radiation lost from the
+    ! canopy to soil / sky.
+    ! NOTE: That assuming the Beer's law emission from a single canopy layer leads to a rough 50 % underestimate of LW emission.
+    !       This is why there is the nos_layer correction here
+    canopy_release_fraction = (1d0 - (max_lai_lwrad_release*lai) / (lai+lai_half_lwrad_release)) &
+                            * (1d0 - exp(decay * lai * nos_layers_1 * clump)) * nos_layers
 
     !!!!!!!!!!
     ! Distribute longwave from sky
@@ -2359,7 +2340,6 @@ double precision :: Creturn_canopy,Creturn_investment
     ! calculate two-sided long wave radiation emitted from canopy which is
     ! ultimately lost from to soil or sky (i.e. this value is used twice, once
     ! to soil once to sky)
-!    canopy_loss = longwave_release_canopy * lai * canopy_release_fraction
     canopy_loss = longwave_release_canopy * canopy_release_fraction
     ! Calculate longwave absorbed by soil which is released by the canopy itself
     soil_absorption_from_canopy = canopy_loss * emissivity
@@ -2401,11 +2381,16 @@ double precision :: Creturn_canopy,Creturn_investment
     call calculate_longwave_isothermal(meant,meant)
     ! Apply linear correction to soil surface isothermal->net longwave radiation
     ! balance based on absorbed shortwave radiation
-    delta_iso = soil_iso_to_net_coef * (soil_swrad_MJday * 1d6 * dayl_seconds_1) + soil_iso_to_net_const
-    soil_lwrad_Wm2 = soil_lwrad_Wm2 + delta_iso
+    delta_iso = (soil_iso_to_net_coef_LAI * lai) + &
+                (soil_iso_to_net_coef_SW * (soil_swrad_MJday * 1d6 * seconds_per_day_1)) + &
+                soil_iso_to_net_const
+    ! In addition to the iso to net adjustment, SPA analysis shows that soil net never gets much below zero
+    soil_lwrad_Wm2 = max(-0.01d0,soil_lwrad_Wm2 + delta_iso)
     ! Apply linear correction to canopy isothermal->net longwave radiation
     ! balance based on absorbed shortwave radiation
-    delta_iso = canopy_iso_to_net_coef * (canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_iso_to_net_const
+    delta_iso = (canopy_iso_to_net_coef_LAI * lai) + &
+                (canopy_iso_to_net_coef_SW * (canopy_swrad_MJday * 1d6 * seconds_per_day_1)) + &
+                canopy_iso_to_net_const
     canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + delta_iso
 
   end subroutine calculate_radiation_balance
@@ -2448,11 +2433,11 @@ double precision :: Creturn_canopy,Creturn_investment
                        ,trans_par_fraction
 
     ! local parameters
-    double precision, parameter :: clump = 0.75d0 &  ! Clumping factor (1 = uniform, 0 totally clumped, mean 0.75)
-                                                     ! He et al., (2012) http://dx.doi.org/10.1016/j.rse.2011.12.008
-                                  ,decay = -0.5d0 &  ! decay coefficient for incident radiation
-                        ,newsnow_nir_abs = 0.27d0 &  ! NIR absorption fraction
-                        ,newsnow_par_abs = 0.05d0    ! PAR absorption fraction
+    double precision, parameter :: clump = 1d0    & ! Clumping factor (1 = uniform, 0 totally clumped, mean = 0.75)
+                                                    ! He et al., (2012) http://dx.doi.org/10.1016/j.rse.2011.12.008
+                                  ,decay = -0.5d0 & ! decay coefficient for incident radiation
+                                  ,newsnow_nir_abs = 0.27d0 & ! NIR absorption fraction
+                                  ,newsnow_par_abs = 0.05d0   ! PAR absorption fraction
 
     !!!!!!!!!!
     ! Determine canopy absorption, reflectance and transmittance as function of
@@ -2739,7 +2724,7 @@ double precision :: Creturn_canopy,Creturn_investment
                                                   ! enters as potential but leaves as water balance adjusted.
                                                   ! Note that this assumes a completely wet leaf surface
     ! local variables
-    integer :: i, hr
+    integer :: i
     double precision :: a, through_fall, max_storage, max_storage_1, daily_addition, wetcanopy_evaporation &
                        ,potential_drainage_rate ,drain_rate, evap_rate, initial_canopy, co_mass_balance, dx, dz, tmp(3)
     ! local parameters
@@ -2755,7 +2740,6 @@ double precision :: Creturn_canopy,Creturn_investment
     ! hold initial canopy storage in memory
     initial_canopy = storage
     ! determine maximum canopy storage & through fall fraction
-!    through_fall = max(min_throughfall,exp(CanIntFrac*lai*clump))
     through_fall = exp(CanIntFrac*lai*clump)
     ! maximum canopy storage (mm); minimum is applied to prevent errors in
     ! drainage calculation. Assume minimum capacity due to wood.
@@ -2892,8 +2876,8 @@ double precision :: Creturn_canopy,Creturn_investment
     double precision, intent(out) :: corrected_ET     ! water balance corrected evapotranspiration (kgH2O/m2/day)
 
     ! local variables
-    integer :: day, a, b
-    double precision :: depth_change, water_change, initial_soilwater, balance
+    integer :: day, a
+    double precision :: depth_change, water_change, initial_soilwater, balance, mass_check
     double precision, dimension(nos_root_layers) :: avail_flux, evaporation_losses, pot_evap_losses
 
     ! set soil water exchanges
@@ -2973,12 +2957,11 @@ double precision :: Creturn_canopy,Creturn_investment
           evaporation_losses = pot_evap_losses
           ! can not evaporate from soil more than is available (m -> mm)
           ! NOTE: This is due to the fact that both soil evaporation and transpiration
-          !       are drawing from the same water supply. Also 0.999 below is to allow for precision error...
+          !       are drawing from the same water supply.
           avail_flux = soil_waterfrac(1:nos_root_layers) * layer_thickness(1:nos_root_layers) * 1d3
           do a = 1, nos_root_layers ! note: timed comparison between "where" and do loop supports do loop for smaller vectors
              if (evaporation_losses(a) > avail_flux(a)) evaporation_losses(a) = avail_flux(a) * 0.999d0
           end do
-!          where (evaporation_losses > avail_flux) evaporation_losses = avail_flux * 0.999d0
           ! this will update the ET estimate outside of the function
           ! days_per_step corrections happens outside of the loop below
           corrected_ET = corrected_ET + sum(evaporation_losses)
@@ -2997,7 +2980,7 @@ double precision :: Creturn_canopy,Creturn_investment
           ! Rainfall infiltration drainage
           !!!!!!!!!!
 
-          ! determine infiltration from rainfall (kgH2O/m2/day),
+          ! Determine infiltration from rainfall (kgH2O/m2/day),
           ! if rainfall is probably liquid / soil surface is probably not frozen
           if (rainfall_in > 0d0) then
               ! reset soil water change variable
@@ -3014,7 +2997,7 @@ double precision :: Creturn_canopy,Creturn_investment
           ! Gravitational drainage
           !!!!!!!!!!
 
-          ! determine drainage flux between surface -> sub surface
+          ! Determine drainage flux between surface -> sub surface
           call gravitational_drainage(1)
 
        end do ! days_per_step
@@ -3049,7 +3032,7 @@ double precision :: Creturn_canopy,Creturn_investment
         ! if there has been an increase
         if (depth_change > 0.05d0) then
 
-            ! determine how much water is within the new volume of soil
+            ! determine how much water (mm) is within the new volume of soil
             water_change = soil_waterfrac(nos_soil_layers) * depth_change
             ! now assign that new volume of water to the deep rooting layer
             soil_waterfrac(nos_root_layers) = ((soil_waterfrac(nos_root_layers)*layer_thickness(nos_root_layers))+water_change) &
@@ -3094,7 +3077,7 @@ double precision :: Creturn_canopy,Creturn_investment
     else if (root_reach < depth_change .and. previous_depth > depth_change) then
 
         !!!!!!!!!!
-        ! Model has explicitly contracted the bucket layer
+        ! Model has explicitly contracted from the bucket layer
         !!!!!!!!!!
 
         ! In this circumstance we want to return the soil profile to it's
@@ -3134,11 +3117,14 @@ double precision :: Creturn_canopy,Creturn_investment
 !
 !    if (abs(balance) > 1d-6 .or. soil_waterfrac(1) < -1d-6) then
 !        print*,"Soil water miss-balance (mm)",balance
-!        print*,"Initial_soilwater",initial_soilwater
-!        print*,"Final_soilwater",sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers) * 1d3)
+!        print*,"Initial_soilwater (mm) = ",initial_soilwater
+!        print*,"Final_soilwater (mm) = ",sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers) * 1d3)
+!        print*,"State balance = ",sum(soil_waterfrac(1:nos_soil_layers)*layer_thickness(1:nos_soil_layers)*1d3)-initial_soilwater
+!        print*,"Flux balance = ",(rainfall_in - corrected_ET - underflow - runoff) * days_per_step
 !        print*,"Top soilwater (fraction)",soil_waterfrac(1)
 !        print*,"Rainfall (mm/step)",rainfall_in,"ET",corrected_ET,"underflow",underflow,"runoff",runoff
 !        print*,"Rainfall (kgH2O/m2/s)",rainfall
+!        print*,"Soil Water Fraction = ",soil_waterfrac
 !    end if ! abs(balance) > 1d-10
 
     ! explicit return needed to ensure that function runs all needed code
@@ -3211,7 +3197,7 @@ double precision :: Creturn_canopy,Creturn_investment
     integer, intent(in) :: time_period_days
 
     ! local variables..
-    integer :: t, d, nos_integrate
+    integer :: t
     double precision, dimension(nos_soil_layers) :: dx, & ! range between the start and end points of the integration
                                                halfway, & ! half way point between start and end point of integration
                                                 liquid, & ! liquid water in local soil layer (m3/m3)
@@ -3231,6 +3217,10 @@ double precision :: Creturn_canopy,Creturn_investment
 
     ! zero water fluxes
     waterchange = 0d0
+
+    ! underflow is tracked in kgH2O/m2/day but estimated here in MgH2O/m2/day
+    ! therefore we must convert
+    underflow = underflow * 1d-3
 
     ! estimate potential drainage rate for the current time period
     liquid = soil_waterfrac(1:nos_soil_layers) * ( 1d0 - iceprop(1:nos_soil_layers) )
@@ -3564,8 +3554,9 @@ double precision :: Creturn_canopy,Creturn_investment
     ! calculate estimate of ratio of friction velocity / canopy wind speed.
     ! NOTE: under current min LAI and fixed canopy height (9 m) this ratio is
     ! fixed at 0.3
-!    ustar_Uh = 0.3d0
-    ustar_Uh = max(ustar_Uh_min,min(sqrt(Cs+Cr*local_lai*0.5d0),ustar_Uh_max))
+    ustar_Uh = 0.3d0
+!    ustar_Uh = max(ustar_Uh_min,min(sqrt(Cs+Cr*local_lai*0.5d0),ustar_Uh_max))
+!    ustar_Uh = sqrt(Cs+Cr*local_lai*0.5d0)
 
     ! calculate displacement (m); assume minimum lai 1.0 or 1.5 as height is not
     ! varied
@@ -3781,8 +3772,7 @@ double precision :: Creturn_canopy,Creturn_investment
         ! then scale the initial investment costs by leaf lifespan (days) and substract the initial investment cost
         ! i.e. gC/m2/day/(gCinvest/LL)
 !        deltaNCE = (((deltaGPP - deltaRm) * leaf_life) - C_invest) / C_invest
-        C_invest = C_invest / leaf_life
-        deltaNCE = (((deltaGPP - deltaRm)) - C_invest) / C_invest
+        deltaNCE = ((deltaGPP - deltaRm) - (C_invest/leaf_life)) / C_invest
         ! Is the marginal return for GPP (over the mean life of leaves)
         ! less than increase in maintenance respiration and C required
         ! to growth?
@@ -3942,7 +3932,7 @@ double precision :: Creturn_canopy,Creturn_investment
   !
   !----------------------------------------------------------------------
   !
-  double precision function opt_max_scaling( max_val , optimum , kurtosis , current )
+  double precision function opt_max_scaling( max_val, min_val , optimum , kurtosis , current )
 
     ! Estimates a 0-1 scaling based on a skewed guassian distribution with a
     ! given optimum, maximum and kurtosis. Minimum is assumed to be at infinity
@@ -3951,10 +3941,10 @@ double precision :: Creturn_canopy,Creturn_investment
     implicit none
 
     ! arguments..
-    double precision,intent(in) :: max_val, optimum, kurtosis, current
+    double precision,intent(in) :: max_val, min_val, optimum, kurtosis, current
 
-    ! local variables..
-    double precision, parameter :: min_val = -1d6
+!    ! local variables..
+!    double precision, parameter :: min_val = -1d6
 
     ! Code with implicit assumption of min bound at infinity
 !    if ( current >= max_val ) then
@@ -3972,7 +3962,6 @@ double precision :: Creturn_canopy,Creturn_investment
                         * exp( kurtosis * log((current-min_val)/(optimum-min_val)) * (optimum-min_val) ) &
                         * exp( kurtosis * (current - optimum) / (max_val-min_val) )
     endif
-
 
   end function opt_max_scaling
   !

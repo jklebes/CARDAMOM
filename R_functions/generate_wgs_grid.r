@@ -3,7 +3,7 @@ generate_wgs84_grid<-function(lat,long,resolution) {
 
     # pt create raster of our desired resolution (in degrees) with the spatial extent set in the control file.
     # This function makes use of the WGS-84 coordinate system
-    pt = raster(resolution = resolution, xmn = long[1], xmx = long[2], ymn = lat[1], ymx = lat[2], crs = "+init=epsg:4326")
+    pt = raster(vals = 1, resolution = resolution, xmn = long[1], xmx = long[2], ymn = lat[1], ymx = lat[2], crs = "+init=epsg:4326")
 
     # extract the spatial information needed else where
     dims = dim(pt) ; lat_dim = dims[1] ; long_dim = dims[2]
@@ -12,7 +12,7 @@ generate_wgs84_grid<-function(lat,long,resolution) {
     lat = lat[length(lat):1]
 
     # combine into output object
-    output = list(lat = lat, long = long, lat_dim = lat_dim, long_dim = long_dim)
+    output = list(cardamom_exts = pt, lat = lat, long = long, lat_dim = lat_dim, long_dim = long_dim)
     # tidy up
     rm(lat,long,lat_dim,long_dim,pt) ; gc(reset=TRUE,verbose=FALSE)
 

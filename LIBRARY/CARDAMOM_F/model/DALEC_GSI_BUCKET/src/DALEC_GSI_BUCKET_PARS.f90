@@ -182,15 +182,15 @@ module MODEL_PARAMETERS
 
        ! C labile
        PI%parmin(18) = 1d0
-       PI%parmax(18) = 1000d0
+       PI%parmax(18) = 2000d0
 
        ! C foliar
        PI%parmin(19) = 1d0
-       PI%parmax(19) = 1000d0
+       PI%parmax(19) = 2000d0
 
        ! C roots
        PI%parmin(20) = 1d0
-       PI%parmax(20) = 1000d0
+       PI%parmax(20) = 2000d0
 
        ! C_wood
        PI%parmin(21) = 1d0

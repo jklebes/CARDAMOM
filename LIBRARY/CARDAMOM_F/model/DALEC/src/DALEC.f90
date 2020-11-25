@@ -183,7 +183,7 @@ module CARBON_MODEL_MOD
                          tortuosity = 2.5d0,        & ! tortuosity
                              gplant = 5d0,          & ! plant hydraulic conductivity (mmol m-1 s-1 MPa-1)
                           max_depth = 2d0,          & ! max root depth (m)
-                             root_k = 800d0,        & ! root biomass needed to reach 50% depth (gbiomass/m2); fine root only value = 100
+                             root_k = 200d0,        & ! root biomass needed to reach 50% depth (gbiomass/m2); fine root only value = 100
                         root_resist = 25d0,         & ! Root resistivity (MPa s g mmol−1 H2O)
                         root_radius = 0.00029d0,    & ! root radius (m) Bonen et al 2014 = 0.00029
                                                       ! Williams et al 1996 = 0.0001
@@ -203,15 +203,13 @@ module CARBON_MODEL_MOD
                       canopy_height = 9d0,          & ! canopy height assumed to be 9 m
                        tower_height = canopy_height + 2d0, & ! tower (observation) height assumed to be 2 m above canopy
                            min_wind = 0.2d0,        & ! minimum wind speed at canopy top
-                       min_drythick = 0.01d0,       & ! minimum dry thickness depth (m)
+                       min_drythick = 0.001d0,       & ! minimum dry thickness depth (m)
                           min_layer = 0.03d0,       & ! minimum thickness of the third rooting layer (m)
                         soil_roughl = 0.05d0,       & ! soil roughness length (m)
-                     top_soil_depth = 0.1d0,        & ! thickness of the top soil layer (m)
-                     mid_soil_depth = 0.2d0,        & ! thickness of the second soil layer (m)
+                     top_soil_depth = 0.15d0,       & ! thickness of the top soil layer (m)
+                     mid_soil_depth = 0.15d0,       & ! thickness of the second soil layer (m)
                            min_root = 5d0,          & ! minimum root biomass (gBiomass.m-2)
                             min_lai = 0.1d0,        & ! minimum LAI assumed for aerodynamic conductance calculations (m2/m2)
-                    min_throughfall = 0.2d0,        & ! minimum fraction of precipitation which
-                                                      ! is through fall
                         min_storage = 0.2d0           ! minimum canopy water (surface) storage (mm)
 
   ! timing parameters
@@ -222,27 +220,26 @@ module CARBON_MODEL_MOD
 
   ! ACM-GPP-ET parameters
   double precision, parameter :: &
-                   pn_max_temp = 6.416723d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
-                   pn_opt_temp = 3.559088d+01,  & ! Optimum daily max temperature for photosynthesis (oC)
-                   pn_kurtosis = 1.599325d-01,  & ! Kurtosis of photosynthesis temperature response
-                            e0 = 3.707992d+00,  & ! Quantum yield gC/MJ/m2/day PAR
-                minlwp_default =-2.158644d+00,  & ! minimum leaf water potential (MPa)
-!                 max_lw_escape = 5.008693d-01,  & ! Max LW which is released from canopy that escapes in one direction
-                 max_lw_escape = 1d0,           & ! Max LW which is released from canopy that escapes in one direction
-                          iWUE = 9.387512d-08,  & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
-         soil_swrad_absorption = 9.826268d-01,  & ! Fraction of SW rad absorbed by soil
-!         max_lai_lwrad_release = 9.756301d-01,  & ! 1-Max fraction of LW emitted from canopy to be released
-!        lai_half_lwrad_release = 3.685006d+00,  & ! LAI at which LW emitted from canopy to be released at 50 %
-         max_lai_lwrad_release = 0.9517081d0,   & ! 1-Max fraction of LW emitted from canopy to be released
-        lai_half_lwrad_release = 4.6917871d0,   & ! LAI at which LW emitted from canopy to be released at 50 %
-          soil_iso_to_net_coef =-2.376724d-05,  & ! Coefficient relating soil isothermal net radiation to net.
-         soil_iso_to_net_const = 1.493317d+00,  & ! Constant relating soil isothermal net radiation to net
-           max_par_transmitted = 1.605450d-01,  & ! Max fraction of canopy incident PAR transmitted to soil
-           max_nir_transmitted = 2.620704d-01,  & ! Max fraction of canopy incident NIR transmitted to soil
-             max_par_reflected = 1.605522d-01,  & ! Max fraction of canopy incident PAR reflected to sky
-             max_nir_reflected = 4.289277d-01,  & ! Max fraction of canopy incident NIR reflected to sky
-        canopy_iso_to_net_coef = 9.999143d-02,  & ! Coefficient relating canopy isothermal net radiation to net.
-       canopy_iso_to_net_const = 1.491501d+00     ! Constant relating canopy isothermal net radiation to net
+                   pn_max_temp = 6.842942d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
+                   pn_opt_temp = 3.155960d+01,  & ! Optimum daily max temperature for photosynthesis (oC)
+                   pn_kurtosis = 1.889026d-01,  & ! Kurtosis of photosynthesis temperature response
+                            e0 = 3.661204d+00,  & ! Quantum yield gC/MJ/m2/day PAR
+                minlwp_default =-1.808224d+00,  & ! minimum leaf water potential (MPa)
+      soil_iso_to_net_coef_LAI =-2.717467d+00,  & ! Coefficient relating soil isothermal net radiation to net.
+                          iWUE = 6.431150d-06,  & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
+         soil_swrad_absorption = 9.989852d-01,  & ! Fraction of SW rad absorbed by soil
+         max_lai_lwrad_release = 9.516639d-01,  & ! 1-Max fraction of LW emitted from canopy to be released
+        lai_half_lwrad_release = 4.693329d+00,  & ! LAI at which LW emitted from canopy to be released at 50 %
+       soil_iso_to_net_coef_SW =-3.500964d-02,  & ! Coefficient relating soil isothermal net radiation to net.
+         soil_iso_to_net_const = 3.455772d+00,  & ! Constant relating soil isothermal net radiation to net
+           max_par_transmitted = 1.628077d-01,  & ! Max fraction of canopy incident PAR transmitted to soil
+           max_nir_transmitted = 2.793660d-01,  & ! Max fraction of canopy incident NIR transmitted to soil
+             max_par_reflected = 1.629133d-01,  & ! Max fraction of canopy incident PAR reflected to sky
+             max_nir_reflected = 4.284365d-01,  & ! Max fraction of canopy incident NIR reflected to sky
+     canopy_iso_to_net_coef_SW = 1.480105d-02,  & ! Coefficient relating SW to the adjustment between isothermal and net LW
+       canopy_iso_to_net_const = 3.753067d-03,  & ! Constant relating canopy isothermal net radiation to net
+    canopy_iso_to_net_coef_LAI = 2.455582d+00     ! Coefficient relating LAI to the adjustment between isothermal and net LW
+
   double precision :: minlwp = minlwp_default
 
   !!!!!!!!!
@@ -344,6 +341,7 @@ module CARBON_MODEL_MOD
   double precision ::   delta_gs, & ! day length corrected gs increment mmolH2O/m2/dayl
                             ceff, & ! canopy efficency, ceff = avN*NUE
                              avN, & ! average foliar N (gN/m2)
+                       iWUE_step, & ! Intrinsic water use efficiency for that day (gC/m2leaf/dayl/mmolH2Ogs)
                              NUE, & ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
                                     ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
 metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limiterd photosynthesis (gC/m2/day)
@@ -872,6 +870,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! extract timing related values
        dayl_hours = daylength_hours(n)
        dayl_hours_fraction = dayl_hours * 0.04166667d0 ! 1/24 = 0.04166667
+       iWUE_step = iWUE * dayl_hours_fraction
        dayl_seconds = daylength_seconds(n) ; dayl_seconds_1 = daylength_seconds_1(n)
        seconds_per_step = seconds_per_day * deltat(n)
 
@@ -949,7 +948,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        Rm_leaf_per_gC = Rm_leaf_baseline * Q10_adjustment(n)
        ! Estimate time step demand on labile pool to support canopy maintenance
        ! NOTE: current Rm costs must be related to current temperature
-       Rm_leaf(n) = min(POOLS(n,1),Q10_adjustment(n) * Rm_leaf_baseline * POOLS(n,2) * deltat(n)) * deltat_1(n)
+       Rm_leaf(n) = min(POOLS(n,1),Rm_leaf_per_gC * POOLS(n,2) * deltat(n)) * deltat_1(n)
 
        !!!!!!!!!!
        ! Calculate canopy phenology
@@ -1312,7 +1311,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! maximum rate of temperature and nitrogen (canopy efficiency) limited
     ! photosynthesis (gC.m-2.day-1 -> umolC/m2/day)
-    metabolic_limited_photosynthesis = gC_to_umol*lai*ceff*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
+    metabolic_limited_photosynthesis = gC_to_umol*lai*ceff*opt_max_scaling(pn_max_temp,-1d6,pn_opt_temp,pn_kurtosis,leafT)
 
     !
     ! Light limited photosynthesis
@@ -1416,7 +1415,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !!!!!!!!!!
 
     ! Determine impact of gs increment on pd and how far we are from iWUE
-    find_gs_iWUE = iWUE - ((acm_gpp_stage_2(gs_in + delta_gs) - acm_gpp_stage_2(gs_in))*lai_1)
+    find_gs_iWUE = iWUE_step - ((acm_gpp_stage_2(gs_in + delta_gs) - acm_gpp_stage_2(gs_in))*lai_1)
 
     ! Remember to return back to the user
     return
@@ -1438,10 +1437,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                        Rtot    ! total hydraulic resistance (MPa.s-1.m-2.mmol-1)
 
     ! local variables
-    double precision :: denom, pl, pn, pn_day, iWUE_upper, iWUE_lower
+    double precision :: denom, iWUE_lower, iWUE_upper
     double precision, parameter :: max_gs = 2000d0, &  ! mmolH2O.m-2.s-1 (leaf area)
                                    min_gs = 1d0, &     ! mmolH2O.m-2.s-1 (leaf area)
-                                   tol_gs = 10d0        ! 4d0
+                                   tol_gs = 10d0       ! mmolH2O.m-2.s-1 (leaf area)
 
     !!!!!!!!!!
     ! Calculate stomatal conductance under H2O and CO2 limitations
@@ -1464,58 +1463,63 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         denom = (denom / (lambda * max_supply * mmol_to_kg_water * dayl_seconds_1)) - slope
         potential_conductance = aerodynamic_conductance / (denom / psych)
 
-        ! Convert m.s-1 to mmolH2O.m-2.s-1
+        ! convert m.s-1 to mmolH2O.m-2.s-1
         potential_conductance = potential_conductance * convert_ms1_mmol_1
-        ! If conditions are dew forming then set conductance to maximum as we
+        ! if conditions are dew forming then set conductance to maximum as we
         ! are not going to be limited by water demand
         if (potential_conductance <= 0d0 .or. potential_conductance > max_gs*lai) potential_conductance = max_gs*lai
 
         ! If there is a positive demand for water then we will solve for
         ! photosynthesis limits on gs through iterative solution
-        delta_gs = 1d-3*lai ! mmolH2O/m2leaf/s
+        delta_gs = 1d-3*lai ! mmolH2O/m2leaf/day
         ! Estimate inverse of LAI to avoid division in optimisation
         lai_1 = lai**(-1d0)
         ! Calculate stage one acm, temperature and light limitation which
         ! are independent of stomatal conductance effects
         call acm_gpp_stage_1
-        ! Intrinsic WUE optimisation
-        ! Check that the water restricted water range brackets the root solution for the bisection
-        iWUE_upper = find_gs_iWUE(potential_conductance) !; iWUE_lower = find_gs_iWUE(min_gs)
-!        if ( iWUE_upper * iWUE_lower > 0d0 ) then
-        if (iWUE_upper < 0d0) then
-            ! Then both proposals indicate that photosynthesis
-            ! would be increased by greater opening of the stomata
-            ! and is therefore water limited!
-            stomatal_conductance = potential_conductance
-            ! Exception being if both are positive - therefore assume
-            ! lowest
-!           if (iWUE_upper > 0d0) stomatal_conductance = minimum_conductance
-        else
-            ! In all other cases iterate
-            stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
-                                          find_gs_iWUE,minimum_conductance,potential_conductance,tol_gs*lai,iWUE*0.10d0)
-        end if
-        ! Empirical fit to outputs generated by bisection procedure.
-        ! Assumes that water supply is not limiting, thus there is still the need to estimate supply limit and apply as bookend.
-        ! Note also that the order of covariates reflects their importance in the prediction,
-        ! i.e. R > 0.9 just for first independent variable
-!        pn = metabolic_limited_photosynthesis
-!        pn_day = metabolic_limited_photosynthesis * dayl_hours_fraction
-!        pl = light_limited_photosynthesis
-!        stomatal_conductance =   50.92693d0 &
-!                             + ( 14.73576d0    * ((pn_day*pl) / (pn_day+pl)) ) &
-!                             + (  1.0555d0     * pn )                          &
-!                             + ((-8.140542d-4) * pn**2d0 )                     &
-!                             + ((-0.7185823d0) * pl )                          &
-!                             + ((-1.565065d0)  * co2_comp_point )              &
-!                             + (( 0.2258834d0) * co2_half_sat )                &
-!                             + ((-2.486837d-4) * co2_half_sat**2d0 )           &
-!                             + (( 4.344512d-2) * co2 )                         &
-!                             + ((-2.969554d-4) * co2**2d0 )                    &
-!                             + ((-41.61914d0)  * iWUE )
-!        stomatal_conductance = max(min_gs,min(stomatal_conductance,potential_conductance))
-!print*,min_gs,potential_conductance,stomatal_conductance
-!print*,tmp1,tmp2,find_gs_iWUE(stomatal_conductance)
+
+!        if (do_iWUE) then
+            ! Intrinsic WUE optimisation
+            ! Check that the water restricted water range brackets the root solution for the bisection
+            iWUE_upper = find_gs_iWUE(potential_conductance) !; iWUE_lower = find_gs_iWUE(min_gs)
+            if ( iWUE_upper * find_gs_iWUE(min_gs) > 0d0 ) then
+                ! Then both proposals indicate that photosynthesis
+                ! would be increased by greater opening of the stomata
+                ! and is therefore water is limiting!
+                stomatal_conductance = potential_conductance
+                ! Exception being if both are positive - therefore assume
+                ! lowest
+                if (iWUE_upper > 0d0) stomatal_conductance = minimum_conductance
+            else
+
+                ! In all other cases iterate
+                stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
+                                              find_gs_iWUE,minimum_conductance,potential_conductance,tol_gs*lai,iWUE_step*0.10d0)
+
+            end if
+!            ! Empirical fit to outputs generated by bisection procedure.
+!            ! Assumes that water supply is not limiting, thus there is still the need to estimate supply limit and apply as bookend.
+!            ! Note also that the order of covariates reflects their importance in the prediction,
+!            ! i.e. R > 0.9 just for first independent variable
+!            pn = metabolic_limited_photosynthesis
+!            pn_day = metabolic_limited_photosynthesis * dayl_hours_fraction
+!            pl = light_limited_photosynthesis
+!            stomatal_conductance =   50.92693d0 &
+!                                 + ( 14.73576d0    * ((pn_day*pl) / (pn_day+pl)) ) &
+!                                 + (  1.0555d0     * pn )                          &
+!                                 + ((-8.140542d-4) * pn**2d0 )                     &
+!                                 + ((-0.7185823d0) * pl )                          &
+!                                 + ((-1.565065d0)  * co2_comp_point )              &
+!                                 + (( 0.2258834d0) * co2_half_sat )                &
+!                                 + ((-2.486837d-4) * co2_half_sat**2d0 )           &
+!                                 + (( 4.344512d-2) * co2 )                         &
+!                                 + ((-2.969554d-4) * co2**2d0 )                    &
+!                                 + ((-41.61914d0)  * iWUE )
+!            stomatal_conductance = max(min_gs,min(stomatal_conductance,potential_conductance))
+!       else
+!            ! WUE optimisation
+!            stomatal_conductance = zbrent('calculate_gs:find_gs_WUE',find_gs_WUE,min_gs,potential_conductance,tol_gs,iWUE*0.10d0)
+!       endif
 
     else
 
@@ -1543,7 +1547,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                     input_vpd_kPa
 
     ! local variables
-    double precision :: s, mult, &
+    double precision :: mult, &
               dynamic_viscosity    ! dynamic viscosity (kg.m-2.s-1)
 
     !
@@ -1628,15 +1632,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! based on Harman & Finnigan (2008); neutral conditions only
     call log_law_decay
-!    canopy_wind = max(min_wind, ustar * 0.3161471806d0)
-
-    ! log law decay
-    !  NOTE: given canopy height (9 m) the log function reduces
-    ! to a constant value down to ~ 7 decimal place (0.3161471806). Therefore
-    ! 1/vonkarman * 0.31 = 0.7710906. While ustar_Uh also reduces to 0.3 giving a constant
-    ! wind_spd -> ustar relationship.
-    ! Ultimately above canopy wind speed to canopy top (m/s) can be reduced to
-    !canopy_wind = max(min_wind,wind_spd * 0.2313272d0)
 
     ! now we are interested in the within canopy wind speed,
     ! here we assume that the wind speed just inside of the canopy is most important.
@@ -1664,10 +1659,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, intent(out) :: gv_forced ! canopy conductance (m/s) for water vapour under forced convection
 
     ! local parameters
-    double precision, parameter :: leaf_width_coef = 12.5d0, & ! (1/leaf_width) * 0.5,
+    double precision, parameter :: leaf_width_coef = 25d0, & ! (1/leaf_width) * 0.5,
                                                                ! where 0.5 accounts for one half
                                                                ! of the leaf used in water exchange
-                                        leaf_width = 0.04d0    ! leaf width (m) (original 0.08)
+                                        leaf_width = 0.02d0    ! leaf width (m) (alternates 0.04, 0.08)
 !                                                Pr = 0.72d0, & ! Prandtl number
 !                                           Pr_coef = 1.05877d0 !1.18d0*(Pr**(0.33d0))
     ! local variables
@@ -1699,7 +1694,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     canopy_wind = ustar * vonkarman_1 * log((canopy_height-displacement) / roughl)
 
     ! set minimum value for wind speed at canopy top (m.s-1)
-    canopy_wind = max(min_wind,canopy_wind)
+!    canopy_wind = max(min_wind,canopy_wind)
 
   end subroutine log_law_decay
   !
@@ -1780,9 +1775,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   soil_absorption_from_canopy    ! soil absorbed radiation emitted from canopy (W.m-2)
 
     ! local parameters
-    double precision, parameter :: clump = 0.75d0 & ! Clumping factor (1 = uniform, 0 totally clumped)
-                                                    ! He et al., (2012) http://dx.doi.org/10.1016/j.rse.2011.12.008
-                                  ,decay = -0.5d0   ! decay coefficient for incident radiation
+    double precision, parameter :: nos_layers = 4d0 & ! Number of canopy layers in source model
+                                  ,nos_layers_1 = nos_layers ** (-1d0) &
+                                  ,clump = 1d0      & ! Clumping factor (1 = uniform, 0 totally clumped, mean = 0.75)
+                                                      ! He et al., (2012) http://dx.doi.org/10.1016/j.rse.2011.12.008
+                                  ,decay = -0.5d0     ! decay coefficient for incident radiation
 
     ! estimate long wave radiation from atmosphere (W.m-2)
     lwrad = emiss_boltz * (maxt+freeze-20d0) ** 4
@@ -1808,19 +1805,21 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! canopy transmittenace to the soil surface and reflectance back to the sky
     ! skews towards reduced transmittance at higher LAI. Both transmittance and
     ! reflectance follow linear a relationship with a common intercept
-    ! NOTE: 0.02 = (1-emissivity) * 0.5
-
+    ! NOTE: 0.02 = (1-emissivity) * 0.5.
+    ! NOTE: lai*0.5 reflects that interacting LAI will be somewhere within the canopy
+    !       and this its transmittance or reflectance will not be subject to the entire canopy
     canopy_transmitted_fraction = exp(decay * lai * 0.5d0 * clump)
     trans_lw_fraction     = 0.02d0 * canopy_transmitted_fraction
     reflected_lw_fraction = 0.02d0 * canopy_transmitted_fraction
     ! Absorption is the residual
     absorbed_lw_fraction = 1d0 - trans_lw_fraction - reflected_lw_fraction
 
-    ! Calculate the potential of longwave radiation lost from the
-    ! canopy to soil / sky. This fraction is applied in each direction.
-!    canopy_release_fraction = max_lw_escape * (1d0 - (max_lai_lwrad_release*lai) / (lai+lai_half_lwrad_release))
-    canopy_release_fraction = max_lw_escape * (1d0 - (max_lai_lwrad_release*lai) / (lai+lai_half_lwrad_release)) &
-                            * (1d0 - transmitted_fraction)
+    ! Calculate the potential absorption of longwave radiation lost from the
+    ! canopy to soil / sky.
+    ! NOTE: That assuming the Beer's law emission from a single canopy layer leads to a rough 50 % underestimate of LW emission.
+    !       This is why there is the nos_layer correction here
+    canopy_release_fraction = (1d0 - (max_lai_lwrad_release*lai) / (lai+lai_half_lwrad_release)) &
+                            * (1d0 - exp(decay * lai * nos_layers_1 * clump)) * nos_layers
 
     !!!!!!!!!!
     ! Distribute longwave from sky
@@ -1863,7 +1862,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! calculate two-sided long wave radiation emitted from canopy which is
     ! ultimately lost from to soil or sky (i.e. this value is used twice, once
     ! to soil once to sky)
-!    canopy_loss = longwave_release_canopy * lai * canopy_release_fraction
     canopy_loss = longwave_release_canopy * canopy_release_fraction
     ! Calculate longwave absorbed by soil which is released by the canopy itself
     soil_absorption_from_canopy = canopy_loss * emissivity
@@ -1905,11 +1903,16 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     call calculate_longwave_isothermal(meant,meant)
     ! Apply linear correction to soil surface isothermal->net longwave radiation
     ! balance based on absorbed shortwave radiation
-    delta_iso = soil_iso_to_net_coef * (soil_swrad_MJday * 1d6 * dayl_seconds_1) + soil_iso_to_net_const
-    soil_lwrad_Wm2 = soil_lwrad_Wm2 + delta_iso
+    delta_iso = (soil_iso_to_net_coef_LAI * lai) + &
+                (soil_iso_to_net_coef_SW * (soil_swrad_MJday * 1d6 * seconds_per_day_1)) + &
+                soil_iso_to_net_const
+    ! In addition to the iso to net adjustment, SPA analysis shows that soil net never gets much below zero
+    soil_lwrad_Wm2 = max(-0.01d0,soil_lwrad_Wm2 + delta_iso)
     ! Apply linear correction to canopy isothermal->net longwave radiation
     ! balance based on absorbed shortwave radiation
-    delta_iso = canopy_iso_to_net_coef * (canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_iso_to_net_const
+    delta_iso = (canopy_iso_to_net_coef_LAI * lai) + &
+                (canopy_iso_to_net_coef_SW * (canopy_swrad_MJday * 1d6 * seconds_per_day_1)) + &
+                canopy_iso_to_net_const
     canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + delta_iso
 
   end subroutine calculate_radiation_balance
@@ -1934,7 +1937,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision :: balance                     &
                        ,transmitted_fraction        &
                        ,canopy_transmitted_fraction &
-                       ,fsnow,par,nir               &
+                       ,par,nir                     &
                        ,soil_par_MJday              &
                        ,soil_nir_MJday              &
                        ,trans_nir_MJday             &
@@ -1950,7 +1953,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                        ,trans_par_fraction
 
     ! local parameters
-    double precision, parameter :: clump = 0.75d0 & ! Clumping factor (1 = uniform, 0 totally clumped)
+    double precision, parameter :: clump = 1d0    & ! Clumping factor (1 = uniform, 0 totally clumped, mean = 0.75)
                                                     ! He et al., (2012) http://dx.doi.org/10.1016/j.rse.2011.12.008
                                   ,decay = -0.5d0   ! decay coefficient for incident radiation
 
@@ -2239,8 +2242,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! calculate estimate of ratio of friction velocity / canopy wind speed.
     ! NOTE: under current min LAI and fixed canopy height (9 m) this ratio is
     ! fixed at 0.3
-!    ustar_Uh = 0.3d0
-    ustar_Uh = max(ustar_Uh_min,min(sqrt(Cs+Cr*local_lai*0.5d0),ustar_Uh_max))
+    ustar_Uh = 0.3d0
+!    ustar_Uh = max(ustar_Uh_min,min(sqrt(Cs+Cr*local_lai*0.5d0),ustar_Uh_max))
+!    ustar_Uh = sqrt(Cs+Cr*local_lai*0.5d0)
 
     ! calculate displacement (m); assume minimum lai 1.0 or 1.5 as height is not
     ! varied
@@ -2424,8 +2428,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! substract the initial investment cost
         ! i.e. gC/m2/day/(gCinvest/LL)
 !        deltaNCE = (((deltaGPP - deltaRm) * leaf_life) - C_invest) / C_invest
-        C_invest = C_invest / leaf_life
-        deltaNCE = (((deltaGPP - deltaRm)) - C_invest) / C_invest
+        deltaNCE = ((deltaGPP - deltaRm) - (C_invest/leaf_life)) / C_invest
         ! Is the marginal return for GPP (over the mean life of leaves)
         ! less than increase in maintenance respiration and C required
         ! to growth?
@@ -2489,25 +2492,36 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !----------------------------------------------------------------------
   !
-  double precision function opt_max_scaling( max_val , optimum , kurtosis , current )
+  double precision function opt_max_scaling( max_val, min_val , optimum , kurtosis , current )
 
-    ! estimates a 0-1 scaling based on a skewed guassian distribution with a
-    ! given optimum, maximum and kurtosis
+    ! Estimates a 0-1 scaling based on a skewed guassian distribution with a
+    ! given optimum, maximum and kurtosis. Minimum is assumed to be at infinity
+    ! (or near enough)
 
     implicit none
 
     ! arguments..
-    double precision,intent(in) :: max_val, optimum, kurtosis, current
+    double precision,intent(in) :: max_val, min_val, optimum, kurtosis, current
 
-    ! local variables..
-    double precision :: dummy
+!    ! local variables..
+!    double precision, parameter :: min_val = -1d6
 
-    if ( current >= max_val ) then
-         opt_max_scaling = 0d0
+    ! Code with implicit assumption of min bound at infinity
+!    if ( current >= max_val ) then
+!         opt_max_scaling = 0d0
+!    else
+!         dummy     = exp( log((max_val - current) / (max_val - optimum)) * kurtosis * (max_val - optimum) )
+!         opt_max_scaling = dummy * exp( kurtosis * ( current - optimum ) )
+!    end if
+
+    ! Code with explicit min bound
+    if (current > max_val .or. current < min_val) then
+        opt_max_scaling = 0d0
     else
-         dummy     = exp( log((max_val - current) / (max_val - optimum)) * kurtosis * (max_val - optimum) )
-         opt_max_scaling = dummy * exp( kurtosis * ( current - optimum ) )
-    end if
+        opt_max_scaling = exp( kurtosis * log((max_val-current)/(max_val-optimum)) * (max_val-optimum) ) &
+                        * exp( kurtosis * log((current-min_val)/(optimum-min_val)) * (optimum-min_val) ) &
+                        * exp( kurtosis * (current - optimum) / (max_val-min_val) )
+    endif
 
   end function opt_max_scaling
   !

@@ -464,7 +464,7 @@ module model_likelihood_module
 
     ! Steady State Attractor:
     ! Log ratio difference between inputs and outputs of the system.
-    logical, parameter :: old_edcs = .false.
+    logical, parameter :: old_edcs = .true.
     double precision, parameter :: EQF1_5 = log(1.5d0), & ! 10.0 = order magnitude; 2 = double and half
                                    EQF2 = log(2d0),   & ! 10.0 = order magnitude; 2 = double and half
                                    EQF5 = log(5d0),   &
@@ -526,7 +526,7 @@ module model_likelihood_module
         ! Equilibrium factor (in comparison with initial conditions)
 !        EQF = 10d0 ! TLS 06/11/2019 !10d0 ! JFE replaced 10 by 2 - 27/06/2018
         ! Pool exponential decay tolerance
-!        etol = 0.3d0 !0.1d0
+!        etol = 0.1d0
 
         ! first calculate total flux for the whole simulation period
         do fl = 1, nofluxes
@@ -607,7 +607,7 @@ module model_likelihood_module
                EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
            end if
            ! Restrict exponential decay
-           if ((EDC2 == 1 .or. DIAG == 1) .and. abs(Rs(n)-Rm(n)) > etol) then
+           if ((EDC2 == 1 .or. DIAG == 1) .and. abs(Rs(n)-Rm(n)) > 0.1d0) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            end if
         end do

@@ -21,7 +21,7 @@ module MCMCOPT
   ! contains MHMCMC options
   type MCMC_OPTIONS
 
-    double precision :: sub_fraction = 0.20d0, inflation_factor = 6d0
+    double precision :: sub_fraction = 0.2d0, inflation_factor = 6d0
 
     logical :: sub_sample_complete = .false. & ! Has a sub-sample / inflated uncertainty simulation taken place?
               ,returnpars = .true. & ! return best fit parameters or not

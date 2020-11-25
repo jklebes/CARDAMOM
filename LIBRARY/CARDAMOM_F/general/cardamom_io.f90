@@ -51,7 +51,7 @@ module cardamom_io
     if (DATAin%ID == 0) then
         ! ID = 0 - ACM/ACM-ET
         DATAin%nopools = 2
-        DATAin%nopars = 19
+        DATAin%nopars = 20
         DATAin%nofluxes = 4
     else if (DATAin%ID == 1) then
         ! ID = 1 - DALEC_CDEA
@@ -246,6 +246,17 @@ module cardamom_io
         DATAin%nopools = 8
         DATAin%nopars = 30
         DATAin%nofluxes = 33
+    else if (DATAin%ID == 31) then
+        ! ID = 20 - DALEC_BUCKET_CanAGE
+        DATAin%nopools = 8
+        DATAin%nopars = 48
+        DATAin%nofluxes = 25
+        if (DATAin%PFT == 1) then
+           ! then actually this is a crop pixel
+           DATAin%nopools = 9
+           DATAin%nopars = 38
+           DATAin%nofluxes = 21
+        endif
     else
        write(*,*) "Oh dear... model ID cannot be found"
        stop

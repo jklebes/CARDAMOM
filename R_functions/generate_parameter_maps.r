@@ -140,7 +140,8 @@ generate_parameter_maps<-function(PROJECT) {
       if (PROJECT$model$name == "DALECN_GSI_FR" | PROJECT$model$name == "DALECN_GSI_DFOL_FR"
         | PROJECT$model$name == "DALEC_GSI_BUCKET"| PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR"
         | PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALECN_BUCKET"
-        | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC") {
+        | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC"
+        | PROJECT$model$name == "DALEC_BUCKET_CanAGE") {
           grid_parameters$parameters[,,11,]=10**grid_parameters$parameters[,,11,]
       }
 
@@ -159,15 +160,17 @@ generate_parameter_maps<-function(PROJECT) {
       if (PROJECT$model$name == "DALEC_EVERGREEN" | PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_CDEA_ACM2" |
           PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET" | PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" |
           PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD" |
-          PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT" | 
-          PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALEC" | PROJECT$model$name == "DALEC_BUCKET") {
+          PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT" |
+          PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALEC" |
+          PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_BUCKET_CanAGE") {
 
           # remove non-constrained parameters (i.e. those not actually used in this analysis)
           initial_conditions=c(18:23)
           par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions),median_loc]
           if (PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR") {
               par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,30,31,32,33,37),median_loc]
-          } else if (PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC") {
+          } else if (PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALEC_BUCKET" |
+                     PROJECT$model$name == "DALEC" | PROJECT$model$name == "DALEC_BUCKET_CanAGE") {
               par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,30,31,32,33,37),median_loc]
           } # PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR"
 
@@ -223,7 +226,7 @@ generate_parameter_maps<-function(PROJECT) {
   # assuming we have generated one lets create the Cluster analysis map
   if (PROJECT$model$name == "DALEC_EVERGREEN" | PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_CDEA_ACM2" |
       PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_GSI_BUCKET" |
-      PROJECT$model$name == "DALEC" | PROJECT$model$name == "DALEC_BUCKET") {
+      PROJECT$model$name == "DALEC" | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_BUCKET_CanAGE") {
       jpeg(file=paste(PROJECT$figpath,"Cluster_map_of_median_parameters_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
       image.plot(grid_parameters$uk_cluster_pft, main=paste("Cluster analysis potential PFT map",sep=""),axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))

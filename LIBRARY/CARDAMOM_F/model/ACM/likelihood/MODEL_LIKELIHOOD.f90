@@ -44,7 +44,7 @@ module model_likelihood_module
     MCO%APPEND = 0
     MCO%nADAPT = 500
     MCO%fADAPT = 1d0
-    MCO%nOUT = 100000
+    MCO%nOUT = 1000
     MCO%nPRINT = 0
     MCO%nWRITE = 0
     ! the next two lines ensure that parameter inputs are either given or
@@ -778,7 +778,7 @@ module model_likelihood_module
           dn = DATAin%woopts(n)
           ! note that division is the uncertainty
           tot_exp = tot_exp+((DATAin%M_FLUXES(dn,3)-DATAin%woo(dn))/DATAin%woo_unc(dn))**2
-        end do
+       end do
         scale_likelihood = scale_likelihood-0.5d0*(tot_exp/dble(DATAin%nwoo))
     endif
 

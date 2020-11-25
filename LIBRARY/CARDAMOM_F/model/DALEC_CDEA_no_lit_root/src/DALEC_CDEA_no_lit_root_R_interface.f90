@@ -1,7 +1,7 @@
 
 
 subroutine rdaleccdeanolitroot(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
-                              ,out_var,out_var2,out_var3,out_var4,out_var5 & &
+                              ,out_var,out_var2,out_var3,out_var4,out_var5 &
                               ,lat,nopars,nomet &
                               ,nofluxes,nopools,pft,pft_specific,nodays,noyears,deltat &
                               ,nos_iter)

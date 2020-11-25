@@ -322,7 +322,7 @@ parallel_cluster_processing<-function(c,analysis_info,uk_cluster_pft,
                              analysis_info$in_file_names[p] == "gpp_gCm2day"   | analysis_info$in_file_names[p] == "nee_gCm2day"       | analysis_info$in_file_names[p] == "reco_gCm2day" |
                              analysis_info$in_file_names[p] == "rauto_gCm2day" | analysis_info$in_file_names[p] == "rhet_gCm2day"      | analysis_info$in_file_names[p] == "wood_gCm2" |
                              analysis_info$in_file_names[p] == "som_gCm2"      | analysis_info$in_file_names[p] == "bio_gCm2"          | analysis_info$in_file_names[p] == "root_gCm2" |
-                             analysis_info$in_file_names[p] == "lit_gCm2"      | analysis_info$in_file_names[p] == "lab_gCm2"          | analysis_info$in_file_names[p] == "fol_gCm2"  | 
+                             analysis_info$in_file_names[p] == "lit_gCm2"      | analysis_info$in_file_names[p] == "lab_gCm2"          | analysis_info$in_file_names[p] == "fol_gCm2"  |
                              analysis_info$in_file_names[p] == "litwood_gCm2") {
                       # remove time step multiplication from time step but do include unit correction with area
                       bob = apply(states_all[[infile_location]],2,quantile, prob=c(0.975,0.50,0.025))
@@ -657,7 +657,7 @@ generate_stocks_and_fluxes_maps<-function(PROJECT) {
         image.plot(mean_rooting_depth,col=colour_choices, main=paste("Median root depth (m)",sep=""),zlim=z_axis,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
         contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
         dev.off()
-    } else if (PROJECT$model$name == "DALEC" | PROJECT$model$name == "DALEC_BUCKET") {
+    } else if (PROJECT$model$name == "DALEC" | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_BUCKET_CanAGE") {
         jpeg(file=paste(PROJECT$figpath,"median_root_depth_maps_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
         par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
         mean_rooting_depth = par_array_median[,,40] * (states_array_median[,,7]*par_array_median[,,29]*2) / (par_array_median[,,39] + (states_array_median[,,7]*par_array_median[,,29]*2))
@@ -1270,5 +1270,3 @@ generate_stocks_and_fluxes_maps<-function(PROJECT) {
 
 ## Use byte compile
 #generate_stocks_and_fluxes_maps<-cmpfun(generate_stocks_and_fluxes_maps)
-
-
