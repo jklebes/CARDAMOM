@@ -464,7 +464,7 @@ module model_likelihood_module
 
     ! Steady State Attractor:
     ! Log ratio difference between inputs and outputs of the system.
-    logical, parameter :: old_edcs = .true.
+    logical, parameter :: old_edcs = .false.
     double precision, parameter :: EQF1_5 = log(1.5d0), & ! 10.0 = order magnitude; 2 = double and half
                                    EQF2 = log(2d0),   & ! 10.0 = order magnitude; 2 = double and half
                                    EQF5 = log(5d0),   &

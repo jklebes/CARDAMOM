@@ -114,7 +114,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
     # check which file prefix we are using today
     # list all available files which we will then search
     avail_files = list.files(path_to_lai,full.names=TRUE)
-    if (length(which(grepl("c_gls_LAI_", avail_files)))) {
+    if (length(which(grepl("c_gls_LAI_", avail_files))) > 0) {
         prefix = "c_gls_LAI_"
     } else {
         prefix = "c_gls_LAI300_"
@@ -149,7 +149,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
         rm(yrr)
       } # first year?
 
-      # open processed modis files
+      # open processed files
       input_file_1=paste(prefix,years_to_load[yr],sep="")
       # then check whether this pattern is found in the available files
       this_year = avail_files[grepl(input_file_1, avail_files)]
@@ -260,10 +260,6 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
     # return spatial structure to data
     lai_out = array(as.vector(lai_hold)[not_na], dim=c(long_dim,lat_dim,length(doy_out)))
     lai_unc_out = array(as.vector(lai_unc_hold)[not_na], dim=c(long_dim,lat_dim,length(doy_out)))
-
-    # Uncertainty information in Copernicus is standard error,
-    # therefore we need to at least conver this to a confidence intervaal
-#    lai_unc_out = lai_unc_out * 1.98
 
     # output variables
     lai_all = list(lai_all = lai_out, lai_unc_all = lai_unc_out,

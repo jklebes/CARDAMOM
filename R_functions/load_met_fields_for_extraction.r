@@ -18,7 +18,41 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
 
     } else {
 
-        if (met_source == "CRUJRA") {
+        if (met_source == "trendy_v9") {
+
+            # declare variable ids needed to select files / infile variables
+            varid = c("dswrf","tmx","pre","vpd","","tmn","wsp")
+            infile_varid = c("dswrf","tmx","pre","vpd","","tmn","wsp")
+
+            # open first ecmwf file to extract needed information
+            input_file_1 = paste(path_to_met_source,"/",varid[1],"_",startyear,"_monthly.nc",sep="")
+            data1 = nc_open(input_file_1)
+
+            # Get timing information
+            steps_in_day = 1/30.4375
+
+            # extract location variables
+            lat = ncvar_get(data1, "lat") ; long = ncvar_get(data1, "lon")
+            # expand the one directional values here into 2 directional
+            lat_dim = length(lat) ; long_dim = length(long)
+            long = array(long,dim=c(long_dim,lat_dim))
+            lat = array(lat,dim=c(lat_dim,long_dim)) ; lat=t(lat)
+par(mfrow=c(2,2)) ; image.plot(lat) ; image.plot(long) ; tmp = ncvar_get(data1,"dswrf"); image.plot(tmp[,,1])
+            # If we are using the GSI model we need the 21 days (or month) before the start date of the simulation, so we need to check if we have this information
+            # NOTE that this section of code is duplicated for each of the available datasets because of differences in storage and file name
+            extra_year = FALSE
+            present = 0
+            for (lag in seq(1,length(varid))) {
+                 if (varid[lag] != "") {
+                     input_file_1 = paste(path_to_met_source,"/",varid[lag],"_",as.character(as.numeric(startyear)-1),"_monthly.nc",sep="")
+                 }
+                 # check whether the files exist or not
+                 if (file.exists(input_file_1)) {present = present+1}
+            }
+            # if all the files exist then we will use them
+            if (present == length(which(varid != ""))) {extra_year=TRUE}
+
+        } else if (met_source == "CRUJRA") {
 
             # declare variable ids needed to select files / infile variables
             varid = c("dswrf","tmax","pre","spfh","pres","tmin","wsp")
@@ -44,7 +78,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
             extra_year = FALSE
             present = 0
             for (lag in seq(1,length(varid))) {
-                 input_file_1 = paste(path_to_met_source,"/",varid[1],"/crujra.V1.1.5d.",varid[1],".",as.character(as.numeric(startyear)-1),".365d.noc.nc",sep="")
+                 input_file_1 = paste(path_to_met_source,"/",varid[lag],"/crujra.V1.1.5d.",varid[lag],".",as.character(as.numeric(startyear)-1),".365d.noc.nc",sep="")
                  # check whether the files exist or not
                  if (file.exists(input_file_1)) {present = present+1}
             }
@@ -75,7 +109,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
             # NOTE that this section of code is duplicated for each of the available datasets because of differences in storage and file name
             extra_year = FALSE ; present = 0
             for (lag in seq(1,length(varid))) {
-                 input_file_1 = paste(path_to_met_source,varid[1],"_",as.character(as.numeric(startyear)-1),"01.nc",sep="")
+                 input_file_1 = paste(path_to_met_source,varid[lag],"_",as.character(as.numeric(startyear)-1),"01.nc",sep="")
                  # check whether the files exist or not
                  if (file.exists(input_file_1)) {present = present+1}
             }
@@ -171,37 +205,65 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
             # NOTE: that the use of mclapply() is due to reported improved efficiency over creating a virtual cluster.
             # However, mclapply does not (at the time of typing) work on Windows, i.e. Linux and Mac only
             cl <- min(length(load_years),numWorkers)
-            var1_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[1],infile_varid=infile_varid[1],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+            if (varid[1] != "") {
+                var1_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[1],infile_varid=infile_varid[1],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+            }
             print("...met load 14 %")
-            var2_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[2],infile_varid=infile_varid[2],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+            if (varid[2] != "") {
+                var2_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[2],infile_varid=infile_varid[2],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+            }
             print("...met load 29 %")
-            var3_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[3],infile_varid=infile_varid[3],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+            if (varid[3] != "") {
+                var3_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[3],infile_varid=infile_varid[3],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+            }
             print("...met load 43 %")
-            var4_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[4],infile_varid=infile_varid[4],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+            if (varid[4] != "") {
+                var4_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[4],infile_varid=infile_varid[4],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+            }
             print("...met load 57 %")
-            var5_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[5],infile_varid=infile_varid[5],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+            if (varid[5] != "") {
+                var5_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[5],infile_varid=infile_varid[5],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+            }
             print("...met load 71 %")
-            var6_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[6],infile_varid=infile_varid[6],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+            if (varid[6] != "") {
+                var6_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[6],infile_varid=infile_varid[6],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+            }
             print("...met load 86 %")
-            wind_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[7],infile_varid=infile_varid[7],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+            if (varid[1] != "") {
+                wind_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[7],infile_varid=infile_varid[7],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+            }
             print("...met load 100 %")
 
         } else {
 
             # or use serial
-            var1_out_list=lapply(load_years,FUN=load_met_function,varid=varid[1],infile_varid=infile_varid[1],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
+            if (varid[1] != "") {
+                var1_out_list=lapply(load_years,FUN=load_met_function,varid=varid[1],infile_varid=infile_varid[1],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
+            }
             print("...met load 14 %")
-            var2_out_list=lapply(load_years,FUN=load_met_function,varid=varid[2],infile_varid=infile_varid[2],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
+            if (varid[2] != "") {
+                var2_out_list=lapply(load_years,FUN=load_met_function,varid=varid[2],infile_varid=infile_varid[2],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
+            }
             print("...met load 29 %")
-            var3_out_list=lapply(load_years,FUN=load_met_function,varid=varid[3],infile_varid=infile_varid[3],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
+            if (varid[3] != "") {
+                var3_out_list=lapply(load_years,FUN=load_met_function,varid=varid[3],infile_varid=infile_varid[3],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
+            }
             print("...met load 43 %")
-            var4_out_list=lapply(load_years,FUN=load_met_function,varid=varid[4],infile_varid=infile_varid[4],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
+            if (varid[4] != "") {
+                var4_out_list=lapply(load_years,FUN=load_met_function,varid=varid[4],infile_varid=infile_varid[4],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
+            }
             print("...met load 57 %")
-            var5_out_list=lapply(load_years,FUN=load_met_function,varid=varid[5],infile_varid=infile_varid[5],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
+            if (varid[5] != "") {
+                var5_out_list=lapply(load_years,FUN=load_met_function,varid=varid[5],infile_varid=infile_varid[5],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
+            }
             print("...met load 71 %")
-            var6_out_list=lapply(load_years,FUN=load_met_function,varid=varid[6],infile_varid=infile_varid[6],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
+            if (varid[6] != "") {
+                var6_out_list=lapply(load_years,FUN=load_met_function,varid=varid[6],infile_varid=infile_varid[6],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
+            }
             print("...met load 86 %")
-            wind_out_list=lapply(load_years,FUN=load_met_function,varid=varid[7],infile_varid=infile_varid[7],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
+            if (varid[7] != "") {
+                wind_out_list=lapply(load_years,FUN=load_met_function,varid=varid[7],infile_varid=infile_varid[7],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff)
+            }
             print("...met load 100 %")
 
         } # parallel option
@@ -209,20 +271,38 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         # user update
         print("...beginning restructuring of meteorological datasets")
         var1_out = 0 ; var2_out = 0 ; var3_out = 0 ; var4_out = 0 ; var5_out = 0 ; var6_out = 0 ; wind_out = 0 ; tmp_out = 0; t_grid = 0
-        for (i in seq(1, length(var1_out_list))) {var1_out=append(var1_out,var1_out_list[[i]]$var_out) ; t_grid=append(t_grid,var1_out_list[[i]]$t_grid)}
-        rm(var1_out_list)
-        for (i in seq(1, length(var2_out_list))) {var2_out=append(var2_out,var2_out_list[[i]]$var_out)}
-        rm(var2_out_list)
-        for (i in seq(1, length(var3_out_list))) {var3_out=append(var3_out,var3_out_list[[i]]$var_out)}
-        rm(var3_out_list)
-        for (i in seq(1, length(var4_out_list))) {var4_out=append(var4_out,var4_out_list[[i]]$var_out)}
-        rm(var4_out_list)
-        for (i in seq(1, length(var5_out_list))) {var5_out=append(var5_out,var5_out_list[[i]]$var_out)}
-        rm(var5_out_list)
-        for (i in seq(1, length(var6_out_list))) {var6_out=append(var6_out,var6_out_list[[i]]$var_out)}
-        rm(var6_out_list)
-        for (i in seq(1, length(wind_out_list))) {wind_out=append(wind_out,wind_out_list[[i]]$var_out)}
-        rm(wind_out_list)
+        if (varid[1] != "") {
+            for (i in seq(1, length(var1_out_list))) {
+                 var1_out=append(var1_out,var1_out_list[[i]]$var_out)
+                 t_grid=append(t_grid,var1_out_list[[i]]$t_grid)
+            }
+
+            rm(var1_out_list)
+        }
+        if (varid[2] != "") {
+            for (i in seq(1, length(var2_out_list))) {var2_out=append(var2_out,var2_out_list[[i]]$var_out)}
+            rm(var2_out_list)
+        }
+        if (varid[3] != "") {
+            for (i in seq(1, length(var3_out_list))) {var3_out=append(var3_out,var3_out_list[[i]]$var_out)}
+            rm(var3_out_list)
+        }
+        if (varid[4] != "") {
+            for (i in seq(1, length(var4_out_list))) {var4_out=append(var4_out,var4_out_list[[i]]$var_out)}
+            rm(var4_out_list)
+        }
+        if (varid[5] != "") {
+            for (i in seq(1, length(var5_out_list))) {var5_out=append(var5_out,var5_out_list[[i]]$var_out)}
+            rm(var5_out_list)
+        }
+        if (varid[6] != "") {
+            for (i in seq(1, length(var6_out_list))) {var6_out=append(var6_out,var6_out_list[[i]]$var_out)}
+            rm(var6_out_list)
+        }
+        if (varid[7] != "") {
+           for (i in seq(1, length(wind_out_list))) {wind_out=append(wind_out,wind_out_list[[i]]$var_out)}
+           rm(wind_out_list)
+        }
 
         # remove initial value
         var1_out = var1_out[-1] ; var2_out = var2_out[-1]
@@ -235,6 +315,14 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         #
         # Unit conversions based on specific datasets
         #
+
+        # convert Trendy air temperature of oC to K
+        if (met_source == "trendy_v9" ) {
+            var2_out = var2_out + 273.15
+            var6_out = var6_out + 273.15
+            # Assign pressure (Pa) a default value
+            var5_out = rep(101325, times = length(var2_out))
+        }
 
         # convert ERA from W/m2 to MJ/m2/day
         if (met_source == "CHESS" | met_source == "ERA" | met_source == "CRUJRA") {
@@ -323,7 +411,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         var2_out = array(var2_out, dim=c(length(wheat_from_chaff),t_grid)) # Max T (K)
         var3_out = array(var3_out, dim=c(length(wheat_from_chaff),t_grid)) # Precipitation (kgH2O/m2/s)
         var4_out = array(var4_out, dim=c(length(wheat_from_chaff),t_grid)) # VPD (Pa)
-        var5_out = array(var5_out, dim=c(length(wheat_from_chaff),t_grid)) # Pressure (Pa)
+        var5_out = array(var5_out, dim=c(length(wheat_from_chaff),t_grid)) # Air Pressure (Pa)
         var6_out = array(var6_out, dim=c(length(wheat_from_chaff),t_grid)) # Min T (K)
         wind_out = array(wind_out, dim=c(length(wheat_from_chaff),t_grid)) # Wind (m/s)
 

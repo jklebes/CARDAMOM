@@ -225,6 +225,8 @@ generate_parameter_maps<-function(PROJECT) {
 
   # assuming we have generated one lets create the Cluster analysis map
   if (PROJECT$model$name == "DALEC_EVERGREEN" | PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_CDEA_ACM2" |
+      PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg" |
+      PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT" |
       PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_GSI_BUCKET" |
       PROJECT$model$name == "DALEC" | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_BUCKET_CanAGE") {
       jpeg(file=paste(PROJECT$figpath,"Cluster_map_of_median_parameters_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)

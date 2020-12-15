@@ -215,44 +215,59 @@ load_forestry_fields_for_extraction<-function(latlon_in,forestry_source,years_to
       # let the user know this might take some time
       print("Loading processed Global Forest Watch clearance information for subsequent sub-setting ...")
 
+      # Set flag
+      lat_done = FALSE
+      # Loop through years
       for (yrr in seq(1,length(years_to_load))){
 
+          # Create file name
           input_file_2 = paste(path_to_forestry,"GFW_forest_loss_",years_to_load[yrr],".nc",sep="")
-          data2 = nc_open(input_file_2)
+          # Check it exists
+          if (file.exists(input_file_2)) {
 
-          if (length(dim(latlon_in)) > 1) {
-              max_lat=max(latlon_in[,1])+1.0 ; max_long=max(latlon_in[,2])+1.0
-              min_lat=min(latlon_in[,1])-1.0 ; min_long=min(latlon_in[,2])-1.0
-          } else {
-              max_lat=max(latlon_in[1])+1.0 ; max_long=max(latlon_in[2])+1.0
-              min_lat=min(latlon_in[1])-1.0 ; min_long=min(latlon_in[2])-1.0
-          }
+              # Open the current file
+              data2 = nc_open(input_file_2)
 
-          if (yrr == 1) {
-              # begin reading the forest loss information instead
-              loss_lat=ncvar_get(data2, "latitude") ; loss_long=ncvar_get(data2, "longitude")
-              keep_lat=which(loss_lat[1,] > min_lat & loss_lat[1,] < max_lat)
-              keep_long=which(loss_long[,1] > min_long & loss_long[,1] < max_long)
-              lat_dim = length(min(keep_lat):max(keep_lat))
-              long_dim = length(min(keep_long):max(keep_long))
-              loss_lat=loss_lat[min(keep_long):max(keep_long),min(keep_lat):max(keep_lat)]
-              loss_long=loss_long[min(keep_long):max(keep_long),min(keep_lat):max(keep_lat)]
-              # rebuild dimensions
-              loss_lat = array(loss_lat, dim=c(long_dim,lat_dim)) ; loss_long = array(loss_long, dim=c(long_dim,lat_dim))
-              dims=c(dim(loss_lat),length(years_to_load))
-              loss_fraction=array(NA, dim=dims)
-          }
+              # Determine  lat / long bounds
+              if (length(dim(latlon_in)) > 1) {
+                  max_lat=max(latlon_in[,1])+1.0 ; max_long=max(latlon_in[,2])+1.0
+                  min_lat=min(latlon_in[,1])-1.0 ; min_long=min(latlon_in[,2])-1.0
+              } else {
+                  max_lat=max(latlon_in[1])+1.0 ; max_long=max(latlon_in[2])+1.0
+                  min_lat=min(latlon_in[1])-1.0 ; min_long=min(latlon_in[2])-1.0
+              }
+
+              # Create the grid once only
+              if (lat_done == FALSE) {
+
+                  # begin reading the forest loss information instead
+                  loss_lat=ncvar_get(data2, "latitude") ; loss_long=ncvar_get(data2, "longitude")
+                  keep_lat=which(loss_lat[1,] > min_lat & loss_lat[1,] < max_lat)
+                  keep_long=which(loss_long[,1] > min_long & loss_long[,1] < max_long)
+                  lat_dim = length(min(keep_lat):max(keep_lat))
+                  long_dim = length(min(keep_long):max(keep_long))
+                  loss_lat=loss_lat[min(keep_long):max(keep_long),min(keep_lat):max(keep_lat)]
+                  loss_long=loss_long[min(keep_long):max(keep_long),min(keep_lat):max(keep_lat)]
+                  # rebuild dimensions
+                  loss_lat = array(loss_lat, dim=c(long_dim,lat_dim)) ; loss_long = array(loss_long, dim=c(long_dim,lat_dim))
+                  dims=c(dim(loss_lat),length(years_to_load))
+                  loss_fraction=array(NA, dim=dims)
+                  # set flag
+                  lat_done = TRUE
+              } # lat_done
+
           # read year of forest loss informatin
-          loss_fraction_tmp=ncvar_get(data2, "forest_loss")
-          loss_fraction_tmp=loss_fraction_tmp[min(keep_long):max(keep_long),min(keep_lat):max(keep_lat)]
+          loss_fraction_tmp = ncvar_get(data2, "forest_loss")
+          loss_fraction_tmp = loss_fraction_tmp[min(keep_long):max(keep_long),min(keep_lat):max(keep_lat)]
           loss_fraction_tmp[which(as.vector(is.na(loss_fraction_tmp)))] = 0
-          loss_fraction=array(loss_fraction, dim=dims)
+          loss_fraction = array(loss_fraction, dim=dims)
           # place new clearance information into the output array
-          loss_fraction[,,yrr]=loss_fraction_tmp
+          loss_fraction[,,yrr] = loss_fraction_tmp
 
           # tidy up
           nc_close(data2)
 
+          } # File exists
       } # looping years
 
       # output variables

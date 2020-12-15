@@ -83,6 +83,8 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
                print('CONSIDER DELETING (or re-running) THIS CHAIN!!')
                print('Likely error will occur next!')
                status[c] = 1
+               # just in case
+               if (dim(param_sets)[2] < par_vector_length) {return(-9999)}
            } else {
                status[c] = 0
            }

@@ -119,12 +119,6 @@ subroutine rdaleccdeaacm2(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
      out_var2(i,1) = sum(FLUXES(1:nodays,4)+FLUXES(1:nodays,8)) / sumNPP ! foliar
      out_var2(i,2) = sum(FLUXES(1:nodays,6)) / sumNPP ! fine root
      out_var2(i,3) = sum(FLUXES(1:nodays,7)) / sumNPP ! wood
-     ! Mean transit time
-     out_var3(i,1) = pars(5,i) ! leaf life span (years)
-     out_var3(i,2) = pars(7,i) ! root residence time (/day)
-     out_var3(i,3) = pars(6,i) ! wood residence time (/day)
-     out_var3(i,4) = (pars(1,i) + pars(8,i)) * airt_adj ! litter (/day)
-     out_var3(i,5) = pars(9,i) * airt_adj ! som (/day)
 
      ! Determine locations of zeros in pools to correct turnover calculation
      ! Foliage
@@ -152,6 +146,25 @@ subroutine rdaleccdeaacm2(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
      where (POOLS(1:nodays,6) == 0) ! protection against NaN from division by zero
            som_hak = 1 ; som_filter(1:nodays) = 0d0
      end where
+
+     ! Mean transit times
+     ! Foliage (/day)
+     out_var3(i,1) = sum( ((FLUXES(1:nodays,10)+FLUXES(1:nodays,19)+FLUXES(1:nodays,25)) &
+                          / POOLS(1:nodays,2)) * fol_filter) / dble(nodays-sum(fol_hak))
+     ! Fine roots (/day)
+     out_var3(i,2) = sum( ((FLUXES(1:nodays,12)+FLUXES(1:nodays,20)+FLUXES(1:nodays,26)) &
+                          / POOLS(1:nodays,3)) * root_filter) / dble(nodays-sum(root_hak))
+     ! Wood (/day)
+     out_var3(i,3) = sum( ((FLUXES(1:nodays,11)+FLUXES(1:nodays,21)+FLUXES(1:nodays,27)) &
+                             / POOLS(1:nodays,4)) * wood_filter) / dble(nodays-sum(wood_hak))
+     ! Litter (fol+root+wood; /day)
+     out_var3(i,4) = sum( ((FLUXES(1:nodays,13)+FLUXES(1:nodays,15)+FLUXES(1:nodays,22)+FLUXES(1:nodays,28)) &
+                          / (POOLS(1:nodays,5))) * lit_filter) &
+                   / dble(nodays-sum(lit_hak)) ! litter+wood litter (/day)
+     ! Soil (/day)
+     out_var3(i,5) = sum( ((FLUXES(1:nodays,14)+FLUXES(1:nodays,23)) &
+                          / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
+
      ! Now loop through each year to estimate the annual residence time
      do y = 1, nos_years
         ! Estimate time steps covered by this year
@@ -196,8 +209,8 @@ subroutine rdaleccdeaacm2(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
   end do ! nos_iter loop
 
   ! MTT - Convert daily fractional loss to years
-  out_var3(:,2:5) = (out_var3(:,2:5)*365.25d0)**(-1d0) ! iter,(fol,root,wood,lit+litwood,som)
-  out_var5 = (out_var5*365.25d0)**(-1d0)               ! iter,(fol,root,wood,lit+litwood,som)
+  out_var3 = (out_var3*365.25d0)**(-1d0) ! iter,(fol,root,wood,lit+litwood,som)
+  out_var5 = (out_var5*365.25d0)**(-1d0) ! iter,(fol,root,wood,lit+litwood,som)
 
   ! Steady state gC/m2 estimation
   ! Determine the mean annual input (gC/m2/yr) based on current inputs for all pool,

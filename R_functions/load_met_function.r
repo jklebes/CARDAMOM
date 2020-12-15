@@ -197,8 +197,8 @@ load_met_function<- function (year_to_do,varid,infile_varid,remove_lat,remove_lo
         # ...unfortunately this outputs an array which the wrong order for the dimension
         # which we need to fix now...
         # ...fortunately we can do so while we move through time removing the "chaff"
-        
-        a = 1 ; l = length(wheat) 
+
+        a = 1 ; l = length(wheat)
         tmp = rep(NA, t_grid*l)
         for (i in seq(1, t_grid)) {
              tmp[a:(a+l-1)] = as.vector(var1[i,,])[wheat]
@@ -211,6 +211,38 @@ load_met_function<- function (year_to_do,varid,infile_varid,remove_lat,remove_lo
 
         # clean up
         rm(var1,tmp,i) ; gc(reset=TRUE,verbose=FALSE)
+
+    } else if (met_source == "trendy_v9") {
+
+        # Check whether this is a leap year or not
+        nos_days = nos_days_in_year(year_to_do)
+        # Determine what the number of days per month are
+        # Define days in month
+        days_per_month = rep(31,12) ; days_per_month[c(9,4,6,11)] = 30
+        if (nos_days == 365) {days_per_month[2] = 28} else {days_per_month[2] = 29}
+
+        # open first file in the sequence
+        input_file_1 = paste(path_to_met_source,"/",varid[1],"_",year_to_do,"_monthly.nc",sep="")
+        # open netcdf files
+        data1 = nc_open(input_file_1)
+        # read the met drivers
+        var1 = ncvar_get(data1, infile_varid[1]) ; var1 = var1[,,1:(dim(var1)[3])]
+        # close files after use
+        nc_close(data1)
+
+        # filter spatial extent
+        var1 = var1[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat),]
+        # assign correct error value
+        var1[is.na(var1)] = -9999
+
+        # move through time removing the "chaff" and inflating the dataset to give daily values
+        var1_out = rep(as.vector(var1[,,1])[wheat], times = days_per_month[1])
+        for (i in seq(2, dim(var1)[3])) { var1_out = append(var1_out,rep(as.vector(var1[,,i])[wheat],each=days_per_month[i])) }
+        # keep count of time steps
+        t_grid = sum(days_per_month)
+
+        # clean up
+        rm(var1,i) ; gc(reset=TRUE,verbose=FALSE)
 
     } # end data source selection
 

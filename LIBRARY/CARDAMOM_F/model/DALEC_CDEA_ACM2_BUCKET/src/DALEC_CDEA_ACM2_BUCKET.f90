@@ -1802,11 +1802,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     canopy_swrad_MJday = canopy_par_MJday + canopy_nir_MJday
 
     ! check energy balance
-!    balance = swrad - canopy_par_MJday - canopy_nir_MJday - refl_par_MJday -
-!    refl_nir_MJday - soil_swrad_MJday
+!    balance = swrad - canopy_par_MJday - canopy_nir_MJday - refl_par_MJday - refl_nir_MJday - soil_swrad_MJday
 !    if ((balance - swrad) / swrad > 0.01) then
-!        print*,"SW residual frac = ",(balance - swrad) / swrad,"SW residual =
-!        ",balance,"SW in = ",swrad
+!        print*,"SW residual frac = ",(balance - swrad) / swrad,"SW residual = ",balance,"SW in = ",swrad
 !    endif
 
   end subroutine calculate_shortwave_balance
@@ -2373,12 +2371,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! finally update soil water potential
     call soil_water_potential
 
-!    ! check water balance
+    ! check water balance
 !    balance = (rainfall_in - corrected_ET - underflow - runoff) * days_per_step
 !    balance = balance &
 !            - (sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers) * 1d3) &
 !            - initial_soilwater)
-!
+
 !    if (abs(balance) > 1d-6 .or. soil_waterfrac(1) < -1d-6) then
 !        print*,"Soil water miss-balance (mm)",balance
 !        print*,"Initial_soilwater (mm) = ",initial_soilwater

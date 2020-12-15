@@ -130,9 +130,13 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
 #        lcm=ncvar_get(data2,"LCM2007")
         lcm = raster("/home/lsmallma/WORK/GREENHOUSE/LCM2007/Download_lcm2007_143707/lcm-2007-1km_397874/dominant_target_class/LCM2007_GB_1K_Dominant_TargetClass.tif")
         # Reproject onto the WGS84 grid
-        lcm = projectRaster(lcm,crs = CRS("+init=epsg:4326"), method = "ngb")
+        lcm = projectRaster(lcm, ext = cardamom_ext, crs = CRS("+init=epsg:4326"), method = "ngb")
         # Aggregate to approximately the right resolution
-        target_ratio = max(0.1666667,(0.001*(resolution/111))) / res(lcm)
+        if (grid_type == "UK") {
+            target_ratio = max(0.1666667,(0.001*(resolution/111))) / res(lcm)
+        } else {
+            target_ratio = max(0.1666667,resolution) / res(lcm)
+        }
         agg_fun = function(pixels, na.rm) { 
            if ((length(which(pixels > 0))/length(pixels)) > 0.2) {
                return(modal(pixels[pixels > 0], na.rm=na.rm)) 
@@ -148,7 +152,6 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
         lcm = array(lcm, dim=c(dim(lcm)[2],dim(lcm)[1]))
         # Now flip the lat dimension to get it the right way
         lat_lcm = lat_lcm[,dim(lat_lcm)[2]:1] ; long_lcm = long_lcm[,dim(long_lcm)[2]:1] ; lcm = lcm[,dim(lcm)[2]:1]
-par(mfrow=c(2,3)) ; image.plot(lat_lcm) ; image.plot(long_lcm) ; image.plot(lcm)
     } else if (use_lcm == "CORINE2006") {
         data2=nc_open("/home/lsmallma/WORK/GREENHOUSE/Corine_lcm/Corine2006_at250m_with_lat_long.nc")
         lcm=ncvar_get(data2,"Corine2006")
@@ -295,37 +298,26 @@ par(mfrow=c(2,3)) ; image.plot(lat_lcm) ; image.plot(long_lcm) ; image.plot(lcm)
             output_j=unlist(output, use.names=FALSE)[which((1:length(unlist(output, use.names=FALSE))*0.5) == floor(1:length(unlist(output, use.names=FALSE))*0.5))]
         } # ECMWF or not
     }
+
+    # Inform the user
     print("Generating land sea mask")
 
     # load global shape file for land sea mask
     landmask = shapefile("./R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx")
     # just to be sure enforce the projection to WGS-84
     landmask = spTransform(landmask,CRS("+init=epsg:4326"))
+    # Clip to the extent of the CARDAMOM analysis
+    landmask = crop(landmask, cardamom_ext)
 
-    # Begin process of creating raster version of the shape file,
-    # based on the type of spatial grid we are using and the resolution of the analysis
-    if (grid_type == "UK") {
-        # 0.1666667 is the limit of resolution of the landsea mask used
-#        landsea = raster(ncols = round(360 / (0.001*(resolution/111)), digit = 0), nrows = round(180 / (0.001*(resolution/111)), digit = 0) )
-        landsea = raster(xmn = -180, xmx = 180, ymn = -90, ymx = 90, resolution = max(0.1666667,(0.001*(resolution/111))), crs = "+init=epsg:27700")
-        # NOTE: THIS NEED TO BE CHECKED WHETHER IT WORKS - I.E. CURRENTLY NOT USED SO NOT TESTED...
-    } else if (grid_type == "wgs84") {
-        # extract whole grids at resolution of the analysis
-        landsea = raster(xmn = -180, xmx = 180, ymn = -90, ymx = 90, resolution = max(0.1666667,resolution), crs = "+init=epsg:4326")
-    }
-    # update the extent information of the raster with that of the source shapefile
-    #extent(landsea) <- extent(landmask) # error; squishes the latitude dimension 
     # create raster, passing the raster values corresponding to the sovereign state
     # NOTE: the actual value assigned is linked the factor levels
-    landsea = rasterize(landmask,landsea,factor(landmask$SOVEREIGNT), fun = "last")
-    # Clip to the cardamom domain
-    landsea = crop(landsea,cardamom_ext)
-    # Resample into the cardamom grid
-    landsea = resample(landsea, cardamom_ext, method = "ngb")
+    landsea = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), fun = "last")
+    landsea_frac = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), getCover=TRUE)
+
     # Sometimes we want to simulate a particular country, which we will check now...
     country_match = factor(landmask$SOVEREIGNT) ; country_match = levels(country_match)
     country_match = gsub(" ","",country_match,fixed=TRUE)
-#sitename =  "UK"
+#sitename =  "UnitedKingdom"
     # does our site name (as specified in the grid verison of analysis) correspond to a country name as
     # given in the land mask we are using...?
     if (length(which(grepl(sitename,country_match) == TRUE)) > 0) {
@@ -333,37 +325,32 @@ par(mfrow=c(2,3)) ; image.plot(lat_lcm) ; image.plot(long_lcm) ; image.plot(lcm)
         country_match = which(sitename == country_match)
         keep = rep(0,length(landsea))
         for (i in seq(1, length(country_match))) {
-             keep[(as.vector(landsea) == country_match[i])] = 1
+             keep[as.vector(landsea) == country_match[i]] = 1
         }
     } else {
         # otherwise just assume we are interested in all land areas...
         keep = rep(0,length(landsea))
         keep[is.na(as.vector(landsea)) == FALSE] = 1
     } # country or all land area filter?
-    landsea[keep == 0] = NA ; landsea[as.vector(landsea) > 0] = 1
-    # trim to the actual data area
-    landsea = trim(landsea, padding = 3) 
+    # Set non country areas to NA, and all other to 1
+    landsea[keep == 0] = NA 
+    # Add a buffer based on the land sea fraction to avoid missing land area we want
+    landsea_frac = (boundaries(landsea, type="outer")*landsea_frac)
+    # Set all actual data to 1
+    landsea[as.vector(landsea) > 0] = 1
     # set missing data to 0
     landsea[is.na(as.vector(landsea))] = 0
+    # Now combine the maps
+    landsea = landsea + landsea_frac
+    # Reset any newly created NaN from the merge
+    landsea[is.na(as.vector(landsea))] = 0
+
+    # trim to the actual data area
+    #landsea = trim(landsea, padding = 3) 
     # extract lat/long information for the raster version
     landsea_long = coordinates(landsea)[,1] ; landsea_lat = coordinates(landsea)[,2]
     # arrange them into the correct lat / long orientations
-    landsea_dim = dim(landsea)
-#plot(landsea)    
-#    if (length(which(grepl(sitename,country_match) == TRUE)) > 0) {
-#        # if so then loop through the land areas which fall within the correct country
-#        country_match = which(sitename == country_match)
-#        keep = 0
-#        for (i in seq(1, length(country_match))) {
-#             keep = append(keep,which(landsea == country_match[i]))
-#        }
-#        keep = keep[-1]
-#        # set all areas to zero, before overlaying just the locations we want
-#        landsea[1:length(landsea)] = 0 ; landsea[keep] = 1
-#    } else {
-#        # otherwise just assume we are interested in all land areas...
-#        landsea[which(is.na(landsea) == FALSE)] = 1 ; landsea[which(is.na(landsea))] = 0
-#    }
+    landsea_dim = dim(landsea) ; landsea = as.vector(landsea)
 
     # find locations from the landsea mask which correspond with overall grid defined in the control file
     if (use_parallel) {
@@ -381,7 +368,7 @@ par(mfrow=c(2,3)) ; image.plot(lat_lcm) ; image.plot(long_lcm) ; image.plot(lcm)
     }
 
     # selecting only these areas of the landsea mask
-    landsea = as.vector(landsea)[output_k]
+#    landsea = as.vector(landsea)[output_k]
 
     # Check against our plant functional type / land cover maps
     # and determine which location want to keep based on land cover etc.
@@ -404,7 +391,7 @@ par(mfrow=c(2,3)) ; image.plot(lat_lcm) ; image.plot(long_lcm) ; image.plot(lcm)
              new_pft = lcm[output_i[pft]]
          }
          # now exclude if not a land site
-         if (new_pft == 0 | new_pft == 14 | new_pft == 15 | landsea[pft] == 0) {
+         if (new_pft == 0 | new_pft == 14 | new_pft == 15 | landsea[output_k[pft]] < 0.5) {
              remove = append(remove,pft)
          } else {
              pft_keep = append(pft_keep,new_pft)

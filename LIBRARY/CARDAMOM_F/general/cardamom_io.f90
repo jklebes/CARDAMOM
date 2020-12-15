@@ -1336,10 +1336,7 @@ module cardamom_io
     ! Assume that sub-sampling process, if completed, will use 10 % of the
     ! simulation time therefore we want to adjust the output frequency to
     ! correct for this
-!    if (MCO%sub_sample_complete) then
-!        MCO%nOUT = nint(dble(MCO%nOUT) * (1d0-MCO%sub_fraction))
-        MCO%nOUT = max(1,MCO%nOUT - MCOUT%nos_iterations)
-!    endif
+    MCO%nOUT = max(1,MCO%nOUT - MCOUT%nos_iterations)
 
     ! construct file names
     write(MCO%outfile,fmt='(A)')trim(outfile)//"PARS"
