@@ -590,7 +590,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         # this is a very bespoke modification so leave it here to avoid getting lost
         print("Loading UoL Africa maps")
 
-        # Create the full file paths estimates and their uncertainty
+        # Create the full file paths estimates and their uncertainty (MgC/ha)
         input_file = paste(path_to_Cwood,"AGBmap_ALOS_PTC_2007_08.tif",sep="")
         input_file = append(input_file,paste(path_to_Cwood,"AGBmap_ALOS_PTC_2009_10.tif",sep=""))
         input_file = append(input_file,paste(path_to_Cwood,"AGBmap_ALOS_PTC_2015_16.tif",sep=""))
@@ -681,17 +681,22 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
 
         } # looping available years
 
-        # Convert gC/m2 -> Mg/ha needed for Saatchi et al (2011)
-        biomass_gCm2 = biomass_gCm2 * 2.083333 * 1e-2
-        biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 * 2.083333 * 1e-2
+        # Convert MgC/ha -> Mg/ha needed for Saatchi et al (2011)
+        biomass_gCm2 = biomass_gCm2 * 2.083333
+        biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 * 2.083333
         # Use allometry to estimate below ground biomass stock and
         # combined with the above ground (Mg/ha) to give a total woody biomass estimate
         # Saatchi et al., (2011), PNAS, 108, 9899-9904, https://www.pnas.org/content/108/24/9899
         biomass_gCm2 = biomass_gCm2 + (0.489 * biomass_gCm2 ** 0.89)
         biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 + (0.489 * biomass_uncertainty_gCm2 ** 0.89)
         # Now back to desired units gC/m2
-        biomass_gC = biomass_gCm2 * 0.48 * 1e2
+        biomass_gCm2 = biomass_gCm2 * 0.48 * 1e2
         biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 * 0.48 * 1e2
+
+        # Re-construct arrays for output
+        idim = dim(lat)[1] ; jdim = dim(long)[2] ; tdim = length(biomass_gCm2) / (idim * jdim)
+        biomass_gCm2 = array(biomass_gCm2, dim=c(idim,jdim,tdim))
+        biomass_uncertainty_gCm2 = array(biomass_uncertainty_gCm2, dim=c(idim,jdim,tdim))
 
         if (done_lat) {
             # Output variables

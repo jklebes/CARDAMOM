@@ -37,7 +37,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
             lat_dim = length(lat) ; long_dim = length(long)
             long = array(long,dim=c(long_dim,lat_dim))
             lat = array(lat,dim=c(lat_dim,long_dim)) ; lat=t(lat)
-par(mfrow=c(2,2)) ; image.plot(lat) ; image.plot(long) ; tmp = ncvar_get(data1,"dswrf"); image.plot(tmp[,,1])
+
             # If we are using the GSI model we need the 21 days (or month) before the start date of the simulation, so we need to check if we have this information
             # NOTE that this section of code is duplicated for each of the available datasets because of differences in storage and file name
             extra_year = FALSE
@@ -380,7 +380,7 @@ par(mfrow=c(2,2)) ; image.plot(lat) ; image.plot(long) ; tmp = ncvar_get(data1,"
                 doy = seq(1,nos_days)
                 # mass of dry air = 28.97(g/mol) ; mass of co2 = 44.01 (g/mol); *1e-6 scale from umol -> mol
                 co2 = rep(co2_annual,times = days_per_month) # specifically generate the right number of days per month
-                co2 = rep(co2, each = steps_in_day)
+                co2 = rep(co2, each = max(1,steps_in_day))
                 #co2 = rep(380,length.out=(nos_days*steps_in_day)) # default ppm 570 / 370 face
                 if (extra_year) {
                     if (extra_nos_days == 366) {
@@ -389,13 +389,13 @@ par(mfrow=c(2,2)) ; image.plot(lat) ; image.plot(long) ; tmp = ncvar_get(data1,"
                         days_per_month=c(31,28,31,30,31,30,31,31,30,31,30,31)
                     }
                     extra_co2 = rep(co2_annual,times = days_per_month) # specifically generate the right number of days per month
-                    extra_co2 = rep(extra_co2, each = steps_in_day)
+                    extra_co2 = rep(extra_co2, each = max(1,steps_in_day))
                     co2 = append(extra_co2,co2)
                 }
              } else {
                 doy = append(doy,seq(1,nos_days))
                 extra_co2 = rep(co2_annual,times = days_per_month) # specifically generate the right number of days per month
-                extra_co2 = rep(extra_co2, each = steps_in_day)
+                extra_co2 = rep(extra_co2, each = max(1,steps_in_day))
                 co2 = append(co2, extra_co2)
 #                co2 = append(co2,rep(380,length.out=(nos_days*steps_in_day)))
              }

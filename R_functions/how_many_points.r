@@ -137,16 +137,16 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
         } else {
             target_ratio = max(0.1666667,resolution) / res(lcm)
         }
-        agg_fun = function(pixels, na.rm) { 
+        agg_fun = function(pixels, na.rm) {
            if ((length(which(pixels > 0))/length(pixels)) > 0.2) {
-               return(modal(pixels[pixels > 0], na.rm=na.rm)) 
-           } else { 
-               return(0) 
-           } 
+               return(modal(pixels[pixels > 0], na.rm=na.rm))
+           } else {
+               return(0)
+           }
         }
         lcm = aggregate(lcm, fact = floor(target_ratio), fun = agg_fun)
         # Extract lat / long
-        lat_lcm = coordinates(lcm) 
+        lat_lcm = coordinates(lcm)
         # Convert into arrays
         long_lcm = array(lat_lcm[,1], dim=c(dim(lcm)[2],dim(lcm)[1])) ; lat_lcm = array(lat_lcm[,2], dim=c(dim(lcm)[2],dim(lcm)[1]))
         lcm = array(lcm, dim=c(dim(lcm)[2],dim(lcm)[1]))
@@ -320,9 +320,9 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
 #sitename =  "UnitedKingdom"
     # does our site name (as specified in the grid verison of analysis) correspond to a country name as
     # given in the land mask we are using...?
-    if (length(which(grepl(sitename,country_match) == TRUE)) > 0) {
+    if (length(which(grepl(sitename,country_match) == TRUE)) > 0 & select_country) {
         # if so then loop through the land areas which fall within the correct country
-        country_match = which(sitename == country_match)
+        country_match = which(grepl(sitename,country_match) == TRUE)
         keep = rep(0,length(landsea))
         for (i in seq(1, length(country_match))) {
              keep[as.vector(landsea) == country_match[i]] = 1
@@ -333,7 +333,7 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
         keep[is.na(as.vector(landsea)) == FALSE] = 1
     } # country or all land area filter?
     # Set non country areas to NA, and all other to 1
-    landsea[keep == 0] = NA 
+    landsea[keep == 0] = NA
     # Add a buffer based on the land sea fraction to avoid missing land area we want
     landsea_frac = (boundaries(landsea, type="outer")*landsea_frac)
     # Set all actual data to 1
@@ -346,7 +346,7 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
     landsea[is.na(as.vector(landsea))] = 0
 
     # trim to the actual data area
-    #landsea = trim(landsea, padding = 3) 
+    #landsea = trim(landsea, padding = 3)
     # extract lat/long information for the raster version
     landsea_long = coordinates(landsea)[,1] ; landsea_lat = coordinates(landsea)[,2]
     # arrange them into the correct lat / long orientations
@@ -411,6 +411,8 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
     }
     # now sub-select for the ones we want
     if (length(remove) > 0) {lat = lat[-remove] ; long = long[-remove] ; sites = sites[-remove]}
+    # Inform the user of the number of pixels
+    print(paste("In total there are ",length(sites)," land pixels to run",sep=""))
 
     # product is the number of points
     return(list(nosites=length(lat),waterpixels=remove,landsea=landsea,ctessel_pft=pft_keep,lat_dim=lat_dim,long_dim=long_dim,sites=sites))

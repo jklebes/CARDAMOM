@@ -151,7 +151,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               save(parameters,drivers,states_all,site_ctessel_pft,file=outfile)#, compress="gzip")
           } else {
               # ...otherwise this is a grid and we want straight forward reduced dataset of common stocks and fluxes
-              num_quantiles = c(0.025,0.25,0.5,0.75,0.975) ; num_quantiles_agg = seq(0.001,0.999, length = 100)
+              num_quantiles = c(0.025,0.05,0.25,0.5,0.75,0.95,0.975) ; num_quantiles_agg = seq(0.001,0.999, length = 100)
               na_flag = TRUE
               # Estimate multiple use fluxes
               npp = states_all$gpp_gCm2day - states_all$rauto_gCm2day
@@ -194,15 +194,15 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               if (length(which(names(states_all) == "litwood_gCm2")) > 0) {
                   # Total C including wood litter
                   site_output$totalC_gCm2 = apply(states_all$bio_gCm2+states_all$litwood_gCm2+states_all$lit_gCm2+states_all$som_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
-                  dCbio = (states_all$bio_gCm2+states_all$litwood_gCm2+states_all$lit_gCm2+states_all$som_gCm2) 
-                  dCbio = dCbio - (states_all$bio_gCm2[,1]+states_all$litwood_gCm2[,1]+states_all$lit_gCm2[,1]+states_all$som_gCm2[,1]) 
+                  dCbio = (states_all$bio_gCm2+states_all$litwood_gCm2+states_all$lit_gCm2+states_all$som_gCm2)
+                  dCbio = dCbio - (states_all$bio_gCm2[,1]+states_all$litwood_gCm2[,1]+states_all$lit_gCm2[,1]+states_all$som_gCm2[,1])
                   site_output$dCtotalC_gCm2 = apply(dCbio,2,quantile, prob=num_quantiles, na.rm=TRUE)
                   # DOM (soil + litter + wood litter)
                   site_output$dom_gCm2 = apply(states_all$litwood_gCm2+states_all$lit_gCm2+states_all$som_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
-                  dCbio = (states_all$litwood_gCm2+states_all$lit_gCm2+states_all$som_gCm2) 
-                  dCbio = dCbio - (states_all$litwood_gCm2[,1]+states_all$lit_gCm2[,1]+states_all$som_gCm2[,1]) 
+                  dCbio = (states_all$litwood_gCm2+states_all$lit_gCm2+states_all$som_gCm2)
+                  dCbio = dCbio - (states_all$litwood_gCm2[,1]+states_all$lit_gCm2[,1]+states_all$som_gCm2[,1])
                   site_output$dCdom_gCm2 = apply(dCbio,2,quantile, prob=num_quantiles, na.rm=TRUE)
-                  # wood litter 
+                  # wood litter
                   site_output$litwood_gCm2 = apply(states_all$litwood_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
                   dCbio = states_all$litwood_gCm2 - states_all$litwood_gCm2[,1] # difference in cwd from initial
                   site_output$dClitwood_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
@@ -210,7 +210,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                   site_output$deadorg_gCm2 = apply(states_all$litwood_gCm2+states_all$lit_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
                   dCbio = (states_all$litwood_gCm2+states_all$lit_gCm2) - (states_all$litwood_gCm2[,1]+states_all$lit_gCm2[,1]) # difference in deadorg from initial
                   site_output$dCdeadorg_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
-         
+
               } else {
                   # Total C without wood litter
                   site_output$totalC_gCm2 = apply(states_all$bio_gCm2+states_all$lit_gCm2+states_all$som_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
@@ -250,7 +250,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               if (length(which(names(states_all) == "litwood_gCm2")) > 0) {
                   ## With wood litter
                   # Total C and change
-                  site_output$agg_totalC = quantile(apply(states_all$bio_gCm2[,ss:ff] + 
+                  site_output$agg_totalC = quantile(apply(states_all$bio_gCm2[,ss:ff] +
                                                           states_all$lit_gCm2[,ss:ff] +
                                                           states_all$litwood_gCm2[,ss:ff] +
                                                           states_all$som_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
@@ -258,8 +258,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                   dCbio = dCbio - (states_all$bio_gCm2[,1] + states_all$lit_gCm2[,1] + states_all$litwood_gCm2[,1] + states_all$som_gCm2[,1])
                   site_output$agg_dCtotalC = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
                   # DOM and change
-                  site_output$agg_dom = quantile(apply(states_all$som_gCm2[,ss:ff] + 
-                                                       states_all$lit_gCm2[,ss:ff] + 
+                  site_output$agg_dom = quantile(apply(states_all$som_gCm2[,ss:ff] +
+                                                       states_all$lit_gCm2[,ss:ff] +
                                                        states_all$litwood_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
                   dCbio = states_all$lit_gCm2[,ff] + states_all$litwood_gCm2[,ff] + states_all$som_gCm2[,ff]
                   dCbio = dCbio - (states_all$lit_gCm2[,1] + states_all$litwood_gCm2[,1] + states_all$som_gCm2[,1])
@@ -271,7 +271,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               } else {
                   ## Without wood litter
                   # Total C and change
-                  site_output$agg_totalC = quantile(apply(states_all$bio_gCm2[,ss:ff] + 
+                  site_output$agg_totalC = quantile(apply(states_all$bio_gCm2[,ss:ff] +
                                                           states_all$lit_gCm2[,ss:ff] +
                                                           states_all$som_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
                   dCbio = states_all$bio_gCm2[,ff] + states_all$lit_gCm2[,ff] + states_all$som_gCm2[,ff]
@@ -682,7 +682,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           # Determine grid area (m2)
           grid_output$area = calc_pixel_area(grid_output$lat,grid_output$long,PROJECT$resolution)
           # this output is in vector form and we need matching array shapes so...
-          grid_output$area = array(grid_output$area, dim=c(PROJECT$long_dim,PROJECT$lat_dim)) 
+          grid_output$area = array(grid_output$area, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 
       } else {
 

@@ -11,7 +11,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
 
       ! drivers
       double precision, allocatable, dimension(:,:) :: MET ! contains our met fields
-      double precision ::  meantemp, meanrad, meanprecip ! mean conditions used in some EDCs
+      double precision :: meanco2, meantemp, meanrad, meanprecip ! mean conditions used in some EDCs
 
       ! OBS: more can obviously be added
       double precision, allocatable, dimension(:) :: GPP     & ! GPP (gC.m-2.day-1)

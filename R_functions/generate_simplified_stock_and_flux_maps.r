@@ -36,16 +36,16 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
 
   # determine the array value for the median,
   num_quantiles = dim(grid_output$mean_labile_gCm2)[3]
-  if (num_quantiles == 5) {
+  if (num_quantiles == 7) {
       # then we assume we are dealing with 0.025, 0.25, 0.5, 0.75, 0.975 quantiles
-      median_loc = 3 ; loc_25 = 2 ; loc_75 = 4; lower_loc = 1 ; upper_loc = 5
+      median_loc = 4 ; loc_25 = 3 ; loc_75 = 6; lower_loc = 1 ; upper_loc = 7
   } else {
       # otherwise we need to approximate it...
       median_loc = round(num_quantiles / 2,digits=0)
-      lower_loc = ceiling(num_quantile * 0.025)
-      upper_loc = floor(num_quantile * 0.975)
-      loc_25 = ceiling(num_quantile * 0.25)
-      loc_75 = floor(num_quantile * 0.75)
+      lower_loc = ceiling(num_quantiles * 0.025)
+      upper_loc = floor(num_quantiles * 0.975)
+      loc_25 = ceiling(num_quantiles * 0.25)
+      loc_75 = floor(num_quantiles * 0.75)
   }
 
   # calculate land mask

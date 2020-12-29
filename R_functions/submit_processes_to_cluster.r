@@ -39,8 +39,9 @@ submit_processes_to_cluster<-function (PROJECT_in) {
     }
     # write commands to clear previous runs and copy new commands
     commands=c(paste("rm ",PROJECT_in$eresultspath,"*",sep="")
-	      ,paste("scp ",username,"@",home_computer,":",outfile," ",PROJECT_in$eexepath,sep="")
-	      ,paste("cd ",PROJECT_in$eexepath, sep=""))
+              ,paste("rm ",PROJECT_in$eoestreampath,"*",sep="")
+              ,paste("scp ",username,"@",home_computer,":",outfile," ",PROJECT_in$eexepath,sep="")
+              ,paste("cd ",PROJECT_in$eexepath, sep=""))
     if (delete_old == "n") {commands=commands[-1]}
 
     ## default information for eddie submission

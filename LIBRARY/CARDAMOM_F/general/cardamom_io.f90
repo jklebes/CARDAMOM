@@ -545,16 +545,16 @@ module cardamom_io
     ! most of these will require new information to be appended to the end at
     ! all times - therefore we use the unformatted stream access
     open(pfile_unit,file=trim(parname),form="UNFORMATTED",access="stream",status="UNKNOWN",iostat=ios)
-    if (ios /= 0) print*,"error ",ios," openning file",trim(parname)
+    if (ios /= 0) print*,"error ",ios," opening file",trim(parname)
     open(sfile_unit,file=trim(stepname),form="UNFORMATTED",access="stream",status="UNKNOWN",iostat=ios)
-    if (ios /= 0) print*,"error ",ios," openning file",trim(stepname)
+    if (ios /= 0) print*,"error ",ios," opening file",trim(stepname)
     open(cifile_unit,file=trim(covinfoname),form="UNFORMATTED",access="stream",status="UNKNOWN",iostat=ios)
-    if (ios /= 0) print*,"error ",ios," openning file",trim(covinfoname)
+    if (ios /= 0) print*,"error ",ios," opening file",trim(covinfoname)
     ! for the covariance matrix we have a fixed size containing two matrices,
     ! the initial and the current output - therefore we use
     inquire(iolength = reclen) a ; print*,reclen
     open(cfile_unit,file=trim(covname),form="UNFORMATTED",access="direct",recl=reclen,iostat=ios)
-    if (ios /= 0) print*,"error ",ios," openning file",trim(covname)
+    if (ios /= 0) print*,"error ",ios," opening file",trim(covname)
 
     return
 
@@ -1192,11 +1192,12 @@ module cardamom_io
 !        print*,"NBE subsample = ",DATAin%sub_nNBE," observations of ",DATAin%nNBE
 !    end if
 
-    ! next determine the mean temperature and mean radiation values
-    ! daily mean temperature component (oC)
+    ! timestep mean temperature (oC)
     DATAin%meantemp = sum((DATAin%met(2,:) + DATAin%met(3,:)) * 0.5d0) / dble(DATAin%nodays)
     ! mean SW radiation (MJ/m2/day)
     DATAin%meanrad = sum(DATAin%met(4,:)) / dble(DATAin%nodays)
+    ! mean atmospheric CO2 (ppm)
+    DATAin%meanco2 = sum(DATAin%met(5,:)) / dble(DATAin%nodays)
     ! mean precipitation (mm/yr)
     DATAin%meanprecip = sum(DATAin%met(7,:)*84600d0*365.25d0) / dble(DATAin%nodays)
 
@@ -1204,6 +1205,7 @@ module cardamom_io
     write(*,*) "Mean Rad (MJ/m2/day) = ", DATAin%meanrad
     write(*,*) "Mean Temp (Celcius) = ", DATAin%meantemp
     write(*,*) "Mean Precip (mm/yr) = ", DATAin%meanprecip
+    write(*,*) "Mean CO2 (ppm) = ", DATAin%meanco2
     write(*,*) "==========="
     write(*,*) "Number of timesteps = ", DATAin%nodays
     write(*,*) "Total number of obs = ", DATAin%total_obs

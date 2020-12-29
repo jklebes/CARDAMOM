@@ -343,31 +343,6 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         # All maps converted into common format, therefore a common extraction subroutine can be used
         output = extract_Cwood_initial(spatial_type,resolution,grid_type,latlon_wanted,Cwood_initial_all)
         Cwood_initial = output$Cwood_stock ; Cwood_initial_unc = output$Cwood_stock_unc
-
-#    } else if (Cwood_initial_source == "UoL") {
-#        # this is a very bespoke modification so leave it here to avoid getting lost
-#        print("extract from UoL AGB maps")
-#        agb = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_stable_forest_2015_2017.tif", sep=""))
-#        unc = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_std_stable_forest_2015_2017.tif", sep=""))
-#        agb = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_stable_savannah_2015_2017.tif", sep=""))
-#        unc = raster(paste(path_to_biomass,"Kenya_0.25deg_AGB_std_stable_savannah_2015_2017.tif", sep=""))
-#        # extract dimension information for the grid, note the axis switching between raster and actual array
-#        xdim = dim(agb)[2] ; ydim = dim(agb)[1]
-#        # extract the lat / long information needed
-#        longitude = coordinates(agb)[,1] ; latitude = coordinates(agb)[,2]
-#        # restructure into correct orientation
-#        longitude = array(longitude, dim=c(xdim,ydim))
-#        latitude = array(latitude, dim=c(xdim,ydim))
-#        # break out from the rasters into arrays which we can manipulate
-#        agb = array(as.vector(unlist(agb)), dim=c(xdim,ydim))
-#        unc = array(as.vector(unlist(unc)), dim=c(xdim,ydim))
-#        output = closest2d(1,latitude,longitude,latlon_wanted[1],latlon_wanted[2],2)
-#        i1 = unlist(output)[1] ; j1 = unlist(output)[2]
-#        if (is.na(agb[i1,j1]) | is.na(unc[i1,j1])) {
-#            Cwood_initial = -9999 ; Cwood_initial_unc = -9999
-#        } else  {
-#            Cwood_initial = agb[i1,j1] ; Cwood_initial_unc = unc[i1,j1]
-#        }
     } else {
         # assume no data available
         Cwood_initial=-9999 ; Cwood_initial_unc=-9999
@@ -422,7 +397,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         }
     } else if (Cwood_stock_source == "GlobBIOMASS" | Cwood_stock_source == "mpi_biomass" |
                Cwood_stock_source == "INPE_Avitabile" | Cwood_stock_source == "Avitabile" |
-               Cwood_stock_source == "McNicol") {
+               Cwood_stock_source == "McNicol" | Cwood_stock_source == "Biomass_maps_Africa_UoL") {
 
         # All maps converted into common format, therefore a common extraction subroutine can be used
         if (max(Cwood_stock_all$place_obs_in_step) > 0) {
@@ -452,58 +427,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
                 Cwood_stock[floor(mean(tmp))] = mean(tmp2) ; Cwood_stock_unc[floor(mean(tmp))] = mean(tmp3)
                 rm(tmp,tmp2,tmp3)
             }
-        }
-#    } else if (Cwood_stock_source == "McNicol") {
-#        # this is a very bespoke modification so leave it here to avoid getting lost
-#        print("extract from McNichol AGB maps")
-#        tmp_2007 = raster(paste(path_to_biomass,"mcnicol_AGC2007_0.25d.tif", sep=""))
-#        tmp_2008 = raster(paste(path_to_biomass,"mcnicol_AGC2008_0.25d.tif", sep=""))
-#        tmp_2009 = raster(paste(path_to_biomass,"mcnicol_AGC2009_0.25d.tif", sep=""))
-#        tmp_2010 = raster(paste(path_to_biomass,"mcnicol_AGC2010_0.25d.tif", sep=""))
-#        # extract dimension information for the grid, note the axis switching between raster and actual array
-#        xdim = dim(tmp_2007)[2] ; ydim = dim(tmp_2007)[1]
-#        # extract the lat / long information needed
-#        longitude = coordinates(tmp_2007)[,1] ; latitude = coordinates(tmp_2007)[,2]
-#        # restructure into correct orientation
-#        longitude = array(longitude, dim=c(xdim,ydim))
-#        latitude = array(latitude, dim=c(xdim,ydim))
-#        # break out from the rasters into arrays which we can manipulate
-#        tmp_2007 = array(as.vector(unlist(tmp_2007)), dim=c(xdim,ydim))
-#        tmp_2008 = array(as.vector(unlist(tmp_2008)), dim=c(xdim,ydim))
-#        tmp_2009 = array(as.vector(unlist(tmp_2009)), dim=c(xdim,ydim))
-#        tmp_2010 = array(as.vector(unlist(tmp_2010)), dim=c(xdim,ydim))
-#        # Find location - assume that lat / long of each file is identical
-#        output = closest2d(1,latitude,longitude,latlon_wanted[1],latlon_wanted[2],2)
-#        i1 = unlist(output)[1] ; j1 = unlist(output)[2]
-#        # Create the wood stock time series variable - ready filled with -9999
-#        if (length(timestep_days) > 1) {
-#            # Time step > daily
-#            Cwood_stock = rep(-9999, length(timestep_days))
-#            Cwood_stock_unc = rep(-9999, length(timestep_days))
-#        } else {
-#            stop('Have not coded up McNicol wood extraction to work for daily yet...')
-#        }
-#        # Find start of target year and stick the observation in the middle of it
-#        if (as.numeric(start_year) < 2007 & is.na(tmp_2007[i1,j1]) == FALSE) {
-#            place = (2007 - as.numeric(start_year))*365.25 ; place = which(cumsum(timestep_days) > place)[1]
-#            # Adjust units from MgC/ha -> gC/m2
-#            Cwood_stock[place] = tmp_2007[i1,j1] * 1e2 ; Cwood_stock_unc[place] = 250 # 250 gC/m2 is assumption from Mat
-#        }
-#        if (as.numeric(start_year) < 2008 & is.na(tmp_2008[i1,j1]) == FALSE) {
-#            place = (2008 - as.numeric(start_year))*365.25 ; place = which(cumsum(timestep_days) > place)[1]
-#            # Adjust units from MgC/ha -> gC/m2
-#            Cwood_stock[place] = tmp_2008[i1,j1] * 1e2 ; Cwood_stock_unc[place] = 250 # 250 gC/m2 is assumption from Mat
-#        }
-#        if (as.numeric(start_year) < 2009 & is.na(tmp_2009[i1,j1]) == FALSE) {
-#            place = (2009 - as.numeric(start_year))*365.25 ; place = which(cumsum(timestep_days) > place)[1]
-#            # Adjust units from MgC/ha -> gC/m2
-#            Cwood_stock[place] = tmp_2009[i1,j1] * 1e2 ; Cwood_stock_unc[place] = 250 # 250 gC/m2 is assumption from Mat
-#        }
-#        if (as.numeric(start_year) < 2010 & is.na(tmp_2010[i1,j1]) == FALSE) {
-#            place = (2010 - as.numeric(start_year))*365.25 ; place = which(cumsum(timestep_days) > place)[1]
-#            # Adjust units from MgC/ha -> gC/m2
-#            Cwood_stock[place] = tmp_2010[i1,j1] * 1e2 ; Cwood_stock_unc[place] = 250 # 250 gC/m2 is assumption from Mat
-#        }
+        } # INPE_Avitabile map adjustment
     } else {
         # assume no data available
         Cwood_stock = -9999 ; Cwood_stock_unc = -9999

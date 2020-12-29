@@ -205,10 +205,13 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       OTHERPRIORS[5] = OBS$Cwood_potential     ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
   } else if (modelname == "DALEC_CDEA_ACM2") {
       PARPRIORS[2] =0.46                ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
-      PARPRIORS[11]=1.89*14.77735       ; PARPRIORUNC[11]=1.89*0.4696238*2 # Derived from ACM2 recalibration.
+#      PARPRIORS[11]=1.89*14.77735       ; PARPRIORUNC[11]=1.89*0.4696238*2 # Derived from ACM2 recalibration.
                                                                     # Note despite having the same name as ecosystem property of Amax per gN or SPA's kappaC
                                                                     # These observational constraints are not the same and would lead to
                                                                     # overestimation of GPP (SPA = 34, ACM2 = 15), but here multiple by avN (1.89) to get Ceff
+      PARPRIORS[11]=21.1491            ; PARPRIORUNC[11]=8.534234*0.5 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+                                                                      #       Note that this prior is difference from DALEC_CDEA_LU_FIRES
+                                                                      # due to the different temperature response functions used in ACM2 vs ACM 1
 #      PARPRIORS[17]=35.5                ; PARPRIORUNC[17]=35.5*0.23 # Kiuic LCA prior
       PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
       PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior

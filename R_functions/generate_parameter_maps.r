@@ -24,8 +24,10 @@ generate_parameter_maps<-function(PROJECT) {
   outfile=paste(PROJECT$results_processedpath,PROJECT$name,"_parameter_maps.RData",sep="")
 
   # Which quantiles will we extract, these should be kept the same as those for the stock / flux outputs
-  num_quantiles = c(0.025,0.25,0.5,0.75,0.975) ; na_flag = TRUE
-  median_loc = 3 ; upper_loc = 5 ; lower_loc = 1
+  num_quantiles = c(0.025,0.05,0.25,0.5,0.75,0.95,0.975) ; na_flag = TRUE
+  median_loc = 4 ; upper_loc = 7 ; lower_loc = 1
+  # Resilience factor for non-combusted tissue
+  rfac = rep(0.5,7) ; rfac[5] = 0.1 ; rfac[6] = 0 ; rfac[7] = 0.1
 
   if (file.exists(outfile) == FALSE | repair == 1) {
       # Create output object
@@ -47,12 +49,21 @@ generate_parameter_maps<-function(PROJECT) {
       grid_parameters$SS_root_gCm2=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
       grid_parameters$SS_DeadOrg_gCm2=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
       grid_parameters$SS_som_gCm2=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
-      # Deried Ecoystem traits (time varient)
+      # Derived Ecoystem traits (time varient)
       grid_parameters$aMTT_foliar_years=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_years,length(num_quantiles)))
       grid_parameters$aMTT_wood_years=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_years,length(num_quantiles)))
       grid_parameters$aMTT_root_years=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_years,length(num_quantiles)))
       grid_parameters$aMTT_som_years=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_years,length(num_quantiles)))
       grid_parameters$aMTT_DeadOrg_years=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_years,length(num_quantiles)))
+      # Derived Ecosystem traits (turnover partitioning)
+      # Fire
+      grid_parameters$MTTfire_foliar_years=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
+      grid_parameters$MTTfire_wood_years=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
+      grid_parameters$MTTfire_root_years=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
+      # Biomass removal (harvest)
+      grid_parameters$MTTharvest_foliar_years=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
+      grid_parameters$MTTharvest_wood_years=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
+      grid_parameters$MTTharvest_root_years=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(num_quantiles)))
       # Model Driver information
       grid_parameters$mean_temperature_C=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
       grid_parameters$mean_vpd_Pa=array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
@@ -122,6 +133,18 @@ generate_parameter_maps<-function(PROJECT) {
                grid_parameters$aMTT_wood_years[slot_i,slot_j,,]=t(apply(aMTT[,3,],2,quantile, prob=num_quantiles,na.rm=TRUE))
                grid_parameters$aMTT_DeadOrg_years[slot_i,slot_j,,]=t(apply(aMTT[,4,],2,quantile, prob=num_quantiles,na.rm=TRUE))
                grid_parameters$aMTT_som_years[slot_i,slot_j,,]=t(apply(aMTT[,5,],2,quantile, prob=num_quantiles,na.rm=TRUE))
+               # calculate disturbance specific residence time variables (fol,root,wood,lit+litwood,som)
+               # NOTE: that depending on the model DeadOrg may be litter or litter + cwd
+               # Fire
+               tmp = sum(drivers$met[which(drivers$met[,9] > 0),9]) / nos_years
+               grid_parameters$MTTfire_foliar_years[slot_i,slot_j,] = (tmp * rfac[2]) ** -1
+               grid_parameters$MTTfire_root_years[slot_i,slot_j,] = (tmp * rfac[3]) ** -1
+               grid_parameters$MTTfire_wood_years[slot_i,slot_j,] = (tmp * rfac[4] ) ** -1
+               # Forest biomass removal / harvest
+               tmp = (sum(drivers$met[which(drivers$met[,8] > 0),8]) / nos_years) ** -1
+               grid_parameters$MTTharvest_foliar_years[slot_i,slot_j,] = tmp
+               grid_parameters$MTTharvest_root_years[slot_i,slot_j,] = tmp
+               grid_parameters$MTTharvest_wood_years[slot_i,slot_j,] = tmp
                # Calculate C stock steady states, as function of natural, fire and biomass extraction
                grid_parameters$SS_foliar_gCm2[slot_i,slot_j,]=quantile(SS[,1], prob=num_quantiles,na.rm=TRUE)
                grid_parameters$SS_root_gCm2[slot_i,slot_j,]=quantile(SS[,2], prob=num_quantiles,na.rm=TRUE)
@@ -414,6 +437,9 @@ generate_parameter_maps<-function(PROJECT) {
   contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
 
+  # Add readme information
+  grid_parameters$readme = data.frame(Note_1 = "Fire MTT is calculated assuming hardcoded combustion completeness values which may from those used in a specific version of DALEC",
+                                      Note_2 = "Biomass removal / harvest MTT calculation is calculated assuming a proportional amount of fine root dies, this is not the assumption used in CDEA model versions.")
   # output some aggragated values
   # probably best to add some aggregated met drivers to this concoction here
   save(grid_parameters,file=outfile)

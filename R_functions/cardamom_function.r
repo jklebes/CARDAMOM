@@ -5,9 +5,12 @@
 ###
 
 cardamom <-function (projname,model,method,stage) {
-#stage = 0 ; repair = 1 ; use_parallel = TRUE
+#stage = 3 ; repair = 1 ; use_parallel = TRUE
   ## load needed functions into R environment
   paths = load_paths()
+
+  # Set default incase missing
+  if (exists("select_country") == FALSE) {select_country = FALSE}
 
   # define file name for PROJECT file
   # this file will contain all information relating the the PROJECT
