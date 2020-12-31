@@ -229,7 +229,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
                 var6_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[6],infile_varid=infile_varid[6],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
             }
             print("...met load 86 %")
-            if (varid[1] != "") {
+            if (varid[7] != "") {
                 wind_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[7],infile_varid=infile_varid[7],remove_lat=remove_lat,remove_long=remove_long,path_to_met_source=path_to_met_source,met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
             }
             print("...met load 100 %")

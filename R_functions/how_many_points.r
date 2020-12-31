@@ -414,6 +414,9 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
     # Inform the user of the number of pixels
     print(paste("In total there are ",length(sites)," land pixels to run",sep=""))
 
+    # re-arrange landsea mask so that it matches with the actual grid
+    landsea = as.vector(array(landsea, dim=c(long_dim,lat_dim))[,lat_dim:1])
+
     # product is the number of points
     return(list(nosites=length(lat),waterpixels=remove,landsea=landsea,ctessel_pft=pft_keep,lat_dim=lat_dim,long_dim=long_dim,sites=sites))
     # clean up

@@ -125,7 +125,7 @@ load_met_function<- function (year_to_do,varid,infile_varid,remove_lat,remove_lo
         # open netcdf files
         data1 = nc_open(input_file_1)
         # read the met drivers
-        var1 = ncvar_get(data1, infile_varid[1]) ; var1 = var1[,,1:(dim(var1)[3])]
+        var1 = ncvar_get(data1, infile_varid[1]) #; var1 = var1[,,1:(dim(var1)[3])]
         # close files after use
         nc_close(data1)
 
@@ -226,7 +226,7 @@ load_met_function<- function (year_to_do,varid,infile_varid,remove_lat,remove_lo
         # open netcdf files
         data1 = nc_open(input_file_1)
         # read the met drivers
-        var1 = ncvar_get(data1, infile_varid[1]) ; var1 = var1[,,1:(dim(var1)[3])]
+        var1 = ncvar_get(data1, infile_varid[1])
         # close files after use
         nc_close(data1)
 
@@ -237,7 +237,8 @@ load_met_function<- function (year_to_do,varid,infile_varid,remove_lat,remove_lo
 
         # move through time removing the "chaff" and inflating the dataset to give daily values
         var1_out = rep(as.vector(var1[,,1])[wheat], times = days_per_month[1])
-        for (i in seq(2, dim(var1)[3])) { var1_out = append(var1_out,rep(as.vector(var1[,,i])[wheat],each=days_per_month[i])) }
+        for (i in seq(2, dim(var1)[3])) { var1_out = append(var1_out,rep(as.vector(var1[,,i])[wheat],times=days_per_month[i])) }
+
         # keep count of time steps
         t_grid = sum(days_per_month)
 
