@@ -1,7 +1,6 @@
 
 ###
-## Script to control the creation of files and submission to eddie for
-## ACM-TESSEL-DALEC
+## Script to control CARDAMOM
 ###
 
 local({
@@ -22,7 +21,7 @@ source("/home/lsmallma/WORK/R/Scripts/CTESSEL/validation/validation_site_info.tx
 use_parallel = FALSE
 numWorkers = 6 # number of cores to assign to parallel job
 ## about you
-username="lsmallma"
+username="lsmallma" # put your Edinburgh uun here
 home_computer="ssh.geos.ed.ac.uk"
 ## projname
 # Give a runid
@@ -33,26 +32,25 @@ projname="FI-Hyy"
 language="Fortran"
 
 ## Compiler options (Fortan only)
-compiler="ifort" #"ifort"
+compiler="ifort" #"ifort", "gfortran"
 timing=FALSE
 debug=FALSE
 
 ## Model
-# i.e. "DALEC_CDEA", "DALEC_CDEA_FR", "DALECcrop", "AT_DALEC", "DALEC_GSI_FR"
+# i.e. "DALEC_CDEA", "DALEC_CDEA_ACM2", "DALEC_CDEA_ACM2_BUCKET", "DALEC_CDEA_ACM2_BUCKET_RmRg", "DALEC_CDEA_ACM2_BUCKET_CWD", "DALEC_GSI_DFOL_CWD_FR", "DALEC_GSI_BUCKET"
 model="DALEC_CDEA_LU_FIRES"
 pft_specific_parameters=FALSE
 
 ## MDF method
-# i.e. MHMCMC or other
+# i.e. MHMCMC or other (currently only MCMC coded)
 method="MHMCMC"
 
 ## Land cover map
 # which land cover map to use
-use_lcm="ECMWF" # choices are "CORINE2006", "LCM2007", "CORINE2006_1km", "ECMWF"
-pft_wanted=FALSE
+use_lcm="ECMWF" # coded choices exist for other maps however only "ECMWF" map is provided with source code
+pft_wanted=FALSE # Impacts crop model only
 
 ## Met paths
-#path_to_met_source="/disk/scratch/local.2/lsmallma/ECMWF/ERA-Interim/0.25deg_global/"
 path_to_met_source="/exports/csce/datastore/geos/groups/gcel/Trendy_v9_met/monthly/"
 path_to_lai="/disk/scratch/local.2/copernicus/LAI_0.125deg/"
 path_to_crop_management="/home/lsmallma/gcel/Crop_calendar_dataset_Sacks/netCDF_5_min/Wheat/"
@@ -70,11 +68,11 @@ path_to_site_obs="./example_files/inputs/"
 met_interp=TRUE
 
 ## Data streams
-met_source="site_specific" # "PRINCETON" or "ECMWF" or "ERA"
-lai_source="site_specific" # "MODIS" or "COPERNICUS" or "site_specific"
-Csom_source="site_specific" #"HWSD" # "HWSD" or "site_specific"
+met_source="site_specific" # "trendy_v9"
+lai_source="site_specific" # "COPERNICUS" or "site_specific"
+Csom_source="site_specific" # "SoilGrids" or "site_specific"
 soilwater_initial_source = " " # initial soil water fraction (m3/m3)
-sand_clay_source="site_specific" # HWSD or "site_specific
+sand_clay_source="site_specific" # "SoilGrids" or "site_specific
 Evap_source=" "
 woodinc_source=" " 	# " " or "site_specific"
 GPP_source=" " 	# " " or "site_specific"
@@ -91,7 +89,6 @@ Cfol_stock_source=" " 	# " " or "site_specific"
 Cfolmax_stock_source=" " 	# " " or "site_specific"
 Cwood_stock_source="site_specific" 	# " " or "site_specific"
 Cstem_stock_source=" "      # " " or "site_specific"
-Cbranch_stock_source=" "      # " " or "site_specific"
 Cagb_stock_source=" " 	# " " or "site_specific"
 Ccoarseroot_stock_source=" " 	# " " or "site_specific"
 Croots_stock_source=" " 	# " " or "site_specific"
@@ -107,16 +104,16 @@ snow_source=" "
 
 ## sites for analysis
 # start year
-years_to_do=as.character(c(1999:2014)) # c("2000","2001","2002","2003","2004","2005","2006","2007","2008","2009")
+years_to_do=as.character(c(1999:2014)) 
 # is this run "site" level or over a "grid"?
 cardamom_type="site"
-cardamom_grid_type=" "
-# if type = "grid" then what resolution in m?
+cardamom_grid_type=" " # "UK" or "wgs84"
+# if type = "grid" then at what spatial resolution (UK = m, wgs84 = degree)?
 cardamom_resolution=1e5
 
 # site names if specific locations e.g. "UKGri"
 sites_cardamom=c("FI-Hyy")
-# lat/long of sites, if type = "grid"then these these are bottom left and top right corners
+# lat/long of sites, if type = "grid" then these these are bottom left and top right corners
 sites_cardamom_lat=61.84741
 sites_cardamom_long=24.29477
 timestep_type="monthly"
@@ -151,7 +148,7 @@ request_use_EDCs = TRUE       # Use EDCs
 # stage  2 : Submit the project to eddie
 # stage  3 : Copy back results and process vectors
 # stage  4 ; Do some standard result checking
-stage=1
+stage=-1
 repair=1 # to force (=1) re-run processed results or driver files if they already exist
 grid_override=FALSE # force site specific files to be saved and figures to be generated when in "grid" operation
 
