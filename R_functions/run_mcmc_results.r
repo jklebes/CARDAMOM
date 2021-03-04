@@ -151,7 +151,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               save(parameters,drivers,states_all,site_ctessel_pft,file=outfile)#, compress="gzip")
           } else {
               # ...otherwise this is a grid and we want straight forward reduced dataset of common stocks and fluxes
-              num_quantiles = c(0.025,0.05,0.25,0.5,0.75,0.95,0.975) ; num_quantiles_agg = seq(0.001,0.999, length = 100)
+              num_quantiles = c(0.025,0.05,0.25,0.5,0.75,0.95,0.975) ; num_quantiles_agg = seq(0.0,1, length = 100)
               na_flag = TRUE
               # Estimate multiple use fluxes
               npp = states_all$gpp_gCm2day - states_all$rauto_gCm2day
@@ -179,6 +179,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                                  fire_gCm2day = apply(states_all$fire_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag))
               # Some derived fluxes / states
               site_output$nbe_gCm2day = apply(states_all$nee_gCm2day + states_all$fire_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
+              site_output$nbp_gCm2day = apply(-states_all$nee_gCm2day - states_all$fire_gCm2day - states_all$harvest_C_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
               dCbio = states_all$bio_gCm2 - states_all$bio_gCm2[,1] # difference in biomass from initial
               site_output$dCbio_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
               dCbio = states_all$fol_gCm2 - states_all$fol_gCm2[,1] # difference in biomass from initial
@@ -315,6 +316,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               site_output$agg_dCsom = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
 
               ## Mean of whole time period
+              site_output$agg_nbp = quantile(apply(-states_all$nee_gCm2day - states_all$fire_gCm2day - states_all$harvest_C_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles_agg, na.rm=na_flag)
               site_output$agg_nbe = quantile(apply(states_all$nee_gCm2day + states_all$fire_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles_agg, na.rm=na_flag)
               site_output$agg_nee = quantile(apply(states_all$nee_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
               site_output$agg_gpp = quantile(apply(states_all$gpp_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
@@ -497,6 +499,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$mean_harvest_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_fire_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_nbe_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          grid_output$mean_nbp_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           # For those which we currently have need, estimate the mean annual maximum
           grid_output$annual_max_roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$annual_max_wood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -579,6 +582,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$harvest_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$fire_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$nbe_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          grid_output$nbp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           # Models where we have a CWD pool and therefore a total dead organic matter combination also
           if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
               grid_output$litwood_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
@@ -646,6 +650,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$agg_harvest_TgCyr = array(0, dim=c(agg_iter))
           grid_output$agg_fire_TgCyr = array(0, dim=c(agg_iter))
           grid_output$agg_nbe_TgCyr = array(0, dim=c(agg_iter))
+          grid_output$agg_nbp_TgCyr = array(0, dim=c(agg_iter))
           # Models where we have a CWD pool and therefore a total dead organic matter combination also
           if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
               grid_output$agg_litwood_TgC = array(0, dim=c(agg_iter))
@@ -664,15 +669,6 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           # vector into which the i,j position information within the grid will be stored
           grid_output$i_location = rep(NA, length.out = PROJECT$nosites)
           grid_output$j_location = rep(NA, length.out = PROJECT$nosites)
-
-          # determine the latitude / longitude grid (dimension long = i, lat = j)
-##          grid_output$lat = seq(PROJECT$latitude[1],PROJECT$latitude[2],length.out=PROJECT$lat_dim)
-##          grid_output$long = seq(PROJECT$longitude[1],PROJECT$longitude[2],length.out=PROJECT$long_dim)
-#          grid_output$lat = seq(PROJECT$latitude[1]+(PROJECT$resolution*0.5),PROJECT$latitude[2]-(PROJECT$resolution*0.5), length.out = PROJECT$lat_dim)
-#          grid_output$long = seq(PROJECT$longitude[1]+(PROJECT$resolution*0.5),PROJECT$longitude[2]-(PROJECT$resolution*0.5), length.out = PROJECT$long_dim)
-#          grid_output$lat = array(grid_output$lat, dim=c(length(grid_output$lat),length(grid_output$long)))
-#          grid_output$lat = t(grid_output$lat)
-#          grid_output$long = array(grid_output$long, dim=dim(grid_output$lat))
 
           # generate the lat / long grid again
           output = generate_wgs84_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
@@ -712,46 +708,47 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                unit_adj = 1e-12 # gC --> TgC ; or kgH2O -> PgH2O
 
                # Mean stocks first
-               grid_output$agg_labile_TgC  = grid_output$agg_labile_TgC  + sample(site_output$agg_labile*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
-               grid_output$agg_totalC_TgC  = grid_output$agg_totalC_TgC  + sample(site_output$agg_totalC*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
-               grid_output$agg_dom_TgC     = grid_output$agg_dom_TgC     + sample(site_output$agg_dom*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
-               grid_output$agg_biomass_TgC = grid_output$agg_biomass_TgC + sample(site_output$agg_biomass*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
-               grid_output$agg_foliage_TgC = grid_output$agg_foliage_TgC + sample(site_output$agg_foliage*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
-               grid_output$agg_roots_TgC   = grid_output$agg_roots_TgC   + sample(site_output$agg_root*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
-               grid_output$agg_wood_TgC    = grid_output$agg_wood_TgC    + sample(site_output$agg_wood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
-               grid_output$agg_lit_TgC     = grid_output$agg_lit_TgC     + sample(site_output$agg_lit*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
-               grid_output$agg_som_TgC     = grid_output$agg_som_TgC     + sample(site_output$agg_som*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               grid_output$agg_labile_TgC  = grid_output$agg_labile_TgC  + sample(site_output$agg_labile*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
+               grid_output$agg_totalC_TgC  = grid_output$agg_totalC_TgC  + sample(site_output$agg_totalC*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
+               grid_output$agg_dom_TgC     = grid_output$agg_dom_TgC     + sample(site_output$agg_dom*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
+               grid_output$agg_biomass_TgC = grid_output$agg_biomass_TgC + sample(site_output$agg_biomass*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
+               grid_output$agg_foliage_TgC = grid_output$agg_foliage_TgC + sample(site_output$agg_foliage*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
+               grid_output$agg_roots_TgC   = grid_output$agg_roots_TgC   + sample(site_output$agg_root*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
+               grid_output$agg_wood_TgC    = grid_output$agg_wood_TgC    + sample(site_output$agg_wood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
+               grid_output$agg_lit_TgC     = grid_output$agg_lit_TgC     + sample(site_output$agg_lit*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
+               grid_output$agg_som_TgC     = grid_output$agg_som_TgC     + sample(site_output$agg_som*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
                # Stock changes second
-               grid_output$agg_dCtotalC_TgC  = grid_output$agg_dCtotalC_TgC + sample(site_output$agg_dCtotalC*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
-               grid_output$agg_dCdom_TgC     = grid_output$agg_dCdom_TgC + sample(site_output$agg_dCdom*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
-               grid_output$agg_dCbio_TgC     = grid_output$agg_dCbio_TgC + sample(site_output$agg_dCbio*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
-               grid_output$agg_dCfoliage_TgC = grid_output$agg_dCfoliage_TgC + sample(site_output$agg_dCfoliage*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
-               grid_output$agg_dCroots_TgC   = grid_output$agg_dCroots_TgC + sample(site_output$agg_dCroot*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
-               grid_output$agg_dCwood_TgC    = grid_output$agg_dCwood_TgC + sample(site_output$agg_dCwood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
-               grid_output$agg_dClit_TgC     = grid_output$agg_dClit_TgC + sample(site_output$agg_dClitter*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
-               grid_output$agg_dCsom_TgC     = grid_output$agg_dCsom_TgC + sample(site_output$agg_dCsom*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+               grid_output$agg_dCtotalC_TgC  = grid_output$agg_dCtotalC_TgC + sample(site_output$agg_dCtotalC*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
+               grid_output$agg_dCdom_TgC     = grid_output$agg_dCdom_TgC + sample(site_output$agg_dCdom*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
+               grid_output$agg_dCbio_TgC     = grid_output$agg_dCbio_TgC + sample(site_output$agg_dCbio*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
+               grid_output$agg_dCfoliage_TgC = grid_output$agg_dCfoliage_TgC + sample(site_output$agg_dCfoliage*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
+               grid_output$agg_dCroots_TgC   = grid_output$agg_dCroots_TgC + sample(site_output$agg_dCroot*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
+               grid_output$agg_dCwood_TgC    = grid_output$agg_dCwood_TgC + sample(site_output$agg_dCwood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
+               grid_output$agg_dClit_TgC     = grid_output$agg_dClit_TgC + sample(site_output$agg_dClitter*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
+               grid_output$agg_dCsom_TgC     = grid_output$agg_dCsom_TgC + sample(site_output$agg_dCsom*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
                # Fluxes third
-               grid_output$agg_nee_TgCyr = grid_output$agg_nee_TgC + sample(site_output$agg_nee*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
-               grid_output$agg_gpp_TgCyr = grid_output$agg_gpp_TgC + sample(site_output$agg_gpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
-               grid_output$agg_rauto_TgCyr = grid_output$agg_rauto_TgC + sample(site_output$agg_rauto*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
-               grid_output$agg_rhet_TgCyr = grid_output$agg_rhet_TgC + sample(site_output$agg_rhet*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
-               grid_output$agg_reco_TgCyr = grid_output$agg_reco_TgC + sample(site_output$agg_reco*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
-               grid_output$agg_npp_TgCyr = grid_output$agg_npp_TgC + sample(site_output$agg_npp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
-               grid_output$agg_fnpp_TgCyr = grid_output$agg_fnpp_TgC + sample(site_output$agg_fnpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
-               grid_output$agg_rnpp_TgCyr = grid_output$agg_rnpp_TgC + sample(site_output$agg_rnpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
-               grid_output$agg_wnpp_TgCyr = grid_output$agg_wnpp_TgC + sample(site_output$agg_wnpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
-               grid_output$agg_harvest_TgCyr = grid_output$agg_harvest_TgC + sample(site_output$agg_harvest*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
-               grid_output$agg_fire_TgCyr = grid_output$agg_fire_TgC + sample(site_output$agg_fire*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
-               grid_output$agg_nbe_TgCyr = grid_output$agg_nbe_TgC + sample(site_output$agg_nbe*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
+               grid_output$agg_nee_TgCyr = grid_output$agg_nee_TgC + sample(site_output$agg_nee*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
+               grid_output$agg_gpp_TgCyr = grid_output$agg_gpp_TgC + sample(site_output$agg_gpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
+               grid_output$agg_rauto_TgCyr = grid_output$agg_rauto_TgC + sample(site_output$agg_rauto*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
+               grid_output$agg_rhet_TgCyr = grid_output$agg_rhet_TgC + sample(site_output$agg_rhet*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
+               grid_output$agg_reco_TgCyr = grid_output$agg_reco_TgC + sample(site_output$agg_reco*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
+               grid_output$agg_npp_TgCyr = grid_output$agg_npp_TgC + sample(site_output$agg_npp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
+               grid_output$agg_fnpp_TgCyr = grid_output$agg_fnpp_TgC + sample(site_output$agg_fnpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
+               grid_output$agg_rnpp_TgCyr = grid_output$agg_rnpp_TgC + sample(site_output$agg_rnpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
+               grid_output$agg_wnpp_TgCyr = grid_output$agg_wnpp_TgC + sample(site_output$agg_wnpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
+               grid_output$agg_harvest_TgCyr = grid_output$agg_harvest_TgC + sample(site_output$agg_harvest*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
+               grid_output$agg_fire_TgCyr = grid_output$agg_fire_TgC + sample(site_output$agg_fire*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
+               grid_output$agg_nbe_TgCyr = grid_output$agg_nbe_TgC + sample(site_output$agg_nbe*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
+               grid_output$agg_nbp_TgCyr = grid_output$agg_nbp_TgC + sample(site_output$agg_nbp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
                # Models where we have a CWD pool and therefore a total dead organic matter combination also
                if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
-                   grid_output$agg_litwood_TgC = grid_output$agg_litwood_TgC + sample(site_output$agg_litwood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
-                   grid_output$agg_dClitwood_TgC = grid_output$agg_dClitwood_TgC + sample(site_output$agg_dClitwood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter)
+                   grid_output$agg_litwood_TgC = grid_output$agg_litwood_TgC + sample(site_output$agg_litwood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
+                   grid_output$agg_dClitwood_TgC = grid_output$agg_dClitwood_TgC + sample(site_output$agg_dClitwood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
                }
                # Finally water cycle specific if available
                if (length(which(names(site_output) == "evap_kgH2Om2day")) > 0) {
                    # evapotranspiration (Etrans + Esoil + Ewetcanopy)
-                   grid_output$agg_evap_PgH2Oyr = grid_output$agg_evap_PgH2Oyr + sample(site_output$agg_evap*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter)
+                   grid_output$agg_evap_PgH2Oyr = grid_output$agg_evap_PgH2Oyr + sample(site_output$agg_evap*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
                }
                # now assign to correct location in array
                # Stocks first
@@ -787,6 +784,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                grid_output$harvest_gCm2day[n,,] = site_output$harvest_gCm2day
                grid_output$fire_gCm2day[n,,] = site_output$fire_gCm2day
                grid_output$nbe_gCm2day[n,,] = site_output$nbe_gCm2day
+               grid_output$nbp_gCm2day[n,,] = site_output$nbp_gCm2day
                # Models where we have a CWD pool and therefore a total dead organic matter combination also
                if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
                    grid_output$litwood_gCm2[n,,] = site_output$litwood_gCm2
@@ -863,6 +861,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                grid_output$mean_harvest_gCm2day[slot_i,slot_j,] = apply(site_output$harvest_gCm2day,1,mean)
                grid_output$mean_fire_gCm2day[slot_i,slot_j,] = apply(site_output$fire_gCm2day,1,mean)
                grid_output$mean_nbe_gCm2day[slot_i,slot_j,] = apply(site_output$nbe_gCm2day,1,mean)
+               grid_output$mean_nbp_gCm2day[slot_i,slot_j,] = apply(site_output$nbp_gCm2day,1,mean)
                # For those which we currently have need, estimate the mean annual maximum
                grid_output$annual_max_roots_gCm2[slot_i,slot_j,] = 0
                grid_output$annual_max_wood_gCm2[slot_i,slot_j,] = 0

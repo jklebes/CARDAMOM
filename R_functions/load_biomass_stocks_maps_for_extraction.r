@@ -596,10 +596,10 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         input_file = append(input_file,paste(path_to_Cwood,"AGBmap_ALOS_PTC_2015_16.tif",sep=""))
         input_file = append(input_file,paste(path_to_Cwood,"AGBmap_ALOS_PTC_2017.tif",sep=""))
         # Uncertainty maps
-        unc_input_file = paste(path_to_Cwood,"SD_AGBmap_ALOS_PTC_2007_08.tif",sep="")
-        unc_input_file = append(input_file,paste(path_to_Cwood,"SD_AGBmap_ALOS_PTC_2009_10.tif",sep=""))
-        unc_input_file = append(input_file,paste(path_to_Cwood,"SD_AGBmap_ALOS_PTC_2015_16.tif",sep=""))
-        unc_input_file = append(input_file,paste(path_to_Cwood,"SD_AGBmap_ALOS_PTC_2017.tif",sep=""))
+        unc_input_file = paste(path_to_Cwood,"SD_AGB_ALOS_PTC_2007_08.tif",sep="")
+        unc_input_file = append(unc_input_file,paste(path_to_Cwood,"SD_AGB_ALOS_PTC_2009_10.tif",sep=""))
+        unc_input_file = append(unc_input_file,paste(path_to_Cwood,"SD_AGB_ALOS_PTC_2015_16.tif",sep=""))
+        unc_input_file = append(unc_input_file,paste(path_to_Cwood,"SD_AGB_ALOS_PTC_2017.tif",sep=""))
         # Years covered
         years_with_obs = c(2007,2009,2015,2017)
 

@@ -22,6 +22,7 @@ module CARBON_MODEL_MOD
            ,calculate_daylength           &
            ,opt_max_scaling               &
            ,freeze                        &
+           ,minlwp_default                &
            ,co2comp_saturation            &
            ,co2comp_half_sat_conc         &
            ,kc_saturation                 &
@@ -31,7 +32,7 @@ module CARBON_MODEL_MOD
            ,calculate_aerodynamic_conductance &
            ,saxton_parameters             &
            ,initialise_soils              &
-           ,linear_model_gradient         &
+!           ,linear_model_gradient         &
            ,seconds_per_day               &
            ,seconds_per_step              &
            ,fine_root_biomass             &
@@ -49,7 +50,8 @@ module CARBON_MODEL_MOD
            ,SWP                           &
            ,SWP_initial                   &
            ,deltat_1                      &
-           ,water_flux                    &
+           ,total_water_flux              &
+           ,water_flux_mmolH2Om2s         &
            ,layer_thickness               &
            ,waterchange                   &
            ,potA,potB                     &
@@ -92,6 +94,7 @@ module CARBON_MODEL_MOD
            ,mint                          &
            ,maxt                          &
            ,leafT                         &
+           ,soilT                         &
            ,swrad                         &
            ,co2                           &
            ,doy                           &
@@ -277,14 +280,12 @@ module CARBON_MODEL_MOD
   ! Module level variables
   !!!!!!!!!
 
-  ! management and gsi related values
+  ! management and phenology related values
   integer :: gsi_lag_remembered
-  ! local variables for GSI phenology model
-  double precision :: Tfac,Photofac,VPDfac & ! oC, seconds, Pa
-                     ,Rm_leaf_per_gC, Rm_leaf_baseline     &
+  ! local variables for phenology model
+  double precision :: Rm_leaf_per_gC, Rm_leaf_baseline     &
                      ,mean_Q10_adjustment  &
-                     ,leaf_life, SLA, NCE_smoother &
-                     ,avail_labile                   &
+                     ,leaf_life, SLA,avail_labile    &
                      ,Cwood_labile_release_gradient  &
                      ,Cwood_labile_half_saturation   &
                      ,Croot_labile_release_gradient  &
@@ -292,10 +293,10 @@ module CARBON_MODEL_MOD
                      ,Cwood_hydraulic_gradient       &
                      ,Cwood_hydraulic_half_saturation&
                      ,Cwood_hydraulic_limit          &
-                     ,tmp,gradient,fol_turn_crit
+                     ,gradient, fol_turn_crit        &
+                     ,tmp
 
   double precision, allocatable, dimension(:) :: &
-                                              tmp_x,gsi_history, &
                                                  Q10_adjustment, &
                                                  Rg_from_labile, &
                                                  Rm_from_labile, &
@@ -322,14 +323,15 @@ module CARBON_MODEL_MOD
                                                   fire_loss_som, &
                                          fire_residue_to_litter, &
                                         fire_residue_to_litwood, &
-                                            fire_residue_to_som
+                                            fire_residue_to_som, &
+                                             tmp_x, gsi_history
 
   ! hydraulic model variables
   integer :: water_retention_pass, soil_layer
   double precision, dimension(nos_soil_layers) :: soil_frac_clay,soil_frac_sand ! clay and soil fractions of soil
   double precision, dimension(nos_root_layers) :: uptake_fraction, & ! fraction of water uptake from each root layer
                                                            demand, & ! maximum potential canopy hydraulic demand
-                                                       water_flux    ! potential transpiration flux (mmol.m-2.s-1)
+                                            water_flux_mmolH2Om2s    ! potential transpiration flux (mmolH2O.m-2.s-1)
   double precision, dimension(nos_soil_layers+1) :: SWP, & ! soil water potential (MPa)
                                             SWP_initial, &
                                       soil_conductivity, & ! soil conductivity
@@ -343,11 +345,12 @@ module CARBON_MODEL_MOD
                                         layer_thickness, & ! thickness of soil layers (m)
                         cond1, cond2, cond3, potA, potB    ! Saxton equation values
 
-  double precision :: root_reach, root_biomass, fine_root_biomass, & ! root depth, coarse+fine, and fine root biomass
+  double precision :: root_reach, root_biomass, &
+                             fine_root_biomass, & ! root depth, coarse+fine, and fine root biomass
+                              total_water_flux, & ! potential transpiration flux (kgH2O.m-2.day-1)
                                       drythick, & ! estimate of the thickness of the dry layer at soil surface (m)
-                                          wSWP, & ! weighted soil water potential (MPa) used in GSI calculate.
-                                                  ! Removes / limits the fact that very low root density in young plants
-                                                  ! give values too large for GSI to handle.
+                                          wSWP, & ! soil water potential weighted by canopy supply (MPa)
+                                          rSWP, & ! soil water potential weighted by root presence (MPa)
                                      max_depth, & ! maximum possible root depth (m)
                                         root_k, & ! biomass to reach half max_depth
                                         runoff, & ! runoff (kgH2O.m-2.day-1)
@@ -363,6 +366,7 @@ module CARBON_MODEL_MOD
                                     max_supply, & ! maximum water supply (mmolH2O/m2/day)
                                          meant, & ! mean air temperature (oC)
                                          leafT, & ! canopy temperature (oC)
+                                         soilT, & ! soil temperature (oC)
                               mean_annual_temp, &
                             canopy_swrad_MJday, & ! canopy_absorbed shortwave radiation (MJ.m-2.day-1)
                               canopy_par_MJday, & ! canopy_absorbed PAR radiation (MJ.m-2.day-1)
@@ -443,9 +447,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                           gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/day)
                                     canopy_par_MJday_time, & ! Absorbed PAR by canopy (MJ/m2ground/day)
                                                 cica_time, & ! Internal vs ambient CO2 concentrations
+                                                      CMI, & ! Canopy mortality index
+                                                     NCCE, & ! Net canopy carbon export (gC/gCleaf/day)
                                                 wSWP_time    ! Soil water potential weighted by root access to water
 
-double precision :: Creturn_canopy,Creturn_investment
   save
 
   contains
@@ -504,8 +509,6 @@ double precision :: Creturn_canopy,Creturn_investment
             ,Photofac_range_1 &
               ,VPDfac_range_1 &
                          ,fSm &
-                     ,deltaWP & ! deltaWP (MPa) minlwp-soilWP
-                        ,Rtot & ! Total hydraulic resistance (MPa.s-1.m-2.mmol-1)
                ,transpiration &
              ,soilevaporation &
               ,wetcanopy_evap &
@@ -538,7 +541,7 @@ double precision :: Creturn_canopy,Creturn_investment
                        ,coarse_root_residue          &
                        ,soil_loss_with_roots
 
-    integer :: reforest_day, harvest_management,restocking_lag
+    integer :: harvest_management, reforest_day, restocking_lag, gsi_lag
 
     ! met drivers are:
     ! 1st run day
@@ -610,26 +613,26 @@ double precision :: Creturn_canopy,Creturn_investment
     ! p(2) Fraction of GPP respired as maintenance for wood and root
     ! p(3) -----NOT IN USE-----
     ! p(4) Fraction of NPP allocated to roots
-    ! p(5) max leaf turnover (GSI)
+    ! p(5) max leaf turnover
     ! p(6) Turnover rate of wood
     ! p(7) Turnover rate of roots
     ! p(8) Litter turnover rate
     ! p(9) SOM mineralisation rate
     ! p(10) Parameter in exponential term of temperature
     ! p(11) Mean foliar nitrogen content (gN/m2)
-    ! p(12) = Max labile turnover(NCE,GSI)
+    ! p(12) = Max labile turnover
     ! p(13) = Fraction allocated to Clab
-    ! p(14) = Min temp threshold (GSI)
-    ! p(15) = Max temp threshold (GSI)
-    ! p(16) = Min photoperiod threshold (GSI)
+    ! p(14) = Min temperature for canopy growth
+    ! p(15) = Optimal temperature for canopy growth
+    ! p(16) =
     ! p(17) = LMA
-    ! p(24) = Max photoperiod threshold (GSI)
-    ! p(25) = Min VPD threshold (GSI)
-    ! p(26) = Max VPD threshold (GSI)
-    ! p(27) = Net Canopy Export return on new Cfol investment (gCperNCE per gCnewfol)
-    ! p(28) = Initial GSI
+    ! p(24) =
+    ! p(25) = wSWP at which canopy growth potential = 0.5
+    ! p(26) = wSWP gradient for canopy growth potential
+    ! p(27) = Net Canopy Export return on new Cfol investment (gCperNCCE per gCnewfol)
+    ! p(28) = Initial CMI
     ! p(29) = Fraction of Cwood which is Ccoarseroot
-    ! p(34) = GSI sensitivity for leaf scenescence
+    ! p(34) = CMI sensitivity for leaf scenescence
     ! p(35) = Reich Maintenance respiration N leaf exponent
     ! p(36) = Reich Maintenance respiration N leaf baseline
     ! p(37) = Initial litwood pool
@@ -679,8 +682,6 @@ double precision :: Creturn_canopy,Creturn_investment
     avN = 10d0**pars(11) ! foliar N gN/m2
     ceff = avN*NUE       ! canopy efficiency, used to avoid what in most cases is a reductance multiplication
                          ! NOTE: must be updated any time NUE or avN changes
-    deltaWP = minlwp     ! leafWP-soilWP (i.e. -2-0)
-    Rtot = 1d0
 
     ! Estimate time invarient N response for maintenance respiration
     ! Include scalings from nmolC/g/s -> gC/gCleaf/day
@@ -706,7 +707,6 @@ double precision :: Creturn_canopy,Creturn_investment
         labile_residue = 0d0 ; foliar_residue = 0d0
         roots_residue = 0d0  ; wood_residue = 0d0
         stem_residue = 0d0
-        reforest_day = 0
         soil_loss_with_roots = 0d0
         coarse_root_residue = 0d0
         post_harvest_burn = 0d0
@@ -825,7 +825,8 @@ double precision :: Creturn_canopy,Creturn_investment
                  meant_time(nodays),rainfall_time(nodays),cica_time(nodays), &
                  Rg_from_labile(nodays),Rm_from_labile(nodays),Resp_leaf(nodays), &
                  Resp_wood_root(nodays),Rm_leaf(nodays),Rm_wood_root(nodays),Q10_adjustment(nodays), &
-                 Rg_leaf(nodays),Rg_wood_root(nodays),itemp(nodays),ivpd(nodays),iphoto(nodays))
+                 Rg_leaf(nodays),Rg_wood_root(nodays),itemp(nodays),ivpd(nodays),iphoto(nodays), &
+                 NCCE(nodays))
 
         !
         ! Timing variables which are needed first
@@ -878,7 +879,7 @@ double precision :: Creturn_canopy,Creturn_investment
 !        Croot_labile_release_coef = (1d0+exp(-Croot_labile_release_gradient* &
 !                                    (meant_time-Croot_labile_half_saturation)))**(-1d0)
 
-        ! Calculate timing components needed for GSI / NCE gradient calculations
+        ! Calculate timing components needed for phenology models
         gsi_lag_remembered = max(2,nint(21d0/mean_days_per_step))
         allocate(tmp_x(gsi_lag_remembered),gsi_history(gsi_lag_remembered))
         do f = 1, gsi_lag_remembered
@@ -890,7 +891,7 @@ double precision :: Creturn_canopy,Creturn_investment
         !
 
         ! zero variables not done elsewhere
-        water_flux = 0d0
+        total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0
         ! initialise some time invarient parameters
         call saxton_parameters(soil_frac_clay,soil_frac_sand)
         call initialise_soils(soil_frac_clay,soil_frac_sand)
@@ -907,7 +908,7 @@ double precision :: Creturn_canopy,Creturn_investment
         ! Load initial soil water conditions from memory
         !
 
-        water_flux = 0d0
+        total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0
         soil_waterfrac = soil_waterfrac_initial
         SWP = SWP_initial
         field_capacity = field_capacity_initial
@@ -919,7 +920,7 @@ double precision :: Creturn_canopy,Creturn_investment
 
     endif ! deltat_1 allocated
 
-    ! assign our starting value
+    ! Assign initial values for the canopy growth and mortality indices
     gsi_history = pars(28)
 
     ! specific leaf area (m2/gC)
@@ -937,6 +938,7 @@ double precision :: Creturn_canopy,Creturn_investment
     vpd_kPa = met(16,1)*1d-3 ! vapour pressure deficit (Pa->kPa)
     meant = meant_time(1)
     leafT = maxt     ! initial canopy temperature (oC)
+    soilT = maxt     ! initial soil temperature (oC)
     seconds_per_step = deltat(1) * seconds_per_day
     days_per_step =  deltat(1)
     days_per_step_1 =  deltat_1(1)
@@ -969,7 +971,7 @@ double precision :: Creturn_canopy,Creturn_investment
     layer_thickness(5) = top_soil_depth
     previous_depth = sum(layer_thickness(1:3))
     ! Needed to initialise soils
-    call calculate_Rtot(Rtot)
+    call calculate_Rtot
     ! Used to initialise soils
     call calculate_update_soil_water(0d0,0d0,0d0,FLUXES(1,19)) ! assume no evap or rainfall
     ! Reset variable used to track ratio of water supply used to meet demand
@@ -978,19 +980,11 @@ double precision :: Creturn_canopy,Creturn_investment
     ! Store soil water content of the surface zone (mm)
     POOLS(1,8) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
 
-    ! assign climate sensitivities
-    fol_turn_crit = pars(34)
-
-    ! Calculate GSI ranges
-    Tfac_range_1 = (pars(15)-pars(14))**(-1d0)
-    Photofac_range_1 = (pars(24)-pars(16))**(-1d0)
-    VPDfac_range_1 = (pars(26)-pars(25))**(-1d0)
-
     !!!!!!!!!!!!
     ! assign climate sensitivities
     !!!!!!!!!!!!
 
-    FLUXES(:,2) = exp(pars(10)*meant_time)
+!    FLUXES(:,2) = exp(pars(10)*meant_time)
 
     !
     ! Begin looping through each time step
@@ -1006,6 +1000,7 @@ double precision :: Creturn_canopy,Creturn_investment
        mint = met(2,n)  ! minimum temperature (oC)
        maxt = met(3,n)  ! maximum temperature (oC)
        leafT = maxt     ! initial canopy temperature (oC)
+       soilT = maxt     ! initial soil temperature (oC)
        swrad = met(4,n) ! incoming short wave radiation (MJ/m2/day)
        co2 = met(5,n)   ! CO2 (ppm)
        doy = met(6,n)   ! Day of year
@@ -1064,6 +1059,13 @@ double precision :: Creturn_canopy,Creturn_investment
        end if
 
        !!!!!!!!!!
+       ! Determine net shortwave and isothermal longwave energy balance
+       !!!!!!!!!!
+
+       call calculate_radiation_balance
+       canopy_par_MJday_time(n) = canopy_par_MJday
+
+       !!!!!!!!!!
        ! Calculate surface exchange coefficients
        !!!!!!!!!!
 
@@ -1074,13 +1076,6 @@ double precision :: Creturn_canopy,Creturn_investment
        ! calculate aerodynamic using consistent approach with SPA
        call calculate_aerodynamic_conductance
        gb_total_canopy(n) = aerodynamic_conductance * convert_ms1_mmol_1
-
-       !!!!!!!!!!
-       ! Determine net shortwave and isothermal longwave energy balance
-       !!!!!!!!!!
-
-       call calculate_radiation_balance
-       canopy_par_MJday_time(n) = canopy_par_MJday
 
        !!!!!!!!!!
        ! Calculate physically constrained evaporation and
@@ -1113,16 +1108,16 @@ double precision :: Creturn_canopy,Creturn_investment
        ! fine root mass ! *2*2 => *RS*C->Bio
        fine_root_biomass = max(min_root,POOLS(n,3)*2d0)
        root_biomass = fine_root_biomass + max(min_root,POOLS(n,4)*pars(29)*2d0)
-       call calculate_Rtot(Rtot)
-       ! Pass wSWP to output variable and update deltaWP between minlwp and
-       ! current weighted soil WP
-       wSWP_time(n) = wSWP ; deltaWP = min(0d0,minlwp-wSWP)
+       call calculate_Rtot
+       ! Pass wSWP to output variable
+       wSWP_time(n) = wSWP
 
        ! calculate radiation absorption and estimate stomatal conductance
-       call calculate_stomatal_conductance(abs(deltaWP),Rtot)
+       call calculate_stomatal_conductance
        ! Estimate stomatal conductance relative to its minimum / maximum, i.e. how
        ! close are we to maxing out supply (note 0.01 taken from min_gs)
-       gs_demand_supply_ratio(n) = (stomatal_conductance - minimum_conductance) / (potential_conductance-minimum_conductance)
+       gs_demand_supply_ratio(n) = (stomatal_conductance - minimum_conductance) &
+                                 / (potential_conductance-minimum_conductance)
        ! Store the canopy level stomatal conductance (mmolH2O/m2/day)
        gs_total_canopy(n) = stomatal_conductance
 
@@ -1147,6 +1142,8 @@ double precision :: Creturn_canopy,Creturn_investment
        ! GPP allocation
        !!!!!!!!!!
 
+       ! Estimate temperature sensitivity for decomposition
+       FLUXES(:,2) = exp(pars(10)*soilT)
        ! autotrophic respiration (gC.m-2.day-1)
        Rm_wood_root(n) = pars(2)*FLUXES(n,1)
        ! labile production (gC.m-2.day-1)
@@ -1163,7 +1160,8 @@ double precision :: Creturn_canopy,Creturn_investment
        ! Scale baseline Rm (gC/gCleaf/day at 20oC) for leaf with current temperature Q10 response
        ! giving maintenance respiration at maximum of current or mean annual temperature per gC leaf
        ! (gC/gCleaf/day).
-       Q10_adjustment(n) = Rm_reich_Q10(meant)
+       !Q10_adjustment(n) = Rm_reich_Q10(meant)
+       Q10_adjustment(n) = Rm_reich_Q10(soilT)
        Rm_leaf_per_gC = Rm_leaf_baseline * Q10_adjustment(n)
        ! Estimate time step demand on labile pool to support canopy maintenance
        ! NOTE: current Rm costs must be related to current temperature
@@ -1183,11 +1181,10 @@ double precision :: Creturn_canopy,Creturn_investment
        call calculate_leaf_dynamics(n,deltat,nodays        &
                                    ,pars(14),pars(16),pars(25)       &
                                    ,Tfac_range_1,Photofac_range_1    &
-                                   ,VPDfac_range_1,pars(3),pars(5),pars(12)  &
-                                   ,met(10,n),met(11,n),met(12,n),deltaWP,Rtot &
+                                   ,pars(26),pars(3),pars(5),pars(12)  &
+                                   ,met(10,n),met(11,n),met(12,n) &
                                    ,FLUXES(n,1),POOLS(n,2),pars(27)  &
                                    ,FLUXES(:,18),FLUXES(n,9),FLUXES(n,16))
-
        ! Total labile release to foliage
        FLUXES(n,8) = avail_labile*(1d0-(1d0-FLUXES(n,16))**deltat(n))*deltat_1(n)
 
@@ -1226,7 +1223,7 @@ double precision :: Creturn_canopy,Creturn_investment
        !
 
        ! turnover of litter
-       fSm = 1d0!0.25d0 + 0.75d0 * soil_waterfrac(1)
+       fSm = 0.25d0 + 0.75d0 * soil_waterfrac(1)
        tmp = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8)*fSm)**deltat(n))*deltat_1(n)
        ! respiration heterotrophic litter ; decomposition of litter to som
        FLUXES(n,13) = tmp * (1d0-pars(1)) ; FLUXES(n,15) = tmp * pars(1)
@@ -1726,17 +1723,13 @@ double precision :: Creturn_canopy,Creturn_investment
   !
   !------------------------------------------------------------------
   !
-  subroutine calculate_stomatal_conductance(deltaWP,Rtot)
+  subroutine calculate_stomatal_conductance
 
     ! Determines 1) an approximation of canopy conductance (gc) mmolH2O.m-2.s-1
     ! based on potential hydraulic flow, air temperature and absorbed radiation.
     ! 2) calculates absorbed shortwave radiation (W.m-2) as function of LAI
 
     implicit none
-
-    ! arguments
-    double precision, intent(in) :: deltaWP, & ! minlwp-wSWP (MPa)
-                                       Rtot    ! total hydraulic resistance (MPa.s-1.m-2.mmol-1)
 
     ! local variables
     double precision :: denom, iWUE_lower, iWUE_upper
@@ -1748,10 +1741,11 @@ double precision :: Creturn_canopy,Creturn_investment
     ! Calculate stomatal conductance under H2O and CO2 limitations
     !!!!!!!!!!
 
-    if (aerodynamic_conductance > vsmall .and. deltaWP > vsmall) then
+    if (aerodynamic_conductance > vsmall .and. total_water_flux > vsmall) then
 
         ! Determine potential water flow rate (mmolH2O.m-2.dayl-1)
-        max_supply = (deltaWP/Rtot) * seconds_per_day
+        max_supply = total_water_flux * seconds_per_day
+
         ! Pass minimum conductance from local parameter to global value
         ! There is uncertainty whether this should be a leaf area scaled value...
         minimum_conductance = min_gs * lai
@@ -1826,7 +1820,8 @@ double precision :: Creturn_canopy,Creturn_investment
     else
 
         ! if no LAI then there can be no stomatal conductance
-        potential_conductance = max_gs ; stomatal_conductance = min_gs
+        potential_conductance = max_gs ; minimum_conductance = vsmall
+        stomatal_conductance = vsmall
         ! set minimum (computer) precision level flow
         max_supply = vsmall
 
@@ -2009,12 +2004,14 @@ double precision :: Creturn_canopy,Creturn_investment
     ! local variables
     double precision :: local_temp &
                    ,soil_radiation & ! isothermal net radiation (W/m2)
+                          ,sfc_swp &
                             ,esurf & ! see code below
                              ,esat & ! soil air space saturation vapour pressure
                               ,gws   ! water vapour conductance through soil air space (m.s-1)
 
     ! oC -> K for local temperature value
-    local_temp = maxt + freeze
+    !local_temp = maxt + freeze
+    local_temp = soilT + freeze
 
     !!!!!!!!!!
     ! Estimate energy radiation balance (W.m-2)
@@ -2037,6 +2034,8 @@ double precision :: Creturn_canopy,Creturn_investment
     ! vapour pressure in soil airspace (kPa), dependent on soil water potential
     ! - Jones p.110. partial_molar_vol_water. Less vapour pressure of the air to
     ! estimate the deficit between soil and canopy air spaces
+!    sfc_swp = sum(SWP(1:2) * layer_thickness(1:2)) / sum(layer_thickness(1:2))
+!    esurf = (esat * exp( 1d6 * sfc_swp * partial_molar_vol_water / (Rcon * local_temp) )) - air_vapour_pressure
     esurf = (esat * exp( 1d6 * SWP(1) * partial_molar_vol_water / (Rcon * local_temp) )) - air_vapour_pressure
 
     ! Estimate potential soil evaporation flux (kgH2O.m-2.day-1)
@@ -2189,7 +2188,7 @@ double precision :: Creturn_canopy,Creturn_investment
     double precision, intent(in) :: doy, lat
 
     ! local variables
-    double precision :: dec, mult, sinld, cosld, aob
+    double precision :: dec, mult, aob!, !sinld, cosld
 
     !
     ! Estimate solar geometry variables needed
@@ -2204,9 +2203,9 @@ double precision :: Creturn_canopy,Creturn_investment
     ! latitude in radians
     mult = lat * deg_to_rad
     ! day length is estimated as the ratio of sin and cos of the product of declination an latitude in radiation
-    sinld = sin( mult ) * sin( dec )
-    cosld = cos( mult ) * cos( dec )
-    aob = max(-1d0,min(1d0,sinld / cosld))
+    !sinld = sin( mult ) * sin( dec )
+    !cosld = cos( mult ) * cos( dec )
+    aob = max(-1d0,min(1d0,(sin( mult ) * sin( dec )) / (cos( mult ) * cos( dec ))))
 
     ! estimate day length in hours and seconds and upload to module variables
     dayl_hours = 12d0 * ( 1d0 + 2d0 * asin( aob ) * pi_1 )
@@ -2378,7 +2377,8 @@ double precision :: Creturn_canopy,Creturn_investment
     ! Estimate shortwave radiation balance
     call calculate_shortwave_balance
     ! Estimate isothermal long wave radiation balance
-    call calculate_longwave_isothermal(meant,meant)
+    call calculate_longwave_isothermal(leafT,soilT)
+!    call calculate_longwave_isothermal(meant,meant)
     ! Apply linear correction to soil surface isothermal->net longwave radiation
     ! balance based on absorbed shortwave radiation
     delta_iso = (soil_iso_to_net_coef_LAI * lai) + &
@@ -2417,7 +2417,10 @@ double precision :: Creturn_canopy,Creturn_investment
                        ,canopy_transmitted_fraction &
                        ,absorbed_nir_fraction_soil  &
                        ,absorbed_par_fraction_soil  &
-                       ,fsnow,par,nir               &
+                       ,snow_adjusted_nir_reflected &
+                       ,snow_adjusted_par_reflected &
+                       ,leaf_fsnow,soil_fsnow       &
+                       ,par,nir                     &
                        ,soil_par_MJday              &
                        ,soil_nir_MJday              &
                        ,trans_nir_MJday             &
@@ -2451,15 +2454,36 @@ double precision :: Creturn_canopy,Creturn_investment
 
     ! Second, of the radiation which is incident on the canopy what fractions
     ! are transmitted through, reflected from or absorbed by the canopy
-
     canopy_transmitted_fraction = exp(decay * lai * 0.5d0 * clump)
+
+    ! Update soil reflectance based on snow cover
+    if (snow_storage > 0d0) then
+        ! Estimate fraction of ground covered by snow
+        soil_fsnow = 1d0 - exp( - snow_storage * transmitted_fraction * 1d-2 )
+        leaf_fsnow = 1d0 - exp( - snow_storage * (1d0 - transmitted_fraction) * 1d-2 )
+        ! Estimate the weighted composition of par and nir reflectance of soil
+        absorbed_par_fraction_soil = ((1d0 - soil_fsnow) * soil_swrad_absorption) + (soil_fsnow * newsnow_par_abs)
+        absorbed_nir_fraction_soil = ((1d0 - soil_fsnow) * soil_swrad_absorption) + (soil_fsnow * newsnow_nir_abs)
+        ! Estimate weighted composition of par and nir reflectance of the canopy
+        snow_adjusted_par_reflected = ((1d0 - leaf_fsnow) * max_par_reflected) + (leaf_fsnow * (1d0-newsnow_par_abs))
+        snow_adjusted_nir_reflected = ((1d0 - leaf_fsnow) * max_nir_reflected) + (leaf_fsnow * (1d0-newsnow_nir_abs))
+        ! Update estimate of soil and canopy temperature.
+        ! Assume tha areas under snow are at 0oC or 273.15 K
+        soilT = (soilT * (1d0 - soil_fsnow)) !+ (0d0 * fsnow)
+        leafT = (leafT * (1d0 - leaf_fsnow)) !+ (0d0 * fsnow)
+    else
+        absorbed_par_fraction_soil = soil_swrad_absorption
+        absorbed_nir_fraction_soil = soil_swrad_absorption
+        snow_adjusted_par_reflected = max_par_reflected
+        snow_adjusted_nir_reflected = max_nir_reflected
+    endif
 
     ! Canopy transmitted of PAR & NIR radiation towards the soil
     trans_par_fraction = canopy_transmitted_fraction * max_par_transmitted
     trans_nir_fraction = canopy_transmitted_fraction * max_nir_transmitted
     ! Canopy reflected of near infrared and photosynthetically active radiation
-    reflected_nir_fraction = canopy_transmitted_fraction * max_nir_reflected
-    reflected_par_fraction = canopy_transmitted_fraction * max_par_reflected
+    reflected_nir_fraction = canopy_transmitted_fraction * snow_adjusted_nir_reflected
+    reflected_par_fraction = canopy_transmitted_fraction * snow_adjusted_par_reflected
     ! Canopy absorption of near infrared and photosynthetically active radiation
     absorbed_nir_fraction = 1d0 - reflected_nir_fraction - trans_nir_fraction
     absorbed_par_fraction = 1d0 - reflected_par_fraction - trans_par_fraction
@@ -2487,20 +2511,6 @@ double precision :: Creturn_canopy,Creturn_investment
     trans_nir_MJday = trans_nir_MJday + (nir * trans_nir_fraction)
     refl_par_MJday = par * reflected_par_fraction
     refl_nir_MJday = nir * reflected_nir_fraction
-
-    !!!!!!!!!
-    ! Estimate soil absorption of shortwave passing through the canopy
-    !!!!!!!!!
-
-    ! Update soil reflectance based on snow cover
-    if (snow_storage > 0d0) then
-        fsnow = 1d0 - exp( - snow_storage * 1d-2 )  ! fraction of snow cover on the ground
-        absorbed_par_fraction_soil = ((1d0 - fsnow) * soil_swrad_absorption) + (fsnow * newsnow_par_abs)
-        absorbed_nir_fraction_soil = ((1d0 - fsnow) * soil_swrad_absorption) + (fsnow * newsnow_nir_abs)
-    else
-        absorbed_par_fraction_soil = soil_swrad_absorption
-        absorbed_nir_fraction_soil = soil_swrad_absorption
-    endif
 
     ! Then the radiation incident and ultimately absorbed by the soil surface
     ! itself (MJ.m-2.day-1)
@@ -2549,29 +2559,31 @@ double precision :: Creturn_canopy,Creturn_investment
   !
   !-----------------------------------------------------------------
   !
-  subroutine calculate_Rtot(Rtot)
+  subroutine calculate_Rtot
 
     ! Purpose of this subroutine is to calculate the minimum soil-root hydraulic
     ! resistance input into ACM. The approach used here is identical to that
     ! found in SPA.
 
     ! declare inputs
-    double precision,intent(inout) :: Rtot ! MPa.s-1.m-2.mmol-1
+    !double precision,intent(inout) :: Rtot ! MPa.s-1.m-2.mmol-1
 
     ! local variables
-    integer :: i
-    double precision :: bonus, sum_water_flux, &
+    integer :: i, rooted_layer
+    double precision :: bonus, &
                         transpiration_resistance,root_reach_local, &
-                        root_depth_50
-    double precision, dimension(nos_root_layers) :: root_mass    &
-                                                   ,root_length  &
-                                                   ,ratio
-    double precision, parameter :: root_depth_frac_50 = 0.25d0 ! fractional soil depth above which 50 %
+                        root_depth_50, slpa, mult, prev, exp_func
+    double precision, dimension(nos_root_layers) :: Rcond_layer, &
+                                                    root_mass,  &
+                                                    root_length
+    double precision, parameter :: rootdist_tol = 13.81551d0 ! log(1d0/rootdist_tol - 1d0) were rootdist_tol = 1d-6
+                                  !rootdist_tol = 1d-6!, & ! Root density assessed for the max rooting depth
+                                   !root_depth_frac_50 = 0.25d0 ! fractional soil depth above which 50 %
                                                                ! of the root mass is assumed to be located
 
     ! reset water flux
-    water_flux = 0d0 ; wSWP = 0d0
-    ratio = 0d0 ; ratio(1) = 1d0 ; root_mass = 0d0
+    total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0 ; wSWP = 0d0 ; rSWP = 0d0
+    slpa = 0d0 ; root_length = 0d0 ; root_mass = 0d0 ; Rcond_layer = 0d0
     ! calculate soil depth to which roots reach
     root_reach = max_depth * root_biomass / (root_k + root_biomass)
     ! calculate the plant hydraulic resistance component. Currently unclear
@@ -2597,57 +2609,57 @@ double precision :: Creturn_canopy,Creturn_investment
     ! to maintain 50 % of root biomass in the top 25 % of the rooting depth.
     ! In a simple 3 root layer system this can be estimates more simply
 
-    ! top 25 % of root profile
-    root_depth_50 = root_reach * root_depth_frac_50
-    if (root_depth_50 <= layer_thickness(1)) then
-
-        ! Greater than 50 % of the fine root biomass can be found in the top
-        ! soil layer
-
-        ! Start by assigning all 50 % of root biomass to the top soil layer
-        root_mass(1) = fine_root_biomass * 0.5d0
-        ! Then quantify how much additional root is found in the top soil layer
-        ! assuming that the top 25 % depth is found somewhere within the top
-        ! layer
-        bonus = (fine_root_biomass-root_mass(1)) &
-              * (layer_thickness(1)-root_depth_50) / (root_reach - root_depth_50)
-        root_mass(1) = root_mass(1) + bonus
-        ! partition the remaining root biomass between the seconds and third
-        ! soil layers
-        if (root_reach > sum(layer_thickness(1:2))) then
-            root_mass(2) = (fine_root_biomass - root_mass(1)) &
-                         * (layer_thickness(2)/(root_reach-layer_thickness(1)))
-            root_mass(3) = fine_root_biomass - sum(root_mass(1:2))
-        else
-            root_mass(2) = fine_root_biomass - root_mass(1)
-        endif
-
-    else if (root_depth_50 > layer_thickness(1) .and. root_depth_50 <= sum(layer_thickness(1:2))) then
-
-        ! Greater than 50 % of fine root biomass found in the top two soil
-        ! layers. We will divide the root biomass uniformly based on volume,
-        ! plus bonus for the second layer (as done above)
-        root_mass(1) = fine_root_biomass * (layer_thickness(1)/root_depth_50)
-        root_mass(2) = fine_root_biomass * ((root_depth_50-layer_thickness(1))/root_depth_50)
-        root_mass(1:2) = root_mass(1:2) * 0.5d0
-
-        ! determine bonus for the seconds layer
-        bonus = (fine_root_biomass-sum(root_mass(1:2))) &
-              * ((sum(layer_thickness(1:2))-root_depth_50)/(root_reach-root_depth_50))
-        root_mass(2) = root_mass(2) + bonus
-        root_mass(3) = fine_root_biomass - sum(root_mass(1:2))
-
-    else
-
-        ! Greater than 50 % of fine root biomass stock spans across all three
-        ! layers
-        root_mass(1:2) = fine_root_biomass * 0.5d0 * (layer_thickness(1:2)/root_depth_50)
-        root_mass(3) = fine_root_biomass - sum(root_mass(1:2))
-
-    endif
-    ! now convert root mass into lengths
-    root_length = root_mass * root_mass_length_coef_1
-!    root_length = root_mass / (root_density * root_cross_sec_area)
+!    ! top 25 % of root profile
+!    root_depth_50 = root_reach * root_depth_frac_50
+!    if (root_depth_50 <= layer_thickness(1)) then
+!
+!        ! Greater than 50 % of the fine root biomass can be found in the top
+!        ! soil layer
+!
+!        ! Start by assigning all 50 % of root biomass to the top soil layer
+!        root_mass(1) = fine_root_biomass * 0.5d0
+!        ! Then quantify how much additional root is found in the top soil layer
+!        ! assuming that the top 25 % depth is found somewhere within the top
+!        ! layer
+!        bonus = (fine_root_biomass-root_mass(1)) &
+!              * (layer_thickness(1)-root_depth_50) / (root_reach - root_depth_50)
+!        root_mass(1) = root_mass(1) + bonus
+!        ! partition the remaining root biomass between the seconds and third
+!        ! soil layers
+!        if (root_reach > sum(layer_thickness(1:2))) then
+!            root_mass(2) = (fine_root_biomass - root_mass(1)) &
+!                         * (layer_thickness(2)/(root_reach-layer_thickness(1)))
+!            root_mass(3) = fine_root_biomass - sum(root_mass(1:2))
+!        else
+!            root_mass(2) = fine_root_biomass - root_mass(1)
+!        endif
+!
+!    else if (root_depth_50 > layer_thickness(1) .and. root_depth_50 <= sum(layer_thickness(1:2))) then
+!
+!        ! Greater than 50 % of fine root biomass found in the top two soil
+!        ! layers. We will divide the root biomass uniformly based on volume,
+!        ! plus bonus for the second layer (as done above)
+!        root_mass(1) = fine_root_biomass * (layer_thickness(1)/root_depth_50)
+!        root_mass(2) = fine_root_biomass * ((root_depth_50-layer_thickness(1))/root_depth_50)
+!        root_mass(1:2) = root_mass(1:2) * 0.5d0
+!
+!        ! determine bonus for the seconds layer
+!        bonus = (fine_root_biomass-sum(root_mass(1:2))) &
+!              * ((sum(layer_thickness(1:2))-root_depth_50)/(root_reach-root_depth_50))
+!        root_mass(2) = root_mass(2) + bonus
+!        root_mass(3) = fine_root_biomass - sum(root_mass(1:2))
+!
+!    else
+!
+!        ! Greater than 50 % of fine root biomass stock spans across all three
+!        ! layers
+!        root_mass(1:2) = fine_root_biomass * 0.5d0 * (layer_thickness(1:2)/root_depth_50)
+!        root_mass(3) = fine_root_biomass - sum(root_mass(1:2))
+!
+!    endif
+!    ! now convert root mass into lengths
+!    root_length = root_mass * root_mass_length_coef_1
+!!    root_length = root_mass / (root_density * root_cross_sec_area)
 
     !!!!!!!!!!!
     ! Calculate hydraulic properties and each rooted layer
@@ -2657,50 +2669,71 @@ double precision :: Creturn_canopy,Creturn_investment
     ! NOTE: Depth correction already accounted for in soil resistance
     ! calculations and this is the maximum potential rate of transpiration
     ! assuming saturated soil and leaves at their minimum water potential.
-    ! also note that the head correction is now added rather than
-    ! subtracted in SPA equations because deltaWP is soilWP-minlwp not
-    ! soilWP prior to application of minlwp
-    demand = abs(minlwp-SWP(1:nos_root_layers))+head*canopy_height
+    demand = max(0d0, (SWP(1:nos_root_layers) - (head*canopy_height)) - minlwp )
     ! now loop through soil layers, where root is present
+    rooted_layer = 1
+    ! Determine the exponential coefficient needed for an exponential decay to the current root reach
+    ! Exponential decay profile following:
+    ! Y = 1 / (1 + exp(-B * Z)), where Y = density at Z, B = gradient, Z = depth
+    ! To determine gradient for current maximum root depth assuming density reaches rootdist_tol value, rearranges to:
+    ! B = ln(1/Y - 1) / Z
+    !slpa = log(1d0/rootdist_tol - 1d0) / root_reach
+    slpa = rootdist_tol / root_reach
+    prev = 1d0
     do i = 1, nos_root_layers
+       ! Determine the exponential function for the current cumulative depth
+       exp_func = exp(-slpa * sum(layer_thickness(1:i)))
+       ! Calculate the difference in the integral between depths, i.e. the proportion of root in the current volume
+       mult = prev - (1d0 - (1d0/(1d0+exp_func)) + (0.5d0 * exp_func))
+       ! Assign fine roo the the current layer...
+       root_mass(i) = fine_root_biomass * mult
+       ! and determine the associated amount of root
+       root_length(i) = root_mass(i) * root_mass_length_coef_1
+       prev = prev - mult
+       ! If there is root in the current layer then we should calculate the resistances
        if (root_mass(i) > 0d0) then
+           ! Track the deepest root layer assessed
+           rooted_layer = i
            ! if there is root then there is a water flux potential...
            root_reach_local = min(root_reach,layer_thickness(i))
            ! calculate and accumulate steady state water flux in mmol.m-2.s-1
-           water_flux(i) = plant_soil_flow(i,root_length(i),root_mass(i) &
-                                          ,demand(i),root_reach_local,transpiration_resistance)
+           call plant_soil_flow(i,root_length(i),root_mass(i) &
+                               ,demand(i),root_reach_local &
+                               ,transpiration_resistance,Rcond_layer(i))
        else
            ! ...if there is not then we wont have any below...
            exit
        end if ! root present in current layer?
     end do ! nos_root_layers
+    ! Turn the output resistance into conductance
+    Rcond_layer = Rcond_layer**(-1d0)
 
-    ! if freezing then assume soil surface is frozen
-    if (meant < 1d0) then
-        water_flux(1) = 0d0
-        ratio(1) = 0d0
-        ratio(2:nos_root_layers) = layer_thickness(2:nos_root_layers) / sum(layer_thickness(2:nos_root_layers))
-    else
-        ratio = layer_thickness(1:nos_root_layers)/sum(layer_thickness(1:nos_root_layers))
-    endif
+    ! if freezing then assume soil surface is frozen, therefore no water flux
+    if (soilT < 1d0) then
+        water_flux_mmolH2Om2s(1) = 0d0
+        Rcond_layer(1) = 0d0
+    end if
 
-    ! calculate sum value
-    sum_water_flux = sum(water_flux)
-    if (sum_water_flux <= vsmall) then
-        wSWP = -20d0 ; uptake_fraction = 0d0 ; uptake_fraction(1) = 1d0
-    else
+    ! calculate sum value (mmolH2O.m-2.s-1)
+    total_water_flux = sum(water_flux_mmolH2Om2s)
+    ! wSWP based on the conductance due to the roots themselves.
+    ! The idea being that the plant may hedge against growth based on the majority of the
+    ! profile being dry while not losing leaves within some toleration.
+    rSWP = sum(SWP(1:rooted_layer) * (Rcond_layer(1:rooted_layer) / sum(Rcond_layer(1:rooted_layer))))
+    if (total_water_flux <= vsmall) then
+        ! Set values for no water flow situation
+        uptake_fraction = (layer_thickness(1:nos_root_layers) / sum(layer_thickness(1:nos_root_layers)))
+        ! Estimate weighted soil water potential based on fractional extraction from soil layers
+        wSWP = sum(SWP(1:nos_root_layers) * uptake_fraction(1:nos_root_layers))
+        total_water_flux = 0d0! ; Rtot = 100d0
+      else
         ! calculate weighted SWP and uptake fraction
-        wSWP = sum(SWP(1:nos_root_layers) * water_flux(1:nos_root_layers))
-        uptake_fraction(1:nos_root_layers) = water_flux(1:nos_root_layers) / sum_water_flux
-        wSWP = wSWP / sum_water_flux
+        uptake_fraction(1:nos_root_layers) = water_flux_mmolH2Om2s(1:nos_root_layers) / total_water_flux
+        ! Estimate weighted soil water potential based on fractional extraction from soil layers
+        wSWP = sum(SWP(1:nos_root_layers) * uptake_fraction(1:nos_root_layers))
+        ! determine effective resistance (MPa.s-1.m-2.mmol-1)
+        !Rtot = -(minlwp - wSWP) / total_water_flux
     endif
-
-    ! determine effective resistance (MPa.s-1.m-2.mmol-1)
-    Rtot = sum(demand) / sum_water_flux
-
-    ! finally convert transpiration flux (mmolH2O.m-2.s-1)
-    ! into kgH2O.m-2.step-1 for consistency with ET in "calculate_update_soil_water"
-    water_flux = water_flux * mmol_to_kg_water * seconds_per_step
 
     ! and return
     return
@@ -3213,7 +3246,7 @@ double precision :: Creturn_canopy,Creturn_investment
     iceprop = 0d0
 
     ! except the surface layer in the mean daily temperature is < 0oC
-    if (meant < 1d0) iceprop(1) = 1d0
+    if (soilT < 1d0) iceprop(1) = 1d0
 
     ! zero water fluxes
     waterchange = 0d0
@@ -3516,7 +3549,7 @@ double precision :: Creturn_canopy,Creturn_investment
                            * soil_waterfrac(1:nos_soil_layers)**potB(1:nos_soil_layers)
     ! NOTE: profiling indiates that 'where' is slower for very short vectors
     do i = 1, nos_soil_layers
-       if (SWP(i) < -20d0) SWP(i) = -20d0
+       if (SWP(i) < -20d0 .or. SWP(i) /= SWP(i)) SWP(i) = -20d0
     end do
 
   end subroutine soil_water_potential
@@ -3588,7 +3621,7 @@ double precision :: Creturn_canopy,Creturn_investment
                                     ,VPDfac_range_1,base_leaf_fall        &
                                     ,pot_leaf_fall,pot_leaf_growth        &
                                     ,mean_max_airt,mean_daylength,mean_vpd&
-                                    ,deltaWP,Rtot,GPP_current,foliage     &
+                                    ,GPP_current,foliage     &
                                     ,gpp_crit_frac,GSI,leaf_fall,leaf_growth)
 
     ! Subroutine determines whether leaves are growing or dying.
@@ -3611,8 +3644,6 @@ double precision :: Creturn_canopy,Creturn_investment
                                     ,mean_max_airt & !
                                    ,mean_daylength & !
                                          ,mean_vpd & !
-                                          ,deltaWP & !
-                                             ,Rtot &
                                          ,Tfac_min & !
                                      ,Photofac_min & !
                                        ,VPDfac_min & !
@@ -3630,11 +3661,10 @@ double precision :: Creturn_canopy,Creturn_investment
     integer :: gsi_lag, m, interval
     double precision :: infi     &
                        ,tmp      &
-                       ,deltaNCE &
+                      ,deltaNCCE &
                        ,deltaGPP &
                         ,deltaRm &
                        ,C_invest &
-                            ,NCE &
                           ,iwswp &
                        ,lai_save &
                  ,canopy_lw_save &
@@ -3660,13 +3690,11 @@ double precision :: Creturn_canopy,Creturn_investment
 
     ! Temperature limitation, then restrict to 0-1; correction for k-> oC
     itemp(current_step) = min(1d0,max(0d0,(mean_max_airt-(Tfac_min-freeze)) * Tfac_range_1))
-!    itemp(current_step) = opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT)
-!    itemp(current_step) = opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,mean_max_airt)
     ! Photoperiod limitation (seconds)
     iphoto(current_step) = min(1d0,max(0d0,(mean_daylength-Photofac_min) * Photofac_range_1))
     ! VPD limitation (kPa)
 !    ivpd(current_step) = min(1d0,max(0d0,1d0 - ((mean_VPD-VPDfac_min) * VPDfac_range_1)))
-    ivpd(current_step) = min(1d0,max(0d0,(wSWP-VPDfac_min) * VPDfac_range_1))
+    ivpd(current_step) = min(1d0,max(0d0,(rSWP-VPDfac_min) * VPDfac_range_1))
     ! Calculate and store the GSI index
     GSI(current_step) = itemp(current_step) * ivpd(current_step) * iphoto(current_step)
 
@@ -3680,7 +3708,7 @@ double precision :: Creturn_canopy,Creturn_investment
     ! determine the number of values, i.e. the interval
     if (current_step < gsi_lag) then
         if (current_step == 1) then
-            gsi_history(2) = GSI(current_step)
+            gsi_history(1:2) = GSI(current_step)
             interval = 2
         else
             gsi_history(1:current_step) = GSI(1:current_step)
@@ -3701,29 +3729,11 @@ double precision :: Creturn_canopy,Creturn_investment
     leaf_fall = 0d0   ! leaf turnover
     leaf_growth = 0d0 ! leaf growth
 
-! calculate new leaf area, GPP return
-!lai = 1d0
-!aerodynamic_conductance = aerodynamic_conductance * (lai / lai_save)
-!call calculate_stomatal_conductance(abs(deltaWP),Rtot)
-!call calculate_shortwave_balance
-!if (lai_save < vsmall) then
-!    call calculate_aerodynamic_conductance
-!endif ! lai_save < vsmall
-!! calculate stomatal conductance of water
-!if (stomatal_conductance > vsmall) then
-!    call acm_gpp_stage_1
-!   iphoto(current_step) = acm_gpp_stage_2(stomatal_conductance) - (Rm_leaf_per_gC * (lai / SLA))
-!else
-!   iphoto(current_step) = 0d0 - (Rm_leaf_per_gC * (lai / SLA))
-!endif
-!lai = lai_save
-
     ! Estimate current NCE
-    NCE = GPP_current - (Rm_leaf_per_gC * foliage)
+    NCCE(current_step) = GPP_current - (Rm_leaf_per_gC * foliage)
 
     ! Reset marginal return variables
-    deltaGPP = 0d0 ; deltaRm = 0d0 ; deltaNCE = 0d0
-    Creturn_canopy = 0d0 ; Creturn_investment = 0d0            ! Marginal return
+    deltaGPP = 0d0 ; deltaRm = 0d0 ; deltaNCCE = 0d0
 
     ! Everything else in here was needed to keep track of GSI values but
     ! ultimately if there is not labile available no growth can occur.
@@ -3731,16 +3741,11 @@ double precision :: Creturn_canopy,Creturn_investment
     ! something about the trend in its environment, i.e. if it is improving and
     ! economic growth if it is economic but declining it might quickly become no
     ! longer economic!
-    if (gradient > fol_turn_crit .and. deltaWP < 0d0 .and. avail_labile > 0d0) then
-
-!        iwswp =  min(1d0,max(0d0,(wSWP-minlwp) / (0.001d0 - minlwp))) ! 0.001 = field capacity (MPa)
+    if (gradient > fol_turn_crit .and. GSI(current_step) > vsmall .and. avail_labile > vsmall) then
 
         ! Estimate approximate the potential leaf area increment
         ! using the Reich maintence respiration Q10 as proxy for potential
         ! metabolic activity
-!        leaf_growth = pot_leaf_growth*Q10_adjustment(n)
-!        leaf_growth = pot_leaf_growth*opt_max_scaling(pn_max_temp,pn_opt_temp,pn_kurtosis,leafT) &
-!                    * iwswp
         leaf_growth = pot_leaf_growth*GSI(current_step)
         ! calculate potential C allocation to leaves
         tmp = avail_labile * &
@@ -3753,7 +3758,7 @@ double precision :: Creturn_canopy,Creturn_investment
         ! calculate new leaf area, GPP return
         lai = (foliage+tmp) * SLA
         aerodynamic_conductance = aerodynamic_conductance * (lai / lai_save)
-        call calculate_stomatal_conductance(abs(deltaWP),Rtot)
+        call calculate_stomatal_conductance
         call calculate_shortwave_balance
         if (lai_save < vsmall) then
             call calculate_aerodynamic_conductance
@@ -3771,21 +3776,21 @@ double precision :: Creturn_canopy,Creturn_investment
         ! Estimate the change in net carbon export by the canopy per day,
         ! then scale the initial investment costs by leaf lifespan (days) and substract the initial investment cost
         ! i.e. gC/m2/day/(gCinvest/LL)
-!        deltaNCE = (((deltaGPP - deltaRm) * leaf_life) - C_invest) / C_invest
-        deltaNCE = ((deltaGPP - deltaRm) - (C_invest/leaf_life)) / C_invest
+        deltaNCCE = ((deltaGPP - deltaRm) - (C_invest/leaf_life)) / C_invest
         ! Is the marginal return for GPP (over the mean life of leaves)
         ! less than increase in maintenance respiration and C required
         ! to growth?
-        if (deltaNCE < gpp_crit_frac) leaf_growth = 0d0
+        if (deltaNCCE < gpp_crit_frac) leaf_growth = 0d0
 
     endif ! deltaWP < 0
 
+    ! Assess leaf loss potential now
     if (avail_labile < vsmall) then
 
         ! We want to lose a chunk of leaf quickly!
         leaf_fall = leaf_fall + pot_leaf_fall
 
-    else if (NCE < 0d0) then
+    else if (NCCE(current_step) < 0d0 .and. leaf_growth == 0) then
 
         ! We are not currently growing and the net canopy export of C is
         ! negative (i.e. leaves are costing more to keep than they generate)
@@ -3812,96 +3817,143 @@ double precision :: Creturn_canopy,Creturn_investment
   !
   !------------------------------------------------------------------
   !
-  subroutine calculate_wood_root_growth(n,lab_to_roots,lab_to_wood &
-                                       ,deltaWP,Rtot,current_gpp,Croot,Cwood  &
-                                       ,root_growth,wood_growth)
+!  subroutine calculate_wood_root_growth(n,lab_to_roots,lab_to_wood &
+!                                       ,deltaWP,Rtot,current_gpp,Croot,Cwood  &
+!                                       ,root_growth,wood_growth)
+!    implicit none
+!
+!    ! Premise of wood and root phenological controls
+!
+!    ! Assumption 1:
+!    ! Based on plant physiology all cell expansion can only occur if there is
+!    ! sufficient water pressure available to drive the desired expansion.
+!    ! Moreover, as there is substantial evidence that shows wood and root growth
+!    ! do not follow the same phenology as leaves or GPP availability.
+!    ! Therefore, their phenological constrols should be separate from both that of
+!    ! the GSI model driving canopy phenology or GPP. Wood growth is limited by a
+!    ! logisitic temperature response assuming <5 % growth potential at 5oC and
+!    ! >95 % growth potential at 30 oC. Wood growth is also limited by a
+!    ! logistic response to water availability. When deltaWP (i.e. minleaf-wSWP)
+!    ! is less than -1 MPa wood growth is restricted to <5 % of potential.
+!    !  See review Fatichi et al (2013). Moving beyond phtosynthesis from carbon
+!    ! source to sink driven vegetation modelling. New Phytologist,
+!    ! https://doi.org/10.1111/nph.12614 for further details.
+!
+!    ! As with wood, root phenology biologically speaking is independent of
+!    ! observed foliar phenological dynamics and GPP availabilty and thus has
+!    ! a separate phenology model. Similar to wood, a logistic temperature
+!    ! response is applied such that root growth is <5 % of potential at 0oC and
+!    ! >95 % of potential at 30oC. The different temperature minimua between
+!    ! wood and root growth is due to observed root growth when ever the soil
+!    ! is not frozen. We also assume that root growth is less sensitive to
+!    ! available hydraulic pressure, see assumption 3.
+!
+!    ! Assumption 2:
+!    ! Actual biological theory suggests that roots support demands for resources
+!    ! made by the rest of the plant in this current model this is water only.
+!    ! Therefore there is an implicit assumption that roots should grow so long as
+!    ! growth is environmentally possible as growth leads to an improvement in
+!    ! C balance over their life time greater than their construction cost.
+!
+!    ! Assumption 3:
+!    ! Determining when root growth should stop is poorly constrained.
+!    ! Similar to wood growth, here we assume root expansion is also dependent on water availability,
+!    ! but is less sensitive than wood. Root growth is assumed to stop when deltaWP approaches 0,
+!    ! determined by marginal return on root growth and temperature limits.
+!
+!    ! arguments
+!    integer, intent(in) :: n
+!    double precision, intent(in) :: lab_to_roots,lab_to_wood &
+!                                   ,deltaWP,Rtot,current_gpp,Croot,Cwood
+!    double precision, intent(out) :: root_growth,wood_growth
+!
+!    ! reset allocation to roots and wood
+!    root_growth = 0d0 ; wood_growth = 0d0
+!
+!    ! Is it currently hydraulically possible for cell expansion (i.e. is soil
+!    ! water potential more negative than min leaf water potential).
+!    if ( avail_labile > 0d0 .and. deltaWP < 0d0 ) then
+!
+!      ! Assume potential root growth is dependent on hydraulic and temperature conditions.
+!      ! Actual allocation is only allowed if the marginal return on GPP,
+!      ! averaged across the life span of the root is greater than the rNPP and Rg_root.
+!
+!      ! Temperature limited turnover rate of labile -> roots
+!      root_growth = lab_to_roots*Croot_labile_release_coef(n)
+!
+!      ! calculate hydraulic limits on wood growth.
+!      ! NOTE: PARAMETERS NEED TO BE CALIBRATRED
+!      Cwood_hydraulic_limit = (1d0+exp(Cwood_hydraulic_gradient*(deltaWP-Cwood_hydraulic_half_saturation)))**(-1d0)
+!      ! determine wood growth based on temperature and hydraulic limits
+!      wood_growth = lab_to_wood*Cwood_labile_release_coef(n)*Cwood_hydraulic_limit
+!
+!      ! cost of wood construction and maintenance not accounted for here due
+!      ! to no benefit being determined
+!
+!      ! track labile reserves to ensure that fractional losses are applied
+!      ! sequencially in assumed order of importance (leaf->root->wood)
+!
+!      ! root production (gC.m-2.day-1)
+!      root_growth = avail_labile*(1d0-(1d0-root_growth)**days_per_step)*days_per_step_1
+!      root_growth = min(avail_labile*days_per_step_1,root_growth)
+!      avail_labile = avail_labile - (root_growth*days_per_step)
+!      ! wood production (gC.m-2.day-1)
+!!      wood_growth = min(current_gpp,avail_labile*(1d0-(1d0-wood_growth)**days_per_step)*days_per_step_1)
+!      wood_growth = min(avail_labile*days_per_step_1,wood_growth)
+!      avail_labile = avail_labile - (wood_growth*days_per_step)
+!
+!    endif ! grow root and wood?
+!
+!    return
+!
+!  end subroutine calculate_wood_root_growth
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine plant_soil_flow(root_layer,root_length,root_mass &
+                            ,demand,root_reach_in,transpiration_resistance &
+                            ,Rroot_layer)
+
+    !
+    ! Calculate soil layer specific water flow form the soil to canopy (mmolH2O.m-2.s-1)
+    ! Accounting for soil, root and plant resistance, and canopy demand
+    !
+
+    ! calculate and accumulate steady state water flux in mmol.m-2.s-1
+    ! From the current soil layer given an amount of root within the soil layer.
+
     implicit none
 
-    ! Premise of wood and root phenological controls
-
-    ! Assumption 1:
-    ! Based on plant physiology all cell expansion can only occur if there is
-    ! sufficient water pressure available to drive the desired expansion.
-    ! Moreover, as there is substantial evidence that shows wood and root growth
-    ! do not follow the same phenology as leaves or GPP availability.
-    ! Therefore, their phenological constrols should be separate from both that of
-    ! the GSI model driving canopy phenology or GPP. Wood growth is limited by a
-    ! logisitic temperature response assuming <5 % growth potential at 5oC and
-    ! >95 % growth potential at 30 oC. Wood growth is also limited by a
-    ! logistic response to water availability. When deltaWP (i.e. minleaf-wSWP)
-    ! is less than -1 MPa wood growth is restricted to <5 % of potential.
-    !  See review Fatichi et al (2013). Moving beyond phtosynthesis from carbon
-    ! source to sink driven vegetation modelling. New Phytologist,
-    ! https://doi.org/10.1111/nph.12614 for further details.
-
-    ! As with wood, root phenology biologically speaking is independent of
-    ! observed foliar phenological dynamics and GPP availabilty and thus has
-    ! a separate phenology model. Similar to wood, a logistic temperature
-    ! response is applied such that root growth is <5 % of potential at 0oC and
-    ! >95 % of potential at 30oC. The different temperature minimua between
-    ! wood and root growth is due to observed root growth when ever the soil
-    ! is not frozen. We also assume that root growth is less sensitive to
-    ! available hydraulic pressure, see assumption 3.
-
-    ! Assumption 2:
-    ! Actual biological theory suggests that roots support demands for resources
-    ! made by the rest of the plant in this current model this is water only.
-    ! Therefore there is an implicit assumption that roots should grow so long as
-    ! growth is environmentally possible as growth leads to an improvement in
-    ! C balance over their life time greater than their construction cost.
-
-    ! Assumption 3:
-    ! Determining when root growth should stop is poorly constrained.
-    ! Similar to wood growth, here we assume root expansion is also dependent on water availability,
-    ! but is less sensitive than wood. Root growth is assumed to stop when deltaWP approaches 0,
-    ! determined by marginal return on root growth and temperature limits.
-
     ! arguments
-    integer, intent(in) :: n
-    double precision, intent(in) :: lab_to_roots,lab_to_wood &
-                                   ,deltaWP,Rtot,current_gpp,Croot,Cwood
-    double precision, intent(out) :: root_growth,wood_growth
+    integer, intent(in) :: root_layer
+    double precision, intent(in) :: root_length, &
+                                      root_mass, &
+                                         demand, &
+                                  root_reach_in, &
+                       transpiration_resistance
+    double precision, intent(out) :: Rroot_layer
 
-    ! reset allocation to roots and wood
-    root_growth = 0d0 ; wood_growth = 0d0
+    ! local arguments
+    double precision :: soilR1, soilR2
 
-    ! Is it currently hydraulically possible for cell expansion (i.e. is soil
-    ! water potential more negative than min leaf water potential).
-    if ( avail_labile > 0d0 .and. deltaWP < 0d0 ) then
+    ! Estimate soil hydraulic resistance to water flow (MPa m2 s mmol-1)
+    ! Note: 1) soil conductivity converted from m.s-1 -> m2.s-1.MPa-1 by head.
+    !       2) soil resistance calculation in single line to reduce assignment costs
+    soilR1 = ( log(root_radius_1*(root_length*pi)**(-0.5d0)) &
+               /(two_pi*root_length*root_reach_in*(soil_conductivity(root_layer)*head_1))) &
+             * 1d-9 * mol_to_g_water
+    ! Calculates root hydraulic resistance (MPa m2 s mmol-1) in a soil-root zone
+    soilR2 = root_resist / (root_mass*root_reach_in)
+    ! Estimate the total hydraulic resistance for the layer
+    Rroot_layer = soilR2
 
-      ! Assume potential root growth is dependent on hydraulic and temperature conditions.
-      ! Actual allocation is only allowed if the marginal return on GPP,
-      ! averaged across the life span of the root is greater than the rNPP and Rg_root.
+    ! Estimate the soil to plant flow of water mmolH2O/m2/s
+    water_flux_mmolH2Om2s(root_layer) = demand/(transpiration_resistance + soilR1 + soilR2)
 
-      ! Temperature limited turnover rate of labile -> roots
-      root_growth = lab_to_roots*Croot_labile_release_coef(n)
-
-      ! calculate hydraulic limits on wood growth.
-      ! NOTE: PARAMETERS NEED TO BE CALIBRATRED
-      Cwood_hydraulic_limit = (1d0+exp(Cwood_hydraulic_gradient*(deltaWP-Cwood_hydraulic_half_saturation)))**(-1d0)
-      ! determine wood growth based on temperature and hydraulic limits
-      wood_growth = lab_to_wood*Cwood_labile_release_coef(n)*Cwood_hydraulic_limit
-
-      ! cost of wood construction and maintenance not accounted for here due
-      ! to no benefit being determined
-
-      ! track labile reserves to ensure that fractional losses are applied
-      ! sequencially in assumed order of importance (leaf->root->wood)
-
-      ! root production (gC.m-2.day-1)
-      root_growth = avail_labile*(1d0-(1d0-root_growth)**days_per_step)*days_per_step_1
-      root_growth = min(avail_labile*days_per_step_1,root_growth)
-      avail_labile = avail_labile - (root_growth*days_per_step)
-      ! wood production (gC.m-2.day-1)
-!      wood_growth = min(current_gpp,avail_labile*(1d0-(1d0-wood_growth)**days_per_step)*days_per_step_1)
-      wood_growth = min(avail_labile*days_per_step_1,wood_growth)
-      avail_labile = avail_labile - (wood_growth*days_per_step)
-
-    endif ! grow root and wood?
-
+    ! return
     return
 
-  end subroutine calculate_wood_root_growth
+  end subroutine plant_soil_flow
   !
   !------------------------------------------------------------------
   !
@@ -3941,7 +3993,7 @@ double precision :: Creturn_canopy,Creturn_investment
     implicit none
 
     ! arguments..
-    double precision,intent(in) :: max_val, min_val, optimum, kurtosis, current
+    double precision, intent(in) :: max_val, min_val, optimum, kurtosis, current
 
 !    ! local variables..
 !    double precision, parameter :: min_val = -1d6
@@ -3955,58 +4007,14 @@ double precision :: Creturn_canopy,Creturn_investment
 !    end if
 
     ! Code with explicit min bound
-    if (current > max_val .or. current < min_val) then
+    if (current >= max_val .or. current <= min_val) then
         opt_max_scaling = 0d0
     else
         opt_max_scaling = exp( kurtosis * log((max_val-current)/(max_val-optimum)) * (max_val-optimum) ) &
-                        * exp( kurtosis * log((current-min_val)/(optimum-min_val)) * (optimum-min_val) ) &
-                        * exp( kurtosis * (current - optimum) / (max_val-min_val) )
+                        * exp( kurtosis * log((current-min_val)/(optimum-min_val)) * (optimum-min_val) )
     endif
 
   end function opt_max_scaling
-  !
-  !------------------------------------------------------------------
-  !
-  double precision function plant_soil_flow(root_layer,root_length,root_mass &
-                                           ,demand,root_reach_in,transpiration_resistance)
-
-    !
-    ! Calculate soil layer specific water flow form the soil to canopy (mmolH2O.m-2.s-1)
-    ! Accounting for soil, root and plant resistance, and canopy demand
-    !
-
-    ! calculate and accumulate steady state water flux in mmol.m-2.s-1
-    ! From the current soil layer given an amount of root within the soil layer.
-
-    implicit none
-
-    ! arguments
-    integer, intent(in) :: root_layer
-    double precision, intent(in) :: root_length, &
-                                      root_mass, &
-                                         demand, &
-                                  root_reach_in, &
-                       transpiration_resistance
-
-    ! local arguments
-    double precision :: soilR1, soilR2
-
-    ! Estimate soil hydraulic resistance to water flow (MPa m2 s mmol-1)
-    ! Note: 1) soil conductivity converted from m.s-1 -> m2.s-1.MPa-1 by head.
-    !       2) soil resistance calculation in single line to reduce assignment costs
-    soilR1 = ( log(root_radius_1*(root_length*pi)**(-0.5d0)) &
-               /(two_pi*root_length*root_reach_in*(soil_conductivity(root_layer)*head_1))) &
-             * 1d-9 * mol_to_g_water
-    ! Calculates root hydraulic resistance (MPa m2 s mmol-1) in a soil-root zone
-    soilR2 = root_resist / (root_mass*root_reach_in)
-
-    ! Estimate the soil to plant flow of water mmolH2O/m2/s
-    plant_soil_flow = demand/(transpiration_resistance + soilR1 + soilR2)
-
-    ! return
-    return
-
-  end function plant_soil_flow
   !
   !------------------------------------------------------------------
   !
@@ -4070,6 +4078,37 @@ double precision :: Creturn_canopy,Creturn_investment
     return
 
   end function linear_model_gradient
+  !
+  !--------------------------------------------------------------------------
+  !
+!  double precision function logistic_func(invar,max_growth,max_growth_point,min_asym,asym_offset)
+!
+!    ! Logistic regression output bounded between 0 and 1.
+!    ! NOTE: upper bound determined by exponent value currently == 1
+!    ! For further information search Generalised logistic function (Richard's Curve)
+!
+!    ! Arguments
+!    double precision, intent(in) :: invar, & ! input variable
+!                               max_growth, & ! growth rate / gradient
+!                         max_growth_point, & ! if curve_offset == asym_offset
+!                                             ! then this is value of invar at which maximum growth occurs
+!                                 min_asym, & ! minimum asymptote value of the function
+!                              asym_offset    ! must be > 0, larger value shifts the max gradient position towards max_asym
+!
+!    ! local parameters
+!    double precision, parameter :: & !min_asym = 0d0, & ! minimum asymptote value of the function
+!                                   max_asym = 1d0, & ! maximum asymptote value of the function
+!                               curve_offset = 1d0    ! must be > 0, larger value shifts curve towards max_asym
+!
+!    ! calculate value of the logistic function
+!!    logistic_func = (1d0+exp(max_growth*(max_growth_point-invar)))**(-1d0)
+!    logistic_func = min_asym + &
+!                   ( (max_asym-min_asym) / &
+!                     (1d0+curve_offset * exp(max_growth*(max_growth_point-invar))**(1d0/asym_offset)) )
+!
+!    return
+!
+!  end function logistic_func
   !
   !--------------------------------------------------------------------------
   !

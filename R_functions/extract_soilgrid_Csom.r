@@ -43,5 +43,6 @@ extract_soilgrid_Csom<-function(spatial_type,resolution,grid_type,latlon_wanted,
 
   # retun back to the user
   return(list(Csom_initial = Csom, Csom_initial_unc = Csom_unc))
+  #return(list(Csom_initial = Csom, Csom_initial_unc = 250))
 
 } # extract_soilgrid_Csom

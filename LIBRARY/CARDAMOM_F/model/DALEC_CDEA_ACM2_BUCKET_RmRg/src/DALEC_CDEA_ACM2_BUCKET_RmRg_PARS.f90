@@ -120,7 +120,7 @@ module MODEL_PARAMETERS
 
     ! BUCKET - coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 %
     ! of max depth
-    PI%parmin(26) = 50d0
+    PI%parmin(26) = 100d0
     PI%parmax(26) = 2500d0 !500d0
 
     ! BUCKET - maximum rooting depth

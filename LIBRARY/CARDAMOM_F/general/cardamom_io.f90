@@ -257,6 +257,28 @@ module cardamom_io
            DATAin%nopars = 38
            DATAin%nofluxes = 21
         endif
+    else if (DATAin%ID == 32) then
+        ! ID = 20 - DALEC_G5
+        DATAin%nopools = 8
+        DATAin%nopars = 43
+        DATAin%nofluxes = 25
+        if (DATAin%PFT == 1) then
+           ! then actually this is a crop pixel
+           DATAin%nopools = 9
+           DATAin%nopars = 38
+           DATAin%nofluxes = 21
+        endif
+    else if (DATAin%ID == 33) then
+        ! ID = 20 - DALEC_G6
+        DATAin%nopools = 8
+        DATAin%nopars = 46
+        DATAin%nofluxes = 25
+        if (DATAin%PFT == 1) then
+           ! then actually this is a crop pixel
+           DATAin%nopools = 9
+           DATAin%nopars = 38
+           DATAin%nofluxes = 21
+        endif
     else
        write(*,*) "Oh dear... model ID cannot be found"
        stop
@@ -620,11 +642,19 @@ module cardamom_io
     DATAin%yield = -9999 !int(statdat(8))
     DATAin%age = int(statdat(9))
     nopars_dummy = int(statdat(10)) ! needed for next dev stage
-    soil_frac_sand(1:2) = statdat(12) ! top soil sand percentage
-    soil_frac_sand(3:nos_soil_layers) = statdat(13) ! bot
-    soil_frac_clay(1:2) = statdat(14) ! top soil clay percentage
-    soil_frac_clay(3:nos_soil_layers) = statdat(15) ! bot
-
+    if (nos_soil_layers == 3) then
+        ! Assume only top soil layer is assigned the top soil condition
+        soil_frac_sand(1) = statdat(12) ! top soil sand percentage
+        soil_frac_sand(2:nos_soil_layers) = statdat(13) ! bot
+        soil_frac_clay(1) = statdat(14) ! top soil clay percentage
+        soil_frac_clay(2:nos_soil_layers) = statdat(15) ! bot
+    else
+        ! Assume that it is greater than 3 layers and thus the top two are considered top
+        soil_frac_sand(1:2) = statdat(12) ! top soil sand percentage
+        soil_frac_sand(3:nos_soil_layers) = statdat(13) ! bot
+        soil_frac_clay(1:2) = statdat(14) ! top soil clay percentage
+        soil_frac_clay(3:nos_soil_layers) = statdat(15) ! bot
+    end if
     ! call for model specific values
     call cardamom_model_library
 

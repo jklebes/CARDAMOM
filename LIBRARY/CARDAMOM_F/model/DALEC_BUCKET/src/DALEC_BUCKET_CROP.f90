@@ -157,7 +157,7 @@ contains
                                ,soil_frac_clay,soil_frac_sand                                              &
                                ,co2comp_saturation,drythick,dayl_hours,dayl_seconds,dayl_seconds_1         & ! variables
                                ,seconds_per_step,fine_root_biomass,mid_soil_depth,root_reach,previous_depth     &
-                               ,deltat_1,water_flux,layer_thickness,meant,stomatal_conductance             &
+                               ,deltat_1,water_flux_mmolH2Om2s,layer_thickness,meant,stomatal_conductance             &
                                ,co2_half_sat,co2_comp_point,mint,maxt,swrad,co2,doy,leafT,ceff             &
                                ,wind_spd,vpd_kPa,lai,days_per_step,days_per_step_1,dayl_hours_fraction     &
                                ,wSWP,SWP,SWP_initial,wSWP_time,soil_waterfrac,soil_waterfrac_initial       &
@@ -214,7 +214,6 @@ contains
                           ,wetcanopy_evap &
                         ,snow_sublimation &
                                  ,deltaWP & !
-                                    ,Rtot &
                                     ,infi   ! used to calculate infinity for diagnositc
 
     integer :: nxp,n
@@ -299,7 +298,6 @@ contains
     avN = 10d0**pars(11) ! foliar N
     ceff = avN*NUE
     deltaWP = minlwp     ! leafWP-soilWP (i.e. -2-0)
-    Rtot = 1d0 ! totaly hydraulic resistance ! p12 from ACM recal (updated)
 
     ! plus ones being calibrated
     root_k = pars(36) ; max_depth = pars(37)
@@ -398,7 +396,7 @@ contains
                     canopy_par_MJday_time(nodays))
            deltat_1 = deltat**(-1d0)
            ! zero variables not done elsewhere
-           water_flux = 0d0
+           water_flux_mmolH2Om2s = 0d0
            ! initialise some time invarient parameters
            call saxton_parameters(soil_frac_clay,soil_frac_sand)
            call initialise_soils(soil_frac_clay,soil_frac_sand)
@@ -411,7 +409,7 @@ contains
 
         else
 
-           water_flux = 0d0
+           water_flux_mmolH2Om2s = 0d0
            field_capacity = field_capacity_initial
            porosity = porosity_initial
 
@@ -443,7 +441,7 @@ contains
         layer_thickness(5) = top_soil_depth
         previous_depth = max(top_soil_depth,root_reach)
         ! needed to initialise soils
-        call calculate_Rtot(Rtot)
+        call calculate_Rtot
         ! used to initialise soils
         call calculate_update_soil_water(0d0,0d0,0d0,ET) ! assume no evap or rainfall
         ! store soil water content of the rooting zone (mm)
@@ -531,7 +529,7 @@ contains
       root_biomass = fine_root_biomass
       ! estimate drythick for the current step
       drythick = max(min_drythick, top_soil_depth * min(1d0,1d0 - (soil_waterfrac(1) / porosity(1))))
-      call calculate_Rtot(Rtot)
+      call calculate_Rtot
 
       ! Pass wSWP to output variable and update deltaWP between minlwp and
       ! current weighted soil WP
@@ -544,7 +542,7 @@ contains
       gb_total_canopy(n) = aerodynamic_conductance * convert_ms1_mol_1 * 1d3
       call calculate_radiation_balance
       canopy_par_MJday_time(n) = canopy_par_MJday
-      call calculate_stomatal_conductance(abs(deltaWP),Rtot)
+      call calculate_stomatal_conductance
       ! Estimate stomatal conductance relative to its minimum / maximum, i.e. how
       ! close are we to maxing out supply (note 0.01 taken from min_gs)
       gs_demand_supply_ratio(n) = (stomatal_conductance - 0.01d0) / (potential_conductance-0.01d0)

@@ -28,7 +28,7 @@ submit_processes_to_cluster<-function (PROJECT_in) {
                   write(paste(PROJECT_in$eexepath,PROJECT_in$exe," ",infile," ",output," ",as.integer(PROJECT_in$nsamples)," 0 ",as.integer(PROJECT_in$samplerate),sep=""),sep=" ", ncolumn=1,file=outfile,append="T")
               }
          } # chain no
-#} # management_kacl
+#} # management_hack
     } # nosite
 
     # do we want to remove any previous output files?

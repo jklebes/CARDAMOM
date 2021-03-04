@@ -35,7 +35,7 @@ extract_forestry_information<-function(timestep_days,spatial_type,resolution,gri
 
   # next move on to working out when there is any deforestation
   # convert input data long to conform to what we need
-  check1=which(forest_all$loss_long > 180) ; if (length(check1) > 0) { forest_all$loss_long[check1]=lai_all$loss_long[check1]-360 }
+  check1=which(forest_all$loss_long > 180) ; if (length(check1) > 0) { forest_all$loss_long[check1]=forest_all$loss_long[check1]-360 }
 
   # find the nearest location
   output=closest2d(1,forest_all$loss_lat,forest_all$loss_long,latlon_in[1],latlon_in[2],2)

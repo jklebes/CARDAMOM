@@ -158,7 +158,7 @@ module CARBON_MODEL_MOD
   double precision, dimension(nos_soil_layers) :: soil_frac_clay,soil_frac_sand ! clay and soil fractions of soil
   double precision, dimension(nos_root_layers) :: uptake_fraction, & ! fraction of water uptake from each root layer
                                                            demand, & ! maximum potential canopy hydraulic demand
-                                                       water_flux    ! potential transpiration flux (mmol.m-2.s-1)
+                                            water_flux_mmolH2Om2s    ! potential transpiration flux (mmolH2O.m-2.s-1)
   double precision, dimension(nos_soil_layers+1) :: SWP, & ! soil water potential (MPa)
                                             SWP_initial, &
                                       soil_conductivity, & ! soil conductivity
@@ -172,7 +172,9 @@ module CARBON_MODEL_MOD
                                         layer_thickness, & ! thickness of soil layers (m)
                         cond1, cond2, cond3, potA, potB    ! Saxton equation values
 
-  double precision :: root_reach, root_biomass, fine_root_biomass, & ! root depth, coarse+fine, and fine root biomass
+  double precision :: root_reach, root_biomass, &
+                             fine_root_biomass, & ! root depth, coarse+fine, and fine root biomass
+                              total_water_flux, & ! potential transpiration flux (kgH2O.m-2.day-1)
                                       drythick, & ! estimate of the thickness of the dry layer at soil surface (m)
                                           wSWP, & ! weighted soil water potential (MPa) used in GSI calculate.
                                                   ! Removes / limits the fact that very low root density in young plants
@@ -483,7 +485,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         !
 
         ! zero variables not done elsewhere
-        water_flux = 0d0
+        total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0
         ! initialise some time invarient parameters
         call saxton_parameters(soil_frac_clay,soil_frac_sand)
         call initialise_soils(soil_frac_clay,soil_frac_sand)
@@ -500,7 +502,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! Load initial soil water conditions from memory
         !
 
-        water_flux = 0d0
+        total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0
         soil_waterfrac = soil_waterfrac_initial
         SWP = SWP_initial
         field_capacity = field_capacity_initial
@@ -698,12 +700,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        fine_root_biomass = max(min_root,POOLS(n,3)*2d0)
        root_biomass = fine_root_biomass + max(min_root,POOLS(n,4)*pars(25)*2d0)
        call calculate_Rtot(Rtot)
-       ! Pass wSWP to output variable and update deltaWP between minlwp and
-       ! current weighted soil WP
-       wSWP_time(n) = wSWP ; deltaWP = min(0d0,minlwp-wSWP)
+       ! Pass wSWP to output variable
+       wSWP_time(n) = wSWP
 
        ! calculate radiation absorption and estimate stomatal conductance
-       call calculate_stomatal_conductance(abs(deltaWP),Rtot)
+       call calculate_stomatal_conductance
        ! Estimate stomatal conductance relative to its minimum / maximum, i.e. how
        ! close are we to maxing out supply (note 0.01 taken from min_gs)
        gs_demand_supply_ratio(n) = (stomatal_conductance  - minimum_conductance) &
@@ -991,17 +992,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !------------------------------------------------------------------
   !
-  subroutine calculate_stomatal_conductance(deltaWP,Rtot)
+  subroutine calculate_stomatal_conductance
 
     ! Determines 1) an approximation of canopy conductance (gc) mmolH2O.m-2.s-1
     ! based on potential hydraulic flow, air temperature and absorbed radiation.
     ! 2) calculates absorbed shortwave radiation (W.m-2) as function of LAI
 
     implicit none
-
-    ! arguments
-    double precision, intent(in) :: deltaWP, & ! minlwp-wSWP (MPa)
-                                       Rtot    ! total hydraulic resistance (MPa.s-1.m-2.mmol-1)
 
     ! local variables
     double precision :: denom, iWUE_lower, iWUE_upper
@@ -1013,10 +1010,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Calculate stomatal conductance under H2O and CO2 limitations
     !!!!!!!!!!
 
-    if (aerodynamic_conductance > vsmall .and. deltaWP > vsmall) then
+    if (aerodynamic_conductance > vsmall .and. total_water_flux > vsmall) then
 
         ! Determine potential water flow rate (mmolH2O.m-2.dayl-1)
-        max_supply = (deltaWP/Rtot) * seconds_per_day
+        max_supply = total_water_flux * seconds_per_day
+
         ! Pass minimum conductance from local parameter to global value
         ! There is uncertainty whether this should be a leaf area scaled value...
         minimum_conductance = min_gs * lai
@@ -1091,7 +1089,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     else
 
         ! if no LAI then there can be no stomatal conductance
-        potential_conductance = max_gs ; stomatal_conductance = min_gs
+        potential_conductance = max_gs ; minimum_conductance = vsmall
+        stomatal_conductance = vsmall
         ! set minimum (computer) precision level flow
         max_supply = vsmall
 
@@ -1821,19 +1820,19 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision,intent(inout) :: Rtot ! MPa.s-1.m-2.mmol-1
 
     ! local variables
-    integer :: i
-    double precision :: bonus, sum_water_flux, &
+    integer :: i, rooted_layer
+    double precision :: bonus, &
                         transpiration_resistance,root_reach_local, &
                         root_depth_50
-    double precision, dimension(nos_root_layers) :: root_mass    &
-                                                   ,root_length  &
-                                                   ,ratio
+    double precision, dimension(nos_root_layers) :: Rtot_layer, &
+                                                    root_mass,  &
+                                                    root_length
     double precision, parameter :: root_depth_frac_50 = 0.25d0 ! fractional soil depth above which 50 %
                                                                ! of the root mass is assumed to be located
 
     ! reset water flux
-    water_flux = 0d0 ; wSWP = 0d0
-    ratio = 0d0 ; ratio(1) = 1d0 ; root_mass = 0d0
+    total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0 ; wSWP = 0d0
+    root_mass = 0d0
     ! calculate soil depth to which roots reach
     root_reach = max_depth * root_biomass / (root_k + root_biomass)
     ! calculate the plant hydraulic resistance component. Currently unclear
@@ -1919,50 +1918,44 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! NOTE: Depth correction already accounted for in soil resistance
     ! calculations and this is the maximum potential rate of transpiration
     ! assuming saturated soil and leaves at their minimum water potential.
-    ! also note that the head correction is now added rather than
-    ! subtracted in SPA equations because deltaWP is soilWP-minlwp not
-    ! soilWP prior to application of minlwp
-    demand = abs(minlwp-SWP(1:nos_root_layers))+head*canopy_height
+    demand = max(0d0, (SWP(1:nos_root_layers) - (head*canopy_height)) - minlwp )
     ! now loop through soil layers, where root is present
+    rooted_layer = 1
     do i = 1, nos_root_layers
        if (root_mass(i) > 0d0) then
+           ! Track the deepest root layer assessed
+           rooted_layer = i
            ! if there is root then there is a water flux potential...
            root_reach_local = min(root_reach,layer_thickness(i))
            ! calculate and accumulate steady state water flux in mmol.m-2.s-1
-           water_flux(i) = plant_soil_flow(i,root_length(i),root_mass(i) &
-                                          ,demand(i),root_reach_local,transpiration_resistance)
+           call plant_soil_flow(i,root_length(i),root_mass(i) &
+                               ,demand(i),root_reach_local &
+                               ,transpiration_resistance,Rtot_layer(i))
        else
            ! ...if there is not then we wont have any below...
            exit
        end if ! root present in current layer?
     end do ! nos_root_layers
 
-    ! if freezing then assume soil surface is frozen
-    if (meant < 1d0) then
-        water_flux(1) = 0d0
-        ratio(1) = 0d0
-        ratio(2:nos_root_layers) = layer_thickness(2:nos_root_layers) / sum(layer_thickness(2:nos_root_layers))
-    else
-        ratio = layer_thickness(1:nos_root_layers)/sum(layer_thickness(1:nos_root_layers))
-    endif
+    ! if freezing then assume soil surface is frozen, therefore no water flux
+    if (meant < 1d0) water_flux_mmolH2Om2s(1) = 0d0
 
-    ! calculate sum value
-    sum_water_flux = sum(water_flux)
-    if (sum_water_flux <= vsmall) then
-        wSWP = -20d0 ; uptake_fraction = 0d0 ; uptake_fraction(1) = 1d0
-    else
+    ! calculate sum value (mmolH2O.m-2.s-1)
+    total_water_flux = sum(water_flux_mmolH2Om2s)
+    if (total_water_flux <= vsmall) then
+        ! Set values for no water flow situation
+        uptake_fraction = (layer_thickness(1:nos_root_layers) / sum(layer_thickness(1:nos_root_layers)))
+        ! Estimate weighted soil water potential based on fractional extraction from soil layers
+        wSWP = sum(SWP(1:nos_root_layers) * uptake_fraction(1:nos_root_layers))
+        Rtot = 100d0 ; total_water_flux = 0d0
+      else
         ! calculate weighted SWP and uptake fraction
-        wSWP = sum(SWP(1:nos_root_layers) * water_flux(1:nos_root_layers))
-        uptake_fraction(1:nos_root_layers) = water_flux(1:nos_root_layers) / sum_water_flux
-        wSWP = wSWP / sum_water_flux
+        uptake_fraction(1:nos_root_layers) = water_flux_mmolH2Om2s(1:nos_root_layers) / total_water_flux
+        ! Estimate weighted soil water potential based on fractional extraction from soil layers
+        wSWP = sum(SWP(1:nos_root_layers) * uptake_fraction(1:nos_root_layers))
+        ! determine effective resistance (MPa.s-1.m-2.mmol-1)
+        Rtot = -(minlwp - wSWP) / total_water_flux
     endif
-
-    ! determine effective resistance (MPa.s-1.m-2.mmol-1)
-    Rtot = sum(demand) / sum_water_flux
-
-    ! finally convert transpiration flux (mmolH2O.m-2.s-1)
-    ! into kgH2O.m-2.step-1 for consistency with ET in "calculate_update_soil_water"
-    water_flux = water_flux * mmol_to_kg_water * seconds_per_step
 
     ! and return
     return
@@ -2778,7 +2771,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                            * soil_waterfrac(1:nos_soil_layers)**potB(1:nos_soil_layers)
     ! NOTE: profiling indiates that 'where' is slower for very short vectors
     do i = 1, nos_soil_layers
-       if (SWP(i) < -20d0) SWP(i) = -20d0
+       if (SWP(i) < -20d0 .or. SWP(i) /= SWP(i)) SWP(i) = -20d0
     end do
 
   end subroutine soil_water_potential
@@ -2843,6 +2836,53 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !------------------------------------------------------------------
   !
+  subroutine plant_soil_flow(root_layer,root_length,root_mass &
+                            ,demand,root_reach_in,transpiration_resistance &
+                            ,Rtot_layer)
+
+    !
+    ! Calculate soil layer specific water flow form the soil to canopy (mmolH2O.m-2.s-1)
+    ! Accounting for soil, root and plant resistance, and canopy demand
+    !
+
+    ! calculate and accumulate steady state water flux in mmol.m-2.s-1
+    ! From the current soil layer given an amount of root within the soil layer.
+
+    implicit none
+
+    ! arguments
+    integer, intent(in) :: root_layer
+    double precision, intent(in) :: root_length, &
+                                      root_mass, &
+                                         demand, &
+                                  root_reach_in, &
+                       transpiration_resistance
+    double precision, intent(out) :: Rtot_layer
+
+    ! local arguments
+    double precision :: soilR1, soilR2
+
+    ! Estimate soil hydraulic resistance to water flow (MPa m2 s mmol-1)
+    ! Note: 1) soil conductivity converted from m.s-1 -> m2.s-1.MPa-1 by head.
+    !       2) soil resistance calculation in single line to reduce assignment costs
+    soilR1 = ( log(root_radius_1*(root_length*pi)**(-0.5d0)) &
+               /(two_pi*root_length*root_reach_in*(soil_conductivity(root_layer)*head_1))) &
+             * 1d-9 * mol_to_g_water
+    ! Calculates root hydraulic resistance (MPa m2 s mmol-1) in a soil-root zone
+    soilR2 = root_resist / (root_mass*root_reach_in)
+    ! Estimate the total hydraulic resistance for the layer
+    Rtot_layer = transpiration_resistance + soilR1 + soilR2
+
+    ! Estimate the soil to plant flow of water mmolH2O/m2/s
+    water_flux_mmolH2Om2s(root_layer) = demand/Rtot_layer
+
+    ! return
+    return
+
+  end subroutine plant_soil_flow
+  !
+  !------------------------------------------------------------------
+  !
   pure function arrhenious( a , b , t )
 
     ! The equation is simply...                        !
@@ -2875,7 +2915,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     implicit none
 
     ! arguments..
-    double precision,intent(in) :: max_val, min_val, optimum, kurtosis, current
+    double precision, intent(in) :: max_val, min_val, optimum, kurtosis, current
 
 !    ! local variables..
 !    double precision, parameter :: min_val = -1d6
@@ -2889,58 +2929,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !    end if
 
     ! Code with explicit min bound
-    if (current > max_val .or. current < min_val) then
+    if (current >= max_val .or. current <= min_val) then
         opt_max_scaling = 0d0
     else
         opt_max_scaling = exp( kurtosis * log((max_val-current)/(max_val-optimum)) * (max_val-optimum) ) &
-                        * exp( kurtosis * log((current-min_val)/(optimum-min_val)) * (optimum-min_val) ) &
-                        * exp( kurtosis * (current - optimum) / (max_val-min_val) )
+                        * exp( kurtosis * log((current-min_val)/(optimum-min_val)) * (optimum-min_val) )
     endif
 
   end function opt_max_scaling
-  !
-  !------------------------------------------------------------------
-  !
-  double precision function plant_soil_flow(root_layer,root_length,root_mass &
-                                           ,demand,root_reach_in,transpiration_resistance)
-
-    !
-    ! Calculate soil layer specific water flow form the soil to canopy (mmolH2O.m-2.s-1)
-    ! Accounting for soil, root and plant resistance, and canopy demand
-    !
-
-    ! calculate and accumulate steady state water flux in mmol.m-2.s-1
-    ! From the current soil layer given an amount of root within the soil layer.
-
-    implicit none
-
-    ! arguments
-    integer, intent(in) :: root_layer
-    double precision, intent(in) :: root_length, &
-                                      root_mass, &
-                                         demand, &
-                                  root_reach_in, &
-                       transpiration_resistance
-
-    ! local arguments
-    double precision :: soilR1, soilR2
-
-    ! Estimate soil hydraulic resistance to water flow (MPa m2 s mmol-1)
-    ! Note: 1) soil conductivity converted from m.s-1 -> m2.s-1.MPa-1 by head.
-    !       2) soil resistance calculation in single line to reduce assignment costs
-    soilR1 = ( log(root_radius_1*(root_length*pi)**(-0.5d0)) &
-               /(two_pi*root_length*root_reach_in*(soil_conductivity(root_layer)*head_1))) &
-             * 1d-9 * mol_to_g_water
-    ! Calculates root hydraulic resistance (MPa m2 s mmol-1) in a soil-root zone
-    soilR2 = root_resist / (root_mass*root_reach_in)
-
-    ! Estimate the soil to plant flow of water mmolH2O/m2/s
-    plant_soil_flow = demand/(transpiration_resistance + soilR1 + soilR2)
-
-    ! return
-    return
-
-  end function plant_soil_flow
   !
   !------------------------------------------------------------------
   !

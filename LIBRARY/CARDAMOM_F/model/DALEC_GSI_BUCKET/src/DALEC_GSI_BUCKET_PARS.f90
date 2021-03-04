@@ -123,16 +123,22 @@ module MODEL_PARAMETERS
        ! GSI min VPD threshold (Pa)
 !       PI%parmin(25) =   10d0 !100d0
 !       PI%parmax(25) =  5500d0
-       ! GSI min SWP threshold (MPa)
-       PI%parmin(25) = -10d0 !10d0 !100d0
-       PI%parmax(25) =   0d0 !5500d0
+!       ! GSI min SWP threshold (MPa)
+!       PI%parmin(25) = -10d0 !10d0 !100d0
+!       PI%parmax(25) =   0d0 !5500d0
+       ! GSI min soil water fraction (m3/m3)
+       PI%parmin(25) = 0d0 !10d0 !100d0
+       PI%parmax(25) = 1d0 !5500d0
 
        ! GSI max VPD threshold (Pa)
 !       PI%parmin(26) = 10d0 !1000d0
 !       PI%parmax(26) = 5500d0
-       ! GSI max SWP threshold (MPa)
-       PI%parmin(26) = -10d0 !10d0 !1000d0
-       PI%parmax(26) =   0d0 !5500d0
+!       ! GSI max SWP threshold (MPa)
+!       PI%parmin(26) = -10d0 !10d0 !1000d0
+!       PI%parmax(26) =   0d0 !5500d0
+       ! GSI max soil water fraction (m3/m3)
+       PI%parmin(26) = 0d0 !10d0 !100d0
+       PI%parmax(26) = 1d0 !5500d0
 
        ! GPP return on new Cfol investment (gCperGPP per gCnewfol)
        PI%parmin(27) = 0.001d0
@@ -169,12 +175,12 @@ module MODEL_PARAMETERS
        PI%parmax(38) = 0.001d0        !   2.74 years at 0oC
 
        ! BUCKET - root biomass needed to reach 50 % of max depth
-       PI%parmin(39) = 50d0
+       PI%parmin(39) = 100d0
        PI%parmax(39) = 2500d0
 
        ! BUCKET - maximum rooting depth
        PI%parmin(40) = 0.35d0
-       PI%parmax(40) = 20d0
+       PI%parmax(40) = 10d0
 
        !
        ! INITIAL VALUES DECLARED HERE

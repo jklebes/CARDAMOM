@@ -50,6 +50,7 @@ module MODEL_PARAMETERS
        PI%parmax(2) = 0.40d0
 
        ! Background leaf turnover rate
+       ! NOT CURRENTLY IN USE
        PI%parmin(3) = 0.0002737851d0 ! 10 years
        PI%parmax(3) = 0.0009126169d0 !  3 year
 
@@ -57,9 +58,9 @@ module MODEL_PARAMETERS
        PI%parmin(4) = 0.10d0
        PI%parmax(4) = 0.80d0
 
-       ! GSI max leaf turnover
-       PI%parmin(5) = 0.002737851d0 ! 1 year
-       PI%parmax(5) = 0.016666667d0 ! 60 days
+       ! Max leaf turnover
+       PI%parmin(5) = 0.0006844627d0*2d0 !  2 years
+       PI%parmax(5) = 0.07142857d0*0.5d0 ! 28 days
 
        ! Turnover fraction of wood
        PI%parmin(6) = 0.000009d0 ! 304  years
@@ -92,12 +93,8 @@ module MODEL_PARAMETERS
        PI%parmax(11) = 0.4771213d0 ! 0.5563025d0 ! TLS: restricted to 3 gC/m2leaf
 
        ! Max labile turnover fraction to foliage
-       PI%parmin(12) = 0.002737851d0 !  1 years
-       PI%parmax(12) = 0.016666667d0 ! 60 days
-
-       ! Fraction of GPP to Clab*/
-       PI%parmin(13) = 0.15d0 ! 0.05d0
-       PI%parmax(13) = 0.55d0 ! 0.35d0
+       PI%parmin(12) = 0.0006844627d0*2d0 !  2 years
+       PI%parmax(12) = 0.07142857d0*0.5d0 ! 28 days
 
        ! GSI min temperature threshold (oC)
        PI%parmin(14) = 235d0
@@ -126,6 +123,9 @@ module MODEL_PARAMETERS
        ! GSI min SWP threshold (MPa)
        PI%parmin(25) = -10d0 !10d0 !100d0
        PI%parmax(25) =   0d0 !5500d0
+!       ! GSI min soil water fraction (m3/m3)
+!       PI%parmin(25) = 0d0 !10d0 !100d0
+!       PI%parmax(25) = 1d0 !5500d0
 
        ! GSI max VPD threshold (Pa)
 !       PI%parmin(26) = 10d0 !1000d0
@@ -133,10 +133,13 @@ module MODEL_PARAMETERS
        ! GSI max SWP threshold (MPa)
        PI%parmin(26) = -10d0 !10d0 !1000d0
        PI%parmax(26) =   0d0 !5500d0
+!       ! GSI max soil water fraction (m3/m3)
+!       PI%parmin(26) = 0d0 !10d0 !100d0
+!       PI%parmax(26) = 1d0 !5500d0
 
-       ! Net Canopy Export due to new leaf (gC/m2/day)
-       PI%parmin(27) = 0.003d0 !0.1d0
-       PI%parmax(27) = 0.025d0
+       ! Net Canopy Carbon Export due to new leaf (gC/m2/day)
+       PI%parmin(27) = 0.001d0 !0.1d0
+       PI%parmax(27) = 0.5d0 !0.025d0
 
        ! Initial GSI value
        PI%parmin(28) = 0d0
@@ -164,12 +167,12 @@ module MODEL_PARAMETERS
        PI%parmax(38) = 0.001d0       !   2.74 years at 0oC
 
        ! BUCKET - coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 % of max depth
-       PI%parmin(39) = 50d0
-       PI%parmax(39) = 2000d0 !500d0
+       PI%parmin(39) = 100d0
+       PI%parmax(39) = 2500d0 !500d0
 
        ! BUCKET - maximum rooting depth
        PI%parmin(40) = 0.35d0
-       PI%parmax(40) = 20d0
+       PI%parmax(40) = 10d0
 
        ! Optimum nitrogen use efficiency (gC/gN per m2 at optimum temperature)
        ! Derived from Vcmax reported in Wullschleger (1993), Journal of

@@ -1427,7 +1427,7 @@ module model_likelihood_module
         ! Wood
 !        Rs = in_out_wood * (jan_mean_pools(4) / jan_first_pools(4))
 !        if (abs(Rs-in_out_wood) > 0.1d0 .or. abs(log(in_out_wood)) > EQF10) then
-        if (abs(log(in_out_wood_yr1) - log(in_out_wood_yr2)) > etol*2d0 .or. &
+        if (abs(log(in_out_wood_yr1) - log(in_out_wood_yr2)) > etol .or. &
             abs(log(in_wood/out_wood)) > EQF5) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(24) = 0
         end if

@@ -547,7 +547,6 @@ module model_likelihood_module
                       ,meantemp,EDC2)
 
     use cardamom_structures, only: DATAin
-    use CARBON_MODEL_MOD, only: linear_model_gradient
     use CARBON_MODEL_CROP_MOD, only: resp_rate_temp_coeff,ts_length
 
     ! the second of two subroutines for assessing current parameters for passing
@@ -667,13 +666,6 @@ module model_likelihood_module
         EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
     endif
 
-    ! LAI time series linear model must retrieve gradient which is at least
-    ! positive (or some other reasonable critical threshold)
-    ! if ((EDC2 == 1 .or. DIAG == 1) .and. &
-    !     linear_model_gradient(DATAin%M_LAI(DATAin%laipts),DATAin%LAI(DATAin%laipts),DATAin%nlai) < 0d0 ) then
-    !     EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
-    ! endif
-
     ! Function to calculate the gradient of a linear model for a given depentent
     ! variable (y) based on predictive variable (x). The typical use of this
     ! function will in fact be to assume that x is time.
@@ -710,9 +702,10 @@ module model_likelihood_module
   subroutine EDC1_GSI(PARS, npars, meantemp, meanrad, EDC1)
 
     use cardamom_structures, only: DATAin
+    use carbon_model_mod, only: opt_max_scaling, minlwp_default
 
     ! subroutine assessed the current parameter sets for passing ecological and
-    ! steady state contraints (modified from Bloom et al., 2014).
+    ! steady state contraints (modified from Bloom & Williams 2015).
 
     implicit none
 
@@ -725,7 +718,7 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n, DIAG
-    double precision :: temp_response, tmp, avN
+    double precision :: temp_response, avN, tmp, tmp1
 
     ! set initial value
     EDC1 = 1d0
@@ -798,37 +791,23 @@ module model_likelihood_module
     ! NOTE: assessment of runs with no EDCs applied shows this is rarely
     ! breached and can probably be ignored
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(9) > (pars(1)*pars(8)) ) then
-       EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
+       EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
     endif
 
     ! Turnover of litwood (pars(38)) should be slower than fine litter turnover pars(8)
     ! NOTE: assessment of runs with no EDCs applied shows this is rarely
     ! breached and can probably be ignored
     if ((EDC1 == 1 .or. DIAG == 1) .and. ( pars(38) > pars(8) ) ) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
     endif
 
     ! Root turnover (pars(7)) should be greater than som turnover (pars(9)) at mean temperature
     ! NOTE: assessment of runs with no EDCs applied shows this is rarely
     ! breached and can probably be ignored
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(9)*temp_response) > pars(7)) then
-       EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
+       EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
     endif
 
-    ! replanting 30 = labile ; 31 = foliar ; 32 = roots ; 33 = wood
-    ! initial    18 = labile ; 19 = foliar ; 20 = roots ; 21 = wood
-    ! initial replanting labile must be consistent with available wood storage
-    ! space. Labile storage cannot be greater than 12.5 % of the total ecosystem
-    ! carbon stock.
-    ! Gough et al (2009) Agricultural and Forest Meteorology. Avg 11, 12.5, 3 %
-    ! (Max across species for branch, bole and coarse roots). Evidence that
-    ! Branches accumulate labile C prior to bud burst from other areas.
-    ! Wurth et al (2005) Oecologia, Clab 8 % of living biomass (DM) in tropical
-    ! forest Richardson et al (2013), New Phytologist, Clab 2.24 +/- 0.44 % in
-    ! temperate (max = 4.2 %, min = 1.8)
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(30) > ((pars(33)+pars(32))*0.125d0)) ) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
-!    endif
     ! also apply to initial conditions
     ! NOTE: that assessment of runs with no EDCs applied show this is rarely
     ! breach and can probably be ignored
@@ -846,13 +825,6 @@ module model_likelihood_module
 !    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(37) > (pars(21) + pars(23))) then
 !        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
 !    endif
-
-    ! initial replanting foliage and fine roots ratio must be consistent with
-    ! ecological ranges. Because this is the initial condition and not the mean
-    ! only the upper foliar:fine root bound is applied
-!!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(32)/pars(31) < 0.04d0) ) then
-!!        EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
-!!    endif
 
     ! CN ratio of leaf should be between 95CI of trait database values
     ! Kattge et al (2011) (12.39 < CN_foliar < 42.2).
@@ -880,7 +852,6 @@ module model_likelihood_module
     use CARBON_MODEL_MOD, only: Rg_from_labile, Rm_from_labile,&
                                 Resp_leaf, Resp_wood_root,     &
                                 Rm_leaf, Rm_wood_root,         &
-                                wSWP_time,     &
                                 harvest_residue_to_litter, &
                                 harvest_residue_to_som,    &
                                 harvest_residue_to_litwood,&
@@ -1120,7 +1091,7 @@ module model_likelihood_module
     ! NOTE: assessment of run with no EDCs indicate that this condition is
     ! rarely breached and could be ignored
     if ((EDC2 == 1 .or. DIAG == 1) .and. (ffol > (5d0*froot) .or. (ffol*5d0) < froot)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
     endif
     ! Restrict difference between root and foliar turnover to less than 5 fold
 !    if ((EDC2 == 1 .or. DIAG == 1) .and. (torfol > pars(7)*5d0 .or. torfol*5d0 < pars(7) )) then
@@ -1129,21 +1100,21 @@ module model_likelihood_module
     ! Restrict maximum leaf lifespan
     ! 0.0003422313 = (8 * 365.25)**-1
     if ((EDC2 == 1 .or. DIAG == 1) .and. torfol < 0.0003422313d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
     endif
 
     ! Average turnover of foliage should not be less than wood (pars(6))
     ! NOTE: assessment of run with no EDCs indicate that this condition is
     ! rarely breached and could be ignored
     if ((EDC2 == 1 .or. DIAG == 1) .and. torfol < pars(6) ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
     endif
 
     ! The initial leaf life span parameter (pars(43)) should not be too far away from the
     ! actual estimate. Note torfol (frac / day) converted to days
     tmp = torfol**(-1d0)
     if ((EDC2 == 1 .or. DIAG == 1) .and. (tmp > pars(43)+50d0 .or. tmp < pars(43)-50d0) ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
     endif
 
     ! In contrast to the leaf longevity labile carbon stocks can be quite long
@@ -1153,7 +1124,7 @@ module model_likelihood_module
     !       11 years = 0.0002488955 day-1
     !        6 years = 0.0004563085 day-1
     if ((EDC2 == 1 .or. DIAG == 1) .and. torlab < 0.0002488955d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
     endif
 
     ! Finally we would not expect that the mean labile stock is greater than
@@ -1166,10 +1137,10 @@ module model_likelihood_module
     ! Richardson et al (2013), New Phytologist, Clab 2.24 +/- 0.44 % in temperate (max = 4.2 %)
     if (EDC2 == 1 .or. DIAG == 1) then
         if ((mean_pools(1) / (mean_pools(3) + mean_pools(4))) > 0.125d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
         endif
         if (maxval(M_POOLS(:,1) / (M_POOLS(:,3) + M_POOLS(:,4))) > 0.25d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
         endif
     endif ! EDC2 == 1 .or. DIAG == 1
 
@@ -1186,7 +1157,7 @@ module model_likelihood_module
        ! Calculate root depths for the annual maximums
        mean_annual_pools = (pars(40) * mean_annual_pools) / (pars(39) + mean_annual_pools)
        if ( ((sum(mean_annual_pools) / dble(no_years)) / pars(40)) < 0.90d0 ) then
-           EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
+           EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
        end if
     endif ! EDC2 == 1 .or. DIAG == 1
 
@@ -1261,11 +1232,11 @@ module model_likelihood_module
 
     ! Limits on foliar allocation
     if ((EDC2 == 1 .or. DIAG == 1) .and. fNPP < 0.05d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
     endif
     ! Limits on fine root allocation
     if ((EDC2 == 1 .or. DIAG == 1) .and. rNPP < 0.05d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
     endif
 
     ! foliar restrictions
@@ -1459,15 +1430,15 @@ module model_likelihood_module
 !        if (abs(Rs-in_out_lab) > 0.1d0 .or. abs(log(in_out_lab)) > EQF10) then
         if (abs(log(in_out_lab_yr1) - log(in_out_lab_yr2)) > etol .or. &
             abs(log(in_lab/out_lab)) > EQF2) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
         end if
 
         ! Foliage
 !        Rs = in_out_fol * (jan_mean_pools(2) / jan_first_pools(2))
 !        if (abs(Rs-in_out_fol) > 0.1d0 .or. abs(log(in_out_fol)) > EQF10) then
         if (abs(log(in_out_fol_yr1) - log(in_out_fol_yr2)) > etol .or. &
-            abs(log(in_fol/out_fol)) > EQF2) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
+            abs(log(in_fol/out_fol)) > EQF2 .or. in_out_fol_yr1 /= in_out_fol_yr1) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
         end if
 
         ! Fine roots
@@ -1475,13 +1446,13 @@ module model_likelihood_module
 !        if (abs(Rs-in_out_root) > 0.1d0 .or. abs(log(in_out_root)) > EQF10) then
         if (abs(log(in_out_root_yr1) - log(in_out_root_yr2)) > etol .or. &
             abs(log(in_root/out_root)) > EQF2) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(23) = 0
         end if
 
         ! Wood
 !        Rs = in_out_wood * (jan_mean_pools(4) / jan_first_pools(4))
 !        if (abs(Rs-in_out_wood) > 0.1d0 .or. abs(log(in_out_wood)) > EQF10) then
-        if (abs(log(in_out_wood_yr1) - log(in_out_wood_yr2)) > etol*2d0 .or. &
+        if (abs(log(in_out_wood_yr1) - log(in_out_wood_yr2)) > etol .or. &
             abs(log(in_wood/out_wood)) > EQF5) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(24) = 0
         end if

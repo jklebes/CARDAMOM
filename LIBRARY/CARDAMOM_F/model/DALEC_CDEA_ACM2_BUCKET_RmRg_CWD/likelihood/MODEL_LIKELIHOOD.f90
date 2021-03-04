@@ -602,10 +602,10 @@ module model_likelihood_module
     ! input and outputs are outside of steady state approximation.
     ! See Bloom et al., 2016 PNAS for details
 
-    ! iterate to check whether Fin/Fout is within EQF limits
+!    ! iterate to check whether Fin/Fout is within EQF limits
 !    Rm = Fin/Fout
 !    Rs = Rm * (jan_mean_pools / jan_first_pools)
-!    do n = 1, nopools-1
+!    do n = 1, 6 ! lab, fol, root, wood, litter, som
 !       ! Restrict rates of increase
 !       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Rm(n))) > log(EQF10)) then
 !           EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
@@ -615,6 +615,14 @@ module model_likelihood_module
 !           EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !       end if
 !    end do
+!    n = 8 ! CWD special case
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Rm(n))) > log(EQF10)) then
+!         EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+!    end if
+!    ! Restrict exponential decay
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. abs(Rs(n)-Rm(n)) > 0.1d0) then
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!    end if
 
     if (EDC2 == 1 .or. DIAG == 1) then
 
@@ -634,7 +642,7 @@ module model_likelihood_module
         if (abs(log(Fin(n)/Fout(n))) > EQF5) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
         end if
-        if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol*2d0) then
+        if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
         end if
         ! Dead pools

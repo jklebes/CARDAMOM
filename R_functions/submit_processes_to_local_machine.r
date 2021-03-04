@@ -12,7 +12,6 @@ submit_processes_to_local_machine<-function (PROJECT_in) {
     delete_old = readline("Delete any previous output files for this project name?(y/n)")
     if (delete_old == "y") {
         system(paste("rm ",PROJECT_in$resultspath,"/*",sep=""))
-        system(paste("rm ",PROJECT_in$eoestreampath,"*",sep=""))
     }
     # do we want to run tasks in the background?
     background = readline("Run jobs in background?(y/n)")

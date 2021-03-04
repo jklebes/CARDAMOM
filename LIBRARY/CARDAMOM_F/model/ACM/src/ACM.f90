@@ -2811,7 +2811,7 @@ contains
                            * soil_waterfrac(1:nos_soil_layers)**potB(1:nos_soil_layers)
     ! NOTE: profiling indiates that 'where' is slower for very short vectors
     do i = 1, nos_soil_layers
-       if (SWP(i) < -20d0) SWP(i) = -20d0
+       if (SWP(i) < -20d0 .or. SWP(i) /= SWP(i)) SWP(i) = -20d0
     end do
 
   end subroutine soil_water_potential
@@ -3011,12 +3011,11 @@ contains
 !    end if
 
     ! Code with explicit min bound
-    if (current > max_val .or. current < min_val) then
+    if (current >= max_val .or. current <= min_val) then
         opt_max_scaling = 0d0
     else
         opt_max_scaling = exp( kurtosis * log((max_val-current)/(max_val-optimum)) * (max_val-optimum) ) &
-                        * exp( kurtosis * log((current-min_val)/(optimum-min_val)) * (optimum-min_val) ) &
-                        * exp( kurtosis * (current - optimum) / (max_val-min_val) )
+                        * exp( kurtosis * log((current-min_val)/(optimum-min_val)) * (optimum-min_val) )
     endif
 
 

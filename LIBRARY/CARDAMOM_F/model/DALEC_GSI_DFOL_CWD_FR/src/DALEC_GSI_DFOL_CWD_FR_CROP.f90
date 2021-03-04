@@ -152,7 +152,7 @@ contains
                                ,min_root,top_soil_depth,max_depth,root_k,minlwp,min_layer                  &
                                ,dayl_hours,dayl_seconds,dayl_seconds_1,dayl_hours_fraction                 & ! variables
                                ,seconds_per_step,root_biomass,mid_soil_depth,root_reach,previous_depth     &
-                               ,deltat_1,water_flux,layer_thickness,meant,stomatal_conductance             &
+                               ,deltat_1,water_flux_mmolH2Om2s,layer_thickness,meant,stomatal_conductance             &
                                ,co2_half_sat,co2_comp_point,mint,maxt,swrad,co2,doy,leafT,wind_spd,vpd_kPa &
                                ,lai,fine_root_biomass,gs_demand_supply_ratio,gs_total_canopy               &
                                ,gb_total_canopy,canopy_par_MJday_time,potential_conductance,canopy_par_MJday &
@@ -430,7 +430,7 @@ contains
       gb_total_canopy(n) = aerodynamic_conductance * convert_ms1_mol_1 * 1d3
       call calculate_radiation_balance
       canopy_par_MJday_time(n) = canopy_par_MJday
-      call calculate_stomatal_conductance(abs(minlwp),Rtot)
+      call calculate_stomatal_conductance
       ! Estimate stomatal conductance relative to its minimum / maximum, i.e. how
       ! close are we to maxing out supply (note 0.01 taken from min_gs)
       gs_demand_supply_ratio(n) = (stomatal_conductance - 0.01d0) / (potential_conductance-0.01d0)

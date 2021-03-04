@@ -5,7 +5,7 @@
 ###
 
 cardamom <-function (projname,model,method,stage) {
-#stage = 3 ; repair = 1 ; use_parallel = TRUE
+#stage = 2 ; repair = 1 ; use_parallel = TRUE
   ## load needed functions into R environment
   paths = load_paths()
 
