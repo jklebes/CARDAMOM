@@ -14,7 +14,7 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
   # need to duplicate the list at this point to ensure that we can be certain we do not confuse the chain number and site numbers
   pfile_tmp = gsub(c("_PARS"),"",pfile)
   # select the correct site
-  is_it = grepl(paste("_",PROJECT_in$sites[n],"_",sep=""),pfile_tmp) ; pfile = pfile[is_it] ; rm(pfile_tmp)
+  is_it = grepl(paste(PROJECT_in$name,"_",PROJECT_in$sites[n],"_",sep=""),pfile_tmp) ; pfile = pfile[is_it] ; rm(pfile_tmp)
   # Find and remove any files which have no data in them
   is_it = file.size(pfile) ; is_it = which(is_it > 0) ; pfile = pfile[is_it]
 

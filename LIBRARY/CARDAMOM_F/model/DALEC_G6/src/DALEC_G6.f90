@@ -1182,7 +1182,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! maintenance respiration
        avail_labile = POOLS(n,1) - (Rm_leaf(n)*deltat(n))
        ! Determine the labile storage ratio
-       lab_ratio = avail_labile / (POOLS(n,3)+POOLS(n,4))
+       lab_ratio = POOLS(n,1) / (POOLS(n,3)+POOLS(n,4))
 
        ! Determine leaf growth and turnover based on CGI, CMI and NCCE
        ! NOTE: that turnovers will be bypassed in favour of mortality turnover
@@ -3717,7 +3717,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !    cgi_water = logistic_func(rSWP,cgi_water_coef_1,cgi_water_coef_2,0d0,1d0)
 !    cgi_water = logistic_func(rSWP,cmi_water_coef_1,cmi_water_coef_2,0d0,1d0)
     cgi_water = max(0d0,min(1d0,(rSWP - cgi_water_coef_1) / (cgi_water_coef_2 - cgi_water_coef_1)))
-    cgi_water = (cgi_water * gs_demand_supply_ratio(current_step)) + (1d0 * (1d0-gs_demand_supply_ratio(current_step)))
+    !cgi_water = (cgi_water * gs_demand_supply_ratio(current_step)) + (1d0 * (1d0-gs_demand_supply_ratio(current_step)))
 
     ! Calculate and store the CGI
     CGI(current_step) = cgi_temperature * cgi_water
@@ -3746,6 +3746,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Therefore, while the potential allocation of new C is determined by the CGI,
     ! whether we consider growing is dependent on the CMI
     if (CGI(current_step) > 1d-6 .and. avail_labile > vsmall) then
+    !if (CGI(current_step) > 1d-6 .and. avail_labile > vsmall .and. gs_demand_supply_ratio(current_step) < 1d0) then
 
         ! Estimate approximate the potential leaf area increment
         leaf_growth = pot_leaf_growth*CGI(current_step)
@@ -3800,12 +3801,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     else if (CMI(current_step) > 1d-6) then
 
         ! Estimate supression of leaf turnover by labile being below target ratio
-        tmp = max(0d0,lab_ratio_target - lab_ratio)
-        tmp = tmp / (tmp + lab_ratio_deficit_k50)
+        !tmp = max(0d0,lab_ratio_target - lab_ratio)
+        !tmp = 1d0 - (tmp / (tmp + lab_ratio_deficit_k50))
 
-        leaf_fall = (pot_leaf_fall * CMI(current_step)) &
-                  *  tmp &
-                  * (logistic_func(lai_save,leaf_fall_lai_suppres_1,leaf_fall_lai_suppres_2,0.05d0,1d0))
+        leaf_fall = (pot_leaf_fall * CMI(current_step)) !&
+        !          *  tmp! &
+                  !* (logistic_func(lai_save,leaf_fall_lai_suppres_1,leaf_fall_lai_suppres_2,0.05d0,1d0))
 
     end if ! losing leaves or not?
 

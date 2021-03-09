@@ -50,6 +50,6 @@ extract_Cwood_stocks<- function(timestep_days,spatial_type,resolution,grid_type,
 
    # pass the information back
    return(list(Cwood_stock = Cwood_stock, Cwood_stock_unc = Cwood_stock_unc))
-   #return(list(Cwood_stock = Cwood_stock, Cwood_stock_unc = 250))
+   #return(list(Cwood_stock = Cwood_stock, Cwood_stock_unc = 1000))
 
 } # end of function

@@ -1635,25 +1635,24 @@ module model_likelihood_module
 
     ! Both CMI and CGI should have maximum values > 0.5 and minimum values < 0.5
     ! Check the first half of the analysis
-    io_start = 1 ; io_finish = floor((real(nodays)/2.0))
-    if ((EDC2 == 1 .or. DIAG == 1) .and. (minval(M_FLUXES(io_start:io_finish,18)) > 0.5d0 .or. &
-                                          maxval(M_FLUXES(io_start:io_finish,18)) < 0.5d0)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(34) = 0
-    endif
-    if ((EDC2 == 1 .or. DIAG == 1) .and. (minval(CMI(io_start:io_finish)) > 0.5d0 .or. &
-                                          maxval(CMI(io_start:io_finish)) < 0.5d0)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(35) = 0
-    endif
-    ! And then the second half
-    if ((EDC2 == 1 .or. DIAG == 1) .and. (minval(M_FLUXES(io_finish:nodays,18)) > 0.5d0 .or. &
-                                          maxval(M_FLUXES(io_finish:nodays,18)) < 0.5d0)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(36) = 0
-    endif
-    if ((EDC2 == 1 .or. DIAG == 1) .and. (minval(CMI(io_finish:nodays)) > 0.5d0 .or. &
-                                          maxval(CMI(io_finish:nodays)) < 0.5d0)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(37) = 0
-    endif
-
+!    io_start = 1 ; io_finish = floor((real(nodays)/2.0))
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. (minval(M_FLUXES(io_start:io_finish,18)) > 0.5d0 .or. &
+!                                          maxval(M_FLUXES(io_start:io_finish,18)) < 0.5d0)) then
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(34) = 0
+!    endif
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. (minval(CMI(io_start:io_finish)) > 0.5d0 .or. &
+!                                          maxval(CMI(io_start:io_finish)) < 0.5d0)) then
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(35) = 0
+!    endif
+!    ! And then the second half
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. (minval(M_FLUXES(io_finish:nodays,18)) > 0.5d0 .or. &
+!                                          maxval(M_FLUXES(io_finish:nodays,18)) < 0.5d0)) then
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(36) = 0
+!    endif
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. (minval(CMI(io_finish:nodays)) > 0.5d0 .or. &
+!                                          maxval(CMI(io_finish:nodays)) < 0.5d0)) then
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(37) = 0
+!    endif
 
     !
     ! EDCs done, below are additional fault detection conditions

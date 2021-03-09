@@ -713,11 +713,16 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         print("Loading McNichol AGB maps...")
 
         # Create the full file paths estimates...uncertainty is assumed to be 250gC/m2
-        input_file = paste(path_to_Cwood,"mcnicol_AGC2007_0.25d.tif",sep="")
+#        input_file = paste(path_to_Cwood,"mcnicol_AGC2007_0.25d.tif",sep="")
+##        years_with_obs = c(2007)
+#        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2008_0.25d.tif",sep=""))
+#        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2009_0.25d.tif",sep=""))
+#        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2010_0.25d.tif",sep=""))
+        input_file = paste(path_to_Cwood,"mcnicol_AGC2007_1km.tif",sep="")
 #        years_with_obs = c(2007)
-        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2008_0.25d.tif",sep=""))
-        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2009_0.25d.tif",sep=""))
-        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2010_0.25d.tif",sep=""))
+        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2008_1km.tif",sep=""))
+        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2009_1km.tif",sep=""))
+        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2010_1km.tif",sep=""))
         years_with_obs = c(2007:2010)
 
         # Loop through each year and extract if appropriate
@@ -791,14 +796,21 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
 
         } # looping available years
 
-        # Convert MgC/ha -> Mg/ha needed for Saatchi et al (2011)
-        biomass_gCm2 = biomass_gCm2 * 2.083333
-        # Use allometry to estimate below ground biomass stock and
-        # combined with the above ground (Mg/ha) to give a total woody biomass estimate
-        # Saatchi et al., (2011), PNAS, 108, 9899-9904, https://www.pnas.org/content/108/24/9899
-        biomass_gCm2 = biomass_gCm2 + (0.489 * biomass_gCm2 ** 0.89)
+# Below ground estimatation following Saatchi et al (2011)
+#        # Convert MgC/ha -> Mg/ha needed for Saatchi et al (2011)
+#        biomass_gCm2 = biomass_gCm2 * 2.083333
+#        # Use allometry to estimate below ground biomass stock and
+#        # combined with the above ground (Mg/ha) to give a total woody biomass estimate
+#        # Saatchi et al., (2011), PNAS, 108, 9899-9904, https://www.pnas.org/content/108/24/9899
+#        biomass_gCm2 = biomass_gCm2 + (0.489 * biomass_gCm2 ** 0.89)
+#        # Convert units of biomass and its uncertainty from MgCha -> gC/m2
+#        biomass_gCm2 = biomass_gCm2 * 1e2 * 0.48
+# Below round estimation following Ryan et al., (2011)
+        # Ryan, C. M., M. Williams and J. Grace (2011). 
+        # "Above and Below Ground Carbon Stocks in a Miombo Woodland Landscape of Mozambique." Biotropica 43: 423-432
+        biomass_gCm2 = biomass_gCm2 + (0.42 * biomass_gCm2)
         # Convert units of biomass and its uncertainty from MgCha -> gC/m2
-        biomass_gCm2 = biomass_gCm2 * 1e2 * 0.48
+        biomass_gCm2 = biomass_gCm2 * 1e2 
 
         # Re-construct arrays for output
         idim = dim(lat)[1] ; jdim = dim(long)[2] ; tdim = length(biomass_gCm2) / (idim * jdim)

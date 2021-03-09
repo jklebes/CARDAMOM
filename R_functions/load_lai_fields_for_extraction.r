@@ -114,11 +114,12 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
     # check which file prefix we are using today
     # list all available files which we will then search
     avail_files = list.files(path_to_lai,full.names=TRUE)
-    if (length(which(grepl("c_gls_LAI_", avail_files))) > 0) {
-        prefix = "c_gls_LAI_"
-    } else {
-        prefix = "c_gls_LAI300_"
-    }
+    prefix = "_"
+#    if (length(which(grepl("c_gls_LAI_", avail_files))) > 0) {
+#        prefix = "c_gls_LAI_"
+#    } else {
+#        prefix = "c_gls_LAI300_"
+#    }
 
     # timing information on the number of day in a month
     month_days = rep(31,length.out=12)
