@@ -140,7 +140,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               if (max(as.vector(states_all$fire_gCm2day), na.rm=TRUE) > 0) {
                   states_all$fire_par_cor = cor(tmp,apply(states_all$fire_gCm2day,1,mean))
               } else {
-                  states_all$fire_par_cor = rep(0, dim(states_all$fire_gCm2day)[1]
+                  states_all$fire_par_cor = rep(0, dim(states_all$fire_gCm2day)[1])
               }
           }
 
