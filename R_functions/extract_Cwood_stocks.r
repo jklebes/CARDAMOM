@@ -49,7 +49,7 @@ extract_Cwood_stocks<- function(timestep_days,spatial_type,resolution,grid_type,
    Cwood_stock_unc[which(is.na(Cwood_stock_unc))] = -9999
 
    # pass the information back
-   return(list(Cwood_stock = Cwood_stock, Cwood_stock_unc = Cwood_stock_unc))
-   #return(list(Cwood_stock = Cwood_stock, Cwood_stock_unc = 500))
+   #return(list(Cwood_stock = Cwood_stock, Cwood_stock_unc = Cwood_stock_unc))
+   return(list(Cwood_stock = Cwood_stock, Cwood_stock_unc = 500))
 
 } # end of function

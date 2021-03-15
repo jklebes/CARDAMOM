@@ -136,7 +136,12 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               states_all$gpp_par_cor = cor(tmp,apply(states_all$gpp_gCm2day,1,mean))
               states_all$rauto_par_cor = cor(tmp,apply(states_all$rauto_gCm2day,1,mean))
               states_all$rhet_par_cor = cor(tmp,apply(states_all$rhet_gCm2day,1,mean))
-              states_all$fire_par_cor = cor(tmp,apply(states_all$fire_gCm2day,1,mean))
+              # Avoid error flag when no fire
+              if (max(as.vector(states_all$fire_gCm2day), na.rm=TRUE) > 0) {
+                  states_all$fire_par_cor = cor(tmp,apply(states_all$fire_gCm2day,1,mean))
+              } else {
+                  states_all$fire_par_cor = rep(0, dim(states_all$fire_gCm2day)[1]
+              }
           }
 
           # pass to local variable for saving
