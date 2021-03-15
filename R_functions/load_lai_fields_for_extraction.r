@@ -114,7 +114,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
     # check which file prefix we are using today
     # list all available files which we will then search
     avail_files = list.files(path_to_lai,full.names=TRUE)
-    prefix = "_"
+    prefix = "c_gls(.)*_" # (.)* wildcard characters for unix standard c_gls*_
 #    if (length(which(grepl("c_gls_LAI_", avail_files))) > 0) {
 #        prefix = "c_gls_LAI_"
 #    } else {
@@ -154,6 +154,11 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
       input_file_1=paste(prefix,years_to_load[yr],sep="")
       # then check whether this pattern is found in the available files
       this_year = avail_files[grepl(input_file_1, avail_files)]
+      # Strip out the time component entirely
+      tmp = unlist(strsplit(this_year,input_file_1))
+      tmp = tmp[seq(2,length(tmp),2)]
+      # The re-order the files correctly
+      this_year = this_year[order(tmp)]
 
       if (length(this_year) > 0) {
           # now loop through the available files for the current year

@@ -15,7 +15,6 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 
 ## Load needed libraries and internal functions
 source("./R_functions/load_all_cardamom_functions.r")
-source("/home/lsmallma/WORK/R/Scripts/CTESSEL/validation/validation_site_info.txt")
 
 ## use parallel functions?
 use_parallel = FALSE
@@ -25,7 +24,7 @@ username="lsmallma" # put your Edinburgh uun here
 home_computer="ssh.geos.ed.ac.uk"
 ## projname
 # Give a runid
-projname="FI-Hyy"
+projname="FI-Hyy_example"
 
 ## Language
 # i.e. "Fortran", "C"
@@ -148,7 +147,7 @@ request_use_EDCs = TRUE       # Use EDCs
 # stage  2 : Submit the project to eddie
 # stage  3 : Copy back results and process vectors
 # stage  4 ; Do some standard result checking
-stage=-1
+stage=3
 repair=1 # to force (=1) re-run processed results or driver files if they already exist
 grid_override=FALSE # force site specific files to be saved and figures to be generated when in "grid" operation
 

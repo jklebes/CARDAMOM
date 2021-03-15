@@ -718,7 +718,7 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n, DIAG
-    double precision :: temp_response, avN, tmp, tmp1
+    double precision :: temp_response, avN, tmp, tmp1, tmp2
 
     ! set initial value
     EDC1 = 1d0
@@ -841,10 +841,12 @@ module model_likelihood_module
     ! CGI is expected to be near zero at 0C. However, because this is statistical form it is
     ! possible for combinations of parameters to be misleading as to their actual response.
     ! Therefore, we explicitly test for near zero growth allowed at 0C while giving the min temperature parameters
-    ! greater freedom to move.
+    ! greater freedom to move. We also assume that at 0C the CMI component should be greater than CGI component (note CMI = 1-tmp2 * ).
+    ! Unless both are at zero
     tmp1 = opt_max_scaling( pars(25), pars(14) , pars(15) , pars(30) , 0d0 )
+    tmp2 = opt_max_scaling( pars(24), pars(3)  , pars(15) , pars(26) , 0d0 )
 !    tmp2 = opt_max_scaling( max_val, min_val , optimum , kurtosis , current )
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp1 > 0.05d0)) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp1 > 0.05d0 .or. (tmp1 > 0d0 .and. tmp2 < tmp1))) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
     end if
 

@@ -240,7 +240,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         Evap_unc = read_site_specific_obs("Evap_unc_kgH2Om2day",infile)
         if (length(Evap_unc) == 1) {
             Evap_unc = rep(-9999,times = length(Evap))
-            Evap_unc[which(Evap > -9999)] = 0.5 * abs(Evap[which(Evap > -9999)])
+            Evap_unc[which(Evap > -9999)] = 0.77 # Assuming Hollinger & Richardson (2005) Tree Physiology, 25, 873-885
         }
         if (modelname == "ACM") {
             # borrow woody increment for soil evaporation in ACM_ET recalibration
@@ -248,10 +248,6 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
             # borrow Cfol_stock for wet canopy evaporation in ACM_ET recalibration
             Cfol_stock = read_site_specific_obs("wetevap_kgH2Om2day",infile)
             # actually lets make uncertainty half mean of total ET
-#            tmp = pmax(0.1581019,(Evap + woodinc + Cfol_stock)*0.15)
-#            Evap_unc = pmax(0.105517750,abs(Evap)*0.15)
-#            woodinc_unc = pmax(0.007663118*2,abs(woodinc)*0.15)
-#            Cfol_stock_unc = pmax(0.048333758*2,abs(Cfol_stock)*0.15)
             Evap_unc = rep(abs(mean(Evap))*0.40, length.out = length(Evap))
             woodinc_unc = rep(abs(mean(woodinc))*0.40, length.out = length(Evap))
             Cfol_stock_unc = rep(abs(mean(Cfol_stock))*0.40, length.out = length(Evap))
@@ -261,8 +257,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         Evap = -9999 ; Evap_unc = -9999
     }
     # Add model structural uncertainty to the observational uncertainty
-    Evap_unc[Evap_unc > 0 & Evap_unc < 0.50] = 0.50
-#    Evap_unc[Evap_unc > 0 & Evap_unc < 0.1581019] = 0.1581019
+    Evap_unc[Evap_unc > 0 & Evap_unc < 0.77] = 0.77
 
     ###
     ## Get some Reco information (time series; gC/m2/day)

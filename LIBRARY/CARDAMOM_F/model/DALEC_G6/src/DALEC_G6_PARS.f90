@@ -110,10 +110,15 @@ module MODEL_PARAMETERS
 !       ! CGI Optimum temperatue (oC)
 !       PI%parmin(16) = 10d0
 !       PI%parmax(16) = 40d0
-       ! CMI supressor - max gradient
-       ! logistic function of LAI
-       PI%parmin(16) = 0.1d0
-       PI%parmax(16) = 10d0
+!       ! CMI supressor - max gradient
+!       ! logistic function of LAI
+!       PI%parmin(16) = 0.1d0
+!       PI%parmax(16) = 10d0
+
+       ! CMI supressor - Michaelis-Menten function
+       ! foliage pool at which turnover = 0.5
+       PI%parmin(16) = 1d0
+       PI%parmax(16) = 500d0
 
        ! LMA
        ! Kattge et al. 2011,
@@ -139,10 +144,18 @@ module MODEL_PARAMETERS
        PI%parmin(27) = 0.001d0 !0.1d0
        PI%parmax(27) = 0.5d0 !0.025d0
 
-       ! CMI supressor - logistic function
-       ! of LAI point of max gradient (m2/m2)
-       PI%parmin(28) = 0d0
-       PI%parmax(28) = 5d0
+!       ! CMI supressor - logistic function
+!       ! of LAI point of max gradient (m2/m2)
+!       PI%parmin(28) = 0d0
+!       PI%parmax(28) = 5d0
+!       ! CGI supressor - Michaelis-Menten function
+!       ! labile pool at which turnover = 0.5
+!       PI%parmin(28) = 1d0
+!       PI%parmax(28) = 500d0
+       ! NCCE
+       ! Value at which CMI = 0.5
+       PI%parmin(28) =  0d0
+       PI%parmax(28) =  0.5d0
 
        ! fraction of Cwood which is coarse root
        PI%parmin(29) = 0.15d0
@@ -173,24 +186,21 @@ module MODEL_PARAMETERS
 !       PI%parmax(31) = 20d0
 
        ! CMI rSWP at which stress begins (MPa)
-       PI%parmin(31) = -10d0
+       PI%parmin(31) = -20d0
        PI%parmax(31) = -0.001d0
 
 !       ! CGI wSWP gradient for logistic function
 !       PI%parmin(32) = 0.5d0
 !       PI%parmax(32) = 20d0
 
-       ! minLWP (MPa)
-       ! and (CGI) rSWP at which stress total (MPa)
+       ! CGI rSWP at which stress total (MPa)
        PI%parmin(32) = -6d0
        PI%parmax(32) = -0.001d0
 
-!       ! CMI wSWP half saturation coef (MPa)
        ! CMI rSWP at which stress begins (MPa)
-       PI%parmin(33) = -10d0
+       PI%parmin(33) = -20d0
        PI%parmax(33) =  0.001d0
 
-!       ! CGI wSWP half saturation coef (MPa)
        ! CGI rSWP at which stress begins (MPa)
        PI%parmin(34) = -6d0
        PI%parmax(34) =  0.001d0
@@ -239,13 +249,19 @@ module MODEL_PARAMETERS
        PI%parmax(44) = -1d0
 
        ! Initial labile:(root+wood) ratio target
+       ! CMI threshold (0-1)
        PI%parmin(45) = 0d0
-       PI%parmax(45) = 0.10d0
+       PI%parmax(45) = 1d0 !0.10d0
+!       ! Whole GPP - Rm C balance
+!       ! Value at which CMI = 0.5
+!       PI%parmin(45) =  0d0
+!       PI%parmax(45) =  0.5d0
 
        ! Deficit between actual and target labile:(root+wood)
        ! at which supression of turnover is at 50 %
+       ! CGI threshold
        PI%parmin(46) = 0d0
-       PI%parmax(46) = 0.10d0
+       PI%parmax(46) = 1d0 !0.10d0
 
        !
        ! INITIAL VALUES DECLARED HERE
