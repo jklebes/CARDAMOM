@@ -7,8 +7,10 @@ read_parameter_covariance<- function(PROJECT_in,n) {
 
   # search for all output files
   cfile = list.files(paste(PROJECT_in$resultspath,sep=""), full.names=TRUE)
-  # select the correct site and COV & COVINFO files
-  is_it = grepl(paste(PROJECT_in$name,"_",PROJECT_in$sites[n],"_COV",sep=""),cfile) ; cfile = cfile[is_it]
+  # select the correct site...
+  is_it = grepl(paste(PROJECT_in$name,"_",PROJECT_in$sites[n],sep=""),cfile) ; cfile = cfile[is_it]
+  # ...and COV & COVINFO files
+  is_it = grepl("_COV",cfile) ; cfile = cfile[is_it]
   # Remove the COVINFO files
   is_it = grepl("_COVINFO",cfile) ; cfile = cfile[is_it == FALSE]
   # Find and remove any files which have no data in them

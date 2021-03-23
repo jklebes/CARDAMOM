@@ -51,8 +51,8 @@ cardamom_project_setup <- function (paths,PROJECT) {
   }
   # If not or not defined correctly ask the user
   while(failed) {
-    nsamples=as.integer(readline("How many parameters to sample?"))
-    if (nsamples >= 1e4 & nsamples <= 200e6) {failed=FALSE} else {failed=TRUE}
+    nsamples=as.integer(readline("Confirm how many parameters to sample (max = 500e6)?"))
+    if (nsamples >= 1e4 & nsamples <= 500e6) {failed=FALSE} else {failed=TRUE}
   }
 
   # number of parameters to sub-sample per chain

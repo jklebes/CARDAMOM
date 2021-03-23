@@ -510,8 +510,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! declare general local variables
     double precision ::  infi &
+                ,new_lab_step &
                    ,lab_ratio &
-            ,lab_ratio_target &
                          ,fSm &
                ,transpiration &
              ,soilevaporation &
@@ -813,7 +813,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! POOL(1,8) assigned later
 
     ! Determine the initial labile storage ratio
-    lab_ratio = POOLS(n,1) / (POOLS(n,3)+POOLS(n,4))
+    lab_ratio = POOLS(1,1) / (POOLS(1,3)+POOLS(1,4))
     !lab_ratio_target = pars(45)
 
     if (.not.allocated(deltat_1)) then
@@ -1182,19 +1182,21 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !Q10_adjustment(n) = Rm_reich_Q10(meant)
        Q10_adjustment(n) = Rm_reich_Q10(soilT)
        Rm_leaf_per_gC = Rm_leaf_baseline * Q10_adjustment(n)
+       ! Estimate new C added to labile pool
+       new_lab_step = FLUXES(n,5) * deltat(n)
        ! Estimate time step demand on labile pool to support canopy maintenance
        ! NOTE: current Rm costs must be related to current temperature
-       Rm_leaf(n) = min(POOLS(n,1),Rm_leaf_per_gC * POOLS(n,2) * deltat(n)) * deltat_1(n)
+       Rm_leaf(n) = min(POOLS(n,1)+new_lab_step,Rm_leaf_per_gC * POOLS(n,2) * deltat(n)) * deltat_1(n)
 
        !!!!!!!!!!
        ! Calculate canopy phenology
        !!!!!!!!!!
 
-       ! assign labile C available in current time step, less that needed for
-       ! maintenance respiration
-       avail_labile = POOLS(n,1) - (Rm_leaf(n)*deltat(n))
+       ! Assume that available labile is composed on existing labile stores, less that needed for
+       ! maintenance respiration but including new allocation to the labile pool from current GPP
+       avail_labile = (POOLS(n,1)+new_lab_step) - (Rm_leaf(n)*deltat(n))
        ! Determine the labile storage ratio
-!       lab_ratio = POOLS(n,1) / (POOLS(n,3)+POOLS(n,4))
+       lab_ratio = POOLS(n,1) / (POOLS(n,3)+POOLS(n,4))
 
        ! Determine leaf growth and turnover based on CGI, CMI and NCCE
        ! NOTE: that turnovers will be bypassed in favour of mortality turnover
@@ -1207,8 +1209,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                    ,pars(31),pars(32) &
                                    ,pars(33),pars(34) &
                                    ,pars(5),pars(12)  &
-                                   ,pars(16),pars(28) &
-                                   ,FLUXES(n,1),POOLS(n,2) &
+                                   ,pars(16),pars(28),pars(45) &
+                                   ,FLUXES(n,1),POOLS(n,2),lab_ratio &
                                    ,pars(27),FLUXES(:,18),FLUXES(n,9),FLUXES(n,16))
        ! Total labile release to foliage
        FLUXES(n,8) = avail_labile*(1d0-(1d0-FLUXES(n,16))**deltat(n))*deltat_1(n)
@@ -2670,6 +2672,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Y = 1 / (1 + exp(-B * Z)), where Y = density at Z, B = gradient, Z = depth
     ! To determine gradient for current maximum root depth assuming density reaches rootdist_tol value, rearranges to:
     ! B = ln(1/Y - 1) / Z
+!d = seq(0,2, 0.01) ; c = -2.6 ; rmax = 1 ; d50 = 0.25 ; rd = rmax / (1+ (d/d50)**c)
+!rmax = rd * (1 + (d/d50)**c)
+!(((rmax / rd) - 1)**(1/c)) * d50 = d ! Depth at which rd = 99 %
     !slpa = log(1d0/rootdist_tol - 1d0) / root_reach
     slpa = rootdist_tol / root_reach
     prev = 1d0
@@ -3616,8 +3621,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                     ,cmi_water_coef_1,cgi_water_coef_1 &
                                     ,cmi_water_coef_2,cgi_water_coef_2 &
                                     ,pot_leaf_fall,pot_leaf_growth    &
-                                    ,cmi_fol_k50,ncce_k50 &
-                                    ,GPP_current,foliage &
+                                    ,cmi_fol_k50,cmi_ncce_k50,cmi_lab_k50 &
+                                    ,GPP_current,foliage,lab_ratio &
                                     ,dNCCE_crit_frac,CGI,leaf_fall,leaf_growth)
 
     ! Subroutine determines whether leaves are growing or dying.
@@ -3641,6 +3646,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                     ,mean_max_airt & !
                                           ,foliage & !
                                       ,GPP_current & !
+                                        ,lab_ratio & !
                                   ,dNCCE_crit_frac & !
                            ,cgi_temperature_coef_1 & !
                            ,cgi_temperature_coef_2 & !
@@ -3656,14 +3662,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                  ,cgi_water_coef_2 & !
                                     ,pot_leaf_fall & !
                                   ,pot_leaf_growth & !
-                                      ,cmi_fol_k50 &
-                                         ,ncce_k50
+                                      ,cmi_fol_k50 & !
+                                      ,cmi_lab_k50 &
+                                     ,cmi_ncce_k50
 
     double precision, intent(inout) :: CGI(nodays) &
                                       ,leaf_fall,leaf_growth
 
     ! declare local variables
-    integer :: m !, interval, cgi_lag
+    integer :: m, cmi_lag !, interval, cgi_lag
     double precision :: infi     &
                        ,tmp      &
                       ,deltaNCCE &
@@ -3700,6 +3707,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Estimate current NCCE
 !    NCCE = GPP_current - (Rm_leaf_per_gC * foliage)
     NCCE(current_step) = (GPP_current / foliage) - Rm_leaf_per_gC
+    if (current_step == 1) then
+        cmi_lag = 1
+    else
+        cmi_lag = current_step - 1
+    endif
     !NCCE(current_step) = (GPP_current - Rm_wood_root(current_step) - Rm_leaf(current_step)) / foliage
     ! CGI is the product of 2 limiting factors for temperature and
     ! water availability that scale between 0 to 1
@@ -3733,11 +3745,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !    cmi_water = max(0d0,min(1d0,(rSWP - cmi_water_coef_1) / (cmi_water_coef_2 - cmi_water_coef_1)))
     cmi_water = max(0d0,min(1d0,(wSWP - cmi_water_coef_1) / (cmi_water_coef_2 - cmi_water_coef_1)))
     ! Weight the impact of cmi_water based on whether or not we are at the limits of the supply demand relationship
-    !cmi_water = (cmi_water * gs_demand_supply_ratio(current_step)) + (1d0 * (1d0-gs_demand_supply_ratio(current_step)))
-    cmi_ncce = max(0d0,NCCE(current_step) / (NCCE(current_step) + ncce_k50))
+    cmi_water = (cmi_water * gs_demand_supply_ratio(current_step)) + (1d0 * (1d0-gs_demand_supply_ratio(current_step)))
 
+    ! Not directly part of the CMI, but acts to suppress turnover in cases where the productivity of the canopy is good
+    cmi_ncce = 1d0 - max(0d0,NCCE(cmi_lag) / (NCCE(cmi_lag) + cmi_ncce_k50))  ! may be better placed below
     ! Calculate and store the CMI
-    CMI(current_step) = 1d0 - (cmi_temperature * cmi_water * cmi_ncce)
+    CMI(current_step) = (1d0 - (cmi_temperature * cmi_water)) * cmi_ncce
 
     !!!!!!!!
     ! Assess canopy growth
@@ -3792,7 +3805,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !!!!!!!!
 
     ! If no labile assume canopy is turning over
-    if (avail_labile < vsmall) then
+    if (avail_labile == 0d0) then
 
         ! We want to lose a chunk of leaf quickly!
         leaf_fall = pot_leaf_fall
@@ -3805,8 +3818,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         !tmp = max(0d0,lab_ratio_target - lab_ratio)
         !tmp = 1d0 - (tmp / (tmp + lab_ratio_deficit_k50))
 
-        leaf_fall = pot_leaf_fall * CMI(current_step) &
-                  * (foliage / (foliage+cmi_fol_k50))
+        leaf_fall = pot_leaf_fall * CMI(current_step) !&
+                  !* (foliage / (foliage+cmi_fol_k50)) !&
+                  !* (lab_ratio / (lab_ratio + cmi_lab_k50))
 
 !        leaf_fall = (pot_leaf_fall * CMI(current_step)) !&
         !          *  tmp! &

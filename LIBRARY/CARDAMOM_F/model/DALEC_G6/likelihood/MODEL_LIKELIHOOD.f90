@@ -220,7 +220,6 @@ module model_likelihood_module
 !    if (sum(EDCD%PASSFAIL) == 100) then
 !        print*,"Found it!" ; stop
 !    endif
-
     ! convert to a probability
     ML_obs_out = -5d0*tot_exp*DATAin%EDC
 
@@ -1228,8 +1227,8 @@ module model_likelihood_module
 
     ! The initial leaf life span parameter (pars(43)) should not be too far away from the
     ! actual estimate. Note torfol (frac / day) converted to days
-    tmp = torfol**(-1d0)
-    if ((EDC2 == 1 .or. DIAG == 1) .and. (tmp > pars(43)+50d0 .or. tmp < pars(43)-50d0) ) then
+    tmp = torfol**(-1d0) ; tmp1 = min(100d0,dble(10 * no_years))
+    if ((EDC2 == 1 .or. DIAG == 1) .and. (tmp > pars(43)+tmp1 .or. tmp < pars(43)-tmp1) ) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
     endif
 
@@ -1261,7 +1260,7 @@ module model_likelihood_module
     endif ! EDC2 == 1 .or. DIAG == 1
 
     ! We assume that plants should reach near their maximum rooting depth quickly on establishment.
-    ! Therefore, we expect that the mean annual maximum should allow roots to reach > 90 % of their max
+    ! Therefore, we expect that the mean annual maximum should allow roots to reach > 50 % of their max
     if (EDC2 == 1 .or. DIAG == 1) then
        ! Estimate the coarse root pool
        biomass_root = (DATAin%M_POOLS(1:DATAin%nodays,3) + (DATAin%M_POOLS(1:DATAin%nodays,3) * pars(29))) * 2d0
@@ -1272,7 +1271,7 @@ module model_likelihood_module
        end do ! year loop
        ! Calculate root depths for the annual maximums
        mean_annual_pools = (pars(40) * mean_annual_pools) / (pars(39) + mean_annual_pools)
-       if ( ((sum(mean_annual_pools) / dble(no_years)) / pars(40)) < 0.90d0 ) then
+       if ( ((sum(mean_annual_pools) / dble(no_years)) / pars(40)) < 0.50d0 ) then
            EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
        end if
     endif ! EDC2 == 1 .or. DIAG == 1
@@ -1613,7 +1612,8 @@ module model_likelihood_module
         SSsom = (SSsom / out_som) * jan_mean_pools(6)
         ! It is reasonable to assume that the steady state for woody litter
         ! should be ~ less than half that of woody biomass...
-        if (SSlitwood / SSwood > 0.60d0  ) then
+        !if (SSlitwood / SSwood > 0.60d0  ) then
+        if (SSlitwood > SSwood) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(32) = 0
         end if
         ! ... and less than soil organic matter

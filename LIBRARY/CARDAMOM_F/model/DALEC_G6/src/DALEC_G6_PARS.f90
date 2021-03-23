@@ -155,7 +155,7 @@ module MODEL_PARAMETERS
        ! NCCE
        ! Value at which CMI = 0.5
        PI%parmin(28) =  0d0
-       PI%parmax(28) =  0.5d0
+       PI%parmax(28) =  0.1d0
 
        ! fraction of Cwood which is coarse root
        PI%parmin(29) = 0.15d0
@@ -248,10 +248,10 @@ module MODEL_PARAMETERS
        PI%parmin(44) = -5d0
        PI%parmax(44) = -1d0
 
-       ! Initial labile:(root+wood) ratio target
+       ! labile:(root+wood) ratio target
        ! CMI threshold (0-1)
        PI%parmin(45) = 0d0
-       PI%parmax(45) = 1d0 !0.10d0
+       PI%parmax(45) = 0.25d0 !0.10d0
 !       ! Whole GPP - Rm C balance
 !       ! Value at which CMI = 0.5
 !       PI%parmin(45) =  0d0

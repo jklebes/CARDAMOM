@@ -133,7 +133,7 @@ burnt_area_factor    = 1
 ## Define the project setup
 # NOTE: if these are not set CARDAMOM will ask you for them
 request_nos_chains = 3        # Number of chains CARDAMOM should run for each location
-request_nos_samples = 100e6   # Total number of parameter samples / iterations to be explored
+request_nos_samples = 500e6   # Total number of parameter samples / iterations to be explored
 request_nos_subsamples = 1e3  # Number of parameter sets to be sub-sampled from the chain
 request_use_server = FALSE     # Use remote server? Currently coded for UoE Eddie.
 request_runtime = 48          # How many hours of compute to request per job. Only applied for running on remote server
@@ -147,7 +147,7 @@ request_use_EDCs = TRUE       # Use EDCs
 # stage  2 : Submit the project to eddie
 # stage  3 : Copy back results and process vectors
 # stage  4 ; Do some standard result checking
-stage=3
+stage=4
 repair=1 # to force (=1) re-run processed results or driver files if they already exist
 grid_override=FALSE # force site specific files to be saved and figures to be generated when in "grid" operation
 
