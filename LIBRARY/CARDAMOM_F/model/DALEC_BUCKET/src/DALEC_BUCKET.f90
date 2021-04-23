@@ -924,6 +924,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Assign initial values for the canopy growth and mortality indices
     gsi_history = pars(28)
 
+    ! Calculate GSI ranges
+    Tfac_range_1 = (pars(15)-pars(14))**(-1d0)
+    Photofac_range_1 = (pars(24)-pars(16))**(-1d0)
+    VPDfac_range_1 = (pars(26)-pars(25))**(-1d0)
+
     ! specific leaf area (m2/gC)
     SLA = pars(17)**(-1d0)
 
@@ -1181,7 +1186,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        call calculate_leaf_dynamics(n,deltat,nodays        &
                                    ,pars(14),pars(16),pars(25)       &
                                    ,Tfac_range_1,Photofac_range_1    &
-                                   ,pars(26),pars(3),pars(5),pars(12)  &
+                                   ,VPDfac_range_1
+                                   ,pars(3),pars(5),pars(12)  &
                                    ,met(10,n),met(11,n),met(12,n) &
                                    ,FLUXES(n,1),POOLS(n,2),pars(27)  &
                                    ,FLUXES(:,18),FLUXES(n,9),FLUXES(n,16))

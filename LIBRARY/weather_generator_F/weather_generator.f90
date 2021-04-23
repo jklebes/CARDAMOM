@@ -36,8 +36,7 @@ module weather_generator
     implicit none
 
     ! arguments..
-    integer,intent(in) :: day_number
-    real,   intent(in) :: days_in_year, latitude_degs, co2_day, ppt_day, rh_day, &
+    real,   intent(in) :: day_number, days_in_year, latitude_degs, co2_day, ppt_day, rh_day, &
          rh_min_day, rh_max_day, sw_day,     &
          Tavg_day, Tmax_day, Tmin_day, wind_day
     real,dimension(nint(hours_per_day)),&
@@ -101,9 +100,9 @@ module weather_generator
     implicit none
 
     ! arguments..
-    integer,intent(in) :: day_number
-    real,   intent(in) :: days_in_year, & ! number of days in year
-                              latitude    ! site latitude in radians
+    real,   intent(in) :: day_number, &
+                        days_in_year, & ! number of days in year
+                            latitude    ! site latitude in radians
     real,  intent(out) :: daylength, & ! day length in hours
                         declination, & !
                             sunrise    ! hour of sunrise
@@ -189,13 +188,13 @@ module weather_generator
     implicit none
 
     ! arguments..
-    integer,intent(in)  :: day_number
-    real,   intent(in)  :: daylength, & ! day length in hours
-                         declination, & !
-                            latitude, & !
-                             sunrise, & ! hour of sunrise
-                              sw_day, & !
-                        days_in_year
+    real,   intent(in)  :: day_number, &
+                            daylength, & ! day length in hours
+                          declination, & !
+                             latitude, & !
+                              sunrise, & ! hour of sunrise
+                               sw_day, & !
+                         days_in_year
     real,   intent(out) :: sw_hr(nint(hours_per_day))
 
     ! local variables..

@@ -27,7 +27,7 @@
     real,intent(in)                 :: days_in_yr
 
     ! declare daily input variables
-    real,dimension(nos_days),intent(in)    :: sat_avg_in & ! daily avg surface air temperature (oC)
+    real,dimension(nos_days),intent(in) :: sat_avg_in & ! daily avg surface air temperature (oC)
                                              ,sat_max_in & ! daily max surface air temperature (oC)
                                              ,sat_min_in & ! daily min surface air temperature (oC)
                                              ,ppt_in     & ! mean (precip) (kg.m-2.s-1)
@@ -39,22 +39,28 @@
                                              ,wind_in      ! mean wind (ms.-1)
 
     real,dimension(nos_days*nint(hours_per_day)),intent(inout) :: sat_out   & ! hourly surface air temperature (oC)
-                                                ,ppt_out   & ! hourly precip (kg.m-2.s-1)
-                                                ,swrad_out & ! hourly sw radiation (W.m-2)
-                                                ,coa_out   & ! hourly CO2 (ppm)
-                                                ,rh_out    & ! hourly rel humidity (frac)
-                                                ,wind_out    !
+                                                                 ,ppt_out   & ! hourly precip (kg.m-2.s-1)
+                                                                 ,swrad_out & ! hourly sw radiation (W.m-2)
+                                                                 ,coa_out   & ! hourly CO2 (ppm)
+                                                                 ,rh_out    & ! hourly rel humidity (frac)
+                                                                 ,wind_out    !
 
     ! local variables..
-    integer             :: i, day_number, a, b
+    integer :: i, a
+    real :: day_number
     real, dimension(nint(hours_per_day)) :: coa_hrly, ppt_hrly, rh_hrly, sat_hrly, sw_hrly, wind_hrly
 
     ! calculate needed timing information
-    a =  nint(hours_per_day + 1.0) ; b = nint(hours_per_day)
+    a = nint(hours_per_day)
 
     do i = 1 , nos_days
+
        ! calculate day-of-year..
-       day_number = max(1,nint(mod( time(i) , days_in_yr )))
+       if (time(i) == days_in_yr) then
+           day_number = days_in_yr
+       else
+           day_number = real(ceiling(amod(time(i), days_in_yr)))
+       endif
 
        ! Call the weather-generator with the daily-means..
        call daily_to_hourly( latitude(i),   day_number,    days_in_yr,  &  ! in
@@ -68,12 +74,12 @@
                              rh_hrly,       wind_hrly            )         ! out
 
        ! Update the output variables..
-         coa_out( (i-1)*a : i*b ) =  coa_hrly
-         ppt_out( (i-1)*a : i*b ) =  ppt_hrly
-          rh_out( (i-1)*a : i*b ) =   rh_hrly
-         sat_out( (i-1)*a : i*b ) =  sat_hrly
-       swrad_out( (i-1)*a : i*b ) =   sw_hrly
-        wind_out( (i-1)*a : i*b ) = wind_hrly
+         coa_out( (((i-1)*a)+1) : i*a ) =  coa_hrly
+         ppt_out( (((i-1)*a)+1) : i*a ) =  ppt_hrly
+          rh_out( (((i-1)*a)+1) : i*a ) =   rh_hrly
+         sat_out( (((i-1)*a)+1) : i*a ) =  sat_hrly
+       swrad_out( (((i-1)*a)+1) : i*a ) =   sw_hrly
+        wind_out( (((i-1)*a)+1) : i*a ) = wind_hrly
 
     enddo
 

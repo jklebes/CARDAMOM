@@ -93,8 +93,6 @@ for (yr in seq(1,nos_years)) {
 
               # Extract location information
               latitude = grid_output$lat[slot_i,slot_j] # degree (-90/90)
-              # Specify our assumed number of days in year
-              days_in_yr = 365.25
               # Extract time information showing the day of year
               time = drivers$met[start:finish,6] # Julian day of year
               # generate but from different file structure
@@ -112,7 +110,7 @@ for (yr in seq(1,nos_years)) {
               sf_pressure_in=rep(101300,length(time)) # Pa
 
               # The weather generator will downscale each "day" given to it but does not expect every day to be provided
-              tmp=.Fortran("weathergeneratorinterface",latitude=as.single(rep(latitude,length.out=length(time))),nos_days=as.integer(length(time)),days_in_yr=as.single(days_in_yr)
+              tmp=.Fortran("weathergeneratorinterface",latitude=as.single(rep(latitude,length.out=length(time))),nos_days=as.integer(length(time)),days_in_year=as.single(days_in_year)
 	                                              ,time=as.single(time)
                                                       ,sat_avg_in=as.single(sat_avg_in),sat_max_in=as.single(sat_max_in),sat_min_in=as.single(sat_min_in)
                                                       ,ppt_in=as.single(ppt_in),swrad_in=as.single(swrad_in),coa_in=as.single(coa_in)
@@ -126,7 +124,7 @@ for (yr in seq(1,nos_years)) {
               #coa_out=tmp$coa_out ; ppt_out=tmp$ppt_out 
               #rh_out=tmp$rh_out   ; wind_out=tmp$wind_out
               # Tidy away output
-              rm(tmp)
+              rm(tmp) ; gc()
 
               ## Determine downscaling coefficient for GPP from daily to hourly based on radiation curve
               hold_gpp = swrad_out/rep(rollapply(swrad_out, width = steps_per_day, by = steps_per_day, FUN=sum, na.rm=TRUE), each = steps_per_day)
@@ -138,19 +136,19 @@ for (yr in seq(1,nos_years)) {
 
               # Now apply the scaler adjustments and expand to fill each day of the month with the same value
               timestep_days_local = PROJECT$model$timestep_days[start:finish]
-              for (q in seq(1, length(quantiles_loc))) {
+              for (q in seq(1, length(quantiles_locs))) {
                    yy = 0 ; ww = 0 
                    for (zz in seq(1,length(time))) {
                         # Determine the period to be covered by the same day
                         yy = yy + steps_per_day ; ww = ww + (timestep_days_local[zz]*steps_per_day) ; adjustment=(ww-((timestep_days_local[zz]*steps_per_day)-1))
                         # Apply disaggregation based on radiation curve for gpp
-                        gpp_gCm2hr[slot_i,slot_j,q,adjustment:ww]=grid_output$gpp_gCm2day[n,quantiles_locs[q],(start+zz-1)]*hold_gpp[(yy-(steps_per_day-1)):yy]
+                        gpp_gCm2hr[slot_i,slot_j,q,adjustment:ww] = rep(grid_output$gpp_gCm2day[n,quantiles_locs[q],(start+zz-1)]*hold_gpp[(yy-(steps_per_day-1)):yy], times = timestep_days_local[zz])
                         # Apply disaggredation based on temperature curve for ra
-                        reco_gCm2hr[slot_i,slot_j,q,adjustment:ww]=grid_output$reco_gCm2day[n,quantiles_locs[q],(start+zz-1)]*hold_resp[(yy-(steps_per_day-1)):yy]
+                        reco_gCm2hr[slot_i,slot_j,q,adjustment:ww] = rep(grid_output$reco_gCm2day[n,quantiles_locs[q],(start+zz-1)]*hold_resp[(yy-(steps_per_day-1)):yy], times = timestep_days_local[zz])
                         # Apply disaggredation based on constant emissions for fire
-                        fire_gCm2hr[slot_i,slot_j,q,adjustment:ww] = grid_output$fire_gCm2day[n,quantiles_locs[q],(start+zz-1)]*hold_const[(yy-(steps_per_day-1)):yy]
+                        fire_gCm2hr[slot_i,slot_j,q,adjustment:ww] = grid_output$fire_gCm2day[n,quantiles_locs[q],(start+zz-1)]*hold_const
                         # Apply disaggredation based on constant emissions for fire
-                        harvest_gCm2hr[slot_i,slot_j,q,adjustment:ww] = grid_output$harvest_gCm2day[n,quantiles_locs[q],(start+zz-1)]*hold_const[(yy-(steps_per_day-1)):yy]
+                        harvest_gCm2hr[slot_i,slot_j,q,adjustment:ww] = grid_output$harvest_gCm2day[n,quantiles_locs[q],(start+zz-1)]*hold_const
                    } # Downscaling and filling
               } # loop each quantile
 
@@ -226,6 +224,4 @@ nc_close(new_file)
 
 # unload the object
 dyn.unload("weather_generator.so")
-# and clean up
-rm(tmp) ; gc() 
 
