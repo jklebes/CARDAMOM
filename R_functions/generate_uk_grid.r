@@ -1,5 +1,5 @@
 
-
+# Function to create lat / long grid on the GB national grid
 generate_uk_grid<-function(lat,long,resolution) {
 
     # Convert lat / long corners into OSGB36 format
@@ -9,7 +9,7 @@ generate_uk_grid<-function(lat,long,resolution) {
     # impose lat/long system (WGS-84) which the box is defined in
     proj4string(pt)=CRS("+init=epsg:4326")
     # transform to ORGB system so we can compare with the resolution
-    # +proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs 
+    # +proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs
     pt=spTransform(pt,CRS("+init=epsg:27700"))
 
     # Create extent in GB grid
@@ -36,7 +36,7 @@ generate_uk_grid<-function(lat,long,resolution) {
 #    # impose lat/long system (WGS-84) which the box is defined in
 #    proj4string(pt)=CRS("+init=epsg:4326")
 #    # transform to ORGB system so we can compare with the resolution
-#    # +proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs 
+#    # +proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs
 #    pt=spTransform(pt,CRS("+init=epsg:27700"))
 #    # extract box edges in (m)
 #    bottom_left_x=coordinates(pt)[1,1]
@@ -45,8 +45,8 @@ generate_uk_grid<-function(lat,long,resolution) {
 #    top_right_y=coordinates(pt)[2,2]
 #
 #    # inputs for northings and eastings (m), adjusted by the resolution desired
-#    N_to_do=seq(bottom_left_y,top_right_y, by=resolution) 
-#    E_to_do=seq(bottom_left_x,top_right_x, by=resolution) 
+#    N_to_do=seq(bottom_left_y,top_right_y, by=resolution)
+#    E_to_do=seq(bottom_left_x,top_right_x, by=resolution)
 #
 #    # loop to fill in the blanks
 #    lat_dim=length(N_to_do) ; long_dim=length(E_to_do)
@@ -66,7 +66,7 @@ generate_uk_grid<-function(lat,long,resolution) {
 #    # Collect together outputs
 #    output = list(cardamom_ext = pt, lat=lat, long=long, lat_dim=lat_dim, long_dim=long_dim)
 #    # Tidy before leaving
-#    rm(lat,long,lat_dim,long_dim,pt,E_to_do,N_to_do,bottom_left_x,bottom_left_y,top_right_x,top_right_y) ; gc(reset=TRUE,verbose=FALSE)	
+#    rm(lat,long,lat_dim,long_dim,pt,E_to_do,N_to_do,bottom_left_x,bottom_left_y,top_right_x,top_right_y) ; gc(reset=TRUE,verbose=FALSE)
 #    # And leave
 #    return(output)
 

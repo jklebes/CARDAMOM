@@ -49,9 +49,9 @@ module MODEL_PARAMETERS
        PI%parmin(2) = 0.05d0
        PI%parmax(2) = 0.40d0
 
-       ! CMI temperature minimum (oC)
-       PI%parmin(3) = -50d0
-       PI%parmax(3) =  10d0
+       ! Baseline canopy turnover
+       PI%parmin(3) = 0.0002737851 ! 10 years
+       PI%parmax(3) = 0.002737851  ! 1 year
 
        ! Fraction of (1-fgpp) to roots*/
        PI%parmin(4) = 0.10d0
@@ -103,107 +103,65 @@ module MODEL_PARAMETERS
        PI%parmin(14) = -50d0
        PI%parmax(14) =  10d0
 
-       ! CMI Optimum temperatue (oC)
+       ! CGI Optimum temperatue (oC)
        PI%parmin(15) = 10d0
        PI%parmax(15) = 40d0
 
-!       ! CGI Optimum temperatue (oC)
-!       PI%parmin(16) = 10d0
-!       PI%parmax(16) = 40d0
-!       ! CMI supressor - max gradient
-!       ! logistic function of LAI
-!       PI%parmin(16) = 0.1d0
-!       PI%parmax(16) = 10d0
-
-       ! CMI supressor - Michaelis-Menten function
-       ! foliage pool at which turnover = 0.5
-       PI%parmin(16) = 1d0
-       PI%parmax(16) = 500d0
+       ! CGI temperature maximum (oC)
+       PI%parmin(16) = 20d0
+       PI%parmax(16) = 70d0
 
        ! LMA
        ! Kattge et al. 2011,
        PI%parmin(17) = 20d0
        PI%parmax(17) = 180d0
 
-       ! CMI temperature maximum (oC)
-       ! Based on the assumption that it
-       ! can't much much less than max possible for photosynthesis
-       PI%parmin(24) = 20d0
-       PI%parmax(24) = 70d0
-
-       ! CGI temperature maximum (oC)
-       PI%parmin(25) = 20d0
-       PI%parmax(25) = 70d0
-
-       ! CMI temperature Kurtosis
+       ! CGI temperature kurtosis
        ! Larger number means more peaky
-       PI%parmin(26) = 0.01d0
-       PI%parmax(26) = 0.3d0
+       PI%parmin(24) = 0.01d0
+       PI%parmax(24) = 0.3d0
+
+       ! NCCE per gCleaf at which
+       ! CMI is suppressed by 0.5
+       PI%parmin(25) = 0d0 !-0.1d0
+       PI%parmax(25) = 0.1d0
+
+       ! Number of days overwhich cmi_ncce is sensitive
+       ! NOT IN USE
+       PI%parmin(26) = 7d0
+       PI%parmax(26) = 183d0
 
        ! Net Canopy Carbon Export due to new leaf (gC/m2/day)
-       PI%parmin(27) = 0.001d0 !0.1d0
+       PI%parmin(27) = 0.0001d0 !0.1d0
        PI%parmax(27) = 0.5d0 !0.025d0
 
-!       ! CMI supressor - logistic function
-!       ! of LAI point of max gradient (m2/m2)
-!       PI%parmin(28) = 0d0
-!       PI%parmax(28) = 5d0
-!       ! CGI supressor - Michaelis-Menten function
-!       ! labile pool at which turnover = 0.5
-!       PI%parmin(28) = 1d0
-!       PI%parmax(28) = 500d0
-       ! NCCE
-       ! Value at which CMI = 0.5
-       PI%parmin(28) =  0d0
-       PI%parmax(28) =  0.1d0
+       ! Initial NCCE reference value for gradient calculations
+       PI%parmin(28) = 0d0
+       PI%parmax(28) = 0.30d0
 
        ! fraction of Cwood which is coarse root
        PI%parmin(29) = 0.15d0
        PI%parmax(29) = 0.50d0 ! increased based on evidence of savannah system 50 % below !0.30d0
 
-       ! CGI temperature kurtosis
-       ! Larger number means more peaky
-       PI%parmin(30) = 0.01d0
-       PI%parmax(30) = 0.3d0
+       ! CGI wSWP at which stress total (MPa)
+       PI%parmin(30) = -6d0
+       PI%parmax(30) = -0.001d0
 
-!       ! CMI max gradient for logistic response as
-!       ! function of water supply per unit leaf area
-!       PI%parmin(31) = 0d0
-!       PI%parmax(31) = 20d0
-!       ! CGI max gradient for logistic response as
-!       ! function of water supply per unit leaf area (mmolH2O/m2leaf/s)
-!       PI%parmin(32) = 0d0
-!       PI%parmax(32) = 20d0
-!       ! CMI point of maximum gradient for logistic response as
-!       ! function of water supply per unit leaf area (mmolH2O/m2leaf/s)
-!       PI%parmin(33) = 0d0
-!       PI%parmax(33) = 5d0
-!       ! CGI wSWP half saturation coef (MPa)
-!       PI%parmin(34) = 0d0
-!       PI%parmax(34) = 5d0
-!       ! CMI wSWP gradient for logistic function
-!       PI%parmin(31) = 0.5d0
-!       PI%parmax(31) = 20d0
+       ! CGI wSWP at which stress begins (MPa)
+       PI%parmin(31) = -6d0
+       PI%parmax(31) =  0.001d0
 
-       ! CMI rSWP at which stress begins (MPa)
-       PI%parmin(31) = -20d0
-       PI%parmax(31) = -0.001d0
+       ! Min leaf water potential (MPa)
+       PI%parmin(32) = -5d0
+       PI%parmax(32) = -1d0
 
-!       ! CGI wSWP gradient for logistic function
-!       PI%parmin(32) = 0.5d0
-!       PI%parmax(32) = 20d0
+       ! CGI min photoperiod threshold (sec)
+       PI%parmin(33) = 3600d0*3d0  !  3 hours
+       PI%parmax(33) = 3600d0*21d0 ! 21 hours
 
-       ! CGI rSWP at which stress total (MPa)
-       PI%parmin(32) = -6d0
-       PI%parmax(32) = -0.001d0
-
-       ! CMI rSWP at which stress begins (MPa)
-       PI%parmin(33) = -20d0
-       PI%parmax(33) =  0.001d0
-
-       ! CGI rSWP at which stress begins (MPa)
-       PI%parmin(34) = -6d0
-       PI%parmax(34) =  0.001d0
+       ! CGI max photoperiod threshold (sec)
+       PI%parmin(34) = 3600d0*3d0   !  3 hours
+       PI%parmax(34) = 3600d0*21d0  ! 21 hours
 
        ! Reich - Leaf N linked respiration exponential coefficient
        PI%parmin(35) = 0.935d0 ! 1.639-0.01
@@ -244,22 +202,13 @@ module MODEL_PARAMETERS
        PI%parmin(43) =  60.d0
        PI%parmax(43) = 365.25d0 * 4d0
 
-       ! Min leaf water potential (MPa)
+       ! NOT IN USE
        PI%parmin(44) = -5d0
        PI%parmax(44) = -1d0
-
-       ! labile:(root+wood) ratio target
-       ! CMI threshold (0-1)
+       ! NOT IN USE
        PI%parmin(45) = 0d0
-       PI%parmax(45) = 0.25d0 !0.10d0
-!       ! Whole GPP - Rm C balance
-!       ! Value at which CMI = 0.5
-!       PI%parmin(45) =  0d0
-!       PI%parmax(45) =  0.5d0
-
-       ! Deficit between actual and target labile:(root+wood)
-       ! at which supression of turnover is at 50 %
-       ! CGI threshold
+       PI%parmax(45) = 1d0 !0.10d0
+       ! NOT IN USE
        PI%parmin(46) = 0d0
        PI%parmax(46) = 1d0 !0.10d0
 

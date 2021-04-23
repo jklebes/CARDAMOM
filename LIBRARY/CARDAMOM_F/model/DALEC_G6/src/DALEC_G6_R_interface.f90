@@ -17,7 +17,7 @@ subroutine rdalecg6(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
                               fire_loss_wood, fire_loss_litter, fire_loss_litwood, &
                               fire_loss_som, fire_residue_to_litter, &
                               fire_residue_to_litwood,fire_residue_to_som,       &
-                              gs_demand_supply_ratio, cica_time, rSWP_time, CMI, &
+                              gs_demand_supply_ratio, cica_time, rSWP_time,  &
                               gs_total_canopy, gb_total_canopy, canopy_par_MJday_time, &
                               total_water_flux_time, NCCE
   use CARBON_MODEL_CROP_MOD, only: CARBON_MODEL_CROP
@@ -193,10 +193,10 @@ subroutine rdalecg6(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
         out_var(i,1:nodays,15) = 0d0
      else
         out_var(i,1:nodays,14) = FLUXES(1:nodays,18) ! CGI value
-        out_var(i,1:nodays,15) = CMI(1:nodays)       ! CMI
+        out_var(i,1:nodays,15) = NCCE(1:nodays)      ! NCCE
      endif
      out_var(i,1:nodays,16) = rSWP_time(1:nodays) !
-     out_var(i,1:nodays,17) = NCCE(1:nodays)!total_water_flux_time(1:nodays)
+     out_var(i,1:nodays,17) = total_water_flux_time(1:nodays)
      out_var(i,1:nodays,18) = FLUXES(1:nodays,19) ! Evapotranspiration (kgH2O.m-2.day-1)
      out_var(i,1:nodays,19) = POOLS(1:nodays,8)   ! rootwater (kgH2O.m-2.10cmdepth)
      out_var(i,1:nodays,20) = wSWP_time(1:nodays) ! Weighted Soil Water Potential (MPa)

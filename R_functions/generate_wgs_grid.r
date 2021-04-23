@@ -1,4 +1,5 @@
 
+# Creates lat / long grid on WGS-84 framework
 generate_wgs84_grid<-function(lat,long,resolution) {
 
     # pt create raster of our desired resolution (in degrees) with the spatial extent set in the control file.

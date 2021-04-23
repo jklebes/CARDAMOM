@@ -16,7 +16,7 @@ plot_parameters<- function(PROJECT,parameters,converged,n) {
       # now add whether the parameter has converged
       par_names=paste(par_names," (",converged,") ",sep="")
 
-      jpeg(file=paste(PROJECT$figpath,"random_walk_of_parameters_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=400, quality=100)
+      jpeg(file=paste(PROJECT$figpath,"random_walk_of_parameters_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""), width=7200, height=4000, res=400, quality=100)
       if (PROJECT$parameter_type == "pft_specific" & PROJECT$ctessel_pft[n] == 1) {
           par(mfrow=c(7,7),mar=c(3, 3, 3, 1), oma=c(0,0,1,0))
       } else if (PROJECT$model$name == "ACM") {
@@ -40,7 +40,7 @@ plot_parameters<- function(PROJECT,parameters,converged,n) {
       }
       dev.off()
 
-      jpeg(file=paste(PROJECT$figpath,"/histogram_of_parameters_",PROJECT$sites[n],"_",PROJECT$name,".jpg",sep=""), width=7200, height=4000, res=400, quality=100)
+      jpeg(file=paste(PROJECT$figpath,"/histogram_of_parameters_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""), width=7200, height=4000, res=400, quality=100)
       if (PROJECT$parameter_type == "pft_specific" & PROJECT$ctessel_pft[n] == 1) {
           par(mfrow=c(7,7),mar=c(3, 3, 3, 1), oma=c(0,0,1,0))
       } else if (PROJECT$model$name == "ACM") {

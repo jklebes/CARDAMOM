@@ -495,7 +495,7 @@ contains
 
     ! Increment step size via different proposal based on whether we have a sufficiently development covariance matrix
     ! Splitting step calculation based on number of parameter vectors accepted
-    ! is linked to the need build a covarianc matrix prior to multivariate
+    ! is linked to the need build a covariance matrix prior to multivariate
     ! sampling.
     ! See Roberts and Rosenthal, Examples of Adaptive MCMC, J. Comp. Graph. Stat. 18:349-367, 2009.
     if ((PI%use_multivariate .and. nint(PI%Nparvar) > N_before_mv*PI%npars)) then

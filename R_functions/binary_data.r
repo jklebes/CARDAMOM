@@ -532,13 +532,13 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[1]=0.5            ; PARPRIORUNC[1]=0.125 # fraction of litter decomposition to Csom
       PARPRIORS[14]=0             ; PARPRIORUNC[14]=5  # minimum CGI temperature
       PARPRIORS[15]=30            ; PARPRIORUNC[15]=5 # optimum CMI and CGI temperatures
+      PARPRIORS[32]=-1.8          ; PARPRIORUNC[32]=1 # minLWP (MPa)
       PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
 #      PARPRIORS[42]=14.77735       ; PARPRIORUNC[42]=0.4696238*2 # Derived from ACM2 recalibration.
                                                                 # Note despite having the same name as ecosystem property of Amax per gN or SPA's kappaC
                                                                 # These observational constraints are not the same and would lead to
                                                                 # overestimation of GPP (SPA = 34, ACM2 = 15)
 #      PARPRIORS[43]=275.1452      ; PARPRIORUNC[43]=296.2767 # Leaf lifespan prior form Kattge et al., 2011, based on log10 gauusian distribution
-      PARPRIORS[44]=-1.8          ; PARPRIORUNC[44]=1 # minLWP (MPa)
       # other priors
       OTHERPRIORS[1] = 0.46          ; OTHERPRIORUNC[1] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       OTHERPRIORS[2] = OBS$soilwater ; OTHERPRIORUNC[2] = OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)

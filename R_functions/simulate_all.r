@@ -181,7 +181,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
                       lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
                       harvest_C_gCm2day = output[,,13], cgi = output[,,14],
-                      cmi = output[,,15], rSWP_MPa = output[,,16],
+                      ncce_gCm2day = output[,,15], rSWP_MPa = output[,,16],
                       potH2O_supply_mmolH2Om2s = output[,,17], evap_kgH2Om2day = output[,,18],
                       sfc_water_mm = output[,,19], wSWP_MPa = output[,,20],
                       litwood_gCm2 = output[,,21], fire_gCm2day = output[,,23],
