@@ -1186,7 +1186,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        call calculate_leaf_dynamics(n,deltat,nodays        &
                                    ,pars(14),pars(16),pars(25)       &
                                    ,Tfac_range_1,Photofac_range_1    &
-                                   ,VPDfac_range_1
+                                   ,VPDfac_range_1            &
                                    ,pars(3),pars(5),pars(12)  &
                                    ,met(10,n),met(11,n),met(12,n) &
                                    ,FLUXES(n,1),POOLS(n,2),pars(27)  &
