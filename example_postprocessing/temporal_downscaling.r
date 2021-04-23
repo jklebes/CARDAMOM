@@ -20,7 +20,8 @@ library(ncdf4)
 ## Define input project information
 
 # load CARDAMOM gridded project file
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_LU_FIRES_MHMCMC/global_1deg_C1/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_LU_FIRES_MHMCMC/global_1deg_C1/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_MHMCMC/DAREUK_0.5deg_monthly/infofile.RData")
 # Then load parameter and C stocks / flux files
 load(paste(PROJECT$results_processedpath,"/",PROJECT$name,"_parameter_maps.RData",sep=""))
 load(paste(PROJECT$results_processedpath,"/",PROJECT$name,"_stock_flux.RData",sep=""))
@@ -52,9 +53,11 @@ dyn.load("./LIBRARY/weather_generator_F/weather_generator.so")
 
 # Specify the number of quantiles we will be extracting from the CARDAMOM output.
 # We will assume we take the lowest, median and highest quantiles
-tmp = median(c(1:dim(grid_output$nee_gCm2day)[2]))
-quantiles_locs = c(1,tmp,dim(grid_output$nee_gCm2day)[2])
-quantiles_wanted = grid_output$num_quantiles[quantiles_locs]
+quantiles_locs = median(c(1:dim(grid_output$nee_gCm2day)[2]))
+#quantiles_locs = c(1,tmp,dim(grid_output$nee_gCm2day)[2])
+#quantiles_wanted = grid_output$num_quantiles[quantiles_locs]
+quantiles_wanted = c(0.5)
+#quantiles_wanted = c(0.025,0.5,0.975)
 
 ###
 ## Loop through each year in turn
@@ -78,7 +81,10 @@ for (yr in seq(1,nos_years)) {
      harvest_gCm2hr = array(NA, dim=c(dims[1],dims[2],length(quantiles_locs),hrs_in_year))
 
      # Loop through each pixel in turn and downscale
-     for (n in seq(1,length(PROJECT$sites))) {
+     for (n in seq(1,PROJECT$nosites)) {
+
+          # Update user
+          if (n%%100) {print(paste("Current at site ",n," of ",PROJECT$nosites," in year: ",simulation_years[yr], sep=""))}
 
           # Load the drivers for the current pixel
           drivers = read_binary_file_format(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep=""))
@@ -142,9 +148,9 @@ for (yr in seq(1,nos_years)) {
                         # Determine the period to be covered by the same day
                         yy = yy + steps_per_day ; ww = ww + (timestep_days_local[zz]*steps_per_day) ; adjustment=(ww-((timestep_days_local[zz]*steps_per_day)-1))
                         # Apply disaggregation based on radiation curve for gpp
-                        gpp_gCm2hr[slot_i,slot_j,q,adjustment:ww] = rep(grid_output$gpp_gCm2day[n,quantiles_locs[q],(start+zz-1)]*hold_gpp[(yy-(steps_per_day-1)):yy], times = timestep_days_local[zz])
+                        gpp_gCm2hr[slot_i,slot_j,q,adjustment:ww] = grid_output$gpp_gCm2day[n,quantiles_locs[q],(start+zz-1)]*hold_gpp[(yy-(steps_per_day-1)):yy]
                         # Apply disaggredation based on temperature curve for ra
-                        reco_gCm2hr[slot_i,slot_j,q,adjustment:ww] = rep(grid_output$reco_gCm2day[n,quantiles_locs[q],(start+zz-1)]*hold_resp[(yy-(steps_per_day-1)):yy], times = timestep_days_local[zz])
+                        reco_gCm2hr[slot_i,slot_j,q,adjustment:ww] = grid_output$reco_gCm2day[n,quantiles_locs[q],(start+zz-1)]*hold_resp[(yy-(steps_per_day-1)):yy]
                         # Apply disaggredation based on constant emissions for fire
                         fire_gCm2hr[slot_i,slot_j,q,adjustment:ww] = grid_output$fire_gCm2day[n,quantiles_locs[q],(start+zz-1)]*hold_const
                         # Apply disaggredation based on constant emissions for fire
