@@ -100,7 +100,7 @@ module MODEL_PARAMETERS
        PI%parmax(13) = 0.55d0 ! 0.35d0
 
        ! CGI minimum temperature (oC)
-       PI%parmin(14) = -50d0
+       PI%parmin(14) = -10d0
        PI%parmax(14) =  10d0
 
        ! CGI Optimum temperatue (oC)
@@ -109,7 +109,7 @@ module MODEL_PARAMETERS
 
        ! CGI temperature maximum (oC)
        PI%parmin(16) = 20d0
-       PI%parmax(16) = 70d0
+       PI%parmax(16) = 60d0
 
        ! LMA
        ! Kattge et al. 2011,
@@ -121,47 +121,78 @@ module MODEL_PARAMETERS
        PI%parmin(24) = 0.01d0
        PI%parmax(24) = 0.3d0
 
+       ! CMI minimum temperature (oC)
+       PI%parmin(25) = -10d0
+       PI%parmax(25) =  20d0
        ! NCCE per gCleaf at which
        ! CMI is suppressed by 0.5
-       PI%parmin(25) = 0d0 !-0.1d0
-       PI%parmax(25) = 0.1d0
+!       PI%parmin(25) = 0.01d0 !-0.1d0
+!       PI%parmax(25) = 0.5d0
 
-       ! Number of days overwhich cmi_ncce is sensitive
-       ! NOT IN USE
-       PI%parmin(26) = 7d0
-       PI%parmax(26) = 183d0
+       ! Estimate day of peak leaf fall
+       PI%parmin(26) = 1d0
+       PI%parmax(26) = 366d0
 
-       ! Net Canopy Carbon Export due to new leaf (gC/m2/day)
-       PI%parmin(27) = 0.0001d0 !0.1d0
-       PI%parmax(27) = 0.5d0 !0.025d0
+!       ! Net Canopy Carbon Export due to new leaf (gC/m2/day)
+!       PI%parmin(27) = 0.0001d0 !0.1d0
+!       PI%parmax(27) = 0.5d0 !0.025d0
+       ! Threshold value for Net Canopy Carbon Export due to new leaf (gC/m2/day) below which enhanced leaf turnover occurs
+!       PI%parmin(27) = 0.001d0 !0.1d0
+!       PI%parmax(27) = 0.5d0 !0.025d0
+       ! iWUE (gC/m2leaf/dayl/mmolH2Ogs/s)
+       ! Actual value used in SPA is 8.4e-8 (Williams et al., 1996)
+       ! Other reported values are 9.0e-8 -> 1.8e-7 (Bonan et al., 2014)
+       ! NOTE: As this is applied at daily time step and the
+       !       hourly time step activities in SPA operate across
+       !       a non-linear diurnal cycle the true equivalent value is effectively unknown.
+!       PI%parmin(27) = 1d-7
+!       PI%parmax(27) = 1e-4
+       ! CMI Optimum temperatue (oC)
+       PI%parmin(27) = 10d0
+       PI%parmax(27) = 40d0
 
-       ! Initial NCCE reference value for gradient calculations
+       ! Initial CMI temperature component value for gradient calculations
        PI%parmin(28) = 0d0
-       PI%parmax(28) = 0.30d0
+       PI%parmax(28) = 1d0
+       ! Initial NCCE reference value for gradient calculations
+!       PI%parmin(28) = 0d0
+!       PI%parmax(28) = 0.30d0
 
        ! fraction of Cwood which is coarse root
        PI%parmin(29) = 0.15d0
        PI%parmax(29) = 0.50d0 ! increased based on evidence of savannah system 50 % below !0.30d0
 
-       ! CGI wSWP at which stress total (MPa)
-       PI%parmin(30) = -6d0
-       PI%parmax(30) = -0.001d0
+!       ! CGI wSWP at which stress total (MPa)
+!       PI%parmin(30) = -6d0
+!       PI%parmax(30) = -0.001d0
+!       ! CGI wSWP at which stress begins (MPa)
+!       PI%parmin(31) = -6d0
+!       PI%parmax(31) =  0.001d0
 
-       ! CGI wSWP at which stress begins (MPa)
-       PI%parmin(31) = -6d0
-       PI%parmax(31) =  0.001d0
+       ! CGI water supply per gleaf stress total (mmolH2O/gleaf/s)
+       PI%parmin(30) =  0d0
+       PI%parmax(30) =  0.2d0
+       ! CGI water supply per gleaf stress removed (mmolH2O/gleaf/s)
+       PI%parmin(31) =  0d0
+       PI%parmax(31) =  0.2d0
 
        ! Min leaf water potential (MPa)
        PI%parmin(32) = -5d0
        PI%parmax(32) = -1d0
 
-       ! CGI min photoperiod threshold (sec)
-       PI%parmin(33) = 3600d0*3d0  !  3 hours
-       PI%parmax(33) = 3600d0*21d0 ! 21 hours
-
-       ! CGI max photoperiod threshold (sec)
-       PI%parmin(34) = 3600d0*3d0   !  3 hours
-       PI%parmax(34) = 3600d0*21d0  ! 21 hours
+!       ! CGI min photoperiod threshold (sec)
+!       PI%parmin(33) = 3600d0*3d0  !  3 hours
+!       PI%parmax(33) = 3600d0*21d0 ! 21 hours
+!       ! CGI max photoperiod threshold (sec)
+!       PI%parmin(34) = 3600d0*3d0   !  3 hours
+!       PI%parmax(34) = 3600d0*21d0  ! 21 hours
+       ! CMI temperature maximum (oC)
+       PI%parmin(33) = 20d0
+       PI%parmax(33) = 60d0
+       ! CMI temperature kurtosis
+       ! Larger number means more peaky
+       PI%parmin(34) = 0.01d0
+       PI%parmax(34) = 0.3d0
 
        ! Reich - Leaf N linked respiration exponential coefficient
        PI%parmin(35) = 0.935d0 ! 1.639-0.01
@@ -202,12 +233,12 @@ module MODEL_PARAMETERS
        PI%parmin(43) =  60.d0
        PI%parmax(43) = 365.25d0 * 4d0
 
-       ! NOT IN USE
-       PI%parmin(44) = -5d0
-       PI%parmax(44) = -1d0
-       ! NOT IN USE
-       PI%parmin(45) = 0d0
-       PI%parmax(45) = 1d0 !0.10d0
+       ! CMI gradient sensitivity
+       PI%parmin(44) = 0d0
+       PI%parmax(44) = 0.1d0
+       ! Labile Deficit  (gC/m2) at which turnover suppressed by 50 %
+       PI%parmin(45) = 1d0
+       PI%parmax(45) = 1000d0
        ! NOT IN USE
        PI%parmin(46) = 0d0
        PI%parmax(46) = 1d0 !0.10d0

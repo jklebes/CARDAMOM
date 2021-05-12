@@ -527,10 +527,10 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,n
 		# flip it to get the right shape
 		Call_var=t(states_all$bio_gCm2)
 
-		jpeg(file=paste(PROJECT$figpath,"timeseries_Call_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""), width=7200, height=4000, res=280, quality=100)
+		jpeg(file=paste(PROJECT$figpath,"timeseries_Cbio_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""), width=7200, height=4000, res=280, quality=100)
 		# now create the plotting area
 		par(mfrow=c(1,1), mar=c(5,5,3,1))
-		plot(rep(-9999,dim(Call_var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(Call_var), prob=c(0.999), na.rm=TRUE)), cex=0.8,ylab="Call (gC.m-2)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8, main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+		plot(rep(-9999,dim(Call_var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(Call_var), prob=c(0.999), na.rm=TRUE)), cex=0.8,ylab="Cbio (gC.m-2)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8, main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
 		axis(1, at=time_vector[seq(1,length(time_vector),interval)],labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
 		# add the confidence intervals
 		plotconfidence(Call_var)

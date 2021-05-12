@@ -1208,11 +1208,11 @@ module model_likelihood_module
     ! Luyssaert et al (2007)
 
     ! Limits on foliar allocation
-    if ((EDC2 == 1 .or. DIAG == 1) .and. fNPP < 0.05d0) then
+    if ((EDC2 == 1 .or. DIAG == 1) .and. (fNPP < 0.05d0 .or. fNPP /= fNPP)) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
     endif
     ! Limits on fine root allocation
-    if ((EDC2 == 1 .or. DIAG == 1) .and. rNPP < 0.05d0) then
+    if ((EDC2 == 1 .or. DIAG == 1) .and. (rNPP < 0.05d0 .or. rNPP /= rNPP)) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
     endif
 

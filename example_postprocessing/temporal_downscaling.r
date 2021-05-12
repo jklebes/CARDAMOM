@@ -199,7 +199,7 @@ for (yr in seq(1,nos_years)) {
      var6 = ncvar_def("fLuc_ensemble",  unit="gC.m-2.h-1", longname = "Forest harvest - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
 
      # create the empty file
-     output_name = paste(PROJECT$results_processedpath,output_prefix,"CFLUX_hourly_downscaled_",PROJECT$start_year,"_",PROJECT$end_year,output_suffix,".nc",sep="")
+     output_name = paste(PROJECT$results_processedpath,output_prefix,"CFLUX_hourly_downscaled_",simulation_years[yr],output_suffix,".nc",sep="")
      new_file=nc_create(filename=output_name, vars=list(var0,                                      
                                                         var1,var2,var3,var4,var5,var6),
                                                         force_v4 = TRUE)
@@ -207,7 +207,7 @@ for (yr in seq(1,nos_years)) {
 ## Load data into output variable
 
 ## TIMING
-ncvar_put(new_file, var0, 1:hrs_in_analysis)
+ncvar_put(new_file, var0, 1:hrs_in_year)
 
 ## FLUXES
 # GPP
@@ -229,5 +229,5 @@ nc_close(new_file)
 } # Year loop
 
 # unload the object
-dyn.unload("weather_generator.so")
+dyn.unload("./LIBRARY/weather_generator_F/weather_generator.so")
 

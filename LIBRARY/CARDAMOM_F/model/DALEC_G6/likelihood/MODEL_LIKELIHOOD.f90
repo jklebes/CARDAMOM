@@ -761,11 +761,20 @@ module model_likelihood_module
     ! The optimum temperature for canopy growth index (p15) can not be warmer than the
     ! maximum temperature for canopy growth index (p16).
     ! Similarly, minimum temperature (p14) cannot be warmer than optimum
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(15) > pars(16))) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(15) > pars(16) .or. pars(14) > pars(15))) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
     end if
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(14) > pars(15))) then
+    ! The optimum temperature for canopy mortality index (p27) can not be warmer than the
+    ! maximum temperature for canopy mortality index (p33).
+    ! Similarly, minimum temperature (p25) cannot be warmer than optimum
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(27) > pars(33) .or. pars(25) > pars(27))) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
+    end if
+    ! The min temperature for canopy growth index (p14) cannot be smaller than canopy mortality index (p27).
+    ! Likewise, the maximum temperature for canopy growth index (p16) cannot be higher  than canopy mortality (p33).
+    ! Finally the kurtosis for CGI (p24) cannot be smaller than CMI (p34)
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(34) > pars(24)) then
+         EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     end if
 
     ! CGI is expected to be near zero at 0C. However, because this is statistical form it is
@@ -775,21 +784,21 @@ module model_likelihood_module
     tmp1 = opt_max_scaling( pars(16), pars(14) , pars(15) , pars(24) , 0d0 )
 !    tmp2 = opt_max_scaling( max_val, min_val , optimum , kurtosis , current )
     if ((EDC1 == 1 .or. DIAG == 1) .and. tmp1 > 0.05d0) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
     end if
 
-    ! Photoperiod
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(34) < pars(33))) then
-         EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
-    end if
-    ! Photoperiod minimum cannot be substantially less than the observed minimum day length
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(33) < minval(DATAin%MET(11,:))-14400d0)) then
-         EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
-    end if
-    ! Photoperiod maximum cannot be greater than the observed maximum day length
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(34) > maxval(DATAin%MET(11,:)))) then
-         EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
-    end if
+!    ! Photoperiod
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(34) < pars(33))) then
+!         EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
+!    end if
+!    ! Photoperiod minimum cannot be substantially less than the observed minimum day length
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(33) < minval(DATAin%MET(11,:))-14400d0)) then
+!         EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
+!    end if
+!    ! Photoperiod maximum cannot be greater than the observed maximum day length
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(34) > maxval(DATAin%MET(11,:)))) then
+!         EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
+!    end if
 
 !    ! CGI is expected to be near zero at 0C. However, because this is statistical form it is
 !    ! possible for combinations of parameters to be misleading as to their actual response.
@@ -952,7 +961,7 @@ module model_likelihood_module
                         hold, infi, Rs, dble_nodays, &
                         mean_step_size
     double precision, allocatable, dimension(:) :: mean_annual_pools
-    double precision, dimension(nodays) :: mean_ratio, resid_fol, resid_lab, biomass_root
+    double precision, dimension(nodays) :: lab_ratio, mean_ratio, resid_fol, resid_lab, biomass_root
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools
     integer, dimension(nodays) :: hak ! variable to determine number of NaN in foliar residence time calculation
     double precision :: SSwood, SSlitwood, SSsom &
@@ -1179,11 +1188,13 @@ module model_likelihood_module
     ! branches accumulate labile C prior to bud burst from other areas.
     ! Wurth et al (2005) Oecologia, Clab 8 % of living biomass (DM) in tropical forest
     ! Richardson et al (2013), New Phytologist, Clab 2.24 +/- 0.44 % in temperate (max = 4.2 %)
+    ! Estimate the labile ratio, also used below
+    lab_ratio = M_POOLS(:,1) / (M_POOLS(:,3) + M_POOLS(:,4))
     if (EDC2 == 1 .or. DIAG == 1) then
         if ((mean_pools(1) / (mean_pools(3) + mean_pools(4))) > 0.125d0) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
         endif
-        if (maxval(M_POOLS(:,1) / (M_POOLS(:,3) + M_POOLS(:,4))) > 0.25d0) then
+        if (maxval(lab_ratio) > 0.25d0) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
         endif
     endif ! EDC2 == 1 .or. DIAG == 1
@@ -1472,7 +1483,7 @@ module model_likelihood_module
         ! Labile
 !        Rs = in_out_lab * (jan_mean_pools(1) / jan_first_pools(1))
 !        if (abs(Rs-in_out_lab) > 0.1d0 .or. abs(log(in_out_lab)) > EQF10) then
-        if ((abs(log(in_out_lab_yr1)) - abs(log(in_out_lab_yr2))) > etol .or. &
+        if ((abs(log(in_out_lab_yr1)) - abs(log(in_out_lab_yr2))) > etol*0.5d0 .or. &
             abs(log(in_lab/out_lab)) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(25) = 0
         end if
@@ -1480,7 +1491,7 @@ module model_likelihood_module
         ! Foliage
 !        Rs = in_out_fol * (jan_mean_pools(2) / jan_first_pools(2))
 !        if (abs(Rs-in_out_fol) > 0.1d0 .or. abs(log(in_out_fol)) > EQF10) then
-        if ((abs(log(in_out_fol_yr1)) - abs(log(in_out_fol_yr2))) > etol .or. &
+        if ((abs(log(in_out_fol_yr1)) - abs(log(in_out_fol_yr2))) > etol*0.5d0 .or. &
             abs(log(in_fol/out_fol)) > EQF2 .or. in_out_fol_yr1 /= in_out_fol_yr1) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(26) = 0
         end if
@@ -1488,7 +1499,7 @@ module model_likelihood_module
         ! Fine roots
 !        Rs = in_out_root * (jan_mean_pools(3) / jan_first_pools(3))
 !        if (abs(Rs-in_out_root) > 0.1d0 .or. abs(log(in_out_root)) > EQF10) then
-        if ((abs(log(in_out_root_yr1)) - abs(log(in_out_root_yr2))) > etol .or. &
+        if ((abs(log(in_out_root_yr1)) - abs(log(in_out_root_yr2))) > etol*0.5d0 .or. &
             abs(log(in_root/out_root)) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(27) = 0
         end if

@@ -48,7 +48,12 @@ module cardamom_io
     ! don't forget to update values found in the relevant model *_PARS.f90
 
     ! choose between included model arrangements
-    if (DATAin%ID == 0) then
+    if (DATAin%ID == -1) then
+        ! ID = -1 StressTest - Circle
+        DATAin%nopools = 1
+        DATAin%nopars = 2
+        DATAin%nofluxes = 1
+    else if (DATAin%ID == 0) then
         ! ID = 0 - ACM/ACM-ET
         DATAin%nopools = 2
         DATAin%nopars = 20
@@ -260,7 +265,7 @@ module cardamom_io
     else if (DATAin%ID == 32) then
         ! ID = 20 - DALEC_G5
         DATAin%nopools = 8
-        DATAin%nopars = 43
+        DATAin%nopars = 46
         DATAin%nofluxes = 25
         if (DATAin%PFT == 1) then
            ! then actually this is a crop pixel
@@ -1295,7 +1300,7 @@ module cardamom_io
 
     ! load parameter max/min information
     call pars_info
-    ! For log-normalisation procedure, not parameter can be <=0.
+    ! For log-normalisation procedure, no parameter can be <=0.
     ! To facilitate easy of setting parameter ranges to real values
     ! we here instead calculate the adjustment need to ensure positive only values
     where (PI%parmin <= 0d0) PI%paradj = abs(PI%parmin) + 1d0

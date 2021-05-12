@@ -10,7 +10,7 @@ implicit none
 private
 
 ! specify what can be seen
-public :: MHMCMC, par_minstepsize,par_initstepsize
+public :: MHMCMC, par_minstepsize, par_initstepsize
 
 ! declare any module level variables needed
 
@@ -517,7 +517,7 @@ contains
         ! create the new proposal. scd = a scaling parameter linking searching
         ! stepping to the number of parameters being retrieved by the analysis.
         ! See Haario et al., (2001) An adaptive Metropolis algorithm. Bernoulli 7.2: 223-242.
-        ! and references therein.
+        ! and references therein. See also, Roberts & Rosenthal (2009) for beta scaling.
         norpars = norpars0 + (rn * opt_scaling * (1d0-beta)) + (par_minstepsize * rn2 * beta)
 
 

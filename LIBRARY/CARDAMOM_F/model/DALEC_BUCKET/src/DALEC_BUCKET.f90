@@ -624,12 +624,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! p(12) = Max labile turnover
     ! p(13) = Fraction allocated to Clab
     ! p(14) = Min temperature for canopy growth
-    ! p(15) = Optimal temperature for canopy growth
-    ! p(16) =
+    ! p(15) = Max temperature for canopy growth
+    ! p(16) = Min photoperiod for canopy growth
     ! p(17) = LMA
-    ! p(24) =
-    ! p(25) = wSWP at which canopy growth potential = 0.5
-    ! p(26) = wSWP gradient for canopy growth potential
+    ! p(24) = Max photoperiod for canopy growth
+    ! p(25) = Min wSWP for canopy growth
+    ! p(26) = Max wSWP for canopy growth
     ! p(27) = Net Canopy Export return on new Cfol investment (gCperNCCE per gCnewfol)
     ! p(28) = Initial CMI
     ! p(29) = Fraction of Cwood which is Ccoarseroot
@@ -985,6 +985,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Store soil water content of the surface zone (mm)
     POOLS(1,8) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
 
+    ! assign climate sensitivities
+    gsi_lag = gsi_lag_remembered ! added to prevent loss from memory
+    fol_turn_crit = pars(34)
+
     !!!!!!!!!!!!
     ! assign climate sensitivities
     !!!!!!!!!!!!
@@ -1148,7 +1152,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !!!!!!!!!!
 
        ! Estimate temperature sensitivity for decomposition
-       FLUXES(:,2) = exp(pars(10)*soilT)
+       FLUXES(n,2) = exp(pars(10)*soilT)
        ! autotrophic respiration (gC.m-2.day-1)
        Rm_wood_root(n) = pars(2)*FLUXES(n,1)
        ! labile production (gC.m-2.day-1)
@@ -1166,7 +1170,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! giving maintenance respiration at maximum of current or mean annual temperature per gC leaf
        ! (gC/gCleaf/day).
        !Q10_adjustment(n) = Rm_reich_Q10(meant)
-       Q10_adjustment(n) = Rm_reich_Q10(soilT)
+       Q10_adjustment(n) = Rm_reich_Q10(leafT)
        Rm_leaf_per_gC = Rm_leaf_baseline * Q10_adjustment(n)
        ! Estimate time step demand on labile pool to support canopy maintenance
        ! NOTE: current Rm costs must be related to current temperature

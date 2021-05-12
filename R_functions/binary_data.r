@@ -502,6 +502,9 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
         PARPRIORS[21]=-9999         ; PARPRIORUNC[21]=-9999
     } else {
       PARPRIORS[1]=0.5            ; PARPRIORUNC[1]=0.125 # fraction of litter decomposition to Csom
+      PARPRIORS[14]=0             ; PARPRIORUNC[14]=5  # minimum CGI temperature
+      PARPRIORS[15]=30            ; PARPRIORUNC[15]=5 # optimum CMI and CGI temperatures
+      PARPRIORS[32]=-1.8          ; PARPRIORUNC[32]=1 # minLWP (MPa)
       PARPRIORS[42]=11.197440     ; PARPRIORUNC[42]=9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
 #      PARPRIORS[42]=14.77735       ; PARPRIORUNC[42]=0.4696238*2 # Derived from ACM2 recalibration.
                                                                 # Note despite having the same name as ecosystem property of Amax per gN or SPA's kappaC
@@ -514,6 +517,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
 #      OTHERPRIORS[3] = 27.295        ; OTHERPRIORUNC[3] = 11.03755 # Foliar C:N (gC/gN) prior derived from Kattge et al., (2011)
       OTHERPRIORS[4] = 0.66          ; OTHERPRIORUNC[4] = 0.12 # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
       OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
+      OTHERPRIORS[6] = 0.5           ; OTHERPRIORUNC[6] = 0.05 # Rleaf:Rauto ratio See Atkin et al., various for approximate ratio
     } # crop or not
   } else if (modelname == "DALEC_G6") {
     PARPRIORS[11]=0.2764618             ; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)

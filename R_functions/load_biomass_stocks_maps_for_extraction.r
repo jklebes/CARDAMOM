@@ -313,16 +313,17 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
 
         # Create the full file paths estimates and their uncertainty (MgC/ha)
         input_file = list.files(path_to_Cwood)
-        # extract only .tif files
-        input_file = input_file[grepl(".tif",input_file) == TRUE]
+        # extract only .tif files, $ symbol asks for strings that end in the given pattern
+        # The \\ also specifies that the . is not to be considered a wildcard
+        input_file = input_file[grepl("\\.tif$",input_file) == TRUE]
         # Extract the uncertainty files from the original list
         unc_input_file = input_file[grepl("SD_AGB",input_file) == TRUE]
         input_file = input_file[grepl("SD_AGB",input_file) == FALSE]
         # Check that we have the same number of files for both biomass and uncertainty
         if (length(input_file) != length(unc_input_file)) {stop("Different number of observation and uncertainty files found...")}
         # Determine the number of years found
-        years_with_obs = gsub("AGB_map_combined_","",input_file)
-        years_with_obs = as.numeric(gsub(".tif","",years_with_obs))
+        years_with_obs = gsub("AGB_map_MgCha_","",input_file)
+        years_with_obs = as.numeric(gsub("\\.tif$","",years_with_obs))
 
         # Loop through each year and extract if appropriate
         done_lat = FALSE
@@ -851,10 +852,10 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         # Create the full file paths estimates...uncertainty is assumed to be 250gC/m2
         input_file = paste(path_to_Cwood,"mcnicol_AGC2007_0.25d.tif",sep="")
         years_with_obs = c(2007)
-#        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2008_0.25d.tif",sep=""))
-#        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2009_0.25d.tif",sep=""))
-#        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2010_0.25d.tif",sep=""))
-#        years_with_obs = c(2007:2010)
+        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2008_0.25d.tif",sep=""))
+        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2009_0.25d.tif",sep=""))
+        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2010_0.25d.tif",sep=""))
+        years_with_obs = c(2007:2010)
 #        input_file = paste(path_to_Cwood,"mcnicol_AGC2007_1km.tif",sep="")
 ##        years_with_obs = c(2007)
 #        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2008_1km.tif",sep=""))

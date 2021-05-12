@@ -710,10 +710,14 @@ module model_likelihood_module
 
     end if ! EDC2 == 1 .or. DIAG == 1
 
+    ! The maximum value for GPP must be greater than 0
+    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_GPP) == 0d0) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(35) = 0
+    end if
+
     !
     ! EDCs done, below are additional fault detection conditions
     !
-
 
     ! additional faults can be stored in locations 35 - 40 of the PASSFAIL array
 

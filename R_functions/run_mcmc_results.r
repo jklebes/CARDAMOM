@@ -146,10 +146,10 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
 
           # pass to local variable for saving
           site_ctessel_pft = PROJECT$ctessel_pft[n]
-          aNPP = states_all$aNPP ; MTT = states_all$MTT ; aMTT = states_all$aMTT ; SS = states_all$SS
+          aNPP = states_all$aNPP ; natMTT = states_all$natMTT; MTT = states_all$MTT ; aMTT = states_all$aMTT ; SS = states_all$SS 
           print("processing and storing ensemble output")
           # store the results now in binary file
-          save(parameter_covariance,parameters,drivers,site_ctessel_pft,aNPP,MTT,aMTT,SS,file=outfile1)#, compress="gzip")
+          save(parameter_covariance,parameters,drivers,site_ctessel_pft,aNPP,natMTT,MTT,aMTT,SS,file=outfile1)#, compress="gzip")
           # determine whether this is a gridded run (or one with the override in place)
           if (PROJECT$spatial_type == "site" | grid_override == TRUE) {
               # ...if this is a site run save the full ensemble and everything else...
@@ -232,7 +232,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               }
               # Water cycle specific if available
               if (length(which(names(states_all) == "evap_kgH2Om2day")) > 0) {
-                  # current water in the soil surface layer (0-10 cm)
+                  # current water in the soil surface layer (0-30 cm)
                   site_output$SurfWater_kgH2Om2 = apply(states_all$sfc_water_mm,2,quantile,prob=num_quantiles,na.rm=na_flag)
                   # plant apparent soil water potential (MPa)
                   site_output$wSWP_MPa = apply(states_all$wSWP_MPa,2,quantile,prob=num_quantiles,na.rm=na_flag)

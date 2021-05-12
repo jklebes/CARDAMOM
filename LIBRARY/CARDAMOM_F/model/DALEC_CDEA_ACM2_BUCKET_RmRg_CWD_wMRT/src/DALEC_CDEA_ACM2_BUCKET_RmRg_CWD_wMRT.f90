@@ -285,7 +285,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
     ! Evergreen Analytical - ACMv2 - BUCKET (DALEC_CDEA_ACM2_BUCKET) model.
-    ! The subroutine calls the Aggregated Canopy Model version 2 to simulate GPP and partitions
+    ! The subroutine calls the Aggregated Canopy Model version 2 (ACMv2) to simulate GPP which is partitioned
     ! between various ecosystem carbon pools. These pools are subject
     ! to turnovers / decompostion resulting in ecosystem phenology and fluxes of CO2
     ! ACMv2 simulates coupled photosynthesis-transpiration (via stomata), soil and intercepted canopy
@@ -294,6 +294,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! This version includes the option to simulate fire combustion based
     ! on burned fraction and fixed combusion rates. It also includes the
     ! possibility to remove a fraction of biomass to simulate deforestation.
+
+    ! Relevant references:
+    ! Bloom & Williams (2015), doi: 10.5194/bg-12-1299-2015
+    ! Smallman & Williams (2019), doi: 10.5194/gmd-12-2227-2019
+    ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
 
     implicit none
 
@@ -536,6 +541,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     sf = 365.25d0/pi
 
     ! Define fire constants
+    ! Originally based on model described in Bloom et al., (2016),
+    ! updated defaults by Casey Ryan.
     cf(1) = 0.1d0         ! labile combustion efficiency
     cf(2) = 0.9d0         ! foliar combustion efficiency
     cf(3) = 0.1d0         ! roots combustion efficiency
@@ -545,6 +552,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     cf(7) = 0.7d0         ! wood litter combustion efficiency
     rfac = 0.5d0          ! resilience factor
     rfac(5) = 0.1d0 ; rfac(6) = 0d0 ; rfac(7) = 0.1d0
+
+    ! Update fire parameters derived from
+    ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
     ! Assign proposed resilience factor
     rfac(1:4) = pars(31)
     ! Assign combustion completeness to foliage
@@ -552,7 +562,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Assign combustion completeness to non-photosynthetic
     cf(1) = pars(33) ; cf(3) = pars(33) ; cf(4) = pars(33)
     cf(6) = pars(34) ! soil
-    ! derived values
+    ! derived values for litter and wood litter
     cf(5) = (cf(2) + cf(6)) * 0.5d0
     cf(7) = (cf(4) + cf(6)) * 0.5d0
 
