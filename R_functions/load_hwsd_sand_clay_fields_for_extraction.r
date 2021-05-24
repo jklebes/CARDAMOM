@@ -1,11 +1,12 @@
 
 ###
-## Function to load met data from global field ECMWF data
-## subsequently extracted in extract_met_drivers.txt
+## Function to load soil texture information from global gridded HWSD
 ###
 
+# This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
+
 load_hwsd_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source) {
-    
+
     if (sand_clay_source == "SoilGrids") {
 
         # Read in the data for both the sand and clay
@@ -38,12 +39,12 @@ load_hwsd_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source) 
         return(list(top_sand = top_sand, top_clay = top_clay, bot_sand = bot_sand, bot_clay = bot_clay,lat = lat,long = long))
 
     } else if (sand_clay_source == "HWSD") {
-    
+
 	# let the user know this might take some time
 	print("Loading processed HWSD sand clay fields for subsequent sub-setting ...")
 
 	# open processed modis files
-	input_file_1=paste(path_to_sand_clay,"/HWSD_sand_clay_with_lat_long.nc",sep="") 
+	input_file_1=paste(path_to_sand_clay,"/HWSD_sand_clay_with_lat_long.nc",sep="")
 	data1=nc_open(input_file_1)
 
 	# extract location variables
@@ -57,15 +58,15 @@ load_hwsd_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source) 
 	    min_lat=min(latlon_in[,1])-0.5 ; min_long=min(latlon_in[,2])-0.5
 	} else {
 	    max_lat=max(latlon_in[1])+0.5 ; max_long=max(latlon_in[2])+0.5
-	    min_lat=min(latlon_in[1])-0.5 ; min_long=min(latlon_in[2])-0.5	    
+	    min_lat=min(latlon_in[1])-0.5 ; min_long=min(latlon_in[2])-0.5
 	}
 	keep_lat=which(lat[1,] > min_lat & lat[1,] < max_lat)
 	keep_long=which(long[,1] > min_long & long[,1] < max_long)
 	hwsd_top_sand=hwsd_top_sand[min(keep_long):max(keep_long),min(keep_lat):max(keep_lat)]
 	hwsd_bot_sand=hwsd_bot_sand[min(keep_long):max(keep_long),min(keep_lat):max(keep_lat)]
 	hwsd_top_clay=hwsd_top_clay[min(keep_long):max(keep_long),min(keep_lat):max(keep_lat)]
-	hwsd_bot_clay=hwsd_bot_clay[min(keep_long):max(keep_long),min(keep_lat):max(keep_lat)]    
-	lat=lat[min(keep_long):max(keep_long),min(keep_lat):max(keep_lat)] 
+	hwsd_bot_clay=hwsd_bot_clay[min(keep_long):max(keep_long),min(keep_lat):max(keep_lat)]
+	lat=lat[min(keep_long):max(keep_long),min(keep_lat):max(keep_lat)]
 	long=long[min(keep_long):max(keep_long),min(keep_lat):max(keep_lat)]
 	# close files after use
 	nc_close(data1)
@@ -82,4 +83,3 @@ load_hwsd_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source) 
     }
 
 } # function end
-

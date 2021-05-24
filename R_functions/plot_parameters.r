@@ -3,6 +3,9 @@
 ## Function to create and save plots of CARDAMOM parameter vectors
 ###
 
+# This function is based on an original Matlab function development by A. A. Bloom (UoE, now at the Jet Propulsion Laboratory).
+# Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
+
 plot_parameters<- function(PROJECT,parameters,converged,n) {
 
       # input is order for parameters dimensions(npar+1,iter,chain)

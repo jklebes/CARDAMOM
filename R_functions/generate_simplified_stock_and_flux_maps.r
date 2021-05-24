@@ -1,7 +1,9 @@
 
 ###
-## Function to extract state variables and direct the production of uncertainty plots for the key states and fluxes
+## Function to create generic stock and flux plots for gridded CARDAMOM analyses
 ###
+
+# This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
 generate_simplified_stock_and_flux_maps<-function(PROJECT) {
 

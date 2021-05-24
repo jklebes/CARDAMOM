@@ -3,6 +3,9 @@
 ## Function to generate mean state variable information by running the parameters and model choice
 ###
 
+# This function is based on an original Matlab function development by A. A. Bloom (UoE, now at the Jet Propulsion Laboratory).
+# Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
+
 simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type,exepath,soil_info) {
 
   output_dim=17 ; aNPP_dim = 3 ; MTT_dim = 5 ; SS_dim = 5

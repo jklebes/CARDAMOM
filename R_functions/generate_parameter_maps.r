@@ -1,7 +1,9 @@
 
 ###
-## Function to extract state variables and direct the production of uncertainty plots for the key states and fluxes
+## Function to create generic plots of gridded CARDAMOM analysis parameters and emergent traits
 ###
+
+# This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
 generate_parameter_maps<-function(PROJECT) {
 
@@ -500,7 +502,7 @@ generate_parameter_maps<-function(PROJECT) {
                                       Note_2 = "Biomass removal / harvest MTT calculation is calculated assuming a proportional amount of fine root dies, this is not the assumption used in CDEA model versions.")
   # output some aggragated values
   # probably best to add some aggregated met drivers to this concoction here
-  save(grid_parameters,file=outfile)
+  save(grid_parameters,file=outfile, compression = "gzip")
 
   # tidy before leaving
   gc(reset=TRUE, verbose=FALSE)

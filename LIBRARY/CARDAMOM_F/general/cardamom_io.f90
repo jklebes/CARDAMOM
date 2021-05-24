@@ -1,8 +1,20 @@
 
 module cardamom_io
 
-  ! module contains subroutines and variables needed to output parameter,
-  ! likelihood and step size information from the MHMCMC
+  !!!!!!!!!!!
+  ! Authorship contributions
+  !
+  ! This code is based on the original C verion of the University of Edinburgh
+  ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
+  ! All code translation into Fortran, integration into the University of
+  ! Edinburgh CARDAMOM code and subsequent modifications by:
+  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
+  ! J. F. Exbrayat (University of Edinburgh)
+  ! See function / subroutine specific comments for exceptions and contributors
+  !!!!!!!!!!!
+
+  ! Module contains subroutines and variables needed to output parameter,
+  ! likelihood and step size information from the MHMCMC.
 
   implicit none
 
@@ -48,12 +60,9 @@ module cardamom_io
     ! don't forget to update values found in the relevant model *_PARS.f90
 
     ! choose between included model arrangements
-    if (DATAin%ID == -1) then
-        ! ID = -1 StressTest - Circle
-        DATAin%nopools = 1
-        DATAin%nopars = 2
-        DATAin%nofluxes = 1
-    else if (DATAin%ID == 0) then
+    ! NOTE: negative values are coded elsewhere and reserved for MCMC stress
+    ! testing
+    if (DATAin%ID == 0) then
         ! ID = 0 - ACM/ACM-ET
         DATAin%nopools = 2
         DATAin%nopars = 20

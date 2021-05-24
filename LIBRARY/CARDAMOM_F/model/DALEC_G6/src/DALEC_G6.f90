@@ -694,7 +694,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     Rm_leaf_baseline = Rm_reich_N(pars(17)/avN,pars(35),pars(36)) * umol_to_gC * seconds_per_day * 2d-3
     ! set initial leaf lifespan
     leaf_life = pars(43)
-    est_canopy_fall = pars(26)
+    est_canopy_fall = mod(pars(26),365.25d0)
 
     ! plus ones being calibrated
     root_k = pars(39) ; max_depth = pars(40)
@@ -3757,13 +3757,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     deltaGPP = 0d0 ; deltaRm = 0d0 ; deltaNCCE = 0d0
 
     ! Estimate current NCCE (gC/gCleaf/day)
-!    if (foliage < 1e-6) then
-!        NCCE(current_step) = 0d0
-!    else
-!        NCCE(current_step) = (GPP_current / foliage) - Rm_leaf_per_gC
-!    endif
+    if (foliage < 1e-6) then
+        NCCE(current_step) = 0d0
+    else
+        NCCE(current_step) = (GPP_current / foliage) - Rm_leaf_per_gC
+    endif
     ! Estimate current NCCE (gC/m2/day)
-    NCCE(current_step) = GPP_current - (Rm_leaf_per_gC * foliage)
+!    NCCE(current_step) = GPP_current - (Rm_leaf_per_gC * foliage)
     ! Determine the degree of suppression being applied to the potential turnover
 !    cmi_ncce = 1d0 - max(0d0,NCCE(current_step) / (NCCE(current_step) + cmi_ncce_k50))
 
@@ -3805,7 +3805,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Water availability limitation
 !    cgi_water = logistic_func(rSWP,cgi_water_coef_1,cgi_water_coef_2,0d0,1d0)
 !    cgi_water = max(0d0,min(1d0,(rSWP - cgi_water_coef_1) / (cgi_water_coef_2 - cgi_water_coef_1)))
-    cgi_water = max(0d0,min(1d0,(total_water_flux - cgi_water_coef_1) / (cgi_water_coef_2 - cgi_water_coef_1)))
+    cgi_water = max(0d0,min(1d0,((total_water_flux/lai) - cgi_water_coef_1) / (cgi_water_coef_2 - cgi_water_coef_1)))
     ! Day length limitation
     !cgi_dayl = max(0d0,min(1d0,(mean_dayl - cgi_dayl_coef_1) / (cgi_dayl_coef_2 - cgi_dayl_coef_1)))
 
@@ -3826,14 +3826,17 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! determine the number of values, i.e. the interval
     if (current_step < cmi_lag) then
         if (current_step == 1) then
-            cmi_history(1:2) = CMI(current_step)
+            !cmi_history(1:2) = CMI(current_step)
+            cmi_history(1:2) = NCCE(current_step)
             interval = 2
         else
-            cmi_history(1:current_step) = CMI(1:current_step)
+            !cmi_history(1:current_step) = CMI(1:current_step)
+            cmi_history(1:current_step) = NCCE(1:current_step)
             interval = current_step
         endif
     else
-        cmi_history(1:cmi_lag) = CMI((current_step-cmi_lag+1):current_step)
+        !cmi_history(1:cmi_lag) = CMI((current_step-cmi_lag+1):current_step)
+        cmi_history(1:cmi_lag) = NCCE((current_step-cmi_lag+1):current_step)
         interval = cmi_lag
     end if
     ! Now calculate the linear gradient
@@ -3919,7 +3922,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         ! If CGI is less than 1
 !        else if (gradient <= 0d0 .and. NCCE(current_step) < dNCCE_crit_frac) then
-        else if (gradient >= cmi_sensitivity .or. CMI(current_step) == 1d0) then
+!CMI        else if (gradient >= cmi_sensitivity .or. CMI(current_step) == 1d0) then
+        else if (gradient < cmi_sensitivity) then ! gradient not NCCE per gCLeaf
 
             ! Estimate the deficit between max labile of last 12 months and current
             labile_suppression = max(0d0, labile_target - labile)

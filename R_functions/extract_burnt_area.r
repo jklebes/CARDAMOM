@@ -1,4 +1,10 @@
 
+###
+## Function extracts locatio specific information on Burned area
+## from already loaded gridded datasets
+###
+
+# This function is based by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
 extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,grid_type,resolution,start_year,end_year,burnt_all) {
 
@@ -19,7 +25,7 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
       product_res = product_res * 0.5 # NOTE: averaging needed for line above
       if (grid_type == "wgs84") {
           # radius is ceiling of the ratio of the product vs analysis ratio
-          radius = round(resolution / product_res, digits=0)
+          radius = floor(0.5*(resolution / product_res))
       } else if (grid_type == "UK") {
           # Estimate radius for UK grid assuming radius is determine by the longitude size
           # 6371e3 = mean earth radius (m)
@@ -33,12 +39,11 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
   } # spatial grid
 
   # work out total burned fraction of the area
-  average_i = max(1,(i1-radius)):min(dim(burnt_all$burnt_area)[1],(i1+radius)) 
+  average_i = max(1,(i1-radius)):min(dim(burnt_all$burnt_area)[1],(i1+radius))
   average_j = max(1,(j1-radius)):min(dim(burnt_all$burnt_area)[2],(j1+radius))
   # carry out aggregation
   burnt_area = array(NA, dim=c(dim(burnt_all$burnt_area)[3]))
   for (n in seq(1, dim(burnt_all$burnt_area)[3])) {burnt_area[n] = mean(burnt_all$burnt_area[average_i,average_j,n], na.rm=TRUE)} #  for loop
-
   # convert missing data back to -9999
   #burnt_area[which(is.na(burnt_area))]=-9999.0
   # next work out how many days we should have in the year
@@ -55,7 +60,7 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
                mod = as.numeric(years_to_do[i])-round((as.numeric(years_to_do[i])/400))*400
                if (mod == 0) {
                    nos_days  = 366
-               } 
+               }
             }
        }
        # count up days needed

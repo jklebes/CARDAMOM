@@ -1,6 +1,10 @@
+
 ###
 ## Function to create binary input files
 ###
+
+# This function is based on an original Matlab function development by A. A. Bloom (UoE, now at the Jet Propulsion Laboratory).
+# Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE) & J. F. Exbrayat (UoE).
 
 # /*TEMPLATE FOR ALL DALEC MCMC DATA files*/
 # /*Static Elements: 1-100 - use as many as needed*/

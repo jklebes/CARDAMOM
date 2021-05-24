@@ -3,6 +3,10 @@ module MHMCMC_StressTests
 
   ! Module contains a number of diagnostic tests used to ensure that the MCMC
   ! is able to retrieve a known distribution of parameters for simple models.
+
+  !!!!!!!!!!!
+  ! Authorship contributions
+  !
   ! Created: 12/05/2021, T. L. Smallman (t.l.smallman@ed.ac.uk)
   ! Version history:
   ! Version 1: Estimating pi and radius of a circle
@@ -23,6 +27,9 @@ module MHMCMC_StressTests
                                  circle_par_2 = 2d0, &
                                  circle_obs_mean = circle_par_1 * circle_par_2 ** 2d0, &
                                  circle_obs_unc  = 0.2d0
+  ! Stress Test 2 - estimate known PDF for single parameter 
+  double precision, parameter :: single_obs_mean = 0d0, &
+                                 single_obs_unc = 1d0
 
   contains
   !
@@ -64,6 +71,25 @@ module MHMCMC_StressTests
 !    PI%parmax(2) = 10.0d0
 
   end subroutine circle_parameter_prior_ranges
+  ! 
+  !--------------------------------------------------------------------
+  ! 
+  subroutine single_parameter_prior_ranges
+    use MCMCOPT, only: PI
+
+    ! define the parameter prior ranges
+
+    ! Estimate the PDF of a single value with known variance
+    ! Test concept from A. A. Bloom (JPL, USA)
+    ! Implemented by T. L. Smallman (UoE, t.l.smallman@ed.ac.uk)
+
+    implicit none
+
+    ! Very large uniform range
+    PI%parmin(1) = -1000d0
+    PI%parmax(1) =  1000d0
+
+  end subroutine single_parameter_prior_ranges
   !
   !--------------------------------------------------------------------
   !
@@ -94,6 +120,15 @@ module MHMCMC_StressTests
         DATAin%nopools = 1
         DATAin%nopars = 1!2
         DATAin%nofluxes = 1
+    else if (outfile == "Single") then
+        ! ID = -2 StressTest - Single parameter
+        DATAin%ID = -2
+        DATAin%nodays = 1
+        DATAin%nomet = 1
+        DATAin%noobs = 1
+        DATAin%nopools = 1
+        DATAin%nopars = 1!2
+        DATAin%nofluxes = 1    
     else
         print*,"Valid Stress Test has not been specified"
         stop
@@ -126,6 +161,8 @@ module MHMCMC_StressTests
     ! load parameter max/min information
     if (DATAin%ID == -1) then
         call circle_parameter_prior_ranges
+    else if (DATAin%ID == -2) then
+        call single_parameter_prior_ranges
     end if
 
     ! For log-normalisation procedure, no parameter can be <=0.
@@ -168,10 +205,15 @@ module MHMCMC_StressTests
     ! initial values
     ML_obs_out = 0d0 ; ML_prior_out = 0d0
 
-    ! run the circle model
-    call circle(PARS,DATAin%nopars,output)
-    ! Estimate the likelihood score
-    ML_obs_out = -0.5d0 * (((output - circle_obs_mean) / circle_obs_unc) ** 2)
+    if (DATAin%ID == -1) then
+        ! run the circle model
+        call circle(PARS,DATAin%nopars,output)
+        ! Estimate the likelihood score
+        ML_obs_out = -0.5d0 * (((output - circle_obs_mean) / circle_obs_unc) ** 2)
+    else if (DATAin%ID == -2) then
+        ! Estimate likelihood for a single parameter retrieval
+        ML_obs_out = -0.5d0 * (((PARS(1) - single_obs_mean) / single_obs_unc) ** 2)
+    end if
 
   end subroutine StressTest_likelihood
   !

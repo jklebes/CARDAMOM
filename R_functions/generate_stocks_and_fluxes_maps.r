@@ -1,4 +1,13 @@
 
+###
+## Function to create gridded, uncertainty propogated plots for the gridded CARDAMOM analyses.
+## Includes functions to determine the linear components of GSI's associations with DALEC simulated LAI.
+## NOTE: these functions are largely superceded by those found in "generate_simplified_stock_and_flux_maps.r"
+###
+
+# This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
+# The GSI concept is derived from the Growing Season Index described by Jolley et al., (2005)
+
 gsi_controlling<-function(gsi_components,gsi,gsi_wanted,timesteps,m) {
 
   ###

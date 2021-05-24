@@ -1,7 +1,9 @@
 
 ###
-## Function to load biomass maps which apply to a specific time point
+## Function to load biomass maps which apply to gridded domain
 ###
+
+# This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
 load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,start,finish,timestep_days) {
 

@@ -146,14 +146,14 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
 
           # pass to local variable for saving
           site_ctessel_pft = PROJECT$ctessel_pft[n]
-          aNPP = states_all$aNPP ; natMTT = states_all$natMTT; MTT = states_all$MTT ; aMTT = states_all$aMTT ; SS = states_all$SS 
+          aNPP = states_all$aNPP ; natMTT = states_all$natMTT; MTT = states_all$MTT ; aMTT = states_all$aMTT ; SS = states_all$SS
           print("processing and storing ensemble output")
           # store the results now in binary file
-          save(parameter_covariance,parameters,drivers,site_ctessel_pft,aNPP,natMTT,MTT,aMTT,SS,file=outfile1)#, compress="gzip")
+          save(parameter_covariance,parameters,drivers,site_ctessel_pft,aNPP,natMTT,MTT,aMTT,SS,file=outfile1, compress="gzip")
           # determine whether this is a gridded run (or one with the override in place)
           if (PROJECT$spatial_type == "site" | grid_override == TRUE) {
               # ...if this is a site run save the full ensemble and everything else...
-              save(parameters,drivers,states_all,site_ctessel_pft,file=outfile)#, compress="gzip")
+              save(parameters,drivers,states_all,site_ctessel_pft,file=outfile, compress="gzip")
           } else {
               # ...otherwise this is a grid and we want straight forward reduced dataset of common stocks and fluxes
               num_quantiles = c(0.025,0.05,0.25,0.5,0.75,0.95,0.975) ; num_quantiles_agg = seq(0.0,1, length = 1000)
@@ -349,7 +349,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               site_output$fire_par_cor = states_all$fire_par_cor
 
               # save to pixel specific file for the moment... in "run_mcmc_results" these will be combined into a single grid
-              save(site_output,file=outfile2)
+              save(site_output,file=outfile2, compression = "gzip")
         }
 
         dummy = 0
@@ -971,7 +971,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
       }
 
       # now save the combined grid file
-      save(grid_output, file=outfile_grid)
+      save(grid_output, file=outfile_grid, compression = "gzip")
 
   } # gridded run?
 

@@ -3,7 +3,11 @@
 ## Function which contains basic information about the models
 ###
 
+# This function is based on an original Matlab function development by A. A. Bloom (UoE, now at the Jet Propulsion Laboratory).
+# Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
+
 cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
+
   if (modelname == "ACM") {
     # information contains is
     # The model name
@@ -293,5 +297,6 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopars=array(53,dim=c(length(ctessel_pft)))
     nofluxes=array(28,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC_GSI_DBio_FR",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  }
-}
+  } # If modelname == "..."
+
+} # end function cardamom_model_details

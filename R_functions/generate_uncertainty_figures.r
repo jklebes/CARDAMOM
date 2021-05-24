@@ -1,7 +1,10 @@
 
 ###
-## Function to extract state variables and direct the production of uncertainty plots for the key states and fluxes
+## Function to direct the creation of site level timeseries plots of CARDAMOM analyes
 ###
+
+# This function is based on an original Matlab function development by A. A. Bloom (UoE, now at the Jet Propulsion Laboratory).
+# Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
 generate_uncertainty_figures<-function(PROJECT,n) {
 

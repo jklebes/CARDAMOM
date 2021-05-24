@@ -3,6 +3,10 @@
 ## Function which allows figure generation to be spread across the cores
 ###
 
+# This function is based on an original Matlab function development by A. A. Bloom (UoE, now at the Jet Propulsion Laboratory).
+# Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
+# Exceptions are given within specific functions.
+
 #Function to determine rmse
 rmse <- function(obs, pred) sqrt(mean((obs-pred)^2, na.rm=TRUE))
 ## Use byte compile

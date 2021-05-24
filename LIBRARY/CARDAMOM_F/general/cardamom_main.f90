@@ -14,20 +14,33 @@ program cardamom_framework
                                     find_edc_initial_values, &
                                     sub_model_likelihood
 
- ! This is the main subroutine for the CARDAMOM framework. The specific model
- ! method combinations are achieved through case specific compilation of the
- ! case while maintaining strict consistent io formats to allow for these
- ! combinations
+ !!!!!!!!!!!
+ ! Authorship contributions
+ !
+ ! This code is based on the original C verion of the University of Edinburgh
+ ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
+ ! All code translation into Fortran, integration into the University of
+ ! Edinburgh CARDAMOM code and subsequent modifications by:
+ ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
+ ! J. F. Exbrayat (University of Edinburgh)
+ ! See function / subroutine specific comments for exceptions and contributors
+ !!!!!!!!!!!
 
  ! Created: Anthony A. Bloom
+ ! Major modification history:
  ! Version 1.0: C language MHMCMC and io created by Anthony A. Bloom
  ! Version 1.1: Translated into Fortran, including some generic function replacement by T. L. Smallman
  ! Version 1.2: Analysis restart capacity added by T.L. Smallman
  ! Version 1.3: MHMCMC updated to APMCMC by T.L. Smallman with advice from Anthony A. Bloom
- !            : Following Haario et al., (2001) and Roberts & Rosenthal (2009).
+ !            : Following Haario et al., (2001, 2006) and Roberts & Rosenthal (2009).
  ! Version 1.4: Pre-APMCMC phase using normalised likelihoods added by T. L. Smallman
  !            : Pre-APMCMC allows for rapidly moving towards observations from very bad starting points.
  ! Specific citations for developments included in the code.
+
+ ! This is the main subroutine for the CARDAMOM framework. The specific model
+ ! method combinations are achieved through case specific compilation of the
+ ! case while maintaining strict consistent io formats to allow for these
+ ! combinations
 
  ! Command line inputs are:
  ! 1) file in
@@ -105,10 +118,11 @@ program cardamom_framework
  write(*,*) "Running model version ", DATAin%ID
 
  ! Check whether we are doing a stress test again
- if (DATAin%ID == -1) then
+ if (DATAin%ID < 0) then
 
      ! We are doing a stress test
      write(*,*)"Carrying out a stress test analysis"
+     write(*,*)"Any existing files will be ignored"
      write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
 
      ! Reset interations counter

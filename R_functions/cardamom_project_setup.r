@@ -3,6 +3,9 @@
 ## Function to describe the PROJECT requirements
 ###
 
+# This function is based on an original Matlab function development by A. A. Bloom (UoE, now at the Jet Propulsion Laboratory).
+# Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
+
 cardamom_project_setup <- function (paths,PROJECT) {
 
   # local paths to be set

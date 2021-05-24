@@ -2,6 +2,17 @@ module MODEL_PARAMETERS
 
   implicit none
 
+  !!!!!!!!!!!
+  ! Authorship contributions
+  !
+  ! This code is based on the original C verion of the University of Edinburgh
+  ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
+  ! All code translation into Fortran, integration into the University of
+  ! Edinburgh CARDAMOM code and subsequent modifications by:
+  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
+  ! See function / subroutine specific comments for exceptions and contributors
+  !!!!!!!!!!!
+
   ! make all private
   private
 
@@ -131,7 +142,7 @@ module MODEL_PARAMETERS
 
        ! Estimate day of peak leaf fall
        PI%parmin(26) = 1d0
-       PI%parmax(26) = 366d0
+       PI%parmax(26) = 365.25*4d0
 
 !       ! Net Canopy Carbon Export due to new leaf (gC/m2/day)
 !       PI%parmin(27) = 0.0001d0 !0.1d0
@@ -234,8 +245,12 @@ module MODEL_PARAMETERS
        PI%parmax(43) = 365.25d0 * 4d0
 
        ! CMI gradient sensitivity
-       PI%parmin(44) = 0d0
-       PI%parmax(44) = 0.1d0
+!       PI%parmin(44) = 0d0
+!       PI%parmax(44) = 0.1d0
+       ! NCCE gradient sensitivity
+       PI%parmin(44) =-0.005d0
+       PI%parmax(44) = 0d0
+
        ! Labile Deficit  (gC/m2) at which turnover suppressed by 50 %
        PI%parmin(45) = 1d0
        PI%parmax(45) = 1000d0
