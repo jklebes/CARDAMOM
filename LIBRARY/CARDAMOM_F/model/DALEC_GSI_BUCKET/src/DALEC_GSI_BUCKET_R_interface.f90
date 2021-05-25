@@ -25,6 +25,14 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
 
+  !!!!!!!!!!!
+  ! Authorship contributions
+  !
+  ! This code is by:
+  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
+  ! See function / subroutine specific comments for exceptions and contributors
+  !!!!!!!!!!!
+
   implicit none
   interface
     subroutine crop_development_parameters(stock_seed_labile,DS_shoot,DS_root,fol_frac &

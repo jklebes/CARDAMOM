@@ -86,8 +86,8 @@ module MHMCMC_StressTests
     implicit none
 
     ! Very large uniform range
-    PI%parmin(1) = -1000d0
-    PI%parmax(1) =  1000d0
+    PI%parmin(1) = -100000d0
+    PI%parmax(1) =  100000d0
 
   end subroutine single_parameter_prior_ranges
   !

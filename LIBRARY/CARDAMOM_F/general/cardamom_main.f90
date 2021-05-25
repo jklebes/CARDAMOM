@@ -132,6 +132,56 @@ program cardamom_framework
      MCO%returnpars = .true.
      MCO%fixedpars  = .false.
      restart_flag = .false.
+
+     ! Do we do the initial MCMC period where we normalise the likelihood by
+     ! number of observations
+     ! This process allows for very bad starting points to more easily move
+     ! towards the general area of the observatons.
+     do_inflate = .true.
+     if (MCOUT%nos_iterations < (MCO%nOUT*MCO%sub_fraction) .and. do_inflate) then
+
+         ! Having found an EDC compliant parameter vector, we want to do a MCMC
+         ! search on inflated uncertainties. This inflation search allows us to
+         ! more easily move towards higher likelihoods, where the inflation
+         ! allows easier movement through parameter space.
+
+         ! The inflated search phase will make use of three stages over which
+         ! the
+         ! inflation will be reduced. Phase 1 used half of the allocated
+         ! iterations for the inflation while the second and third is
+
+         ! Set flag to indicate this phase has occurred and make a record of the
+         ! total iterations to be attempted
+         MCO%sub_sample_complete = .true. ; nOUT_save = MCO%nOUT
+
+         ! Report to the user
+         write(*,*)"Beginning parameter search on sample size normalised likelihoods"
+
+         MCO%nOUT = nint(dble(nOUT_save) * MCO%sub_fraction) - MCOUT%nos_iterations
+         write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
+         MCO%nADAPT = 100 ; MCO%fADAPT = 1d0
+         call MHMCMC(1d0,StressTest_likelihood,StressTest_likelihood)
+         ! Use the best parameter set as the starting point for the next stage
+         PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
+         ! Leave parameter and covariance structures as they come out form the
+         ! sub-sample - but reset the number of samples used in the update
+         ! weighting
+         if (PI%cov .and. PI%use_multivariate) then
+             PI%Nparvar = 1d0
+         else
+             ! reset the parameter step size at the beginning of each attempt
+             PI%parvar = 1d0 ; PI%Nparvar = 0d0
+             ! Covariance matrix cannot be set to zero therefore set initial
+             ! value to a small positive value along to variance access
+             PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+             PI%use_multivariate = .false.
+             do n = 1, PI%npars
+                PI%covariance(n,n) = 1d0
+             end do
+         endif ! do we need a new covariance matrix or can we use the existing one?
+
+     end if ! restart flag
+
      ! Call the MHMCMC
      call MHMCMC(1d0,StressTest_likelihood,StressTest_likelihood)
      ! Tell the user the best parameter set
