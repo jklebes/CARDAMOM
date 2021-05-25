@@ -7,9 +7,13 @@ module MHMCMC_StressTests
   !!!!!!!!!!!
   ! Authorship contributions
   !
-  ! Created: 12/05/2021, T. L. Smallman (t.l.smallman@ed.ac.uk)
+  ! Created: 12/05/2021, T. L. Smallman (UoE, t.l.smallman@ed.ac.uk)
+  ! Subsequent contributions by:
+  ! T. L. Smallman (UoE)
+  ! A. A. Bloom (JPL, USA)
   ! Version history:
-  ! Version 1: Estimating pi and radius of a circle
+  ! Version 1.0: Estimating pi from a circle, and a single parameter retrieval with known PDF.
+  ! Version 1.1: Estimating pi and multiple circle radius from multiple areas.
 
   implicit none
 
@@ -27,9 +31,15 @@ module MHMCMC_StressTests
                                  circle_par_2 = 2d0, &
                                  circle_obs_mean = circle_par_1 * circle_par_2 ** 2d0, &
                                  circle_obs_unc  = 0.2d0
-  ! Stress Test 2 - estimate known PDF for single parameter 
+  ! Stress Test 2 - estimate known PDF for single parameter
   double precision, parameter :: single_obs_mean = 0d0, &
                                  single_obs_unc = 1d0
+  ! Stress Test 3 - estimate pi and radius of multiple circles from areas estimates
+!  double precision, parameter :: circle_par_1 = 3.141d0, &
+!                                 circle_par_2 = 2d0, &
+!                                 circle_obs_mean = circle_par_1 * circle_par_2 ** 2d0, &
+!                                 circle_obs_unc  = 0.2d0
+
 
   contains
   !
@@ -71,9 +81,9 @@ module MHMCMC_StressTests
 !    PI%parmax(2) = 10.0d0
 
   end subroutine circle_parameter_prior_ranges
-  ! 
+  !
   !--------------------------------------------------------------------
-  ! 
+  !
   subroutine single_parameter_prior_ranges
     use MCMCOPT, only: PI
 
@@ -128,7 +138,7 @@ module MHMCMC_StressTests
         DATAin%noobs = 1
         DATAin%nopools = 1
         DATAin%nopars = 1!2
-        DATAin%nofluxes = 1    
+        DATAin%nofluxes = 1
     else
         print*,"Valid Stress Test has not been specified"
         stop

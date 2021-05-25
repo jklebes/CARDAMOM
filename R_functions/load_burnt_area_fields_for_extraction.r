@@ -179,7 +179,7 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
 
           # restructure
           burnt_area=array(burnt_area, dim=c(dim(long)[1],dim(lat)[2],length(doy_obs)))
-
+par(mfrow=c(2,2)) ; plot(apply(burnt_area,3,mean, na.rm=TRUE)) ; image.plot(apply(burnt_area,c(1,2),mean,na.rm=TRUE))
           # output variables
           return(list(burnt_area=burnt_area,doy_obs=doy_obs,lat=lat,long=long,missing_years=missing_years))
 

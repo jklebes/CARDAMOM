@@ -349,7 +349,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               site_output$fire_par_cor = states_all$fire_par_cor
 
               # save to pixel specific file for the moment... in "run_mcmc_results" these will be combined into a single grid
-              save(site_output,file=outfile2, compression = "gzip")
+              save(site_output,file=outfile2, compress = "gzip")
         }
 
         dummy = 0
@@ -971,7 +971,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
       }
 
       # now save the combined grid file
-      save(grid_output, file=outfile_grid, compression = "gzip")
+      save(grid_output, file=outfile_grid, compress = "gzip")
 
   } # gridded run?
 
