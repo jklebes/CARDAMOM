@@ -8,10 +8,10 @@
 
 # /*TEMPLATE FOR ALL DALEC MCMC DATA files*/
 # /*Static Elements: 1-100 - use as many as needed*/
-# /*Parameter Priors: 101-150*/
-# /*Parameter prior uncertainty: 151-200*/
-#/*Other priors & uncertainties: 201-300*/
-# /*TEMPORAL DRIVERS & DATA: 301-end*/
+# /*Parameter Priors: 101-200*/
+# /*Parameter prior uncertainty: 201-300*/
+#/*Other priors & uncertainties: 301-400*/
+# /*TEMPORAL DRIVERS & DATA: 401-end*/
 
 binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter_type,nopars) {
   print(paste("writing out binary...",Sys.time(),sep=""))
