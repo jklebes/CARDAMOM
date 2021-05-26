@@ -3,6 +3,14 @@
 ## Function to extractmet data from global field ECMWF data
 ###
 
+  #!!!!!!!!!!!
+  #! Authorship contributions
+  #!
+  #! Created: T. L. Smallman (UoE, t.l.smallman@ed.ac.uk)
+  #! Subsequent contributions by:
+  #! T. L. Smallman (UoE)
+  # See code for exceptions
+
 daily_mean <-function(var, interval, missing_allowed) {
       # work out how many intervals fit
       # i.e. number of days possible

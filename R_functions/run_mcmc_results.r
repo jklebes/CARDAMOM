@@ -147,6 +147,10 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
           # pass to local variable for saving
           site_ctessel_pft = PROJECT$ctessel_pft[n]
           aNPP = states_all$aNPP ; natMTT = states_all$natMTT; MTT = states_all$MTT ; aMTT = states_all$aMTT ; SS = states_all$SS
+          # Sanity check
+          if (length(which(is.na(as.vector(aNPP))) == TRUE) > 0) {
+              print(paste("NA value found in NPP for site ",PROJECT$site[n],sep="")) ; dummy = -1 ; return(dummy)
+          }
           print("processing and storing ensemble output")
           # store the results now in binary file
           save(parameter_covariance,parameters,drivers,site_ctessel_pft,aNPP,natMTT,MTT,aMTT,SS,file=outfile1, compress="gzip")

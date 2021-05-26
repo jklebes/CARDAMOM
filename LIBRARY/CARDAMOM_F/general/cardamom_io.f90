@@ -317,7 +317,7 @@ module cardamom_io
     ! local variables
     logical :: par_exists, step_exists, cov_exists, covinfo_exists
     double precision :: dummy
-    integer :: num_lines,status
+    integer :: num_lines, status
 
     ! Check that all files exist
     inquire(file=trim(parname),     exist=par_exists)

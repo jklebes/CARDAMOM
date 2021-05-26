@@ -2,6 +2,14 @@ module weather_generator
 
   implicit none
 
+  !!!!!!!!!!!
+  ! Authorship contributions
+  !
+  ! Created: O. Browne (University of Edinburgh)
+  ! Subsequent contributions by:
+  ! T. L. Smallman (University of Edinburgh, t.l.smallman@ed.ac.uk)
+  ! For exceptions and further references see code within
+
   private ! assume all private unless specifically stated
 
   public :: hours_per_day, daily_to_hourly
@@ -229,7 +237,7 @@ module weather_generator
                print*,"At step ",hr," of ",hours_per_day,"on day ",day_number," at latitude ",latitude*(180/pi), &
                       "the cosine of the solar zenith angle is ",cos_solar_zenith_angle(hr)
            endif
-  
+
        endif ! is the sun up?
 
     enddo ! loop ours of day
@@ -301,7 +309,7 @@ module weather_generator
        sum_one = sum_one + ( hr - hottest_time )
        sum_two = sum_two + ( hours_per_day - real(hr) )
     enddo
-    sat_at_midnight = ( 1.0 / sum_one) * & 
+    sat_at_midnight = ( 1.0 / sum_one) * &
                     ( (hours_per_day - hottest_time) * (hours_per_day * Tavg_day - sum(t_hr(1:index_hot_time))) &
                     - tmax_day * sum_two )
 

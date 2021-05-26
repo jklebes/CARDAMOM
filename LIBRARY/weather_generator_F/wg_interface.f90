@@ -1,4 +1,12 @@
 
+  !!!!!!!!!!!
+  ! Authorship contributions
+  !
+  ! Created: O. Browne (University of Edinburgh)
+  ! Subsequent contributions by:
+  ! T. L. Smallman (University of Edinburgh, t.l.smallman@ed.ac.uk)
+  ! For exceptions and further references see code within
+
   !! This provides an interface b/wn the wrapper and whatever !!
   !! weather generator we wish to call.                       !!
 

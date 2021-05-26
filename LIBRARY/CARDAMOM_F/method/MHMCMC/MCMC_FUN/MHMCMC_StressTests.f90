@@ -40,7 +40,6 @@ module MHMCMC_StressTests
 !                                 circle_obs_mean = circle_par_1 * circle_par_2 ** 2d0, &
 !                                 circle_obs_unc  = 0.2d0
 
-
   contains
   !
   !--------------------------------------------------------------------

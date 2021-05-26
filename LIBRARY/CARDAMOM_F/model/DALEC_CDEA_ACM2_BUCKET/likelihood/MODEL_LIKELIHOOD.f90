@@ -658,8 +658,8 @@ module model_likelihood_module
 
     end if ! EDC2 == 1 .or. DIAG == 1
 
-    ! The maximum value for GPP must be greater than 0
-    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_GPP) == 0d0) then
+    ! The maximum value for GPP must be greater than 0, 0.001 to guard against precision values
+    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_GPP) < 0.001d0) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(35) = 0
     end if
 
