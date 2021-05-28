@@ -47,4 +47,7 @@ extract_Cwood_potential<- function(timestep_days,spatial_type,resolution,grid_ty
    # pass the information back
    return(list(Cwood_stock = Cwood, Cwood_stock_unc = Cwood_unc))
 
-} # end of function
+} # end function extract_Cwood_potential
+
+## Use byte compile
+extract_Cwood_potential<-cmpfun(extract_Cwood_potential)

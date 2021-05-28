@@ -26,3 +26,6 @@ cardamom_write_project_info <- function (PROJECT) {
          write(paste(pdetails$parameter_names[n],"min and max values ",Pmin[n]," - ",Pmax[n],sep=""),sep=",",ncolumns = 1,file=file,append="T")
     }
 }
+
+## Use byte compile
+cardamom_write_project_info<-cmpfun(cardamom_write_project_info)

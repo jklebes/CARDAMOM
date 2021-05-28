@@ -26,4 +26,7 @@ calc_pixel_area<-function(latitude,longitude,resolution) {
     # return to user in meters
     return(pixel_area)
 
-}
+} # end function
+
+## Use byte compile
+calc_pixel_area<-cmpfun(calc_pixel_area)

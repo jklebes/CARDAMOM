@@ -148,22 +148,9 @@ extract_forestry_information<-function(timestep_days,spatial_type,resolution,gri
       # we will not insert the deforestation event into the correct location
       doy_out=0
       for (i in seq(1, length(years_to_do))) {
-        # is current year a leap or not
-        nos_days = 365
-        mod=as.numeric(years_to_do[i])-round((as.numeric(years_to_do[i])/4))*4
-        if (mod == 0) {
-          nos_days = 366
-          mod=as.numeric(years_to_do[i])-round((as.numeric(years_to_do[i])/100))*100
-          if (mod == 0) {
-            nos_days  = 365
-            mod=as.numeric(years_to_do[i])-round((as.numeric(years_to_do[i])/400))*400
-            if (mod == 0) {
-              nos_days  = 366
-            }
-          }
-        }
-        # count up days needed
-        doy_out=append(doy_out,1:nos_days)
+           nos_days = nos_days_in_year(years_to_do[i])
+           # count up days needed
+           doy_out=append(doy_out,1:nos_days)
       }
       doy_out=doy_out[-1]
 
@@ -215,4 +202,7 @@ extract_forestry_information<-function(timestep_days,spatial_type,resolution,gri
   # return time series and updates pft information
   return(list(ctessel_pft=ctessel_pft,deforestation=deforestation,yield_class=yield_class,age=age))
 
-} # end function
+} # end function extract_forestry_information
+
+## Use byte compile
+extract_forestry_information<-cmpfun(extract_forestry_information)

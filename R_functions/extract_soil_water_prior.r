@@ -54,4 +54,7 @@ extract_soilwater_initial<- function(spatial_type,resolution,grid_type,latlon_in
 	# pass the information back
 	return(list(soil_water = soilwater,soil_water_unc = soilwater_unc))
 
-} # end of function
+} # end function extract_soilwater_initial
+
+## Use byte compile
+extract_soilwater_initial<-cmpfun(extract_soilwater_initial)

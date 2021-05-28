@@ -28,4 +28,7 @@ have_chains_converged<-function (param_sets) {
       # return the result
       return(converged)
 
-} # end of function
+} # end function have_chains_converged
+
+## Use byte compile
+have_chains_converged<-cmpfun(have_chains_converged)

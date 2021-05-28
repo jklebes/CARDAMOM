@@ -51,4 +51,7 @@ extract_soilgrid_Csom<-function(spatial_type,resolution,grid_type,latlon_wanted,
   return(list(Csom_initial = Csom, Csom_initial_unc = Csom_unc))
   #return(list(Csom_initial = Csom, Csom_initial_unc = 500))
 
-} # extract_soilgrid_Csom
+} # end function extract_soilgrid_Csom
+
+## Use byte compile
+extract_soilgrid_Csom<-cmpfun(extract_soilgrid_Csom)

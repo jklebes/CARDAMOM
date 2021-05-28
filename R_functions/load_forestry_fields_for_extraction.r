@@ -290,4 +290,7 @@ load_forestry_fields_for_extraction<-function(latlon_in,forestry_source,years_to
 
   }
 
-} # end of function
+} # end function load_forestry_fields_for_extraction
+
+## Use byte compile
+load_forestry_fields_for_extraction<-cmpfun(load_forestry_fields_for_extraction)

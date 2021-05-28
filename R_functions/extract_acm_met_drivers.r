@@ -51,4 +51,7 @@ extract_acm_met_drivers<-function(PROJECT,latlon_wanted,site_name) {
              ,lai=lai_out,lat=lat_out,wind_spd=wind_out,precip=precip_out,Rtot=Rtot_out,top_sand = top_sand
              ,bot_sand = bot_sand, top_clay  = top_clay, bot_clay = bot_clay))
 
-} # function end
+} # function end extract_acm_met_drivers
+
+## Use byte compile
+extract_acm_met_drivers<-cmpfun(extract_acm_met_drivers)

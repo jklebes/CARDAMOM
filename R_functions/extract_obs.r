@@ -659,4 +659,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
       ,Cwood_potential = Cwood_potential, Cwood_potential_unc = Cwood_potential_unc))
 
 
-    } # end of function
+} # end function extract_obs
+
+## Use byte compile
+extract_obs<-cmpfun(extract_obs)

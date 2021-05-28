@@ -25,3 +25,6 @@ ecdf_execute<- function(command,cluster_address) {
     system('rm sshOut')
 
 } # end function ecdf_execute
+
+## Use byte compile
+ecdf_execute<-cmpfun(ecdf_execute)

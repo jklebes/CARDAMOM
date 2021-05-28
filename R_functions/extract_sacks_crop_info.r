@@ -61,4 +61,7 @@ extract_sacks_crop_info<- function(spatial_type,resolution,grid_type,latlon_in,c
 	# pass the information back
 	return(list(plant=plant,plant_range=plant_range,harvest=harvest,harvest_range=harvest_range))
 
-} # end of function
+} # end function extract_sacks_crop_info
+
+## Use byte compile
+extract_sacks_crop_info<-cmpfun(extract_sacks_crop_info)

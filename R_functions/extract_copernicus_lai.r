@@ -145,4 +145,7 @@ extract_copernicus_lai<- function(timestep_days,spatial_type,resolution,grid_typ
   output = list(lai = lai_out, lai_unc = lai_unc_out)
   return(output)
 
-} # end of function
+} # end function extract_copernicus_lai
+
+## Use byte compile
+extract_copernicus_lai<-cmpfun(extract_copernicus_lai)

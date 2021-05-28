@@ -154,3 +154,6 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
   gc(reset=TRUE, verbose=FALSE)
 
 } # end function generate_simplified_stock_and_fluxe_maps
+
+## Use byte compile
+generate_simplified_stock_and_flux_maps<-cmpfun(generate_simplified_stock_and_flux_maps)

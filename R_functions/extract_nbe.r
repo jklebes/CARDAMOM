@@ -127,4 +127,7 @@ extract_nbe<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in
   output = list(nbe = nbe_out, nbe_unc = nbe_unc_out)
   return(output)
 
-} # end of function
+} # end function extract_nbe
+
+## Use byte compile
+extract_nbe<-cmpfun(extract_nbe)

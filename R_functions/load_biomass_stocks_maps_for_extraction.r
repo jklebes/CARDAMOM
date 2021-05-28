@@ -978,4 +978,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                     biomass_gCm2 = -9999, biomass_uncertainty_gCm2 = -9999))
     } # which biomass source?
 
-} # function end
+} # function end load_biomass_stocks_maps_for_extraction
+
+## Use byte compile
+load_biomass_stocks_maps_for_extraction<-cmpfun(load_biomass_stocks_maps_for_extraction)

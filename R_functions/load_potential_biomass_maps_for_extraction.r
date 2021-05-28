@@ -45,4 +45,7 @@ load_potential_biomass_maps_for_extraction<-function(latlon_in,Cwood_potential_s
    } # Cwood_potential_source
 
 
-} # function end
+} # function end load_potential_biomass_maps_for_extraction
+
+## Use byte compile
+load_potential_biomass_maps_for_extraction<-cmpfun(load_potential_biomass_maps_for_extraction)

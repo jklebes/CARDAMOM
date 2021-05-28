@@ -46,4 +46,7 @@ extract_Cwood_initial<- function(spatial_type,resolution,grid_type,latlon_in,Cwo
    # pass the information back
    return(list(Cwood_stock = Cwood, Cwood_stock_unc = Cwood_unc))
 
-} # end of function
+} # end function extract_Cwood_initial
+
+## Use byte compile
+extract_Cwood_initial<-cmpfun(extract_Cwood_initial)

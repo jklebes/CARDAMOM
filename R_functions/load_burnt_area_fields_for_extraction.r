@@ -194,3 +194,6 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
     } # if MPI biomass
 
 } # function end
+
+## Use byte compile
+load_burnt_area_fields_for_extraction<-cmpfun(load_burnt_area_fields_for_extraction)

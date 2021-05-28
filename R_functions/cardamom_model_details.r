@@ -300,3 +300,6 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
   } # If modelname == "..."
 
 } # end function cardamom_model_details
+
+## Use byte compile
+cardamom_model_details<-cmpfun(cardamom_model_details)

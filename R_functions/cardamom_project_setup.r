@@ -311,4 +311,7 @@ cardamom_project_setup <- function (paths,PROJECT) {
     PROJECT$email=email
   }
   return(PROJECT)
-} # function end
+} # function end cardamom_project_setup
+
+## Use byte compile
+cardamom_project_setup<-cmpfun(cardamom_project_setup)

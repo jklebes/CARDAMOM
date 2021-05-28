@@ -75,4 +75,7 @@ extract_soilgrid_sand_clay<- function(spatial_type,resolution,grid_type,latlon_i
 	# pass the information back
 	return(list(top_sand=top_sand,bot_sand=bot_sand,top_clay=top_clay,bot_clay=bot_clay))
 
-} # end of function
+} # end function extract_soilgrid_sand_clay
+
+## Use byte compile
+extract_soilgrid_sand_clay<-cmpfun(extract_soilgrid_sand_clay)

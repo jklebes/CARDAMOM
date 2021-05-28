@@ -55,4 +55,6 @@ extract_hwsd_Csom<- function(spatial_type,resolution,grid_type,latlon_in,Csom_al
 	# pass the information back
 	return(Csom)
 
-} # end of function
+} # end function extract_hwsd_Csom
+## Use byte compile
+extract_hwsd_Csom<-cmpfun(extract_hwsd_Csom)

@@ -64,10 +64,10 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
             }
        }
        # count up days needed
-       doy_out=append(doy_out,1:nos_days)
+       doy_out = append(doy_out,1:nos_days)
   }
   # remove initial value
-  doy_out=doy_out[-1]
+  doy_out = doy_out[-1]
 
   # just incase there is no missing data we best make sure there is a value which can be assessed
   if (length(burnt_all$missing_years) == 0) { burnt_all$missing_years=1066 }
@@ -123,4 +123,7 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
   # pass the information back
   return(burnt_area=burnt_area_out)
 
-} # end of function
+} # end function extract_burnt_area_information
+
+## Use byte compile
+extract_burnt_area_information<-cmpfun(extract_burnt_area_information)
