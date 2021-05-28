@@ -64,4 +64,7 @@ read_parameter_covariance<- function(PROJECT_in,n) {
   # return the parameter solutions
   return(list(parameter_covariance = parameter_covariance, info = "dim = npar,npar,chain,2, where 2 is the initial and final covariance matrices"))
 
-} # end of function
+} # end of function read_parameter_covariance
+
+## Use byte compile
+read_parameter_covariance<-cmpfun(read_parameter_covariance)

@@ -55,4 +55,7 @@ load_sacks_calendar_fields_for_extraction<-function(latlon_in,crop_management_so
     return(list(plant=-9999,plant_range=-9999,harvest=-9999,harvest_range=-9999,lat=-9999,long=-9999))
   }
 
-} # function end
+} # function end load_sacks_calendar_fields_for_extraction
+
+## Use byte compile
+load_sacks_calendar_fields_for_extraction<-cmpfun(load_sacks_calendar_fields_for_extraction)

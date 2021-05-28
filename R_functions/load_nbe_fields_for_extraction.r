@@ -156,4 +156,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load) {
 
   } # if GEOSCHEM
 
-} # function end
+} # function end load_nbe_fields_for_extraction
+
+## Use byte compile
+load_nbe_fields_for_extraction<-cmpfun(load_nbe_fields_for_extraction)

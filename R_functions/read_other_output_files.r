@@ -58,4 +58,7 @@ read_other_output_files<- function(PROJECT_in,n,pattern_wanted) {
   # return the parameter solutions
   return(output)
 
-} # end of function
+} # end of function read_other_output_files
+
+## Use byte compile
+read_other_output_files<-cmpfun(read_other_output_files)

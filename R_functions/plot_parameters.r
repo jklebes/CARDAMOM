@@ -67,4 +67,7 @@ plot_parameters<- function(PROJECT,parameters,converged,n) {
       }
       dev.off()
 
-} # function end
+} # function end plot_parameters
+
+## Use byte compile
+plot_parameters<-cmpfun(plot_parameters)

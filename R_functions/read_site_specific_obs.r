@@ -25,4 +25,7 @@ read_site_specific_obs <- function(variable,infile) {
     # return the desired variable
     return(output)
 
-} # end of function
+} # end of function read_site_specific_obs
+
+## Use byte compile
+read_site_specific_obs<-cmpfun(read_site_specific_obs)

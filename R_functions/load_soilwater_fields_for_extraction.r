@@ -33,4 +33,7 @@ load_soilwater_fields_for_extraction<-function(latlon_in,soilwater_source) {
     return(list(soil_water=-9999,soil_water_unc = -9999,lat=-9999,long=-9999))
   }
 
-} # function end
+} # function end load_soilwater_fields_for_extraction
+
+## Use byte compile
+load_soilwater_fields_for_extraction<-cmpfun(load_soilwater_fields_for_extraction)

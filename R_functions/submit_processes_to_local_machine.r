@@ -50,4 +50,7 @@ submit_processes_to_local_machine<-function (PROJECT_in) {
     setwd(cwd) ; rm(cwd)
     print("Command issued to local machine")
 
-} # end of function
+} # end of function submit_processes_to_local_machine
+
+## Use byte compile
+submit_processes_to_local_machine<-cmpfun(submit_processes_to_local_machine)
