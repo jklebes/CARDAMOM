@@ -8,8 +8,8 @@ program cardamom_framework
                         check_for_existing_output_files,restart_flag,   &
                         update_for_restart_simulation, write_covariance_matrix, &
                         close_output_files, write_covariance_info
- use MHMCMC_module, only: MHMCMC, par_minstepsize, par_initstepsize
- use MHMCMC_StressTests, only: StressTest_likelihood, prepare_for_stress_test
+ use MHMCMC_module, only: MHMCMC, par_minstepsize, par_initstepsize, N_before_mv
+ use MHMCMC_StressTests, only: StressTest_likelihood, StressTest_sublikelihood, prepare_for_stress_test
  use model_likelihood_module, only: model_likelihood, &
                                     find_edc_initial_values, &
                                     sub_model_likelihood
@@ -123,7 +123,6 @@ program cardamom_framework
      ! We are doing a stress test
      write(*,*)"Carrying out a stress test analysis"
      write(*,*)"Any existing files will be ignored"
-     write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
 
      ! Reset interations counter
      MCOUT%nos_iterations = 0
@@ -160,14 +159,14 @@ program cardamom_framework
          MCO%nOUT = nint(dble(nOUT_save) * MCO%sub_fraction) - MCOUT%nos_iterations
          write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
          MCO%nADAPT = 100 ; MCO%fADAPT = 1d0
-         call MHMCMC(1d0,StressTest_likelihood,StressTest_likelihood)
+         call MHMCMC(1d0,StressTest_likelihood,StressTest_sublikelihood)
          ! Use the best parameter set as the starting point for the next stage
          PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
          ! Leave parameter and covariance structures as they come out form the
          ! sub-sample - but reset the number of samples used in the update
          ! weighting
          if (PI%cov .and. PI%use_multivariate) then
-             PI%Nparvar = 1d0
+             PI%Nparvar = (N_before_mv * PI%npars) + 1
          else
              ! reset the parameter step size at the beginning of each attempt
              PI%parvar = 1d0 ; PI%Nparvar = 0d0
@@ -180,8 +179,22 @@ program cardamom_framework
              end do
          endif ! do we need a new covariance matrix or can we use the existing one?
 
+         ! Assume that sub-sampling process, if completed, will use 10 % of the
+         ! simulation time therefore we want to adjust the output frequency to
+         ! correct for this
+         MCO%nOUT = max(1,nOUT_save - MCOUT%nos_iterations)
+         ! by pass read_options file for StressTest special case
+         MCO%append = 1
+         MCO%nADAPT = 1000
+         MCO%fADAPT = 0.5d0
+         MCO%randparini = .false.
+         MCO%returnpars = .false.
+         MCO%fixedpars  = .true.
+
      end if ! restart flag
 
+     ! Let the user know how many more we will propose
+     write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
      ! Call the MHMCMC
      call MHMCMC(1d0,StressTest_likelihood,StressTest_likelihood)
      ! Tell the user the best parameter set
@@ -257,7 +270,7 @@ program cardamom_framework
          ! sub-sample - but reset the number of samples used in the update
          ! weighting
          if (PI%cov .and. PI%use_multivariate) then
-             PI%Nparvar = 1d0
+             PI%Nparvar = (N_before_mv * PI%npars) + 1
          else
              ! reset the parameter step size at the beginning of each attempt
              PI%parvar = 1d0 ; PI%Nparvar = 0d0

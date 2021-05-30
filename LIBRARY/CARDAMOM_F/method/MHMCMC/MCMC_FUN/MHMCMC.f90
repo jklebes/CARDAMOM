@@ -27,7 +27,7 @@ implicit none
 private
 
 ! specify what can be seen
-public :: MHMCMC, par_minstepsize, par_initstepsize
+public :: MHMCMC, par_minstepsize, par_initstepsize, N_before_mv
 
 ! declare any module level variables needed
 
@@ -52,7 +52,7 @@ contains
   !
   !--------------------------------------------------------------------
   !
-  subroutine MHMCMC (P_target,model_likelihood_default,model_likelihood_option)
+  subroutine MHMCMC(P_target,model_likelihood_default,model_likelihood_option)
     use MCMCOPT, only: PI, MCO, MCOUT, COUNTERS
     use math_functions, only: randn, random_uniform, log_par2nor, log_nor2par, par2nor, nor2par
     use cardamom_io, only: write_parameters,write_variances,write_covariance_matrix &
