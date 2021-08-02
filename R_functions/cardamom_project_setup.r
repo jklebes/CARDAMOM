@@ -50,12 +50,12 @@ cardamom_project_setup <- function (paths,PROJECT) {
   # Check whether we have one defined already
   if (exists("request_nos_samples")) {
       nsamples = request_nos_samples
-      if (nsamples >= 1e4 & nsamples <= 200e6) {failed=FALSE} else {failed=TRUE}
+      if (nsamples >= 1e4 & nsamples <= 1000e6) {failed=FALSE} else {failed=TRUE}
   }
   # If not or not defined correctly ask the user
   while(failed) {
     nsamples=as.integer(readline("Confirm how many parameters to sample (max = 500e6)?"))
-    if (nsamples >= 1e4 & nsamples <= 500e6) {failed=FALSE} else {failed=TRUE}
+    if (nsamples >= 1e4 & nsamples <= 1000e6) {failed=FALSE} else {failed=TRUE}
   }
 
   # number of parameters to sub-sample per chain
@@ -253,7 +253,7 @@ cardamom_project_setup <- function (paths,PROJECT) {
                      " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep=""))
 #        print(paste(compiler," -O2 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
 #                     " ../model/",modelname,"/src/",modelname,"_CROP.f90",
-#                     " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90",
+#                     " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_StressTests.f90",
 #                     " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
 #                     " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep=""))
         system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/executable/cardamom.exe ",exepath,"/",exe,sep=""))

@@ -160,7 +160,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               save(parameters,drivers,states_all,site_ctessel_pft,file=outfile, compress="gzip")
           } else {
               # ...otherwise this is a grid and we want straight forward reduced dataset of common stocks and fluxes
-              num_quantiles = c(0.025,0.05,0.25,0.5,0.75,0.95,0.975) ; num_quantiles_agg = seq(0.0,1, length = 1000)
+              num_quantiles = c(0.025,0.05,0.25,0.5,0.75,0.95,0.975) ; num_quantiles_agg = seq(0.0,1, length = 100)
               na_flag = TRUE
               # Estimate multiple use fluxes
               npp = states_all$gpp_gCm2day - states_all$rauto_gCm2day
@@ -446,6 +446,8 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
       steps_per_year = floor(dim(drivers$met)[1] / nos_years)
       # Set number of final aggregated quantiles wanted
       agg_quantiles_final = seq(0,1,length.out=100)
+      # Number of iterations available for resample in aggregation process
+      agg_iter = 1e5
 
       if (file.exists(outfile_grid) == FALSE | repair == 1) {
 
@@ -629,9 +631,6 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           # Fluxes variables will be estimated as the mean flux over time
           #
 
-          # Number of iterations available for resample
-          agg_iter = length(site_output$agg_labile)
-
           # Mean stocks first
           grid_output$agg_labile_TgC = array(0, dim=c(agg_iter))
           grid_output$agg_totalC_TgC = array(0, dim=c(agg_iter))
@@ -723,47 +722,47 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                unit_adj = 1e-12 # gC --> TgC ; or kgH2O -> PgH2O
 
                # Mean stocks first
-               grid_output$agg_labile_TgC  = grid_output$agg_labile_TgC  + sample(site_output$agg_labile*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
-               grid_output$agg_totalC_TgC  = grid_output$agg_totalC_TgC  + sample(site_output$agg_totalC*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
-               grid_output$agg_dom_TgC     = grid_output$agg_dom_TgC     + sample(site_output$agg_dom*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
-               grid_output$agg_biomass_TgC = grid_output$agg_biomass_TgC + sample(site_output$agg_biomass*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
-               grid_output$agg_foliage_TgC = grid_output$agg_foliage_TgC + sample(site_output$agg_foliage*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
-               grid_output$agg_roots_TgC   = grid_output$agg_roots_TgC   + sample(site_output$agg_root*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
-               grid_output$agg_wood_TgC    = grid_output$agg_wood_TgC    + sample(site_output$agg_wood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
-               grid_output$agg_lit_TgC     = grid_output$agg_lit_TgC     + sample(site_output$agg_lit*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
-               grid_output$agg_som_TgC     = grid_output$agg_som_TgC     + sample(site_output$agg_som*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
+               grid_output$agg_labile_TgC  = grid_output$agg_labile_TgC  + sample(site_output$agg_labile*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
+               grid_output$agg_totalC_TgC  = grid_output$agg_totalC_TgC  + sample(site_output$agg_totalC*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
+               grid_output$agg_dom_TgC     = grid_output$agg_dom_TgC     + sample(site_output$agg_dom*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
+               grid_output$agg_biomass_TgC = grid_output$agg_biomass_TgC + sample(site_output$agg_biomass*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
+               grid_output$agg_foliage_TgC = grid_output$agg_foliage_TgC + sample(site_output$agg_foliage*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
+               grid_output$agg_roots_TgC   = grid_output$agg_roots_TgC   + sample(site_output$agg_root*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
+               grid_output$agg_wood_TgC    = grid_output$agg_wood_TgC    + sample(site_output$agg_wood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
+               grid_output$agg_lit_TgC     = grid_output$agg_lit_TgC     + sample(site_output$agg_lit*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
+               grid_output$agg_som_TgC     = grid_output$agg_som_TgC     + sample(site_output$agg_som*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
                # Stock changes second
-               grid_output$agg_dCtotalC_TgC  = grid_output$agg_dCtotalC_TgC + sample(site_output$agg_dCtotalC*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
-               grid_output$agg_dCdom_TgC     = grid_output$agg_dCdom_TgC + sample(site_output$agg_dCdom*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
-               grid_output$agg_dCbio_TgC     = grid_output$agg_dCbio_TgC + sample(site_output$agg_dCbio*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
-               grid_output$agg_dCfoliage_TgC = grid_output$agg_dCfoliage_TgC + sample(site_output$agg_dCfoliage*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
-               grid_output$agg_dCroots_TgC   = grid_output$agg_dCroots_TgC + sample(site_output$agg_dCroot*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
-               grid_output$agg_dCwood_TgC    = grid_output$agg_dCwood_TgC + sample(site_output$agg_dCwood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
-               grid_output$agg_dClit_TgC     = grid_output$agg_dClit_TgC + sample(site_output$agg_dClitter*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
-               grid_output$agg_dCsom_TgC     = grid_output$agg_dCsom_TgC + sample(site_output$agg_dCsom*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
+               grid_output$agg_dCtotalC_TgC  = grid_output$agg_dCtotalC_TgC + sample(site_output$agg_dCtotalC*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
+               grid_output$agg_dCdom_TgC     = grid_output$agg_dCdom_TgC + sample(site_output$agg_dCdom*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
+               grid_output$agg_dCbio_TgC     = grid_output$agg_dCbio_TgC + sample(site_output$agg_dCbio*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
+               grid_output$agg_dCfoliage_TgC = grid_output$agg_dCfoliage_TgC + sample(site_output$agg_dCfoliage*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
+               grid_output$agg_dCroots_TgC   = grid_output$agg_dCroots_TgC + sample(site_output$agg_dCroot*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
+               grid_output$agg_dCwood_TgC    = grid_output$agg_dCwood_TgC + sample(site_output$agg_dCwood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
+               grid_output$agg_dClit_TgC     = grid_output$agg_dClit_TgC + sample(site_output$agg_dClitter*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
+               grid_output$agg_dCsom_TgC     = grid_output$agg_dCsom_TgC + sample(site_output$agg_dCsom*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
                # Fluxes third
-               grid_output$agg_nee_TgCyr = grid_output$agg_nee_TgC + sample(site_output$agg_nee*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
-               grid_output$agg_gpp_TgCyr = grid_output$agg_gpp_TgC + sample(site_output$agg_gpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
-               grid_output$agg_rauto_TgCyr = grid_output$agg_rauto_TgC + sample(site_output$agg_rauto*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
-               grid_output$agg_rhet_TgCyr = grid_output$agg_rhet_TgC + sample(site_output$agg_rhet*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
-               grid_output$agg_reco_TgCyr = grid_output$agg_reco_TgC + sample(site_output$agg_reco*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
-               grid_output$agg_npp_TgCyr = grid_output$agg_npp_TgC + sample(site_output$agg_npp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
-               grid_output$agg_fnpp_TgCyr = grid_output$agg_fnpp_TgC + sample(site_output$agg_fnpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
-               grid_output$agg_rnpp_TgCyr = grid_output$agg_rnpp_TgC + sample(site_output$agg_rnpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
-               grid_output$agg_wnpp_TgCyr = grid_output$agg_wnpp_TgC + sample(site_output$agg_wnpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
-               grid_output$agg_harvest_TgCyr = grid_output$agg_harvest_TgC + sample(site_output$agg_harvest*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
-               grid_output$agg_fire_TgCyr = grid_output$agg_fire_TgC + sample(site_output$agg_fire*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
-               grid_output$agg_nbe_TgCyr = grid_output$agg_nbe_TgC + sample(site_output$agg_nbe*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
-               grid_output$agg_nbp_TgCyr = grid_output$agg_nbp_TgC + sample(site_output$agg_nbp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
+               grid_output$agg_nee_TgCyr = grid_output$agg_nee_TgC + sample(site_output$agg_nee*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
+               grid_output$agg_gpp_TgCyr = grid_output$agg_gpp_TgC + sample(site_output$agg_gpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
+               grid_output$agg_rauto_TgCyr = grid_output$agg_rauto_TgC + sample(site_output$agg_rauto*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
+               grid_output$agg_rhet_TgCyr = grid_output$agg_rhet_TgC + sample(site_output$agg_rhet*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
+               grid_output$agg_reco_TgCyr = grid_output$agg_reco_TgC + sample(site_output$agg_reco*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
+               grid_output$agg_npp_TgCyr = grid_output$agg_npp_TgC + sample(site_output$agg_npp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
+               grid_output$agg_fnpp_TgCyr = grid_output$agg_fnpp_TgC + sample(site_output$agg_fnpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
+               grid_output$agg_rnpp_TgCyr = grid_output$agg_rnpp_TgC + sample(site_output$agg_rnpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
+               grid_output$agg_wnpp_TgCyr = grid_output$agg_wnpp_TgC + sample(site_output$agg_wnpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
+               grid_output$agg_harvest_TgCyr = grid_output$agg_harvest_TgC + sample(site_output$agg_harvest*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
+               grid_output$agg_fire_TgCyr = grid_output$agg_fire_TgC + sample(site_output$agg_fire*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
+               grid_output$agg_nbe_TgCyr = grid_output$agg_nbe_TgC + sample(site_output$agg_nbe*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
+               grid_output$agg_nbp_TgCyr = grid_output$agg_nbp_TgC + sample(site_output$agg_nbp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
                # Models where we have a CWD pool and therefore a total dead organic matter combination also
                if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
-                   grid_output$agg_litwood_TgC = grid_output$agg_litwood_TgC + sample(site_output$agg_litwood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
-                   grid_output$agg_dClitwood_TgC = grid_output$agg_dClitwood_TgC + sample(site_output$agg_dClitwood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = FALSE)
+                   grid_output$agg_litwood_TgC = grid_output$agg_litwood_TgC + sample(site_output$agg_litwood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
+                   grid_output$agg_dClitwood_TgC = grid_output$agg_dClitwood_TgC + sample(site_output$agg_dClitwood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
                }
                # Finally water cycle specific if available
                if (length(which(names(site_output) == "evap_kgH2Om2day")) > 0) {
                    # evapotranspiration (Etrans + Esoil + Ewetcanopy)
-                   grid_output$agg_evap_PgH2Oyr = grid_output$agg_evap_PgH2Oyr + sample(site_output$agg_evap*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = FALSE)
+                   grid_output$agg_evap_PgH2Oyr = grid_output$agg_evap_PgH2Oyr + sample(site_output$agg_evap*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
                }
                # now assign to correct location in array
                # Stocks first

@@ -483,7 +483,7 @@ module model_likelihood_module
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                    etol = 0.30d0 !0.10d0 !0.05d0
+                                    etol = 0.20d0 !0.10d0 !0.05d0
 
     ! update initial values
     DIAG = EDCD%DIAG
@@ -650,13 +650,13 @@ module model_likelihood_module
         end do
         ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
         n = 4
-        if (abs(log(Fin(n)/Fout(n))) > EQF5) then
+        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
         end if
         if (abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
         end if
-        ! Dead pools
+        ! Fine litter and soil
         do n = 5, 6
            ! Restrict rates of increase
            if (abs(log(Fin(n)/Fout(n))) > EQF2) then
@@ -667,6 +667,16 @@ module model_likelihood_module
                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            end if
         end do
+        ! Wood litter
+        n = 8
+        ! Restrict rates of increase
+        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+        end if
+        ! Restrict exponential behaviour at initialisation
+        if (abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+        end if
 
         ! Determine the steady state estimate of wood (gC/m2)
         SSwood = (Fin(4)/Fout(4)) * jan_mean_pools(4)
@@ -697,6 +707,11 @@ module model_likelihood_module
     ! The maximum value for GPP must be greater than 0, 0.001 to guard against precision values
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_GPP) < 0.001d0) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(35) = 0
+    end if
+
+    ! Prevent NPP -> foliage (FLX4,8) > NPP (GPP-Ra, FLX1-FLX3) * 0.8d0; i.e. 80 % of NPP
+    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(:,4)+M_FLUXES(:,8)) > sum(M_FLUXES(:,1)-M_FLUXES(:,3))*0.8d0 ) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(36) = 0
     end if
 
     !

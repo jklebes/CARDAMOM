@@ -297,6 +297,24 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopars=array(53,dim=c(length(ctessel_pft)))
     nofluxes=array(28,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC_GSI_DBio_FR",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC_1005") {
+    # information contains is
+    # The model name
+    # Number of met parameters
+    # Number of model parameters to be optimised
+    nopools=array(8,dim=c(length(ctessel_pft)))
+    nopars=array(37,dim=c(length(ctessel_pft)))
+    nofluxes=array(32,dim=c(length(ctessel_pft)))
+    cardamom_model_details=list(name="DALEC_1005",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC_1005a") {
+    # information contains is
+    # The model name
+    # Number of met parameters
+    # Number of model parameters to be optimised
+    nopools=array(8,dim=c(length(ctessel_pft)))
+    nopars=array(37,dim=c(length(ctessel_pft)))
+    nofluxes=array(32,dim=c(length(ctessel_pft)))
+    cardamom_model_details=list(name="DALEC_1005a",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } # If modelname == "..."
 
 } # end function cardamom_model_details

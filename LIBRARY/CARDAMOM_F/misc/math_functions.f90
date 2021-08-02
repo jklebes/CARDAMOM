@@ -129,6 +129,8 @@ module math_functions
     ! This code was based on CARDAMOM routines provided by A. A. Bloom,
     ! available at github.com/CARDAMOM-framework/CARDAMOM_2.1.6c
     ! (contact abloom@jpl.nasa.gov for access)
+    ! Translation to fortran and subsequent modifications by T. L. Smallman
+    ! University of Edinburgh, t.l.smallman@ed.ac.uk
 
     implicit none
 
@@ -174,6 +176,8 @@ module math_functions
     ! This code was based on CARDAMOM routines provided by A. A. Bloom,
     ! available at github.com/CARDAMOM-framework/CARDAMOM_2.1.6c
     ! (contact abloom@jpl.nasa.gov for access)
+    ! Translation to fortran and subsequent modifications by T. L. Smallman
+    ! University of Edinburgh, t.l.smallman@ed.ac.uk
 
     implicit none
 

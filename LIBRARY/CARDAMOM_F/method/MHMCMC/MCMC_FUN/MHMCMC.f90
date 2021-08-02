@@ -38,15 +38,16 @@ double precision, allocatable, dimension(:) :: uniform_random_vector
 double precision, parameter :: par_minstepsize = 0.001d0 & ! 0.0005 -> 0.001 -> 0.01 -> 0.1 -> 0.005
                               ,par_maxstepsize = 0.01d0  &
                               ,par_initstepsize = 0.005d0
-! Optimal scaling vaire for parameter searching
-double precision :: opt_scaling ! scd = 2.381204 the optimal scaling parameter
+! Optimal scaling variable for parameter searching
+double precision :: N_before_mv_target, & !
+                    opt_scaling ! scd = 2.381204 the optimal scaling parameter
                                 ! for MCMC search, when applied to  multivariate proposal.
                                 ! NOTE 1: 2.38 / sqrt(npars) sometimes used when applied to the Cholesky
                                 ! factor. NOTE 2: 2.381204 ** 2 = 5.670132
 double precision, parameter :: beta = 0.05d0 ! weighting for gaussian step in multivariate proposals
 ! Is current proposal multivariate or not?
 logical :: multivariate_proposal = .false.
-integer, parameter :: N_before_mv = 10
+double precision, parameter :: N_before_mv = 10d0
 
 contains
   !
@@ -137,7 +138,7 @@ contains
 
     double precision, dimension(PI%npars,MCO%nADAPT) :: PARSALL ! All accepted normalised parameters since previous step adaption
     double precision :: infini &
-                       ,burn_in_period &
+                       ,burn_in_period & ! for how many proposals will we adapt the covariance matrix as a minimum
                        ,crit1  & ! random numbers log(0->1) used to accept / reject
                        ,AM_likelihood &
                        ,outputP0      &
@@ -156,6 +157,7 @@ contains
     ! Determine how long we will continue to adapt our proposal covariance
     ! matrix and use of Delayed Rejection
     burn_in_period = MCO%fADAPT*dble(MCO%nOUT)
+    N_before_mv_target = N_before_mv * dble(PI%npars)
 
     ! See step() for relevant references.
     ! scd = 2.381204 the optimal scaling parameter for MCMC search, when applied
@@ -213,7 +215,7 @@ contains
     ! checks whether the EDCs (combined with P0 not P0prior) have been met in the initial parameter set
     infini = 0d0
     if (P0 == log(infini)) then
-        write(*,*) "WARNING! P0 = ",P0," - MHMCMC will get stuck, if so please check initial conditins"
+        write(*,*) "WARNING! P0 = ",P0," - MHMCMC will get stuck, if so please check initial conditions"
         stop
     endif
 
@@ -265,7 +267,7 @@ contains
            endif
            ! Keep count of the number of accepted proposals in this local period
            N%ACCLOC = N%ACCLOC + 1d0
-           ! Accepted first proposal from multivarite
+           ! Accepted first proposal from multivariate
            if (multivariate_proposal) N%ACC_first = N%ACC_first + 1d0
 
            P0 = P ; P0prior = Pprior
@@ -308,7 +310,7 @@ contains
                ! single parameter set from each period.
                if (PI%cov) then
                    N%ACCLOC = 1d0 ; PARSALL(1:PI%npars,nint(N%ACCLOC)) = norPARS0(1:PI%npars)
-               else if (N%ACCLOC > 3d0) then
+               else if (.not.PI%cov .and. N%ACCLOC > 3d0) then
                    PARSALL(1:PI%npars,2) = PARSALL(1:PI%npars,ceiling(N%ACCLOC*0.5d0))
                    PARSALL(1:PI%npars,3) = PARSALL(1:PI%npars,nint(N%ACCLOC))
                    N%ACCLOC = 3d0
@@ -349,7 +351,7 @@ contains
     ! set the initial parameter set the final one accepted
     PI%parini(1:PI%npars) = PARS0(1:PI%npars)
     ! record how many iterations were taken to complete
-    MCOUT%nos_iterations = MCOUT%nos_iterations + dble(N%ITER)
+    MCOUT%nos_iterations = MCOUT%nos_iterations + N%ITER
     ! set flag MCMC completed
     MCOUT%complete = 1
     ! tidy up
@@ -357,8 +359,10 @@ contains
 
     ! completed MHMCMC loop
     write(*,*)"MHMCMC loop completed"
-    write(*,*)"Overall final acceptance rate = ",N%ACC / N%ITER
+    write(*,*)"Overall acceptance rate     = ",N%ACC / N%ITER
+    write(*,*)"Final local acceptance rate = ",N%ACCRATE
     write(*,*)"Best log-likelihood = ",Pmax
+    !write(*,*)"Best parameters = ",MCOUT%best_pars
 
   end subroutine MHMCMC
   !
@@ -388,7 +392,7 @@ contains
     integer p, i, info ! counters
     double precision, dimension(PI%npars,PI%npars) :: cholesky, cov_backup
     double precision, dimension(PI%npars) :: mean_par_backup
-    double precision :: Nparvar_backup
+    double precision :: Nparvar_backup, Nparvar_local
 
     ! if we have a covariance matrix then we want to update it, if not then we need to create one
     if (PI%cov) then
@@ -396,9 +400,14 @@ contains
         ! Increment the variance-covariance matrix with new accepted parameter sets
         ! NOTE: that this also increments the total accepted counter (PI%Nparvar)
         cov_backup = PI%covariance ; mean_par_backup = PI%mean_par ; Nparvar_backup = PI%Nparvar
+!        call increment_covariance_matrix(PARSALL(1:PI%npars,1:nint(N%ACCLOC)),PI%mean_par,PI%npars &
+!                                        ,PI%Nparvar,nint(N%ACCLOC),PI%covariance)
+        ! Have started hardcoding a maximum number of observations to be 100.
+        ! While not strictly following Haario et al., (2001) or Roberts and Rosenthal, (2009)
+        ! this allows for the covariance matrix to be more responsive to its local environment.
+        Nparvar_local = min(N_before_mv_target,Nparvar_backup)
         call increment_covariance_matrix(PARSALL(1:PI%npars,1:nint(N%ACCLOC)),PI%mean_par,PI%npars &
-                                        ,PI%Nparvar,nint(N%ACCLOC),PI%covariance)
-
+                                        ,Nparvar_local,nint(N%ACCLOC),PI%covariance)
         ! Calculate the cholesky factor as this includes a determination of
         ! whether the covariance matrix is positive definite.
         cholesky = PI%covariance
@@ -491,8 +500,7 @@ contains
 
     ! declare local variables
     integer :: p
-    double precision :: rn(PI%npars), mu(PI%npars), rn2(PI%npars) &
-                       ,tmp
+    double precision :: rn(PI%npars), mu(PI%npars), rn2(PI%npars)
 
     ! reset values
     mu = 0d0
@@ -507,15 +515,13 @@ contains
         ! and reset uniform counter
         uniform = 1
     endif
-    ! Draw from uniform distribution to determine whether multivariate step will be used
-    tmp = uniform_random_vector(uniform) ; uniform = uniform + 1
 
     ! Increment step size via different proposal based on whether we have a sufficiently development covariance matrix
     ! Splitting step calculation based on number of parameter vectors accepted
     ! is linked to the need build a covariance matrix prior to multivariate
     ! sampling.
     ! See Roberts and Rosenthal, Examples of Adaptive MCMC, J. Comp. Graph. Stat. 18:349-367, 2009.
-    if ((PI%use_multivariate .and. nint(PI%Nparvar) > N_before_mv*PI%npars)) then
+    if ((PI%use_multivariate .and. PI%Nparvar > N_before_mv_target)) then
 
         ! Is this step a multivariate proposal or not
         multivariate_proposal = .true.
@@ -537,7 +543,7 @@ contains
         ! and references therein. See also, Roberts & Rosenthal (2009) for beta scaling.
         norpars = norpars0 + (rn * opt_scaling * (1d0-beta)) + (par_minstepsize * rn2 * beta)
 
-    else ! nint(PI%Nparvar) > N_before_mv*PI%npars .and. tmp > beta
+    else ! nint(PI%Nparvar) > N_before_mv*PI%npars
 
        ! is this step a multivariate proposal or not
        multivariate_proposal = .false.
@@ -553,7 +559,7 @@ contains
        ! Draw from uniform distribution to determine which step size is used
        norpars = norpars0 + (par_minstepsize*rn2)
 
-    end if ! nint(PI%Nparvar) > 10*PI%npars .and. tmp > beta
+    end if ! nint(PI%Nparvar) > 10*PI%npars
 
     ! reverse normalisation on the new parameter step
     do p = 1, PI%npars

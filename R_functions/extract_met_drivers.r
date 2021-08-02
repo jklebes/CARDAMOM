@@ -257,17 +257,17 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
           vpd_lagged_agg=array(NA,dim=length(run_day_selector))
           avgTemp_agg=array(NA,dim=length(run_day_selector))
           for (y in seq(1,length(run_day_selector))) {
-               swrad_agg[y]=mean(swrad_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
-               maxt_agg[y]=mean(maxt_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
-               mint_agg[y]=mean(mint_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
-               avgTemp_agg[y]=mean(avgTemp_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
-               wind_spd_agg[y]=mean(wind_spd_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
-               precip_agg[y]=mean(precip_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
-               co2_agg[y]=mean(co2_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
-               avgTmax_agg[y]=mean(avgTmax_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
-               vpd_agg[y]=mean(vpd_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
-               vpd_lagged_agg[y]=mean(vpd_lagged_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
-               photoperiod_agg[y]=mean(photoperiod_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]])
+               swrad_agg[y]=mean(swrad_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
+               maxt_agg[y]=mean(maxt_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
+               mint_agg[y]=mean(mint_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
+               avgTemp_agg[y]=mean(avgTemp_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
+               wind_spd_agg[y]=mean(wind_spd_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
+               precip_agg[y]=mean(precip_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
+               co2_agg[y]=mean(co2_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
+               avgTmax_agg[y]=mean(avgTmax_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
+               vpd_agg[y]=mean(vpd_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
+               vpd_lagged_agg[y]=mean(vpd_lagged_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
+               photoperiod_agg[y]=mean(photoperiod_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
           }
           # update with new output information
           swrad_out=swrad_agg ; maxt_out=maxt_agg ; mint_out=mint_agg

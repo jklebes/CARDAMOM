@@ -387,7 +387,6 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                  # What year of the analysis does the data fall?
                  obs_step = which(run_day_selector >= floor(which(analysis_years == years_with_obs[t]) * 365.25))[1]
                  obs_step = obs_step - (steps_per_year-1)
-
                  # Combine with the other time step
                  if (exists("place_obs_in_step")) {
                      # Output variables already exits to append them
@@ -421,7 +420,6 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         idim = dim(lat)[1] ; jdim = dim(long)[2] ; tdim = length(biomass_gCm2) / (idim * jdim)
         biomass_gCm2 = array(biomass_gCm2, dim=c(idim,jdim,tdim))
         biomass_uncertainty_gCm2 = array(biomass_uncertainty_gCm2, dim=c(idim,jdim,tdim))
-
         if (done_lat) {
             # Output variables
             return(list(place_obs_in_step = place_obs_in_step, lat = lat, long = long,

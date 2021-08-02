@@ -479,7 +479,7 @@ contains
     dec = -23.4d0*cos((360d0*(doy+10d0)/365d0)*pi/180d0)*pi/180d0
     mult = tan(lat*pi/180.0)*tan(dec)
     if (mult >= 1d0) then
-        dayl = 2d0
+        dayl = 24d0
     else if (mult <= -1d0) then
         dayl = 0d0
     else

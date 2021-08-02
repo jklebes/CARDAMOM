@@ -179,6 +179,18 @@ generate_parameter_maps<-function(PROJECT) {
                        tmp2 = quantile(tmp2, prob = num_quantiles, na.rm=TRUE)
                        grid_parameters$MTTfire_root_years[slot_i,slot_j,] = tmp2
                        grid_parameters$MTTfire_wood_years[slot_i,slot_j,] = tmp2
+                   # (fire*cc) + (fire*(1-cc)*(1-rfac))
+                   } else if (PROJECT$model$name == "DALEC_1005" | PROJECT$model$name == "DALEC_1005a") {
+                       # Use the model calibrated resiliance factors
+                       # Foliage
+                       tmp2 = ((tmp * parameters[28,,]) + (tmp * (1-parameters[28,,]) * (1-parameters[31,,]))) ** -1
+                       tmp2 = quantile(tmp2, prob = num_quantiles, na.rm=TRUE)
+                       grid_parameters$MTTfire_foliar_years[slot_i,slot_j,] = tmp2
+                       # Currently fine roots and wood have a commmon rfac and combustion completeness
+                       tmp2 = ((tmp * parameters[29,,]) + (tmp * (1-parameters[29,,]) * (1-parameters[31,,]))) ** -1
+                       tmp2 = quantile(tmp2, prob = num_quantiles, na.rm=TRUE)
+                       grid_parameters$MTTfire_root_years[slot_i,slot_j,] = tmp2
+                       grid_parameters$MTTfire_wood_years[slot_i,slot_j,] = tmp2
                    } else {
                        # Use default assumptions
                        tmp2 = ((tmp * cf[2]) + (tmp * (1-cf[2]) * (1-rfac[2]))) ** -1
@@ -242,7 +254,8 @@ generate_parameter_maps<-function(PROJECT) {
           PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT" |
           PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALEC" |
           PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_BUCKET_CanAGE" |
-          PROJECT$model$name == "DALEC_G5" | PROJECT$model$name == "DALEC_G6") {
+          PROJECT$model$name == "DALEC_G5" | PROJECT$model$name == "DALEC_G6" |
+          PROJECT$model$name == "DALEC_1005" | PROJECT$model$name == "DALEC_1005a") {
 
           # remove non-constrained parameters (i.e. those not actually used in this analysis)
           initial_conditions=c(18:23)
@@ -254,6 +267,8 @@ generate_parameter_maps<-function(PROJECT) {
               par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,30,31,32,33,37),median_loc]
           } else if (PROJECT$model$name == "DALEC_G5" | PROJECT$model$name == "DALEC_G6") {
               par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,37),median_loc]
+          } else if (PROJECT$model$name == "DALEC_1005" | PROJECT$model$name == "DALEC_1005a") {
+              par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,27,36),median_loc]
           } # PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR"
 
           # now normalise the dataset
@@ -311,7 +326,8 @@ generate_parameter_maps<-function(PROJECT) {
       PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT" |
       PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_GSI_BUCKET" |
       PROJECT$model$name == "DALEC" | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_BUCKET_CanAGE" |
-      PROJECT$model$name == "DALEC_G5" | PROJECT$model$name == "DALEC_G6") {
+      PROJECT$model$name == "DALEC_G5" | PROJECT$model$name == "DALEC_G6" |
+      PROJECT$model$name == "DALEC_1005" | PROJECT$model$name == "DALEC_1005a") {
       jpeg(file=paste(PROJECT$figpath,"Cluster_map_of_median_parameters_",PROJECT$name,".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
       image.plot(grid_parameters$uk_cluster_pft, main=paste("Cluster analysis potential PFT map",sep=""),axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))

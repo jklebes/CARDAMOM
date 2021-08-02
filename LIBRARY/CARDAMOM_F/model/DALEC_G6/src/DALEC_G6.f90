@@ -1630,7 +1630,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     rb_mol_1 = (gb_mol)**(-1d0)
 
     ! Temperature adjustments for Michaelis-Menten coefficients
-    ! for CO2 (kc) and O2 (ko) and CO2 compensation point
+    ! for CO2 (kc) and O2 (ko; in Farquhar model) and CO2 compensation point
     ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
     co2_half_sat   = arrhenious(kc_saturation,kc_half_sat_conc,leafT)
     co2_comp_point = arrhenious(co2comp_saturation,co2comp_half_sat_conc,leafT)

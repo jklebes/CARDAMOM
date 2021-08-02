@@ -11,6 +11,7 @@ module CARBON_MODEL_MOD
   ! Bloom & Williams (2015), https://doi.org/10.5194/bg-12-1299-2015.
   ! Smallman & Williams (2019) https://doi.org/10.5194/gmd-12-2227-2019.
   ! Thomas et al., (2019), https://doi.org/10.1029/2019MS001679
+  ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
   ! This code is based on that created by A. A. Bloom (UoE, now at JPL, USA).
   ! Subsequent modifications by:
   ! T. L. Smallman (University of Edinburgh, t.l.smallman@ed.ac.uk)
@@ -995,7 +996,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, intent(in) :: gs
 
     ! declare local variables
-    double precision :: pp, qq, mult, rc, pd
+    double precision :: pp, qq, mult, rc, pd, ci_light, tmp_pl
 
     !
     ! Diffusion limited photosynthesis

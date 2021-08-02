@@ -62,7 +62,7 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
 
   # create a map summarising the rooting depth information
   mean_rooting_depth = NA
-  if (PROJECT$model$name ==  "DALEC" | PROJECT$model$name == "DALEC_BUCKET" |
+  if (PROJECT$model$name == "DALEC" | PROJECT$model$name == "DALEC_BUCKET" |
       PROJECT$model$name == "DALEC_G5" | PROJECT$model$name == "DALEC_G6" |
       PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALEC_BUCKET_CanAGE") {
 
@@ -115,11 +115,11 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
        dev.off()
 
        # create distribution information
-       jpeg(file=paste(PROJECT$figpath,"grid_mean_hist_",par_names[p],"_",PROJECT$name,".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
-       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.8), omi=c(0.2, 0.2, 0.2, 0.40))
-       info = paste("Distribution of median estimates: ",par_names[p], sep="")
-       hist(as.vector(grid_output[[pp]][,,median_loc]), main=info, col = "grey", cex.main=2.4, cex=1.5)
-       dev.off()
+#       jpeg(file=paste(PROJECT$figpath,"grid_mean_hist_",par_names[p],"_",PROJECT$name,".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+#       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.8), omi=c(0.2, 0.2, 0.2, 0.40))
+#       info = paste("Distribution of median estimates: ",par_names[p], sep="")
+#       hist(as.vector(grid_output[[pp]][,,median_loc]), main=info, col = "grey", cex.main=2.4, cex=1.5)
+#       dev.off()
 
   } # loop through all "grid_output" objects
 

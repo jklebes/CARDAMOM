@@ -81,6 +81,10 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     modelid = 32
   } else if (modelname == "DALEC_G6"){
     modelid = 33
+  } else if (modelname == "DALEC_1005"){
+    modelid = 34
+  } else if (modelname == "DALEC_1005a"){
+    modelid = 35
   }
 
   # some drivers may be passed as single values assuming this will apply across the whole time series
@@ -127,7 +131,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       MET[,16] = pmax(0,met$vpd)      # Pa
   }
 
-  # Create time series observation matrix, i.e. things with uncertainty associated. 
+  # Create time series observation matrix, i.e. things with uncertainty associated.
   # Currently space for 18 time series of observation and its uncertainty.
   # Uncertainty is assumed to be the Gaussian variance in same units as the observation itself.
   # NOTE: that not all models are currently coded to be compatible with all observation streams.
@@ -148,23 +152,23 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   OBSMAT[,13] = OBS$Cwood_stock           # Wood stock (above + below; gC/m2)
   OBSMAT[,14] = OBS$Cwood_stock_unc       # Wood stock (above + below) variance
   OBSMAT[,15] = OBS$Croots_stock          # Fine root stock (gC/m2)
-  OBSMAT[,16] = OBS$Croots_stock_unc      # Fine root stock variance 
+  OBSMAT[,16] = OBS$Croots_stock_unc      # Fine root stock variance
   OBSMAT[,17] = OBS$Clit_stock            # Foliar + fine root litter stock (gC/m2)
-  OBSMAT[,18] = OBS$Clit_stock_unc        # Foliar + fine root litter stock variance 
+  OBSMAT[,18] = OBS$Clit_stock_unc        # Foliar + fine root litter stock variance
   OBSMAT[,19] = OBS$Csom_stock            # Soil organic matter stock (gC/m2)
-  OBSMAT[,20] = OBS$Csom_stock_unc        # Soil organic matter stock variance 
+  OBSMAT[,20] = OBS$Csom_stock_unc        # Soil organic matter stock variance
   OBSMAT[,21] = OBS$Cagb_stock            # Above ground biomass stock (gC/m2)
-  OBSMAT[,22] = OBS$Cagb_stock_unc        # Above ground biomass stock variance 
+  OBSMAT[,22] = OBS$Cagb_stock_unc        # Above ground biomass stock variance
   OBSMAT[,23] = -9999                     # Empty
   OBSMAT[,24] = -9999                     # Empty
   OBSMAT[,25] = -9999                     # Empty
   OBSMAT[,26] = -9999                     # Empty
   OBSMAT[,27] = OBS$Ccoarseroot_stock     # Coarse root stock (gC/m2)
-  OBSMAT[,28] = OBS$Ccoarseroot_stock_unc # Coarse root stock variance 
+  OBSMAT[,28] = OBS$Ccoarseroot_stock_unc # Coarse root stock variance
   OBSMAT[,29] = OBS$Cfolmax_stock         # Annual foliar maximum (gC/m2)
   OBSMAT[,30] = OBS$Cfolmax_stock_unc     # Annual foliar maximum variance
   OBSMAT[,31] = OBS$Evap                  # Evapotranspiration (kgH2O/m2/day)
-  OBSMAT[,32] = OBS$Evap_unc              # Evapotranspiration variance 
+  OBSMAT[,32] = OBS$Evap_unc              # Evapotranspiration variance
   OBSMAT[,33] = OBS$SWE                   # Snow water equivalent (kgH2O/m2)
   OBSMAT[,34] = OBS$SWE_unc               # Snow water equivalent variance
   OBSMAT[,35] = OBS$nbe                   # Net Biome Exchange of CO2 (gC/m2/day)
@@ -208,7 +212,30 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   if (modelname == "DALEC_CDEA" | modelname == "DALEC_CDEA_LU_FIRES") {
       PARPRIORS[2] =0.46                ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       PARPRIORS[11]=16.9                ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+      PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
 #      PARPRIORS[17]=35.5                ; PARPRIORUNC[17]=35.5*0.23 # Kiuic LCA prior
+      PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
+      PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
+      PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+      PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+      PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
+      # Other priors
+      OTHERPRIORS[5] = OBS$Cwood_potential     ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
+  } else if (modelname == "DALEC_1005") {
+      PARPRIORS[2] =0.46                ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+      PARPRIORS[11]=16.9                ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+      PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
+      PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
+      PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
+      PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+      PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+      PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
+      # Other priors
+      OTHERPRIORS[5] = OBS$Cwood_potential     ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
+  } else if (modelname == "DALEC_1005a") {
+      PARPRIORS[2] =0.46                ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+      PARPRIORS[11]=16.9                ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+      PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
       PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
       PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
       PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
@@ -225,6 +252,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[11]=21.1491            ; PARPRIORUNC[11]=8.534234*0.5 # Ceff: derived from multiple trait values from Kattge et al., (2011)
                                                                       #       Note that this prior is difference from DALEC_CDEA_LU_FIRES
                                                                       # due to the different temperature response functions used in ACM2 vs ACM 1
+      PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
 #      PARPRIORS[17]=35.5                ; PARPRIORUNC[17]=35.5*0.23 # Kiuic LCA prior
       PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
       PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -242,6 +270,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[11]=21.1491            ; PARPRIORUNC[11]=8.534234*0.5 # Ceff: derived from multiple trait values from Kattge et al., (2011)
                                                                       #       Note that this prior is difference from DALEC_CDEA_LU_FIRES
                                                                       # due to the different temperature response functions used in ACM2 vs ACM 1
+      PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
 #      PARPRIORS[17]=35.5                ; PARPRIORUNC[17]=35.5*0.23 # Kiuic LCA prior
       PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
       PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -261,6 +290,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[11]=21.1491            ; PARPRIORUNC[11]=8.534234*0.5 # Ceff: derived from multiple trait values from Kattge et al., (2011)
                                                                       #       Note that this prior is difference from DALEC_CDEA_LU_FIRES
                                                                       # due to the different temperature response functions used in ACM2 vs ACM 1
+      PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
 #      PARPRIORS[17]=35.5                ; PARPRIORUNC[17]=35.5*0.23 # Kiuic LCA prior
       PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
       PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -282,6 +312,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[11]=21.1491            ; PARPRIORUNC[11]=8.534234*0.5 # Ceff: derived from multiple trait values from Kattge et al., (2011)
                                                                       #       Note that this prior is difference from DALEC_CDEA_LU_FIRES
                                                                       # due to the different temperature response functions used in ACM2 vs ACM 1
+      PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
 #      PARPRIORS[17]=35.5                ; PARPRIORUNC[17]=35.5*0.23 # Kiuic LCA prior
       PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
       PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -303,6 +334,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[11]=21.1491            ; PARPRIORUNC[11]=8.534234*0.5 # Ceff: derived from multiple trait values from Kattge et al., (2011)
                                                                       #       Note that this prior is difference from DALEC_CDEA_LU_FIRES
                                                                       # due to the different temperature response functions used in ACM2 vs ACM 1
+      PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
 #      PARPRIORS[17]=35.5                ; PARPRIORUNC[17]=35.5*0.23 # Kiuic LCA prior
       PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
       PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -339,6 +371,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     PARPRIORS[11] = OBS$Csom_initial   ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[11] = OBS$Csom_initial_unc} # Csom + Clitter prior
   } else if (modelname == "DALEC_CDEA_FR") {
     #        PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.617705 # Ceff
+    PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
     #PARPRIORS[17]=140.0   ; PARPRIORUNC[17]=1.5 # LMA gC.m-2 prior (Duke Forest; Akers et al 2013)
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -347,6 +380,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALEC_GSI_DBio_FR") {
     PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
     PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
@@ -354,6 +388,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALECN_GSI_FR") {
     PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
     PARPRIORS[49]=0.001868948 ; PARPRIORUNC[49]=0.0005951156 # NUE**(1/-2.999299929993) (gC/gN)
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -362,6 +397,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALEC_GSI_FR") {
     #        PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.617705 # Ceff
+    PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
     PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
@@ -369,6 +405,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALEC_GSI_DFOL_FR") {
     PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.2 #1.617705 # Ceff
+    PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
     PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
@@ -376,6 +413,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALEC_GSI_DFOL_CWD_FR") {
     PARPRIORS[11]=0.2764618           ; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
 #    PARPRIORS[17]=35.5                ; PARPRIORUNC[17]=35.5*0.23 # Kiuic LCA prior
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -403,6 +441,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     } #  parameter_type
   } else if (modelname == "DALEC_GSI_DFOL_LABILE_FR") {
     PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.6 #1.617705 # Ceff
+    PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
     PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
@@ -410,6 +449,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALECN_GSI_DFOL_LABILE_FR") {
     PARPRIORS[11]=0.2432501      ; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
     #        PARPRIORS[52]=0.0479264      ; PARPRIORUNC[52]=0.01904211 # NUE**(1/-1.38513851385139) (gC/gN)
     PARPRIORS[52]=0.001868948    ; PARPRIORUNC[52]=0.0005951156 # NUE**(1/-2.999299929993) (gC/gN)
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
@@ -419,6 +459,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALECN_GSI_DFOL_LABILE_FROOT_FR") {
     PARPRIORS[11]=0.2432501      ; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
     #        PARPRIORS[52]=0.0479264      ; PARPRIORUNC[52]=0.01904211 # NUE**(1/-1.38513851385139) (gC/gN)
     PARPRIORS[52]=0.001868948    ; PARPRIORUNC[52]=0.0005951156 # NUE**(1/-2.999299929993) (gC/gN)
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
@@ -428,6 +469,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALEC_GSI_DFOL_FROOT_FR") {
     PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.1 # 1.617705 # Ceff
+    PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
     PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
@@ -435,6 +477,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALEC_GSI_MFOL_FR") {
     #        PARPRIORS[11]=20.52048   ; PARPRIORUNC[11]=1.617705 # Ceff
+    PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
     PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
@@ -442,6 +485,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
   } else if (modelname == "DALEC") {
     PARPRIORS[11]=0.2764618             ; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
 #    PARPRIORS[17]=35.5                ; PARPRIORUNC[17]=35.5*0.23 # Kiuic LCA prior
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -469,6 +513,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     } # crop or not
   } else if (modelname == "DALEC_BUCKET") {
     PARPRIORS[11]=0.2764618             ; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
 #    PARPRIORS[17]=35.5                ; PARPRIORUNC[17]=35.5*0.23 # Kiuic LCA prior
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -497,6 +542,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     } # crop or not
   } else if (modelname == "DALEC_G5") {
     PARPRIORS[11]=0.2764618             ; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
 #    PARPRIORS[17]=35.5                ; PARPRIORUNC[17]=35.5*0.23 # Kiuic LCA prior
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -529,6 +575,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     } # crop or not
   } else if (modelname == "DALEC_G6") {
     PARPRIORS[11]=0.2764618             ; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
 #    PARPRIORS[17]=35.5                ; PARPRIORUNC[17]=35.5*0.23 # Kiuic LCA prior
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -561,6 +608,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     } # crop or not
   } else if (modelname == "DALEC_BUCKET_CanAGE") {
     PARPRIORS[11]=0.2764618             ; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
 #    PARPRIORS[17]=35.5                ; PARPRIORUNC[17]=35.5*0.23 # Kiuic LCA prior
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -589,6 +637,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     } # crop or not
   } else if (modelname == "DALEC_GSI_BUCKET") {
     PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871*0.5 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
 #    PARPRIORS[17]=35.5                ; PARPRIORUNC[17]=35.5*0.23 # Kiuic LCA prior
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -616,6 +665,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     } # crop or not
   } else if (modelname == "DALECN_GSI_BUCKET") {
     PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
     PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
@@ -637,6 +687,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     } # Crop or not
   } else if (modelname == "DALECN_BUCKET") {
     PARPRIORS[11]=0.2764618		; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
+    PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
     PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
     PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
     PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior

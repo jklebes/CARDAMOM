@@ -473,7 +473,7 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, nn, nnn, DIAG, no_years, y, PEDC, steps_per_year, steps_per_month, nd, fl, &
                io_start, io_finish
-    double precision :: no_years_1, infi, SSwood, SSlitwood, SSsom !, EQF, etol
+    double precision :: no_years_1, infi, SSwood, SSlitwood, SSsom, MRTwood !, EQF, etol
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
                                             mean_pools, Fin, Fout, Rm, Rs, &
                                             Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
@@ -492,7 +492,7 @@ module model_likelihood_module
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                    etol = 0.30d0 !0.10d0 !0.05d0
+                                    etol = 0.20d0 !0.10d0 !0.05d0
 
     ! update initial values
     DIAG = EDCD%DIAG
@@ -675,7 +675,7 @@ module model_likelihood_module
         end do
         ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
         n = 4
-        if (abs(log(Fin(n)/Fout(n))) > EQF5) then
+        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
         end if
         !if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
@@ -694,6 +694,16 @@ module model_likelihood_module
                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            end if
         end do
+        ! Wood litter
+        n = 8
+        ! Restrict rates of increase
+        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+        end if
+        ! Restrict exponential behaviour at initialisation
+        if (abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+        end if
 
         ! Determine the steady state estimate of wood (gC/m2)
         SSwood = (Fin(4)/Fout(4)) * jan_mean_pools(4)
@@ -724,6 +734,17 @@ module model_likelihood_module
     ! The maximum value for GPP must be greater than 0, 0.001 to guard against precision values
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_GPP) < 0.001d0) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(35) = 0
+    end if
+
+    ! Estimate total MRT in years, we assume that this has to be a sensible number even with the turnover suppression
+    MRTwood = ((sum(M_FLUXES(:,11) + M_FLUXES(:,21) + M_FLUXES(:,27) / M_POOLS(:,4)) / dble(nodays)) * 365.25d0) ** (-1d0)
+    if ((EDC2 == 1 .or. DIAG == 1) .and. MRTwood > 600d0) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(36) = 0
+    end if
+
+    ! Prevent NPP -> foliage (FLX4,8) > NPP (GPP-Ra, FLX1-FLX3)
+    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(:,4)+M_FLUXES(:,8)) > sum(M_FLUXES(:,1)-M_FLUXES(:,3))*0.8d0 ) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(37) = 0
     end if
 
     !

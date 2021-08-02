@@ -53,7 +53,7 @@ program cardamom_framework
 
  ! declare local variables
  character(350) :: infile, outfile, solution_wanted_char, freq_print_char, freq_write_char
- integer :: solution_wanted, freq_print, freq_write, time1, time2, time3, i, n, nOUT_save
+ integer :: solution_wanted, freq_print, freq_write, time1, time2, time3, n, nOUT_save
  logical :: do_inflate
 
  ! user update
@@ -67,6 +67,8 @@ program cardamom_framework
  call get_command_argument(5 ,freq_write_char)
 
  ! now convert relevant ones to integeter
+ ! Note: that I10 is the maximum allowed with the default integer kind (kind = 4).
+ !       allow for larger number of iterations integer (kind  = 8) is needed throughout the code.
  read(solution_wanted_char,'(I10)') solution_wanted
  read(freq_print_char,'(I10)') freq_print
  read(freq_write_char,'(I10)') freq_write
@@ -158,15 +160,16 @@ program cardamom_framework
 
          MCO%nOUT = nint(dble(nOUT_save) * MCO%sub_fraction) - MCOUT%nos_iterations
          write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
-         MCO%nADAPT = 100 ; MCO%fADAPT = 1d0
+         MCO%fADAPT = 1d0 !; MCO%nADAPT = 1000
          call MHMCMC(1d0,StressTest_likelihood,StressTest_sublikelihood)
          ! Use the best parameter set as the starting point for the next stage
+! REALLY NOT SURE I SHOULD BE DOING THIS - SHOULD BE PROGRESSING FROM THE LAST ACCEPTED PARAMETER SET?
          PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
          ! Leave parameter and covariance structures as they come out form the
          ! sub-sample - but reset the number of samples used in the update
          ! weighting
          if (PI%cov .and. PI%use_multivariate) then
-             PI%Nparvar = (N_before_mv * PI%npars) + 1
+             PI%Nparvar = (N_before_mv * dble(PI%npars)) + 1d0
          else
              ! reset the parameter step size at the beginning of each attempt
              PI%parvar = 1d0 ; PI%Nparvar = 0d0
@@ -262,15 +265,16 @@ program cardamom_framework
 
          MCO%nOUT = nint(dble(nOUT_save) * MCO%sub_fraction) - MCOUT%nos_iterations
          write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
-         MCO%nADAPT = 100 ; MCO%fADAPT = 1d0
+         MCO%fADAPT = 1d0 !; MCO%nADAPT = 1000
          call MHMCMC(1d0,model_likelihood,sub_model_likelihood)
          ! Use the best parameter set as the starting point for the next stage
          PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
+         MCO%fixedpars  = .true.
          ! Leave parameter and covariance structures as they come out form the
          ! sub-sample - but reset the number of samples used in the update
          ! weighting
          if (PI%cov .and. PI%use_multivariate) then
-             PI%Nparvar = (N_before_mv * PI%npars) + 1
+             PI%Nparvar = (N_before_mv * dble(PI%npars)) + 1d0
          else
              ! reset the parameter step size at the beginning of each attempt
              PI%parvar = 1d0 ; PI%Nparvar = 0d0

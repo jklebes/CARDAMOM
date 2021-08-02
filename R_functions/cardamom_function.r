@@ -45,7 +45,7 @@ cardamom <-function (projname,model,method,stage) {
       if (cardamom_type == "site") {
           PROJECT$nosites=length(sites_cardamom)
           PROJECT$waterpixels = 0
-          PROJECT$landsea = 0 # 1=sea
+          PROJECT$landsea = 1 # 1=land, 0 = sea # NOTE not used for site runs
           PROJECT$sites = sites_cardamom
           if (pft_wanted) {
               site_info = find_pft(sites_cardamom_lat,sites_cardamom_long)
@@ -252,6 +252,7 @@ cardamom <-function (projname,model,method,stage) {
                        Cwood_potential_all = load_potential_biomass_maps_for_extraction(latlon,Cwood_potential_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
                        burnt_all = load_burnt_area_fields_for_extraction(latlon,burnt_area_source,path_to_burnt_area,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year))
                        soilwater_all = load_soilwater_fields_for_extraction(latlon,soilwater_initial_source)
+                       lca_all = load_lca_maps_for_extraction(latlon_source, lca_source)
                        # set flag
                        loaded_all = TRUE
                    } # if loaded_all == FALSE
@@ -263,7 +264,7 @@ cardamom <-function (projname,model,method,stage) {
 #if ( length(which(skip_UK$UK_Forest_site_nos == n)) > 0) {
                obs=extract_obs(latlon[n,],lai_all,Csom_all,forest_all
                               ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
-                              ,sand_clay_all,crop_man_all,burnt_all,soilwater_all,nbe_all
+                              ,sand_clay_all,crop_man_all,burnt_all,soilwater_all,nbe_all, lca_all
                               ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
                               ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
 

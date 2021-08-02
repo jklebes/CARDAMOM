@@ -12,8 +12,9 @@ module MHMCMC_StressTests
   ! T. L. Smallman (UoE)
   ! A. A. Bloom (JPL, USA)
   ! Version history:
-  ! Version 1.0: Estimating pi from a circle, and a single parameter retrieval with known PDF.
-  ! Version 1.1: Estimating pi from a circle expanded to multiple circle radius from multiple areas.
+  ! Version 1.0: A single parameter retrieval with known PDF.
+  !              Estimating pi and radius from a circle with multiple 'observation'
+  !              Estimating pi and radii from 9 circles, a single observtion per circle
 
   implicit none
 
@@ -25,24 +26,33 @@ module MHMCMC_StressTests
 
   ! Declare any module level variables
 
-  ! Stress Test 1 - estimate parameters for a circle
+  ! Stress Test 1 - estimate parameters for multiple circle
   ! Parameter 1 = pi, parameter 2:10 = radi
+  ! DO NOT USE SOME REFINEMENT NEEDED
   double precision, parameter :: circle_par_1 = 3.141d0, &
-                                 circle_par_2 = 2d0, &
-                                 circle_par_3 = 5d0, &
+                                 circle_par_2 = 1.2d0, &
+                                 circle_par_3 = 3d0, &
                                  circle_par_4 = 8d0, &
                                  circle_par_5 = 10d0, &
                                  circle_par_6 = 15d0, &
                                  circle_par_7 = 200d0, &
-                                 circle_par_8 = 93d0, &
+                                 circle_par_8 = 193d0, &
                                  circle_par_9 = 88d0, &
-                                 circle_par_10 = 91d0, &
+                                 circle_par_10 = 291d0, &
                                  circle_obs_unc = 1d0
   double precision, dimension(9) :: circle_obs
 
   ! Stress Test 2 - estimate known PDF for single parameter
   double precision, parameter :: single_obs_mean = 0d0, &
                                  single_obs_unc = 1d0
+
+  ! Stress Test 3 - estimate parameters for a single circle
+  ! Parameter 1 = pi, parameter 2 = radius
+  double precision, parameter :: single_circle_par_1 = 3.141d0, &
+                                 single_circle_par_2 = 88d0, &
+                                 single_circle_obs_unc = single_circle_par_2 * 0.2d0, &
+                                 single_circle_par_unc = single_circle_par_1 * 0.5d0
+  double precision, dimension(29) :: single_circle_obs
 
   contains
   !
@@ -53,7 +63,7 @@ module MHMCMC_StressTests
     implicit none
 
     ! Subroutine estimates the area of a circle using two parameters
-    ! which define pi and the radius.
+    ! which define pi and the radius. A prior estimate of pi has also been applied.
 
     ! arguments
     integer, intent(in) :: nopars
@@ -61,7 +71,7 @@ module MHMCMC_StressTests
     double precision, intent(out) :: output
     ! local variables
     integer :: i
-    double precision, dimension(nopars) :: area
+    double precision, dimension(nopars-1) :: area
 
     ! Determine the area of the circle for the current parameters
     do i = 2, nopars
@@ -82,8 +92,8 @@ module MHMCMC_StressTests
     implicit none
 
     ! Pi
-    PI%parmin(1) = 1d0
-    PI%parmax(1) = 5d0
+    PI%parmin(1) =-10d0
+    PI%parmax(1) = 10d0
 
     ! Radius - 1
     PI%parmin(2) =  1d0
@@ -133,6 +143,78 @@ module MHMCMC_StressTests
     circle_obs(9) = circle_par_1 * circle_par_10 ** 2d0
 
   end subroutine circle_parameter_prior_ranges
+  !
+  !--------------------------------------------------------------------
+  !
+  subroutine single_circle(pars,nopars,output)
+
+    implicit none
+
+    ! Subroutine estimates the area of a circle using two parameters
+    ! which define pi and the radius. A prior estimate of pi has also been applied.
+
+    ! arguments
+    integer, intent(in) :: nopars
+    double precision, dimension(nopars), intent(in) :: pars
+    double precision, intent(out) :: output
+
+    ! Determine the area of the circle for the current parameters
+    output = pars(1) * pars(2) ** 2d0
+
+    ! Convert into log-likelihood
+    output = sum(-0.5d0 * (((output - single_circle_obs) / single_circle_obs_unc) ** 2))
+
+  end subroutine single_circle
+  !
+  !--------------------------------------------------------------------
+  !
+  subroutine single_circle_parameter_prior_ranges
+    use MCMCOPT, only: PI
+
+    ! define the parameter prior ranges
+
+    implicit none
+
+    ! Pi
+    PI%parmin(1) =-10d0
+    PI%parmax(1) = 10d0
+
+    ! Radius - 1
+    PI%parmin(2) =  1d0
+    PI%parmax(2) = 300.0d0
+
+    ! Assign observations values, taken from a Gaussian distribution with mean of 88 and variance of 1
+    single_circle_obs(1) = 24329.30d0
+    single_circle_obs(2) = 24328.31d0
+    single_circle_obs(3) = 24328.23d0
+    single_circle_obs(4) = 24328.89d0
+    single_circle_obs(5) = 24326.58d0
+    single_circle_obs(6) = 24329.30d0
+    single_circle_obs(7) = 24327.14d0
+    single_circle_obs(8) = 24330.30d0
+    single_circle_obs(9) = 24329.10d0
+    single_circle_obs(10) = 24330.63d0
+    single_circle_obs(11) = 24328.21d0
+    single_circle_obs(12) = 24327.76d0
+    single_circle_obs(13) = 24327.22d0
+    single_circle_obs(14) = 24329.36d0
+    single_circle_obs(15) = 24329.99d0
+    single_circle_obs(16) = 24327.93d0
+    single_circle_obs(17) = 24328.18d0
+    single_circle_obs(18) = 24327.78d0
+    single_circle_obs(19) = 24328.47d0
+    single_circle_obs(20) = 24328.25d0
+    single_circle_obs(21) = 24327.39d0
+    single_circle_obs(22) = 24328.63d0
+    single_circle_obs(23) = 24328.01d0
+    single_circle_obs(24) = 24329.58d0
+    single_circle_obs(25) = 24328.56d0
+    single_circle_obs(26) = 24329.65d0
+    single_circle_obs(27) = 24326.77d0
+    single_circle_obs(28) = 24328.45d0
+    single_circle_obs(29) = 24327.42d0
+
+  end subroutine single_circle_parameter_prior_ranges
   !
   !--------------------------------------------------------------------
   !
@@ -191,6 +273,15 @@ module MHMCMC_StressTests
         DATAin%nopools = 1
         DATAin%nopars = 1!2
         DATAin%nofluxes = 1
+    else if (outfile == "SingleCircle") then
+        ! ID = -3 StressTest - Single Circle
+        DATAin%ID = -3
+        DATAin%nodays = 1
+        DATAin%nomet = 1
+        DATAin%noobs = 29
+        DATAin%nopools = 1
+        DATAin%nopars = 2
+        DATAin%nofluxes = 1
     else
         print*,"Valid Stress Test has not been specified"
         stop
@@ -225,6 +316,8 @@ module MHMCMC_StressTests
         call circle_parameter_prior_ranges
     else if (DATAin%ID == -2) then
         call single_parameter_prior_ranges
+    else if (DATAin%ID == -3) then
+        call single_circle_parameter_prior_ranges
     end if
 
     ! For log-normalisation procedure, no parameter can be <=0.
@@ -271,10 +364,15 @@ module MHMCMC_StressTests
         ! run the circle model
         call circle(PARS,DATAin%nopars,output)
         ! Estimate the likelihood score
-        ML_obs_out = output
+        ML_obs_out = output + (-0.5d0 * ((((pars(1)-circle_par_1)) / circle_obs_unc)**2))
     else if (DATAin%ID == -2) then
         ! Estimate likelihood for a single parameter retrieval
         ML_obs_out = -0.5d0 * (((PARS(1) - single_obs_mean) / single_obs_unc) ** 2)
+    else if (DATAin%ID == -3) then
+        ! run the circle model
+        call single_circle(PARS,DATAin%nopars,output)
+        ! Estimate the likelihood score
+        ML_obs_out = output + (-0.5d0 * ((((pars(1)-single_circle_par_1)) / single_circle_par_unc)**2))
     end if
 
   end subroutine StressTest_likelihood
@@ -307,10 +405,15 @@ module MHMCMC_StressTests
         ! run the circle model
         call circle(PARS,DATAin%nopars,output)
         ! Estimate the likelihood score, normalise by sample size in the sub-case
-        ML_obs_out = output / DATAin%noobs
+        ML_obs_out = (output / DATAin%noobs) + (-0.5d0 * ((((pars(1)-circle_par_1)) / circle_obs_unc)**2))
     else if (DATAin%ID == -2) then
         ! Estimate likelihood for a single parameter retrieval
         ML_obs_out = -0.5d0 * (((PARS(1) - single_obs_mean) / single_obs_unc) ** 2)
+    else if (DATAin%ID == -3) then
+        ! run the circle model
+        call single_circle(PARS,DATAin%nopars,output)
+        ! Estimate the likelihood score
+        ML_obs_out = (output / DATAin%noobs) + (-0.5d0 * ((((pars(1)-single_circle_par_1)) / single_circle_par_unc)**2))
     end if
 
   end subroutine StressTest_sublikelihood
