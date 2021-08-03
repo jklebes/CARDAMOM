@@ -252,7 +252,7 @@ cardamom <-function (projname,model,method,stage) {
                        Cwood_potential_all = load_potential_biomass_maps_for_extraction(latlon,Cwood_potential_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
                        burnt_all = load_burnt_area_fields_for_extraction(latlon,burnt_area_source,path_to_burnt_area,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year))
                        soilwater_all = load_soilwater_fields_for_extraction(latlon,soilwater_initial_source)
-                       lca_all = load_lca_maps_for_extraction(latlon_source, lca_source)
+                       lca_all = load_lca_maps_for_extraction(latlon, lca_source)
                        # set flag
                        loaded_all = TRUE
                    } # if loaded_all == FALSE

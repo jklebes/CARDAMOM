@@ -666,14 +666,14 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
         Cwood_potential=read_site_specific_obs("LCA_gCm2",infile)
         Cwood_potential_unc=read_site_specific_obs("LCA_unc_gCm2",infile)
-    } else if (Cwood_potential_source == "butler") {
+    } else if (lca_source == "butler") {
         # get Cwood
         output = extract_lca_prior(spatial_type,resolution,grid_type,latlon_wanted,lca_all)
         lca = output$lca_gCm2
         lca_unc = output$lca_unc_gCm2
     } else {
         # assume no data available
-        lca=-9999 ; lca_unc=-9999
+        lca = -9999 ; lca_unc = -9999
     }
 
     # return output now

@@ -731,6 +731,8 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         input_file = list.files(path_to_Cwood)
         # extract only .tif files
         input_file = input_file[grepl(".tif",input_file) == TRUE]
+        # Check that we have found some files
+        if (length(input_file) == 0) {stop("No files have been found in target directory")}
         # Extract the uncertainty files from the original list
         unc_input_file = input_file[grepl("SD_AGB",input_file) == TRUE]
         input_file = input_file[grepl("SD_AGB",input_file) == FALSE]
