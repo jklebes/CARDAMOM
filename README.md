@@ -25,6 +25,10 @@ Myrgiotis, V., Blei, E., Clement, R., Jones, S.K., Keane, B., Lee, M.A., Levy, P
 
 Quetin, G.R., Bloom, A.A., Bowman, K.W. and Konings, A.G., 2020. Carbon flux variability from a relatively simple ecosystem model with assimilated data is consistent with terrestrial biosphere model estimates. Journal of Advances in Modeling Earth Systems, 12(3), p.e2019MS001889.
 
+Revill, A., Bloom, A.A., Williams, M., 2016. Impacts of reduced model complexity and driver resolution on cropland ecosystem photosynthesis estimates. Field Crops Research, 187. https://doi.org/10.1016/j.fcr.2015.12.006.
+
+Revill, A., Myrgiotis, V., Florence, A., Hoad, S., Rees, R., MacArthur, A., Williams, M., 2021. Combining Process Modelling and LAI Observations to Diagnose Winter Wheat Nitrogen Status and Forecast Yield. Agronomy, 11(2):314. https://doi.org/10.3390/agronomy11020314.
+
 Smallman, L., Exbrayat, J-F., Mencuccini, M., Bloom, A. A., & Williams, M. (2017). Assimilation of repeated woody biomass observations constrains decadal ecosystem carbon cycle uncertainty in aggrading forests. Journal of Geophysical Research: Biogeosciences. https://doi.org/10.1002/2016JG003520.
 
 Smallman, T. L., & Williams, M. (2019). Description and validation of an intermediate complexity model for ecosystem photosynthesis and evapotranspiration: ACM-GPP-ETv1. Geoscientific Model Development, 12(6). https://doi.org/10.5194/gmd-12-2227-2019.
