@@ -33,6 +33,7 @@ source("~/WORK/GREENHOUSE/models/CARDAMOM/R_functions/calc_pixel_area.r")
 source("~/WORK/GREENHOUSE/models/CARDAMOM/R_functions/read_binary_file_format.r")
 source("~/WORK/GREENHOUSE/models/CARDAMOM/R_functions/function_closest2d.r")
 source("~/WORK/GREENHOUSE/models/CARDAMOM/R_functions/plotconfidence.r")
+source("~/WORK/GREENHOUSE/models/CARDAMOM/R_functions/read_src_model_priors.r")
 
 # Function to determine the number of days in any given year
 nos_days_in_year<-function(year) {
@@ -78,12 +79,19 @@ ensemble_within_range<-function(target,proposal) {
 
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/Miombo_0.25deg_allWood/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/Trendyv9_historical/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/ODA_extension_Africa/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/ODA_extension_Africa_lca/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/ODA_extension_Africa_gpp/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/ODA_extension_Africa_lca_gpp/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/ODA_extension_Africa_5%CI_agb/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/ODA_extension_Africa_10%CI_agb/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/ODA_extension_Africa_20%CI_agb/infofile.RData")
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_parameter_maps.RData",sep=""))
 
 # Set output path for figures and tables
-out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/figures/"
+out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/figures_africa/"
+#out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
 
 # Specify the position within the stored ensemble for the median estimate and the desired uncertainty bands
 mid_quant = 4 ; low_quant = 2 ; high_quant = 6
@@ -161,7 +169,7 @@ scenario_colours = scenario_colours(4)
 model_colours = colorRampPalette(brewer.pal(12,"Paired"))
 model_colours = model_colours(5)
 obs_colours = colorRampPalette(brewer.pal(8,"Dark2"))
-obs_colours = obs_colours(8)
+obs_colours = obs_colours(4)
 
 # array sizes are always the same so
 colour_choices_default = colour_choices_default(100)
@@ -178,10 +186,13 @@ dims = dim(grid_output$mean_lai_m2m2)
 SoilCPrior = array(NA, dim=c(dims[1], dims[2]))
 # Mean annual LAI obs
 LAIobs = array(NA, dim=c(dims[1],dims[2],nos_years))
-# Fire
-BurnedFraction = array(NA, dim=c(dims[1], dims[2],length(PROJECT$model$timestep_days)))
+# Disturbance
+HarvestFraction = array(NA, dim=c(dims[1], dims[2]))
+BurnedFraction = array(NA, dim=c(dims[1], dims[2]))
+FireFreq = array(NA, dim=c(dims[1],dims[2]))
 # Observed wood trends information
 WoodCobs = array(NA, dim=c(dims[1], dims[2],length(PROJECT$model$timestep_days)))
+WoodCobs_CI = array(NA, dim=c(dims[1], dims[2],length(PROJECT$model$timestep_days)))
 WoodCobs_trend_map = array(NA, dim=c(dims[1], dims[2]))
 WoodCobs_trend = rep(NA, PROJECT$nosites)
 mean_obs_wood = rep(NA, PROJECT$nosites)
@@ -197,8 +208,11 @@ for (n in seq(1, PROJECT$nosites)) {
      if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE & is.na(landfilter[grid_output$i_location[n],grid_output$j_location[n]]) == FALSE) {
          # Read in pixel driving data
          drivers = read_binary_file_format(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep=""))
-         # Load drivers wanted
-         BurnedFraction[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,9]
+         # Determine forest harvest intensity
+         HarvestFraction[grid_output$i_location[n],grid_output$j_location[n]] = sum(drivers$met[,8]) / nos_years
+         # Determine mean annual fire intensity and frequency
+         BurnedFraction[grid_output$i_location[n],grid_output$j_location[n]] = sum(drivers$met[,9]) / nos_years
+         FireFreq[grid_output$i_location[n],grid_output$j_location[n]] = length(which(drivers$met[,9] > 0)) / nos_years
          # Load any priors
          SoilCPrior[grid_output$i_location[n],grid_output$j_location[n]] = drivers$parpriors[23]
          # Clear missing data from and extract observed LAI
@@ -210,6 +224,7 @@ for (n in seq(1, PROJECT$nosites)) {
              for (t in seq(1, length(tmp))) {
                   # Observational constraint
                   WoodCobs[grid_output$i_location[n],grid_output$j_location[n],tmp[t]] = drivers$obs[tmp[t],13]
+                  WoodCobs_CI[grid_output$i_location[n],grid_output$j_location[n],tmp[t]] = drivers$obs[tmp[t],14]
                   # Corresponding model output
                   WoodC[grid_output$i_location[n],grid_output$j_location[n],tmp[t]] = grid_output$wood_gCm2[n,mid_quant,tmp[t]]
              } # loop time steps with obs
@@ -232,19 +247,19 @@ for (n in seq(1, PROJECT$nosites)) {
 # Initialise lai for grid annuals
 cumarea = 0
 lai_grid = array(NA,dim=c(PROJECT$nosites,nos_years))
-lai_m2m2 = rep(0,nos_years)
-gpp_TgCyr = rep(0,nos_years)
-rauto_TgCyr = rep(0,nos_years)
-rhet_TgCyr = rep(0,nos_years)
-nee_TgCyr = rep(0,nos_years)
-nbe_TgCyr = rep(0,nos_years)
-fire_TgCyr = rep(0,nos_years)
-harvest_TgCyr = rep(0,nos_years)
+lai_m2m2 = rep(0,nos_years) ; lai_lower_m2m2 = rep(0,nos_years) ; lai_upper_m2m2 = rep(0,nos_years)
+gpp_TgCyr = rep(0,nos_years) ; gpp_lower_TgCyr = rep(0,nos_years) ; gpp_upper_TgCyr = rep(0,nos_years)
+rauto_TgCyr = rep(0,nos_years) ; rauto_lower_TgCyr = rep(0,nos_years) ; rauto_upper_TgCyr = rep(0,nos_years)
+rhet_TgCyr = rep(0,nos_years) ; rhet_lower_TgCyr = rep(0,nos_years) ; rhet_upper_TgCyr = rep(0,nos_years)
+nee_TgCyr = rep(0,nos_years) ; nee_lower_TgCyr = rep(0,nos_years) ; nee_upper_TgCyr = rep(0,nos_years)
+nbe_TgCyr = rep(0,nos_years) ; nbe_lower_TgCyr = rep(0,nos_years) ; nbe_upper_TgCyr = rep(0,nos_years)
+fire_TgCyr = rep(0,nos_years) ; fire_lower_TgCyr = rep(0,nos_years) ; fire_upper_TgCyr = rep(0,nos_years)
+harvest_TgCyr = rep(0,nos_years) ; harvest_lower_TgCyr = rep(0,nos_years) ; harvest_upper_TgCyr = rep(0,nos_years)
 # Pool totals
-wood_TgC = rep(0,nos_years)
-lit_TgC = rep(0,nos_years)
-litwood_TgC = rep(0,nos_years)
-soil_TgC = rep(0,nos_years)
+wood_TgC = rep(0,nos_years) ; wood_lower_TgC = rep(0,nos_years) ; wood_upper_TgC = rep(0,nos_years)
+lit_TgC = rep(0,nos_years) ; lit_lower_TgC = rep(0,nos_years) ; lit_upper_TgC = rep(0,nos_years)
+litwood_TgC = rep(0,nos_years) ; litwood_lower_TgC = rep(0,nos_years) ; litwood_upper_TgC = rep(0,nos_years)
+soil_TgC = rep(0,nos_years) ; soil_lower_TgC = rep(0,nos_years) ; soil_upper_TgC = rep(0,nos_years)
 # Flux trends
 gpp_trend = array(NA, dim=c(dim(grid_output$mean_nee_gCm2day)[1],dim(grid_output$mean_nee_gCm2day)[2]))
 rauto_trend = array(NA, dim=c(dim(grid_output$mean_nee_gCm2day)[1],dim(grid_output$mean_nee_gCm2day)[2]))
@@ -272,24 +287,50 @@ for (n in seq(1, PROJECT$nosites)) {
          cumarea = cumarea + area[i_loc,j_loc]
          lai_grid[n,] = rollapply(grid_output$lai_m2m2[n,mid_quant,], width = steps_per_year, by = steps_per_year, mean)         
          lai_m2m2      = lai_m2m2      + lai_grid[n,]
+         lai_lower_m2m2 = lai_lower_m2m2 + rollapply(grid_output$lai_m2m2[n,low_quant,], width = steps_per_year, by = steps_per_year, mean)         
+         lai_upper_m2m2 = lai_upper_m2m2 + rollapply(grid_output$lai_m2m2[n,high_quant,], width = steps_per_year, by = steps_per_year, mean)         
          # Stocks
          wood_TgC      = wood_TgC      + (rollapply(grid_output$wood_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean))
+         wood_lower_TgC = wood_lower_TgC + rollapply(grid_output$wood_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+         wood_upper_TgC = wood_upper_TgC + rollapply(grid_output$wood_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
          lit_TgC       = lit_TgC       + (rollapply(grid_output$lit_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean))
+         lit_lower_TgC = lit_lower_TgC + rollapply(grid_output$lit_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+         lit_upper_TgC = lit_upper_TgC + rollapply(grid_output$lit_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
          litwood_TgC   = litwood_TgC   + (rollapply(grid_output$litwood_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean))
+         litwood_lower_TgC = litwood_lower_TgC + rollapply(grid_output$litwood_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+         litwood_upper_TgC = litwood_upper_TgC + rollapply(grid_output$litwood_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
          soil_TgC      = soil_TgC      + (rollapply(grid_output$som_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean))
+         soil_lower_TgC = soil_lower_TgC + rollapply(grid_output$som_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+         soil_upper_TgC = soil_upper_TgC + rollapply(grid_output$som_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
          # Fluxes
          gpp_TgCyr     = gpp_TgCyr     + (rollapply(grid_output$gpp_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         gpp_lower_TgCyr = gpp_lower_TgCyr + (rollapply(grid_output$gpp_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         gpp_upper_TgCyr = gpp_upper_TgCyr + (rollapply(grid_output$gpp_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          rauto_TgCyr   = rauto_TgCyr   + (rollapply(grid_output$rauto_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         rauto_lower_TgCyr = rauto_lower_TgCyr + (rollapply(grid_output$rauto_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         rauto_upper_TgCyr = rauto_upper_TgCyr + (rollapply(grid_output$rauto_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)         
          rhet_TgCyr    = rhet_TgCyr    + (rollapply(grid_output$rhet_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         rhet_lower_TgCyr = rhet_lower_TgCyr + (rollapply(grid_output$rhet_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         rhet_upper_TgCyr = rhet_upper_TgCyr + (rollapply(grid_output$rhet_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          nee_TgCyr     = nee_TgCyr     + (rollapply(grid_output$nee_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         nee_lower_TgCyr = nee_lower_TgCyr + (rollapply(grid_output$nee_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         nee_upper_TgCyr = nee_upper_TgCyr + (rollapply(grid_output$nee_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          nbe_TgCyr     = nbe_TgCyr     + (rollapply(grid_output$nbe_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         nbe_lower_TgCyr = nbe_lower_TgCyr + (rollapply(grid_output$nbe_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         nbe_upper_TgCyr = nbe_upper_TgCyr + (rollapply(grid_output$nbe_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          fire_TgCyr    = fire_TgCyr    + (rollapply(grid_output$fire_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         fire_lower_TgCyr = fire_lower_TgCyr + (rollapply(grid_output$fire_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         fire_upper_TgCyr = fire_upper_TgCyr + (rollapply(grid_output$fire_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          harvest_TgCyr = harvest_TgCyr + (rollapply(grid_output$harvest_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         harvest_lower_TgCyr = harvest_lower_TgCyr + (rollapply(grid_output$harvest_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         harvest_upper_TgCyr = harvest_upper_TgCyr + (rollapply(grid_output$harvest_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
      }
 } # loop sites
 
 # LAI averaging
 lai_m2m2 = lai_m2m2 / nos_sites_inc
+lai_lower_m2m2 = lai_lower_m2m2 / nos_sites_inc
+lai_upper_m2m2 = lai_upper_m2m2 / nos_sites_inc
 # Now adjust units gC/yr -> TgC/yr
 # All AGB
 gpp_TgCyr     = gpp_TgCyr * 1e-12
@@ -303,6 +344,30 @@ lit_TgC       = lit_TgC * 1e-12
 litwood_TgC   = litwood_TgC * 1e-12
 wood_TgC      = wood_TgC * 1e-12
 soil_TgC      = soil_TgC * 1e-12
+# lower
+gpp_lower_TgCyr     = gpp_lower_TgCyr * 1e-12
+rauto_lower_TgCyr   = rauto_lower_TgCyr * 1e-12
+rhet_lower_TgCyr    = rhet_lower_TgCyr * 1e-12
+nee_lower_TgCyr     = nee_lower_TgCyr * 1e-12
+nbe_lower_TgCyr     = nbe_lower_TgCyr * 1e-12
+fire_lower_TgCyr    = fire_lower_TgCyr * 1e-12
+harvest_lower_TgCyr = harvest_lower_TgCyr * 1e-12
+lit_lower_TgC       = lit_lower_TgC * 1e-12
+litwood_lower_TgC   = litwood_lower_TgC * 1e-12
+wood_lower_TgC      = wood_lower_TgC * 1e-12
+soil_lower_TgC      = soil_lower_TgC * 1e-12
+# upper
+gpp_upper_TgCyr     = gpp_upper_TgCyr * 1e-12
+rauto_upper_TgCyr   = rauto_upper_TgCyr * 1e-12
+rhet_upper_TgCyr    = rhet_upper_TgCyr * 1e-12
+nee_upper_TgCyr     = nee_upper_TgCyr * 1e-12
+nbe_upper_TgCyr     = nbe_upper_TgCyr * 1e-12
+fire_upper_TgCyr    = fire_upper_TgCyr * 1e-12
+harvest_upper_TgCyr = harvest_upper_TgCyr * 1e-12
+lit_upper_TgC       = lit_upper_TgC * 1e-12
+litwood_upper_TgC   = litwood_upper_TgC * 1e-12
+wood_upper_TgC      = wood_upper_TgC * 1e-12
+soil_upper_TgC      = soil_upper_TgC * 1e-12
 
 ###
 ## C - Budget (TgC/yr)
@@ -362,6 +427,70 @@ if (length(which(names(grid_output) == "mean_litwood_gCm2")) > 0) {
 
 # Write out C budget
 write.table(output, file = paste(out_dir,"/",PROJECT$name,"_C_budget.csv",sep=""), row.names=FALSE, sep=",",append=FALSE)
+
+###
+## Determine 1-posterior:prior ratio, i.e. how much have we learned?
+###
+
+# Extract parameter prior ranges from source code
+prior_ranges = read_src_model_priors(PROJECT)
+
+# Create ratio array
+posterior_prior = array(NA, dim=c(dim(grid_parameters$parameters)[1:2],length(prior_ranges$parmin)))
+for (n in seq(1, PROJECT$nosites)) {
+
+     # Check that location has run
+     if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE) {
+         for (p in seq(1,length(prior_ranges$parmin))) {
+              tmp = grid_parameters$parameters[grid_output$i_location[n],grid_output$j_location[n],p,high_quant] 
+              tmp = tmp - grid_parameters$parameters[grid_output$i_location[n],grid_output$j_location[n],p,low_quant] 
+              posterior_prior[grid_output$i_location[n],grid_output$j_location[n],p] = tmp / (prior_ranges$parmax[p]-prior_ranges$parmin[p])
+         } # Loop parameters
+     } # Does site exist
+
+} # Loop sites
+
+# Generate some summary statistics
+#print("====1-(Posterior:Prior====")
+#print("===Process parameters===")
+#print(summary(apply(1-posterior_prior[,,-c(18:24,28)], 3, mean, na.rm=TRUE)))
+#print("===Initial conditions parameters===")
+#print(summary(apply(1-posterior_prior[,,c(18:24,28)], 3, mean, na.rm=TRUE)))
+print("===All parameters===")
+print(summary(apply(1-posterior_prior, 3, mean, na.rm=TRUE)))
+
+# Generate some plots
+
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_posterior_prior_reductions.png",sep=""), height = (1667/2)*3, width = 4500, res = 300)
+par(mfrow=c(1,1), mar=c(0.5,0.3,2.8,7),omi=c(0.1,0.3,0.1,0.1))
+tmp = area
+var1 = apply(1-posterior_prior,c(1,2),mean,na.rm=TRUE)
+var1 = raster(vals = t(var1[,dim(var1)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+plot(var1, main="", zlim=c(0,1), col=colour_choices_default, xaxt = "n", yaxt = "n", box = FALSE, bty = "n",
+     cex.lab=2, cex.main=2.0, cex.axis = 2, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1))
+plot(landmask, add=TRUE)
+mtext(expression('Mean posterior reduction (0-1)'), side = 2, cex = 1.6, padj = -0.15, adj = 0.5)
+dev.off()
+
+#png(file = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/posterior_prior_reductions.png", height = (1667/2)*3, width = 4500, res = 300)
+#par(mfrow=c(1,2), mar=c(0.5,0.3,2.8,7),omi=c(0.1,0.3,0.1,0.1))
+#tmp = area
+## Process parameters
+#var1 = apply(1-posterior_prior[,,-c(18:24,28)],c(1,2),mean,na.rm=TRUE)
+#var1 = raster(vals = t(var1[,dim(var1)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+#plot(var1, main="", zlim=c(0,1), col=colour_choices_default, xaxt = "n", yaxt = "n", box = FALSE, bty = "n",
+#     cex.lab=2, cex.main=2.0, cex.axis = 2, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1))
+#plot(landmask, add=TRUE)
+#mtext(expression('Process parameters'), side = 2, cex = 1.6, padj = -0.15, adj = 0.5)
+## Initial conditions
+#var1 = apply(1-posterior_prior[,,c(18:24,28)],c(1,2),mean,na.rm=TRUE)
+#var1 = raster(vals = t(var1[,dim(var1)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+#plot(var1, main="", zlim=c(0,1), col=colour_choices_default, xaxt = "n", yaxt = "n", box = FALSE, bty = "n",
+#     cex.lab=2, cex.main=2.0, cex.axis = 2, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1))
+#plot(landmask, add=TRUE)
+#mtext(expression('Initial conditions'), side = 2, cex = 1.6, padj = -0.15, adj = 0.5)
+#dev.off()
+
 
 ###
 ## Loading and processing of independent observations
@@ -594,7 +723,7 @@ oco2_files = avail_files[grepl("oco2", avail_files) == TRUE]
 # \\ means don't consider . as a wildcard, $ means at the end of the string
 oco2_files_nee = oco2_files[grepl("biofluxopt\\.nc$", oco2_files) == TRUE]
 oco2_files_fire = oco2_files[grepl("firefluximp\\.nc$", oco2_files) == TRUE]
-# Restrict the biosphere fluxes to those which we have the iposed fire emissions, 
+# Restrict the biosphere fluxes to those which we have the imposed fire emissions, 
 # so that we can convert nee into nbe
 check_fire_version = unlist(strsplit(x = oco2_files_fire, split = "firefluximp.nc"))
 tmp = 0
@@ -925,28 +1054,99 @@ for (n in seq(1,PROJECT$nosites)) {
      } # valid value exists
 } # loop sites
 
+
+
+## Extract FluxSat v2 GPP (2000-2019)
+
+# "PointsOfChange"
+
+# Read first file to get additional information
+fluxsat_years = c(2000:2019)
+fluxsat_years = intersect(fluxsat_years,run_years)
+
+# Make a list of all available files
+fluxsat_files = list.files("/exports/csce/datastore/geos/groups/gcel/GPP_ESTIMATES/FluxSat/global_1deg_monthly/", full.names = TRUE)
+
+# Loop years now reading in each file in turn and adding to the output variable
+for (y in seq(1,length(fluxsat_years))) {
+     # Make a list of all files for this year
+     infiles = fluxsat_files[which(grepl(paste("GPP_FluxSat_daily_v2_",fluxsat_years[y],sep=""),fluxsat_files) == TRUE)]
+     # Loop through all files in the year to store these too
+     for (t in seq(1, length(infiles))) {
+          # Open file
+          copernicus = nc_open(infiles[t])
+          # If this is the first year extract some spatial information
+          if (y == 1 & t == 1) {
+              # Read lat / long
+              fluxsat_lat = ncvar_get(copernicus,"lat")
+              fluxsat_long = ncvar_get(copernicus,"lon")         
+              # Create output variable we will accumulate into 
+              fluxsat_gpp = array(NA, dim=c(length(fluxsat_long),length(fluxsat_lat),length(fluxsat_years)))
+          } # first year actions only
+          # For first step of the year create the new years loading variable
+          if (t == 1) { tmp = array(NA, dim=c(length(fluxsat_long),length(fluxsat_lat),length(infiles))) }
+          # Read in variable
+          tmp[,,t] = ncvar_get(copernicus, "GPP")
+          # Remove any missing data flags
+          tmp[,,t][which(tmp[,,t] == -9999)] = NA
+          # Tidy up
+          nc_close(copernicus)
+     } # loop time step in year
+     # Monthly to annual
+     fluxsat_gpp[,,y] = apply(tmp,c(1,2),mean)
+     # Tidy
+     rm(tmp)
+} # Loop copernicus years
+
+# Adjust units
+fluxsat_gpp = fluxsat_gpp * 365.25 #gC/m2/day -> gC/m2/yr
+
+# Loop through and extract the correct pixels for the target domain
+# At this stage keep the ensemble specific information
+# Loop through each year to estimate the annual means
+fluxsat_cardamom_gpp_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],length(fluxsat_years)))
+fluxsat_cardamom_gpp_gCm2yr_trend = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2]))
+for (n in seq(1,PROJECT$nosites)) {
+     if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE & is.na(landfilter[grid_output$i_location[n],grid_output$j_location[n]]) == FALSE) {
+         output = closest2d(1,fluxsat_lat,fluxsat_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]],3)
+         i1 = unlist(output)[1] ; j1 = unlist(output)[2]
+         fluxsat_cardamom_gpp_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],] = fluxsat_gpp[i1,j1,]
+         # Estimate the GPP trend at this time too
+         if (length(which(is.na(fluxsat_gpp[i1,j1,]) == FALSE)) > 1) {
+             fluxsat_cardamom_gpp_gCm2yr_trend[grid_output$i_location[n],grid_output$j_location[n]] = coef(lm(fluxsat_gpp[i1,j1,]~fluxsat_years))[2]
+         } 
+     } # valid value exists
+} # loop sites
+
 ## Combine the GPP estimates from our datasets
 
 # How many unique years in total
-obs_gpp_years = unique(c(fc_years,copernicus_years))
+obs_gpp_years = unique(c(fc_years,copernicus_years,fluxsat_years))
 
 # Define the combined timeseries datasets
-nos_gpp_databases = 2
+nos_gpp_databases = 3
 obs_gpp_gCm2yr = array(NA, dim = c(dim(grid_output$mean_lai_m2m2)[1:2],length(obs_gpp_years),nos_gpp_databases))
 for (i in seq(1,length(obs_gpp_years))) {
-     # determine whether the flask dataset has any values for this year
+     # determine whether the fluxcom dataset has any values for this year
      tmp = which(fc_years == obs_gpp_years[i])
      if (length(tmp) > 0) {
          # If there is we shall load this into the output object
          i_s = 1 ; i_e = 1
          obs_gpp_gCm2yr[,,i,i_s:i_e] = fc_cardamom_gpp_gCm2yr[,,tmp]
      }
-     # determine whether the oco2 dataset has any values for this year
+     # determine whether the copernicus dataset has any values for this year
      tmp = which(copernicus_years == obs_gpp_years[i])
      if (length(tmp) > 0) {
          # If there is we shall load this into the output object
          i_s = 1+1 ; i_e = i_s - 1 + 1
          obs_gpp_gCm2yr[,,i,i_s:i_e] = copernicus_cardamom_gpp_gCm2yr[,,tmp]
+     }
+     # determine whether the fluxsatv2 dataset has any values for this year
+     tmp = which(fluxsat_years == obs_gpp_years[i])
+     if (length(tmp) > 0) {
+         # If there is we shall load this into the output object
+         i_s = 1+1+1 ; i_e = i_s - 1 + 1
+         obs_gpp_gCm2yr[,,i,i_s:i_e] = fluxsat_cardamom_gpp_gCm2yr[,,tmp]
      }
 } # loop years
 
@@ -984,6 +1184,8 @@ if (length(tmp) != length(run_years)) {
         obs_gpp_max_gCm2yr = abind(obs_gpp_max_gCm2yr,add_afterward, along=3)
     }
 } # extra years needed
+
+apply(copernicus_cardamom_gpp_gCm2yr*array(area, dim=c(dim(area)[1:2],dim(copernicus_cardamom_gpp_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
 
 # Generate aggregate values at the domain level
 obs_gpp_mean_domain_TgCyr = apply(obs_gpp_mean_gCm2yr*array(area, dim=c(dim(area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
@@ -1161,48 +1363,67 @@ for (i in seq(1, PROJECT$long_dim)) {
                    tmp[q,] = rollapply(grid_output$gpp_gCm2day[n,wanted_quant[q],], by = steps_per_year, width = steps_per_year, FUN = mean)
               }
               # scale to annual value
-              tmp = tmp * 365.25
+              tmp = tmp * 365.25 ; nobs = 0 ; npdf = 0 ; grid_output$gpp_obs_overlap_fraction[i,j] = 0
               # Loop through time to assess model overlap with observations
               nobs = 0 ; grid_output$gpp_obs_overlap_fraction[i,j] = 0
-              for (t in seq(1,nos_years)) {
-                   # Determine if an observation is present to be assessed
-                   if (is.na(obs_gpp_min_gCm2yr[i,j,t]) == FALSE) {
-                       nobs = nobs + 1 # count used obervations
-                       grid_output$gpp_obs_overlap_fraction[i,j] = grid_output$gpp_obs_overlap_fraction[i,j] + ensemble_within_range(c(obs_gpp_min_gCm2yr[i,j,t],obs_gpp_max_gCm2yr[i,j,t]),tmp[,t]) 
+              for (t in seq(1, nos_years)) {
+                   if (is.na(obs_gpp_mean_gCm2yr[i,j,t]) == FALSE) {
+                       if ((obs_gpp_min_gCm2yr[i,j,t] - obs_gpp_max_gCm2yr[i,j,t]) != 0 ) {
+                           # Create list object containing each observations distributions
+                           hist_list = list(o = c(obs_gpp_min_gCm2yr[i,j,t],obs_gpp_max_gCm2yr[i,j,t]),
+                                            m = tmp[,t])
+                           # Estimate average model ensemble within observated range
+                           tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
+                           if (tmp2 > 0) {npdf = npdf + 1}
+                           grid_output$gpp_obs_overlap_fraction[i,j] = grid_output$gpp_obs_overlap_fraction[i,j] + tmp2
+                           nobs = nobs + 1
+                       } 
                    }
+              } # looping for cal period
+              if (nobs > 0) {
+                  grid_output$gpp_obs_overlap_fraction[i,j] = grid_output$gpp_obs_overlap_fraction[i,j] / nobs
+                  npdf = npdf / nobs
+              } else {
+                  grid_output$gpp_obs_overlap_fraction[i,j] = 0
               }
-              # Now estimate the average overlap
-              grid_output$gpp_obs_overlap_fraction[i,j] = grid_output$gpp_obs_overlap_fraction[i,j] / nobs
-              # Assume that having > 50 % observed histogram within observation uncertainty counts as significant overlap
-              if (grid_output$gpp_obs_overlap_fraction[i,j] >= 0.5) {
+              # Where are we consistent with Fluxcom GPP and its uncertainty
+              if (npdf > 0.90) {
                   gpp_sig_latitude = append(gpp_sig_latitude,j-0.5)
                   gpp_sig_longitude = append(gpp_sig_longitude,i-0.5)
               } # GPP
 
-              ## Where are we consistent with NBE observations
+              ## Where are we consistent with GPP observations
               tmp = array(NA, dim=c(length(wanted_quant),nos_years))
               # Determine mean annual flux per quantile
               for (q in seq(1, length(wanted_quant))) {
                    tmp[q,] = rollapply(grid_output$nbe_gCm2day[n,wanted_quant[q],], by = steps_per_year, width = steps_per_year, FUN = mean)
               }
-              # scale to annual value
-              tmp = tmp * 365.25
-              # Loop through time to assess model overlap with observations
-              nobs = 0 ; grid_output$nbe_obs_overlap_fraction[i,j] = 0
-              for (t in seq(1,nos_years)) {
-                   # Determine if an observation is present to be assessed
-                   if (is.na(obs_nbe_min_gCm2yr[i,j,t]) == FALSE) {
-                       nobs = nobs + 1 # count used obervations
-                       grid_output$nbe_obs_overlap_fraction[i,j] = grid_output$nbe_obs_overlap_fraction[i,j] + ensemble_within_range(c(obs_nbe_min_gCm2yr[i,j,t],obs_nbe_max_gCm2yr[i,j,t]),tmp[,t]) 
+              tmp = tmp * 365.25 ; nobs = 0 ; npdf = 0 ; grid_output$nbe_obs_overlap_fraction[i,j] = 0
+              for (t in seq(1, nos_years)) {
+                   if (is.na(obs_nbe_mean_gCm2yr[i,j,t]) == FALSE){
+                       if ((obs_nbe_min_gCm2yr[i,j,t] - obs_nbe_max_gCm2yr[i,j,t]) != 0 ) {
+                           # Create list object containing each observations distributions
+                           hist_list = list(o = c(obs_nbe_min_gCm2yr[i,j,t],obs_nbe_max_gCm2yr[i,j,t]),
+                                            m = tmp[,t])
+                           # Estimate average model ensemble within observated range
+                           tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
+                           if (tmp2 > 0) {npdf = npdf + 1}
+                           grid_output$nbe_obs_overlap_fraction[i,j] = grid_output$nbe_obs_overlap_fraction[i,j] + tmp2
+                           nobs = nobs + 1
+                       } 
                    }
+              } # looping for cal period
+              if (nobs > 0) {
+                  grid_output$nbe_obs_overlap_fraction[i,j] = grid_output$nbe_obs_overlap_fraction[i,j] / nobs
+                  npdf = npdf / nobs
+              } else {
+                  grid_output$nbe_obs_overlap_fraction[i,j] = 0
               }
-              # Now estimate the average overlap
-              grid_output$nbe_obs_overlap_fraction[i,j] = grid_output$nbe_obs_overlap_fraction[i,j] / nobs
-              # Assume that having > 50 % observed histogram within observation uncertainty counts as significant overlap
-              if (grid_output$nbe_obs_overlap_fraction[i,j] >= 0.5) {
+              # Where are we consistent with CTE NBE ensemble
+              if (npdf > 0.90) {
                   nbe_sig_latitude = append(nbe_sig_latitude,j-0.5)
                   nbe_sig_longitude = append(nbe_sig_longitude,i-0.5)
-              } # NBE
+              } # NEE
 
               ## Where are we consistent with Fire observations
               tmp = array(NA, dim=c(length(wanted_quant),nos_years))
@@ -1210,24 +1431,34 @@ for (i in seq(1, PROJECT$long_dim)) {
               for (q in seq(1, length(wanted_quant))) {
                    tmp[q,] = rollapply(grid_output$fire_gCm2day[n,wanted_quant[q],], by = steps_per_year, width = steps_per_year, FUN = mean)
               }
-              # scale to annual value
-              tmp = tmp * 365.25
-              # Loop through time to assess model overlap with observations
-              nobs = 0 ; grid_output$fire_obs_overlap_fraction[i,j] = 0
-              for (t in seq(1,nos_years)) {
-                   # Determine if an observation is present to be assessed
-                   if (is.na(obs_fire_min_gCm2yr[i,j,t]) == FALSE) {
-                       nobs = nobs + 1 # count used obervations
-                       grid_output$fire_obs_overlap_fraction[i,j] = grid_output$fire_obs_overlap_fraction[i,j] + ensemble_within_range(c(obs_fire_min_gCm2yr[i,j,t],obs_fire_max_gCm2yr[i,j,t]),tmp[,t]) 
+              tmp = tmp * 365.25 ; nobs = 0 ; npdf = 0 ; grid_output$fire_obs_overlap_fraction[i,j] = 0
+              for (t in seq(1, nos_years)) {
+                   if (is.na(obs_fire_mean_gCm2yr[i,j,t]) == FALSE) {
+                       if (obs_fire_mean_gCm2yr[i,j,t] > 0.01 & (obs_fire_min_gCm2yr[i,j,t] - obs_fire_max_gCm2yr[i,j,t]) != 0 ) {
+                           # Create list object containing each observations distributions
+                           hist_list = list(o = c(obs_fire_min_gCm2yr[i,j,t],obs_fire_max_gCm2yr[i,j,t]),
+                                            m = tmp[,t])
+                           # Estimate average model ensemble within observated range
+                           tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
+                           if (tmp2 > 0) {npdf = npdf + 1}
+                           grid_output$fire_obs_overlap_fraction[i,j] = grid_output$fire_obs_overlap_fraction[i,j] + tmp2
+                           nobs = nobs + 1
+                       } else if (obs_fire_mean_gCm2yr[i,j,t] <= 0.1 & tmp[,t] <= 0.1) {
+                           nobs = nobs + 1 ; npdf = npdf + 1
+                       } 
                    }
+              } # looping for cal period
+              if (nobs > 0) {
+                  grid_output$fire_obs_overlap_fraction[i,j] = grid_output$fire_obs_overlap_fraction[i,j] / nobs
+                  npdf = npdf / nobs
+              } else {
+                  grid_output$fire_obs_overlap_fraction[i,j] = 0
               }
-              # Now estimate the average overlap
-              grid_output$fire_obs_overlap_fraction[i,j] = grid_output$fire_obs_overlap_fraction[i,j] / nobs
-              # Assume that having > 50 % observed histogram within observation uncertainty counts as significant overlap
-              if (grid_output$fire_obs_overlap_fraction[i,j] >= 0.5) {
+              # Where are we consistent for fire (2003-2016)
+              if (npdf > 0.90) {
                   fire_sig_latitude = append(fire_sig_latitude,j-0.5)
                   fire_sig_longitude = append(fire_sig_longitude,i-0.5)
-              } # fire
+              } # fire obs
 
           } # NA
      } # j 
@@ -1242,9 +1473,9 @@ fire_sig_latitude   = fire_sig_latitude[-1]
 fire_sig_longitude  = fire_sig_longitude[-1]
 
 # Print % of pixels that are consistent
-print(paste("NBE pixel consistent =",length(nbe_sig_latitude) / nos_site_inc,sep=" "))
-print(paste("GPP pixel consistent =",length(gpp_sig_latitude) / nos_site_inc,sep=" "))
-print(paste("Fire pixel consistent =",length(fire_sig_latitude) / nos_site_inc,sep=" "))
+print(paste("NBE pixel consistent =",round(100*(length(nbe_sig_latitude) / nos_site_inc), digits=3)," %",sep=" "))
+print(paste("GPP pixel consistent =",round(100*(length(gpp_sig_latitude) / nos_site_inc), digits=3)," %",sep=" "))
+print(paste("Fire pixel consistent =",round(100*(length(fire_sig_latitude) / nos_site_inc), digits=3)," %",sep=" "))
 
 # Determine locations where we have confidence of net source / sink of C
 nbp_sig_latitude = 0    ; nbp_sig_longitude = 0
@@ -1287,11 +1518,11 @@ dCsom_sig_longitude = dCsom_sig_longitude[-1]
 
 # Fraction of locations with significant change
 # NBE
-print(paste("NBE sig  = ",(length(nbp_sig_latitude) / nos_site_inc)*100," %",sep=""))
+print(paste("NBE sig  = ",round((length(nbp_sig_latitude) / nos_site_inc)*100, digits=3)," %",sep=""))
 # dCwood
-print(paste("dCwood sig  = ",(length(dCwood_sig_latitude) / nos_site_inc)*100," %",sep=""))
+print(paste("dCwood sig  = ",round((length(dCwood_sig_latitude) / nos_site_inc)*100, digits=3)," %",sep=""))
 # dCsom
-print(paste("dCsom sig  = ",(length(dCsom_sig_latitude) / nos_site_inc)*100," %",sep=""))
+print(paste("dCsom sig  = ",round((length(dCsom_sig_latitude) / nos_site_inc)*100, digits=3)," %",sep=""))
 
 # Statisical correlation between NBP and wood change
 print(paste("NBP ~ dCwood R2 = ",round(summary(lm(as.vector(-grid_output$mean_nbe_gCm2[,,mid_quant]) ~ as.vector(grid_output$mean_dCwood_gCm2[,,mid_quant])))$adj.r.squared,digits=3),sep=""))
@@ -1302,7 +1533,7 @@ print(paste("NBP ~ dCsom R2  = ",round(summary(lm(as.vector(-grid_output$mean_nb
 ## Plot Observations
 
 # Compare analyses against the observational constraints (LAI, Soil C prior, Cwood stock, potAGB)
-png(file = paste(out_dir,"/",PROJECT$name,"_compare_observation.png",sep=""), height = 4000, width = 4500, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_compare_observation.png",sep=""), height = 4000, width = 4500, res = 300)
 par(mfrow=c(2,2), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Plot LAI mean annual
 var1 = as.vector(LAIobs*array(landfilter,dim=dim(LAIobs))) ; var1 = var1[which(is.na(var1) == FALSE)]
@@ -1335,26 +1566,138 @@ mtext(expression(paste('Initial soil C (MgC/ha)',sep="")), side = 2, cex = 2.4, 
 abline(0,1, col="grey", lwd=3)
 dev.off()
 
-png(file = paste(out_dir,"/",PROJECT$name,"_wood_trend_comparison.png",sep=""), height = 1200, width = 4000, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_observed_wood_timeseries.png",sep=""), height = 2000, width = 3500, res = 300)
+par(mfrow=c(1,1), mar=c(4.2,4.7,2.8,2),omi=c(0.01,0.01,0.01,0.01))
+# Now plot LAI time series
+var2  = rollapply(apply(WoodCobs_CI*1e-2*array(landfilter,dim=dim(WoodCobs))**2,3,mean,na.rm=TRUE), FUN = mean, by = 12, width = 12, na.rm=TRUE)
+var2 = sqrt(var2)
+var3  = rollapply(apply(WoodCobs*1e-2*array(landfilter,dim=dim(WoodCobs)),3,mean,na.rm=TRUE), FUN = mean, by = 12, width = 12, na.rm=TRUE)
+var4  = rollapply(apply(WoodC*1e-2*array(landfilter,dim=dim(WoodC)),3,mean,na.rm=TRUE), FUN = mean, by = 12, width = 12, na.rm=TRUE)
+zrange = range(c(var3,var4), na.rm=TRUE) * c(0.85,1.15)
+plotCI(x = run_years, y = var3, uiw = var2, main="", cex.lab=2.4, cex.main=2, cex.axis=2.4, ylim=zrange,
+      col="black", lwd=4, ylab="", xlab="")
+lines(var4~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var4~run_years, col=model_colours[1], pch=16)
+legend("topleft", legend = c("Obs","CARDAMOM"), col = c("black",model_colours[1]), lty = c(1,2), pch=c(NA,NA), horiz = FALSE, bty = "n", cex=2.1, lwd=3, ncol = 2)
+mtext(expression(paste('Year',sep="")), side = 1, cex = 2.4, padj = 1.85)
+mtext(expression(paste('Wood stocks (MgC/ha)',sep="")), side = 2, cex = 2.4, padj = -1.3)
+dev.off()
+
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_wood_trend_comparison.png",sep=""), height = 1200, width = 4000, res = 300)
 par(mfrow=c(1,3), mar=c(4.2,4.7,2.8,2),omi=c(0.01,0.01,0.01,0.01))
 # X~Y scatter
 yrange = c(-1,1) * max(abs(c(WoodCobs_trend,wood_trend)), na.rm=TRUE)
-plot(WoodCobs_trend ~ wood_trend, xlim=yrange, ylim=yrange, ylab = "Obs wood trend (gC/m2/yr)", 
-     main = " ", xlab = "Model wood trend (gC/m2/yr)", pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
+plot(WoodCobs_trend ~ wood_trend, xlim=yrange, ylim=yrange, ylab = expression(paste("Obs wood trend (gC",m^2,"",y^-1,")",sep="")), 
+     main = " ", xlab = expression(paste("Model wood trend (gC",m^2,"",y^-1,")",sep="")), 
+     pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
 abline(0,1,col="red", lwd=3) ; abline(0,0,col="grey", lwd=2) ; abline(v = 0,col="grey", lwd=2)
 # Bias ~ modelled wood stock
-plot((wood_trend - WoodCobs_trend)  ~ mean_wood, ylab="Model - Obs trend bias", xlab = "Mean obs wood stock (gC/m2)", pch = 16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
+plot((wood_trend - WoodCobs_trend)  ~ mean_wood, ylab="Model - Obs trend bias", 
+      xlab = expression(paste("Mean obs wood stock (gC",m^-2,")",sep="")), pch = 16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
 abline(0,0,col="grey", lwd=2)
 # Bias ~ observed wood stock uncertainty
-plot((wood_trend - WoodCobs_trend)  ~ WoodCobs_mean_CI, ylab="Model - Obs trend bias", xlab = "Obs CI (gC/m2)", pch = 16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
+plot((wood_trend - WoodCobs_trend)  ~ WoodCobs_mean_CI, ylab="Model - Obs trend bias", 
+      xlab = expression(paste("Obs CI (gC",m^-2,")",sep="")), pch = 16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
 abline(0,0,col="grey", lwd=2)
+dev.off()
+
+# restricted axis version
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_wood_trend_comparison_restricted_axes.png",sep=""), height = 1200, width = 4000, res = 300)
+par(mfrow=c(1,3), mar=c(4.2,4.7,2.8,2),omi=c(0.01,0.01,0.01,0.01))
+# X~Y scatter
+yrange = c(-1,1) * quantile(abs(c(WoodCobs_trend,wood_trend)), prob=c(0.999), na.rm=TRUE)
+plot(WoodCobs_trend ~ wood_trend, xlim=yrange, ylim=yrange, ylab = expression(paste("Obs wood trend (gC",m^2,"",y^-1,")",sep="")), 
+     main = " ", xlab = expression(paste("Model wood trend (gC",m^2,"",y^-1,")",sep="")), 
+     pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
+abline(0,1,col="red", lwd=3) ; abline(0,0,col="grey", lwd=2) ; abline(v = 0,col="grey", lwd=2)
+# Bias ~ modelled wood stock
+yrange = c(-1,1) * quantile((WoodCobs_trend-wood_trend), prob=c(0.999), na.rm=TRUE)
+plot((wood_trend - WoodCobs_trend)  ~ mean_wood, ylab="Model - Obs trend bias", 
+     xlab = expression(paste("Mean obs wood stock (gC",m^-2,")",sep="")), 
+     ylim=yrange, pch = 16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
+abline(0,0,col="grey", lwd=2)
+# Bias ~ observed wood stock uncertainty
+plot((wood_trend - WoodCobs_trend)  ~ WoodCobs_mean_CI, ylab="Model - Obs trend bias", xlab = expression(paste("Obs CI (gC",m^-2,")",sep="")), 
+      ylim=yrange, pch = 16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
+abline(0,0,col="grey", lwd=2)
+dev.off()
+
+
+my_colours=colorRampPalette(c("white",rep(rev(brewer.pal(11,"Spectral")),each=3)))
+# restricted axis version
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_wood_trend_comparison_restricted_axes_heatmap.png",sep=""), height = 1200, width = 4000, res = 300)
+par(mfrow=c(1,3), mar=c(4.2,4.7,2.8,2.5),omi=c(0.01,0.01,0.01,0.01))
+# X~Y scatter
+yrange = c(-1,1) * quantile(abs(c(WoodCobs_trend,wood_trend)), prob=c(0.999), na.rm=TRUE)
+smoothScatter(WoodCobs_trend ~ wood_trend, xlim=yrange, ylim=yrange, ylab = expression(paste("Obs wood trend (gC",m^2,"",y^-1,")",sep="")), 
+     main = " ", xlab = expression(paste("Model wood trend (gC",m^2,"",y^-1,")",sep="")), 
+     pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+     transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+abline(0,1,col="red", lwd=3) ; abline(0,0,col="grey", lwd=2) ; abline(v = 0,col="grey", lwd=2)
+# Bias ~ modelled wood stock
+yrange = c(-1,1) * quantile((WoodCobs_trend-wood_trend), prob=c(0.999), na.rm=TRUE)
+smoothScatter((wood_trend - WoodCobs_trend)  ~ mean_wood, ylab="Model - Obs trend bias", 
+     xlab = expression(paste("Mean obs wood stock (gC",m^-2,")",sep="")), 
+     ylim=yrange, pch = 16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+     transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+abline(0,0,col="grey", lwd=2)
+# Bias ~ observed wood stock uncertainty
+smoothScatter((wood_trend - WoodCobs_trend)  ~ WoodCobs_mean_CI, ylab="Model - Obs trend bias", 
+     xlab = expression(paste("Obs CI (gC",m^-2,")",sep="")), 
+     ylim=yrange, pch = 16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+     transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+abline(0,0,col="grey", lwd=2)
+dev.off()
+
+my_colours=colorRampPalette(c("white",rep(rev(brewer.pal(11,"Spectral")),each=3)))
+# restricted axis version
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_wood_trend_CI_comparison_restricted_axes_heatmap.png",sep=""), height = 1200, width = 4000, res = 300)
+par(mfrow=c(1,3), mar=c(4.2,5.4,2.8,2),omi=c(0.01,0.01,0.01,0.01))
+# X~Y scatter
+yrange = c(-1,1) * quantile(abs(c(WoodCobs_trend,wood_trend)), prob=c(0.999), na.rm=TRUE) * 1e-2
+smoothScatter((WoodCobs_trend*1e-2) ~ as.vector(1e-2*wood_trend), xlim=yrange, ylim=yrange, ylab = expression(paste("Obs wood trend (MgC h",a^-1,"",y^-1,")",sep="")), 
+     main = " ", xlab = expression(paste("Model wood trend (gC",m^2,"",y^-1,")",sep="")), 
+     pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+     transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+abline(0,1,col="red", lwd=3) ; abline(0,0,col="grey", lwd=2) ; abline(v = 0,col="grey", lwd=2)
+# Observed wood change vs stock
+yrange = c(-1,1) * quantile((WoodCobs_trend*length(run_years)), prob=c(0.999), na.rm=TRUE) * 1e-2
+plot((1e-2*WoodCobs_trend*length(run_years)) ~ as.vector(1e-2*mean_wood), ylab=expression(paste("Obs total AGB change (MgC h",a^-1,")",sep="",)), 
+     xlab = expression(paste("Mean obs wood stock (MgC h",a^-1,")",sep="")), 
+     ylim=yrange, xlim=c(0,max(mean_wood*1e-2,na.rm=TRUE)), pch = 16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
+abline(0,0,col="grey", lwd=2)
+# Observed wood change vs CI
+plot((1e-2*WoodCobs_trend*length(run_years))  ~ as.vector(1e-2*WoodCobs_mean_CI), ylab=expression(paste("Obs total AGB change (MgC h",a^-1,")",sep="",)), 
+     xlab = expression(paste("Obs mean CI (MgC h",a^-1,")",sep="")), 
+     ylim=yrange, xlim=c(0,max(1e-2*WoodCobs_mean_CI, na.rm=TRUE)), pch = 16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
+lines(c(0:max(1e-2*WoodCobs_mean_CI, na.rm=TRUE))~c(0:max(1e-2*WoodCobs_mean_CI, na.rm=TRUE)), col="red", lwd=2)
+lines(c(0:-max(1e-2*WoodCobs_mean_CI, na.rm=TRUE))~c(0:max(1e-2*WoodCobs_mean_CI, na.rm=TRUE)), col="red", lwd=2)
+abline(0,0,col="grey", lwd=2) 
+dev.off()
+
+# restricted axis version
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_wood_comparison_abs_error_restricted_axes.png",sep=""), height = 1200, width = 4000, res = 300)
+par(mfrow=c(1,3), mar=c(4.2,4.7,2.8,2),omi=c(0.01,0.01,0.01,0.01))
+# X~Y scatter
+yrange = c(0,1) * quantile(abs(c(WoodCobs_trend,wood_trend)), prob=c(0.99), na.rm=TRUE)
+plot(abs(WoodCobs_trend) ~ abs(wood_trend), xlim=yrange, ylim=yrange, ylab = "abs(Obs) wood trend (gC/m2/yr)", 
+     main = " ", xlab = "abs(Model) wood trend (gC/m2/yr)", pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
+abline(0,1,col="red", lwd=3) ; abline(0,0,col="grey", lwd=2) ; abline(v = 0,col="grey", lwd=2)
+# Bias ~ modelled wood stock
+yrange = c(0,1) * quantile(abs((WoodCobs_trend-wood_trend)), prob=c(0.99), na.rm=TRUE)
+plot(abs(wood_trend - WoodCobs_trend)  ~ mean_wood, ylab="abs(Model - Obs) trend error", xlab = "Mean obs wood stock (gC/m2)", 
+     ylim=yrange, pch = 16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
+abline(0,1,col="grey", lwd=2)
+# Bias ~ observed wood stock uncertainty
+plot(abs(wood_trend - WoodCobs_trend)  ~ WoodCobs_mean_CI, ylab="abs(Model - Obs) trend error", xlab = "Obs CI (gC/m2)", 
+     ylim=yrange, pch = 16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
+abline(0,1,col="grey", lwd=2)
 dev.off()
 
 ###
 ## Independent evaluation plots
 
 # Are CARDAMOM models consistent with the range described by CTE NBE ensemble, FC GPP ensemble and GFED / GFAS Fire products
-png(file = paste(out_dir,"/",PROJECT$name,"_NBE_GPP_FIRE_evaluation_stippling.png",sep=""), height = 1000, width = 3500, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_FIRE_evaluation_stippling.png",sep=""), height = 1000, width = 3500, res = 300)
 # Plot differences
 par(mfrow=c(1,3), mar=c(0.05,1,0.05,7.0), omi = c(0.01,0.4,0.3,0.05))
 var1 = raster(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_nbe_gCm2day[,dim(area)[2]:1,mid_quant]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -1385,7 +1728,41 @@ plot(landmask, add=TRUE)
 dev.off()
 
 # Are CARDAMOM models consistent with the range described by CTE NBE ensemble, FC GPP ensemble and GFED / GFAS Fire products
-png(file = paste(out_dir,"/",PROJECT$name,"_NBE_GPP_FIRE_evaluation_fraction_overlap.png",sep=""), height = 1000, width = 3500, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_FIRE_evaluation_bias_stippling.png",sep=""), height = 1000, width = 3500, res = 300)
+# Plot differences
+par(mfrow=c(1,3), mar=c(0.05,1,0.05,7.0), omi = c(0.01,0.4,0.3,0.05))
+var1 = (365.25*grid_output$mean_nbe_gCm2day[,,mid_quant]) - apply(obs_nbe_mean_gCm2yr, c(1,2), mean, na.rm=TRUE)
+var1 = raster(vals = t(landfilter[,dim(area)[2]:1]*1e-2*var1[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var2 = (365.25*grid_output$mean_gpp_gCm2day[,,mid_quant]) - apply(obs_gpp_mean_gCm2yr, c(1,2), mean, na.rm=TRUE)
+var2 = raster(vals = t(landfilter[,dim(area)[2]:1]*1e-2*var2[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = (365.25*grid_output$mean_fire_gCm2day[,,mid_quant]) - apply(obs_fire_mean_gCm2yr, c(1,2), mean, na.rm=TRUE)
+var3 = raster(vals = t(landfilter[,dim(area)[2]:1]*1e-2*var3[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Correct spatial area and mask
+var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask)
+var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask)
+# create axis
+zrange1 = c(-1,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
+zrange2 = c(0,max(values(var2), na.rm=TRUE))
+zrange3 = c(0,max(values(var3), na.rm=TRUE))
+plot(var1, main="",col = rev(colour_choices_default), zlim=zrange1, xaxt = "n", yaxt = "n", box = FALSE, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, legend.width = 2.3, axes = FALSE, axis.args=list(cex.axis=2.6,hadj=0.1))
+mtext(expression(paste("NBE (MgC/ha y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = +0.5, adj = 0.5)
+points(grid_long[nbe_sig_longitude+0.5,1],grid_lat[1,nbe_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+plot(landmask, add=TRUE)
+plot(var2, main="",col = colour_choices_gain, zlim=zrange2, xaxt = "n", yaxt = "n",  box = FALSE, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, legend.width = 2.3, axes = FALSE, axis.args=list(cex.axis=2.6,hadj=0.1))
+mtext(expression(paste("GPP (MgC/ha y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = +0.5, adj = 0.5)
+points(grid_long[gpp_sig_longitude+0.5,1],grid_lat[1,gpp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+plot(landmask, add=TRUE)
+plot(var3, main="",col = (colour_choices_loss), zlim=zrange3, xaxt = "n", yaxt = "n",  box = FALSE, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, legend.width = 2.3, axes = FALSE, axis.args=list(cex.axis=2.6,hadj=0.1))
+mtext(expression(paste("Fire (MgC/ha y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = +0.5, adj = 0.5)
+points(grid_long[fire_sig_longitude+0.5,1],grid_lat[1,fire_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+plot(landmask, add=TRUE)
+dev.off()
+
+# Are CARDAMOM models consistent with the range described by CTE NBE ensemble, FC GPP ensemble and GFED / GFAS Fire products
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_FIRE_evaluation_fraction_overlap.png",sep=""), height = 1000, width = 3500, res = 300)
 # Plot differences
 par(mfrow=c(1,3), mar=c(0.05,1,0.05,7.0), omi = c(0.01,0.4,0.3,0.05))
 # C1
@@ -1415,8 +1792,8 @@ dev.off()
 
 # Domain wide NBE (yaxis) model (xaxis), include independent estimates
 model_flags=c("CARDAMOM")
-obs_flags=c("CTE","FC/Copernicus/MODIS","GFEDv4.1s / GFAS")
-png(file = paste(out_dir,"/",PROJECT$name,"_NBE_GPP_Fire_timeseries_comparison.png",sep=""), height=3800, width=2500, res=300)
+obs_flags=c("CTE","FC/Copernicus/FluxSatv2","GFEDv4.1s / GFAS")
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_Fire_timeseries_comparison.png",sep=""), height=3800, width=2500, res=300)
 par(mfrow=c(3,1),mai=c(0.3,0.65,0.3,0.2),omi=c(0.2,0.2,0.3,0.005))
 # Now plot NBE, annual time series TgC/yr
 dims = dim(cte_nbe_gCm2yr)
@@ -1456,7 +1833,60 @@ zrange = range(c(var3,var4), na.rm=TRUE)*c(0.9,1.1)
 plot(var4~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
       col=model_colours[1], type="l", lwd=4, lty=2, ylab="", xlab="")
 plotconfidence(var3,run_years,2,obs_colours[3])
+lines(var4~run_years, col=model_colours[1], lwd=4, lty = 2) ; points(var4~run_years, col=model_colours[1], pch=16)
+mtext("Year", side=1, padj=2.0,cex=1.6)
+mtext("Fire Emissions (TgC/yr)", side=2, padj=-2.65,cex=1.5)
+dev.off()
+
+# Domain wide NBE (yaxis) model (xaxis), include independent estimates
+model_flags=c("CARDAMOM")
+obs_flags=c("CTE","FC/Copernicus/FluxSatv2","GFEDv4.1s / GFAS")
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_Fire_timeseries_comparison_plusCI.png",sep=""), height=3800, width=2500, res=300)
+par(mfrow=c(3,1),mai=c(0.3,0.65,0.3,0.2),omi=c(0.2,0.2,0.3,0.005))
+# Now plot NBE, annual time series TgC/yr
+dims = dim(cte_nbe_gCm2yr)
+var1  = c(apply(cte_nbe_gCm2yr * array(cte_m2, dim=dims),c(3),sum, na.rm=TRUE) * 1e-12)
+var2  = cbind(cbind(c(obs_nbe_mean_domain_TgCyr),c(obs_nbe_min_domain_TgCyr)),c(obs_nbe_max_domain_TgCyr))
+var3  = nbe_TgCyr ; var4  = nbe_lower_TgCyr ; var5  = nbe_upper_TgCyr
+zrange = range(c(var1,var2,var3,var4,var5), na.rm=TRUE)
+zrange[2] = zrange[2] + 500
+plot(var3~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
+      col=model_colours[1], type="l", lwd=4, ylab="", xlab="", lty=1)
+plotconfidence(var2,run_years,2,obs_colours[1])
+lines(var3~run_years, col=model_colours[1], lwd=3, lty = 1) ; points(var3~run_years, col=model_colours[1], pch=16)
 lines(var4~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var4~run_years, col=model_colours[1], pch=16)
+lines(var5~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var5~run_years, col=model_colours[1], pch=16)
+abline(0,0,col="grey", lwd=2)
+legend("topleft", legend = c(obs_flags,model_flags), col = c(obs_colours[1:3],model_colours), 
+       lty = c(rep(1,length(obs_flags)),rep(1,length(model_flags))), pch=rep(NA,length(c(obs_flags,model_flags))), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+mtext("Net Biome Exchange (TgC/yr)", side=2, padj=-2.65,cex=1.5)
+#mtext("Year", side=1, padj=2.0,cex=1.6)
+
+# Now plot GPP
+var3  = cbind(cbind(c(obs_gpp_mean_domain_TgCyr),c(obs_gpp_min_domain_TgCyr)),c(obs_gpp_max_domain_TgCyr))
+var4  = gpp_TgCyr ; var5  = gpp_lower_TgCyr ; var6  = gpp_upper_TgCyr   
+zrange = range(c(var3,var4,var5,var6), na.rm=TRUE)*c(0.9,1.0)
+plot(var4~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
+      col=model_colours[1], type="l", lwd = 4, ylab="", xlab="", lty = 2)
+plotconfidence(var3,run_years,2,obs_colours[2])
+lines(var4~run_years, col=model_colours[1], lwd = 4, lty = 1) ; points(var4~run_years, col=model_colours[1], pch=16)
+lines(var5~run_years, col=model_colours[1], lwd = 4, lty = 2) ; points(var5~run_years, col=model_colours[1], pch=16)
+lines(var6~run_years, col=model_colours[1], lwd = 4, lty = 2) ; points(var6~run_years, col=model_colours[1], pch=16)
+#legend("bottomright", legend = c(obs_flags[-5],model_flags), col = c(obs_colours[1:4],model_colours), 
+#       lty = c(rep(1,length(obs_flags[-5])),rep(2,length(model_flags))), pch=rep(NA,length(c(obs_flags[-5],model_flags))), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+#mtext("Year", side=1, padj=2.0,cex=1.6)
+mtext("Gross Primary Productivity (TgC/yr)", side=2, padj=-2.65, cex=1.5)
+
+# Now plot fire
+var3  = cbind(cbind(c(obs_fire_mean_domain_TgCyr),c(obs_fire_min_domain_TgCyr)),c(obs_fire_max_domain_TgCyr))
+var4  = fire_TgCyr  ; var5  = fire_lower_TgCyr ; var6  = fire_upper_TgCyr
+zrange = range(c(var3,var4,var5,var6), na.rm=TRUE)*c(0.9,1.1)
+plot(var4~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
+      col=model_colours[1], type="l", lwd=4, lty=2, ylab="", xlab="")
+plotconfidence(var3,run_years,2,obs_colours[3])
+lines(var4~run_years, col=model_colours[1], lwd=4, lty = 1) ; points(var4~run_years, col=model_colours[1], pch=16)
+lines(var5~run_years, col=model_colours[1], lwd=4, lty = 2) ; points(var5~run_years, col=model_colours[1], pch=16)
+lines(var6~run_years, col=model_colours[1], lwd=4, lty = 2) ; points(var5~run_years, col=model_colours[1], pch=16)
 mtext("Year", side=1, padj=2.0,cex=1.6)
 mtext("Fire Emissions (TgC/yr)", side=2, padj=-2.65,cex=1.5)
 dev.off()
@@ -1465,7 +1895,7 @@ dev.off()
 ## Statistical significance / trend maps for C-budget terms
 
 # Comparison of NBE, wood and soil stock change over the analysis period by model
-png(file = paste(out_dir,"/",PROJECT$name,"_NBP_dCwood_dCsom.png",sep=""), height = 1000, width = 3500, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBP_dCwood_dCsom.png",sep=""), height = 1000, width = 3500, res = 300)
 # Plot differences
 par(mfrow=c(1,3), mar=c(0.05,1,0.05,7.0), omi = c(0.01,0.4,0.3,0.05))
 # Create raster
@@ -1507,7 +1937,7 @@ mtext(expression(paste("Soil Change (MgC/ha y",r^-1,")",sep="")), side = 3, cex 
 dev.off()
 
 # GPP, Rauto, Rhet trend
-png(file = paste(out_dir,"/",PROJECT$name,"_GPP_Rauto_Rhet_LAI_trend.png",sep=""), height = 2800, width = 3300, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_GPP_Rauto_Rhet_LAI_trend.png",sep=""), height = 2800, width = 3300, res = 300)
 # Plot differences
 par(mfrow=c(2,2), mar=c(0.1,0.1,1.0,8),omi=c(0.05,0.1,0.2,0.15))
 # C1 - GPP. Rauto, Rhet and LAI trends
@@ -1590,7 +2020,7 @@ zrange5 = c(0,1)*max(abs(range(values(var5),na.rm=TRUE)))
 zrange6 = c(0,1)*max(abs(range(values(var6),na.rm=TRUE)))
 zrange7 = c(0,1)*max(abs(range(values(var7),na.rm=TRUE)))
 zrange8 = c(0,1)*max(abs(range(values(var8),na.rm=TRUE)))
-png(file = paste(out_dir,"/",PROJECT$name,"_C_fluxes_median_CI.png",sep=""), height = 2100, width = 5000, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_C_fluxes_median_CI.png",sep=""), height = 2100, width = 5000, res = 300)
 par(mfrow=c(2,4), mar=c(0.5,0.5,2.8,7),omi=c(0.1,0.4,0.2,0.2))
 # Mean annual median estimates
 plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
@@ -1660,7 +2090,7 @@ zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
 zrange4 = c(0,1)*max(abs(range(values(var4),na.rm=TRUE)))
 zrange5 = c(0,1)*max(abs(range(values(var5),na.rm=TRUE)))
 zrange6 = c(0,1)*max(abs(range(values(var6),na.rm=TRUE)))
-png(file = paste(out_dir,"/",PROJECT$name,"_Final_stocks_median_CI.png",sep=""), height = 2700, width = 4900, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Final_stocks_median_CI.png",sep=""), height = 2700, width = 4900, res = 300)
 par(mfrow=c(2,3), mar=c(0.6,0.4,2.9,7),omi=c(0.1,0.4,0.18,0.2))
 # Final C stocks, median estimate
 plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
@@ -1719,7 +2149,7 @@ zrange3 = c(-1,1)*max(abs(range(values(var3),na.rm=TRUE)))
 zrange4 = c(0,1)*max(abs(range(values(var4),na.rm=TRUE)))
 zrange5 = c(0,1)*max(abs(range(values(var5),na.rm=TRUE)))
 zrange6 = c(0,1)*max(abs(range(values(var6),na.rm=TRUE)))
-png(file = paste(out_dir,"/",PROJECT$name,"_Final_stock_change_median_CI.png",sep=""), height = 2700, width = 4900, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Final_stock_change_median_CI.png",sep=""), height = 2700, width = 4900, res = 300)
 par(mfrow=c(2,3), mar=c(0.5,0.4,2.8,7),omi=c(0.1,0.4,0.2,0.2))
 # Final stock changes, median estimates
 plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
@@ -1754,10 +2184,14 @@ dev.off()
 
 # Traits
 # Assign variables
-var1 = grid_parameters$MTT_wood_years[,,mid_quant]
+wood_mrt_limit = 60
+print(paste("Wood MRT plotting range has been limited to ",wood_mrt_limit," years",sep=""))
+var1 = pmin(wood_mrt_limit,grid_parameters$MTT_wood_years[,,mid_quant])
+var1 = array(var1, dim = dim(grid_parameters$MTT_wood_years)[1:2])
 var2 = grid_parameters$NPP_wood_fraction[,,mid_quant]
 var3 = grid_parameters$SS_wood_gCm2[,,mid_quant]*1e-2
-var4 = grid_parameters$MTT_wood_years[,,high_quant] - grid_parameters$MTT_wood_years[,,low_quant]
+var4 = pmin(wood_mrt_limit*2,grid_parameters$MTT_wood_years[,,high_quant]) - pmin(wood_mrt_limit*2,grid_parameters$MTT_wood_years[,,low_quant])
+var4 = array(var4, dim = dim(grid_parameters$MTT_wood_years)[1:2])
 var5 = grid_parameters$NPP_wood_fraction[,,high_quant] - grid_parameters$NPP_wood_fraction[,,low_quant]
 var6 = (grid_parameters$SS_wood_gCm2[,,high_quant]*1e-2) - (grid_parameters$SS_wood_gCm2[,,low_quant]*1e-2)
 # Apply filter
@@ -1781,8 +2215,7 @@ zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
 zrange4 = c(0,1)*max(abs(range(values(var4),na.rm=TRUE)))
 zrange5 = c(0,1)
 zrange6 = c(0,1)*max(abs(range(values(var6),na.rm=TRUE)))
-
-png(file = paste(out_dir,"/",PROJECT$name,"_NPP_MRT_SS_median_CI.png",sep=""), height = 2700, width = 4900, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_MRT_SS_median_CI.png",sep=""), height = 2700, width = 4900, res = 300)
 par(mfrow=c(2,3), mar=c(0.5,0.3,2.8,8),omi=c(0.1,0.3,0.2,0.2))
 # Ecosystem traits, median estimates
 plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
@@ -1826,13 +2259,17 @@ var1 = var1 / wood_turn ; var2 = var2 / wood_turn ; var3 = var3 / wood_turn
 var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
 var2[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
 var3[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+# Filter for the miombo AGB map locations
+var1[which(landfilter == 1 & is.na(var1) == TRUE)] = 0
+var2[which(landfilter == 1 & is.na(var2) == TRUE)] = 0
+var3[which(landfilter == 1 & is.na(var3) == TRUE)] = 0
 # Convert to raster
 var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
 var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 # specify ranges
 zrange1 = c(0,1)
-png(file = paste(out_dir,"/",PROJECT$name,"_Wood_turnover_contribution.png",sep=""), height = 1300, width = 4900, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Wood_turnover_contribution.png",sep=""), height = 1300, width = 4900, res = 300)
 par(mfrow=c(1,3), mar=c(0.5,0.4,3.0,7),omi=c(0.1,0.3,0.1,0.2))
 # Partitioning of wood turnover, median estimate
 plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
@@ -1847,6 +2284,271 @@ plot(var3, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = 
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
      main = "Biomass removal MRT comp (0-1)", col=colour_choices_loss)
 plot(landmask, add=TRUE)
+dev.off()
+
+# Plot Foliage, fine root, wood, litter(foliar+fine root+wood?), soil mean residence times against main meteorology
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_MRT_meteorology_association.png",sep=""), height = 2200, width = 4500, res = 300)
+par(mfrow=c(3,5), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.1,0.1))
+# Temperature
+plot(grid_parameters$MTT_foliar_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="Foliar MRT (yrs)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+#mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
+plot(grid_parameters$MTT_root_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="Root MRT (yrs)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$MTT_wood_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="Wood MRT (yrs)", ylab="", xlab="Mean Temperature (C)", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+plot(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="DeadOrg MRT (yrs)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$MTT_som_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="Soil MRT (yrs)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+# Precipitation
+plot(grid_parameters$MTT_foliar_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$MTT_root_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$MTT_wood_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="Mean precipitation (mm/yr)", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+plot(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$MTT_som_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+# Vapour pressure deficit
+plot(grid_parameters$MTT_foliar_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$MTT_root_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$MTT_wood_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+plot(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$MTT_som_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+dev.off()
+
+# Plot Foliage, fine root, wood, litter(foliar+fine root+wood?), soil mean residence times against main disturbance
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_MRT_disturbance_association.png",sep=""), height = 2200, width = 4500, res = 300)
+par(mfrow=c(3,5), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.1,0.1))
+# Mean annual number of fires
+plot(grid_parameters$MTT_foliar_years[,,mid_quant]~(FireFreq), main="Foliar MRT (yrs)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+#mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
+plot(grid_parameters$MTT_root_years[,,mid_quant]~(FireFreq), main="Root MRT (yrs)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$MTT_wood_years[,,mid_quant]~(FireFreq), main="Wood MRT (yrs)", ylab="", xlab="No. annual fires", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+plot(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(FireFreq), main="DeadOrg MRT (yrs)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$MTT_som_years[,,mid_quant]~(FireFreq), main="Soil MRT (yrs)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+# Mean annual burned fraction
+plot(grid_parameters$MTT_foliar_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$MTT_root_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$MTT_wood_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+plot(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$MTT_som_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+# Mean annual forest harvest fraction
+plot(grid_parameters$MTT_foliar_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$MTT_root_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$MTT_wood_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+plot(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$MTT_som_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+dev.off()
+
+# Plot Foliage, fine root, wood NPP allocation fractions main meteorology
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_meteorology_association.png",sep=""), height = 2200, width = 2800, res = 300)
+par(mfrow=c(3,3), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.1,0.1))
+# Temperature
+plot(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(grid_parameters$mean_temperature_C), main="Foliar NPP (0-1)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+#mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
+plot(grid_parameters$NPP_root_fraction[,,mid_quant]~(grid_parameters$mean_temperature_C), main="Root NPP (0-1)", ylab="", xlab="Mean Temperature (C)", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$NPP_wood_fraction[,,mid_quant]~(grid_parameters$mean_temperature_C), main="Wood NPP (0-1)", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+# Precipitation
+plot(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$NPP_root_fraction[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="Mean precipitation (mm/yr)", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$NPP_wood_fraction[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+# Vapour pressure deficit
+plot(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$NPP_root_fraction[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$NPP_wood_fraction[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+dev.off()
+
+# Plot Foliage, fine root, wood NPP allocation fractions against main disturbance
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_disturbance_association.png",sep=""), height = 2200, width = 2800, res = 300)
+par(mfrow=c(3,3), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.1,0.1))
+# Temperature
+plot(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(FireFreq), main="Foliar NPP (0-1)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+#mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
+plot(grid_parameters$NPP_root_fraction[,,mid_quant]~(FireFreq), main="Root NPP (0-1)", ylab="", xlab="No. annual fires", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$NPP_wood_fraction[,,mid_quant]~(FireFreq), main="Wood NPP (0-1)", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+# Precipitation
+plot(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$NPP_root_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$NPP_wood_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+# Vapour pressure deficit
+plot(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$NPP_root_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(grid_parameters$NPP_wood_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+dev.off()
+
+my_colours=colorRampPalette(c("white",rep(rev(brewer.pal(11,"Spectral")),each=3)))
+# Plot Foliage, fine root, wood, litter(foliar+fine root+wood?), soil mean residence times against main meteorology
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_MRT_meteorology_association_heatmap.png",sep=""), height = 2200, width = 4500, res = 300)
+par(mfrow=c(3,5), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.1,0.1))
+# Temperature
+smoothScatter(grid_parameters$MTT_foliar_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="Foliar MRT (yrs)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+#mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
+smoothScatter(grid_parameters$MTT_root_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="Root MRT (yrs)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_wood_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="Wood MRT (yrs)", ylab="", xlab="Mean Temperature (C)", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="DeadOrg MRT (yrs)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_som_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="Soil MRT (yrs)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+# Precipitation
+smoothScatter(grid_parameters$MTT_foliar_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_root_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_wood_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="Mean precipitation (mm/yr)", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_som_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+# Vapour pressure deficit
+smoothScatter(grid_parameters$MTT_foliar_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_root_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_wood_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_som_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+dev.off()
+
+# Plot Foliage, fine root, wood, litter(foliar+fine root+wood?), soil mean residence times against main disturbance
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_MRT_disturbance_association_heatmap.png",sep=""), height = 2200, width = 4500, res = 300)
+par(mfrow=c(3,5), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.1,0.1))
+# Mean annual number of fires
+smoothScatter(grid_parameters$MTT_foliar_years[,,mid_quant]~(FireFreq), main="Foliar MRT (yrs)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+#mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
+smoothScatter(grid_parameters$MTT_root_years[,,mid_quant]~(FireFreq), main="Root MRT (yrs)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_wood_years[,,mid_quant]~(FireFreq), main="Wood MRT (yrs)", ylab="", xlab="No. annual fires", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(FireFreq), main="DeadOrg MRT (yrs)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_som_years[,,mid_quant]~(FireFreq), main="Soil MRT (yrs)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+# Mean annual burned fraction
+smoothScatter(grid_parameters$MTT_foliar_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_root_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_wood_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_som_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+# Mean annual forest harvest fraction
+smoothScatter(grid_parameters$MTT_foliar_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_root_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_wood_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$MTT_som_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+dev.off()
+
+# Plot Foliage, fine root, wood NPP allocation fractions main meteorology
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_meteorology_association_heatmap.png",sep=""), height = 2200, width = 2800, res = 300)
+par(mfrow=c(3,3), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.1,0.1))
+# Temperature
+smoothScatter(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(grid_parameters$mean_temperature_C), main="Foliar NPP (0-1)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+#mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
+smoothScatter(grid_parameters$NPP_root_fraction[,,mid_quant]~(grid_parameters$mean_temperature_C), main="Root NPP (0-1)", ylab="", xlab="Mean Temperature (C)", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$NPP_wood_fraction[,,mid_quant]~(grid_parameters$mean_temperature_C), main="Wood NPP (0-1)", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+# Precipitation
+smoothScatter(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$NPP_root_fraction[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="Mean precipitation (mm/yr)", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$NPP_wood_fraction[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+# Vapour pressure deficit
+smoothScatter(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$NPP_root_fraction[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$NPP_wood_fraction[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+dev.off()
+
+# Plot Foliage, fine root, wood NPP allocation fractions against main disturbance
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_disturbance_association_heatmap.png",sep=""), height = 2200, width = 2800, res = 300)
+par(mfrow=c(3,3), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.1,0.1))
+# Temperature
+smoothScatter(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(FireFreq), main="Foliar NPP (0-1)", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+#mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
+smoothScatter(grid_parameters$NPP_root_fraction[,,mid_quant]~(FireFreq), main="Root NPP (0-1)", ylab="", xlab="No. annual fires", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$NPP_wood_fraction[,,mid_quant]~(FireFreq), main="Wood NPP (0-1)", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+# Precipitation
+smoothScatter(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$NPP_root_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$NPP_wood_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+# Vapour pressure deficit
+smoothScatter(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$NPP_root_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
+smoothScatter(grid_parameters$NPP_wood_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) x**0.25, colramp=my_colours, nrpoints = 0)
 dev.off()
 
 

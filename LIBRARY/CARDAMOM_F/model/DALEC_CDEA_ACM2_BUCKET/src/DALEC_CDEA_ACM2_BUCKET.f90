@@ -377,7 +377,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! 5 = labile production
     ! 6 = root production
     ! 7 = wood production
-    ! 8 = labile production
+    ! 8 = labile->leaf production
     ! 9 = leaffall factor
     ! 10 = leaf litter production
     ! 11 = woodlitter production

@@ -571,6 +571,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Update fire parameters derived from
     ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
+    ! Subsequently expanded by T. L. Smallman & Mat Williams (UoE, 03/09/2021)
+    ! to provide specific CC for litter and wood litter.
+    ! NOTE: changes also result in the addition of further EDCs
+
     ! Assign proposed resilience factor
     rfac(1:4) = pars(31)
     ! Assign combustion completeness to foliage
@@ -579,8 +583,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     cf(1) = pars(33) ; cf(3) = pars(33) ; cf(4) = pars(33)
     cf(6) = pars(34) ! soil
     ! derived values for litter and wood litter
-    cf(5) = (cf(2) + cf(6)) * 0.5d0
-    cf(7) = (cf(4) + cf(6)) * 0.5d0
+    cf(5) = pars(35) !(cf(2) + cf(6)) * 0.5d0
+    cf(7) = pars(36) !(cf(4) + cf(6)) * 0.5d0
 
     !
     ! Begin looping through each time step

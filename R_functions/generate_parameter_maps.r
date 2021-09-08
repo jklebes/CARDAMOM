@@ -7,6 +7,27 @@
 
 generate_parameter_maps<-function(PROJECT) {
 
+  # work out area matrix for the pixels in meters
+  # include adjustment for g-> Tg (*1e-12)
+  if (PROJECT$grid_type == "UK") {
+      output = generate_uk_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
+      grid_lat = array(output$lat, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+      grid_long = array(output$long,dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+      rm(output)
+  } else if (PROJECT$grid_type == "wgs84") {
+      # generate the lat / long grid again
+      output = generate_wgs84_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
+      grid_lat = array(output$lat, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+      grid_long = array(output$long,dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+      rm(output)
+  } else {
+      stop("valid spatial grid option not selected (UK, or wgs84)")
+  }
+
+  # Move working directory
+  old_wd = getwd()
+  setwd(PROJECT$figpath)
+
   # how many years of the analysis
   nos_years = length(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year))
   # load timesteps to local variable
@@ -328,15 +349,18 @@ generate_parameter_maps<-function(PROJECT) {
       PROJECT$model$name == "DALEC" | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_BUCKET_CanAGE" |
       PROJECT$model$name == "DALEC_G5" | PROJECT$model$name == "DALEC_G6" |
       PROJECT$model$name == "DALEC_1005" | PROJECT$model$name == "DALEC_1005a") {
-      jpeg(file=paste(PROJECT$figpath,"Cluster_map_of_median_parameters_",PROJECT$name,".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+      figname = paste("Cluster_map_of_median_parameters_",gsub("%","_",PROJECT$name),".jpeg",sep="")
+      jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      image.plot(grid_parameters$uk_cluster_pft, main=paste("Cluster analysis potential PFT map",sep=""),axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-      contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+      image.plot(x = grid_long, y = grid_lat, z = grid_parameters$uk_cluster_pft, main=paste("Cluster analysis potential PFT map",sep=""),axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+      map(add=TRUE, lwd = 2)
+      #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
   }
 
   # create tempory array of parameters for the covariance analysis
-  jpeg(file=paste(PROJECT$figpath,"parameter_correlations_median_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  figname = paste("parameter_correlations_median_",gsub("%","_",PROJECT$name),".jpg",sep="")
+  jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   tmp=array(grid_parameters$parameters[,,1:dim(grid_parameters$parameters)[3],median_loc],dim=c(prod(dim(grid_parameters$parameters)[1:2]),(dim(grid_parameters$parameters)[3])))
   image.plot(cor(tmp,use="na.or.complete", method="spearman"), main="Median Parameter Correlation (Spearmans)")
@@ -348,169 +372,214 @@ generate_parameter_maps<-function(PROJECT) {
   colour_choices=colour_choices_upper(length(grid_parameters$NPP_foliar_fraction[,,median_loc]))
 
   # create map of NPP allocations
-  jpeg(file=paste(PROJECT$figpath,"parameter_maps_median_","Cfoliar_NPP_alloc","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  figname = paste("parameter_maps_median_","Cfoliar_NPP_alloc","_",gsub("%","_",PROJECT$name),".jpg",sep="")
+  jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(grid_parameters$NPP_foliar_fraction[,,median_loc], col=colour_choices, main=paste("Cfoliar NPP allocation median estimate",sep=""), axes=FALSE
+  image.plot(x = grid_long, y = grid_lat, z = grid_parameters$NPP_foliar_fraction[,,median_loc], col=colour_choices
+            , main=paste("Cfoliar NPP allocation median estimate",sep=""), axes=FALSE
             ,cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-  contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+  map(add=TRUE, lwd = 2)
+  #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
-  jpeg(file=paste(PROJECT$figpath,"parameter_maps_median_","Cwood_NPP_alloc","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  figname = paste("parameter_maps_median_","Cwood_NPP_alloc","_",gsub("%","_",PROJECT$name),".jpg",sep="")
+  jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(grid_parameters$NPP_wood_fraction[,,median_loc],col=colour_choices, main=paste("Cwood NPP allocation median estimate",sep=""), axes=FALSE
+  image.plot(x = grid_long, y = grid_lat, z = grid_parameters$NPP_wood_fraction[,,median_loc],col=colour_choices
+            ,main=paste("Cwood NPP allocation median estimate",sep=""), axes=FALSE
             ,cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-  contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+  map(add=TRUE, lwd = 2)
+  #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
-  jpeg(file=paste(PROJECT$figpath,"parameter_maps_median_","Croot_NPP_alloc","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(grid_parameters$NPP_root_fraction[,,median_loc], col=colour_choices, main=paste("Croot NPP allocation median estimate",sep=""), axes=FALSE
+  image.plot(x = grid_long, y = grid_lat, z = grid_parameters$NPP_root_fraction[,,median_loc], col=colour_choices
+             ,main=paste("Croot NPP allocation median estimate",sep=""), axes=FALSE
             ,cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-  contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+  map(add=TRUE, lwd = 2)
+  #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
-  jpeg(file=paste(PROJECT$figpath,"parameter_maps_95CI_","Cfoliar_NPP_alloc","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  figname = paste("parameter_maps_95CI_","Cfoliar_NPP_alloc","_",gsub("%","_",PROJECT$name),".jpg",sep="")
+  jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(grid_parameters$NPP_foliar_fraction[,,upper_loc]-grid_parameters$NPP_foliar_fraction[,,lower_loc]
+  image.plot(x = grid_long, y = grid_lat, z = grid_parameters$NPP_foliar_fraction[,,upper_loc]-grid_parameters$NPP_foliar_fraction[,,lower_loc]
             ,col=colour_choices, main=paste("Cfoliar NPP allocation uncertainty",sep=""),axes=FALSE
             ,cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-  contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+  map(add=TRUE, lwd = 2)
+  #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
-  jpeg(file=paste(PROJECT$figpath,"parameter_maps_95CI_","Cwood_NPP_alloc","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  figname = paste("parameter_maps_95CI_","Cwood_NPP_alloc","_",gsub("%","_",PROJECT$name),".jpg",sep="")
+  jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(grid_parameters$NPP_wood_fraction[,,upper_loc]-grid_parameters$NPP_wood_fraction[,,lower_loc]
+  image.plot(x = grid_long, y = grid_lat, z = grid_parameters$NPP_wood_fraction[,,upper_loc]-grid_parameters$NPP_wood_fraction[,,lower_loc]
             ,col=colour_choices, main=paste("Cwood NPP allocation uncertainty",sep=""),axes=FALSE
             ,cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-  contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+  map(add=TRUE, lwd = 2)
+  #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
-  jpeg(file=paste(PROJECT$figpath,"parameter_maps_95CI_","Croot_NPP_alloc","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  figname = paste("parameter_maps_95CI_","Croot_NPP_alloc","_",gsub("%","_",PROJECT$name),".jpg",sep="")
+  jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(grid_parameters$NPP_root_fraction[,,upper_loc]-grid_parameters$NPP_root_fraction[,,lower_loc]
+  image.plot(x = grid_long, y = grid_lat, z = grid_parameters$NPP_root_fraction[,,upper_loc]-grid_parameters$NPP_root_fraction[,,lower_loc]
             ,col=colour_choices, main=paste("Croot NPP allocation uncertainty",sep=""),axes=FALSE
             ,cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-  contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+  map(add=TRUE, lwd = 2)
+  #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
 
   # create map of residence times
-  jpeg(file=paste(PROJECT$figpath,"parameter_maps_median_","Cfoliar_residence_time","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  jpeg(file=paste("parameter_maps_median_","Cfoliar_residence_time","_",gsub("%","_",PROJECT$name),".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(grid_parameters$MTT_foliar_years[,,median_loc], col=colour_choices, main=paste("Cfoliar residence time median estimate",sep="")
+  image.plot(x = grid_long, y = grid_lat, z = grid_parameters$MTT_foliar_years[,,median_loc], col=colour_choices
+            ,main=paste("Cfoliar residence time median estimate",sep="")
             ,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-  contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+  map(add=TRUE, lwd = 2)
+  #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
-  jpeg(file=paste(PROJECT$figpath,"parameter_maps_median_","Cwood_residence_time","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  jpeg(file=paste("parameter_maps_median_","Cwood_residence_time","_",gsub("%","_",PROJECT$name),".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(grid_parameters$MTT_wood_years[,,median_loc], col=colour_choices, main=paste("Cwood residence time median estimate",sep="")
+  image.plot(x = grid_long, y = grid_lat, z = grid_parameters$MTT_wood_years[,,median_loc], col=colour_choices
+            ,main=paste("Cwood residence time median estimate",sep="")
             ,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-  contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+  map(add=TRUE, lwd = 2)
+  #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
-  jpeg(file=paste(PROJECT$figpath,"parameter_maps_median_","Croot_residence_time","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  jpeg(file=paste("parameter_maps_median_","Croot_residence_time","_",gsub("%","_",PROJECT$name),".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(grid_parameters$MTT_root_years[,,median_loc], col=colour_choices, main=paste("Croot residence time median estimate",sep="")
+  image.plot(x = grid_long, y = grid_lat, z = grid_parameters$MTT_root_years[,,median_loc], col=colour_choices
+            ,main=paste("Croot residence time median estimate",sep="")
             ,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-  contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+  map(add=TRUE, lwd = 2)
+  #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
-  jpeg(file=paste(PROJECT$figpath,"parameter_maps_median_","Csom_residence_time","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  jpeg(file=paste("parameter_maps_median_","Csom_residence_time","_",gsub("%","_",PROJECT$name),".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(grid_parameters$MTT_som_years[,,median_loc], col=colour_choices, main=paste("Csom residence time median estimate",sep="")
+  image.plot(x = grid_long, y = grid_lat, z = grid_parameters$MTT_som_years[,,median_loc], col=colour_choices
+            ,main=paste("Csom residence time median estimate",sep="")
             ,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-  contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+  map(add=TRUE, lwd = 2)
+  #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
-  jpeg(file=paste(PROJECT$figpath,"parameter_maps_median_","CDeadOrg_residence_time","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  jpeg(file=paste("parameter_maps_median_","CDeadOrg_residence_time","_",gsub("%","_",PROJECT$name),".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(grid_parameters$MTT_DeadOrg_years[,,median_loc], col=colour_choices, main=paste("CDeadOrg residence time median estimate",sep="")
+  image.plot(x = grid_long, y = grid_lat, z = grid_parameters$MTT_DeadOrg_years[,,median_loc], col=colour_choices
+            ,main=paste("CDeadOrg residence time median estimate",sep="")
             ,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-  contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+  map(add=TRUE, lwd = 2)
+  #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
 
-  jpeg(file=paste(PROJECT$figpath,"parameter_maps_median_uncertainty_","Cfoliar_residence_time","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  jpeg(file=paste("parameter_maps_median_uncertainty_","Cfoliar_residence_time","_",gsub("%","_",PROJECT$name),".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(grid_parameters$MTT_foliar_years[,,upper_loc]-grid_parameters$MTT_foliar_years[,,lower_loc]
+  image.plot(x = grid_long, y = grid_lat, z = grid_parameters$MTT_foliar_years[,,upper_loc]-grid_parameters$MTT_foliar_years[,,lower_loc]
             ,col=colour_choices, main=paste("Cfoliar residence time uncertainty",sep="")
             ,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-  contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+  map(add=TRUE, lwd = 2)
+  #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
-  jpeg(file=paste(PROJECT$figpath,"parameter_maps_median_uncertainty_","Cwood_residence_time","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  jpeg(file=paste("parameter_maps_median_uncertainty_","Cwood_residence_time","_",gsub("%","_",PROJECT$name),".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(grid_parameters$MTT_wood_years[,,upper_loc]-grid_parameters$MTT_wood_years[,,lower_loc]
+  image.plot(x = grid_long, y = grid_lat, z = grid_parameters$MTT_wood_years[,,upper_loc]-grid_parameters$MTT_wood_years[,,lower_loc]
             ,col=colour_choices, main=paste("Cwood residence time uncertainty",sep="")
             ,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-  contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+  map(add=TRUE, lwd = 2)
+  #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
-  jpeg(file=paste(PROJECT$figpath,"parameter_maps_median_uncertainty_","Croot_residence_time","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  jpeg(file=paste("parameter_maps_median_uncertainty_","Croot_residence_time","_",gsub("%","_",PROJECT$name),".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(grid_parameters$MTT_root_years[,,upper_loc]-grid_parameters$MTT_root_years[,,lower_loc]
+  image.plot(x = grid_long, y = grid_lat, z = grid_parameters$MTT_root_years[,,upper_loc]-grid_parameters$MTT_root_years[,,lower_loc]
             ,col=colour_choices, main=paste("Croot residence time uncertainty",sep="")
             ,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-  contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+  map(add=TRUE, lwd = 2)
+  #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
-  jpeg(file=paste(PROJECT$figpath,"parameter_maps_median_uncertainty_","CDeadOrg_residence_time","_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  jpeg(file=paste("parameter_maps_median_uncertainty_","CDeadOrg_residence_time","_",gsub("%","_",PROJECT$name),".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(grid_parameters$MTT_DeadOrg_years[,,upper_loc]-grid_parameters$MTT_DeadOrg_years[,,lower_loc]
+  image.plot(x = grid_long, y = grid_lat, z = grid_parameters$MTT_DeadOrg_years[,,upper_loc]-grid_parameters$MTT_DeadOrg_years[,,lower_loc]
             ,col=colour_choices, main=paste("CDeadOrg residence time uncertainty",sep="")
             ,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-  contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+  map(add=TRUE, lwd = 2)
+  #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
 
   # now everything has been loaded into a nice array we begin plotting
   for (p in seq(1,dim(grid_parameters$parameters)[3])) {
        ###
        ## spatial maps
-       jpeg(file=paste(PROJECT$figpath,"parameter_maps_median_",par_names[p],"_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+       jpeg(file=paste("parameter_maps_median_",par_names[p],"_",gsub("%","_",PROJECT$name),".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
        par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-       image.plot(grid_parameters$parameters[,,p,median_loc], col=colour_choices, main=paste(par_names[p]," median estimate",sep=""),axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-       contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+       image.plot(x = grid_long, y = grid_lat, z = grid_parameters$parameters[,,p,median_loc], col=colour_choices,
+                  main=paste(par_names[p]," median estimate",sep=""),axes=FALSE, cex.main=2.4,legend.width=3.0,
+                  cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+       map(add=TRUE, lwd = 2)
+       #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
        dev.off()
-       jpeg(file=paste(PROJECT$figpath,"parameter_maps_95CI_",par_names[p],"_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+       jpeg(file=paste("parameter_maps_95CI_",par_names[p],"_",gsub("%","_",PROJECT$name),".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
        par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-       image.plot(grid_parameters$parameters[,,p,upper_loc]-grid_parameters$parameters[,,p,lower_loc], col=colour_choices, main=paste(par_names[p]," uncertainty range",sep=""),axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-       contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+       image.plot(x = grid_long, y = grid_lat, z = grid_parameters$parameters[,,p,upper_loc]-grid_parameters$parameters[,,p,lower_loc],
+                  col=colour_choices, main=paste(par_names[p]," uncertainty range",sep=""), axes=FALSE,
+                  cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+       map(add=TRUE, lwd = 2)
+       #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
        dev.off()
-       jpeg(file=paste(PROJECT$figpath,"parameter_maps_converged_",par_names[p],"_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+       jpeg(file=paste("parameter_maps_converged_",par_names[p],"_",gsub("%","_",PROJECT$name),".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
        par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-       image.plot(grid_parameters$parameters_converged[,,p], col=colour_choices, main=paste(par_names[p]," Gelmen-Rubens convergence (1 = PASS / 0 = FALSE)",sep="")
+       image.plot(x = grid_long, y = grid_lat, z = grid_parameters$parameters_converged[,,p], col=colour_choices
+                 ,main=paste(par_names[p]," Gelmen-Rubens convergence (1 = PASS / 0 = FALSE)",sep="")
                  ,axes=FALSE, zlim=c(0,1), cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-       contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+       map(add=TRUE, lwd = 2)
+       #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
        dev.off()
   }
 
   # Plant function type map
   if (length(which(is.na((as.vector(grid_parameters$pft_array))) == FALSE & as.vector(grid_parameters$pft_array) > 0)) > 0) {
-      jpeg(file=paste(PROJECT$figpath,"pft_maps_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+      jpeg(file=paste("pft_maps_",gsub("%","_",PROJECT$name),".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      image.plot(grid_parameters$pft_array, main="ECMWF PFT"
+      image.plot(x = grid_long, y = grid_lat, z = grid_parameters$pft_array, main="ECMWF PFT"
                 ,axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5
                 ,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(0,20))
-      contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+      map(add=TRUE, lwd = 2)
+      #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
   }
   # mean temperature
-  jpeg(file=paste(PROJECT$figpath,"mean_temperature_maps_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  jpeg(file=paste("mean_temperature_maps_",gsub("%","_",PROJECT$name),".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(grid_parameters$mean_temperature_C, col=rev(colour_choices), main="Mean air temperature (oC)",axes=FALSE, cex.main=2.4,legend.width=3.0
+  image.plot(x = grid_long, y = grid_lat, z = grid_parameters$mean_temperature_C, col=rev(colour_choices)
+            ,main="Mean air temperature (oC)",axes=FALSE, cex.main=2.4,legend.width=3.0
             ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1)
             ,zlim=c(min(as.vector(grid_parameters$mean_temperature_C),na.rm=TRUE),max(as.vector(grid_parameters$mean_temperature_C),na.rm=TRUE)))
-  contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+  map(add=TRUE, lwd = 2)
+  #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
   # mean radiation
-  jpeg(file=paste(PROJECT$figpath,"mean_radiation_maps_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  jpeg(file=paste("mean_radiation_maps_",gsub("%","_",PROJECT$name),".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(grid_parameters$mean_radiation_MJm2day, col=rev(colour_choices), main="Mean radiation (MJ/m2/day)"
+  image.plot(x = grid_long, y = grid_lat, z = grid_parameters$mean_radiation_MJm2day, col=rev(colour_choices)
+            ,main="Mean radiation (MJ/m2/day)"
             ,axes=FALSE, cex.main=2.4,legend.width=3.0
             ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(0,36))
-  contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+  map(add=TRUE, lwd = 2)
+  #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
   # mean vpd
-  jpeg(file=paste(PROJECT$figpath,"mean_vpd_maps_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  jpeg(file=paste("mean_vpd_maps_",gsub("%","_",PROJECT$name),".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(grid_parameters$mean_vpd_Pa, col=rev(colour_choices), main="Mean VPD (Pa)"
+  image.plot(x = grid_long, y = grid_lat, z = grid_parameters$mean_vpd_Pa, col=rev(colour_choices)
+            ,main="Mean VPD (Pa)"
             ,axes=FALSE, cex.main=2.4, legend.width=3.0, cex=1.5
             ,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(0,max(as.vector(grid_parameters$mean_vpd_Pa),na.rm=TRUE)))
-  contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+  map(add=TRUE, lwd = 2)
+  #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
   # mean precipitation
-  jpeg(file=paste(PROJECT$figpath,"mean_precipitation_maps_",PROJECT$name,".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+  jpeg(file=paste("mean_precipitation_maps_",gsub("%","_",PROJECT$name),".jpg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(grid_parameters$mean_precipitation_kgm2yr, col=colour_choices, main="Mean precipitation (mm/yr)",axes=FALSE, cex.main=2.4,legend.width=3.0
+  image.plot(x = grid_long, y = grid_lat, z = grid_parameters$mean_precipitation_kgm2yr, col=colour_choices,
+             main="Mean precipitation (mm/yr)",axes=FALSE, cex.main=2.4,legend.width=3.0
             ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(0,max(as.vector(grid_parameters$mean_precipitation_kgm2yr),na.rm=TRUE)))
-  contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+  map(add=TRUE, lwd = 2)
+  #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
 
   # Add readme information
@@ -522,6 +591,9 @@ generate_parameter_maps<-function(PROJECT) {
 
   # tidy before leaving
   gc(reset=TRUE, verbose=FALSE)
+
+  # Move working directory
+  setwd(old_wd)
 
   print("...done with parameters...")
 

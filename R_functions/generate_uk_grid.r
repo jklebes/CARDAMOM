@@ -6,6 +6,9 @@
 
 generate_uk_grid<-function(lat,long,resolution) {
 
+    # Check whether we have two values for the resolution (longitude, latitude), (x,y)
+    if (length(resolution) == 1) {tmp = rep(resolution, length.out = 2)} else {resolution = tmp}
+
     # Convert lat / long corners into OSGB36 format
     pt=data.frame(x=long,y=lat)
     # convert them into coordinates

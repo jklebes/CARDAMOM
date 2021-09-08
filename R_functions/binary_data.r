@@ -249,7 +249,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
                                                                     # Note despite having the same name as ecosystem property of Amax per gN or SPA's kappaC
                                                                     # These observational constraints are not the same and would lead to
                                                                     # overestimation of GPP (SPA = 34, ACM2 = 15), but here multiple by avN (1.89) to get Ceff
-      PARPRIORS[11]=21.1491            ; PARPRIORUNC[11]=8.534234*0.5 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+      PARPRIORS[11]=21.1491            ; PARPRIORUNC[11]=8.534234*0.25 # Ceff: derived from multiple trait values from Kattge et al., (2011)
                                                                       #       Note that this prior is difference from DALEC_CDEA_LU_FIRES
                                                                       # due to the different temperature response functions used in ACM2 vs ACM 1
       PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
@@ -267,7 +267,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
                                                                     # Note despite having the same name as ecosystem property of Amax per gN or SPA's kappaC
                                                                     # These observational constraints are not the same and would lead to
                                                                     # overestimation of GPP (SPA = 34, ACM2 = 15), but here multiple by avN (1.89) to get Ceff
-      PARPRIORS[11]=21.1491            ; PARPRIORUNC[11]=8.534234*0.5 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+      PARPRIORS[11]=21.1491            ; PARPRIORUNC[11]=8.534234*0.25 # Ceff: derived from multiple trait values from Kattge et al., (2011)
                                                                       #       Note that this prior is difference from DALEC_CDEA_LU_FIRES
                                                                       # due to the different temperature response functions used in ACM2 vs ACM 1
       PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
@@ -287,7 +287,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
                                                                     # Note despite having the same name as ecosystem property of Amax per gN or SPA's kappaC
                                                                     # These observational constraints are not the same and would lead to
                                                                     # overestimation of GPP (SPA = 34, ACM2 = 15), but here multiple by avN (1.89) to get Ceff
-      PARPRIORS[11]=21.1491            ; PARPRIORUNC[11]=8.534234*0.5 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+      PARPRIORS[11]=21.1491            ; PARPRIORUNC[11]=8.534234*0.25 # Ceff: derived from multiple trait values from Kattge et al., (2011)
                                                                       #       Note that this prior is difference from DALEC_CDEA_LU_FIRES
                                                                       # due to the different temperature response functions used in ACM2 vs ACM 1
       PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
@@ -309,7 +309,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
                                                                     # Note despite having the same name as ecosystem property of Amax per gN or SPA's kappaC
                                                                     # These observational constraints are not the same and would lead to
                                                                     # overestimation of GPP (SPA = 34, ACM2 = 15), but here multiple by avN (1.89) to get Ceff
-      PARPRIORS[11]=21.1491            ; PARPRIORUNC[11]=8.534234*0.5 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+      PARPRIORS[11]=21.1491            ; PARPRIORUNC[11]=8.534234*0.25 # Ceff: derived from multiple trait values from Kattge et al., (2011)
                                                                       #       Note that this prior is difference from DALEC_CDEA_LU_FIRES
                                                                       # due to the different temperature response functions used in ACM2 vs ACM 1
       PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
@@ -332,8 +332,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
                                                                     # These observational constraints are not the same and would lead to
                                                                     # overestimation of GPP (SPA = 34, ACM2 = 15), but here multiple by avN (1.89) to get Ceff
       PARPRIORS[11]=21.1491            ; PARPRIORUNC[11]=8.534234*0.5 # Ceff: derived from multiple trait values from Kattge et al., (2011)
-                                                                      #       Note that this prior is difference from DALEC_CDEA_LU_FIRES
-                                                                      # due to the different temperature response functions used in ACM2 vs ACM 1
+                                                                       #       Note that this prior is difference from DALEC_CDEA_LU_FIRES
+                                                                       # due to the different temperature response functions used in ACM2 vs ACM 1
       PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
 #      PARPRIORS[17]=35.5                ; PARPRIORUNC[17]=35.5*0.23 # Kiuic LCA prior
       PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
@@ -341,6 +341,10 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[21]=OBS$Cwood_initial   ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
       PARPRIORS[22]=OBS$Clit_initial    ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
       PARPRIORS[23]=OBS$Csom_initial    ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
+      PARPRIORS[31] = 0.5  ; PARPRIORUNC[31] = 0.25 # Resilience factor
+      PARPRIORS[32] = 0.5   ; PARPRIORUNC[32] = 0.25 # Foliar combustion completeness (NCEO FCC global mean)
+      PARPRIORS[33] = 0.1    ; PARPRIORUNC[33] = 0.25 # Root / wood combustion completeness
+      PARPRIORS[34] = 0.01    ; PARPRIORUNC[34] = 0.05 # Soil combustion completeness
       # Other priors
       OTHERPRIORS[1] = OBS$soilwater ; OTHERPRIORUNC[1] = OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
       OTHERPRIORS[2] = 0.46          ; OTHERPRIORUNC[2] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034

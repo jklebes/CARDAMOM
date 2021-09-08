@@ -8,7 +8,9 @@
 
 extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,grid_type,resolution,start_year,end_year,burnt_all) {
 
+  # Update the user
   print(paste("Beginning burned fraction data extraction for current location ",Sys.time(),sep=""))
+
   # find the nearest location
   if (length(dim(burnt_all$long)) == 2) {
       output = closest2d(1,burnt_all$lat,burnt_all$long,latlon_in[1],latlon_in[2],2)
@@ -18,11 +20,13 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
   #i1=unlist(output)[2] ; j1=unlist(output)[1]
   i1 = unlist(output)[1] ; j1=unlist(output)[2]
 
+  # If resolution has been provides as single value then adjust this here
+  if (length(resolution) == 1) {tmp_res = resolution * c(1,1)} else {tmp_res = resolution}
+
   # work out number of pixels to average over
   if (spatial_type == "grid") {
       # resolution of the product
-      product_res = abs(burnt_all$lat[2]-burnt_all$lat[1])+abs(burnt_all$long[2]-burnt_all$long[1])
-      product_res = product_res * 0.5 # NOTE: averaging needed for line above
+      product_res = c(abs(burnt_all$long[2,1]-burnt_all$long[1,1]),abs(burnt_all$lat[1,2]-burnt_all$lat[1,1]))
       if (grid_type == "wgs84") {
           # radius is ceiling of the ratio of the product vs analysis ratio
           radius = floor(0.5*(resolution / product_res))
@@ -35,12 +39,13 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
           stop("have not specified the grid used in this analysis")
       }
   } else {
-      radius = 0
+      radius = c(0,0)
   } # spatial grid
 
   # work out total burned fraction of the area
-  average_i = max(1,(i1-radius)):min(dim(burnt_all$burnt_area)[1],(i1+radius))
-  average_j = max(1,(j1-radius)):min(dim(burnt_all$burnt_area)[2],(j1+radius))
+  average_i = (i1-radius[1]):(i1+radius[1]) ; average_j = (j1-radius[2]):(j1+radius[2])
+  average_i = max(1,(i1-radius[1])):min(dim(burnt_all$burnt_area)[1],(i1+radius[1]))
+  average_j = max(1,(j1-radius[2])):min(dim(burnt_all$burnt_area)[2],(j1+radius[2]))
   # carry out aggregation
   burnt_area = array(NA, dim=c(dim(burnt_all$burnt_area)[3]))
   for (n in seq(1, dim(burnt_all$burnt_area)[3])) {burnt_area[n] = mean(burnt_all$burnt_area[average_i,average_j,n], na.rm=TRUE)} #  for loop

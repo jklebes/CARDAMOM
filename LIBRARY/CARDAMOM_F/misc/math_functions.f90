@@ -15,7 +15,7 @@ module math_functions
             random_normal, random_uniform, rnstrt, &
             random_multivariate, increment_covariance_matrix, &
             par2nor, nor2par, log_par2nor, log_nor2par, &
-            cholesky_factor, inverse_matrix, dsymv, &
+            cholesky_factor, inverse_matrix, matrix_vector_func, &
             calculate_variance, increment_variance
 
   !!!!!!!!!!!
@@ -268,7 +268,7 @@ module math_functions
      !============================================================
      ! Inverse for positive definite symmetric matrix
      ! Method: Based on Doolittle LU factorization for Ax=b
-     ! Alex G. December 2009
+     ! Alex L. Godunov December 2009
      ! Modifed for CARDAMOM: T. Luke Smallman (June 2019)
      !                       t.l.smallman@ed.ac.uk
      ! Warning if matrix not positive definite this function will fail
@@ -361,7 +361,7 @@ module math_functions
   !
   !--------------------------------------------------------------------
   !
-  subroutine dsymv(uplo,n,alpha,A,lda,X,incx,beta,Y,incy)
+  subroutine matrix_vector_func(uplo,n,alpha,A,lda,X,incx,beta,Y,incy)
 
     ! Performs the matrix-vector operation
     ! y := alpha*A*x + beta*y,
@@ -450,7 +450,7 @@ module math_functions
     ! Further Details:
     ! =====================
     !
-    !  Level 2 Blas routine.
+    !  Level 2 Basic Linear Algebra Subprograms (BLAS) routines.
     !  The vector and matrix arguments are not referenced when N = 0, or M = 0
     !
     !  -- Written on 22-October-1986.
@@ -501,7 +501,7 @@ module math_functions
         info = 10
     end if
     if (info /= 0) then
-        print*,"Inputs to dsymv not correct - error code = ",info
+        print*,"Inputs to matrix_vector_func not correct - error code = ",info
         stop
     end if
 
@@ -637,7 +637,7 @@ module math_functions
     ! now return finally to the user
     return
 
-  end subroutine dsymv
+  end subroutine matrix_vector_func
   !
   !--------------------------------------------------------------------
   !
@@ -778,7 +778,7 @@ module math_functions
   !
   double precision function randn(option)
 
-    ! From Numerical Receipes p271 Press et al., 1986 2nd Edition Chapter 7,
+    ! From Numerical Recipes p271 Press et al., 1986 2nd Edition Chapter 7,
     ! Random Numbers function returns real random number between 0-1 based on an initial start
     ! point (ran1). The start point (default = -1) is reinitialised every time the model runs
     ! providing the same distribution each run. To ensure random numbers each time use the
@@ -876,6 +876,8 @@ module math_functions
     ! Reference: Marsaglia,G. & Bray,T.A. 'A convenient method for
     ! generating normal variables',
     ! Siam Rev., vol.6, 260-264, 1964.
+    ! Code modified from that created by Alan Miller
+    ! (https://jblevins.org/mirror/amiller/rnorm.f90, last updated February 2004)
 
     implicit none
 
@@ -926,10 +928,17 @@ module math_functions
   subroutine random_uniform(u, n)
 
     ! Generate an array of n double precision values between 0 and 1.
-    ! Part of process to generate a random normal deviate using the polar method.
-    ! Reference: Marsaglia,G. & Bray,T.A. 'A convenient method for
-    ! generating normal variables',
-    ! Siam Rev., vol.6, 260-264, 1964.
+    ! from Seminumerical Algorithms by D E Knuth, 3rd edition (1997)
+    !       including the MODIFICATIONS made in the 9th printing (2002)
+    ! ********* see the book for explanations and caveats! *********
+    ! Author: Steve Kifowit
+    ! http://ourworld.compuserve.com/homepages/steve_kifowit
+    ! with modifications by Alan Miller to rnarry and rnstrt based upon
+    ! Knuth's code.
+    ! Code converted using TO_F90 by Alan Miller
+    ! Date: 2000-09-10, last update 16 January 2003
+    ! Modified for integration into CARDAMOM by T. Luke Smallman (t.l.smallman@ed.ac.uk)
+    ! 03/05/2019
 
     integer, intent(in)  :: n ! number of random values wanted
     double precision, intent(out) :: u(n) ! output vector
@@ -969,9 +978,9 @@ module math_functions
     !
     !  Last Modified: 03/05/2019
     !
-    !  Original Author: John Burkardt
+    !  Original Author: John Burkardt (07 December 2009)
     !
-    !  Modified for coupling into CARDAMOM:
+    !  Modified for coupling into CARDAMOM (03 May 2019):
     !    T. L. Smallman (t.l.smallman@ed.ac.uk)
     !
     !  Parameters:
@@ -1170,11 +1179,18 @@ module math_functions
   subroutine rnarry(aa, n)
 
     ! Generate an array of n integers between 0 and 2^30-1.
-    ! Part of process to generate a random normal deviate using the polar
-    ! method.
-    ! Reference: Marsaglia,G. & Bray,T.A. 'A convenient method for
-    ! generating normal variables',
-    ! Siam Rev., vol.6, 260-264, 1964.
+    ! Part of process to an array of n double precision values between 0 and 1.
+    ! from Seminumerical Algorithms by D E Knuth, 3rd edition (1997)
+    !       including the MODIFICATIONS made in the 9th printing (2002)
+    ! ********* see the book for explanations and caveats! *********
+    ! Author: Steve Kifowit
+    ! http://ourworld.compuserve.com/homepages/steve_kifowit
+    ! with modifications by Alan Miller to rnarry and rnstrt based upon
+    ! Knuth's code.
+    ! Code converted using TO_F90 by Alan Miller
+    ! Date: 2000-09-10, last update 16 January 2003
+    ! Modified for integration into CARDAMOM by T. Luke Smallman (t.l.smallman@ed.ac.uk)
+    ! 03/05/2019
 
     integer, intent(in)   :: n
     integer, intent(out)  :: aa(n)
@@ -1205,11 +1221,18 @@ module math_functions
   subroutine rnstrt(seed)
 
     ! Initialize integer array ranx using the input seed.
-    ! Part of process to generate a random normal deviate using the polar
-    ! method.
-    ! Reference: Marsaglia,G. & Bray,T.A. 'A convenient method for
-    ! generating normal variables',
-    ! Siam Rev., vol.6, 260-264, 1964.
+    ! Part of process to an array of n double precision values between 0 and 1.
+    ! from Seminumerical Algorithms by D E Knuth, 3rd edition (1997)
+    !       including the MODIFICATIONS made in the 9th printing (2002)
+    ! ********* see the book for explanations and caveats! *********
+    ! Author: Steve Kifowit
+    ! http://ourworld.compuserve.com/homepages/steve_kifowit
+    ! with modifications by Alan Miller to rnarry and rnstrt based upon
+    ! Knuth's code.
+    ! Code converted using TO_F90 by Alan Miller
+    ! Date: 2000-09-10, last update 16 January 2003
+    ! Modified for integration into CARDAMOM by T. Luke Smallman (t.l.smallman@ed.ac.uk)
+    ! 03/05/2019
 
     integer, intent(in)  :: seed
 

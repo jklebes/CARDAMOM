@@ -9,7 +9,7 @@
 extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
                      ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                      ,sand_clay_all,crop_man_all,burnt_all,soilwater_all,nbe_all
-                     ,lca_all
+                     ,lca_all,gpp_all
                      ,ctessel_pft,site_name,start_year,end_year
                      ,timestep_days,spatial_type,resolution,grid_type,modelname) {
 
@@ -225,6 +225,13 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
             GPP_unc[which(GPP > 0)] = 0.74
             if (modelname == "ACM") {GPP_unc = rep(mean(GPP)*0.40,times=length(GPP))}
         }
+    } else if (GPP_source == "Global_Combined") {
+
+        # Extract GPP and uncertainty information
+        # NOTE: assume default uncertainty (+/- scale)
+        output = extract_gpp(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,gpp_all,as.numeric(start_year):as.numeric(end_year))
+        GPP = output$GPP ; GPP_unc = output$GPP_unc
+
     } else {
         # assume no data available
         GPP = -9999 ; GPP_unc = -9999
@@ -234,7 +241,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     # GPP against fluxnet observations (Smallman & Williams 2019)
     # NOTE: this is a gross overestimate as ACM-GPP-ET was not calibrated against the data,
     # i.e. we don't know that it couldn't fit it
-    GPP_unc[GPP_unc >= 0] = sqrt(GPP_unc[GPP_unc >= 0]**2 + 2**2)
+    #GPP_unc[GPP_unc >= 0] = sqrt(GPP_unc[GPP_unc >= 0]**2 + 2**2)
+    # Assumed uncertainty structure as agreed with Anthony Bloom
+    GPP_unc[GPP_unc >= 0] = sqrt(GPP_unc[GPP_unc >= 0]**2 + (0.1*mean(GPP[GPP >= 0]))**2)
 
     ###
     ## Get some Evapotranspiration information (time series; kgH2O/m2/day)
@@ -413,7 +422,11 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         # All maps converted into common format, therefore a common extraction subroutine can be used
         if (max(Cwood_stock_all$place_obs_in_step) > 0) {
             output = extract_Cwood_stocks(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_stock_all)
-            Cwood_stock= output$Cwood_stock ; Cwood_stock_unc = output$Cwood_stock_unc
+            Cwood_stock = output$Cwood_stock ; Cwood_stock_unc = output$Cwood_stock_unc
+#            tmp = which(Cwood_stock > 0) # first AGB only
+#            if (length(tmp) > 1) {
+#                Cwood_stock[tmp[-1]] = -9999 ; Cwood_stock_unc[tmp[-1]] = -9999
+#            }
         } else {
             Cwood_stock = rep(-9999, length(timestep_days))
             Cwood_stock_unc = rep(-9999, length(timestep_days))
@@ -666,7 +679,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
         Cwood_potential=read_site_specific_obs("LCA_gCm2",infile)
         Cwood_potential_unc=read_site_specific_obs("LCA_unc_gCm2",infile)
-    } else if (lca_source == "butler") {
+    } else if (lca_source == "Butler") {
         # get Cwood
         output = extract_lca_prior(spatial_type,resolution,grid_type,latlon_wanted,lca_all)
         lca = output$lca_gCm2
@@ -678,20 +691,20 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
 
     # return output now
     return(list(LAT = latlon_wanted[1], LAI = lai, LAI_unc = lai_unc, GPP = GPP, GPP_unc = GPP_unc
-      ,Evap = Evap, Evap_unc = Evap_unc, NEE = NEE, NEE_unc = NEE_unc, Reco = Reco, Reco_unc = Reco_unc
-      ,woodinc = woodinc, woodinc_unc = woodinc_unc, Cfol_stock = Cfol_stock, Cfol_stock_unc = Cfol_stock_unc
-      ,Cwood_stock = Cwood_stock, Cwood_stock_unc = Cwood_stock_unc, Cagb_stock=Cagb_stock, Cagb_stock_unc = Cagb_stock_unc
-      ,Croots_stock = Croots_stock, Croots_stock_unc = Croots_stock_unc, Clit_stock = Clit_stock, Clit_stock_unc = Clit_stock_unc
-      ,Csom_stock = Csom_stock, Csom_stock_unc = Csom_stock_unc, Ccoarseroot_stock = Ccoarseroot_stock
-      ,Ccoarseroot_stock_unc = Ccoarseroot_stock_unc, Cfolmax_stock = Cfolmax_stock, Cfolmax_stock_unc = Cfolmax_stock_unc
-      ,Csom_initial = Csom_initial, Csom_initial_unc = Csom_initial_unc, Cfol_initial = Cfol_initial, Cfol_initial_unc = Cfol_initial_unc
-      ,Cwood_initial = Cwood_initial, Cwood_initial_unc = Cwood_initial_unc, Croots_initial = Croots_initial
-      ,Croots_initial_unc = Croots_initial_unc, Clit_initial = Clit_initial, Clit_initial_unc = Clit_initial_unc
-      ,deforestation = deforestation, burnt_area = burnt_area, ctessel_pft = ctessel_pft, yield_class = yield_class
-      ,age = age, forest_management = forest_management, top_sand = top_sand, bot_sand = bot_sand, top_clay = top_clay
-      ,bot_clay = bot_clay, plant = plant, plant_range = plant_range, harvest = harvest, harvest_range = harvest_range
-      ,SWE = SWE, SWE_unc = SWE_unc, soilwater = soilwater, soilwater_unc = soilwater_unc, nbe = nbe, nbe_unc = nbe_unc
-      ,Cwood_potential = Cwood_potential, Cwood_potential_unc = Cwood_potential_unc, lca = lca, lca_unc = lca_unc))
+               ,Evap = Evap, Evap_unc = Evap_unc, NEE = NEE, NEE_unc = NEE_unc, Reco = Reco, Reco_unc = Reco_unc
+               ,woodinc = woodinc, woodinc_unc = woodinc_unc, Cfol_stock = Cfol_stock, Cfol_stock_unc = Cfol_stock_unc
+               ,Cwood_stock = Cwood_stock, Cwood_stock_unc = Cwood_stock_unc, Cagb_stock=Cagb_stock, Cagb_stock_unc = Cagb_stock_unc
+               ,Croots_stock = Croots_stock, Croots_stock_unc = Croots_stock_unc, Clit_stock = Clit_stock, Clit_stock_unc = Clit_stock_unc
+               ,Csom_stock = Csom_stock, Csom_stock_unc = Csom_stock_unc, Ccoarseroot_stock = Ccoarseroot_stock
+               ,Ccoarseroot_stock_unc = Ccoarseroot_stock_unc, Cfolmax_stock = Cfolmax_stock, Cfolmax_stock_unc = Cfolmax_stock_unc
+               ,Csom_initial = Csom_initial, Csom_initial_unc = Csom_initial_unc, Cfol_initial = Cfol_initial, Cfol_initial_unc = Cfol_initial_unc
+               ,Cwood_initial = Cwood_initial, Cwood_initial_unc = Cwood_initial_unc, Croots_initial = Croots_initial
+               ,Croots_initial_unc = Croots_initial_unc, Clit_initial = Clit_initial, Clit_initial_unc = Clit_initial_unc
+               ,deforestation = deforestation, burnt_area = burnt_area, ctessel_pft = ctessel_pft, yield_class = yield_class
+               ,age = age, forest_management = forest_management, top_sand = top_sand, bot_sand = bot_sand, top_clay = top_clay
+               ,bot_clay = bot_clay, plant = plant, plant_range = plant_range, harvest = harvest, harvest_range = harvest_range
+               ,SWE = SWE, SWE_unc = SWE_unc, soilwater = soilwater, soilwater_unc = soilwater_unc, nbe = nbe, nbe_unc = nbe_unc
+               ,Cwood_potential = Cwood_potential, Cwood_potential_unc = Cwood_potential_unc, lca = lca, lca_unc = lca_unc))
 
 
 } # end function extract_obs

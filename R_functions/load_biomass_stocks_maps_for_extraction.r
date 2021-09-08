@@ -837,6 +837,13 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         biomass_gCm2 = array(biomass_gCm2, dim=c(idim,jdim,tdim))
         biomass_uncertainty_gCm2 = array(biomass_uncertainty_gCm2, dim=c(idim,jdim,tdim))
 
+# HACK: override the provided uncertainty with assumption of 20 % or 250 gCm2
+#tmp = which(biomass_gCm2 > 0)
+#if (length(tmp) > 0) {
+#biomass_uncertainty_gCm2[tmp] = 250#biomass_gCm2[tmp] * 0.2
+#biomass_uncertainty_gCm2[which(biomass_uncertainty_gCm2 < 250)] = 250
+#}
+
         if (done_lat) {
             # Output variables
             return(list(place_obs_in_step = place_obs_in_step, lat = lat, long = long,

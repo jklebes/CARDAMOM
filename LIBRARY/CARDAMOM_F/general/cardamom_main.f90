@@ -1,7 +1,7 @@
 
 program cardamom_framework
 
- use math_functions, only: idum, randn, rnstrt, inverse_matrix
+ use math_functions, only: idum, rnstrt, inverse_matrix
  use MCMCOPT, only: MCO, MCOUT, PI, initialise_mcmc_output
  use cardamom_structures, only: DATAin, io_space
  use cardamom_io, only: read_pari_data, read_options, open_output_files, &

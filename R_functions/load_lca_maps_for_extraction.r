@@ -10,7 +10,7 @@ load_lca_maps_for_extraction<-function(latlon_in,lca_source) {
     ###
     ## Select the correct LCA source for specific time points
 
-    if (lca_source == "butler") {
+    if (lca_source == "Butler") {
 
         # let the user know this might take some time
         print("Loading Butler LCA map...")

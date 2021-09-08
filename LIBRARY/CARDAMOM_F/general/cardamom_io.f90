@@ -258,7 +258,7 @@ module cardamom_io
     else if (DATAin%ID == 30) then
         ! ID = 30 - DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT
         DATAin%nopools = 8
-        DATAin%nopars = 34
+        DATAin%nopars = 36
         DATAin%nofluxes = 33
     else if (DATAin%ID == 31) then
         ! ID = 31 - DALEC_BUCKET_CanAGE

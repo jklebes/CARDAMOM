@@ -243,6 +243,7 @@ cardamom <-function (projname,model,method,stage) {
                        met_all = load_met_fields_for_extraction(latlon,met_source,PROJECT$model$name,PROJECT$start_year,PROJECT$end_year)
                        lai_all = load_lai_fields_for_extraction(latlon,lai_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
                        nbe_all = load_nbe_fields_for_extraction(latlon,nbe_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
+                       gpp_all = load_gpp_fields_for_extraction(latlon,GPP_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year))
                        Csom_all = load_Csom_fields_for_extraction(latlon,Csom_source)
                        crop_man_all = load_sacks_calendar_fields_for_extraction(latlon,crop_management_source)
                        sand_clay_all = load_sand_clay_fields_for_extraction(latlon,sand_clay_source)
@@ -261,10 +262,9 @@ cardamom <-function (projname,model,method,stage) {
                    # assume ACM special case
                    met = extract_acm_met_drivers(PROJECT,latlon[n,],PROJECT$sites[n])
                } # # if (PROJECT$model$name != "ACM")
-#if ( length(which(skip_UK$UK_Forest_site_nos == n)) > 0) {
                obs=extract_obs(latlon[n,],lai_all,Csom_all,forest_all
                               ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
-                              ,sand_clay_all,crop_man_all,burnt_all,soilwater_all,nbe_all, lca_all
+                              ,sand_clay_all,crop_man_all,burnt_all,soilwater_all,nbe_all, lca_all, gpp_all
                               ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
                               ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
 
@@ -273,6 +273,7 @@ cardamom <-function (projname,model,method,stage) {
                # Load additional model information
                PROJECT$model = cardamom_model_details(PROJECT$model$name,pft_specific_parameters,PROJECT$ctessel_pft)
                # write out the relevant binary files
+#if (max(obs$Cwood_stock) > 0) {
                binary_data(met,obs,filename,PROJECT$edc,latlon[n,],PROJECT$ctessel_pft[n],PROJECT$model$name,PROJECT$parameter_type,PROJECT$model$nopars[n])
 #}
            } # if (file.exists(filename) == FALSE | repair == 1)

@@ -8,17 +8,20 @@
 
 extract_Cwood_potential<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in,Cwood_potential_all) {
 
+   # Update the user
+   print(paste("Cwood potential extracted for current location ",Sys.time(),sep=""))
+
    # find the nearest location
    output = closest2d(1,Cwood_potential_all$lat,Cwood_potential_all$long,latlon_in[1],latlon_in[2],2)
    i1 = unlist(output)[1] ; j1 = unlist(output)[2]
 
-   print(paste("Cwood potential extracted for current location ",Sys.time(),sep=""))
+   # If resolution has been provides as single value then adjust this here
+   if (length(resolution) == 1) {tmp_res = resolution * c(1,1)} else {tmp_res = resolution}
 
    # work out number of pixels to average over
    if (spatial_type == "grid") {
        # resolution of the product
-       product_res = abs(Cwood_potential_all$lat[1,2]-Cwood_potential_all$lat[1,1])+abs(Cwood_potential_all$long[2,1]-Cwood_potential_all$long[1,1])
-       product_res = product_res * 0.5 # NOTE: averaging needed for line above
+       product_res = c(abs(Cwood_potential_all$long[2,1]-Cwood_potential_all$long[1,1]),abs(Cwood_potential_all$lat[1,2]-Cwood_potential_all$lat[1,1]))
        if (grid_type == "wgs84") {
            # radius is ceiling of the ratio of the product vs analysis ratio
            radius = floor(0.5*(resolution / product_res))
@@ -31,12 +34,13 @@ extract_Cwood_potential<- function(timestep_days,spatial_type,resolution,grid_ty
            stop("have not specified the grid used in this analysis")
         }
    } else {
-        radius = 0
+        radius = c(0,0)
    }
 
    # Work out average areas
-   average_i = max(1,(i1-radius)):min(dim(Cwood_potential_all$biomass_gCm2)[1],(i1+radius))
-   average_j = max(1,(j1-radius)):min(dim(Cwood_potential_all$biomass_gCm2)[2],(j1+radius))
+   average_i = (i1-radius[1]):(i1+radius[1]) ; average_j = (j1-radius[2]):(j1+radius[2])
+   average_i = max(1,(i1-radius[1])):min(dim(Cwood_potential_all$biomass_gCm2)[1],(i1+radius[1]))
+   average_j = max(1,(j1-radius[2])):min(dim(Cwood_potential_all$biomass_gCm2)[2],(j1+radius[2]))
    # Carry out averaging
    Cwood = mean(Cwood_potential_all$biomass_gCm2[average_i,average_j], na.rm=TRUE)
    Cwood_unc = mean(Cwood_potential_all$biomass_uncertainty_gCm2[average_i,average_j], na.rm=TRUE)
