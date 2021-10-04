@@ -303,6 +303,11 @@ module cardamom_io
         DATAin%nopools = 8
         DATAin%nopars = 37
         DATAin%nofluxes = 32
+    else if (DATAin%ID == 36) then
+        ! ID = 36 - DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT
+        DATAin%nopools = 8
+        DATAin%nopars = 38
+        DATAin%nofluxes = 33
     else
        write(*,*) "Oh dear... model ID cannot be found"
        stop

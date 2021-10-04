@@ -440,7 +440,17 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
       # determine what the output file name is here, so that we can check if one already exists
       outfile_grid = paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep="")
       # read in example input files for using in some calculation
-      drivers = read_binary_file_format(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[1],".bin",sep=""))
+      driver_file = paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[1],".bin",sep="")
+      if (exists(driver_file)) {
+          drivers = read_binary_file_format(driver_file)
+      } else {
+          read_driver = FALSE ; nn = 2
+          while (read_driver == FALSE) {
+             driver_file = paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[nn],".bin",sep="")
+             if (file.exists(driver_file) == TRUE) { read_driver = TRUE } else { nn = nn + 1}
+          }
+          drivers = read_binary_file_format(driver_file)
+      }
       # Determine some useful information for the analysis below
       nos_years = (as.numeric(PROJECT$end_year) - as.numeric(PROJECT$start_year))+1
       steps_per_year = floor(dim(drivers$met)[1] / nos_years)

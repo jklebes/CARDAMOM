@@ -58,7 +58,7 @@ module MODEL_PARAMETERS
 
        ! Fraction of GPP respired as Rm(wood,root)
        PI%parmin(2) = 0.05d0
-       PI%parmax(2) = 0.40d0
+       PI%parmax(2) = 0.30d0
 
        ! Background leaf turnover rate
        ! NOT CURRENTLY IN USE
@@ -108,7 +108,7 @@ module MODEL_PARAMETERS
        PI%parmax(12) = 0.07142857d0*0.5d0 ! 28 days
 
        ! Fraction of GPP to Clab*/
-       PI%parmin(13) = 0.15d0 ! 0.05d0
+       PI%parmin(13) = 0.10d0 ! 0.05d0
        PI%parmax(13) = 0.55d0 ! 0.35d0
 
        ! GSI min temperature threshold (oC)

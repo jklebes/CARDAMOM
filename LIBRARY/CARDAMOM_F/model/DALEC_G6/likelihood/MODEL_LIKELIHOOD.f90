@@ -1981,10 +1981,11 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, dn, no_years, y
     double precision :: tot_exp, tmp_var, infini, input, output
+    double precision, dimension(DATAin%nodays) :: mid_state
     double precision, allocatable :: mean_annual_pools(:)
 
     ! initial value
-    likelihood = 0d0 ; infini = 0d0
+    likelihood = 0d0 ; infini = 0d0 ; mid_state = 0d0
 
     ! NBE Log-likelihood
     if (DATAin%nnbe > 0) then
@@ -2008,13 +2009,28 @@ module model_likelihood_module
        likelihood = likelihood-tot_exp
     endif
 
-    ! LAI log-likelihood
+    ! Assume physical property is best represented as the mean of value at beginning and end of times step
     if (DATAin%nlai > 0) then
-        ! loop split to allow vectorisation
-        tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+       ! Create vector of (LAI_t0 + LAI_t1) * 0.5, note / pars(17) to convert foliage C to LAI
+       mid_state = ( ( DATAin%M_POOLS(1:DATAin%nodays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
+                 * 0.5d0 ) / pars(17)
+       ! Split loop to allow vectorisation
+       tot_exp = sum(((mid_state(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
                        /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
-        if (minval(DATAin%M_LAI) < 0d0) tot_exp = tot_exp + (-log(infini))
-        likelihood = likelihood-tot_exp
+       ! loop split to allow vectorisation
+       !tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+       !                /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
+       do n = 1, DATAin%nlai
+         dn = DATAin%laipts(n)
+         ! if zero or greater allow calculation with min condition to prevent
+         ! errors of zero LAI which occur in managed systems
+         if (mid_state(dn) < 0d0) then
+             ! if not then we have unrealistic negative values or NaN so indue
+             ! error
+             tot_exp = tot_exp+(-log(infini))
+         endif
+       end do
+       likelihood = likelihood-tot_exp
     endif
 
     ! NEE likelihood
@@ -2051,13 +2067,14 @@ module model_likelihood_module
 
     ! Cfoliage log-likelihood
     if (DATAin%nCfol_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nCfol_stock
-         dn = DATAin%Cfol_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp = tot_exp+(log(DATAin%M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2d0
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2
-       end do
+       ! Create vector of (FOL_t0 + FOL_t1) * 0.5
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
+                 * 0.5d0
+       ! Vectorised version of loop to estimate cost function
+       tot_exp = sum(( (mid_state(DATAin%Cfol_stockpts(1:DATAin%nCfol_stock)) &
+                       -DATAin%Cfol_stock(DATAin%Cfol_stockpts(1:DATAin%nCfol_stock)))&
+                     / DATAin%Cfol_stock_unc(DATAin%Cfol_stockpts(1:DATAin%nCfol_stock)))**2)
+       ! Sum with current likelihood score
        likelihood = likelihood-tot_exp
     endif
 
@@ -2088,49 +2105,53 @@ module model_likelihood_module
 
     ! Cwood log-likelihood (i.e. branch, stem and CR)
     if (DATAin%nCwood_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nCwood_stock
-         dn = DATAin%Cwood_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,4)/DATAin%Cwood_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/DATAin%Cwood_stock_unc(dn))**2
-       end do
-       likelihood = likelihood-tot_exp
-    endif
-
-    ! Cagb log-likelihood
-    if (DATAin%nCagb_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nCagb_stock
-         dn = DATAin%Cagb_stockpts(n)
-         ! remove coarse root fraction from wood (pars29)
-         tmp_var = DATAin%M_POOLS(dn,4)-(DATAin%M_POOLS(dn,4)*pars(29))
-         tot_exp = tot_exp+((tmp_var-DATAin%Cagb_stock(dn))/DATAin%Cagb_stock_unc(dn))**2
-       end do
-       likelihood = likelihood-tot_exp
-    endif
-
-    ! Ccoarseroot log-likelihood
-    if (DATAin%nCcoarseroot_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nCcoarseroot_stock
-         dn = DATAin%Ccoarseroot_stockpts(n)
-         ! extract coarse root component from wood only
-         tmp_var = DATAin%M_POOLS(dn,4)*pars(29)
-         tot_exp = tot_exp+((tmp_var-DATAin%Ccoarseroot_stock(dn)) / DATAin%Ccoarseroot_stock_unc(dn))**2
-       end do
+       ! Create vector of (Wood_t0 + Wood_t1) * 0.5
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
+                 * 0.5d0
+       ! Vectorised version of loop to estimate cost function
+       tot_exp = sum(( (mid_state(DATAin%Cwood_stockpts(1:DATAin%nCwood_stock)) &
+                       -DATAin%Cwood_stock(DATAin%Cwood_stockpts(1:DATAin%nCwood_stock)))&
+                     / DATAin%Cwood_stock_unc(DATAin%Cwood_stockpts(1:DATAin%nCwood_stock)))**2)
+       ! Combine with existing likelihood estimate
        likelihood = likelihood-tot_exp
     endif
 
     ! Croots log-likelihood
     if (DATAin%nCroots_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nCroots_stock
-         dn = DATAin%Croots_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,3)/DATAin%Croots_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
-       end do
+       ! Create vector of (root_t0 + root_t1) * 0.5
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,3) + DATAin%M_POOLS(2:(DATAin%nodays+1),3) ) &
+                 * 0.5d0
+       ! Vectorised version of loop to estimate cost function
+       tot_exp = sum(( (mid_state(DATAin%Croots_stockpts(1:DATAin%nCroots_stock)) &
+                       -DATAin%Croots_stock(DATAin%Croots_stockpts(1:DATAin%nCroots_stock)))&
+                     / DATAin%Croots_stock_unc(DATAin%Croots_stockpts(1:DATAin%nCroots_stock)))**2)
+       ! Combine with existing likelihood estimate
+       likelihood = likelihood-tot_exp
+    endif
+
+    ! Cagb log-likelihood
+    if (DATAin%nCagb_stock > 0) then
+       ! Create vector of (agb_t0 + agb_t1) * 0.5
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
+                 * 0.5d0 * (1d0-pars(29))
+       ! Vectorised version of loop to estimate cost function
+       tot_exp = sum(( (mid_state(DATAin%Cagb_stockpts(1:DATAin%nCagb_stock)) &
+                       -DATAin%Cagb_stock(DATAin%Cagb_stockpts(1:DATAin%nCagb_stock)))&
+                     / DATAin%Cagb_stock_unc(DATAin%Cagb_stockpts(1:DATAin%nCagb_stock)))**2)
+       ! Combine with existing likelihood estimate
+       likelihood = likelihood-tot_exp
+    endif
+
+    ! Ccoarseroot log-likelihood
+    if (DATAin%nCcoarseroot_stock > 0) then
+       ! Create vector of (coarseroot_t0 + coarseroot_t1) * 0.5
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
+                 * 0.5d0 * pars(29)
+       ! Vectorised version of loop to estimate cost function
+       tot_exp = sum(( (mid_state(DATAin%Ccoarseroot_stockpts(1:DATAin%nCcoarseroot_stock)) &
+                       -DATAin%Ccoarseroot_stock(DATAin%Ccoarseroot_stockpts(1:DATAin%nCcoarseroot_stock)))&
+                     / DATAin%Ccoarseroot_stock_unc(DATAin%Ccoarseroot_stockpts(1:DATAin%nCcoarseroot_stock)))**2)
+       ! Combine with existing likelihood estimate
        likelihood = likelihood-tot_exp
     endif
 
@@ -2138,27 +2159,30 @@ module model_likelihood_module
     ! WARNING WARNING WARNING hack in place to estimate fraction of litter pool
     ! originating from surface pools
     if (DATAin%nClit_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nClit_stock
-         dn = DATAin%Clit_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp=tot_exp+((log((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
-!                           *DATAin%M_POOLS(dn,5))/DATAin%Clit_stock(dn))/log(2.))**2d0
-         tot_exp = tot_exp+(((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
-                           *(DATAin%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2
-       end do
+       ! Create vector of (lit_t0 + lit_t1) * 0.5
+       !mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
+       !          * 0.5d0
+       mid_state = (sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
+                 * DATAin%M_POOLS(:,5)
+       mid_state = (mid_state(1:DATAin%nodays) + mid_state(2:(DATAin%nodays+1))) * 0.5d0
+       ! Vectorised version of loop to estimate cost function
+       tot_exp = sum(( (mid_state(DATAin%Clit_stockpts(1:DATAin%nClit_stock)) &
+                       -DATAin%Clit_stock(DATAin%Clit_stockpts(1:DATAin%nClit_stock)))&
+                     / DATAin%Clit_stock_unc(DATAin%Clit_stockpts(1:DATAin%nClit_stock)))**2)
+       ! Combine with existing likelihood estimate
        likelihood = likelihood-tot_exp
     endif
 
     ! Csom log-likelihood
     if (DATAin%nCsom_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nCsom_stock
-         dn = DATAin%Csom_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,6)/DATAin%Csom_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2
-       end do
+       ! Create vector of (som_t0 + som_t1) * 0.5
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,6) + DATAin%M_POOLS(2:(DATAin%nodays+1),6) ) &
+                 * 0.5d0
+       ! Vectorised version of loop to estimate cost function
+       tot_exp = sum(( (mid_state(DATAin%Csom_stockpts(1:DATAin%nCsom_stock)) &
+                       -DATAin%Csom_stock(DATAin%Csom_stockpts(1:DATAin%nCsom_stock)))&
+                     / DATAin%Csom_stock_unc(DATAin%Csom_stockpts(1:DATAin%nCsom_stock)))**2)
+       ! Combine with existing likelihood estimate
        likelihood = likelihood-tot_exp
     endif
 

@@ -48,9 +48,9 @@ module MODEL_PARAMETERS
     PI%parmin(1) = 0.25d0
     PI%parmax(1) = 0.75d0
 
-    ! Fraction of GPP respired as Rm(fol,root,wood)
-    PI%parmin(2) = 0.1d0
-    PI%parmax(2) = 0.8d0
+    ! Fraction of GPP respired as Rm(wood,root)
+    PI%parmin(2) = 0.05d0
+    PI%parmax(2) = 0.30d0
 
     ! Fraction of (1-fgpp) to foliage
     PI%parmin(3) = 0.01d0
@@ -105,8 +105,8 @@ module MODEL_PARAMETERS
     PI%parmax(12) = 365.25d0*4d0
 
     ! Fraction to Clab*/
-    PI%parmin(13) = 0.01d0
-    PI%parmax(13) = 0.5d0
+    PI%parmin(13) = 0.10d0
+    PI%parmax(13) = 0.55d0
 
     ! Clab Release period
     PI%parmin(14) = 10d0
@@ -147,8 +147,8 @@ module MODEL_PARAMETERS
     PI%parmax(29) = 0.001d0      !   2.74 years at 0oC
 
     ! Half saturation coefficient for self-thinning supression on wood turnover
-    PI%parmin(30) = 1000d0
-    PI%parmax(30) = 20000d0
+    PI%parmin(30) = 100d0
+    PI%parmax(30) = 10000d0
 
     ! Resilience factor for burned but not combusted C stocks
     PI%parmin(31) = 0.1d0
@@ -168,6 +168,15 @@ module MODEL_PARAMETERS
     ! Combustion completeness factor for wood litter
     PI%parmin(36) = 0.01d0
     PI%parmax(36) = 0.75d0
+
+    ! Baseline leaf maintenance respiration.
+    ! For details see Table S3, Heskel et al., (2016), doi: http://www.pnas.org/cgi/doi/10.1073/pnas.1520282113
+    PI%parmin(37) = -4.4d0
+    PI%parmax(37) = -0.6d0
+
+    ! Labile pool lifespan (years)
+    PI%parmin(38) = 1.001d0
+    PI%parmax(38) = 8d0
 
     !
     ! INITIAL VALUES DECLARED HERE

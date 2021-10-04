@@ -40,11 +40,11 @@ extract_copernicus_lai<- function(timestep_days,spatial_type,resolution,grid_typ
       }
   } else {
       radius = c(0,0)
-      max_radius = 4
+#      max_radius = c(4,4)
   }
 
-  answer = NA
-  while (is.na(answer) == TRUE) {
+#  answer = NA
+#  while (is.na(answer) == TRUE) {
     # work out average areas
     average_i = (i1-radius[1]):(i1+radius[1]) ; average_j = (j1-radius[2]):(j1+radius[2])
     average_i = max(1,(i1-radius[1])):min(dim(lai_all$lai_all)[1],(i1+radius[1]))
@@ -55,15 +55,15 @@ extract_copernicus_lai<- function(timestep_days,spatial_type,resolution,grid_typ
          lai[n] = mean(as.vector(lai_all$lai_all[average_i,average_j,n]), na.rm=TRUE)
          lai_unc[n] = mean(as.vector(lai_all$lai_unc_all[average_i,average_j,n]), na.rm=TRUE)
     }
-    # are any of the my data points now filled
-    answer = max(as.vector(lai),na.rm=TRUE)
-    # what proportion of my data points are within a realistic range
-    npoints = length(which(lai > 0 & lai < 12))/length(lai)
-    # do I have at least 20 % of data points filled
-    if (is.na(answer) | answer == -Inf | npoints < 0.2) {radius = radius+1 ; answer = NA}
-    # restrict how far to look before giving up
-    if (radius >= max_radius) {answer = 1}
-  }
+#    # are any of the my data points now filled
+#    answer = max(as.vector(lai),na.rm=TRUE)
+#    # what proportion of my data points are within a realistic range
+#    npoints = length(which(lai > 0 & lai < 12))/length(lai)
+#    # do I have at least 20 % of data points filled
+#    if (is.na(answer) | answer == -Inf | npoints < 0.2) {radius = radius+1 ; answer = NA}
+#    # restrict how far to look before giving up
+#    if (radius[1] >= max_radius[1] | radius[2] >= max_radius[2]) {answer = 1}
+#  }
   # warning to the used
   print(paste("NOTE LAI averaged over a pixel radius (i.e. centre + radius) of ",radius," points",sep=""))
   # convert missing data back to -9999

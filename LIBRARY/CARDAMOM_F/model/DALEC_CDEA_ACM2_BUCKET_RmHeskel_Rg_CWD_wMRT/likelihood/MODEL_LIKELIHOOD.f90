@@ -380,9 +380,6 @@ module model_likelihood_module
     froot = (1d0-fauto-ffol-flab)*pars(4)
     fwood = 1d0-fauto-ffol-flab-froot
 
-    ! yearly leaf loss fraction
-    torfol = 1d0/(pars(5)*365.25d0)
-
     ! set all EDCs to 1 (pass)
     EDCD%nedc = 100
     EDCD%PASSFAIL(1:EDCD%nedc) = 1
@@ -401,20 +398,34 @@ module model_likelihood_module
        EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
     endif
 
-    ! turnover of foliage faster than turnover of wood
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(6) > torfol) then
-       EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
-    end if
+    ! turnover of litwood (pars(29)) should be slower than fine litter turnover pars(8)
+    if ((EDC1 == 1 .or. DIAG == 1) .and. ( pars(29) > pars(8) ) ) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
+    endif
 
     ! root turnover greater than som turnover at mean temperature
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(7) < (pars(9)*exp(pars(10)*meantemp)))) then
        EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
     endif
 
-    ! GPP allocation to foliage and labile cannot be 5 orders of magnitude
-    ! difference from GPP allocation to roots
-    if ((EDC1 == 1 .or. DIAG == 1) .and. ((ffol+flab) > (5d0*froot) .or. ((ffol+flab)*5d0) < froot)) then
+    ! IMPLICIT Combustion completeness for foliage should be greater than soil
+    ! IMPLICIT Combustion completeness for wood litter and fol+root litter should be greater than soil
+
+    ! Combustion completeness for foliage should be greater than non-photosynthetic tissues
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(33)) then
        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
+    endif
+    ! Combustion completeness for non-photosynthetic tissue should be greater than soil
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(33) < pars(34)) then
+       EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
+    endif
+    ! Combustion completeness for foliar + fine root litter should be greater than wood litter
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(35) < pars(36)) then
+       EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
+    endif
+    ! Combustion completeness for wood litter should be greater than non-photosynthetic tissue
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(36) < pars(33)) then
+       EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
     endif
 
     ! could always add more / remove some
@@ -428,7 +439,9 @@ module model_likelihood_module
                       ,meantemp,EDC2)
 
     use cardamom_structures, only: DATAin
-    use CARBON_MODEL_MOD, only: Rg_from_labile
+    use CARBON_MODEL_MOD, only: Rg_from_labile, Rm_from_labile, &
+                                Resp_leaf, Resp_wood_root, &
+                                Rm_leaf, Rm_wood_root
 
     ! Determines whether the dynamical contraints for the search of the initial
     ! parameters has been successful or whether or not we should abandon the
@@ -459,16 +472,32 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, nn, nnn, DIAG, no_years, y, PEDC, steps_per_year, steps_per_month, nd, fl, &
                io_start, io_finish
-    double precision :: no_years_1, infi, SSwood, SSlitwood, SSsom !, EQF, etol
+    double precision :: no_years_1, infi, SSwood, SSlitwood, SSsom, MRTwood, dble_nodays !, EQF, etol
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
                                             mean_pools, Fin, Fout, Rm, Rs, &
                                             Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
+    double precision, dimension(nodays) :: lab_ratio, mean_ratio, resid_fol, resid_lab, biomass_root
     double precision, dimension(nofluxes) :: FT, FT_yr1, FT_yr2
+    integer, dimension(nodays) :: hak ! variable to determine number of NaN in foliar residence time calculation
     double precision :: fauto & ! Fractions of GPP to autotrophic respiration
                        ,ffol  & ! Fraction of GPP to foliage
                        ,flab  & ! Fraction of GPP to labile pool
                        ,froot & ! Fraction of GPP to root
-                       ,fwood   ! Fraction of GPP to wood
+                       ,fwood & ! Fraction of GPP to wood
+                       ,torfol, torlab &
+                       ,sumrauto    &
+                       ,sumlab      &
+                       ,sumfol      &
+                       ,sumroot     &
+                       ,sumwood     &
+                       ,sumlitwood  &
+                       ,sumlit      &
+                       ,sumsom      &
+                       ,sumgpp      &
+                       ,sumnpp      &
+                       ,fNPP        & ! fraction of NPP to foliage
+                       ,rNPP        & ! fraction of NPP to roots
+                       ,wNPP          ! fraction of NPP to wood
 
     ! Steady State Attractor:
     ! Log ratio difference between inputs and outputs of the system.
@@ -486,18 +515,13 @@ module model_likelihood_module
 
     infi = 0d0
 
-    ! estimate GPP allocation fractions
-    fauto = sum(DATAin%M_FLUXES(:,3)) / sum(DATAin%M_FLUXES(:,1))
-    ffol = (1d0-fauto)*pars(3)
-    flab = (1d0-fauto-ffol)*pars(13)
-    froot = (1d0-fauto-ffol-flab)*pars(4)
-    fwood = 1d0-fauto-ffol-flab-froot
-
     ! derive mean pools
     do n = 1, nopools-1
        mean_pools(n) = cal_mean_pools(M_POOLS,n,nodays+1,nopools)
     end do
 
+    ! Make local copy of number of days in double precision for divisions
+    dble_nodays = dble(nodays)
     ! number of years in analysis
     no_years = nint(sum(deltat)/365.25d0)
     ! number of time steps per year
@@ -515,23 +539,122 @@ module model_likelihood_module
       end do
       jan_mean_pools(n) = jan_mean_pools(n) / dble(steps_per_month*no_years)
     end do
+    ! Bespoke call for lit wood
+    jan_first_pools(8) = sum(M_POOLS(1:steps_per_month,8)) / dble(steps_per_month)
+    do y = 1, no_years
+       nn = 1 + (steps_per_year * (y - 1)) ; nnn = nn + (steps_per_month - 1)
+       jan_mean_pools(8) = jan_mean_pools(8) + sum(M_POOLS(nn:nnn,8))
+    end do
+    jan_mean_pools(8) = jan_mean_pools(8) / dble(steps_per_month*no_years)
+
+    !!!!!!!!!!!!
+    ! calculate photosynthate / NPP allocations
+    !!!!!!!!!!!!
+
+    ! calculate sum fluxes
+    sumgpp = sum(M_FLUXES(:,1))
+    sumrauto = sum(M_FLUXES(:,3))
+    sumlab = sum(M_FLUXES(:,5))
+    sumfol = sum(M_FLUXES(:,8))
+    sumroot = sum(M_FLUXES(:,6))
+    sumwood = sum(M_FLUXES(:,7))
+
+    ! initialise and then calculate mean gpp values
+    fauto = sumrauto / sumgpp            ! i.e. Ra:GPP = 1-CUE
+    sumnpp = (sumgpp - sumrauto)**(-1d0) ! NOTE: inverted here
+    sumgpp = sumgpp**(-1d0)              ! NOTE: inverted here
+
+    ! GPP allocation fractions
+    ffol = sumfol * sumgpp
+    froot = sumroot * sumgpp
+
+    ! NPP allocations; note that because of possible labile accumulation this
+    ! might not be equal to 1
+    fNPP = sumfol * sumnpp
+    wNPP = sumwood * sumnpp
+    rNPP = sumroot * sumnpp
+
+    !!!!!!!!!!!!
+    ! calculate residence times
+    !!!!!!!!!!!!
+
+    !
+    ! Foliar turnover
+    !
+
+    ! update initial values
+    hak = 0 ; resid_fol = 0d0
+    ! calculate mean turnover rate for leaves
+    resid_fol = (M_FLUXES(:,10)+M_FLUXES(:,19)+M_FLUXES(:,25))/M_POOLS(1:nodays,2)
+    ! division by zero results in NaN plus obviously I can't have turned
+    ! anything over if there was nothing to start out with...
+    where ( M_POOLS(1:nodays,2) == 0d0 )
+           hak = 1 ; resid_fol = 0d0
+    end where
+    ! mean fractional loss per day
+    torfol = sum(resid_fol) / (dble_nodays-dble(sum(hak)))
+
+    !
+    ! Labile turnover
+    !
+
+    ! reset initial values
+    hak = 0 ; resid_lab = 0d0
+    ! calculate mean turnover rate for labile pool
+    resid_lab = (M_FLUXES(:,8)+Rg_from_labile+Rm_from_labile+M_FLUXES(:,18)+M_FLUXES(:,24)) &
+              / M_POOLS(1:nodays,1)
+    ! division by zero results in NaN plus obviously I can't have turned
+    ! anything over if there was nothing to start out with...
+    where ( M_POOLS(1:nodays,1) == 0d0 )
+           hak = 1 ; resid_lab = 0d0
+    end where
+    ! mean fractional loss of labile per day
+    torlab = sum(resid_lab) / (dble_nodays-dble(sum(hak)))
 
     !
     ! Begin EDCs here
     !
 
+    ! GPP allocation to foliage and labile cannot be 5 orders of magnitude
+    ! difference from GPP allocation to roots
+    ! NOTE: assessment of run with no EDCs indicate that this condition is
+    ! rarely breached and could be ignored
+    if ((EDC2 == 1 .or. DIAG == 1) .and. (ffol > (5d0*froot) .or. (ffol*5d0) < froot)) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
+    endif
+
+    ! Average turnover of foliage should not be less than wood (pars(6))
+    ! NOTE: assessment of run with no EDCs indicate that this condition is
+    ! rarely breached and could be ignored
+    if ((EDC2 == 1 .or. DIAG == 1) .and. torfol < pars(6) ) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+    endif
+
     ! EDC 6
     ! ensure ratio between Cfoliar and Croot is less than 5
     if ((EDC2 == 1 .or. DIAG == 1) .and. &
         (mean_pools(2) > (mean_pools(3)*5d0) .or. (mean_pools(2)*5d0) < mean_pools(3)) ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(6) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
     end if
 
     ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
     ! the empirical phenology but mechanistic hydrology / photosynthesis
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_LAI) > 20d0 ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(7) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
     end if
+
+    ! Equilibrium factor (in comparison with initial conditions)
+!    EQF = 10d0 ! TLS 06/11/2019 !10d0 ! JFE replaced 10 by 2 - 27/06/2018
+    ! Pool exponential decay tolerance
+!    etol = 0.3d0 !0.1d0
+
+    ! first calculate total flux for the whole simulation period
+!    do fl = 1, nofluxes
+!        FT(fl) = 0
+!        do nd = 1, nodays
+!            FT(fl) = FT(fl) + M_FLUXES(nd,fl)*deltat(nd)
+!        end do
+!    end do
 
     ! First calculate total flux for the simulation period
     io_start = (steps_per_year*2) + 1 ; io_finish = nodays
@@ -542,17 +665,23 @@ module model_likelihood_module
        FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*deltat(1:steps_per_year))
        FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl)*deltat((steps_per_year+1):(steps_per_year*2)))
     end do
+    ! Override for flux 11 to assume wood loss based on its steady state turnover not the actual loss as the system may be early successional
+    FT(11) = sum(M_POOLS(io_start:io_finish,4) * pars(6) * deltat(io_start:io_finish))
 
     ! get total in and out for each pool
     ! labile
     Fin(1)  = FT(5)
-    Fout(1) = FT(8)+FT(18)+FT(24)+sum(Rg_from_labile(io_start:io_finish)*deltat(io_start:io_finish))
+    Fout(1) = FT(8)+FT(18)+FT(24) &
+            + sum(Rg_from_labile(io_start:io_finish)*deltat(io_start:io_finish)) &
+            + sum(Rm_from_labile(io_start:io_finish)*deltat(io_start:io_finish))
     Fin_yr1(1)  = FT_yr1(5)
     Fout_yr1(1) = FT_yr1(8)+FT_yr1(18)+FT_yr1(24) &
-                + sum(Rg_from_labile(1:steps_per_year)*deltat(1:steps_per_year))
+                + sum(Rg_from_labile(1:steps_per_year)*deltat(1:steps_per_year)) &
+                + sum(Rm_from_labile(1:steps_per_year)*deltat(1:steps_per_year))
     Fin_yr2(1)  = FT_yr2(5)
     Fout_yr2(1) = FT_yr2(8)+FT_yr2(18)+FT_yr2(24) &
-                + sum(Rg_from_labile((steps_per_year+1):(steps_per_year*2))*deltat((steps_per_year+1):(steps_per_year*2)))
+                + sum(Rg_from_labile((steps_per_year+1):(steps_per_year*2))*deltat((steps_per_year+1):(steps_per_year*2))) &
+                + sum(Rm_from_labile((steps_per_year+1):(steps_per_year*2))*deltat((steps_per_year+1):(steps_per_year*2)))
     ! foliar
     Fin(2)  = FT(4)+FT(8)
     Fout(2) = FT(10)+FT(19)+FT(25)
@@ -582,12 +711,20 @@ module model_likelihood_module
     Fin_yr2(5)  = FT_yr2(10)+FT_yr2(12)+FT_yr2(24)+FT_yr2(25)+FT_yr2(26)
     Fout_yr2(5) = FT_yr2(13)+FT_yr2(15)+FT_yr2(22)+FT_yr2(28)
     ! som
-    Fin(6)  = FT(11)+FT(15)+FT(27)+FT(28)
+    Fin(6)  = FT(15)+FT(27)+FT(28)+FT(31)+FT(33)
     Fout(6) = FT(14)+FT(23)
-    Fin_yr1(6)  = FT_yr1(11)+FT_yr1(15)+FT_yr1(27)+FT_yr1(28)
+    Fin_yr1(6)  = FT_yr1(15)+FT_yr1(27)+FT_yr1(28)+FT_yr1(31)+FT_yr1(33)
     Fout_yr1(6) = FT_yr1(14)+FT_yr1(23)
-    Fin_yr2(6)  = FT_yr2(11)+FT_yr2(15)+FT_yr2(27)+FT_yr2(28)
+    Fin_yr2(6)  = FT_yr2(15)+FT_yr2(27)+FT_yr2(28)+FT_yr2(31)+FT_yr2(33)
     Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)
+
+    ! litwood
+    Fin(8)  = FT(11)
+    Fout(8) = FT(30)+FT(31)+FT(32)+FT(33)
+    Fin_yr1(8)  = FT_yr1(11)
+    Fout_yr1(8) = FT_yr1(30)+FT_yr1(31)+FT_yr1(32)+FT_yr1(33)
+    Fin_yr2(8)  = FT_yr2(11)
+    Fout_yr2(8) = FT_yr2(30)+FT_yr2(31)+FT_yr2(32)+FT_yr2(33)
 
     ! Iterate through C pools to determine whether they have their ratio of
     ! input and outputs are outside of steady state approximation.
@@ -596,7 +733,7 @@ module model_likelihood_module
 !    ! iterate to check whether Fin/Fout is within EQF limits
 !    Rm = Fin/Fout
 !    Rs = Rm * (jan_mean_pools / jan_first_pools)
-!    do n = 1, nopools-1
+!    do n = 1, 6 ! lab, fol, root, wood, litter, som
 !       ! Restrict rates of increase
 !       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Rm(n))) > log(EQF10)) then
 !           EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
@@ -606,6 +743,14 @@ module model_likelihood_module
 !           EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !       end if
 !    end do
+!    n = 8 ! CWD special case
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Rm(n))) > log(EQF10)) then
+!         EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+!    end if
+!    ! Restrict exponential decay
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. abs(Rs(n)-Rm(n)) > 0.1d0) then
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!    end if
 
     if (EDC2 == 1 .or. DIAG == 1) then
 
@@ -616,6 +761,7 @@ module model_likelihood_module
                EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
            end if
            ! Restrict exponential behaviour at initialisation
+           !if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
            if (abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            end if
@@ -625,6 +771,7 @@ module model_likelihood_module
         if (abs(log(Fin(n)/Fout(n))) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
         end if
+        !if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
         if (abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
         end if
@@ -635,10 +782,45 @@ module model_likelihood_module
                EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
            end if
            ! Restrict exponential behaviour at initialisation
+           !if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
            if (abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            end if
         end do
+        ! Wood litter
+        n = 8
+        ! Restrict rates of increase
+        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+        end if
+        ! Restrict exponential behaviour at initialisation
+        if (abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+        end if
+
+        ! Determine the steady state estimate of wood (gC/m2)
+        SSwood = (Fin(4)/Fout(4)) * jan_mean_pools(4)
+        ! Based on the wood SS (gC/m2) and the sum fractional loss per day determine the mean input to litwood...
+        SSlitwood = SSwood * (Fout(4)/jan_mean_pools(4))
+        ! ...then estimate the actual steady state wood litter
+        SSlitwood = (SSlitwood/Fout(8)) * jan_mean_pools(8)
+        ! Steady state of som requires accounting for foliar, fine root and wood litter inputs
+        ! and adjusting for the litwood input already included
+        SSsom = Fin(6) - sum(M_FLUXES(io_start:io_finish,31))
+        ! Now repeat the process as done for litwood to estimate the inputs,
+        ! adjusting for the fraction of litwood output which is respired not decomposed
+        SSsom = SSsom + (SSlitwood * (Fout(8)/jan_mean_pools(8)) * pars(1))
+        ! Accounting for losses and scaling to SSsom
+        SSsom = (SSsom / Fout(6)) * jan_mean_pools(6)
+        ! It is reasonable to assume that the steady state for woody litter
+        ! should be ~ less than half that of woody biomass...
+        if (SSlitwood / SSwood > 0.60d0  ) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(30) = 0
+        end if
+        ! ... and less than soil organic matter
+        if ( SSsom < SSlitwood ) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(31) = 0
+        end if
 
     end if ! EDC2 == 1 .or. DIAG == 1
 
@@ -647,17 +829,41 @@ module model_likelihood_module
         EDC2 = 0d0 ; EDCD%PASSFAIL(35) = 0
     end if
 
-    ! Prevent NPP -> foliage (FLX4,8) > NPP (GPP-Ra, FLX1-FLX3)
-    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(:,4)+M_FLUXES(:,8)) > sum(M_FLUXES(:,1)-M_FLUXES(:,3))*0.8d0 ) then
+    ! Estimate total MRT in years, we assume that this has to be a sensible number even with the turnover suppression
+    MRTwood = ((sum(M_FLUXES(:,11) + M_FLUXES(:,21) + M_FLUXES(:,27) / M_POOLS(:,4)) / dble(nodays)) * 365.25d0) ** (-1d0)
+    if ((EDC2 == 1 .or. DIAG == 1) .and. MRTwood > 600d0) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(36) = 0
     end if
+
+    ! Prevent NPP -> foliage (FLX4,8) > NPP (GPP-Ra, FLX1-FLX3)
+    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(:,4)+M_FLUXES(:,8)) / sum(M_FLUXES(:,1)-M_FLUXES(:,3)) > 1d0 ) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(37) = 0
+    end if
+
+    ! Finally we would not expect that the mean labile stock is greater than
+    ! 8 % of the total ecosystem carbon stock, as we need structure to store
+    ! labile.
+    ! Gough et al (2009) Agricultural and Forest Meteorology. Avg 11, 12.5, 3 %
+    ! (Max across species for branch, bole and coarse roots). Provides evidence that
+    ! branches accumulate labile C prior to bud burst from other areas.
+    ! Wurth et al (2005) Oecologia, Clab 8 % of living biomass (DM) in tropical forest
+    ! Richardson et al (2013), New Phytologist, Clab 2.24 +/- 0.44 % in temperate (max = 4.2 %)
+    ! Estimate the labile ratio, also used below
+    lab_ratio = M_POOLS(:,1) / (M_POOLS(:,3) + M_POOLS(:,4))
+    if (EDC2 == 1 .or. DIAG == 1) then
+        if ((mean_pools(1) / (mean_pools(3) + mean_pools(4))) > 0.125d0) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(38) = 0
+        endif
+        if (maxval(lab_ratio) > 0.25d0) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(39) = 0
+        endif
+    endif ! EDC2 == 1 .or. DIAG == 1
 
     !
     ! EDCs done, below are additional fault detection conditions
     !
 
-
-    ! additional faults can be stored in locations 55 - 60 of the PASSFAIL array
+    ! additional faults can be stored in locations 35 - 40 of the PASSFAIL array
 
     ! ensure minimum pool values are >= 0, /= NaN or Inf
     if (EDC2 == 1 .or. DIAG == 1) then
@@ -986,6 +1192,7 @@ module model_likelihood_module
        likelihood = likelihood-tot_exp
     endif
 
+    ! LAI log-likelihood
     ! Assume physical property is best represented as the mean of value at beginning and end of times step
     if (DATAin%nlai > 0) then
        ! Create vector of (LAI_t0 + LAI_t1) * 0.5, note / pars(17) to convert foliage C to LAI

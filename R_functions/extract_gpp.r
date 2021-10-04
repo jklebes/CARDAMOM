@@ -24,7 +24,7 @@ extract_gpp<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in
   # work out number of pixels to average over
   if (spatial_type == "grid") {
       # resolution of the product
-      product_res = c(abs(gpp_all$long[2,1]-gpp_all$long[1,1]),abs(gpp_all$lat[1,2]-gpp_all$lat[1,1]))
+      product_res = c(abs(gpp_all$long[2]-gpp_all$long[1]),abs(gpp_all$lat[2]-gpp_all$lat[1]))
       if (grid_type == "wgs84") {
           # radius is ceiling of the ratio of the product vs analysis ratio
           radius = floor(0.5*(resolution / product_res))
@@ -38,7 +38,6 @@ extract_gpp<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in
       }
   } else {
       radius = c(0,0)
-      max_radius = 4
   }
 
   # work out average areas
