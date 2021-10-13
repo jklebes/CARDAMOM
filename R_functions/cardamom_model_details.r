@@ -27,12 +27,12 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nofluxes=array(16,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC_CDEA",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } else if (modelname == "DALEC_CDEA_LU_FIRES") {
-    # information contains is
+    # Information contains is
     # The model name
     # Number of met parameters
     # Number of model parameters to be optimised
     nopools=array(6,dim=c(length(ctessel_pft)))
-    nopars=array(23,dim=c(length(ctessel_pft)))
+    nopars=array(28,dim=c(length(ctessel_pft)))
     nofluxes=array(28,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC_CDEA_LU_FIRES",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } else if (modelname == "DALEC_CDEA_ACM2") {
@@ -41,7 +41,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     # Number of met parameters
     # Number of model parameters to be optimised
     nopools=array(6,dim=c(length(ctessel_pft)))
-    nopars=array(23,dim=c(length(ctessel_pft)))
+    nopars=array(28,dim=c(length(ctessel_pft)))
     nofluxes=array(28,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC_CDEA_ACM2",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } else if (modelname == "DALEC_CDEA_ACM2_BUCKET") {
@@ -50,16 +50,25 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     # Number of met parameters
     # Number of model parameters to be optimised
     nopools=array(7,dim=c(length(ctessel_pft)))
-    nopars=array(27,dim=c(length(ctessel_pft)))
+    nopars=array(32,dim=c(length(ctessel_pft)))
     nofluxes=array(29,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC_CDEA_ACM2_BUCKET",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC_CDEA_ACM2_BUCKET_wMRT") {
+    # information contains is
+    # The model name
+    # Number of met parameters
+    # Number of model parameters to be optimised
+    nopools=array(7,dim=c(length(ctessel_pft)))
+    nopars=array(33,dim=c(length(ctessel_pft)))
+    nofluxes=array(29,dim=c(length(ctessel_pft)))
+    cardamom_model_details=list(name="DALEC_CDEA_ACM2_BUCKET_wMRT",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } else if (modelname == "DALEC_CDEA_ACM2_BUCKET_RmRg") {
     # information contains is
     # The model name
     # Number of met parameters
     # Number of model parameters to be optimised
     nopools=array(7,dim=c(length(ctessel_pft)))
-    nopars=array(27,dim=c(length(ctessel_pft)))
+    nopars=array(32,dim=c(length(ctessel_pft)))
     nofluxes=array(31,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC_CDEA_ACM2_BUCKET_RmRg",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } else if (modelname == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD") {
@@ -68,7 +77,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     # Number of met parameters
     # Number of model parameters to be optimised
     nopools=array(8,dim=c(length(ctessel_pft)))
-    nopars=array(29,dim=c(length(ctessel_pft)))
+    nopars=array(35,dim=c(length(ctessel_pft)))
     nofluxes=array(33,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC_CDEA_ACM2_BUCKET_RmRg_CWD",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } else if (modelname == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT") {

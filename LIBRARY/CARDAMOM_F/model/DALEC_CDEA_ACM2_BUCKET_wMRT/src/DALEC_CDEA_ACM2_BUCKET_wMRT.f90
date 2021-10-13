@@ -11,7 +11,6 @@ module CARBON_MODEL_MOD
   ! Bloom & Williams (2015), https://doi.org/10.5194/bg-12-1299-2015.
   ! Smallman & Williams (2019) https://doi.org/10.5194/gmd-12-2227-2019.
   ! Thomas et al., (2019), https://doi.org/10.1029/2019MS001679
-  ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
   ! This code is based on that created by A. A. Bloom (UoE, now at JPL, USA).
   ! Subsequent modifications by:
   ! T. L. Smallman (University of Edinburgh, t.l.smallman@ed.ac.uk)
@@ -36,7 +35,6 @@ module CARBON_MODEL_MOD
            ,soil_frac_sand   &
            ,nos_soil_layers  &
            ,extracted_C      &
-           ,Rg_from_labile   &
            ,dim_1,dim_2      &
            ,nos_trees        &
            ,nos_inputs       &
@@ -84,12 +82,8 @@ module CARBON_MODEL_MOD
                       kc_saturation = 310d0,        & ! CO2 half saturation, saturation value
                    kc_half_sat_conc = 23.956d0,     & ! CO2 half sat, half sat
                  co2comp_saturation = 36.5d0,       & ! CO2 compensation point, saturation
-              co2comp_half_sat_conc = 9.46d0,       & ! CO2 comp point, half sat
+              co2comp_half_sat_conc = 9.46d0          ! CO2 comp point, half sat
                                                       ! Each of these are temperature sensitivty
-                        Rg_fraction = 0.21875d0,    & ! fraction of C allocation towards each pool
-                                                      ! lost as growth respiration
-                                                      ! (i.e. 0.28 .eq. xNPP)
-                    one_Rg_fraction = 1d0 - Rg_fraction
 
   ! hydraulic parameters
   double precision, parameter :: &
@@ -155,11 +149,10 @@ module CARBON_MODEL_MOD
   ! forest rotation specific info
   double precision, allocatable, dimension(:) :: extracted_C
   ! Photosynthetic Metrics
-  double precision, allocatable, dimension(:) :: Rg_from_labile, &
-                                         gs_demand_supply_ratio, & ! actual:potential stomatal conductance
-                                                gs_total_canopy, & ! stomatal conductance (mmolH2O/m2ground/day)
-                                                gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/day)
-                                          canopy_par_MJday_time    ! Absorbed PAR by canopy (MJ/m2ground/day)
+  double precision, allocatable, dimension(:) :: gs_demand_supply_ratio, & ! actual:potential stomatal conductance
+                                                        gs_total_canopy, & ! stomatal conductance (mmolH2O/m2ground/day)
+                                                        gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/day)
+                                                  canopy_par_MJday_time    ! Absorbed PAR by canopy (MJ/m2ground/day)
 
   ! arrays for the emulator, just so we load them once and that is it cos they be
   ! massive
@@ -248,7 +241,6 @@ module CARBON_MODEL_MOD
                                     ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
 metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limiterd photosynthesis (gC/m2/day)
     light_limited_photosynthesis, & ! light limited photosynthesis (gC/m2/day)
-      co2_limited_photosynthesis, & ! metabolic + co2 supply limited photosynthesis
                               ci, & ! Internal CO2 concentration (ppm)
                           gb_mol, & ! Canopy boundary layer conductance (molCO2/m2/day)
                         rb_mol_1, & ! Canopy boundary layer resistance (day/m2/molCO2)
@@ -290,8 +282,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                       daylength_seconds_1, &
                                             rainfall_time, &
                                                 cica_time, & ! Internal vs ambient CO2 concentrations
-                                                rSWP_time, & ! Timeseries of rSWP
-                                                wSWP_time    ! Timeseries of wSWP
+                                                rSWP_time, & ! Soil water potential weighted by access water
+                                                wSWP_time    ! Soil water potential weighted by supply of water
 
   contains
   !
@@ -302,7 +294,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
     ! Evergreen Analytical - ACMv2 - BUCKET (DALEC_CDEA_ACM2_BUCKET) model.
-    ! The subroutine calls the Aggregated Canopy Model version 2 (ACMv2) to simulate GPP which is partitioned
+    ! The subroutine calls the Aggregated Canopy Model version 2 to simulate GPP and partitions
     ! between various ecosystem carbon pools. These pools are subject
     ! to turnovers / decompostion resulting in ecosystem phenology and fluxes of CO2
     ! ACMv2 simulates coupled photosynthesis-transpiration (via stomata), soil and intercepted canopy
@@ -311,11 +303,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! This version includes the option to simulate fire combustion based
     ! on burned fraction and fixed combusion rates. It also includes the
     ! possibility to remove a fraction of biomass to simulate deforestation.
-
-    ! Relevant references:
-    ! Bloom & Williams (2015), doi: 10.5194/bg-12-1299-2015
-    ! Smallman & Williams (2019), doi: 10.5194/gmd-12-2227-2019
-    ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
 
     implicit none
 
@@ -350,9 +337,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                     ,deltaWP & ! deltaWP (MPa) minlwp-soilWP
   ,wf,wl,ff,fl,osf,osl,sf,ml   ! phenological controls
 
-    ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
-    ! Modified later with the inclusion of CWD pool by TLS Aug 2020
-    double precision :: cf(7),rfac(7)
+     ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
+    double precision :: cf(6),rfac(6)
 
     integer :: p,f,n,ii ! JFE added ii to loop over fluxes
 
@@ -391,7 +377,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! 5 = labile production
     ! 6 = root production
     ! 7 = wood production
-    ! 8 = labile production
+    ! 8 = labile->leaf production
     ! 9 = leaffall factor
     ! 10 = leaf litter production
     ! 11 = woodlitter production
@@ -464,7 +450,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        POOLS(1,4) = pars(21) ! wood
        POOLS(1,5) = pars(22) ! litter
        POOLS(1,6) = pars(23) ! som
-       POOLS(1,8) = pars(28) ! litwood
        !POOLS(1,7) = assigned later ! soil water (0-10cm)
     endif
 
@@ -474,7 +459,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         allocate(deltat_1(nodays),wSWP_time(nodays),rSWP_time(nodays),gs_demand_supply_ratio(nodays), &
                  gs_total_canopy(nodays),gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
                  daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
-                 meant_time(nodays),rainfall_time(nodays),Rg_from_labile(nodays),cica_time(nodays))
+                 meant_time(nodays),rainfall_time(nodays),cica_time(nodays))
 
         !
         ! Timing variables which are needed first
@@ -565,15 +550,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! NOTE: changes also result in the addition of further EDCs
 
     ! Assign proposed resilience factor
-    rfac(1:4) = pars(31)
-    rfac(5) = 0.1d0 ; rfac(6) = 0d0 ; rfac(7) = 0.1d0
+    rfac(1:4) = pars(28)
+    rfac(5) = 0.1d0 ; rfac(6) = 0d0
     ! Assign combustion completeness to foliage
-    cf(2) = pars(32) ! foliage
+    cf(2) = pars(29) ! foliage
     ! Assign combustion completeness to non-photosynthetic
-    cf(1) = pars(33) ; cf(3) = pars(33) ; cf(4) = pars(33)
-    cf(6) = pars(34) ! soil
-    ! derived values for litter and wood litter
-    cf(5) = pars(35) ; cf(7) = pars(36)
+    cf(1) = pars(30) ; cf(3) = pars(30) ; cf(4) = pars(30)
+    cf(6) = pars(31) ! soil
+    ! derived values for litter
+    cf(5) = pars(32)
 
     !
     ! Begin looping through each time step
@@ -594,7 +579,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     seconds_per_step = deltat(1) * seconds_per_day
     days_per_step =  deltat(1)
     days_per_step_1 =  deltat_1(1)
-
 
     ! Initialise root reach based on initial coarse root biomass
     fine_root_biomass = max(min_root,POOLS(1,3)*2d0)
@@ -755,7 +739,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! Gross primary productivity (gC/m2/day)
            call acm_gpp_stage_1 ; FLUXES(n,1) = acm_gpp_stage_2(stomatal_conductance)
            cica_time(n) = ci / co2
-           !cica_time(n) = light_limited_photosynthesis / co2_limited_photosynthesis
            ! Canopy transpiration (kgH2O/m2/day)
            call calculate_transpiration(transpiration)
            ! restrict transpiration to positive only
@@ -791,7 +774,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! total leaf litter production
        FLUXES(n,10) = POOLS(n,2)*(1d0-(1d0-FLUXES(n,9))**deltat(n))/deltat(n)
        ! total wood production
-       tmp = pars(6) * (POOLS(n,4) / (POOLS(n,4) + pars(30)))
+       tmp = pars(6) * (POOLS(n,4) / (POOLS(n,4) + pars(33)))
        FLUXES(n,11) = POOLS(n,4)*(1d0-(1d0-tmp)**deltat(n))/deltat(n)
        ! total root litter production
        FLUXES(n,12) = POOLS(n,3)*(1d0-(1d0-pars(7))**deltat(n))/deltat(n)
@@ -800,38 +783,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! those with temperature AND time dependancies
        !
 
+       ! respiration heterotrophic litter
+       FLUXES(n,13) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))/deltat(n)
        ! respiration heterotrophic som
        FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9))**deltat(n))/deltat(n)
-       ! turnover of litter
-       tmp = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))*deltat_1(n)
-       ! respiration heterotrophic litter ; decomposition of litter to som
-       FLUXES(n,13) = tmp * (1d0-pars(1)) ; FLUXES(n,15) = tmp * pars(1)
-       ! respiration heterotrophic litwood ; decomposition of litwood to som
-       tmp = POOLS(n,8)*(1d0-(1d0-FLUXES(n,2)*pars(29))**deltat(n))*deltat_1(n)
-       FLUXES(n,30) = tmp * (1d0-pars(1)) ; FLUXES(n,31) = tmp * pars(1)
-
-       !!!!!!!!!!
-       ! calculate growth respiration and adjust allocation to pools assuming
-       ! 0.21875 of total C allocation towards each pool (i.e. 0.28 .eq. xNPP)
-       !!!!!!!!!!
-
-       ! calculate growth respiration and adjust allocation to pools assuming
-       ! 0.21875 of total C allocation towards each pool (i.e. 0.28 .eq. xNPP)
-       ! foliage. NOTE: that in the current version only Rg_fol comes from
-       ! Clabile
-       Rg_from_labile(n) = FLUXES(n,8)*Rg_fraction ; FLUXES(n,8) = FLUXES(n,8) * one_Rg_fraction
-       ! now update the Ra flux, i.e. growth on to the existing maintenance
-       ! estimate
-       FLUXES(n,3) = FLUXES(n,3) + Rg_from_labile(n)
-       ! foliage - gpp direct
-       FLUXES(n,3) = FLUXES(n,3) + (FLUXES(n,4)*Rg_fraction) ; FLUXES(n,4) = FLUXES(n,4) * one_Rg_fraction
-       ! roots
-!       FLUXES(n,3) = FLUXES(n,3) + (FLUXES(n,6)*Rg_fraction) ; FLUXES(n,6) = FLUXES(n,6) * one_Rg_fraction
-       ! wood
-!       FLUXES(n,3) = FLUXES(n,3) + (FLUXES(n,7)*Rg_fraction) ; FLUXES(n,7) = FLUXES(n,7) * one_Rg_fraction
+       ! litter to som
+       FLUXES(n,15) = POOLS(n,5)*(1d0-(1d0-pars(1)*FLUXES(n,2))**deltat(n))/deltat(n)
 
        ! calculate the NEE
-       NEE(n) = (-FLUXES(n,1)+FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14)+FLUXES(n,30))
+       NEE(n) = (-FLUXES(n,1)+FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14))
        ! load GPP
        GPP(n) = FLUXES(n,1)
 
@@ -840,7 +800,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !
 
        ! labile pool
-       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8)-Rg_from_labile(n))*deltat(n)
+       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8))*deltat(n)
        ! foliar pool
        POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,4)-FLUXES(n,10) + FLUXES(n,8))*deltat(n)
        ! wood pool
@@ -850,9 +810,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! litter pool
        POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
        ! som pool
-       POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)+FLUXES(n,31)-FLUXES(n,14))*deltat(n)
-       ! litwood
-       POOLS(n+1,8) = POOLS(n,8) + (FLUXES(n,11)-FLUXES(n,30)-FLUXES(n,31))*deltat(n)
+       POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)-FLUXES(n,14)+FLUXES(n,11))*deltat(n)
 
        !!!!!!!!!!
        ! Update soil water balance
@@ -899,7 +857,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            FLUXES(n,21) = POOLS(n+1,4)*met(9,n)*cf(4)/deltat(n) ! wood
            FLUXES(n,22) = POOLS(n+1,5)*met(9,n)*cf(5)/deltat(n) ! litter
            FLUXES(n,23) = POOLS(n+1,6)*met(9,n)*cf(6)/deltat(n) ! som
-           FLUXES(n,32) = POOLS(n+1,8)*met(9,n)*cf(7)/deltat(n) ! litterwood
 
            ! second calculate litter transfer fluxes in g C m-2 d-1, all pools except som
            FLUXES(n,24) = POOLS(n+1,1)*met(9,n)*(1d0-cf(1))*(1d0-rfac(1))/deltat(n) ! labile into litter
@@ -907,7 +864,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            FLUXES(n,26) = POOLS(n+1,3)*met(9,n)*(1d0-cf(3))*(1d0-rfac(3))/deltat(n) ! roots into litter
            FLUXES(n,27) = POOLS(n+1,4)*met(9,n)*(1d0-cf(4))*(1d0-rfac(4))/deltat(n) ! wood into som
            FLUXES(n,28) = POOLS(n+1,5)*met(9,n)*(1d0-cf(5))*(1d0-rfac(5))/deltat(n) ! litter into som
-           FLUXES(n,33) = POOLS(n+1,8)*met(9,n)*(1d0-cf(7))*(1d0-rfac(7))/deltat(n) ! wood litter into som
 
            ! update pools - first remove burned vegetation
            POOLS(n+1,1) = POOLS(n+1,1) - (FLUXES(n,18) + FLUXES(n,24)) * deltat(n) ! labile
@@ -916,14 +872,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            POOLS(n+1,4) = POOLS(n+1,4) - (FLUXES(n,21) + FLUXES(n,27)) * deltat(n) ! wood
            ! update pools - add litter transfer
            POOLS(n+1,5) = POOLS(n+1,5) + (FLUXES(n,24) + FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22) - FLUXES(n,28)) * deltat(n)
-           POOLS(n+1,6) = POOLS(n+1,6) + (FLUXES(n,27) + FLUXES(n,28) + FLUXES(n,33) - FLUXES(n,23)) * deltat(n)
-           POOLS(n+1,8) = POOLS(n+1,8) - (FLUXES(n,32) + FLUXES(n,33)) * deltat(n)
+           POOLS(n+1,6) = POOLS(n+1,6) + (FLUXES(n,27) + FLUXES(n,28) - FLUXES(n,23)) * deltat(n)
 
            ! calculate ecosystem emissions
-           FLUXES(n,17) = FLUXES(n,18)+FLUXES(n,19)+FLUXES(n,20)+FLUXES(n,21)+FLUXES(n,22)+FLUXES(n,23)+FLUXES(n,32)
+           FLUXES(n,17) = FLUXES(n,18)+FLUXES(n,19)+FLUXES(n,20)+FLUXES(n,21)+FLUXES(n,22)+FLUXES(n,23)
        else
            ! set fluxes to zero
-           FLUXES(n,17:28) = 0d0 ; FLUXES(n,32:33) = 0d0
+           FLUXES(n,17:28) = 0d0
        end if
 
     end do ! nodays loop
@@ -992,7 +947,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, intent(in) :: gs
 
     ! declare local variables
-    double precision :: pp, qq, mult, rc, pd, ci_light, tmp_pl
+    double precision :: pp, qq, mult, rc, pd
 
     !
     ! Diffusion limited photosynthesis
@@ -1017,7 +972,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Then scale to day light period as this is then consistent with the light
     ! capture period (1/24 = 0.04166667)
     pd = ((co2-ci)/rc) * umol_to_gC * dayl_hours_fraction
-    co2_limited_photosynthesis = pd
 
     !
     ! Estimate CO2 and light co-limitation
@@ -1869,11 +1823,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     canopy_swrad_MJday = canopy_par_MJday + canopy_nir_MJday
 
     ! check energy balance
-!    balance = swrad - canopy_par_MJday - canopy_nir_MJday - refl_par_MJday -
-!    refl_nir_MJday - soil_swrad_MJday
+!    balance = swrad - canopy_par_MJday - canopy_nir_MJday - refl_par_MJday - refl_nir_MJday - soil_swrad_MJday
 !    if ((balance - swrad) / swrad > 0.01) then
-!        print*,"SW residual frac = ",(balance - swrad) / swrad,"SW residual =
-!        ",balance,"SW in = ",swrad
+!        print*,"SW residual frac = ",(balance - swrad) / swrad,"SW residual = ",balance,"SW in = ",swrad
 !    endif
 
   end subroutine calculate_shortwave_balance
@@ -2899,6 +2851,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! describes the departure of the velocity profile from just above the
     ! roughness from the intertial sublayer log law
+
 
     ! Estimate canopy drag coefficient
     sqrt_cd1_lai = sqrt(cd1 * local_lai)

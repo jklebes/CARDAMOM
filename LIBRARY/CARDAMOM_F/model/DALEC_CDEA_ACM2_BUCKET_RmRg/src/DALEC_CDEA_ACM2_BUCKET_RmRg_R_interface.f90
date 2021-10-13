@@ -134,7 +134,7 @@ subroutine rdaleccdeaacm2bucketrmrg(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars 
 
      ! calculate the actual NPP allocation fractions to foliar, wood and fine root pools
      ! by comparing the sum alloaction to each pools over the sum NPP.
-     sumNPP = sum(FLUXES(1:nodays,1)*(1-pars(2,i))) ! GPP * (1-Ra) fraction
+     sumNPP = sum(FLUXES(1:nodays,1)-FLUXES(1:nodays,3)) ! GPP - Ra
      airt_adj = sum(met(3,1:nodays)) / dble(nodays)
      airt_adj = exp(pars(10,i)*airt_adj)
      out_var2(i,1) = sum(FLUXES(1:nodays,4)+FLUXES(1:nodays,8)) / sumNPP ! foliar

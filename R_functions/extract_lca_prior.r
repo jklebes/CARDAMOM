@@ -15,7 +15,7 @@ extract_lca_prior<- function(spatial_type,resolution,grid_type,latlon_in,lca_all
    i1 = unlist(output)[1] ; j1 = unlist(output)[2]
 
    # If resolution has been provides as single value then adjust this here
-   if (length(resolution) == 1) {tmp_res = resolution * c(1,1)} else {tmp_res = resolution}
+   if (length(resolution) == 1 & spatial_type == "grid") {tmp_res = resolution * c(1,1)} else {tmp_res = resolution}
 
    # work out number of pixels to average over
    if (spatial_type == "grid") {

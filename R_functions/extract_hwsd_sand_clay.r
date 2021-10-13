@@ -20,7 +20,7 @@ extract_hwsd_sand_clay<- function(spatial_type,resolution,grid_type,latlon_in,sa
 	# return long to 0-360
 	if (length(check1) > 0) { sand_clay_all$long[check1]=sand_clay_all$long[check1]+360 }
   # If resolution has been provides as single value then adjust this here
-  if (length(resolution) == 1) {tmp_res = resolution * c(1,1)} else {tmp_res = resolution}
+  if (length(resolution) == 1 & spatial_type == "grid") {tmp_res = resolution * c(1,1)} else {tmp_res = resolution}
 
 	# work out number of pixels to average over
 	if (spatial_type == "grid") {

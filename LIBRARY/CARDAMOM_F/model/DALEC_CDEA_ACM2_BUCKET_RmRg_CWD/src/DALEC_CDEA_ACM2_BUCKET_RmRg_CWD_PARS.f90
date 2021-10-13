@@ -41,9 +41,6 @@ module MODEL_PARAMETERS
     ! declare parameters
     !
 
-!    ! Decomposition litter -> som (day-1)
-!    PI%parmin(1) = 0.00001d0
-!    PI%parmax(1) = 0.01d0
     ! Decomposition efficiency of litter/CWD to som (fraction)
     PI%parmin(1) = 0.25d0
     PI%parmax(1) = 0.75d0
@@ -92,7 +89,7 @@ module MODEL_PARAMETERS
     ! Kattge et al (2011) offers a prior of 3.4 - 30.7 gC/m2leaf/day.
     ! Here, to be cautious we will expand accepted range
     ! Thus CUE = NUE * avN -> 1.64 / 42.0
-    PI%parmin(11) = 1.64d0 !5d0
+    PI%parmin(11) = 3.4d0 !5d0
     PI%parmax(11) = 42d0 !50d0
     ! log10 avg foliar N (gN.m-2)
     ! Kattge et al., (2011) (Quantiles 25% / 75%)
@@ -138,17 +135,36 @@ module MODEL_PARAMETERS
     PI%parmin(27) = 0.35d0
     PI%parmax(27) = 20d0
 
-!    ! Optimum Nitrogen use efficiency (gC/gN/m2/day)
-!    PI%parmin(28) =  1.6d0
-!    PI%parmax(28) = 40.0d0
-
     ! Turnover rate for CWD
     PI%parmin(29) = 1.368925d-05 ! 200.00 years at 0oC
     PI%parmax(29) = 0.001d0      !   2.74 years at 0oC
 
+    ! Resilience factor for burned but not combusted C stocks
+    PI%parmin(30) = 0.1d0
+    PI%parmax(30) = 1d0
+    ! Combustion completeness factor for foliage
+    PI%parmin(31) = 0.01d0
+    PI%parmax(31) = 0.75d0
+    ! Combustion completeness factor for fine root and wood
+    PI%parmin(32) = 0.01d0
+    PI%parmax(32) = 0.75d0
+    ! Combustion completeness factor for soil
+    PI%parmin(33) = 0.001d0
+    PI%parmax(33) = 0.1d0
+    ! Combustion completeness factor for foliage + fine root litter
+    PI%parmin(34) = 0.01d0
+    PI%parmax(34) = 0.75d0
+    ! Combustion completeness factor for wood litter
+    PI%parmin(35) = 0.01d0
+    PI%parmax(35) = 0.75d0
+
+!    ! Optimum Nitrogen use efficiency (gC/gN/m2/day)
+!    PI%parmin(XX) =  1.6d0
+!    PI%parmax(XX) = 40.0d0
+
 !    ! minLWP (MPa)
-!    PI%parmin(28) = -4d0
-!    PI%parmax(28) = -1d0
+!    PI%parmin(XX) = -4d0
+!    PI%parmax(XX) = -1d0
 
     !
     ! INITIAL VALUES DECLARED HERE

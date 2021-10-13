@@ -92,7 +92,7 @@ module MODEL_PARAMETERS
     ! Kattge et al (2011) offers a prior of 3.4 - 30.7 gC/m2leaf/day.
     ! Here, to be cautious we will expand accepted range
     ! Thus CUE = NUE * avN -> 1.64 / 42.0
-    PI%parmin(11) = 1.64d0 !5d0
+    PI%parmin(11) = 3.4d0 !5d0
     PI%parmax(11) = 42d0 !50d0
     ! log10 avg foliar N (gN.m-2)
     ! Kattge et al., (2011) (Quantiles 25% / 75%)
@@ -147,8 +147,8 @@ module MODEL_PARAMETERS
     PI%parmax(29) = 0.001d0      !   2.74 years at 0oC
 
     ! Half saturation coefficient for self-thinning supression on wood turnover
-    PI%parmin(30) = 1000d0
-    PI%parmax(30) = 20000d0
+    PI%parmin(30) = 1d0
+    PI%parmax(30) = 7500d0
 
     ! Resilience factor for burned but not combusted C stocks
     PI%parmin(31) = 0.1d0

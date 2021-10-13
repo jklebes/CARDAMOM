@@ -21,7 +21,7 @@ extract_soilgrid_sand_clay<- function(spatial_type,resolution,grid_type,latlon_i
 	# return long to 0-360
 	if (length(check1) > 0) { sand_clay_all$long[check1]=sand_clay_all$long[check1]+360 }
   # If resolution has been provides as single value then adjust this here
-  if (length(resolution) == 1) {tmp_res = resolution * c(1,1)} else {tmp_res = resolution}
+  if (length(resolution) == 1 & spatial_type == "grid") {tmp_res = resolution * c(1,1)} else {tmp_res = resolution}
 
 	# work out number of pixels to average over
 #	print("NOTE all Csom values are a minimum average of 9 pixels (i.e centre+1 )")

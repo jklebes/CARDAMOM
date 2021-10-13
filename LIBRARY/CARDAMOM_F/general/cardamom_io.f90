@@ -179,7 +179,7 @@ module cardamom_io
     else if (DATAin%ID == 18) then
         ! DALEC_CDEA_LU_FIRES_ET - added 03/05/2018 JFE
         DATAin%nopools = 6
-        DATAin%nopars = 23
+        DATAin%nopars = 28
         DATAin%nofluxes = 28
         !change ID code below to resolve conflict when merging with jeff = 23/10/18
     else if (DATAin%ID == 19) then
@@ -227,7 +227,7 @@ module cardamom_io
     else if (DATAin%ID == 25) then
         ! ID = 25 - DALEC_CDEA_ACM2
         DATAin%nopools = 6
-        DATAin%nopars = 23
+        DATAin%nopars = 28
         DATAin%nofluxes = 28
     else if (DATAin%ID == 26) then
         ! ID = 26 - DALEC
@@ -243,17 +243,17 @@ module cardamom_io
     else if (DATAin%ID == 27) then
         ! ID = 27 - DALEC_CDEA_ACM2_BUCKET
         DATAin%nopools = 7
-        DATAin%nopars = 27
+        DATAin%nopars = 32
         DATAin%nofluxes = 29
     else if (DATAin%ID == 28) then
         ! ID = 28 - DALEC_CDEA_ACM2_BUCKET_RmRg
         DATAin%nopools = 7
-        DATAin%nopars = 27
+        DATAin%nopars = 32
         DATAin%nofluxes = 31
     else if (DATAin%ID == 29) then
         ! ID = 29 - DALEC_CDEA_ACM2_BUCKET_RmRg_CWD
         DATAin%nopools = 8
-        DATAin%nopars = 29
+        DATAin%nopars = 35
         DATAin%nofluxes = 33
     else if (DATAin%ID == 30) then
         ! ID = 30 - DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT
@@ -308,6 +308,11 @@ module cardamom_io
         DATAin%nopools = 8
         DATAin%nopars = 38
         DATAin%nofluxes = 33
+    else if (DATAin%ID == 37) then
+        ! ID = 37 - DALEC_CDEA_ACM2_BUCKET_wMRT
+        DATAin%nopools = 7
+        DATAin%nopars = 33
+        DATAin%nofluxes = 29
     else
        write(*,*) "Oh dear... model ID cannot be found"
        stop

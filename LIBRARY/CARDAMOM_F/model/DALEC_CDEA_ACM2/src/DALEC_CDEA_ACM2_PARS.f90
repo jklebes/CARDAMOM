@@ -34,8 +34,6 @@ module MODEL_PARAMETERS
 
     implicit none
 
-!    PI%npars=23;
-
     ! NOTE: that these parameter ranges have been matched with Bloom's C code
     ! 22/11/2019 - try not to lose this information as it is needed for comparability
 
@@ -91,7 +89,7 @@ module MODEL_PARAMETERS
     ! Kattge et al (2011) offers a prior of 3.4 - 30.7 gC/m2leaf/day.
     ! Here, to be cautious we will expand accepted range
     ! Thus CUE = NUE * avN -> 1.64 / 42.0
-    PI%parmin(11) = 1.64d0 !5d0
+    PI%parmin(11) = 3.4d0 !5d0
     PI%parmax(11) = 42d0 !50d0
 
     ! max bud burst day
@@ -118,6 +116,22 @@ module MODEL_PARAMETERS
     ! Kattge et al. 2011
     PI%parmin(17) = 20d0
     PI%parmax(17) = 180d0
+
+    ! Resilience factor for burned but not combusted C stocks
+    PI%parmin(24) = 0.1d0
+    PI%parmax(24) = 1d0
+    ! Combustion completeness factor for foliage
+    PI%parmin(25) = 0.01d0
+    PI%parmax(25) = 0.75d0
+    ! Combustion completeness factor for fine root and wood
+    PI%parmin(26) = 0.01d0
+    PI%parmax(26) = 0.75d0
+    ! Combustion completeness factor for soil
+    PI%parmin(27) = 0.001d0
+    PI%parmax(27) = 0.1d0
+    ! Combustion completeness factor for foliage + fine root litter
+    PI%parmin(28)= 0.01d0
+    PI%parmax(28) = 0.75d0
 
     !
     ! INITIAL VALUES DECLARED HERE

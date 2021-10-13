@@ -482,7 +482,8 @@ module model_likelihood_module
                                             mean_pools, Fin, Fout, Rm, Rs, &
                                             Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
     double precision, dimension(nofluxes) :: FT, FT_yr1, FT_yr2
-    double precision :: fauto & ! Fractions of GPP to autotrophic respiration
+    double precision :: MRTwood &
+                       ,fauto & ! Fractions of GPP to autotrophic respiration
                        ,ffol  & ! Fraction of GPP to foliage
                        ,flab  & ! Fraction of GPP to labile pool
                        ,froot & ! Fraction of GPP to root
@@ -576,6 +577,8 @@ module model_likelihood_module
        FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*deltat(1:steps_per_year))
        FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl)*deltat((steps_per_year+1):(steps_per_year*2)))
     end do
+    ! Override for flux 11 to assume wood loss based on its steady state turnover not the actual loss as the system may be early successional
+    FT(11) = sum(M_POOLS(io_start:io_finish,4) * pars(6) * deltat(io_start:io_finish))
 
     ! get total in and out for each pool
     ! labile
@@ -679,9 +682,15 @@ module model_likelihood_module
         EDC2 = 0d0 ; EDCD%PASSFAIL(35) = 0
     end if
 
+    ! Estimate total MRT in years, we assume that this has to be a sensible number even with the turnover suppression
+    MRTwood = ((sum(M_FLUXES(:,11) + M_FLUXES(:,21) + M_FLUXES(:,27) / M_POOLS(:,4)) / dble(nodays)) * 365.25d0) ** (-1d0)
+    if ((EDC2 == 1 .or. DIAG == 1) .and. MRTwood > 600d0) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(36) = 0
+    end if
+
     ! Prevent NPP -> foliage (FLX4,8) > NPP (GPP-Ra, FLX1-FLX3)
     if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(:,4)+M_FLUXES(:,8)) / sum(M_FLUXES(:,1)-M_FLUXES(:,3)) > 1d0 ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(36) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(37) = 0
     end if
 
     !

@@ -189,7 +189,8 @@ generate_parameter_maps<-function(PROJECT) {
                # If there is fire we will estimate its impact on residence time
                if (tmp > 0) {
                    # (fire*cc) + (fire*(1-cc)*(1-rfac))
-                   if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT") {
+                   if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT" |
+                       PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT") {
                        # Use the model calibrated resiliance factors
                        # Foliage
                        tmp2 = ((tmp * parameters[32,,]) + (tmp * (1-parameters[32,,]) * (1-parameters[31,,]))) ** -1
@@ -201,7 +202,46 @@ generate_parameter_maps<-function(PROJECT) {
                        grid_parameters$MTTfire_root_years[slot_i,slot_j,] = tmp2
                        grid_parameters$MTTfire_wood_years[slot_i,slot_j,] = tmp2
                    # (fire*cc) + (fire*(1-cc)*(1-rfac))
-                   } else if (PROJECT$model$name == "DALEC_1005" | PROJECT$model$name == "DALEC_1005a") {
+                   } else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD") {
+                       # Use the model calibrated resiliance factors
+                       # Foliage
+                       tmp2 = ((tmp * parameters[31,,]) + (tmp * (1-parameters[31,,]) * (1-parameters[30,,]))) ** -1
+                       tmp2 = quantile(tmp2, prob = num_quantiles, na.rm=TRUE)
+                       grid_parameters$MTTfire_foliar_years[slot_i,slot_j,] = tmp2
+                       # Currently fine roots and wood have a commmon rfac and combustion completeness
+                       tmp2 = ((tmp * parameters[32,,]) + (tmp * (1-parameters[32,,]) * (1-parameters[30,,]))) ** -1
+                       tmp2 = quantile(tmp2, prob = num_quantiles, na.rm=TRUE)
+                       grid_parameters$MTTfire_root_years[slot_i,slot_j,] = tmp2
+                       grid_parameters$MTTfire_wood_years[slot_i,slot_j,] = tmp2
+                   # (fire*cc) + (fire*(1-cc)*(1-rfac))
+                   } else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg" |
+                              PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET" |
+                              PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_wMRT") {
+                       # Use the model calibrated resiliance factors
+                       # Foliage
+                       tmp2 = ((tmp * parameters[29,,]) + (tmp * (1-parameters[29,,]) * (1-parameters[28,,]))) ** -1
+                       tmp2 = quantile(tmp2, prob = num_quantiles, na.rm=TRUE)
+                       grid_parameters$MTTfire_foliar_years[slot_i,slot_j,] = tmp2
+                       # Currently fine roots and wood have a commmon rfac and combustion completeness
+                       tmp2 = ((tmp * parameters[29,,]) + (tmp * (1-parameters[29,,]) * (1-parameters[28,,]))) ** -1
+                       tmp2 = quantile(tmp2, prob = num_quantiles, na.rm=TRUE)
+                       grid_parameters$MTTfire_root_years[slot_i,slot_j,] = tmp2
+                       grid_parameters$MTTfire_wood_years[slot_i,slot_j,] = tmp2
+                   } else if (PROJECT$model$name == "DALEC_CDEA_ACM2" |
+                              PROJECT$model$name == "DALEC_CDEA_LU_FIRES") {
+                       # Use the model calibrated resiliance factors
+                       # Foliage
+                       tmp2 = ((tmp * parameters[25,,]) + (tmp * (1-parameters[25,,]) * (1-parameters[24,,]))) ** -1
+                       tmp2 = quantile(tmp2, prob = num_quantiles, na.rm=TRUE)
+                       grid_parameters$MTTfire_foliar_years[slot_i,slot_j,] = tmp2
+                       # Currently fine roots and wood have a commmon rfac and combustion completeness
+                       tmp2 = ((tmp * parameters[26,,]) + (tmp * (1-parameters[26,,]) * (1-parameters[24,,]))) ** -1
+                       tmp2 = quantile(tmp2, prob = num_quantiles, na.rm=TRUE)
+                       grid_parameters$MTTfire_root_years[slot_i,slot_j,] = tmp2
+                       grid_parameters$MTTfire_wood_years[slot_i,slot_j,] = tmp2
+                   # (fire*cc) + (fire*(1-cc)*(1-rfac))
+                   } else if (PROJECT$model$name == "DALEC_1005" |
+                              PROJECT$model$name == "DALEC_1005a") {
                        # Use the model calibrated resiliance factors
                        # Foliage
                        tmp2 = ((tmp * parameters[28,,]) + (tmp * (1-parameters[28,,]) * (1-parameters[31,,]))) ** -1
@@ -270,7 +310,8 @@ generate_parameter_maps<-function(PROJECT) {
   if (file.exists(outfile) == FALSE | repair == 1) {
       nos_uk_clusters = 1 ; uk_cluster = 1 ; uk_cluster_pft = 1
       if (PROJECT$model$name == "DALEC_EVERGREEN" | PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_CDEA_ACM2" |
-          PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET" | PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" |
+          PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_wMRT" |
+          PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" |
           PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD" |
           PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT" |
           PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALEC" |
@@ -343,7 +384,8 @@ generate_parameter_maps<-function(PROJECT) {
 
   # assuming we have generated one lets create the Cluster analysis map
   if (PROJECT$model$name == "DALEC_EVERGREEN" | PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_CDEA_ACM2" |
-      PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg" |
+      PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_wMRT" | 
+      PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg" |
       PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT" |
       PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT" |
       PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_GSI_BUCKET" |

@@ -233,15 +233,23 @@ contains
     ! scaling to biyearly sine curve
     sf = 365.25d0/pi
 
-    ! Define fire constants
-    cf(1) = 0.1d0         ! labile combustion efficiency
-    cf(2) = 0.9d0         ! foliar combustion efficiency
-    cf(3) = 0.1d0         ! roots combustion efficiency
-    cf(4) = 0.1d0         ! wood combustion efficiency
-    cf(5) = 0.7d0         ! litter combustion efficiency
-    cf(6) = 0.01d0        ! som combustion efficency
-    rfac = 0.5d0          ! resilience factor
+    ! JFE added 4 May 2018 - define fire constants
+    ! Update fire parameters derived from
+    ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
+    ! Subsequently expanded by T. L. Smallman & Mat Williams (UoE, 03/09/2021)
+    ! to provide specific CC for litter and wood litter.
+    ! NOTE: changes also result in the addition of further EDCs
+
+    ! Assign proposed resilience factor
+    rfac(1:4) = pars(24)
     rfac(5) = 0.1d0 ; rfac(6) = 0d0
+    ! Assign combustion completeness to foliage
+    cf(2) = pars(25) ! foliage
+    ! Assign combustion completeness to non-photosynthetic
+    cf(1) = pars(26) ; cf(3) = pars(26) ; cf(4) = pars(26)
+    cf(6) = pars(27) ! soil
+    ! derived values for litter
+    cf(5) = pars(28)
 
     if (.not.allocated(CiCa_time)) allocate(CiCa_time(nodays))
 
@@ -337,12 +345,12 @@ contains
 
       ! Biomass removal
       if (met(8,n) > 0d0) then
-          ! Only estimate total when code is conducting post-processing
+          tmp = (POOLS(n+1,2)+POOLS(n+1,4))/sum(POOLS(n+1,2:4))
           if (allocated(extracted_C)) then
-              extracted_C(n) = ((POOLS(n+1,1) + POOLS(n+1,2) + POOLS(n+1,4)) * met(8,n)) / deltat(n)
+              extracted_C(n) = (((POOLS(n+1,1)*tmp) + POOLS(n+1,2) + POOLS(n+1,4)) * met(8,n)) / deltat(n)
           endif
-          ! Update live pools
-          POOLS(n+1,1) = POOLS(n+1,1)*(1d0-met(8,n)) ! remove labile
+          POOLS(n+1,1) = tmp &
+                       * POOLS(n+1,1)*(1d0-met(8,n)) ! remove labile
           POOLS(n+1,2) = POOLS(n+1,2)*(1d0-met(8,n)) ! remove foliar
           POOLS(n+1,4) = POOLS(n+1,4)*(1d0-met(8,n)) ! remove wood
           ! NOTE 1: fine root is left in system without mortality

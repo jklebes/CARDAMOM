@@ -417,6 +417,22 @@ module model_likelihood_module
        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     endif
 
+    ! IMPLICIT Combustion completeness for foliage should be greater than soil
+    ! IMPLICIT Combustion completeness for fol+root litter should be greater than soil
+
+    ! Combustion completeness for foliage should be greater than non-photosynthetic tissues
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(29) < pars(30)) then
+       EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
+    endif
+    ! Combustion completeness for non-photosynthetic tissue should be greater than soil
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(30) < pars(31)) then
+       EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
+    endif
+    ! Combustion completeness for foliar + fine root litter should be greater than non-photosynthetic tissue
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(30)) then
+       EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
+    endif
+
     ! could always add more / remove some
 
   end subroutine EDC1_CDEA_LU_FIRES
@@ -524,13 +540,13 @@ module model_likelihood_module
     ! ensure ratio between Cfoliar and Croot is less than 5
     if ((EDC2 == 1 .or. DIAG == 1) .and. &
         (mean_pools(2) > (mean_pools(3)*5d0) .or. (mean_pools(2)*5d0) < mean_pools(3)) ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(6) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
     end if
 
     ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
     ! the empirical phenology but mechanistic hydrology / photosynthesis
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_LAI) > 20d0 ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(7) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
     end if
 
     ! First calculate total flux for the simulation period

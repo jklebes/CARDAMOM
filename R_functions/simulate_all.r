@@ -623,6 +623,50 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       aNPP = aNPP, MTT = MTT, SS = SS, aMTT = aMTT, natMTT = MTTnat)
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
+  } else if (model_name == "DALEC_CDEA_ACM2_BUCKET_wMRT") {
+      output_dim=25
+      dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
+      if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
+      tmp=.Fortran( "rdaleccdeaacm2bucketwmrt",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim)
+                                          ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
+                                          ,met=as.double(t(met))
+                                          ,pars=as.double(pars_in),out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
+                                          ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
+                                          ,out_var3=as.double(array(0,dim=c(nos_iter,MTT_dim)))
+                                          ,out_var4=as.double(array(0,dim=c(nos_iter,SS_dim)))
+                                          ,out_var5=as.double(array(0,dim=c(nos_iter,MTT_dim,noyears)))
+                                          ,out_var6=as.double(array(0,dim=c(nos_iter,MTT_dim)))
+                                          ,lat=as.double(lat)
+                                          ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
+                                          ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
+                                          ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
+                                          ,noyears=as.integer(noyears)
+                                          ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
+                                          ,soil_frac_clay_in=as.double(array(c(soil_info[3],soil_info[3],soil_info[4],soil_info[4]),dim=c(4)))
+                                          ,soil_frac_sand_in=as.double(array(c(soil_info[1],soil_info[1],soil_info[2],soil_info[2]),dim=c(4))))
+      output = tmp$out_var ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
+      aNPP = tmp$out_var2  ; aNPP = array(aNPP, dim=c(nos_iter,aNPP_dim))
+      MTT = tmp$out_var3   ; MTT = array(MTT, dim=c(nos_iter,MTT_dim))
+      SS = tmp$out_var4    ; SS = array(SS, dim=c(nos_iter,SS_dim))
+      aMTT = tmp$out_var5  ; aMTT = array(aMTT, dim=c(nos_iter,MTT_dim,noyears))
+      MTTnat = tmp$out_var6; MTTnat = array(MTTnat, dim=c(nos_iter,MTT_dim))
+      dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
+      rm(tmp) ; gc()
+      # Create the output object
+      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
+                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
+                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
+                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
+                      root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
+                      lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
+                      harvest_C_gCm2day = output[,,13], fire_gCm2day = output[,,14],
+                      evap_kgH2Om2day = output[,,18],sfc_water_mm = output[,,19],
+                      wSWP_MPa = output[,,20],gs_demand_supply = output[,,21],
+                      gs_total_canopy = output[,,22],APAR_MJm2day = output[,,23],
+                      gb_total_canopy = output[,,24],CiCa = output[,,25],
+                      aNPP = aNPP, MTT = MTT, SS = SS, aMTT = aMTT, natMTT = MTTnat)
+      # add newly calculated variables
+      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_CDEA_ACM2_BUCKET_RmRg") {
       output_dim=25
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))

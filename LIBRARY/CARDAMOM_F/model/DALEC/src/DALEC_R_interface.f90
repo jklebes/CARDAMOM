@@ -219,8 +219,7 @@ subroutine rdalec(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
 
      ! calculate the actual NPP allocation fractions to foliar, wood and fine root pools
      ! by comparing the sum alloaction to each pools over the sum NPP.
-     fauto = sum(FLUXES(1:nodays,3)) / sum(FLUXES(1:nodays,1))
-     sumNPP = (sum(FLUXES(1:nodays,1))*(1d0-fauto))**(-1d0) ! GPP * (1-Ra) fraction
+     sumNPP = sum(FLUXES(1:nodays,1)-FLUXES(1:nodays,3)) ! GPP - Ra
      out_var2(i,1) = sum(FLUXES(1:nodays,8)) * sumNPP ! foliar
      out_var2(i,2) = sum(FLUXES(1:nodays,6)) * sumNPP ! fine root
      out_var2(i,3) = sum(FLUXES(1:nodays,7)) * sumNPP ! wood

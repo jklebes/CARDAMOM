@@ -26,7 +26,7 @@ extract_modis_lai<- function(timestep_days,spatial_type,resolution,grid_type,lat
   # return long to 0-360
   if (length(check1) > 0) { lai_all$long[check1]=lai_all$long[check1]+360 }
   # If resolution has been provides as single value then adjust this here
-  if (length(resolution) == 1) {tmp_res = resolution * c(1,1)} else {tmp_res = resolution}
+  if (length(resolution) == 1 & spatial_type == "grid") {tmp_res = resolution * c(1,1)} else {tmp_res = resolution}
 
   # work out number of pixels to average over
   if (spatial_type == "grid") {

@@ -1,13 +1,15 @@
 
-subroutine rdaleccdeaacm2(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
-                         ,out_var,out_var2,out_var3,out_var4,out_var5 &
-                         ,out_var6,lat,nopars,nomet &
-                         ,nofluxes,nopools,pft,pft_specific,nodays,noyears,deltat &
-                         ,nos_iter)
 
-  use CARBON_MODEL_MOD, only: CARBON_MODEL, extracted_C, gs_demand_supply_ratio, &
-                              gs_total_canopy, gb_total_canopy, canopy_par_MJday_time, &
-                              cica_time
+subroutine rdaleccdeaacm2bucketwmrt(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
+                                   ,out_var,out_var2,out_var3,out_var4,out_var5 &
+                                   ,out_var6,lat,nopars,nomet &
+                                   ,nofluxes,nopools,pft,pft_specific,nodays,noyears,deltat &
+                                   ,nos_iter,soil_frac_clay_in,soil_frac_sand_in)
+
+  use CARBON_MODEL_MOD, only: CARBON_MODEL, extracted_C, wSWP_time &
+                             ,soil_frac_clay, soil_frac_sand, nos_soil_layers &
+                             ,gs_demand_supply_ratio, cica_time &
+                             ,gs_total_canopy, gb_total_canopy, canopy_par_MJday_time
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -36,10 +38,12 @@ subroutine rdaleccdeaacm2(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
                         ,nopools        & ! number of model pools
                         ,nodays           ! number of days in simulation
 
-  double precision, intent(inout) :: deltat(nodays)   ! time step in decimal days
-  double precision, intent(in) :: met(nomet,nodays) & ! met drivers, note reverse of needed
-                       ,pars(nopars,nos_iter)       & ! number of parameters
-                       ,lat                           ! site latitude (degrees)
+  double precision, intent(inout) :: deltat(nodays)     ! time step in decimal days
+  double precision, intent(in) :: met(nomet,nodays)   & ! met drivers, note reverse of needed
+                  ,soil_frac_clay_in(nos_soil_layers) & ! clay in soil (%)
+                  ,soil_frac_sand_in(nos_soil_layers) & ! sand in soil (%)
+                       ,pars(nopars,nos_iter)         & ! number of parameters
+                       ,lat                 ! site latitude (degrees)
 
   ! output declaration
   double precision, intent(out), dimension(nos_iter,nodays,output_dim) :: out_var
@@ -73,10 +77,14 @@ subroutine rdaleccdeaacm2(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
   if (allocated(extracted_C)) deallocate(extracted_C)
   allocate(extracted_C(nodays))
 
+  ! update soil parameters
+  soil_frac_clay = soil_frac_clay_in
+  soil_frac_sand = soil_frac_clay_in
+
   ! generate deltat step from input data
   deltat(1) = met(1,1)
   do i = 2, nodays
-     deltat(i) = met(1,i) - met(1,(i-1))
+     deltat(i) = met(1,i)-met(1,(i-1))
   end do
   ! number of years in analysis
   nos_years = nint(sum(deltat)/365.25d0)
@@ -114,11 +122,15 @@ subroutine rdaleccdeaacm2(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
      out_var(i,1:nodays,12) = POOLS(1:nodays,2) ! foliage
      out_var(i,1:nodays,13) = extracted_C(1:nodays) ! harvested material
      out_var(i,1:nodays,14) = FLUXES(1:nodays,17) ! Fire value
-     out_var(i,1:nodays,15) = gs_demand_supply_ratio(1:nodays)
-     out_var(i,1:nodays,16) = gs_total_canopy(1:nodays)
-     out_var(i,1:nodays,17) = canopy_par_MJday_time(1:nodays)
-     out_var(i,1:nodays,18) = gb_total_canopy(1:nodays)
-     out_var(i,1:nodays,19) = cica_time(1:nodays)
+
+     out_var(i,1:nodays,18) = FLUXES(1:nodays,29) ! Evapotranspiration (kgH2O.m-2.day-1)
+     out_var(i,1:nodays,19) = POOLS(1:nodays,7)   ! rootwater (kgH2O.m-2.10cmdepth)
+     out_var(i,1:nodays,20) = wSWP_time(1:nodays) ! Weighted Soil Water Potential (MPa)
+     out_var(i,1:nodays,21) = gs_demand_supply_ratio ! ratio of evaporative demand over supply
+     out_var(i,1:nodays,22) = gs_total_canopy(1:nodays)
+     out_var(i,1:nodays,23) = canopy_par_MJday_time(1:nodays)
+     out_var(i,1:nodays,24) = gb_total_canopy(1:nodays)
+     out_var(i,1:nodays,25) = cica_time(1:nodays)
 
      ! calculate the actual NPP allocation fractions to foliar, wood and fine root pools
      ! by comparing the sum alloaction to each pools over the sum NPP.
@@ -169,7 +181,7 @@ subroutine rdaleccdeaacm2(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
      ! Litter (fol+root; /day)
      out_var3(i,4) = sum( ((FLUXES(1:nodays,13)+FLUXES(1:nodays,15)+FLUXES(1:nodays,22)+FLUXES(1:nodays,28)) &
                           / (POOLS(1:nodays,5))) * lit_filter) &
-                   / dble(nodays-sum(lit_hak))
+                   / dble(nodays-sum(lit_hak)) ! litter+wood litter (/day)
      ! Soil (/day)
      out_var3(i,5) = sum( ((FLUXES(1:nodays,14)+FLUXES(1:nodays,23)) &
                           / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
@@ -252,4 +264,4 @@ subroutine rdaleccdeaacm2(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
   ! return back to the subroutine then
   return
 
-end subroutine rdaleccdeaacm2
+end subroutine rdaleccdeaacm2bucketwmrt

@@ -108,14 +108,14 @@ subroutine rdalec1005(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
      out_var(i,1:nodays,13) = extracted_C(1:nodays) ! harvested material
      out_var(i,1:nodays,14) = FLUXES(1:nodays,17) ! Fire value
      out_var(i,1:nodays,15) = CiCa_time(1:nodays)
-!     out_var(i,1:nodays,16) = 
+!     out_var(i,1:nodays,16) =
 !     out_var(i,1:nodays,17) =
      out_var(i,1:nodays,18) = FLUXES(1:nodays,29) ! ET kgH2O/m2/day
 
      ! Calculate the actual NPP allocation fractions to foliar, wood and fine root pools
      ! by comparing the sum allocation to each pools over the sum NPP.
      ! Not strictly needed for this version of DALEC but allows code consistency with more complex versions
-     sumNPP = sum(FLUXES(1:nodays,1)*(1d0-pars(2,i))) ! GPP * (1-Ra) fraction
+     sumNPP = sum(FLUXES(1:nodays,1)-FLUXES(1:nodays,3)) ! GPP - Ra
      airt_adj = sum(met(3,1:nodays)) / dble(nodays)
      airt_adj = exp(pars(10,i)*airt_adj)
      out_var2(i,1) = sum(FLUXES(1:nodays,4)+FLUXES(1:nodays,8)) / sumNPP ! foliar

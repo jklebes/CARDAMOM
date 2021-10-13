@@ -198,7 +198,7 @@ program cardamom_framework
 
      ! Let the user know how many more we will propose
      write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
-     ! Call the MHMCMC
+     ! Call the AP-MCMC
      call MHMCMC(1d0,StressTest_likelihood,StressTest_likelihood)
      ! Tell the user the best parameter set
      print*,"Best parameters = ",MCOUT%best_pars
@@ -207,7 +207,7 @@ program cardamom_framework
 
      ! Begin search for initial conditions
      write(*,*) "Beginning search for initial parameter conditions"
-     ! Determine initial values, this requires using the MHMCMC
+     ! Determine initial values, this requires using the AP-MCMC
      call find_edc_initial_values
      ! Reset the iterations counter - if not then the wrong number of iterations will be attempted
      MCOUT%nos_iterations = 0
@@ -300,7 +300,7 @@ program cardamom_framework
      ! Call the main MCMC
      call MHMCMC(1d0,model_likelihood,model_likelihood)
      ! Let the user know we are done
-     write(*,*)"MHMCMC done now, moving on ..."
+     write(*,*)"AP-MCMC done now, moving on ..."
 
  end if ! stress test or not
 

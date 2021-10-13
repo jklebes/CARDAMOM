@@ -13,7 +13,7 @@ module MHMCMC_MODULE
   !!!!!!!!!!!
 
   ! Module contains all subroutine and functions relevant specifically to the
-  ! MHMCMC method. The choice of EDC, likelihood and model are made else where and
+  ! AP-MCMC method. The choice of EDC, likelihood and model are made else where and
   ! are thus contains within a seperate module
 
   ! Relevant source references:
@@ -34,7 +34,7 @@ public :: MHMCMC, par_minstepsize, par_initstepsize, N_before_mv
 ! related to random number generator
 integer :: uniform, unif_length
 double precision, allocatable, dimension(:) :: uniform_random_vector
-! MHMCMC step size
+! AP-MCMC step size
 double precision, parameter :: par_minstepsize = 0.001d0 & ! 0.0005 -> 0.001 -> 0.01 -> 0.1 -> 0.005
                               ,par_maxstepsize = 0.01d0  &
                               ,par_initstepsize = 0.005d0
@@ -70,7 +70,7 @@ contains
     ! * (c) returning  the (log) likelihood.
     ! * The function will be run as MODEL_LIKELIHOOD(DATA,PI,PARS);
     ! * To facilitate this, ALL data can be
-    ! * passed to the MHMCMC function as a structure (in order to avoid
+    ! * passed to the AP-MCMC function as a structure (in order to avoid
     ! * repeated read/write computational time).
     ! *
     ! * DATA: All data needed for the MODEL_LIKELYHOOD. It can include
@@ -192,7 +192,7 @@ contains
     end do ! for PI%npar loop
 
     ! Inform the user
-    write(*,*) "Have loaded / randomly assigned PI%parini - now begin the MHMCMC"
+    write(*,*) "Have loaded / randomly assigned PI%parini - now begin the AP-MCMC"
 
     ! Initialise the prior and best pars vectors
     PARS0(1:PI%npars) = PI%parini(1:PI%npars)
@@ -215,11 +215,11 @@ contains
     ! checks whether the EDCs (combined with P0 not P0prior) have been met in the initial parameter set
     infini = 0d0
     if (P0 == log(infini)) then
-        write(*,*) "WARNING! P0 = ",P0," - MHMCMC will get stuck, if so please check initial conditions"
+        write(*,*) "WARNING! P0 = ",P0," - AP-MCMC will get stuck, if so please check initial conditions"
         stop
     endif
 
-    ! Begin the main MHMCMC loop
+    ! Begin the main AP-MCMC loop
     do while (N%ITER < MCO%nOUT .and. Pmax < P_target)
 
        ! take a step in parameter space
@@ -357,8 +357,8 @@ contains
     ! tidy up
     deallocate(uniform_random_vector)
 
-    ! completed MHMCMC loop
-    write(*,*)"MHMCMC loop completed"
+    ! completed AP-MCMC loop
+    write(*,*)"AP-MCMC loop completed"
     write(*,*)"Overall acceptance rate     = ",N%ACC / N%ITER
     write(*,*)"Final local acceptance rate = ",N%ACCRATE
     write(*,*)"Best log-likelihood = ",Pmax
