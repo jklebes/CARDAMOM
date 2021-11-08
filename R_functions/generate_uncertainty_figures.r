@@ -34,6 +34,8 @@ generate_uncertainty_figures<-function(PROJECT,n) {
 	nos_plots=0:11
   if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET") {nos_plots=c(-5,-4,-3,-2,nos_plots,24)}
   if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_wMRT") {nos_plots=c(-5,-4,-3,-2,nos_plots,24)}
+  if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB") {nos_plots=c(-5,-4,-3,-2,nos_plots,24)}
+  if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB_wMRT") {nos_plots=c(-5,-4,-3,-2,nos_plots,24)}
   if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg") {nos_plots=c(-5,-4,-3,-2,nos_plots,24)}
   if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD") {nos_plots=c(-5,-4,-3,-2,nos_plots,15,24)}
   if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT") {nos_plots = c(-5,-4,-3,-2,nos_plots,15,24)}

@@ -71,6 +71,18 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,n
                 var=t(states_all$root_gCm2) + tmp
                 # Now estimate the rooting depth based on the equation imbedded in DALEC_GSI_BUCKET
                 var=as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
+            }  else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB"){
+                # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
+                tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
+                var=t(states_all$root_gCm2) + tmp
+                # Now estimate the rooting depth based on the equation imbedded in DALEC_GSI_BUCKET
+                var=as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
+            }  else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB_wMRT"){
+                # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
+                tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
+                var=t(states_all$root_gCm2) + tmp
+                # Now estimate the rooting depth based on the equation imbedded in DALEC_GSI_BUCKET
+                var=as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
             }
 
             jpeg(file=paste(PROJECT$figpath,"timeseries_RootDepth_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""), width=7200, height=4000, res=280, quality=100)
@@ -292,7 +304,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,n
 
 	} else if (which_plot == 4) {
 
-                # flip it to get the right shape
+    # flip it to get the right shape
 		Reco_var=t(states_all$reco_gCm2day)
 		# pass observations driver
 		eco_resp_obs=drivers$obs[,9] ; eco_resp_obs_unc=drivers$obs[,10]
@@ -449,7 +461,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,n
 
 	} else if (which_plot == 8) {
 
-                # flip it to get the right shape
+    # flip it to get the right shape
 		Cr_var=t(states_all$root_gCm2)
 
 		# pass all observations (if any)
@@ -480,7 +492,7 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,n
 
 	} else if (which_plot == 9) {
 
-                # flip it to get the right shape
+    # flip it to get the right shape
 		Cw_var=t(states_all$wood_gCm2)
 		# pass observations driver
 		Cwood_obs=drivers$obs[,13] ; Cwood_obs_unc=drivers$obs[,14]
@@ -498,8 +510,8 @@ uncertainty_figures<-function(which_plot,PROJECT,states_all,drivers,parameters,n
 		#lines(apply(Cw_var[1:(dim(Cw_var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
 		# add the data on top if there is any
 		if (length(which(is.na(Cwood_obs))) != length(Cwood_obs) ) {
-			points(Cwood_obs, pch=16, cex=0.8)
-			plotCI(Cwood_obs,gap=0,uiw=Cwood_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
+  			points(Cwood_obs, pch=16, cex=0.8)
+	  		plotCI(Cwood_obs,gap=0,uiw=Cwood_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
 		}
 		dev.off()
 

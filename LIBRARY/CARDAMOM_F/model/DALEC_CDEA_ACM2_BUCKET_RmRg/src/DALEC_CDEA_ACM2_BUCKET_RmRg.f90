@@ -869,6 +869,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            endif
            POOLS(n+1,1) = tmp &
                         * POOLS(n+1,1)*(1d0-met(8,n)) ! remove labile
+!           POOLS(n+1,1) = max(pars(18),tmp &
+!                        * POOLS(n+1,1)*(1d0-met(8,n))) ! remove labile
            POOLS(n+1,2) = POOLS(n+1,2)*(1d0-met(8,n)) ! remove foliar
            POOLS(n+1,4) = POOLS(n+1,4)*(1d0-met(8,n)) ! remove wood
            ! NOTE: fine root is left in system this is an issue...

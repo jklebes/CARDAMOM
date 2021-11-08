@@ -207,7 +207,7 @@ module cardamom_io
     else if (DATAin%ID == 21) then
         ! ID = 21 - DALEC_CDEA_LU_FIRES
         DATAin%nopools = 6
-        DATAin%nopars = 23
+        DATAin%nopars = 28
         DATAin%nofluxes = 28
     else if (DATAin%ID == 22) then
         ! ID = 22 - DALEC_EVERGREEN
@@ -312,6 +312,16 @@ module cardamom_io
         ! ID = 37 - DALEC_CDEA_ACM2_BUCKET_wMRT
         DATAin%nopools = 7
         DATAin%nopars = 33
+        DATAin%nofluxes = 29
+    else if (DATAin%ID == 38) then
+        ! ID = 38 - DALEC_CDEA_ACM2_BUCKET_LAB
+        DATAin%nopools = 7
+        DATAin%nopars = 33
+        DATAin%nofluxes = 29
+    else if (DATAin%ID == 39) then
+        ! ID = 39 - DALEC_CDEA_ACM2_BUCKET_LAB_wMRT
+        DATAin%nopools = 7
+        DATAin%nopars = 34
         DATAin%nofluxes = 29
     else
        write(*,*) "Oh dear... model ID cannot be found"

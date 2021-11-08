@@ -1,10 +1,11 @@
 
-
-subroutine rdaleccdeaacm2bucketrmrg(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
-                               ,out_var,out_var2,out_var3,out_var4,out_var5 &
-                               ,out_var6,lat,nopars,nomet &
-                               ,nofluxes,nopools,pft,pft_specific,nodays,noyears,deltat &
-                               ,nos_iter,soil_frac_clay_in,soil_frac_sand_in)
+subroutine rdaleccdeaacm2bucketrmrg(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
+                                   ,met,pars &
+                                   ,out_var,out_var2,out_var3,out_var4,out_var5 &
+                                   ,out_var6,out_var7,out_var8,out_var9         &
+                                   ,lat,nopars,nomet &
+                                   ,nofluxes,nopools,pft,pft_specific,nodays,noyears,deltat &
+                                   ,nos_iter,soil_frac_clay_in,soil_frac_sand_in)
 
   use CARBON_MODEL_MOD, only: CARBON_MODEL, extracted_C, wSWP_time &
                              ,soil_frac_clay, soil_frac_sand, nos_soil_layers &
@@ -28,8 +29,9 @@ subroutine rdaleccdeaacm2bucketrmrg(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars 
                         ,pft            & ! plant functional type
                         ,output_dim     & !
                         ,aNPP_dim       & ! NPP allocation fraction variable dimension
-                        ,MTT_dim        &
-                        ,SS_dim         &
+                        ,MTT_dim        & ! number of pools mean transit time estimates
+                        ,SS_dim         & ! number of pools the steady state will be output for
+                        ,fire_dim       & ! number of pools to be assessed for fire impacts
                         ,pft_specific   & !
                         ,nos_iter       & !
                         ,noyears        &
@@ -52,6 +54,9 @@ subroutine rdaleccdeaacm2bucketrmrg(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars 
   double precision, intent(out), dimension(nos_iter,SS_dim) :: out_var4   ! Steady State (gC/m2)
   double precision, intent(out), dimension(nos_iter,MTT_dim,noyears) :: out_var5 ! Annual estimates of MRT (years)
   double precision, intent(out), dimension(nos_iter,MTT_dim) :: out_var6  ! Natural component of mean annual MRT (years)
+  double precision, intent(out), dimension(nos_iter,fire_dim,noyears) :: out_var7 ! Mean annual fire emissions per tissue
+  double precision, intent(out), dimension(nos_iter,fire_dim,noyears) :: out_var8 ! Mean annual fire litter production per tissue
+  double precision, intent(out), dimension(nos_iter,fire_dim,noyears) :: out_var9 ! Mean annual natural litter production per tissue
 
   ! local variables
   ! vector of ecosystem pools
@@ -201,8 +206,11 @@ subroutine rdaleccdeaacm2bucketrmrg(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars 
      out_var6(i,5) = sum( (FLUXES(1:nodays,14) &
                           / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
 
-     ! Now loop through each year to estimate the annual residence time
+     ! Now loop through each year
      do y = 1, nos_years
+
+        ! Estimate annual residence times
+
         ! Estimate time steps covered by this year
         y_s = 1 + (steps_per_year * (y-1)) ; y_e = steps_per_year * y
         ! Foliage
@@ -220,6 +228,52 @@ subroutine rdaleccdeaacm2bucketrmrg(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars 
         ! Soil
         out_var5(i,5,y) = sum( ((FLUXES(y_s:y_e,14)+FLUXES(y_s:y_e,23)) &
                                 / POOLS(y_s:y_e,6)) * som_filter(y_s:y_e)) / dble(steps_per_year-sum(som_hak(y_s:y_e)))
+
+        ! Estimate annual tissue specific fire emissions
+
+        ! Labile
+        out_var7(i,1,y) = sum(FLUXES(y_s:y_e,18)*deltat(y_s:y_e))
+        ! Foliage
+        out_var7(i,2,y) = sum(FLUXES(y_s:y_e,19)*deltat(y_s:y_e))
+        ! Fine roots
+        out_var7(i,3,y) = sum(FLUXES(y_s:y_e,20)*deltat(y_s:y_e))
+        ! Wood
+        out_var7(i,4,y) = sum(FLUXES(y_s:y_e,21)*deltat(y_s:y_e))
+        ! Litter (fol+fine root)
+        out_var7(i,5,y) = sum(FLUXES(y_s:y_e,22)*deltat(y_s:y_e))
+        ! Soil
+        out_var7(i,6,y) = sum(FLUXES(y_s:y_e,23)*deltat(y_s:y_e))
+
+        ! Estimate annual tissue specific fire litter generation
+
+        ! Labile
+        out_var8(i,1,y) = sum(FLUXES(y_s:y_e,24)*deltat(y_s:y_e))
+        ! Foliage
+        out_var8(i,2,y) = sum(FLUXES(y_s:y_e,25)*deltat(y_s:y_e))
+        ! Fine roots
+        out_var8(i,3,y) = sum(FLUXES(y_s:y_e,26)*deltat(y_s:y_e))
+        ! Wood
+        out_var8(i,4,y) = sum(FLUXES(y_s:y_e,27)*deltat(y_s:y_e))
+        ! Litter (fol+fine root)
+        out_var8(i,5,y) = sum(FLUXES(y_s:y_e,28)*deltat(y_s:y_e))
+        ! Soil
+        out_var8(i,6,y) = 0d0
+
+        ! Estimate annual tissue specific natural outputs fluxes (foliage, fine root, wood, litter, som)
+
+        ! Labile
+        out_var9(i,1,y) = sum((FLUXES(y_s:y_e,8)+Rg_from_labile(y_s:y_e))*deltat(y_s:y_e))
+        ! Foliage
+        out_var9(i,2,y) = sum((FLUXES(y_s:y_e,10))*deltat(y_s:y_e))
+        ! Fine roots
+        out_var9(i,3,y) = sum((FLUXES(y_s:y_e,12))*deltat(y_s:y_e))
+        ! Wood
+        out_var9(i,4,y) = sum((FLUXES(y_s:y_e,11))*deltat(y_s:y_e))
+        ! Litter (fol+fine root+wood)
+        out_var9(i,5,y) = sum((FLUXES(y_s:y_e,13)+FLUXES(y_s:y_e,15))*deltat(y_s:y_e))
+        ! Soil
+        out_var9(i,6,y) = sum((FLUXES(y_s:y_e,14))*deltat(y_s:y_e))
+
      end do
 
 !     ! Calculate the mean inputs to each pool, needed for steady state calculation

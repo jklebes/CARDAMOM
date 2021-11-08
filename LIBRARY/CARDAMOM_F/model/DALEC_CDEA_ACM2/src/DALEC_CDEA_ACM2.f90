@@ -430,7 +430,7 @@ metabolic_limited_photosynthesis, &
                  gs_total_canopy(nodays), gb_total_canopy(nodays), &
                  canopy_par_MJday_time(nodays),cica_time(nodays))
     end if
-!call cpu_time(start_time)
+
     do n = start, finish
 
        !!!!!!!!!!
@@ -616,84 +616,7 @@ metabolic_limited_photosynthesis, &
 
     end do ! nodays loop
 
-!call cpu_time(finish_time)
-!print*,"...time...",finish_time-start_time
-
   end subroutine CARBON_MODEL
-  !
-  !------------------------------------------------------------------
-  !
-!  double precision function acm_gpp(gs)
-!
-!    ! the Aggregated Canopy Model, is a Gross Primary Productivity (i.e.
-!    ! Photosyntheis) emulator which operates at a daily time step. ACM can be
-!    ! paramaterised to provide reasonable results for most ecosystems.
-!
-!    implicit none
-!
-!    ! declare input variables
-!    double precision, intent(in) :: gs
-!
-!    ! declare local variables
-!    double precision :: pn, pd, pp, qq, ci, mult, pl &
-!                       ,gc ,gs_mol, gb_mol
-!
-!    !
-!    ! Metabolic limited photosynthesis
-!    !
-!
-!    ! maximum rate of temperature and nitrogen (canopy efficiency) limited
-!    ! photosynthesis (gC.m-2.day-1)
-!    pn = lai*Ceff*pn_airt_scaling
-!
-!    !
-!    ! Diffusion limited photosynthesis
-!    !
-!
-!    ! daily canopy conductance (mmolH2O.m-2.s-1-> molCO2.m-2.day-1)
-!    ! The ratio of H20:CO2 diffusion is 1.646259 (Jones appendix 2).
-!    ! i.e. gcH2O*1.646259 = gcCO2
-!    gs_mol = gs * 1d-3 * seconds_per_day * gs_H2O_CO2
-!    ! canopy level boundary layer conductance unit change
-!    ! (m.s-1 -> mol.m-2.day-1) assuming sea surface pressure only.
-!    ! Note the ratio of H20:CO2 diffusion through leaf level boundary layer is
-!    ! 1.37 (Jones appendix 2).
-!    gb_mol = aerodynamic_conductance * seconds_per_day * convert_ms1_mol_1 * gb_H2O_CO2
-!    ! Combining in series the stomatal and boundary layer conductances
-!    gc = (gs_mol ** (-1d0) + gb_mol ** (-1d0)) ** (-1d0)
-!
-!    ! pp and qq represent limitation by metabolic (temperature & N) and
-!    ! diffusion (co2 supply) respectively
-!    pp = (pn*gC_to_umol)/gc ; qq = co2_comp_point-co2_half_sat
-!    ! calculate internal CO2 concentration (ppm or umol/mol)
-!    mult = co2+qq-pp
-!    ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
-!    ! calculate CO2 limited rate of photosynthesis (gC.m-2.day-1)
-!    pd = (gc * (co2-ci)) * umol_to_gC
-!    ! scale to day light period as this is then consistent with the light
-!    ! capture period (1/24 = 0.04166667)
-!    pd = pd * dayl_hours * 0.04166667d0
-!
-!    !
-!    ! Light limited photosynthesis
-!    !
-!
-!    ! calculate light limted rate of photosynthesis (gC.m-2.day-1)
-!    pl = e0 * canopy_par_MJday
-!
-!    !
-!    ! CO2 and light co-limitation
-!    !
-!
-!    ! calculate combined light and CO2 limited photosynthesis
-!    acm_gpp = pl*pd/(pl+pd)
-!    ! sanity check
-!    if (acm_gpp /= acm_gpp .or. acm_gpp < 0d0) acm_gpp = 0d0
-!
-!    ! don't forget to return
-!    return
-!
-!  end function acm_gpp
   !
   !------------------------------------------------------------------
   !

@@ -146,14 +146,17 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
 
           # pass to local variable for saving
           site_ctessel_pft = PROJECT$ctessel_pft[n]
-          aNPP = states_all$aNPP ; natMTT = states_all$natMTT; MTT = states_all$MTT ; aMTT = states_all$aMTT ; SS = states_all$SS
+          aNPP = states_all$aNPP
+          natMTT = states_all$natMTT ; MTT = states_all$MTT ; aMTT = states_all$aMTT
+          SS_gCm2 = states_all$SS_gCm2
+
           # Sanity check
           if (length(which(is.na(as.vector(aNPP))) == TRUE) > 0) {
               print(paste("NA value found in NPP for site ",PROJECT$site[n],sep="")) ; dummy = -1 ; return(dummy)
           }
           print("processing and storing ensemble output")
           # store the results now in binary file
-          save(parameter_covariance,parameters,drivers,site_ctessel_pft,aNPP,natMTT,MTT,aMTT,SS,file=outfile1, compress="gzip")
+          save(parameter_covariance,parameters,drivers,site_ctessel_pft,aNPP,natMTT,MTT,aMTT,SS_gCm2,file=outfile1, compress="gzip")
           # determine whether this is a gridded run (or one with the override in place)
           if (PROJECT$spatial_type == "site" | grid_override == TRUE) {
               # ...if this is a site run save the full ensemble and everything else...
@@ -252,7 +255,33 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                   # Extract the internal vs ambient CO2 ratio
                   site_output$CiCa = apply(states_all$CiCa,2,quantile, prob=num_quantiles, na.rm=na_flag)
               }
-
+              # Some annual aggregate information for disturbance
+              if (length(which(names(states_all) == "FIREemiss_gCm2yr"))) {
+                  # Extract pool specific fire emissions information (labile, foliar, fine root, wood, litter, soil)
+                  tmp = apply(states_all$FIREemiss_gCm2yr,c(2,3),quantile, prob=num_quantiles, na.rm=na_flag)
+                  site_output$FIREemiss_labile_gCm2yr = tmp[,1,]
+                  site_output$FIREemiss_foliar_gCm2yr = tmp[,2,]
+                  site_output$FIREemiss_root_gCm2yr   = tmp[,3,]
+                  site_output$FIREemiss_wood_gCm2yr   = tmp[,4,]
+                  site_output$FIREemiss_litter_gCm2yr = tmp[,5,]
+                  site_output$FIREemiss_som_gCm2yr    = tmp[,6,]
+                  # Extract pool specific fire generated litter information (labile, foliar, fine root, wood, litter, soil)
+                  tmp = apply(states_all$FIRElit_gCm2yr,c(2,3),quantile, prob=num_quantiles, na.rm=na_flag)
+                  site_output$FIRElitter_labile_gCm2yr = tmp[,1,]
+                  site_output$FIRElitter_foliar_gCm2yr = tmp[,2,]
+                  site_output$FIRElitter_root_gCm2yr   = tmp[,3,]
+                  site_output$FIRElitter_wood_gCm2yr   = tmp[,4,]
+                  site_output$FIRElitter_litter_gCm2yr = tmp[,5,]
+                  site_output$FIRElitter_som_gCm2yr    = tmp[,6,]
+                  # Extract pool specific fire generated outfluxes from natural processed (labile, foliar, fine root, wood, litter, soil)
+                  tmp = apply(states_all$NAToutflux_gCm2yr,c(2,3),quantile, prob=num_quantiles, na.rm=na_flag)
+                  site_output$NAToutflux_labile_gCm2yr = tmp[,1,]
+                  site_output$NAToutflux_foliar_gCm2yr = tmp[,2,]
+                  site_output$NAToutflux_root_gCm2yr   = tmp[,3,]
+                  site_output$NAToutflux_wood_gCm2yr   = tmp[,4,]
+                  site_output$NAToutflux_litter_gCm2yr = tmp[,5,]
+                  site_output$NAToutflux_som_gCm2yr    = tmp[,6,]
+              }
               ## Now keeping the whole ensemble extract the pixel level values needed for grid scale aggregates
               ## All units remain at this point as the are output by DALEC
               steps_per_year = floor(dim(drivers$met)[1] / ((as.numeric(PROJECT$end_year) - as.numeric(PROJECT$start_year))+1))
@@ -559,6 +588,30 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               # Canopy Ci:Ca
               grid_output$mean_CiCa = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           }
+          # Annual tissue specific fire fluxes
+          if (length(which(names(site_output) == "FIREemiss_labile_gCm2yr"))) {
+              # Extract pool specific fire emissions information (labile, foliar, fine root, wood, litter, soil)
+              grid_output$mean_FIREemiss_labile_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_FIREemiss_foliar_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_FIREemiss_root_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_FIREemiss_wood_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_FIREemiss_litter_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_FIREemiss_som_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Extract pools specific fire driven litter fluxes
+              grid_output$mean_FIRElitter_labile_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_FIRElitter_foliar_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_FIRElitter_root_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_FIRElitter_wood_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_FIRElitter_litter_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_FIRElitter_som_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Extract pool specific fire generated outfluxes from natural processed (labile, foliar, fine root, wood, litter, soil)
+              grid_output$mean_NAToutflux_labile_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_NAToutflux_foliar_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_NAToutflux_root_gCm2yr   = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_NAToutflux_wood_gCm2yr   = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_NAToutflux_litter_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_NAToutflux_som_gCm2yr    = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          }
 
           # Time and uncertainty invarient information,
           # this is the correlation between ensemble members for parameter and C-cycle flux variables
@@ -632,6 +685,29 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           if (length(which(names(site_output) == "CiCa")) > 0) {
               # Canopy CiCa
               grid_output$CiCa = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          }
+          if (length(which(names(site_output) == "FIREemiss_labile_gCm2yr"))) {
+              # Extract pool specific fire emissions information (labile, foliar, fine root, wood, litter, soil)
+              grid_output$FIREemiss_labile_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
+              grid_output$FIREemiss_foliar_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
+              grid_output$FIREemiss_root_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
+              grid_output$FIREemiss_wood_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
+              grid_output$FIREemiss_litter_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
+              grid_output$FIREemiss_som_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
+              # Extract pools specific fire driven litter fluxes
+              grid_output$FIRElitter_labile_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
+              grid_output$FIRElitter_foliar_gCm2yr= array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
+              grid_output$FIRElitter_root_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
+              grid_output$FIRElitter_wood_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
+              grid_output$FIRElitter_litter_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
+              grid_output$FIRElitter_som_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
+              # Extract pool specific fire generated outfluxes from natural processed (labile, foliar, fine root, wood, litter, soil)
+              grid_output$NAToutflux_labile_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
+              grid_output$NAToutflux_foliar_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
+              grid_output$NAToutflux_root_gCm2yr   = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
+              grid_output$NAToutflux_wood_gCm2yr   = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
+              grid_output$NAToutflux_litter_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
+              grid_output$NAToutflux_som_gCm2yr    = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
           }
 
           #
@@ -831,6 +907,29 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                if (length(which(names(site_output) == "CiCa")) > 0) {
                   grid_output$CiCa[n,,] = site_output$CiCa
                }
+               if (length(which(names(site_output) == "FIREemiss_labile_gCm2yr"))) {
+                   # Extract pool specific fire emissions information (labile, foliar, fine root, wood, litter, soil)
+                   grid_output$FIREemiss_labile_gCm2yr[n,,] = site_output$FIREemiss_labile_gCm2yr
+                   grid_output$FIREemiss_foliar_gCm2yr[n,,] = site_output$FIREemiss_foliar_gCm2yr
+                   grid_output$FIREemiss_root_gCm2yr[n,,] = site_output$FIREemiss_root_gCm2yr
+                   grid_output$FIREemiss_wood_gCm2yr[n,,] = site_output$FIREemiss_wood_gCm2yr
+                   grid_output$FIREemiss_litter_gCm2yr[n,,] = site_output$FIREemiss_litter_gCm2yr
+                   grid_output$FIREemiss_som_gCm2yr[n,,] = site_output$FIREemiss_som_gCm2yr
+                   # Extract pools specific fire driven litter fluxes
+                   grid_output$FIRElitter_labile_gCm2yr[n,,] = site_output$FIRElitter_labile_gCm2yr
+                   grid_output$FIRElitter_foliar_gCm2yr[n,,] = site_output$FIRElitter_foliar_gCm2yr
+                   grid_output$FIRElitter_root_gCm2yr[n,,] = site_output$FIRElitter_root_gCm2yr
+                   grid_output$FIRElitter_wood_gCm2yr[n,,] = site_output$FIRElitter_wood_gCm2yr
+                   grid_output$FIRElitter_litter_gCm2yr[n,,] = site_output$FIRElitter_litter_gCm2yr
+                   grid_output$FIRElitter_som_gCm2yr[n,,] = site_output$FIRElitter_som_gCm2yr
+                   # Extract pool specific fire generated outfluxes from natural processed (labile, foliar, fine root, wood, litter, soil)
+                   grid_output$NAToutflux_labile_gCm2yr[n,,] = site_output$NAToutflux_labile_gCm2yr
+                   grid_output$NAToutflux_foliar_gCm2yr[n,,] = site_output$NAToutflux_foliar_gCm2yr
+                   grid_output$NAToutflux_root_gCm2yr[n,,]   = site_output$NAToutflux_root_gCm2yr
+                   grid_output$NAToutflux_wood_gCm2yr[n,,]   = site_output$NAToutflux_wood_gCm2yr
+                   grid_output$NAToutflux_litter_gCm2yr[n,,] = site_output$NAToutflux_litter_gCm2yr
+                   grid_output$NAToutflux_som_gCm2yr[n,,]    = site_output$NAToutflux_som_gCm2yr
+               }
 
                # now assign to correct location in array
                # Mean stocks first
@@ -925,7 +1024,29 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                if (length(which(names(site_output) == "CiCa")) > 0) {
                    grid_output$mean_CiCa[slot_i,slot_j,] = apply(site_output$CiCa,1,mean)
                }
-
+              if (length(which(names(site_output) == "FIREemiss_labile_gCm2yr"))) {
+                  # Extract pool specific fire emissions information (labile, foliar, fine root, wood, litter, soil)
+                  grid_output$mean_FIREemiss_labile_gCm2yr[slot_i,slot_j,] = apply(site_output$FIREemiss_labile_gCm2yr,1,mean)
+                  grid_output$mean_FIREemiss_foliar_gCm2yr[slot_i,slot_j,] = apply(site_output$FIREemiss_foliar_gCm2yr,1,mean)
+                  grid_output$mean_FIREemiss_root_gCm2yr[slot_i,slot_j,] = apply(site_output$FIREemiss_root_gCm2yr,1,mean)
+                  grid_output$mean_FIREemiss_wood_gCm2yr[slot_i,slot_j,] = apply(site_output$FIREemiss_wood_gCm2yr,1,mean)
+                  grid_output$mean_FIREemiss_litter_gCm2yr[slot_i,slot_j,] = apply(site_output$FIREemiss_litter_gCm2yr,1,mean)
+                  grid_output$mean_FIREemiss_som_gCm2yr[slot_i,slot_j,] = apply(site_output$FIREemiss_som_gCm2yr,1,mean)
+                  # Extract pools specific fire driven litter fluxes
+                  grid_output$mean_FIRElitter_labile_gCm2yr[slot_i,slot_j,] = apply(site_output$FIRElitter_labile_gCm2yr,1,mean)
+                  grid_output$mean_FIRElitter_foliar_gCm2yr[slot_i,slot_j,] = apply(site_output$FIRElitter_foliar_gCm2yr,1,mean)
+                  grid_output$mean_FIRElitter_root_gCm2yr[slot_i,slot_j,] = apply(site_output$FIRElitter_root_gCm2yr,1,mean)
+                  grid_output$mean_FIRElitter_wood_gCm2yr[slot_i,slot_j,] = apply(site_output$FIRElitter_wood_gCm2yr,1,mean)
+                  grid_output$mean_FIRElitter_litter_gCm2yr[slot_i,slot_j,] = apply(site_output$FIRElitter_litter_gCm2yr,1,mean)
+                  grid_output$mean_FIRElitter_som_gCm2yr[slot_i,slot_j,] = apply(site_output$FIRElitter_som_gCm2yr,1,mean)
+                  # Extract pool specific fire generated outfluxes from natural processed (labile, foliar, fine root, wood, litter, soil)
+                  grid_output$mean_NAToutflux_labile_gCm2yr[slot_i,slot_j,] = apply(site_output$NAToutflux_labile_gCm2yr,1,mean)
+                  grid_output$mean_NAToutflux_foliar_gCm2yr[slot_i,slot_j,] = apply(site_output$NAToutflux_foliar_gCm2yr,1,mean)
+                  grid_output$mean_NAToutflux_root_gCm2yr[slot_i,slot_j,]   = apply(site_output$NAToutflux_root_gCm2yr,1,mean)
+                  grid_output$mean_NAToutflux_wood_gCm2yr[slot_i,slot_j,]   = apply(site_output$NAToutflux_wood_gCm2yr,1,mean)
+                  grid_output$mean_NAToutflux_litter_gCm2yr[slot_i,slot_j,] = apply(site_output$NAToutflux_litter_gCm2yr,1,mean)
+                  grid_output$mean_NAToutflux_som_gCm2yr[slot_i,slot_j,]    = apply(site_output$NAToutflux_som_gCm2yr,1,mean)
+               }
                # Parameter vs C-cycle flux correlation across ensemble member
                grid_output$nee_par_cor[slot_i,slot_j,] = site_output$nee_par_cor
                grid_output$gpp_par_cor[slot_i,slot_j,] = site_output$gpp_par_cor

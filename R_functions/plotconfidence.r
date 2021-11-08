@@ -5,7 +5,7 @@
 # This function is based on an original Matlab function development by A. A. Bloom (UoE, now at the Jet Propulsion Laboratory).
 # Translation to R and subsequent modifications by T. L Smallman (13/02/2014, t.l.smallman@ed.ac.uk, UoE).
 
-plotconfidence <- function(y,x,nos_confint,col_start) {
+plotconfidence <- function(y,x,nos_confint=20,col_start="red",low_confint=0.025,high_confint=0.975) {
 
     # Input needs to have dimensions of dim(time,params)
     # If however dimensions are equal to 3 then dim(param,time,cluster)
@@ -14,14 +14,10 @@ plotconfidence <- function(y,x,nos_confint,col_start) {
     # Load library if needed
     require(colorspace)
 
-    # number of confidence ranges
-    if (missing(nos_confint)) {nos_confint=20}
-    # choose colours
-    if (missing(col_start)) {col_start = "red"}
     colour_choices=colorRampPalette(c(lighten(col_start, amount = 0.7, space = "HLS", method = "relative"), col_start))
     colour_choices=colour_choices(nos_confint)
     # confidence ranges
-    ci_wanted=seq(0.025,0.975,length.out=nos_confint)
+    ci_wanted=seq(low_confint,high_confint,length.out=nos_confint)
     # split between the upper and lower values needed
     upper_ci_wanted=rev(ci_wanted[((length(ci_wanted)*0.5)+1):length(ci_wanted)])
     lower_ci_wanted=ci_wanted[1:(length(ci_wanted)*0.5)]

@@ -50,7 +50,7 @@ module MODEL_PARAMETERS
     PI%parmax(2) = 0.8d0
 
     ! Fraction of (1-fgpp) to foliage
-    PI%parmin(3) = 0.01d0
+    PI%parmin(3) = 0.1d0
     PI%parmax(3) = 0.5d0
 
     ! Fraction of (1-fgpp) to roots*/
@@ -86,11 +86,12 @@ module MODEL_PARAMETERS
 
     ! Canopy Efficiency
     ! NUE and avN combination give a Vcmax equivalent, the canopy efficiency.
-    ! Kattge et al (2011) offers a prior of 3.4 - 30.7 gC/m2leaf/day.
+    ! Kattge et al (2011) offers a potential prior range of 3.4 - 30.7 gC/m2leaf/day.
     ! Here, to be cautious we will expand accepted range
     ! Thus CUE = NUE * avN -> 1.64 / 42.0
-    PI%parmin(11) = 3.4d0 !5d0
-    PI%parmax(11) = 42d0 !50d0
+    ! TLS: 27/10/2021 restricted again based now on 95 %CI (12.61 / 29.68) from TRY
+    PI%parmin(11) = 12d0 !3.4d0 !5d0
+    PI%parmax(11) = 30d0 !42d0 !50d0
     ! log10 avg foliar N (gN.m-2)
     ! Kattge et al., (2011) (Quantiles 25% / 75%)
     ! and Thomas et al., (2019) (Aconite canopy paper)
@@ -141,7 +142,7 @@ module MODEL_PARAMETERS
 
     ! Resilience factor for burned but not combusted C stocks
     PI%parmin(30) = 0.1d0
-    PI%parmax(30) = 1d0
+    PI%parmax(30) = 0.9d0
     ! Combustion completeness factor for foliage
     PI%parmin(31) = 0.01d0
     PI%parmax(31) = 0.75d0

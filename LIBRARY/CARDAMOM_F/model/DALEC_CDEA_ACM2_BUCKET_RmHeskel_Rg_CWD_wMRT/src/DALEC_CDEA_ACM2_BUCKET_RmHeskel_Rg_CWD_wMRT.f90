@@ -847,7 +847,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! Calculate wood and fine root turnover
        !!!!!!!!!!
 
-       ! total wood production
+       ! total wood litter production
        tmp = pars(6) * (POOLS(n,4) / (POOLS(n,4) + pars(30)))
        FLUXES(n,11) = POOLS(n,4)*(1d0-(1d0-tmp)**deltat(n))/deltat(n)
        ! total root litter production
@@ -929,8 +929,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            endif
            POOLS(n+1,1) = tmp &
                         * POOLS(n+1,1)*(1d0-met(8,n)) ! remove labile
+!           POOLS(n+1,1) = max(pars(18),tmp &
+!                        * POOLS(n+1,1)*(1d0-met(8,n))) ! remove labile
            POOLS(n+1,2) = POOLS(n+1,2)*(1d0-met(8,n)) ! remove foliar
            POOLS(n+1,4) = POOLS(n+1,4)*(1d0-met(8,n)) ! remove wood
+           !Do labile last to allow ratio for labile pool with wood and roots
+           !POOLS(n+1,1) = max(0.03*(POOLS(n+1,4)+POOLS(n+1,3)),tmp &
+           !             * POOLS(n+1,1)*(1d0-met(8,n)))! remove labile, restrict to initial labile to allow for regrowth
            ! NOTE: fine root is left in system this is an issue...
        end if
 

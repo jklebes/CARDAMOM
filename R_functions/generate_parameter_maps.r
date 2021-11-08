@@ -216,7 +216,9 @@ generate_parameter_maps<-function(PROJECT) {
                    # (fire*cc) + (fire*(1-cc)*(1-rfac))
                    } else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg" |
                               PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET" |
-                              PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_wMRT") {
+                              PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_wMRT" |
+                              PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB" |
+                              PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB_wMRT") {
                        # Use the model calibrated resiliance factors
                        # Foliage
                        tmp2 = ((tmp * parameters[29,,]) + (tmp * (1-parameters[29,,]) * (1-parameters[28,,]))) ** -1
@@ -274,11 +276,11 @@ generate_parameter_maps<-function(PROJECT) {
                    grid_parameters$MTTharvest_wood_years[slot_i,slot_j,] = tmp
                } # is there any disturbance
                # Calculate C stock steady states, as function of natural, fire and biomass extraction
-               grid_parameters$SS_foliar_gCm2[slot_i,slot_j,]=quantile(SS[,1], prob=num_quantiles,na.rm=TRUE)
-               grid_parameters$SS_root_gCm2[slot_i,slot_j,]=quantile(SS[,2], prob=num_quantiles,na.rm=TRUE)
-               grid_parameters$SS_wood_gCm2[slot_i,slot_j,]=quantile(SS[,3], prob=num_quantiles,na.rm=TRUE)
-               grid_parameters$SS_DeadOrg_gCm2[slot_i,slot_j,]=quantile(SS[,4], prob=num_quantiles,na.rm=TRUE)
-               grid_parameters$SS_som_gCm2[slot_i,slot_j,]=quantile(SS[,5], prob=num_quantiles,na.rm=TRUE)
+               grid_parameters$SS_foliar_gCm2[slot_i,slot_j,]=quantile(SS_gCm2[,1], prob=num_quantiles,na.rm=TRUE)
+               grid_parameters$SS_root_gCm2[slot_i,slot_j,]=quantile(SS_gCm2[,2], prob=num_quantiles,na.rm=TRUE)
+               grid_parameters$SS_wood_gCm2[slot_i,slot_j,]=quantile(SS_gCm2[,3], prob=num_quantiles,na.rm=TRUE)
+               grid_parameters$SS_DeadOrg_gCm2[slot_i,slot_j,]=quantile(SS_gCm2[,4], prob=num_quantiles,na.rm=TRUE)
+               grid_parameters$SS_som_gCm2[slot_i,slot_j,]=quantile(SS_gCm2[,5], prob=num_quantiles,na.rm=TRUE)
                # loop through parameters + likelihood
                for (p in seq(1, dim(parameters)[1])) {
                     grid_parameters$parameters[slot_i,slot_j,p,] = quantile(as.vector(parameters[p,,]), prob=num_quantiles)
@@ -304,16 +306,26 @@ generate_parameter_maps<-function(PROJECT) {
 
   } # have these previously been loaded
 
+  # determine correct height and widths
+  hist_height=4000 ; hist_width=7200
+  fig_height=7000 ; fig_width = ((PROJECT$long_dim/PROJECT$lat_dim)+0.25) * fig_height #7200
+  if (PROJECT$grid_type == "UK") { fig_height=8000 ; fig_width=7200 }
+  # load colour palette
+  colour_choices_upper = colorRampPalette((brewer.pal(11,"Spectral")))
+
+  # calculate land mask
+  grid_parameters$landmask=array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+
   # inform the user
   print("......have finished loading - now beginning cluster analysis")
 
   if (file.exists(outfile) == FALSE | repair == 1) {
-      nos_uk_clusters = 1 ; uk_cluster = 1 ; uk_cluster_pft = 1
       if (PROJECT$model$name == "DALEC_EVERGREEN" | PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_CDEA_ACM2" |
           PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_wMRT" |
           PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" |
           PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD" |
           PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT" |
+          PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB_wMRT" |
           PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALEC" |
           PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_BUCKET_CanAGE" |
           PROJECT$model$name == "DALEC_G5" | PROJECT$model$name == "DALEC_G6" |
@@ -324,20 +336,39 @@ generate_parameter_maps<-function(PROJECT) {
           par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions),median_loc]
           if (PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR") {
               par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,30,31,32,33,37),median_loc]
-          } else if (PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALEC_BUCKET" |
-                     PROJECT$model$name == "DALEC" | PROJECT$model$name == "DALEC_BUCKET_CanAGE") {
+          } else if (PROJECT$model$name == "DALEC_BUCKET") {
+              par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,30,31,32,33,37,41),median_loc]
+          } else if (PROJECT$model$name == "DALEC") {
               par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,30,31,32,33,37),median_loc]
+          } else if (PROJECT$model$name == "DALEC_GSI_BUCKET") {
+              par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,30,31,32,33,35,37),median_loc]
+          } else if (PROJECT$model$name == "DALEC_GSI_BUCKET_CanAGE") {
+              par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,30,31,32,33,35,37,41),median_loc]
+          } else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET") {
+              par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,24),median_loc]
+          } else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_wMRT") {
+              par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,24),median_loc]
+          } else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB") {
+              par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,24),median_loc]
+          } else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB_wMRT") {
+              par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,24),median_loc]
+          } else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg") {
+              par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,24),median_loc]
+          } else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD") {
+              par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,24,28),median_loc]
+          } else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT") {
+              par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,24,28),median_loc]
           } else if (PROJECT$model$name == "DALEC_G5" | PROJECT$model$name == "DALEC_G6") {
-              par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,37),median_loc]
+              par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,37,41),median_loc]
           } else if (PROJECT$model$name == "DALEC_1005" | PROJECT$model$name == "DALEC_1005a") {
               par_array_median_normalised = grid_parameters$parameters[,,-c(initial_conditions,27,36),median_loc]
           } # PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR"
 
-          # now normalise the dataset
+          # now normalise the parameter values
           for (i in seq(1,dim(par_array_median_normalised)[3])) {
-               min_par_val=min(grid_parameters$parameters[,,i,median_loc],na.rm=TRUE)
-               max_par_val=max(grid_parameters$parameters[,,i,median_loc],na.rm=TRUE)
-               par_array_median_normalised[,,i]=((grid_parameters$parameters[,,i,median_loc]-min_par_val)/(max_par_val-min_par_val))
+               min_par_val=min(par_array_median_normalised[,,i],na.rm=TRUE)
+               max_par_val=max(par_array_median_normalised[,,i],na.rm=TRUE)
+               par_array_median_normalised[,,i]=((par_array_median_normalised[,,i]-min_par_val)/(max_par_val-min_par_val))
           }
           par_array_tmp=array(NA,dim=c(prod(dim(grid_parameters$parameters)[1:2]),dim(par_array_median_normalised)[3]))
           par_array_tmp[1:prod(dim(par_array_median_normalised)[1:2]),1:dim(par_array_median_normalised)[3]]=par_array_median_normalised
@@ -352,16 +383,67 @@ generate_parameter_maps<-function(PROJECT) {
           for (i in seq(1,10)) {
                tmp=append(tmp,preferenceRange(negDistMat(par_array_tmp[sample(1:dim(par_array_tmp)[1],0.05*dim(par_array_tmp)[1], replace=FALSE),],r=2))[1])
           } ; preference_input=max(mean(tmp[-1]),median(tmp[-1]))
-          grid_parameters$uk_clusters=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1,sweeps=10, p=preference_input,maxits=1000, convits=100)
-          #grid_parameters$uk_clusters=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1, sweeps=10, q=0.05, maxits=1000, convits=100)
-          grid_parameters$nos_uk_clusters=length(grid_parameters$uk_clusters@clusters) ; uk_clusters_exemplars=grid_parameters$uk_clusters@exemplars
-          grid_parameters$uk_cluster_pft=array(NA,dim=c(dim(par_array_median_normalised)[1:2]))
-          for (i in seq(1,length(grid_parameters$uk_clusters@clusters))) {
-               grid_parameters$uk_cluster_pft[actual_forests[grid_parameters$uk_clusters@clusters[[i]]]] = i
+          grid_parameters$cluster_analysis=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1,sweeps=10, p=preference_input,maxits=1000, convits=100)
+          #grid_parameters$cluster_analysis=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1, sweeps=10, q=0.05, maxits=1000, convits=100)
+          grid_parameters$nos_pars_clusters=length(grid_parameters$cluster_analysis@clusters) ; clusters_exemplars=grid_parameters$cluster_analysis@exemplars
+          grid_parameters$pars_clusters=array(NA,dim=c(dim(par_array_median_normalised)[1:2]))
+          for (i in seq(1,length(grid_parameters$cluster_analysis@clusters))) {
+               grid_parameters$pars_clusters[actual_forests[grid_parameters$cluster_analysis@clusters[[i]]]] = i
           }
-          grid_parameters$uk_cluster_pft=array(grid_parameters$uk_cluster_pft,dim=c(dim(par_array_median_normalised)[1:2]))
-      }
-  }
+          grid_parameters$pars_clusters=array(grid_parameters$pars_clusters,dim=c(dim(par_array_median_normalised)[1:2]))
+          # Tidy away the overall analysis in faviour of what we have extracted
+          grid_parameters = within(grid_parameters, rm(cluster_analysis))
+
+          # Now generate cluster map using all parameters including the initial conditions
+          par_array_median_normalised = grid_parameters$parameters[,,,median_loc]
+          # now normalise the parameter values
+          for (i in seq(1,dim(par_array_median_normalised)[3])) {
+               min_par_val=min(par_array_median_normalised[,,i],na.rm=TRUE)
+               max_par_val=max(par_array_median_normalised[,,i],na.rm=TRUE)
+               par_array_median_normalised[,,i]=((par_array_median_normalised[,,i]-min_par_val)/(max_par_val-min_par_val))
+          }
+          par_array_tmp=array(NA,dim=c(prod(dim(grid_parameters$parameters)[1:2]),dim(par_array_median_normalised)[3]))
+          par_array_tmp[1:prod(dim(par_array_median_normalised)[1:2]),1:dim(par_array_median_normalised)[3]]=par_array_median_normalised
+          actual_forests=which(is.na(par_array_tmp[,1]) == FALSE)
+          par_array_tmp=par_array_tmp[actual_forests,]
+          par_array_tmp=array(par_array_tmp,dim=c((length(par_array_tmp)/dim(par_array_median_normalised)[3]),dim(par_array_median_normalised)[3]))
+
+          tmp = 0
+          # Looping to find preference_input, the preferenceRange() returns 2 values, the first of which minimises the number of clusters,
+          # while the seconds would return as many clusters as there are observations.
+          # It is the responsibility of the user to ensure the most appropriate use of these information to result in an appropriate number of clusters for error propagation
+          for (i in seq(1,10)) {
+               tmp=append(tmp,preferenceRange(negDistMat(par_array_tmp[sample(1:dim(par_array_tmp)[1],0.05*dim(par_array_tmp)[1], replace=FALSE),],r=2))[1])
+          } ; preference_input=max(mean(tmp[-1]),median(tmp[-1]))
+          grid_parameters$cluster_analysis=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1,sweeps=10, p=preference_input,maxits=1000, convits=100)
+          #grid_parameters$cluster_analysis=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1, sweeps=10, q=0.05, maxits=1000, convits=100)
+          grid_parameters$nos_clusters=length(grid_parameters$cluster_analysis@clusters) ; clusters_exemplars=grid_parameters$cluster_analysis@exemplars
+          grid_parameters$clusters=array(NA,dim=c(dim(par_array_median_normalised)[1:2]))
+          for (i in seq(1,length(grid_parameters$cluster_analysis@clusters))) {
+               grid_parameters$clusters[actual_forests[grid_parameters$cluster_analysis@clusters[[i]]]] = i
+          }
+          grid_parameters$clusters=array(grid_parameters$clusters,dim=c(dim(par_array_median_normalised)[1:2]))
+          # Tidy away the overall analysis in faviour of what we have extracted
+          grid_parameters = within(grid_parameters, rm(cluster_analysis))
+
+          # Now plot both possible cluster maps
+          figname = paste("Cluster_map_of_median_parameters_",gsub("%","_",PROJECT$name),".jpeg",sep="")
+          jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
+          par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
+          image.plot(x = grid_long, y = grid_lat, z = grid_parameters$pars_clusters, main=paste("Parameter based cluster maps",sep=""),axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+          map(add=TRUE, lwd = 2)
+          dev.off()
+
+          figname = paste("Cluster_map_of_median_parameters_with_initial_",gsub("%","_",PROJECT$name),".jpeg",sep="")
+          jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
+          par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
+          image.plot(x = grid_long, y = grid_lat, z = grid_parameters$clusters, main=paste("Parameter + initial based cluster map",sep=""),axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+          map(add=TRUE, lwd = 2)
+          dev.off()
+
+      } # make cluster map
+
+  } # reprocessing or not?
 
   # inform the user
   print("......now generating parameter maps")
@@ -371,35 +453,6 @@ generate_parameter_maps<-function(PROJECT) {
   number_bit=1:(PROJECT$model$nopars[1])
   # merge the letter and numbers together
   par_names=c(paste(character_bit,number_bit,sep=""),"log-likelihood")
-
-  # determine correct height and widths
-  hist_height=4000 ; hist_width=7200
-  fig_height=7000 ; fig_width = ((PROJECT$long_dim/PROJECT$lat_dim)+0.25) * fig_height #7200
-  if (PROJECT$grid_type == "UK") { fig_height=8000 ; fig_width=7200 }
-  # load colour palette
-  colour_choices_upper = colorRampPalette((brewer.pal(11,"Spectral")))
-
-  # calculate land mask
-  grid_parameters$landmask=array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-
-  # assuming we have generated one lets create the Cluster analysis map
-  if (PROJECT$model$name == "DALEC_EVERGREEN" | PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_CDEA_ACM2" |
-      PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_wMRT" | 
-      PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg" |
-      PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT" |
-      PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT" |
-      PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" | PROJECT$model$name == "DALEC_GSI_BUCKET" |
-      PROJECT$model$name == "DALEC" | PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_BUCKET_CanAGE" |
-      PROJECT$model$name == "DALEC_G5" | PROJECT$model$name == "DALEC_G6" |
-      PROJECT$model$name == "DALEC_1005" | PROJECT$model$name == "DALEC_1005a") {
-      figname = paste("Cluster_map_of_median_parameters_",gsub("%","_",PROJECT$name),".jpeg",sep="")
-      jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
-      par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      image.plot(x = grid_long, y = grid_lat, z = grid_parameters$uk_cluster_pft, main=paste("Cluster analysis potential PFT map",sep=""),axes=FALSE, cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-      map(add=TRUE, lwd = 2)
-      #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
-      dev.off()
-  }
 
   # create tempory array of parameters for the covariance analysis
   figname = paste("parameter_correlations_median_",gsub("%","_",PROJECT$name),".jpeg",sep="")

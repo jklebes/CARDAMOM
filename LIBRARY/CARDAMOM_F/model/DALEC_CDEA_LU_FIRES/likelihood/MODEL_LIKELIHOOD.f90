@@ -202,7 +202,6 @@ module model_likelihood_module
 !    endif
 
     ! convert to a probability
-!    ML_obs_out = -0.5d0*(tot_exp*10d0)*DATAin%EDC
     ML_obs_out = -5d0*tot_exp*DATAin%EDC
 
   end subroutine edc_model_likelihood
@@ -691,13 +690,6 @@ module model_likelihood_module
     !
 
     ! additional faults can be stored in locations 35 - 40 of the PASSFAIL array
-
-    ! All pools must confirm to the prior ranges
-    do n = 1, nopools
-       if ((EDC2 == 1 .or. DIAG == 1) .and. (M_POOLS(1,n) > parmax(n+npars-nopools))) then
-          EDC2 = 0d0 ; EDCD%PASSFAIL(35) = 0
-       end if ! prior ranges conditions
-    end do ! loop pools
 
     ! ensure minimum pool values are >= 0 and /= NaN
     if (EDC2 == 1 .or. DIAG == 1) then

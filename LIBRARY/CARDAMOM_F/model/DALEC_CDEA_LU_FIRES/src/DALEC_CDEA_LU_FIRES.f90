@@ -63,7 +63,7 @@ contains
 !--------------------------------------------------------------------
 !
   subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,lai,NEE,FLUXES,POOLS &
-                       ,nopars,nomet,nopools,nofluxes,GPP)
+                         ,nopars,nomet,nopools,nofluxes,GPP)
 
     ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
     ! Evergreen Analytical (DALEC_CDEA; C1; DALEC2) model.
@@ -104,7 +104,7 @@ contains
     double precision :: gpppars(12)   & ! ACM inputs (LAI+met)
                        ,constants(10) & ! parameters for ACM
              ,wf,wl,ff,fl,osf,osl,sf  & ! phenological controls
-             ,pi,ml,doy
+             ,pi,ml,doy,tmp
 
     ! C pool specific combustion completeness and resilience factors
     double precision :: cf(6),rfac(6)

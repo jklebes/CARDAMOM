@@ -91,8 +91,8 @@ fudgeit <- function(){
 # PointsOfChange
 
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT_MHMCMC/global_4deg_C15/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT_MHMCMC/global_4deg_C15_gpp/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/Miombo_0.25deg_allWood/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT_MHMCMC/global_4deg_C15_gpp/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/Miombo_0.25deg_allWood/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/Trendyv9_historical/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/ODA_extension_Africa/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/ODA_extension_Africa_lca/infofile.RData")
@@ -108,9 +108,9 @@ load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_parameter_maps.RData",sep=""))
 
 # Set output path for figures and tables
-out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_4deg_C15/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_4deg_C15/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/figures_africa/"
-#out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
+out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
 
 # Specify the position within the stored ensemble for the median estimate and the desired uncertainty bands
 mid_quant = 4 ; low_quant = 2 ; high_quant = 6
@@ -419,6 +419,18 @@ grid_output$roots_TgC          = apply(grid_output$mean_roots_gCm2*array(landfil
 grid_output$wood_TgC           = apply(grid_output$mean_wood_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
 grid_output$lit_TgC            = apply(grid_output$mean_lit_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
 grid_output$som_TgC            = apply(grid_output$mean_som_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+grid_output$fnpp_TgCyr         = apply(grid_output$mean_fnpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+grid_output$rnpp_TgCyr         = apply(grid_output$mean_rnpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+grid_output$wnpp_TgCyr         = apply(grid_output$mean_wnpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+grid_output$fFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+grid_output$rFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_root_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+grid_output$wFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+grid_output$fFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+grid_output$rFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_root_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+grid_output$wFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+grid_output$fNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+grid_output$rNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_root_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+grid_output$wNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
 grid_parameters$fNPP           = apply(array(landfilter,dim = dims)*grid_parameters$NPP_foliar_fraction,3,mean, na.rm=TRUE)
 grid_parameters$rNPP           = apply(array(landfilter,dim = dims)*grid_parameters$NPP_root_fraction,3,mean, na.rm=TRUE)
 grid_parameters$wNPP           = apply(array(landfilter,dim = dims)*grid_parameters$NPP_wood_fraction,3,mean, na.rm=TRUE)
@@ -440,6 +452,10 @@ output = data.frame(Quantile = grid_output$num_quantiles,
                     labile_TgC = grid_output$labile_TgC, foliage_TgC = grid_output$foliage_TgC, 
                     fine_root_TgC = grid_output$roots_TgC, wood_TgC = grid_output$wood_TgC, 
                     litter_TgC = grid_output$lit_TgC, som_TgC = grid_output$som_TgC, 
+                    fNPP_TgCyr = grid_output$fnpp_TgCyr, rNPP_TgCyr = grid_output$rnpp_TgCyr, wNPP_TgCyr = grid_output$wnpp_TgCyr,
+                    fFireLit_TgCyr = grid_output$fFIRElitter_TgCyr, rFireLit_TgCyr = grid_output$rFIRElitter_TgCyr, wFireLit_TgCyr = grid_output$wFIRElitter_TgCyr,
+                    fFireEmis_TgCyr = grid_output$fFIREemiss_TgCyr, rFireEmis_TgCyr = grid_output$rFIREemiss_TgCyr, wFireEmis_TgCyr = grid_output$wFIREemiss_TgCyr,
+                    fNAToutflux_TgCyr = grid_output$fNAToutflux_TgCyr, rNAToutflux_TgCyr = grid_output$rNAToutflux_TgCyr, wNAToutflux_TgCyr = grid_output$wNAToutflux_TgCyr,
                     fNPP_fraction = grid_parameters$fNPP, rNPP_fraction = grid_parameters$rNPP, wNPP_fraction = grid_parameters$wNPP,
                     foliage_MTT_yr = grid_parameters$foliage_MTT_yr, fine_roots_MTT_yr = grid_parameters$roots_MTT_yr, 
                     wood_MTT_yr = grid_parameters$wood_MTT_yr,
@@ -459,6 +475,482 @@ if (length(which(names(grid_output) == "mean_litwood_gCm2")) > 0) {
 
 # Write out C budget
 write.table(output, file = paste(out_dir,"/",PROJECT$name,"_C_budget.csv",sep=""), row.names=FALSE, sep=",",append=FALSE)
+
+###
+## C-budgets by cluster (TgC/yr)
+## Clustering carried out using both initial condition and process parameters
+###
+
+landfilter_keep = landfilter
+for (c in seq(1, grid_parameters$nos_clusters)) {
+    landfilter[which(grid_parametersclusters > 0 & grid_parametersclusters != c)] = 0
+    # Summary C budgets for output to table, NOTE the use of landfilter removes areas outside of the target area
+    dims = dim(grid_output$mean_gpp_gCm2day)
+    grid_output$gpp_TgCyr          = apply(grid_output$mean_gpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    grid_output$rauto_TgCyr        = apply(grid_output$mean_rauto_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    grid_output$rhet_TgCyr         = apply(grid_output$mean_rhet_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    grid_output$nbe_TgCyr          = apply(grid_output$mean_nbe_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    grid_output$nee_TgCyr          = apply(grid_output$mean_nee_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    grid_output$fire_TgCyr         = apply(grid_output$mean_fire_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    grid_output$harvest_TgCyr      = apply(grid_output$mean_harvest_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    grid_output$labile_TgC         = apply(grid_output$mean_labile_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$foliage_TgC        = apply(grid_output$mean_foliage_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$roots_TgC          = apply(grid_output$mean_roots_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$wood_TgC           = apply(grid_output$mean_wood_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$lit_TgC            = apply(grid_output$mean_lit_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$som_TgC            = apply(grid_output$mean_som_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$fnpp_TgCyr         = apply(grid_output$mean_fnpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    grid_output$rnpp_TgCyr         = apply(grid_output$mean_rnpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    grid_output$wnpp_TgCyr         = apply(grid_output$mean_wnpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    grid_output$fFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$rFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_root_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$wFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$fFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$rFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_root_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$wFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$fNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$rNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_root_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$wNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_parameters$fNPP           = apply(array(landfilter,dim = dims)*grid_parameters$NPP_foliar_fraction,3,mean, na.rm=TRUE)
+    grid_parameters$rNPP           = apply(array(landfilter,dim = dims)*grid_parameters$NPP_root_fraction,3,mean, na.rm=TRUE)
+    grid_parameters$wNPP           = apply(array(landfilter,dim = dims)*grid_parameters$NPP_wood_fraction,3,mean, na.rm=TRUE)
+    grid_parameters$foliage_MTT_yr = apply(array(landfilter,dim = dims)*grid_parameters$MTT_foliar_years,3,mean, na.rm=TRUE)
+    grid_parameters$roots_MTT_yr   = apply(array(landfilter,dim = dims)*grid_parameters$MTT_root_years,3,mean, na.rm=TRUE)
+    grid_parameters$wood_MTT_yr    = apply(array(landfilter,dim = dims)*grid_parameters$MTT_wood_years,3,mean, na.rm=TRUE)
+    grid_parameters$lit_MTT_yr     = apply(array(landfilter,dim = dims)*grid_parameters$MTT_DeadOrg_years,3,mean, na.rm=TRUE)
+    grid_parameters$som_MTT_yr     = apply(array(landfilter,dim = dims)*grid_parameters$MTT_som_years,3,mean, na.rm=TRUE)
+    grid_output$dCfoliage_gCm2yr   = apply(array(landfilter,dim = dims)*(grid_output$final_dCfoliage_gCm2/nos_years),3,mean, na.rm=TRUE)
+    grid_output$dCroots_gCm2yr     = apply(array(landfilter,dim = dims)*(grid_output$final_dCroots_gCm2/nos_years),3,mean, na.rm=TRUE)
+    grid_output$dCwood_gCm2yr      = apply(array(landfilter,dim = dims)*(grid_output$final_dCwood_gCm2/nos_years),3,mean, na.rm=TRUE)
+    grid_output$dClit_gCm2yr       = apply(array(landfilter,dim = dims)*(grid_output$final_dClit_gCm2/nos_years),3,mean, na.rm=TRUE)
+    grid_output$dCsom_gCm2yr       = apply(array(landfilter,dim = dims)*(grid_output$final_dCsom_gCm2/nos_years),3,mean, na.rm=TRUE)
+    # Combine output into dataframe
+    output = data.frame(Quantile = grid_output$num_quantiles, 
+                        GPP_TgCyr = grid_output$gpp_TgCyr, Ra_TgCyr = grid_output$rauto_TgCyr, Rhet_TgCyr = grid_output$rhet_TgCyr, 
+                        NEE_TgCyr = grid_output$nee_TgCyr, NBE_TgCyr = grid_output$nbe_TgCyr, 
+                        Fire_TgCyr = grid_output$fire_TgCyr, Harvest_TgCyr = grid_output$harvest_TgCyr,
+                        labile_TgC = grid_output$labile_TgC, foliage_TgC = grid_output$foliage_TgC, 
+                        fine_root_TgC = grid_output$roots_TgC, wood_TgC = grid_output$wood_TgC, 
+                        litter_TgC = grid_output$lit_TgC, som_TgC = grid_output$som_TgC, 
+                        fNPP_TgCyr = grid_output$fnpp_TgCyr, rNPP_TgCyr = grid_output$rnpp_TgCyr, wNPP_TgCyr = grid_output$wnpp_TgCyr,
+                        fFireLit_TgCyr = grid_output$fFIRElitter_TgCyr, rFireLit_TgCyr = grid_output$rFIRElitter_TgCyr, wFireLit_TgCyr = grid_output$wFIRElitter_TgCyr,
+                        fFireEmis_TgCyr = grid_output$fFIREemiss_TgCyr, rFireEmis_TgCyr = grid_output$rFIREemiss_TgCyr, wFireEmis_TgCyr = grid_output$wFIREemiss_TgCyr,
+                        fNAToutflux_TgCyr = grid_output$fNAToutflux_TgCyr, rNAToutflux_TgCyr = grid_output$rNAToutflux_TgCyr, wNAToutflux_TgCyr = grid_output$wNAToutflux_TgCyr,
+                        fNPP_fraction = grid_parameters$fNPP, rNPP_fraction = grid_parameters$rNPP, wNPP_fraction = grid_parameters$wNPP,
+                        foliage_MTT_yr = grid_parameters$foliage_MTT_yr, fine_roots_MTT_yr = grid_parameters$roots_MTT_yr, 
+                        wood_MTT_yr = grid_parameters$wood_MTT_yr,
+                        lit_MTT_yr = grid_parameters$lit_MTT_yr, som_MTT_yr = grid_parameters$som_MTT_yr,
+                        dCfoliage_gCm2yr = grid_output$dCfoliage_gCm2yr, dCroots_gCm2yr = grid_output$dCroots_gCm2yr,
+                        dCwood_gCm2yr = grid_output$dCwood_gCm2yr,
+                        dClit_gCm2yr = grid_output$dClit_gCm2yr, dCsom_gCm2yr = grid_output$dCsom_gCm2yr)
+    # Add any additional variables based on conditional statements
+    if (length(which(names(grid_output) == "mean_litwood_gCm2")) > 0) {
+        # Create variables
+        grid_output$litwood_TgC = apply(grid_output$mean_litwood_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+        grid_output$dClitwood_gCm2yr = apply(array(landfilter,dim = dims)*(grid_output$final_dClitwood_gCm2/nos_years),3,mean, na.rm=TRUE)
+        # Assign to data.frame
+        output$wood_litter_TgC = grid_output$litwood_TgC
+        output$dClitwood_gCm2yr = grid_output$dClitwood_gCm2yr
+    } # wood litter is simulated
+
+    # Write out C budget
+    write.table(output, file = paste(out_dir,"/",PROJECT$name,"_cluster_",c,"_C_budget.csv",sep=""), row.names=FALSE, sep=",",append=FALSE)
+    
+} # cluster loop
+
+###
+## Plot overlayed PDFs for cluster specific and grid varying parameters and trait maps
+## Clustering carried out using initial conitions and process parameters
+###
+
+### Maps of absolute harvest emission
+
+# Then create new colours with high 'alpha', i.e. transparency
+#c_colours = colorRampPalette(brewer.pal(9,"Set1"))
+c_colours = colorRampPalette(brewer.pal(8,"Accent"))
+c_colours = c_colours(grid_parameters$nos_clusters)
+nbins = 50 # desired number of catagories, you might not get this many
+
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_parameter_PDFs_by_cluster.png",sep=""), height = 2000, width = 3000, res = 300)
+par(mfrow=c(6,6), mar = c(2,2,2,1))
+# Loop parameters
+for (p in seq(1, dim(grid_parameters$parameters)[3]-1)) {
+     # Set to local variables
+     tmp = as.vector(grid_parameters$parameters[,,p,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - (mean(b,e)*0.01) ; e = e + (mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          tmp1 = tmp[filter]
+          # Plot the seperate histograms and store them in an object, do not save them yet
+          tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+          cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+          # Now plot them together
+          ymax = max(c(ymax,cluster_var[c,]))
+     } # loop clusters first time
+     # Now plot each of them
+     plot(cluster_var[1,]~x_axis, type="l", lwd=2, col = c_colours[1], main=paste("Parameter = ",p,sep=""), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax)) # Start with first cluster
+     for (c in seq(2,grid_parameters$nos_clusters)) {
+          lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) # Add next cluster
+     } # loop clusters again
+} # loop parameters
+dev.off()
+
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_trait_PDFs_by_cluster.png",sep=""), width = 3000, height = 1800, res = 300)
+par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
+
+     ## CUE
+
+     # Set to local variables
+     tmp = 1-as.vector(grid_output$mean_rauto_gCm2day[,,mid_quant] / grid_output$mean_gpp_gCm2day[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - (mean(b,e)*0.01) ; e = e + (mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          tmp1 = tmp[filter]
+          # Plot the seperate histograms and store them in an object, do not save them yet
+          tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+          cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+          # Now plot them together
+          ymax = max(c(ymax,cluster_var[c,]))
+     } # loop clusters first time
+     # Now plot each of them
+     plot(cluster_var[1,]~x_axis, type="l", lwd=2, col = c_colours[1], main=expression(paste("CUE (0-1)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax)) # Start with first cluster
+     for (c in seq(2,grid_parameters$nos_clusters)) {
+          lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) # Add next cluster
+     } # loop clusters again
+
+     ## NPP fraction to foliage
+
+     # Set to local variables
+     tmp = as.vector(grid_parameters$NPP_foliar_fraction[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - (mean(b,e)*0.01) ; e = e + (mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          tmp1 = tmp[filter]
+          # Plot the seperate histograms and store them in an object, do not save them yet
+          tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+          cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+          # Now plot them together
+          ymax = max(c(ymax,cluster_var[c,]))
+     } # loop clusters first time
+     # Now plot each of them
+     plot(cluster_var[1,]~x_axis, type="l", lwd=2, col = c_colours[1], main=expression(paste("NP",P[foliar]," (0-1)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax)) # Start with first cluster
+     for (c in seq(2,grid_parameters$nos_clusters)) {
+          lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) # Add next cluster
+     } # loop clusters again
+
+     ## NPP fraction to fine roots
+
+     # Set to local variables
+     tmp = as.vector(grid_parameters$NPP_root_fraction[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - (mean(b,e)*0.01) ; e = e + (mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          tmp1 = tmp[filter]
+          # Plot the seperate histograms and store them in an object, do not save them yet
+          tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+          cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+          # Now plot them together
+          ymax = max(c(ymax,cluster_var[c,]))
+     } # loop clusters first time
+     # Now plot each of them
+     plot(cluster_var[1,]~x_axis, type="l", lwd=2, col = c_colours[1], main=expression(paste("NP",P[root]," (0-1)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax)) # Start with first cluster
+     for (c in seq(2,grid_parameters$nos_clusters)) {
+          lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) # Add next cluster
+     } # loop clusters again
+     
+     ## NPP fraction to wood
+
+     # Set to local variables
+     tmp = as.vector(grid_parameters$NPP_wood_fraction[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - (mean(b,e)*0.01) ; e = e + (mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          tmp1 = tmp[filter]
+          # Plot the seperate histograms and store them in an object, do not save them yet
+          tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+          cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+          # Now plot them together
+          ymax = max(c(ymax,cluster_var[c,]))
+     } # loop clusters first time
+     # Now plot each of them
+     plot(cluster_var[1,]~x_axis, type="l", lwd=2, col = c_colours[1], main=expression(paste("NP",P[wood]," (0-1)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax)) # Start with first cluster
+     for (c in seq(2,grid_parameters$nos_clusters)) {
+          lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) # Add next cluster
+     } # loop clusters again
+     
+     ## MRT foliage (years)
+
+     # Set to local variables
+     tmp = as.vector(grid_parameters$MTT_foliar_years[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - (mean(b,e)*0.01) ; e = e + (mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          tmp1 = tmp[filter]
+          # Plot the seperate histograms and store them in an object, do not save them yet
+          tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+          cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+          # Now plot them together
+          ymax = max(c(ymax,cluster_var[c,]))
+     } # loop clusters first time
+     # Now plot each of them
+     plot(cluster_var[1,]~x_axis, type="l", lwd=2, col = c_colours[1], main=expression(paste("MR",T[foliar]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax)) # Start with first cluster
+     for (c in seq(2,grid_parameters$nos_clusters)) {
+          lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) # Add next cluster
+     } # loop clusters again
+
+     ## MRT fine root (years)
+
+     # Set to local variables
+     tmp = as.vector(grid_parameters$MTT_root_years[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - (mean(b,e)*0.01) ; e = e + (mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          tmp1 = tmp[filter]
+          # Plot the seperate histograms and store them in an object, do not save them yet
+          tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+          cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+          # Now plot them together
+          ymax = max(c(ymax,cluster_var[c,]))
+     } # loop clusters first time
+     # Now plot each of them
+     plot(cluster_var[1,]~x_axis, type="l", lwd=2, col = c_colours[1], main=expression(paste("MR",T[root]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax)) # Start with first cluster
+     for (c in seq(2,grid_parameters$nos_clusters)) {
+          lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) # Add next cluster
+     } # loop clusters again
+     
+     ## MRT wood (years)
+
+     # Set to local variables
+     tmp = as.vector(grid_parameters$MTT_wood_years[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - (mean(b,e)*0.01) ; e = e + (mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          tmp1 = tmp[filter]
+          # Plot the seperate histograms and store them in an object, do not save them yet
+          tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+          cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+          # Now plot them together
+          ymax = max(c(ymax,cluster_var[c,]))
+     } # loop clusters first time
+     # Now plot each of them
+     plot(cluster_var[1,]~x_axis, type="l", lwd=2, col = c_colours[1], main=expression(paste("MR",T[wood]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax), xlim=c(0,100)) # Start with first cluster
+     for (c in seq(2,grid_parameters$nos_clusters)) {
+          lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) # Add next cluster
+     } # loop clusters again
+     
+     ## MRT DeadOrg (litter + CWD; if applicable)
+
+     # Set to local variables
+     tmp = as.vector(grid_parameters$MTT_DeadOrg_years[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - (mean(b,e)*0.01) ; e = e + (mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          tmp1 = tmp[filter]
+          # Plot the seperate histograms and store them in an object, do not save them yet
+          tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+          cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+          # Now plot them together
+          ymax = max(c(ymax,cluster_var[c,]))
+     } # loop clusters first time
+     # Now plot each of them
+     plot(cluster_var[1,]~x_axis, type="l", lwd=2, col = c_colours[1], main=expression(paste("MR",T[DeadOrg]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax)) # Start with first cluster
+     for (c in seq(2,grid_parameters$nos_clusters)) {
+          lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) # Add next cluster
+     } # loop clusters again
+     
+     ## MRT soil
+
+     # Set to local variables
+     tmp = as.vector(grid_parameters$MTT_som_years[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - (mean(b,e)*0.01) ; e = e + (mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          tmp1 = tmp[filter]
+          # Plot the seperate histograms and store them in an object, do not save them yet
+          tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+          cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+          # Now plot them together
+          ymax = max(c(ymax,cluster_var[c,]))
+     } # loop clusters first time
+     # Now plot each of them
+     plot(cluster_var[1,]~x_axis, type="l", lwd=2, col = c_colours[1], main=expression(paste("MR",T[som]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax)) # Start with first cluster
+     for (c in seq(2,grid_parameters$nos_clusters)) {
+          lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) # Add next cluster
+     } # loop clusters again
+     
+     ## Leaf Carbon per unit leaf Area (gC/m2)
+
+     # Set to local variables
+     tmp = as.vector(grid_parameters$parameters[,,17,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - (mean(b,e)*0.01) ; e = e + (mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          tmp1 = tmp[filter]
+          # Plot the seperate histograms and store them in an object, do not save them yet
+          tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+          cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+          # Now plot them together
+          ymax = max(c(ymax,cluster_var[c,]))
+     } # loop clusters first time
+     # Now plot each of them
+     plot(cluster_var[1,]~x_axis, type="l", lwd=2, col = c_colours[1], main=expression(paste("LCA (gC",m^-2,")",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax)) # Start with first cluster
+     for (c in seq(2,grid_parameters$nos_clusters)) {
+          lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) # Add next cluster
+     } # loop clusters again
+
+     ## Canopy Photosynthetic Efficiency (gC/m2/day)
+
+     # Set to local variables
+     tmp = as.vector(grid_parameters$parameters[,,11,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - (mean(b,e)*0.01) ; e = e + (mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          tmp1 = tmp[filter]
+          # Plot the seperate histograms and store them in an object, do not save them yet
+          tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+          cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+          # Now plot them together
+          ymax = max(c(ymax,cluster_var[c,]))
+     } # loop clusters first time
+     # Now plot each of them
+     plot(cluster_var[1,]~x_axis, type="l", lwd=2, col = c_colours[1], main=expression(paste("Ceff (gC",m^-2,d^-1,")",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax)) # Start with first cluster
+     for (c in seq(2,grid_parameters$nos_clusters)) {
+          lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) # Add next cluster
+     } # loop clusters again
+         
+
+
+dev.off()
+
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_cluster_map.png",sep=""), height = 2000, width = 3000, res = 300)
+par(mfrow=c(1,1), mar=c(0.01,1.5,0.3,7),omi=c(0.01,0.1,0.01,0.1))
+var1 = grid_parameters$clusters 
+var1 = raster(vals = t(var1[,dim(var1)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+plot(var1, main="", col=c_colours, xaxt = "n", yaxt = "n", box = FALSE, bty = "n",
+     cex.lab=2, cex.main=2.0, cex.axis = 2, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1))
+plot(landmask, add=TRUE)
+mtext(expression('Parameter based clustering'), side = 2, cex = 1.6, padj = -0.25, adj = 0.5)
+dev.off()
 
 ###
 ## Determine 1-posterior:prior ratio, i.e. how much have we learned?
@@ -2105,6 +2597,48 @@ var1 = grid_output$mean_nbe_gCm2day[,,mid_quant]*1e-2*365.25
 var2 = grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25
 var3 = grid_output$mean_reco_gCm2day[,,mid_quant]*1e-2*365.25 
 var4 = grid_output$mean_fire_gCm2day[,,mid_quant]*1e-2*365.25 
+# Apply filter
+var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var2[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var3[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var4[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+# Convert to raster
+var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Determine ranges
+zrange1 = c(-1,1)*max(abs(range(values(var1),na.rm=TRUE)))
+zrange2 = c(0,1)*max(abs(range(values(var2),na.rm=TRUE)))
+zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
+zrange4 = c(0,1)*max(abs(range(values(var4),na.rm=TRUE)))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_C_fluxes_median.png",sep=""), height = 2100*0.5, width = 5000, res = 300)
+par(mfrow=c(1,4), mar=c(0.5,0.5,2.8,7),omi=c(0.1,0.4,0.2,0.2))
+# Mean annual median estimates
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste('NBE (MgC h',a^-1,' y',r^-1,')',sep="")), col=rev(colour_choices_default))
+plot(landmask, add=TRUE)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")), col=colour_choices_gain)
+plot(landmask, add=TRUE)
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste('Reco (MgC h',a^-1,' y',r^-1,')',sep="")), col=colour_choices_loss)
+plot(landmask, add=TRUE)
+plot(var4, zlim=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")), col=colour_choices_loss)
+plot(landmask, add=TRUE)
+dev.off()
+
+# C fluxes
+# Assign variables
+var1 = grid_output$mean_nbe_gCm2day[,,mid_quant]*1e-2*365.25
+var2 = grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25
+var3 = grid_output$mean_reco_gCm2day[,,mid_quant]*1e-2*365.25 
+var4 = grid_output$mean_fire_gCm2day[,,mid_quant]*1e-2*365.25 
 var5 = (grid_output$mean_nbe_gCm2day[,,high_quant]-grid_output$mean_nbe_gCm2day[,,low_quant])*1e-2*365.25
 var6 = (grid_output$mean_gpp_gCm2day[,,high_quant]-grid_output$mean_gpp_gCm2day[,,low_quant])*1e-2*365.25
 var7 = (grid_output$mean_reco_gCm2day[,,high_quant]-grid_output$mean_reco_gCm2day[,,low_quant])*1e-2*365.25
@@ -2236,6 +2770,40 @@ plot(var6, zlim=zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = 
 plot(landmask, add=TRUE)
 dev.off()
 
+# Final stocks
+# Assign variables
+var1 = grid_output$final_totalC_gCm2[,,mid_quant]*1e-2
+var2 = grid_output$final_biomass_gCm2[,,mid_quant]*1e-2 
+var3 = grid_output$final_dom_gCm2[,,mid_quant]*1e-2 
+# Apply filter
+var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var2[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var3[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+# Convert to raster
+var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# ranges
+zrange1 = c(0,1)*max(abs(range(values(var1),na.rm=TRUE)))
+zrange2 = c(0,1)*max(abs(range(values(var2),na.rm=TRUE)))
+zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Final_stock_median.png",sep=""), height = 2700*0.5, width = 4900, res = 300)
+par(mfrow=c(1,3), mar=c(0.6,0.4,2.9,7),omi=c(0.1,0.4,0.18,0.2))
+# Final C stocks, median estimate
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Total (MgC h",a^-1,")",sep="")), col=colour_choices_gain)
+plot(landmask, add=TRUE)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Biomass (MgC h",a^-1,")",sep="")), col=colour_choices_gain)
+plot(landmask, add=TRUE)
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("DOM (MgC h",a^-1,")",sep="")), col=colour_choices_gain)
+plot(landmask, add=TRUE)
+dev.off()
+
 # Change stocks
 # Assign variables
 var1 = grid_output$final_dCtotalC_gCm2[,,mid_quant]*1e-2*(1/nos_years)
@@ -2292,6 +2860,158 @@ plot(landmask, add=TRUE)
 plot(var6, zlim=zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
      main = expression(paste(Delta,"DOM CI (MgC h",a^-1,"y",r^-1,")",sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+dev.off()
+
+# NPP and litter fluxes from plant tissues
+# Assign variables
+var1 = grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25
+var2 = grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25
+var3 = grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25
+var4 = grid_output$mean_foliage_gCm2[,,mid_quant]*1e-2*(1/grid_parameters$MTT_foliar_years[,,mid_quant])
+var5 = grid_output$mean_roots_gCm2[,,mid_quant]*1e-2*(1/grid_parameters$MTT_root_years[,,mid_quant])
+var6 = grid_output$mean_wood_gCm2[,,mid_quant]*1e-2*(1/grid_parameters$MTT_wood_years[,,mid_quant])
+# Apply filter
+var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var2[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var3[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var4[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var5[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var6[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+# Convert to raster
+var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# ranges
+zrange1 = c(0,1)*max(abs(range(c(values(var1),values(var2),values(var3),values(var4),values(var5),values(var6)),na.rm=TRUE)))
+zrange2 = zrange1
+zrange3 = zrange1
+zrange4 = zrange1
+zrange5 = zrange1
+zrange6 = zrange1
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_litter_fluxes.png",sep=""), height = 2700, width = 4900, res = 300)
+par(mfrow=c(2,3), mar=c(0.5,0.4,2.8,7),omi=c(0.1,0.4,0.2,0.2))
+# Median NPP fluxes to plant tissues
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Foliar NPP (MgC h",a^-1,"y",r^-1,")",sep="")), col=(colour_choices_gain))
+plot(landmask, add=TRUE)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Fine root NPP (MgC h",a^-1,"y",r^-1,")",sep="")), col=(colour_choices_gain))
+plot(landmask, add=TRUE)
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Wood NPP (MgC h",a^-1,"y",r^-1,")",sep="")), col=(colour_choices_gain))
+plot(landmask, add=TRUE)
+# Median litter fluxes from plant tissues
+plot(var4, zlim=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Foliar litter (MgC h",a^-1,"y",r^-1,")",sep="")), col=colour_choices_loss)
+plot(landmask, add=TRUE)
+plot(var5, zlim=zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Fine root litter (MgC h",a^-1,"y",r^-1,")",sep="")), col=colour_choices_loss)
+plot(landmask, add=TRUE)
+plot(var6, zlim=zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Wood litter (MgC h",a^-1,"y",r^-1,")",sep="")), col=colour_choices_loss)
+plot(landmask, add=TRUE)
+dev.off()
+
+# Fire emission and litter fluxes from plant tissues
+# Assign variables
+var1 = grid_output$mean_FIREemiss_foliar_gCm2yr[,,mid_quant]*1e-2
+var2 = grid_output$mean_FIREemiss_root_gCm2yr[,,mid_quant]*1e-2
+var3 = grid_output$mean_FIREemiss_wood_gCm2yr[,,mid_quant]*1e-2
+var4 = grid_output$mean_FIRElitter_foliar_gCm2yr[,,mid_quant]*1e-2
+var5 = grid_output$mean_FIRElitter_root_gCm2yr[,,mid_quant]*1e-2
+var6 = grid_output$mean_FIRElitter_wood_gCm2yr[,,mid_quant]*1e-2
+# Apply filter
+var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var2[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var3[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var4[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var5[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var6[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+# Convert to raster
+var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# ranges
+zrange1 = c(0,1)*max(abs(range(c(values(var1),values(var2),values(var3),values(var4),values(var5),values(var6)),na.rm=TRUE)))
+zrange2 = zrange1
+zrange3 = zrange1
+zrange4 = zrange1
+zrange5 = zrange1
+zrange6 = zrange1
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Fire_emission_litter_fluxes.png",sep=""), height = 2700, width = 4900, res = 300)
+par(mfrow=c(2,3), mar=c(0.5,0.4,2.8,7),omi=c(0.1,0.4,0.2,0.2))
+# Median NPP fluxes to plant tissues
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Foliar fire emission (MgC h",a^-1,"y",r^-1,")",sep="")), col=(colour_choices_gain))
+plot(landmask, add=TRUE)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Fine root fire emission (MgC h",a^-1,"y",r^-1,")",sep="")), col=(colour_choices_gain))
+plot(landmask, add=TRUE)
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Wood fire emission (MgC h",a^-1,"y",r^-1,")",sep="")), col=(colour_choices_gain))
+plot(landmask, add=TRUE)
+# Median litter fluxes from plant tissues
+plot(var4, zlim=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Foliar fire litter (MgC h",a^-1,"y",r^-1,")",sep="")), col=colour_choices_loss)
+plot(landmask, add=TRUE)
+plot(var5, zlim=zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Fine root fire litter (MgC h",a^-1,"y",r^-1,")",sep="")), col=colour_choices_loss)
+plot(landmask, add=TRUE)
+plot(var6, zlim=zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Wood fire litter (MgC h",a^-1,"y",r^-1,")",sep="")), col=colour_choices_loss)
+plot(landmask, add=TRUE)
+dev.off()
+
+# Change stocks
+# Assign variables
+var1 = grid_output$final_dCtotalC_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var2 = grid_output$final_dCbio_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var3 = grid_output$final_dCdom_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+# Apply filter
+var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var2[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var3[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+# Convert to raster
+var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# ranges
+zrange1 = c(-1,1)*max(abs(range(values(var1),na.rm=TRUE)))
+zrange2 = c(-1,1)*max(abs(range(values(var2),na.rm=TRUE)))
+zrange3 = c(-1,1)*max(abs(range(values(var3),na.rm=TRUE)))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Final_stock_change_median.png",sep=""), height = 2700*0.5, width = 4900, res = 300)
+par(mfrow=c(1,3), mar=c(0.5,0.4,2.8,7),omi=c(0.1,0.4,0.2,0.2))
+# Final stock changes, median estimates
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste(Delta,"Total (MgC h",a^-1,"y",r^-1,")",sep="")), col=(colour_choices_default))
+plot(landmask, add=TRUE)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste(Delta,"Biomass (MgC h",a^-1,"y",r^-1,")",sep="")), col=(colour_choices_default))
+plot(landmask, add=TRUE)
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste(Delta,"DOM (MgC h",a^-1,"y",r^-1,")",sep="")), col=(colour_choices_default))
 plot(landmask, add=TRUE)
 dev.off()
 
@@ -2361,6 +3081,44 @@ plot(var6, zlim=zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = 
 plot(landmask, add=TRUE)
 dev.off()
 
+# Traits
+# Assign variables
+wood_mrt_limit = 60
+print(paste("Wood MRT plotting range has been limited to ",wood_mrt_limit," years",sep=""))
+var1 = pmin(wood_mrt_limit,grid_parameters$MTT_wood_years[,,mid_quant])
+var1 = array(var1, dim = dim(grid_parameters$MTT_wood_years)[1:2])
+var2 = grid_parameters$NPP_wood_fraction[,,mid_quant]
+var3 = grid_parameters$SS_wood_gCm2[,,mid_quant]*1e-2
+var4 = pmin(wood_mrt_limit*2,grid_parameters$MTT_wood_years[,,high_quant]) - pmin(wood_mrt_limit*2,grid_parameters$MTT_wood_years[,,low_quant])
+# Apply filter
+var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var2[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var3[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+# Convert to raster
+var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# ranges
+zrange1 = c(0,1)*max(abs(range(values(var1),na.rm=TRUE)))
+zrange2 = c(0,1)
+zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_MRT_SS_median.png",sep=""), height = 2700*0.5, width = 4900, res = 300)
+par(mfrow=c(1,3), mar=c(0.5,0.3,2.8,8),omi=c(0.1,0.3,0.2,0.2))
+# Ecosystem traits, median estimates
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "MRT Wood (years)", col=colour_choices_gain)
+plot(landmask, add=TRUE)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "NPP wood (0-1)", col=colour_choices_gain)
+plot(landmask, add=TRUE)
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "SS wood (MgC/ha)", col=colour_choices_gain)
+plot(landmask, add=TRUE)
+dev.off()
+
 ###
 ## Partition the importance of disturbance on residence times
 
@@ -2399,6 +3157,27 @@ plot(landmask, add=TRUE)
 plot(var3, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
      main = "Biomass removal MRT comp (0-1)", col=colour_choices_loss)
+plot(landmask, add=TRUE)
+dev.off()
+
+# Convert to raster
+var1 = raster(vals = t((HarvestFraction)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((BurnedFraction)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((FireFreq)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_disturbance_drivers.png",sep=""), height = 1300, width = 4900, res = 300)
+par(mfrow=c(1,3), mar=c(0.5,0.4,3.0,7),omi=c(0.1,0.3,0.1,0.2))
+# Partitioning of wood turnover, median estimate
+plot(var1, zlim=c(0,1), xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Deforested fraction (0-1)",sep="")), col=colour_choices_loss)
+plot(landmask, add=TRUE)
+plot(var2, zlim=c(0,1), xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Burnt fraction (0-1)",sep="")), col=colour_choices_loss)
+plot(landmask, add=TRUE)
+plot(var3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("No. fires per year",sep="")), col=colour_choices_loss)
 plot(landmask, add=TRUE)
 dev.off()
 
@@ -2596,6 +3375,61 @@ plot(grid_parameters$NPP_root_fraction[,,mid_quant]~(HarvestFraction), main="", 
 plot(grid_parameters$NPP_wood_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
 dev.off()
+
+# Plot Foliage, fine root, wood NPP allocation fractions main meteorology
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_flux_meteorology_association.png",sep=""), height = 2200, width = 2800, res = 300)
+par(mfrow=c(3,3), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.1,0.1))
+# Temperature
+plot(as.vector(grid_parameters$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_temperature_C), main=expression(paste("Foliar NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+#mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
+plot(as.vector(grid_parameters$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_temperature_C), main=expression(paste("Root NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab="Mean Temperature (C)", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_parameters$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_temperature_C), main=expression(paste("Wood NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+# Precipitation
+plot(as.vector(grid_parameters$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_parameters$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="Mean precipitation (mm/yr)", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_parameters$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+# Vapour pressure deficit
+plot(as.vector(grid_parameters$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_parameters$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_parameters$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+dev.off()
+
+# Plot Foliage, fine root, wood NPP allocation fractions against main disturbance
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_flux_disturbance_association.png",sep=""), height = 2200, width = 2800, res = 300)
+par(mfrow=c(3,3), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.1,0.1))
+# Temperature
+plot(grid_parameters$NPP_foliar_fraction[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main=expression(paste("Foliar NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+#mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
+plotas.vector((grid_parameters$NPP_root_fraction[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main=expression(paste("Root NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab="No. annual fires", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_parameters$NPP_wood_fraction[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main=expression(paste("Wood NPP (MgC h",a^-1,y^-1,")",sep="")),, ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+# Precipitation
+plot(as.vector(grid_parameters$NPP_foliar_fraction[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_parameters$NPP_root_fraction[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_parameters$NPP_wood_fraction[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+# Vapour pressure deficit
+plot(as.vector(grid_parameters$NPP_foliar_fraction[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_parameters$NPP_root_fraction[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_parameters$NPP_wood_fraction[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+dev.off()
+
 
 # Plot Foliage, fine root, wood, litter(foliar+fine root+wood?), soil mean residence times against main meteorology
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_MRT_meteorology_association_heatmap.png",sep=""), height = 2200, width = 4500, res = 300)
