@@ -104,6 +104,7 @@ load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/ODA_extension_Africa_actualCI_agb/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/ODA_extension_Africa_one_AGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/ODA_extension_Africa_250gCI_agb/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_actualCI_agb/infofile.RData")
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_parameter_maps.RData",sep=""))
 
@@ -481,9 +482,11 @@ write.table(output, file = paste(out_dir,"/",PROJECT$name,"_C_budget.csv",sep=""
 ## Clustering carried out using both initial condition and process parameters
 ###
 
+# Store original land filter 
 landfilter_keep = landfilter
 for (c in seq(1, grid_parameters$nos_clusters)) {
-    landfilter[which(grid_parametersclusters > 0 & grid_parametersclusters != c)] = 0
+    # Add further filtering based on the cluster
+    landfilter[which(grid_parameters$clusters > 0 & grid_parameters$clusters != c)] = 0
     # Summary C budgets for output to table, NOTE the use of landfilter removes areas outside of the target area
     dims = dim(grid_output$mean_gpp_gCm2day)
     grid_output$gpp_TgCyr          = apply(grid_output$mean_gpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
@@ -556,6 +559,9 @@ for (c in seq(1, grid_parameters$nos_clusters)) {
     # Write out C budget
     write.table(output, file = paste(out_dir,"/",PROJECT$name,"_cluster_",c,"_C_budget.csv",sep=""), row.names=FALSE, sep=",",append=FALSE)
     
+    # Reset land filter after each cluster to return back to the correc map
+    landfilter = landfilter_keep
+
 } # cluster loop
 
 ###
@@ -2901,7 +2907,7 @@ plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = 
 plot(landmask, add=TRUE)
 plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Fine root NPP (MgC h",a^-1,"y",r^-1,")",sep="")), col=(colour_choices_gain))
+     main = expression(paste("Root NPP (MgC h",a^-1,"y",r^-1,")",sep="")), col=(colour_choices_gain))
 plot(landmask, add=TRUE)
 plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
@@ -2914,7 +2920,7 @@ plot(var4, zlim=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = 
 plot(landmask, add=TRUE)
 plot(var5, zlim=zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Fine root litter (MgC h",a^-1,"y",r^-1,")",sep="")), col=colour_choices_loss)
+     main = expression(paste("Root litter (MgC h",a^-1,"y",r^-1,")",sep="")), col=colour_choices_loss)
 plot(landmask, add=TRUE)
 plot(var6, zlim=zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
@@ -2945,12 +2951,12 @@ var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs
 var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 # ranges
-zrange1 = c(0,1)*max(abs(range(c(values(var1),values(var2),values(var3),values(var4),values(var5),values(var6)),na.rm=TRUE)))
+zrange1 = c(0,1)*sum(c(max(values(var1), na.rm=TRUE),max(values(var2), na.rm=TRUE),max(values(var3),na.rm=TRUE)))
 zrange2 = zrange1
 zrange3 = zrange1
-zrange4 = zrange1
-zrange5 = zrange1
-zrange6 = zrange1
+zrange4 = c(0,1)*max(range(c(values(var4),values(var5),values(var6)),na.rm=TRUE))
+zrange5 = zrange4
+zrange6 = zrange4
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Fire_emission_litter_fluxes.png",sep=""), height = 2700, width = 4900, res = 300)
 par(mfrow=c(2,3), mar=c(0.5,0.4,2.8,7),omi=c(0.1,0.4,0.2,0.2))
 # Median NPP fluxes to plant tissues
@@ -2960,7 +2966,7 @@ plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = 
 plot(landmask, add=TRUE)
 plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Fine root fire emission (MgC h",a^-1,"y",r^-1,")",sep="")), col=(colour_choices_gain))
+     main = expression(paste("Root fire emission (MgC h",a^-1,"y",r^-1,")",sep="")), col=(colour_choices_gain))
 plot(landmask, add=TRUE)
 plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
@@ -2973,7 +2979,7 @@ plot(var4, zlim=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = 
 plot(landmask, add=TRUE)
 plot(var5, zlim=zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Fine root fire litter (MgC h",a^-1,"y",r^-1,")",sep="")), col=colour_choices_loss)
+     main = expression(paste("Root fire litter (MgC h",a^-1,"y",r^-1,")",sep="")), col=colour_choices_loss)
 plot(landmask, add=TRUE)
 plot(var6, zlim=zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
@@ -3380,26 +3386,26 @@ dev.off()
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_flux_meteorology_association.png",sep=""), height = 2200, width = 2800, res = 300)
 par(mfrow=c(3,3), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.1,0.1))
 # Temperature
-plot(as.vector(grid_parameters$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_temperature_C), main=expression(paste("Foliar NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab=" ", 
+plot(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_temperature_C), main=expression(paste("Foliar NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 #mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
-plot(as.vector(grid_parameters$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_temperature_C), main=expression(paste("Root NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab="Mean Temperature (C)", 
+plot(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_temperature_C), main=expression(paste("Root NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab="Mean Temperature (C)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(as.vector(grid_parameters$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_temperature_C), main=expression(paste("Wood NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab="", 
+plot(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_temperature_C), main=expression(paste("Wood NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
 # Precipitation
-plot(as.vector(grid_parameters$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+plot(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(as.vector(grid_parameters$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="Mean precipitation (mm/yr)", 
+plot(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="Mean precipitation (mm/yr)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(as.vector(grid_parameters$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="", 
+plot(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
 # Vapour pressure deficit
-plot(as.vector(grid_parameters$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+plot(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(as.vector(grid_parameters$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
+plot(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(as.vector(grid_parameters$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="", 
+plot(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
 dev.off()
 
@@ -3407,27 +3413,129 @@ dev.off()
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_flux_disturbance_association.png",sep=""), height = 2200, width = 2800, res = 300)
 par(mfrow=c(3,3), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.1,0.1))
 # Temperature
-plot(grid_parameters$NPP_foliar_fraction[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main=expression(paste("Foliar NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab=" ", 
+plot(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main=expression(paste("Foliar NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 #mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
-plotas.vector((grid_parameters$NPP_root_fraction[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main=expression(paste("Root NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab="No. annual fires", 
+plot(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main=expression(paste("Root NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab="No. annual fires", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(as.vector(grid_parameters$NPP_wood_fraction[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main=expression(paste("Wood NPP (MgC h",a^-1,y^-1,")",sep="")),, ylab="", xlab="", 
+plot(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main=expression(paste("Wood NPP (MgC h",a^-1,y^-1,")",sep="")),, ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
 # Precipitation
-plot(as.vector(grid_parameters$NPP_foliar_fraction[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab=" ", 
+plot(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(as.vector(grid_parameters$NPP_root_fraction[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
+plot(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(as.vector(grid_parameters$NPP_wood_fraction[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab="", 
+plot(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
 # Vapour pressure deficit
-plot(as.vector(grid_parameters$NPP_foliar_fraction[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab=" ", 
+plot(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(as.vector(grid_parameters$NPP_root_fraction[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
+plot(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(as.vector(grid_parameters$NPP_wood_fraction[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab="", 
+plot(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+dev.off()
+
+# Plot Foliage, fine root, wood NPP allocation fractions main meteorology
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_flux_meteorology_association_heatmap.png",sep=""), height = 2200, width = 2800, res = 300)
+par(mfrow=c(3,3), mar=c(4,2,1.4,3.8), omi = c(0.1,0.2,0.1,0.1))
+fudgeit.leg.lab=""
+# Temperature
+smoothScatter(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_temperature_C), main=expression(paste("Foliar NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
+     colramp=smoothScatter_colours, 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_temperature_C, na.rm=TRUE)))
+smoothScatter(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_temperature_C), main=expression(paste("Root NPP (MgC h",a^-1,y^-1,")",sep="")), 
+     ylab="", xlab="Mean Temperature (C)", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
+     colramp=smoothScatter_colours, 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_temperature_C, na.rm=TRUE)))
+fudgeit.leg.lab="Relative Density"
+smoothScatter(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_temperature_C), main=expression(paste("Wood NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
+     colramp=smoothScatter_colours, 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_temperature_C, na.rm=TRUE)))
+# Precipitation
+fudgeit.leg.lab=""
+smoothScatter(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
+     colramp=smoothScatter_colours, 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_precipitation_kgm2yr, na.rm=TRUE)))
+smoothScatter(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_precipitation_kgm2yr), main="", 
+     ylab="", xlab="Mean precipitation (mm/yr)", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
+     colramp=smoothScatter_colours, 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_precipitation_kgm2yr, na.rm=TRUE)))
+fudgeit.leg.lab="Relative Density"
+smoothScatter(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
+     colramp=smoothScatter_colours, 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_precipitation_kgm2yr, na.rm=TRUE)))
+# Vapour pressure deficit
+fudgeit.leg.lab=""
+smoothScatter(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
+     colramp=smoothScatter_colours, 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_vpd_Pa, na.rm=TRUE)))
+smoothScatter(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
+     colramp=smoothScatter_colours, 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_vpd_Pa, na.rm=TRUE)))
+fudgeit.leg.lab="Relative Density"
+smoothScatter(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
+     colramp=smoothScatter_colours, 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_vpd_Pa, na.rm=TRUE)))
+dev.off()
+
+# Plot Foliage, fine root, wood NPP allocation fractions against main disturbance
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_flux_disturbance_association_heatmap.png",sep=""), height = 2200, width = 2800, res = 300)
+par(mfrow=c(3,3), mar=c(4,2,1.4,3.8), omi = c(0.1,0.2,0.1,0.1))
+fudgeit.leg.lab=""
+# Temperature
+smoothScatter(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main=expression(paste("Foliar NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
+     colramp=smoothScatter_colours, 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(FireFreq, na.rm=TRUE)*1.0))
+smoothScatter(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main=expression(paste("Root NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab="No. annual fires", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
+     colramp=smoothScatter_colours, 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(FireFreq, na.rm=TRUE)*1.0))
+fudgeit.leg.lab="Relative Density"
+smoothScatter(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main=expression(paste("Wood NPP (MgC h",a^-1,y^-1,")",sep="")), ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
+     colramp=smoothScatter_colours, 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(FireFreq, na.rm=TRUE)*1.0))
+# Precipitation
+fudgeit.leg.lab=""
+smoothScatter(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
+     colramp=smoothScatter_colours, 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(BurnedFraction, na.rm=TRUE)*1.0))
+smoothScatter(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
+     colramp=smoothScatter_colours, 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(BurnedFraction, na.rm=TRUE)*1.0))
+fudgeit.leg.lab="Relative Density"
+smoothScatter(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
+     colramp=smoothScatter_colours, 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(BurnedFraction, na.rm=TRUE)*1.0))
+# Vapour pressure deficit
+fudgeit.leg.lab=""
+smoothScatter(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
+     colramp=smoothScatter_colours, 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(HarvestFraction, na.rm=TRUE)*1.0))
+smoothScatter(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
+     colramp=smoothScatter_colours, 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(HarvestFraction, na.rm=TRUE)*1.0))
+fudgeit.leg.lab="Relative Density"
+smoothScatter(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
+     colramp=smoothScatter_colours, 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(HarvestFraction, na.rm=TRUE)*1.0))
 dev.off()
 
 

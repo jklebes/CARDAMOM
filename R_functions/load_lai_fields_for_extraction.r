@@ -153,15 +153,17 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
 
       # open processed files
       input_file_1=paste(prefix,years_to_load[yr],sep="")
+
       # then check whether this pattern is found in the available files
       this_year = avail_files[grepl(input_file_1, avail_files)]
-      # Strip out the time component entirely
-      tmp = unlist(strsplit(this_year,input_file_1))
-      tmp = tmp[seq(2,length(tmp),2)]
-      # The re-order the files correctly
-      this_year = this_year[order(tmp)]
-
       if (length(this_year) > 0) {
+
+          # Strip out the time component entirely
+          tmp = unlist(strsplit(this_year,input_file_1))
+          tmp = tmp[seq(2,length(tmp),2)]
+          # The re-order the files correctly
+          this_year = this_year[order(tmp)]
+
           # now loop through the available files for the current year
           for (t in seq(1, length(this_year))) {
 
@@ -200,7 +202,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
 
             # read the LAI observations
             var1 = ncvar_get(data1, "LAI") # leaf area index (m2/m2)
-            # check for erro variable
+            # check for error variable
             if (length(which(grepl("LAI_ERR",names(data1$var)) == TRUE)) > 0) {
                 var2 = ncvar_get(data1, "LAI_ERR") # standard error (m2/m2)
             } else if (length(which(grepl("RMSE",names(data1$var)) == TRUE)) > 0) {

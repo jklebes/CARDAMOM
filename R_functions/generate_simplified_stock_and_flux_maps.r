@@ -143,7 +143,7 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
        var5 = mean(grid_output[[pp]][,,loc_75], na.rm=TRUE)
        var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2) ; var4 = round(var4,digit=2) ; var5 = round(var5,digit=2)
        info = paste("Mean estimate: ",par_names[p]," (97.5 % = ",var2,"; 75 % = ",var5,"; 50 % = ",var1,"; 25 % = ",var4,"; 2.5 % = ",var3,")", sep="")
-       zrange=pretty(grid_output[[pp]][,,median_loc])
+       zrange=range(pretty(c(min(grid_output[[pp]][,,median_loc], na.rm=TRUE),max(grid_output[[pp]][,,median_loc],na.rm=TRUE))))
        image.plot(x = grid_long, y = grid_lat, z = grid_output[[pp]][,,median_loc], zlim=zrange, main=info, col = colour_choices,
                   axes=FALSE, cex.main=2.4, legend.width=3.0, cex=1.5, axis.args=list(cex.axis=1.8, hadj=0.1))
        map(add=TRUE, lwd = 2)
@@ -179,7 +179,7 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
        var5 = mean(grid_output[[pp]][,,loc_75], na.rm=TRUE)
        var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2) ; var4 = round(var4,digit=2) ; var5 = round(var5,digit=2)
        info = paste("Final estimate: ",par_names[p]," (97.5 % = ",var2,"; 75 % = ",var5,"; 50 % = ",var1,"; 25 % = ",var4,"; 2.5 % = ",var3,")", sep="")
-       zrange=pretty(grid_output[[pp]][,,median_loc])
+       zrange=range(pretty(c(min(grid_output[[pp]][,,median_loc], na.rm=TRUE),max(grid_output[[pp]][,,median_loc],na.rm=TRUE))))
        image.plot(x = grid_long, y = grid_lat, z = grid_output[[pp]][,,median_loc], main=info, col = colour_choices, zlim=zrange,
                   axes=FALSE, cex.main=2.4, legend.width=3.0, cex=1.5, axis.args=list(cex.axis=1.8, hadj=0.1))
        map(add=TRUE, lwd = 2)
