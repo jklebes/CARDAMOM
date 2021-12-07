@@ -67,7 +67,7 @@ load_met_function<- function (year_to_do,varid,infile_varid,remove_lat,remove_lo
         # clean up
         rm(var1,tmp,i,m,tmp_t) ; gc(reset=TRUE,verbose=FALSE)
 
-    } else if (met_source == "ERA") {
+    } else if (met_source == "ERA" | met_source == "isimip3a") {
 
         # open first file in the sequence
         m = 1

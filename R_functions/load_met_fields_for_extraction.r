@@ -87,7 +87,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
             # if all the files exist then we will use them
             if (present == length(varid)) {extra_year=TRUE}
 
-        } else if (met_source == "ERA") {
+        } else if (met_source == "ERA" | met_source == "isimip3a") {
 
             # declare variable ids needed to select files / infile variables
             varid=c("sw_radiation_daily_mean","airt_daily_max","precipitation_daily_mean","vpd_daily_mean","sfc_pressure_daily_mean","airt_daily_min","wind_spd_daily_mean")
@@ -327,7 +327,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         }
 
         # convert ERA from W/m2 to MJ/m2/day
-        if (met_source == "CHESS" | met_source == "ERA" | met_source == "CRUJRA") {
+        if (met_source == "CHESS" | met_source == "ERA" | met_source == "isimip3a" | met_source == "CRUJRA") {
             var1_out = var1_out * 86400 * 1e-6
         }
 
@@ -340,7 +340,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         }
 
         # convert precipitation from kgH2O/m2/day -> per second
-        if (met_source == "ERA") {
+        if (met_source == "ERA" | met_source == "isimip3a") {
             var3_out = var3_out / 86400
         }
 

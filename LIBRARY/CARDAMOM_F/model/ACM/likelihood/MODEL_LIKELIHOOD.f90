@@ -706,13 +706,13 @@ module model_likelihood_module
         likelihood = likelihood-0.5d0*tot_exp
     endif
 
-    ! Borrowed wood increment to provide soil evaporation for ACM recal  (kgH2O.m-2.day-1) Log-likelihood
+    ! Borrowed wood increment to provide soil evaporation for ACM recal (kgH2O.m-2.day-1) Log-likelihood
     tot_exp = 0d0
-    if (DATAin%nwoo > 0) then
-        do n = 1, DATAin%nwoo
-          dn = DATAin%woopts(n)
+    if (DATAin%nCwood_inc > 0) then
+        do n = 1, DATAin%nCwood_inc
+          dn = DATAin%Cwood_incpts(n)
           ! note that division is the uncertainty
-          tot_exp = tot_exp+((DATAin%M_FLUXES(dn,3)-DATAin%woo(dn))/DATAin%woo_unc(dn))**2
+          tot_exp = tot_exp+((DATAin%M_FLUXES(dn,3)-DATAin%Cwood_inc(dn))/DATAin%Cwood_inc_unc(dn))**2
         end do
         likelihood = likelihood-0.5d0*tot_exp
     endif
@@ -784,13 +784,13 @@ module model_likelihood_module
 
     ! Borrowed wood increment to provide soil evaporation for ACM recal (kgH2O.m-2.day-1) Log-likelihood
     tot_exp = 0d0
-    if (DATAin%nwoo > 0) then
-        do n = 1, DATAin%nwoo
-          dn = DATAin%woopts(n)
+    if (DATAin%nCwood_inc > 0) then
+        do n = 1, DATAin%nCwood_inc
+          dn = DATAin%Cwood_incpts(n)
           ! note that division is the uncertainty
-          tot_exp = tot_exp+((DATAin%M_FLUXES(dn,3)-DATAin%woo(dn))/DATAin%woo_unc(dn))**2
+          tot_exp = tot_exp+((DATAin%M_FLUXES(dn,3)-DATAin%Cwood_inc(dn))/DATAin%Cwood_inc_unc(dn))**2
        end do
-        scale_likelihood = scale_likelihood-0.5d0*(tot_exp/dble(DATAin%nwoo))
+        scale_likelihood = scale_likelihood-0.5d0*(tot_exp/dble(DATAin%nCwood_inc))
     endif
 
     ! Borrowed Cfol_stock to provide wet canopy evaporation for ACM recal  (kgH2O.m-2.day-1) Log-likelihood

@@ -14,6 +14,7 @@ cardamom <-function (projname,model,method,stage) {
 
   # Set default incase missing
   if (exists("select_country") == FALSE) {select_country = FALSE}
+  if (exists("path_to_landsea") == FALSE) {path_to_landsea = "default"}
 
   # define file name for PROJECT file
   # this file will contain all information relating the the PROJECT

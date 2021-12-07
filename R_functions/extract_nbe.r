@@ -59,39 +59,39 @@ extract_nbe<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in
   nbe[which(is.na(nbe))] = -9999
   nbe_unc[which(is.na(nbe_unc))] = -9999
   # next work out how many days we should have in the year
-  doy_out = 0
+  doy_obs = 0
   for (i in seq(1, length(years_to_load))) {
        nos_days = nos_days_in_year(years_to_load[i])
        # count up days needed
-       doy_out = append(doy_out,1:nos_days)
+       doy_obs = append(doy_obs,1:nos_days)
   }
-  doy_out = doy_out[-1]
+  doy_obs = doy_obs[-1]
 
   # just incase there is no missing data we best make sure there is a value which can be assessed
   if (length(nbe_all$missing_years) == 0) { nbe_all$missing_years=1066 }
 
   # declare output variable
-  nbe_out = array(-9999, dim=length(doy_out))
-  nbe_unc_out = array(-9999, dim=length(doy_out))
+  nbe_out = array(-9999, dim=length(doy_obs))
+  nbe_unc_out = array(-9999, dim=length(doy_obs))
   # now line up the obs days with all days
   b = 1 ; i = 1 ; a = 1 ; start_year=as.numeric(years_to_load[1])
   while (b <= length(nbe_all$doy_obs)) {
 
       # if we are in a year which is missing then we do not allow consideration of DOY
       if (start_year != nbe_all$missing_years[a]) {
-          if (doy_out[i] == nbe_all$doy_obs[b]) {
+          if (doy_obs[i] == nbe_all$doy_obs[b]) {
               nbe_out[i] = nbe[b] ; nbe_unc_out[i] = nbe_unc[b] ; b = b+1
           } # end if doy matches
       } # end if missing year
       # but we do keep counting through the total vector length which we expect
       i = i+1
 
-      # each time we come back to doy_out[i]==1 we need to count on the year
-      if (doy_out[i-1] > doy_out[i] & b <= length(nbe_all$doy_obs)) {
+      # each time we come back to doy_obs[i]==1 we need to count on the year
+      if (doy_obs[i-1] > doy_obs[i] & b <= length(nbe_all$doy_obs)) {
           # and if we have just been in a missing year we need to count on the missing years vector to
           if (start_year == nbe_all$missing_years[a]) {a = min(length(nbe_all$missing_years),a+1)}
           start_year=start_year+1
-      } # end if doy_out[i] == 1
+      } # end if doy_obs[i] == 1
 
   } # end while condition
 

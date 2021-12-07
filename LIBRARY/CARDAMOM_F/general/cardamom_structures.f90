@@ -29,7 +29,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
       double precision, allocatable, dimension(:) :: GPP     & ! GPP (gC.m-2.day-1)
                                           ,NEE               & ! NEE (gC.m-2.day-1)
                                           ,LAI               & ! LAI (m2/m2)
-                                          ,WOO               & ! Wood increment observations (gC.m-2.yr-1)
+                                          ,Cwood_inc         & ! Wood increment observations (gC.m-2.day-1, averaged across a lagged period)
                                           ,Reco              & ! Ecosystem respiration (gC.m-2.day-1)
                                           ,Cfol_stock        & ! time specific estimate of foliage carbon (gC.m-2)
                                           ,Cwood_stock       & ! time specific estimate of wood carbon (gC.m-2)
@@ -43,11 +43,11 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                                           ,SWE               & ! Snow Water Equivalent (mm.day-1)
                                           ,NBE                 ! Net Biome Exchange (gC/m2/day)
 
-      ! OBS uncertainties: obv these must be pared with OBS above
+      ! OBS uncertainties: obv these must be paired with OBS above
       double precision, allocatable, dimension(:) :: GPP_unc     & ! (gC/m2/day)
                                           ,NEE_unc               & ! (gC/m2/day)
                                           ,LAI_unc               & ! (m2/m2)
-                                          ,WOO_unc               & ! (gC/m2/yr)
+                                          ,Cwood_inc_unc         & ! (gC.m-2.day-1, averaged across a lagged period)
                                           ,Reco_unc              & ! (gC/m2/day)
                                           ,Cfol_stock_unc        & ! gC/m2
                                           ,Cwood_stock_unc       & ! gC/m2
@@ -61,10 +61,13 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                                           ,SWE_unc               & ! (mm.day-1)
                                           ,NBE_unc                 ! gC/m2/day
 
+      ! OBS lagged period: obs these must be paired with OBS and their uncertainties above
+      double precision, allocatable, dimension(:) :: Cwood_inc_lag
+
       ! location of observations in the data stream
       integer, allocatable, dimension(:) :: gpppts                   & ! gpppts vector used in deriving ngpp
                                            ,neepts                   & ! same for nee
-                                           ,woopts                   & ! same for wood
+                                           ,Cwood_incpts             & ! same for wood increment
                                            ,laipts                   & ! same for lai
                                            ,recopts                  & ! same for ecosystem respiration
                                            ,Cfol_stockpts            & ! same for Cfoliage
@@ -77,23 +80,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                                            ,Cfolmax_stockpts         & ! same for seasonal max foliar
                                            ,Evappts                  & ! same for ecosystem evaportion
                                            ,SWEpts                   & ! same for snow water equivalent
-                                           ,NBEpts                   & ! same for net biome exchange of CO2
-                                           ,sub_gpppts               & ! as above but for a sub-sample of observations
-                                           ,sub_neepts               & !
-                                           ,sub_woopts               & !
-                                           ,sub_laipts               & !
-                                           ,sub_recopts              & !
-                                           ,sub_Cfol_stockpts        & !
-                                           ,sub_Cwood_stockpts       & !
-                                           ,sub_Croots_stockpts      & !
-                                           ,sub_Csom_stockpts        & !
-                                           ,sub_Cagb_stockpts        & !
-                                           ,sub_Clit_stockpts        & !
-                                           ,sub_Ccoarseroot_stockpts & !
-                                           ,sub_Cfolmax_stockpts     & !
-                                           ,sub_Evappts              & !
-                                           ,sub_SWEpts               & !
-                                           ,sub_NBEpts
+                                           ,NBEpts                     ! same for net biome exchange of CO2
 
       double precision :: nobs_scaler
 
@@ -102,7 +89,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                 ,ngpp                   & ! number of GPP observations
                 ,nnee                   & ! number of NEE observations
                 ,nlai                   & ! number of LAI observations
-                ,nwoo                   & ! number of wood increment obervations
+                ,nCwood_inc             & ! number of wood increment obervations
                 ,nreco                  & ! number of Reco observations
                 ,nCfol_stock            & ! number of Cfol observations
                 ,nCwood_stock           & ! number of Cwood observations

@@ -118,8 +118,10 @@ module MODEL_PARAMETERS
 
     ! LMA (gC.m-2)
     ! Kattge et al. 2011
-    PI%parmin(17) = 20d0
-    PI%parmax(17) = 180d0
+!    PI%parmin(17) = 20d0
+!    PI%parmax(17) = 180d0
+    PI%parmin(17) = 5d0
+    PI%parmax(17) = 200d0
 
     ! uWUE: GPP*sqrt(VPD)/ ET
     ! gC/kgH2O per hPa

@@ -1,4 +1,15 @@
 
+ensemble_within_range<-function(target,proposal) {
+
+   # Determine what proportion of a proposed PDF is within a target range
+   # Returned value 0-1
+
+   t_range = range(target, na.rm=TRUE)
+   in_range = length(which(proposal >= t_range[1] & proposal <= t_range[2]))
+   return(in_range / length(proposal))
+
+} # ensemble_within_range
+
 ###
 ## Function to run CARDAMOM parameters via the chosen model
 ###
@@ -130,7 +141,10 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
 
           # Avoid running with ACM basically where not all fluxes exist
           if (grepl("DALEC",PROJECT$model$name)) {
-              # Post-hoc calculation of parameter correlations with key C-cycle variables
+
+              ###
+              ## Post-hoc calculation of parameter correlations with key C-cycle variables
+
               tmp = t(array(as.vector(parameters[1:PROJECT$model$nopars[n],,]),dim=c(PROJECT$model$nopars[n],prod(dim(parameters)[2:3]))))
               states_all$nee_par_cor = cor(tmp,apply(states_all$nee_gCm2day,1,mean))
               states_all$gpp_par_cor = cor(tmp,apply(states_all$gpp_gCm2day,1,mean))
@@ -142,7 +156,167 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               } else {
                   states_all$fire_par_cor = array(0, dim = c(PROJECT$model$nopars[n],1))
               }
-          }
+
+              ###
+              ## Comparison with assimilated observation - to what extent does the ensemble overlap?
+
+              ## GPP (gC/m2/day)
+              obs_id = 1 ; unc_id = obs_id+1
+              if (length(which(drivers$obs[,obs_id] != -9999)) > 0 & length(which(drivers$obs[,unc_id] != -9999)) > 0) {
+                  # Loop through time to assess model overlap with observations
+                  nobs = 0 ; states_all$gpp_assim_data_overlap_fraction = 0
+                  for (t in seq(1, length(drivers$met[,1]))) {
+                       if (drivers$obs[t,obs_id] != -9999) {
+                           # Estimate the min / max values for the observations
+                           obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
+                           obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
+                           # Create list object containing each observations distributions
+                           hist_list = list(o = c(obs_min,obs_max), m = states_all$gpp_gCm2day[,t])
+                           # Estimate average model ensemble within observated range
+                           tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
+                           states_all$gpp_assim_data_overlap_fraction = states_all$gpp_assim_data_overlap_fraction + tmp2
+                           nobs = nobs + 1
+                       }  # != -9999
+                   } # time loop
+                   # Average the overlap
+                   if (nobs > 0) {
+                       states_all$gpp_assim_data_overlap_fraction = states_all$gpp_assim_data_overlap_fraction / nobs
+                   } else {
+                       states_all$gpp_assim_data_overlap_fraction = 0
+                   }
+              } # was the obs assimilated?
+
+              ## LAI (m2/m2)
+              obs_id = 3 ; unc_id = obs_id+1
+              if (length(which(drivers$obs[,obs_id] != -9999)) > 0 & length(which(drivers$obs[,unc_id] != -9999)) > 0) {
+                  # Loop through time to assess model overlap with observations
+                  nobs = 0 ; states_all$lai_assim_data_overlap_fraction = 0
+                  for (t in seq(1, length(drivers$met[,1]))) {
+                       if (drivers$obs[t,obs_id] != -9999) {
+                           # Estimate the min / max values for the observations
+                           obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
+                           obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
+                           # Create list object containing each observations distributions
+                           hist_list = list(o = c(obs_min,obs_max), m = states_all$lai_m2m2[,t])
+                           # Estimate average model ensemble within observated range
+                           tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
+                           states_all$lai_assim_data_overlap_fraction = states_all$lai_assim_data_overlap_fraction + tmp2
+                           nobs = nobs + 1
+                       }  # != -9999
+                   } # time loop
+                   # Average the overlap
+                   if (nobs > 0) {
+                       states_all$lai_assim_data_overlap_fraction = states_all$lai_assim_data_overlap_fraction / nobs
+                   } else {
+                       states_all$lai_assim_data_overlap_fraction = 0
+                   }
+              } # was the obs assimilated?
+
+              ## NEE (gC/m2/day)
+              obs_id = 5 ; unc_id = obs_id+1
+              if (length(which(drivers$obs[,obs_id] != -9999)) > 0 & length(which(drivers$obs[,unc_id] != -9999)) > 0) {
+                  # Loop through time to assess model overlap with observations
+                  nobs = 0 ; states_all$nee_assim_data_overlap_fraction = 0
+                  for (t in seq(1, length(drivers$met[,1]))) {
+                       if (drivers$obs[t,obs_id] != -9999) {
+                           # Estimate the min / max values for the observations
+                           obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
+                           obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
+                           # Create list object containing each observations distributions
+                           hist_list = list(o = c(obs_min,obs_max), m = states_all$nee_gCm2day[,t])
+                           # Estimate average model ensemble within observated range
+                           tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
+                           states_all$nee_assim_data_overlap_fraction = states_all$nee_assim_data_overlap_fraction + tmp2
+                           nobs = nobs + 1
+                       }  # != -9999
+                   } # time loop
+                   # Average the overlap
+                   if (nobs > 0) {
+                       states_all$nee_assim_data_overlap_fraction = states_all$nee_assim_data_overlap_fraction / nobs
+                   } else {
+                       states_all$nee_assim_data_overlap_fraction = 0
+                   }
+              } # was the obs assimilated?
+
+              ## Wood (gC/m2)
+              obs_id = 13 ; unc_id = obs_id+1
+              if (length(which(drivers$obs[,obs_id] != -9999)) > 0 & length(which(drivers$obs[,unc_id] != -9999)) > 0) {
+                  # Loop through time to assess model overlap with observations
+                  nobs = 0 ; states_all$wood_assim_data_overlap_fraction = 0
+                  for (t in seq(1, length(drivers$met[,1]))) {
+                       if (drivers$obs[t,obs_id] != -9999) {
+                           # Estimate the min / max values for the observations
+                           obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
+                           obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
+                           # Create list object containing each observations distributions
+                           hist_list = list(o = c(obs_min,obs_max), m = states_all$wood_gCm2[,t])
+                           # Estimate average model ensemble within observated range
+                           tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
+                           states_all$wood_assim_data_overlap_fraction = states_all$wood_assim_data_overlap_fraction + tmp2
+                           nobs = nobs + 1
+                       }  # != -9999
+                   } # time loop
+                   # Average the overlap
+                   if (nobs > 0) {
+                       states_all$wood_assim_data_overlap_fraction = states_all$wood_assim_data_overlap_fraction / nobs
+                   } else {
+                       states_all$wood_assim_data_overlap_fraction = 0
+                   }
+              } # was the obs assimilated?
+
+              ## ET (kgH2O/m2/day)
+              obs_id = 31 ; unc_id = obs_id+1
+              if (length(which(drivers$obs[,obs_id] != -9999)) > 0 & length(which(drivers$obs[,unc_id] != -9999)) > 0) {
+                  # Loop through time to assess model overlap with observations
+                  nobs = 0 ; states_all$evap_assim_data_overlap_fraction = 0
+                  for (t in seq(1, length(drivers$met[,1]))) {
+                       if (drivers$obs[t,obs_id] != -9999) {
+                           # Estimate the min / max values for the observations
+                           obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
+                           obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
+                           # Create list object containing each observations distributions
+                           hist_list = list(o = c(obs_min,obs_max), m = states_all$evap_kgH2Om2day[,t])
+                           # Estimate average model ensemble within observated range
+                           tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
+                           states_all$evap_assim_data_overlap_fraction = states_all$evap_assim_data_overlap_fraction + tmp2
+                           nobs = nobs + 1
+                       }  # != -9999
+                   } # time loop
+                   # Average the overlap
+                   if (nobs > 0) {
+                       states_all$evap_assim_data_overlap_fraction = states_all$evap_assim_data_overlap_fraction / nobs
+                   } else {
+                       states_all$evap_assim_data_overlap_fraction = 0
+                   }
+              } # was the obs assimilated?
+
+              ## NBE (gC/m2/day)
+              obs_id = 35 ; unc_id = obs_id+1 ; states_all$nbe_gCm2day = states_all$nee_gCm2day + states_all$fire_gCm2day
+              if (length(which(drivers$obs[,obs_id] != -9999)) > 0 & length(which(drivers$obs[,unc_id] != -9999)) > 0) {
+                  # Loop through time to assess model overlap with observations
+                  nobs = 0 ; states_all$nbe_assim_data_overlap_fraction = 0
+                  for (t in seq(1, length(drivers$met[,1]))) {
+                       if (drivers$obs[t,obs_id] != -9999) {
+                           # Estimate the min / max values for the observations
+                           obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
+                           obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
+                           # Create list object containing each observations distributions
+                           hist_list = list(o = c(obs_min,obs_max), m = states_all$nbe_gCm2day[,t])
+                           # Estimate average model ensemble within observated range
+                           tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
+                           states_all$nbe_assim_data_overlap_fraction = states_all$nbe_assim_data_overlap_fraction + tmp2
+                           nobs = nobs + 1
+                       }  # != -9999
+                   } # time loop
+                   # Average the overlap
+                   if (nobs > 0) {
+                       states_all$nbe_assim_data_overlap_fraction = states_all$nbe_assim_data_overlap_fraction / nobs
+                   } else {
+                       states_all$nbe_assim_data_overlap_fraction = 0
+                   }
+              } # was the obs assimilated?
+
+          } # DALEC model or not?
 
           # pass to local variable for saving
           site_ctessel_pft = PROJECT$ctessel_pft[n]
@@ -282,6 +456,25 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                   site_output$NAToutflux_litter_gCm2yr = tmp[,5,]
                   site_output$NAToutflux_som_gCm2yr    = tmp[,6,]
               }
+              # Any time series assimilated data overlaps?
+              if (length(which(names(states_all) == "gpp_assim_data_overlap_fraction")) > 0) {
+                  site_output$gpp_assim_data_overlap_fraction = states_all$gpp_assim_data_overlap_fraction
+              }
+              if (length(which(names(states_all) == "lai_assim_data_overlap_fraction")) > 0) {
+                  site_output$lai_assim_data_overlap_fraction = states_all$lai_assim_data_overlap_fraction
+              }
+              if (length(which(names(states_all) == "nee_assim_data_overlap_fraction")) > 0) {
+                  site_output$nee_assim_data_overlap_fraction = states_all$nee_assim_data_overlap_fraction
+              }
+              if (length(which(names(states_all) == "wood_assim_data_overlap_fraction")) > 0) {
+                  site_output$wood_assim_data_overlap_fraction = states_all$wood_assim_data_overlap_fraction
+              }
+              if (length(which(names(states_all) == "evap_assim_data_overlap_fraction")) > 0) {
+                  site_output$evap_assim_data_overlap_fraction = states_all$evap_assim_data_overlap_fraction
+              }
+              if (length(which(names(states_all) == "nbe_assim_data_overlap_fraction")) > 0) {
+                  site_output$nbe_assim_data_overlap_fraction = states_all$nbe_assim_data_overlap_fraction
+              }
               ## Now keeping the whole ensemble extract the pixel level values needed for grid scale aggregates
               ## All units remain at this point as the are output by DALEC
               steps_per_year = floor(dim(drivers$met)[1] / ((as.numeric(PROJECT$end_year) - as.numeric(PROJECT$start_year))+1))
@@ -418,7 +611,8 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
   # bundle needed functions down the chain
   functions_list=c("read_parameter_chains","read_binary_file_format","simulate_all",
                    "read_binary_response_surface","crop_development_parameters",
-                   "have_chains_converged","psrf","read_parameter_covariance")
+                   "have_chains_converged","psrf","read_parameter_covariance",
+                   "ensemble_within_range")
   # start marker
   stime = proc.time()["elapsed"]
 
@@ -612,6 +806,14 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$mean_NAToutflux_litter_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_NAToutflux_som_gCm2yr    = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           }
+
+          # Create overlap statistics variables - may not always get filled in the end
+          grid_output$gpp_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$lai_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$nee_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$wood_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$evap_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$nbe_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 
           # Time and uncertainty invarient information,
           # this is the correlation between ensemble members for parameter and C-cycle flux variables
@@ -1046,6 +1248,25 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                   grid_output$mean_NAToutflux_wood_gCm2yr[slot_i,slot_j,]   = apply(site_output$NAToutflux_wood_gCm2yr,1,mean)
                   grid_output$mean_NAToutflux_litter_gCm2yr[slot_i,slot_j,] = apply(site_output$NAToutflux_litter_gCm2yr,1,mean)
                   grid_output$mean_NAToutflux_som_gCm2yr[slot_i,slot_j,]    = apply(site_output$NAToutflux_som_gCm2yr,1,mean)
+               }
+               # Any time series assimilated data overlaps?
+               if (length(which(names(site_output) == "gpp_assim_data_overlap_fraction")) > 0) {
+                   grid_output$gpp_assim_data_overlap_fraction[slot_i,slot_j] = site_output$gpp_assim_data_overlap_fraction
+               }
+               if (length(which(names(site_output) == "lai_assim_data_overlap_fraction")) > 0) {
+                   grid_output$lai_assim_data_overlap_fraction[slot_i,slot_j] = site_output$lai_assim_data_overlap_fraction
+               }
+               if (length(which(names(site_output) == "nee_assim_data_overlap_fraction")) > 0) {
+                   grid_output$nee_assim_data_overlap_fraction[slot_i,slot_j] = statsite_outputes_all$nee_assim_data_overlap_fraction
+               }
+               if (length(which(names(site_output) == "wood_assim_data_overlap_fraction")) > 0) {
+                   grid_output$wood_assim_data_overlap_fraction[slot_i,slot_j] = site_output$wood_assim_data_overlap_fraction
+               }
+               if (length(which(names(site_output) == "evap_assim_data_overlap_fraction")) > 0) {
+                   grid_output$evap_assim_data_overlap_fraction[slot_i,slot_j] = site_output$evap_assim_data_overlap_fraction
+               }
+               if (length(which(names(site_output) == "nbe_assim_data_overlap_fraction")) > 0) {
+                   grid_output$nbe_assim_data_overlap_fraction[slot_i,slot_j] = site_output$nbe_assim_data_overlap_fraction
                }
                # Parameter vs C-cycle flux correlation across ensemble member
                grid_output$nee_par_cor[slot_i,slot_j,] = site_output$nee_par_cor

@@ -219,13 +219,13 @@ generate_parameter_maps<-function(PROJECT) {
                               PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_wMRT" |
                               PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB" |
                               PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB_wMRT") {
-                       # Use the model calibrated resiliance factors
+                           # Use the model calibrated resiliance factors
                        # Foliage
                        tmp2 = ((tmp * parameters[29,,]) + (tmp * (1-parameters[29,,]) * (1-parameters[28,,]))) ** -1
                        tmp2 = quantile(tmp2, prob = num_quantiles, na.rm=TRUE)
                        grid_parameters$MTTfire_foliar_years[slot_i,slot_j,] = tmp2
                        # Currently fine roots and wood have a commmon rfac and combustion completeness
-                       tmp2 = ((tmp * parameters[29,,]) + (tmp * (1-parameters[29,,]) * (1-parameters[28,,]))) ** -1
+                       tmp2 = ((tmp * parameters[30,,]) + (tmp * (1-parameters[30,,]) * (1-parameters[28,,]))) ** -1
                        tmp2 = quantile(tmp2, prob = num_quantiles, na.rm=TRUE)
                        grid_parameters$MTTfire_root_years[slot_i,slot_j,] = tmp2
                        grid_parameters$MTTfire_wood_years[slot_i,slot_j,] = tmp2

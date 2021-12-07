@@ -304,48 +304,65 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
     # Inform the user
     print("Generating land sea mask")
 
-    # load global shape file for land sea mask
-    landmask = shapefile("./R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx")
-    # just to be sure enforce the projection to WGS-84
-    landmask = spTransform(landmask,CRS("+init=epsg:4326"))
-    # Clip to the extent of the CARDAMOM analysis
-    landmask = crop(landmask, cardamom_ext)
+    if (path_to_landsea == "default") {
+        # load global shape file for land sea mask
+        landmask = shapefile("./R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx")
+        # just to be sure enforce the projection to WGS-84
+        landmask = spTransform(landmask,CRS("+init=epsg:4326"))
+        # Clip to the extent of the CARDAMOM analysis
+        landmask = crop(landmask, cardamom_ext)
 
-    # create raster, passing the raster values corresponding to the sovereign state
-    # NOTE: the actual value assigned is linked the factor levels
-    landsea = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), fun = "last")
-    landsea_frac = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), getCover=TRUE)
+        # create raster, passing the raster values corresponding to the sovereign state
+        # NOTE: the actual value assigned is linked the factor levels
+        landsea = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), fun = "last")
+        landsea_frac = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), getCover=TRUE)
 
-    # Sometimes we want to simulate a particular country, which we will check now...
-    country_match = factor(landmask$SOVEREIGNT) ; country_match = levels(country_match)
-    country_match = gsub(" ","",country_match,fixed=TRUE)
-#sitename =  "UnitedKingdom"
-    # does our site name (as specified in the grid verison of analysis) correspond to a country name as
-    # given in the land mask we are using...?
-    if (length(which(grepl(sitename,country_match) == TRUE)) > 0 & select_country) {
-        # if so then loop through the land areas which fall within the correct country
-        country_match = which(grepl(sitename,country_match) == TRUE)
-        keep = rep(0,length(landsea))
-        for (i in seq(1, length(country_match))) {
-             keep[as.vector(landsea) == country_match[i]] = 1
-        }
+        # Sometimes we want to simulate a particular country, which we will check now...
+        country_match = factor(landmask$SOVEREIGNT) ; country_match = levels(country_match)
+        country_match = gsub(" ","",country_match,fixed=TRUE)
+        #sitename =  "UnitedKingdom"
+        # does our site name (as specified in the grid verison of analysis) correspond to a country name as
+        # given in the land mask we are using...?
+        if (length(which(grepl(sitename,country_match) == TRUE)) > 0 & select_country) {
+            # if so then loop through the land areas which fall within the correct country
+            country_match = which(grepl(sitename,country_match) == TRUE)
+            keep = rep(0,length(landsea))
+            for (i in seq(1, length(country_match))) {
+                 keep[as.vector(landsea) == country_match[i]] = 1
+            }
+        } else {
+            # otherwise just assume we are interested in all land areas...
+            keep = rep(0,length(landsea))
+            keep[is.na(as.vector(landsea)) == FALSE] = 1
+        } # country or all land area filter?
+        # Set non country areas to NA, and all other to 1
+        landsea[keep == 0] = NA
+        # Add a buffer based on the land sea fraction to avoid missing land area we want
+        landsea_frac = (boundaries(landsea, type="outer")*landsea_frac)
+        # Set all actual data to 1
+        landsea[as.vector(landsea) > 0] = 1
+        # set missing data to 0
+        landsea[is.na(as.vector(landsea))] = 0
+        # Now combine the maps
+        landsea = landsea + landsea_frac
+        # Reset any newly created NaN from the merge
+        landsea[is.na(as.vector(landsea))] = 0
+
     } else {
-        # otherwise just assume we are interested in all land areas...
-        keep = rep(0,length(landsea))
-        keep[is.na(as.vector(landsea)) == FALSE] = 1
-    } # country or all land area filter?
-    # Set non country areas to NA, and all other to 1
-    landsea[keep == 0] = NA
-    # Add a buffer based on the land sea fraction to avoid missing land area we want
-    landsea_frac = (boundaries(landsea, type="outer")*landsea_frac)
-    # Set all actual data to 1
-    landsea[as.vector(landsea) > 0] = 1
-    # set missing data to 0
-    landsea[is.na(as.vector(landsea))] = 0
-    # Now combine the maps
-    landsea = landsea + landsea_frac
-    # Reset any newly created NaN from the merge
-    landsea[is.na(as.vector(landsea))] = 0
+
+        # Assume that we have been given a geotiff file where the presence of a value > 0  should be included in the masked area
+        landsea = raster(path_to_landsea)
+        # just to be sure enforce the projection to WGS-84
+        landsea = spTransform(landsea,CRS("+init=epsg:4326"))
+        # Clip to the extent of the CARDAMOM analysis
+        landsea = crop(landsea, cardamom_ext)
+
+        # Assume all positive values are to be included
+        landsea[as.vector(landsea) > 0] = 1
+        # Assume everywhere else is not to be included
+        landsea[as.vector(landsea) != 1] = 0
+
+    } # default landsea mask
 
     # trim to the actual data area
     #landsea = trim(landsea, padding = 3)

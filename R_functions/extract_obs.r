@@ -25,7 +25,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     ## Get some NBE information (gC/m2/day); negative is sink
     ###
 
-    if (nbe_source == "GEOSCHEM") {
+    if (nbe_source == "GEOSCHEM" | nbe_source == "Global_Combined") {
 
       # Extract NBE and uncertainty information
       # NOTE: assume default uncertainty (+/- scale)
@@ -191,19 +191,29 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     ## Get some Wood increment information (gC/m2/yr; time series)
     ###
 
-    if (woodinc_source == "site_specific") {
+    if (Cwood_inc_source == "site_specific") {
         infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-        woodinc=read_site_specific_obs("woodinc",infile)
-        woodinc_unc=read_site_specific_obs("woodinc_unc",infile)
-        if (length(woodinc_unc) == 1) {
+        Cwood_inc=read_site_specific_obs("Cwood_inc_gCm2day",infile)
+        Cwood_inc_unc=read_site_specific_obs("Cwood_inc_unc_gCm2day",infile)
+        Cwood_inc_lag=read_site_specific_obs("Cwood_inc_lag",infile) # in model time steps
+        # Has uncertainty information been provided?
+        if (length(Cwood_inc_unc) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
-            woodinc_unc = rep(-9999,times = length(woodinc))
-            woodinc_unc[which(woodinc > 0)] = 0.25 * woodinc[which(woodinc > 0)]
+            Cwood_inc_unc = rep(-9999,times = length(Cwood_inc))
+            Cwood_inc_unc[which(Cwood_inc > 0)] = 0.25 * Cwood_inc[which(Cwood_inc > 0)]
+        }
+        # Has lag information been provided
+        if (length(Cwood_inc_lag) == 1) {
+            # on the other hand if not then we have no uncertainty info, so use default
+            Cwood_inc_lag = rep(-9999,times = length(Cwood_inc))
+            Cwood_inc_lag[which(Cwood_inc > 0)] = 1 # assume applies to current time step only
         }
     } else {
         # assume no data available
-        woodinc=-9999 ; woodinc_unc=-9999
+        Cwood_inc = -9999 ; Cwood_inc_unc = -9999 ; Cwood_inc_lag = -9999
     }
+    # Assumed uncertainty structure as agreed with Anthony Bloom
+    Cwood_inc_unc[Cwood_inc_unc >= 0] = sqrt(Cwood_inc_unc[Cwood_inc_unc >= 0]**2 + (0.1*mean(Cwood_inc_unc[Cwood_inc_unc >= 0]))**2)
 
     ###
     ## Get some GPP information (time series; gC/m2/day)
@@ -264,12 +274,12 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         }
         if (modelname == "ACM") {
             # borrow woody increment for soil evaporation in ACM_ET recalibration
-            woodinc = read_site_specific_obs("soilevap_kgH2Om2day",infile)
+            Cwood_inc = read_site_specific_obs("soilevap_kgH2Om2day",infile)
             # borrow Cfol_stock for wet canopy evaporation in ACM_ET recalibration
             Cfol_stock = read_site_specific_obs("wetevap_kgH2Om2day",infile)
             # actually lets make uncertainty half mean of total ET
             Evap_unc = rep(abs(mean(Evap))*0.40, length.out = length(Evap))
-            woodinc_unc = rep(abs(mean(woodinc))*0.40, length.out = length(Evap))
+            Cwood_inc_unc = rep(abs(mean(Cwood_inc))*0.40, length.out = length(Evap))
             Cfol_stock_unc = rep(abs(mean(Cfol_stock))*0.40, length.out = length(Evap))
         }
     } else {
@@ -692,7 +702,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     # return output now
     return(list(LAT = latlon_wanted[1], LAI = lai, LAI_unc = lai_unc, GPP = GPP, GPP_unc = GPP_unc
                ,Evap = Evap, Evap_unc = Evap_unc, NEE = NEE, NEE_unc = NEE_unc, Reco = Reco, Reco_unc = Reco_unc
-               ,woodinc = woodinc, woodinc_unc = woodinc_unc, Cfol_stock = Cfol_stock, Cfol_stock_unc = Cfol_stock_unc
+               ,Cfol_stock = Cfol_stock, Cfol_stock_unc = Cfol_stock_unc
                ,Cwood_stock = Cwood_stock, Cwood_stock_unc = Cwood_stock_unc, Cagb_stock=Cagb_stock, Cagb_stock_unc = Cagb_stock_unc
                ,Croots_stock = Croots_stock, Croots_stock_unc = Croots_stock_unc, Clit_stock = Clit_stock, Clit_stock_unc = Clit_stock_unc
                ,Csom_stock = Csom_stock, Csom_stock_unc = Csom_stock_unc, Ccoarseroot_stock = Ccoarseroot_stock
@@ -704,7 +714,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
                ,age = age, forest_management = forest_management, top_sand = top_sand, bot_sand = bot_sand, top_clay = top_clay
                ,bot_clay = bot_clay, plant = plant, plant_range = plant_range, harvest = harvest, harvest_range = harvest_range
                ,SWE = SWE, SWE_unc = SWE_unc, soilwater = soilwater, soilwater_unc = soilwater_unc, nbe = nbe, nbe_unc = nbe_unc
-               ,Cwood_potential = Cwood_potential, Cwood_potential_unc = Cwood_potential_unc, lca = lca, lca_unc = lca_unc))
+               ,Cwood_potential = Cwood_potential, Cwood_potential_unc = Cwood_potential_unc, lca = lca, lca_unc = lca_unc
+               ,Cwood_inc = Cwood_inc, Cwood_inc_unc = Cwood_inc_unc, Cwood_inc_lag = Cwood_inc_lag))
 
 
 } # end function extract_obs

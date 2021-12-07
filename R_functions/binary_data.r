@@ -143,7 +143,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   # Currently space for 18 time series of observation and its uncertainty.
   # Uncertainty is assumed to be the Gaussian variance in same units as the observation itself.
   # NOTE: that not all models are currently coded to be compatible with all observation streams.
-  OBSMAT = array(-9999.0,dim=c(length(met$run_day),36))
+  OBSMAT = array(-9999.0,dim=c(length(met$run_day),39))
   # Line makes the correct array size but with -9999 in place of all
   OBSMAT[,1] = OBS$GPP                    # GPP (gC/m2/day)
   OBSMAT[,2] = OBS$GPP_unc                # GPP variance (gC/m2/day)
@@ -151,8 +151,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   OBSMAT[,4] = OBS$LAI_unc                # Leaf area index variance
   OBSMAT[,5] = OBS$NEE                    # Net Ecosystem Exchange of CO2 (gC/m2/day)
   OBSMAT[,6] = OBS$NEE_unc                # Net Ecosystem Exchange of CO2 variance
-  OBSMAT[,7] = OBS$woodinc                # Wood stock increment (gC/m2/step)
-  OBSMAT[,8] = OBS$woodinc_unc            # Wood stock increment variance
+  OBSMAT[,7] = -9999                      # Empty
+  OBSMAT[,8] = -9999                      # Empty
   OBSMAT[,9] = OBS$Reco                   # Ecosystem respiration (Ra + Rh; gC/m2/day)
   OBSMAT[,10] = OBS$Reco_unc              # Ecosystem respiration (Ra + Rh) variance
   OBSMAT[,11] = OBS$Cfol_stock            # Foliar stock (gC/m2)
@@ -180,8 +180,11 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   OBSMAT[,32] = OBS$Evap_unc              # Evapotranspiration variance
   OBSMAT[,33] = OBS$SWE                   # Snow water equivalent (kgH2O/m2)
   OBSMAT[,34] = OBS$SWE_unc               # Snow water equivalent variance
-  OBSMAT[,35] = OBS$nbe                   # Net Biome Exchange of CO2 (gC/m2/day)
+  OBSMAT[,35] = OBS$nbe                   # Net Biome Exchange (Reco + Fire - GPP) of CO2 (gC/m2/day)
   OBSMAT[,36] = OBS$nbe_unc               # Net Biome Exchange variance
+  OBSMAT[,37] = OBS$Cwood_inc             # Mean woody productivity / increment over lag period (gC/m2/day)
+  OBSMAT[,38] = OBS$Cwood_inc_unc         # Mean woody productivity / increment varince
+  OBSMAT[,39] = OBS$Cwood_inc_lag         # Lag period over which to average  (steps)
   DATA_TEMP = t(cbind(MET,OBSMAT))
 
   # STATIC DATA (1-100)

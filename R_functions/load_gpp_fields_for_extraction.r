@@ -48,7 +48,7 @@ load_gpp_fields_for_extraction<-function(latlon_in,gpp_source,start_year,end_yea
                       lat = ncvar_get(data1, "lat_axis") ; long = ncvar_get(data1, "long_axis")
                   }
 
-                  # read the burnt fraction estimate (units are 0-1)
+                  # read the GPP estimate (units are gC/m2/day)
                   var1 = ncvar_get(data1, "GPP")
                   # get some uncertainty information - in this case the max / min which will be the basis of our uncertainty
                   var2 = ncvar_get(data1, "GPP_min") ; var3 = ncvar_get(data1, "GPP_max")
