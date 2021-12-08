@@ -213,8 +213,10 @@ cardamom <-function (projname,model,method,stage) {
   ## Begin Stage 1
 
   if (stage == 1) {
-#skip_UK = read.csv("/home/lsmallma/Desktop/UK_forestry_sites_with_yield_and_biomass.csv",header=TRUE)
+
+      # Update the user
       print("Beginning creation of binary input files")
+
       # flag for met drivers load
       loaded_all = FALSE ; met_all = 0 ; lai_all = 0 ; Csom_all = 0 ; forest_all = 0 ; Cwood_all = 0
       # load from PROJECT time step information
@@ -255,6 +257,7 @@ cardamom <-function (projname,model,method,stage) {
                        burnt_all = load_burnt_area_fields_for_extraction(latlon,burnt_area_source,path_to_burnt_area,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year))
                        soilwater_all = load_soilwater_fields_for_extraction(latlon,soilwater_initial_source)
                        lca_all = load_lca_maps_for_extraction(latlon, lca_source)
+                       Cwood_inc_all = load_wood_productivity_maps_for_extraction(Cwood_inc_source,latlon,PROJECT$spatial_type,PROJECT$grid_type,PROJECT$resolution,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days) 
                        # set flag
                        loaded_all = TRUE
                    } # if loaded_all == FALSE
@@ -265,7 +268,8 @@ cardamom <-function (projname,model,method,stage) {
                } # # if (PROJECT$model$name != "ACM")
                obs=extract_obs(latlon[n,],lai_all,Csom_all,forest_all
                               ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
-                              ,sand_clay_all,crop_man_all,burnt_all,soilwater_all,nbe_all, lca_all, gpp_all
+                              ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
+                              ,nbe_all, lca_all, gpp_all,Cwood_inc_all
                               ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
                               ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
 

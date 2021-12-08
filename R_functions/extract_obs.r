@@ -9,7 +9,7 @@
 extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
                      ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                      ,sand_clay_all,crop_man_all,burnt_all,soilwater_all,nbe_all
-                     ,lca_all,gpp_all
+                     ,lca_all,gpp_all,Cwood_inc_all
                      ,ctessel_pft,site_name,start_year,end_year
                      ,timestep_days,spatial_type,resolution,grid_type,modelname) {
 
@@ -193,9 +193,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
 
     if (Cwood_inc_source == "site_specific") {
         infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-        Cwood_inc=read_site_specific_obs("Cwood_inc_gCm2day",infile)
-        Cwood_inc_unc=read_site_specific_obs("Cwood_inc_unc_gCm2day",infile)
-        Cwood_inc_lag=read_site_specific_obs("Cwood_inc_lag",infile) # in model time steps
+        Cwood_inc=read_site_specific_obs("Cwood_increment_gCm2day",infile)
+        Cwood_inc_unc=read_site_specific_obs("Cwood_increment_uncertainty_gCm2day",infile)
+        Cwood_inc_lag=read_site_specific_obs("Cwood_increment_lag_step",infile) # in model time steps
         # Has uncertainty information been provided?
         if (length(Cwood_inc_unc) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
@@ -207,6 +207,18 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
             # on the other hand if not then we have no uncertainty info, so use default
             Cwood_inc_lag = rep(-9999,times = length(Cwood_inc))
             Cwood_inc_lag[which(Cwood_inc > 0)] = 1 # assume applies to current time step only
+        }
+    } else if (Cwood_inc_source == "Rainfor") {
+        # If there are any values in the analysis window
+        if (max(Cwood_inc_all$place_obs_in_step) > 0) {
+            # Extract the current location
+            output = extract_wood_productivity(timestep_days,spatial_type,resolution,grid_type,latlon_in,Cwood_inc_all)
+            Cwood_inc = output$Cwood_inc ; Cwood_inc_unc = output$Cwood_inc_unc ; Cwood_inc_lag = output$Cwood_inc_lag
+            # Tidy up
+            rm(output)
+        } else {
+            # assume no data available
+            Cwood_inc = -9999 ; Cwood_inc_unc = -9999 ; Cwood_inc_lag = -9999
         }
     } else {
         # assume no data available
