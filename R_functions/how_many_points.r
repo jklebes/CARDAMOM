@@ -353,7 +353,9 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
         # Assume that we have been given a geotiff file where the presence of a value > 0  should be included in the masked area
         landsea = raster(path_to_landsea)
         # just to be sure enforce the projection to WGS-84
-        landsea = spTransform(landsea,CRS("+init=epsg:4326"))
+        target = raster(crs = crs(cardamom_ext), ext = extent(landsea), resolution = res(landsea))
+        # Resample to correct grid
+        landsea = resample(landsea, target, method="ngb", na.rm=TRUE)
         # Clip to the extent of the CARDAMOM analysis
         landsea = crop(landsea, cardamom_ext)
 
@@ -361,6 +363,7 @@ how_many_points<- function (lat,long,resolution,grid_type,sitename) {
         landsea[as.vector(landsea) > 0] = 1
         # Assume everywhere else is not to be included
         landsea[as.vector(landsea) != 1] = 0
+        landsea[is.na(as.vector(landsea))] = 0
 
     } # default landsea mask
 

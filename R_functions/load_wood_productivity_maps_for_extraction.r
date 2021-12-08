@@ -48,7 +48,7 @@ load_wood_productivity_maps_for_extraction<-function(Cwood_inc_source,latlon_in,
     if (exists(Cwood_inc_source) == FALSE) {
         # Output dummy variables
         return(list(place_obs_in_step = -9999, lat = -9999, long = -9999,
-                    Cwood_increment_gCm2 = -9999, Cwood_increment_uncertainty_gCm2 = -9999, Cwood_increment_lag = -9999)))
+                    Cwood_increment_gCm2 = -9999, Cwood_increment_uncertainty_gCm2 = -9999, Cwood_increment_lag = -9999))
     }
 
     # If we got here then this must exist

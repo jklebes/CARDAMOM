@@ -755,7 +755,7 @@ module cardamom_io
             ,DATAin%Evap(DATAin%nodays),DATAin%Evap_unc(DATAin%nodays)                           &
             ,DATAin%SWE(DATAin%nodays),DATAin%SWE_unc(DATAin%nodays)                             &
             ,DATAin%NBE(DATAin%nodays),DATAin%NBE_unc(DATAin%nodays)                             &
-            ,DATAin%Cwood_inc_lag(DATAin%nodays)
+            ,DATAin%Cwood_inc_lag(DATAin%nodays)                                                 &
             ,mettemp(DATAin%nomet),obstemp(DATAin%noobs))
 
     !! Zero all variables
@@ -983,7 +983,7 @@ module cardamom_io
           DATAin%neepts(y) = day ; y = y+1
        endif
        if (DATAin%Cwood_inc(day) > -9998d0) then
-           DATAin%woopts(z) = day ; z = z+1
+           DATAin%Cwood_incpts(z) = day ; z = z+1
        endif ! data present condition
        if (DATAin%Reco(day) > -9998d0) then
            DATAin%recopts(c) = day ; c = c+1
