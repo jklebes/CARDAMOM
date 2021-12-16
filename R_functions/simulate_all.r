@@ -407,6 +407,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       aNPP=tmp$out_var2  ; aNPP=array(aNPP, dim=c(nos_iter,aNPP_dim))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
+      stop('Code to assign variables to output has not been re-written to current code standard - ooops')
   } else if (model_name == "DALEC_CDEA_FR") {
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
@@ -635,12 +636,13 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       rm(tmp) ; gc()
       # Create the output object
       states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
-                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
+                      rauto_gCm2day = output[,,3], rhet_litter_gCm2day = output[,,4],
                       nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
                       som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
                       root_gCm2 = output[,,9], lit_gCm2 = output[,,10],
                       lab_gCm2 = output[,,11], fol_gCm2 = output[,,12],
                       harvest_C_gCm2day = output[,,13], fire_gCm2day = output[,,14],
+                      rhet_som_gCm2day = output[,,15], decomp_litter_gCm2day = output[,,16],
                       evap_kgH2Om2day = output[,,18],sfc_water_mm = output[,,19],
                       wSWP_MPa = output[,,20],gs_demand_supply = output[,,21],
                       gs_total_canopy = output[,,22],APAR_MJm2day = output[,,23],
@@ -649,6 +651,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       FIREemiss_gCm2yr = FIREemiss, FIRElit_gCm2yr = FIRElit,
                       NAToutflux_gCm2yr = outflux_nat)
       # add newly calculated variables
+      states_all$rhet_gCm2day = states_all$rhet_litter_gCm2day + states_all$rhet_som_gCm2day
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_CDEA_ACM2_BUCKET_wMRT") {
       output_dim=25

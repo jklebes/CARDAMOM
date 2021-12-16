@@ -15,7 +15,7 @@ dump_binary_files <-function(infile) {
   # Check file exists
   if (file.exists(infile)) {
 
-      # open connection to the file 
+      # open connection to the file
       # 'r' to read and 'b' for binary
       bob = file(infile,'rb') ; nos_var = 1e6
       # Read from the file, double() is the data type expected
@@ -40,28 +40,32 @@ dump_binary_files <-function(infile) {
 
 read_parameter_chains<- function(PROJECT_in,n,ndim) {
 
-  # search for all output files
-  pfile = list.files(paste(PROJECT_in$resultspath,sep=""), full.names=TRUE)
-  # select the correct project
-  is_it = grepl(PROJECT_in$name,pfile) ; pfile = pfile[is_it]
-  # select the PARS files only
-  is_it = grepl("PARS",pfile) ; pfile = pfile[is_it]
-  # need to duplicate the list at this point to ensure that we can be certain we do not confuse the chain number and site numbers
-  pfile_tmp = gsub(c("_PARS"),"",pfile)
-  # select the correct site
-  is_it = grepl(paste(PROJECT_in$name,"_",PROJECT_in$sites[n],"_",sep=""),pfile_tmp) ; pfile = pfile[is_it] ; rm(pfile_tmp)
+  # Determine the intended name for the parmeter files
+  pfile=paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_",c(1:PROJECT_in$nochains),"_PARS",sep="")
+#  # search for all output files
+#  pfile = list.files(paste(PROJECT_in$resultspath,sep=""), full.names=TRUE)
+#  # select the correct project
+#  is_it = grepl(PROJECT_in$name,pfile) ; pfile = pfile[is_it]
+#  # select the PARS files only
+#  is_it = grepl("PARS",pfile) ; pfile = pfile[is_it]
+#  # need to duplicate the list at this point to ensure that we can be certain we do not confuse the chain number and site numbers
+#  pfile_tmp = gsub(c("_PARS"),"",pfile)
+#  # select the correct site
+#  is_it = grepl(paste(PROJECT_in$name,"_",PROJECT_in$sites[n],"_",sep=""),pfile_tmp) ; pfile = pfile[is_it] ; rm(pfile_tmp)
   # Find and remove any files which have no data in them
   is_it = file.size(pfile) ; is_it = which(is_it > 0) ; pfile = pfile[is_it]
 
   # just in case
   if (length(pfile) < 1) {return(-9999)}
 
-  # search for all output files
-  sfile = list.files(paste(PROJECT_in$resultspath,sep=""), full.names=TRUE)
-  # select the correct project
-  is_it = grepl(PROJECT_in$name,pfile) ; pfile = pfile[is_it]
-  # select the correct site
-  is_it = grepl(PROJECT_in$sites[n],pfile) ; pfile = pfile[is_it]
+  # Determine the intended name for the parmeter files
+  sfile=paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_",c(1:PROJECT_in$nochains),"_STEP",sep="")
+#  # search for all output files
+#  sfile = list.files(paste(PROJECT_in$resultspath,sep=""), full.names=TRUE)
+#  # select the correct project
+#  is_it = grepl(PROJECT_in$name,pfile) ; pfile = pfile[is_it]
+#  # select the correct site
+#  is_it = grepl(PROJECT_in$sites[n],pfile) ; pfile = pfile[is_it]
   # select the STEP files only
   sfiles = paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_*_STEP",sep="")
 

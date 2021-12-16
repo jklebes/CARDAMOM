@@ -107,7 +107,7 @@ corine2006_to_ctessel<- function(input_pft) {
 corine2006_to_ctessel<-cmpfun(corine2006_to_ctessel)
 
 #lat = sites_cardamom_lat ; long = sites_cardamom_long ; resolution = cardamom_resolution ; grid_type = cardamom_grid_type ; sitename = sites_cardamom
-how_many_points<- function (lat,long,resolution,grid_type,sitename) {
+how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitename) {
 
     # check input data
     if (length(which(long > 180)) > 0) {stop("Long should be -180 to +180")}

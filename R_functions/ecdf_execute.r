@@ -13,7 +13,8 @@ ecdf_execute<- function(command,cluster_address) {
     system('mkfifo sshOut')
     #Then, connect to the pipe and the fifo from within R:
     # The &> redirects both stdout and stderr to the fifo
-    sshIn <- pipe( paste("ssh -A ",username,"@",cluster_address," &> sshOut",sep=""), open = 'w+')
+    #sshIn <- pipe( paste("ssh -A -tt ",username,"@",cluster_address," &> sshOut",sep=""), open = 'w+')
+    sshIn <- pipe( paste("ssh -A -T ",username,"@",cluster_address,sep=""), open = 'w+')
     sshOut <- fifo( 'sshOut', 'r+' )
     # write commands to list
     for (i in seq(1, length(command))) {writeLines( command[i], sshIn )}

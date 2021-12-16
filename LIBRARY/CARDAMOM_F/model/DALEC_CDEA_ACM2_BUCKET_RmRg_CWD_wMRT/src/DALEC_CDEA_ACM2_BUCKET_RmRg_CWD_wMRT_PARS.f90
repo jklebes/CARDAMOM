@@ -156,19 +156,19 @@ module MODEL_PARAMETERS
     PI%parmax(31) = 0.9d0
     ! Combustion completeness factor for foliage
     PI%parmin(32) = 0.01d0
-    PI%parmax(32) = 0.75d0
+    PI%parmax(32) = 0.99d0
     ! Combustion completeness factor for fine root and wood
     PI%parmin(33) = 0.01d0
-    PI%parmax(33) = 0.75d0
+    PI%parmax(33) = 0.99d0
     ! Combustion completeness factor for soil
     PI%parmin(34) = 0.001d0
     PI%parmax(34) = 0.1d0
     ! Combustion completeness factor for foliage + fine root litter
     PI%parmin(35) = 0.01d0
-    PI%parmax(35) = 0.75d0
+    PI%parmax(35) = 0.99d0
     ! Combustion completeness factor for wood litter
     PI%parmin(36) = 0.01d0
-    PI%parmax(36) = 0.75d0
+    PI%parmax(36) = 0.99d0
 
     !
     ! INITIAL VALUES DECLARED HERE

@@ -145,19 +145,19 @@ module MODEL_PARAMETERS
     PI%parmax(30) = 0.9d0
     ! Combustion completeness factor for foliage
     PI%parmin(31) = 0.01d0
-    PI%parmax(31) = 0.75d0
+    PI%parmax(31) = 0.99d0
     ! Combustion completeness factor for fine root and wood
     PI%parmin(32) = 0.01d0
-    PI%parmax(32) = 0.75d0
+    PI%parmax(32) = 0.99d0
     ! Combustion completeness factor for soil
     PI%parmin(33) = 0.001d0
     PI%parmax(33) = 0.1d0
     ! Combustion completeness factor for foliage + fine root litter
     PI%parmin(34) = 0.01d0
-    PI%parmax(34) = 0.75d0
+    PI%parmax(34) = 0.99d0
     ! Combustion completeness factor for wood litter
     PI%parmin(35) = 0.01d0
-    PI%parmax(35) = 0.75d0
+    PI%parmax(35) = 0.99d0
 
 !    ! Optimum Nitrogen use efficiency (gC/gN/m2/day)
 !    PI%parmin(XX) =  1.6d0

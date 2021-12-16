@@ -104,7 +104,7 @@ submit_processes_to_cluster<-function (PROJECT_in) {
          # now submit them all
          jobnamestr=paste(" -N ",PROJECT_in$name,"_bundle_",bundle_start,"_",bundle_end,sep="")
          commands=append(commands,paste("qsub -t ",bundle_start,"-",bundle_end,jobnamestr,emailstr,memorystr,runtimestr,oestream," ",PROJECT_in$eexepath,"CARDAMOM_ECDF_SUBMIT_BUNDLES.sh ",PROJECT_in$eexepath,sep=""))
-         print(commands)
+         #print(commands)
     } # bundle looping
 
     # issue commands to eddie

@@ -240,6 +240,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
 
               ## Wood (gC/m2)
               obs_id = 13 ; unc_id = obs_id+1
+              # If there is a prior assign it to the first timestep of the observation timeseries
+              if (drivers$parpriors[21] > 0) { drivers$obs[1,obs_id] = drivers$parpriors[21] ; drivers$obs[1,unc_id] = drivers$parpriorunc[21] }
               if (length(which(drivers$obs[,obs_id] != -9999)) > 0 & length(which(drivers$obs[,unc_id] != -9999)) > 0) {
                   # Loop through time to assess model overlap with observations
                   nobs = 0 ; states_all$wood_assim_data_overlap_fraction = 0
@@ -261,6 +263,34 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                        states_all$wood_assim_data_overlap_fraction = states_all$wood_assim_data_overlap_fraction / nobs
                    } else {
                        states_all$wood_assim_data_overlap_fraction = 0
+                   }
+              } # was the obs assimilated?
+
+              ## Soil (gC/m2)
+              obs_id = 15 ; unc_id = obs_id+1
+              # If there is a prior assign it to the first timestep of the observation timeseries
+              if (drivers$parpriors[23] > 0) { drivers$obs[1,obs_id] = drivers$parpriors[23] ; drivers$obs[1,unc_id] = drivers$parpriorunc[23] }
+              if (length(which(drivers$obs[,obs_id] != -9999)) > 0 & length(which(drivers$obs[,unc_id] != -9999)) > 0) {
+                  # Loop through time to assess model overlap with observations
+                  nobs = 0 ; states_all$soil_assim_data_overlap_fraction = 0
+                  for (t in seq(1, length(drivers$met[,1]))) {
+                       if (drivers$obs[t,obs_id] != -9999) {
+                           # Estimate the min / max values for the observations
+                           obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
+                           obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
+                           # Create list object containing each observations distributions
+                           hist_list = list(o = c(obs_min,obs_max), m = states_all$soil_gCm2[,t])
+                           # Estimate average model ensemble within observated range
+                           tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
+                           states_all$soil_assim_data_overlap_fraction = states_all$soil_assim_data_overlap_fraction + tmp2
+                           nobs = nobs + 1
+                       }  # != -9999
+                   } # time loop
+                   # Average the overlap
+                   if (nobs > 0) {
+                       states_all$soil_assim_data_overlap_fraction = states_all$soil_assim_data_overlap_fraction / nobs
+                   } else {
+                       states_all$soil_assim_data_overlap_fraction = 0
                    }
               } # was the obs assimilated?
 
@@ -357,7 +387,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                                  gpp_gCm2day = apply(states_all$gpp_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
                                  rauto_gCm2day = apply(states_all$rauto_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
                                  rhet_gCm2day = apply(states_all$rhet_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
-                                 reco_gCm2day = apply(states_all$rhet_gCm2day+states_all$rauto_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
+                                 reco_gCm2day = apply(states_all$reco_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
                                  npp_gCm2day = apply(npp,2,quantile,prob=num_quantiles,na.rm=na_flag),
                                  fnpp_gCm2day = apply(npp * states_all$aNPP[,1],2,quantile,prob=num_quantiles,na.rm=na_flag),
                                  rnpp_gCm2day = apply(npp * states_all$aNPP[,2],2,quantile,prob=num_quantiles,na.rm=na_flag),
@@ -379,6 +409,15 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               site_output$dClit_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
               dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
               site_output$dCsom_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
+              if (length(which(names(site_output) == "rhet_litter_gCm2day")) > 0) {
+                  site_output$rhet_litter_gCm2day = apply(states_all$rhet_litter_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
+              }
+              if (length(which(names(site_output) == "rhet_som_gCm2day")) > 0) {
+                  site_output$rhet_som_gCm2day = apply(states_all$rhet_som_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
+              }
+              if (length(which(names(site_output) == "decomp_litter_gCm2day")) > 0) {
+                  site_output$decomp_litter_gCm2day = apply(states_all$decomp_litter_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
+              }
               if (length(which(names(states_all) == "litwood_gCm2")) > 0) {
                   # Total C including wood litter
                   site_output$totalC_gCm2 = apply(states_all$bio_gCm2+states_all$litwood_gCm2+states_all$lit_gCm2+states_all$som_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
@@ -468,6 +507,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               }
               if (length(which(names(states_all) == "wood_assim_data_overlap_fraction")) > 0) {
                   site_output$wood_assim_data_overlap_fraction = states_all$wood_assim_data_overlap_fraction
+              }
+              if (length(which(names(states_all) == "soil_assim_data_overlap_fraction")) > 0) {
+                  site_output$soil_assim_data_overlap_fraction = states_all$soil_assim_data_overlap_fraction
               }
               if (length(which(names(states_all) == "evap_assim_data_overlap_fraction")) > 0) {
                   site_output$evap_assim_data_overlap_fraction = states_all$evap_assim_data_overlap_fraction
@@ -561,6 +603,15 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               site_output$agg_fnpp = quantile(apply(npp * states_all$aNPP[,1],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
               site_output$agg_rnpp = quantile(apply(npp * states_all$aNPP[,2],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
               site_output$agg_wnpp = quantile(apply(npp * states_all$aNPP[,3],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              if (length(which(names(site_output) == "rhet_litter_gCm2day")) > 0) {
+                  site_output$agg_rhet_litter = quantile(apply(states_all$rhet_litter_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              }
+              if (length(which(names(site_output) == "rhet_som_gCm2day")) > 0) {
+                  site_output$agg_rhet_som = quantile(apply(states_all$rhet_som_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              }
+              if (length(which(names(site_output) == "decomp_litter_gCm2day")) > 0) {
+                  site_output$agg_decomp_litter = quantile(apply(states_all$decomp_litter_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
+              }
               # Water cycle specific if available
               if (length(which(names(states_all) == "evap_kgH2Om2day")) > 0) {
                   # evapotranspiration (Etrans + Esoil + Ewetcanopy)
@@ -751,6 +802,18 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           # For those which we currently have need, estimate the mean annual maximum
           grid_output$annual_max_roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$annual_max_wood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          # Models were heterotrophic respiration of litter is seperately output
+          if (length(which(names(site_output) == "rhet_litter_gCm2day")) > 0) {
+              grid_output$mean_rhet_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          }
+          # Models were heterotrophic respiration of som is seperately output
+          if (length(which(names(site_output) == "rhet_som_gCm2day")) > 0) {
+              grid_output$mean_rhet_som_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          }
+          # Models were decomposition of litter to som is seperately output
+          if (length(which(names(site_output) == "decomp_litter_gCm2day")) > 0) {
+              grid_output$mean_decomp_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          }
           # Models where we have a wood litter pool and therefore a total dead organic matter combination also
           if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
               grid_output$mean_litwood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -812,6 +875,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$lai_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
           grid_output$nee_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
           grid_output$wood_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$soil_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
           grid_output$evap_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
           grid_output$nbe_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 
@@ -863,6 +927,18 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$fire_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$nbe_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$nbp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          # Models were heterotrophic respiration of litter is seperately output
+          if (length(which(names(site_output) == "rhet_litter_gCm2day")) > 0) {
+              grid_output$rhet_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          }
+          # Models were heterotrophic respiration of som is seperately output
+          if (length(which(names(site_output) == "rhet_som_gCm2day")) > 0) {
+              grid_output$rhet_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          }
+          # Models were decomposition of litter to som is seperately output
+          if (length(which(names(site_output) == "decomp_litter_gCm2day")) > 0) {
+              grid_output$decomp_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          }
           # Models where we have a CWD pool and therefore a total dead organic matter combination also
           if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
               grid_output$litwood_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
@@ -951,6 +1027,18 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$agg_fire_TgCyr = array(0, dim=c(agg_iter))
           grid_output$agg_nbe_TgCyr = array(0, dim=c(agg_iter))
           grid_output$agg_nbp_TgCyr = array(0, dim=c(agg_iter))
+          # Models were heterotrophic respiration of litter is seperately output
+          if (length(which(names(site_output) == "rhet_litter_gCm2day")) > 0) {
+              grid_output$agg_rhet_litter_TgCyr = array(0, dim=c(agg_iter))
+          }
+          # Models were heterotrophic respiration of som is seperately output
+          if (length(which(names(site_output) == "rhet_som_gCm2day")) > 0) {
+              grid_output$agg_rhet_som_TgCyr = array(0, dim=c(agg_iter))
+          }
+          # Models were decomposition of litter to som is seperately output
+          if (length(which(names(site_output) == "decomp_litter_gCm2day")) > 0) {
+              grid_output$agg_decomp_litter_TgCyr = array(0, dim=c(agg_iter))
+          }
           # Models where we have a CWD pool and therefore a total dead organic matter combination also
           if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
               grid_output$agg_litwood_TgC = array(0, dim=c(agg_iter))
@@ -1042,6 +1130,18 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                grid_output$agg_fire_TgCyr = grid_output$agg_fire_TgC + sample(site_output$agg_fire*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
                grid_output$agg_nbe_TgCyr = grid_output$agg_nbe_TgC + sample(site_output$agg_nbe*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
                grid_output$agg_nbp_TgCyr = grid_output$agg_nbp_TgC + sample(site_output$agg_nbp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
+               # Models were heterotrophic respiration of litter is seperately output
+               if (length(which(names(site_output) == "rhet_litter_gCm2day")) > 0) {
+                   grid_output$agg_rhet_litter_TgCyr = grid_output$agg_rhet_litter_TgCyr + sample(site_output$agg_rhet_litter*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
+               }
+               # Models were heterotrophic respiration of som is seperately output
+               if (length(which(names(site_output) == "rhet_som_gCm2day")) > 0) {
+                   grid_output$agg_rhet_som_TgCyr = grid_output$agg_rhet_som_TgCyr + sample(site_output$agg_rhet_som*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
+               }
+               # Models were decomposition of litter to som is seperately output
+               if (length(which(names(site_output) == "decomp_litter_gCm2day")) > 0) {
+                   grid_output$agg_decomp_litter_TgCyr = grid_output$agg_decomp_litter_TgCyr + sample(site_output$decomp_litter*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
+               }
                # Models where we have a CWD pool and therefore a total dead organic matter combination also
                if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
                    grid_output$agg_litwood_TgC = grid_output$agg_litwood_TgC + sample(site_output$agg_litwood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
@@ -1087,6 +1187,15 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                grid_output$fire_gCm2day[n,,] = site_output$fire_gCm2day
                grid_output$nbe_gCm2day[n,,] = site_output$nbe_gCm2day
                grid_output$nbp_gCm2day[n,,] = site_output$nbp_gCm2day
+               if (length(which(names(site_output) == "rhet_litter_gCm2day")) > 0) {
+                   grid_output$rhet_litter_gCm2day = site_output$rhet_litter_gCm2day
+               }
+               if (length(which(names(site_output) == "rhet_som_gCm2day")) > 0) {
+                   grid_output$rhet_som_gCm2day  = site_output$rhet_som_gCm2day
+               }
+               if (length(which(names(site_output) == "decomp_litter_gCm2day")) > 0) {
+                   grid_output$decomp_litter_gCm2day  = site_output$decomp_litter_gCm2day
+               }
                # Models where we have a CWD pool and therefore a total dead organic matter combination also
                if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
                    grid_output$litwood_gCm2[n,,] = site_output$litwood_gCm2
@@ -1197,6 +1306,15 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                }
                grid_output$annual_max_roots_gCm2[slot_i,slot_j,] = grid_output$annual_max_roots_gCm2[slot_i,slot_j,] / nos_years
                grid_output$annual_max_wood_gCm2[slot_i,slot_j,] = grid_output$annual_max_wood_gCm2[slot_i,slot_j,] / nos_years
+               if (length(which(names(site_output) == "rhet_litter_gCm2day")) > 0) {
+                   grid_output$mean_rhet_litter_gCm2day = apply(site_output$rhet_litter_gCm2day,1,mean)
+               }
+               if (length(which(names(site_output) == "rhet_som_gCm2day")) > 0) {
+                   grid_output$mean_rhet_som_gCm2day = apply(site_output$rhet_SOM_gCm2day,1,mean)
+               }
+               if (length(which(names(site_output) == "decomp_litter_gCm2day")) > 0) {
+                   grid_output$mean_decomp_litter_gCm2day =  apply(site_output$decomp_litter_gCm2day,1,mean)
+               }
                # Models where we have a CWD pool and therefore a total dead organic matter combination also
                if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
                    grid_output$mean_litwood_gCm2[slot_i,slot_j,] = apply(site_output$litwood_gCm2,1,mean)
@@ -1262,6 +1380,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                if (length(which(names(site_output) == "wood_assim_data_overlap_fraction")) > 0) {
                    grid_output$wood_assim_data_overlap_fraction[slot_i,slot_j] = site_output$wood_assim_data_overlap_fraction
                }
+               if (length(which(names(site_output) == "soil_assim_data_overlap_fraction")) > 0) {
+                   grid_output$soil_assim_data_overlap_fraction[slot_i,slot_j] = site_output$soil_assim_data_overlap_fraction
+               }
                if (length(which(names(site_output) == "evap_assim_data_overlap_fraction")) > 0) {
                    grid_output$evap_assim_data_overlap_fraction[slot_i,slot_j] = site_output$evap_assim_data_overlap_fraction
                }
@@ -1314,6 +1435,18 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
       grid_output$agg_fire_TgCyr = quantile(grid_output$agg_fire_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
       grid_output$agg_nbe_TgCyr = quantile(grid_output$agg_nbe_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
       grid_output$agg_nbp_TgCyr = quantile(grid_output$agg_nbp_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
+      # Models where we have an explicit heterotrophic respiration from litter
+      if (length(which(names(grid_output) == "agg_rhet_litter_TgCyr")) > 0) {
+          grid_output$agg_rhet_litter_TgCyr = quantile(grid_output$agg_rhet_litter_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
+      }
+      # Models where we have an explicit heterotrophic respiration frosoil organic matter
+      if (length(which(names(grid_output) == "agg_rhet_som_TgCyr")) > 0) {
+          grid_output$agg_rhet_som_TgCyr = quantile(grid_output$agg_rhet_som_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
+      }
+      # Models where we have an explicit decomposition of litter to siol organic matter
+      if (length(which(names(grid_output) == "agg_decomp_litter_TgCyr")) > 0) {
+          grid_output$agg_decomp_litter_TgCyr = quantile(grid_output$agg_decomp_litter_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
+      }
       # Models where we have a CWD pool and therefore a total dead organic matter combination also
       if (length(which(names(grid_output) == "agg_litwood_TgC")) > 0) {
           grid_output$agg_litwood_TgC = quantile(grid_output$agg_litwood_TgC, prob = agg_quantiles_final, na.rm=TRUE)

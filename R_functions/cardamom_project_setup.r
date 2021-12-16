@@ -24,13 +24,13 @@ cardamom_project_setup <- function (paths,PROJECT) {
   project_type=PROJECT$type
 
   # create local paths if they do no exist already
-  if (file.exists(typepath) == FALSE ){system(paste("mkdir ",typepath,sep=""))}
-  if (file.exists(localpath) == FALSE ){system(paste("mkdir ",localpath,sep=""))}
-  if (file.exists(datapath) == FALSE ){system(paste("mkdir ",datapath,sep=""))}
-  if (file.exists(resultspath) == FALSE ){system(paste("mkdir ",resultspath,sep=""))}
-  if (file.exists(results_processedpath) == FALSE ){system(paste("mkdir ",results_processedpath,sep=""))}
-  if (file.exists(figpath) == FALSE ){system(paste("mkdir ",figpath,sep=""))}
-  if (file.exists(exepath) == FALSE ){system(paste("mkdir ",exepath,sep=""))}
+  if (dir.exists(typepath) == FALSE ){system(paste("mkdir ",typepath,sep=""))}
+  if (dir.exists(localpath) == FALSE ){system(paste("mkdir ",localpath,sep=""))}
+  if (dir.exists(datapath) == FALSE ){system(paste("mkdir ",datapath,sep=""))}
+  if (dir.exists(resultspath) == FALSE ){system(paste("mkdir ",resultspath,sep=""))}
+  if (dir.exists(results_processedpath) == FALSE ){system(paste("mkdir ",results_processedpath,sep=""))}
+  if (dir.exists(figpath) == FALSE ){system(paste("mkdir ",figpath,sep=""))}
+  if (dir.exists(exepath) == FALSE ){system(paste("mkdir ",exepath,sep=""))}
 
   # number of chains desired?
   failed=TRUE
@@ -80,17 +80,17 @@ cardamom_project_setup <- function (paths,PROJECT) {
   description = ""#readline("Any other comments?")
 
   # calculate the sample rate
-  samplerate=nsamples/nsubsamples
+  samplerate = nsamples/nsubsamples
 
   # creation date
-  date=Sys.time()
+  date = Sys.time()
   # remove the spaces and other characters
-  date=gsub("-", "",date)
-  date=gsub(" ", "_",date)
-  date=gsub(":", "_",date)
+  date = gsub("-", "",date)
+  date = gsub(" ", "_",date)
+  date = gsub(":", "_",date)
 
   # define executable name
-  exe=paste(PROJECT$name,".exe",sep="")
+  exe = paste(PROJECT$name,".exe",sep="")
 
   # Are we using the remote server?
   # Has this information already been provided...
@@ -98,7 +98,7 @@ cardamom_project_setup <- function (paths,PROJECT) {
       use_eddie = request_use_server
       # If the value is not valid then ask the user
       if (use_eddie != TRUE & use_eddie != FALSE) {
-          use_eddie=readline("Will you run this PROJECT on remote server (TRUE/FALSE)")
+          use_eddie = readline("Will you run this PROJECT on remote server (TRUE/FALSE)")
       }
   } else {
       # ... or ask the user
@@ -114,7 +114,7 @@ cardamom_project_setup <- function (paths,PROJECT) {
           chain_runtime = request_runtime
       } else {
           # ask the user how long they want to set the simulation to run for
-          chain_runtime=readline(paste("How much run time per chain do you want to request (whole hours)? (NOTE: Given ",nsamples," required parameter vectors per chain, approximately ",cre," hours needed."))
+          chain_runtime = readline(paste("How much run time per chain do you want to request (whole hours)? (NOTE: Given ",nsamples," required parameter vectors per chain, approximately ",cre," hours needed."))
       }
       # If response is not acceptable try again
       if (as.numeric(chain_runtime) > 48 | as.numeric(chain_runtime) < 1) {
@@ -234,30 +234,37 @@ cardamom_project_setup <- function (paths,PROJECT) {
                      paths$cardamom,"LIBRARY/CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/a.out -lm",sep=""))
         system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/a.out ",exepath,"/",exe,sep=""))
     } else if (project_src == "Fortran") {
-        # compiler options
-        compiler_options=""#"-xhost -ipo -no-ftz"
-        if (timing) {compiler_options=paste(compiler_options," -pg",sep="")}
-        if (debug) {compiler_options=paste(compiler_options," -debug -traceback",sep="")}
-        # if executables are present either in source library or in project folder remove them
-        #if (file.exists(paste(paths$cardamom,"LIBRARY/CARDAMOM_F/executable/cardamom.exe",sep=""))) { system(paste("rm cardamom.exe")) }
-        if (file.exists(paste(exepath,"/",exe,sep=""))) {system(paste("rm ",exepath,"/",exe,sep=""))}
+
         # store current working directory so that we can leave it briefly but return later
         cwd=getwd()
+        # Move to the directory containing the source ode
         setwd(paste(paths$cardamom,"LIBRARY/CARDAMOM_F/executable/",sep=""))
+        # Remove the evidence of the previuos compilation
         system("rm *.mod") # depends on being in executable directory
-        # issue compile commands
-        system(paste(compiler," -O2 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
-                     " ../model/",modelname,"/src/",modelname,"_CROP.f90",
-                     " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_StressTests.f90",
-                     " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
-                     " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep=""))
-#        print(paste(compiler," -O2 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
-#                     " ../model/",modelname,"/src/",modelname,"_CROP.f90",
-#                     " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_StressTests.f90",
-#                     " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
-#                     " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep=""))
-        system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/executable/cardamom.exe ",exepath,"/",exe,sep=""))
-        # now also generate the shared library needed later by R
+
+        if (request_compile_server == FALSE) {
+            # compiler options
+            compiler_options=""#"-xhost -ipo -no-ftz"
+            if (timing) {compiler_options=paste(compiler_options," -pg",sep="")}
+            if (debug) {compiler_options=paste(compiler_options," -debug -traceback",sep="")}
+            # if executables are present either in source library or in project folder remove them
+            #if (file.exists(paste(paths$cardamom,"LIBRARY/CARDAMOM_F/executable/cardamom.exe",sep=""))) { system(paste("rm cardamom.exe")) }
+            if (file.exists(paste(exepath,"/",exe,sep=""))) {system(paste("rm ",exepath,"/",exe,sep=""))}
+            # issue compile commands
+            system(paste(compiler," -O2 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
+                         " ../model/",modelname,"/src/",modelname,"_CROP.f90",
+                         " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_StressTests.f90",
+                         " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
+                         " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep=""))
+#            print(paste(compiler," -O2 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
+#                         " ../model/",modelname,"/src/",modelname,"_CROP.f90",
+#                         " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_StressTests.f90",
+#                         " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
+#                         " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep=""))
+            system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/executable/cardamom.exe ",exepath,"/",exe,sep=""))
+        } # compile executable on local machine too?
+
+        # Generate the shared library needed later by R
         system(paste("gfortran -O2 -shared ../model/",modelname,"/src/",modelname,".f90 ",
                      "../model/",modelname,"/src/",modelname,"_CROP.f90 ",
                      "../model/",modelname,"/src/",modelname,"_R_interface.f90 ","-o dalec.so -fPIC",sep=""))

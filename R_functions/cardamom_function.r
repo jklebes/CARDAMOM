@@ -55,7 +55,7 @@ cardamom <-function (projname,model,method,stage) {
               PROJECT$ctessel_pft = rep(0, length.out=PROJECT$nosites)
           } # pft_wanted
       } else { # if (cardamom_type == "site")
-          site_info = how_many_points(sites_cardamom_lat,sites_cardamom_long,
+          site_info = how_many_points(path_to_landsea,sites_cardamom_lat,sites_cardamom_long,
                                       cardamom_resolution,cardamom_grid_type,sites_cardamom)
           PROJECT$nosites = site_info$nosites
           PROJECT$sites = site_info$sites
@@ -227,10 +227,10 @@ cardamom <-function (projname,model,method,stage) {
                print("Determining number / locations of grid points for this run ...")
                output = determine_lat_long_needed(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution,PROJECT$grid_type,PROJECT$waterpixels)
                print("Have now determined grid point locations")
-               latlon = cbind(output$lat,output$long) ; rm(output) ; gc(reset=TRUE,verbose=FALSE)
+               latlon = cbind(output$lat,output$long) ; cardamom_ext = output$cardamom_ext ; rm(output) ; gc(reset=TRUE,verbose=FALSE)
            } else if (n == 1 & cardamom_type != "grid") {
                print("Determining number / locations of grid points for this run ...")
-               latlon = cbind(PROJECT$latitude,PROJECT$longitude)
+               latlon = cbind(PROJECT$latitude,PROJECT$longitude) ; cardamom_ext = NULL
                print("Have now determined grid point locations")
            }
            print(paste("Site ",n," of ",PROJECT$nosites," ",Sys.time(),sep=""))
@@ -257,7 +257,7 @@ cardamom <-function (projname,model,method,stage) {
                        burnt_all = load_burnt_area_fields_for_extraction(latlon,burnt_area_source,path_to_burnt_area,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year))
                        soilwater_all = load_soilwater_fields_for_extraction(latlon,soilwater_initial_source)
                        lca_all = load_lca_maps_for_extraction(latlon, lca_source)
-                       Cwood_inc_all = load_wood_productivity_maps_for_extraction(Cwood_inc_source,latlon,PROJECT$spatial_type,PROJECT$grid_type,PROJECT$resolution,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days) 
+                       Cwood_inc_all = load_wood_productivity_maps_for_extraction(Cwood_inc_source,cardamom_ext,PROJECT$spatial_type,latlon,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
                        # set flag
                        loaded_all = TRUE
                    } # if loaded_all == FALSE

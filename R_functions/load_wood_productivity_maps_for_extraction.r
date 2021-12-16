@@ -7,7 +7,7 @@
 # Created: 07/12/2021
 # Last edited: 08/12/2021 (T. L. Smallman)
 
-load_wood_productivity_maps_for_extraction<-function(Cwood_inc_source,latlon_in,spatial_type,grid_type,resolution,start,finish,timestep_days) {
+load_wood_productivity_maps_for_extraction<-function(Cwood_inc_source,cardamom_ext,spatial_type,latlon_in,start,finish,timestep_days) {
 
     # Generate timing information need in most cases
     analysis_years = seq(as.numeric(start),as.numeric(finish))
@@ -21,31 +21,10 @@ load_wood_productivity_maps_for_extraction<-function(Cwood_inc_source,latlon_in,
     # How many steps per year
     steps_per_year = length(timestep_days) / length(analysis_years)
 
-    if (spatial_type == "grid") {
-
-        # Generate spatial information for the actual analysis
-        if (grid_type == "UK") {
-            output = generate_uk_grid(latlon_in[,1],latlon_in[,2],resolution)
-        } else if (grid_type=="wgs84") {
-            output = generate_wgs84_grid(latlon_in[,1],latlon_in[,2],resolution)
-        } else {
-            stop('have selected invalid grid type, the valid options are "UK" and "wgs84"')
-        }
-        # Extract useful information (output re-used later)
-        cardamom_ext = output$cardamom_ext
-
-    } else if (spatial_type == "site") {
-
-        # Actually means we do very little
-
-    } else {
-        stop('have selected invalid spatial type, the valid options are "site" and "grid"')
-    }
-
     ###
     ## Select the correct Cwood increment source for specific time points
 
-    if (exists(Cwood_inc_source) == FALSE) {
+    if (exists("Cwood_inc_source") == FALSE) {
         # Output dummy variables
         return(list(place_obs_in_step = -9999, lat = -9999, long = -9999,
                     Cwood_increment_gCm2 = -9999, Cwood_increment_uncertainty_gCm2 = -9999, Cwood_increment_lag = -9999))
@@ -67,20 +46,23 @@ load_wood_productivity_maps_for_extraction<-function(Cwood_inc_source,latlon_in,
         input_file = input_file[grepl("unc_wood_productivity_gCm2",input_file) == FALSE]
         # Check that we have the same number of files for both biomass and uncertainty
         if (length(input_file) != length(unc_input_file)) {stop("Different number of observation and uncertainty files found...")}
+
         # Extract timing information
         years_with_obs = gsub("wood_productivity_gCm2_","",input_file)
         years_with_obs = gsub("\\.tif$","",years_with_obs)
         # These files have two years provided, defining the beginning and ending of the averaging periods
         endings = rep(NA,length(years_with_obs)) ; avg_period_of_obs = rep(NA,length(years_with_obs))
         for (t in seq(1, length(years_with_obs))) {
-             tmp = gsub("_","",years_with_obs[t])
+             tmp = unlist(strsplit(years_with_obs[t],"_"))
              endings[t] = as.numeric(tmp[2])
              # Use the beginnings and endings to etermine the averaging period
              avg_period_of_obs[t] = length(c(as.numeric(tmp[1]):endings[t]))
         }
         # Overwrite years with obs with the endings, as these are the points which the information will be loaded
         years_with_obs = endings
-
+        # Correct averaging period to that of the model timestep
+        avg_period_of_obs = avg_period_of_obs * steps_per_year
+print(years_with_obs) ; print(avg_period_of_obs)
         # Loop through each year and extract if appropriate
         done_lat = FALSE
         for (t in seq(1, length(years_with_obs))) {
@@ -92,22 +74,27 @@ load_wood_productivity_maps_for_extraction<-function(Cwood_inc_source,latlon_in,
                  Cwood_increment = raster(paste(path_to_Cwood_inc,input_file[t],sep=""))
                  Cwood_increment_uncertainty = raster(paste(path_to_Cwood_inc,unc_input_file[t],sep=""))
 
-                 # Create raster at target resolution
+                 # Create raster with the target crs
                  target = raster(crs = ("+init=epsg:4326"), ext = extent(Cwood_increment), resolution = res(Cwood_increment))
                  # Check whether the target and actual analyses have the same CRS
                  if (compareCRS(Cwood_increment,target) == FALSE) {
                      # Resample to correct grid
-                     Cwood_increment = resample(Cwood_increment, target, method="ngb", na.rm=TRUE) ; gc() ; removeTmpFiles()
-                     Cwood_increment_uncertainty = resample(Cwood_increment_uncertainty, target, method="ngb", na.rm=TRUE) ; gc() ; removeTmpFiles()
+                     Cwood_increment = resample(Cwood_increment, target, method="ngb") ; gc() ; removeTmpFiles()
+                     Cwood_increment_uncertainty = resample(Cwood_increment_uncertainty, target, method="ngb") ; gc() ; removeTmpFiles()
                  }
                  # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
                  if (spatial_type == "grid") {
-                     if (res(Cwood_increment) < res(cardamom_ext)) {
+                     if (res(Cwood_increment)[1] < res(cardamom_ext)[1] | res(Cwood_increment)[2] < res(cardamom_ext)[2]) {
+
+                         # Create raster with the target resolution
+                         target = raster(crs = crs(cardamom_ext), ext = extent(Cwood_increment), resolution = res(cardamom_ext))
+
                          # Resample to correct grid
-                         Cwood_increment = resample(Cwood_increment, res = res(cardamom_ext), method="bilinear", na.rm=TRUE) ; gc() ; removeTmpFiles()
-                         Cwood_increment_uncertainty = resample(Cwood_increment_uncertainty, res = res(cardamom_ext), method="bilinear", na.rm=TRUE) ; gc() ; removeTmpFiles()
-                     }
-                 }
+                         Cwood_increment = resample(Cwood_increment, target, method="bilinear") ; gc() ; removeTmpFiles()
+                         Cwood_increment_uncertainty = resample(Cwood_increment_uncertainty, target, method="bilinear") ; gc() ; removeTmpFiles()
+
+                     } # Aggrgeate to resolution
+                 } # spatial_type == "grid"
 
                  # If the first file to be read extract the lat / long information
                  if (done_lat == FALSE) {
@@ -193,6 +180,7 @@ load_wood_productivity_maps_for_extraction<-function(Cwood_inc_source,latlon_in,
         Cwood_increment_gCm2 = array(Cwood_increment_gCm2, dim=c(idim,jdim,tdim))
         Cwood_increment_uncertainty_gCm2 = array(Cwood_increment_uncertainty_gCm2, dim=c(idim,jdim,tdim))
         Cwood_increment_lag_step = array(Cwood_increment_lag_step, dim=c(idim,jdim,tdim))
+
         if (done_lat) {
             # Output variables
             return(list(place_obs_in_step = place_obs_in_step, lat = lat, long = long,

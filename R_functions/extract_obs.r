@@ -212,7 +212,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         # If there are any values in the analysis window
         if (max(Cwood_inc_all$place_obs_in_step) > 0) {
             # Extract the current location
-            output = extract_wood_productivity(timestep_days,spatial_type,resolution,grid_type,latlon_in,Cwood_inc_all)
+            output = extract_wood_productivity(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_inc_all)
             Cwood_inc = output$Cwood_inc ; Cwood_inc_unc = output$Cwood_inc_unc ; Cwood_inc_lag = output$Cwood_inc_lag
             # Tidy up
             rm(output)
@@ -606,9 +606,10 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         deforestation = read_site_specific_obs("deforestation_fraction",infile)
         forest_management = read_site_specific_obs("management_type",infile)
-        yield_class = 0 #read_site_specific_obs("yield_class",infile)
+        if (length(forest_management) == 1) {forest_management = 2}
+        yield_class = -9999 #read_site_specific_obs("yield_class",infile)
         age = read_site_specific_obs("age",infile)
-        age = age[1] # we only want the age at the beginning of the simulation
+        if (length(age) > 1) {age = age[1]} # we only want the age at the beginning of the simulation
     } else if (deforestation_source == "combined_dataset" | deforestation_source == "GFW") {
         output = extract_forestry_information(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,forest_all,start_year,end_year,ctessel_pft)
         ctessel_pft = output$ctessel_pft
