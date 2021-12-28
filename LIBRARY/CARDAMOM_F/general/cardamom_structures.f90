@@ -64,7 +64,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                                           ,NBE_unc                 ! gC/m2/day
 
       ! OBS lagged period: obs these must be paired with OBS and their uncertainties above
-      double precision, allocatable, dimension(:) :: Cwood_inc_lag
+      double precision, allocatable, dimension(:) :: Cwood_inc_lag, Cwood_mortality_lag
 
       ! location of observations in the data stream
       integer, allocatable, dimension(:) :: gpppts                   & ! gpppts vector used in deriving ngpp
