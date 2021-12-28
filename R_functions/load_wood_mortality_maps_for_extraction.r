@@ -34,7 +34,7 @@ load_wood_mortality_maps_for_extraction<-function(Cwood_mortality_source,cardamo
     if (Cwood_mortality_source == "Rainfor") {
 
         # this is a very bespoke modification so leave it here to avoid getting lost
-        print("Loading Rainfor wood productivity maps maps")
+        print("Loading Rainfor wood mortality maps maps")
 
         # Create the full file paths estimates and their uncertainty (MgC/ha)
         input_file = list.files(path_to_Cwood_mortality)
@@ -42,13 +42,13 @@ load_wood_mortality_maps_for_extraction<-function(Cwood_mortality_source,cardamo
         # The \\ also specifies that the . is not to be considered a wildcard
         input_file = input_file[grepl("\\.tif$",input_file) == TRUE]
         # Extract the uncertainty files from the original list
-        unc_input_file = input_file[grepl("unc_wood_productivity_gCm2",input_file) == TRUE]
-        input_file = input_file[grepl("unc_wood_productivity_gCm2",input_file) == FALSE]
+        unc_input_file = input_file[grepl("unc_wood_mortality_gCm2",input_file) == TRUE]
+        input_file = input_file[grepl("unc_wood_mortality_gCm2",input_file) == FALSE]
         # Check that we have the same number of files for both biomass and uncertainty
         if (length(input_file) != length(unc_input_file)) {stop("Different number of observation and uncertainty files found...")}
 
         # Extract timing information
-        years_with_obs = gsub("wood_productivity_gCm2_","",input_file)
+        years_with_obs = gsub("wood_mortality_gCm2_","",input_file)
         years_with_obs = gsub("\\.tif$","",years_with_obs)
         # These files have two years provided, defining the beginning and ending of the averaging periods
         endings = rep(NA,length(years_with_obs)) ; avg_period_of_obs = rep(NA,length(years_with_obs))
