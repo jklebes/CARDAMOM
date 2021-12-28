@@ -30,6 +30,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                                           ,NEE               & ! NEE (gC.m-2.day-1)
                                           ,LAI               & ! LAI (m2/m2)
                                           ,Cwood_inc         & ! Wood increment observations (gC.m-2.day-1, averaged across a lagged period)
+                                          ,Cwood_mortality   & ! Natural wood mortality observations (gC.m-2.day-1, averaged across a lagged period)
                                           ,Reco              & ! Ecosystem respiration (gC.m-2.day-1)
                                           ,Cfol_stock        & ! time specific estimate of foliage carbon (gC.m-2)
                                           ,Cwood_stock       & ! time specific estimate of wood carbon (gC.m-2)
@@ -48,6 +49,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                                           ,NEE_unc               & ! (gC/m2/day)
                                           ,LAI_unc               & ! (m2/m2)
                                           ,Cwood_inc_unc         & ! (gC.m-2.day-1, averaged across a lagged period)
+                                          ,Cwood_mortality_unc   & ! (gC.m-2.day-1, averaged across a lagged period)
                                           ,Reco_unc              & ! (gC/m2/day)
                                           ,Cfol_stock_unc        & ! gC/m2
                                           ,Cwood_stock_unc       & ! gC/m2
@@ -68,6 +70,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
       integer, allocatable, dimension(:) :: gpppts                   & ! gpppts vector used in deriving ngpp
                                            ,neepts                   & ! same for nee
                                            ,Cwood_incpts             & ! same for wood increment
+                                           ,Cwood_mortalitypts       & ! same for natural wood mortality
                                            ,laipts                   & ! same for lai
                                            ,recopts                  & ! same for ecosystem respiration
                                            ,Cfol_stockpts            & ! same for Cfoliage
@@ -90,6 +93,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                 ,nnee                   & ! number of NEE observations
                 ,nlai                   & ! number of LAI observations
                 ,nCwood_inc             & ! number of wood increment obervations
+                ,nCwood_mortality       & ! number of wood mortality obervations
                 ,nreco                  & ! number of Reco observations
                 ,nCfol_stock            & ! number of Cfol observations
                 ,nCwood_stock           & ! number of Cwood observations
@@ -101,23 +105,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                 ,nCfolmax_stock         & ! number of seasonal maximum foliar C
                 ,nEvap                  & ! number of ecosystem evaporation observations
                 ,nSWE                   & ! number of snow water equivalent
-                ,nNBE                   & ! number of net biome exchange of CO2
-                ,sub_ngpp               & ! As above but for a subsample of observations
-                ,sub_nnee               & !
-                ,sub_nlai               & !
-                ,sub_nwoo               & !
-                ,sub_nreco              & !
-                ,sub_nCfol_stock        & !
-                ,sub_nCwood_stock       & !
-                ,sub_nCroots_stock      & !
-                ,sub_nCsom_stock        & !
-                ,sub_nCagb_stock        & !
-                ,sub_nClit_stock        & !
-                ,sub_nCcoarseroot_stock & !
-                ,sub_nCfolmax_stock     & !
-                ,sub_nEvap              &
-                ,sub_nSWE               &
-                ,sub_nNBE
+                ,nNBE                     ! number of net biome exchange of CO2
 
       ! saving computational speed by allocating memory to model output
       double precision, allocatable, dimension(:) :: M_GPP    & !

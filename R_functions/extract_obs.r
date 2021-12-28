@@ -9,7 +9,7 @@
 extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
                      ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                      ,sand_clay_all,crop_man_all,burnt_all,soilwater_all,nbe_all
-                     ,lca_all,gpp_all,Cwood_inc_all
+                     ,lca_all,gpp_all,Cwood_inc_all,Cwood_mortality_all
                      ,ctessel_pft,site_name,start_year,end_year
                      ,timestep_days,spatial_type,resolution,grid_type,modelname) {
 
@@ -188,7 +188,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     }
 
     ###
-    ## Get some Wood increment information (gC/m2/yr; time series)
+    ## Get some Wood increment information (gC/m2/day; time series)
     ###
 
     if (Cwood_inc_source == "site_specific") {
@@ -226,6 +226,48 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     }
     # Assumed uncertainty structure as agreed with Anthony Bloom
     Cwood_inc_unc[Cwood_inc_unc >= 0] = sqrt(Cwood_inc_unc[Cwood_inc_unc >= 0]**2 + (0.1*mean(Cwood_inc_unc[Cwood_inc_unc >= 0]))**2)
+
+    ###
+    ## Get some Wood natural mortality information (gC/m2/day; time series)
+    ###
+
+    if (Cwood_mortality_source == "site_specific") {
+        infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
+        Cwood_mortality=read_site_specific_obs("Cwood_mortality_gCm2day",infile)
+        Cwood_mortality_unc=read_site_specific_obs("Cwood_mortality_uncertainty_gCm2day",infile)
+        Cwood_mortality_lag=read_site_specific_obs("Cwood_mortality_lag_step",infile) # in model time steps
+        # Has uncertainty information been provided?
+        if (length(Cwood_mortality_unc) == 1) {
+            # on the other hand if not then we have no uncertainty info, so use default
+            Cwood_mortality_unc = rep(-9999,times = length(Cwood_mortality))
+            Cwood_mortality_unc[which(Cwood_mortality > 0)] = 0.25 * Cwood_mortality[which(Cwood_mortality > 0)]
+        }
+        # Has lag information been provided
+        if (length(Cwood_mortality_lag) == 1) {
+            # on the other hand if not then we have no uncertainty info, so use default
+            Cwood_mortality_lag = rep(-9999,times = length(Cwood_mortality))
+            Cwood_mortality_lag[which(Cwood_mortality > 0)] = 1 # assume applies to current time step only
+        }
+    } else if (Cwood_mortality_source == "Rainfor") {
+        # If there are any values in the analysis window
+        if (max(Cwood_mortality_all$place_obs_in_step) > 0) {
+            # Extract the current location
+            output = extract_wood_mortality(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_mortality_all)
+            Cwood_mortality = output$Cwood_mortality
+            Cwood_mortality_unc = output$Cwood_mortality_unc
+            Cwood_mortality_lag = output$Cwood_mortality_lag
+            # Tidy up
+            rm(output)
+        } else {
+            # assume no data available
+            Cwood_mortality = -9999 ; Cwood_mortality_unc = -9999 ; Cwood_mortality_lag = -9999
+        }
+    } else {
+        # assume no data available
+        Cwood_mortality = -9999 ; Cwood_mortality_unc = -9999 ; Cwood_mortality_lag = -9999
+    }
+    # Assumed uncertainty structure as agreed with Anthony Bloom
+    Cwood_mortality_unc[Cwood_mortality_unc >= 0] = sqrt(Cwood_mortality_unc[Cwood_mortality_unc >= 0]**2 + (0.1*mean(Cwood_mortality_unc[Cwood_mortality_unc >= 0]))**2)
 
     ###
     ## Get some GPP information (time series; gC/m2/day)
@@ -728,7 +770,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
                ,bot_clay = bot_clay, plant = plant, plant_range = plant_range, harvest = harvest, harvest_range = harvest_range
                ,SWE = SWE, SWE_unc = SWE_unc, soilwater = soilwater, soilwater_unc = soilwater_unc, nbe = nbe, nbe_unc = nbe_unc
                ,Cwood_potential = Cwood_potential, Cwood_potential_unc = Cwood_potential_unc, lca = lca, lca_unc = lca_unc
-               ,Cwood_inc = Cwood_inc, Cwood_inc_unc = Cwood_inc_unc, Cwood_inc_lag = Cwood_inc_lag))
+               ,Cwood_inc = Cwood_inc, Cwood_inc_unc = Cwood_inc_unc, Cwood_inc_lag = Cwood_inc_lag
+               ,Cwood_mortality = Cwood_mortality, Cwood_mortality_unc = Cwood_mortality_unc, Cwood_mortality_lag = Cwood_mortality_lag))
 
 
 } # end function extract_obs

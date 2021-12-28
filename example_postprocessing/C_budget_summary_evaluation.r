@@ -95,23 +95,29 @@ fudgeit <- function(){
 
 # PointsOfChange
 
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_isimip3a_lca_gpp_nbe/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_isimip3a_lca_gpp_nbe/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_isimip3a_lca_gpp/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/Miombo_0.25deg_allWood/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_AGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_actualCI_agb/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_gpp/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_nbe/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_nbe_RaGPPhighConf/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_agb_nbe_gpp/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_agb_nbe/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_agb_gpp/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_agb_nbe_gpp/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/NoRainfor_woody_productivity_mortality/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Rainfor_woody_productivity_mortality/infofile.RData")
+
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_parameter_maps.RData",sep=""))
 
 # Set output path for figures and tables
-out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_1deg_C7_isimip/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_1deg_C7_isimip/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/figures_africa/"
 #out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
+out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/cssp_brazil_2/figures_productivity_without_vs_with/"
 
 # Specify the position within the stored ensemble for the median estimate and the desired uncertainty bands
 mid_quant = 4 ; low_quant = 2 ; high_quant = 6
@@ -150,7 +156,7 @@ landmask = shapefile("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/R_functions
 landmask = spTransform(landmask,crs(cardamom_ext))
 # subset by continent (could also do by country)
 #landmask = subset(landmask, CONTINENT == "South America") # Change continent to target area or comment out if spanning zones
-#landmask = subset(landmask, CONTINENT == "Africa") # Change continent to target area or comment out if spanning zones
+landmask = subset(landmask, CONTINENT == "Africa") # Change continent to target area or comment out if spanning zones
 # Clip to the extent of the CARDAMOM analysis
 landmask = crop(landmask, cardamom_ext)
 
@@ -505,6 +511,7 @@ for (c in seq(1, grid_parameters$nos_clusters)) {
     grid_output$gpp_TgCyr          = apply(grid_output$mean_gpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
     grid_output$rauto_TgCyr        = apply(grid_output$mean_rauto_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
     grid_output$rhet_TgCyr         = apply(grid_output$mean_rhet_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    grid_output$npp_TgCyr          = apply(grid_output$mean_npp_gCm2day*array(landfilter*area,dim = dims)*1e-2*365.25,3,sum, na.rm=TRUE)
     grid_output$nbe_TgCyr          = apply(grid_output$mean_nbe_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
     grid_output$nee_TgCyr          = apply(grid_output$mean_nee_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
     grid_output$fire_TgCyr         = apply(grid_output$mean_fire_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
@@ -568,6 +575,24 @@ for (c in seq(1, grid_parameters$nos_clusters)) {
         output$wood_litter_TgC = grid_output$litwood_TgC
         output$dClitwood_gCm2yr = grid_output$dClitwood_gCm2yr
     } # wood litter is simulated
+    if (length(which(names(grid_output) == "mean_rhet_litter_gCm2")) > 0) {
+        # Create variables
+        grid_output$rhet_litter_TgCyr = apply(grid_output$mean_rhet_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+        # Assign to data.frame
+        output$Rhet_litter_TgCyr = grid_output$rhet_litter_TgCyr
+    } # litter respiration is output
+    if (length(which(names(grid_output) == "mean_rhet_som_gCm2")) > 0) {
+        # Create variables
+        grid_output$rhet_som_TgCyr = apply(grid_output$mean_rhet_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+        # Assign to data.frame
+        output$Rhet_som_TgCyr = grid_output$rhet_som_TgCyr
+    } # som respiration is output
+    if (length(which(names(grid_output) == "mean_rhet_som_gCm2")) > 0) {
+        # Create variables
+        grid_output$decomp_som_TgCyr = apply(grid_output$mean_decomp_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+        # Assign to data.frame
+        output$Decomp_litter_TgCyr = grid_output$decomp_litter_TgCyr
+    } # litter decomposition to som is output          
 
     # Write out C budget
     write.table(output, file = paste(out_dir,"/",PROJECT$name,"_cluster_",c,"_C_budget.csv",sep=""), row.names=FALSE, sep=",",append=FALSE)
@@ -649,7 +674,25 @@ if (length(which(names(grid_output) == "mean_litwood_gCm2")) > 0) {
     output$wood_litter_TgC = grid_output$litwood_TgC
     output$dClitwood_gCm2yr = grid_output$dClitwood_gCm2yr
 } # wood litter is simulated
-
+if (length(which(names(grid_output) == "mean_rhet_litter_gCm2")) > 0) {
+    # Create variables
+    grid_output$rhet_litter_TgCyr = apply(grid_output$mean_rhet_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    # Assign to data.frame
+    output$Rhet_litter_TgCyr = grid_output$rhet_litter_TgCyr
+} # litter respiration is output
+if (length(which(names(grid_output) == "mean_rhet_som_gCm2")) > 0) {
+    # Create variables
+    grid_output$rhet_som_TgCyr = apply(grid_output$mean_rhet_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    # Assign to data.frame
+    output$Rhet_som_TgCyr = grid_output$rhet_som_TgCyr
+} # som respiration is output
+if (length(which(names(grid_output) == "mean_rhet_som_gCm2")) > 0) {
+    # Create variables
+    grid_output$decomp_som_TgCyr = apply(grid_output$mean_decomp_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    # Assign to data.frame
+    output$Decomp_litter_TgCyr = grid_output$decomp_litter_TgCyr
+} # litter decomposition to som is output          
+    
 # Write out C budget
 write.table(output, file = paste(out_dir,"/",PROJECT$name,"_C_budget.csv",sep=""), row.names=FALSE, sep=",",append=FALSE)
 

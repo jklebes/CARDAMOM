@@ -423,21 +423,8 @@ module model_likelihood_module
     ! IMPLICIT Combustion completeness for foliage should be greater than soil
     ! IMPLICIT Combustion completeness for fol+root litter should be greater than soil
 
-!    ! Combustion completeness for foliage should be greater than non-photosynthetic tissues
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(29) < pars(30)) then
-!       EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
-!    endif
-!    ! Combustion completeness for non-photosynthetic tissue should be greater than soil
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(30) < pars(31)) then
-!       EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
-!    endif
-!    ! Combustion completeness for foliar + fine root litter should be greater than non-photosynthetic tissue
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(30)) then
-!       EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
-!    endif
-
-    ! Combustion completeness for photosynthetic tissue should be greater than soil
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(29) < pars(31)) then
+    ! Combustion completeness for foliage should be greater than non-photosynthetic tissues
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(29) < pars(30)) then
        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
     endif
     ! Combustion completeness for non-photosynthetic tissue should be greater than soil
@@ -999,7 +986,7 @@ module model_likelihood_module
     double precision, dimension(npars), intent(in) :: pars
 
     ! declare local variables
-    integer :: n, dn, no_years, y
+    integer :: n, dn, no_years, y, s
     double precision :: tot_exp, tmp_var, infini, input, output
     double precision, dimension(DATAin%nodays) :: mid_state
     double precision, allocatable :: mean_annual_pools(:)
@@ -1077,11 +1064,25 @@ module model_likelihood_module
        tot_exp = 0d0
        do n = 1, DATAin%nCwood_inc
          dn = DATAin%Cwood_incpts(n)
+         s = max(0,dn-nint(DATAin%Cwood_inc_lag(dn)))+1
          ! Estimate the mean allocation to wood over the lag period
-         tmp_var = sum(DATAin%M_FLUXES((dn-nint(DATAin%Cwood_inc_lag(dn))+1):dn,7)) / DATAin%Cwood_inc_lag(dn)
+         tmp_var = sum(DATAin%M_FLUXES(s:dn,7)) / DATAin%Cwood_inc_lag(dn)
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_inc(dn)) / DATAin%Cwood_inc_unc(dn))**2
        end do
        likelihood = likelihood-tot_exp
+    endif
+
+    ! Cwood mortality log-likelihood
+    if (DATAin%nCwood_mortality > 0) then
+       tot_exp = 0d0
+       do n = 1, DATAin%nCwood_mortality
+         dn = DATAin%Cwood_mortalitypts(n)
+         s = max(0,dn-nint(DATAin%Cwood_mortality_lag(dn)))+1
+         ! Estimate the mean allocation to wood over the lag period
+         tmp_var = sum(DATAin%M_FLUXES(s:dn,11)) / DATAin%Cwood_mortality_lag(dn)
+         tot_exp = tot_exp+((tmp_var-DATAin%Cwood_mortality(dn)) / DATAin%Cwood_mortality_unc(dn))**2
+       end do
+       likelihood = likelihood-(tot_exp/dble(DATAin%nCwood_mortality))
     endif
 
     ! Cfoliage log-likelihood
@@ -1242,7 +1243,7 @@ module model_likelihood_module
     double precision, dimension(npars), intent(in) :: pars
 
     ! declare local variables
-    integer :: n, dn, no_years, y
+    integer :: n, dn, no_years, y, s
     double precision :: tot_exp, tmp_var, infini, input, output
     double precision, allocatable :: mean_annual_pools(:)
 
@@ -1313,11 +1314,26 @@ module model_likelihood_module
        tot_exp = 0d0
        do n = 1, DATAin%nCwood_inc
          dn = DATAin%Cwood_incpts(n)
+         s = max(0,dn-nint(DATAin%Cwood_inc_lag(dn)))+1
          ! Estimate the mean allocation to wood over the lag period
-         tmp_var = sum(DATAin%M_FLUXES((dn-nint(DATAin%Cwood_inc_lag(dn))+1):dn,7)) / DATAin%Cwood_inc_lag(dn)
+         tmp_var = sum(DATAin%M_FLUXES(s:dn,7)) / DATAin%Cwood_inc_lag(dn)
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_inc(dn)) / DATAin%Cwood_inc_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCwood_inc))
+    endif
+
+
+    ! Cwood mortality log-likelihood
+    if (DATAin%nCwood_mortality > 0) then
+       tot_exp = 0d0
+       do n = 1, DATAin%nCwood_mortality
+         dn = DATAin%Cwood_mortalitypts(n)
+         s = max(0,dn-nint(DATAin%Cwood_mortality_lag(dn)))+1
+         ! Estimate the mean allocation to wood over the lag period
+         tmp_var = sum(DATAin%M_FLUXES(s:dn,11)) / DATAin%Cwood_mortality_lag(dn)
+         tot_exp = tot_exp+((tmp_var-DATAin%Cwood_mortality(dn)) / DATAin%Cwood_mortality_unc(dn))**2
+       end do
+       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCwood_mortality))
     endif
 
     ! Cfoliage log-likelihood

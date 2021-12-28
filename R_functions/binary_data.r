@@ -185,6 +185,9 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   OBSMAT[,37] = OBS$Cwood_inc             # Mean woody productivity / increment over lag period (gC/m2/day)
   OBSMAT[,38] = OBS$Cwood_inc_unc         # Mean woody productivity / increment varince
   OBSMAT[,39] = OBS$Cwood_inc_lag         # Lag period over which to average  (steps)
+  OBSMAT[,40] = OBS$Cwood_mortality       # Mean woody natural mortality over lag period (gC/m2/day)
+  OBSMAT[,41] = OBS$Cwood_mortality_unc   # Mean woody natural mortality varince
+  OBSMAT[,42] = OBS$Cwood_mortality_lag   # Lag period over which to average  (steps)
   DATA_TEMP = t(cbind(MET,OBSMAT))
 
   # STATIC DATA (1-100)
@@ -282,7 +285,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       # Other priors
       OTHERPRIORS[5] = OBS$Cwood_potential     ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
   } else if (modelname == "DALEC_CDEA_ACM2_BUCKET") {
-      PARPRIORS[2] = 0.46                ; PARPRIORUNC[2] = 0.5*0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+      PARPRIORS[2] = 0.46                ; PARPRIORUNC[2] = 0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
 #      PARPRIORS[11]=1.89*14.77735       ; PARPRIORUNC[11]=1.89*0.4696238*2 # Derived from ACM2 recalibration.
                                                                     # Note despite having the same name as ecosystem property of Amax per gN or SPA's kappaC
                                                                     # These observational constraints are not the same and would lead to

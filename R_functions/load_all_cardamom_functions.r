@@ -22,6 +22,7 @@ load_r_libraries<-function(){
     require(compiler)
     require(RColorBrewer)
     require(colorspace)
+    require(maps)
 } # function to load all libraries needed by the system
 
 ###

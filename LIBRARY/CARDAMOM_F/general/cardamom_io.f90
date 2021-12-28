@@ -650,7 +650,7 @@ module cardamom_io
 
     ! declare local variables
     integer :: nopars_dummy,subsample
-    integer :: a,b,c,d,e,f,g,h,i,j,k,l,m,o,x,y,z,day,s,t &
+    integer :: a,b,c,d,e,f,g,h,i,j,k,l,m,o,p,q,r,u,v,w,x,y,z,day,s,t &
               ,start      &
               ,finish     &
               ,totcol     & ! total number of columns (met + obs)
@@ -746,6 +746,7 @@ module cardamom_io
             ,DATAin%Csom_stock(DATAin%nodays),DATAin%Cagb_stock(DATAin%nodays)                   &
             ,DATAin%GPP_unc(DATAin%nodays)                                                       &
             ,DATAin%NEE_unc(DATAin%nodays),DATAin%LAI_unc(DATAin%nodays)                         &
+            ,DATAin%Cwood_mortality(DATAin%nodays)                                               &
             ,DATAin%Cwood_inc_unc(DATAin%nodays),DATAin%Reco_unc(DATAin%nodays)                  &
             ,DATAin%Cfol_stock_unc(DATAin%nodays),DATAin%Cwood_stock_unc(DATAin%nodays)          &
             ,DATAin%Croots_stock_unc(DATAin%nodays),DATAin%Clit_stock_unc(DATAin%nodays)         &
@@ -755,7 +756,8 @@ module cardamom_io
             ,DATAin%Evap(DATAin%nodays),DATAin%Evap_unc(DATAin%nodays)                           &
             ,DATAin%SWE(DATAin%nodays),DATAin%SWE_unc(DATAin%nodays)                             &
             ,DATAin%NBE(DATAin%nodays),DATAin%NBE_unc(DATAin%nodays)                             &
-            ,DATAin%Cwood_inc_lag(DATAin%nodays)                                                 &
+            ,DATAin%Cwood_mortality_unc(DATAin%nodays)                                           &
+            ,DATAin%Cwood_inc_lag(DATAin%nodays),DATAin%Cwood_mortality_lag(DATAin%nodays)       &
             ,mettemp(DATAin%nomet),obstemp(DATAin%noobs))
 
     !! Zero all variables
@@ -779,6 +781,7 @@ module cardamom_io
     DATAin%NBE = 0d0               ; DATAin%NBE_unc = 0d0
     ! Observations which have an explicit lag, i.e. they represent the average of a to be specified period
     DATAin%Cwood_inc = 0d0 ; DATAin%Cwood_inc_unc = 0d0 ; DATAin%Cwood_inc_lag = 0
+    DATAin%Cwood_mortality = 0d0 ; DATAin%Cwood_mortality_unc = 0d0 ; DATAin%Cwood_mortality_lag = 0
     ! Temorary arrays
     mettemp = 0d0 ; obstemp = 0d0
 
@@ -788,6 +791,7 @@ module cardamom_io
     DATAin%nlai = 0
     DATAin%nnee = 0
     DATAin%nCwood_inc = 0
+    DATAin%nCwood_mortality = 0
     DATAin%nreco = 0
     DATAin%nCfol_stock = 0
     DATAin%nCwood_stock = 0
@@ -926,6 +930,12 @@ module cardamom_io
        DATAin%Cwood_inc_unc(day) = obstemp(38)
        DATAin%Cwood_inc_lag(day) = obstemp(39)
 
+       ! Woody natural mortality (gC/m2/day)
+       ! Represents the average across the lagged period
+       DATAin%Cwood_mortality(day) = obstemp(40)
+       if (obstemp(40) > -9998d0) DATAin%nCwood_mortality = DATAin%nCwood_mortality+1
+       DATAin%Cwood_mortality_unc(day) = obstemp(41)
+       DATAin%Cwood_mortality_lag(day) = obstemp(42)
     end do ! day loop
 
     ! Count the total number of observations which are to be used.
@@ -934,7 +944,8 @@ module cardamom_io
                      + DATAin%nCwood_inc + DATAin%nreco + DATAin%nCfol_stock &
                      + DATAin%nCwood_stock + DATAin%nCroots_stock + DATAin%nCsom_stock &
                      + DATAin%nClit_stock + DATAin%nCagb_stock + DATAin%nCcoarseroot_stock &
-                     + DATAin%nCfolmax_stock + DATAin%nEvap + DATAin%nSWE + DATAin%nNBE
+                     + DATAin%nCfolmax_stock + DATAin%nEvap + DATAin%nSWE + DATAin%nNBE &
+                     + DATAin%nCwood_mortality
 
     ! allocate to time step
     allocate(DATAin%deltat(DATAin%nodays)) ; DATAin%deltat = 0d0
@@ -966,7 +977,8 @@ module cardamom_io
     if (DATAin%nEvap > 0) allocate(DATAin%Evappts(DATAin%nEvap))
     if (DATAin%nSWE > 0) allocate(DATAin%SWEpts(DATAin%nSWE))
     if (DATAin%nNBE > 0) allocate(DATAin%NBEpts(DATAin%nNBE))
-    if (DATAin%nCwood_inc > 0) allocate(DATAin%Cwood_incpts(DATAin%nNBE))
+    if (DATAin%nCwood_inc > 0) allocate(DATAin%Cwood_incpts(DATAin%nCwood_inc))
+    if (DATAin%nCwood_mortality > 0) allocate(DATAin%Cwood_mortalitypts(DATAin%nCwood_mortality))
     ! we know how many observations we have and what they are, but now lets work
     ! out where they are in the data sets
     x = 1 ; y = 1 ; z = 1 ; b = 1 ; c = 1 ; d = 1 ; e = 1
@@ -984,6 +996,9 @@ module cardamom_io
        endif
        if (DATAin%Cwood_inc(day) > -9998d0) then
            DATAin%Cwood_incpts(z) = day ; z = z+1
+       endif ! data present condition
+       if (DATAin%Cwood_mortality(day) > -9998d0) then
+           DATAin%Cwood_mortalitypts(w) = day ; w = w+1
        endif ! data present condition
        if (DATAin%Reco(day) > -9998d0) then
            DATAin%recopts(c) = day ; c = c+1

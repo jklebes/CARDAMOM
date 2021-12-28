@@ -70,7 +70,7 @@ load_lca_maps_for_extraction<-function(latlon_in,lca_source) {
         # Re-construct arrays for output
         idim = dim(lat)[1] ; jdim = dim(long)[2]
         lca_gCm2 = array(lca_gCm2, dim=c(idim,jdim))
-        lca_uncertainty_gCm2 = array(lca_uncertainty_gCm2, dim=c(idim,jdim))
+        lca_uncertainty_gCm2 = array(lca_uncertainty_gCm2*0.5, dim=c(idim,jdim))
 
         # Output variables
         return(list(lat = lat, long = long, lca_gCm2 = lca_gCm2, lca_uncertainty_gCm2 = lca_uncertainty_gCm2))
