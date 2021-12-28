@@ -203,4 +203,4 @@ load_wood_mortality_maps_for_extraction<-function(Cwood_mortality_source,cardamo
 } # function end load_biomass_stocks_maps_for_extraction
 
 ## Use byte compile
-load_wood_mortality_maps_for_extraction<-cmpfun(load_wood_productivity_maps_for_extraction)
+load_wood_mortality_maps_for_extraction<-cmpfun(load_wood_mortality_maps_for_extraction)
