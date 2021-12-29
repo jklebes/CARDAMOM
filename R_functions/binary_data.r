@@ -143,7 +143,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   # Currently space for 18 time series of observation and its uncertainty.
   # Uncertainty is assumed to be the Gaussian variance in same units as the observation itself.
   # NOTE: that not all models are currently coded to be compatible with all observation streams.
-  OBSMAT = array(-9999.0,dim=c(length(met$run_day),39))
+  OBSMAT = array(-9999.0,dim=c(length(met$run_day),42))
   # Line makes the correct array size but with -9999 in place of all
   OBSMAT[,1] = OBS$GPP                    # GPP (gC/m2/day)
   OBSMAT[,2] = OBS$GPP_unc                # GPP variance (gC/m2/day)
