@@ -756,6 +756,7 @@ module cardamom_io
             ,DATAin%Evap(DATAin%nodays),DATAin%Evap_unc(DATAin%nodays)                           &
             ,DATAin%SWE(DATAin%nodays),DATAin%SWE_unc(DATAin%nodays)                             &
             ,DATAin%NBE(DATAin%nodays),DATAin%NBE_unc(DATAin%nodays)                             &
+            ,DATAin%Fire(DATAin%nodays),DATAin%Fire_unc(DATAin%nodays)                           &
             ,DATAin%Cwood_mortality_unc(DATAin%nodays)                                           &
             ,DATAin%Cwood_inc_lag(DATAin%nodays),DATAin%Cwood_mortality_lag(DATAin%nodays)       &
             ,mettemp(DATAin%nomet),obstemp(DATAin%noobs))
@@ -779,6 +780,7 @@ module cardamom_io
     DATAin%Evap = 0d0              ; DATAin%Evap_unc = 0d0
     DATAin%SWE = 0d0               ; DATAin%SWE_unc = 0d0
     DATAin%NBE = 0d0               ; DATAin%NBE_unc = 0d0
+    DATAin%Fire = 0d0              ; DATAin%Fire_unc = 0d0
     ! Observations which have an explicit lag, i.e. they represent the average of a to be specified period
     DATAin%Cwood_inc = 0d0 ; DATAin%Cwood_inc_unc = 0d0 ; DATAin%Cwood_inc_lag = 0
     DATAin%Cwood_mortality = 0d0 ; DATAin%Cwood_mortality_unc = 0d0 ; DATAin%Cwood_mortality_lag = 0
@@ -804,6 +806,7 @@ module cardamom_io
     DATAin%nEvap = 0
     DATAin%nSWE = 0
     DATAin%nNBE = 0
+    DATAin%nFire = 0
 
     ! work out some key variables
     ! DATAin%noobs corresponds to observations and uncertainties
@@ -845,13 +848,11 @@ module cardamom_io
        if (obstemp(5) > -9998d0) DATAin%nnee = DATAin%nnee+1
        DATAin%NEE_unc(day) = obstemp(6)
 
-! POSITION 7-8 no longer have matching points in code.
-! These can be re-allocated at a future point
-! TLS: 07/12/2021
-!       DATAin%WOO(day) = obstemp(7)
-!       if (obstemp(7) > -9998d0) DATAin%nwoo = DATAin%nwoo+1
-!       DATAin%WOO_unc(day) = obstemp(8)
-!
+       ! Fire emissions of C (gC/m2day)
+       DATAin%Fire(day) = obstemp(7)
+       if (obstemp(7) > -9998d0) DATAin%nFire = DATAin%nFire+1
+       DATAin%Fire_unc(day) = obstemp(8)
+
        ! Ecosystem respiration (Reco, gC/m2/day)
        DATAin%Reco(day) = obstemp(9)
        if (obstemp(9) > -9998d0) DATAin%nreco = DATAin%nreco+1
@@ -945,7 +946,7 @@ module cardamom_io
                      + DATAin%nCwood_stock + DATAin%nCroots_stock + DATAin%nCsom_stock &
                      + DATAin%nClit_stock + DATAin%nCagb_stock + DATAin%nCcoarseroot_stock &
                      + DATAin%nCfolmax_stock + DATAin%nEvap + DATAin%nSWE + DATAin%nNBE &
-                     + DATAin%nCwood_mortality
+                     + DATAin%nCwood_mortality + DATAin%nFire
 
     ! allocate to time step
     allocate(DATAin%deltat(DATAin%nodays)) ; DATAin%deltat = 0d0
@@ -979,6 +980,7 @@ module cardamom_io
     if (DATAin%nNBE > 0) allocate(DATAin%NBEpts(DATAin%nNBE))
     if (DATAin%nCwood_inc > 0) allocate(DATAin%Cwood_incpts(DATAin%nCwood_inc))
     if (DATAin%nCwood_mortality > 0) allocate(DATAin%Cwood_mortalitypts(DATAin%nCwood_mortality))
+    if (DATAin%nFire > 0) allocate(DATAin%Firepts(DATAin%nFire))
     ! we know how many observations we have and what they are, but now lets work
     ! out where they are in the data sets
     x = 1 ; y = 1 ; z = 1 ; b = 1 ; c = 1 ; d = 1 ; e = 1
@@ -1036,6 +1038,9 @@ module cardamom_io
        if (DATAin%NBE(day) > -9998d0) then
            DATAin%NBEpts(t) = day ; t = t + 1
        endif
+       if (DATAin%Evap(day) > -9998d0) then
+           DATAin%Evappts(v) = day ; v = v+1
+       endif ! data present condition
     end do ! day loop
 
     ! timestep mean temperature (oC)

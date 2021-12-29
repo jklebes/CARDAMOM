@@ -1012,7 +1012,14 @@ module model_likelihood_module
     ! Evap Log-likelihood
     if (DATAin%nEvap > 0) then
        tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),29)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
-                       /DATAin%Evap_unc(DATAin%evappts(1:DATAin%nEvap)))**2)
+                       /DATAin%Evap_unc(DATAin%Evappts(1:DATAin%nEvap)))**2)
+       likelihood = likelihood-tot_exp
+    endif
+
+    ! Fire Log-likelihood
+    if (DATAin%nFire > 0) then
+       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Evap(DATAin%Firepts(1:DATAin%nFire))) &
+                       /DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2)
        likelihood = likelihood-tot_exp
     endif
 
@@ -1082,7 +1089,7 @@ module model_likelihood_module
          tmp_var = sum(DATAin%M_FLUXES(s:dn,11)) / DATAin%Cwood_mortality_lag(dn)
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_mortality(dn)) / DATAin%Cwood_mortality_unc(dn))**2
        end do
-       likelihood = likelihood-(tot_exp/dble(DATAin%nCwood_mortality))
+       likelihood = likelihood-tot_exp
     endif
 
     ! Cfoliage log-likelihood
@@ -1268,8 +1275,15 @@ module model_likelihood_module
     ! Evap Log-likelihood
     if (DATAin%nEvap > 0) then
        tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),29)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
-                       /DATAin%Evap_unc(DATAin%evappts(1:DATAin%nEvap)))**2)
+                       /DATAin%Evap_unc(DATAin%Evappts(1:DATAin%nEvap)))**2)
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nEvap))
+    endif
+
+    ! Fire Log-likelihood
+    if (DATAin%nFire > 0) then
+       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Evap(DATAin%Firepts(1:DATAin%nFire))) &
+                       /DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2)
+       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nFire))
     endif
 
     ! LAI log-likelihood

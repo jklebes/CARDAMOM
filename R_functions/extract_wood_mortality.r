@@ -26,12 +26,12 @@ extract_wood_mortality<- function(timestep_days,spatial_type,resolution,grid_typ
    # its associated uncertainty and period of effect
    for (t in seq(1, length(Cwood_mortality_all$place_obs_in_step))) {
         # Prodictivity estimate
-        Cwood_mortality[Cwood_mortality_all$place_obs_in_step[t]] = Cwood_mortality_all$Cwood_mortalityrement_gCm2[i1,j1,t]
+        Cwood_mortality[Cwood_mortality_all$place_obs_in_step[t]] = Cwood_mortality_all$Cwood_mortality_gCm2[i1,j1,t]
         # Its uncertainty
-        tmp = min(Cwood_mortality[Cwood_mortality_all$place_obs_in_step[t]], Cwood_mortality_all$Cwood_mortalityrement_uncertainty_gCm2[i1,j1,t])
+        tmp = min(Cwood_mortality[Cwood_mortality_all$place_obs_in_step[t]], Cwood_mortality_all$Cwood_mortality_uncertainty_gCm2[i1,j1,t])
         Cwood_mortality_unc[Cwood_mortality_all$place_obs_in_step[t]] = tmp
         # Its period of effect
-        Cwood_mortality_lag[Cwood_mortality_all$place_obs_in_step[t]] = Cwood_mortality_all$Cwood_mortalityrement_lag_step[i1,j1,t]
+        Cwood_mortality_lag[Cwood_mortality_all$place_obs_in_step[t]] = Cwood_mortality_all$Cwood_mortality_lag_step[i1,j1,t]
    }
 
    # Set any time series values with NaN to missing data flag (-9999)

@@ -270,7 +270,7 @@ cardamom <-function (projname,model,method,stage) {
                obs=extract_obs(latlon[n,],lai_all,Csom_all,forest_all
                               ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                               ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
-                              ,nbe_all, lca_all, gpp_all,Cwood_inc_all
+                              ,nbe_all, lca_all, gpp_all,Cwood_inc_all,Cwood_mortality_all
                               ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
                               ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
 

@@ -28,6 +28,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
       ! OBS: more can obviously be added
       double precision, allocatable, dimension(:) :: GPP     & ! GPP (gC.m-2.day-1)
                                           ,NEE               & ! NEE (gC.m-2.day-1)
+                                          ,Fire              & ! Fire (gC.m-2.day-1)
                                           ,LAI               & ! LAI (m2/m2)
                                           ,Cwood_inc         & ! Wood increment observations (gC.m-2.day-1, averaged across a lagged period)
                                           ,Cwood_mortality   & ! Natural wood mortality observations (gC.m-2.day-1, averaged across a lagged period)
@@ -47,6 +48,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
       ! OBS uncertainties: obv these must be paired with OBS above
       double precision, allocatable, dimension(:) :: GPP_unc     & ! (gC/m2/day)
                                           ,NEE_unc               & ! (gC/m2/day)
+                                          ,Fire_unc              & ! (gC/m2/day)
                                           ,LAI_unc               & ! (m2/m2)
                                           ,Cwood_inc_unc         & ! (gC.m-2.day-1, averaged across a lagged period)
                                           ,Cwood_mortality_unc   & ! (gC.m-2.day-1, averaged across a lagged period)
@@ -69,6 +71,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
       ! location of observations in the data stream
       integer, allocatable, dimension(:) :: gpppts                   & ! gpppts vector used in deriving ngpp
                                            ,neepts                   & ! same for nee
+                                           ,Firepts                  & ! same for Fire
                                            ,Cwood_incpts             & ! same for wood increment
                                            ,Cwood_mortalitypts       & ! same for natural wood mortality
                                            ,laipts                   & ! same for lai
@@ -91,6 +94,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
       integer :: total_obs              & ! total number of obervations
                 ,ngpp                   & ! number of GPP observations
                 ,nnee                   & ! number of NEE observations
+                ,nFire                  & ! number of Fire observations
                 ,nlai                   & ! number of LAI observations
                 ,nCwood_inc             & ! number of wood increment obervations
                 ,nCwood_mortality       & ! number of wood mortality obervations

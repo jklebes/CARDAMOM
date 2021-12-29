@@ -151,8 +151,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   OBSMAT[,4] = OBS$LAI_unc                # Leaf area index variance
   OBSMAT[,5] = OBS$NEE                    # Net Ecosystem Exchange of CO2 (gC/m2/day)
   OBSMAT[,6] = OBS$NEE_unc                # Net Ecosystem Exchange of CO2 variance
-  OBSMAT[,7] = -9999                      # Empty
-  OBSMAT[,8] = -9999                      # Empty
+  OBSMAT[,7] = -9999#OBS$Fire                   # Fire C emission (gC/m2day)
+  OBSMAT[,8] = -9999#OBS$Fire                   # Fire C emission variance
   OBSMAT[,9] = OBS$Reco                   # Ecosystem respiration (Ra + Rh; gC/m2/day)
   OBSMAT[,10] = OBS$Reco_unc              # Ecosystem respiration (Ra + Rh) variance
   OBSMAT[,11] = OBS$Cfol_stock            # Foliar stock (gC/m2)
