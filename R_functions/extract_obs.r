@@ -9,7 +9,7 @@
 extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
                      ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                      ,sand_clay_all,crop_man_all,burnt_all,soilwater_all,nbe_all
-                     ,lca_all,gpp_all,Cwood_inc_all,Cwood_mortality_all
+                     ,lca_all,gpp_all,Cwood_inc_all,Cwood_mortality_all,fire_all
                      ,ctessel_pft,site_name,start_year,end_year
                      ,timestep_days,spatial_type,resolution,grid_type,modelname) {
 
@@ -308,6 +308,34 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     #GPP_unc[GPP_unc >= 0] = sqrt(GPP_unc[GPP_unc >= 0]**2 + 2**2)
     # Assumed uncertainty structure as agreed with Anthony Bloom
     GPP_unc[GPP_unc >= 0] = sqrt(GPP_unc[GPP_unc >= 0]**2 + (0.1*mean(GPP[GPP >= 0]))**2)
+
+    ###
+    ## Get some fire C emission information (time series; gC/m2/day)
+    ###
+
+    if (fire_source == "site_specific") {
+        infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
+        Fire = read_site_specific_obs("fire_gCm2day",infile)
+        Fire_unc = read_site_specific_obs("fire_unc_gCm2day",infile)
+        if (length(Fire_unc) == 1) {
+            Fire_unc = rep(-9999,times = length(Fire))
+            # Ill defined assumption
+            Fire_unc[which(Fire > 0)] = 1
+        }
+    } else if (fire_source == "Global_Combined") {
+
+        # Extract Fire and uncertainty information
+        # NOTE: assume default uncertainty (+/- scale)
+        output = extract_gpp(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,fire_all,as.numeric(start_year):as.numeric(end_year))
+        Fire = output$Fire ; Fire_unc = output$Fire_unc
+
+    } else {
+        # assume no data available
+        Fire = -9999 ; Fire_unc = -9999
+    }
+    # Combine with an estimate of model structural error.
+    # Assumed uncertainty structure as agreed with Anthony Bloom
+    Fire_unc[Fire_unc >= 0] = sqrt(Fire_unc[Fire_unc >= 0]**2 + (0.1*mean(Fire[Fire >= 0]))**2)
 
     ###
     ## Get some Evapotranspiration information (time series; kgH2O/m2/day)
@@ -755,7 +783,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     }
 
     # return output now
-    return(list(LAT = latlon_wanted[1], LAI = lai, LAI_unc = lai_unc, GPP = GPP, GPP_unc = GPP_unc
+    return(list(LAT = latlon_wanted[1], LAI = lai, LAI_unc = lai_unc, GPP = GPP, GPP_unc = GPP_unc, Fire = Fire, Fire_unc = Fire_unc
                ,Evap = Evap, Evap_unc = Evap_unc, NEE = NEE, NEE_unc = NEE_unc, Reco = Reco, Reco_unc = Reco_unc
                ,Cfol_stock = Cfol_stock, Cfol_stock_unc = Cfol_stock_unc
                ,Cwood_stock = Cwood_stock, Cwood_stock_unc = Cwood_stock_unc, Cagb_stock=Cagb_stock, Cagb_stock_unc = Cagb_stock_unc

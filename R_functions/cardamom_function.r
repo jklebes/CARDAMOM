@@ -247,6 +247,7 @@ cardamom <-function (projname,model,method,stage) {
                        lai_all = load_lai_fields_for_extraction(latlon,lai_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
                        nbe_all = load_nbe_fields_for_extraction(latlon,nbe_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
                        gpp_all = load_gpp_fields_for_extraction(latlon,GPP_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year))
+                       fire_all = load_fire_fields_for_extraction(latlon,fire_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year))
                        Csom_all = load_Csom_fields_for_extraction(latlon,Csom_source)
                        crop_man_all = load_sacks_calendar_fields_for_extraction(latlon,crop_management_source)
                        sand_clay_all = load_sand_clay_fields_for_extraction(latlon,sand_clay_source)
@@ -270,7 +271,7 @@ cardamom <-function (projname,model,method,stage) {
                obs=extract_obs(latlon[n,],lai_all,Csom_all,forest_all
                               ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                               ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
-                              ,nbe_all, lca_all, gpp_all,Cwood_inc_all,Cwood_mortality_all
+                              ,nbe_all, lca_all, gpp_all,Cwood_inc_all,Cwood_mortality_all, fire_all
                               ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
                               ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
 
