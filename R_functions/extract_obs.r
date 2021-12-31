@@ -326,7 +326,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
 
         # Extract Fire and uncertainty information
         # NOTE: assume default uncertainty (+/- scale)
-        output = extract_gpp(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,fire_all,as.numeric(start_year):as.numeric(end_year))
+        output = extract_fire(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,fire_all,as.numeric(start_year):as.numeric(end_year))
         Fire = output$Fire ; Fire_unc = output$Fire_unc
 
     } else {
