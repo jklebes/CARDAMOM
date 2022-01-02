@@ -985,7 +985,7 @@ module cardamom_io
     ! out where they are in the data sets
     x = 1 ; y = 1 ; z = 1 ; b = 1 ; c = 1 ; d = 1 ; e = 1
     f = 1 ; g = 1 ; h = 1 ; i = 1 ; j = 1 ; k = 1 ; l = 1
-    m = 1 ; o = 1 ; s = 1 ; t = 1
+    m = 1 ; o = 1 ; s = 1 ; t = 1 ; v = 1
     do day = 1, DATAin%nodays
        if (DATAin%GPP(day) > -9998d0) then
           DATAin%gpppts(b) = day ; b = b+1
@@ -1038,8 +1038,8 @@ module cardamom_io
        if (DATAin%NBE(day) > -9998d0) then
            DATAin%NBEpts(t) = day ; t = t + 1
        endif
-       if (DATAin%Evap(day) > -9998d0) then
-           DATAin%Evappts(v) = day ; v = v+1
+       if (DATAin%Fire(day) > -9998d0) then
+           DATAin%Firepts(v) = day ; v = v+1
        endif ! data present condition
     end do ! day loop
 
