@@ -96,7 +96,7 @@ fudgeit <- function(){
 # PointsOfChange
 
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_isimip3a_lca_gpp_nbe/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_isimip3a_lca_gpp/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_isimip3a_lca_gpp/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/Miombo_0.25deg_allWood/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_AGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_actualCI_agb/infofile.RData")
@@ -107,17 +107,17 @@ fudgeit <- function(){
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_agb_nbe/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_agb_gpp/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_agb_nbe_gpp/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/NoRainfor_woody_productivity_mortality/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/NoRainfor_woody_productivity_mortality/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Rainfor_woody_productivity_mortality/infofile.RData")
 
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_parameter_maps.RData",sep=""))
 
 # Set output path for figures and tables
-#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_1deg_C7_isimip/"
+out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_1deg_C7_isimip/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/figures_africa/"
 #out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
-out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/cssp_brazil_2/figures_productivity_without_vs_with/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/cssp_brazil_2/figures_productivity_without_vs_with/"
 
 # Specify the position within the stored ensemble for the median estimate and the desired uncertainty bands
 mid_quant = 4 ; low_quant = 2 ; high_quant = 6
@@ -156,7 +156,7 @@ landmask = shapefile("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/R_functions
 landmask = spTransform(landmask,crs(cardamom_ext))
 # subset by continent (could also do by country)
 #landmask = subset(landmask, CONTINENT == "South America") # Change continent to target area or comment out if spanning zones
-landmask = subset(landmask, CONTINENT == "Africa") # Change continent to target area or comment out if spanning zones
+#landmask = subset(landmask, CONTINENT == "Africa") # Change continent to target area or comment out if spanning zones
 # Clip to the extent of the CARDAMOM analysis
 landmask = crop(landmask, cardamom_ext)
 

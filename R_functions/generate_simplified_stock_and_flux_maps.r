@@ -83,10 +83,10 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
       max_root_biomass = (grid_output$annual_max_roots_gCm2[,,median_loc]+(grid_output$annual_max_wood_gCm2[,,median_loc]*grid_parameters$parameters[,,29,median_loc]))*2
       max_rooting_depth = grid_parameters$parameters[,,40,median_loc] * max_root_biomass / (grid_parameters$parameters[,,39,median_loc] + max_root_biomass)
 
-  } else if (PROJECT$model$name == "DALEC_CDEA_BUCKET" | PROJECT$model$name == "DALEC_CDEA_BUCKET_LAB" |
-             PROJECT$model$name == "DALEC_CDEA_BUCKET_LAB" |
-             PROJECT$model$name == "DALEC_CDEA_BUCKET_wMRT" | PROJECT$model$name == "DALEC_CDEA_BUCKET_RmRg" |
-             PROJECT$model$name == "DALEC_CDEA_BUCKET_RmRg_CWD" | PROJECT$model$name == "DALEC_CDEA_BUCKET_RmRg_CWD_wMRT" |
+  } else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB" |
+             PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB" |
+             PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_wMRT" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg" |
+             PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT" |
              PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT") {
 
       # Mean rooting depth information
