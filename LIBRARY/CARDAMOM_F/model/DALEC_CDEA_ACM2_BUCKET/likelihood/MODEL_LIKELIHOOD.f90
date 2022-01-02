@@ -1018,7 +1018,7 @@ module model_likelihood_module
 
     ! Fire Log-likelihood
     if (DATAin%nFire > 0) then
-       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Evap(DATAin%Firepts(1:DATAin%nFire))) &
+       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
                        /DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2)
        likelihood = likelihood-tot_exp
     endif
@@ -1281,7 +1281,7 @@ module model_likelihood_module
 
     ! Fire Log-likelihood
     if (DATAin%nFire > 0) then
-       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Evap(DATAin%Firepts(1:DATAin%nFire))) &
+       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
                        /DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2)
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nFire))
     endif
