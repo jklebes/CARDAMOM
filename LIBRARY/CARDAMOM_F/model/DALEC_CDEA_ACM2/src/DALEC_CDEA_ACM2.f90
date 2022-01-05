@@ -278,7 +278,7 @@ metabolic_limited_photosynthesis, &
 
     ! declare local variables
     double precision :: Rtot & ! Total hydraulic resistance (MPa.s-1.m-2.mmol-1)
-  ,wf,wl,ff,fl,osf,osl,sf,ml   ! phenological controls
+                       ,tmp,wf,wl,ff,fl,osf,osl,sf,ml   ! phenological controls
 
     ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
     double precision :: cf(6),rfac(6)

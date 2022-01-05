@@ -1336,7 +1336,6 @@ module model_likelihood_module
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCwood_inc))
     endif
 
-
     ! Cwood mortality log-likelihood
     if (DATAin%nCwood_mortality > 0) then
        tot_exp = 0d0

@@ -840,7 +840,7 @@ module model_likelihood_module
     double precision, dimension(npars), intent(in) :: pars
 
     ! declare local variables
-    integer :: n, dn, no_years, y
+    integer :: n, dn, no_years, y, s
     double precision :: tot_exp, tmp_var, infini
     double precision, allocatable :: mean_annual_pools(:)
 
@@ -851,6 +851,13 @@ module model_likelihood_module
     if (DATAin%ngpp > 0) then
        tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
                        /DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2d0)
+       likelihood = likelihood-tot_exp
+    endif
+
+    ! Fire Log-likelihood
+    if (DATAin%nFire > 0) then
+       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
+                       /DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2)
        likelihood = likelihood-tot_exp
     endif
 
@@ -892,14 +899,27 @@ module model_likelihood_module
     endif
 
     ! Cwood increment log-likelihood
-    if (DATAin%nwoo > 0) then
+    if (DATAin%nCwood_inc > 0) then
        tot_exp = 0d0
-       do n = 1, DATAin%nwoo
-         dn = DATAin%woopts(n)
-         ! note that division is the uncertainty
-         ! tot_exp = tot_exp+(log((DATAin%M_POOLS(dn,3)-DATAin%M_POOLS(dn-365,3)) &
-         !                   / DATAin%WOO(dn))/log(DATAin%WOO_unc(dn)))**2
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%M_POOLS(dn-365,3)) / DATAin%WOO_unc(dn))**2d0
+       do n = 1, DATAin%nCwood_inc
+         dn = DATAin%Cwood_incpts(n)
+         s = max(0,dn-nint(DATAin%Cwood_inc_lag(dn)))+1
+         ! Estimate the mean allocation to wood over the lag period
+         tmp_var = sum(DATAin%M_FLUXES(s:dn,7)) / DATAin%Cwood_inc_lag(dn)
+         tot_exp = tot_exp+((tmp_var-DATAin%Cwood_inc(dn)) / DATAin%Cwood_inc_unc(dn))**2
+       end do
+       likelihood = likelihood-tot_exp
+    endif
+
+    ! Cwood mortality log-likelihood
+    if (DATAin%nCwood_mortality > 0) then
+       tot_exp = 0d0
+       do n = 1, DATAin%nCwood_mortality
+         dn = DATAin%Cwood_mortalitypts(n)
+         s = max(0,dn-nint(DATAin%Cwood_mortality_lag(dn)))+1
+         ! Estimate the mean allocation to wood over the lag period
+         tmp_var = sum(DATAin%M_FLUXES(s:dn,11)) / DATAin%Cwood_mortality_lag(dn)
+         tot_exp = tot_exp+((tmp_var-DATAin%Cwood_mortality(dn)) / DATAin%Cwood_mortality_unc(dn))**2
        end do
        likelihood = likelihood-tot_exp
     endif
@@ -1031,7 +1051,7 @@ module model_likelihood_module
     double precision, dimension(npars), intent(in) :: pars
 
     ! declare local variables
-    integer :: n, dn, no_years, y
+    integer :: n, dn, no_years, y, s
     double precision :: tot_exp, tmp_var, infini
     double precision, allocatable :: mean_annual_pools(:)
 
@@ -1043,6 +1063,13 @@ module model_likelihood_module
        tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
                        /DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2d0)
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%ngpp))
+    endif
+
+    ! Fire Log-likelihood
+    if (DATAin%nFire > 0) then
+       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
+                       /DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2)
+       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nFire))
     endif
 
     ! LAI log-likelihood
@@ -1083,16 +1110,29 @@ module model_likelihood_module
     endif
 
     ! Cwood increment log-likelihood
-    if (DATAin%nwoo > 0) then
+    if (DATAin%nCwood_inc > 0) then
        tot_exp = 0d0
-       do n = 1, DATAin%nwoo
-         dn = DATAin%woopts(n)
-         ! note that division is the uncertainty
-         ! tot_exp = tot_exp+(log((DATAin%M_POOLS(dn,3)-DATAin%M_POOLS(dn-365,3)) &
-         !                   / DATAin%WOO(dn))/log(DATAin%WOO_unc(dn)))**2
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%M_POOLS(dn-365,3)) / DATAin%WOO_unc(dn))**2d0
+       do n = 1, DATAin%nCwood_inc
+         dn = DATAin%Cwood_incpts(n)
+         s = max(0,dn-nint(DATAin%Cwood_inc_lag(dn)))+1
+         ! Estimate the mean allocation to wood over the lag period
+         tmp_var = sum(DATAin%M_FLUXES(s:dn,7)) / DATAin%Cwood_inc_lag(dn)
+         tot_exp = tot_exp+((tmp_var-DATAin%Cwood_inc(dn)) / DATAin%Cwood_inc_unc(dn))**2
        end do
-       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nwoo))
+       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCwood_inc))
+    endif
+
+    ! Cwood mortality log-likelihood
+    if (DATAin%nCwood_mortality > 0) then
+       tot_exp = 0d0
+       do n = 1, DATAin%nCwood_mortality
+         dn = DATAin%Cwood_mortalitypts(n)
+         s = max(0,dn-nint(DATAin%Cwood_mortality_lag(dn)))+1
+         ! Estimate the mean allocation to wood over the lag period
+         tmp_var = sum(DATAin%M_FLUXES(s:dn,11)) / DATAin%Cwood_mortality_lag(dn)
+         tot_exp = tot_exp+((tmp_var-DATAin%Cwood_mortality(dn)) / DATAin%Cwood_mortality_unc(dn))**2
+       end do
+       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCwood_mortality))
     endif
 
     ! Cfoliage log-likelihood
@@ -1206,391 +1246,6 @@ module model_likelihood_module
     return
 
   end function scale_likelihood
-  !
-  !------------------------------------------------------------------
-  !
-  double precision function inflate_likelihood(npars,pars)
-    use MCMCOPT, only: MCO
-    use cardamom_structures, only: DATAin
-
-    ! calculates the likelihood of of the model output compared to the available
-    ! observations which have been input to the model
-
-    implicit none
-
-    ! declare arguments
-    integer, intent(in) :: npars
-    double precision, dimension(npars), intent(in) :: pars
-
-    ! declare local variables
-    integer :: n, dn, no_years, y
-    double precision :: tot_exp, tmp_var, infini, inflate_factor
-    double precision, allocatable :: mean_annual_pools(:)
-
-    ! initial value
-    inflate_likelihood = 0d0 ; infini = 0d0
-    ! Update inflation factor from module
-    inflate_factor = MCO%inflation_factor
-
-    ! GPP Log-likelihood
-    if (DATAin%ngpp > 0) then
-       tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
-                       /(inflate_factor*DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp))))**2d0)
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! LAI log-likelihood
-    if (DATAin%nlai > 0) then
-       ! loop split to allow vectorisation
-       tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
-                       /(inflate_factor*DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai))))**2d0)
-       do n = 1, DATAin%nlai
-         dn = DATAin%laipts(n)
-         ! if zero or greater allow calculation with min condition to prevent
-         ! errors of zero LAI which occur in managed systems
-         if (DATAin%M_LAI(dn) < 0d0) then
-             ! if not then we have unrealistic negative values or NaN so indue
-             ! error
-             tot_exp = tot_exp+(-log(infini))
-         endif
-       end do
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! NEE likelihood
-    if (DATAin%nnee > 0) then
-       tot_exp = sum(((DATAin%M_NEE(DATAin%neepts(1:DATAin%nnee))-DATAin%NEE(DATAin%neepts(1:DATAin%nnee))) &
-                       /(inflate_factor*DATAin%NEE_unc(DATAin%neepts(1:DATAin%nnee))))**2d0)
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! Reco likelihood
-    if (DATAin%nreco > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nreco
-         dn = DATAin%recopts(n)
-         tmp_var = DATAin%M_NEE(dn)+DATAin%M_GPP(dn)
-         ! note that we calculate the Ecosystem resp from GPP and NEE
-         tot_exp = tot_exp+((tmp_var-DATAin%Reco(dn))/(inflate_factor*DATAin%Reco_unc(dn)))**2d0
-       end do
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! Cwood increment log-likelihood
-    if (DATAin%nwoo > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nwoo
-         dn = DATAin%woopts(n)
-         ! note that division is the uncertainty
-         ! tot_exp = tot_exp+(log((DATAin%M_POOLS(dn,3)-DATAin%M_POOLS(dn-365,3)) &
-         !                   / DATAin%WOO(dn))/log(DATAin%WOO_unc(dn)))**2
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%M_POOLS(dn-365,3)) / (inflate_factor*DATAin%WOO_unc(dn)))**2d0
-       end do
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! Cfoliage log-likelihood
-    if (DATAin%nCfol_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nCfol_stock
-         dn = DATAin%Cfol_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp = tot_exp+(log(DATAin%M_POOLS(dn,1)/DATAin%Cfol_stock(dn))/log(2d0))**2d0
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,1)-DATAin%Cfol_stock(dn)) / (inflate_factor*DATAin%Cfol_stock_unc(dn)))**2d0
-       end do
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! Annual foliar maximum
-    if (DATAin%nCfolmax_stock > 0) then
-       tot_exp = 0d0
-       no_years = int(nint(sum(DATAin%deltat)/365.25d0))
-       if (allocated(mean_annual_pools)) deallocate(mean_annual_pools)
-       allocate(mean_annual_pools(no_years))
-       ! determine the annual max for each pool
-       do y = 1, no_years
-          ! derive mean annual foliar pool
-          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),1),y,DATAin%deltat,DATAin%nodays+1)
-       end do ! year loop
-       ! loop through the observations then
-       do n = 1, DATAin%nCfolmax_stock
-         ! load the observation position in stream
-         dn = DATAin%Cfolmax_stockpts(n)
-         ! determine which years this in in for the simulation
-         y = ceiling( (dble(dn)*(sum(DATAin%deltat)/(DATAin%nodays))) / 365.25d0 )
-         ! load the correct year into the analysis
-         tmp_var = mean_annual_pools(y)
-         ! note that division is the uncertainty
-         tot_exp = tot_exp+((tmp_var-DATAin%Cfolmax_stock(dn)) / (inflate_factor*DATAin%Cfolmax_stock_unc(dn)))**2d0
-       end do
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! Cwood log-likelihood (i.e. branch, stem and CR)
-    if (DATAin%nCwood_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nCwood_stock
-         dn = DATAin%Cwood_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,3)/DATAin%Cwood_stock(dn))/log(2d0))**2d0
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Cwood_stock(dn))/(inflate_factor*DATAin%Cwood_stock_unc(dn)))**2d0
-       end do
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! Croots log-likelihood
-    if (DATAin%nCroots_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nCroots_stock
-         dn = DATAin%Croots_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,2)/DATAin%Croots_stock(dn))/log(2d0))**2d0
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Croots_stock(dn)) / (inflate_factor*DATAin%Croots_stock_unc(dn)))**2d0
-       end do
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! Clitter log-likelihood
-    ! WARNING WARNING WARNING hack in place to estimate fraction of litter pool
-    ! originating from surface pools
-    if (DATAin%nClit_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nClit_stock
-         dn = DATAin%Clit_stockpts(n)
-         ! note that division is the uncertainty
-         tot_exp = tot_exp+(((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
-                           *(DATAin%M_POOLS(dn,4))-DATAin%Clit_stock(dn))/(inflate_factor*DATAin%Clit_stock_unc(dn)))**2d0
-       end do
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    ! Csom log-likelihood
-    if (DATAin%nCsom_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%nCsom_stock
-         dn = DATAin%Csom_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,5)/DATAin%Csom_stock(dn))/log(2d0))**2d0
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,5)-DATAin%Csom_stock(dn))/(inflate_factor*DATAin%Csom_stock_unc(dn)))**2d0
-       end do
-       inflate_likelihood = inflate_likelihood-tot_exp
-    endif
-
-    !
-    ! Curiously we will assess other priors here, as the tend to have to do with model state derived values
-    !
-
-    ! Ra:GPP fraction is in this model a derived property
-    if (DATAin%otherpriors(1) > 0) then
-        tot_exp = sum(DATAin%M_FLUXES(:,3)) / sum(DATAin%M_FLUXES(:,1))
-        inflate_likelihood = inflate_likelihood-((tot_exp-DATAin%otherpriors(1))/(DATAin%otherpriorunc(1)))**2d0
-    end if
-
-    ! the likelihood scores for each observation are subject to multiplication
-    ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
-    ! multiple datastreams wes apply this multiplication to the bulk liklihood
-    ! hear
-    inflate_likelihood = inflate_likelihood * 0.5d0
-
-    ! check that log-likelihood is an actual number
-    if (inflate_likelihood /= inflate_likelihood) then
-       inflate_likelihood = log(infini)
-    end if
-    ! don't forget to return
-    return
-
-  end function inflate_likelihood
-  !
-  !------------------------------------------------------------------
-  !
-  double precision function sub_likelihood(npars,pars)
-    use cardamom_structures, only: DATAin
-
-    ! calculates the likelihood of of the model output compared to the available
-    ! observations which have been input to the model
-
-    implicit none
-
-    ! declare arguments
-    integer, intent(in) :: npars
-    double precision, dimension(npars), intent(in) :: pars
-
-    ! declare local variables
-    integer :: n, dn, no_years, y
-    double precision :: tot_exp, tmp_var, infini
-    double precision, allocatable :: mean_annual_pools(:)
-
-    ! initial value
-    sub_likelihood = 0d0 ; infini = 0d0
-
-    ! GPP Log-likelihood
-    if (DATAin%sub_ngpp > 0) then
-       tot_exp = sum(((DATAin%M_GPP(DATAin%sub_gpppts(1:DATAin%sub_ngpp))-DATAin%GPP(DATAin%sub_gpppts(1:DATAin%sub_ngpp))) &
-                       /DATAin%GPP_unc(DATAin%sub_gpppts(1:DATAin%sub_ngpp)))**2d0)
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! LAI log-likelihood
-    if (DATAin%sub_nlai > 0) then
-       ! loop split to allow vectorisation
-       tot_exp = sum(((DATAin%M_LAI(DATAin%sub_laipts(1:DATAin%sub_nlai))-DATAin%LAI(DATAin%sub_laipts(1:DATAin%sub_nlai))) &
-                       /DATAin%LAI_unc(DATAin%sub_laipts(1:DATAin%sub_nlai)))**2d0)
-       do n = 1, DATAin%sub_nlai
-         dn = DATAin%sub_laipts(n)
-         ! if zero or greater allow calculation with min condition to prevent
-         ! errors of zero LAI which occur in managed systems
-         if (DATAin%M_LAI(dn) < 0d0) then
-             ! if not then we have unrealistic negative values or NaN so indue
-             ! error
-             tot_exp = tot_exp+(-log(infini))
-         endif
-       end do
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! NEE likelihood
-    if (DATAin%sub_nnee > 0) then
-       tot_exp = sum(((DATAin%M_NEE(DATAin%sub_neepts(1:DATAin%sub_nnee))-DATAin%NEE(DATAin%sub_neepts(1:DATAin%sub_nnee))) &
-                       /DATAin%NEE_unc(DATAin%sub_neepts(1:DATAin%sub_nnee)))**2d0)
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! Reco likelihood
-    if (DATAin%sub_nreco > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%sub_nreco
-         dn = DATAin%sub_recopts(n)
-         tmp_var = DATAin%M_NEE(dn)+DATAin%M_GPP(dn)
-         ! note that we calculate the Ecosystem resp from GPP and NEE
-         tot_exp = tot_exp+((tmp_var-DATAin%Reco(dn))/DATAin%Reco_unc(dn))**2d0
-       end do
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! Cwood increment log-likelihood
-    if (DATAin%sub_nwoo > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%sub_nwoo
-         dn = DATAin%sub_woopts(n)
-         ! note that division is the uncertainty
-         ! tot_exp = tot_exp+(log((DATAin%M_POOLS(dn,3)-DATAin%M_POOLS(dn-365,3)) &
-         !                   / DATAin%WOO(dn))/log(DATAin%WOO_unc(dn)))**2
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%M_POOLS(dn-365,3)) / DATAin%WOO_unc(dn))**2d0
-       end do
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! Cfoliage log-likelihood
-    if (DATAin%sub_nCfol_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%sub_nCfol_stock
-         dn = DATAin%sub_Cfol_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp = tot_exp+(log(DATAin%M_POOLS(dn,1)/DATAin%Cfol_stock(dn))/log(2d0))**2d0
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,1)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2d0
-       end do
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! Annual foliar maximum
-    if (DATAin%sub_nCfolmax_stock > 0) then
-       tot_exp = 0d0
-       no_years = int(nint(sum(DATAin%deltat)/365.25d0))
-       if (allocated(mean_annual_pools)) deallocate(mean_annual_pools)
-       allocate(mean_annual_pools(no_years))
-       ! determine the annual max for each pool
-       do y = 1, no_years
-          ! derive mean annual foliar pool
-          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),1),y,DATAin%deltat,DATAin%nodays+1)
-       end do ! year loop
-       ! loop through the observations then
-       do n = 1, DATAin%sub_nCfolmax_stock
-         ! load the observation position in stream
-         dn = DATAin%sub_Cfolmax_stockpts(n)
-         ! determine which years this in in for the simulation
-         y = ceiling( (dble(dn)*(sum(DATAin%deltat)/(DATAin%nodays))) / 365.25d0 )
-         ! load the correct year into the analysis
-         tmp_var = mean_annual_pools(y)
-         ! note that division is the uncertainty
-         tot_exp = tot_exp+((tmp_var-DATAin%Cfolmax_stock(dn)) / DATAin%Cfolmax_stock_unc(dn))**2d0
-       end do
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! Cwood log-likelihood (i.e. branch, stem and CR)
-    if (DATAin%sub_nCwood_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%sub_nCwood_stock
-         dn = DATAin%sub_Cwood_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,3)/DATAin%Cwood_stock(dn))/log(2d0))**2d0
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Cwood_stock(dn))/DATAin%Cwood_stock_unc(dn))**2d0
-       end do
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! Croots log-likelihood
-    if (DATAin%sub_nCroots_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%sub_nCroots_stock
-         dn = DATAin%sub_Croots_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,2)/DATAin%Croots_stock(dn))/log(2d0))**2d0
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2d0
-       end do
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! Clitter log-likelihood
-    ! WARNING WARNING WARNING hack in place to estimate fraction of litter pool
-    ! originating from surface pools
-    if (DATAin%sub_nClit_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%sub_nClit_stock
-         dn = DATAin%sub_Clit_stockpts(n)
-         ! note that division is the uncertainty
-         tot_exp = tot_exp+(((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
-                           *(DATAin%M_POOLS(dn,4))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2d0
-       end do
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    ! Csom log-likelihood
-    if (DATAin%sub_nCsom_stock > 0) then
-       tot_exp = 0d0
-       do n = 1, DATAin%sub_nCsom_stock
-         dn = DATAin%sub_Csom_stockpts(n)
-         ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,5)/DATAin%Csom_stock(dn))/log(2d0))**2d0
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,5)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2d0
-       end do
-       sub_likelihood = sub_likelihood-tot_exp
-    endif
-
-    !
-    ! Curiously we will assess other priors here, as the tend to have to do with model state derived values
-    !
-
-    ! Ra:GPP fraction is in this model a derived property
-    if (DATAin%otherpriors(1) > 0) then
-        tot_exp = sum(DATAin%M_FLUXES(:,3)) / sum(DATAin%M_FLUXES(:,1))
-        sub_likelihood = sub_likelihood-((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2d0
-    end if
-
-    ! the likelihood scores for each observation are subject to multiplication
-    ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
-    ! multiple datastreams we apply this multiplication to the bulk liklihood
-    ! hear
-    sub_likelihood = sub_likelihood * 0.5d0
-
-    ! check that log-likelihood is an actual number
-    if (sub_likelihood /= sub_likelihood) then
-       sub_likelihood = log(infini)
-    end if
-    ! don't forget to return
-    return
-
-  end function sub_likelihood
   !
   !------------------------------------------------------------------
   !

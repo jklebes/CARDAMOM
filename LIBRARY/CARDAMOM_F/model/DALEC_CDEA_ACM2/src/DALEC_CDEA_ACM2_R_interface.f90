@@ -62,7 +62,7 @@ subroutine rdaleccdeaacm2(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
   double precision, dimension((nodays+1),nopools) :: POOLS
   ! vector of ecosystem fluxes
   double precision, dimension(nodays,nofluxes) :: FLUXES
-  double precision :: sumNPP,airt_adj
+  double precision :: sumNPP, airt_adj, tmp
   double precision, dimension(nodays) :: lai & ! leaf area index
                                         ,GPP & ! Gross primary productivity
                                         ,NEE & ! net ecosystem exchange of CO2
@@ -259,7 +259,7 @@ subroutine rdaleccdeaacm2(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
         ! Wood
         out_var9(i,4,y) = sum((FLUXES(y_s:y_e,11))*deltat(y_s:y_e))
         ! Litter (fol+fine root)
-        out_var9(i,5,y) = sum((FLUXES(y_s:y_e,13)+FLUXES(y_s:y_e,15)*deltat(y_s:y_e))
+        out_var9(i,5,y) = sum((FLUXES(y_s:y_e,13)+FLUXES(y_s:y_e,15))*deltat(y_s:y_e))
         ! Soil
         out_var9(i,6,y) = sum((FLUXES(y_s:y_e,14))*deltat(y_s:y_e))
 
