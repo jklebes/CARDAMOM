@@ -20,8 +20,8 @@ extract_lai_timeseries<- function(timestep_days,spatial_type,resolution,grid_typ
    if (length(check1) > 0) { lai_all$long[check1]=lai_all$long[check1]+360 }
 
    # Extract current location to local variable
-   lai = lai_all$lai_all[i1,j1,n]), na.rm=TRUE)
-   lai_unc = lai_all$lai_unc_all[i1,j1,n]), na.rm=TRUE)
+   lai = lai_all$lai_all[i1,j1,]
+   lai_unc = lai_all$lai_unc_all[i1,j1,]
 
    # convert missing data to -9999
    lai[which(is.na(lai))] = -9999.0 ; lai_unc[which(is.na(lai_unc))] = -9999.0

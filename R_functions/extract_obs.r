@@ -56,35 +56,28 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     ## Get some LAI information (m2/m2)
     ###
 
-    if (lai_source == "MODIS") {
+    if (lai_source == "MODIS" | lai_source == "COPERNICUS") {
 
-      # Extract lai and uncertainty information
-      # NOTE: assume default uncertainty (+/- scale)
-      output = extract_modis_lai(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,lai_all,as.numeric(start_year):as.numeric(end_year))
-      lai = output$lai ; lai_unc = output$lai_unc
-
-    } else if (lai_source == "COPERNICUS") {
-
-      # Extract lai and uncertainty information
-      # NOTE: assume default uncertainty (+/- scale)
-      output = extract_copernicus_lai(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,lai_all,as.numeric(start_year):as.numeric(end_year))
-      lai = output$lai ; lai_unc = output$lai_unc
+        # Extract lai and uncertainty information
+        # NOTE: assume default uncertainty (+/- scale)
+        output = extract_lai_timeseries(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,lai_all,as.numeric(start_year):as.numeric(end_year))
+        lai = output$lai ; lai_unc = output$lai_unc
 
     } else if (lai_source == "site_specific") {
 
-      # read from .csv or netcdf
-      infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-      lai = read_site_specific_obs("LAI_m2m2",infile) ; lai_unc = read_site_specific_obs("LAI_unc_m2m2",infile)
-      if (max(lai_unc) == -9999) {
-          lai_unc = rep(-9999,times = length(lai))
-          # apply default uncertainty
-          lai_unc[which(lai != -9999)] = 0.5
-      }
+        # read from .csv or netcdf
+        infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
+        lai = read_site_specific_obs("LAI_m2m2",infile) ; lai_unc = read_site_specific_obs("LAI_unc_m2m2",infile)
+        if (max(lai_unc) == -9999) {
+            lai_unc = rep(-9999,times = length(lai))
+            # apply default uncertainty
+            lai_unc[which(lai != -9999)] = 0.5
+        }
 
     } else {
 
-      lai = -9999
-      lai_unc = -9999
+        lai = -9999
+        lai_unc = -9999
 
     }
     # Assume minimum uncertainty to reflect model structural uncertainty
