@@ -248,7 +248,7 @@ cardamom <-function (projname,model,method,stage) {
                        nbe_all = load_nbe_fields_for_extraction(latlon,nbe_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
                        gpp_all = load_gpp_fields_for_extraction(latlon,GPP_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year))
                        fire_all = load_fire_emission_fields_for_extraction(latlon,fire_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year))
-                       Csom_all = load_Csom_fields_for_extraction(latlon,Csom_source)
+                       Csom_all = load_Csom_fields_for_extraction(latlon,Csom_source,cardamom_ext,PROJECT$spatial_type)
                        crop_man_all = load_sacks_calendar_fields_for_extraction(latlon,crop_management_source)
                        sand_clay_all = load_sand_clay_fields_for_extraction(latlon,sand_clay_source)
                        forest_all = load_forestry_fields_for_extraction(latlon,deforestation_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))

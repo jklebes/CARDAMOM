@@ -5,13 +5,38 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-load_Csom_fields_for_extraction<-function(latlon_in,Csom_source) {
+load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spatial_type) {
 
     if (Csom_source == "SoilGrids") {
 
-        # this is a very bespoke modification so leave it here to avoid getting lost
+        # This is a very bespoke modification so leave it here to avoid getting lost
         Csom = raster(paste(path_to_Csom,"Csom_gCm2_mean_0to1m.tif", sep=""))
         Csom_unc = raster(paste(path_to_Csom,"Csom_gCm2_sd_0to1m.tif", sep=""))
+
+        # Create raster with the target crs
+        target = raster(crs = ("+init=epsg:4326"), ext = extent(Csom), resolution = res(Csom))
+        # Check whether the target and actual analyses have the same CRS
+        if (compareCRS(Csom,target) == FALSE) {
+            # Resample to correct grid
+            Csom = resample(Csom, target, method="ngb") ; gc() ; removeTmpFiles()
+            Csom_unc = resample(Csom_unc, target, method="ngb") ; gc() ; removeTmpFiles()
+        }
+        # Trim the extent of the overall grid to the analysis domain
+        Csom = crop(Csom,cardamom_ext) ; Csom_unc = crop(Csom,cardamom_ext)
+        # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
+        if (spatial_type == "grid") {
+            if (res(Csom)[1] < res(cardamom_ext)[1] | res(Csom)[2] < res(cardamom_ext)[2]) {
+
+                # Create raster with the target resolution
+                target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+
+                # Resample to correct grid
+                Csom = resample(Csom, target, method="bilinear") ; gc() ; removeTmpFiles()
+                Csom_unc = resample(Csom_unc, target, method="bilinear") ; gc() ; removeTmpFiles()
+
+            } # Aggrgeate to resolution
+        } # spatial_type == "grid"
+
         # extract dimension information for the grid, note the axis switching between raster and actual array
         xdim = dim(Csom)[2] ; ydim = dim(Csom)[1]
         # extract the lat / long information needed
