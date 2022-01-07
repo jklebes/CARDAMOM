@@ -37,6 +37,21 @@
 1) git checkout dev_branch    # To stay on your local branch 
 2) git push origin dev_branch # It pushes your local dev_branch to the remote dev_branch; ‘origin’ always means the remote repo
 
+### To check which branch you are currently on (and those available)
+1) git branch -a 
+
+### To push (merge) your development branch changes to the master
+1) git branch -a              # Check which branch you are on
+2) git checkout dev_branch    # Change to the branch you want to push to the master
+3) git pull origin master     # Ensure your branch is upto date with the master - check that everything works correctly
+4) git push origin dev_branch # Update your remote branch with the local status
+5) git checkout master        # Change to the master branch
+6) git merge dev_branch       # Merge the master with the dev_branch
+
+### To delete a disused branch
+git branch -d dev_branch # Delete locally 
+git branch -d -r origin/dev_branch # Delete remote copy
+
 # 2. Instructions to correct an unintentional git commit and git push that bring files to an older version, or unintentionally stashed changes, committed and pushed to the master
 
 0. If you need help to identify the problem. Let other CARDAMOM developers be aware of this issue and specify the problem. 
