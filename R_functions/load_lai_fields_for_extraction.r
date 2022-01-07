@@ -9,8 +9,8 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
 
   if (lai_source == "MODIS") {
 
-    # let the user know this might take some time
-    print("Loading processed lai fields for subsequent sub-setting ...")
+      # let the user know this might take some time
+      print("Loading processed lai fields for subsequent sub-setting ...")
 
     lat_done = FALSE ; missing_years=0 ; keepers=0 ; yrs=1
     # loop for year here
@@ -121,130 +121,144 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
     month_days = rep(31,length.out=12)
     month_days[2] = 28 ; month_days[c(4,6,9,11)] = 30
 
-    lat_done = FALSE ; missing_years = 0 ; keepers = 0 ; yrs = 1
+    lat_done = FALSE ; missing_years = 0 ; keepers = 0 ; yrs = 1 ; doy_out = 0
     # loop for year here
     for (yr in seq(1, length(years_to_load))) {
-      print(paste("... ",round((yr/length(years_to_load))*100,0),"% completed ",Sys.time(),sep=""))
 
-      # first check how many files we have
-      if (yr == 1) {
-        nsteps = 0
-        for (yrr in seq(1, length(years_to_load))) {
-             # create the prefix to the files we will want for a given year
-             input_file_1=paste(prefix,years_to_load[yrr],sep="")
-             # then check whether this pattern is found in the available files
-             this_year = grepl(input_file_1, avail_files) ; this_year = which(this_year == TRUE)
-             # if we have at least one timestep for this year then we have some information otherwise it is missing!
-             if (length(this_year) > 0) {
-                 keepers = keepers+1 ; nsteps = max(nsteps,length(this_year))
-             } else {
-                 missing_years = append(missing_years,years_to_load[yrr])
-             }
-        } # loop through possible years
-        rm(yrr)
-      } # first year?
+         # Update the user as to our progress
+         print(paste("... ",round((yr/length(years_to_load))*100,0),"% completed ",Sys.time(),sep=""))
 
-      # open processed files
-      input_file_1=paste(prefix,years_to_load[yr],sep="")
+         # If we are just starting check how many files we have
+         if (yr == 1) {
+             nsteps = 0
+             # Loop through all the analyses years and check whether files exist for it
+             for (yrr in seq(1, length(years_to_load))) {
+                  # create the prefix to the files we will want for a given year
+                  input_file_1=paste(prefix,years_to_load[yrr],sep="")
+                  # then check whether this pattern is found in the available files
+                  this_year = grepl(input_file_1, avail_files) ; this_year = which(this_year == TRUE)
+                  # if we have at least one timestep for this year then we have some information otherwise it is missing!
+                  if (length(this_year) > 0) {
+                      keepers = keepers+1 ; nsteps = max(nsteps,length(this_year))
+                  } else {
+                      missing_years = append(missing_years,years_to_load[yrr])
+                  }
+             } # loop through possible years
+             rm(yrr)
+         } # first year?
 
-      # then check whether this pattern is found in the available files
-      this_year = avail_files[grepl(input_file_1, avail_files)]
-      if (length(this_year) > 0) {
+         # Begin reading the files in now for real
 
-          # Strip out the time component entirely
-          tmp = unlist(strsplit(this_year,input_file_1))
-          tmp = tmp[seq(2,length(tmp),2)]
-          # The re-order the files correctly
-          this_year = this_year[order(tmp)]
+         # Determine the unique file name pattern
+         input_file_1=paste(prefix,years_to_load[yr],sep="")
 
-          # now loop through the available files for the current year
-          for (t in seq(1, length(this_year))) {
+         # then check whether this pattern is found in the available files
+         this_year = avail_files[grepl(input_file_1, avail_files)]
+         if (length(this_year) > 0) {
 
-            # open the file
-            data1 = nc_open(this_year[t])
+             # Strip out the time component entirely
+             tmp = unlist(strsplit(this_year,input_file_1))
+             tmp = tmp[seq(2,length(tmp),2)]
+             # The re-order the files correctly
+             this_year = this_year[order(tmp)]
 
-            # get timing variable
-            tmp = strsplit(this_year[t],input_file_1)[[1]][2]
-            month = as.numeric(substring(tmp,1,2)) ; doy_in = as.numeric(substring(tmp,3,4))
-            # January is correct already, so only adjust if month is >= February
-            if (month > 1) {
-              doy_in = doy_in + sum(month_days[1:(month-1)])
-            }
+             # now loop through the available files for the current year
+             for (t in seq(1, length(this_year))) {
 
-            # extract location variables
-            if (lat_done == FALSE) {
-                lat = ncvar_get(data1, "lat") ; long = ncvar_get(data1, "lon")
-                lat = array(rev(lat), dim=c(length(lat),length(long))) ; lat = t(lat)
-                long = array(long, dim=dim(lat))
-                # restrict the spatial extent based on latlong ranges provided
-                remove_lat = intersect(which(lat < (max(latlon_in[,1])+2)),which(lat > (min(latlon_in[,1])-2)))
-                remove_long = intersect(which(long < (max(latlon_in[,2])+2)),which(long > (min(latlon_in[,2])-2)))
-                # now find common where out in both contexts
-                remove_lat = intersect(remove_lat,remove_long)
-                # update both variables because of common matrix
-                remove_long = remove_lat
-                # adjust for matrix rather than vector arrangement
-                remove_lat = remove_lat/dim(lat)[1]
-                remove_long = (remove_long-(floor(remove_lat)*dim(lat)[1]))+1
-                remove_lat = ceiling(remove_lat)
-                # update new dimensions
-                lat_dim = length(min(remove_lat):max(remove_lat)) ; long_dim = length(min(remove_long):max(remove_long))
-                lat = lat[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
-                long = long[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
-            }
+                  # open the file
+                  data1 = nc_open(this_year[t])
 
-            # read the LAI observations
-            var1 = ncvar_get(data1, "LAI") # leaf area index (m2/m2)
-            # check for error variable
-            if (length(which(grepl("LAI_ERR",names(data1$var)) == TRUE)) > 0) {
-                var2 = ncvar_get(data1, "LAI_ERR") # standard error (m2/m2)
-            } else if (length(which(grepl("RMSE",names(data1$var)) == TRUE)) > 0) {
-                var2 = ncvar_get(data1, "RMSE") # standard error (m2/m2)
-            } else {
-                stop("LAI error variable cannot be found for copernicus...")
-            }
-            # re-structure to matching orientation with the lat / long information
-            var1 = var1[,dim(var1)[2]:1] ; var2 = var2[,dim(var2)[2]:1]
-            # reduce spatial cover to the desired area only
-            var1 = var1[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
-            var2 = var2[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
-            # set actual missing data to -9999
-            var1[which(is.na(as.vector(var1)))] = -9999
-            var2[which(is.na(as.vector(var2)))] = -9999
+                  # get timing variable
+                  tmp = strsplit(this_year[t],input_file_1)[[1]][2]
+                  month = as.numeric(substring(tmp,1,2)) ; doy_in = as.numeric(substring(tmp,3,4))
+                  # January is correct already, so only adjust if month is >= February
+                  if (month > 1) {
+                      doy_in = doy_in + sum(month_days[1:(month-1)])
+                  }
 
-            # close files after use
-            nc_close(data1)
+                  # Extract spatial information
+                  lat_in = ncvar_get(data1, "lat") ; long_in = ncvar_get(data1, "lon")
 
-            # remove additional spatial information
-            if (lat_done == FALSE) {
-              # create holding arrays for the lai information...
-              lai_hold = array(NA, dim=c(long_dim*lat_dim,keepers*nsteps))
-              lai_hold[1:length(as.vector(var1)),(t+((yrs-1)*nsteps))] = as.vector(var1)
-              # ...and its uncertainty information...
-              lai_unc_hold = array(NA, dim=c(long_dim*lat_dim,keepers*nsteps))
-              lai_unc_hold[1:length(as.vector(var2)),(t+((yrs-1)*nsteps))] = as.vector(var2)
-              # ...and timing
-              doy_out = doy_in
-            } else {
-              # begin populating the various outputs
-              lai_hold[1:length(as.vector(var1)),(t+((yrs-1)*nsteps))] = as.vector(var1)
-              lai_unc_hold[1:length(as.vector(var2)),(t+((yrs-1)*nsteps))] = as.vector(var2)
-              doy_out = append(doy_out,doy_in)
-            }
+                  # read the LAI observations
+                  var1 = ncvar_get(data1, "LAI") # leaf area index (m2/m2)
+                  # check for error variable
+                  if (length(which(grepl("LAI_ERR",names(data1$var)) == TRUE)) > 0) {
+                      var2 = ncvar_get(data1, "LAI_ERR") # standard error (m2/m2)
+                  } else if (length(which(grepl("RMSE",names(data1$var)) == TRUE)) > 0) {
+                      var2 = ncvar_get(data1, "RMSE") # standard error (m2/m2)
+                  } else {
+                      stop("LAI error variable cannot be found for copernicus...")
+                  }
 
-            # update flag for lat / long load
-            if (lat_done == FALSE) {lat_done = TRUE}
+                  # Close the current file
+                  nc_close(data1)
 
-          } # loop through available time steps in the current year
+                  # Turn lat_in / long_in from vectors to arrays
+                  lat_in = t(array(lat_in, dim=c(dim(var1)[2],dim(var1)[1])))
+                  long_in = array(long_in, dim=c(dim(var1)[1],dim(var1)[2]))
 
-          # keep track of years actually ran
-          yrs = yrs + 1
-          # clean up allocated memeory
-          rm(var1,var2) ; gc()
+                  # Convert to a raster, assuming standad WGS84 grid
+                  var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1))
+                  var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326"))
+                  var2 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var2))
+                  var2 = rasterFromXYZ(var2, crs = ("+init=epsg:4326"))
+                  # Remove the input lat / long information
+                  rm(lat_in,long_in)
 
-      } # is there information for the current year?
+                  # Trim the extent of the overall grid to the analysis domain
+                  var1 = crop(var1,cardamom_ext) ; var2 = crop(var2,cardamom_ext)
+                  # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
+                  if (spatial_type == "grid") {
+                      if (res(var1)[1] < res(cardamom_ext)[1] | res(var1)[2] < res(cardamom_ext)[2]) {
+                          # Create raster with the target resolution
+                          target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+                          # Resample to correct grid.
+                          # Probably should be done via aggregate function to allow for correct error propogation
+                          var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
+                          var2 = resample(var2, target, method="bilinear") ; gc() ; removeTmpFiles()
+                      } # Aggrgeate to resolution
+                  } # spatial_type == "grid"
+
+                  # Extract spatial information just the once
+                  if (done_lat == FALSE) {
+                      # Set flag to true
+                      done_lat = TRUE
+                      # extract dimension information for the grid, note the axis switching between raster and actual array
+                      xdim = dim(var1)[2] ; ydim = dim(var1)[1]
+                      # extract the lat / long information needed
+                      long = coordinates(var1)[,1] ; lat = coordinates(var1)[,2]
+                      # restructure into correct orientation
+                      long = array(long, dim=c(xdim,ydim))
+                      lat = array(lat, dim=c(xdim,ydim))
+                      # create holding arrays for the lai information...
+                      lai_hold = array(NA, dim=c(xdim*ydim,keepers*nsteps))
+                      lai_unc_hold = array(NA, dim=c(xdim*ydim,keepers*nsteps))
+                  }
+                  # break out from the rasters into arrays which we can manipulate
+                  var1 = array(as.vector(unlist(var1)), dim=c(xdim,ydim))
+                  var2 = array(as.vector(unlist(var2)), dim=c(xdim,ydim))
+                  # set actual missing data to -9999
+                  var1[which(is.na(as.vector(var1)))] = -9999
+                  var2[which(is.na(as.vector(var2)))] = -9999
+
+                  # begin populating the various outputs
+                  lai_hold[1:length(as.vector(var1)),(t+((yrs-1)*nsteps))] = as.vector(var1)
+                  lai_unc_hold[1:length(as.vector(var2)),(t+((yrs-1)*nsteps))] = as.vector(var2)
+                  doy_out = append(doy_out,doy_in)
+
+             } # loop through available time steps in the current year
+
+             # keep track of years actually ran
+             yrs = yrs + 1
+             # clean up allocated memeory
+             rm(var1,var2) ; gc()
+
+         } # is there information for the current year?
 
     } # year loop
+
+    # Correct for initialisation
+    doy_out = doy_out[-1]
 
     # Sanity check for LAI
     if (lat_done == FALSE) {stop('No LAI information could be found...')}
@@ -260,12 +274,12 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
     # now remove the ones that are actual missing data
     lai_hold[filter] = NA ; lai_unc_hold[filter] = NA
     # return spatial structure to data
-    lai_out = array(as.vector(lai_hold)[not_na], dim=c(long_dim,lat_dim,length(doy_out)))
-    lai_unc_out = array(as.vector(lai_unc_hold)[not_na], dim=c(long_dim,lat_dim,length(doy_out)))
+    lai_out = array(as.vector(lai_hold)[not_na], dim=c(xdim,ydim,length(doy_out)))
+    lai_unc_out = array(as.vector(lai_unc_hold)[not_na], dim=c(xdim,ydim,length(doy_out)))
 
     # output variables
     lai_all = list(lai_all = lai_out, lai_unc_all = lai_unc_out,
-                  doy_obs = doy_out, lat = lat, long = long, missing_years=missing_years)
+                   doy_obs = doy_out, lat = lat, long = long, missing_years=missing_years)
     # clean up variables
     rm(doy_in,lai_hold,lai_unc_hold,not_na,lai_out,doy_out,lat,long,missing_years) ; gc(reset=TRUE,verbose=FALSE)
     return(lai_all)

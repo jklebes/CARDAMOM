@@ -76,7 +76,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
             Csom = resample(Csom, target, method="ngb") ; gc() ; removeTmpFiles()
         }
         # Trim the extent of the overall grid to the analysis domain
-        Csom = crop(Csom,cardamom_ext) ; Csom_unc = crop(Csom,cardamom_ext)
+        Csom = crop(Csom,cardamom_ext) 
         # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
         if (spatial_type == "grid") {
             if (res(Csom)[1] < res(cardamom_ext)[1] | res(Csom)[2] < res(cardamom_ext)[2]) {
