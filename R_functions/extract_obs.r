@@ -117,12 +117,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     ## Get some initial Csom (gC/m2) information
     ###
 
-    if (Csom_source == "HWSD") {
-        # could add other variables such as SOM (gC.m-2)
-        Csom_initial = extract_hwsd_Csom(spatial_type,resolution,grid_type,latlon_wanted,Csom_all)
-        Csom_initial_unc = Csom_initial * 0.47 # see papers assessing uncertainty of HWSD, ~47 %
-    } else if (Csom_source == "SoilGrids") {
-        Csom_info = extract_soilgrid_Csom(spatial_type,resolution,grid_type,latlon_wanted,Csom_all)
+    if (Csom_source == "HWSD" | Csom_source == "SoilGrids") {
+        Csom_info = extract_Csom_prior(spatial_type,resolution,grid_type,latlon_wanted,Csom_all)
         Csom_initial = Csom_info$Csom_initial ; Csom_initial_unc = Csom_info$Csom_initial_unc
     } else if (Csom_source == "site_specific") {
         infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
@@ -146,12 +142,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     ## Get some sand / clay information (%)
     ###
 
-    if (sand_clay_source == "HWSD") {
-        sand_clay=extract_hwsd_sand_clay(spatial_type,resolution,grid_type,latlon_wanted,sand_clay_all)
-        top_sand = sand_clay$top_sand ; bot_sand = sand_clay$bot_sand
-        top_clay = sand_clay$top_clay ; bot_clay = sand_clay$bot_clay
-    } else if (sand_clay_source == "SoilGrids") {
-        sand_clay=extract_soilgrid_sand_clay(spatial_type,resolution,grid_type,latlon_wanted,sand_clay_all)
+    if (sand_clay_source == "HWSD" | sand_clay_source == "SoilGrids") {
+        sand_clay=extract_sand_clay(spatial_type,resolution,grid_type,latlon_wanted,sand_clay_all)
         top_sand = sand_clay$top_sand ; bot_sand = sand_clay$bot_sand
         top_clay = sand_clay$top_clay ; bot_clay = sand_clay$bot_clay
     } else if (sand_clay_source == "site_specific") {

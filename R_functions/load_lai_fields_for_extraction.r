@@ -5,7 +5,7 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
+load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,cardamom_ext,spatial_type) {
 
   if (lai_source == "MODIS") {
 
@@ -116,11 +116,6 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
     # list all available files which we will then search
     avail_files = list.files(path_to_lai,full.names=TRUE)
     prefix = "c_gls(.)*_" # (.)* wildcard characters for unix standard c_gls*_
-#    if (length(which(grepl("c_gls_LAI_", avail_files))) > 0) {
-#        prefix = "c_gls_LAI_"
-#    } else {
-#        prefix = "c_gls_LAI300_"
-#    }
 
     # timing information on the number of day in a month
     month_days = rep(31,length.out=12)
@@ -133,20 +128,18 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
 
       # first check how many files we have
       if (yr == 1) {
-        # list all available files which we will then search
-#        avail_files = list.files(path_to_lai,full.names=TRUE)
         nsteps = 0
         for (yrr in seq(1, length(years_to_load))) {
-          # create the prefix to the files we will want for a given year
-          input_file_1=paste(prefix,years_to_load[yrr],sep="")
-          # then check whether this pattern is found in the available files
-          this_year = grepl(input_file_1, avail_files) ; this_year = which(this_year == TRUE)
-          # if we have at least one timestep for this year then we have some information otherwise it is missing!
-          if (length(this_year) > 0) {
-              keepers = keepers+1 ; nsteps = max(nsteps,length(this_year))
-          } else {
-              missing_years = append(missing_years,years_to_load[yrr])
-          }
+             # create the prefix to the files we will want for a given year
+             input_file_1=paste(prefix,years_to_load[yrr],sep="")
+             # then check whether this pattern is found in the available files
+             this_year = grepl(input_file_1, avail_files) ; this_year = which(this_year == TRUE)
+             # if we have at least one timestep for this year then we have some information otherwise it is missing!
+             if (length(this_year) > 0) {
+                 keepers = keepers+1 ; nsteps = max(nsteps,length(this_year))
+             } else {
+                 missing_years = append(missing_years,years_to_load[yrr])
+             }
         } # loop through possible years
         rm(yrr)
       } # first year?
@@ -277,7 +270,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load) {
     rm(doy_in,lai_hold,lai_unc_hold,not_na,lai_out,doy_out,lat,long,missing_years) ; gc(reset=TRUE,verbose=FALSE)
     return(lai_all)
 
-  } # if MODIS
+  } # if MODIS or COPERNICUS
 
 } # function end
 ## Use byte compile
