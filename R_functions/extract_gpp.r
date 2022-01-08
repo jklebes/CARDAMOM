@@ -53,7 +53,7 @@ extract_gpp<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in
   }
 
   # warning to the used
-  print(paste("NOTE: GPP averaged over a pixel radius (i.e. centre + radius) of ",radius," points",sep=""))
+  print(paste("NOTE: GPP averaged over a pixel radius (i.e. centre + radius) of ",radius[1]," points",sep=""))
   # convert missing data back to -9999
   gpp[which(is.na(gpp))] = -9999
   gpp_unc[which(is.na(gpp_unc))] = -9999

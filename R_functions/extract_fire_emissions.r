@@ -53,7 +53,7 @@ extract_fire<- function(timestep_days,spatial_type,resolution,grid_type,latlon_i
   }
 
   # warning to the used
-  print(paste("NOTE: Fire averaged over a pixel radius (i.e. centre + radius) of ",radius," points",sep=""))
+  print(paste("NOTE: Fire averaged over a pixel radius (i.e. centre + radius) of ",radius[1]," points",sep=""))
   # convert missing data back to -9999
   fire[which(is.na(fire))] = -9999
   fire_unc[which(is.na(fire_unc))] = -9999
