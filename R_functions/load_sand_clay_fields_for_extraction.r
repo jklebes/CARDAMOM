@@ -31,6 +31,7 @@ load_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source,cardam
         top_sand = crop(top_sand,cardamom_ext) ; bot_sand = crop(bot_sand,cardamom_ext)
         top_clay = crop(top_clay,cardamom_ext) ; bot_clay = crop(bot_clay,cardamom_ext)
         # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
+        # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
         if (spatial_type == "grid") {
             if (res(top_sand)[1] < res(cardamom_ext)[1] | res(top_sand)[2] < res(cardamom_ext)[2]) {
 
@@ -107,6 +108,7 @@ load_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source,cardam
         top_sand = crop(top_sand,cardamom_ext) ; bot_sand = crop(bot_sand,cardamom_ext)
         top_clay = crop(top_clay,cardamom_ext) ; bot_clay = crop(bot_clay,cardamom_ext)
         # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
+        # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
         if (spatial_type == "grid") {
             if (res(top_sand)[1] < res(cardamom_ext)[1] | res(top_sand)[2] < res(cardamom_ext)[2]) {
 

@@ -227,10 +227,16 @@ cardamom <-function (projname,model,method,stage) {
                print("Determining number / locations of grid points for this run ...")
                output = determine_lat_long_needed(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution,PROJECT$grid_type,PROJECT$waterpixels)
                print("Have now determined grid point locations")
+               # Bin together the latitude / longitudes for the grid, extract grid information needed to aid further processing (cardamom_ext)
                latlon = cbind(output$lat,output$long) ; cardamom_ext = output$cardamom_ext ; rm(output) ; gc(reset=TRUE,verbose=FALSE)
            } else if (n == 1 & cardamom_type != "grid") {
                print("Determining number / locations of grid points for this run ...")
-               latlon = cbind(PROJECT$latitude,PROJECT$longitude) ; cardamom_ext = NULL
+               # Combine the latitude / longitude from the site list
+               latlon = cbind(PROJECT$latitude,PROJECT$longitude)
+               # However we still need a reduced area domain for extracting the site level analyses. +c(-0.5,0.5) allows buffer
+               output = determine_lat_long_needed(lat = range(PROJECT$latitude)+c(-0.5,0.5), long = range(PROJECT$longitude)+c(-0.5,0.5)
+                                                 ,resolution = 0.125, grid_type = "wgs84", remove = 0)
+               cardamom_ext = output$cardamom_ext ; rm(output) ; gc(reset=TRUE,verbose=FALSE)
                print("Have now determined grid point locations")
            }
            print(paste("Site ",n," of ",PROJECT$nosites," ",Sys.time(),sep=""))

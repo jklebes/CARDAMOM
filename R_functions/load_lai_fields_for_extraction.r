@@ -208,6 +208,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                   # Trim the extent of the overall grid to the analysis domain
                   var1 = crop(var1,cardamom_ext) ; var2 = crop(var2,cardamom_ext)
                   # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
+                  # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
                   if (spatial_type == "grid") {
                       if (res(var1)[1] < res(cardamom_ext)[1] | res(var1)[2] < res(cardamom_ext)[2]) {
                           # Create raster with the target resolution

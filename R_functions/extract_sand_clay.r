@@ -40,8 +40,6 @@ extract_sand_clay<- function(spatial_type,resolution,grid_type,latlon_in,sand_cl
 	    # error checking
 	    if (is.na(top_sand) | top_sand <= 0) {radius = radius+1 ; answer = NA} else {answer = 0}
 	}
-  # Inform the user
-	print(paste("NOTE sand/clay averaged over a pixel radius (i.e. centre + radius) of ",radius," points",sep=""))
 
 	# just to check because when averaging sometimes the sand / clay combinations can be > 100 %
 	# 94 % chosesn as this is the highest total % found in the HWSD dataset
