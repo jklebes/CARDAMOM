@@ -220,9 +220,9 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                   } # spatial_type == "grid"
 
                   # Extract spatial information just the once
-                  if (done_lat == FALSE) {
+                  if (lat_done == FALSE) {
                       # Set flag to true
-                      done_lat = TRUE
+                      lat_done = TRUE
                       # extract dimension information for the grid, note the axis switching between raster and actual array
                       xdim = dim(var1)[2] ; ydim = dim(var1)[1]
                       # extract the lat / long information needed
