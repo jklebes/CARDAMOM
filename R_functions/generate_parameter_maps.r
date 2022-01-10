@@ -689,7 +689,7 @@ generate_parameter_maps<-function(PROJECT) {
                                       Note_2 = "Biomass removal / harvest MTT calculation is calculated assuming a proportional amount of fine root dies, this is not the assumption used in CDEA model versions.")
   # output some aggragated values
   # probably best to add some aggregated met drivers to this concoction here
-  save(grid_parameters,file=outfile, compress = "gzip")
+  save(grid_parameters,file=outfile, compress = "gzip", compression_level = 9)
 
   # tidy before leaving
   gc(reset=TRUE, verbose=FALSE)

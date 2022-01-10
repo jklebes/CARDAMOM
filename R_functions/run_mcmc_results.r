@@ -360,11 +360,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
           }
           print("processing and storing ensemble output")
           # store the results now in binary file
-          save(parameter_covariance,parameters,drivers,site_ctessel_pft,aNPP,natMTT,MTT,aMTT,SS_gCm2,file=outfile1, compress="gzip")
+          save(parameter_covariance,parameters,drivers,site_ctessel_pft,aNPP,natMTT,MTT,aMTT,SS_gCm2,file=outfile1, compress="gzip", compression_level = 9)
           # determine whether this is a gridded run (or one with the override in place)
           if (PROJECT$spatial_type == "site" | grid_override == TRUE) {
               # ...if this is a site run save the full ensemble and everything else...
-              save(parameters,drivers,states_all,site_ctessel_pft,file=outfile, compress="gzip")
+              save(parameters,drivers,states_all,site_ctessel_pft,file=outfile, compress="gzip", compression_level = 9)
           } else {
               # ...otherwise this is a grid and we want straight forward reduced dataset of common stocks and fluxes
               num_quantiles = c(0.025,0.05,0.25,0.5,0.75,0.95,0.975) ; num_quantiles_agg = seq(0.0,1, length = 100)
@@ -626,7 +626,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               site_output$fire_par_cor = states_all$fire_par_cor
 
               # save to pixel specific file for the moment... in "run_mcmc_results" these will be combined into a single grid
-              save(site_output,file=outfile2, compress = "gzip")
+              save(site_output,file=outfile2, compress = "gzip", compression_level = 9)
         }
 
         dummy = 0
@@ -1459,7 +1459,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
       }
 
       # now save the combined grid file
-      save(grid_output, file=outfile_grid, compress = "gzip")
+      save(grid_output, file=outfile_grid, compress = "gzip", compression_level = 9)
 
   } # gridded run?
 
