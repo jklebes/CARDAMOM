@@ -224,11 +224,11 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   # Define model parameter prior information
   PARPRIORS = rep(-9999.0,length.out=100)   # Prior estimate
   PARPRIORUNC = rep(-9999.0,length.out=100) # Gaussian uncertainty estimate
-  PARPRIORWEIGHTING = rep(1,length.out=100) # Weighting factor, e.g. RaGPP is assumed to be applicable on annual basis, so if 12 years = 12
+  PARPRIORWEIGHT = rep(1,length.out=100) # Weighting factor, e.g. RaGPP is assumed to be applicable on annual basis, so if 12 years = 12
   #For all other multiparameter user-defined priors
   OTHERPRIORS = rep(-9999.0,length.out=50)
   OTHERPRIORUNC = rep(-9999.0,length.out=50)
-  OTHERPRIORWEIGHTING = rep(1,length.out=50) # Weighting factor, e.g. RaGPP is assumed to be applicable on annual basis, so if 12 years = 12
+  OTHERPRIORWEIGHT = rep(1,length.out=50) # Weighting factor, e.g. RaGPP is assumed to be applicable on annual basis, so if 12 years = 12
 
   # Assign model specific parameter priors
   if (modelname == "DALEC_CDEA" | modelname == "DALEC_CDEA_LU_FIRES") {
@@ -930,7 +930,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
 #  }
 
   # combine the static data
-  DATA_STAT = c(PARPRIORS,PARPRIORUNC,PARPRIORWEIGHTING,OTHERPRIORS,OTHERPRIORUNC,OTHRPRIORWEIGHTING)
+  DATA_STAT = c(PARPRIORS,PARPRIORUNC,PARPRIORWEIGHT,OTHERPRIORS,OTHERPRIORUNC,OTHRPRIORWEIGHT)
 
   # open the binary file
   zz <- file(file, "wb")
