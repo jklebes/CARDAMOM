@@ -436,7 +436,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         }
 
     } else if (Cwood_initial_source == "Avitabile" | Cwood_initial_source == "mpi_biomass" |
-               Cwood_initial_source == "GlobBIOMASS" | Cwood_initial_source == "UoL_stable_forest" |
+               Cwood_initial_source == "UoL_stable_forest" |
                Cwood_initial_source == "UoL_stable_savannah") {
 
         # All maps converted into common format, therefore a common extraction subroutine can be used
@@ -494,7 +494,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
             Cwood_stock_unc = rep(-9999,times = length(Cwood_stock))
             Cwood_stock_unc[which(Cwood_stock != -9999)] = abs(0.25 * Cwood_stock[which(Cwood_stock != -9999)])
         }
-    } else if (Cwood_stock_source == "GlobBIOMASS" | Cwood_stock_source == "mpi_biomass" |
+    } else if (Cwood_stock_source == "mpi_biomass" |
                Cwood_stock_source == "INPE_Avitabile" | Cwood_stock_source == "Avitabile" |
                Cwood_stock_source == "McNicol" | Cwood_stock_source == "Biomass_maps_Africa_UoL" |
                Cwood_stock_source == "ESA_CCI_Biomass") {
@@ -512,14 +512,6 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
             Cwood_stock_unc = rep(-9999, length(timestep_days))
         }
 
-#        # GlobBIOMASS / ESA_CCI Biomass maps, there is debate as to whether they can be considered as part of a time series
-#        # Therefore for the moment we should consider these to be separate. If our analysis covers both time periods we will
-#        # use the first only only as the 2010 appears to be better than the 2017 maps (at least over the UK)
-#        if (Cwood_stock_source == "GlobBIOMASS" & length(Cwood_stock_all$place_obs_in_step) > 1) {
-#            # We have more than 1 time step with information, therefore we will mask out the the second one
-#            Cwood_stock[Cwood_stock_all$place_obs_in_step[2]] = -9999
-#            Cwood_stock_unc[Cwood_stock_all$place_obs_in_step[2]] = -9999
-#        }
         # INPE Map is a merge of two separate ones, therefore it is a bad idea to have two time steps,
         # one from each map as these data are inconsistent.
         # Therefore, check whether we have two data points and take an average + average location

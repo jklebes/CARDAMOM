@@ -22,20 +22,12 @@ extract_Csom_prior<-function(spatial_type,resolution,grid_type,latlon_wanted,Cso
 	# return long to 0-360
 	if (length(check1) > 0) { Csom_all$long[check1] = Csom_all$long[check1]+360 }
 
-  # Extract the correct value, but allow for expanding to a larger area if we pick a no data area
-  radius = c(0,0) # assume precise location is known
-  answer = NA
-  while (is.na(answer) == TRUE) {
-    # work out average areas
-    average_i = (i1-radius[1]):(i1+radius[1]) ; average_j = (j1-radius[2]):(j1+radius[2])
-    average_i = max(1,(i1-radius[1])):min(dim(Csom_all$Csom)[1],(i1+radius[1]))
-    average_j = max(1,(j1-radius[2])):min(dim(Csom_all$Csom)[2],(j1+radius[2]))
-    # carry out averaging
-    Csom = mean(as.vector(Csom_all$Csom[average_i,average_j]), na.rm=TRUE)
-    Csom_unc = mean(as.vector(Csom_all$Csom_unc[average_i,average_j]), na.rm=TRUE)
-    # check for errors
-    if (is.na(Csom) | Csom < 0) {radius = radius+1 ; answer = NA} else {answer = 1}
-  }
+  # Extract target location
+  Csom = Csom_all$Csom[i1,j1]
+  Csom_unc = Csom_all$Csom_unc[i1,j1]
+
+  # Convert any NaN to missing data flag -9999
+  Csom[which(is.na(Csom))] = -9999 ; Csom_unc[which(is.na(Csom_unc))] = -9999
 
   # retun back to the user
   return(list(Csom_initial = Csom, Csom_initial_unc = Csom_unc))

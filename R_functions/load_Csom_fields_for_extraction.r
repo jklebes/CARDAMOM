@@ -67,7 +67,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
 
         # Convert to a raster, assuming standad WGS84 grid
         Csom = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(Csom))
-        Csom = rasterFromXYZ(xyz, crs = ("+init=epsg:4326"))
+        Csom = rasterFromXYZ(Csom, crs = ("+init=epsg:4326"))
 
         # Create raster with the target crs (technically this bit is not required)
         target = raster(crs = ("+init=epsg:4326"), ext = extent(Csom), resolution = res(Csom))

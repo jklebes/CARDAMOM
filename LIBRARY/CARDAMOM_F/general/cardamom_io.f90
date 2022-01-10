@@ -751,8 +751,8 @@ module cardamom_io
     end do
 
     ! Add a sensible limit on the weighting value
-    where(DATAin%parpriorweighting < 1) DATAin%parpriorweighting = 1
-    where(DATAin%otherpriorweighting < 1) DATAin%otherpriorweighting = 1
+    where(DATAin%parpriorweight < 1) DATAin%parpriorweight = 1
+    where(DATAin%otherpriorweight < 1) DATAin%otherpriorweight = 1
 
     ! now we know specific information about the dimensions in the file lets use
     ! it to allocate to the module variables
