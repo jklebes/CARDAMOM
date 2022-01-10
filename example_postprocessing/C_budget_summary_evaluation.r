@@ -157,7 +157,7 @@ landmask = shapefile("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/R_functions
 landmask = spTransform(landmask,crs(cardamom_ext))
 # subset by continent (could also do by country)
 #landmask = subset(landmask, CONTINENT == "South America") # Change continent to target area or comment out if spanning zones
-landmask = subset(landmask, CONTINENT == "Africa") # Change continent to target area or comment out if spanning zones
+#landmask = subset(landmask, CONTINENT == "Africa") # Change continent to target area or comment out if spanning zones
 # Clip to the extent of the CARDAMOM analysis
 landmask = crop(landmask, cardamom_ext)
 

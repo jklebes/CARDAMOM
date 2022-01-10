@@ -321,6 +321,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     # Combine with an estimate of model structural error.
     # Assumed uncertainty structure as agreed with Anthony Bloom
     Fire_unc[Fire_unc >= 0] = sqrt(Fire_unc[Fire_unc >= 0]**2 + (0.1*mean(Fire[Fire >= 0]))**2)
+    # As fire can often be zero in a given location, providing that information with an associated 0 uncertainty
+    # creates unrealistic behavious in the cpst function. As a result apply a minimum value of 0.1
+    Fire_unc[Fire_unc >= 0] = pmax(0.1, Fire_unc[Fire_unc >= 0])
 
     ###
     ## Get some Evapotranspiration information (time series; kgH2O/m2/day)
