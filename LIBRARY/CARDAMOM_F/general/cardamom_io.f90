@@ -668,10 +668,10 @@ module cardamom_io
     rewind(ifile_unit)
 
     ! allocate memory
-    allocate(statdat(100))
+    allocate(statdat(50))
 
-    ! now read the static elements (1-100)
-    do i = 1, 100 ! number of static elements
+    ! now read the static elements (1-50)
+    do i = 1, 50 ! number of static elements
        read(ifile_unit) statdat(i)
     end do
 
@@ -708,33 +708,51 @@ module cardamom_io
     ! clean up
     deallocate(statdat)
 
-    ! read in parameter information
+    ! read in parameter information (100 elements)
     a = 1
-    do i = 101, 200
+    do i = 51, 150
        read(ifile_unit) DATAin%parpriors(a)
        a = a + 1
     end do
 
-    ! read in parameter uncertainty
+    ! read in parameter uncertainty (100 elements)
     a = 1
-    do i = 201, 300
+    do i = 151, 250
        read(ifile_unit) DATAin%parpriorunc(a)
        a = a + 1
     end do
 
-    ! read in 'other' parameter priors
+    ! read in parameter effect period (100 elements)
     a = 1
-    do i = 301, 400
+    do i = 251, 350
+       read(ifile_unit) DATAin%parpriorweight(a)
+       a = a + 1
+    end do
+
+    ! read in 'other' parameter priors (50 elements)
+    a = 1
+    do i = 351, 400
        read(ifile_unit) DATAin%otherpriors(a)
        a = a + 1
     end do
 
-    ! read in 'other' parameter priors uncertainties
+    ! read in 'other' parameter priors uncertainties (50 elements)
     a = 1
-    do i = 401, 500
+    do i = 401, 450
        read(ifile_unit) DATAin%otherpriorunc(a)
        a = a + 1
     end do
+
+    ! read in 'other' parameter priors weighting (50 elements)
+    a = 1
+    do i = 451, 500
+       read(ifile_unit) DATAin%otherpriorweight(a)
+       a = a + 1
+    end do
+
+    ! Add a sensible limit on the weighting value
+    where(DATAin%parpriorweighting < 1) DATAin%parpriorweighting = 1
+    where(DATAin%otherpriorweighting < 1) DATAin%otherpriorweighting = 1
 
     ! now we know specific information about the dimensions in the file lets use
     ! it to allocate to the module variables

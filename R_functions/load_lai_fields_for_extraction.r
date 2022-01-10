@@ -12,76 +12,104 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
       # let the user know this might take some time
       print("Loading processed lai fields for subsequent sub-setting ...")
 
-    lat_done = FALSE ; missing_years=0 ; keepers=0 ; yrs=1
-    # loop for year here
-    for (yr in seq(1, length(years_to_load))) {
-      print(paste("... ",round((yr/length(years_to_load))*100,0),"% completed ",Sys.time(),sep=""))
+      lat_done = FALSE ; missing_years=0 ; keepers=0 ; yrs=1
+      # loop for year here
+      for (yr in seq(1, length(years_to_load))) {
 
-      if (yr == 1) {
-        # first check how many files we have
-        for (yrr in seq(1, length(years_to_load))) {
-          # open processed modis files
-          input_file_1=paste(path_to_lai,"modis_lai_with_lat_long_",years_to_load[yrr],".nc",sep="")
-          if (file.exists(input_file_1) == TRUE) {keepers=keepers+1} else {missing_years=append(missing_years,years_to_load[yrr])}
-        }
-      }
-      # open processed modis files
-      input_file_1=paste(path_to_lai,"modis_lai_with_lat_long_",years_to_load[yr],".nc",sep="")
+           # Inform the user
+           print(paste("... ",round((yr/length(years_to_load))*100,0),"% completed ",Sys.time(),sep=""))
 
-      # check to see if file exists if it does then we read it in, if not then we assume its a year we don't have data for and move on
-      if (file.exists(input_file_1) == TRUE) {
-        # open the file
-        data1=nc_open(input_file_1)
+           if (yr == 1) {
+               # first check how many files we have
+               for (yrr in seq(1, length(years_to_load))) {
+                    # open processed modis files
+                    input_file_1 = paste(path_to_lai,"modis_lai_with_lat_long_",years_to_load[yrr],".nc",sep="")
+                    if (file.exists(input_file_1) == TRUE) {
+                        keepers = keepers+1
+                    } else {
+                        missing_years = append(missing_years,years_to_load[yrr])
+                    }
+               }
+           }
 
-        # get timing variable
-        doy_in=ncvar_get(data1,"doy")
+           # open processed modis files
+           input_file_1 = paste(path_to_lai,"modis_lai_with_lat_long_",years_to_load[yr],".nc",sep="")
 
-        # extract location variables
-        if (lat_done == FALSE) {
-          lat=ncvar_get(data1, "lat") ; long=ncvar_get(data1, "long")
-          # restrict the spatial extent based on latlong ranges provided
-          remove_lat=intersect(which(lat < (max(latlon_in[,1])+2)),which(lat > (min(latlon_in[,1])-2)))
-          remove_long=intersect(which(long < (max(latlon_in[,2])+2)),which(long > (min(latlon_in[,2])-2)))
-          # now find common where out in both contexts
-          remove_lat=intersect(remove_lat,remove_long)
-          # update both variables because of common matrix
-          remove_long=remove_lat
-          # adjust for matrix rather than vector arrangement
-          remove_lat=remove_lat/dim(lat)[1]
-          remove_long=(remove_long-(floor(remove_lat)*dim(lat)[1]))+1
-          remove_lat=ceiling(remove_lat)
-          # update new dimensions
-          lat_dim=length(min(remove_lat):max(remove_lat)) ; long_dim=length(min(remove_long):max(remove_long))
-          lat=lat[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)] ; long=long[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
-        }
+           # check to see if file exists if it does then we read it in, if not then we assume its a year we don't have data for and move on
+           if (file.exists(input_file_1) == TRUE) {
 
-        # read the modis lai drivers
-        var1=ncvar_get(data1, "modis_lai")
-        # reduce spatial cover to the desired area only
-        var1=var1[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat),]
-        # set actual missing data to -9999
-        var1[which(is.na(as.vector(var1)))] = -9999
+               # open the file
+               data1 = nc_open(input_file_1)
+               # get timing variable
+               doy_in = ncvar_get(data1,"doy")
 
-        # close files after use
-        nc_close(data1)
+               # read the modis lai drivers
+               var1 = ncvar_get(data1, "modis_lai")
+               # read latitude / longitude information
+               lat_in = ncvar_get(data1, "lat") ; long_in = ncvar_get(data1, "long")
 
-        # remove additional spatial information
-        if (lat_done == FALSE) {
-          lai_hold=array(NA, dim=c(long_dim*lat_dim*48,keepers))
-          lai_hold[1:length(as.vector(var1)),yrs]=as.vector(var1)
-          doy_out=doy_in
-        } else {
-          lai_hold[1:length(as.vector(var1)),yrs]=as.vector(var1)
-          doy_out=append(doy_out,doy_in)
-        }
+               # close open file
+               nc_close(data1)
 
-        # update flag for lat / long load
-        if (lat_done == FALSE) {lat_done = TRUE}
-        # keep track of years actually ran
-        yrs=yrs+1
-        # clean up allocated memeory
-        rm(var1) ; gc()
-      } # end of does file exist
+               # Loop through each time step to do aggregation processes
+               for (t in seq(1, dim(var1)[3])) {
+                    # Convert to a raster, assuming standad WGS84 grid
+                    var2 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1[,,t]))
+                    var2 = rasterFromXYZ(var2, crs = ("+init=epsg:4326"))
+
+                    # Trim the extent of the overall grid to the analysis domain
+                    var2 = crop(var2,cardamom_ext)
+                    # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
+                    # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+                    if (spatial_type == "grid") {
+                        if (res(var2)[1] < res(cardamom_ext)[1] | res(var2)[2] < res(cardamom_ext)[2]) {
+                            # Create raster with the target resolution
+                            target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+                            # Resample to correct grid.
+                            # Probably should be done via aggregate function to allow for correct error propogation
+                            var2 = resample(var2, target, method="bilinear") ; gc() ; removeTmpFiles()
+                        } # Aggrgeate to resolution
+                    } # spatial_type == "grid"
+
+                    # Extract spatial information just the once
+                    if (lat_done == FALSE) {
+                        # Set flag to true
+                        lat_done = TRUE
+                        # extract dimension information for the grid, note the axis switching between raster and actual array
+                        xdim = dim(var2)[2] ; ydim = dim(var2)[1]
+                        # extract the lat / long information needed
+                        long = coordinates(var2)[,1] ; lat = coordinates(var2)[,2]
+                        # restructure into correct orientation
+                        long = array(long, dim=c(xdim,ydim))
+                        lat = array(lat, dim=c(xdim,ydim))
+                        # create holding arrays for the lai information...
+                        lai_hold = array(NA, dim=c(xdim*ydim*48,keepers))
+                    }
+                    # Create local array for holding this years information
+                    lai_year_hold = array(NA, dim=c(xdim*ydim,48))
+                    # break out from the rasters into arrays which we can manipulate
+                    var2 = array(as.vector(unlist(var2)), dim=c(xdim,ydim))
+                    # set actual missing data to -9999
+                    var2[which(is.na(as.vector(var2)))] = -9999
+
+                    # begin populating the various outputs
+                    lai_year_hold[1:length(as.vector(var2)),t] = as.vector(var2)
+                    doy_out = append(doy_out,doy_in)
+
+               } # end of year loop
+
+               # Assign yearly information into the larger domain
+               lai_hold[,yr] = as.vector(lai_year_hold) ; rm(lai_year_hold)
+
+               # set actual missing data to -9999
+               lai_hold[which(is.na(as.vector(lai_hold)))] = -9999
+
+               # keep track of years actually ran
+               yrs = yrs+1
+               # clean up allocated memeory
+               rm(var1) ; gc()
+
+           } # end of does file exist
 
     } # year loop
 
@@ -89,17 +117,17 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
     if (lat_done == FALSE) {stop('No LAI information could be found...')}
 
     # remove initial value
-    missing_years=missing_years[-1]
+    missing_years = missing_years[-1]
 
     # check which ones are NA because I made them up
-    not_na=is.na(as.vector(lai_hold))
-    not_na=which(not_na == FALSE)
+    not_na = is.na(as.vector(lai_hold))
+    not_na = which(not_na == FALSE)
 
     # now remove the ones that are actual missing data
     lai_hold[which(as.vector(lai_hold) == -9999)] = NA
     # return spatial structure to data
-    lai_out=array(as.vector(lai_hold)[not_na], dim=c(long_dim,lat_dim,length(doy_out)))
-    lai_unc_out = array(-9999, dim=dim(lai_out))
+    lai_out = array(as.vector(lai_hold)[not_na], dim=c(long_dim,lat_dim,length(doy_out)))
+    lai_unc_out = array(lai_out*0.20, dim=dim(lai_out)) ; lai_unc_out[which(lai_unc_out < 0.2)] = 0.2
     # output variables
     lai_all = list(lai_all = lai_out, lai_unc_all = lai_unc_out,
                   doy_obs = doy_out, lat = lat, long = long, missing_years=missing_years)

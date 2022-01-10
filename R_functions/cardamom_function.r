@@ -221,6 +221,7 @@ cardamom <-function (projname,model,method,stage) {
       loaded_all = FALSE ; met_all = 0 ; lai_all = 0 ; Csom_all = 0 ; forest_all = 0 ; Cwood_all = 0
       # load from PROJECT time step information
       timestep_days = PROJECT$model$timestep_days
+      noyears = length(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year))
       # start looping through sites to create site specific files of obs and met
       for (n in seq(1, PROJECT$nosites)) {
            if (n == 1 & cardamom_type == "grid") {
@@ -287,7 +288,8 @@ cardamom <-function (projname,model,method,stage) {
                PROJECT$model = cardamom_model_details(PROJECT$model$name,pft_specific_parameters,PROJECT$ctessel_pft)
                # write out the relevant binary files
 #if (max(obs$Cwood_stock) > 0) {
-               binary_data(met,obs,filename,PROJECT$edc,latlon[n,],PROJECT$ctessel_pft[n],PROJECT$model$name,PROJECT$parameter_type,PROJECT$model$nopars[n])
+               binary_data(met,obs,filename,PROJECT$edc,latlon[n,],PROJECT$ctessel_pft[n],
+                           PROJECT$model$name,PROJECT$parameter_type,PROJECT$model$nopars[n],noyears)
 #}
            } # if (file.exists(filename) == FALSE | repair == 1)
       } # site loop

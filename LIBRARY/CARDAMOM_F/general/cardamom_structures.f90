@@ -141,10 +141,13 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
       integer :: edc_random_search !
 
       ! priors
-      double precision, dimension(100) :: parpriors     & ! prior values
-                                         ,parpriorunc   & ! prior uncertainties
-                                         ,otherpriors   & ! other prior values
-                                         ,otherpriorunc   ! other prior uncertainties
+      double precision, dimension(100) :: parpriors       & ! prior values
+                                         ,parpriorunc     & ! prior uncertainties
+                                         ,parpriorweight   ! prior weighting
+      ! other priors
+      double precision, dimension(50) :: otherpriors      & ! other prior values
+                                        ,otherpriorunc    & ! other prior uncertainties
+                                        ,otherpriorweight   ! other prior weighting
 
   end type ! DATA_type
   type (DATA_type), save :: DATAin

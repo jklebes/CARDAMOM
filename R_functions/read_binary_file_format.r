@@ -25,24 +25,30 @@ read_binary_file_format<- function(infile) {
 
       # begin preparing to disagregate the different sections of the file
       k=0
-      # extract static data (100 places)
-      static=bd[(k+1):(k+100)]
-      k=k+100
+      # extract static data (50 places)
+      static=bd[(k+1):(k+50)]
+      k=k+50
       # extract priors
       pr=bd[(k+1):(k+100)]
       k=k+100
-      # extract prior uncertainties (50 places)
+      # extract prior uncertainties (100 places)
       pru=bd[(k+1):(k+100)]
       k=k+100
+      # extract prior weighting (100 places)
+      prw=bd[(k+1):(k+100)]
+      k=k+100
       # other priors (50 places)
-      opr=bd[(k+1):(k+100)]
-      k=k+100
+      opr=bd[(k+1):(k+50)]
+      k=k+50
       # other prior uncertainties (50 places)
-      opru=bd[(k+1):(k+100)]
-      k=k+100
+      opru=bd[(k+1):(k+50)]
+      k=k+50
+      # other prior weighting (50 places)
+      oprw=bd[(k+1):(k+50)]
+      k=k+50
 
       # store prior information
-      md=list(parpriors=pr,parpriorunc=pru,otherpriors=opr,otherpriorunc=opru)
+      md=list(parpriors=pr,parpriorunc=pru,parpriorweight=prw,otherpriors=opr,otherpriorunc=opru,otherpriorweight=oprw)
 
       # id code (not currently used)
       md$id=static[1]

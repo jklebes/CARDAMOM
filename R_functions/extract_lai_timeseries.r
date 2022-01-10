@@ -81,17 +81,19 @@ extract_lai_timeseries<- function(timestep_days,spatial_type,resolution,grid_typ
        # create needed variables
        lai_agg = array(NA,dim=length(run_day_selector))
        lai_unc_agg = array(NA,dim=length(run_day_selector))
+       # Convert -9999 into NaN
+       lai_out[which(lai_out == -9999)] = NA
+       lai_unc_out[which(lai_unc_out == -9999)] = NA
        for (y in seq(1,length(run_day_selector))) {
-            pick = lai_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]]
-            pick_unc = lai_unc_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]]
-            lai_agg[y] = mean(pick[which(pick != -9999)],na.rm=TRUE)
-            lai_unc_agg[y] = mean(pick_unc[which(pick_unc != -9999)],na.rm=TRUE)
+            pick = (run_day_selector[y]-timestep_days[y]):run_day_selector[y]
+            lai_agg[y] = mean(lai_out[pick], na.rm=TRUE)
+            lai_unc_agg[y] = mean(lai_unc_out[pick], na.rm=TRUE)
        }
        # convert missing values to -9999
-       lai_agg[which(is.na(lai_agg))]=-9999
-       lai_unc_agg[which(is.na(lai_unc_agg))]=-9999
+       lai_agg[which(is.na(lai_agg))] = -9999
+       lai_unc_agg[which(is.na(lai_unc_agg))] = -9999
        # update with new output information
-       lai_out=lai_agg ; lai_unc_out=lai_unc_agg
+       lai_out = lai_agg ; lai_unc_out = lai_unc_agg
        # clean up
        rm(lai_agg,lai_unc_agg,y) ; gc()
 

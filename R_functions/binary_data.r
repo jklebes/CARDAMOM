@@ -7,13 +7,18 @@
 # Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE) & J. F. Exbrayat (UoE).
 
 # TEMPLATE FOR ALL DALEC MCMC DATA files
-# Static Elements: 1-100
-# Parameter Priors: 101-200
-# Parameter prior uncertainty: 201-300
-# Other priors & uncertainties: 301-400
-# TEMPORAL DRIVERS & DATA: 401-end
+# Static Elements: 1-50
+# Parameter Priors: 51-150
+# Parameter prior uncertainty: 151-250
+# Parameter prior weightings: 251-350
+# Other priors: 351-400
+# Other prior uncertainties: 401-450
+# Other prior weights: 451-500
+# TEMPORAL DRIVERS & DATA: 501-end
 
-binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter_type,nopars) {
+binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter_type,nopars,noyears) {
+
+  # Inform the user
   print(paste("writing out binary...",Sys.time(),sep=""))
 
   # set model ID
@@ -210,18 +215,20 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   # if force_random_search == 1 then CARDAMOM ignores parameter priors even if present in the file during the EDC initialisation
   force_random_search = -9999 #; OBS$age = -9999
   # pass static information
-  static_data = rep(-9999.0,length.out=100)
+  static_data = rep(-9999.0,length.out=50)
   tmp = c(modelid,latlon_in[1],dim(MET)[1],dim(MET)[2],dim(OBSMAT)[2],
           EDC,ctessel_pft,OBS$yield_class,OBS$age,nopars,force_random_search,
           OBS$top_sand[1],OBS$bot_sand[1],OBS$top_clay[1],OBS$bot_clay[1])
   static_data[1:length(tmp)] = tmp
 
-  #ONLY USED FOR LOG NORMALLY PSERIBUTED PARAMETER PRIORS
-  PARPRIORS = rep(-9999.0,length.out=100)
-  PARPRIORUNC = rep(-9999.0,length.out=100)
+  # Define model parameter prior information
+  PARPRIORS = rep(-9999.0,length.out=100)   # Prior estimate
+  PARPRIORUNC = rep(-9999.0,length.out=100) # Gaussian uncertainty estimate
+  PARPRIORWEIGHTING = rep(1,length.out=100) # Weighting factor, e.g. RaGPP is assumed to be applicable on annual basis, so if 12 years = 12
   #For all other multiparameter user-defined priors
-  OTHERPRIORS = rep(-9999.0,length.out=100)
-  OTHERPRIORUNC = rep(-9999.0,length.out=100)
+  OTHERPRIORS = rep(-9999.0,length.out=50)
+  OTHERPRIORUNC = rep(-9999.0,length.out=50)
+  OTHERPRIORWEIGHTING = rep(1,length.out=50) # Weighting factor, e.g. RaGPP is assumed to be applicable on annual basis, so if 12 years = 12
 
   # Assign model specific parameter priors
   if (modelname == "DALEC_CDEA" | modelname == "DALEC_CDEA_LU_FIRES") {
@@ -285,15 +292,15 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       # Other priors
       OTHERPRIORS[5] = OBS$Cwood_potential     ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
   } else if (modelname == "DALEC_CDEA_ACM2_BUCKET") {
-      PARPRIORS[2] = 0.46                ; PARPRIORUNC[2] = 0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+      PARPRIORS[2] = 0.46                ; PARPRIORUNC[2] = 0.12 ; PARPRIORWEIGHT[2] = noyears # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
 #      PARPRIORS[11]=1.89*14.77735       ; PARPRIORUNC[11]=1.89*0.4696238*2 # Derived from ACM2 recalibration.
                                                                     # Note despite having the same name as ecosystem property of Amax per gN or SPA's kappaC
                                                                     # These observational constraints are not the same and would lead to
                                                                     # overestimation of GPP (SPA = 34, ACM2 = 15), but here multiple by avN (1.89) to get Ceff
-      PARPRIORS[11]=21.1491            ; PARPRIORUNC[11]=8.534234*0.45 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+      PARPRIORS[11]=21.1491            ; PARPRIORUNC[11]=8.534234*0.45 ; PARPRIORWEIGHT[11] = noyears # Ceff: derived from multiple trait values from Kattge et al., (2011)
                                                                       #       Note that this prior is difference from DALEC_CDEA_LU_FIRES
                                                                       # due to the different temperature response functions used in ACM2 vs ACM 1
-      PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc
+      PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc ;  ; PARPRIORWEIGHT[17] = noyears
 #      PARPRIORS[17]=35.5                ; PARPRIORUNC[17]=35.5*0.23 # Kiuic LCA prior
       PARPRIORS[19]=OBS$Cfol_initial    ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
       PARPRIORS[20]=OBS$Croots_initial  ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -306,7 +313,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[31] = 0.01    ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
       # Other priors
       OTHERPRIORS[1] = OBS$soilwater ; OTHERPRIORUNC[1] = OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
-      OTHERPRIORS[4] = 0.66          ; OTHERPRIORUNC[4] = 0.12 # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
+      OTHERPRIORS[4] = 0.66          ; OTHERPRIORUNC[4] = 0.12 ; OTHERPRIORWEIGHT[4] = noyears # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
       OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
   } else if (modelname == "DALEC_CDEA_ACM2_BUCKET_LAB") {
       PARPRIORS[2] =0.46                ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
@@ -923,7 +930,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
 #  }
 
   # combine the static data
-  DATA_STAT = c(PARPRIORS,PARPRIORUNC,OTHERPRIORS,OTHERPRIORUNC)
+  DATA_STAT = c(PARPRIORS,PARPRIORUNC,PARPRIORWEIGHTING,OTHERPRIORS,OTHERPRIORUNC,OTHRPRIORWEIGHTING)
 
   # open the binary file
   zz <- file(file, "wb")

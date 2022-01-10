@@ -274,7 +274,7 @@ module model_likelihood_module
 
     ! Calculate log-likelihood associated with priors
     ! We always want this
-    ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
+    ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,DATAin%parpriorweight,PARS)
     ! calculate final model likelihood when compared to obs
     ML_obs_out = ML_obs_out + scale_likelihood(PI%npars,PARS)
 
@@ -932,7 +932,7 @@ module model_likelihood_module
 
     ! Calculate log-likelihood associated with priors
     ! We always want this
-    ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
+    ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,DATAin%parpriorweight,PARS)
     ! calculate final model likelihood when compared to obs
     ML_obs_out = ML_obs_out + likelihood(PI%npars,PARS)
 
@@ -940,7 +940,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  double precision function likelihood_p(npars,parpriors,parpriorunc,pars)
+  double precision function likelihood_p(npars,parpriors,parpriorunc,parpriorweight,pars)
     ! function calculates the parameter based log-likelihood for the current set
     ! of parameters. This assumes that we have any actual priors / prior
     ! uncertainties to be working with. This does include initial states, as we
@@ -950,9 +950,10 @@ module model_likelihood_module
 
     ! declare input variables
     integer, intent(in) :: npars
-    double precision, dimension(npars), intent(in) :: pars      & ! current parameter vector
-                                                     ,parpriors & ! prior values for parameters
-                                                     ,parpriorunc ! prior uncertainties
+    double precision, dimension(npars), intent(in) :: pars         & ! current parameter vector
+                                                     ,parpriors    & ! prior values for parameters
+                                                     ,parpriorunc  & ! prior uncertainties
+                                                     ,parpriorweight ! prior weighting
 
     ! declare local variables
     integer :: n
@@ -962,7 +963,7 @@ module model_likelihood_module
     likelihood_p = 0d0 ; local_likelihood = 0d0
 
     ! now loop through defined parameters for their uncertainties
-    where (parpriors > -9999) local_likelihood = ((pars-parpriors)/parpriorunc)**2
+    where (parpriors > -9999) local_likelihood = parpriorweight*((pars-parpriors)/parpriorunc)**2
     likelihood_p = sum(local_likelihood) * (-0.5d0)
 
     ! dont for get to return
@@ -1196,14 +1197,16 @@ module model_likelihood_module
     ! is actually assessed against an observation
     if (DATAin%otherpriors(1) > -9998) then
         tot_exp = (DATAin%M_POOLS(1,7) * 1d-3) / layer_thickness(1) ! convert mm -> m3/m3
-        likelihood = likelihood-((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
+        tot_exp = DATAin%otherpriorweight(1) * ((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
+        likelihood = likelihood-tot_exp
     end if
 
     ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
     ! kg/m2/day)
     if (DATAin%otherpriors(4) > -9998) then
         tot_exp = sum(DATAin%M_FLUXES(:,29)) / sum(DATAin%MET(7,:) * 86400d0)
-        likelihood = likelihood-((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
+        tot_exp = DATAin%otherpriorweight(4) * ((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
+        likelihood = likelihood-tot_exp
     end if
 
     ! Estimate the biological steady state attractor on the wood pool.
@@ -1216,7 +1219,8 @@ module model_likelihood_module
         input = sum(DATAin%M_FLUXES(:,7))
         output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+DATAin%M_FLUXES(:,25)))
         tot_exp = (input/dble(DATAin%nodays)) * (output/dble(DATAin%nodays))
-        likelihood = likelihood - ((tot_exp - DATAin%otherpriors(5)) / DATAin%otherpriorunc(5))**2
+        tot_exp = DATAin%otherpriorweight(5) * ((tot_exp-DATAin%otherpriors(5))/DATAin%otherpriorunc(5))**2
+        likelihood = likelihood-tot_exp
     endif
 
     ! the likelihood scores for each observation are subject to multiplication
@@ -1447,13 +1451,15 @@ module model_likelihood_module
     ! is actually assessed against an observation
     if (DATAin%otherpriors(1) > -9998) then
         tot_exp = (DATAin%M_POOLS(1,7) * 1d-3) / layer_thickness(1) ! convert mm -> m3/m3
-        scale_likelihood = scale_likelihood-((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
+        tot_exp = DATAin%otherpriorweight(1) * ((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
+        scale_likelihood = scale_likelihood-tot_exp
     end if
 
     ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation
     if (DATAin%otherpriors(4) > -9998) then
         tot_exp = sum(DATAin%M_FLUXES(:,29)) / sum(DATAin%MET(7,:) * 86400d0)
-        scale_likelihood = scale_likelihood-((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
+        tot_exp = DATAin%otherpriorweight(4) * ((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
+        scale_likelihood = scale_likelihood-tot_exp
     end if
 
     ! Estimate the biological steady state attractor on the wood pool.
@@ -1466,7 +1472,8 @@ module model_likelihood_module
         input = sum(DATAin%M_FLUXES(:,7))
         output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+DATAin%M_FLUXES(:,25)))
         tot_exp = (input/dble(DATAin%nodays)) * (output/dble(DATAin%nodays))
-        scale_likelihood = scale_likelihood - ((tot_exp - DATAin%otherpriors(5)) / DATAin%otherpriorunc(5))**2
+        tot_exp = DATAin%otherpriorweight(5) * ((tot_exp-DATAin%otherpriors(5))/DATAin%otherpriorunc(5))**2
+        scale_likelihood = scale_likelihood-tot_exp
     endif
 
     ! the likelihood scores for each observation are subject to multiplication
