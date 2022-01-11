@@ -63,8 +63,8 @@ load_gpp_fields_for_extraction<-function(latlon_in,gpp_source,start_year,end_yea
                   nc_close(data1)
 
                   # Turn lat_in / long_in from vectors to arrays
-                  lat_in = t(array(lat_in, dim=c(dim(var1)[2],dim(var1)[1])))
-                  long_in = array(long_in, dim=c(dim(var1)[1],dim(var1)[2]))
+                  lat_in = t(array(lat_in, dim=c(dim(var1_in)[2],dim(var1_in)[1])))
+                  long_in = array(long_in, dim=c(dim(var1_in)[1],dim(var1_in)[2]))
 
                   # Loop through each timestep in the year
                   for (t in seq(1, dim(var1_in)[3])) {
