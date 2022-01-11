@@ -18,43 +18,11 @@ extract_nbe<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in
 
   # return long to 0-360
   if (length(check1) > 0) { nbe_all$long[check1] = nbe_all$long[check1]+360 }
-  # If resolution has been provides as single value then adjust this here
-  if (length(resolution) == 1 & spatial_type == "grid") {tmp_res = resolution * c(1,1)} else {tmp_res = resolution}
 
-  # work out number of pixels to average over
-  if (spatial_type == "grid") {
-      # resolution of the product
-      product_res = c(abs(nbe_all$long[2,1]-nbe_all$long[1,1]),abs(nbe_all$lat[1,2]-nbe_all$lat[1,1]))
-      if (grid_type == "wgs84") {
-          # radius is ceiling of the ratio of the product vs analysis ratio
-          radius = floor(0.5*(resolution / product_res))
-      } else if (grid_type == "UK") {
-          # Estimate radius for UK grid assuming radius is determine by the longitude size
-          # 6371e3 = mean earth radius (m)
-          radius = round(rad2deg(sqrt((resolution / 6371e3**2))) / product_res, digits=0)
-          #radius = max(0,floor(1*resolution*1e-3*0.5))
-      } else {
-          stop("have not specified the grid used in this analysis")
-      }
-  } else {
-      radius = c(0,0)
-      max_radius = 4
-  }
+  # Extract to local variable
+  nbe = nbe_all$nbe_gCm2day[i1,j1,]
+  nbe_unc = nbe_all$nbe_unc_gCm2day[i1,j1,]
 
-  # work out average areas
-  average_i = (i1-radius[1]):(i1+radius[1]) ; average_j = (j1-radius[2]):(j1+radius[2])
-  average_i = max(1,(i1-radius[1])):min(dim(nbe_all$nbe_gCm2day)[1],(i1+radius[1]))
-  average_j = max(1,(j1-radius[2])):min(dim(nbe_all$nbe_gCm2day)[2],(j1+radius[2]))
-  # carry out averaging
-  nbe = array(NA, dim=c(dim(nbe_all$nbe_gCm2day)[3]))
-  nbe_unc = array(NA, dim=c(dim(nbe_all$nbe_gCm2day)[3]))
-  for (n in seq(1, dim(nbe_all$nbe_gCm2day)[3])) {
-       nbe[n] = mean(nbe_all$nbe_gCm2day[average_i,average_j,n], na.rm=TRUE)
-       nbe_unc[n] = mean(nbe_all$nbe_unc_gCm2day[average_i,average_j,n], na.rm=TRUE)
-  }
-
-  # warning to the used
-  print(paste("NOTE: NBE averaged over a pixel radius (i.e. centre + radius) of ",radius," points",sep=""))
   # convert missing data back to -9999
   nbe[which(is.na(nbe))] = -9999
   nbe_unc[which(is.na(nbe_unc))] = -9999

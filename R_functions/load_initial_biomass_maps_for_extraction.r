@@ -5,7 +5,7 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-load_initial_biomass_maps_for_extraction<-function(latlon_in,Cwood_initial_source,start,finish,timestep_days) {
+load_initial_biomass_maps_for_extraction<-function(latlon_in,Cwood_initial_source,start,finish,timestep_days,cardamom_ext,spatial_type) {
 
       # Generate timing information need in most cases
       analysis_years = seq(as.numeric(start),as.numeric(finish))

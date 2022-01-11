@@ -41,11 +41,9 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load) {
                data1 = nc_open(input_file_1)
 
                # extract location variables
-               if (lat_done == FALSE) {
-                   lat = ncvar_get(data1, "lat_axis") ; long = ncvar_get(data1, "long_axis")
-                   lat = array(rev(lat), dim=c(length(lat),length(long))) ; lat = t(lat)
-                   long = array(long, dim=dim(lat))
-               }
+               lat = ncvar_get(data1, "lat_axis") ; long = ncvar_get(data1, "long_axis")
+               lat = array(rev(lat), dim=c(length(lat),length(long))) ; lat = t(lat)
+               long = array(long, dim=dim(lat))
 
                # read the NBE estimate (units are gC/m2/day)
                var1 = ncvar_get(data1, "NBE")
@@ -63,6 +61,50 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load) {
 
                # close files after use
                nc_close(data1)
+
+               # Convert to a raster, assuming standad WGS84 grid
+               var1 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(var1))
+               var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326"))
+               var2 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(var2))
+               var2 = rasterFromXYZ(var2, crs = ("+init=epsg:4326"))
+
+               # Create raster with the target crs (technically this bit is not required)
+               target = raster(crs = ("+init=epsg:4326"), ext = extent(var1), resolution = res(var1))
+               # Check whether the target and actual analyses have the same CRS
+               if (compareCRS(var1,target) == FALSE) {
+                   # Resample to correct grid
+                   var1 = resample(var1, target, method="ngb") ; gc() ; removeTmpFiles()
+                   var2 = resample(var2, target, method="ngb") ; gc() ; removeTmpFiles()
+               }
+               # Trim the extent of the overall grid to the analysis domain
+               var1 = crop(var1,cardamom_ext) ; var2 = crop(var2,cardamom_ext)
+
+               # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
+               # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+               if (spatial_type == "grid") {
+                   if (res(var1)[1] < res(cardamom_ext)[1] | res(var1)[2] < res(cardamom_ext)[2]) {
+
+                       # Create raster with the target resolution
+                       target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+                       # Resample to correct grid
+                       var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
+                       var2 = resample(var2, target, method="bilinear") ; gc() ; removeTmpFiles()
+
+                  } # Aggrgeate to resolution
+               } # spatial_type == "grid"
+
+               if (lat_done == FALSE) {
+                   # extract dimension information for the grid, note the axis switching between raster and actual array
+                   xdim = dim(var1)[2] ; ydim = dim(var1)[1]
+                   # extract the lat / long information needed
+                   long = coordinates(var1)[,1] ; lat = coordinates(var1)[,2]
+                   # restructure into correct orientation
+                   long = array(long, dim=c(xdim,ydim))
+                   lat = array(lat, dim=c(xdim,ydim))
+               }
+               # break out from the rasters into arrays which we can manipulate
+               var1 = array(as.vector(unlist(var1)), dim=c(xdim,ydim))
+               var2 = array(as.vector(unlist(var2)), dim=c(xdim,ydim))
 
                # vectorise at this time
                if (lat_done == FALSE) {
@@ -89,8 +131,8 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load) {
       rm(var1,var2) ; gc(reset=TRUE,verbose=FALSE)
 
       # restructure
-      nbe_gCm2day = array(nbe_gCm2day, dim=c(dim(long)[1],dim(lat)[2],length(doy_obs)))
-      nbe_unc_gCm2day = array(nbe_unc_gCm2day, dim=c(dim(long)[1],dim(lat)[2],length(doy_obs)))
+      nbe_gCm2day = array(nbe_gCm2day, dim=c(xdim,ydim,length(doy_obs)))
+      nbe_unc_gCm2day = array(nbe_unc_gCm2day, dim=c(xdim,ydim,length(doy_obs)))
 
       # output variables
       return(list(nbe_gCm2day = nbe_gCm2day, nbe_unc_gCm2day = nbe_unc_gCm2day,
@@ -162,41 +204,61 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load) {
                     }
 
                     # extract location variables
-                    if (lat_done == FALSE) {
-                        lat = ncvar_get(data1, "lat") ; long = ncvar_get(data1, "lon")
-                        lat = array(rev(lat), dim=c(length(lat),length(long))) ; lat = t(lat)
-                        long = array(long, dim=dim(lat))
-                        # restrict the spatial extent based on latlong ranges provided
-                        remove_lat = intersect(which(lat < (max(latlon_in[,1])+2)),which(lat > (min(latlon_in[,1])-2)))
-                        remove_long = intersect(which(long < (max(latlon_in[,2])+2)),which(long > (min(latlon_in[,2])-2)))
-                        # now find common where out in both contexts
-                        remove_lat = intersect(remove_lat,remove_long)
-                        # update both variables because of common matrix
-                        remove_long = remove_lat
-                        # adjust for matrix rather than vector arrangement
-                        remove_lat = remove_lat/dim(lat)[1]
-                        remove_long = (remove_long-(floor(remove_lat)*dim(lat)[1]))+1
-                        remove_lat = ceiling(remove_lat)
-                        # update new dimensions
-                        lat_dim = length(min(remove_lat):max(remove_lat)) ; long_dim = length(min(remove_long):max(remove_long))
-                        lat = lat[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
-                        long = long[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
-                    }
+                    lat = ncvar_get(data1, "lat") ; long = ncvar_get(data1, "lon")
+                    lat = array(rev(lat), dim=c(length(lat),length(long))) ; lat = t(lat)
+                    long = array(long, dim=dim(lat))
 
                     # read the NBE observations
                     var1 = ncvar_get(data1, "NBE") # net biome exchange of CO2 (gC/m2/day)
                     # check for error variable
                     var2 = ncvar_get(data1, "NBE_unc") # NBE error  estimate(gC/m2/day)
 
-                    # reduce spatial cover to the desired area only
-                    var1 = var1[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
-                    var2 = var2[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
-                    # set actual missing data to -9999
-                    var1[which(is.na(as.vector(var1)))] = -9999
-                    var2[which(is.na(as.vector(var2)))] = -9999
-
                     # close files after use
                     nc_close(data1)
+
+                    # Convert to a raster, assuming standad WGS84 grid
+                    var1 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(var1))
+                    var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326"))
+                    var2 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(var2))
+                    var2 = rasterFromXYZ(var2, crs = ("+init=epsg:4326"))
+
+                    # Create raster with the target crs (technically this bit is not required)
+                    target = raster(crs = ("+init=epsg:4326"), ext = extent(var1), resolution = res(var1))
+                    # Check whether the target and actual analyses have the same CRS
+                    if (compareCRS(var1,target) == FALSE) {
+                        # Resample to correct grid
+                        var1 = resample(var1, target, method="ngb") ; gc() ; removeTmpFiles()
+                        var2 = resample(var2, target, method="ngb") ; gc() ; removeTmpFiles()
+                    }
+                    # Trim the extent of the overall grid to the analysis domain
+                    var1 = crop(var1,cardamom_ext) ; var2 = crop(var2,cardamom_ext)
+                    var1[which(as.vector(var1) == -9999)] = NA ; var2[which(as.vector(var2) == -9999)] = NA
+                    # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
+                    # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+                    if (spatial_type == "grid") {
+                        if (res(var1)[1] < res(cardamom_ext)[1] | res(var1)[2] < res(cardamom_ext)[2]) {
+
+                            # Create raster with the target resolution
+                            target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+                            # Resample to correct grid
+                            var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
+                            var2 = resample(var2, target, method="bilinear") ; gc() ; removeTmpFiles()
+
+                       } # Aggrgeate to resolution
+                    } # spatial_type == "grid"
+
+                    if (lat_done == FALSE) {
+                        # extract dimension information for the grid, note the axis switching between raster and actual array
+                        xdim = dim(var1)[2] ; ydim = dim(var1)[1]
+                        # extract the lat / long information needed
+                        long = coordinates(var1)[,1] ; lat = coordinates(var1)[,2]
+                        # restructure into correct orientation
+                        long = array(long, dim=c(xdim,ydim))
+                        lat = array(lat, dim=c(xdim,ydim))
+                    }
+                    # break out from the rasters into arrays which we can manipulate
+                    var1 = array(as.vector(unlist(var1)), dim=c(xdim,ydim))
+                    var2 = array(as.vector(unlist(var2)), dim=c(xdim,ydim))
 
                     # remove additional spatial information
                     if (lat_done == FALSE) {
@@ -234,13 +296,6 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load) {
 
       # remove initial value
       missing_years = missing_years[-1]
-
-      # check which ones are NA because I made them up
-      not_na = is.na(as.vector(nbe_hold))
-      not_na = which(not_na == FALSE)
-      filter = as.vector(nbe_hold) == -9999 | as.vector(nbe_unc_hold) == -9999
-      # now remove the ones that are actual missing data
-      nbe_hold[filter] = NA ; nbe_unc_hold[filter] = NA
 
       # enforce minimum uncertainty value
       nbe_unc_hold[abs(nbe_unc_hold) < 0.01] = 0.01
