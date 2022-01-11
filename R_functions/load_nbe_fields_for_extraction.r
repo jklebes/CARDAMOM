@@ -5,7 +5,7 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load) {
+load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,cardamom_ext,spatial_type) {
 
     if (nbe_source == "Global_Combined") {
 
@@ -41,15 +41,12 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load) {
                data1 = nc_open(input_file_1)
 
                # extract location variables
-               lat = ncvar_get(data1, "lat_axis") ; long = ncvar_get(data1, "long_axis")
-               lat = array(rev(lat), dim=c(length(lat),length(long))) ; lat = t(lat)
-               long = array(long, dim=dim(lat))
-
+               lat_in = ncvar_get(data1, "lat_axis") ; long_in = ncvar_get(data1, "long_axis")
                # read the NBE estimate (units are gC/m2/day)
-               var1 = ncvar_get(data1, "NBE")
+               var1_in = ncvar_get(data1, "NBE")
                # get some uncertainty information - in this case the max / min which will be the basis of our uncertainty
-               var2 = ncvar_get(data1, "NBE_min") ; var3 = ncvar_get(data1, "NBE_max")
-               var2 = (var3 - var2) * 0.5 ; rm(var3)
+               var2_in = ncvar_get(data1, "NBE_min") ; var3_in = ncvar_get(data1, "NBE_max")
+               var2_in = (var3_in - var2_in) * 0.5 ; rm(var3_in)
                # Months in a year
                time_steps_per_year = 12
                # approximate doy of the mid-month and allocate nbe to that point
@@ -62,61 +59,69 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load) {
                # close files after use
                nc_close(data1)
 
-               # Convert to a raster, assuming standad WGS84 grid
-               var1 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(var1))
-               var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326"))
-               var2 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(var2))
-               var2 = rasterFromXYZ(var2, crs = ("+init=epsg:4326"))
+               # Turn lat_in / long_in from vectors to arrays
+               lat_in = t(array(lat_in, dim=c(dim(var1)[2],dim(var1)[1])))
+               long_in = array(long_in, dim=c(dim(var1)[1],dim(var1)[2]))
 
-               # Create raster with the target crs (technically this bit is not required)
-               target = raster(crs = ("+init=epsg:4326"), ext = extent(var1), resolution = res(var1))
-               # Check whether the target and actual analyses have the same CRS
-               if (compareCRS(var1,target) == FALSE) {
-                   # Resample to correct grid
-                   var1 = resample(var1, target, method="ngb") ; gc() ; removeTmpFiles()
-                   var2 = resample(var2, target, method="ngb") ; gc() ; removeTmpFiles()
-               }
-               # Trim the extent of the overall grid to the analysis domain
-               var1 = crop(var1,cardamom_ext) ; var2 = crop(var2,cardamom_ext)
+               # Loop through each timestep in the year
+               for (t in seq(1, dim(var1_in)[3])) {
+                    # Convert to a raster, assuming standad WGS84 grid
+                    var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1_in[,,t]))
+                    var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326"))
+                    var2 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var2_in[,,t]))
+                    var2 = rasterFromXYZ(var2, crs = ("+init=epsg:4326"))
 
-               # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
-               # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-               if (spatial_type == "grid") {
-                   if (res(var1)[1] < res(cardamom_ext)[1] | res(var1)[2] < res(cardamom_ext)[2]) {
+                    # Create raster with the target crs (technically this bit is not required)
+                    target = raster(crs = ("+init=epsg:4326"), ext = extent(var1), resolution = res(var1))
+                    # Check whether the target and actual analyses have the same CRS
+                    if (compareCRS(var1,target) == FALSE) {
+                        # Resample to correct grid
+                        var1 = resample(var1, target, method="ngb") ; gc() ; removeTmpFiles()
+                        var2 = resample(var2, target, method="ngb") ; gc() ; removeTmpFiles()
+                    }
+                    # Trim the extent of the overall grid to the analysis domain
+                    var1 = crop(var1,cardamom_ext) ; var2 = crop(var2,cardamom_ext)
 
-                       # Create raster with the target resolution
-                       target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
-                       # Resample to correct grid
-                       var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
-                       var2 = resample(var2, target, method="bilinear") ; gc() ; removeTmpFiles()
+                    # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
+                    # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+                    if (spatial_type == "grid") {
+                        if (res(var1)[1] < res(cardamom_ext)[1] | res(var1)[2] < res(cardamom_ext)[2]) {
 
-                  } # Aggrgeate to resolution
-               } # spatial_type == "grid"
+                            # Create raster with the target resolution
+                            target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+                            # Resample to correct grid
+                            var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
+                            var2 = resample(var2, target, method="bilinear") ; gc() ; removeTmpFiles()
 
-               if (lat_done == FALSE) {
-                   # extract dimension information for the grid, note the axis switching between raster and actual array
-                   xdim = dim(var1)[2] ; ydim = dim(var1)[1]
-                   # extract the lat / long information needed
-                   long = coordinates(var1)[,1] ; lat = coordinates(var1)[,2]
-                   # restructure into correct orientation
-                   long = array(long, dim=c(xdim,ydim))
-                   lat = array(lat, dim=c(xdim,ydim))
-               }
-               # break out from the rasters into arrays which we can manipulate
-               var1 = array(as.vector(unlist(var1)), dim=c(xdim,ydim))
-               var2 = array(as.vector(unlist(var2)), dim=c(xdim,ydim))
+                       } # Aggrgeate to resolution
+                    } # spatial_type == "grid"
 
-               # vectorise at this time
-               if (lat_done == FALSE) {
-                   nbe_gCm2day = as.vector(var1)
-                   nbe_unc_gCm2day = as.vector(var2)
-               } else {
-                   nbe_gCm2day = append(nbe_gCm2day,as.vector(var1))
-                   nbe_unc_gCm2day = append(nbe_unc_gCm2day,as.vector(var2))
-               }
+                    if (lat_done == FALSE) {
+                        # extract dimension information for the grid, note the axis switching between raster and actual array
+                        xdim = dim(var1)[2] ; ydim = dim(var1)[1]
+                        # extract the lat / long information needed
+                        long = coordinates(var1)[,1] ; lat = coordinates(var1)[,2]
+                        # restructure into correct orientation
+                        long = array(long, dim=c(xdim,ydim))
+                        lat = array(lat, dim=c(xdim,ydim))
+                    }
+                    # break out from the rasters into arrays which we can manipulate
+                    var1 = array(as.vector(unlist(var1)), dim=c(xdim,ydim))
+                    var2 = array(as.vector(unlist(var2)), dim=c(xdim,ydim))
 
-               # update flag for lat / long load
-               if (lat_done == FALSE) {lat_done = TRUE}
+                    # vectorise at this time
+                    if (lat_done == FALSE) {
+                        nbe_gCm2day = as.vector(var1)
+                        nbe_unc_gCm2day = as.vector(var2)
+                    } else {
+                        nbe_gCm2day = append(nbe_gCm2day,as.vector(var1))
+                        nbe_unc_gCm2day = append(nbe_unc_gCm2day,as.vector(var2))
+                    }
+
+                    # update flag for lat / long load
+                    if (lat_done == FALSE) {lat_done = TRUE}
+               } # within year step
+
                # keep track of years actually ran
                yrs = yrs+1
 
@@ -204,10 +209,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load) {
                     }
 
                     # extract location variables
-                    lat = ncvar_get(data1, "lat") ; long = ncvar_get(data1, "lon")
-                    lat = array(rev(lat), dim=c(length(lat),length(long))) ; lat = t(lat)
-                    long = array(long, dim=dim(lat))
-
+                    lat_in = ncvar_get(data1, "lat") ; long_in = ncvar_get(data1, "lon")
                     # read the NBE observations
                     var1 = ncvar_get(data1, "NBE") # net biome exchange of CO2 (gC/m2/day)
                     # check for error variable
@@ -216,10 +218,14 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load) {
                     # close files after use
                     nc_close(data1)
 
+                    # Turn lat_in / long_in from vectors to arrays
+                    lat_in = t(array(lat_in, dim=c(dim(var1)[2],dim(var1)[1])))
+                    long_in = array(long_in, dim=c(dim(var1)[1],dim(var1)[2]))
+
                     # Convert to a raster, assuming standad WGS84 grid
-                    var1 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(var1))
+                    var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1))
                     var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326"))
-                    var2 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(var2))
+                    var2 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var2))
                     var2 = rasterFromXYZ(var2, crs = ("+init=epsg:4326"))
 
                     # Create raster with the target crs (technically this bit is not required)
@@ -263,10 +269,10 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load) {
                     # remove additional spatial information
                     if (lat_done == FALSE) {
                         # create holding arrays for the nbe information...
-                        nbe_hold = array(NA, dim=c(long_dim*lat_dim,keepers*nsteps))
+                        nbe_hold = array(NA, dim=c(xdim*ydim,keepers*nsteps))
                         nbe_hold[1:length(as.vector(var1)),(t+((yrs-1)*nsteps))] = as.vector(var1)
                         # ...and its uncertainty information...
-                        nbe_unc_hold = array(NA, dim=c(long_dim*lat_dim,keepers*nsteps))
+                        nbe_unc_hold = array(NA, dim=c(xdim*ydim,keepers*nsteps))
                         nbe_unc_hold[1:length(as.vector(var2)),(t+((yrs-1)*nsteps))] = as.vector(var2)
                         # ...and timing
                         doy_obs = doy_in

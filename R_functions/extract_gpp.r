@@ -18,42 +18,11 @@ extract_gpp<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in
 
   # return long to 0-360
   if (length(check1) > 0) { gpp_all$long[check1] = gpp_all$long[check1]+360 }
-  # If resolution has been provides as single value then adjust this here
-  if (length(resolution) == 1 & spatial_type == "grid") {tmp_res = resolution * c(1,1)} else {tmp_res = resolution}
 
-  # work out number of pixels to average over
-  if (spatial_type == "grid") {
-      # resolution of the product
-      product_res = c(abs(gpp_all$long[2]-gpp_all$long[1]),abs(gpp_all$lat[2]-gpp_all$lat[1]))
-      if (grid_type == "wgs84") {
-          # radius is ceiling of the ratio of the product vs analysis ratio
-          radius = floor(0.5*(resolution / product_res))
-      } else if (grid_type == "UK") {
-          # Estimate radius for UK grid assuming radius is determine by the longitude size
-          # 6371e3 = mean earth radius (m)
-          radius = round(rad2deg(sqrt((resolution / 6371e3**2))) / product_res, digits=0)
-          #radius = max(0,floor(1*resolution*1e-3*0.5))
-      } else {
-          stop("have not specified the grid used in this analysis")
-      }
-  } else {
-      radius = c(0,0)
-  }
+  # Extract to local variable
+  gpp = gpp_all$gpp_gCm2day[i1,j1,n]
+  gpp_unc = gpp_all$gpp_unc_gCm2day[i1,j1,n]
 
-  # work out average areas
-  average_i = (i1-radius[1]):(i1+radius[1]) ; average_j = (j1-radius[2]):(j1+radius[2])
-  average_i = max(1,(i1-radius[1])):min(dim(gpp_all$gpp_gCm2day)[1],(i1+radius[1]))
-  average_j = max(1,(j1-radius[2])):min(dim(gpp_all$gpp_gCm2day)[2],(j1+radius[2]))
-  # carry out averaging
-  gpp = array(NA, dim=c(dim(gpp_all$gpp_gCm2day)[3]))
-  gpp_unc = array(NA, dim=c(dim(gpp_all$gpp_gCm2day)[3]))
-  for (n in seq(1, dim(gpp_all$gpp_gCm2day)[3])) {
-       gpp[n] = mean(gpp_all$gpp_gCm2day[average_i,average_j,n], na.rm=TRUE)
-       gpp_unc[n] = mean(gpp_all$gpp_unc_gCm2day[average_i,average_j,n], na.rm=TRUE)
-  }
-
-  # warning to the used
-  print(paste("NOTE: GPP averaged over a pixel radius (i.e. centre + radius) of ",radius[1]," points",sep=""))
   # convert missing data back to -9999
   gpp[which(is.na(gpp))] = -9999
   gpp_unc[which(is.na(gpp_unc))] = -9999
