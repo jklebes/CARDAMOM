@@ -25,28 +25,14 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
   # convert missing data to -9999
   burnt_area[which(is.na(burnt_area))] = -9999
 
-  # next work out how many days we should have in the year
-  doy_out=0
-  for (i in seq(1, length(years_to_do))) {
-       # is current year a leap or not
-       nos_days = 365
-       mod=as.numeric(years_to_do[i])-round((as.numeric(years_to_do[i])/4))*4
-       if (mod == 0) {
-           nos_days = 366
-           mod = as.numeric(years_to_do[i])-round((as.numeric(years_to_do[i])/100))*100
-           if (mod == 0) {
-               nos_days  = 365
-               mod = as.numeric(years_to_do[i])-round((as.numeric(years_to_do[i])/400))*400
-               if (mod == 0) {
-                   nos_days  = 366
-               }
-            }
-       }
-       # count up days needed
-       doy_out = append(doy_out,1:nos_days)
-  }
-  # remove initial value
-  doy_out = doy_out[-1]
+   # Determine how many days are in each year
+   doy_out = 0
+   for (i in seq(1, length(years_to_load))) {
+        nos_days = nos_days_in_year(years_to_load[i])
+        # count up days needed
+        doy_out = append(doy_out,1:nos_days)
+   }
+   doy_out = doy_out[-1]
 
   # just incase there is no missing data we best make sure there is a value which can be assessed
   if (length(burnt_all$missing_years) == 0) { burnt_all$missing_years=1066 }
