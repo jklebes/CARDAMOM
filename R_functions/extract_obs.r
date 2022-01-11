@@ -660,7 +660,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         yield_class = -9999 #read_site_specific_obs("yield_class",infile)
         age = read_site_specific_obs("age",infile)
         if (length(age) > 1) {age = age[1]} # we only want the age at the beginning of the simulation
-    } else if (deforestation_source == "combined_dataset" | deforestation_source == "GFW") {
+    } else if (deforestation_source == "GFW") {
         output = extract_forestry_information(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,forest_all,start_year,end_year,ctessel_pft)
         ctessel_pft = output$ctessel_pft
         deforestation = output$deforestation
