@@ -269,17 +269,15 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
                     # remove additional spatial information
                     if (lat_done == FALSE) {
                         # create holding arrays for the nbe information...
-                        nbe_hold = array(NA, dim=c(xdim*ydim,keepers*nsteps))
-                        nbe_hold[1:length(as.vector(var1)),(t+((yrs-1)*nsteps))] = as.vector(var1)
+                        nbe_hold = as.vector(var1)
                         # ...and its uncertainty information...
-                        nbe_unc_hold = array(NA, dim=c(xdim*ydim,keepers*nsteps))
-                        nbe_unc_hold[1:length(as.vector(var2)),(t+((yrs-1)*nsteps))] = as.vector(var2)
+                        nbe_unc_hold = as.vector(var2)
                         # ...and timing
                         doy_obs = doy_in
                     } else {
                         # begin populating the various outputs
-                        nbe_hold[1:length(as.vector(var1)),(t+((yrs-1)*nsteps))] = as.vector(var1)
-                        nbe_unc_hold[1:length(as.vector(var2)),(t+((yrs-1)*nsteps))] = as.vector(var2)
+                        nbe_hold = append(nbe_hold,as.vector(var1))
+                        nbe_unc_hold = append(nbe_unc_hold,as.vector(var2))
                         doy_obs = append(doy_obs,doy_in)
                     }
 
@@ -307,8 +305,8 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
       nbe_unc_hold[abs(nbe_unc_hold) < 0.01] = 0.01
 
       # return spatial structure to data
-      nbe_out = array(as.vector(nbe_hold)[not_na], dim=c(long_dim,lat_dim,length(doy_obs)))
-      nbe_unc_out = array(as.vector(nbe_unc_hold)[not_na], dim=c(long_dim,lat_dim,length(doy_obs)))
+      nbe_out = array(as.vector(nbe_hold), dim=c(xdim,ydim,length(doy_obs)))
+      nbe_unc_out = array(as.vector(nbe_unc_hold), dim=c(xdim,ydim,length(doy_obs)))
 
       # output variables
       nbe_all = list(nbe_gCm2day = nbe_out, nbe_unc_gCm2day = nbe_unc_out,

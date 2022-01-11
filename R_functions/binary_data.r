@@ -203,8 +203,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   # noobs         = static_data[5]; Number of observation streams
   # EDC           = static_data[6]; EDCs on (1) or off (0)
   # pft           = static_data[7]; CTESSEL plant functional type, only used by ACM_TESSEL
-  # yield class   = static_data[8]; UK forestry commission yield class NOT IN USE
-  # age           = static_data[9]; years since last complete disturbance
+  # yield class   = static_data[8]; NOT IN USE
+  # age           = static_data[9]; NOT IN USE
   # nos. pars     = static_data[10]; number of parameters to be optimised for model
   # random search = static_data[11]; force random starting points for all parameters
   # top_sand      = static_data[12]; top soil (0-30cm) sand fractional content

@@ -5,7 +5,7 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-load_fire_emission_fields_for_extraction<-function(latlon_in,fire_source,start_year,end_year,cardamom_ect,spatial_type) {
+load_fire_emission_fields_for_extraction<-function(latlon_in,fire_source,start_year,end_year,cardamom_ext,spatial_type) {
 
     # Determine the years for which the analysis will occur
     years_to_do = as.character(seq(start_year,end_year))
