@@ -20,37 +20,11 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
   #i1=unlist(output)[2] ; j1=unlist(output)[1]
   i1 = unlist(output)[1] ; j1=unlist(output)[2]
 
-  # If resolution has been provides as single value then adjust this here
-  if (length(resolution) == 1 & spatial_type == "grid") {tmp_res = resolution * c(1,1)} else {tmp_res = resolution}
-
-  # work out number of pixels to average over
-  if (spatial_type == "grid") {
-      # resolution of the product
-      product_res = c(abs(burnt_all$long[2,1]-burnt_all$long[1,1]),abs(burnt_all$lat[1,2]-burnt_all$lat[1,1]))
-      if (grid_type == "wgs84") {
-          # radius is ceiling of the ratio of the product vs analysis ratio
-          radius = floor(0.5*(resolution / product_res))
-      } else if (grid_type == "UK") {
-          # Estimate radius for UK grid assuming radius is determine by the longitude size
-          # 6371e3 = mean earth radius (m)
-          radius = round(rad2deg(sqrt((resolution / 6371e3**2))) / product_res, digits=0)
-          #radius = max(0,floor(1*resolution*1e-3*0.5))
-      } else {
-          stop("have not specified the grid used in this analysis")
-      }
-  } else {
-      radius = c(0,0)
-  } # spatial grid
-
-  # work out total burned fraction of the area
-  average_i = (i1-radius[1]):(i1+radius[1]) ; average_j = (j1-radius[2]):(j1+radius[2])
-  average_i = max(1,(i1-radius[1])):min(dim(burnt_all$burnt_area)[1],(i1+radius[1]))
-  average_j = max(1,(j1-radius[2])):min(dim(burnt_all$burnt_area)[2],(j1+radius[2]))
-  # carry out aggregation
-  burnt_area = array(NA, dim=c(dim(burnt_all$burnt_area)[3]))
-  for (n in seq(1, dim(burnt_all$burnt_area)[3])) {burnt_area[n] = mean(burnt_all$burnt_area[average_i,average_j,n], na.rm=TRUE)} #  for loop
+  # Extract location specific information to a local variable
+  burnt_area = burnt_all$burnt_area[i1,j1,]
   # convert missing data to -9999
-  burnt_area[which(is.na(burnt_area))] = -9999.0
+  burnt_area[which(is.na(burnt_area))] = -9999
+
   # next work out how many days we should have in the year
   doy_out=0
   for (i in seq(1, length(years_to_do))) {

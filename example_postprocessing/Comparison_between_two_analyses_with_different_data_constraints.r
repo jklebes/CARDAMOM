@@ -5742,9 +5742,9 @@ plot(var9, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box 
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE)
 # print summary information to user
-print(paste("Mean (-1-1) difference in natMRT (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean (-1-1) difference in fireMRT (",alt_name,"-",orig_name,")    = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean (-1-1) difference in harvestMRT (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) difference in natMRT comp (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) difference in fireMRT comp (",alt_name,"-",orig_name,")    = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) difference in harvestMRT comp (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
 # Relative change version
@@ -5797,9 +5797,9 @@ plot(var9, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box 
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE)
 # print summary information to user
-print(paste("Mean relative (-1-1) difference in CI fMRT (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean relative (-1-1) difference in CI rMRT (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean relative (-1-1) difference in CI wMRT (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean relative (-1-1) difference in natMRT comp (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean relative (-1-1) difference in fireMRT comp (",alt_name,"-",orig_name,")    = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean relative (-1-1) difference in harvestMRT comp (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
 ###

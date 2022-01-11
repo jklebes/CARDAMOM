@@ -5,7 +5,7 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path_to_burnt_area,start_year,end_year) {
+load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path_to_burnt_area,start_year,end_year,cardamom_ext,spatial_type) {
 
     # Determine the years for which the analysis will occur
     years_to_do = as.character(seq(start_year,end_year))
@@ -43,12 +43,9 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
                   data1 = nc_open(input_file_1)
 
                   # extract location variables
-                  if (lat_done == FALSE) {lat=ncvar_get(data1, "latitude") ; long=ncvar_get(data1, "longitude")}
-
+                  lat_in = ncvar_get(data1, "latitude") ; long_in = ncvar_get(data1, "longitude")
                   # read the burnt fraction estimate (units are 0-1)
                   var1 = ncvar_get(data1, "BurnedFraction")
-                  # set actual missing data to 0 as missing data is actually no fire
-                  var1[which(is.na(as.vector(var1)))] = 0
                   # get time information (month in this case)
                   var2 = ncvar_get(data1, "time") ; time_steps_per_year = 12
                   # approximate doy of the mid-month and allocate fire to that point
@@ -59,7 +56,46 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
                   }
 
                   # close files after use
-                  nc_close(data1)
+                  nc_close(data1) ; rm(var2)
+
+                  # Turn lat_in / long_in from vectors to arrays
+                  lat_in = t(array(lat_in, dim=c(dim(var1)[2],dim(var1)[1])))
+                  long_in = array(long_in, dim=c(dim(var1)[1],dim(var1)[2]))
+
+                  # Convert to a raster, assuming standad WGS84 grid
+                  var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1))
+                  var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326"))
+                  # Remove the input lat / long information
+                  rm(lat_in,long_in)
+
+                  # Trim the extent of the overall grid to the analysis domain
+                  var1 = crop(var1,cardamom_ext)
+                  # set actual missing data to 0 as missing data is actually no fire
+                  var1[which(is.na(as.vector(var1)))] = 0
+                  # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
+                  # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+                  if (spatial_type == "grid") {
+                      if (res(var1)[1] < res(cardamom_ext)[1] | res(var1)[2] < res(cardamom_ext)[2]) {
+                          # Create raster with the target resolution
+                          target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+                          # Resample to correct grid.
+                          # Probably should be done via aggregate function to allow for correct error propogation
+                          var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
+                      } # Aggrgeate to resolution
+                  } # spatial_type == "grid"
+
+                  # Extract spatial information just the once
+                  if (lat_done == FALSE) {
+                      # extract dimension information for the grid, note the axis switching between raster and actual array
+                      xdim = dim(var1)[2] ; ydim = dim(var1)[1]
+                      # extract the lat / long information needed
+                      long = coordinates(var1)[,1] ; lat = coordinates(var1)[,2]
+                      # restructure into correct orientation
+                      long = array(long, dim=c(xdim,ydim))
+                      lat = array(lat, dim=c(xdim,ydim))
+                  }
+                  # break out from the rasters into arrays which we can manipulate
+                  var1 = array(as.vector(unlist(var1)), dim=c(xdim,ydim))
 
                   # vectorise at this time
                   if (lat_done == FALSE) {
@@ -84,7 +120,7 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
          rm(var1,var2) ; gc(reset=TRUE,verbose=FALSE)
 
          # restructure
-         burnt_area=array(burnt_area, dim=c(length(long),length(lat),length(doy_obs)))
+         burnt_area=array(burnt_area, dim=c(xdim,ydim,length(doy_obs)))
 
          # output variables
          return(list(burnt_area=burnt_area,doy_obs=doy_obs,lat=lat,long=long,missing_years=missing_years))
@@ -117,31 +153,9 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
                   data1 = nc_open(input_file_1)
 
                   # extract location variables
-                  if (lat_done == FALSE) {
-                      lat = ncvar_get(data1, "latitude") ; long = ncvar_get(data1, "longitude")
-                      # Restrict the spatial extent based on latlong ranges provided
-                      remove_lat = intersect(which(lat < (max(latlon_in[,1])+2)),which(lat > (min(latlon_in[,1])-2)))
-                      remove_long = intersect(which(long < (max(latlon_in[,2])+2)),which(long > (min(latlon_in[,2])-2)))
-                      # now find common where out in both contexts
-                      remove_lat = intersect(remove_lat,remove_long)
-                      # update both variables because of common matrix
-                      remove_long = remove_lat
-                      # adjust for matrix rather than vector arrangement
-                      remove_lat = remove_lat/dim(lat)[1]
-                      remove_long = (remove_long-(floor(remove_lat)*dim(lat)[1]))+1
-                      remove_lat = ceiling(remove_lat)
-                      # update new dimensions
-                      lat_dim = length(min(remove_lat):max(remove_lat)) ; long_dim = length(min(remove_long):max(remove_long))
-                      lat = lat[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
-                      long = long[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat)]
-                  }
-
+                  lat_in = ncvar_get(data1, "latitude") ; long_in = ncvar_get(data1, "longitude")
                   # read the burnt fraction estimate (units are 0-1)
                   var1 = ncvar_get(data1, "BurnedFraction")
-                  # restrict spatial area
-                  var1 = var1[min(remove_long):max(remove_long),min(remove_lat):max(remove_lat),]
-                  # set actual missing data to 0 as missing data is actually no fire
-#                  var1[which(is.na(as.vector(var1)))] = 0
 
                   # get time information (day of year)
                   var2 = ncvar_get(data1, "time") ; time_steps_per_year = 12
@@ -153,7 +167,40 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
                   }
 
                   # close files after use
-                  nc_close(data1)
+                  nc_close(data1) ; rm(var2)
+
+                  # Convert to a raster, assuming standad WGS84 grid
+                  var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1))
+                  var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326"))
+                  # Remove the input lat / long information
+                  rm(lat_in,long_in)
+
+                  # Trim the extent of the overall grid to the analysis domain
+                  var1 = crop(var1,cardamom_ext)
+                  # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
+                  # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+                  if (spatial_type == "grid") {
+                      if (res(var1)[1] < res(cardamom_ext)[1] | res(var1)[2] < res(cardamom_ext)[2]) {
+                          # Create raster with the target resolution
+                          target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+                          # Resample to correct grid.
+                          # Probably should be done via aggregate function to allow for correct error propogation
+                          var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
+                      } # Aggrgeate to resolution
+                  } # spatial_type == "grid"
+
+                  # Extract spatial information just the once
+                  if (lat_done == FALSE) {
+                      # extract dimension information for the grid, note the axis switching between raster and actual array
+                      xdim = dim(var1)[2] ; ydim = dim(var1)[1]
+                      # extract the lat / long information needed
+                      long = coordinates(var1)[,1] ; lat = coordinates(var1)[,2]
+                      # restructure into correct orientation
+                      long = array(long, dim=c(xdim,ydim))
+                      lat = array(lat, dim=c(xdim,ydim))
+                  }
+                  # break out from the rasters into arrays which we can manipulate
+                  var1 = array(as.vector(unlist(var1)), dim=c(xdim,ydim))
 
                   # vectorise at this time
                   if (lat_done == FALSE) {
@@ -178,7 +225,7 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
           rm(var1,var2) ; gc(reset=TRUE,verbose=FALSE)
 
           # restructure
-          burnt_area=array(burnt_area, dim=c(dim(long)[1],dim(lat)[2],length(doy_obs)))
+          burnt_area=array(burnt_area, dim=c(xdim,ydim,length(doy_obs)))
 
           # output variables
           return(list(burnt_area=burnt_area,doy_obs=doy_obs,lat=lat,long=long,missing_years=missing_years))
