@@ -137,7 +137,7 @@ load_gpp_fields_for_extraction<-function(latlon_in,gpp_source,start_year,end_yea
          missing_years=missing_years[-1]
 
          # clean up variables
-         rm(var1,var2) ; gc(reset=TRUE,verbose=FALSE)
+         gc(reset=TRUE,verbose=FALSE)
 
          # restructure
          gpp_gCm2day = array(gpp_gCm2day, dim=c(xdim,ydim,length(doy_obs)))

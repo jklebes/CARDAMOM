@@ -19,8 +19,8 @@ extract_fire<- function(timestep_days,spatial_type,resolution,grid_type,latlon_i
   if (length(check1) > 0) { fire_all$long[check1] = fire_all$long[check1]+360 }
 
   # Extract to local variable
-  fire[n] = fire_all$fire_gCm2day[i1,j1,]
-  fire_unc[n] = fire_all$fire_unc_gCm2day[i1,j1,]
+  fire = fire_all$fire_gCm2day[i1,j1,]
+  fire_unc = fire_all$fire_unc_gCm2day[i1,j1,]
 
   # convert missing data back to -9999
   fire[which(is.na(fire))] = -9999
