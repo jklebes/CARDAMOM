@@ -15,10 +15,6 @@ extract_Cwood_stocks<- function(timestep_days,spatial_type,resolution,grid_type,
    output = closest2d(1,Cwood_stock_all$lat,Cwood_stock_all$long,latlon_in[1],latlon_in[2],2)
    i1 = unlist(output)[1] ; j1 = unlist(output)[2]
 
-   # Work out average areas
-   average_i = (i1-radius[1]):(i1+radius[1]) ; average_j = (j1-radius[2]):(j1+radius[2])
-   average_i = max(1,(i1-radius[1])):min(dim(Cwood_stock_all$biomass_gCm2)[1],(i1+radius[1]))
-   average_j = max(1,(j1-radius[2])):min(dim(Cwood_stock_all$biomass_gCm2)[2],(j1+radius[2]))
    # Create time series output variables
    Cwood_stock = rep(-9999, length(timestep_days))
    Cwood_stock_unc = rep(-9999, length(timestep_days))
