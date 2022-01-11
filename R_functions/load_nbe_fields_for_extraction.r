@@ -312,7 +312,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
       nbe_all = list(nbe_gCm2day = nbe_out, nbe_unc_gCm2day = nbe_unc_out,
                      doy_obs = doy_obs, lat = lat, long = long, missing_years=missing_years)
       # clean up variables
-      rm(doy_in,nbe_hold,nbe_unc_hold,not_na,nbe_out,doy_obs,lat,long,missing_years) ; gc(reset=TRUE,verbose=FALSE)
+      rm(doy_in,nbe_hold,nbe_unc_hold,nbe_out,doy_obs,lat,long,missing_years) ; gc(reset=TRUE,verbose=FALSE)
       return(nbe_all)
 
   } # if GEOSCHEM

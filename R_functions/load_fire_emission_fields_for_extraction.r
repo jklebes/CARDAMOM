@@ -116,14 +116,9 @@ load_fire_emission_fields_for_extraction<-function(latlon_in,fire_source,start_y
                        if (lat_done == FALSE) {
                            fire_gCm2day = as.vector(var1)
                            fire_unc_gCm2day = as.vector(var2)
-                           # Months in a year
-                           doy_obs = ncvar_get(data1, "time_axis")
                        } else {
                            fire_gCm2day = append(fire_gCm2day,as.vector(var1))
                            fire_unc_gCm2day = append(fire_unc_gCm2day,as.vector(var2))
-                           # Months in a year
-                           tmp1 = ncvar_get(data1, "time_axis")
-                           doy_obs = append(doy_obs,tmp1)
                        }
 
                        # update flag for lat / long load
