@@ -215,7 +215,7 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
 
                   # keep track of years actually ran
                   yrs = yrs+1
-s                  # Remove the input lat / long information
+                  # Remove the input lat / long information
                   rm(lat_in,long_in,var1_in)
 
               } # end of does file exist
