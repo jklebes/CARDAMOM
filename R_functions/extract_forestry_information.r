@@ -4,7 +4,7 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-extract_forestry_information<-function(timestep_days,spatial_type,resolution,grid_type,latlon_in,forest_all,start_year,end_year,ctessel_pft_in,years_to_load) {
+extract_forestry_information<-function(timestep_days,spatial_type,resolution,grid_type,latlon_in,forest_all,start_year,end_year,ctessel_pft_in,years_to_load,doy_out) {
 
    # find the nearest location
    output=closest2d(1,forest_all$lat,forest_all$long,latlon_in[1],latlon_in[2],2)
@@ -16,15 +16,6 @@ extract_forestry_information<-function(timestep_days,spatial_type,resolution,gri
    age=-9999
    yield_class=-9999
    ctessel_pft=ctessel_pft_in
-
-   # next work out how many days we should have in the year
-   doy_out = 0
-   for (i in seq(1, length(years_to_load))) {
-        nos_days = nos_days_in_year(years_to_load[i])
-        # count up days needed
-        doy_out = append(doy_out,1:nos_days)
-   }
-   doy_out = doy_out[-1]
 
    # declare output variable
    deforestation = rep(0, times=length(doy_out))
@@ -51,8 +42,7 @@ extract_forestry_information<-function(timestep_days,spatial_type,resolution,gri
    # create needed variables
    deforestation_agg = array(NA,dim=length(run_day_selector))
    for (y in seq(1,length(run_day_selector))) {
-        pick = deforestation[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]]
-        deforestation_agg[y] = sum(pick[which(pick != -9999)],na.rm=TRUE)
+        deforestation_agg[y] = sum(deforestation[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]],na.rm=TRUE)
         # having picked from this period, ensure no overlap by clearing it!
         deforestation[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]] = -9999
    }

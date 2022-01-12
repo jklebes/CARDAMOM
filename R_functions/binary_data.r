@@ -932,6 +932,13 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   # combine the static data
   DATA_STAT = c(PARPRIORS,PARPRIORUNC,PARPRIORWEIGHT,OTHERPRIORS,OTHERPRIORUNC,OTHERPRIORWEIGHT)
 
+
+  # Possible location to set all NA values to -9999?
+  # This would allow bit by bit replacement of NA to -9999 to be removed
+#  static_data[is.na(static_data)] = -9999
+#  DATA_STAT[is.na(DATA_STAT)] -9999
+#  DATA_TEMP[is.na(DATA_TEMP)] -9999
+
   # open the binary file
   zz <- file(file, "wb")
   # write with 8 bit precision (i.e. double)

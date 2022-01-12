@@ -14,13 +14,20 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
                      ,timestep_days,spatial_type,resolution,grid_type,modelname) {
 
     # Create useful timing information for multiple functions
+    # Years to be simulated
+    years_to_load = as.numeric(start_year):as.numeric(end_year)
+    # Determine how many days are in each year
+    doy_out = 0
+    for (i in seq(1, length(years_to_load))) {
+         nos_days = nos_days_in_year(years_to_load[i])
+         # count up days needed
+         doy_out = append(doy_out,1:nos_days)
+    }
+    doy_out = doy_out[-1]
+    # Days per time step if not already provided
     if (length(timestep_days) == 1) {
-        analysis_years = seq(as.numeric(start_year),as.numeric(end_year))
-        nos_days = 0
-        for (t in seq(1,length(analysis_years))) {nos_days = nos_days + nos_days_in_year(analysis_years[t])}
         timestep_days = rep(timestep_days, nos_days, by = timestep_days)
     }
-    years_to_load = as.numeric(start_year):as.numeric(end_year)
 
     ###
     ## Get some NBE information (gC/m2/day); negative is sink
@@ -30,7 +37,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
 
       # Extract NBE and uncertainty information
       # NOTE: assume default uncertainty (+/- scale)
-      output = extract_nbe(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,nbe_all,years_to_load)
+      output = extract_nbe(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,nbe_all,years_to_load,doy_out)
       nbe = output$nbe ; nbe_unc = output$nbe_unc
 
     } else if (nbe_source == "site_specific") {
@@ -61,7 +68,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
 
         # Extract lai and uncertainty information
         # NOTE: assume default uncertainty (+/- scale)
-        output = extract_lai_timeseries(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,lai_all,years_to_load)
+        output = extract_lai_timeseries(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,lai_all,years_to_load,doy_out)
         lai = output$lai ; lai_unc = output$lai_unc
 
     } else if (lai_source == "site_specific") {
@@ -284,7 +291,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
 
         # Extract GPP and uncertainty information
         # NOTE: assume default uncertainty (+/- scale)
-        output = extract_gpp(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,gpp_all,years_to_load)
+        output = extract_gpp(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,gpp_all,years_to_load,doy_out)
         GPP = output$GPP ; GPP_unc = output$GPP_unc
 
     } else {
@@ -317,7 +324,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
 
         # Extract Fire and uncertainty information
         # NOTE: assume default uncertainty (+/- scale)
-        output = extract_fire(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,fire_all,years_to_load)
+        output = extract_fire(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,fire_all,years_to_load,doy_out)
         Fire = output$Fire ; Fire_unc = output$Fire_unc
 
     } else {
@@ -667,7 +674,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         age = read_site_specific_obs("age",infile)
         if (length(age) > 1) {age = age[1]} # we only want the age at the beginning of the simulation
     } else if (deforestation_source == "GFW") {
-        output = extract_forestry_information(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,forest_all,start_year,end_year,ctessel_pft,years_to_load)
+        output = extract_forestry_information(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,forest_all,start_year,end_year,ctessel_pft,years_to_load,doy_out)
         ctessel_pft = output$ctessel_pft
         deforestation = output$deforestation
         yield_class = output$yield_class
@@ -692,7 +699,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         # assume no data available
         burnt_area = 0
     } else {
-        burnt_area = extract_burnt_area_information(latlon_wanted,timestep_days,spatial_type,grid_type,resolution,start_year,end_year,burnt_all,years_to_load)
+        burnt_area = extract_burnt_area_information(latlon_wanted,timestep_days,spatial_type,grid_type,resolution,start_year,end_year,burnt_all,years_to_load,doy_out)
     }
 
     ###
@@ -756,8 +763,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
 
     if (lca_source == "site_specific") {
         infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
-        Cwood_potential=read_site_specific_obs("LCA_gCm2",infile)
-        Cwood_potential_unc=read_site_specific_obs("LCA_unc_gCm2",infile)
+        lca=read_site_specific_obs("LCA_gCm2",infile)
+        lca_unc=read_site_specific_obs("LCA_unc_gCm2",infile)
     } else if (lca_source == "Butler") {
         # get Cwood
         output = extract_lca_prior(spatial_type,resolution,grid_type,latlon_wanted,lca_all)

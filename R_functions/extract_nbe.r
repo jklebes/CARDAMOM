@@ -5,7 +5,7 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-extract_nbe<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in,nbe_all,years_to_load) {
+extract_nbe<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in,nbe_all,years_to_load,doy_out) {
 
   # Update the user
   print(paste("NBE data extracted for current location ",Sys.time(),sep=""))
@@ -19,24 +19,12 @@ extract_nbe<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in
   nbe = nbe_all$nbe_gCm2day[i1,j1,]
   nbe_unc = nbe_all$nbe_unc_gCm2day[i1,j1,]
 
-  # convert missing data back to -9999
-  nbe[which(is.na(nbe))] = -9999
-  nbe_unc[which(is.na(nbe_unc))] = -9999
-  # next work out how many days we should have in the year
-  doy_obs = 0
-  for (i in seq(1, length(years_to_load))) {
-       nos_days = nos_days_in_year(years_to_load[i])
-       # count up days needed
-       doy_obs = append(doy_obs,1:nos_days)
-  }
-  doy_obs = doy_obs[-1]
-
   # just incase there is no missing data we best make sure there is a value which can be assessed
   if (length(nbe_all$missing_years) == 0) { nbe_all$missing_years=1066 }
 
   # declare output variable
-  nbe_out = array(-9999, dim=length(doy_obs))
-  nbe_unc_out = array(-9999, dim=length(doy_obs))
+  nbe_out = array(NA, dim=length(doy_obs))
+  nbe_unc_out = array(NA, dim=length(doy_obs))
   # now line up the obs days with all days
   b = 1 ; i = 1 ; a = 1 ; start_year=as.numeric(years_to_load[1])
   while (b <= length(nbe_all$doy_obs)) {
@@ -68,8 +56,8 @@ extract_nbe<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in
       # Generally this now deals with time steps which are not daily.
       # However if not monthly special case
       if (length(timestep_days) == 1) {
-          run_day_selector = seq(1,length(nbe_out),timestep_days)
-          timestep_days = rep(timestep_days, length.out=length(nbe_out))
+          run_day_selector = seq(1,length(nbe_out), timestep_days)
+          timestep_days = rep(timestep_days, length.out = length(nbe_out))
       }
       print("...calculating monthly averages for NBE")
       # determine the actual daily positions
@@ -78,19 +66,20 @@ extract_nbe<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in
       nbe_agg = array(NA,dim=length(run_day_selector))
       nbe_unc_agg = array(NA, dim=length(run_day_selector))
       for (y in seq(1,length(run_day_selector))) {
-           pick = nbe_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]]
-           nbe_agg[y] = mean(pick[which(pick != -9999)],na.rm=TRUE)
-           pick = nbe_unc_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]]
-           nbe_unc_agg[y] = mean(pick[which(pick != -9999)],na.rm=TRUE)
+           pick = (run_day_selector[y]-timestep_days[y]):run_day_selector[y]
+           nbe_agg[y] = mean(nbe_out[pick],na.rm=TRUE)
+           nbe_unc_agg[y] = mean(nbe_unc_out[pick],na.rm=TRUE)
       }
-      # convert missing values back to -9999
-      nbe_agg[which(is.na(nbe_agg))] = -9999 ; nbe_unc_agg[which(is.na(nbe_unc_agg))] = -9999
       # update with new output information
       nbe_out = nbe_agg ; nbe_unc_out = nbe_unc_agg
       # clean up
       rm(nbe_agg,nbe_unc_agg,y) ; gc()
 
   } # monthly aggregation etc
+
+  # convert missing data back to -9999
+  nbe_out[which(is.na(nbe_out))] = -9999
+  nbe_unc_out[which(is.na(nbe_unc_out))] = -9999
 
   # pass the information back
   output = list(nbe = nbe_out, nbe_unc = nbe_unc_out)

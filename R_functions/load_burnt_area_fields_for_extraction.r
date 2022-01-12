@@ -155,7 +155,7 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
                   # extract location variables
                   lat_in = ncvar_get(data1, "latitude") ; long_in = ncvar_get(data1, "longitude")
                   # read the burnt fraction estimate (units are 0-1)
-                  var1 = ncvar_get(data1, "BurnedFraction")
+                  var1_in = ncvar_get(data1, "BurnedFraction")
 
                   # get time information (day of year)
                   var2 = ncvar_get(data1, "time") ; time_steps_per_year = 12
@@ -169,50 +169,54 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
                   # close files after use
                   nc_close(data1) ; rm(var2)
 
-                  # Convert to a raster, assuming standad WGS84 grid
-                  var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1))
-                  var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326"))
-                  # Remove the input lat / long information
-                  rm(lat_in,long_in)
+                  for (t in seq(1, dim(var1_in)[3])) {
+                       # Convert to a raster, assuming standad WGS84 grid
+                       var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1_in[,,t]))
+                       var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326"))
 
-                  # Trim the extent of the overall grid to the analysis domain
-                  var1 = crop(var1,cardamom_ext)
-                  # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-                  # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-                  if (spatial_type == "grid") {
-                      if (res(var1)[1] < res(cardamom_ext)[1] | res(var1)[2] < res(cardamom_ext)[2]) {
-                          # Create raster with the target resolution
-                          target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
-                          # Resample to correct grid.
-                          # Probably should be done via aggregate function to allow for correct error propogation
-                          var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
-                      } # Aggrgeate to resolution
-                  } # spatial_type == "grid"
+                       # Trim the extent of the overall grid to the analysis domain
+                       var1 = crop(var1,cardamom_ext)
+                       # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
+                       # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+                       if (spatial_type == "grid") {
+                           if (res(var1)[1] < res(cardamom_ext)[1] | res(var1)[2] < res(cardamom_ext)[2]) {
+                               # Create raster with the target resolution
+                               target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+                               # Resample to correct grid.
+                               # Probably should be done via aggregate function to allow for correct error propogation
+                               var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
+                           } # Aggrgeate to resolution
+                       } # spatial_type == "grid"
 
-                  # Extract spatial information just the once
-                  if (lat_done == FALSE) {
-                      # extract dimension information for the grid, note the axis switching between raster and actual array
-                      xdim = dim(var1)[2] ; ydim = dim(var1)[1]
-                      # extract the lat / long information needed
-                      long = coordinates(var1)[,1] ; lat = coordinates(var1)[,2]
-                      # restructure into correct orientation
-                      long = array(long, dim=c(xdim,ydim))
-                      lat = array(lat, dim=c(xdim,ydim))
-                  }
-                  # break out from the rasters into arrays which we can manipulate
-                  var1 = array(as.vector(unlist(var1)), dim=c(xdim,ydim))
+                       # Extract spatial information just the once
+                       if (lat_done == FALSE) {
+                           # extract dimension information for the grid, note the axis switching between raster and actual array
+                           xdim = dim(var1)[2] ; ydim = dim(var1)[1]
+                           # extract the lat / long information needed
+                           long = coordinates(var1)[,1] ; lat = coordinates(var1)[,2]
+                           # restructure into correct orientation
+                           long = array(long, dim=c(xdim,ydim))
+                           lat = array(lat, dim=c(xdim,ydim))
+                       }
+                       # break out from the rasters into arrays which we can manipulate
+                       var1 = array(as.vector(unlist(var1)), dim=c(xdim,ydim))
 
-                  # vectorise at this time
-                  if (lat_done == FALSE) {
-                      burnt_area = as.vector(var1)
-                  } else {
-                      burnt_area = append(burnt_area,as.vector(var1))
-                  }
+                       # vectorise at this time
+                       if (lat_done == FALSE) {
+                           burnt_area = as.vector(var1)
+                       } else {
+                           burnt_area = append(burnt_area,as.vector(var1))
+                       }
 
-                  # update flag for lat / long load
-                  if (lat_done == FALSE) {lat_done = TRUE}
+                       # update flag for lat / long load
+                       if (lat_done == FALSE) {lat_done = TRUE}
+
+                  } # steps within file
+
                   # keep track of years actually ran
                   yrs = yrs+1
+s                  # Remove the input lat / long information
+                  rm(lat_in,long_in,var1_in)
 
               } # end of does file exist
 
@@ -222,7 +226,7 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
           missing_years = missing_years[-1]
 
           # clean up variables
-          rm(var1,var2) ; gc(reset=TRUE,verbose=FALSE)
+          rm(var1) ; gc(reset=TRUE,verbose=FALSE)
 
           # restructure
           burnt_area=array(burnt_area, dim=c(xdim,ydim,length(doy_obs)))

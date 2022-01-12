@@ -6,7 +6,7 @@
 
 # This function is based by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,grid_type,resolution,start_year,end_year,burnt_all,years_to_load) {
+extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,grid_type,resolution,start_year,end_year,burnt_all,years_to_load,doy_out) {
 
   # Update the user
   print(paste("Beginning burned fraction data extraction for current location ",Sys.time(),sep=""))
@@ -17,17 +17,6 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
 
   # Extract location specific information to a local variable
   burnt_area = burnt_all$burnt_area[i1,j1,]
-  # convert missing data to -9999
-  burnt_area[which(is.na(burnt_area))] = -9999
-
-   # Determine how many days are in each year
-   doy_out = 0
-   for (i in seq(1, length(years_to_load))) {
-        nos_days = nos_days_in_year(years_to_load[i])
-        # count up days needed
-        doy_out = append(doy_out,1:nos_days)
-   }
-   doy_out = doy_out[-1]
 
   # just incase there is no missing data we best make sure there is a value which can be assessed
   if (length(burnt_all$missing_years) == 0) { burnt_all$missing_years=1066 }
@@ -66,19 +55,19 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
       # determine the actual daily positions
       run_day_selector = cumsum(timestep_days)
       # create needed variables
-      burnt_area_agg = array(-9999,dim=length(run_day_selector))
+      burnt_area_agg = array(NA,dim=length(run_day_selector))
       # As far is an absolute event we sum all events within the time period not average!
       for (y in seq(1,length(run_day_selector))) {
-           pick = burnt_area_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]]
-           burnt_area_agg[y] = sum(pick[which(pick != -9999)],na.rm=TRUE)
+           burnt_area_agg[y] = sum(pick[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]],na.rm=TRUE)
       }
-      # now convert the missing values back to -9999
-      burnt_area_agg[which(is.na(burnt_area_agg))] = -9999
       # update with new output information
       burnt_area_out = burnt_area_agg
       # clean up
       rm(burnt_area_agg) ; gc()
   } # monthly aggregation etc
+
+  # convert missing data to -9999
+  burnt_area_out[which(is.na(burnt_area_out))] = -9999
 
   # pass the information back
   return(burnt_area=burnt_area_out)

@@ -150,6 +150,8 @@ load_fire_emission_fields_for_extraction<-function(latlon_in,fire_source,start_y
     } else if (fire_source == " " | fire_source == "site_specific"){
 
 	        # Do nothing as this should be read directly from files or not needed
+          return(list(fire_gCm2day = -9999, fire_unc_gCm2day = -9999,
+                      doy_obs = -9999, lat = -9999, long = -9999, missing_years = -9999))
 
     } else {
 

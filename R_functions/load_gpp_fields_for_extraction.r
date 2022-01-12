@@ -150,6 +150,8 @@ load_gpp_fields_for_extraction<-function(latlon_in,gpp_source,start_year,end_yea
     } else if (gpp_source == " " | gpp_source == "site_specific"){
 
 	        # Do nothing as this should be read directly from files or not needed
+          return(list(gpp_gCm2day = -9999, gpp_unc_gCm2day = -9999,
+                      doy_obs = -9999, lat = -9999, long = -9999, missing_years = -9999))
 
     } else {
 

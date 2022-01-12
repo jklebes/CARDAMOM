@@ -5,7 +5,7 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-extract_gpp<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in,gpp_all,years_to_load) {
+extract_gpp<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in,gpp_all,years_to_load,doy_out) {
 
   # Update the user
   print(paste("GPP data extracted for current location ",Sys.time(),sep=""))
@@ -18,24 +18,12 @@ extract_gpp<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in
   gpp = gpp_all$gpp_gCm2day[i1,j1,]
   gpp_unc = gpp_all$gpp_unc_gCm2day[i1,j1,]
 
-  # convert missing data back to -9999
-  gpp[which(is.na(gpp))] = -9999
-  gpp_unc[which(is.na(gpp_unc))] = -9999
-  # next work out how many days we should have in the year
-  doy_out = 0
-  for (i in seq(1, length(years_to_load))) {
-       nos_days = nos_days_in_year(years_to_load[i])
-       # count up days needed
-       doy_out = append(doy_out,1:nos_days)
-  }
-  doy_out = doy_out[-1]
-
   # just incase there is no missing data we best make sure there is a value which can be assessed
   if (length(gpp_all$missing_years) == 0) { gpp_all$missing_years=1066 }
 
   # declare output variable
-  gpp_out = array(-9999, dim=length(doy_out))
-  gpp_unc_out = array(-9999, dim=length(doy_out))
+  gpp_out = array(NA, dim=length(doy_out))
+  gpp_unc_out = array(NA, dim=length(doy_out))
   # now line up the obs days with all days
   b = 1 ; i = 1 ; a = 1 ; start_year=as.numeric(years_to_load[1])
   while (b <= length(gpp_all$doy_obs)) {
@@ -77,19 +65,20 @@ extract_gpp<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in
       gpp_agg = array(NA,dim=length(run_day_selector))
       gpp_unc_agg = array(NA, dim=length(run_day_selector))
       for (y in seq(1,length(run_day_selector))) {
-           pick = gpp_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]]
-           gpp_agg[y] = mean(pick[which(pick != -9999)],na.rm=TRUE)
-           pick = gpp_unc_out[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]]
-           gpp_unc_agg[y] = mean(pick[which(pick != -9999)],na.rm=TRUE)
+           pick = (run_day_selector[y]-timestep_days[y]):run_day_selector[y]
+           gpp_agg[y] = mean(gpp_out[pick],na.rm=TRUE)
+           gpp_unc_agg[y] = mean(gpp_unc_out[pick],na.rm=TRUE)
       }
-      # convert missing values back to -9999
-      gpp_agg[which(is.na(gpp_agg))] = -9999 ; gpp_unc_agg[which(is.na(gpp_unc_agg))] = -9999
       # update with new output information
       gpp_out = gpp_agg ; gpp_unc_out = gpp_unc_agg
       # clean up
       rm(gpp_agg,gpp_unc_agg,y) ; gc()
 
   } # monthly aggregation etc
+
+  # convert missing data back to -9999
+  gpp_out[which(is.na(gpp_out))] = -9999
+  gpp_unc_out[which(is.na(gpp_unc_out))] = -9999
 
   # pass the information back
   output = list(GPP = gpp_out, GPP_unc = gpp_unc_out)
