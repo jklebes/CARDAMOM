@@ -6,7 +6,7 @@
 
 # This function is based by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,grid_type,resolution,start_year,end_year,burnt_all) {
+extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,grid_type,resolution,start_year,end_year,burnt_all,years_to_load) {
 
   # Update the user
   print(paste("Beginning burned fraction data extraction for current location ",Sys.time(),sep=""))

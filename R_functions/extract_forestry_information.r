@@ -4,7 +4,7 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-extract_forestry_information<-function(timestep_days,spatial_type,resolution,grid_type,latlon_in,forest_all,start_year,end_year,ctessel_pft_in) {
+extract_forestry_information<-function(timestep_days,spatial_type,resolution,grid_type,latlon_in,forest_all,start_year,end_year,ctessel_pft_in,years_to_load) {
 
    # find locations information
    # convert input data long to conform to what we need
@@ -23,7 +23,7 @@ extract_forestry_information<-function(timestep_days,spatial_type,resolution,gri
    ctessel_pft=ctessel_pft_in
 
    # next work out how many days we should have in the year
-   doy_out = 0
+   doy_out = 0 
    for (i in seq(1, length(years_to_load))) {
         nos_days = nos_days_in_year(years_to_load[i])
         # count up days needed
