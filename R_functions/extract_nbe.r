@@ -5,7 +5,7 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-extract_nbe<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in,nbe_all,years_to_load,doy_out) {
+extract_nbe<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in,nbe_all,years_to_load,doy_obs) {
 
   # Update the user
   print(paste("NBE data extracted for current location ",Sys.time(),sep=""))

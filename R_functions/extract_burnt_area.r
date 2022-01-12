@@ -6,7 +6,7 @@
 
 # This function is based by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,grid_type,resolution,start_year,end_year,burnt_all,years_to_load,doy_out) {
+extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,grid_type,resolution,start_year,end_year,burnt_all,years_to_load,doy_obs) {
 
   # Update the user
   print(paste("Beginning burned fraction data extraction for current location ",Sys.time(),sep=""))
@@ -22,24 +22,24 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
   if (length(burnt_all$missing_years) == 0) { burnt_all$missing_years=1066 }
 
   # declare output variable
-  burnt_area_out = array(0, dim=length(doy_out))
+  burnt_area_out = array(0, dim=length(doy_obs))
   # now line up the obs days with all days
   b = 1 ; i = 1 ; a = 1 ; start_year = as.numeric(years_to_do[1])
   while (b <= length(burnt_all$doy_obs)) {
          # if we are in a year which is missing then we do not allow consideration of DOY
          if (start_year != burnt_all$missing_years[a]) {
-             if (doy_out[i] == burnt_all$doy_obs[b]) {
+             if (doy_obs[i] == burnt_all$doy_obs[b]) {
                  burnt_area_out[i] = burnt_area[b] ; b = b+1
              } # end if doy matches
          } # end if missing year
          # but we do keep counting through the total vector length which we expect
          i = i + 1
          # have we just looped round the year?
-         if (i != 1 & doy_out[i-1] > doy_out[i]) {
+         if (i != 1 & doy_obs[i-1] > doy_obs[i]) {
              # and if we have just been in a missing year we need to count on the missing years vector to
              if (start_year == burnt_all$missing_years[a]) {a = min(length(burnt_all$missing_years),a+1)}
              start_year = start_year+1
-         } # end if doy_out[i] == 1
+         } # end if doy_obs[i] == 1
   } # end while condition
 
   if (length(timestep_days) == 1 & timestep_days[1] == 1) {

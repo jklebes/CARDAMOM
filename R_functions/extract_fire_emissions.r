@@ -5,7 +5,7 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-extract_fire<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in,fire_all,years_to_load,doy_out) {
+extract_fire<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in,fire_all,years_to_load,doy_obs) {
 
   # Update the user
   print(paste("Fire data extracted for current location ",Sys.time(),sep=""))
@@ -22,27 +22,27 @@ extract_fire<- function(timestep_days,spatial_type,resolution,grid_type,latlon_i
   if (length(fire_all$missing_years) == 0) { fire_all$missing_years=1066 }
 
   # declare output variable
-  fire_out = array(NA, dim=length(doy_out))
-  fire_unc_out = array(NA, dim=length(doy_out))
+  fire_out = array(NA, dim=length(doy_obs))
+  fire_unc_out = array(NA, dim=length(doy_obs))
   # now line up the obs days with all days
   b = 1 ; i = 1 ; a = 1 ; start_year=as.numeric(years_to_load[1])
   while (b <= length(fire_all$doy_obs)) {
 
       # if we are in a year which is missing then we do not allow consideration of DOY
       if (start_year != fire_all$missing_years[a]) {
-          if (doy_out[i] == fire_all$doy_obs[b]) {
+          if (doy_obs[i] == fire_all$doy_obs[b]) {
               fire_out[i] = fire[b] ; fire_unc_out[i] = fire_unc[b] ; b = b+1
           } # end if doy matches
       } # end if missing year
       # but we do keep counting through the total vector length which we expect
       i = i+1
 
-      # each time we come back to doy_out[i]==1 we need to count on the year
-      if (doy_out[i-1] > doy_out[i] & b <= length(fire_all$doy_obs)) {
+      # each time we come back to doy_obs[i]==1 we need to count on the year
+      if (doy_obs[i-1] > doy_obs[i] & b <= length(fire_all$doy_obs)) {
           # and if we have just been in a missing year we need to count on the missing years vector to
           if (start_year == fire_all$missing_years[a]) {a = min(length(fire_all$missing_years),a+1)}
           start_year=start_year+1
-      } # end if doy_out[i] == 1
+      } # end if doy_obs[i] == 1
 
   } # end while condition
 

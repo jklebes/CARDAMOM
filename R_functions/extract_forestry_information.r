@@ -4,7 +4,7 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-extract_forestry_information<-function(timestep_days,spatial_type,resolution,grid_type,latlon_in,forest_all,start_year,end_year,ctessel_pft_in,years_to_load,doy_out) {
+extract_forestry_information<-function(timestep_days,spatial_type,resolution,grid_type,latlon_in,forest_all,start_year,end_year,ctessel_pft_in,years_to_load,doy_obs) {
 
    # find the nearest location
    output=closest2d(1,forest_all$lat,forest_all$long,latlon_in[1],latlon_in[2],2)
@@ -18,9 +18,9 @@ extract_forestry_information<-function(timestep_days,spatial_type,resolution,gri
    ctessel_pft=ctessel_pft_in
 
    # declare output variable
-   deforestation = rep(0, times=length(doy_out))
+   deforestation = rep(0, times=length(doy_obs))
    ## normal assumption
-   start_of_years = which(doy_out == 1)
+   start_of_years = which(doy_obs == 1)
    # which year is the one in which deforestation occurs?
    # then find the appropriate beginning of a year and make deforestation
    for (aa in seq(1,length(forest_all$year_of_loss))) {

@@ -5,7 +5,7 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-extract_gpp<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in,gpp_all,years_to_load,doy_out) {
+extract_gpp<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in,gpp_all,years_to_load,doy_obs) {
 
   # Update the user
   print(paste("GPP data extracted for current location ",Sys.time(),sep=""))
@@ -22,27 +22,27 @@ extract_gpp<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in
   if (length(gpp_all$missing_years) == 0) { gpp_all$missing_years=1066 }
 
   # declare output variable
-  gpp_out = array(NA, dim=length(doy_out))
-  gpp_unc_out = array(NA, dim=length(doy_out))
+  gpp_out = array(NA, dim=length(doy_obs))
+  gpp_unc_out = array(NA, dim=length(doy_obs))
   # now line up the obs days with all days
   b = 1 ; i = 1 ; a = 1 ; start_year=as.numeric(years_to_load[1])
   while (b <= length(gpp_all$doy_obs)) {
 
       # if we are in a year which is missing then we do not allow consideration of DOY
       if (start_year != gpp_all$missing_years[a]) {
-          if (doy_out[i] == gpp_all$doy_obs[b]) {
+          if (doy_obs[i] == gpp_all$doy_obs[b]) {
               gpp_out[i] = gpp[b] ; gpp_unc_out[i] = gpp_unc[b] ; b = b+1
           } # end if doy matches
       } # end if missing year
       # but we do keep counting through the total vector length which we expect
       i = i+1
 
-      # each time we come back to doy_out[i]==1 we need to count on the year
-      if (doy_out[i-1] > doy_out[i] & b <= length(gpp_all$doy_obs)) {
+      # each time we come back to doy_obs[i]==1 we need to count on the year
+      if (doy_obs[i-1] > doy_obs[i] & b <= length(gpp_all$doy_obs)) {
           # and if we have just been in a missing year we need to count on the missing years vector to
           if (start_year == gpp_all$missing_years[a]) {a = min(length(gpp_all$missing_years),a+1)}
           start_year=start_year+1
-      } # end if doy_out[i] == 1
+      } # end if doy_obs[i] == 1
 
   } # end while condition
 

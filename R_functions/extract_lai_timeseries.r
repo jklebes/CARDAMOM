@@ -5,7 +5,7 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-extract_lai_timeseries<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in,lai_all,years_to_load,doy_out) {
+extract_lai_timeseries<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in,lai_all,years_to_load,doy_obs) {
 
    # Update the user
    print(paste("LAI data extracted for current location ",Sys.time(),sep=""))
@@ -22,8 +22,8 @@ extract_lai_timeseries<- function(timestep_days,spatial_type,resolution,grid_typ
    if (length(lai_all$missing_years) == 0) { lai_all$missing_years=1066 }
 
    # declare output variable
-   lai_out = array(NA, dim=length(doy_out))
-   lai_unc_out = array(NA, dim=length(doy_out))
+   lai_out = array(NA, dim=length(doy_obs))
+   lai_unc_out = array(NA, dim=length(doy_obs))
    # now line up the obs days with all days
    b = 1 ; i = 1 ; a = 1 ; start_year = as.numeric(years_to_load[1])
    print("...begin inserting LAI observations into model time steps")
@@ -31,7 +31,7 @@ extract_lai_timeseries<- function(timestep_days,spatial_type,resolution,grid_typ
 
       # if we are in a year which is missing then we do not allow consideration of DOY
       if (start_year != lai_all$missing_years[a]) {
-          if (doy_out[i] == lai_all$doy_obs[b]) {
+          if (doy_obs[i] == lai_all$doy_obs[b]) {
               lai_out[i] = lai[b] ; lai_unc_out[i] = lai_unc[b] ; b = b + 1
           } # end if doy matches
       } # end if missing year
@@ -39,12 +39,12 @@ extract_lai_timeseries<- function(timestep_days,spatial_type,resolution,grid_typ
       # but we do keep counting through the total vector length which we expect
       i = i + 1
 
-      # each time we come back to doy_out[i]==1 we need to count on the year
-      if (doy_out[i] == 1 & b <= length(lai_all$doy_obs)) {
+      # each time we come back to doy_obs[i]==1 we need to count on the year
+      if (doy_obs[i] == 1 & b <= length(lai_all$doy_obs)) {
           # and if we have just been in a missing year we need to count on the missing years vector to
           if (start_year == lai_all$missing_years[a]) { a = min(length(lai_all$missing_years),a+1) }
           start_year = start_year + 1
-      } # end if doy_out[i] == 1
+      } # end if doy_obs[i] == 1
 
    } # end while condition
 
@@ -82,7 +82,7 @@ extract_lai_timeseries<- function(timestep_days,spatial_type,resolution,grid_typ
    lai[which(is.na(lai))] = -9999 ; lai_unc[which(is.na(lai_unc))] = -9999
 
    # clean up
-   rm(i1,j1,check1,lai,i,nos_days,doy_out,a) ; gc(reset=TRUE,verbose=FALSE)
+   rm(i1,j1,check1,lai,i,a) ; gc(reset=TRUE,verbose=FALSE)
 
    # CARDAMOM works best if the uncertainties are the same across each LAI observation as the framework tends towards lower LAI values
    # Therefore, to make use of the uncertainty information we take the mean for this site and apply it across each value.
