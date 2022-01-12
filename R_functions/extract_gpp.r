@@ -20,8 +20,8 @@ extract_gpp<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in
   if (length(check1) > 0) { gpp_all$long[check1] = gpp_all$long[check1]+360 }
 
   # Extract to local variable
-  gpp = gpp_all$gpp_gCm2day[i1,j1,n]
-  gpp_unc = gpp_all$gpp_unc_gCm2day[i1,j1,n]
+  gpp = gpp_all$gpp_gCm2day[i1,j1,]
+  gpp_unc = gpp_all$gpp_unc_gCm2day[i1,j1,]
 
   # convert missing data back to -9999
   gpp[which(is.na(gpp))] = -9999
