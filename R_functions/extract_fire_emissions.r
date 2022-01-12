@@ -10,13 +10,9 @@ extract_fire<- function(timestep_days,spatial_type,resolution,grid_type,latlon_i
   # Update the user
   print(paste("Fire data extracted for current location ",Sys.time(),sep=""))
 
-  # convert input data long to conform to what we need
-  check1 = which(fire_all$long > 180) ; if (length(check1) > 0) { fire_all$long[check1]=fire_all$long[check1]-360 }
   # find the nearest location
   output = closest2d(1,fire_all$lat,fire_all$long,latlon_in[1],latlon_in[2],2)
   i1 = unlist(output, use.names=FALSE)[1] ; j1 = unlist(output, use.names=FALSE)[2]
-  # return long to 0-360
-  if (length(check1) > 0) { fire_all$long[check1] = fire_all$long[check1]+360 }
 
   # Extract to local variable
   fire = fire_all$fire_gCm2day[i1,j1,]

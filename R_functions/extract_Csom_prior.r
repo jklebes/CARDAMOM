@@ -12,13 +12,9 @@ extract_Csom_prior<-function(spatial_type,resolution,grid_type,latlon_wanted,Cso
   # Update the user
   print(paste("Csom prior data extracted for current location ",Sys.time(),sep=""))
 
-	# convert input data long to conform to what we need
-	check1=which(Csom_all$long > 180) ; if (length(check1) > 0) { Csom_all$long[check1] = Csom_all$long[check1]-360 }
   # find desired lat / long location within the soilgrid database
   output = closest2d(1,Csom_all$lat,Csom_all$long,latlon_wanted[1],latlon_wanted[2],2)
   i1 = unlist(output, use.names=FALSE)[1] ; j1 = unlist(output, use.names=FALSE)[2]
-	# return long to 0-360
-	if (length(check1) > 0) { Csom_all$long[check1] = Csom_all$long[check1]+360 }
 
   # Extract target location
   Csom = Csom_all$Csom[i1,j1]

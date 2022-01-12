@@ -10,14 +10,10 @@ extract_nbe<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in
   # Update the user
   print(paste("NBE data extracted for current location ",Sys.time(),sep=""))
 
-  # convert input data long to conform to what we need
-  check1 = which(nbe_all$long > 180) ; if (length(check1) > 0) { nbe_all$long[check1]=nbe_all$long[check1]-360 }
+
   # find the nearest location
   output = closest2d(1,nbe_all$lat,nbe_all$long,latlon_in[1],latlon_in[2],2)
-  i1 = unlist(output)[1] ; j1 = unlist(output)[2]
-
-  # return long to 0-360
-  if (length(check1) > 0) { nbe_all$long[check1] = nbe_all$long[check1]+360 }
+  i1 = unlist(output, use.names=FALSE)[1] ; j1 = unlist(output, use.names=FALSE)[2]
 
   # Extract to local variable
   nbe = nbe_all$nbe_gCm2day[i1,j1,]

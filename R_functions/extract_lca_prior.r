@@ -10,15 +10,9 @@ extract_lca_prior<- function(spatial_type,resolution,grid_type,latlon_in,lca_all
    # Update the user
    print(paste("LCA prior extracted for current location ",Sys.time(),sep=""))
 
-   # convert input data long to conform to what we need
-   check1=which(lca_all$long > 180) ; if (length(check1) > 0) { lca_all$long[check1] = lca_all$long[check1]-360 }
-
    # find the nearest location
    output = closest2d(1,lca_all$lat,lca_all$long,latlon_in[1],latlon_in[2],2)
-   i1 = unlist(output)[1] ; j1 = unlist(output)[2]
-
-   # return long to 0-360
-   if (length(check1) > 0) { lca_all$long[check1] = lca_all$long[check1]+360 }
+   i1 = unlist(output, use.names=FALSE)[1] ; j1 = unlist(output, use.names=FALSE)[2]
 
    # Extract target location
    lca_gCm2 = lca_all$lca_gCm2[i1,j1]

@@ -6,14 +6,9 @@
 
 extract_forestry_information<-function(timestep_days,spatial_type,resolution,grid_type,latlon_in,forest_all,start_year,end_year,ctessel_pft_in,years_to_load) {
 
-   # find locations information
-   # convert input data long to conform to what we need
-   check1=which(forest_all$long > 180) ; if (length(check1) > 0) { forest_all$long[check1]=forest_all$long[check1]-360 }
    # find the nearest location
    output=closest2d(1,forest_all$lat,forest_all$long,latlon_in[1],latlon_in[2],2)
-   i1=unlist(output)[1] ; j1=unlist(output)[2]
-   # return long to 0-360
-   if (length(check1) > 0) { forest_all$long[check1] = forest_all$long[check1]+360 }
+   i1=unlist(output, use.names=FALSE)[1] ; j1=unlist(output, use.names=FALSE)[2]
 
    # Assume this location does not have forest commission information
    # The age, yield class and pft override will be removed at a later date
@@ -23,7 +18,7 @@ extract_forestry_information<-function(timestep_days,spatial_type,resolution,gri
    ctessel_pft=ctessel_pft_in
 
    # next work out how many days we should have in the year
-   doy_out = 0 
+   doy_out = 0
    for (i in seq(1, length(years_to_load))) {
         nos_days = nos_days_in_year(years_to_load[i])
         # count up days needed

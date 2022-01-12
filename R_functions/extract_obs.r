@@ -140,6 +140,11 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         sand_clay=extract_sand_clay(spatial_type,resolution,grid_type,latlon_wanted,sand_clay_all)
         top_sand = sand_clay$top_sand ; bot_sand = sand_clay$bot_sand
         top_clay = sand_clay$top_clay ; bot_clay = sand_clay$bot_clay
+        # Guard against NaN values
+        if (is.na(top_sand)) {top_sand = 40}
+        if (is.na(bot_sand)) {top_sand = 40}
+        if (is.na(top_clay)) {top_sand = 15}
+        if (is.na(bot_clay)) {top_sand = 15}
     } else if (sand_clay_source == "site_specific") {
         infile=paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
         top_sand = read_site_specific_obs("top_sand_initial_percent",infile)

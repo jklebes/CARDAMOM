@@ -13,7 +13,7 @@ extract_Cwood_stocks<- function(timestep_days,spatial_type,resolution,grid_type,
 
    # find the nearest location
    output = closest2d(1,Cwood_stock_all$lat,Cwood_stock_all$long,latlon_in[1],latlon_in[2],2)
-   i1 = unlist(output)[1] ; j1 = unlist(output)[2]
+   i1 = unlist(output, use.names=FALSE)[1] ; j1 = unlist(output, use.names=FALSE)[2]
 
    # Create time series output variables
    Cwood_stock = rep(-9999, length(timestep_days))
