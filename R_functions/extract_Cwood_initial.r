@@ -12,7 +12,7 @@ extract_Cwood_initial<- function(spatial_type,resolution,grid_type,latlon_in,Cwo
 
    # find the nearest location
    output = closest2d(1,Cwood_initial_all$lat,Cwood_initial_all$long,latlon_in[1],latlon_in[2],2)
-   i1 = unlist(output)[1] ; j1 = unlist(output)[2]
+   i1 = unlist(output, use.names=FALSE)[1] ; j1 = unlist(output, use.names=FALSE)[2]
 
    # Carry out averaging
    Cwood = Cwood_initial_all$biomass_gCm2[i1,j1]
