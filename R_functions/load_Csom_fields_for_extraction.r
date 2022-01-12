@@ -107,7 +107,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         Csom_unc[Csom_unc < 100] = 100
 
         # Return the loaded dataset
-        return(list(Csom = Csom, Csom_unc = Csom_unc, lat = lat,long = long))
+        return(list(Csom = Csom, Csom_unc = Csom_unc, lat = lat, long = long))
 
     } else {
         # output variables

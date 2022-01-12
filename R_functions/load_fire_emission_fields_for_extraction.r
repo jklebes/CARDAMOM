@@ -137,11 +137,11 @@ load_fire_emission_fields_for_extraction<-function(latlon_in,fire_source,start_y
          missing_years=missing_years[-1]
 
          # clean up variables
-         rm(var1,var2) ; gc(reset=TRUE,verbose=FALSE)
+         gc(reset=TRUE,verbose=FALSE)
 
          # restructure
-         fire_gCm2day = array(fire_gCm2day, dim=c(length(long),length(lat),length(doy_obs)))
-         fire_unc_gCm2day = array(fire_unc_gCm2day, dim=c(length(long),length(lat),length(doy_obs)))
+         fire_gCm2day = array(fire_gCm2day, dim=c(xdim,ydim,length(doy_obs)))
+         fire_unc_gCm2day = array(fire_unc_gCm2day, dim=c(xdim,ydim,length(doy_obs)))
 
          # output variables
          return(list(fire_gCm2day = fire_gCm2day, fire_unc_gCm2day = fire_unc_gCm2day,

@@ -133,7 +133,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
       missing_years=missing_years[-1]
 
       # clean up variables
-      rm(var1,var2) ; gc(reset=TRUE,verbose=FALSE)
+      gc(reset=TRUE,verbose=FALSE)
 
       # restructure
       nbe_gCm2day = array(nbe_gCm2day, dim=c(xdim,ydim,length(doy_obs)))
@@ -289,7 +289,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
                # keep track of years actually ran
                yrs = yrs + 1
                # clean up allocated memeory
-               rm(var1,var2) ; gc()
+               gc()
 
            } # is there information for the current year?
 
