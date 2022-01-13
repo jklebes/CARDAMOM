@@ -21,7 +21,7 @@ extract_Csom_prior<-function(spatial_type,resolution,grid_type,latlon_wanted,Cso
   Csom_unc = Csom_all$Csom_unc[i1,j1]
 
   # Convert any NaN to missing data flag -9999
-  Csom[which(is.na(Csom))] = -9999 ; Csom_unc[which(is.na(Csom_unc))] = -9999
+  Csom[is.na(Csom) == TRUE] = -9999 ; Csom_unc[is.na(Csom_unc) == TRUE] = -9999
 
   # retun back to the user
   return(list(Csom_initial = Csom, Csom_initial_unc = Csom_unc))

@@ -40,7 +40,7 @@ load_lca_maps_for_extraction<-function(latlon_in,lca_source,cardamom_ext,spatial
             lca_uncertainty_gCm2 = resample(lca_uncertainty_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
         }
         # Trim the extent of the overall grid to the analysis domain
-        lca_gCm2 = crop(lca_gCm2,cardamom_ext) ; Csom_unc = crop(lca_uncertainty_gCm2,cardamom_ext)
+        lca_gCm2 = crop(lca_gCm2,cardamom_ext) ; lca_uncertainty_gCm2 = crop(lca_uncertainty_gCm2,cardamom_ext)
         # now remove the ones that are actual missing data
         lca_gCm2[which(as.vector(lca_gCm2) < 0)] = NA
         lca_uncertainty_gCm2[which(as.vector(lca_uncertainty_gCm2) < 0)] = NA

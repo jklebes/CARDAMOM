@@ -146,7 +146,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     # A structural of uncertainty has been estimates at ~ 1000 gC/m2 based on Smallman et al., (2017)
     #Csom_initial_unc[Csom_initial_unc >= 0] = sqrt(Csom_initial_unc[Csom_initial_unc >= 0]**2 + 1000**2)
     # Assumed uncertainty structure as agreed with Anthony Bloom
-    Csom_initial_unc[Csom_initial_unc >= 0] = sqrt(Csom_initial_unc[Csom_initial_unc >= 0]**2 + (0.1*mean(Csom_initial[Csom_initial >= 0]))**2)
+    Csom_initial_unc[Csom_initial_unc > 0] = sqrt(Csom_initial_unc[Csom_initial_unc > 0]**2 + (0.1*mean(Csom_initial[Csom_initial > 0]))**2)
 
     ###
     ## Get some sand / clay information (%)

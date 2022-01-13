@@ -9,6 +9,9 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
 
     if (Csom_source == "SoilGrids") {
 
+        # let the user know this might take some time
+        print("Loading processed SoilGrids Csom fields for subsequent sub-setting ...")
+
         # This is a very bespoke modification so leave it here to avoid getting lost
         Csom = raster(paste(path_to_Csom,"Csom_gCm2_mean_0to1m.tif", sep=""))
         Csom_unc = raster(paste(path_to_Csom,"Csom_gCm2_sd_0to1m.tif", sep=""))
@@ -49,7 +52,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         Csom = array(as.vector(unlist(Csom)), dim=c(xdim,ydim))
         Csom_unc = array(as.vector(unlist(Csom_unc)), dim=c(xdim,ydim))
 
-        return(list(Csom = Csom, Csom_unc = Csom_unc, lat = lat,long = long))
+        return(list(Csom = Csom, Csom_unc = Csom_unc, lat = lat, long = long))
 
     } else if (Csom_source == "HWSD") {
 

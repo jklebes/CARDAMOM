@@ -227,7 +227,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
 
           # if we do not have all the needed for simplisity we will assume that the first 21 days are repeated
           avgTmax_out = append(avgTmax_out[1:(avg_days-1)],avgTmax_out)
-          vpd_lagged_out= a ppend(vpd_lagged_out[1:(avg_days-1)],vpd_lagged_out)
+          vpd_lagged_out = append(vpd_lagged_out[1:(avg_days-1)],vpd_lagged_out)
 
       } # extra year?
 

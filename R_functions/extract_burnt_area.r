@@ -67,7 +67,7 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
   } # monthly aggregation etc
 
   # convert missing data to -9999
-  burnt_area_out[which(is.na(burnt_area_out))] = -9999
+  burnt_area_out[is.na(burnt_area_out) == TRUE] = -9999
 
   # pass the information back
   return(burnt_area=burnt_area_out)

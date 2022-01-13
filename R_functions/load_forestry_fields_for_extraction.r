@@ -80,7 +80,7 @@ load_forestry_fields_for_extraction<-function(latlon_in,forestry_source,years_to
       } # looping years
 
       # output variables
-      return(list(loss_lat=lat,loss_long=long,year_of_loss=years_to_load,loss_fraction=loss_fraction))
+      return(list(lat=lat,long=long,year_of_loss=years_to_load,loss_fraction=loss_fraction))
 
   } else {
 

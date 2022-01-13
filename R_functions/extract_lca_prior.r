@@ -19,7 +19,7 @@ extract_lca_prior<- function(spatial_type,resolution,grid_type,latlon_in,lca_all
    lca_unc_gCm2 = lca_all$lca_uncertainty_gCm2[i1,j1]
 
    # Convert any NaN to missing data flag -9999
-   lca_gCm2[which(is.na(lca_gCm2))] = -9999 ; lca_unc_gCm2[which(is.na(lca_unc_gCm2))] = -9999
+   lca_gCm2[is.na(lca_gCm2)] = -9999 ; lca_unc_gCm2[is.na(lca_unc_gCm2)] = -9999
 
    # pass the information back
    return(list(lca_gCm2 = lca_gCm2, lca_unc_gCm2 = lca_unc_gCm2))
