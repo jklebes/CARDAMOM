@@ -200,7 +200,6 @@ module model_likelihood_module
 !       tot_exp=tot_exp+(1d0-EDCD%PASSFAIL(n))
 !       if (EDCD%PASSFAIL(n) /= 1) print*,"failed edcs are: ", n
 !    end do ! checking EDCs
-!if (tot_exp /= sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))) stop "bollocks"
     ! for testing purposes, stop the model when start achieved
 !    if (sum(EDCD%PASSFAIL) == 100) then
 !        print*,"Found it" ; stop

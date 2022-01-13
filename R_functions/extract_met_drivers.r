@@ -199,35 +199,35 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
 
       avg_days = 21 # assume that the first 21 days are just the actual values
       # create photoperiod information; add 21 days to the output
-      photoperiod_out=calc_photoperiod_sec(latlon_wanted[1],c(seq(365,(365-(avg_days-2)),-1),met_in$doy))
+      photoperiod_out = calc_photoperiod_sec(latlon_wanted[1],c(seq(365,(365-(avg_days-2)),-1),met_in$doy))
 
       # now take the daily values and turn them into rolling 21 day averages
-      photoperiod_out=rollapply(photoperiod_out,avg_days,mean,na.rm=FALSE)
-      avgTmax_out=rollapply(avgTmax_out,avg_days,mean,na.rm=FALSE)
-      vpd_lagged_out=rollapply(vpd_out,avg_days,mean,na.rm=FALSE)
+      photoperiod_out = rollapply(photoperiod_out,avg_days,mean,na.rm=FALSE)
+      avgTmax_out = rollapply(avgTmax_out,avg_days,mean,na.rm=FALSE)
+      vpd_lagged_out = rollapply(vpd_out,avg_days,mean,na.rm=FALSE)
 
       # make adjustments to the time series should we have read in an extra year for GSI calculation
       if (met_in$extra_year) {
 
           # we now need to remove the additional portion of the datasets from the front of them
-          adjustment_end=length(swrad_out) ; adjustment_begin=length(swrad_out)-(length(met_in$doy)-1)
-          swrad_out=swrad_out[adjustment_begin:adjustment_end]
-          maxt_out=maxt_out[adjustment_begin:adjustment_end]
-          mint_out=mint_out[adjustment_begin:adjustment_end]
-          avgTemp_out=avgTemp_out[adjustment_begin:adjustment_end]
-          wind_spd_out=wind_spd_out[adjustment_begin:adjustment_end]
-          precip_out=precip_out[adjustment_begin:adjustment_end]
-          co2_out=co2_out[adjustment_begin:adjustment_end]
-          adjustment_end=length(avgTmax_out) ; adjustment_begin=length(avgTmax_out)-(length(met_in$doy)-1)
-          avgTmax_out=avgTmax_out[adjustment_begin:adjustment_end]
-          vpd_lagged_out=vpd_lagged_out[adjustment_begin:adjustment_end]
-          vpd_out=vpd_out[adjustment_begin:adjustment_end]
+          adjustment_end = length(swrad_out) ; adjustment_begin = length(swrad_out)-(length(met_in$doy)-1)
+          swrad_out = swrad_out[adjustment_begin:adjustment_end]
+          maxt_out = maxt_out[adjustment_begin:adjustment_end]
+          mint_out = mint_out[adjustment_begin:adjustment_end]
+          avgTemp_out = avgTemp_out[adjustment_begin:adjustment_end]
+          wind_spd_out = wind_spd_out[adjustment_begin:adjustment_end]
+          precip_out = precip_out[adjustment_begin:adjustment_end]
+          co2_out = co2_out[adjustment_begin:adjustment_end]
+          adjustment_end = length(avgTmax_out) ; adjustment_begin = length(avgTmax_out)-(length(met_in$doy)-1)
+          avgTmax_out = avgTmax_out[adjustment_begin:adjustment_end]
+          vpd_lagged_out = vpd_lagged_out[adjustment_begin:adjustment_end]
+          vpd_out = vpd_out[adjustment_begin:adjustment_end]
 
       } else {
 
           # if we do not have all the needed for simplisity we will assume that the first 21 days are repeated
-          avgTmax_out=append(avgTmax_out[1:(avg_days-1)],avgTmax_out)
-          vpd_lagged_out=append(vpd_lagged_out[1:(avg_days-1)],vpd_lagged_out)
+          avgTmax_out = append(avgTmax_out[1:(avg_days-1)],avgTmax_out)
+          vpd_lagged_out= a ppend(vpd_lagged_out[1:(avg_days-1)],vpd_lagged_out)
 
       } # extra year?
 
@@ -247,38 +247,38 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
 
           print("...calculating monthly or weekly averages for met drivers")
           # determine the actual daily positions
-          run_day_selector=cumsum(timestep_days)
+          run_day_selector = cumsum(timestep_days)
           # create needed variables
-          swrad_agg=array(NA,dim=length(run_day_selector)) ; maxt_agg=array(NA,dim=length(run_day_selector))
-          mint_agg=array(NA,dim=length(run_day_selector))
-          precip_agg=array(NA,dim=length(run_day_selector)) ; wind_spd_agg=array(NA,dim=length(run_day_selector))
-          co2_agg=array(NA,dim=length(run_day_selector)) ; avgTmax_agg=array(NA,dim=length(run_day_selector))
-          vpd_agg=array(NA,dim=length(run_day_selector)) ; photoperiod_agg=array(NA,dim=length(run_day_selector))
-          vpd_lagged_agg=array(NA,dim=length(run_day_selector))
-          avgTemp_agg=array(NA,dim=length(run_day_selector))
+          swrad_agg = array(NA,dim=length(run_day_selector)) ; maxt_agg = array(NA,dim=length(run_day_selector))
+          mint_agg = array(NA,dim=length(run_day_selector))
+          precip_agg = array(NA,dim=length(run_day_selector)) ; wind_spd_agg = array(NA,dim=length(run_day_selector))
+          co2_agg = array(NA,dim=length(run_day_selector)) ; avgTmax_agg = array(NA,dim=length(run_day_selector))
+          vpd_agg = array(NA,dim=length(run_day_selector)) ; photoperiod_agg = array(NA,dim=length(run_day_selector))
+          vpd_lagged_agg = array(NA,dim=length(run_day_selector))
+          avgTemp_agg = array(NA,dim=length(run_day_selector))
           for (y in seq(1,length(run_day_selector))) {
-               swrad_agg[y]=mean(swrad_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
-               maxt_agg[y]=mean(maxt_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
-               mint_agg[y]=mean(mint_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
-               avgTemp_agg[y]=mean(avgTemp_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
-               wind_spd_agg[y]=mean(wind_spd_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
-               precip_agg[y]=mean(precip_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
-               co2_agg[y]=mean(co2_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
-               avgTmax_agg[y]=mean(avgTmax_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
-               vpd_agg[y]=mean(vpd_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
-               vpd_lagged_agg[y]=mean(vpd_lagged_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
-               photoperiod_agg[y]=mean(photoperiod_out[(run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]])
+               pick = (run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]
+               swrad_agg[y] = mean(swrad_out[pick])
+               maxt_agg[y] = mean(maxt_out[pick])
+               mint_agg[y] = mean(mint_out[pick])
+               avgTemp_agg[y] = mean(avgTemp_out[pick])
+               wind_spd_agg[y] = mean(wind_spd_out[pick])
+               precip_agg[y] = mean(precip_out[pick])
+               co2_agg[y] = mean(co2_out[pick])
+               avgTmax_agg[y] = mean(avgTmax_out[pick])
+               vpd_agg[y] = mean(vpd_out[pick])
+               vpd_lagged_agg[y] = mean(vpd_lagged_out[pick])
+               photoperiod_agg[y] = mean(photoperiod_out[pick])
           }
           # update with new output information
-          swrad_out=swrad_agg ; maxt_out=maxt_agg ; mint_out=mint_agg
-          precip_out=precip_agg ; vpd_lagged_out=vpd_lagged_agg
-          co2_out=co2_agg ; avgTmax_out=avgTmax_agg ; vpd_out=vpd_agg ; photoperiod_out=photoperiod_agg
-          avgTemp_out=avgTemp_agg ; wind_spd_out = wind_spd_agg
+          swrad_out = swrad_agg ; maxt_out = maxt_agg ; mint_out = mint_agg
+          precip_out = precip_agg ; vpd_lagged_out = vpd_lagged_agg
+          co2_out = co2_agg ; avgTmax_out = avgTmax_agg ; vpd_out = vpd_agg ; photoperiod_out = photoperiod_agg
+          avgTemp_out = avgTemp_agg ; wind_spd_out = wind_spd_agg
 
           # clean up
           rm(y,swrad_agg,maxt_agg,mint_agg,precip_agg,co2_agg,avgTmax_agg,
              vpd_agg,photoperiod_agg,avgTemp_agg,wind_spd_agg)
-          gc(reset=TRUE,verbose=FALSE)
 
       } # monthly aggregation etc
 
@@ -288,10 +288,10 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       avgTemp_out = avgTemp_out - 273.15 ; avgTmax_out = avgTmax_out - 273.15
 
       # output variables
-      met=list(run_day=met_in$run_day[run_day_selector],mint=mint_out,maxt=maxt_out,
-               swrad=swrad_out,co2=co2_out,doy=met_in$doy[run_day_selector],precip=precip_out,
-               avgTmax=avgTmax_out,photoperiod=photoperiod_out,vpd_lagged=vpd_lagged_out,
-               avgTemp=avgTemp_out,vpd=vpd_out,wind_spd=wind_spd_out)
+      met=list(run_day = met_in$run_day[run_day_selector],mint = mint_out,maxt = maxt_out,
+               swrad = swrad_out,co2 = co2_out,doy = met_in$doy[run_day_selector],precip = precip_out,
+               avgTmax = avgTmax_out,photoperiod = photoperiod_out,vpd_lagged = vpd_lagged_out,
+               avgTemp = avgTemp_out,vpd = vpd_out,wind_spd = wind_spd_out)
 
       # clean up
       rm(swrad_out,mint_out,maxt_out,precip_out,co2_out,vpd_lagged_out,
