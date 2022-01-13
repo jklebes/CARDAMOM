@@ -82,7 +82,7 @@ extract_lai_timeseries<- function(timestep_days,spatial_type,resolution,grid_typ
    lai[which(is.na(lai))] = -9999 ; lai_unc[which(is.na(lai_unc))] = -9999
 
    # clean up
-   rm(i1,j1,check1,lai,i,a) ; gc(reset=TRUE,verbose=FALSE)
+   rm(i1,j1,lai,i,a) ; gc(reset=TRUE,verbose=FALSE)
 
    # CARDAMOM works best if the uncertainties are the same across each LAI observation as the framework tends towards lower LAI values
    # Therefore, to make use of the uncertainty information we take the mean for this site and apply it across each value.

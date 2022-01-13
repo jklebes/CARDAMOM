@@ -45,7 +45,7 @@ load_forestry_fields_for_extraction<-function(latlon_in,forestry_source,years_to
               }
               # Trim the extent of the overall grid to the analysis domain
               var1 = crop(var1,cardamom_ext)
-              var1[which(as.vector(var1) == -9999)] = NA
+              var1[which(as.vector(var1) < 0)] = NA
               # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
               # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
               if (spatial_type == "grid") {

@@ -24,7 +24,7 @@ extract_forestry_information<-function(timestep_days,spatial_type,resolution,gri
    # which year is the one in which deforestation occurs?
    # then find the appropriate beginning of a year and make deforestation
    for (aa in seq(1,length(forest_all$year_of_loss))) {
-        start_point = start_of_years[which(as.numeric(years_to_do) == forest_all$year_of_loss[aa])]
+        start_point = start_of_years[which(as.numeric(years_to_load) == forest_all$year_of_loss[aa])]
         end_point = start_point + 364
         deforestation[start_point:end_point] = (forest_all$loss_fraction[i1,j1,aa]) / 365
    }
@@ -44,9 +44,9 @@ extract_forestry_information<-function(timestep_days,spatial_type,resolution,gri
    for (y in seq(1,length(run_day_selector))) {
         deforestation_agg[y] = sum(deforestation[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]],na.rm=TRUE)
         # having picked from this period, ensure no overlap by clearing it!
-        deforestation[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]] = -9999
+        deforestation[(run_day_selector[y]-timestep_days[y]):run_day_selector[y]] = NA
    }
-   deforestation_agg[which(is.na(deforestation_agg))] = -9999
+   deforestation_agg[is.na(deforestation_agg)] = -9999
    # update with new output information
    deforestation = deforestation_agg
    # clean up

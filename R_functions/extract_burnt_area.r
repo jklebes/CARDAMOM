@@ -24,7 +24,7 @@ extract_burnt_area_information<- function(latlon_in,timestep_days,spatial_type,g
   # declare output variable
   burnt_area_out = array(0, dim=length(doy_obs))
   # now line up the obs days with all days
-  b = 1 ; i = 1 ; a = 1 ; start_year = as.numeric(years_to_do[1])
+  b = 1 ; i = 1 ; a = 1 ; start_year = as.numeric(years_to_load[1])
   while (b <= length(burnt_all$doy_obs)) {
          # if we are in a year which is missing then we do not allow consideration of DOY
          if (start_year != burnt_all$missing_years[a]) {
