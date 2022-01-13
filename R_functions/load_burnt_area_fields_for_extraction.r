@@ -156,7 +156,9 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
                   lat_in = ncvar_get(data1, "latitude") ; long_in = ncvar_get(data1, "longitude")
                   # read the burnt fraction estimate (units are 0-1)
                   var1_in = ncvar_get(data1, "BurnedFraction")
-
+                  # MODIS has some negative values which are codes for missing data and sea.
+                  # -2 = sea, -1 missing data
+                  var1_in[var1_in == -2] = NA ; var1_in[var1_in == -1] = 0
                   # get time information (day of year)
                   var2 = ncvar_get(data1, "time") ; time_steps_per_year = 12
                   # approximate doy of the mid-month and allocate fire to that point

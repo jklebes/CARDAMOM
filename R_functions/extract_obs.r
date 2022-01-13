@@ -100,7 +100,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     # resultant CI in both instances is range of ~0.50. Therefore CI of +/- 0.25
     #lai_unc[lai_unc >= 0] = sqrt(lai_unc[lai_unc >= 0]**2 + 0.25**2)
     # Assumed uncertainty structure as agreed with Anthony Bloom
-    lai_unc[lai_unc >= 0] = sqrt(lai_unc[lai_unc >= 0]**2 + (0.1*mean(lai[lai >= 0]))**2)
+    if (length(which(lai_unc > 0)) > 0) {
+        lai_unc[lai_unc > 0] = sqrt(lai_unc[lai_unc > 0]**2 + (0.1*mean(lai[lai > 0]))**2)
+    }
 
     ###
     ## Get some Cfoliage information (stock; gC/m2)
