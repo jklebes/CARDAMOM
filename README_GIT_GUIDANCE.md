@@ -4,9 +4,10 @@
 # Two sections in this file:
 1. CARDAMOM user GitHub instructions (New users are required to go through this section)
 2. Instructions to correct an unintentional git commit and git push that bring files to an older version, or unintentionally stashed changes, committed and pushed to the master
+3. A suggested protocol for collaborative development of the repository
 
 ***Original authors: Shuang Ma and others in the JPL team***
-***University of Edinburgh modifiers: T. Luke Smallman***
+***University of Edinburgh modifiers: T. Luke Smallman, David T. Milodowski***
 
 # 1. CARDAMOM user GitHub instructions (New users are required to go through this section)
 ## 1) MUST READ: 
@@ -68,3 +69,30 @@ Git revert basically creates a new commit at the head of your current branch tha
 7. All users, whether or not you’ve made changes after the reverted commit, save your changes with ‘git add’, then pull from the master. 
 More useful tips from Alex Patton: ‘If you have made changes to your local repository and are not up to date with the origin master branch, then doing git a git pull will attempt to auto-merge the changes from master into your local version when you run git pull. If git discovers that you have made changes that are incompatible with the changes on origin master branch, then it will alert you to a merge conflict, and you will have to go into your code and sort out the conflicts yourself. Git will let you know which files it can’t merge if that happens. (Note that this paragraph is how git always works with regard to commits, and is not unique to the git revert I did)
 8. As noted in the user instructions, work on your own branch is the best way to avoid dealing with this kind of problems.
+
+
+# 3. Suggested protocol for collaborative development of this repository
+## How to contribute to CARDAMOM
+You might want to:
+-	Highlight a bug in the code
+-	Add an new feature/dataset
+-	Improve the existing code
+-	Write some documentation
+First of all, make sure you are working in your own development branch. If you are working on major revisions to the code base, or collaboratively working on a particular development, then taking branches of branches may be a useful approach.
+Updates to the master branch should be undertaken via a pull request. Pull requests to the master branch should generally be reserved for changes that have been tested to ensure the code still functions as expected and represent a significant problem solved (i.e. a bug-fix, new feature), rather than part-completed components.
+Together “Issues” and “Pull requests” provide a place for discussing changes to the source code and provide a documented history of the changes being made, and some of the reasoning behind why they were necessary.
+
+## Our suggested workflow for collaborators is as follows:
+1)	Raise an **issue** on the github page with a description of the problem.
+a.	For bugs, it is recommended that this is done as quickly as possible, as there may be an issue others are unaware of.
+b.	For enhancements, one could raise an issue at the beginning of the code development, or work on the change independently before opening the issue when ready to submit the changes. The former is advantageous as (i) it lets people know what you are planning to work on and avoid duplicating effort, and (ii) may lead to some helpful discussions/synergies.
+Raising “issues” is a useful way to track developments being made by different researchers across different branches. There are lots of options for keeping track of things, including check-lists and markdown support for easy formatting. They could also be used to flag for help if something isn’t working. The github page can then be used as a discussion platform that can aide the development and provide a log of the changes and underlying reasons for future records. We can use the weekly CARDAMOM group calls to look over open issues each week and ensure that development needs aren’t being ignored/provide guidance for tricky issues.
+2)	**Pull the latest changes **from the master branch into your development branch (or create a new branch).
+3)	Make the changes **in your own branch**.
+4)	**Test** the changes.
+5)	To merge back into the master branch (if required), **open a pull request**. On the github page, this can be **linked to specific issues** that are resolved by the changes being pulled into the master branch. Linked issues can then be automatically closed once the pull request is approved.
+6)	**Resolve conflicts** between the development branch and the master. This is often straightforward, but a good way to avoid getting stuck in more complex conflict resolution is to make sure that you try to keep your development branch up-to-date with the master branch. 
+7)	(Optional) Review of pull request – may be a good idea for substantive changes to the code base.
+8)	When all conflicts are resolved, **close the pull request** to merge the branches.
+
+This protocol is a working progress. If you find it useful, then great. If there are ways you can make it better, then any suggestions are very welcome.
