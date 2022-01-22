@@ -163,7 +163,8 @@ landmask = crop(landmask, cardamom_ext)
 
 #add_biomes = " "
 #add_biomes = "ssa_wwf"
-add_biomes = "wwf_ecoregions"
+#add_biomes = "wwf_ecoregions"
+add_biomes = "reccap2_permafrost"
 if (add_biomes == "ssa_wwf") {
     # Read in shape file for boundaries
     biomes = shapefile("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/SECO/analysis/ssa_wwf_dissolve/ssa_wwf_dissolve.shp")
@@ -210,6 +211,55 @@ if (add_biomes == "ssa_wwf") {
     biome_names = levels(factor(biomes$BIOME_NAME))
     # Turn the Biomes object into a raster now
     biomes = rasterize(biomes,cardamom_ext, factor(biomes$BIOME_NAME), fun="last")
+} else if (add_biomes == "reccap2_permafrost") {
+
+    # open reccap2-permafrost region mask
+    input_file_1=paste("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/RECCAP2_regions/RECCAP2_permafrost_regions_isimip3.nc",sep="")
+    data1=nc_open(input_file_1)
+
+    # extract location variables
+    biomes_lat=ncvar_get(data1, "latitude") ; biomes_long=ncvar_get(data1, "longitude")
+    # Create lat / long grid from vectors
+    idim = length(biomes_long) ; jdim = length(biomes_lat)
+    biomes_lat = array(biomes_lat, dim=c(jdim,idim)) ; biomes_lat = t(biomes_lat)
+    biomes_long = array(biomes_long, dim=c(idim,jdim))
+    # read the mask
+    biomes=ncvar_get(data1, "permafrost_region_mask") 
+    # For the moment convert each different sub-region into 1 and the missing number flag into NA
+    biomes[biomes > 0 & biomes < 115] = 1 ; biomes[biomes > 1] = NA
+    biome_names = NA
+    # tidy up
+    nc_close(data1)
+
+    # Convert to a raster, assuming standad WGS84 grid
+    biomes = data.frame(x = as.vector(biomes_long), y = as.vector(biomes_lat), z = as.vector(biomes))
+    biomes = rasterFromXYZ(biomes, crs = ("+init=epsg:4326"))
+
+    # Create raster with the target crs
+    target = raster(crs = ("+init=epsg:4326"), ext = extent(biomes), resolution = res(biomes))
+    # Check whether the target and actual analyses have the same CRS
+    if (compareCRS(biomes,target) == FALSE) {
+        # Resample to correct grid
+        biomes = resample(biomes, target, method="ngb") ; gc() ; removeTmpFiles()
+    }
+    # Trim the extent of the overall grid to the analysis domain
+    biomes = crop(biomes,cardamom_ext) 
+    # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
+    # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+    spatial_type = "grid"
+    if (spatial_type == "grid") {
+        if (res(biomes)[1] < res(cardamom_ext)[1] | res(biomes)[2] < res(cardamom_ext)[2]) {
+
+            # Create raster with the target resolution
+            target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+            # Resample to correct grid
+            biomes = resample(biomes, target, method="bilinear") ; gc() ; removeTmpFiles()
+        } # Aggrgeate to resolution
+    } # spatial_type == "grid"
+
+    # Overwrite the existing landmask
+    landmask = biomes
+
 } else {
     # DO NOTHING
     biomes = NA ; biome_names = NA
@@ -222,7 +272,7 @@ write.table(data.frame(BiomeCode = c(1:length(biome_names)),BiomeNames = biome_n
 # PointsOfChange
 
 # This will be used to filter the analysis to include specific locations only
-use_filter = TRUE
+use_filter = FALSE
 if (use_filter) {
     #  Design a user created / loaded filter 
     landfilter = array(NA,dim=dim(grid_parameters$obs_wood_gCm2))

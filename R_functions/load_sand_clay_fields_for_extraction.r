@@ -79,20 +79,20 @@ load_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source,cardam
 
         # extract location variables
         lat=ncvar_get(data1, "lat") ; long=ncvar_get(data1, "long")
-        # read the modis lai drivers
+        # read the HWSD datasets
 	      top_sand=ncvar_get(data1, "HWSD_top_sand") ; top_clay=ncvar_get(data1, "HWSD_top_clay")
         bot_sand=ncvar_get(data1, "HWSD_bot_sand") ; bot_clay=ncvar_get(data1, "HWSD_bot_clay")
         nc_close(data1)
 
         # Convert to a raster, assuming standad WGS84 grid
         top_sand = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(top_sand))
-        top_sand = rasterFromXYZ(xyz, crs = ("+init=epsg:4326"))
+        top_sand = rasterFromXYZ(top_sand, crs = ("+init=epsg:4326"))
         bot_sand = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(bot_sand))
-        bot_sand = rasterFromXYZ(xyz, crs = ("+init=epsg:4326"))
+        bot_sand = rasterFromXYZ(bot_sand, crs = ("+init=epsg:4326"))
         top_clay = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(top_clay))
-        top_clay = rasterFromXYZ(xyz, crs = ("+init=epsg:4326"))
+        top_clay = rasterFromXYZ(top_clay, crs = ("+init=epsg:4326"))
         bot_clay = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(bot_clay))
-        bot_clay = rasterFromXYZ(xyz, crs = ("+init=epsg:4326"))
+        bot_clay = rasterFromXYZ(bot_clay, crs = ("+init=epsg:4326"))
 
         # Create raster with the target crs
         target = raster(crs = ("+init=epsg:4326"), ext = extent(top_sand), resolution = res(top_sand))
