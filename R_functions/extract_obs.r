@@ -28,7 +28,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     doy_obs = doy_obs[-1]
 
 
-# Create useful timing information for multiple functions
+    # Create useful timing information for multiple functions
     if (length(timestep_days) == 1) {
         analysis_years = seq(as.numeric(start_year),as.numeric(end_year))
         nos_days = 0
@@ -65,6 +65,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
 
     }
     # Add model structural uncertainty to the uncertainty estimate if present
+    # NOTE minimum uncertainty bound irrespective of the dataset estimates
     nbe_unc[nbe_unc >= 0] = sqrt(nbe_unc[nbe_unc >= 0]**2 + 1.0**2)
 
     ###
@@ -100,8 +101,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     # resultant CI in both instances is range of ~0.50. Therefore CI of +/- 0.25
     #lai_unc[lai_unc >= 0] = sqrt(lai_unc[lai_unc >= 0]**2 + 0.25**2)
     # Assumed uncertainty structure as agreed with Anthony Bloom
-    if (length(which(lai_unc > 0)) > 0) {
-        lai_unc[lai_unc > 0] = sqrt(lai_unc[lai_unc > 0]**2 + (0.1*mean(lai[lai > 0]))**2)
+    # NOTE minimum uncertainty bound irrespective of the dataset estimates
+    if (length(which(lai_unc >= 0)) > 0) {
+        lai_unc[lai_unc >= 0] = pmax(0.5,sqrt(lai_unc[lai_unc >= 0]**2 + (0.1*mean(lai[lai >= 0]))**2))
     }
 
     ###
@@ -146,7 +148,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     # A structural of uncertainty has been estimates at ~ 1000 gC/m2 based on Smallman et al., (2017)
     #Csom_initial_unc[Csom_initial_unc >= 0] = sqrt(Csom_initial_unc[Csom_initial_unc >= 0]**2 + 1000**2)
     # Assumed uncertainty structure as agreed with Anthony Bloom
-    Csom_initial_unc[Csom_initial_unc > 0] = sqrt(Csom_initial_unc[Csom_initial_unc > 0]**2 + (0.1*mean(Csom_initial[Csom_initial > 0]))**2)
+    # NOTE minimum uncertainty bound irrespective of the dataset estimates
+    Csom_initial_unc[Csom_initial_unc > 0] = pmax(1000,sqrt(Csom_initial_unc[Csom_initial_unc > 0]**2 + (0.1*mean(Csom_initial[Csom_initial > 0]))**2))
 
     ###
     ## Get some sand / clay information (%)
@@ -227,7 +230,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         Cwood_inc = -9999 ; Cwood_inc_unc = -9999 ; Cwood_inc_lag = -9999
     }
     # Assumed uncertainty structure as agreed with Anthony Bloom
-    Cwood_inc_unc[Cwood_inc_unc >= 0] = sqrt(Cwood_inc_unc[Cwood_inc_unc >= 0]**2 + (0.1*mean(Cwood_inc_unc[Cwood_inc_unc >= 0]))**2)
+    # NOTE minimum uncertainty bound irrespective of the dataset estimates
+    Cwood_inc_unc[Cwood_inc_unc >= 0] = pmax(0.1,sqrt(Cwood_inc_unc[Cwood_inc_unc >= 0]**2 + (0.1*mean(Cwood_inc_unc[Cwood_inc_unc >= 0]))**2))
 
     ###
     ## Get some Wood natural mortality information (gC/m2/day; time series)
@@ -269,7 +273,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         Cwood_mortality = -9999 ; Cwood_mortality_unc = -9999 ; Cwood_mortality_lag = -9999
     }
     # Assumed uncertainty structure as agreed with Anthony Bloom
-    Cwood_mortality_unc[Cwood_mortality_unc >= 0] = sqrt(Cwood_mortality_unc[Cwood_mortality_unc >= 0]**2 + (0.1*mean(Cwood_mortality_unc[Cwood_mortality_unc >= 0]))**2)
+    # NOTE minimum uncertainty bound irrespective of the dataset estimates
+    Cwood_mortality_unc[Cwood_mortality_unc >= 0] = pmax(0.1,sqrt(Cwood_mortality_unc[Cwood_mortality_unc >= 0]**2 + (0.1*mean(Cwood_mortality_unc[Cwood_mortality_unc >= 0]))**2))
 
     ###
     ## Get some GPP information (time series; gC/m2/day)
@@ -308,8 +313,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     # NOTE: this is a gross overestimate as ACM-GPP-ET was not calibrated against the data,
     # i.e. we don't know that it couldn't fit it
     #GPP_unc[GPP_unc >= 0] = sqrt(GPP_unc[GPP_unc >= 0]**2 + 2**2)
-    # Assumed uncertainty structure as agreed with Anthony Bloom
-    GPP_unc[GPP_unc >= 0] = sqrt(GPP_unc[GPP_unc >= 0]**2 + (0.1*mean(GPP[GPP >= 0]))**2)
+    # Assumed uncertainty structure as agreed with Anthony Bloom,
+    # NOTE minimum bound also applied
+    GPP_unc[GPP_unc >= 0] = pmax(0.1,sqrt(GPP_unc[GPP_unc >= 0]**2 + (0.1*mean(GPP[GPP >= 0]))**2))
 
     ###
     ## Get some fire C emission information (time series; gC/m2/day)
@@ -337,10 +343,10 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     }
     # Combine with an estimate of model structural error.
     # Assumed uncertainty structure as agreed with Anthony Bloom
-    Fire_unc[Fire_unc >= 0] = sqrt(Fire_unc[Fire_unc >= 0]**2 + (0.1*mean(Fire[Fire >= 0]))**2)
+    # NOTE minimum uncertainty bound irrespective of the dataset estimates
+    Fire_unc[Fire_unc >= 0] = pmax(0.5,sqrt(Fire_unc[Fire_unc >= 0]**2 + (0.1*mean(Fire[Fire >= 0]))**2))
     # As fire can often be zero in a given location, providing that information with an associated 0 uncertainty
     # creates unrealistic behavious in the cpst function. As a result apply a minimum value of 0.1
-    Fire_unc[Fire_unc >= 0] = pmax(0.1, Fire_unc[Fire_unc >= 0])
 
     ###
     ## Get some Evapotranspiration information (time series; kgH2O/m2/day)
@@ -376,8 +382,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     # Combine with an estimate of model structural error.
     # A mean rmse of ~1 kgH2O/m2/day was estimated when evaluating ACM-GPP-ET (ACM2)
     # ET against fluxnet observations (Smallman & Williams 2019)
-    #Evap_unc[Evap_unc >= 0] = sqrt(Evap_unc[Evap_unc >= 0]**2 + 1**2)
-    Evap_unc[Evap_unc >= 0] = sqrt(Evap_unc[Evap_unc >= 0]**2 + (0.1*mean(Evap[Evap >= 0]))**2)
+    # NOTE minimum uncertainty bound irrespective of the dataset estimates
+    Evap_unc[Evap_unc >= 0] = pmax(0.1,sqrt(Evap_unc[Evap_unc >= 0]**2 + (0.1*mean(Evap[Evap >= 0]))**2))
 
     ###
     ## Get some Reco information (time series; gC/m2/day)
@@ -420,6 +426,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     }
     # The largest site level mean rmse achieved across the COMPLEX (Famiglietti et al., 2021) sites was 0.99 gC/m2/day.
     # This was achieved in the reduced uncertainty analysis providing and indication of the model structural error
+    # NOTE minimum uncertainty bound irrespective of the dataset estimates
     NEE_unc[NEE_unc >= 0] = sqrt(NEE_unc[NEE_unc >= 0]**2 + 1**2)
 
     ###
@@ -548,7 +555,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     # apply lower bound in all cases to the uncertainty
     #Cwood_stock_unc[Cwood_stock_unc >= 0] = sqrt(Cwood_stock_unc[Cwood_stock_unc >= 0]**2 + 100**2)
     # Assumed uncertainty structure as agreed with Anthony Bloom
-    Cwood_stock_unc[Cwood_stock_unc >= 0] = sqrt(Cwood_stock_unc[Cwood_stock_unc >= 0]**2 + (0.1*mean(Cwood_stock[Cwood_stock >= 0]))**2)
+    # NOTE minimum uncertainty bound irrespective of the dataset estimates
+    Cwood_stock_unc[Cwood_stock_unc >= 0] = pmax(100,sqrt(Cwood_stock_unc[Cwood_stock_unc >= 0]**2 + (0.1*mean(Cwood_stock[Cwood_stock >= 0]))**2))
 
     ###
     ## Get some Cagb information (stock)
@@ -568,7 +576,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         Cagb_stock = -9999 ; Cagb_stock_unc = -9999
     }
     # apply lower bound in all cases to the uncertainty
-    Cagb_stock_unc[Cagb_stock_unc >= 0] = sqrt(Cagb_stock_unc[Cagb_stock_unc >= 0]**2 + (0.1*mean(Cagb_stock[Cagb_stock >= 0]))**2)
+    # NOTE minimum uncertainty bound irrespective of the dataset estimates
+    Cagb_stock_unc[Cagb_stock_unc >= 0] = pmax(100,sqrt(Cagb_stock_unc[Cagb_stock_unc >= 0]**2 + (0.1*mean(Cagb_stock[Cagb_stock >= 0]))**2))
 
     ###
     ## Get some Croots information (stock)
@@ -627,7 +636,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     # A structural of uncertainty has been estimates at ~ 1000 gC/m2 based on Smallman et al., (2017)
     #Csom_stock_unc[Csom_stock_unc >= 0] = sqrt(Csom_stock_unc[Csom_stock_unc >= 0]**2 + 1000**2)
     # Assumed uncertainty structure as agreed with Anthony Bloom
-    Csom_stock_unc[Csom_stock_unc >= 0] = sqrt(Csom_stock_unc[Csom_stock_unc >= 0]**2 + (0.1*mean(Csom_stock[Csom_stock > 0]))**2)
+    # NOTE minimum uncertainty bound irrespective of the dataset estimates
+    Csom_stock_unc[Csom_stock_unc >= 0] = pmax(1000,sqrt(Csom_stock_unc[Csom_stock_unc >= 0]**2 + (0.1*mean(Csom_stock[Csom_stock > 0]))**2))
 
     ###
     ## Get some Ccoarseroot information (stock)
@@ -778,6 +788,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         # assume no data available
         lca = -9999 ; lca_unc = -9999
     }
+    # Assumed uncertainty structure as agreed with Anthony Bloom
+    # NOTE minimum uncertainty bound irrespective of the dataset estimates
+    lca_unc[lca_unc >= 0] = pmax(10,sqrt(lca_unc[lca_unc >= 0]**2 + (0.1*mean(lca[lca > 0]))**2))
 
     # return output now
     return(list(LAT = latlon_wanted[1], LAI = lai, LAI_unc = lai_unc, GPP = GPP, GPP_unc = GPP_unc, Fire = Fire, Fire_unc = Fire_unc

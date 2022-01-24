@@ -308,7 +308,7 @@ generate_parameter_maps<-function(PROJECT) {
 
   # determine correct height and widths
   hist_height=4000 ; hist_width=7200
-  fig_height=7000 ; fig_width = ((PROJECT$long_dim/PROJECT$lat_dim)+0.25) * fig_height #7200
+  fig_height=3000 ; fig_width = ((PROJECT$long_dim/PROJECT$lat_dim)+0.25) * fig_height #7200
   if (PROJECT$grid_type == "UK") { fig_height=8000 ; fig_width=7200 }
   # load colour palette
   colour_choices_upper = colorRampPalette((brewer.pal(11,"Spectral")))

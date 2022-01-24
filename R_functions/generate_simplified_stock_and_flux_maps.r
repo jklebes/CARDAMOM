@@ -69,7 +69,7 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
   colour_choices = colour_choices_upper(length(area))
 
   # determine correct height and widths
-  fig_height = 7000 ; fig_width = ((PROJECT$long_dim/PROJECT$lat_dim)+0.25) * fig_height
+  fig_height = 3000 ; fig_width = ((PROJECT$long_dim/PROJECT$lat_dim)+0.25) * fig_height
 
   # create a map summarising the rooting depth information
   if (PROJECT$model$name == "DALEC" | PROJECT$model$name == "DALEC_BUCKET" |

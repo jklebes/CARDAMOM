@@ -79,7 +79,7 @@ extract_lai_timeseries<- function(timestep_days,spatial_type,resolution,grid_typ
    } # monthly aggregation etc
 
    # convert missing data to -9999
-   lai[which(is.na(lai))] = -9999 ; lai_unc[which(is.na(lai_unc))] = -9999
+   lai_out[which(is.na(lai_out))] = -9999 ; lai_unc_out[which(is.na(lai_unc_out))] = -9999
 
    # clean up
    rm(i1,j1,lai,i,a) ; gc(reset=TRUE,verbose=FALSE)
