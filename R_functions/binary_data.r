@@ -297,7 +297,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
                                                                     # Note despite having the same name as ecosystem property of Amax per gN or SPA's kappaC
                                                                     # These observational constraints are not the same and would lead to
                                                                     # overestimation of GPP (SPA = 34, ACM2 = 15), but here multiple by avN (1.89) to get Ceff
-      PARPRIORS[11]=21.1491            ; PARPRIORUNC[11]=8.534234*0.45 ; PARPRIORWEIGHT[11] = noyears # Ceff: derived from multiple trait values from Kattge et al., (2011)
+      PARPRIORS[11]=21.1491            ; PARPRIORUNC[11]=8.534234 ; PARPRIORWEIGHT[11] = noyears # Ceff: derived from multiple trait values from Kattge et al., (2011)
                                                                       #       Note that this prior is difference from DALEC_CDEA_LU_FIRES
                                                                       # due to the different temperature response functions used in ACM2 vs ACM 1
       PARPRIORS[17]=OBS$lca             ; PARPRIORUNC[17]=OBS$lca_unc ;  ; PARPRIORWEIGHT[17] = noyears

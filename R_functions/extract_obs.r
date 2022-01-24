@@ -103,7 +103,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     # Assumed uncertainty structure as agreed with Anthony Bloom
     # NOTE minimum uncertainty bound irrespective of the dataset estimates
     if (length(which(lai_unc >= 0)) > 0) {
-        lai_unc[lai_unc >= 0] = pmax(0.5,sqrt(lai_unc[lai_unc >= 0]**2 + (0.1*mean(lai[lai >= 0]))**2))
+        lai_unc[lai_unc >= 0] = pmax(0.25,sqrt(lai_unc[lai_unc >= 0]**2 + (0.1*mean(lai[lai >= 0]))**2))
     }
 
     ###
@@ -315,7 +315,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     #GPP_unc[GPP_unc >= 0] = sqrt(GPP_unc[GPP_unc >= 0]**2 + 2**2)
     # Assumed uncertainty structure as agreed with Anthony Bloom,
     # NOTE minimum bound also applied
-    GPP_unc[GPP_unc >= 0] = pmax(0.1,sqrt(GPP_unc[GPP_unc >= 0]**2 + (0.1*mean(GPP[GPP >= 0]))**2))
+    GPP_unc[GPP_unc >= 0] = pmax(0.5,sqrt(GPP_unc[GPP_unc >= 0]**2 + (0.1*mean(GPP[GPP >= 0]))**2))
 
     ###
     ## Get some fire C emission information (time series; gC/m2/day)
@@ -344,9 +344,7 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     # Combine with an estimate of model structural error.
     # Assumed uncertainty structure as agreed with Anthony Bloom
     # NOTE minimum uncertainty bound irrespective of the dataset estimates
-    Fire_unc[Fire_unc >= 0] = pmax(0.5,sqrt(Fire_unc[Fire_unc >= 0]**2 + (0.1*mean(Fire[Fire >= 0]))**2))
-    # As fire can often be zero in a given location, providing that information with an associated 0 uncertainty
-    # creates unrealistic behavious in the cpst function. As a result apply a minimum value of 0.1
+    Fire_unc[Fire_unc >= 0] = pmax(1,sqrt(Fire_unc[Fire_unc >= 0]**2 + (0.1*mean(Fire[Fire >= 0]))**2))
 
     ###
     ## Get some Evapotranspiration information (time series; kgH2O/m2/day)
