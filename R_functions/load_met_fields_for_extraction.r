@@ -178,7 +178,8 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         tmp1[tmp1 < 0] = NA
         # this section is key as near land sea borders it is possible for the nearest lat/long location to actually be a sea pixel
         wheat_from_chaff = which(is.na(tmp1) == FALSE)
-
+print(length(wheat_from_chaff)) ; length(as.vector(tmp1))
+print(summary(tmp1[wheat_from_chaff]))
         # convert input data long to conform to what we need
         check1 = which(long > 180) ; if (length(check1) > 0) { long[check1]=long[check1]-360 }
         # now filter through the reduced dataset for the specific locations
@@ -187,6 +188,8 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         var1_out = unlist(output, use.names=FALSE) ; rm(output)
         # select the correct location values for the original vector form the wheat_from_chaff
         wheat_from_chaff = wheat_from_chaff[var1_out]
+print(length(wheat_from_chaff)) ; length(as.vector(tmp1))
+print(summary(tmp1[wheat_from_chaff]))
         # return long to 0-360
         if (length(check1) > 0) { long[check1]=long[check1]+360 }
 
@@ -275,6 +278,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         var1_out = 0 ; var2_out = 0 ; var3_out = 0 ; var4_out = 0 ; var5_out = 0 ; var6_out = 0 ; wind_out = 0 ; tmp_out = 0; t_grid = 0
         if (varid[1] != "") {
             for (i in seq(1, length(var1_out_list))) {
+print(summary(var1_out_list[[i]]$var_out)) ; print(dim(var1_out_list[[i]]$var_out))
                  var1_out=append(var1_out,var1_out_list[[i]]$var_out)
                  t_grid=append(t_grid,var1_out_list[[i]]$t_grid)
             }
@@ -423,6 +427,11 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
                       ,pressure=var5_out,mint=var6_out,wind_spd=wind_out,extra_year=extra_year)
 
         # quick sanity check
+print(names(met_all))
+print(summary(as.vector(met_all$swrad)))
+print(dim(as.vector(met_all$swrad)))
+print(length(as.vector(met_all$swrad)))
+print(min(as.vector(met_all$swrad)))
         if (min(as.vector(met_all$swrad)) < -1) {stop(paste("SW_RAD summary: ",summary(as.vector(met_all$swrad)),sep="")) }
         met_all$swrad[which(met_all$swrad < 0)] = 0
 

@@ -2184,9 +2184,9 @@ for (t in seq(2, length(gfas_years))) {
      gfas = nc_open(paste("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/cssp_brazil/GFAS_annual/cams_gfas_co2fire_",gfas_years[t],".nc",sep=""))
      tmp = ncvar_get(gfas, "AnnualFire")
      gfas_fire[,,t] = tmp
+     # Tidy
+     nc_close(gfas)
 }
-# Tidy
-nc_close(gfas)
 
 # Search for africa locations and slot into africa only grid for matching onto CARDAMOM
 gfas_cardamom_fire_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],length(gfas_years)))

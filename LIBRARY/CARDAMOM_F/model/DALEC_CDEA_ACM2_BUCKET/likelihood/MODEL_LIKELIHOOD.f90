@@ -685,7 +685,6 @@ module model_likelihood_module
     ! EDCs done, below are additional fault detection conditions
     !
 
-
     ! additional faults can be stored in locations 55 - 61 of the PASSFAIL array
 
     ! ensure minimum pool values are >= 0, /= NaN or Inf
