@@ -163,25 +163,24 @@ contains
     ! PARAMETERS
     ! 14 values + 4 initial conditions
 
-    ! p(1) Litter to SOM conversion rate
-    ! p(2) Fraction of GPP respired
-    ! p(3) Fraction of NPP allocated to foliage
-    ! p(4) Leaf lifespan
-    ! p(5) Turnover rate of wood+root
-    ! p(6) Litter+som turnover rate
-    ! p(7) Parameter in exponential term of temperature
-    ! p(8) Canopy efficiency parameter
-    ! p(9) date of Clab release
-    ! p(10) Fraction allocated to Clab
-    ! p(11) lab release duration period
-    ! p(12) date of leaf fall
-    ! p(13) leaf fall duration period
-    ! p(14) LMA (gC/m2)
+    ! p(1) Fraction of GPP respired
+    ! p(2) Fraction of NPP allocated to foliage
+    ! p(3) Leaf lifespan
+    ! p(4) Turnover rate of wood+root
+    ! p(5) Litter+som turnover rate
+    ! p(6) Parameter in exponential term of temperature
+    ! p(7) Canopy efficiency parameter
+    ! p(8) doy of Clab release
+    ! p(9) Fraction allocated to Clab
+    ! p(10) lab release duration period
+    ! p(11) date of leaf fall
+    ! p(12) leaf fall duration period
+    ! p(13) LMA (gC/m2)
 
-    ! p(15) Initial labile
-    ! p(16) Initial foliage
-    ! p(17) Initial wood+roots
-    ! p(18) Initial litter + som
+    ! p(14) Initial labile
+    ! p(15) Initial foliage
+    ! p(16) Initial wood+roots
+    ! p(17) Initial litter + som
 
     ! set constants
     pi = 3.1415927d0
@@ -421,11 +420,11 @@ contains
     gc = abs(deltaWP)**(hydraulic_exponent)/((hydraulic_temp_coef*Rtot+trange))
     ! maximum rate of temperature and nitrogen (canopy efficiency) limited photosynthesis (gC.m-2.day-1)
     pn = lai*nit*NUE*exp(temp_exponent*maxt)
-    ! pp and qq represent limitation by diffusion and metabolites respecitively
+    ! pp and qq represent limitation by diffusion and metabolites respectively
     pp = pn/gc ; qq = co2_comp_point-co2_half_sat
     ! calculate internal CO2 concentration (ppm)
     ci = 0.5d0*(co2+qq-pp+((co2+qq-pp)**2d0-4d0*(co2*qq-pp*co2_comp_point))**0.5d0)
-    ! limit maximum quantium efficiency by leaf area, hyperbola
+    ! limit maximum quantum efficiency by leaf area, hyperbola
     e0 = lai_coef*lai**2d0/(lai**2d0+lai_const)
     ! calculate day length (hours)
 !    dec = - asin( sin( 23.45d0 * pi / 180d0 ) * cos( 2d0 * pi * ( doy + 10d0 ) /365d0 ) )
