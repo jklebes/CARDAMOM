@@ -9,11 +9,11 @@
 extract_sand_clay<- function(spatial_type,resolution,grid_type,latlon_in,sand_clay_all) {
 
   # Update the user
-	print(paste("Sand/clay data extracted for current location ",Sys.time(),sep=""))
+  print(paste("Sand/clay data extracted for current location ",Sys.time(),sep=""))
 
-	# find the nearest location
-	output=closest2d(1,sand_clay_all$lat,sand_clay_all$long,latlon_in[1],latlon_in[2],2)
-	j1=unlist(output, use.names=FALSE)[2];i1=unlist(output, use.names=FALSE)[1]
+  # find the nearest location
+  output=closest2d_2(1,sand_clay_all$lat,sand_clay_all$long,latlon_in[1],latlon_in[2])
+  j1=unlist(output, use.names=FALSE)[2];i1=unlist(output, use.names=FALSE)[1]
 
   # Extract the correct value
   top_sand = sand_clay_all$top_sand[i1,j1]
@@ -27,21 +27,21 @@ extract_sand_clay<- function(spatial_type,resolution,grid_type,latlon_in,sand_cl
   if (is.na(top_clay) | is.infinite(top_clay)) {top_clay = 15}
   if (is.na(bot_clay) | is.infinite(bot_clay)) {bot_clay = 15}
 
-	# just to check because when averaging sometimes the sand / clay combinations can be > 100 %
-	# 94 % chosesn as this is the highest total % found in the HWSD dataset
-	if ((top_sand+top_clay) > 94) {
-	    tmp1 = top_sand / (top_sand + top_clay + 6) # 6 % is implicit in the 94 % max value for silt / gravel
-	    tmp2 = top_clay / (top_sand + top_clay + 6) # 6 % is implicit in the 94 % max value for silt / gravel
-	    top_sand = tmp1*100 ; top_clay = tmp2*100
-	}
-	if ((bot_sand+bot_clay) > 94) {
-	    tmp1 = bot_sand / (bot_sand + bot_clay + 6) # 6 % is implicit in the 94 % max value for silt / gravel
-	    tmp2 = bot_clay / (bot_sand + bot_clay + 6) # 6 % is implicit in the 94 % max value for silt / gravel
-	    top_sand = tmp1*100 ; top_clay = tmp2*100
-	}
+  # just to check because when averaging sometimes the sand / clay combinations can be > 100 %
+  # 94 % chosesn as this is the highest total % found in the HWSD dataset
+  if ((top_sand+top_clay) > 94) {
+      tmp1 = top_sand / (top_sand + top_clay + 6) # 6 % is implicit in the 94 % max value for silt / gravel
+      tmp2 = top_clay / (top_sand + top_clay + 6) # 6 % is implicit in the 94 % max value for silt / gravel
+      top_sand = tmp1*100 ; top_clay = tmp2*100
+  }
+  if ((bot_sand+bot_clay) > 94) {
+       tmp1 = bot_sand / (bot_sand + bot_clay + 6) # 6 % is implicit in the 94 % max value for silt / gravel
+       tmp2 = bot_clay / (bot_sand + bot_clay + 6) # 6 % is implicit in the 94 % max value for silt / gravel
+       top_sand = tmp1*100 ; top_clay = tmp2*100
+  }
 
-	# pass the information back
-	return(list(top_sand=top_sand,bot_sand=bot_sand,top_clay=top_clay,bot_clay=bot_clay))
+  # pass the information back
+  return(list(top_sand=top_sand,bot_sand=bot_sand,top_clay=top_clay,bot_clay=bot_clay))
 
 } # end function extract_sand_clay
 

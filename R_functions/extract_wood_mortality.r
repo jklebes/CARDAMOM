@@ -14,7 +14,7 @@ extract_wood_mortality<- function(timestep_days,spatial_type,resolution,grid_typ
    print(paste("Cwood mortality extracted for current location ",Sys.time(),sep=""))
 
    # find the nearest location
-   output = closest2d(1,Cwood_mortality_all$lat,Cwood_mortality_all$long,latlon_in[1],latlon_in[2],2)
+   output = closest2d_2(1,Cwood_mortality_all$lat,Cwood_mortality_all$long,latlon_in[1],latlon_in[2])
    i1 = unlist(output, use.names=FALSE)[1] ; j1 = unlist(output, use.names=FALSE)[2]
 
    # Create time series output variables

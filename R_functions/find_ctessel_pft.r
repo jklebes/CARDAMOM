@@ -64,12 +64,12 @@ find_pft<- function (lat,long) {
 
         if (use_lcm == "ECMWF") {
             cl <- makeCluster(min(length(lat),numWorkers), type = "PSOCK")
-            output=parLapply(cl,1:length(lat),fun=closest2d,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long,nos_dim=1)
+            output=parLapply(cl,1:length(lat),fun=closest2d_1,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long)
             stopCluster(cl)
             output_i=unlist(output)
         } else {
             cl <- makeCluster(min(length(lat),numWorkers), type = "PSOCK")
-            output=parLapply(cl,1:length(lat),fun=closest2d,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long,nos_dim=2)
+            output=parLapply(cl,1:length(lat),fun=closest2d_2,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long)
             stopCluster(cl)
             # extract the i,j values seperately
             output_i=unlist(output)[which((1:length(unlist(output))*0.5) != floor(1:length(unlist(output))*0.5))]
@@ -80,10 +80,10 @@ find_pft<- function (lat,long) {
 
         if (use_lcm == "ECMWF") {
             # search for nearest matches
-            output=lapply(1:length(lat),FUN=closest2d,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long,nos_dim=1)
+            output=lapply(1:length(lat),FUN=closest2d_1,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long)
             output_i=unlist(output)[1]
         } else {
-            output=lapply(1:length(lat),FUN=closest2d,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long,nos_dim=2)
+            output=lapply(1:length(lat),FUN=closest2d_2,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long)
             # extract the i,j values seperately
             output_i=unlist(output)[which((1:length(unlist(output))*0.5) != floor(1:length(unlist(output))*0.5))]
             output_j=unlist(output)[which((1:length(unlist(output))*0.5) == floor(1:length(unlist(output))*0.5))]

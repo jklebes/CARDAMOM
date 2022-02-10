@@ -11,7 +11,7 @@ extract_fire<- function(timestep_days,spatial_type,resolution,grid_type,latlon_i
   print(paste("Fire data extracted for current location ",Sys.time(),sep=""))
 
   # find the nearest location
-  output = closest2d(1,fire_all$lat,fire_all$long,latlon_in[1],latlon_in[2],2)
+  output = closest2d_2(1,fire_all$lat,fire_all$long,latlon_in[1],latlon_in[2])
   i1 = unlist(output, use.names=FALSE)[1] ; j1 = unlist(output, use.names=FALSE)[2]
 
   # Extract to local variable

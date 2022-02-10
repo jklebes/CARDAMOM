@@ -15,7 +15,7 @@ extract_sacks_crop_info<- function(spatial_type,resolution,grid_type,latlon_in,c
 	check1=which(crop_man_all$long > 180) ; if (length(check1) > 0) { crop_man_all$long[check1]=crop_man_all$long[check1]-360 }
 
 	# find the nearest location
-	output=closest2d(1,crop_man_all$lat,crop_man_all$long,latlon_in[1],latlon_in[2],3)
+	output=closest2d_3(1,crop_man_all$lat,crop_man_all$long,latlon_in[1],latlon_in[2])
 	i1=unlist(output, use.names=FALSE)[1] ; j1=unlist(output, use.names=FALSE)[2]
 
 	# return long to 0-360
