@@ -82,6 +82,8 @@ load_fire_emission_fields_for_extraction<-function(latlon_in,fire_source,start_y
                            var1 = resample(var1, target, method="ngb") ; gc() ; removeTmpFiles()
                            var2 = resample(var2, target, method="ngb") ; gc() ; removeTmpFiles()
                        }
+                       # Extend the extent of the overall grid to the analysis domain
+                       var1 = extend(var1,cardamom_ext) ; var2 = extend(var2,cardamom_ext)
                        # Trim the extent of the overall grid to the analysis domain
                        var1 = crop(var1,cardamom_ext) ; var2 = crop(var2,cardamom_ext)
 

@@ -51,6 +51,8 @@ load_initial_biomass_maps_for_extraction<-function(latlon_in,Cwood_initial_sourc
               biomass_gCm2 = resample(biomass_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
               biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
           }
+          # Extend the extent of the overall grid to the analysis domain
+          biomass_gCm2 = extend(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = extend(biomass_uncertainty_gCm2,cardamom_ext)
           # Trim the extent of the overall grid to the analysis domain
           biomass_gCm2 = crop(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = crop(biomass_uncertainty_gCm2,cardamom_ext)
           # Remove any missing or un-realistic data points
@@ -127,6 +129,8 @@ load_initial_biomass_maps_for_extraction<-function(latlon_in,Cwood_initial_sourc
               biomass_gCm2 = resample(biomass_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
               biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
           }
+          # Extend the extent of the overall grid to the analysis domain
+          biomass_gCm2 = extend(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = extend(biomass_uncertainty_gCm2,cardamom_ext)
           # Trim the extent of the overall grid to the analysis domain
           biomass_gCm2 = crop(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = crop(biomass_uncertainty_gCm2,cardamom_ext)
           # Remove any missing or un-realistic data points
@@ -196,6 +200,8 @@ load_initial_biomass_maps_for_extraction<-function(latlon_in,Cwood_initial_sourc
             biomass_gCm2 = resample(biomass_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
             biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
         }
+        # Extend the extent of the overall grid to the analysis domain
+        biomass_gCm2 = extend(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = extend(biomass_uncertainty_gCm2,cardamom_ext)
         # Trim the extent of the overall grid to the analysis domain
         biomass_gCm2 = crop(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = crop(biomass_uncertainty_gCm2,cardamom_ext)
         # now remove the ones that are actual missing data
@@ -261,6 +267,8 @@ load_initial_biomass_maps_for_extraction<-function(latlon_in,Cwood_initial_sourc
             biomass_gCm2 = resample(biomass_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
             biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
         }
+        # Extend the extent of the overall grid to the analysis domain
+        biomass_gCm2 = extend(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = extend(biomass_uncertainty_gCm2,cardamom_ext)
         # Trim the extent of the overall grid to the analysis domain
         biomass_gCm2 = crop(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = crop(biomass_uncertainty_gCm2,cardamom_ext)
         # now remove the ones that are actual missing data

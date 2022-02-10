@@ -27,6 +27,9 @@ load_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source,cardam
             top_clay = resample(top_clay, target, method="ngb") ; gc() ; removeTmpFiles()
             bot_clay = resample(bot_clay, target, method="ngb") ; gc() ; removeTmpFiles()
         }
+        # Extend the extent of the overall grid to the analysis domain
+        top_sand = extend(top_sand,cardamom_ext) ; bot_sand = extend(bot_sand,cardamom_ext)
+        top_clay = extend(top_clay,cardamom_ext) ; bot_clay = extend(bot_clay,cardamom_ext)
         # Trim the extent of the overall grid to the analysis domain
         top_sand = crop(top_sand,cardamom_ext) ; bot_sand = crop(bot_sand,cardamom_ext)
         top_clay = crop(top_clay,cardamom_ext) ; bot_clay = crop(bot_clay,cardamom_ext)
@@ -104,6 +107,9 @@ load_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source,cardam
             top_clay = resample(top_clay, target, method="ngb") ; gc() ; removeTmpFiles()
             bot_clay = resample(bot_clay, target, method="ngb") ; gc() ; removeTmpFiles()
         }
+        # Extend the extent of the overall grid to the analysis domain
+        top_sand = extend(top_sand,cardamom_ext) ; bot_sand = extend(bot_sand,cardamom_ext)
+        top_clay = extend(top_clay,cardamom_ext) ; bot_clay = extend(bot_clay,cardamom_ext)
         # Trim the extent of the overall grid to the analysis domain
         top_sand = crop(top_sand,cardamom_ext) ; bot_sand = crop(bot_sand,cardamom_ext)
         top_clay = crop(top_clay,cardamom_ext) ; bot_clay = crop(bot_clay,cardamom_ext)

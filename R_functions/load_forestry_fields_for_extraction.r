@@ -43,6 +43,8 @@ load_forestry_fields_for_extraction<-function(latlon_in,forestry_source,years_to
                   # Resample to correct grid
                   var1 = resample(var1, target, method="ngb") ; gc() ; removeTmpFiles()
               }
+              # Extend the extent of the overall grid to the analysis domain
+              var1 = extend(var1,cardamom_ext)
               # Trim the extent of the overall grid to the analysis domain
               var1 = crop(var1,cardamom_ext)
               var1[which(as.vector(var1) < 0)] = NA

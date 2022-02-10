@@ -18,14 +18,20 @@ determine_lat_long_needed<- function(lat,long,resolution,grid_type,remove) {
     } else {
         stop('have selected invalid grid type, the valid options are "UK" and "wgs84"')
     }
-    # extract the desired information,
-    lat=output$lat ; long=output$long ; cardamom_ext = output$cardamom_ext ; rm(output)
+    # extract the latitude / longitude and extent/resolution information
+    lat = output$lat ; long = output$long ; long_dim = output$long_dim ; lat_dim = output$lat_dim
+    cardamom_ext = output$cardamom_ext
+
+    # Create a grid specifically to be used for extracting the correct location from the gridded datasets
+    obs_long_grid = array(long, dim=c(long_dim,lat_dim))
+    obs_lat_grid = array(rev(lat), dim=c(long_dim,lat_dim)) # rev() accounts for the flipping of orientation conducted in the generate_*_grid()
 
     # remove the values we don't want
     if (length(remove) > 0) {lat = lat[-remove] ; long = long[-remove]}
 
     # output the result
-    output=list(lat = lat, long = long, cardamom_ext = cardamom_ext)
+    output = list(lat = lat, long = long, cardamom_ext = cardamom_ext,
+                  obs_long_grid = obs_long_grid, obs_lat_grid = obs_lat_grid)
     rm(lat,long) ; gc(reset=TRUE, verbose=FALSE)
     return(output)
 

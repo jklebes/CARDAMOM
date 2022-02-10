@@ -68,6 +68,8 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
                   # Remove the input lat / long information
                   rm(lat_in,long_in)
 
+                  # extend the extent of the overall grid to the analysis domain
+                  var1 = extend(var1,cardamom_ext)
                   # Trim the extent of the overall grid to the analysis domain
                   var1 = crop(var1,cardamom_ext)
                   # set actual missing data to 0 as missing data is actually no fire
@@ -176,6 +178,8 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
                        var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1_in[,,t]))
                        var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326"))
 
+                       # Extend the extent of the overall grid to the analysis domain
+                       var1 = extend(var1,cardamom_ext)
                        # Trim the extent of the overall grid to the analysis domain
                        var1 = crop(var1,cardamom_ext)
                        # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here

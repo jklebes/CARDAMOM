@@ -57,6 +57,8 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                     var2 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1[,,t]))
                     var2 = rasterFromXYZ(var2, crs = ("+init=epsg:4326"))
 
+                    # Extend the extent of the overall grid to the analysis domain
+                    var2 = extend(var2,cardamom_ext)
                     # Trim the extent of the overall grid to the analysis domain
                     var2 = crop(var2,cardamom_ext)
                     # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
@@ -233,6 +235,8 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                   # Remove the input lat / long information
                   rm(lat_in,long_in)
 
+                  # Extend the extent of the overall grid to the analysis domain
+                  var1 = extend(var1,cardamom_ext) ; var2 = extend(var2,cardamom_ext)
                   # Trim the extent of the overall grid to the analysis domain
                   var1 = crop(var1,cardamom_ext) ; var2 = crop(var2,cardamom_ext)
                   # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here

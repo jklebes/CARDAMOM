@@ -5,14 +5,15 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-extract_lai_timeseries<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in,lai_all,years_to_load,doy_obs) {
+extract_lai_timeseries<- function(i1,j1,timestep_days,spatial_type,resolution,
+                                  grid_type,latlon_in,lai_all,years_to_load,doy_obs) {
 
    # Update the user
    print(paste("LAI data extracted for current location ",Sys.time(),sep=""))
 
-   # find the nearest location
-   output = closest2d_2(1,lai_all$lat,lai_all$long,latlon_in[1],latlon_in[2])
-   i1 = unlist(output, use.names=FALSE)[1] ; j1=unlist(output, use.names=FALSE)[2]
+#   # find the nearest location
+#   output = closest2d_2(1,lai_all$lat,lai_all$long,latlon_in[1],latlon_in[2])
+#   i1 = unlist(output, use.names=FALSE)[1] ; j1=unlist(output, use.names=FALSE)[2]
 
    # Extract current location to local variable
    lai = lai_all$lai_all[i1,j1,]

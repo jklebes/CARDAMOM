@@ -5,14 +5,15 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-extract_Cwood_initial<- function(spatial_type,resolution,grid_type,latlon_in,Cwood_initial_all) {
+extract_Cwood_initial<- function(i1,j1,spatial_type,resolution,grid_type,latlon_in,
+                                 Cwood_initial_all) {
 
    # Update the user
    print(paste("Cwood initial extracted for current location ",Sys.time(),sep=""))
 
-   # find the nearest location
-   output = closest2d_2(1,Cwood_initial_all$lat,Cwood_initial_all$long,latlon_in[1],latlon_in[2])
-   i1 = unlist(output, use.names=FALSE)[1] ; j1 = unlist(output, use.names=FALSE)[2]
+#   # find the nearest location
+#   output = closest2d_2(1,Cwood_initial_all$lat,Cwood_initial_all$long,latlon_in[1],latlon_in[2])
+#   i1 = unlist(output, use.names=FALSE)[1] ; j1 = unlist(output, use.names=FALSE)[2]
 
    # Carry out averaging
    Cwood = Cwood_initial_all$biomass_gCm2[i1,j1]

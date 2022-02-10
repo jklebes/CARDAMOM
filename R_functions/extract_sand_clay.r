@@ -6,14 +6,15 @@
 # This function is based on an original Matlab function development by A. A. Bloom (UoE, now at the Jet Propulsion Laboratory).
 # Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-extract_sand_clay<- function(spatial_type,resolution,grid_type,latlon_in,sand_clay_all) {
+extract_sand_clay<- function(i1,j1,spatial_type,resolution,grid_type,latlon_in,
+                             sand_clay_all) {
 
   # Update the user
   print(paste("Sand/clay data extracted for current location ",Sys.time(),sep=""))
 
-  # find the nearest location
-  output=closest2d_2(1,sand_clay_all$lat,sand_clay_all$long,latlon_in[1],latlon_in[2])
-  j1=unlist(output, use.names=FALSE)[2];i1=unlist(output, use.names=FALSE)[1]
+#  # find the nearest location
+#  output=closest2d_2(1,sand_clay_all$lat,sand_clay_all$long,latlon_in[1],latlon_in[2])
+#  j1=unlist(output, use.names=FALSE)[2];i1=unlist(output, use.names=FALSE)[1]
 
   # Extract the correct value
   top_sand = sand_clay_all$top_sand[i1,j1]

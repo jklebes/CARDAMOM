@@ -82,6 +82,8 @@ load_wood_productivity_maps_for_extraction<-function(Cwood_inc_source,cardamom_e
                      Cwood_increment = resample(Cwood_increment, target, method="ngb") ; gc() ; removeTmpFiles()
                      Cwood_increment_uncertainty = resample(Cwood_increment_uncertainty, target, method="ngb") ; gc() ; removeTmpFiles()
                  }
+                 # Extend the extent of the overall grid to the analysis domain
+                 Cwood_increment = extend(Cwood_increment,cardamom_ext) ; Cwood_increment_uncertainty = extend(Cwood_increment_uncertainty,cardamom_ext)
                  # Trim the extent of the overall grid to the analysis domain
                  Cwood_increment = crop(Cwood_increment,cardamom_ext) ; Cwood_increment_uncertainty = crop(Cwood_increment_uncertainty,cardamom_ext)
                  # now remove the ones that are actual missing data

@@ -228,8 +228,12 @@ cardamom <-function (projname,model,method,stage) {
                print("Determining number / locations of grid points for this run ...")
                output = determine_lat_long_needed(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution,PROJECT$grid_type,PROJECT$waterpixels)
                print("Have now determined grid point locations")
-               # Bin together the latitude / longitudes for the grid, extract grid information needed to aid further processing (cardamom_ext)
-               latlon = cbind(output$lat,output$long) ; cardamom_ext = output$cardamom_ext ; rm(output) ; gc(reset=TRUE,verbose=FALSE)
+               # Bind together the latitude / longitudes for the grid, extract grid information needed to aid further processing (cardamom_ext)
+               latlon = cbind(output$lat,output$long) ; cardamom_ext = output$cardamom_ext
+               # Extract the lat / long grids designed for determining the extraction locations for the gridded observation datasets
+               obs_long_grid = output$obs_long_grid ; obs_lat_grid = output$obs_lat_grid
+               # Tidy up
+               rm(output) ; gc(reset=TRUE,verbose=FALSE)
            } else if (n == 1 & cardamom_type != "grid") {
                print("Determining number / locations of grid points for this run ...")
                # Combine the latitude / longitude from the site list
@@ -237,12 +241,25 @@ cardamom <-function (projname,model,method,stage) {
                # However we still need a reduced area domain for extracting the site level analyses. +c(-0.5,0.5) allows buffer
                output = determine_lat_long_needed(lat = range(PROJECT$latitude)+c(-0.5,0.5), long = range(PROJECT$longitude)+c(-0.5,0.5)
                                                  ,resolution = 0.125, grid_type = "wgs84", remove = 0)
-               cardamom_ext = output$cardamom_ext ; rm(output) ; gc(reset=TRUE,verbose=FALSE)
+               cardamom_ext = output$cardamom_ext ; gc(reset=TRUE,verbose=FALSE)
+               # Extract the lat / long grids designed for determining the extraction locations for the gridded observation datasets
+               obs_long_grid = output$obs_long_grid ; obs_lat_grid = output$obs_lat_grid
+               # Tidy up
+               rm(output) ; gc(reset=TRUE,verbose=FALSE)
                print("Have now determined grid point locations")
            }
            print(paste("Site ",n," of ",PROJECT$nosites," ",Sys.time(),sep=""))
            # create the file name for the met/obs binary
            filename=paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep="")
+
+           # All CARDAMOM read gridded datasets now map onto the same projection, extent and resolution.
+           # This means that we can extract the location of the current site within any grid just the
+           # once and pass around the solution to all the extraction functions.
+           # find the nearest location. But that assumes we have a gridded dataset to extract from.
+           # find the nearest location
+           output = closest2d_2(1,obs_lat_grid,obs_long_grid,latlon[1],latlon[2])
+           grid_long_loc = unlist(output, use.names=FALSE)[1] ; grid_lat_loc = unlist(output, use.names=FALSE)[2]
+           rm(output)
 
            # load met drivers and obs from CTESSEL and convert to daily if needed
            # these data are site specific so
@@ -275,7 +292,7 @@ cardamom <-function (projname,model,method,stage) {
                    # assume ACM special case
                    met = extract_acm_met_drivers(PROJECT,latlon[n,],PROJECT$sites[n])
                } # # if (PROJECT$model$name != "ACM")
-               obs=extract_obs(latlon[n,],lai_all,Csom_all,forest_all
+               obs=extract_obs(grid_long_loc,grid_lat_loc,latlon[n,],lai_all,Csom_all,forest_all
                               ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                               ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
                               ,nbe_all, lca_all, gpp_all,Cwood_inc_all,Cwood_mortality_all, fire_all

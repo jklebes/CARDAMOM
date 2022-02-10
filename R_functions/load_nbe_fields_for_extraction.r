@@ -79,6 +79,8 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
                            var1 = resample(var1, target, method="ngb") ; gc() ; removeTmpFiles()
                            var2 = resample(var2, target, method="ngb") ; gc() ; removeTmpFiles()
                        }
+                       # Extend the extent of the overall grid to the analysis domain
+                       var1 = extend(var1,cardamom_ext) ; var2 = extend(var2,cardamom_ext)
                        # Trim the extent of the overall grid to the analysis domain
                        var1 = crop(var1,cardamom_ext) ; var2 = crop(var2,cardamom_ext)
 
@@ -237,6 +239,8 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
                         var1 = resample(var1, target, method="ngb") ; gc() ; removeTmpFiles()
                         var2 = resample(var2, target, method="ngb") ; gc() ; removeTmpFiles()
                     }
+                    # Extend the extent of the overall grid to the analysis domain
+                    var1 = extend(var1,cardamom_ext) ; var2 = extend(var2,cardamom_ext)
                     # Trim the extent of the overall grid to the analysis domain
                     var1 = crop(var1,cardamom_ext) ; var2 = crop(var2,cardamom_ext)
                     var1[which(as.vector(var1) == -9999)] = NA ; var2[which(as.vector(var2) == -9999)] = NA

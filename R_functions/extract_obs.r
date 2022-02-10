@@ -6,7 +6,7 @@
 # This function is based on an original Matlab function development by A. A. Bloom (UoE, now at the Jet Propulsion Laboratory).
 # Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
+extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,forest_all
                      ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                      ,sand_clay_all,crop_man_all,burnt_all,soilwater_all,nbe_all
                      ,lca_all,gpp_all,Cwood_inc_all,Cwood_mortality_all,fire_all
@@ -27,7 +27,6 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     }
     doy_obs = doy_obs[-1]
 
-
     # Create useful timing information for multiple functions
     if (length(timestep_days) == 1) {
         analysis_years = seq(as.numeric(start_year),as.numeric(end_year))
@@ -44,7 +43,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
 
       # Extract NBE and uncertainty information
       # NOTE: assume default uncertainty (+/- scale)
-      output = extract_nbe(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,nbe_all,years_to_load,doy_obs)
+      output = extract_nbe(grid_long_loc,grid_lat_loc,timestep_days,
+                           spatial_type,resolution,grid_type,latlon_wanted,
+                           nbe_all,years_to_load,doy_obs)
       nbe = output$nbe ; nbe_unc = output$nbe_unc
 
     } else if (nbe_source == "site_specific") {
@@ -76,7 +77,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
 
         # Extract lai and uncertainty information
         # NOTE: assume default uncertainty (+/- scale)
-        output = extract_lai_timeseries(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,lai_all,years_to_load,doy_obs)
+        output = extract_lai_timeseries(grid_long_loc,grid_lat_loc,timestep_days,
+                                        spatial_type,resolution,grid_type,
+                                        latlon_wanted,lai_all,years_to_load,doy_obs)
         lai = output$lai ; lai_unc = output$lai_unc
 
     } else if (lai_source == "site_specific") {
@@ -130,7 +133,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     ###
 
     if (Csom_source == "HWSD" | Csom_source == "SoilGrids") {
-        Csom_info = extract_Csom_prior(spatial_type,resolution,grid_type,latlon_wanted,Csom_all)
+        Csom_info = extract_Csom_prior(grid_long_loc,grid_lat_loc,spatial_type,
+                                       resolution,grid_type,latlon_wanted,Csom_all)
         Csom_initial = Csom_info$Csom_initial ; Csom_initial_unc = Csom_info$Csom_initial_unc
     } else if (Csom_source == "site_specific") {
         infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
@@ -156,7 +160,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
     ###
 
     if (sand_clay_source == "HWSD" | sand_clay_source == "SoilGrids") {
-        sand_clay=extract_sand_clay(spatial_type,resolution,grid_type,latlon_wanted,sand_clay_all)
+        sand_clay=extract_sand_clay(grid_long_loc,grid_lat_loc,spatial_type,
+                                    resolution,grid_type,latlon_wanted,sand_clay_all)
         top_sand = sand_clay$top_sand ; bot_sand = sand_clay$bot_sand
         top_clay = sand_clay$top_clay ; bot_clay = sand_clay$bot_clay
     } else if (sand_clay_source == "site_specific") {
@@ -217,7 +222,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         # If there are any values in the analysis window
         if (max(Cwood_inc_all$place_obs_in_step) > 0) {
             # Extract the current location
-            output = extract_wood_productivity(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_inc_all)
+            output = extract_wood_productivity(grid_long_loc,grid_lat_loc,timestep_days,
+                                               spatial_type,resolution,grid_type,
+                                               latlon_wanted,Cwood_inc_all)
             Cwood_inc = output$Cwood_inc ; Cwood_inc_unc = output$Cwood_inc_unc ; Cwood_inc_lag = output$Cwood_inc_lag
             # Tidy up
             rm(output)
@@ -258,7 +265,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         # If there are any values in the analysis window
         if (max(Cwood_mortality_all$place_obs_in_step) > 0) {
             # Extract the current location
-            output = extract_wood_mortality(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_mortality_all)
+            output = extract_wood_mortality(grid_long_loc,grid_lat_loc,timestep_days,
+                                            spatial_type,resolution,grid_type,
+                                            latlon_wanted,Cwood_mortality_all)
             Cwood_mortality = output$Cwood_mortality
             Cwood_mortality_unc = output$Cwood_mortality_unc
             Cwood_mortality_lag = output$Cwood_mortality_lag
@@ -300,7 +309,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
 
         # Extract GPP and uncertainty information
         # NOTE: assume default uncertainty (+/- scale)
-        output = extract_gpp(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,gpp_all,years_to_load,doy_obs)
+        output = extract_gpp(grid_long_loc,grid_lat_loc,timestep_days,spatial_type,
+                             resolution,grid_type,latlon_wanted,gpp_all,years_to_load,doy_obs)
         GPP = output$GPP ; GPP_unc = output$GPP_unc
 
     } else {
@@ -334,7 +344,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
 
         # Extract Fire and uncertainty information
         # NOTE: assume default uncertainty (+/- scale)
-        output = extract_fire(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,fire_all,years_to_load,doy_obs)
+        output = extract_fire(grid_long_loc,grid_lat_loc,timestep_days,spatial_type,
+                              resolution,grid_type,latlon_wanted,fire_all,years_to_load,doy_obs)
         Fire = output$Fire ; Fire_unc = output$Fire_unc
 
     } else {
@@ -462,7 +473,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
                Cwood_initial_source == "UoL_stable_savannah") {
 
         # All maps converted into common format, therefore a common extraction subroutine can be used
-        output = extract_Cwood_initial(spatial_type,resolution,grid_type,latlon_wanted,Cwood_initial_all)
+        output = extract_Cwood_initial(grid_long_loc,grid_lat_loc,spatial_type,
+                                       resolution,grid_type,latlon_wanted,Cwood_initial_all)
         Cwood_initial = output$Cwood_stock ; Cwood_initial_unc = output$Cwood_stock_unc
     } else {
         # assume no data available
@@ -523,7 +535,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
 
         # All maps converted into common format, therefore a common extraction subroutine can be used
         if (max(Cwood_stock_all$place_obs_in_step) > 0) {
-            output = extract_Cwood_stocks(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_stock_all)
+            output = extract_Cwood_stocks(grid_long_loc,grid_lat_loc,timestep_days,
+                                          spatial_type,resolution,grid_type,latlon_wanted,
+                                          Cwood_stock_all)
             Cwood_stock = output$Cwood_stock ; Cwood_stock_unc = output$Cwood_stock_unc
 #            tmp = which(Cwood_stock > 0) # first AGB only
 #            if (length(tmp) > 1) {
@@ -686,7 +700,10 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         age = read_site_specific_obs("age",infile)
         if (length(age) > 1) {age = age[1]} # we only want the age at the beginning of the simulation
     } else if (deforestation_source == "GFW") {
-        output = extract_forestry_information(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,forest_all,start_year,end_year,ctessel_pft,years_to_load,doy_obs)
+        output = extract_forestry_information(grid_long_loc,grid_lat_loc,timestep_days,
+                                              spatial_type,resolution,grid_type,latlon_wanted,
+                                              forest_all,start_year,end_year,ctessel_pft,
+                                              years_to_load,doy_obs)
         ctessel_pft = output$ctessel_pft
         deforestation = output$deforestation
         yield_class = output$yield_class
@@ -711,7 +728,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         # assume no data available
         burnt_area = 0
     } else {
-        burnt_area = extract_burnt_area_information(latlon_wanted,timestep_days,spatial_type,grid_type,resolution,start_year,end_year,burnt_all,years_to_load,doy_obs)
+        burnt_area = extract_burnt_area_information(grid_long_loc,grid_lat_loc,latlon_wanted,
+                                                    timestep_days,spatial_type,grid_type,resolution,
+                                                    start_year,end_year,burnt_all,years_to_load,doy_obs)
     }
 
     ###
@@ -761,7 +780,9 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         Cwood_potential_unc=read_site_specific_obs("Cwood_potential_unc_gCm2",infile)
     } else if (Cwood_potential_source == "UoE_potAGB") {
         # get Cwood
-        output = extract_Cwood_potential(timestep_days,spatial_type,resolution,grid_type,latlon_wanted,Cwood_potential_all)
+        output = extract_Cwood_potential(grid_long_loc,grid_lat_loc,timestep_days,
+                                         spatial_type,resolution,grid_type,latlon_wanted,
+                                         Cwood_potential_all)
         Cwood_potential = output$Cwood_stock
         Cwood_potential_unc = output$Cwood_stock_unc
     } else {
@@ -779,7 +800,8 @@ extract_obs<-function(latlon_wanted,lai_all,Csom_all,forest_all
         lca_unc=read_site_specific_obs("LCA_unc_gCm2",infile)
     } else if (lca_source == "Butler") {
         # get Cwood
-        output = extract_lca_prior(spatial_type,resolution,grid_type,latlon_wanted,lca_all)
+        output = extract_lca_prior(grid_long_loc,grid_lat_loc,spatial_type,resolution,
+                                   grid_type,latlon_wanted,lca_all)
         lca = output$lca_gCm2
         lca_unc = output$lca_unc_gCm2
     } else {

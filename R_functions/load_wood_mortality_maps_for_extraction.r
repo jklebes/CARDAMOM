@@ -82,6 +82,8 @@ load_wood_mortality_maps_for_extraction<-function(Cwood_mortality_source,cardamo
                      Cwood_mortality = resample(Cwood_mortality, target, method="ngb") ; gc() ; removeTmpFiles()
                      Cwood_mortality_uncertainty = resample(Cwood_mortality_uncertainty, target, method="ngb") ; gc() ; removeTmpFiles()
                  }
+                 # Extend the extent of the overall grid to the analysis domain
+                 Cwood_mortality = extend(Cwood_mortality,cardamom_ext) ; Cwood_mortality_uncertainty = extend(Cwood_mortality_uncertainty,cardamom_ext)
                  # Trim the extent of the overall grid to the analysis domain
                  Cwood_mortality = crop(Cwood_mortality,cardamom_ext) ; Cwood_mortality_uncertainty = crop(Cwood_mortality_uncertainty,cardamom_ext)
                  # now remove the ones that are actual missing data

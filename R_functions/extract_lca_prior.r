@@ -5,14 +5,14 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-extract_lca_prior<- function(spatial_type,resolution,grid_type,latlon_in,lca_all) {
+extract_lca_prior<- function(i1,j1,spatial_type,resolution,grid_type,latlon_in,lca_all) {
 
    # Update the user
    print(paste("LCA prior extracted for current location ",Sys.time(),sep=""))
 
-   # find the nearest location
-   output = closest2d_2(1,lca_all$lat,lca_all$long,latlon_in[1],latlon_in[2])
-   i1 = unlist(output, use.names=FALSE)[1] ; j1 = unlist(output, use.names=FALSE)[2]
+#   # find the nearest location
+#   output = closest2d_2(1,lca_all$lat,lca_all$long,latlon_in[1],latlon_in[2])
+#   i1 = unlist(output, use.names=FALSE)[1] ; j1 = unlist(output, use.names=FALSE)[2]
 
    # Extract target location
    lca_gCm2 = lca_all$lca_gCm2[i1,j1]

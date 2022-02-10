@@ -18,6 +18,8 @@ generate_wgs84_grid<-function(lat,long,resolution) {
     dims = dim(pt) ; lat_dim = dims[1] ; long_dim = dims[2]
     lat = coordinates(pt)[,2] ; long = coordinates(pt)[,1]
     # reverse latitude vector to correct with R plotting orientation (i.e. make the world N/S rather than S/N)
+    # It is very important to remember this has happened as the output from this fuction will not be consistent
+    # with much of what is done with the calibration datasets.
     lat = lat[length(lat):1]
 
     # combine into output object

@@ -5,14 +5,15 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-extract_fire<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in,fire_all,years_to_load,doy_obs) {
+extract_fire<- function(i1,j1,timestep_days,spatial_type,resolution,grid_type,
+                        latlon_in,fire_all,years_to_load,doy_obs) {
 
   # Update the user
   print(paste("Fire data extracted for current location ",Sys.time(),sep=""))
 
-  # find the nearest location
-  output = closest2d_2(1,fire_all$lat,fire_all$long,latlon_in[1],latlon_in[2])
-  i1 = unlist(output, use.names=FALSE)[1] ; j1 = unlist(output, use.names=FALSE)[2]
+#  # find the nearest location
+#  output = closest2d_2(1,fire_all$lat,fire_all$long,latlon_in[1],latlon_in[2])
+#  i1 = unlist(output, use.names=FALSE)[1] ; j1 = unlist(output, use.names=FALSE)[2]
 
   # Extract to local variable
   fire = fire_all$fire_gCm2day[i1,j1,]
