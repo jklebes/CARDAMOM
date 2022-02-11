@@ -38,7 +38,7 @@ dump_binary_files <-function(infile) {
 
 } # end function
 
-read_parameter_chains<- function(PROJECT_in,n,ndim) {
+read_parameter_chains<- function(PROJECT_in,n) {
 
   # Determine the intended name for the parmeter files
   pfile=paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_",c(1:PROJECT_in$nochains),"_PARS",sep="")

@@ -30,7 +30,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
   if (file.exists(outfile1) == FALSE | repair == 1) {
       # load only the desired latter fraction of the parameter vectors
       # output is order dimensions(npar+1,iter,chain)
-      parameters = read_parameter_chains(PROJECT,n,3)
+      parameters = read_parameter_chains(PROJECT,n)
       parameter_covariance = read_parameter_covariance(PROJECT,n)
 
       # determine whether we have any actual completed chains and whether they include EDC consistent value only
@@ -83,7 +83,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                              print(paste("............chain rejected = ",i,sep=""))
                          }
                      }
-                     # If removing one chain does not lead to convergence then lowest average likelihood chain
+                     # If removing one chain does not lead to convergence then lowest average likelihood chain could be removed
+                     # NOTE: this should be made optional, such that non-converging locations are excluded from the analysis instead
                      if (i > dim(parameters)[3] & notconv) {
                          # Which is lowest likelihood
                          i = which(max_likelihood == min(max_likelihood))
@@ -346,6 +347,32 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
                    }
               } # was the obs assimilated?
 
+              ## Fire (gC/m2/day)
+              obs_id = 7 ; unc_id = obs_id+1
+              if (length(which(drivers$obs[,obs_id] != -9999)) > 0 & length(which(drivers$obs[,unc_id] != -9999)) > 0) {
+                  # Loop through time to assess model overlap with observations
+                  nobs = 0 ; states_all$fire_assim_data_overlap_fraction = 0
+                  for (t in seq(1, length(drivers$met[,1]))) {
+                       if (drivers$obs[t,obs_id] != -9999) {
+                           # Estimate the min / max values for the observations
+                           obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
+                           obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
+                           # Create list object containing each observations distributions
+                           hist_list = list(o = c(obs_min,obs_max), m = states_all$fire_gCm2day[,t])
+                           # Estimate average model ensemble within observated range
+                           tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
+                           states_all$fire_assim_data_overlap_fraction = states_all$fire_assim_data_overlap_fraction + tmp2
+                           nobs = nobs + 1
+                       }  # != -9999
+                   } # time loop
+                   # Average the overlap
+                   if (nobs > 0) {
+                       states_all$fire_assim_data_overlap_fraction = states_all$fire_assim_data_overlap_fraction / nobs
+                   } else {
+                       states_all$fire_assim_data_overlap_fraction = 0
+                   }
+              } # was the obs assimilated?
+
           } # DALEC model or not?
 
           # pass to local variable for saving
@@ -516,6 +543,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
               }
               if (length(which(names(states_all) == "nbe_assim_data_overlap_fraction")) > 0) {
                   site_output$nbe_assim_data_overlap_fraction = states_all$nbe_assim_data_overlap_fraction
+              }
+              if (length(which(names(states_all) == "fire_assim_data_overlap_fraction")) > 0) {
+                  site_output$fire_assim_data_overlap_fraction = states_all$fire_assim_data_overlap_fraction
               }
               ## Now keeping the whole ensemble extract the pixel level values needed for grid scale aggregates
               ## All units remain at this point as the are output by DALEC
@@ -878,6 +908,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$soil_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
           grid_output$evap_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
           grid_output$nbe_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$fire_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 
           # Time and uncertainty invarient information,
           # this is the correlation between ensemble members for parameter and C-cycle flux variables
@@ -1388,6 +1419,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                }
                if (length(which(names(site_output) == "nbe_assim_data_overlap_fraction")) > 0) {
                    grid_output$nbe_assim_data_overlap_fraction[slot_i,slot_j] = site_output$nbe_assim_data_overlap_fraction
+               }
+               if (length(which(names(site_output) == "fire_assim_data_overlap_fraction")) > 0) {
+                   grid_output$fire_assim_data_overlap_fraction[slot_i,slot_j] = site_output$fire_assim_data_overlap_fraction
                }
                # Parameter vs C-cycle flux correlation across ensemble member
                grid_output$nee_par_cor[slot_i,slot_j,] = site_output$nee_par_cor

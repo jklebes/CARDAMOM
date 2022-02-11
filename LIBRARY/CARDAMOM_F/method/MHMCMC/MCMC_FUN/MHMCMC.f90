@@ -183,8 +183,8 @@ contains
        if (MCO%fixedpars .and. PI%parini(i) /= -9999d0) PI%parfix(i) = 1d0
        ! only assign random parameters if (a) randparini == .true. or (b) PI$parini(n) == -9999)
        if (MCO%randparini .and. PI%parfix(i) == 0d0 .and. .not.restart_flag) then
-           call nor2par(1,uniform_random_vector(uniform),PI%parmin(i),PI%parmax(i),PI%parini(i))
-!           call log_nor2par(1,uniform_random_vector(uniform),PI%parmin(i),PI%parmax(i),PI%paradj(i),PI%parini(i))
+!           call nor2par(1,uniform_random_vector(uniform),PI%parmin(i),PI%parmax(i),PI%parini(i))
+           call log_nor2par(1,uniform_random_vector(uniform),PI%parmin(i),PI%parmax(i),PI%paradj(i),PI%parini(i))
            uniform = uniform + 1
        end if
        ! write(*,*) parameter values to screen

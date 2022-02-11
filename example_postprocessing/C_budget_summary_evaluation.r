@@ -97,8 +97,8 @@ fudgeit <- function(){
 
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_isimip3a_lca_gpp_nbe/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_isimip3a_lca_gpp/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_gpp_fire/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/Miombo_0.25deg_allWood/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_gpp_fire/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_AGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_actualCI_agb/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_gpp/infofile.RData")
@@ -117,9 +117,9 @@ load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_parameter_maps.RData",sep=""))
 
 # Set output path for figures and tables
-#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_reccap2_permafrost_1deg_C7_isimip/"
+out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_reccap2_permafrost_1deg_C7_isimip/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/figures_africa/"
-out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
+#out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/cssp_brazil_2/figures_productivity_without_vs_with/"
 
 # Specify the position within the stored ensemble for the median estimate and the desired uncertainty bands
@@ -1381,10 +1381,12 @@ print("===Assimilated NEE overlap (0-1)===")
 print(summary(as.vector(landfilter*grid_output$nee_assim_data_overlap_fraction)))
 print("===Assimilated ET overlap (0-1)===")
 print(summary(as.vector(landfilter*grid_output$evap_assim_data_overlap_fraction)))
+print("===Assimilated fire overlap (0-1)===")
+print(summary(as.vector(landfilter*grid_output$fire_assim_data_overlap_fraction)))
 # Are CARDAMOM models consistent with their assimilated observations
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_assimilated_observations_fraction_overlap.png",sep=""), height = 2700, width = 4900, res = 300)
 # Plot differences
-par(mfrow=c(2,3), mar=c(0.6,0.4,2.9,7),omi=c(0.1,0.4,0.18,0.2))
+par(mfrow=c(3,3), mar=c(0.6,0.4,2.9,7),omi=c(0.1,0.4,0.18,0.2))
 # Convert to raster
 var1 = raster(vals = t(landfilter[,dim(area)[2]:1]*grid_output$lai_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var2 = raster(vals = t(landfilter[,dim(area)[2]:1]*grid_output$gpp_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -1392,9 +1394,10 @@ var3 = raster(vals = t(landfilter[,dim(area)[2]:1]*grid_output$wood_assim_data_o
 var4 = raster(vals = t(landfilter[,dim(area)[2]:1]*grid_output$nbe_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var5 = raster(vals = t(landfilter[,dim(area)[2]:1]*grid_output$nee_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var6 = raster(vals = t(landfilter[,dim(area)[2]:1]*grid_output$evap_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var7 = raster(vals = t(landfilter[,dim(area)[2]:1]*grid_output$fire_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 # Correct spatial area and mask
-var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask) ; var4 = crop(var4, landmask) ; var5 = crop(var5, landmask) ; var6 = crop(var6, landmask)
-var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask) ; var4 = mask(var4, landmask) ; var5 = mask(var5, landmask) ; var6 = mask(var6, landmask)
+var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask) ; var4 = crop(var4, landmask) ; var5 = crop(var5, landmask) ; var6 = crop(var6, landmask) ; var7 = crop(var7, landmask)
+var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask) ; var4 = mask(var4, landmask) ; var5 = mask(var5, landmask) ; var6 = mask(var6, landmask) ; var7 = mask(var7, landmask)
 # create axis
 zrange1 = c(0,1)
 zrange2 = c(0,1)
@@ -1402,6 +1405,7 @@ zrange3 = c(0,1)
 zrange4 = c(0,1)
 zrange5 = c(0,1)
 zrange6 = c(0,1)
+zrange7 = c(0,1)
 # Begin plotting
 plot(var1, main="",col = colour_choices_gain, zlim=zrange1, xaxt = "n", yaxt = "n", box = FALSE, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, legend.width = 2.3, axes = FALSE, axis.args=list(cex.axis=2.6,hadj=0.1))
@@ -1426,6 +1430,10 @@ plot(landmask, add=TRUE)
 plot(var6, main="",col = (colour_choices_gain), zlim=zrange6, xaxt = "n", yaxt = "n",  box = FALSE, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, legend.width = 2.3, axes = FALSE, axis.args=list(cex.axis=2.6,hadj=0.1))
 mtext(expression(paste("Assimilated ET overlap (0-1)",sep="")), side = 3, cex = 1.8, padj = +0.05, adj = 0.5)
+plot(landmask, add=TRUE)
+plot(var7, main="",col = (colour_choices_gain), zlim=zrange7, xaxt = "n", yaxt = "n",  box = FALSE, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, legend.width = 2.3, axes = FALSE, axis.args=list(cex.axis=2.6,hadj=0.1))
+mtext(expression(paste("Assimilated Fire overlap (0-1)",sep="")), side = 3, cex = 1.8, padj = +0.05, adj = 0.5)
 plot(landmask, add=TRUE)
 dev.off()
 
@@ -1471,7 +1479,7 @@ cte_fire_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],length(ove
 cte_m2 = array(NA, dim=dim(grid_output$mean_lai_m2m2)[1:2])
 for (n in seq(1,PROJECT$nosites)) {
      if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE & is.na(landfilter[grid_output$i_location[n],grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,cte_lat,cte_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]],3)
+         output = closest2d_3(1,cte_lat,cte_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          cte_nbe_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],] = cte_nbe[i1,j1,overlap_start:overlap_end]
          cte_nee_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],] = cte_nee[i1,j1,overlap_start:overlap_end]
@@ -1641,7 +1649,7 @@ flask_cardamom_nbe_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],
 flask_cardamom_fire_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],length(flask_years),dim(flask_fire_gCm2yr)[4]))
 for (n in seq(1,PROJECT$nosites)) {
      if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE & is.na(landfilter[grid_output$i_location[n],grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,flask_lat,flask_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]],3)
+         output = closest2d_3(1,flask_lat,flask_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          flask_cardamom_nee_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],,] = flask_nee_gCm2yr[i1,j1,,]
          flask_cardamom_nbe_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],,] = flask_nbe_gCm2yr[i1,j1,,]
@@ -1762,7 +1770,7 @@ oco2_cardamom_nbe_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],l
 oco2_cardamom_fire_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],length(oco2_years),dim(oco2_fire_gCm2yr)[4]))
 for (n in seq(1,PROJECT$nosites)) {
      if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE & is.na(landfilter[grid_output$i_location[n],grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,oco2_lat,oco2_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]],3)
+         output = closest2d_3(1,oco2_lat,oco2_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          oco2_cardamom_nee_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],,] = oco2_nee_gCm2yr[i1,j1,,]
          oco2_cardamom_nbe_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],,] = oco2_nbe_gCm2yr[i1,j1,,]
@@ -1928,7 +1936,7 @@ fc_gpp = fc_gpp * 365.25 # gC/m2/yr
 fc_cardamom_gpp_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],length(fc_years)))
 for (n in seq(1,PROJECT$nosites)) {
      if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE & is.na(landfilter[grid_output$i_location[n],grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,fc_lat,fc_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]],3)
+         output = closest2d_3(1,fc_lat,fc_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          fc_cardamom_gpp_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],] = fc_gpp[i1,j1,]
      } # valid value exists
@@ -1985,7 +1993,7 @@ copernicus_gpp = copernicus_gpp * 365.25 #gC/m2/day -> gC/m2/yr
 copernicus_cardamom_gpp_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],length(copernicus_years)))
 for (n in seq(1,PROJECT$nosites)) {
      if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE & is.na(landfilter[grid_output$i_location[n],grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,copernicus_lat,copernicus_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]],3)
+         output = closest2d_3(1,copernicus_lat,copernicus_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          copernicus_cardamom_gpp_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],] = copernicus_gpp[i1,j1,]
      } # valid value exists
@@ -2044,7 +2052,7 @@ fluxsat_cardamom_gpp_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2
 fluxsat_cardamom_gpp_gCm2yr_trend = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2]))
 for (n in seq(1,PROJECT$nosites)) {
      if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE & is.na(landfilter[grid_output$i_location[n],grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,fluxsat_lat,fluxsat_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]],3)
+         output = closest2d_3(1,fluxsat_lat,fluxsat_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          fluxsat_cardamom_gpp_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],] = fluxsat_gpp[i1,j1,]
          # Estimate the GPP trend at this time too
@@ -2162,7 +2170,7 @@ gfed_cardamom_fire_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],
 gfed_m2 = array(NA, dim=dim(grid_output$mean_lai_m2m2)[1:2])
 for (n in seq(1,PROJECT$nosites)) {
      if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE & is.na(landfilter[grid_output$i_location[n],grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,gfed_lat,gfed_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]],3)
+         output = closest2d_3(1,gfed_lat,gfed_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          gfed_cardamom_fire_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],] = gfed_fire[i1,j1,]
      }
@@ -2195,7 +2203,7 @@ for (t in seq(2, length(gfas_years))) {
 gfas_cardamom_fire_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],length(gfas_years)))
 for (n in seq(1,PROJECT$nosites)) {
      if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE & is.na(landfilter[grid_output$i_location[n],grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,gfas_lat,gfas_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]],3)
+         output = closest2d_3(1,gfas_lat,gfas_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          gfas_cardamom_fire_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],] = gfas_fire[i1,j1,]
      }
