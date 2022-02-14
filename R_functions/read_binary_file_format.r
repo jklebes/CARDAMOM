@@ -71,7 +71,7 @@ read_binary_file_format<- function(infile) {
       # 10 will be nos_pars
       ###
       # start searching EDCs from anywhere (1) or from prescribed starting point (0)
-      md$rc_random_search= static[11] == 1
+      md$rc_random_search = static[11] == 1
       # Top sand %
       md$top_sand=static[12]
       # bot sand %

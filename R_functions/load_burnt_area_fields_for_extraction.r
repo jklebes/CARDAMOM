@@ -236,7 +236,7 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
 
           # restructure
           burnt_area=array(burnt_area, dim=c(xdim,ydim,length(doy_obs)))
-
+par(mfrow=c(2,2)) ; image.plot(apply(burnt_area,c(1,2), sum)) ;  image.plot(apply(burnt_area,c(1,2), mean)*365.25)
           # output variables
           return(list(burnt_area=burnt_area,doy_obs=doy_obs,lat=lat,long=long,missing_years=missing_years))
 
@@ -248,7 +248,7 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
 
 	        stop(paste("Burnt area option (",burnt_area_source,") not valid"))
 
-    } # if MPI biomass
+    } # if data_source
 
 } # function end
 

@@ -8,7 +8,7 @@
 # Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
 cardamom <-function (projname,model,method,stage) {
-#stage = 0 ; repair = 1 ; use_parallel = TRUE
+#stage = 2 ; repair = 1 ; use_parallel = TRUE
   ## load needed functions into R environment
   paths = load_paths()
 
@@ -257,7 +257,7 @@ cardamom <-function (projname,model,method,stage) {
            # once and pass around the solution to all the extraction functions.
            # find the nearest location. But that assumes we have a gridded dataset to extract from.
            # find the nearest location
-           output = closest2d_2(1,obs_lat_grid,obs_long_grid,latlon[1],latlon[2])
+           output = closest2d_2(1,obs_lat_grid,obs_long_grid,latlon[n,1],latlon[n,2])
            grid_long_loc = unlist(output, use.names=FALSE)[1] ; grid_lat_loc = unlist(output, use.names=FALSE)[2]
            rm(output)
 

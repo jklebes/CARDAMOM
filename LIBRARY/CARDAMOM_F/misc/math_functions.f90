@@ -755,7 +755,7 @@ module math_functions
 
     implicit none
     integer, intent(in) :: niter     ! number of iterations in current vector
-    double precision, intent(in) :: min_par, max_par, par_adj
+    double precision, intent(in) :: min_par, max_par, par_adj ! adjustment prevents negative values being fed into the analysis
     double precision, dimension(niter), intent(in) :: initial_par
     double precision, dimension(niter), intent(out) :: out_par
     ! local values

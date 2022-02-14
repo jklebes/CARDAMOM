@@ -104,7 +104,7 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
       z_axis=c(min(as.vector(mean_rooting_depth),na.rm=TRUE),max(as.vector(mean_rooting_depth),na.rm=TRUE))
       image.plot(x = grid_long, y = grid_lat, z = mean_rooting_depth,col=colour_choices
                 ,main=paste("Median root depth (m)",sep=""),zlim=z_axis,axes=FALSE
-                ,cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                ,cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
       map(add=TRUE, lwd = 2)
       #contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
@@ -114,7 +114,7 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
       z_axis=c(min(as.vector(max_rooting_depth),na.rm=TRUE),max(as.vector(max_rooting_depth),na.rm=TRUE))
       image.plot(x = grid_long, y = grid_lat, z = mean_rooting_depth,col=colour_choices,
                  main=paste("Annual max root depth (m)",sep=""),zlim=z_axis,axes=FALSE
-                ,cex.main=2.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                ,cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
       map(add=TRUE, lwd = 2)
       #contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
@@ -145,7 +145,7 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
        info = paste("Mean estimate: ",par_names[p]," (97.5 % = ",var2,"; 75 % = ",var5,"; 50 % = ",var1,"; 25 % = ",var4,"; 2.5 % = ",var3,")", sep="")
        zrange=range(pretty(c(min(grid_output[[pp]][,,median_loc], na.rm=TRUE),max(grid_output[[pp]][,,median_loc],na.rm=TRUE))))
        image.plot(x = grid_long, y = grid_lat, z = grid_output[[pp]][,,median_loc], zlim=zrange, main=info, col = colour_choices,
-                  axes=FALSE, cex.main=2.4, legend.width=3.0, cex=1.5, axis.args=list(cex.axis=1.8, hadj=0.1))
+                  axes=FALSE, cex.main=1.8, legend.width=3.0, cex=1.5, axis.args=list(cex.axis=1.8, hadj=0.1))
        map(add=TRUE, lwd = 2)
        #contour(landmask, add = TRUE, lwd = 1.0, nlevels = 1,axes = FALSE,drawlabels = FALSE,col = "black")
        dev.off()
@@ -153,7 +153,7 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
        # Histrograms of fluxes
        jpeg(file=paste("grid_mean_hist_median_",par_names[p],"_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
        par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-       hist(grid_output[[pp]][,,median_loc], main=info, cex.main=2.4, cex=1.5, cex.axis=1.8)
+       hist(grid_output[[pp]][,,median_loc], main=info, cex.main=1.8, cex=1.5, cex.axis=1.8)
        dev.off()
 
   } # loop through all "grid_output" objects
@@ -181,7 +181,7 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
        info = paste("Final estimate: ",par_names[p]," (97.5 % = ",var2,"; 75 % = ",var5,"; 50 % = ",var1,"; 25 % = ",var4,"; 2.5 % = ",var3,")", sep="")
        zrange=range(pretty(c(min(grid_output[[pp]][,,median_loc], na.rm=TRUE),max(grid_output[[pp]][,,median_loc],na.rm=TRUE))))
        image.plot(x = grid_long, y = grid_lat, z = grid_output[[pp]][,,median_loc], main=info, col = colour_choices, zlim=zrange,
-                  axes=FALSE, cex.main=2.4, legend.width=3.0, cex=1.5, axis.args=list(cex.axis=1.8, hadj=0.1))
+                  axes=FALSE, cex.main=1.8, legend.width=3.0, cex=1.5, axis.args=list(cex.axis=1.8, hadj=0.1))
        map(add=TRUE, lwd = 2)
        #contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
        dev.off()

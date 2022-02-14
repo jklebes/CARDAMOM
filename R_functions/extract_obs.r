@@ -722,12 +722,13 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ###
 
     if (burnt_area_source == "site_specific") {
-        infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-        burnt_area=read_site_specific_obs("burnt_area_fraction",infile)
+        infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
+        burnt_area = read_site_specific_obs("burnt_area_fraction",infile)
     } else if (burnt_area_source == " "){
         # assume no data available
         burnt_area = 0
     } else {
+print("extract burnt fraction")
         burnt_area = extract_burnt_area_information(grid_long_loc,grid_lat_loc,latlon_wanted,
                                                     timestep_days,spatial_type,grid_type,resolution,
                                                     start_year,end_year,burnt_all,years_to_load,doy_obs)
