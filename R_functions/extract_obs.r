@@ -728,7 +728,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         # assume no data available
         burnt_area = 0
     } else {
-print("extract burnt fraction")
+
         burnt_area = extract_burnt_area_information(grid_long_loc,grid_lat_loc,latlon_wanted,
                                                     timestep_days,spatial_type,grid_type,resolution,
                                                     start_year,end_year,burnt_all,years_to_load,doy_obs)
