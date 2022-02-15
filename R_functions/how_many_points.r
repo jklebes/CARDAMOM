@@ -6,6 +6,23 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
+## available_countries, a function to provide a list of the countries which can be specified in the site_name
+## to define the CARDAMOM analysis area
+available_countries <-function() {
+
+   # Load the shapefile CARDAMOM uses as default to define its land sea mask
+   landmask = shapefile("./R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx")
+   # Extract the list of country names used in the mask
+   country_match = factor(landmask$SOVEREIGNT) ; country_match = levels(country_match)
+   # For consistency / allowability of using the country name in a file path,
+   # remove the spaces
+   country_match = gsub(" ","",country_match,fixed=TRUE)
+
+   # return to the user
+   return(country_match)
+
+} # end function
+
 ## lcm2007_to_ctessel, a function which matches the dominant classifications of the lcm2007 to the appropriate C/D-TESSEL PFT
 
 lcm2007_to_ctessel<- function(input_pft) {

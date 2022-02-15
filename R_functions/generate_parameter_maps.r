@@ -430,14 +430,14 @@ generate_parameter_maps<-function(PROJECT) {
           figname = paste("Cluster_map_of_median_parameters_",gsub("%","_",PROJECT$name),".jpeg",sep="")
           jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
           par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-          image.plot(x = grid_long, y = grid_lat, z = grid_parameters$pars_clusters, main=paste("Parameter based cluster maps",sep=""),axes=FALSE, cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+          image.plot(x = grid_long, y = grid_lat, z = grid_parameters$pars_clusters, main=paste("Parameter based cluster maps",sep=""),axes=FALSE, cex.main=1.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
           map(add=TRUE, lwd = 2)
           dev.off()
 
           figname = paste("Cluster_map_of_median_parameters_with_initial_",gsub("%","_",PROJECT$name),".jpeg",sep="")
           jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
           par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-          image.plot(x = grid_long, y = grid_lat, z = grid_parameters$clusters, main=paste("Parameter + initial based cluster map",sep=""),axes=FALSE, cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+          image.plot(x = grid_long, y = grid_lat, z = grid_parameters$clusters, main=paste("Parameter + initial based cluster map",sep=""),axes=FALSE, cex.main=1.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
           map(add=TRUE, lwd = 2)
           dev.off()
 
@@ -473,7 +473,7 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(x = grid_long, y = grid_lat, z = grid_parameters$NPP_foliar_fraction[,,median_loc], col=colour_choices
             , main=paste("Cfoliar NPP allocation median estimate",sep=""), axes=FALSE
-            ,cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+            ,cex.main=1.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
   map(add=TRUE, lwd = 2)
   #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
@@ -482,7 +482,7 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(x = grid_long, y = grid_lat, z = grid_parameters$NPP_wood_fraction[,,median_loc],col=colour_choices
             ,main=paste("Cwood NPP allocation median estimate",sep=""), axes=FALSE
-            ,cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+            ,cex.main=1.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
   map(add=TRUE, lwd = 2)
   #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
@@ -490,7 +490,7 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(x = grid_long, y = grid_lat, z = grid_parameters$NPP_root_fraction[,,median_loc], col=colour_choices
              ,main=paste("Croot NPP allocation median estimate",sep=""), axes=FALSE
-            ,cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+            ,cex.main=1.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
   map(add=TRUE, lwd = 2)
   #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
@@ -499,7 +499,7 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(x = grid_long, y = grid_lat, z = grid_parameters$NPP_foliar_fraction[,,upper_loc]-grid_parameters$NPP_foliar_fraction[,,lower_loc]
             ,col=colour_choices, main=paste("Cfoliar NPP allocation uncertainty",sep=""),axes=FALSE
-            ,cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+            ,cex.main=1.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
   map(add=TRUE, lwd = 2)
   #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
@@ -508,7 +508,7 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(x = grid_long, y = grid_lat, z = grid_parameters$NPP_wood_fraction[,,upper_loc]-grid_parameters$NPP_wood_fraction[,,lower_loc]
             ,col=colour_choices, main=paste("Cwood NPP allocation uncertainty",sep=""),axes=FALSE
-            ,cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+            ,cex.main=1.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
   map(add=TRUE, lwd = 2)
   #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
@@ -517,7 +517,7 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(x = grid_long, y = grid_lat, z = grid_parameters$NPP_root_fraction[,,upper_loc]-grid_parameters$NPP_root_fraction[,,lower_loc]
             ,col=colour_choices, main=paste("Croot NPP allocation uncertainty",sep=""),axes=FALSE
-            ,cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+            ,cex.main=1.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
   map(add=TRUE, lwd = 2)
   #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
@@ -527,7 +527,7 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(x = grid_long, y = grid_lat, z = grid_parameters$MTT_foliar_years[,,median_loc], col=colour_choices
             ,main=paste("Cfoliar residence time median estimate",sep="")
-            ,axes=FALSE, cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+            ,axes=FALSE, cex.main=1.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
   map(add=TRUE, lwd = 2)
   #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
@@ -535,7 +535,7 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(x = grid_long, y = grid_lat, z = grid_parameters$MTT_wood_years[,,median_loc], col=colour_choices
             ,main=paste("Cwood residence time median estimate",sep="")
-            ,axes=FALSE, cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+            ,axes=FALSE, cex.main=1.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
   map(add=TRUE, lwd = 2)
   #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
@@ -543,7 +543,7 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(x = grid_long, y = grid_lat, z = grid_parameters$MTT_root_years[,,median_loc], col=colour_choices
             ,main=paste("Croot residence time median estimate",sep="")
-            ,axes=FALSE, cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+            ,axes=FALSE, cex.main=1.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
   map(add=TRUE, lwd = 2)
   #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
@@ -551,7 +551,7 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(x = grid_long, y = grid_lat, z = grid_parameters$MTT_som_years[,,median_loc], col=colour_choices
             ,main=paste("Csom residence time median estimate",sep="")
-            ,axes=FALSE, cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+            ,axes=FALSE, cex.main=1.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
   map(add=TRUE, lwd = 2)
   #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
@@ -559,7 +559,7 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(x = grid_long, y = grid_lat, z = grid_parameters$MTT_DeadOrg_years[,,median_loc], col=colour_choices
             ,main=paste("CDeadOrg residence time median estimate",sep="")
-            ,axes=FALSE, cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+            ,axes=FALSE, cex.main=1.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
   map(add=TRUE, lwd = 2)
   #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
@@ -568,7 +568,7 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(x = grid_long, y = grid_lat, z = grid_parameters$MTT_foliar_years[,,upper_loc]-grid_parameters$MTT_foliar_years[,,lower_loc]
             ,col=colour_choices, main=paste("Cfoliar residence time uncertainty",sep="")
-            ,axes=FALSE, cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+            ,axes=FALSE, cex.main=1.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
   map(add=TRUE, lwd = 2)
   #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
@@ -576,7 +576,7 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(x = grid_long, y = grid_lat, z = grid_parameters$MTT_wood_years[,,upper_loc]-grid_parameters$MTT_wood_years[,,lower_loc]
             ,col=colour_choices, main=paste("Cwood residence time uncertainty",sep="")
-            ,axes=FALSE, cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+            ,axes=FALSE, cex.main=1.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
   map(add=TRUE, lwd = 2)
   #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
@@ -584,7 +584,7 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(x = grid_long, y = grid_lat, z = grid_parameters$MTT_root_years[,,upper_loc]-grid_parameters$MTT_root_years[,,lower_loc]
             ,col=colour_choices, main=paste("Croot residence time uncertainty",sep="")
-            ,axes=FALSE, cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+            ,axes=FALSE, cex.main=1.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
   map(add=TRUE, lwd = 2)
   #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
@@ -592,7 +592,7 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(x = grid_long, y = grid_lat, z = grid_parameters$MTT_DeadOrg_years[,,upper_loc]-grid_parameters$MTT_DeadOrg_years[,,lower_loc]
             ,col=colour_choices, main=paste("CDeadOrg residence time uncertainty",sep="")
-            ,axes=FALSE, cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+            ,axes=FALSE, cex.main=1.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
   map(add=TRUE, lwd = 2)
   #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
   dev.off()
@@ -603,14 +603,14 @@ generate_parameter_maps<-function(PROJECT) {
        ## Histrograms of parameters
        jpeg(file=paste("parameter_hist_median_",par_names[p],"_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
        par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-       hist(grid_parameters$parameters[,,p,median_loc], main=paste(par_names[p]," median estimate",sep=""), cex.main=1.8, cex=1.5, cex.axis=1.8)
+       hist(grid_parameters$parameters[,,p,median_loc], main=paste(par_names[p]," median estimate",sep=""), cex.main=1.4, cex=1.5, cex.axis=1.8)
        dev.off()
        ###
        ## spatial maps
        jpeg(file=paste("parameter_maps_median_",par_names[p],"_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
        par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
        image.plot(x = grid_long, y = grid_lat, z = grid_parameters$parameters[,,p,median_loc], col=colour_choices,
-                  main=paste(par_names[p]," median estimate",sep=""),axes=FALSE, cex.main=1.8,legend.width=3.0,
+                  main=paste(par_names[p]," median estimate",sep=""),axes=FALSE, cex.main=1.4,legend.width=3.0,
                   cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
        map(add=TRUE, lwd = 2)
        #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
@@ -619,7 +619,7 @@ generate_parameter_maps<-function(PROJECT) {
        par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
        image.plot(x = grid_long, y = grid_lat, z = grid_parameters$parameters[,,p,upper_loc]-grid_parameters$parameters[,,p,lower_loc],
                   col=colour_choices, main=paste(par_names[p]," uncertainty range",sep=""), axes=FALSE,
-                  cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                  cex.main=1.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
        map(add=TRUE, lwd = 2)
        #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
        dev.off()
@@ -627,7 +627,7 @@ generate_parameter_maps<-function(PROJECT) {
        par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
        image.plot(x = grid_long, y = grid_lat, z = grid_parameters$parameters_converged[,,p], col=colour_choices
                  ,main=paste(par_names[p]," Gelmen-Rubens convergence (1 = PASS / 0 = FALSE)",sep="")
-                 ,axes=FALSE, zlim=c(0,1), cex.main=1.8,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                 ,axes=FALSE, zlim=c(0,1), cex.main=1.4,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
        map(add=TRUE, lwd = 2)
        #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
        dev.off()
@@ -638,7 +638,7 @@ generate_parameter_maps<-function(PROJECT) {
       jpeg(file=paste("pft_maps_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
       image.plot(x = grid_long, y = grid_lat, z = grid_parameters$pft_array, main="ECMWF PFT"
-                ,axes=FALSE, cex.main=1.8,legend.width=3.0,cex=1.5
+                ,axes=FALSE, cex.main=1.4,legend.width=3.0,cex=1.5
                 ,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(0,20))
       map(add=TRUE, lwd = 2)
       #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
@@ -648,7 +648,7 @@ generate_parameter_maps<-function(PROJECT) {
   jpeg(file=paste("mean_temperature_maps_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(x = grid_long, y = grid_lat, z = grid_parameters$mean_temperature_C, col=rev(colour_choices)
-            ,main="Mean air temperature (oC)",axes=FALSE, cex.main=1.8,legend.width=3.0
+            ,main="Mean air temperature (oC)",axes=FALSE, cex.main=1.4,legend.width=3.0
             ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1)
             ,zlim=c(min(as.vector(grid_parameters$mean_temperature_C),na.rm=TRUE),max(as.vector(grid_parameters$mean_temperature_C),na.rm=TRUE)))
   map(add=TRUE, lwd = 2)
@@ -659,7 +659,7 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(x = grid_long, y = grid_lat, z = grid_parameters$mean_radiation_MJm2day, col=rev(colour_choices)
             ,main="Mean radiation (MJ/m2/day)"
-            ,axes=FALSE, cex.main=1.8,legend.width=3.0
+            ,axes=FALSE, cex.main=1.4,legend.width=3.0
             ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(0,36))
   map(add=TRUE, lwd = 2)
   #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
@@ -669,7 +669,7 @@ generate_parameter_maps<-function(PROJECT) {
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(x = grid_long, y = grid_lat, z = grid_parameters$mean_vpd_Pa, col=rev(colour_choices)
             ,main="Mean VPD (Pa)"
-            ,axes=FALSE, cex.main=1.8, legend.width=3.0, cex=1.5
+            ,axes=FALSE, cex.main=1.4, legend.width=3.0, cex=1.5
             ,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(0,max(as.vector(grid_parameters$mean_vpd_Pa),na.rm=TRUE)))
   map(add=TRUE, lwd = 2)
   #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
@@ -678,7 +678,7 @@ generate_parameter_maps<-function(PROJECT) {
   jpeg(file=paste("mean_precipitation_maps_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
   par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
   image.plot(x = grid_long, y = grid_lat, z = grid_parameters$mean_precipitation_kgm2yr, col=colour_choices,
-             main="Mean precipitation (mm/yr)",axes=FALSE, cex.main=1.8,legend.width=3.0
+             main="Mean precipitation (mm/yr)",axes=FALSE, cex.main=1.4,legend.width=3.0
             ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(0,max(as.vector(grid_parameters$mean_precipitation_kgm2yr),na.rm=TRUE)))
   map(add=TRUE, lwd = 2)
   #contour(grid_parameters$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
