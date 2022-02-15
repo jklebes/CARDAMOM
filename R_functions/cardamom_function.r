@@ -304,10 +304,8 @@ cardamom <-function (projname,model,method,stage) {
                # Load additional model information
                PROJECT$model = cardamom_model_details(PROJECT$model$name,pft_specific_parameters,PROJECT$ctessel_pft)
                # write out the relevant binary files
-#if (max(obs$Cwood_stock) > 0) {
                binary_data(met,obs,filename,PROJECT$edc,latlon[n,],PROJECT$ctessel_pft[n],
                            PROJECT$model$name,PROJECT$parameter_type,PROJECT$model$nopars[n],noyears)
-#}
            } # if (file.exists(filename) == FALSE | repair == 1)
       } # site loop
 
@@ -427,7 +425,7 @@ cardamom <-function (projname,model,method,stage) {
           for (n in seq(1,PROJECT$nosites)) {
                # find relevant parameter information first
                # output is order dimensions(npar+1,iter,chain)
-               parameters = read_parameter_chains(PROJECT,n,3)
+               parameters = read_parameter_chains(PROJECT,n)
                # If an analysis has been carried out for this location (parameters[1] != -9999)
                if (parameters[1] != -9999) {
                    # Determine whether chains have converged (true/false)
