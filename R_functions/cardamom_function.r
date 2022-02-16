@@ -255,8 +255,9 @@ cardamom <-function (projname,model,method,stage) {
            # All CARDAMOM read gridded datasets now map onto the same projection, extent and resolution.
            # This means that we can extract the location of the current site within any grid just the
            # once and pass around the solution to all the extraction functions.
-           # find the nearest location. But that assumes we have a gridded dataset to extract from.
-           # find the nearest location
+           # NOTE: that met_all is an exception to this as the for the analysis to work we must always have
+           # meteorology driving the model, so we assume a nearest neighbour approach of valid
+           # locations, rather than accepting data gaps as done in observations / disturbance drivers.
            output = closest2d_2(1,obs_lat_grid,obs_long_grid,latlon[n,1],latlon[n,2])
            grid_long_loc = unlist(output, use.names=FALSE)[1] ; grid_lat_loc = unlist(output, use.names=FALSE)[2]
            rm(output)
@@ -267,7 +268,7 @@ cardamom <-function (projname,model,method,stage) {
                if (PROJECT$model$name != "ACM") {
                    # if this is the first time of all creating new met files this time round load the whole dataset for rapid access
                    if (loaded_all == FALSE) {
-                       met_all = load_met_fields_for_extraction(latlon,met_source,PROJECT$model$name,PROJECT$start_year,PROJECT$end_year)
+                       met_all = load_met_fields_for_extraction(latlon,met_source,PROJECT$model$name,PROJECT$start_year,PROJECT$end_year,PROJECT$spatial_type,cardamom_ext)
                        lai_all = load_lai_fields_for_extraction(latlon,lai_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),cardamom_ext,PROJECT$spatial_type)
                        nbe_all = load_nbe_fields_for_extraction(latlon,nbe_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),cardamom_ext,PROJECT$spatial_type)
                        gpp_all = load_gpp_fields_for_extraction(latlon,GPP_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),cardamom_ext,PROJECT$spatial_type)

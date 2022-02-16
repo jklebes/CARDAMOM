@@ -156,7 +156,7 @@ contains
 
     ! Determine how long we will continue to adapt our proposal covariance
     ! matrix and use of Delayed Rejection
-    burn_in_period = MCO%fADAPT*dble(MCO%nOUT)
+    burn_in_period = MCO%fADAPT * dble(MCO%nOUT)
     N_before_mv_target = N_before_mv * dble(PI%npars)
 
     ! See step() for relevant references.

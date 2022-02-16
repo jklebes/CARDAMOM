@@ -189,7 +189,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
 
       # sub-select for sites
       swrad_out = met_in$swrad[n,] ; maxt_out = met_in$maxt[n,] ; precip_out = met_in$precip[n,]
-      vpd_out = met_in$vpd[n,] ; pressure_out = met_in$pressure[n,]
+      vpd_out = met_in$vpd[n,]
       mint_out = met_in$mint[n,] ; wind_spd_out = met_in$wind_spd[n,]
       co2_out = met_in$co2 ; avgTmax_out = maxt_out
       avgTemp_out = (mint_out + maxt_out) * 0.5
