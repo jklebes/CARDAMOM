@@ -333,9 +333,8 @@ module model_likelihood_module
 
     ! Calculate log-likelihood associated with priors
     ! We always want this
-    ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
+    ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,DATAin%parpriorweight,PARS)
     ! calculate final model likelihood when compared to obs
-!    ML_obs_out = ML_obs_out + inflate_likelihood(PI%npars,PARS)
     ML_obs_out = ML_obs_out + scale_likelihood(PI%npars,PARS)
 
   end subroutine sub_model_likelihood
@@ -1825,7 +1824,7 @@ module model_likelihood_module
 
     ! Calculate log-likelihood associated with priors
     ! We always want this
-    ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
+    ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,DATAin%parpriorweight,PARS)
     ! calculate final model likelihood when compared to obs
     ML_obs_out = ML_obs_out + likelihood(PI%npars,PARS)
 
@@ -1833,7 +1832,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  double precision function likelihood_p(npars,parpriors,parpriorunc,pars)
+  double precision function likelihood_p(npars,parpriors,parpriorunc,parpriorweight,pars)
     ! function calculates the parameter based log-likelihood for the current set
     ! of parameters. This assumes that we have any actual priors / prior
     ! uncertainties to be working with. This does include initial states, as we
@@ -1843,9 +1842,10 @@ module model_likelihood_module
 
     ! declare input variables
     integer, intent(in) :: npars
-    double precision, dimension(npars), intent(in) :: pars      & ! current parameter vector
-                                                     ,parpriors & ! prior values for parameters
-                                                     ,parpriorunc ! prior uncertainties
+    double precision, dimension(npars), intent(in) :: pars         & ! current parameter vector
+                                                     ,parpriors    & ! prior values for parameters
+                                                     ,parpriorunc  & ! prior uncertainties
+                                                     ,parpriorweight ! prior weighting
 
     ! declare local variables
     integer :: n
@@ -1855,7 +1855,7 @@ module model_likelihood_module
     likelihood_p = 0d0 ; local_likelihood = 0d0
 
     ! now loop through defined parameters for their uncertainties
-    where (parpriors > -9999) local_likelihood = ((pars-parpriors)/parpriorunc)**2
+    where (parpriors > -9999) local_likelihood = parpriorweight*((pars-parpriors)/parpriorunc)**2
     likelihood_p = sum(local_likelihood) * (-0.5d0)
 
     ! dont for get to return
@@ -1895,10 +1895,10 @@ module model_likelihood_module
        likelihood = likelihood-tot_exp
     endif
 
-    ! Evap Log-likelihood
-    if (DATAin%nEvap > 0) then
-       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),19)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
-                       /DATAin%Evap_unc(DATAin%evappts(1:DATAin%nEvap)))**2)
+    ! GPP Log-likelihood
+    if (DATAin%ngpp > 0) then
+       tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
+                       /DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2)
        likelihood = likelihood-tot_exp
     endif
 
@@ -1906,13 +1906,6 @@ module model_likelihood_module
     if (DATAin%nFire > 0) then
        tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
                        /DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2)
-       likelihood = likelihood-tot_exp
-    endif
-
-    ! GPP Log-likelihood
-    if (DATAin%ngpp > 0) then
-       tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
-                       /DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2)
        likelihood = likelihood-tot_exp
     endif
 
@@ -2113,13 +2106,15 @@ module model_likelihood_module
     ! Ra:GPP fraction is in this model a derived property
     if (DATAin%otherpriors(1) > -9998) then
         tot_exp = sum(DATAin%M_FLUXES(:,3)) / sum(DATAin%M_FLUXES(:,1))
-        likelihood = likelihood-((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
+        tot_exp =  DATAin%otherpriorweight(1) * ((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
+        likelihood = likelihood-tot_exp
     end if
 
     ! Leaf C:N is derived from multiple parameters
     if (DATAin%otherpriors(3) > -9998) then
         tot_exp = pars(17) / (10d0**pars(11))
-        likelihood = likelihood-((tot_exp-DATAin%otherpriors(3))/DATAin%otherpriorunc(3))**2
+        tot_exp =  DATAin%otherpriorweight(3) * ((tot_exp-DATAin%otherpriors(3))/DATAin%otherpriorunc(3))**2
+        likelihood = likelihood-tot_exp
     end if
 
     ! Estimate the biological steady state attractor on the wood pool.
@@ -2132,7 +2127,8 @@ module model_likelihood_module
         input = sum(DATAin%M_FLUXES(:,7))
         output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+fire_loss_wood))
         tot_exp = (input/dble(DATAin%nodays)) * (output/dble(DATAin%nodays))
-        likelihood = likelihood - ((tot_exp - DATAin%otherpriors(5)) / DATAin%otherpriorunc(5))**2
+        tot_exp =  DATAin%otherpriorweight(5) * ((tot_exp-DATAin%otherpriors(5))/DATAin%otherpriorunc(5))**2
+        likelihood = likelihood-tot_exp
     endif
 
     ! the likelihood scores for each observation are subject to multiplication
@@ -2229,7 +2225,6 @@ module model_likelihood_module
        do n = 1, DATAin%nCfol_stock
          dn = DATAin%Cfol_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp = tot_exp+(log(DATAin%M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2d0
          tot_exp = tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCfol_stock))
@@ -2316,7 +2311,6 @@ module model_likelihood_module
        do n = 1, DATAin%nCroots_stock
          dn = DATAin%Croots_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,3)/DATAin%Croots_stock(dn))/log(2.))**2.
          tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCroots_stock))
@@ -2330,8 +2324,6 @@ module model_likelihood_module
        do n = 1, DATAin%nClit_stock
          dn = DATAin%Clit_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+((log((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
-!                           *DATAin%M_POOLS(dn,5))/DATAin%Clit_stock(dn))/log(2.))**2d0
          tot_exp = tot_exp+(((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
                            *(DATAin%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2
        end do
@@ -2344,7 +2336,6 @@ module model_likelihood_module
        do n = 1, DATAin%nCsom_stock
          dn = DATAin%Csom_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,6)/DATAin%Csom_stock(dn))/log(2.))**2.
          tot_exp = tot_exp+((DATAin%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCsom_stock))
@@ -2357,13 +2348,15 @@ module model_likelihood_module
     ! Ra:GPP fraction is in this model a derived property
     if (DATAin%otherpriors(1) > -9998) then
         tot_exp = sum(DATAin%M_FLUXES(:,3)) / sum(DATAin%M_FLUXES(:,1))
-        scale_likelihood = scale_likelihood-((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
+        tot_exp =  DATAin%otherpriorweight(1) * ((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
+        scale_likelihood = scale_likelihood-tot_exp
     end if
 
     ! Leaf C:N is derived from multiple parameters
     if (DATAin%otherpriors(3) > -9998) then
         tot_exp = pars(17) / (10d0**pars(11))
-        scale_likelihood = scale_likelihood-((tot_exp-DATAin%otherpriors(3))/DATAin%otherpriorunc(3))**2
+        tot_exp =  DATAin%otherpriorweight(3) * ((tot_exp-DATAin%otherpriors(3))/DATAin%otherpriorunc(3))**2
+        scale_likelihood = scale_likelihood-tot_exp
     end if
 
     ! Estimate the biological steady state attractor on the wood pool.
@@ -2376,7 +2369,8 @@ module model_likelihood_module
         input = sum(DATAin%M_FLUXES(:,7))
         output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+fire_loss_wood))
         tot_exp = (input/dble(DATAin%nodays)) * (output/dble(DATAin%nodays))
-        scale_likelihood = scale_likelihood - ((tot_exp - DATAin%otherpriors(5)) / DATAin%otherpriorunc(5))**2
+        tot_exp =  DATAin%otherpriorweight(5) * ((tot_exp-DATAin%otherpriors(5))/DATAin%otherpriorunc(5))**2
+        scale_likelihood = scale_likelihood-tot_exp
     endif
 
     ! the likelihood scores for each observation are subject to multiplication

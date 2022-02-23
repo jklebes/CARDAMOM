@@ -548,7 +548,7 @@ module model_likelihood_module
 
     ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
     ! the empirical phenology but mechanistic hydrology / photosynthesis
-    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_LAI) > 20d0 ) then
+    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_LAI) > 10d0 ) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
     end if
 
@@ -968,8 +968,8 @@ module model_likelihood_module
     return
 
   end function likelihood_p
-  !
   !------------------------------------------------------------------
+  !
   !
   double precision function likelihood(npars,pars)
     use cardamom_structures, only: DATAin
