@@ -14,18 +14,12 @@ ensemble_within_range<-function(target,proposal) {
 ## Function to run CARDAMOM parameters via the chosen model
 ###
 
-run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
+run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
 
-  if (stage == 5) {
-      stage5name = as.vector(unlist(stage5modifiers))
-      stage5name = paste(stage5name[1],stage5name[2],stage5name[3],stage5name[4],stage5name[5],stage5name[6],stage5name[7],stage5name[8],sep="_")
-      outfile = paste(PROJECT$results_processedpath,PROJECT$sites[n],"_",stage5name,".RData",sep="")
-      outfile1 = paste(PROJECT$results_processedpath,PROJECT$sites[n],"_",stage5name,"_parameters.RData",sep="")
-  } else {
-      outfile = paste(PROJECT$results_processedpath,PROJECT$sites[n],".RData",sep="")
-      outfile1 = paste(PROJECT$results_processedpath,PROJECT$sites[n],"_parameters.RData",sep="")
-      outfile2 = paste(PROJECT$results_processedpath,PROJECT$sites[n],"_stock_fluxes.RData",sep="")
-  }
+  # Define the output file names
+  outfile = paste(PROJECT$results_processedpath,PROJECT$sites[n],".RData",sep="")
+  outfile1 = paste(PROJECT$results_processedpath,PROJECT$sites[n],"_parameters.RData",sep="")
+  outfile2 = paste(PROJECT$results_processedpath,PROJECT$sites[n],"_stock_fluxes.RData",sep="")
 
   if (file.exists(outfile1) == FALSE | repair == 1) {
       # load only the desired latter fraction of the parameter vectors
@@ -111,27 +105,6 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override,stage5modifiers) {
 
           # load the met data for each site
           drivers = read_binary_file_format(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep=""))
-
-          # if Stage 5 sensitivity analysis is enacted - apply factor scaled adjustment to the drivers
-          if (stage == 5) {
-
-              # do weather drivers first
-              drivers$met[,2]  = drivers$met[,2]  * stage5modifiers$airt_factor # min temperature
-              drivers$met[,3]  = drivers$met[,3]  * stage5modifiers$airt_factor # max temperature
-              drivers$met[,4]  = drivers$met[,4]  * stage5modifiers$swrad_factor
-              drivers$met[,5]  = drivers$met[,5]  * stage5modifiers$co2_factor
-              drivers$met[,7]  = drivers$met[,7]  * stage5modifiers$rainfall_factor
-              drivers$met[,15] = drivers$met[,15] * stage5modifiers$wind_spd_factor
-              drivers$met[,16] = drivers$met[,16] * stage5modifiers$vpd_factor
-              # do disturbance drivers next
-              disturbed_locations = which(drivers$met[,8] > 0)
-              drivers$met[disturbed_locations,8] = drivers$met[disturbed_locations,8] * stage5modifiers$deforestation_factor
-              disturbed_locations = which(drivers$met[,9] > 0)
-              drivers$met[disturbed_locations,9] = drivers$met[disturbed_locations,9] * stage5modifiers$burnt_area_factor
-              # do GSI related parameters next
-              drivers$met[,10] = drivers$met[,10] * stage5modifiers$airt_factor # 21 day rolling average daily minimum temperature
-
-          }
 
           # run parameters for full results / propogation
           soil_info = c(drivers$top_sand,drivers$bot_sand,drivers$top_clay,drivers$bot_clay)
@@ -713,11 +686,6 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
       nos_plots = nos_plots[keep_list]
   }
 
-  # Combine driver modifiers into a list to be passed to the run_each_site()
-  stage5modifiers=list(airt_factor = airt_factor, swrad_factor = swrad_factor, co2_factor = co2_factor,
-                       rainfall_factor = rainfall_factor, wind_spd_factor = wind_spd_factor, vpd_factor = vpd_factor,
-                       deforestation_factor = deforestation_factor, burnt_area_factor = burnt_area_factor)
-
   # now request the creation of the plots
   if (use_parallel & length(nos_plots) > 1) {
       print("...beginning parallel operations")
@@ -726,13 +694,13 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
       # load R libraries in cluster
       clusterExport(cl,"load_r_libraries") ; clusterEvalQ(cl, load_r_libraries())
       dummy=parLapply(cl,nos_plots,fun=run_each_site,PROJECT=PROJECT,stage=stage,
-                      repair=repair,grid_override=grid_override,stage5modifiers=stage5modifiers)
+                      repair=repair,grid_override=grid_override)
       stopCluster(cl)
   } else {
       print("...beginning serial operations")
       # or use serial
       dummy=lapply(nos_plots,FUN=run_each_site,PROJECT=PROJECT,stage=stage,
-                   repair=repair,grid_override=grid_override,stage5modifiers=stage5modifiers)
+                   repair=repair,grid_override=grid_override)
   } # parallel option
 
   # now if this is a gridded run we want to take out individual site specific summary files and combine them into a single file

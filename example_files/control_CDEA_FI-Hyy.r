@@ -4,7 +4,8 @@
 ###
 
 # Set working directory in which the CARDAMOM code base can be found
-setwd("<Path to where CARDAMOM has been placed>")
+#setwd("<Path to where CARDAMOM has been placed>")
+setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 
 ###
 ## Options
@@ -45,10 +46,10 @@ method="MHMCMC"
 # which land cover map to use. Used to determine the land / sea mask
 use_lcm="ECMWF" # coded choices exist for other maps however only "ECMWF" map is provided with source code
 pft_wanted=FALSE # Impacts crop model only
+path_to_landsea="default" # If gridded analysis, any raster layer with >0 values will be taken as the mask area. To ignore = "default"
 
 ## Data paths - assumes that R code has been updated to deal with various gridded datasets
 path_to_site_obs="./example_files/inputs/" # If not using gridded data then only the site obs path needs setting
-path_to_landsea = " " # If gridded analysis, any raster layer with non NaN values will be taken as mask area
 path_to_met_source=" "
 path_to_lai=" "
 path_to_crop_management=" " # crop model only
@@ -69,11 +70,11 @@ path_to_lca = " " # leaf carbon per unit area (gC/m2)
 met_interp=TRUE # apply linear interpolation to met drivers if the provided datasets are not correct
 
 ## Data streams - The currently coded data streams which can be used to drive or constrain the models
-met_source="site_specific" # "trendy_v9" or other options coded into the R wrapper
-lai_source="site_specific" # "COPERNICUS" or "site_specific"
-Csom_source="site_specific" # "SoilGrids" or "site_specific"
+met_source="site_specific" # "trendy_v9" or "ERA" or "isimip3a" or "site_specific"
+lai_source="site_specific" # "COPERNICUS" or "MODIS" or "site_specific"
+Csom_source="site_specific" # "SoilGrids" or "HWSD" or "site_specific"
 soilwater_initial_source = " " # initial soil water fraction (m3/m3)
-sand_clay_source="site_specific" # "SoilGrids" or "site_specific
+sand_clay_source="site_specific" # "SoilGrids" or "HWSD" or "site_specific
 Evap_source=" "        # " " or "site_specific"
 Cwood_inc_source = " " # "site_specific" or " " or "Rainfor"
 Cwood_mortality_source = " " # "site_specific" or " " or "Rainfor"
@@ -81,7 +82,7 @@ fire_source=" " # " " or "site_specific" or "Global_Combined"
 GPP_source=" " 	# " " or "site_specific" or "Global_Combined"
 Reco_source=" " 	# " " or "site_specific"
 NEE_source="site_specific" # "site_specific" 	# " " or "site_specific"
-nbe_source = " "
+nbe_source = " " # " ", "site_specific", "Global_Combined"
 # i.e. single value valid for beginning of simulation
 Cfol_initial_source=" " #"site_specific" 	# " " or "site_specific"
 Cwood_initial_source=" " #"site_specific" 	# " " or "site_specific"
@@ -101,8 +102,8 @@ lca_source = " " # "Butler" or " " or "site_specific"
 # Steady state attractor
 Cwood_potential_source = " " # "site_specific" or ""
 # Management drivers
-burnt_area_source=" "
-deforestation_source=" " # " ", "site_specific" or "maryland_forestry_commission"
+burnt_area_source=" " # " " or "MCD64A1" or "GFED4" or "site_specific"
+deforestation_source=" " # " ", "site_specific" or "GFW"
 crop_management_source=" " # "_" or "site_specific" or "sacks_crop_calendar"
 snow_source=" "
 
@@ -121,19 +122,9 @@ sites_cardamom=c("FI-Hyy")
 sites_cardamom_lat=61.84741
 sites_cardamom_long=24.29477
 timestep_type="monthly"
-
-## Stage 5: Driver modifications
-# Define a proportional change to weather drivers.
-airt_factor  = 1  # NOTE: this is also impact air temperature used in GSI model
-swrad_factor = 1
-co2_factor   = 1
-rainfall_factor = 1
-wind_spd_factor = 1
-vpd_factor      = 1
-# Define a proportional change on disturbance drivers.
-# NOTE: at this point the only the intensity is impacted rather than frequency of events
-deforestation_factor = 1
-burnt_area_factor    = 1
+select_country = FALSE # If gridded run and path_to_landsea = "default", 
+                       # select country based on site_cardamom. Use function
+                       # available_countries() for compatible country names.
 
 ## Define the project setup
 # NOTE: if these are not set CARDAMOM will ask you for them
@@ -151,9 +142,9 @@ request_use_EDCs = TRUE        # Use EDCs
 # stage  1 : Create met / obs containing files for the specifc project
 # stage  2 : Submit the project to eddie
 # stage  3 : Copy back results and process vectors
-# stage  4 ; Do some standard result checking
+# stage  4 ; Do some standard figure creation (and further processing for gridded analysis)
 # stage  5 ; Currently out of use
-stage=-1
+stage=2
 repair=1 # to force (=1) re-run processed results or driver files if they already exist
 grid_override=FALSE # force site specific files to be saved and figures to be generated when in "grid" operation
 
