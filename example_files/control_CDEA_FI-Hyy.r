@@ -4,8 +4,7 @@
 ###
 
 # Set working directory in which the CARDAMOM code base can be found
-#setwd("<Path to where CARDAMOM has been placed>")
-setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
+setwd("<Path to where CARDAMOM has been placed>")
 
 ###
 ## Options
@@ -144,7 +143,7 @@ request_use_EDCs = TRUE        # Use EDCs
 # stage  3 : Copy back results and process vectors
 # stage  4 ; Do some standard figure creation (and further processing for gridded analysis)
 # stage  5 ; Currently out of use
-stage=2
+stage=-1
 repair=1 # to force (=1) re-run processed results or driver files if they already exist
 grid_override=FALSE # force site specific files to be saved and figures to be generated when in "grid" operation
 
