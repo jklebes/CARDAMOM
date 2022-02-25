@@ -461,39 +461,10 @@ cardamom <-function (projname,model,method,stage) {
   ###
   ## Begin Stage 5
 
-  # This stage was created as a demonstration for Forests2020,
-  # should probably be removed and replaced with code for converting RData outputs into netCDF which can be more easily shared.
+  # Currently empty
   if (stage == 5) {
 
-      print("Stage 5 will re-process PROJECT but allowing modifications to exisiting drivers based on control*.r desires.")
-      # Stage 5 will overwrite existing outputs, repair needs to be set to once to achieve this
-      repair_remember = repair ; repair = 1
-      # do we run the parameters yet for analysis
-      run_all = readline("Do you want to run the currently selected scenario (y) or just generate figures (n)?")
-      failed = TRUE
-      while(failed) {
-         if (run_all != "y" & run_all != "n") {
-             # non-viable answer supplied, ask again
-             run_all = readline("Do you want to run the currently selected scenario (y) or just generate figures (n)?")
-             failed = TRUE
-         } else {
-            # viable answer supplied
-            failed = FALSE
-         }
-      } # while (failed)
-      if (run_all == "y") {
-          PROJECT$latter_sample_frac = 0.75 #0.5 # 0.75
-          run_mcmc_results(PROJECT,stage,repair,grid_override)
-      }
-      # ...but just in case we remember and set the rapair value back to its original user defined value
-      repair = repair_remember
-
-      # conduct simple comparison between median values between estimates
-      print("Beginning generation of standard comparison graphs...")
-      scenario_comparison(PROJECT)
-
-      # now save the project
-      save(PROJECT,file=PROJECTfile)
+      print("Stage 5 current uncoded and open for new uses")
 
       # report to the user
       return(paste("CARDAMOM Report: ",stage," completed", sep=""))
