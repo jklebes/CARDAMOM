@@ -355,7 +355,12 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     # Combine with an estimate of model structural error.
     # Assumed uncertainty structure as agreed with Anthony Bloom
     # NOTE minimum uncertainty bound irrespective of the dataset estimates, based on median difference between GFED and GFAS
-    Fire_unc[Fire_unc >= 0] = pmax(0.01,sqrt(Fire_unc[Fire_unc >= 0]**2 + (0.1*mean(Fire[Fire >= 0]))**2))
+    Fire_unc[Fire_unc >= 0] = pmax(0.1,sqrt(Fire_unc[Fire_unc >= 0]**2 + (0.1*mean(Fire[Fire >= 0]))**2))
+    # Fire emissions are dominated by zero (or effectively zero) values. This bias' the APMCMC (or MHMCMC)
+    # away from fitting the more important emission values in favour of the more common zero (or near zero values.)
+    # To address this we remove fire emission observations less than 0.01 gC/m2/day
+    print("Fire observations < 0.01 gC/m2/day have been removed to prevent bias to MDF calibration")
+    Fire_unc[Fire < 0.01] = -9999 ; Fire[Fire < 0.01] = -9999
 
     ###
     ## Get some Evapotranspiration information (time series; kgH2O/m2/day)

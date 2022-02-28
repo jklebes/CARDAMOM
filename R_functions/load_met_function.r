@@ -6,7 +6,7 @@
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
 load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamom_ext,
-                             path_to_met_source,met_source,wheat) {
+                              path_to_met_source,met_source,wheat) {
 
     # Create target grid for aggregation if needed
     if (spatial_type == "grid") {
@@ -31,7 +31,7 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
              # read the met drivers
              var_in = ncvar_get(data1, infile_varid[1])
              # keep count of time steps
-             t_grid = t_grid + dim(var1_in)[3]
+             t_grid = t_grid + dim(var_in)[3]
              # read in the location information
              lat = ncvar_get(data1, "Latitude") ; long = ncvar_get(data1, "Longitude")
 #             # convert input data long to conform to what we need
@@ -69,7 +69,7 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
                   } # spatial_type == "grid"
 
                   # break out from the rasters so can manipulate
-                  var1_out = append(var1_out, rep(as.vector(unlist(var1))[wheat], times = days_per_month[t]))
+                  var1_out = append(var1_out, as.vector(unlist(var1))[wheat])
              } # step within month loop
 
         }  # month loop

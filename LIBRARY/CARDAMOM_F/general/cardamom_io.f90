@@ -75,7 +75,7 @@ module cardamom_io
     else if (DATAin%ID == 2) then
         ! ID = 2 - DALEC_GSI_BUCKET
         DATAin%nopools = 8
-        DATAin%nopars = 40
+        DATAin%nopars = 46
         DATAin%nofluxes = 25
         if (DATAin%PFT == 1) then
            ! then actually this is a crop pixel

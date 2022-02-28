@@ -109,7 +109,7 @@ load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_agb_nbe_gpp/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/NoRainfor_woody_productivity_mortality/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Rainfor_woody_productivity_mortality/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Mexico_1deg_C7_agb_lca_gpp_fire_nbe/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Mexico_1deg_C7_agb_lca_gpp_fire_nbe/infofile.RData")
 
 # Load the CARDAMOM files
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
@@ -119,7 +119,7 @@ load(paste(PROJECT$results_processedpath,PROJECT$name,"_parameter_maps.RData",se
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_reccap2_permafrost_1deg_C7_isimip/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/figures_africa/"
 out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
-#out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/mexico/gridded_figures/"
+out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/mexico/gridded_figures/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/cssp_brazil_2/figures_productivity_without_vs_with/"
 
 # Specify the position within the stored ensemble for the median estimate and the desired uncertainty bands

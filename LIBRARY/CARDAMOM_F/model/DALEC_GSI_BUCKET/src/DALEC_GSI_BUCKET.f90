@@ -139,13 +139,20 @@ module CARBON_MODEL_MOD
            ,harvest_loss_foliar           &
            ,harvest_loss_roots            &
            ,harvest_loss_wood             &
-           ,fire_loss_labile              &
-           ,fire_loss_foliar              &
-           ,fire_loss_roots               &
-           ,fire_loss_wood                &
-           ,fire_loss_litter              &
-           ,fire_loss_litwood             &
-           ,fire_loss_som                 &
+           ,fire_litter_labile              &
+           ,fire_litter_foliar              &
+           ,fire_litter_roots               &
+           ,fire_litter_wood                &
+           ,fire_litter_litter              &
+           ,fire_litter_litwood             &
+           ,fire_litter_som                 &
+           ,fire_emiss_labile              &
+           ,fire_emiss_foliar              &
+           ,fire_emiss_roots               &
+           ,fire_emiss_wood                &
+           ,fire_emiss_litter              &
+           ,fire_emiss_litwood             &
+           ,fire_emiss_som                 &
            ,fire_residue_to_litter        &
            ,fire_residue_to_litwood       &
            ,fire_residue_to_som           &
@@ -327,13 +334,20 @@ module CARBON_MODEL_MOD
                                             harvest_loss_foliar, &
                                              harvest_loss_roots, &
                                               harvest_loss_wood, &
-                                               fire_loss_labile, &
-                                               fire_loss_foliar, &
-                                                fire_loss_roots, &
-                                                 fire_loss_wood, &
-                                               fire_loss_litter, &
-                                              fire_loss_litwood, &
-                                                  fire_loss_som, &
+                                             fire_litter_labile, &
+                                             fire_litter_foliar, &
+                                              fire_litter_roots, &
+                                               fire_litter_wood, &
+                                             fire_litter_litter, &
+                                            fire_litter_litwood, &
+                                                fire_litter_som, &
+                                              fire_emiss_labile, &
+                                              fire_emiss_foliar, &
+                                               fire_emiss_roots, &
+                                                fire_emiss_wood, &
+                                              fire_emiss_litter, &
+                                             fire_emiss_litwood, &
+                                                 fire_emiss_som, &
                                          fire_residue_to_litter, &
                                         fire_residue_to_litwood, &
                                             fire_residue_to_som, &
@@ -485,6 +499,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !
     ! This version was coded by T. Luke Smallman (t.l.smallman@ed.ac.uk)
     ! Version 1: 15/11/2018
+    ! Version 2: 25/02/2022 - Addition of the parameterisable combustion completeness and resiliance fire model
 
     implicit none
 
@@ -793,6 +808,24 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     end if ! disturbance ?
 
+    ! JFE added 4 May 2018 - define fire constants
+    ! Update fire parameters derived from
+    ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
+    ! Subsequently expanded by T. L. Smallman & Mat Williams (UoE, 03/09/2021)
+    ! to provide specific CC for litter and wood litter.
+    ! NOTE: changes also result in the addition of further EDCs
+
+    ! Assign proposed resilience factor
+    rfac(1:4) = pars(41)
+    rfac(5) = 0.1d0 ; rfac(6) = 0d0 ; rfac(7) = 0.1d0
+    ! Assign combustion completeness to foliage
+    combust_eff(2) = pars(42) ! foliage
+    ! Assign combustion completeness to non-photosynthetic
+    combust_eff(1) = pars(43) ; combust_eff(3) = pars(43) ; combust_eff(4) = pars(43)
+    combust_eff(6) = pars(44) ! soil
+    ! derived values for litter and wood litter
+    combust_eff(5) = pars(45) ; combust_eff(7) = pars(46)
+
     ! assigning initial conditions for the current iteration
     POOLS(1,1) = pars(18)
     POOLS(1,2) = pars(19)
@@ -810,9 +843,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                  harvest_loss_som(nodays),harvest_loss_litwood(nodays),                    &
                  harvest_loss_labile(nodays),harvest_loss_foliar(nodays),                  &
                  harvest_loss_roots(nodays),harvest_loss_wood(nodays),                     &
-                 fire_loss_labile(nodays),fire_loss_foliar(nodays),fire_loss_roots(nodays),&
-                 fire_loss_wood(nodays),fire_loss_litter(nodays),fire_loss_litwood(nodays),&
-                 fire_loss_som(nodays),fire_residue_to_litter(nodays),                     &
+                 fire_emiss_labile(nodays),fire_emiss_foliar(nodays),fire_emiss_roots(nodays),&
+                 fire_emiss_wood(nodays),fire_emiss_litter(nodays),fire_emiss_litwood(nodays),&
+                 fire_emiss_som(nodays), &
+                 fire_litter_labile(nodays),fire_litter_foliar(nodays),fire_litter_roots(nodays),&
+                 fire_litter_wood(nodays),fire_litter_litter(nodays),fire_litter_litwood(nodays),&
+                 fire_litter_som(nodays),fire_residue_to_litter(nodays),                     &
                  fire_residue_to_litwood(nodays),fire_residue_to_som(nodays),              &
                  Cwood_labile_release_coef(nodays),Croot_labile_release_coef(nodays),      &
                  deltat_1(nodays),wSWP_time(nodays),rSWP_time(nodays),gs_demand_supply_ratio(nodays),        &
@@ -942,10 +978,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     harvest_loss_roots = 0d0        ; harvest_loss_wood = 0d0
     harvest_loss_litter = 0d0       ; harvest_loss_som = 0d0
     harvest_loss_litwood = 0d0
-    ! Reset fire loss
-    fire_loss_labile = 0d0 ; fire_loss_foliar = 0d0 ; fire_loss_roots = 0d0
-    fire_loss_wood = 0d0   ; fire_loss_litter = 0d0 ; fire_loss_litwood = 0d0
-    fire_loss_som = 0d0
+    ! Reset fire loss to litter
+    fire_litter_labile = 0d0 ; fire_litter_foliar = 0d0 ; fire_litter_roots = 0d0
+    fire_litter_wood = 0d0   ; fire_litter_litter = 0d0 ; fire_litter_litwood = 0d0
+    fire_litter_som = 0d0
+    ! Reset fire loss to combustion and emissions
+    fire_emiss_labile = 0d0 ; fire_emiss_foliar = 0d0 ; fire_emiss_roots = 0d0
+    fire_emiss_wood = 0d0   ; fire_emiss_litter = 0d0 ; fire_emiss_litwood = 0d0
+    fire_emiss_som = 0d0
     ! Reset fire residue
     fire_residue_to_litter = 0d0 ; fire_residue_to_litwood = 0d0 ; fire_residue_to_som = 0d0
 
@@ -1393,56 +1433,41 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
            if (burnt_area > 0d0) then
 
-               ! Calculate combusted flux and non-combusted turnover
-               ! Labile
-               CFF(1) = POOLS(n+1,1)*burnt_area*combust_eff(1)
-               NCFF(1) = POOLS(n+1,1)*burnt_area*(1d0-combust_eff(1))*(1d0-rfac(1))
-               ! Foliage
-               CFF(2) = POOLS(n+1,2)*burnt_area*combust_eff(2)
-               NCFF(2) = POOLS(n+1,2)*burnt_area*(1d0-combust_eff(2))*(1d0-rfac(2))
-               ! Fine root
-               CFF(3) = POOLS(n+1,3)*burnt_area*combust_eff(3)
-               NCFF(3) = POOLS(n+1,3)*burnt_area*(1d0-combust_eff(3))*(1d0-rfac(3))
-               ! Wood (above + below)
-               CFF(4) = POOLS(n+1,4)*burnt_area*combust_eff(4)
-               NCFF(4) = POOLS(n+1,4)*burnt_area*(1d0-combust_eff(4))*(1d0-rfac(4))
-               ! Litter (foliar + fine root)
-               CFF(5) = POOLS(n+1,5)*burnt_area*combust_eff(5)
-               NCFF(5) = POOLS(n+1,5)*burnt_area*(1d0-combust_eff(5))*(1d0-rfac(5))
-               ! Soil - can't have a NCFF for soil as there is no where for it to go
-               CFF(6) = POOLS(n+1,6)*burnt_area*combust_eff(6)
-               !NCFF(6) = POOLS(n+1,6)*burnt_area*(1d0-combust_eff(6))*(1d0-rfac(6))
-               ! Wood litter
-               CFF(7) = POOLS(n+1,7)*burnt_area*combust_eff(7)
-               NCFF(7) = POOLS(n+1,7)*burnt_area*(1d0-combust_eff(7))*(1d0-rfac(7))
+               ! first calculate combustion / emissions fluxes in g C m-2 d-1
+               fire_emiss_labile(n) = POOLS(n+1,1)*burnt_area*combust_eff(1)*deltat_1(n) ! labile
+               fire_emiss_foliar(n) = POOLS(n+1,2)*burnt_area*combust_eff(2)*deltat_1(n) ! foliar
+               fire_emiss_roots(n) = POOLS(n+1,3)*burnt_area*combust_eff(3)*deltat_1(n) ! roots
+               fire_emiss_wood(n) = POOLS(n+1,4)*burnt_area*combust_eff(4)*deltat_1(n) ! wood
+               fire_emiss_litter(n) = POOLS(n+1,5)*burnt_area*combust_eff(5)*deltat_1(n) ! litter
+               fire_emiss_som(n) = POOLS(n+1,6)*burnt_area*combust_eff(6)*deltat_1(n) ! som
+               fire_emiss_litwood(n) = POOLS(n+1,7)*burnt_area*combust_eff(7)*deltat_1(n) ! litterwood
+
+               ! second calculate litter transfer fluxes in g C m-2 d-1, all pools except som
+               fire_litter_labile(n) = POOLS(n+1,1)*burnt_area*(1d0-combust_eff(1))*(1d0-rfac(1))*deltat_1(n) ! labile into litter
+               fire_litter_foliar(n) = POOLS(n+1,2)*burnt_area*(1d0-combust_eff(2))*(1d0-rfac(2))*deltat_1(n) ! foliar into litter
+               fire_litter_roots(n) = POOLS(n+1,3)*burnt_area*(1d0-combust_eff(3))*(1d0-rfac(3))*deltat_1(n) ! roots into litter
+               fire_litter_wood(n) = POOLS(n+1,4)*burnt_area*(1d0-combust_eff(4))*(1d0-rfac(4))*deltat_1(n) ! wood into litwood
+               fire_litter_litter(n) = POOLS(n+1,5)*burnt_area*(1d0-combust_eff(5))*(1d0-rfac(5))*deltat_1(n) ! litter into som
+               !fire_litter_som(n) = ! no litter generation from the som pool
+               fire_litter_litwood(n) = POOLS(n+1,7)*burnt_area*(1d0-combust_eff(7))*(1d0-rfac(7))*deltat_1(n) ! wood litter into som
+
                ! Fire flux (gC/m2/day)
-               FLUXES(n,17)=(CFF(1)+CFF(2)+CFF(3)+CFF(4)+CFF(5)+CFF(6)+CFF(7)) * deltat_1(n)
+               FLUXES(n,17) = fire_emiss_labile(n) + fire_emiss_foliar(n) + fire_emiss_roots(n) &
+                            + fire_emiss_wood(n) + fire_emiss_litter(n) + fire_emiss_litwood(n) + fire_emiss_som(n)
 
-               ! Determine the daily rate impact on live tissues for use in EDC and
-               ! MTT calculations
-               fire_loss_labile(n) = (CFF(1) + NCFF(1)) * deltat_1(n) ! labile
-               fire_loss_foliar(n) = (CFF(2) + NCFF(2)) * deltat_1(n) ! foliar
-               fire_loss_roots(n)  = (CFF(3) + NCFF(3)) * deltat_1(n) ! root
-               fire_loss_wood(n)   = (CFF(4) + NCFF(4)) * deltat_1(n) ! wood
-
-               ! Determine the daily rate impact on dead organic matter for use in EDCs and MTT calculation
-               ! Losses
-               fire_loss_litter(n)  = (CFF(5) + NCFF(5)) * deltat_1(n)
-               fire_loss_som(n)     =  CFF(6) * deltat_1(n)
-               fire_loss_litwood(n) = (CFF(7) + NCFF(7)) * deltat_1(n)
                ! Residue redistribution
-               fire_residue_to_litter(n) = (NCFF(1)+NCFF(2)+NCFF(3)) * deltat_1(n)
-               fire_residue_to_som(n)    = (NCFF(4)+NCFF(5)+NCFF(7)) * deltat_1(n)
-               fire_residue_to_litwood(n)=  NCFF(4) * deltat_1(n)
+               fire_residue_to_litter(n) = fire_litter_labile(n) + fire_litter_foliar(n) + fire_litter_roots(n)
+               fire_residue_to_som(n)    = fire_litter_litter(n) + fire_litter_litwood(n)
+               fire_residue_to_litwood(n)=  fire_litter_wood(n)
 
                ! Update pools
-               POOLS(n+1,1) = POOLS(n+1,1)-CFF(1)-NCFF(1)
-               POOLS(n+1,2) = POOLS(n+1,2)-CFF(2)-NCFF(2)
-               POOLS(n+1,3) = POOLS(n+1,3)-CFF(3)-NCFF(3)
-               POOLS(n+1,4) = POOLS(n+1,4)-CFF(4)-NCFF(4)
-               POOLS(n+1,5) = POOLS(n+1,5)-CFF(5)-NCFF(5)+NCFF(1)+NCFF(2)+NCFF(3)
-               POOLS(n+1,6) = POOLS(n+1,6)+NCFF(4)+NCFF(5)+NCFF(7)
-               POOLS(n+1,7) = POOLS(n+1,7)-CFF(7)-NCFF(7)
+               POOLS(n+1,1) = POOLS(n+1,1)-(fire_emiss_labile(n)+fire_litter_labile(n)) * deltat(n)
+               POOLS(n+1,2) = POOLS(n+1,2)-(fire_emiss_foliar(n)+fire_litter_foliar(n)) * deltat(n)
+               POOLS(n+1,3) = POOLS(n+1,3)-(fire_emiss_roots(n)+fire_litter_roots(n)) * deltat(n)
+               POOLS(n+1,4) = POOLS(n+1,4)-(fire_emiss_wood(n)+fire_litter_wood(n)) * deltat(n)
+               POOLS(n+1,5) = POOLS(n+1,5)+(fire_residue_to_litter(n)-fire_emiss_litter(n)-fire_litter_litter(n)) * deltat(n)
+               POOLS(n+1,6) = POOLS(n+1,6)+(fire_residue_to_som(n)-fire_emiss_som(n)) * deltat(n)
+               POOLS(n+1,7) = POOLS(n+1,7)+(fire_residue_to_litwood(n)-fire_emiss_litwood(n)-fire_litter_litwood(n)) * deltat(n)
                ! mass balance check
                where (POOLS(n+1,1:7) < 0d0) POOLS(n+1,1:7) = 0d0
 

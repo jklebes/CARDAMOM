@@ -301,6 +301,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
       tmp=.Fortran( "rdalecgsibucket",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim)
                                      ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
+                                     ,fire_dim=as.integer(fire_dim)
                                      ,met=as.double(t(met)),pars=as.double(pars_in)
                                      ,out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
                                      ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
@@ -308,6 +309,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                                      ,out_var4=as.double(array(0,dim=c(nos_iter,SS_dim)))
                                      ,out_var5=as.double(array(0,dim=c(nos_iter,MTT_dim,noyears)))
                                      ,out_var6=as.double(array(0,dim=c(nos_iter,MTT_dim)))
+                                     ,out_var7=as.double(array(0,dim=c(nos_iter,fire_dim,noyears)))
+                                     ,out_var8=as.double(array(0,dim=c(nos_iter,fire_dim,noyears)))
+                                     ,out_var9=as.double(array(0,dim=c(nos_iter,fire_dim,noyears)))
                                      ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site])
                                      ,nomet=as.integer(dim(met)[2]),nofluxes=as.integer(PROJECT$model$nofluxes[site])
                                      ,nopools=as.integer(PROJECT$model$nopools[site]),pft=as.integer(pft)
@@ -323,6 +327,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       SS_gCm2 = tmp$out_var4 ; SS_gCm2 = array(SS_gCm2, dim=c(nos_iter,SS_dim))
       aMTT = tmp$out_var5    ; aMTT = array(aMTT, dim=c(nos_iter,MTT_dim,noyears))
       MTTnat = tmp$out_var6  ; MTTnat = array(MTTnat, dim=c(nos_iter,MTT_dim))
+      FIREemiss = tmp$out_var7; FIREemiss = array(FIREemiss, dim=c(nos_iter,fire_dim,noyears))
+      FIRElit = tmp$out_var8  ; FIRElit = array(FIRElit, dim=c(nos_iter,fire_dim,noyears))
+      outflux_nat = tmp$out_var9  ; outflux_nat = array(outflux_nat, dim=c(nos_iter,fire_dim,noyears))
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
       # create output object
@@ -340,7 +347,10 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       gs_demand_supply = output[,,24], gs_total_canopy = output[,,25],
                       APAR_MJm2day = output[,,26], gb_total_canopy = output[,,27],
                       CiCa = output[,,28],
-                      aNPP = aNPP, MTT = MTT, SS_gCm2 = SS_gCm2, aMTT = aMTT, natMTT = MTTnat)
+                      aNPP = aNPP, MTT = MTT, SS_gCm2 = SS_gCm2, aMTT = aMTT, natMTT = MTTnat,
+                      FIREemiss_gCm2yr = FIREemiss, FIRElit_gCm2yr = FIRElit,
+                      NAToutflux_gCm2yr = outflux_nat)
+
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALECN_GSI_BUCKET") {

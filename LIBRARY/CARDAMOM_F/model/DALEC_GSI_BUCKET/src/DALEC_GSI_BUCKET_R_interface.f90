@@ -1,11 +1,12 @@
 
 
-subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
+subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
+                          ,met,pars &
                           ,out_var,out_var2,out_var3,out_var4,out_var5 &
-                          ,out_var6,lat &
+                          ,out_var6,out_var7,out_var8,out_var9,lat &
                           ,nopars,nomet,nofluxes,nopools,pft,pft_specific &
-                          ,nodays,noyears,deltat,nos_iter,soil_frac_clay_in,soil_frac_sand_in &
-                          ,exepath,pathlength)
+                          ,nodays,noyears,deltat,nos_iter,soil_frac_clay_in &
+                          ,soil_frac_sand_in,exepath,pathlength)
 
   use CARBON_MODEL_MOD, only: CARBON_MODEL, itemp, ivpd, iphoto, wSWP_time, &
                               soil_frac_clay, soil_frac_sand, nos_soil_layers, &
@@ -14,11 +15,13 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
                               harvest_loss_litwood, harvest_loss_som,      &
                               harvest_loss_labile, harvest_loss_foliar,    &
                               harvest_loss_roots, harvest_loss_wood,       &
-                              fire_loss_labile, fire_loss_foliar, fire_loss_roots, &
-                              fire_loss_wood, fire_loss_litter, fire_loss_litwood, &
-                              fire_loss_som, fire_residue_to_litter, &
+                              fire_emiss_labile, fire_emiss_foliar, fire_emiss_roots, &
+                              fire_emiss_wood, fire_emiss_litter, fire_emiss_litwood, &
+                              fire_emiss_som, fire_litter_labile, fire_litter_foliar,   &
+                              fire_litter_roots, fire_litter_wood, fire_litter_litter,   &
+                              fire_litter_litwood, fire_litter_som, fire_residue_to_litter, &
                               fire_residue_to_litwood,fire_residue_to_som,       &
-                              gs_demand_supply_ratio, cica_time, &
+                              gs_demand_supply_ratio, cica_time, Rg_from_labile, &
                               gs_total_canopy, gb_total_canopy, canopy_par_MJday_time
   use CARBON_MODEL_CROP_MOD, only: CARBON_MODEL_CROP
 
@@ -67,6 +70,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
                         ,aNPP_dim       & ! NPP allocation fraction variable dimension
                         ,MTT_dim        &
                         ,SS_dim         &
+                        ,fire_dim &
                         ,pft            & ! plant functional type
                         ,pft_specific   & !
                         ,nos_iter       & !
@@ -91,6 +95,9 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
   double precision, intent(out), dimension(nos_iter,SS_dim) :: out_var4   ! Steady State (gC/m2)
   double precision, intent(out), dimension(nos_iter,MTT_dim,noyears) :: out_var5 ! Annual estimates of MRT (years)
   double precision, intent(out), dimension(nos_iter,MTT_dim) :: out_var6  ! Natural component of mean annual MRT (years)
+  double precision, intent(out), dimension(nos_iter,fire_dim,noyears) :: out_var7 ! Mean annual fire emissions per tissue
+  double precision, intent(out), dimension(nos_iter,fire_dim,noyears) :: out_var8 ! Mean annual fire litter production per tissue
+  double precision, intent(out), dimension(nos_iter,fire_dim,noyears) :: out_var9 ! Mean annual natural litter production per tissue
 
   ! local variables
   integer :: i, y, y_s, y_e, nos_years, steps_per_year
@@ -286,10 +293,10 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
          ! wood crop system residence time is due to managment < 1 year
          out_var3(i,3) = 1/365.25
          ! Lit+litwood
-         out_var3(i,4) = sum( ((FLUXES(1:nodays,13)+FLUXES(1:nodays,15)) &
+         out_var3(i,4) = sum( ((FLUXES(1:nodays,13) + FLUXES(1:nodays,15)) &
                               / POOLS(1:nodays,5)) * lit_filter) / dble(nodays-sum(lit_hak))
          ! Soil
-         out_var3(i,5) = sum( ((FLUXES(1:nodays,14)+fire_loss_som + harvest_loss_som) &
+         out_var3(i,5) = sum( ((FLUXES(1:nodays,14) + fire_emiss_som + fire_litter_som + harvest_loss_som) &
                               / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
 
          ! Assume constant residence times for crops at the moment
@@ -344,20 +351,21 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
 
          ! Estimate MRT (years)
          ! Foliage
-         out_var3(i,1) = sum( ((FLUXES(1:nodays,10)+fire_loss_foliar + harvest_loss_foliar) &
+         out_var3(i,1) = sum( ((FLUXES(1:nodays,10) + fire_emiss_foliar + fire_litter_foliar + harvest_loss_foliar) &
                               / POOLS(1:nodays,2)) * fol_filter) / dble(nodays-sum(fol_hak))
          ! Fine roots
-         out_var3(i,2) = sum( ((FLUXES(1:nodays,12)+fire_loss_roots + harvest_loss_roots) &
+         out_var3(i,2) = sum( ((FLUXES(1:nodays,12) + fire_emiss_roots + fire_litter_roots + harvest_loss_roots) &
                               / POOLS(1:nodays,3)) * root_filter) / dble(nodays-sum(root_hak))
          ! Wood
-         out_var3(i,3) = sum( ((FLUXES(1:nodays,11)+fire_loss_wood + harvest_loss_wood) &
+         out_var3(i,3) = sum( ((FLUXES(1:nodays,11) + fire_emiss_wood +fire_litter_wood + harvest_loss_wood) &
                               / POOLS(1:nodays,4)) * wood_filter) / dble(nodays-sum(wood_hak))
          ! Lit+litwood
          out_var3(i,4) = sum( ((FLUXES(1:nodays,13)+FLUXES(1:nodays,15)+FLUXES(1:nodays,20)+FLUXES(1:nodays,4) &
-                               +fire_loss_litter + harvest_loss_litter + fire_loss_litwood + harvest_loss_litwood) &
+                               +fire_emiss_litter + fire_litter_litter + harvest_loss_litter + fire_emiss_litwood &
+                               +fire_litter_litwood + harvest_loss_litwood) &
                               / (POOLS(1:nodays,5)+POOLS(1:nodays,7))) * lit_filter) / dble(nodays-sum(lit_hak))
          ! Soil
-         out_var3(i,5) = sum( ((FLUXES(1:nodays,14)+fire_loss_som + harvest_loss_som) &
+         out_var3(i,5) = sum( ((FLUXES(1:nodays,14)+fire_emiss_som + fire_litter_som + harvest_loss_som) &
                               / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
 
          ! Estimate natural MRT (years)
@@ -385,23 +393,73 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
             ! Estimate time steps covered by this year
             y_s = 1 + (steps_per_year * (y-1)) ; y_e = steps_per_year * y
             ! Foliage
-            out_var5(i,1,y) = sum( ((FLUXES(y_s:y_e,10) + fire_loss_foliar(y_s:y_e) + harvest_loss_foliar(y_s:y_e)) &
+            out_var5(i,1,y) = sum( ((FLUXES(y_s:y_e,10) + fire_emiss_foliar(y_s:y_e) + &
+                                     fire_litter_foliar(y_s:y_e) + harvest_loss_foliar(y_s:y_e)) &
                                    / POOLS(y_s:y_e,2)) * fol_filter(y_s:y_e)) / dble(steps_per_year-sum(fol_hak(y_s:y_e)))
             ! Fine roots
-            out_var5(i,2,y) = sum( ((FLUXES(y_s:y_e,12) + fire_loss_roots(y_s:y_e) + harvest_loss_roots(y_s:y_e)) &
+            out_var5(i,2,y) = sum( ((FLUXES(y_s:y_e,12) + fire_emiss_roots(y_s:y_e) + &
+                                     fire_litter_roots(y_s:y_e) + harvest_loss_roots(y_s:y_e)) &
                                    / POOLS(y_s:y_e,3)) * root_filter(y_s:y_e)) / dble(steps_per_year-sum(root_hak(y_s:y_e)))
             ! Wood
-            out_var5(i,3,y) = sum( ((FLUXES(y_s:y_e,11) + fire_loss_wood(y_s:y_e) + harvest_loss_wood(y_s:y_e)) &
+            out_var5(i,3,y) = sum( ((FLUXES(y_s:y_e,11) + fire_emiss_wood(y_s:y_e) + &
+                                     fire_litter_wood(y_s:y_e) + harvest_loss_wood(y_s:y_e)) &
                                    / POOLS(y_s:y_e,4)) * wood_filter(y_s:y_e)) / dble(steps_per_year-sum(wood_hak(y_s:y_e)))
             ! Litter (fol+fine root)
             out_var5(i,4,y) = sum( ((FLUXES(y_s:y_e,13)+FLUXES(y_s:y_e,15)+FLUXES(y_s:y_e,20)+FLUXES(y_s:y_e,4) &
-                                    +fire_loss_litter(y_s:y_e)+harvest_loss_litter(y_s:y_e) &
-                                    +fire_loss_litwood(y_s:y_e)+harvest_loss_litwood(y_s:y_e)) &
+                                    +fire_emiss_litter(y_s:y_e)+fire_litter_litter(y_s:y_e)+harvest_loss_litter(y_s:y_e) &
+                                    +fire_emiss_litwood(y_s:y_e)+fire_litter_litwood(y_s:y_e)+harvest_loss_litwood(y_s:y_e)) &
                                    / (POOLS(y_s:y_e,5)+POOLS(y_s:y_e,7))) * lit_filter(y_s:y_e)) &
                             / dble(steps_per_year-sum(lit_hak(y_s:y_e)))
             ! Soil
-            out_var5(i,5,y) = sum( ((FLUXES(y_s:y_e,14)+fire_loss_som(y_s:y_e)+harvest_loss_som(y_s:y_e)) &
+            out_var5(i,5,y) = sum( ((FLUXES(y_s:y_e,14)+fire_emiss_som(y_s:y_e)+ &
+                                     fire_litter_som(y_s:y_e)+harvest_loss_som(y_s:y_e)) &
                                     / POOLS(y_s:y_e,6)) * som_filter(y_s:y_e)) / dble(steps_per_year-sum(som_hak(y_s:y_e)))
+
+            ! Estimate annual tissue specific fire emissions
+
+            ! Labile
+            out_var7(i,1,y) = sum(fire_emiss_labile(y_s:y_e)*deltat(y_s:y_e))
+            ! Foliage
+            out_var7(i,2,y) = sum(fire_emiss_foliar(y_s:y_e)*deltat(y_s:y_e))
+            ! Fine roots
+            out_var7(i,3,y) = sum(fire_emiss_roots(y_s:y_e)*deltat(y_s:y_e))
+            ! Wood
+            out_var7(i,4,y) = sum(fire_emiss_wood(y_s:y_e)*deltat(y_s:y_e))
+            ! Litter (fol+fine root+wood)
+            out_var7(i,5,y) = sum((fire_emiss_litter(y_s:y_e)+fire_emiss_litwood(y_s:y_e))*deltat(y_s:y_e))
+            ! Soil
+            out_var7(i,6,y) = sum(fire_emiss_som(y_s:y_e)*deltat(y_s:y_e))
+
+            ! Estimate annual tissue specific fire litter generation
+
+            ! Labile
+            out_var8(i,1,y) = sum(fire_litter_labile(y_s:y_e)*deltat(y_s:y_e))
+            ! Foliage
+            out_var8(i,2,y) = sum(fire_litter_foliar(y_s:y_e)*deltat(y_s:y_e))
+            ! Fine roots
+            out_var8(i,3,y) = sum(fire_litter_roots(y_s:y_e)*deltat(y_s:y_e))
+            ! Wood
+            out_var8(i,4,y) = sum(fire_litter_wood(y_s:y_e)*deltat(y_s:y_e))
+            ! Litter (fol+fine root)
+            out_var8(i,5,y) = sum((fire_litter_litter(y_s:y_e)+fire_litter_litwood(y_s:y_e))*deltat(y_s:y_e))
+            ! Soil
+            out_var8(i,6,y) = 0d0
+
+            ! Estimate annual tissue specific natural outputs fluxes (foliage, fine root, wood, litter, som)
+
+            ! Labile
+            out_var9(i,1,y) = sum((FLUXES(y_s:y_e,8)+Rg_from_labile(y_s:y_e))*deltat(y_s:y_e))
+            ! Foliage
+            out_var9(i,2,y) = sum((FLUXES(y_s:y_e,10))*deltat(y_s:y_e))
+            ! Fine roots
+            out_var9(i,3,y) = sum((FLUXES(y_s:y_e,12))*deltat(y_s:y_e))
+            ! Wood
+            out_var9(i,4,y) = sum((FLUXES(y_s:y_e,11))*deltat(y_s:y_e))
+            ! Litter (fol+fine root+wood)
+            out_var9(i,5,y) = sum((FLUXES(y_s:y_e,13)+FLUXES(y_s:y_e,15)+FLUXES(y_s:y_e,4)+FLUXES(y_s:y_e,20))*deltat(y_s:y_e))
+            ! Soil
+            out_var9(i,6,y) = sum((FLUXES(y_s:y_e,14))*deltat(y_s:y_e))
+
          end do
 
          !
