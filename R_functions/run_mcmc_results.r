@@ -10,6 +10,24 @@ ensemble_within_range<-function(target,proposal) {
 
 } # ensemble_within_range
 
+rollapply_mean_annual_max<-function(var_in, step) {
+
+   # Determine the mean of a maximums extracted from a rolling descrete windows
+   # function specific command turned into a function to allow
+   # for use within apply()
+   return(mean(rollapply(var_in, by = step, width = step, FUN=max), na.rm=TRUE))
+
+} # rollapply_mean_annual_max
+
+rollapply_mean_annual<-function(var_in, step) {
+
+   # Determine the mean of a maximums extracted from a rolling descrete windows
+   # function specific command turned into a function to allow
+   # for use within apply()
+   return(rollapply(var_in, by = step, width = step, FUN=mean))
+
+} # rollapply_mean_annual
+
 ###
 ## Function to run CARDAMOM parameters via the chosen model
 ###
@@ -17,11 +35,11 @@ ensemble_within_range<-function(target,proposal) {
 run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
 
   # Define the output file names
-  outfile = paste(PROJECT$results_processedpath,PROJECT$sites[n],".RData",sep="")
-  outfile1 = paste(PROJECT$results_processedpath,PROJECT$sites[n],"_parameters.RData",sep="")
-  outfile2 = paste(PROJECT$results_processedpath,PROJECT$sites[n],"_stock_fluxes.RData",sep="")
+  outfile_site         = paste(PROJECT$results_processedpath,PROJECT$sites[n],".RData",sep="")
+  outfile_parameters   = paste(PROJECT$results_processedpath,PROJECT$sites[n],"_parameters.RData",sep="")
+  outfile_stock_fluxes = paste(PROJECT$results_processedpath,PROJECT$sites[n],"_stock_fluxes.RData",sep="")
 
-  if (file.exists(outfile1) == FALSE | repair == 1) {
+  if (file.exists(outfile_parameters) == FALSE | repair == 1) {
       # load only the desired latter fraction of the parameter vectors
       # output is order dimensions(npar+1,iter,chain)
       parameters = read_parameter_chains(PROJECT,n)
@@ -115,6 +133,41 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
 
           # Avoid running with ACM basically where not all fluxes exist
           if (grepl("DALEC",PROJECT$model$name)) {
+
+              ###
+              # Derive stocks and fluxes used in the calculation of gridded aggregates
+              # These are variables which for a site analysis would be easy to calcuate
+              # from the ensembles but difficult if not determined here and now before aggregation
+              ###
+
+              # Calculate the combined ecosystem heterotrophic respiration.
+              # All models have a som pool, so start with that
+              states_all$rhet_gCm2day = states_all$rhet_som_gCm2day
+              # If the model has a litter pool (foliar + fine root) add this
+              if (exists(x = "rhet_litter_gCm2", where = states_all)) {
+                  states_all$rhet_gCm2day = states_all$rhet_gCm2day + states_all$rhet_litter_gCm2day
+              }
+              # If the model has a wood litter pool add this
+              if (exists(x = "rhet_litter_gCm2", where = states_all)) {
+                  states_all$rhet_gCm2day = states_all$rhet_gCm2day + states_all$rhet_woodlitter_gCm2day
+              }
+
+              # Combine to make ecosystem rspiration
+              states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
+              # Combine to make net ecosystem exchange
+              states_all$nee_gCm2day = states_all$reco_gCm2day - states_all$gpp_gCm2day
+              # Calculate net primary productivity
+              states_all$npp_gCm2day = states_all$gpp_gCm2day - states_all$rauto_gCm2day
+              # Begin calculation of net biome exchange and net biome productivity
+              states_all$nbe_gCm2day = states_all$nee_gCm2day
+              states_all$nbp_gCm2day = -states_all$nee_gCm2day
+              # If the relevant variables exist then calculate correct values
+              if (exists(x = "fire_gCm2day", where = states_all)) {
+                  states_all$nbe_gCm2day = states_all$nee_gCm2day + states_all$fire_gCm2day
+              }
+              if (exists(x = "fire_gCm2day", where = states_all)) {
+                  states_all$nbp_gCm2day = -states_all$nbe_gCm2day - states_all$harvest_gCm2day
+              }
 
               ###
               ## Post-hoc calculation of parameter correlations with key C-cycle variables
@@ -272,25 +325,25 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
               obs_id = 31 ; unc_id = obs_id+1
               if (length(which(drivers$obs[,obs_id] != -9999)) > 0 & length(which(drivers$obs[,unc_id] != -9999)) > 0) {
                   # Loop through time to assess model overlap with observations
-                  nobs = 0 ; states_all$evap_assim_data_overlap_fraction = 0
+                  nobs = 0 ; states_all$et_assim_data_overlap_fraction = 0
                   for (t in seq(1, length(drivers$met[,1]))) {
                        if (drivers$obs[t,obs_id] != -9999) {
                            # Estimate the min / max values for the observations
                            obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
                            obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
                            # Create list object containing each observations distributions
-                           hist_list = list(o = c(obs_min,obs_max), m = states_all$evap_kgH2Om2day[,t])
+                           hist_list = list(o = c(obs_min,obs_max), m = states_all$ET_kgH2Om2day[,t])
                            # Estimate average model ensemble within observated range
                            tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
-                           states_all$evap_assim_data_overlap_fraction = states_all$evap_assim_data_overlap_fraction + tmp2
+                           states_all$et_assim_data_overlap_fraction = states_all$et_assim_data_overlap_fraction + tmp2
                            nobs = nobs + 1
                        }  # != -9999
                    } # time loop
                    # Average the overlap
                    if (nobs > 0) {
-                       states_all$evap_assim_data_overlap_fraction = states_all$evap_assim_data_overlap_fraction / nobs
+                       states_all$et_assim_data_overlap_fraction = states_all$et_assim_data_overlap_fraction / nobs
                    } else {
-                       states_all$evap_assim_data_overlap_fraction = 0
+                       states_all$et_assim_data_overlap_fraction = 0
                    }
               } # was the obs assimilated?
 
@@ -350,275 +403,869 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
 
           # pass to local variable for saving
           site_ctessel_pft = PROJECT$ctessel_pft[n]
-          aNPP = states_all$aNPP
-          natMTT = states_all$natMTT ; MTT = states_all$MTT ; aMTT = states_all$aMTT
-          SS_gCm2 = states_all$SS_gCm2
+          NPP_fraction = list(NPP_foliage_fraction = states_all$NPP_foliage_fraction)
+          if (exists(x = "NPP_roots_fraction", where = states_all)) {NPP_fraction$NPP_roots_fraction = states_all$NPP_roots_fraction}
+          if (exists(x = "NPP_wood_fraction", where = states_all)) {NPP_fraction$NPP_wood_fraction = states_all$NPP_wood_fraction}
+          MTT_years = list(MTT_foliage_years = states_all$MTT_foliage_years)
+          if (exists(x = "MTT_labile_years", where = states_all)) {MTT_years$MTT_labile_years = states_all$MTT_labile_years}
+          if (exists(x = "MTT_roots_years", where = states_all)) {MTT_years$MTT_roots_years = states_all$MTT_roots_years}
+          if (exists(x = "MTT_wood_years", where = states_all)) {MTT_years$MTT_wood_years = states_all$MTT_wood_years}
+          if (exists(x = "MTT_litter_years", where = states_all)) {MTT_years$MTT_litter_years = states_all$MTT_litter_years}
+          if (exists(x = "MTT_woodlitter_years", where = states_all)) {MTT_years$MTT_woodlitter_years = states_all$MTT_woodlitter_years}
+          if (exists(x = "MTT_som_years", where = states_all)) {MTT_years$MTT_som_years = states_all$MTT_som_years}
+          SS_gCm2 = list(SS_foliage_gCm2 = states_all$SS_foliage_gCm2)
+          if (exists(x = "SS_labile_gCm2", where = states_all)) {SS_gCm2$SS_labile_gCm2 = states_all$SS_labile_gCm2}
+          if (exists(x = "SS_roots_gCm2", where = states_all)) {SS_gCm2$SS_roots_gCm2 = states_all$SS_roots_gCm2}
+          if (exists(x = "SS_wood_gCm2", where = states_all)) {SS_gCm2$SS_wood_gCm2 = states_all$SS_wood_gCm2}
+          if (exists(x = "SS_litter_gCm2", where = states_all)) {SS_gCm2$SS_litter_gCm2 = states_all$SS_litter_gCm2}
+          if (exists(x = "SS_woodlitter_gCm2", where = states_all)) {SS_gCm2$SS_woodlitter_gCm2 = states_all$SS_woodlitter_gCm2}
+          if (exists(x = "SS_som_gCm2", where = states_all)) {SS_gCm2$SS_som_gCm2 = states_all$SS_som_gCm2}
 
           # Sanity check
-          if (length(which(is.na(as.vector(aNPP))) == TRUE) > 0) {
+          if (length(which(is.na(as.vector(NPP_fraction))) == TRUE) > 0) {
               print(paste("NA value found in NPP for site ",PROJECT$site[n],sep="")) ; dummy = -1 ; return(dummy)
           }
           print("processing and storing ensemble output")
           # store the results now in binary file
-          save(parameter_covariance,parameters,drivers,site_ctessel_pft,aNPP,natMTT,MTT,aMTT,SS_gCm2,file=outfile1, compress="gzip", compression_level = 9)
+          save(parameter_covariance,parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,file=outfile_parameters, compress="gzip", compression_level = 9)
           # determine whether this is a gridded run (or one with the override in place)
           if (PROJECT$spatial_type == "site" | grid_override == TRUE) {
               # ...if this is a site run save the full ensemble and everything else...
-              save(parameters,drivers,states_all,site_ctessel_pft,file=outfile, compress="gzip", compression_level = 9)
+              save(parameters,drivers,states_all,site_ctessel_pft,file=outfile_site, compress="gzip", compression_level = 9)
           } else {
               # ...otherwise this is a grid and we want straight forward reduced dataset of common stocks and fluxes
               num_quantiles = c(0.025,0.05,0.25,0.5,0.75,0.95,0.975) ; num_quantiles_agg = seq(0.0,1, length = 100)
               na_flag = TRUE
-              # Estimate multiple use fluxes
-              npp = states_all$gpp_gCm2day - states_all$rauto_gCm2day
-              # Stocks first
-              site_output = list(num_quantiles = num_quantiles,
-                                 labile_gCm2 = apply(states_all$lab_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag),
-#follab_gCm2 = apply(states_all$fol_gCm2+states_all$lab_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag),
-                                 biomass_gCm2 = apply(states_all$bio_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag),
-                                 lai_m2m2 = apply(states_all$lai_m2m2,2,quantile,prob=num_quantiles,na.rm=na_flag),
-                                 foliage_gCm2 = apply(states_all$fol_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag),
-                                 roots_gCm2 = apply(states_all$root_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag),
-                                 wood_gCm2 = apply(states_all$wood_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag),
-                                 lit_gCm2 = apply(states_all$lit_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag),
-                                 som_gCm2 = apply(states_all$som_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag),
-              # Fluxes second
-                                 nee_gCm2day = apply(states_all$nee_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
-                                 gpp_gCm2day = apply(states_all$gpp_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
-                                 rauto_gCm2day = apply(states_all$rauto_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
-                                 rhet_gCm2day = apply(states_all$rhet_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
-                                 reco_gCm2day = apply(states_all$reco_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
-                                 npp_gCm2day = apply(npp,2,quantile,prob=num_quantiles,na.rm=na_flag),
-                                 fnpp_gCm2day = apply(npp * states_all$aNPP[,1],2,quantile,prob=num_quantiles,na.rm=na_flag),
-                                 rnpp_gCm2day = apply(npp * states_all$aNPP[,2],2,quantile,prob=num_quantiles,na.rm=na_flag),
-                                 wnpp_gCm2day = apply(npp * states_all$aNPP[,3],2,quantile,prob=num_quantiles,na.rm=na_flag),
-                                 harvest_gCm2day = apply(states_all$harvest_C_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag),
-                                 fire_gCm2day = apply(states_all$fire_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag))
-              # Some derived fluxes / states
-              site_output$nbe_gCm2day = apply(states_all$nee_gCm2day + states_all$fire_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
-              site_output$nbp_gCm2day = apply(-states_all$nee_gCm2day - states_all$fire_gCm2day - states_all$harvest_C_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
-              dCbio = states_all$bio_gCm2 - states_all$bio_gCm2[,1] # difference in biomass from initial
-              site_output$dCbio_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
-              dCbio = states_all$fol_gCm2 - states_all$fol_gCm2[,1] # difference in biomass from initial
-              site_output$dCfoliage_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
-              dCbio = states_all$root_gCm2 - states_all$root_gCm2[,1] # difference in root from initial
-              site_output$dCroots_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
-              dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
-              site_output$dCwood_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
-              dCbio = states_all$lit_gCm2 - states_all$lit_gCm2[,1] # difference in lit from initial
-              site_output$dClit_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
-              dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
-              site_output$dCsom_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
-              if (length(which(names(site_output) == "rhet_litter_gCm2day")) > 0) {
-                  site_output$rhet_litter_gCm2day = apply(states_all$rhet_litter_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
-              }
-              if (length(which(names(site_output) == "rhet_som_gCm2day")) > 0) {
-                  site_output$rhet_som_gCm2day = apply(states_all$rhet_som_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
-              }
-              if (length(which(names(site_output) == "decomp_litter_gCm2day")) > 0) {
-                  site_output$decomp_litter_gCm2day = apply(states_all$decomp_litter_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
-              }
-              if (length(which(names(states_all) == "litwood_gCm2")) > 0) {
-                  # Total C including wood litter
-                  site_output$totalC_gCm2 = apply(states_all$bio_gCm2+states_all$litwood_gCm2+states_all$lit_gCm2+states_all$som_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
-                  dCbio = (states_all$bio_gCm2+states_all$litwood_gCm2+states_all$lit_gCm2+states_all$som_gCm2)
-                  dCbio = dCbio - (states_all$bio_gCm2[,1]+states_all$litwood_gCm2[,1]+states_all$lit_gCm2[,1]+states_all$som_gCm2[,1])
-                  site_output$dCtotalC_gCm2 = apply(dCbio,2,quantile, prob=num_quantiles, na.rm=TRUE)
-                  # DOM (soil + litter + wood litter)
-                  site_output$dom_gCm2 = apply(states_all$litwood_gCm2+states_all$lit_gCm2+states_all$som_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
-                  dCbio = (states_all$litwood_gCm2+states_all$lit_gCm2+states_all$som_gCm2)
-                  dCbio = dCbio - (states_all$litwood_gCm2[,1]+states_all$lit_gCm2[,1]+states_all$som_gCm2[,1])
-                  site_output$dCdom_gCm2 = apply(dCbio,2,quantile, prob=num_quantiles, na.rm=TRUE)
-                  # wood litter
-                  site_output$litwood_gCm2 = apply(states_all$litwood_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
-                  dCbio = states_all$litwood_gCm2 - states_all$litwood_gCm2[,1] # difference in cwd from initial
-                  site_output$dClitwood_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
-                  # Combined litter and wood litter
-                  site_output$deadorg_gCm2 = apply(states_all$litwood_gCm2+states_all$lit_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
-                  dCbio = (states_all$litwood_gCm2+states_all$lit_gCm2) - (states_all$litwood_gCm2[,1]+states_all$lit_gCm2[,1]) # difference in deadorg from initial
-                  site_output$dCdeadorg_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
 
-              } else {
-                  # Total C without wood litter
-                  site_output$totalC_gCm2 = apply(states_all$bio_gCm2+states_all$lit_gCm2+states_all$som_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
-                  dCbio = (states_all$bio_gCm2+states_all$lit_gCm2+states_all$som_gCm2)
-                  dCbio = dCbio - (states_all$bio_gCm2[,1]+states_all$lit_gCm2[,1]+states_all$som_gCm2[,1])
-                  site_output$dCtotalC_gCm2 = apply(dCbio,2,quantile, prob=num_quantiles, na.rm=TRUE)
-                  # DOM (soil + litter)
-                  site_output$dom_gCm2 = apply(states_all$lit_gCm2+states_all$som_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
-                  dCbio = (states_all$lit_gCm2+states_all$som_gCm2)
-                  dCbio = dCbio - (states_all$lit_gCm2[,1]+states_all$som_gCm2[,1])
-                  site_output$dCdom_gCm2 = apply(dCbio,2,quantile, prob=num_quantiles, na.rm=TRUE)
+              # Determine some useful information for the analysis below
+              nos_years = (as.numeric(PROJECT$end_year) - as.numeric(PROJECT$start_year))+1
+              steps_per_year = floor(dim(drivers$met)[1] / nos_years)
+
+              # Declare the site level output list object
+              site_output = list(num_quantiles = num_quantiles)
+
+              ###
+              # Derive stocks and fluxes used in the calculation of gridded aggregates
+              # These are variables which for a site analysis would be easy to calcuate
+              # from the ensembles but difficult if not determined here and now before aggregation
+              ###
+
+              # Determine the total biomass within the system
+              # All models have a foliage pool
+              states_all$biomass_gCm2 = states_all$foliage_gCm2
+              states_all$biomass_to_litter_gCm2day = states_all$foliage_to_litter_gCm2day
+              # Now look for accumulating optional disturbance drivers
+              if (exists(x = "FIREemiss_foliage_gCm2day", where = states_all)) {
+                  states_all$FIREemiss_biomass_gCm2day = states_all$FIREemiss_foliage_gCm2day
               }
+              if (exists(x = "FIRElitter_foliage_gCm2day", where = states_all)) {
+                  states_all$FIRElitter_biomass_gCm2day = states_all$FIRElitter_foliage_gCm2day
+              }
+              if (exists(x = "harvest_foliage_gCm2day", where = states_all)) {
+                  states_all$harvest_biomass_gCm2day = states_all$harvest_foliage_gCm2day
+              }
+              if (exists(x = "labile_gCm2", where = states_all)) {
+                  states_all$biomass_gCm2 = states_all$biomass_gCm2 + states_all$labile_gCm2
+                  # Now look for accumulating optional disturbance drivers
+                  if (exists(x = "FIREemiss_labile_gCm2day", where = states_all)) {
+                      states_all$FIREemiss_biomass_gCm2day = states_all$FIREemiss_biomass_gCm2day + states_all$FIREemiss_labile_gCm2day
+                  }
+                  if (exists(x = "FIRElitter_labile_gCm2day", where = states_all)) {
+                      states_all$FIRElitter_biomass_gCm2day = states_all$FIRElitter_biomass_gCm2day + states_all$FIRElitter_labile_gCm2day
+                  }
+                  if (exists(x = "harvest_labile_gCm2day", where = states_all)) {
+                      states_all$outflux_biomass_gCm2day = states_all$outflux_biomass_gCm2day + states_all$harvest_labile_gCm2day
+                  }
+              }
+              if (exists(x = "roots_gCm2", where = states_all)) {
+                  states_all$biomass_gCm2 = states_all$biomass_gCm2 + states_all$roots_gCm2
+                  states_all$biomass_to_litter_gCm2day = states_all$biomass_to_litter_gCm2day + states_all$roots_to_litter_gCm2day
+                  # Now look for accumulating optional disturbance drivers
+                  if (exists(x = "FIREemiss_roots_gCm2day", where = states_all)) {
+                      states_all$FIREemiss_biomass_gCm2day = states_all$FIREemiss_biomass_gCm2day + states_all$FIREemiss_roots_gCm2day
+                  }
+                  if (exists(x = "FIRElitter_roots_gCm2day", where = states_all)) {
+                      states_all$FIRElitter_biomass_gCm2day = states_all$FIRElitter_biomass_gCm2day + states_all$FIRElitter_roots_gCm2day
+                  }
+                  if (exists(x = "harvest_roots_gCm2day", where = states_all)) {
+                      states_all$outflux_biomass_gCm2day = states_all$outflux_biomass_gCm2day + states_all$harvest_roots_gCm2day
+                  }
+
+              }
+              if (exists(x = "wood_gCm2", where = states_all)) {
+                  states_all$biomass_gCm2 = states_all$biomass_gCm2 + states_all$wood_gCm2
+                  states_all$biomass_to_litter_gCm2day = states_all$biomass_to_litter_gCm2day + states_all$wood_to_litter_gCm2day
+                  # Now look for accumulating optional disturbance drivers
+                  if (exists(x = "FIREemiss_wood_gCm2day", where = states_all)) {
+                      states_all$FIREemiss_biomass_gCm2day = states_all$FIREemiss_biomass_gCm2day + states_all$FIREemiss_wood_gCm2day
+                  }
+                  if (exists(x = "FIRElitter_wood_gCm2day", where = states_all)) {
+                      states_all$FIRElitter_biomass_gCm2day = states_all$FIRElitter_biomass_gCm2day + states_all$FIRElitter_wood_gCm2day
+                  }
+                  if (exists(x = "harvest_wood_gCm2day", where = states_all)) {
+                      states_all$outflux_biomass_gCm2day = states_all$outflux_biomass_gCm2day + states_all$harvest_wood_gCm2day
+                  }
+              } # biomass
+
+              # Determine the total dead organic matter within the system
+              # plus their associated loss terms.
+              # All models have a som pool so start there
+              if (exists(x = "dom_gCm2", where = states_all) == FALSE) {
+                  states_all$dom_gCm2 = states_all$som_gCm2
+                  states_all$rhet_dom_gCm2day = states_all$rhet_som_gCm2day
+                  # Create corresponding variables for the disturbance drivers.
+                  # NOTE: that we do not need to account for disturbance induced
+                  # litter fluxes as these always remain within the DOM pool
+                  if (exists(x = "FIREemiss_som_gCm2day", where = states_all)) {
+                      states_all$FIREemiss_dom_gCm2day = states_all$FIREemiss_som_gCm2day
+                  }
+                  if (exists(x = "harvest_som_gCm2day", where = states_all)) {
+                      states_all$harvest_dom_gCm2day = states_all$harvest_som_gCm2day
+                  }
+                  # Check for presence of litter or wood litter pools
+                  if (exists(x = "litter_gCm2", where = states_all)) {
+                      states_all$dom_gCm2 = states_all$dom_gCm2 + states_all$litter_gCm2
+                      states_all$rhet_dom_gCm2day = states_all$rhet_dom_gCm2day + states_all$rhet_litter_gCm2day
+                      if (exists(x = "FIREemiss_litter_gCm2day", where = states_all)) {
+                          states_all$FIREemiss_dom_gCm2day = states_all$FIREemiss_dom_gCm2day + states_all$FIREemiss_litter_gCm2day
+                      }
+                      if (exists(x = "harvest_litter_gCm2day", where = states_all)) {
+                          states_all$harvest_dom_gCm2day = states_all$harvest_dom_gCm2day + states_all$harvest_litter_gCm2day
+                      }
+                  } # litter
+                  if (exists(x = "woodlitter_gCm2", where = states_all)) {
+                      states_all$dom_gCm2 = states_all$dom_gCm2 + states_all$woodlitter_gCm2
+                      states_all$rhet_dom_gCm2day = states_all$rhet_dom_gCm2day + states_all$rhet_woodlitter_gCm2day
+                      if (exists(x = "FIREemiss_woodlitter_gCm2day", where = states_all)) {
+                          states_all$FIREemiss_dom_gCm2day = states_all$FIREemiss_dom_gCm2day + states_all$FIREemiss_woodlitter_gCm2day
+                      }
+                      if (exists(x = "harvest_woodlitter_gCm2day", where = states_all)) {
+                          states_all$harvest_dom_gCm2day = states_all$harvest_dom_gCm2day + states_all$harvest_woodlitter_gCm2day
+                      }
+                  } # wood litter
+              } # DOM pool exists
+
+              # Determine the total C within the system
+              # Biomass and dead organic matter have already been determined,
+              # so combine.
+              states_all$Ctotal_gCm2 = states_all$biomass_gCm2 + states_all$dom_gCm2
+
+              ###
+              # Extract likelihood / parameter / driver information
+              ###
+
+              # loop through parameters + likelihood
+              site_output$parameters = array(NA, dim=c(dim(parameters)[1],length(num_quantiles)))
+              for (p in seq(1, dim(parameters)[1])) {
+                   site_output$parameters[p,] = quantile(as.vector(parameters[p,,]), prob=num_quantiles)
+              }
+              # track which parameters have converged + likelihood
+              site_output$parameters_converged = rep(0, dim(parameters)[1])
+              site_output$parameters_converged[which(converged == "PASS")] = 1
+              # Mean meteorological conditions
+              site_output$mean_temperature_C = mean((drivers$met[,3]+drivers$met[,2])*0.5)
+              site_output$mean_radiation_MJm2day = mean(drivers$met[,4])
+              site_output$mean_vpd_Pa = mean(drivers$met[,16])
+              site_output$mean_precipitation_kgH2Om2yr = mean(drivers$met[,7]*86400*365.25)
+              # Assimilated LAI information
+              if (max(drivers$obs[,3]) > 0) {
+                  site_output$assimilated_lai_max_m2m2 = max(drivers$obs[,3])
+                  site_output$assimilated_lai_mean_m2m2 = mean(drivers$obs[which(drivers$obs[,3] != -9999),3])
+                  site_output$assimilated_lai_sd_m2m2 = sd(drivers$obs[which(drivers$obs[,3] != -9999),3])
+                  site_output$assimilated_lai_unc_m2m2 = mean(drivers$obs[which(drivers$obs[,4] != -9999),4])
+              } else {
+                  site_output$assimilated_lai_max_m2m2 = NA
+                  site_output$assimilated_lai_mean_m2m2 = NA
+                  site_output$assimilated_lai_sd_m2m2 = NA
+                  site_output$assimilated_lai_unc_m2m2 = NA
+              }
+              # Assimilated wood stock / prior information
+              # Do we have one or both wood stock prior and time series inforamtion
+              if (drivers$parpriors[21] > 0 |
+                  length(which(drivers$obs[,13] > -9999)) > 0) {
+                  # Initialise the variable with zero to allow averaging
+                  site_output$assimilated_wood_mean_gCm2 = 0
+                  site_output$assimilated_wood_mean_unc_gCm2 = 0
+                  # Do we have time series information?
+                  if (length(which(drivers$obs[,13] > -9999)) > 0) { # Does time series info exist
+                      site_output$assimilated_wood_mean_gCm2 = append(site_output$assimilated_wood_mean_gCm2,
+                                                                      drivers$obs[which(drivers$obs[,13] != -9999),13])
+                      site_output$assimilated_wood_mean_unc_gCm2 = append(site_output$assimilated_wood_mean_unc_gCm2,
+                                                                          drivers$obs[which(drivers$obs[,14] != -9999),14])
+                  }
+                  # Do we have a prior estimate on initial wood stocks?
+                  if (drivers$parpriors[21] > 0) { # Does a prior exist
+                      site_output$assimilated_wood_mean_gCm2 = append(site_output$assimilated_wood_mean_gCm2,
+                                                                      drivers$parpriors[21])
+                      site_output$assimilated_wood_mean_unc_gCm2 = append(site_output$assimilated_wood_mean_unc_gCm2,
+                                                                          drivers$parpriorunc[21])
+                  }
+                  # Average available observation and uncertainty information
+                  # remembering to remove the initial value
+                  site_output$assimilated_wood_mean_gCm2 = mean(site_output$assimilated_wood_mean_gCm2[-1], na.rm=na_flag)
+                  site_output$assimilated_wood_mean_unc_gCm2 = mean(site_output$assimilated_wood_mean_unc_gCm2[-1], na.rm=na_flag)
+              } else {
+                 # assign missing value flag for consistency
+                 site_output$assimilated_wood_mean_gCm2 = NA
+                 site_output$assimilated_wood_mean_unc_gCm2 = NA
+              } # wood stock or prior information was assimilated
+              # Assimilated som stock / prior information
+              # Do we have one or both som stock prior and time series inforamtion
+              if (drivers$parpriors[23] > 0 |
+                  length(which(drivers$obs[,19] > -9999)) > 0) {
+                  # Initialise the variable with zero to allow averaging
+                  site_output$assimilated_som_mean_gCm2 = 0
+                  site_output$assimilated_som_mean_unc_gCm2 = 0
+                  # Do we have time series information?
+                  if (length(which(drivers$obs[,19] > -9999)) > 0) { # Does time series info exist
+                      site_output$assimilated_som_mean_gCm2 = append(site_output$assimilated_som_mean_gCm2,
+                                                                     drivers$obs[which(drivers$obs[,19] != -9999),19])
+                      site_output$assimilated_som_mean_unc_gCm2 = append(site_output$assimilated_som_mean_unc_gCm2,
+                                                                         drivers$obs[which(drivers$obs[,20] != -9999),20])
+                  }
+                  # Do we have a prior estimate on initial wood stocks?
+                  if (drivers$parpriors[23] > 0) { # Does a prior exist
+                      site_output$assimilated_som_mean_gCm2 = append(site_output$assimilated_som_mean_gCm2,
+                                                                     drivers$parpriors[23])
+                      site_output$assimilated_som_mean_unc_gCm2 = append(site_output$assimilated_som_mean_unc_gCm2,
+                                                                         drivers$parpriorunc[23])
+                  }
+                  # Average available observation and uncertainty information
+                  # remembering to remove the initial value
+                  site_output$assimilated_som_mean_gCm2 = mean(site_output$assimilated_som_mean_gCm2[-1], na.rm=na_flag)
+                  site_output$assimilated_som_mean_unc_gCm2 = mean(site_output$assimilated_som_mean_unc_gCm2[-1], na.rm=na_flag)
+              } else {
+                 # assign missing value flag for consistency
+                 site_output$assimilated_som_mean_gCm2 = NA
+                 site_output$assimilated_som_mean_unc_gCm2 = NA
+              } # som stock or prior information was assimilated
+
+              ###
+              # Begin aggregating the states_all information into
+              # quantile based site_output
+              ###
+
+              # Net primary production allocation fractions
+              if (exists(x = "NPP_foliage_fraction", where = states_all)) {site_output$NPP_foliage_fraction = quantile(states_all$NPP_foliage_fraction, prob=num_quantiles, na.rm=na_flag)}
+              if (exists(x = "NPP_roots_fraction", where = states_all)) {site_output$NPP_roots_fraction = quantile(states_all$NPP_roots_fraction, prob=num_quantiles, na.rm=na_flag)}
+              if (exists(x = "NPP_wood_fraction", where = states_all)) {site_output$NPP_wood_fraction = quantile(states_all$NPP_wood_fraction, prob=num_quantiles, na.rm=na_flag)}
+              # Analysis mean transit (residence) times (years)
+              if (exists(x = "MTT_labile_years", where = states_all)) {site_output$MTT_labile_years = quantile(states_all$MTT_labile_years, prob=num_quantiles, na.rm=na_flag)}
+              if (exists(x = "MTT_foliage_years", where = states_all)) {site_output$MTT_foliage_years = quantile(states_all$MTT_foliage_years, prob=num_quantiles, na.rm=na_flag)}
+              if (exists(x = "MTT_roots_years", where = states_all)) {site_output$MTT_roots_years = quantile(states_all$MTT_roots_years, prob=num_quantiles, na.rm=na_flag)}
+              if (exists(x = "MTT_wood_years", where = states_all)) {site_output$MTT_wood_years = quantile(states_all$MTT_wood_years, prob=num_quantiles, na.rm=na_flag)}
+              if (exists(x = "MTT_litter_years", where = states_all)) {site_output$MTT_litter_years = quantile(states_all$MTT_litter_years, prob=num_quantiles, na.rm=na_flag)}
+              if (exists(x = "MTT_woodlitter_years", where = states_all)) {site_output$MTT_woodlitter_years = quantile(states_all$MTT_woodlitter_years, prob=num_quantiles, na.rm=na_flag)}
+              if (exists(x = "MTT_som_years", where = states_all)) {site_output$MTT_som_years = quantile(states_all$MTT_som_years, prob=num_quantiles, na.rm=na_flag)}
+              # Steady state C stock estimates (gC/m2)
+              if (exists(x = "SS_labile_gCm2", where = states_all)) {site_output$SS_labile_gCm2 = quantile(states_all$SS_labile_gCm2, prob=num_quantiles, na.rm=na_flag)}
+              if (exists(x = "SS_foliage_gCm2", where = states_all)) {site_output$SS_foliage_gCm2 = quantile(states_all$SS_foliage_gCm2, prob=num_quantiles, na.rm=na_flag)}
+              if (exists(x = "SS_roots_gCm2", where = states_all)) {site_output$SS_roots_gCm2 = quantile(states_all$SS_roots_gCm2, prob=num_quantiles, na.rm=na_flag)}
+              if (exists(x = "SS_wood_gCm2", where = states_all)) {site_output$SS_wood_gCm2 = quantile(states_all$SS_wood_gCm2, prob=num_quantiles, na.rm=na_flag)}
+              if (exists(x = "SS_litter_gCm2", where = states_all)) {site_output$SS_litter_gCm2 = quantile(states_all$SS_litter_gCm2, prob=num_quantiles, na.rm=na_flag)}
+              if (exists(x = "SS_woodlitter_gCm2", where = states_all)) {site_output$SS_woodlitter_gCm2 = quantile(states_all$SS_woodlitter_gCm2, prob=num_quantiles, na.rm=na_flag)}
+              if (exists(x = "SS_som_gCm2", where = states_all)) {site_output$SS_som_gCm2 = quantile(states_all$SS_som_gCm2, prob=num_quantiles, na.rm=na_flag)}
+
+              # State variables - NOTE: extraction of pixel specific means done here to account for different ensemble trajectories, i.e. correlation in time.
+              site_output$lai_m2m2         = apply(states_all$lai_m2m2,2,quantile,prob=num_quantiles,na.rm=na_flag)
+              site_output$mean_lai_m2m2    = quantile(apply(states_all$lai_m2m2,1,mean,na.rm=na_flag) ,prob=num_quantiles, na.rm=TRUE)
+              site_output$Ctotal_gCm2      = apply(states_all$Ctotal_gCm2,2,quantile,prob=num_quantiles,na.rm=na_flag)
+              site_output$mean_Ctotal_gCm2 = quantile(apply(states_all$Ctotal_gCm2,1,mean,na.rm=na_flag) ,prob=num_quantiles, na.rm=TRUE)
+              # Fluxes second
+              site_output$gpp_gCm2day          = apply(states_all$gpp_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
+              site_output$mean_gpp_gCm2day     = quantile(apply(states_all$gpp_gCm2day,1,mean,na.rm=na_flag) ,prob=num_quantiles, na.rm=TRUE)
+              site_output$rauto_gCm2day        = apply(states_all$rauto_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
+              site_output$mean_rauto_gCm2day   = quantile(apply(states_all$rauto_gCm2day,1,mean,na.rm=na_flag) ,prob=num_quantiles, na.rm=TRUE)
+              site_output$rhet_gCm2day         = apply(states_all$rhet_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
+              site_output$mean_rhet_gCm2day    = quantile(apply(states_all$rhet_gCm2day,1,mean,na.rm=na_flag) ,prob=num_quantiles, na.rm=TRUE)
+              site_output$nee_gCm2day          = apply(states_all$nee_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
+              site_output$mean_nee_gCm2day     = quantile(apply(states_all$nee_gCm2day,1,mean,na.rm=na_flag) ,prob=num_quantiles, na.rm=TRUE)
+              site_output$npp_gCm2day          = apply(states_all$npp_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
+              site_output$mean_npp_gCm2day     = quantile(apply(states_all$npp_gCm2day,1,mean,na.rm=na_flag) ,prob=num_quantiles, na.rm=TRUE)
+              site_output$nbe_gCm2day          = apply(states_all$nbe_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
+              site_output$mean_nbe_gCm2day     = quantile(apply(states_all$nbe_gCm2day,1,mean,na.rm=na_flag) ,prob=num_quantiles, na.rm=TRUE)
+              site_output$nbp_gCm2day          = apply(states_all$nbp_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
+              site_output$mean_nbp_gCm2day     = quantile(apply(states_all$nbp_gCm2day,1,mean,na.rm=na_flag) ,prob=num_quantiles, na.rm=TRUE)
+              site_output$reco_gCm2day         = apply(states_all$reco_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
+              site_output$mean_reco_gCm2day    = quantile(apply(states_all$reco_gCm2day,1,mean,na.rm=na_flag) ,prob=num_quantiles, na.rm=TRUE)
+              site_output$harvest_gCm2day      = apply(states_all$harvest_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
+              site_output$mean_harvest_gCm2day = quantile(apply(states_all$harvest_gCm2day,1,mean,na.rm=na_flag) ,prob=num_quantiles, na.rm=TRUE)
+              site_output$fire_gCm2day         = apply(states_all$fire_gCm2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
+              site_output$mean_fire_gCm2day    = quantile(apply(states_all$fire_gCm2day,1,mean,na.rm=na_flag) ,prob=num_quantiles, na.rm=TRUE)
+
+              ###
+              # Track net pool change over time
+              ###
+
+              # Start with the common variables
+              dCbio = states_all$Ctotal_gCm2 - states_all$Ctotal_gCm2[,1] # difference in total C from initial
+              site_output$dCtotal_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
+
+              dCbio = states_all$lai_m2m2 - states_all$lai_m2m2[,1] #  difference in lai from initial
+              site_output$dlai_m2m2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
+
+              # Then do model specific pool combinations
+              # Include the pool, its net change, the allocation if from GPP / NPP direct
+              # and its output flow(s).
+
+              # Biomass related pool, change and output variables
+              if (exists(x = "biomass_gCm2", where = states_all)) {
+                  # Assign pool to site_output
+                  site_output$biomass_gCm2 = apply(states_all$biomass_gCm2,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  site_output$mean_biomass_gCm2 = quantile(apply(states_all$biomass_gCm2,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Determine net pool change over time
+                  dCbio = states_all$biomass_gCm2 - states_all$biomass_gCm2[,1] # difference in labile from initial
+                  site_output$dCbiomass_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  # Track natural biomass losses
+                  site_output$biomass_to_litter_gCm2day = apply(states_all$biomass_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  site_output$mean_biomass_to_litter_gCm2day = quantile(apply(states_all$biomass_to_litter_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Begin accumulating the total output
+                  site_output$outflux_biomass_gCm2day = states_all$biomass_to_litter_gCm2day
+                  site_output$NaturalFractionOfTurnover_biomass = states_all$biomass_to_litter_gCm2day
+                  # Other natural flux pathways should really go here before disturbance related
+                  if (exists(x = "FIREemiss_biomass_gCm2day", where = states_all)) {
+                      site_output$FIREemiss_biomass_gCm2day = apply(states_all$FIREemiss_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_FIREemiss_biomass_gCm2day = quantile(apply(states_all$FIREemiss_biomass_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_biomass_gCm2day = site_output$outflux_biomass_gCm2day + states_all$FIREemiss_biomass_gCm2day
+                      site_output$FireFractionOfTurnover_biomass = states_all$FIREemiss_biomass_gCm2day
+                  }
+                  if (exists(x = "FIRElitter_biomass_gCm2day", where = states_all)) {
+                      site_output$FIRElitter_biomass_gCm2day = apply(states_all$FIRElitter_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_FIRElitter_biomass_gCm2day = quantile(apply(states_all$FIRElitter_biomass_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_biomass_gCm2day = site_output$outflux_biomass_gCm2day + states_all$FIRElitter_biomass_gCm2day
+                      site_output$FireFractionOfTurnover_biomass = site_output$FireFractionOfTurnover_biomass + states_all$FIRElitter_biomass_gCm2day
+                  }
+                  if (exists(x = "harvest_biomass_gCm2day", where = states_all)) {
+                      site_output$harvest_biomass_gCm2day = apply(states_all$harvest_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_harvest_biomass_gCm2day = quantile(apply(states_all$harvest_biomass_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_biomass_gCm2day = site_output$outflux_biomass_gCm2day + states_all$harvest_biomass_gCm2day
+                      site_output$HarvestFractionOfTurnover_biomass = states_all$harvest_biomass_gCm2day
+                  }
+                  # Estimate the ecosystem mean transit (residence) times as a function of natural and disturbance processes
+                  site_output$MTT_annual_biomass_years = apply(site_output$outflux_biomass_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_biomass_years = site_output$MTT_annual_biomass_years / apply(states_all$biomass_gCm2,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_biomass_years = t(site_output$MTT_annual_biomass_years) # rollapply inverts the dimensions from that wanted
+                  site_output$MTT_annual_biomass_years = apply(site_output$MTT_annual_biomass_years,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  # Convert to fractions
+                  site_output$NaturalFractionOfTurnover_biomass = quantile(apply(site_output$NaturalFractionOfTurnover_biomass,1,mean, na.rm = na_flag) /
+                                                                           apply(site_output$outflux_biomass_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  site_output$FireFractionOfTurnover_biomass = quantile(apply(site_output$FireFractionOfTurnover_biomass,1,mean, na.rm = na_flag) /
+                                                                        apply(site_output$outflux_biomass_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  site_output$HarvestFractionOfTurnover_biomass = quantile(apply(site_output$HarvestFractionOfTurnover_biomass,1,mean, na.rm = na_flag) /
+                                                                           apply(site_output$outflux_biomass_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  # Mean outflux from biomass
+                  site_output$mean_outflux_biomass_gCm2day = quantile(apply(site_output$outflux_biomass_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Now aggregate across quantiles
+                  site_output$outflux_biomass_gCm2day = apply(site_output$outflux_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+              }
+              # Labile related pool, change, input and output variables
+              if (exists(x = "labile_gCm2", where = states_all)) {
+                  # Assign pool to site_output
+                  site_output$labile_gCm2 = apply(states_all$labile_gCm2,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  site_output$mean_labile_gCm2 = quantile(apply(states_all$labile_gCm2,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Determine net pool change over time
+                  dCbio = states_all$labile_gCm2 - states_all$labile_gCm2[,1] # difference in labile from initial
+                  site_output$dClabile_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  # Determine the allocation to labile - in all cases this must be a direct variable
+                  site_output$alloc_labile_gCm2day = apply(states_all$alloc_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  site_output$mean_alloc_labile_gCm2 = quantile(apply(states_all$alloc_labile_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Check for the possible loss pathways
+                  if (exists(x = "labile_to_foliage_gCm2day", where = states_all)) {
+                      site_output$labile_to_foliage_gCm2day = apply(states_all$labile_to_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_labile_to_foliage_gCm2day = quantile(apply(states_all$labile_to_foliage_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$NaturalFractionOfTurnover_labile = states_all$labile_to_foliage_gCm2day
+                      # Begin accumulating the total output
+                      site_output$outflux_labile_gCm2day = states_all$labile_to_foliage_gCm2day
+                  }
+                  # Other natural flux pathways should really go here before disturbance related
+                  if (exists(x = "FIREemiss_labile_gCm2day", where = states_all)) {
+                      site_output$FIREemiss_labile_gCm2day = apply(states_all$FIREemiss_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_FIREemiss_labile_gCm2day = quantile(apply(states_all$FIREemiss_labile_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$FireFractionOfTurnover_labile = states_all$FIREemiss_labile_gCm2day
+                      site_output$outflux_labile_gCm2day = site_output$outflux_labile_gCm2day + states_all$FIREemiss_labile_gCm2day
+                  }
+                  if (exists(x = "FIRElitter_labile_gCm2day", where = states_all)) {
+                      site_output$FIRElitter_labile_gCm2day = apply(states_all$FIRElitter_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_FIRElitter_labile_gCm2day = quantile(apply(states_all$FIRElitter_labile_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_labile_gCm2day = site_output$outflux_labile_gCm2day + states_all$FIRElitter_labile_gCm2day
+                      site_output$FireFractionOfTurnover_labile = site_output$FireFractionOfTurnover_labile + states_all$FIRElitter_labile_gCm2day
+                  }
+                  if (exists(x = "harvest_labile_gCm2day", where = states_all)) {
+                      site_output$harvest_labile_gCm2day = apply(states_all$harvest_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_harvest_labile_gCm2day = quantile(apply(states_all$harvest_labile_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_labile_gCm2day = site_output$outflux_labile_gCm2day + states_all$harvest_labile_gCm2day
+                      site_output$HarvestFractionOfTurnover_labile = states_all$harvest_labile_gCm2day
+                  }
+                  # Use this information to determine the mean residence times as it evolves over time
+                  site_output$MTT_annual_labile_years = apply(site_output$outflux_labile_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_labile_years = site_output$MTT_annual_labile_years / apply(states_all$labile_gCm2,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_labile_years = t(site_output$MTT_annual_labile_years) # rollapply inverts the dimensions from that wanted
+                  site_output$MTT_annual_labile_years = apply(site_output$MTT_annual_labile_years,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  # Convert to fractions
+                  site_output$NaturalFractionOfTurnover_labile = quantile(apply(site_output$NaturalFractionOfTurnover_labile,1,mean, na.rm = na_flag) /
+                                                                          apply(site_output$outflux_labile_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  site_output$FireFractionOfTurnover_labile = quantile(apply(site_output$FireFractionOfTurnover_labile,1,mean, na.rm = na_flag) /
+                                                                       apply(site_output$outflux_labile_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  site_output$HarvestFractionOfTurnover_labile = quantile(apply(site_output$HarvestFractionOfTurnover_labile,1,mean, na.rm = na_flag) /
+                                                                          apply(site_output$outflux_labile_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  # Mean outflux from labile
+                  site_output$mean_outflux_labile_gCm2day = quantile(apply(site_output$outflux_labile_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Now aggregate across quantiles
+                  site_output$outflux_labile_gCm2day = apply(site_output$outflux_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+              }
+              # Foliage related pool, change, input and output variables
+              if (exists(x = "foliage_gCm2", where = states_all)) {
+                  # Assign pool to site_output
+                  site_output$foliage_gCm2 = apply(states_all$foliage_gCm2,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  site_output$mean_foliage_gCm2 = quantile(apply(states_all$foliage_gCm2,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Determine net pool change over time
+                  dCbio = states_all$foliage_gCm2 - states_all$foliage_gCm2[,1] # difference in root from initial
+                  site_output$dCfoliage_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  # Check for the possible pathways
+                  if (exists(x = "alloc_foliage_gCm2day", where = states_all)) {
+                      site_output$alloc_foliage_gCm2day = apply(states_all$alloc_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_alloc_foliage_gCm2day = quantile(apply(states_all$alloc_foliage_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  }
+                  if (exists(x = "foliage_to_litter_gCm2day", where = states_all)) {
+                      site_output$foliage_to_litter_gCm2day = apply(states_all$foliage_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_foliage_to_litter_gCm2day = quantile(apply(states_all$foliage_to_litter_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$NaturalFractionOfTurnover_foliage = states_all$foliage_to_litter_gCm2day
+                      # Begin accumulating the total output fluxes here
+                      site_output$outflux_foliage_gCm2day = states_all$foliage_to_litter_gCm2day
+                  }
+                  if (exists(x = "FIREemiss_foliage_gCm2day", where = states_all)) {
+                      site_output$FIREemiss_foliage_gCm2day = apply(states_all$FIREemiss_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_FIREemiss_foliage_gCm2day = quantile(apply(states_all$FIREemiss_foliage_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$FireFractionOfTurnover_foliage = states_all$FIREemiss_foliage_gCm2day
+                      site_output$outflux_foliage_gCm2day = site_output$outflux_foliage_gCm2day + states_all$FIREemiss_foliage_gCm2day
+                  }
+                  if (exists(x = "FIRElitter_foliage_gCm2day", where = states_all)) {
+                      site_output$FIRElitter_foliage_gCm2day = apply(states_all$FIRElitter_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_FIRElitter_foliage_gCm2day = quantile(apply(states_all$FIRElitter_foliage_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_foliage_gCm2day = site_output$outflux_foliage_gCm2day + states_all$FIRElitter_foliage_gCm2day
+                      site_output$FireFractionOfTurnover_foliage = site_output$FireFractionOfTurnover_foliage + states_all$FIRElitter_foliage_gCm2day
+                  }
+                  if (exists(x = "harvest_foliage_gCm2day", where = states_all)) {
+                      site_output$harvest_foliage_gCm2day = apply(states_all$harvest_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_harvest_foliage_gCm2day = quantile(apply(states_all$harvest_foliage_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_foliage_gCm2day = site_output$outflux_foliage_gCm2day + states_all$harvest_foliage_gCm2day
+                      site_output$HarvestFractionOfTurnover_foliage = states_all$harvest_foliage_gCm2day
+                  }
+                  # Use this information to determine the mean residence times as it evolves over time
+                  site_output$MTT_annual_foliage_years = apply(site_output$outflux_foliage_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_foliage_years = site_output$MTT_annual_foliage_years / apply(states_all$foliage_gCm2,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_foliage_years = t(site_output$MTT_annual_foliage_years) # rollapply inverts the dimensions from that wanted
+                  site_output$MTT_annual_foliage_years = apply(site_output$MTT_annual_foliage_years,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  # Convert to fractions
+                  site_output$NaturalFractionOfTurnover_foliage = quantile(apply(site_output$NaturalFractionOfTurnover_foliage,1,mean, na.rm = na_flag) /
+                                                                           apply(site_output$outflux_foliage_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  site_output$FireFractionOfTurnover_foliage = quantile(apply(site_output$FireFractionOfTurnover_foliage,1,mean, na.rm = na_flag) /
+                                                                        apply(site_output$outflux_foliage_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  site_output$HarvestFractionOfTurnover_foliage = quantile(apply(site_output$HarvestFractionOfTurnover_foliage,1,mean, na.rm = na_flag) /
+                                                                           apply(site_output$outflux_foliage_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  # Mean outflux from foliage
+                  site_output$mean_outflux_foliage_gCm2day = quantile(apply(site_output$outflux_foliage_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Now aggregate across quantiles
+                  site_output$outflux_foliage_gCm2day = apply(site_output$outflux_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+              }
+
+              # Fine roots related pool, change, input and output variables
+              if (exists(x = "roots_gCm2", where = states_all)) {
+                  # Assign pool to site_output
+                  site_output$roots_gCm2 = apply(states_all$roots_gCm2,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  site_output$mean_roots_gCm2 = quantile(apply(states_all$roots_gCm2,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Determine net pool change over time
+                  dCbio = states_all$roots_gCm2 - states_all$roots_gCm2[,1] # difference in root from initial
+                  site_output$dCroots_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  # Calculate the mean annual maximums
+                  dCbio = apply(states_all$roots_gCm2, 1, rollapply_mean_annual_max, step = steps_per_year)
+                  site_output$annual_max_roots_gCm2 = quantile(dCbio, prob=num_quantiles, na.rm=na_flag)
+                  # Check for the possible pathways
+                  if (exists(x = "alloc_roots_gCm2day", where = states_all)) {
+                      site_output$alloc_roots_gCm2day = apply(states_all$alloc_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_alloc_roots_gCm2day = quantile(apply(states_all$alloc_roots_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  }
+                  if (exists(x = "roots_to_litter_gCm2day", where = states_all)) {
+                      site_output$roots_to_litter_gCm2day = apply(states_all$roots_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_roots_to_litter_gCm2day = quantile(apply(states_all$roots_to_litter_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$NaturalFractionOfTurnover_roots = states_all$roots_to_litter_gCm2day
+                      # Begin accumulation of output fluxes
+                      site_output$outflux_roots_gCm2day = states_all$roots_to_litter_gCm2day
+                  }
+                  # If this one exists then maybe some other fluxes do
+                  if (exists(x = "FIREemiss_roots_gCm2day", where = states_all)) {
+                      site_output$FIREemiss_roots_gCm2day = apply(states_all$FIREemiss_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_FIREemiss_roots_gCm2day = quantile(apply(states_all$FIREemiss_roots_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$FireFractionOfTurnover_roots = states_all$FIREemiss_roots_gCm2day
+                      site_output$outflux_roots_gCm2day = site_output$outflux_roots_gCm2day + states_all$FIREemiss_roots_gCm2day
+                  }
+                  if (exists(x = "FIRElitter_roots_gCm2day", where = states_all)) {
+                      site_output$FIRElitter_roots_gCm2day = apply(states_all$FIRElitter_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_FIRElitter_roots_gCm2day = quantile(apply(states_all$FIRElitter_roots_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_roots_gCm2day = site_output$outflux_roots_gCm2day + states_all$FIRElitter_roots_gCm2day
+                      site_output$FireFractionOfTurnover_roots = site_output$FireFractionOfTurnover_roots + states_all$FIRElitter_roots_gCm2day
+                  }
+                  if (exists(x = "harvest_roots_gCm2day", where = states_all)) {
+                      site_output$harvest_roots_gCm2day = apply(states_all$harvest_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_harvest_roots_gCm2day = quantile(apply(states_all$harvest_roots_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_roots_gCm2day = site_output$outflux_roots_gCm2day + states_all$harvest_roots_gCm2day
+                      site_output$HarvestFractionOfTurnover_roots = states_all$harvest_roots_gCm2day
+                  }
+                  # Use this information to determine the mean residence times as it evolves over time
+                  site_output$MTT_annual_roots_years = apply(site_output$outflux_roots_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_roots_years = site_output$MTT_annual_roots_years / apply(states_all$roots_gCm2,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_roots_years = t(site_output$MTT_annual_roots_years) # rollapply inverts the dimensions from that wanted
+                  site_output$MTT_annual_roots_years = apply(site_output$MTT_annual_roots_years,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  # Convert to fractions
+                  site_output$NaturalFractionOfTurnover_roots = quantile(apply(site_output$NaturalFractionOfTurnover_roots,1,mean, na.rm = na_flag) /
+                                                                         apply(site_output$outflux_roots_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  site_output$FireFractionOfTurnover_roots = quantile(apply(site_output$FireFractionOfTurnover_roots,1,mean, na.rm = na_flag) /
+                                                                      apply(site_output$outflux_roots_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  site_output$HarvestFractionOfTurnover_roots = quantile(apply(site_output$HarvestFractionOfTurnover_roots,1,mean, na.rm = na_flag) /
+                                                                         apply(site_output$outflux_roots_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  # Mean outflux from roots
+                  site_output$mean_outflux_roots_gCm2day = quantile(apply(site_output$outflux_roots_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Now aggregate across quantiles
+                  site_output$outflux_roots_gCm2day = apply(site_output$outflux_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+              }
+
+              # Wood related pool, change, input and output variables
+              if (exists(x = "wood_gCm2", where = states_all)) {
+                  # Assign pool to site_output
+                  site_output$wood_gCm2 = apply(states_all$wood_gCm2,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  site_output$mean_wood_gCm2 = quantile(apply(states_all$wood_gCm2,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Determine net pool change over time
+                  dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
+                  site_output$dCwood_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  # Calculate the mean annual maximums
+                  dCbio = apply(states_all$wood_gCm2, 1, rollapply_mean_annual_max, step = steps_per_year)
+                  site_output$annual_max_wood_gCm2 = quantile(dCbio, prob=num_quantiles, na.rm=na_flag)
+                  # Check for the possible pathways
+                  if (exists(x = "alloc_wood_gCm2day", where = states_all)) {
+                      site_output$alloc_wood_gCm2day = apply(states_all$alloc_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_alloc_wood_gCm2day = quantile(apply(states_all$alloc_wood_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  }
+                  if (exists(x = "wood_to_litter_gCm2day", where = states_all)) {
+                      site_output$wood_to_litter_gCm2day = apply(states_all$wood_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_wood_to_litter_gCm2day = quantile(apply(states_all$wood_to_litter_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$NaturalFractionOfTurnover_wood = states_all$wood_to_litter_gCm2day
+                      # Begin accumulating output fluxes
+                      site_output$outflux_wood_gCm2day = states_all$wood_to_litter_gCm2day
+                  }
+                  # If this one exists then maybe some other fluxes do
+                  if (exists(x = "FIREemiss_wood_gCm2day", where = states_all)) {
+                      site_output$FIREemiss_wood_gCm2day = apply(states_all$FIREemiss_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_FIREemiss_wood_gCm2day = quantile(apply(states_all$FIREemiss_wood_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$FireFractionOfTurnover_wood = states_all$FIREemiss_wood_gCm2day
+                      site_output$outflux_wood_gCm2day = site_output$outflux_wood_gCm2day + states_all$FIREemiss_wood_gCm2day
+                  }
+                  if (exists(x = "FIRElitter_wood_gCm2day", where = states_all)) {
+                      site_output$FIRElitter_wood_gCm2day = apply(states_all$FIRElitter_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_FIRElitter_wood_gCm2day = quantile(apply(states_all$FIRElitter_wood_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_wood_gCm2day = site_output$outflux_wood_gCm2day + states_all$FIRElitter_wood_gCm2day
+                      site_output$FireFractionOfTurnover_wood = site_output$FireFractionOfTurnover_wood + states_all$FIRElitter_wood_gCm2day
+                  }
+                  if (exists(x = "harvest_wood_gCm2day", where = states_all)) {
+                      site_output$harvest_wood_gCm2day = apply(states_all$harvest_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_harvest_wood_gCm2day = quantile(apply(states_all$harvest_wood_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_wood_gCm2day = site_output$outflux_wood_gCm2day + states_all$harvest_wood_gCm2day
+                      site_output$HarvestFractionOfTurnover_wood = states_all$harvest_wood_gCm2day
+                  }
+                  # Use this information to determine the mean residence times as it evolves over time
+                  site_output$MTT_annual_wood_years = apply(site_output$outflux_wood_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_wood_years = site_output$MTT_annual_wood_years / apply(states_all$wood_gCm2,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_wood_years = t(site_output$MTT_annual_wood_years) # rollapply inverts the dimensions from that wanted
+                  site_output$MTT_annual_wood_years = apply(site_output$MTT_annual_wood_years,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  # Convert to fractions
+                  site_output$NaturalFractionOfTurnover_wood = quantile(apply(site_output$NaturalFractionOfTurnover_wood,1,mean, na.rm = na_flag) /
+                                                                        apply(site_output$outflux_wood_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  site_output$FireFractionOfTurnover_wood = quantile(apply(site_output$FireFractionOfTurnover_wood,1,mean, na.rm = na_flag) /
+                                                                     apply(site_output$outflux_wood_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  site_output$HarvestFractionOfTurnover_wood = quantile(apply(site_output$HarvestFractionOfTurnover_wood,1,mean, na.rm = na_flag) /
+                                                                        apply(site_output$outflux_wood_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  # Mean outflux from wood
+                  site_output$mean_outflux_wood_gCm2day = quantile(apply(site_output$outflux_wood_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Now aggregate across quantiles
+                  site_output$outflux_wood_gCm2day = apply(site_output$outflux_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+              }
+
+              # Fine litter pool, change and output variables
+              if (exists(x = "litter_gCm2", where = states_all)) {
+                  # Assign pool to site_output
+                  site_output$litter_gCm2 = apply(states_all$litter_gCm2,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  site_output$mean_litter_gCm2 = quantile(apply(states_all$litter_gCm2,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Determine net pool change over time
+                  dCbio = states_all$litter_gCm2 - states_all$litter_gCm2[,1] # difference in litter from initial
+                  site_output$dClitter_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  # Acumulate total output
+                  site_output$outflux_litter_gCm2day = states_all$rhet_litter_gCm2day + states_all$litter_to_som_gCm2day
+                  site_output$NaturalFractionOfTurnover_litter = site_output$outflux_litter_gCm2day
+                  # Heterotrophic respiration
+                  site_output$rhet_litter_gCm2day = apply(states_all$rhet_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  site_output$mean_rhet_litter_gCm2day = quantile(apply(states_all$rhet_litter_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Decomposition
+                  site_output$litter_to_som_gCm2day = apply(states_all$litter_to_som_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  site_output$mean_litter_to_som_gCm2day = quantile(apply(states_all$litter_to_som_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # If this one exists then maybe some other fluxes do
+                  if (exists(x = "FIREemiss_litter_gCm2day", where = states_all)) {
+                      site_output$FIREemiss_litter_gCm2day = apply(states_all$FIREemiss_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_FIREemiss_litter_gCm2day = quantile(apply(states_all$FIREemiss_litter_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$FireFractionOfTurnover_litter = states_all$FIREemiss_litter_gCm2day
+                      site_output$outflux_litter_gCm2day = site_output$outflux_litter_gCm2day + states_all$FIREemiss_litter_gCm2day
+                  }
+                  if (exists(x = "FIRElitter_litter_gCm2day", where = states_all)) {
+                      site_output$FIRElitter_litter_gCm2day = apply(states_all$FIRElitter_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_FIRElitter_litter_gCm2day = quantile(apply(states_all$FIRElitter_litter_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_litter_gCm2day = site_output$outflux_litter_gCm2day + states_all$FIRElitter_litter_gCm2day
+                      site_output$FireFractionOfTurnover_litter = site_output$FireFractionOfTurnover_litter + states_all$FIRElitter_litter_gCm2day
+                  }
+                  if (exists(x = "harvest_litter_gCm2day", where = states_all)) {
+                      site_output$harvest_litter_gCm2day = apply(states_all$harvest_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_harvest_litter_gCm2day = quantile(apply(states_all$harvest_litter_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_litter_gCm2day = site_output$outflux_litter_gCm2day + states_all$harvest_litter_gCm2day
+                      site_output$HarvestFractionOfTurnover_litter = states_all$harvest_litter_gCm2day
+                  }
+                  # Use this information to determine the mean residence times as it evolves over time
+                  site_output$MTT_annual_litter_years = apply(site_output$outflux_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_litter_years = site_output$MTT_annual_litter_years / apply(states_all$litter_gCm2,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_litter_years = t(site_output$MTT_annual_litter_years) # rollapply inverts the dimensions from that wanted
+                  site_output$MTT_annual_litter_years = apply(site_output$MTT_annual_litter_years,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  # Convert to fractions
+                  site_output$NaturalFractionOfTurnover_litter = quantile(apply(site_output$NaturalFractionOfTurnover_litter,1,mean, na.rm = na_flag) /
+                                                                          apply(site_output$outflux_litter_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  site_output$FireFractionOfTurnover_litter = quantile(apply(site_output$FireFractionOfTurnover_litter,1,mean, na.rm = na_flag) /
+                                                                       apply(site_output$outflux_litter_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  site_output$HarvestFractionOfTurnover_litter = quantile(apply(site_output$HarvestFractionOfTurnover_litter,1,mean, na.rm = na_flag) /
+                                                                          apply(site_output$outflux_litter_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  # Mean outflux from litter
+                  site_output$mean_outflux_litter_gCm2day = quantile(apply(site_output$outflux_litter_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Now aggregate across quantiles
+                  site_output$outflux_litter_gCm2day = apply(site_output$outflux_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+              }
+
+              # Wood litter pool, change and output variables
+              if (exists(x = "woodlitter_gCm2", where = states_all)) {
+                  # Assign pool to site_output
+                  site_output$woodlitter_gCm2 = apply(states_all$woodlitter_gCm2,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  site_output$mean_woodlitter_gCm2 = quantile(apply(states_all$woodlitter_gCm2,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Determine net pool change over time
+                  dCbio = states_all$woodlitter_gCm2 - states_all$woodlitter_gCm2[,1] # difference in wood litter from initial
+                  site_output$dCwoodlitter_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  # Begin accumulating losses from wood litter
+                  site_output$outflux_woodlitter_gCm2day = states_all$rhet_woodlitter_gCm2day + states_all$woodlitter_to_som_gCm2day
+                  site_output$NaturalFractionOfTurnover_woodlitter = site_output$outflux_woodlitter_gCm2day
+                  # Heterotrophic respiration
+                  site_output$rhet_woodlitter_gCm2day = apply(states_all$rhet_woodlitter_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  site_output$mean_rhet_woodlitter_gCm2day = quantile(apply(states_all$rhet_woodlitter_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Decomposition
+                  site_output$woodlitter_to_som_gCm2day = apply(states_all$woodlitter_to_som_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  site_output$mean_woodlitter_to_som_gCm2day = quantile(apply(states_all$woodlitter_to_som_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # If this one exists then maybe some other fluxes do
+                  if (exists(x = "FIREemiss_woodlitter_gCm2day", where = states_all)) {
+                      site_output$FIREemiss_woodlitter_gCm2day = apply(states_all$FIREemiss_woodlitter_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_FIREemiss_woodlitter_gCm2day = quantile(apply(states_all$FIREemiss_woodlitter_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$FireFractionOfTurnover_woodlitter = states_all$FIREemiss_woodlitter_gCm2day
+                      site_output$outflux_woodlitter_gCm2day = site_output$outflux_woodlitter_gCm2day + states_all$FIREemiss_woodlitter_gCm2day
+                  }
+                  if (exists(x = "FIRElitter_woodlitter_gCm2day", where = states_all)) {
+                      site_output$FIRElitter_woodlitter_gCm2day = apply(states_all$FIRElitter_woodlitter_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_FIRElitter_woodlitter_gCm2day = quantile(apply(states_all$FIRElitter_woodlitter_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_woodlitter_gCm2day = site_output$outflux_woodlitter_gCm2day + states_all$FIRElitter_woodlitter_gCm2day
+                      site_output$FireFractionOfTurnover_woodlitter = site_output$FireFractionOfTurnover_woodlitter + states_all$FIRElitter_woodlitter_gCm2day
+                  }
+                  if (exists(x = "harvest_woodlitter_gCm2day", where = states_all)) {
+                      site_output$harvest_woodlitter_gCm2day = apply(states_all$harvest_woodlitter_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_harvest_woodlitter_gCm2day = quantile(apply(states_all$harvest_woodlitter_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_woodlitter_gCm2day = site_output$outflux_woodlitter_gCm2day + states_all$harvest_woodlitter_gCm2day
+                      site_output$HarvestFractionOfTurnover_woodlitter = states_all$harvest_woodlitter_gCm2day
+                  }
+                  # Use this information to determine the mean residence times as it evolves over time
+                  site_output$MTT_annual_woodlitter_years = apply(site_output$outflux_woodlitter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_woodlitter_years = site_output$MTT_annual_woodlitter_years / apply(states_all$woodlitter_gCm2,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_woodlitter_years = t(site_output$MTT_annual_woodlitter_years) # rollapply inverts the dimensions from that wanted
+                  site_output$MTT_annual_woodlitter_years = apply(site_output$MTT_annual_woodlitter_years,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  # Convert to fractions
+                  site_output$NaturalFractionOfTurnover_woodlitter = quantile(apply(site_output$NaturalFractionOfTurnover_woodlitter,1,mean, na.rm = na_flag) /
+                                                                              apply(site_output$outflux_woodlitter_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  site_output$FireFractionOfTurnover_woodlitter = quantile(apply(site_output$FireFractionOfTurnover_woodlitter,1,mean, na.rm = na_flag) /
+                                                                           apply(site_output$outflux_woodlitter_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  site_output$HarvestFractionOfTurnover_woodlitter = quantile(apply(site_output$HarvestFractionOfTurnover_woodlitter,1,mean, na.rm = na_flag) /
+                                                                              apply(site_output$outflux_woodlitter_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  # Mean outflux from wood
+                  site_output$mean_outflux_woodlitter_gCm2day = quantile(apply(site_output$outflux_woodlitter_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Now aggregate across quantiles
+                  site_output$outflux_woodlitter_gCm2day = apply(site_output$outflux_woodlitter_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+              }
+
+              # Soil organic matter pool, change and output variables
+              if (exists(x = "som_gCm2", where = states_all)) {
+                  # Assign pool to site_output
+                  site_output$som_gCm2 = apply(states_all$som_gCm2,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  site_output$mean_som_gCm2 = quantile(apply(states_all$som_gCm2,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Determine net pool change over time
+                  dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
+                  site_output$dCsom_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  # Begin accumulating losses from som
+                  site_output$outflux_som_gCm2day = states_all$rhet_som_gCm2day
+                  site_output$NaturalFractionOfTurnover_som = site_output$outflux_som_gCm2day
+                  # Heterotrphic respiration
+                  site_output$rhet_som_gCm2day = apply(states_all$rhet_som_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  site_output$mean_rhet_som_gCm2day = quantile(apply(states_all$rhet_som_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # If this one exists then maybe some other fluxes do
+                  if (exists(x = "FIREemiss_som_gCm2day", where = states_all)) {
+                      site_output$FIREemiss_som_gCm2day = apply(states_all$FIREemiss_som_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_FIREemiss_som_gCm2day = quantile(apply(states_all$FIREemiss_som_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$FireFractionOfTurnover_som = states_all$FIREemiss_som_gCm2day
+                      site_output$outflux_som_gCm2day = site_output$outflux_som_gCm2day + states_all$FIREemiss_som_gCm2day
+                  }
+                  # NOTE: FIRElitter does not exist as there is not litter which leaves the som pool
+                  if (exists(x = "harvest_som_gCm2day", where = states_all)) {
+                      site_output$harvest_som_gCm2day = apply(states_all$harvest_som_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_harvest_som_gCm2day = quantile(apply(states_all$harvest_som_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_som_gCm2day = site_output$outflux_som_gCm2day + states_all$harvest_som_gCm2day
+                      site_output$HarvestFractionOfTurnover_som = states_all$harvest_som_gCm2day
+                  }
+                  # Use this information to determine the mean residence times as it evolves over time
+                  site_output$MTT_annual_som_years = apply(site_output$outflux_som_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_som_years = site_output$MTT_annual_som_years / apply(states_all$som_gCm2,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_som_years = t(site_output$MTT_annual_som_years) # rollapply inverts the dimensions from that wanted
+                  site_output$MTT_annual_som_years = apply(site_output$MTT_annual_som_years,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  # Convert to fractions
+                  site_output$NaturalFractionOfTurnover_som = quantile(apply(site_output$NaturalFractionOfTurnover_som,1,mean, na.rm = na_flag) /
+                                                                       apply(site_output$outflux_som_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  site_output$FireFractionOfTurnover_som = quantile(apply(site_output$FireFractionOfTurnover_som,1,mean, na.rm = na_flag) /
+                                                                    apply(site_output$outflux_som_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  site_output$HarvestFractionOfTurnover_som = quantile(apply(site_output$HarvestFractionOfTurnover_som,1,mean, na.rm = na_flag) /
+                                                                       apply(site_output$outflux_som_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  # Mean outflux from som
+                  site_output$mean_outflux_som_gCm2day = quantile(apply(site_output$outflux_som_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Now aggregate across quantiles
+                  site_output$outflux_som_gCm2day = apply(site_output$outflux_som_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+              }
+
+              # Dead organic matter pool, change and output variables
+              # NOTE: this is potentially the combination of som, litter and wood litter
+              if (exists(x = "dom_gCm2", where = states_all)) {
+                  # Assign pool to site_output
+                  site_output$dom_gCm2 = apply(states_all$dom_gCm2,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  site_output$mean_dom_gCm2 = quantile(apply(states_all$dom_gCm2,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Determine net pool change over time
+                  dCbio = states_all$dom_gCm2 - states_all$dom_gCm2[,1] # difference in dom from initial
+                  site_output$dCdom_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  # Accumulating output fluxes from dead organic matter
+                  site_output$outflux_dom_gCm2day = states_all$rhet_dom_gCm2day
+                  site_output$NaturalFractionOfTurnover_dom = site_output$outflux_dom_gCm2day
+                  # Heterotrophic respiration
+                  site_output$rhet_dom_gCm2day = apply(states_all$rhet_dom_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  site_output$mean_rhet_dom_gCm2day = quantile(apply(states_all$rhet_dom_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # If this one exists then maybe some other fluxes do
+                  if (exists(x = "FIREemiss_dom_gCm2day", where = states_all)) {
+                      site_output$FIREemiss_dom_gCm2day = apply(states_all$FIREemiss_dom_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_FIREemiss_dom_gCm2day = quantile(apply(states_all$FIREemiss_dom_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$FireFractionOfTurnover_dom = states_all$FIREemiss_dom_gCm2day
+                      site_output$outflux_dom_gCm2day = site_output$outflux_dom_gCm2day + states_all$FIREemiss_dom_gCm2day
+                  }
+                  # NOTE: FIRElitter does not exist as there is not litter which leaves the dom pool
+                  if (exists(x = "harvest_dom_gCm2day", where = states_all)) {
+                      site_output$harvest_dom_gCm2day = apply(states_all$harvest_dom_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_harvest_dom_gCm2day = quantile(apply(states_all$harvest_dom_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_dom_gCm2day = site_output$outflux_dom_gCm2day + states_all$harvest_som_gCm2day
+                      site_output$HarvestFractionOfTurnover_dom = states_all$harvest_dom_gCm2day
+                  }
+                  # Use this information to determine the mean residence times as it evolves over time
+                  site_output$MTT_annual_dom_years = apply(site_output$outflux_dom_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_dom_years = site_output$MTT_annual_dom_years / apply(states_all$dom_gCm2,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_dom_years = t(site_output$MTT_annual_dom_years) # rollapply inverts the dimensions from that wanted
+                  site_output$MTT_annual_dom_years = apply(site_output$MTT_annual_dom_years,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                  # Convert to fractions
+                  site_output$NaturalFractionOfTurnover_dom = quantile(apply(site_output$NaturalFractionOfTurnover_dom,1,mean, na.rm = na_flag) /
+                                                                       apply(site_output$outflux_dom_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  site_output$FireFractionOfTurnover_dom = quantile(apply(site_output$FireFractionOfTurnover_dom,1,mean, na.rm = na_flag) /
+                                                                    apply(site_output$outflux_dom_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  site_output$HarvestFractionOfTurnover_dom = quantile(apply(site_output$HarvestFractionOfTurnover_dom,1,mean, na.rm = na_flag) /
+                                                                       apply(site_output$outflux_dom_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm=na_flag)
+                  # Mean outflux from dom
+                  site_output$mean_outflux_dom_gCm2day = quantile(apply(site_output$outflux_dom_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Now aggregate across quantiles
+                  site_output$outflux_dom_gCm2day = apply(site_output$outflux_dom_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+              }
+
+              ###
+              # Aggregate Water cycle related fluxes
+              ###
+
               # Water cycle specific if available
-              if (length(which(names(states_all) == "evap_kgH2Om2day")) > 0) {
-                  # current water in the soil surface layer (0-30 cm)
-                  site_output$SurfWater_kgH2Om2 = apply(states_all$sfc_water_mm,2,quantile,prob=num_quantiles,na.rm=na_flag)
+              if (exists(x = "ET_kgH2Om2day", where = states_all)) {
+                  ## current water in the soil surface layer (0-30 cm)
+                  site_output$SurfWater_kgH2Om2 = apply(states_all$SurfWater_kgH2Om2,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  site_output$mean_SurfWater_kgH2Om2 = quantile(apply(states_all$SurfWater_kgH2Om2,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Calculate change over time
+                  dCbio = states_all$SurfWater_kgH2Om2 - states_all$SurfWater_kgH2Om2[,1] # difference in surface water from initial
+                  site_output$dSurfWater_kgH2Om2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
+
                   # plant apparent soil water potential (MPa)
                   site_output$wSWP_MPa = apply(states_all$wSWP_MPa,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  site_output$mean_wSWP_MPa = quantile(apply(states_all$wSWP_MPa,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Calculate change over time
+                  dCbio = states_all$wSWP_MPa - states_all$wSWP_MPa[,1] # difference from initial
+                  site_output$dwSWP_MPa = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
+
                   # evapotranspiration (Etrans + Esoil + Ewetcanopy)
-                  site_output$evap_kgH2Om2day = apply(states_all$evap_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  site_output$ET_kgH2Om2day = apply(states_all$ET_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  site_output$mean_ET_kgH2Om2day = quantile(apply(states_all$ET_kgH2Om2day,1,mean, na.rm=na_flag), prob=num_quantiles)
               }
+
+              ###
+              # Aggregate ACM diagnositic information
+              ###
+
               # Canopy process information if available
-              if (length(which(names(states_all) == "APAR_MJm2day")) > 0) {
+              if (exists(x = "APAR_MJm2day", where = states_all)) {
                   # Extract the absorbed photosynthetically active radiation by the canopy
                   site_output$APAR_MJm2day = apply(states_all$APAR_MJm2day,2,quantile, prob=num_quantiles, na.rm=na_flag)
+                  site_output$mean_APAR_MJm2day = quantile(apply(states_all$APAR_MJm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Calculate change over time
+                  dCbio = states_all$APAR_MJm2day - states_all$APAR_MJm2day[,1] # difference in dom from initial
+                  site_output$dAPAR_MJm2day = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
               }
-              if (length(which(names(states_all) == "CiCa")) > 0) {
+              if (exists(x = "CiCa", where = states_all)) {
                   # Extract the internal vs ambient CO2 ratio
                   site_output$CiCa = apply(states_all$CiCa,2,quantile, prob=num_quantiles, na.rm=na_flag)
+                  site_output$mean_CiCa = quantile(apply(states_all$CiCa,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  # Calculate change over time
+                  dCbio = states_all$CiCa - states_all$CiCa[,1] # difference in dom from initial
+                  site_output$dCiCa = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
               }
-              # Some annual aggregate information for disturbance
-              if (length(which(names(states_all) == "FIREemiss_gCm2yr"))) {
-                  # Extract pool specific fire emissions information (labile, foliar, fine root, wood, litter, soil)
-                  tmp = apply(states_all$FIREemiss_gCm2yr,c(2,3),quantile, prob=num_quantiles, na.rm=na_flag)
-                  site_output$FIREemiss_labile_gCm2yr = tmp[,1,]
-                  site_output$FIREemiss_foliar_gCm2yr = tmp[,2,]
-                  site_output$FIREemiss_root_gCm2yr   = tmp[,3,]
-                  site_output$FIREemiss_wood_gCm2yr   = tmp[,4,]
-                  site_output$FIREemiss_litter_gCm2yr = tmp[,5,]
-                  site_output$FIREemiss_som_gCm2yr    = tmp[,6,]
-                  # Extract pool specific fire generated litter information (labile, foliar, fine root, wood, litter, soil)
-                  tmp = apply(states_all$FIRElit_gCm2yr,c(2,3),quantile, prob=num_quantiles, na.rm=na_flag)
-                  site_output$FIRElitter_labile_gCm2yr = tmp[,1,]
-                  site_output$FIRElitter_foliar_gCm2yr = tmp[,2,]
-                  site_output$FIRElitter_root_gCm2yr   = tmp[,3,]
-                  site_output$FIRElitter_wood_gCm2yr   = tmp[,4,]
-                  site_output$FIRElitter_litter_gCm2yr = tmp[,5,]
-                  site_output$FIRElitter_som_gCm2yr    = tmp[,6,]
-                  # Extract pool specific fire generated outfluxes from natural processed (labile, foliar, fine root, wood, litter, soil)
-                  tmp = apply(states_all$NAToutflux_gCm2yr,c(2,3),quantile, prob=num_quantiles, na.rm=na_flag)
-                  site_output$NAToutflux_labile_gCm2yr = tmp[,1,]
-                  site_output$NAToutflux_foliar_gCm2yr = tmp[,2,]
-                  site_output$NAToutflux_root_gCm2yr   = tmp[,3,]
-                  site_output$NAToutflux_wood_gCm2yr   = tmp[,4,]
-                  site_output$NAToutflux_litter_gCm2yr = tmp[,5,]
-                  site_output$NAToutflux_som_gCm2yr    = tmp[,6,]
-              }
+
+              ###
+              # Aggregate model ensemble - observation uncertainty consistency
+              # information
+              ###
+
               # Any time series assimilated data overlaps?
-              if (length(which(names(states_all) == "gpp_assim_data_overlap_fraction")) > 0) {
+              if (exists(x = "gpp_assim_data_overlap_fraction", where = states_all)) {
                   site_output$gpp_assim_data_overlap_fraction = states_all$gpp_assim_data_overlap_fraction
               }
-              if (length(which(names(states_all) == "lai_assim_data_overlap_fraction")) > 0) {
+              if (exists(x = "lai_assim_data_overlap_fraction", where = states_all)) {
                   site_output$lai_assim_data_overlap_fraction = states_all$lai_assim_data_overlap_fraction
               }
-              if (length(which(names(states_all) == "nee_assim_data_overlap_fraction")) > 0) {
+              if (exists(x = "nee_assim_data_overlap_fraction", where = states_all)) {
                   site_output$nee_assim_data_overlap_fraction = states_all$nee_assim_data_overlap_fraction
               }
-              if (length(which(names(states_all) == "wood_assim_data_overlap_fraction")) > 0) {
+              if (exists(x = "wood_assim_data_overlap_fraction", where = states_all)) {
                   site_output$wood_assim_data_overlap_fraction = states_all$wood_assim_data_overlap_fraction
               }
-              if (length(which(names(states_all) == "soil_assim_data_overlap_fraction")) > 0) {
+              if (exists(x = "soil_assim_data_overlap_fraction", where = states_all)) {
                   site_output$soil_assim_data_overlap_fraction = states_all$soil_assim_data_overlap_fraction
               }
-              if (length(which(names(states_all) == "evap_assim_data_overlap_fraction")) > 0) {
-                  site_output$evap_assim_data_overlap_fraction = states_all$evap_assim_data_overlap_fraction
+              if (exists(x = "et_assim_data_overlap_fraction", where = states_all)) {
+                  site_output$et_assim_data_overlap_fraction = states_all$et_assim_data_overlap_fraction
               }
-              if (length(which(names(states_all) == "nbe_assim_data_overlap_fraction")) > 0) {
+              if (exists(x = "nbe_assim_data_overlap_fraction", where = states_all)) {
                   site_output$nbe_assim_data_overlap_fraction = states_all$nbe_assim_data_overlap_fraction
               }
-              if (length(which(names(states_all) == "fire_assim_data_overlap_fraction")) > 0) {
+              if (exists(x = "fire_assim_data_overlap_fraction", where = states_all)) {
                   site_output$fire_assim_data_overlap_fraction = states_all$fire_assim_data_overlap_fraction
-              }
-              ## Now keeping the whole ensemble extract the pixel level values needed for grid scale aggregates
-              ## All units remain at this point as the are output by DALEC
-              steps_per_year = floor(dim(drivers$met)[1] / ((as.numeric(PROJECT$end_year) - as.numeric(PROJECT$start_year))+1))
-              ss = dim(drivers$met)[1]-steps_per_year ;  ff = dim(drivers$met)[1]
-              # Mean of final year
-              if (length(which(names(states_all) == "litwood_gCm2")) > 0) {
-                  ## With wood litter
-                  # Total C and change
-                  site_output$agg_totalC = quantile(apply(states_all$bio_gCm2[,ss:ff] +
-                                                          states_all$lit_gCm2[,ss:ff] +
-                                                          states_all$litwood_gCm2[,ss:ff] +
-                                                          states_all$som_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-                  dCbio = states_all$bio_gCm2[,ff] + states_all$lit_gCm2[,ff] + states_all$litwood_gCm2[,ff] + states_all$som_gCm2[,ff]
-                  dCbio = dCbio - (states_all$bio_gCm2[,1] + states_all$lit_gCm2[,1] + states_all$litwood_gCm2[,1] + states_all$som_gCm2[,1])
-                  site_output$agg_dCtotalC = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
-                  # DOM and change
-                  site_output$agg_dom = quantile(apply(states_all$som_gCm2[,ss:ff] +
-                                                       states_all$lit_gCm2[,ss:ff] +
-                                                       states_all$litwood_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-                  dCbio = states_all$lit_gCm2[,ff] + states_all$litwood_gCm2[,ff] + states_all$som_gCm2[,ff]
-                  dCbio = dCbio - (states_all$lit_gCm2[,1] + states_all$litwood_gCm2[,1] + states_all$som_gCm2[,1])
-                  site_output$agg_dCdom = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
-                  # Wood litter and change
-                  site_output$agg_litwood = quantile(apply(states_all$litwood_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-                  dCbio = states_all$litwood_gCm2[,ff] - states_all$litwood_gCm2[,1]
-                  site_output$agg_dClitwood = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
-              } else {
-                  ## Without wood litter
-                  # Total C and change
-                  site_output$agg_totalC = quantile(apply(states_all$bio_gCm2[,ss:ff] +
-                                                          states_all$lit_gCm2[,ss:ff] +
-                                                          states_all$som_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-                  dCbio = states_all$bio_gCm2[,ff] + states_all$lit_gCm2[,ff] + states_all$som_gCm2[,ff]
-                  dCbio = dCbio - (states_all$bio_gCm2[,1] + states_all$lit_gCm2[,1] + states_all$som_gCm2[,1])
-                  site_output$agg_dCtotalC = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
-                  # DOM and change
-                  site_output$agg_dom = quantile(apply(states_all$lit_gCm2[,ss:ff]+states_all$som_gCm2[,ss:ff],1,mean), prob = num_quantiles_agg, na.rm=na_flag)
-                  dCbio = states_all$lit_gCm2[,ff] + states_all$som_gCm2[,ff]
-                  dCbio = dCbio - (states_all$lit_gCm2[,1] + states_all$som_gCm2[,1])
-                  site_output$agg_dCdom = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
-
-              }
-
-              # Biomass and change
-              site_output$agg_biomass = quantile(apply(states_all$bio_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              dCbio = states_all$bio_gCm2[,ff] - states_all$bio_gCm2[,1] # difference in biomass from initial
-              site_output$agg_dCbio = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
-              # Labile and change
-              site_output$agg_labile = quantile(apply(states_all$lab_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              dCbio = states_all$lab_gCm2[,ff] - states_all$lab_gCm2[,1] # difference in biomass from initial
-              site_output$agg_dClabile = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
-              # Foliage and change
-              site_output$agg_foliage = quantile(apply(states_all$fol_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              dCbio = states_all$fol_gCm2[,ff] - states_all$fol_gCm2[,1] # difference in biomass from initial
-              site_output$agg_dCfoliage = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
-              # Fine root and change
-              site_output$agg_root = quantile(apply(states_all$root_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              dCbio = states_all$root_gCm2[,ff] - states_all$root_gCm2[,1] # difference in biomass from initial
-              site_output$agg_dCroot = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
-              # Wood and change
-              site_output$agg_wood = quantile(apply(states_all$wood_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              dCbio = states_all$wood_gCm2[,ff] - states_all$wood_gCm2[,1] # difference in biomass from initial
-              site_output$agg_dCwood = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
-              # Foliar and fine root litter and chaneg
-              site_output$agg_lit = quantile(apply(states_all$lit_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              dCbio = states_all$lit_gCm2[,ff] - states_all$lit_gCm2[,1] # difference in biomass from initial
-              site_output$agg_dClitter = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
-              # Soil C and change
-              site_output$agg_som = quantile(apply(states_all$som_gCm2[,ss:ff],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              dCbio = states_all$som_gCm2[,ff] - states_all$som_gCm2[,1] # difference in biomass from initial
-              site_output$agg_dCsom = quantile(dCbio, prob = num_quantiles_agg, na.rm=na_flag)
-
-              ## Mean of whole time period
-              site_output$agg_nbp = quantile(apply(-states_all$nee_gCm2day - states_all$fire_gCm2day - states_all$harvest_C_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles_agg, na.rm=na_flag)
-              site_output$agg_nbe = quantile(apply(states_all$nee_gCm2day + states_all$fire_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles_agg, na.rm=na_flag)
-              site_output$agg_nee = quantile(apply(states_all$nee_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              site_output$agg_gpp = quantile(apply(states_all$gpp_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              site_output$agg_rauto = quantile(apply(states_all$rauto_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              site_output$agg_rhet = quantile(apply(states_all$rhet_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              site_output$agg_reco = quantile(apply(states_all$reco_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              site_output$agg_harvest = quantile(apply(states_all$harvest_C_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              site_output$agg_fire = quantile(apply(states_all$fire_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              site_output$agg_npp = quantile(apply(npp,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              site_output$agg_fnpp = quantile(apply(npp * states_all$aNPP[,1],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              site_output$agg_rnpp = quantile(apply(npp * states_all$aNPP[,2],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              site_output$agg_wnpp = quantile(apply(npp * states_all$aNPP[,3],1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              if (length(which(names(site_output) == "rhet_litter_gCm2day")) > 0) {
-                  site_output$agg_rhet_litter = quantile(apply(states_all$rhet_litter_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              }
-              if (length(which(names(site_output) == "rhet_som_gCm2day")) > 0) {
-                  site_output$agg_rhet_som = quantile(apply(states_all$rhet_som_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              }
-              if (length(which(names(site_output) == "decomp_litter_gCm2day")) > 0) {
-                  site_output$agg_decomp_litter = quantile(apply(states_all$decomp_litter_gCm2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
-              }
-              # Water cycle specific if available
-              if (length(which(names(states_all) == "evap_kgH2Om2day")) > 0) {
-                  # evapotranspiration (Etrans + Esoil + Ewetcanopy)
-                  site_output$agg_evap = quantile(apply(states_all$evap_kgH2Om2day,1,mean, na.rm=na_flag), prob = num_quantiles_agg, na.rm=na_flag)
               }
 
               # C-cycle flux correlation with parameters
@@ -629,7 +1276,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
               site_output$fire_par_cor = states_all$fire_par_cor
 
               # save to pixel specific file for the moment... in "run_mcmc_results" these will be combined into a single grid
-              save(site_output,file=outfile2, compress = "gzip", compression_level = 9)
+              save(site_output,file=outfile_stock_fluxes, compress = "gzip", compression_level = 9)
         }
 
         dummy = 0
@@ -666,7 +1313,8 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
   functions_list=c("read_parameter_chains","read_binary_file_format","simulate_all",
                    "read_binary_response_surface","crop_development_parameters",
                    "have_chains_converged","psrf","read_parameter_covariance",
-                   "ensemble_within_range")
+                   "ensemble_within_range","rollapply_mean_annual_max",
+                   "rollapply_mean_annual")
   # start marker
   stime = proc.time()["elapsed"]
 
@@ -678,8 +1326,8 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
       print("...beginning filterings for sites we have already processed")
       keep_list = 0
       for (i in seq(1, length(nos_plots))) {
-           outfile1 = paste(PROJECT$results_processedpath,PROJECT$sites[i],"_parameters.RData",sep="")
-           if (file.exists(outfile1) == FALSE) {keep_list=append(keep_list,i)}
+           outfile_parameters = paste(PROJECT$results_processedpath,PROJECT$sites[i],"_parameters.RData",sep="")
+           if (file.exists(outfile_parameters) == FALSE) {keep_list=append(keep_list,i)}
       }
       # filter out the sites we already have then
       keep_list = keep_list[-1] ; print(paste("......removing ",length(nos_plots)-length(keep_list)," sites out of ",length(nos_plots)," from the analysis",sep=""))
@@ -726,11 +1374,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
       # Determine some useful information for the analysis below
       nos_years = (as.numeric(PROJECT$end_year) - as.numeric(PROJECT$start_year))+1
       steps_per_year = floor(dim(drivers$met)[1] / nos_years)
-      # Set number of final aggregated quantiles wanted
-      agg_quantiles_final = seq(0,1,length.out=100)
-      # Number of iterations available for resample in aggregation process
-      agg_iter = 1e5
 
+      # Begin creation of all variables for the output gridded dataset
+      # otherwise load the existing but incomplete version from file
       if (file.exists(outfile_grid) == FALSE | repair == 1) {
 
           # make a list of all the files we will be reading in
@@ -742,141 +1388,459 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           #
           # Generate the summary information
           # Time invariant but contain uncertainty, shaped into the full spatial grid
-          # i.e. including areas not part of the analysis but within the spatail domain
+          # i.e. including areas not part of the analysis but within the spatial domain
           #
-          # Mean stocks first
-          grid_output = list(num_quantiles = site_output$num_quantiles)
-          grid_output$mean_labile_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_totalC_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_dom_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_biomass_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_foliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_wood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_lit_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_som_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_dCtotalC_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_dCdom_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_dCbio_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_dCfoliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_dCroots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_dCwood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_dClit_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_dCsom_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+
+          # Define grid_output object and add some basic information
+          grid_output = list(readme = c("For gridded variables (e.g. mean_*, or final_*) the default dimesions are long/lat/quantile",
+                                        "For time varying variables (e.g. wood_gCm2) default dimensions are site/quantile/time"),
+                             num_quantiles = site_output$num_quantiles,
+                             long_dim = PROJECT$long_dim, lat_dim = PROJECT$lat_dim, time_dim = dim(site_output$labile_gCm2)[2],
+                             start_year = PROJECT$start_year, end_year = PROJECT$end_year,
+                             steps_per_year = steps_per_year, nos_years = nos_years)
+
+          ###
+          # Define likelihood / parameter / driver information
+          ###
+
+          # loop through parameters + likelihood
+          grid_output$parameters = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)+1,dim(site_output$labile_gCm2)[1]))
+          # track which parameters have converged + likelihood
+          grid_output$parameters_converged = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)+1))
+          # Mean meteorological conditions
+          grid_output$mean_temperature_C = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$mean_radiation_MJm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$mean_vpd_Pa = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$mean_precipitation_kgH2Om2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          # Assimilated leaf area index information
+          grid_output$assimilated_lai_max_m2m2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$assimilated_lai_mean_m2m2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$assimilated_lai_sd_m2m2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$assimilated_lai_unc_m2m2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          # Assimilated wood stock / prior information
+          grid_output$assimilated_wood_mean_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$assimilated_wood_mean_unc_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          # Assimilated som stock / prior information
+          grid_output$assimilated_som_mean_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$assimilated_som_mean_unc_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+
+          # Net primary production allocation fractions
+          if (exists(x = "NPP_foliage_fraction", where = site_output)) {grid_output$NPP_foliage_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
+          if (exists(x = "NPP_roots_fraction", where = site_output)) {grid_output$NPP_roots_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
+          if (exists(x = "NPP_wood_fraction", where = site_output)) {grid_output$NPP_wood_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
+          # Analysis mean transit (residence) times (years)
+          if (exists(x = "MTT_labile_years", where = site_output)) {grid_output$MTT_labile_years =array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
+          if (exists(x = "MTT_foliage_years", where = site_output)) {grid_output$MTT_foliage_years = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
+          if (exists(x = "MTT_roots_years", where = site_output)) {grid_output$MTT_roots_years = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
+          if (exists(x = "MTT_wood_years", where = site_output)) {grid_output$MTT_wood_years = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
+          if (exists(x = "MTT_litter_years", where = site_output)) {grid_output$MTT_litter_years = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
+          if (exists(x = "MTT_woodlitter_years", where = site_output)) {grid_output$MTT_woodlitter_years = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
+          if (exists(x = "MTT_som_years", where = site_output)) {grid_output$MTT_som_years = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
+          # Steady state C stock estimates (gC/m2)
+          if (exists(x = "SS_labile_gCm2", where = site_output)) {grid_output$SS_labile_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
+          if (exists(x = "SS_foliage_gCm2", where = site_output)) {grid_output$SS_foliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
+          if (exists(x = "SS_roots_gCm2", where = site_output)) {grid_output$SS_roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
+          if (exists(x = "SS_wood_gCm2", where = site_output)) {grid_output$SS_wood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
+          if (exists(x = "SS_litter_gCm2", where = site_output)) {grid_output$SS_litter_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
+          if (exists(x = "SS_woodlitter_gCm2", where = site_output)) {grid_output$SS_woodlitter_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
+          if (exists(x = "SS_som_gCm2", where = site_output)) {grid_output$SS_som_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
+
+          # Total ecosystem C is always present
+          grid_output$mean_Ctotal_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          grid_output$final_Ctotal_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          grid_output$final_dCtotal_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          # Ecosystem leaf area index is always present
           grid_output$mean_lai_m2m2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          # Final stocks second
-          grid_output$final_labile_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$final_totalC_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$final_dom_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$final_biomass_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$final_foliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$final_roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$final_wood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$final_lit_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$final_som_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$final_dCtotalC_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$final_dCdom_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$final_dCbio_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$final_dCfoliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$final_dCroots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$final_dCwood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$final_dClit_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$final_dCsom_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$final_lai_m2m2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          # Fluxes third
+          grid_output$final_dlai_m2m2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          # Mean ecosystem bulk fluxes are always present
           grid_output$mean_nee_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_gpp_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_rauto_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_rhet_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_reco_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_npp_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_fnpp_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_rnpp_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$mean_wnpp_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_harvest_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_fire_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_nbe_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_nbp_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          # For those which we currently have need, estimate the mean annual maximum
-          grid_output$annual_max_roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          grid_output$annual_max_wood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          # Models were heterotrophic respiration of litter is seperately output
-          if (length(which(names(site_output) == "rhet_litter_gCm2day")) > 0) {
+          # Time varying pixel based (i.e. not within the grid) values with quantile based uncertainty for...
+          # States
+          grid_output$Ctotal_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          grid_output$lai_m2m2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          # Fluxes
+          grid_output$nee_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          grid_output$gpp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          grid_output$rauto_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          grid_output$rhet_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          grid_output$reco_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          grid_output$npp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          grid_output$harvest_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          grid_output$fire_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          grid_output$nbe_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          grid_output$nbp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+
+          # Based on the presence of each pool define the grids for the mean and final values.
+          # Also, create the time varying but quantile based values and time
+
+          # Gridded biomass information
+          if (exists(x = "biomass_gCm2", where = site_output)) {
+              # Grid mean / finals for globally available variables
+              grid_output$mean_biomass_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_biomass_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_dCbiomass_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_outflux_biomass_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_biomass_to_litter_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Time varying pixel specific with quantiles
+              grid_output$biomass_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$dCbiomass_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$outflux_biomass_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$biomass_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              # Annual information
+              grid_output$MTT_annual_biomass_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              # Fractional partitioning of tunover to different drivers - should they exist
+              grid_output$NaturalFractionOfTurnover_biomass = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$FireFractionOfTurnover_biomass = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$HarvestFractionOfTurnover_biomass = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Conditional variables
+              if (exists(x = "FIREemiss_biomass_gCm2day", where = site_output)) {
+                  grid_output$FIREemiss_biomass_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_FIREemiss_biomass_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+              if (exists(x = "FIRElitter_biomass_gCm2day", where = site_output)) {
+                  grid_output$FIRElitter_biomass_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_FIRElitter_biomass_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+              if (exists(x = "harvest_biomass_gCm2day", where = site_output)) {
+                  grid_output$harvest_biomass_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_harvest_biomass_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+          }
+          # Gridded labile information
+          if (exists(x = "labile_gCm2", where = site_output)) {
+              # Grid averages
+              grid_output$mean_labile_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_labile_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_dClabile_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_outflux_labile_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_labile_to_foliage_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_alloc_labile_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Time varying pixel specific with quantiles
+              grid_output$labile_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$dClabile_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$outflux_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$labile_to_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$alloc_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              # Annual information
+              grid_output$MTT_annual_labile_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              # Fractional partitioning of tunover to different drivers - should they exist
+              grid_output$NaturalFractionOfTurnover_labile = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$FireFractionOfTurnover_labile = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$HarvestFractionOfTurnover_labile = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Conditional variables
+              if (exists(x = "FIREemiss_labile_gCm2day", where = site_output)) {
+                  grid_output$FIREemiss_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_FIREemiss_labile_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+              if (exists(x = "FIRElitter_labile_gCm2day", where = site_output)) {
+                  grid_output$FIRElitter_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_FIRElitter_labile_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+              if (exists(x = "harvest_labile_gCm2day", where = site_output)) {
+                  grid_output$harvest_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_harvest_labile_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+          }
+          # Gridded foliage information
+          if (exists(x = "foliage_gCm2", where = site_output)) {
+              # Grided mean / final
+              grid_output$mean_foliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_foliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_dCfoliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_outflux_foliage_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_foliage_to_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Time varying pixel specific with quantiles
+              grid_output$foliage_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$dCfoliage_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$outflux_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$foliage_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              # Annual information
+              grid_output$MTT_annual_foliage_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              # Fractional partitioning of tunover to different drivers - should they exist
+              grid_output$NaturalFractionOfTurnover_foliage = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$FireFractionOfTurnover_foliage = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$HarvestFractionOfTurnover_foliage = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Conditional variables
+              if (exists(x = "alloc_foliage_gCm2day_gCm2day", where = site_output)) {
+                  grid_output$alloc_foliage_gCm2day_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_alloc_foliage_gCm2day_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+              if (exists(x = "FIREemiss_foliage_gCm2day", where = site_output)) {
+                  grid_output$FIREemiss_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_FIREemiss_foliage_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+              if (exists(x = "FIRElitter_foliage_gCm2day", where = site_output)) {
+                  grid_output$FIRElitter_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_FIRElitter_foliage_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+              if (exists(x = "harvest_foliage_gCm2day", where = site_output)) {
+                  grid_output$harvest_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_harvest_foliage_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+          }
+          # Gridded roots information
+          if (exists(x = "roots_gCm2", where = site_output)) {
+              # Gridded mean / final
+              grid_output$mean_roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_dCroots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_outflux_roots_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_roots_to_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_alloc_roots_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$annual_max_roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Time varying pixel specific with quantiles
+              grid_output$roots_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$dCroots_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$outflux_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$roots_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$alloc_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              # Annual information
+              grid_output$MTT_annual_roots_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              # Fractional partitioning of tunover to different drivers - should they exist
+              grid_output$NaturalFractionOfTurnover_roots = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$FireFractionOfTurnover_roots = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$HarvestFractionOfTurnover_roots = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              if (exists(x = "FIREemiss_roots_gCm2day", where = site_output)) {
+                  grid_output$FIREemiss_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_FIREemiss_roots_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+              if (exists(x = "FIRElitter_roots_gCm2day", where = site_output)) {
+                  grid_output$FIRElitter_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_FIRElitter_roots_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+              if (exists(x = "harvest_roots_gCm2day", where = site_output)) {
+                  grid_output$harvest_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_harvest_roots_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+          }
+          # Gridded wood information
+          if (exists(x = "wood_gCm2", where = site_output)) {
+              # Gridded mean / final variables
+              grid_output$mean_wood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_wood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_dCwood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_outflux_wood_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_wood_to_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_alloc_wood_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$annual_max_wood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Time varying pixel specific with quantiles
+              grid_output$wood_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$dCwood_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$outflux_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$wood_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$alloc_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              # Annual information
+              grid_output$MTT_annual_wood_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              # Fractional partitioning of tunover to different drivers - should they exist
+              grid_output$NaturalFractionOfTurnover_wood = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$FireFractionOfTurnover_wood = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$HarvestFractionOfTurnover_wood = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Conditional variables
+              if (exists(x = "FIREemiss_wood_gCm2day", where = site_output)) {
+                  grid_output$FIREemiss_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_FIREemiss_wood_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+              if (exists(x = "FIRElitter_wood_gCm2day", where = site_output)) {
+                  grid_output$FIRElitter_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_FIRElitter_wood_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+              if (exists(x = "harvest_wood_gCm2day", where = site_output)) {
+                  grid_output$harvest_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_harvest_wood_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+          }
+          # Gridded litter information
+          if (exists(x = "litter_gCm2", where = site_output)) {
+              # Gridded mean / final
+              grid_output$mean_litter_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_litter_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_dClitter_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_outflux_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_litter_to_som_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_rhet_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Time varying pixel specific with quantiles
+              grid_output$litter_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$dClitter_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$outflux_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$litter_to_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$rhet_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              # Annual information
+              grid_output$MTT_annual_litter_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              # Fractional partitioning of tunover to different drivers - should they exist
+              grid_output$NaturalFractionOfTurnover_litter = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$FireFractionOfTurnover_litter = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$HarvestFractionOfTurnover_litter = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Conditional variables
+              if (exists(x = "FIREemiss_litter_gCm2day", where = site_output)) {
+                  grid_output$FIREemiss_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_FIREemiss_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+              if (exists(x = "FIRElitter_litter_gCm2day", where = site_output)) {
+                  grid_output$FIRElitter_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_FIRElitter_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+              if (exists(x = "harvest_litter_gCm2day", where = site_output)) {
+                  grid_output$harvest_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_harvest_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
           }
-          # Models were heterotrophic respiration of som is seperately output
-          if (length(which(names(site_output) == "rhet_som_gCm2day")) > 0) {
+          # Gridded wood litter information
+          if (exists(x = "woodlitter_gCm2", where = site_output)) {
+              # Gridded mean / final
+              grid_output$mean_woodlitter_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_woodlitter_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_dCwoodlitter_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_outflux_woodlitter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_woodlitter_to_som_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_rhet_woodlitter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Time varying pixel specific with quantiles
+              grid_output$woodlitter_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$dCwoodlitter_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$outflux_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$woodlitter_to_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$rhet_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              # Annual information
+              grid_output$MTT_annual_woodlitter_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              # Fractional partitioning of tunover to different drivers - should they exist
+              grid_output$NaturalFractionOfTurnover_woodlitter = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$FireFractionOfTurnover_woodlitter = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$HarvestFractionOfTurnover_woodlitter = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Conditional variables
+              if (exists(x = "FIREemiss_woodlitter_gCm2day", where = site_output)) {
+                  grid_output$FIREemiss_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_FIREemiss_woodlitter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+              if (exists(x = "FIRElitter_woodlitter_gCm2day", where = site_output)) {
+                  grid_output$FIRElitter_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_FIRElitter_woodlitter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+              if (exists(x = "harvest_woodlitter_gCm2day", where = site_output)) {
+                  grid_output$harvest_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_harvest_woodlitter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+          }
+          # Gridded som information
+          if (exists(x = "som_gCm2", where = site_output)) {
+              # Gridded mean / finals
+              grid_output$mean_som_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_som_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_dCsom_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_outflux_som_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_rhet_som_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Time varying pixel specific with quantiles
+              grid_output$som_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$dCsom_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$outflux_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$rhet_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              # Annual information
+              grid_output$MTT_annual_som_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              # Fractional partitioning of tunover to different drivers - should they exist
+              grid_output$NaturalFractionOfTurnover_som = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$FireFractionOfTurnover_som = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$HarvestFractionOfTurnover_som = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Time varying
+              if (exists(x = "FIREemiss_som_gCm2day", where = site_output)) {
+                  grid_output$FIREemiss_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_FIREemiss_som_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+              if (exists(x = "harvest_som_gCm2day", where = site_output)) {
+                  grid_output$harvest_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_harvest_som_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
           }
-          # Models were decomposition of litter to som is seperately output
-          if (length(which(names(site_output) == "decomp_litter_gCm2day")) > 0) {
-              grid_output$mean_decomp_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          # Gridded dom information
+          if (exists(x = "dom_gCm2", where = site_output)) {
+              # Gridded mean / finals
+              grid_output$mean_dom_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_dom_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_dCdom_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_outflux_dom_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_rhet_dom_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Time varying pixel specific with quantiles
+              grid_output$dom_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$dCdom_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$outflux_dom_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$rhet_dom_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              # Annual information
+              grid_output$MTT_annual_dom_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              # Fractional partitioning of tunover to different drivers - should they exist
+              grid_output$NaturalFractionOfTurnover_dom = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$FireFractionOfTurnover_dom = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$HarvestFractionOfTurnover_dom = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Conditional
+              if (exists(x = "FIREemiss_dom_gCm2day", where = site_output)) {
+                  grid_output$FIREemiss_dom_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_FIREemiss_dom_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
+              if (exists(x = "harvest_dom_gCm2day", where = site_output)) {
+                  grid_output$harvest_dom_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_harvest_dom_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
           }
-          # Models where we have a wood litter pool and therefore a total dead organic matter combination also
-          if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
-              grid_output$mean_litwood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_dClitwood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$final_litwood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$final_dClitwood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_deadorg_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_dCdeadorg_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$final_deadorg_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$final_dCdeadorg_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          }
-          # Finally water cycle specific if available
-          if (length(which(names(site_output) == "evap_kgH2Om2day")) > 0) {
-              # currently water in the soil surface layer (0-10 cm)
+
+          # Water cycle specific variables
+          if (exists(x = "ET_kgH2Om2day", where = site_output)) {
+              # currently water in the soil surface layer (0-30 cm)
               grid_output$mean_SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$final_SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$final_dSurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$dSurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # plant apparent soil water potential (MPa)
               grid_output$mean_wSWP_MPa = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$final_wSWP_MPa = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$wSWP_MPa = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$dwSWP_MPa = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # evapotranspiration (Etrans + Esoil + Ewetcanopy)
-              grid_output$mean_evap_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_ET_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$ET_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           }
           # Canopy process variables
-          if (length(which(names(site_output) == "APAR_MJm2day")) > 0) {
+          if (exists(x = "APAR_MJm2day", where = site_output)) {
               # Absorbed photosynthetically active radation
               grid_output$mean_APAR_MJm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$APAR_MJm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           }
-          if (length(which(names(site_output) == "CiCa")) > 0) {
+          if (exists(x = "CiCa", where = site_output)) {
               # Canopy Ci:Ca
               grid_output$mean_CiCa = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-          }
-          # Annual tissue specific fire fluxes
-          if (length(which(names(site_output) == "FIREemiss_labile_gCm2yr"))) {
-              # Extract pool specific fire emissions information (labile, foliar, fine root, wood, litter, soil)
-              grid_output$mean_FIREemiss_labile_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_FIREemiss_foliar_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_FIREemiss_root_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_FIREemiss_wood_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_FIREemiss_litter_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_FIREemiss_som_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              # Extract pools specific fire driven litter fluxes
-              grid_output$mean_FIRElitter_labile_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_FIRElitter_foliar_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_FIRElitter_root_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_FIRElitter_wood_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_FIRElitter_litter_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_FIRElitter_som_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              # Extract pool specific fire generated outfluxes from natural processed (labile, foliar, fine root, wood, litter, soil)
-              grid_output$mean_NAToutflux_labile_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_NAToutflux_foliar_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_NAToutflux_root_gCm2yr   = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_NAToutflux_wood_gCm2yr   = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_NAToutflux_litter_gCm2yr = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_NAToutflux_som_gCm2yr    = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$CiCa = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           }
 
           # Create overlap statistics variables - may not always get filled in the end
-          grid_output$gpp_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-          grid_output$lai_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-          grid_output$nee_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-          grid_output$wood_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-          grid_output$soil_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-          grid_output$evap_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-          grid_output$nbe_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-          grid_output$fire_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          if (exists(x = "gpp_assim_data_overlap_fraction", where = site_output)) {
+              grid_output$gpp_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          }
+          if (exists(x = "lai_assim_data_overlap_fraction", where = site_output)) {
+              grid_output$lai_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          }
+          if (exists(x = "nee_assim_data_overlap_fraction", where = site_output)) {
+              grid_output$nee_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          }
+          if (exists(x = "wood_assim_data_overlap_fraction", where = site_output)) {
+              grid_output$wood_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          }
+          if (exists(x = "soil_assim_data_overlap_fraction", where = site_output)) {
+              grid_output$soil_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          }
+          if (exists(x = "et_assim_data_overlap_fraction", where = site_output)) {
+              grid_output$et_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          }
+          if (exists(x = "nbe_assim_data_overlap_fraction", where = site_output)) {
+              grid_output$nbe_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          }
+          if (exists(x = "fire_assim_data_overlap_fraction", where = site_output)) {
+              grid_output$fire_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          }
 
           # Time and uncertainty invarient information,
           # this is the correlation between ensemble members for parameter and C-cycle flux variables
@@ -885,169 +1849,6 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$rauto_par_cor = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
           grid_output$rhet_par_cor = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
           grid_output$fire_par_cor = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
-
-          #
-          # Generate the variables needed to contain just the analysis locations
-          # Full time series provided along with uncertainty information but for the analysis pixels only
-          # Each pixel will have a corresponding i and j location which related to its lat/long within the overall domain grid
-          #
-
-          # Mean stocks first
-          grid_output$labile_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$totalC_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$dom_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$biomass_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$foliage_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-#grid_output$follab_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$roots_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$wood_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$lit_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$som_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$dCtotalC_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$dCdom_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$dCbio_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$dCfoliage_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$dCroots_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$dCwood_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$dClit_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$dCsom_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$lai_m2m2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          # Fluxes seconds
-          grid_output$nee_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$gpp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$rauto_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$rhet_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$reco_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$npp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$fnpp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$rnpp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$wnpp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$harvest_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$fire_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$nbe_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          grid_output$nbp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          # Models were heterotrophic respiration of litter is seperately output
-          if (length(which(names(site_output) == "rhet_litter_gCm2day")) > 0) {
-              grid_output$rhet_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          }
-          # Models were heterotrophic respiration of som is seperately output
-          if (length(which(names(site_output) == "rhet_som_gCm2day")) > 0) {
-              grid_output$rhet_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          }
-          # Models were decomposition of litter to som is seperately output
-          if (length(which(names(site_output) == "decomp_litter_gCm2day")) > 0) {
-              grid_output$decomp_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          }
-          # Models where we have a CWD pool and therefore a total dead organic matter combination also
-          if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
-              grid_output$litwood_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-              grid_output$dClitwood_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-              grid_output$dCdeadorg_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-              grid_output$deadorg_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          }
-          # Finally water cycle specific if available
-          if (length(which(names(site_output) == "evap_kgH2Om2day")) > 0) {
-              # currently water in the soil surface layer (0-10 cm)
-              grid_output$SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-              # plant apparent soil water potential (MPa)
-              grid_output$wSWP_MPa = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-              # evapotranspiration (Etrans + Esoil + Ewetcanopy)
-              grid_output$evap_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          }
-          # Canopy process information
-          if (length(which(names(site_output) == "APAR_MJm2day")) > 0) {
-              # Canopy absorbed photosynthetically active radiation
-              grid_output$APAR_MJm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          }
-          if (length(which(names(site_output) == "CiCa")) > 0) {
-              # Canopy CiCa
-              grid_output$CiCa = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-          }
-          if (length(which(names(site_output) == "FIREemiss_labile_gCm2yr"))) {
-              # Extract pool specific fire emissions information (labile, foliar, fine root, wood, litter, soil)
-              grid_output$FIREemiss_labile_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
-              grid_output$FIREemiss_foliar_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
-              grid_output$FIREemiss_root_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
-              grid_output$FIREemiss_wood_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
-              grid_output$FIREemiss_litter_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
-              grid_output$FIREemiss_som_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
-              # Extract pools specific fire driven litter fluxes
-              grid_output$FIRElitter_labile_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
-              grid_output$FIRElitter_foliar_gCm2yr= array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
-              grid_output$FIRElitter_root_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
-              grid_output$FIRElitter_wood_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
-              grid_output$FIRElitter_litter_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
-              grid_output$FIRElitter_som_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
-              # Extract pool specific fire generated outfluxes from natural processed (labile, foliar, fine root, wood, litter, soil)
-              grid_output$NAToutflux_labile_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
-              grid_output$NAToutflux_foliar_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
-              grid_output$NAToutflux_root_gCm2yr   = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
-              grid_output$NAToutflux_wood_gCm2yr   = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
-              grid_output$NAToutflux_litter_gCm2yr = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
-              grid_output$NAToutflux_som_gCm2yr    = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$FIREemiss_foliar_gCm2yr)[2]))
-          }
-
-          #
-          # Generate the variables needed to contain grid aggregate values
-          # These will be 'global' totals in units of TgC/yr, TgC, TgH20/yr or unit specific
-          # Stocks variables will be estimated as the mean stock in the final year
-          # Fluxes variables will be estimated as the mean flux over time
-          #
-
-          # Mean stocks first
-          grid_output$agg_labile_TgC = array(0, dim=c(agg_iter))
-          grid_output$agg_totalC_TgC = array(0, dim=c(agg_iter))
-          grid_output$agg_dom_TgC = array(0, dim=c(agg_iter))
-          grid_output$agg_biomass_TgC = array(0, dim=c(agg_iter))
-          grid_output$agg_foliage_TgC = array(0, dim=c(agg_iter))
-          grid_output$agg_roots_TgC = array(0, dim=c(agg_iter))
-          grid_output$agg_wood_TgC = array(0, dim=c(agg_iter))
-          grid_output$agg_lit_TgC = array(0, dim=c(agg_iter))
-          grid_output$agg_som_TgC = array(0, dim=c(agg_iter))
-          grid_output$agg_dCtotalC_TgC = array(0, dim=c(agg_iter))
-          grid_output$agg_dCdom_TgC = array(0, dim=c(agg_iter))
-          grid_output$agg_dCbio_TgC = array(0, dim=c(agg_iter))
-          grid_output$agg_dCfoliage_TgC = array(0, dim=c(agg_iter))
-          grid_output$agg_dCroots_TgC = array(0, dim=c(agg_iter))
-          grid_output$agg_dCwood_TgC = array(0, dim=c(agg_iter))
-          grid_output$agg_dClit_TgC = array(0, dim=c(agg_iter))
-          grid_output$agg_dCsom_TgC = array(0, dim=c(agg_iter))
-          # Fluxes seconds
-          grid_output$agg_nee_TgCyr = array(0, dim=c(agg_iter))
-          grid_output$agg_gpp_TgCyr = array(0, dim=c(agg_iter))
-          grid_output$agg_rauto_TgCyr = array(0, dim=c(agg_iter))
-          grid_output$agg_rhet_TgCyr = array(0, dim=c(agg_iter))
-          grid_output$agg_reco_TgCyr = array(0, dim=c(agg_iter))
-          grid_output$agg_npp_TgCyr = array(0, dim=c(agg_iter))
-          grid_output$agg_fnpp_TgCyr = array(0, dim=c(agg_iter))
-          grid_output$agg_rnpp_TgCyr = array(0, dim=c(agg_iter))
-          grid_output$agg_wnpp_TgCyr = array(0, dim=c(agg_iter))
-          grid_output$agg_harvest_TgCyr = array(0, dim=c(agg_iter))
-          grid_output$agg_fire_TgCyr = array(0, dim=c(agg_iter))
-          grid_output$agg_nbe_TgCyr = array(0, dim=c(agg_iter))
-          grid_output$agg_nbp_TgCyr = array(0, dim=c(agg_iter))
-          # Models were heterotrophic respiration of litter is seperately output
-          if (length(which(names(site_output) == "rhet_litter_gCm2day")) > 0) {
-              grid_output$agg_rhet_litter_TgCyr = array(0, dim=c(agg_iter))
-          }
-          # Models were heterotrophic respiration of som is seperately output
-          if (length(which(names(site_output) == "rhet_som_gCm2day")) > 0) {
-              grid_output$agg_rhet_som_TgCyr = array(0, dim=c(agg_iter))
-          }
-          # Models were decomposition of litter to som is seperately output
-          if (length(which(names(site_output) == "decomp_litter_gCm2day")) > 0) {
-              grid_output$agg_decomp_litter_TgCyr = array(0, dim=c(agg_iter))
-          }
-          # Models where we have a CWD pool and therefore a total dead organic matter combination also
-          if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
-              grid_output$agg_litwood_TgC = array(0, dim=c(agg_iter))
-              grid_output$agg_dClitwood_TgC = array(0, dim=c(agg_iter))
-          }
-          # Finally water cycle specific if available
-          if (length(which(names(site_output) == "evap_kgH2Om2day")) > 0) {
-              # evapotranspiration (Etrans + Esoil + Ewetcanopy)
-              grid_output$agg_evap_PgH2Oyr = array(0, dim=c(agg_iter))
-          }
 
           #
           # Generate the spatial information needed to relate i,j within the grid to long / lat and the summary vs detailed output
@@ -1067,6 +1868,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           # this output is in vector form and we need matching array shapes so...
           grid_output$area = array(grid_output$area, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 
+          # calculate land mask
+          grid_output$landmask=array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+
       } else {
 
           # if file already exists load it up
@@ -1074,321 +1878,458 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 
       } # have we already an output file
 
+      # Loop through all sites now in turn and load their specific information
+      # into the overall gridded variables
       for (n in seq(1,PROJECT$nosites)) {
            # load the current file
-           outfile2 = paste(PROJECT$results_processedpath,PROJECT$sites[n],"_stock_fluxes.RData",sep="")
-           if (file.exists(outfile2)) {
+           outfile_stock_fluxes = paste(PROJECT$results_processedpath,PROJECT$sites[n],"_stock_fluxes.RData",sep="")
+           if (file.exists(outfile_stock_fluxes)) {
                # load the site
-               load(outfile2)
+               load(outfile_stock_fluxes)
                # determine the lat / long location within the grid
                slot_j=as.numeric(PROJECT$sites[n])/PROJECT$long_dim
                slot_i=as.numeric(PROJECT$sites[n])-(floor(slot_j)*PROJECT$long_dim)
                if(slot_i == 0) {slot_i = PROJECT$long_dim} ; slot_j=ceiling(slot_j)
                # save for later
                grid_output$i_location[n] = slot_i ; grid_output$j_location[n] = slot_j
-               # Store a record of the quantiles extracted for the site data
-               grid_output$quantiles_wanted
 
-               ## Begin aggregation to grid totals
+               # loop through parameters + likelihood
+               grid_output$parameters[slot_i,slot_j,,] = site_output$parameters
+               # track which parameters have converged + likelihood
+               grid_output$parameters_converged[slot_i,slot_j,] = site_output$parameters_converged
+               # Mean meteorological conditions
+               grid_output$mean_temperature_C[slot_i,slot_j] = site_output$mean_temperature_C
+               grid_output$mean_radiation_MJm2day[slot_i,slot_j] = site_output$mean_radiation_MJm2day
+               grid_output$mean_vpd_Pa[slot_i,slot_j] = site_output$mean_vpd_Pa
+               grid_output$mean_precipitation_kgH2Om2yr[slot_i,slot_j] = site_output$mean_precipitation_kgH2Om2yr
+               # Assimilated leaf area index information
+               grid_output$assimilated_lai_max_m2m2[slot_i,slot_j] = site_output$assimilated_lai_max_m2m2
+               grid_output$assimilated_lai_mean_m2m2[slot_i,slot_j] = site_output$assimilated_lai_mean_m2m2
+               grid_output$assimilated_lai_sd_m2m2[slot_i,slot_j] = site_output$assimilated_lai_sd_m2m2
+               grid_output$assimilated_lai_unc_m2m2[slot_i,slot_j] = site_output$assimilated_lai_unc_m2m2
+               # Assimilated wood stock / prior information
+               grid_output$assimilated_wood_mean_gCm2[slot_i,slot_j] = site_output$assimilated_wood_mean_gCm2
+               grid_output$assimilated_wood_mean_unc_gCm2[slot_i,slot_j] = site_output$assimilated_wood_mean_unc_gCm2
+               # Assimilated som stock / prior information
+               grid_output$assimilated_som_mean_gCm2[slot_i,slot_j] = site_output$assimilated_som_mean_gCm2
+               grid_output$assimilated_som_mean_unc_gCm2[slot_i,slot_j] = site_output$assimilated_som_mean_unc_gCm2
 
-               # Number of iterations available for resample
-               agg_iter = length(site_output$agg_labile)
-               # Unit adjustment
-               unit_adj = 1e-12 # gC --> TgC ; or kgH2O -> PgH2O
+               # Net primary production allocation fractions
+               if (exists(x = "NPP_foliage_fraction", where = site_output)) {grid_output$NPP_foliage_fraction[slot_i,slot_j,] = site_output$NPP_foliage_fraction}
+               if (exists(x = "NPP_roots_fraction", where = site_output)) {grid_output$NPP_roots_fraction[slot_i,slot_j,] = site_output$NPP_roots_fraction}
+               if (exists(x = "NPP_wood_fraction", where = site_output)) {grid_output$NPP_wood_fraction[slot_i,slot_j,] = site_output$NPP_wood_fraction}
+               # Analysis mean transit (residence) times (years)
+               if (exists(x = "MTT_labile_years", where = site_output)) {grid_output$MTT_labile_years[slot_i,slot_j,] = site_output$MTT_labile_years}
+               if (exists(x = "MTT_foliage_years", where = site_output)) {grid_output$MTT_foliage_years[slot_i,slot_j,] = site_output$MTT_foliage_years}
+               if (exists(x = "MTT_roots_years", where = site_output)) {grid_output$MTT_roots_years[slot_i,slot_j,] = site_output$MTT_roots_years}
+               if (exists(x = "MTT_wood_years", where = site_output)) {grid_output$MTT_wood_years[slot_i,slot_j,] = site_output$MTT_wood_years}
+               if (exists(x = "MTT_litter_years", where = site_output)) {grid_output$MTT_litter_years[slot_i,slot_j,] = site_output$MTT_litter_years}
+               if (exists(x = "MTT_woodlitter_years", where = site_output)) {grid_output$MTT_woodlitter_years[slot_i,slot_j,] = site_output$MTT_woodlitter_years}
+               if (exists(x = "MTT_som_years", where = site_output)) {grid_output$MTT_som_years[slot_i,slot_j,] = site_output$MTT_som_years}
+               # Steady state C stock estimates (gC/m2)
+               if (exists(x = "SS_labile_gCm2", where = site_output)) {grid_output$SS_labile_gCm2[slot_i,slot_j,] = site_output$SS_labile_gCm2}
+               if (exists(x = "SS_foliage_gCm2", where = site_output)) {grid_output$SS_foliage_gCm2[slot_i,slot_j,] = site_output$SS_foliage_gCm2}
+               if (exists(x = "SS_roots_gCm2", where = site_output)) {grid_output$SS_roots_gCm2[slot_i,slot_j,] = site_output$SS_roots_gCm2}
+               if (exists(x = "SS_wood_gCm2", where = site_output)) {grid_output$SS_wood_gCm2[slot_i,slot_j,] = site_output$SS_wood_gCm2}
+               if (exists(x = "SS_litter_gCm2", where = site_output)) {grid_output$SS_litter_gCm2[slot_i,slot_j,] = site_output$SS_litter_gCm2}
+               if (exists(x = "SS_woodlitter_gCm2", where = site_output)) {grid_output$SS_woodlitter_gCm2[slot_i,slot_j,] = site_output$SS_woodlitter_gCm2}
+               if (exists(x = "SS_som_gCm2", where = site_output)) {grid_output$SS_som_gCm2[slot_i,slot_j,] = site_output$SS_som_gCm2}
 
-               # Mean stocks first
-               grid_output$agg_labile_TgC  = grid_output$agg_labile_TgC  + sample(site_output$agg_labile*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
-               grid_output$agg_totalC_TgC  = grid_output$agg_totalC_TgC  + sample(site_output$agg_totalC*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
-               grid_output$agg_dom_TgC     = grid_output$agg_dom_TgC     + sample(site_output$agg_dom*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
-               grid_output$agg_biomass_TgC = grid_output$agg_biomass_TgC + sample(site_output$agg_biomass*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
-               grid_output$agg_foliage_TgC = grid_output$agg_foliage_TgC + sample(site_output$agg_foliage*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
-               grid_output$agg_roots_TgC   = grid_output$agg_roots_TgC   + sample(site_output$agg_root*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
-               grid_output$agg_wood_TgC    = grid_output$agg_wood_TgC    + sample(site_output$agg_wood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
-               grid_output$agg_lit_TgC     = grid_output$agg_lit_TgC     + sample(site_output$agg_lit*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
-               grid_output$agg_som_TgC     = grid_output$agg_som_TgC     + sample(site_output$agg_som*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
-               # Stock changes second
-               grid_output$agg_dCtotalC_TgC  = grid_output$agg_dCtotalC_TgC + sample(site_output$agg_dCtotalC*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
-               grid_output$agg_dCdom_TgC     = grid_output$agg_dCdom_TgC + sample(site_output$agg_dCdom*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
-               grid_output$agg_dCbio_TgC     = grid_output$agg_dCbio_TgC + sample(site_output$agg_dCbio*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
-               grid_output$agg_dCfoliage_TgC = grid_output$agg_dCfoliage_TgC + sample(site_output$agg_dCfoliage*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
-               grid_output$agg_dCroots_TgC   = grid_output$agg_dCroots_TgC + sample(site_output$agg_dCroot*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
-               grid_output$agg_dCwood_TgC    = grid_output$agg_dCwood_TgC + sample(site_output$agg_dCwood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
-               grid_output$agg_dClit_TgC     = grid_output$agg_dClit_TgC + sample(site_output$agg_dClitter*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
-               grid_output$agg_dCsom_TgC     = grid_output$agg_dCsom_TgC + sample(site_output$agg_dCsom*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
-               # Fluxes third
-               grid_output$agg_nee_TgCyr = grid_output$agg_nee_TgC + sample(site_output$agg_nee*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
-               grid_output$agg_gpp_TgCyr = grid_output$agg_gpp_TgC + sample(site_output$agg_gpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
-               grid_output$agg_rauto_TgCyr = grid_output$agg_rauto_TgC + sample(site_output$agg_rauto*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
-               grid_output$agg_rhet_TgCyr = grid_output$agg_rhet_TgC + sample(site_output$agg_rhet*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
-               grid_output$agg_reco_TgCyr = grid_output$agg_reco_TgC + sample(site_output$agg_reco*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
-               grid_output$agg_npp_TgCyr = grid_output$agg_npp_TgC + sample(site_output$agg_npp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
-               grid_output$agg_fnpp_TgCyr = grid_output$agg_fnpp_TgC + sample(site_output$agg_fnpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
-               grid_output$agg_rnpp_TgCyr = grid_output$agg_rnpp_TgC + sample(site_output$agg_rnpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
-               grid_output$agg_wnpp_TgCyr = grid_output$agg_wnpp_TgC + sample(site_output$agg_wnpp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
-               grid_output$agg_harvest_TgCyr = grid_output$agg_harvest_TgC + sample(site_output$agg_harvest*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
-               grid_output$agg_fire_TgCyr = grid_output$agg_fire_TgC + sample(site_output$agg_fire*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
-               grid_output$agg_nbe_TgCyr = grid_output$agg_nbe_TgC + sample(site_output$agg_nbe*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
-               grid_output$agg_nbp_TgCyr = grid_output$agg_nbp_TgC + sample(site_output$agg_nbp*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
-               # Models were heterotrophic respiration of litter is seperately output
-               if (length(which(names(site_output) == "rhet_litter_gCm2day")) > 0) {
-                   grid_output$agg_rhet_litter_TgCyr = grid_output$agg_rhet_litter_TgCyr + sample(site_output$agg_rhet_litter*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
-               }
-               # Models were heterotrophic respiration of som is seperately output
-               if (length(which(names(site_output) == "rhet_som_gCm2day")) > 0) {
-                   grid_output$agg_rhet_som_TgCyr = grid_output$agg_rhet_som_TgCyr + sample(site_output$agg_rhet_som*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
-               }
-               # Models were decomposition of litter to som is seperately output
-               if (length(which(names(site_output) == "decomp_litter_gCm2day")) > 0) {
-                   grid_output$agg_decomp_litter_TgCyr = grid_output$agg_decomp_litter_TgCyr + sample(site_output$decomp_litter*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
-               }
-               # Models where we have a CWD pool and therefore a total dead organic matter combination also
-               if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
-                   grid_output$agg_litwood_TgC = grid_output$agg_litwood_TgC + sample(site_output$agg_litwood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
-                   grid_output$agg_dClitwood_TgC = grid_output$agg_dClitwood_TgC + sample(site_output$agg_dClitwood*grid_output$area[slot_i,slot_j]*unit_adj, size = agg_iter, replace = TRUE)
-               }
-               # Finally water cycle specific if available
-               if (length(which(names(site_output) == "evap_kgH2Om2day")) > 0) {
-                   # evapotranspiration (Etrans + Esoil + Ewetcanopy)
-                   grid_output$agg_evap_PgH2Oyr = grid_output$agg_evap_PgH2Oyr + sample(site_output$agg_evap*grid_output$area[slot_i,slot_j]*unit_adj*365.25, size = agg_iter, replace = TRUE)
-               }
-               # now assign to correct location in array
-               # Stocks first
-               grid_output$labile_gCm2[n,,] = site_output$labile_gCm2
-               grid_output$totalC_gCm2[n,,] = site_output$totalC_gCm2
-               grid_output$dom_gCm2[n,,] = site_output$dom_gCm2
-               grid_output$biomass_gCm2[n,,] = site_output$biomass_gCm2
-#grid_output$follab_gCm2[n,,] = site_output$follab_gCm2
-               grid_output$foliage_gCm2[n,,] = site_output$foliage_gCm2
-               grid_output$roots_gCm2[n,,] = site_output$roots_gCm2
-               grid_output$wood_gCm2[n,,] = site_output$wood_gCm2
-               grid_output$lit_gCm2[n,,] = site_output$lit_gCm2
-               grid_output$som_gCm2[n,,] = site_output$som_gCm2
-               grid_output$dCtotalC_gCm2[n,,] = site_output$dCtotalC_gCm2
-               grid_output$dCdom_gCm2[n,,] = site_output$dCdom_gCm2
-               grid_output$dCbio_gCm2[n,,] = site_output$dCbio_gCm2
-               grid_output$dCfoliage_gCm2[n,,] = site_output$dCfoliage_gCm2
-               grid_output$dCroots_gCm2[n,,] = site_output$dCroots_gCm2
-               grid_output$dCwood_gCm2[n,,] = site_output$dCwood_gCm2
-               grid_output$dClit_gCm2[n,,] = site_output$dClit_gCm2
-               grid_output$dCsom_gCm2[n,,] = site_output$dCsom_gCm2
-               grid_output$lai_m2m2[n,,] = site_output$lai_m2m2
-               # Fluxes second
-               grid_output$nee_gCm2day[n,,] = site_output$nee_gCm2day
-               grid_output$gpp_gCm2day[n,,] = site_output$gpp_gCm2day
-               grid_output$rauto_gCm2day[n,,] = site_output$rauto_gCm2day
-               grid_output$rhet_gCm2day[n,,] = site_output$rhet_gCm2day
-               grid_output$reco_gCm2day[n,,] = site_output$reco_gCm2day
-               grid_output$npp_gCm2day[n,,] = site_output$npp_gCm2day
-               grid_output$fnpp_gCm2day[n,,] = site_output$fnpp_gCm2day
-               grid_output$rnpp_gCm2day[n,,] = site_output$rnpp_gCm2day
-               grid_output$wnpp_gCm2day[n,,] = site_output$wnpp_gCm2day
+               # Total ecosystem C is always present
+               grid_output$mean_Ctotal_gCm2[slot_i,slot_j,] = site_output$mean_Ctotal_gCm2
+               grid_output$final_Ctotal_gCm2[slot_i,slot_j,] = site_output$Ctotal_gCm2[,grid_output$time_dim]
+               grid_output$final_dCtotal_gCm2[slot_i,slot_j,] = site_output$dCtotal_gCm2[,grid_output$time_dim]
+               # Ecosystem leaf area index is always present
+               grid_output$mean_lai_m2m2[slot_i,slot_j,] = site_output$mean_lai_m2m2
+               grid_output$final_dlai_m2m2[slot_i,slot_j,] = site_output$dlai_m2m2[,grid_output$time_dim]
+               # Mean ecosystem bulk fluxes are always present
+               grid_output$mean_nee_gCm2day[slot_i,slot_j,] = site_output$mean_nee_gCm2day
+               grid_output$mean_gpp_gCm2day[slot_i,slot_j,] = site_output$mean_gpp_gCm2day
+               grid_output$mean_rauto_gCm2day[slot_i,slot_j,] = site_output$mean_rauto_gCm2day
+               grid_output$mean_rhet_gCm2day[slot_i,slot_j,] = site_output$mean_rhet_gCm2day
+               grid_output$mean_reco_gCm2day[slot_i,slot_j,] = site_output$mean_reco_gCm2day
+               grid_output$mean_npp_gCm2day[slot_i,slot_j,] = site_output$mean_npp_gCm2day
+               grid_output$mean_harvest_gCm2day[slot_i,slot_j,] = site_output$mean_harvest_gCm2day
+               grid_output$mean_fire_gCm2day[slot_i,slot_j,] = site_output$mean_fire_gCm2day
+               grid_output$mean_nbe_gCm2day[slot_i,slot_j,] = site_output$mean_nbe_gCm2day
+               grid_output$mean_nbp_gCm2day[slot_i,slot_j,] = site_output$mean_nbp_gCm2day
+               # Time varying pixel based (i.e. not within the grid) values with quantile based uncertainty for...
+               # States
+               grid_output$Ctotal_gCm2[n,,] = site_output$Ctotal_gCm2
+               grid_output$lai_m2m2[n,,]    = site_output$lai_m2m2
+               # Fluxes
+               grid_output$nee_gCm2day[n,,]     = site_output$nee_gCm2day
+               grid_output$gpp_gCm2day[n,,]     = site_output$gpp_gCm2day
+               grid_output$rauto_gCm2day[n,,]   = site_output$rauto_gCm2day
+               grid_output$rhet_gCm2day[n,,]    = site_output$rhet_gCm2day
+               grid_output$reco_gCm2day[n,,]    = site_output$reco_gCm2day
+               grid_output$npp_gCm2day[n,,]     = site_output$npp_gCm2day
                grid_output$harvest_gCm2day[n,,] = site_output$harvest_gCm2day
-               grid_output$fire_gCm2day[n,,] = site_output$fire_gCm2day
-               grid_output$nbe_gCm2day[n,,] = site_output$nbe_gCm2day
-               grid_output$nbp_gCm2day[n,,] = site_output$nbp_gCm2day
-               if (length(which(names(site_output) == "rhet_litter_gCm2day")) > 0) {
-                   grid_output$rhet_litter_gCm2day = site_output$rhet_litter_gCm2day
+               grid_output$fire_gCm2day[n,,]    = site_output$fire_gCm2day
+               grid_output$nbe_gCm2day[n,,]     = site_output$nbe_gCm2day
+               grid_output$nbp_gCm2day[n,,]     = site_output$nbp_gCm2day
+
+               # Based on the presence of each pool define the grids for the mean and final values.
+               # Also, create the time varying but quantile based values and time
+
+               # Gridded biomass information
+               if (exists(x = "biomass_gCm2", where = site_output)) {
+                   # Grid mean / finals for globally available variables
+                   grid_output$mean_biomass_gCm2[slot_i,slot_j,] = site_output$mean_biomass_gCm2
+                   grid_output$final_biomass_gCm2[slot_i,slot_j,] = site_output$biomass_gCm2[,grid_output$time_dim]
+                   grid_output$final_dCbiomass_gCm2[slot_i,slot_j,] = site_output$dCbiomass_gCm2[,grid_output$time_dim]
+                   grid_output$mean_outflux_biomass_gCm2day[slot_i,slot_j,] = site_output$mean_outflux_biomass_gCm2day
+                   grid_output$mean_biomass_to_litter_gCm2[slot_i,slot_j,] = site_output$mean_biomass_to_litter_gCm2
+                   # Time varying pixel specific with quantiles
+                   grid_output$biomass_gCm2[n,,] = site_output$biomass_gCm2
+                   grid_output$dCbiomass_gCm2[n,,] = site_output$dCbiomass_gCm2
+                   grid_output$outflux_biomass_gCm2day[n,,] = site_output$outflux_biomass_gCm2day
+                   grid_output$biomass_to_litter_gCm2day[n,,] = site_output$biomass_to_litter_gCm2day
+                   # Annual information
+                   grid_output$MTT_annual_biomass_years[n,,] = site_output$MTT_annual_biomass_years
+                   # Fractional partitioning of tunover to different drivers - should they exist
+                   grid_output$NaturalFractionOfTurnover_biomass[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_biomass
+                   grid_output$FireFractionOfTurnover_biomass[slot_i,slot_j,] = site_output$FireFractionOfTurnover_biomass
+                   grid_output$HarvestFractionOfTurnover_biomass[slot_i,slot_j,] = site_output$HarvestFractionOfTurnover_biomass
+                   # Conditional variables
+                   if (exists(x = "FIREemiss_biomass_gCm2day", where = site_output)) {
+                       grid_output$FIREemiss_biomass_gCm2day[n,,] = site_output$FIREemiss_biomass_gCm2day
+                       grid_output$mean_FIREemiss_biomass_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_biomass_gCm2day
+                   }
+                   if (exists(x = "FIRElitter_biomass_gCm2day", where = site_output)) {
+                       grid_output$FIRElitter_biomass_gCm2day[n,,] = site_output$FIRElitter_biomass_gCm2day
+                       grid_output$mean_FIRElitter_biomass_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_biomass_gCm2day
+                   }
+                   if (exists(x = "harvest_biomass_gCm2day", where = site_output)) {
+                       grid_output$harvest_biomass_gCm2day[n,,] = site_output$harvest_biomass_gCm2day
+                       grid_output$mean_harvest_biomass_gCm2day[slot_i,slot_j,] = site_output$mean_harvest_biomass_gCm2day
+                   }
                }
-               if (length(which(names(site_output) == "rhet_som_gCm2day")) > 0) {
-                   grid_output$rhet_som_gCm2day  = site_output$rhet_som_gCm2day
+               # Gridded labile information
+               if (exists(x = "labile_gCm2", where = site_output)) {
+                   # Grid averages
+                   grid_output$mean_labile_gCm2[slot_i,slot_j,] = site_output$mean_labile_gCm2
+                   grid_output$final_labile_gCm2[slot_i,slot_j,] = site_output$labile_gCm2[,grid_output$time_dim]
+                   grid_output$final_dClabile_gCm2[slot_i,slot_j,] = site_output$dClabile_gCm2[,grid_output$time_dim]
+                   grid_output$mean_outflux_labile_gCm2day[slot_i,slot_j,] = site_output$mean_outflux_labile_gCm2day
+                   grid_output$mean_labile_to_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_labile_to_foliage_gCm2day
+                   grid_output$mean_alloc_labile_gCm2day[slot_i,slot_j,] = site_output$mean_alloc_labile_gCm2day
+                   # Time varying
+                   grid_output$labile_gCm2[n,,] = site_output$labile_gCm2
+                   grid_output$dClabile_gCm2[n,,] = site_output$dClabile_gCm2
+                   grid_output$outflux_labile_gCm2day[n,,] = site_output$outflux_labile_gCm2day
+                   grid_output$labile_to_foliage_gCm2day[n,,] = site_output$labile_to_foliage_gCm2day
+                   grid_output$alloc_labile_gCm2day[n,,] = site_output$alloc_labile_gCm2day
+                   # Annual information
+                   grid_output$MTT_annual_labile_years[n,,] = site_output$MTT_annual_labile_years
+                   # Fractional partitioning of tunover to different drivers - should they exist
+                   grid_output$NaturalFractionOfTurnover_labile[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_labile
+                   grid_output$FireFractionOfTurnover_labile[slot_i,slot_j,] = site_output$FireFractionOfTurnover_labile
+                   grid_output$HarvestFractionOfTurnover_labile[slot_i,slot_j,] = site_output$HarvestFractionOfTurnover_labile
+                   # Conditional variables
+                   if (exists(x = "FIREemiss_labile_gCm2day", where = site_output)) {
+                       grid_output$FIREemiss_labile_gCm2day[n,,] = site_output$FIREemiss_labile_gCm2day
+                       grid_output$mean_FIREemiss_labile_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_labile_gCm2day
+                   }
+                   if (exists(x = "FIRElitter_labile_gCm2day", where = site_output)) {
+                       grid_output$FIRElitter_labile_gCm2day[n,,] = site_output$FIRElitter_labile_gCm2day
+                       grid_output$mean_FIRElitter_labile_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_labile_gCm2day
+                   }
+                   if (exists(x = "harvest_labile_gCm2day", where = site_output)) {
+                       grid_output$harvest_labile_gCm2day[n,,] = site_output$harvest_labile_gCm2day
+                       grid_output$mean_harvest_labile_gCm2day[slot_i,slot_j,] = site_output$mean_harvest_labile_gCm2day
+                   }
                }
-               if (length(which(names(site_output) == "decomp_litter_gCm2day")) > 0) {
-                   grid_output$decomp_litter_gCm2day  = site_output$decomp_litter_gCm2day
+               # Gridded foliage information
+               if (exists(x = "foliage_gCm2", where = site_output)) {
+                   # Grided mean / final
+                   grid_output$mean_foliage_gCm2[slot_i,slot_j,] = site_output$mean_foliage_gCm2
+                   grid_output$final_foliage_gCm2[slot_i,slot_j,] = site_output$foliage_gCm2[,grid_output$time_dim]
+                   grid_output$final_dCfoliage_gCm2[slot_i,slot_j,] = site_output$dCfoliage_gCm2[,grid_output$time_dim]
+                   grid_output$mean_outflux_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_outflux_foliage_gCm2day
+                   grid_output$mean_foliage_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_foliage_to_litter_gCm2day
+                   # Time varying pixel specific
+                   grid_output$foliage_gCm2[n,,] = site_output$foliage_gCm2
+                   grid_output$dCfoliage_gCm2[n,,] = site_output$dCfoliage_gCm2
+                   grid_output$outflux_foliage_gCm2day[n,,] = site_output$outflux_foliage_gCm2day
+                   grid_output$foliage_to_litter_gCm2day[n,,] = site_output$foliage_to_litter_gCm2day
+                   # Annual information
+                   grid_output$MTT_annual_foliage_years[n,,] = site_output$MTT_annual_foliage_years
+                   # Fractional partitioning of tunover to different drivers - should they exist
+                   grid_output$NaturalFractionOfTurnover_foliage[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_foliage
+                   grid_output$FireFractionOfTurnover_foliage[slot_i,slot_j,] = site_output$FireFractionOfTurnover_foliage
+                   grid_output$HarvestFractionOfTurnover_foliage[slot_i,slot_j,] = site_output$HarvestFractionOfTurnover_foliage
+                   # Conditional variables
+                   if (exists(x = "alloc_foliage_gCm2day", where = site_output)) {
+                       grid_output$alloc_foliage_gCm2day[n,,] = site_output$alloc_foliage_gCm2day
+                       grid_output$mean_alloc_foliage_gCm2day_gCm2day[slot_i,slot_j,] = site_output$mean_alloc_foliage_gCm2day
+                   }
+                   if (exists(x = "FIREemiss_foliage_gCm2day", where = site_output)) {
+                       grid_output$FIREemiss_foliage_gCm2day[n,,] = site_output$FIREemiss_foliage_gCm2day
+                       grid_output$mean_FIREemiss_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_foliage_gCm2day
+                   }
+                   if (exists(x = "FIRElitter_foliage_gCm2day", where = site_output)) {
+                       grid_output$FIRElitter_foliage_gCm2day[n,,] = site_output$FIRElitter_foliage_gCm2day
+                       grid_output$mean_FIRElitter_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_foliage_gCm2day
+                   }
+                   if (exists(x = "harvest_foliage_gCm2day", where = site_output)) {
+                       grid_output$harvest_foliage_gCm2day[n,,] = site_output$harvest_foliage_gCm2day
+                       grid_output$mean_harvest_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_harvest_foliage_gCm2day
+                   }
                }
-               # Models where we have a CWD pool and therefore a total dead organic matter combination also
-               if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
-                   grid_output$litwood_gCm2[n,,] = site_output$litwood_gCm2
-                   grid_output$dClitwood_gCm2[n,,] = site_output$dClitwood_gCm2
-                   grid_output$dCdeadorg_gCm2[n,,] = site_output$dCdeadorg_gCm2
-                   grid_output$deadorg_gCm2[n,,] = site_output$deadorg_gCm2
+               # Gridded roots information
+               if (exists(x = "roots_gCm2", where = site_output)) {
+                   # Gridded mean / final
+                   grid_output$mean_roots_gCm2[slot_i,slot_j,] = site_output$mean_roots_gCm2
+                   grid_output$final_roots_gCm2[slot_i,slot_j,] = site_output$roots_gCm2[,grid_output$time_dim]
+                   grid_output$final_dCroots_gCm2[slot_i,slot_j,] = site_output$dCroots_gCm2[,grid_output$time_dim]
+                   grid_output$mean_outflux_roots_gCm2day[slot_i,slot_j,] = site_output$mean_outflux_roots_gCm2day
+                   grid_output$mean_roots_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_roots_to_litter_gCm2day
+                   grid_output$mean_alloc_roots_gCm2day[slot_i,slot_j,] = site_output$mean_alloc_roots_gCm2day
+                   grid_output$annual_max_roots_gCm2[slot_i,slot_j,] = site_output$annual_max_roots_gCm2
+                   # Pixel specific time varying
+                   grid_output$roots_gCm2[n,,] = site_output$roots_gCm2
+                   grid_output$dCroots_gCm2[n,,] = site_output$dCroots_gCm2
+                   grid_output$outflux_roots_gCm2day[n,,] = site_output$outflux_roots_gCm2day
+                   grid_output$roots_to_litter_gCm2day[n,,] = site_output$roots_to_litter_gCm2day
+                   grid_output$alloc_roots_gCm2day[n,,] = site_output$alloc_roots_gCm2day
+                   # Annual information
+                   grid_output$MTT_annual_roots_years[n,,] = site_output$MTT_annual_roots_years
+                   # Fractional partitioning of tunover to different drivers - should they exist
+                   grid_output$NaturalFractionOfTurnover_roots[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_roots
+                   grid_output$FireFractionOfTurnover_roots[slot_i,slot_j,] = site_output$FireFractionOfTurnover_roots
+                   grid_output$HarvestFractionOfTurnover_roots[slot_i,slot_j,] = site_output$HarvestFractionOfTurnover_roots
+                   # Conditional variables
+                   if (exists(x = "FIREemiss_roots_gCm2day", where = site_output)) {
+                       grid_output$FIREemiss_roots_gCm2day[n,,] = site_output$FIREemiss_roots_gCm2day
+                       grid_output$mean_FIREemiss_roots_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_roots_gCm2day
+                   }
+                   if (exists(x = "FIRElitter_roots_gCm2day", where = site_output)) {
+                       grid_output$FIRElitter_roots_gCm2day[n,,] = site_output$FIRElitter_roots_gCm2day
+                       grid_output$mean_FIRElitter_roots_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_roots_gCm2day
+                   }
+                   if (exists(x = "harvest_roots_gCm2day", where = site_output)) {
+                       grid_output$harvest_roots_gCm2day[n,,] = site_output$harvest_roots_gCm2day
+                       grid_output$mean_harvest_roots_gCm2day[slot_i,slot_j,] = site_output$mean_harvest_roots_gCm2day
+                   }
                }
-               # Finally water cycle specific if available
-               if (length(which(names(site_output) == "evap_kgH2Om2day")) > 0) {
-                   # currently water in the soil surface layer (0-10 cm)
-                   grid_output$SurfWater_kgH2Om2[n,,] = site_output$SurfWater_kgH2Om2
-                   # plant apparent soil water potential (MPa)
-                   grid_output$wSWP_MPa[n,,] = site_output$wSWP_MPa
-                   # evapotranspiration (Etrans + Esoil + Ewetcanopy)
-                   grid_output$evap_kgH2Om2day[n,,] = site_output$evap_kgH2Om2day
+               # Gridded wood information
+               if (exists(x = "wood_gCm2", where = site_output)) {
+                   # Gridded mean / final variables
+                   grid_output$mean_wood_gCm2[slot_i,slot_j,] = site_output$mean_wood_gCm2
+                   grid_output$final_wood_gCm2[slot_i,slot_j,] = site_output$wood_gCm2[,grid_output$time_dim]
+                   grid_output$final_dCwood_gCm2[slot_i,slot_j,] = site_output$dCwood_gCm2[,grid_output$time_dim]
+                   grid_output$mean_outflux_wood_gCm2day[slot_i,slot_j,] = site_output$mean_outflux_wood_gCm2day
+                   grid_output$mean_wood_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_wood_to_litter_gCm2day
+                   grid_output$mean_alloc_wood_gCm2day[slot_i,slot_j,] = site_output$mean_alloc_wood_gCm2day
+                   grid_output$annual_max_wood_gCm2[slot_i,slot_j,] = site_output$annual_max_wood_gCm2
+                   # Pixel specific time varying
+                   grid_output$wood_gCm2[n,,] = site_output$wood_gCm2
+                   grid_output$dCwood_gCm2[n,,] = site_output$dCwood_gCm2
+                   grid_output$outflux_wood_gCm2day[n,,] = site_output$outflux_wood_gCm2day
+                   grid_output$wood_to_litter_gCm2day[n,,] = site_output$wood_to_litter_gCm2day
+                   grid_output$alloc_wood_gCm2day[n,,] = site_output$alloc_wood_gCm2day
+                   # Annual information
+                   grid_output$MTT_annual_wood_years[n,,] = site_output$MTT_annual_wood_years
+                   # Fractional partitioning of tunover to different drivers - should they exist
+                   grid_output$NaturalFractionOfTurnover_wood[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_wood
+                   grid_output$FireFractionOfTurnover_wood[slot_i,slot_j,] = site_output$FireFractionOfTurnover_wood
+                   grid_output$HarvestFractionOfTurnover_wood[slot_i,slot_j,] = site_output$HarvestFractionOfTurnover_wood
+                   # Conditional variables
+                   if (exists(x = "FIREemiss_wood_gCm2day", where = site_output)) {
+                        grid_output$FIREemiss_wood_gCm2day[n,,] = site_output$FIREemiss_wood_gCm2day
+                        grid_output$mean_FIREemiss_wood_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_wood_gCm2day
+                   }
+                   if (exists(x = "FIRElitter_wood_gCm2day", where = site_output)) {
+                       grid_output$FIRElitter_wood_gCm2day[n,,] = site_output$FIRElitter_wood_gCm2day
+                       grid_output$mean_FIRElitter_wood_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_wood_gCm2day
+                   }
+                   if (exists(x = "harvest_wood_gCm2day", where = site_output)) {
+                       grid_output$harvest_wood_gCm2day[n,,] = site_output$harvest_wood_gCm2day
+                       grid_output$mean_harvest_wood_gCm2day[slot_i,slot_j,] = site_output$mean_harvest_wood_gCm2day
+                   }
                }
-               if (length(which(names(site_output) == "APAR_MJm2day")) > 0) {
-                  grid_output$APAR_MJm2day[n,,] = site_output$APAR_MJm2day
+               # Gridded litter information
+               if (exists(x = "litter_gCm2", where = site_output)) {
+                   # Gridded mean / final
+                   grid_output$mean_litter_gCm2[slot_i,slot_j,] = site_output$mean_litter_gCm2
+                   grid_output$final_litter_gCm2[slot_i,slot_j,] = site_output$litter_gCm2[,grid_output$time_dim]
+                   grid_output$final_dClitter_gCm2[slot_i,slot_j,] = site_output$dClitter_gCm2[,grid_output$time_dim]
+                   grid_output$mean_outflux_litter_gCm2day[slot_i,slot_j,] = site_output$mean_outflux_litter_gCm2day
+                   grid_output$mean_litter_to_som_gCm2day[slot_i,slot_j,] = site_output$mean_litter_to_som_gCm2day
+                   grid_output$mean_rhet_litter_gCm2day[slot_i,slot_j,] = site_output$mean_rhet_litter_gCm2day
+                   # Pixel specific time varying
+                   grid_output$litter_gCm2[n,,] = site_output$litter_gCm2
+                   grid_output$dClitter_gCm2[n,,] = site_output$litter_gCm2
+                   grid_output$outflux_litter_gCm2day[n,,] = site_output$dClitter_gCm2
+                   grid_output$litter_to_som_gCm2day[n,,] = site_output$litter_to_som_gCm2day
+                   grid_output$rhet_litter_gCm2day[n,,] = site_output$rhet_litter_gCm2day
+                   # Annual information
+                   grid_output$MTT_annual_litter_years[n,,] = site_output$MTT_annual_litter_years
+                   # Fractional partitioning of tunover to different drivers - should they exist
+                   grid_output$NaturalFractionOfTurnover_litter[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_litter
+                   grid_output$FireFractionOfTurnover_litter[slot_i,slot_j,] = site_output$FireFractionOfTurnover_litter
+                   grid_output$HarvestFractionOfTurnover_litter[slot_i,slot_j,] = site_output$HarvestFractionOfTurnover_litter
+                   # Conditional variables
+                   if (exists(x = "FIREemiss_litter_gCm2day", where = site_output)) {
+                       grid_output$FIREemiss_litter_gCm2day[n,,] = site_output$FIREemiss_litter_gCm2day
+                       grid_output$mean_FIREemiss_litter_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_litter_gCm2day
+                   }
+                   if (exists(x = "FIRElitter_litter_gCm2day", where = site_output)) {
+                       grid_output$FIRElitter_litter_gCm2day[n,,] = site_output$FIRElitter_litter_gCm2day
+                       grid_output$mean_FIRElitter_litter_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_litter_gCm2day
+                   }
+                   if (exists(x = "harvest_litter_gCm2day", where = site_output)) {
+                       grid_output$harvest_litter_gCm2day[n,,] = site_output$harvest_litter_gCm2day
+                       grid_output$mean_harvest_litter_gCm2day[slot_i,slot_j,] = site_output$mean_harvest_litter_gCm2day
+                   }
                }
-               if (length(which(names(site_output) == "CiCa")) > 0) {
-                  grid_output$CiCa[n,,] = site_output$CiCa
+               # Gridded wood litter information
+               if (exists(x = "woodlitter_gCm2", where = site_output)) {
+                   # Gridded mean / final
+                   grid_output$mean_woodlitter_gCm2[slot_i,slot_j,] = site_output$mean_woodlitter_gCm2
+                   grid_output$final_woodlitter_gCm2[slot_i,slot_j,] = site_output$woodlitter_gCm2[,grid_output$time_dim]
+                   grid_output$final_dCwoodlitter_gCm2[slot_i,slot_j,] = site_output$dCwoodlitter_gCm2[,grid_output$time_dim]
+                   grid_output$mean_outflux_woodlitter_gCm2day[slot_i,slot_j,] = site_output$mean_outflux_woodlitter_gCm2day
+                   grid_output$mean_woodlitter_to_som_gCm2day[slot_i,slot_j,] = site_output$mean_woodlitter_to_som_gCm2day
+                   grid_output$mean_rhet_woodlitter_gCm2day[slot_i,slot_j,] = site_output$mean_rhet_woodlitter_gCm2day
+                   # Pixel specific time varying
+                   grid_output$woodlitter_gCm2[n,,] = site_output$woodlitter_gCm2
+                   grid_output$dCwoodlitter_gCm2[n,,] = site_output$dCwoodlitter_gCm2
+                   grid_output$outflux_woodlitter_gCm2day[n,,] = site_output$outflux_woodlitter_gCm2day
+                   grid_output$woodlitter_to_som_gCm2day[n,,] = site_output$woodlitter_to_som_gCm2day
+                   grid_output$rhet_woodlitter_gCm2day[n,,] = site_output$rhet_woodlitter_gCm2day
+                   # Annual information
+                   grid_output$MTT_annual_woodlitter_years[n,,] = site_output$MTT_annual_woodlitter_years
+                   # Fractional partitioning of tunover to different drivers - should they exist
+                   grid_output$NaturalFractionOfTurnover_woodlitter[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_woodlitter
+                   grid_output$FireFractionOfTurnover_woodlitter[slot_i,slot_j,] = site_output$FireFractionOfTurnover_woodlitter
+                   grid_output$HarvestFractionOfTurnover_woodlitter[slot_i,slot_j,] = site_output$HarvestFractionOfTurnover_woodlitter
+                   # Conditional variables
+                   if (exists(x = "FIREemiss_woodlitter_gCm2day", where = site_output)) {
+                       grid_output$FIREemiss_woodlitter_gCm2day[n,,] = site_output$FIREemiss_woodlitter_gCm2day
+                       grid_output$mean_FIREemiss_woodlitter_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_woodlitter_gCm2day
+                   }
+                   if (exists(x = "FIRElitter_woodlitter_gCm2day", where = site_output)) {
+                       grid_output$FIRElitter_woodlitter_gCm2day[n,,] = site_output$FIRElitter_woodlitter_gCm2day
+                       grid_output$mean_FIRElitter_woodlitter_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_woodlitter_gCm2day
+                   }
+                   if (exists(x = "harvest_woodlitter_gCm2day", where = site_output)) {
+                       grid_output$harvest_woodlitter_gCm2day[n,,] = site_output$harvest_woodlitter_gCm2day
+                       grid_output$mean_harvest_woodlitter_gCm2day[slot_i,slot_j,] = site_output$mean_harvest_woodlitter_gCm2day
+                   }
                }
-               if (length(which(names(site_output) == "FIREemiss_labile_gCm2yr"))) {
-                   # Extract pool specific fire emissions information (labile, foliar, fine root, wood, litter, soil)
-                   grid_output$FIREemiss_labile_gCm2yr[n,,] = site_output$FIREemiss_labile_gCm2yr
-                   grid_output$FIREemiss_foliar_gCm2yr[n,,] = site_output$FIREemiss_foliar_gCm2yr
-                   grid_output$FIREemiss_root_gCm2yr[n,,] = site_output$FIREemiss_root_gCm2yr
-                   grid_output$FIREemiss_wood_gCm2yr[n,,] = site_output$FIREemiss_wood_gCm2yr
-                   grid_output$FIREemiss_litter_gCm2yr[n,,] = site_output$FIREemiss_litter_gCm2yr
-                   grid_output$FIREemiss_som_gCm2yr[n,,] = site_output$FIREemiss_som_gCm2yr
-                   # Extract pools specific fire driven litter fluxes
-                   grid_output$FIRElitter_labile_gCm2yr[n,,] = site_output$FIRElitter_labile_gCm2yr
-                   grid_output$FIRElitter_foliar_gCm2yr[n,,] = site_output$FIRElitter_foliar_gCm2yr
-                   grid_output$FIRElitter_root_gCm2yr[n,,] = site_output$FIRElitter_root_gCm2yr
-                   grid_output$FIRElitter_wood_gCm2yr[n,,] = site_output$FIRElitter_wood_gCm2yr
-                   grid_output$FIRElitter_litter_gCm2yr[n,,] = site_output$FIRElitter_litter_gCm2yr
-                   grid_output$FIRElitter_som_gCm2yr[n,,] = site_output$FIRElitter_som_gCm2yr
-                   # Extract pool specific fire generated outfluxes from natural processed (labile, foliar, fine root, wood, litter, soil)
-                   grid_output$NAToutflux_labile_gCm2yr[n,,] = site_output$NAToutflux_labile_gCm2yr
-                   grid_output$NAToutflux_foliar_gCm2yr[n,,] = site_output$NAToutflux_foliar_gCm2yr
-                   grid_output$NAToutflux_root_gCm2yr[n,,]   = site_output$NAToutflux_root_gCm2yr
-                   grid_output$NAToutflux_wood_gCm2yr[n,,]   = site_output$NAToutflux_wood_gCm2yr
-                   grid_output$NAToutflux_litter_gCm2yr[n,,] = site_output$NAToutflux_litter_gCm2yr
-                   grid_output$NAToutflux_som_gCm2yr[n,,]    = site_output$NAToutflux_som_gCm2yr
+               # Gridded som information
+               if (exists(x = "som_gCm2", where = site_output)) {
+                   # Gridded mean / finals
+                   grid_output$mean_som_gCm2[slot_i,slot_j,] = site_output$mean_som_gCm2
+                   grid_output$final_som_gCm2[slot_i,slot_j,] = site_output$som_gCm2[,grid_output$time_dim]
+                   grid_output$final_dCsom_gCm2[slot_i,slot_j,] = site_output$dCsom_gCm2[,grid_output$time_dim]
+                   grid_output$mean_outflux_som_gCm2day[slot_i,slot_j,] = site_output$mean_outflux_som_gCm2day
+                   grid_output$mean_rhet_som_gCm2day[slot_i,slot_j,] = site_output$mean_rhet_som_gCm2day
+                   # Pixel specific time varying
+                   grid_output$som_gCm2[n,,] = site_output$som_gCm2
+                   grid_output$dCsom_gCm2[n,,] = site_output$dCsom_gCm2
+                   grid_output$outflux_som_gCm2day[n,,] = site_output$outflux_som_gCm2day
+                   grid_output$rhet_som_gCm2day[n,,] = site_output$rhet_som_gCm2day
+                   # Annual information
+                   grid_output$MTT_annual_som_years[n,,] = site_output$MTT_annual_som_years
+                   # Fractional partitioning of tunover to different drivers - should they exist
+                   grid_output$NaturalFractionOfTurnover_som[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_som
+                   grid_output$FireFractionOfTurnover_som[slot_i,slot_j,] = site_output$FireFractionOfTurnover_som
+                   grid_output$HarvestFractionOfTurnover_som[slot_i,slot_j,] = site_output$HarvestFractionOfTurnover_som
+                   # Time varying
+                   if (exists(x = "FIREemiss_som_gCm2day", where = site_output)) {
+                       grid_output$FIREemiss_som_gCm2day[n,,] = site_output$FIREemiss_som_gCm2day
+                       grid_output$mean_FIREemiss_som_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_som_gCm2day
+                   }
+                   if (exists(x = "harvest_som_gCm2day", where = site_output)) {
+                       grid_output$harvest_som_gCm2day[n,,] = site_output$harvest_som_gCm2day
+                       grid_output$mean_harvest_som_gCm2day[slot_i,slot_j,] = site_output$mean_harvest_som_gCm2day
+                   }
+               }
+               # Gridded dom information
+               if (exists(x = "dom_gCm2", where = site_output)) {
+                   # Gridded mean / finals
+                   grid_output$mean_dom_gCm2[slot_i,slot_j,] = site_output$mean_dom_gCm2
+                   grid_output$final_dom_gCm2[slot_i,slot_j,] = site_output$dom_gCm2[,grid_output$time_dim]
+                   grid_output$final_dCdom_gCm2[slot_i,slot_j,] = site_output$dCdom_gCm2[,grid_output$time_dim]
+                   grid_output$mean_outflux_dom_gCm2day[slot_i,slot_j,] = site_output$mean_outflux_dom_gCm2day
+                   grid_output$mean_rhet_dom_gCm2day[slot_i,slot_j,] = site_output$mean_rhet_dom_gCm2day
+                   # Pixel specific time varying
+                   grid_output$dom_gCm2[n,,] = site_output$dom_gCm2
+                   grid_output$dCdom_gCm2[n,,] = site_output$dCdom_gCm2
+                   grid_output$outflux_dom_gCm2day[n,,] = site_output$outflux_dom_gCm2day
+                   grid_output$rhet_dom_gCm2day[n,,] = site_output$rhet_dom_gCm2day
+                   # Annual information
+                   grid_output$MTT_annual_dom_years[n,,] = site_output$MTT_annual_dom_years
+                   # Fractional partitioning of tunover to different drivers - should they exist
+                   grid_output$NaturalFractionOfTurnover_dom[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_dom
+                   grid_output$FireFractionOfTurnover_dom[slot_i,slot_j,] = site_output$FireFractionOfTurnover_dom
+                   grid_output$HarvestFractionOfTurnover_dom[slot_i,slot_j,] = site_output$HarvestFractionOfTurnover_dom
+                   # Conditional
+                   if (exists(x = "FIREemiss_dom_gCm2day", where = site_output)) {
+                       grid_output$FIREemiss_dom_gCm2day[n,,] = site_output$FIREemiss_dom_gCm2day
+                       grid_output$mean_FIREemiss_dom_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_dom_gCm2day
+                   }
+                   if (exists(x = "harvest_dom_gCm2day", where = site_output)) {
+                       grid_output$harvest_dom_gCm2day[n,,] = site_output$harvest_dom_gCm2day
+                       grid_output$mean_harvest_dom_gCm2day[slot_i,slot_j,] = site_output$mean_harvest_dom_gCm2day
+                   }
                }
 
-               # now assign to correct location in array
-               # Mean stocks first
-               grid_output$mean_labile_gCm2[slot_i,slot_j,] = apply(site_output$labile_gCm2,1,mean)
-               grid_output$mean_totalC_gCm2[slot_i,slot_j,] = apply(site_output$totalC_gCm2,1,mean)
-               grid_output$mean_dom_gCm2[slot_i,slot_j,] = apply(site_output$dom_gCm2,1,mean)
-               grid_output$mean_biomass_gCm2[slot_i,slot_j,] = apply(site_output$biomass_gCm2,1,mean)
-               grid_output$mean_foliage_gCm2[slot_i,slot_j,] = apply(site_output$foliage_gCm2,1,mean)
-               grid_output$mean_roots_gCm2[slot_i,slot_j,] = apply(site_output$roots_gCm2,1,mean)
-               grid_output$mean_wood_gCm2[slot_i,slot_j,] = apply(site_output$wood_gCm2,1,mean)
-               grid_output$mean_lit_gCm2[slot_i,slot_j,] = apply(site_output$lit_gCm2,1,mean)
-               grid_output$mean_som_gCm2[slot_i,slot_j,] = apply(site_output$som_gCm2,1,mean)
-               grid_output$mean_dCtotalC_gCm2[slot_i,slot_j,] = apply(site_output$dCtotalC_gCm2,1,mean)
-               grid_output$mean_dCdom_gCm2[slot_i,slot_j,] = apply(site_output$dCdom_gCm2,1,mean)
-               grid_output$mean_dCbio_gCm2[slot_i,slot_j,] = apply(site_output$dCbio_gCm2,1,mean)
-               grid_output$mean_dCfoliage_gCm2[slot_i,slot_j,] = apply(site_output$dCfoliage_gCm2,1,mean)
-               grid_output$mean_dCroots_gCm2[slot_i,slot_j,] = apply(site_output$dCroots_gCm2,1,mean)
-               grid_output$mean_dCwood_gCm2[slot_i,slot_j,] = apply(site_output$dCwood_gCm2,1,mean)
-               grid_output$mean_dClit_gCm2[slot_i,slot_j,] = apply(site_output$dClit_gCm2,1,mean)
-               grid_output$mean_dCsom_gCm2[slot_i,slot_j,] = apply(site_output$dCsom_gCm2,1,mean)
-               grid_output$mean_lai_m2m2[slot_i,slot_j,] = apply(site_output$lai_m2m2,1,mean)
-               # Final stocks second
-               final_step = dim(site_output$labile_gCm2)[2]
-               grid_output$final_labile_gCm2[slot_i,slot_j,] = site_output$labile_gCm2[,final_step]
-               grid_output$final_totalC_gCm2[slot_i,slot_j,] = site_output$totalC_gCm2[,final_step]
-               grid_output$final_dom_gCm2[slot_i,slot_j,] = site_output$dom_gCm2[,final_step]
-               grid_output$final_biomass_gCm2[slot_i,slot_j,] = site_output$biomass_gCm2[,final_step]
-               grid_output$final_foliage_gCm2[slot_i,slot_j,] = site_output$foliage_gCm2[,final_step]
-               grid_output$final_roots_gCm2[slot_i,slot_j,] = site_output$roots_gCm2[,final_step]
-               grid_output$final_wood_gCm2[slot_i,slot_j,] = site_output$wood_gCm2[,final_step]
-               grid_output$final_lit_gCm2[slot_i,slot_j,] = site_output$lit_gCm2[,final_step]
-               grid_output$final_som_gCm2[slot_i,slot_j,] = site_output$som_gCm2[,final_step]
-               grid_output$final_dCtotalC_gCm2[slot_i,slot_j,] = site_output$dCtotalC_gCm2[,final_step]
-               grid_output$final_dCdom_gCm2[slot_i,slot_j,] = site_output$dCdom_gCm2[,final_step]
-               grid_output$final_dCbio_gCm2[slot_i,slot_j,] = site_output$dCbio_gCm2[,final_step]
-               grid_output$final_dCfoliage_gCm2[slot_i,slot_j,] = site_output$dCfoliage_gCm2[,final_step]
-               grid_output$final_dCroots_gCm2[slot_i,slot_j,] = site_output$dCroots_gCm2[,final_step]
-               grid_output$final_dCwood_gCm2[slot_i,slot_j,] = site_output$dCwood_gCm2[,final_step]
-               grid_output$final_dClit_gCm2[slot_i,slot_j,] = site_output$dClit_gCm2[,final_step]
-               grid_output$final_dCsom_gCm2[slot_i,slot_j,] = site_output$dCsom_gCm2[,final_step]
-               grid_output$final_lai_m2m2[slot_i,slot_j,] = site_output$lai_m2m2[,final_step]
-               # Fluxes third
-               grid_output$mean_gpp_gCm2day[slot_i,slot_j,] = apply(site_output$gpp_gCm2day,1,mean)
-               grid_output$mean_nee_gCm2day[slot_i,slot_j,] = apply(site_output$nee_gCm2day,1,mean)
-               grid_output$mean_rauto_gCm2day[slot_i,slot_j,] = apply(site_output$rauto_gCm2day,1,mean)
-               grid_output$mean_rhet_gCm2day[slot_i,slot_j,] = apply(site_output$rhet_gCm2day,1,mean)
-               grid_output$mean_reco_gCm2day[slot_i,slot_j,] = apply(site_output$reco_gCm2day,1,mean)
-               grid_output$mean_npp_gCm2day[slot_i,slot_j,] = apply(site_output$npp_gCm2day,1,mean)
-               grid_output$mean_fnpp_gCm2day[slot_i,slot_j,] = apply(site_output$fnpp_gCm2day,1,mean)
-               grid_output$mean_rnpp_gCm2day[slot_i,slot_j,] = apply(site_output$rnpp_gCm2day,1,mean)
-               grid_output$mean_wnpp_gCm2day[slot_i,slot_j,] = apply(site_output$wnpp_gCm2day,1,mean)
-               grid_output$mean_harvest_gCm2day[slot_i,slot_j,] = apply(site_output$harvest_gCm2day,1,mean)
-               grid_output$mean_fire_gCm2day[slot_i,slot_j,] = apply(site_output$fire_gCm2day,1,mean)
-               grid_output$mean_nbe_gCm2day[slot_i,slot_j,] = apply(site_output$nbe_gCm2day,1,mean)
-               grid_output$mean_nbp_gCm2day[slot_i,slot_j,] = apply(site_output$nbp_gCm2day,1,mean)
-               # For those which we currently have need, estimate the mean annual maximum
-               grid_output$annual_max_roots_gCm2[slot_i,slot_j,] = 0
-               grid_output$annual_max_wood_gCm2[slot_i,slot_j,] = 0
-               for (y in seq(1,nos_years)) {
-                    s = 1 + (steps_per_year * (y - 1)) ; f = s + (steps_per_year-1)
-                    grid_output$annual_max_roots_gCm2[slot_i,slot_j,] = grid_output$annual_max_roots_gCm2[slot_i,slot_j,] + apply(site_output$roots_gCm2[,s:f],1,max)
-                    grid_output$annual_max_wood_gCm2[slot_i,slot_j,] = grid_output$annual_max_wood_gCm2[slot_i,slot_j,] + apply(site_output$wood_gCm2[,s:f],1,max)
-               }
-               grid_output$annual_max_roots_gCm2[slot_i,slot_j,] = grid_output$annual_max_roots_gCm2[slot_i,slot_j,] / nos_years
-               grid_output$annual_max_wood_gCm2[slot_i,slot_j,] = grid_output$annual_max_wood_gCm2[slot_i,slot_j,] / nos_years
-               if (length(which(names(site_output) == "rhet_litter_gCm2day")) > 0) {
-                   grid_output$mean_rhet_litter_gCm2day = apply(site_output$rhet_litter_gCm2day,1,mean)
-               }
-               if (length(which(names(site_output) == "rhet_som_gCm2day")) > 0) {
-                   grid_output$mean_rhet_som_gCm2day = apply(site_output$rhet_SOM_gCm2day,1,mean)
-               }
-               if (length(which(names(site_output) == "decomp_litter_gCm2day")) > 0) {
-                   grid_output$mean_decomp_litter_gCm2day =  apply(site_output$decomp_litter_gCm2day,1,mean)
-               }
-               # Models where we have a CWD pool and therefore a total dead organic matter combination also
-               if (length(which(names(site_output) == "litwood_gCm2")) > 0) {
-                   grid_output$mean_litwood_gCm2[slot_i,slot_j,] = apply(site_output$litwood_gCm2,1,mean)
-                   grid_output$mean_dClitwood_gCm2[slot_i,slot_j,] = apply(site_output$dClitwood_gCm2,1,mean)
-                   grid_output$mean_dCdeadorg_gCm2[slot_i,slot_j,] = apply(site_output$dCdeadorg_gCm2,1,mean)
-                   grid_output$mean_deadorg_gCm2[slot_i,slot_j,] = apply(site_output$deadorg_gCm2,1,mean)
-                   grid_output$final_litwood_gCm2[slot_i,slot_j,] = site_output$litwood_gCm2[,final_step]
-                   grid_output$final_dClitwood_gCm2[slot_i,slot_j,] = site_output$dClitwood_gCm2[,final_step]
-                   grid_output$final_dCdeadorg_gCm2[slot_i,slot_j,] = site_output$dCdeadorg_gCm2[,final_step]
-                   grid_output$final_deadorg_gCm2[slot_i,slot_j,] = site_output$deadorg_gCm2[,final_step]
-               }
-               # Finally water cycle specific if available
-               if (length(which(names(site_output) == "evap_kgH2Om2day")) > 0) {
-                   # currently water in the soil surface layer (0-10 cm)
-                   grid_output$mean_SurfWater_kgH2Om2[slot_i,slot_j,] = apply(site_output$SurfWater_kgH2Om2,1,mean)
-                   grid_output$final_SurfWater_kgH2Om2[slot_i,slot_j,] = site_output$SurfWater_kgH2Om2[,final_step]
+               # Water cycle specific variables
+               if (exists(x = "ET_kgH2Om2day", where = site_output)) {
+                   # currently water in the soil surface layer (0-30 cm)
+                   grid_output$mean_SurfWater_kgH2Om2[slot_i,slot_j,] = site_output$mean_SurfWater_kgH2Om2
+                   grid_output$final_SurfWater_kgH2Om2[slot_i,slot_j,] = site_output$SurfWater_kgH2Om2[,grid_output$time_dim]
+                   grid_output$final_dSurfWater_kgH2Om2[slot_i,slot_j,] = site_output$dSurfWater_kgH2Om2[,grid_output$time_dim]
+                   grid_output$SurfWater_kgH2Om2[n,,] = site_output$SurfWater_kgH2Om2
+                   grid_output$dSurfWater_kgH2Om2[n,,] = site_output$dSurfWater_kgH2Om2
                    # plant apparent soil water potential (MPa)
-                   grid_output$mean_wSWP_MPa[slot_i,slot_j,] = apply(site_output$wSWP_MPa,1,mean)
-                   grid_output$final_wSWP_MPa[slot_i,slot_j,] = site_output$wSWP_MPa[,final_step]
+                   grid_output$mean_wSWP_MPa[slot_i,slot_j,] = site_output$mean_wSWP_MPa
+                   grid_output$final_wSWP_MPa[slot_i,slot_j,] = site_output$wSWP_MPa[,grid_output$time_dim]
+                   grid_output$wSWP_MPa[n,,] = site_output$wSWP_MPa
+                   grid_output$dwSWP_MPa[n,,] = site_output$dwSWP_MPa
                    # evapotranspiration (Etrans + Esoil + Ewetcanopy)
-                   grid_output$mean_evap_kgH2Om2day[slot_i,slot_j,] = apply(site_output$evap_kgH2Om2day,1,mean)
+                   grid_output$mean_ET_kgH2Om2day[slot_i,slot_j,] = site_output$mean_ET_kgH2Om2day
+                   grid_output$ET_kgH2Om2day[n,,] = site_output$ET_kgH2Om2day
                }
-               # Canopy process information
-               if (length(which(names(site_output) == "APAR_MJm2day")) > 0) {
-                   grid_output$mean_APAR_MJm2day[slot_i,slot_j,] = apply(site_output$APAR_MJm2day,1,mean)
+               # Canopy process variables
+               if (exists(x = "APAR_MJm2day", where = site_output)) {
+                   # Absorbed photosynthetically active radation
+                   grid_output$mean_APAR_MJm2day[slot_i,slot_j,] = site_output$mean_APAR_MJm2day
+                   grid_output$APAR_MJm2day[n,,] = site_output$APAR_MJm2day
                }
-               if (length(which(names(site_output) == "CiCa")) > 0) {
-                   grid_output$mean_CiCa[slot_i,slot_j,] = apply(site_output$CiCa,1,mean)
+               if (exists(x = "CiCa", where = site_output)) {
+                   # Canopy Ci:Ca
+                   grid_output$mean_CiCa[slot_i,slot_j,] = site_output$mean_CiCa
+                   grid_output$CiCa[n,,] = site_output$CiCa
                }
-              if (length(which(names(site_output) == "FIREemiss_labile_gCm2yr"))) {
-                  # Extract pool specific fire emissions information (labile, foliar, fine root, wood, litter, soil)
-                  grid_output$mean_FIREemiss_labile_gCm2yr[slot_i,slot_j,] = apply(site_output$FIREemiss_labile_gCm2yr,1,mean)
-                  grid_output$mean_FIREemiss_foliar_gCm2yr[slot_i,slot_j,] = apply(site_output$FIREemiss_foliar_gCm2yr,1,mean)
-                  grid_output$mean_FIREemiss_root_gCm2yr[slot_i,slot_j,] = apply(site_output$FIREemiss_root_gCm2yr,1,mean)
-                  grid_output$mean_FIREemiss_wood_gCm2yr[slot_i,slot_j,] = apply(site_output$FIREemiss_wood_gCm2yr,1,mean)
-                  grid_output$mean_FIREemiss_litter_gCm2yr[slot_i,slot_j,] = apply(site_output$FIREemiss_litter_gCm2yr,1,mean)
-                  grid_output$mean_FIREemiss_som_gCm2yr[slot_i,slot_j,] = apply(site_output$FIREemiss_som_gCm2yr,1,mean)
-                  # Extract pools specific fire driven litter fluxes
-                  grid_output$mean_FIRElitter_labile_gCm2yr[slot_i,slot_j,] = apply(site_output$FIRElitter_labile_gCm2yr,1,mean)
-                  grid_output$mean_FIRElitter_foliar_gCm2yr[slot_i,slot_j,] = apply(site_output$FIRElitter_foliar_gCm2yr,1,mean)
-                  grid_output$mean_FIRElitter_root_gCm2yr[slot_i,slot_j,] = apply(site_output$FIRElitter_root_gCm2yr,1,mean)
-                  grid_output$mean_FIRElitter_wood_gCm2yr[slot_i,slot_j,] = apply(site_output$FIRElitter_wood_gCm2yr,1,mean)
-                  grid_output$mean_FIRElitter_litter_gCm2yr[slot_i,slot_j,] = apply(site_output$FIRElitter_litter_gCm2yr,1,mean)
-                  grid_output$mean_FIRElitter_som_gCm2yr[slot_i,slot_j,] = apply(site_output$FIRElitter_som_gCm2yr,1,mean)
-                  # Extract pool specific fire generated outfluxes from natural processed (labile, foliar, fine root, wood, litter, soil)
-                  grid_output$mean_NAToutflux_labile_gCm2yr[slot_i,slot_j,] = apply(site_output$NAToutflux_labile_gCm2yr,1,mean)
-                  grid_output$mean_NAToutflux_foliar_gCm2yr[slot_i,slot_j,] = apply(site_output$NAToutflux_foliar_gCm2yr,1,mean)
-                  grid_output$mean_NAToutflux_root_gCm2yr[slot_i,slot_j,]   = apply(site_output$NAToutflux_root_gCm2yr,1,mean)
-                  grid_output$mean_NAToutflux_wood_gCm2yr[slot_i,slot_j,]   = apply(site_output$NAToutflux_wood_gCm2yr,1,mean)
-                  grid_output$mean_NAToutflux_litter_gCm2yr[slot_i,slot_j,] = apply(site_output$NAToutflux_litter_gCm2yr,1,mean)
-                  grid_output$mean_NAToutflux_som_gCm2yr[slot_i,slot_j,]    = apply(site_output$NAToutflux_som_gCm2yr,1,mean)
-               }
+
                # Any time series assimilated data overlaps?
-               if (length(which(names(site_output) == "gpp_assim_data_overlap_fraction")) > 0) {
+               if (exists(x = "gpp_assim_data_overlap_fraction", where = site_output)) {
                    grid_output$gpp_assim_data_overlap_fraction[slot_i,slot_j] = site_output$gpp_assim_data_overlap_fraction
                }
-               if (length(which(names(site_output) == "lai_assim_data_overlap_fraction")) > 0) {
+               if (exists(x = "lai_assim_data_overlap_fraction", where = site_output)) {
                    grid_output$lai_assim_data_overlap_fraction[slot_i,slot_j] = site_output$lai_assim_data_overlap_fraction
                }
-               if (length(which(names(site_output) == "nee_assim_data_overlap_fraction")) > 0) {
+               if (exists(x = "nee_assim_data_overlap_fraction", where = site_output)) {
                    grid_output$nee_assim_data_overlap_fraction[slot_i,slot_j] = statsite_outputes_all$nee_assim_data_overlap_fraction
                }
-               if (length(which(names(site_output) == "wood_assim_data_overlap_fraction")) > 0) {
+               if (exists(x = "wood_assim_data_overlap_fraction", where = site_output)) {
                    grid_output$wood_assim_data_overlap_fraction[slot_i,slot_j] = site_output$wood_assim_data_overlap_fraction
                }
-               if (length(which(names(site_output) == "soil_assim_data_overlap_fraction")) > 0) {
+               if (exists(x = "soil_assim_data_overlap_fraction", where = site_output)) {
                    grid_output$soil_assim_data_overlap_fraction[slot_i,slot_j] = site_output$soil_assim_data_overlap_fraction
                }
-               if (length(which(names(site_output) == "evap_assim_data_overlap_fraction")) > 0) {
-                   grid_output$evap_assim_data_overlap_fraction[slot_i,slot_j] = site_output$evap_assim_data_overlap_fraction
+               if (exists(x = "et_assim_data_overlap_fraction", where = site_output)) {
+                   grid_output$et_assim_data_overlap_fraction[slot_i,slot_j] = site_output$et_assim_data_overlap_fraction
                }
-               if (length(which(names(site_output) == "nbe_assim_data_overlap_fraction")) > 0) {
+               if (exists(x = "nbe_assim_data_overlap_fraction", where = site_output)) {
                    grid_output$nbe_assim_data_overlap_fraction[slot_i,slot_j] = site_output$nbe_assim_data_overlap_fraction
                }
-               if (length(which(names(site_output) == "fire_assim_data_overlap_fraction")) > 0) {
+               if (exists(x = "fire_assim_data_overlap_fraction", where = site_output)) {
                    grid_output$fire_assim_data_overlap_fraction[slot_i,slot_j] = site_output$fire_assim_data_overlap_fraction
                }
                # Parameter vs C-cycle flux correlation across ensemble member
@@ -1399,66 +2340,11 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                grid_output$fire_par_cor[slot_i,slot_j,] = site_output$fire_par_cor
 
                # now tidy away the file
-               file.remove(outfile2)
+               file.remove(outfile_stock_fluxes)
 
           } # if site has been done and can now be made part of the overall...
 
       } # looping through sites
-
-      # Mean stocks first
-      grid_output$agg_labile_TgC = quantile(grid_output$agg_labile_TgC, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_totalC_TgC = quantile(grid_output$agg_totalC_TgC, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_dom_TgC = quantile(grid_output$agg_dom_TgC, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_biomass_TgC = quantile(grid_output$agg_biomass_TgC, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_foliage_TgC = quantile(grid_output$agg_foliage_TgC, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_roots_TgC = quantile(grid_output$agg_roots_TgC, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_wood_TgC = quantile(grid_output$agg_wood_TgC, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_lit_TgC = quantile(grid_output$agg_lit_TgC, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_som_TgC = quantile(grid_output$agg_som_TgC, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_dCtotalC_TgC = quantile(grid_output$agg_dCtotalC_TgC, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_dCdom_TgC = quantile(grid_output$agg_dCdom_TgC, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_dCbio_TgC = quantile(grid_output$agg_dCbio_TgC, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_dCfoliage_TgC = quantile(grid_output$agg_dCfoliage_TgC, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_dCroots_TgC = quantile(grid_output$agg_dCroots_TgC, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_dCwood_TgC = quantile(grid_output$agg_dCwood_TgC, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_dClit_TgC = quantile(grid_output$agg_dClit_TgC, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_dCsom_TgC = quantile(grid_output$agg_dCsom_TgC, prob = agg_quantiles_final, na.rm=TRUE)
-      # Fluxes seconds
-      grid_output$agg_nee_TgCyr = quantile(grid_output$agg_nee_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_gpp_TgCyr = quantile(grid_output$agg_gpp_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_rauto_TgCyr = quantile(grid_output$agg_rauto_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_rhet_TgCyr = quantile(grid_output$agg_rhet_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_reco_TgCyr = quantile(grid_output$agg_reco_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_npp_TgCyr = quantile(grid_output$agg_npp_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_fnpp_TgCyr = quantile(grid_output$agg_fnpp_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_rnpp_TgCyr = quantile(grid_output$agg_rnpp_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_wnpp_TgCyr = quantile(grid_output$agg_wnpp_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_harvest_TgCyr = quantile(grid_output$agg_harvest_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_fire_TgCyr = quantile(grid_output$agg_fire_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_nbe_TgCyr = quantile(grid_output$agg_nbe_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
-      grid_output$agg_nbp_TgCyr = quantile(grid_output$agg_nbp_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
-      # Models where we have an explicit heterotrophic respiration from litter
-      if (length(which(names(grid_output) == "agg_rhet_litter_TgCyr")) > 0) {
-          grid_output$agg_rhet_litter_TgCyr = quantile(grid_output$agg_rhet_litter_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
-      }
-      # Models where we have an explicit heterotrophic respiration frosoil organic matter
-      if (length(which(names(grid_output) == "agg_rhet_som_TgCyr")) > 0) {
-          grid_output$agg_rhet_som_TgCyr = quantile(grid_output$agg_rhet_som_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
-      }
-      # Models where we have an explicit decomposition of litter to siol organic matter
-      if (length(which(names(grid_output) == "agg_decomp_litter_TgCyr")) > 0) {
-          grid_output$agg_decomp_litter_TgCyr = quantile(grid_output$agg_decomp_litter_TgCyr, prob = agg_quantiles_final, na.rm=TRUE)
-      }
-      # Models where we have a CWD pool and therefore a total dead organic matter combination also
-      if (length(which(names(grid_output) == "agg_litwood_TgC")) > 0) {
-          grid_output$agg_litwood_TgC = quantile(grid_output$agg_litwood_TgC, prob = agg_quantiles_final, na.rm=TRUE)
-          grid_output$agg_dClitwood_TgC = quantile(grid_output$agg_dClitwood_TgC, prob = agg_quantiles_final, na.rm=TRUE)
-      }
-      # Finally water cycle specific if available
-      if (length(which(names(grid_output) == "agg_evap_PgH2Oyr")) > 0) {
-          # evapotranspiration (Etrans + Esoil + Ewetcanopy)
-          grid_output$agg_evap_PgH2Oyr = quantile(grid_output$agg_evap_PgH2Oyr, prob = agg_quantiles_final, na.rm=TRUE)
-      }
 
       # now save the combined grid file
       save(grid_output, file=outfile_grid, compress = "gzip", compression_level = 9)

@@ -132,7 +132,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ## Get some initial Csom (gC/m2) information
     ###
 
-    if (Csom_source == "HWSD" | Csom_source == "SoilGrids") {
+    if (Csom_source == "HWSD" | Csom_source == "SoilGrids" | Csom_source == "NCSCD") {
         Csom_info = extract_Csom_prior(grid_long_loc,grid_lat_loc,spatial_type,
                                        resolution,grid_type,latlon_wanted,Csom_all)
         Csom_initial = Csom_info$Csom_initial ; Csom_initial_unc = Csom_info$Csom_initial_unc
@@ -355,7 +355,10 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     # Combine with an estimate of model structural error.
     # Assumed uncertainty structure as agreed with Anthony Bloom
     # NOTE minimum uncertainty bound irrespective of the dataset estimates, based on median difference between GFED and GFAS
-    Fire_unc[Fire_unc >= 0] = pmax(0.1,sqrt(Fire_unc[Fire_unc >= 0]**2 + (0.1*mean(Fire[Fire >= 0]))**2))
+    #Fire_unc[Fire_unc >= 0] = pmax(0.1,sqrt(Fire_unc[Fire_unc >= 0]**2 + (0.1*mean(Fire[Fire >= 0]))**2))
+    #Fire_unc[Fire_unc >= 0] = pmax(0.1*mean(Fire[Fire >= 0]),pmax(0.01,Fire_unc[Fire_unc >= 0]))
+    Fire_unc[Fire_unc >= 0] = pmax(0.1*mean(Fire[Fire >= 0]),pmax(0.01,pmin(Fire[Fire >= 0],Fire_unc[Fire_unc >= 0])))
+
     # Fire emissions are dominated by zero (or effectively zero) values. This bias' the APMCMC (or MHMCMC)
     # away from fitting the more important emission values in favour of the more common zero (or near zero values.)
     # To address this we remove fire emission observations less than 0.01 gC/m2/day

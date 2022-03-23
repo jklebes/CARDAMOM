@@ -16,8 +16,10 @@ source("~/WORK/GREENHOUSE/models/CARDAMOM/R_functions/load_all_cardamom_function
 
 # set input and output directories
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_gpp_fire/"
+input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca/"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Trendyv9_historical/"
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_gpp_fire_nbe/"
-input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Mexico_1deg_C7_agb_lca_gpp_fire_nbe/"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Mexico_1deg_C7_agb_lca_gpp_fire_nbe/"
 # Specify any extra information for the filename
 output_prefix = "" # follow with "_"
 output_suffix = "" # begin with "_"
@@ -336,8 +338,11 @@ var10 = ncvar_def("cVeg_ensemble",     unit="kg.m-2", longname = "Carbon in live
 # TotalC
 var11 = ncvar_def("cTotal_ensemble",   unit="kg.m-2", longname = "Carbon in live and dead organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
 
-# create the empty file
+# Define the output file name
 output_name = paste(PROJECT$results_processedpath,output_prefix,"CSTOCK_",PROJECT$start_year,"_",PROJECT$end_year,output_suffix,".nc",sep="")
+# Delete if the file currently exists
+if (file.exists(output_name)) {file.remove(output_name)}
+# Create the empty file space
 new_file=nc_create(filename=output_name, vars=list(var0,                                      
                                                    var1,var2,var3,var4,var5,var6,
                                                    var7,var8,var9,var10,var11),
@@ -435,8 +440,11 @@ var28  = ncvar_def("FIREemiss_cLeafFineRootlitter_ensemble", unit="kg.m-2.s-1", 
 # Fire mortality outflux from som
 var29  = ncvar_def("FIREemiss_cSOM_ensemble", unit="kg.m-2.s-1", longname = "Fire combusted C output flux from soil organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
 
-# create the empty file
+# Define the output file name
 output_name = paste(PROJECT$results_processedpath,output_prefix,"CFLUX_",PROJECT$start_year,"_",PROJECT$end_year,output_suffix,".nc",sep="")
+# Delete if the file currently exists
+if (file.exists(output_name)) {file.remove(output_name)}
+# Create the empty file space
 new_file=nc_create(filename=output_name, vars=list(var0,                                      
                                                    var1,var2,var3,var4,var5,var6,var7,        
                                                    var8,var9,var10,var11,var12,var13,var14,
@@ -542,8 +550,11 @@ var10 = ncvar_def("NPP_root_flx_ensemble", unit="kg.m-2.s-1", longname = "Net Pr
 # Wood
 var11 = ncvar_def("NPP_wood_flx_ensemble", unit="kg.m-2.s-1", longname = "Net Primary Productivity to wood - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    
-# create the empty file
+# Define the output file name
 output_name = paste(PROJECT$results_processedpath,output_prefix,"NPP_MRT_",PROJECT$start_year,"_",PROJECT$end_year,output_suffix,".nc",sep="")
+# Delete if the file currently exists
+if (file.exists(output_name)) {file.remove(output_name)}
+# Create the empty file space
 new_file=nc_create(filename=output_name, vars=list(var0,                                     
                                                    var1,var2,var3,var4,var5,var6,var7,       
                                                    var8,var9,var10,var11),
@@ -630,8 +641,11 @@ var20 = ncvar_def("FIRE_OBS", unit="g.m-2.d-1", longname = "Observed C emission 
 # Fire uncertainty
 var21 = ncvar_def("FIRE_UNC_OBS", unit="g.m-2.d-1", longname = "Uncertainty on observed C emission due to fire combustion", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
 
-# create the empty file
+# Define the output file name
 output_name = paste(PROJECT$results_processedpath,output_prefix,"DRIVERS_OBS_",PROJECT$start_year,"_",PROJECT$end_year,output_suffix,".nc",sep="")
+# Delete if the file currently exists
+if (file.exists(output_name)) {file.remove(output_name)}
+# Create the empty file space
 new_file=nc_create(filename=output_name, vars=list(var0,                                     
                                                    var1,var2,var3,var4,var5,var6,var7,       
                                                    var8,var9,var10,var11,var12,var13,

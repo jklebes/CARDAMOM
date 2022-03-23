@@ -95,8 +95,10 @@ fudgeit <- function(){
 
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_isimip3a_lca_gpp_nbe/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_isimip3a_lca_gpp/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_gpp_fire/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_gpp_fire/infofile.RData")
 load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_GSI_BUCKET_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Trendyv9_historical/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_AGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_actualCI_agb/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_gpp/infofile.RData")
@@ -109,7 +111,7 @@ load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_agb_nbe_gpp/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/NoRainfor_woody_productivity_mortality/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Rainfor_woody_productivity_mortality/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Mexico_1deg_C7_agb_lca_gpp_fire_nbe/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Mexico_1deg_C7_agb_lca_gpp_fire_nbe/infofile.RData")
 
 # Load the CARDAMOM files
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
@@ -119,7 +121,9 @@ load(paste(PROJECT$results_processedpath,PROJECT$name,"_parameter_maps.RData",se
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_reccap2_permafrost_1deg_C7_isimip/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/figures_africa/"
 out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
-out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/mexico/gridded_figures/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/trendy/figures/"
+#out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/dalec_gsi_bucket/"
+#out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/mexico/gridded_figures/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/cssp_brazil_2/figures_productivity_without_vs_with/"
 
 # Specify the position within the stored ensemble for the median estimate and the desired uncertainty bands
@@ -356,6 +360,7 @@ cica_ratio = rep(0, nos_years) ; cica_lower_ratio = rep(0, nos_years) ; cica_upp
 SurfWater_mm = rep(0, nos_years) ; SurfWater_lower_mm = rep(0, nos_years) ; SurfWater_upper_mm = rep(0, nos_years)  
 wSWP_MPa = rep(0, nos_years) ; wSWP_lower_MPa = rep(0, nos_years) ; wSWP_upper_MPa = rep(0, nos_years)  
 gpp_TgCyr = rep(0,nos_years) ; gpp_lower_TgCyr = rep(0,nos_years) ; gpp_upper_TgCyr = rep(0,nos_years)
+npp_TgCyr = rep(0,nos_years) ; npp_lower_TgCyr = rep(0,nos_years) ; npp_upper_TgCyr = rep(0,nos_years)
 rauto_TgCyr = rep(0,nos_years) ; rauto_lower_TgCyr = rep(0,nos_years) ; rauto_upper_TgCyr = rep(0,nos_years)
 rhet_TgCyr = rep(0,nos_years) ; rhet_lower_TgCyr = rep(0,nos_years) ; rhet_upper_TgCyr = rep(0,nos_years)
 nee_TgCyr = rep(0,nos_years) ; nee_lower_TgCyr = rep(0,nos_years) ; nee_upper_TgCyr = rep(0,nos_years)
@@ -382,7 +387,7 @@ time_vector = seq(0,nos_years, length.out = dim(grid_output$nee_gCm2day)[3])
 
 # Loop through all sites
 nos_sites_inc = 0
-# Loop through every site
+# Loop through every site to generate TIME VARYING estimates
 for (n in seq(1, PROJECT$nosites)) {
 
      # Extract each sites location within the grid
@@ -448,6 +453,9 @@ for (n in seq(1, PROJECT$nosites)) {
          gpp_TgCyr              = gpp_TgCyr           + (rollapply(grid_output$gpp_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          gpp_lower_TgCyr        = gpp_lower_TgCyr     + (rollapply(grid_output$gpp_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          gpp_upper_TgCyr        = gpp_upper_TgCyr     + (rollapply(grid_output$gpp_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         npp_TgCyr              = npp_TgCyr           + (rollapply(grid_output$npp_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         npp_lower_TgCyr        = npp_lower_TgCyr     + (rollapply(grid_output$npp_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         npp_upper_TgCyr        = npp_upper_TgCyr     + (rollapply(grid_output$npp_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          rauto_TgCyr            = rauto_TgCyr         + (rollapply(grid_output$rauto_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          rauto_lower_TgCyr      = rauto_lower_TgCyr   + (rollapply(grid_output$rauto_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          rauto_upper_TgCyr      = rauto_upper_TgCyr   + (rollapply(grid_output$rauto_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)         
@@ -524,6 +532,7 @@ wSWP_upper_MPa = wSWP_upper_MPa / nos_sites_inc
 # Now adjust units gC/yr -> TgC/yr
 # All AGB
 gpp_TgCyr     = gpp_TgCyr * 1e-12
+npp_TgCyr     = npp_TgCyr * 1e-12
 rauto_TgCyr   = rauto_TgCyr * 1e-12
 rhet_TgCyr    = rhet_TgCyr * 1e-12
 nee_TgCyr     = nee_TgCyr * 1e-12
@@ -536,6 +545,7 @@ wood_TgC      = wood_TgC * 1e-12
 soil_TgC      = soil_TgC * 1e-12
 # lower
 gpp_lower_TgCyr     = gpp_lower_TgCyr * 1e-12
+npp_lower_TgCyr     = npp_lower_TgCyr * 1e-12
 rauto_lower_TgCyr   = rauto_lower_TgCyr * 1e-12
 rhet_lower_TgCyr    = rhet_lower_TgCyr * 1e-12
 nee_lower_TgCyr     = nee_lower_TgCyr * 1e-12
@@ -548,6 +558,7 @@ wood_lower_TgC      = wood_lower_TgC * 1e-12
 soil_lower_TgC      = soil_lower_TgC * 1e-12
 # upper
 gpp_upper_TgCyr     = gpp_upper_TgCyr * 1e-12
+npp_upper_TgCyr     = npp_upper_TgCyr * 1e-12
 rauto_upper_TgCyr   = rauto_upper_TgCyr * 1e-12
 rhet_upper_TgCyr    = rhet_upper_TgCyr * 1e-12
 nee_upper_TgCyr     = nee_upper_TgCyr * 1e-12
@@ -578,6 +589,7 @@ for (c in seq(1, grid_parameters$nos_clusters)) {
     dims = dim(grid_output$mean_gpp_gCm2day)
     cluster_area = sum(area * landfilter, na.rm=TRUE) * 1e-4
     grid_output$gpp_TgCyr          = apply(grid_output$mean_gpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    grid_output$npp_TgCyr          = apply(grid_output$mean_npp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
     grid_output$rauto_TgCyr        = apply(grid_output$mean_rauto_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
     grid_output$rhet_TgCyr         = apply(grid_output$mean_rhet_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
     grid_output$npp_TgCyr          = apply(grid_output$mean_npp_gCm2day*array(landfilter*area,dim = dims)*1e-2*365.25,3,sum, na.rm=TRUE)
@@ -597,12 +609,18 @@ for (c in seq(1, grid_parameters$nos_clusters)) {
     grid_output$fFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
     grid_output$rFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_root_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
     grid_output$wFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$lFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_litter_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$sFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_som_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
     grid_output$fFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
     grid_output$rFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_root_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
     grid_output$wFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$lFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_litter_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$sFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_som_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
     grid_output$fNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
     grid_output$rNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_root_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
     grid_output$wNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$lNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_litter_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    grid_output$sNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_som_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
     grid_parameters$fNPP           = apply(array(landfilter,dim = dims)*grid_parameters$NPP_foliar_fraction,3,mean, na.rm=TRUE)
     grid_parameters$rNPP           = apply(array(landfilter,dim = dims)*grid_parameters$NPP_root_fraction,3,mean, na.rm=TRUE)
     grid_parameters$wNPP           = apply(array(landfilter,dim = dims)*grid_parameters$NPP_wood_fraction,3,mean, na.rm=TRUE)
@@ -618,16 +636,23 @@ for (c in seq(1, grid_parameters$nos_clusters)) {
     grid_output$dCsom_gCm2yr       = apply(array(landfilter,dim = dims)*(grid_output$final_dCsom_gCm2/nos_years),3,mean, na.rm=TRUE)
     # Combine output into dataframe
     output = data.frame(Quantile = grid_output$num_quantiles, area_ha = rep(cluster_area, length(grid_output$num_quantiles)), 
-                        GPP_TgCyr = grid_output$gpp_TgCyr, Ra_TgCyr = grid_output$rauto_TgCyr, Rhet_TgCyr = grid_output$rhet_TgCyr, 
+                        GPP_TgCyr = grid_output$gpp_TgCyr, NPP_TgCyr = grid_output$npp_TgCyr, Ra_TgCyr = grid_output$rauto_TgCyr, 
+                        Rhet_TgCyr = grid_output$rhet_TgCyr, 
                         NEE_TgCyr = grid_output$nee_TgCyr, NBE_TgCyr = grid_output$nbe_TgCyr, 
                         Fire_TgCyr = grid_output$fire_TgCyr, Harvest_TgCyr = grid_output$harvest_TgCyr,
                         labile_TgC = grid_output$labile_TgC, foliage_TgC = grid_output$foliage_TgC, 
                         fine_root_TgC = grid_output$roots_TgC, wood_TgC = grid_output$wood_TgC, 
                         litter_TgC = grid_output$lit_TgC, som_TgC = grid_output$som_TgC, 
                         fNPP_TgCyr = grid_output$fnpp_TgCyr, rNPP_TgCyr = grid_output$rnpp_TgCyr, wNPP_TgCyr = grid_output$wnpp_TgCyr,
-                        fFireLit_TgCyr = grid_output$fFIRElitter_TgCyr, rFireLit_TgCyr = grid_output$rFIRElitter_TgCyr, wFireLit_TgCyr = grid_output$wFIRElitter_TgCyr,
-                        fFireEmis_TgCyr = grid_output$fFIREemiss_TgCyr, rFireEmis_TgCyr = grid_output$rFIREemiss_TgCyr, wFireEmis_TgCyr = grid_output$wFIREemiss_TgCyr,
-                        fNAToutflux_TgCyr = grid_output$fNAToutflux_TgCyr, rNAToutflux_TgCyr = grid_output$rNAToutflux_TgCyr, wNAToutflux_TgCyr = grid_output$wNAToutflux_TgCyr,
+                        fFireLit_TgCyr = grid_output$fFIRElitter_TgCyr, rFireLit_TgCyr = grid_output$rFIRElitter_TgCyr, 
+                        wFireLit_TgCyr = grid_output$wFIRElitter_TgCyr, lFireLit_TgCyr = grid_output$lFIRElitter_TgCyr,
+                        sFireLit_TgCyr = grid_output$sFIRElitter_TgCyr, 
+                        fFireEmis_TgCyr = grid_output$fFIREemiss_TgCyr, rFireEmis_TgCyr = grid_output$rFIREemiss_TgCyr, 
+                        wFireEmis_TgCyr = grid_output$wFIREemiss_TgCyr, lFireEmis_TgCyr = grid_output$lFIREemiss_TgCyr,
+                        sFireEmis_TgCyr = grid_output$sFIREemiss_TgCyr,
+                        fNAToutflux_TgCyr = grid_output$fNAToutflux_TgCyr, rNAToutflux_TgCyr = grid_output$rNAToutflux_TgCyr, 
+                        wNAToutflux_TgCyr = grid_output$wNAToutflux_TgCyr, lNAToutflux_TgCyr = grid_output$lNAToutflux_TgCyr,
+                        sNAToutflux_TgCyr = grid_output$sNAToutflux_TgCyr,
                         fNPP_fraction = grid_parameters$fNPP, rNPP_fraction = grid_parameters$rNPP, wNPP_fraction = grid_parameters$wNPP,
                         foliage_MTT_yr = grid_parameters$foliage_MTT_yr, fine_roots_MTT_yr = grid_parameters$roots_MTT_yr, 
                         wood_MTT_yr = grid_parameters$wood_MTT_yr,
@@ -678,9 +703,11 @@ landfilter = landfilter_keep
 ## C - Budget (TgC/yr)
 
 # Summary C budgets for output to table, NOTE the use of landfilter removes areas outside of the target area
+# These are not time varying (unlike the loop a few sections above)
 dims = dim(grid_output$mean_gpp_gCm2day)
 grid_area = sum(area * landfilter, na.rm=TRUE) * 1e-4 # convertion m2->ha
 grid_output$gpp_TgCyr          = apply(grid_output$mean_gpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+grid_output$npp_TgCyr          = apply(grid_output$mean_npp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
 grid_output$rauto_TgCyr        = apply(grid_output$mean_rauto_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
 grid_output$rhet_TgCyr         = apply(grid_output$mean_rhet_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
 grid_output$nbe_TgCyr          = apply(grid_output$mean_nbe_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
@@ -699,12 +726,18 @@ grid_output$wnpp_TgCyr         = apply(grid_output$mean_wnpp_gCm2day*array(landf
 grid_output$fFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
 grid_output$rFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_root_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
 grid_output$wFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+grid_output$lFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_litter_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+grid_output$sFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_som_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
 grid_output$fFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
 grid_output$rFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_root_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
 grid_output$wFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+grid_output$lFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_litter_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+grid_output$sFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_som_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
 grid_output$fNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
 grid_output$rNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_root_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
 grid_output$wNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+grid_output$lNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_litter_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+grid_output$sNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_som_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
 grid_parameters$fNPP           = apply(array(landfilter,dim = dims)*grid_parameters$NPP_foliar_fraction,3,mean, na.rm=TRUE)
 grid_parameters$rNPP           = apply(array(landfilter,dim = dims)*grid_parameters$NPP_root_fraction,3,mean, na.rm=TRUE)
 grid_parameters$wNPP           = apply(array(landfilter,dim = dims)*grid_parameters$NPP_wood_fraction,3,mean, na.rm=TRUE)
@@ -720,16 +753,23 @@ grid_output$dClit_gCm2yr       = apply(array(landfilter,dim = dims)*(grid_output
 grid_output$dCsom_gCm2yr       = apply(array(landfilter,dim = dims)*(grid_output$final_dCsom_gCm2/nos_years),3,mean, na.rm=TRUE)
 # Combine output into dataframe
 output = data.frame(Quantile = grid_output$num_quantiles, area_ha = rep(grid_area, length(grid_output$num_quantiles)), 
-                    GPP_TgCyr = grid_output$gpp_TgCyr, Ra_TgCyr = grid_output$rauto_TgCyr, Rhet_TgCyr = grid_output$rhet_TgCyr, 
+                    GPP_TgCyr = grid_output$gpp_TgCyr, NPP_TgCyr = grid_output$npp_TgCyr, Ra_TgCyr = grid_output$rauto_TgCyr, 
+                    Rhet_TgCyr = grid_output$rhet_TgCyr, 
                     NEE_TgCyr = grid_output$nee_TgCyr, NBE_TgCyr = grid_output$nbe_TgCyr, 
                     Fire_TgCyr = grid_output$fire_TgCyr, Harvest_TgCyr = grid_output$harvest_TgCyr,
                     labile_TgC = grid_output$labile_TgC, foliage_TgC = grid_output$foliage_TgC, 
                     fine_root_TgC = grid_output$roots_TgC, wood_TgC = grid_output$wood_TgC, 
                     litter_TgC = grid_output$lit_TgC, som_TgC = grid_output$som_TgC, 
                     fNPP_TgCyr = grid_output$fnpp_TgCyr, rNPP_TgCyr = grid_output$rnpp_TgCyr, wNPP_TgCyr = grid_output$wnpp_TgCyr,
-                    fFireLit_TgCyr = grid_output$fFIRElitter_TgCyr, rFireLit_TgCyr = grid_output$rFIRElitter_TgCyr, wFireLit_TgCyr = grid_output$wFIRElitter_TgCyr,
-                    fFireEmis_TgCyr = grid_output$fFIREemiss_TgCyr, rFireEmis_TgCyr = grid_output$rFIREemiss_TgCyr, wFireEmis_TgCyr = grid_output$wFIREemiss_TgCyr,
-                    fNAToutflux_TgCyr = grid_output$fNAToutflux_TgCyr, rNAToutflux_TgCyr = grid_output$rNAToutflux_TgCyr, wNAToutflux_TgCyr = grid_output$wNAToutflux_TgCyr,
+                    fFireLit_TgCyr = grid_output$fFIRElitter_TgCyr, rFireLit_TgCyr = grid_output$rFIRElitter_TgCyr, 
+                    wFireLit_TgCyr = grid_output$wFIRElitter_TgCyr, lFireLit_TgCyr = grid_output$lFIRElitter_TgCyr,
+                    sFireLit_TgCyr = grid_output$sFIRElitter_TgCyr, 
+                    fFireEmis_TgCyr = grid_output$fFIREemiss_TgCyr, rFireEmis_TgCyr = grid_output$rFIREemiss_TgCyr, 
+                    wFireEmis_TgCyr = grid_output$wFIREemiss_TgCyr, lFireEmis_TgCyr = grid_output$lFIREemiss_TgCyr,
+                    sFireEmis_TgCyr = grid_output$sFIREemiss_TgCyr,
+                    fNAToutflux_TgCyr = grid_output$fNAToutflux_TgCyr, rNAToutflux_TgCyr = grid_output$rNAToutflux_TgCyr, 
+                    wNAToutflux_TgCyr = grid_output$wNAToutflux_TgCyr, lNAToutflux_TgCyr = grid_output$lNAToutflux_TgCyr,
+                    sNAToutflux_TgCyr = grid_output$sNAToutflux_TgCyr,                    
                     fNPP_fraction = grid_parameters$fNPP, rNPP_fraction = grid_parameters$rNPP, wNPP_fraction = grid_parameters$wNPP,
                     foliage_MTT_yr = grid_parameters$foliage_MTT_yr, fine_roots_MTT_yr = grid_parameters$roots_MTT_yr, 
                     wood_MTT_yr = grid_parameters$wood_MTT_yr,
@@ -780,6 +820,9 @@ write.table(output, file = paste(out_dir,"/",PROJECT$name,"_C_budget.csv",sep=""
 c_colours = colorRampPalette(brewer.pal(8,"Accent"))
 c_colours = c_colours(grid_parameters$nos_clusters)
 nbins = 30 # desired number of catagories, you might not get this many
+
+skip_clusters = FALSE
+if (skip_clusters == FALSE) {
 
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_parameter_PDFs_by_cluster.png",sep=""), height = 2000, width = 3000, res = 300)
 par(mfrow=c(6,6), mar = c(2,2,2,1))
@@ -2111,7 +2154,7 @@ plot(var1, main="", zlim=c(0,1), col=colour_choices_default, xaxt = "n", yaxt = 
 plot(landmask, add=TRUE)
 mtext(expression('Mean posterior reduction (0-1)'), side = 2, cex = 1.6, padj = -0.25, adj = 0.5)
 dev.off()
-
+}
 ###
 ## Compare fraction of model ensemble members consistent with the assimilated observations
 
@@ -2335,7 +2378,7 @@ for (i in seq(1, length(flask_date))) {
 # Determine where we will clip the datasets in time
 flask_years = floor(flask_date) ; flask_years_keep = 0
 for (i in seq(1, length(unique(flask_years)))) {
-     if (length(which(flask_years == unique(flask_years)[i])) > 48) {
+     if (length(which(flask_years == unique(flask_years)[i])) > 48 & length(which(unique(flask_years)[i] == run_years)) > 0) {
          flask_years_keep = append(flask_years_keep, which(flask_years == unique(flask_years)[i]))
      } 
 }
@@ -3654,54 +3697,6 @@ dev.off()
 # Domain wide NBE (yaxis) model (xaxis), include independent estimates
 model_flags=c("CARDAMOM")
 obs_flags=c("CTE","FC/Copernicus/FluxSatv2","GFEDv4.1s / GFAS")
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_Fire_timeseries_comparison.png",sep=""), height=3800, width=2500, res=300)
-par(mfrow=c(3,1),mai=c(0.3,0.65,0.3,0.2),omi=c(0.2,0.2,0.3,0.005))
-# Now plot NBE, annual time series TgC/yr
-dims = dim(cte_nbe_gCm2yr)
-var1  = c(apply(cte_nbe_gCm2yr * array(cte_m2, dim=dims),c(3),sum, na.rm=TRUE) * 1e-12)
-var2  = cbind(cbind(c(obs_nbe_mean_domain_TgCyr),c(obs_nbe_min_domain_TgCyr)),c(obs_nbe_max_domain_TgCyr))
-var3  = nbe_TgCyr
-zrange = range(c(var1,var2,var3), na.rm=TRUE)
-zrange[2] = zrange[2] + 500
-plot(var1~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
-      col=obs_colours[1], type="l", lwd=4, ylab="", xlab="")
-plotconfidence(var2,run_years,2,obs_colours[1])
-lines(var1~run_years, col=obs_colours[1], lwd=4)
-lines(var3~run_years, col=model_colours[1], lwd=3, lty = 1) ; points(var3~run_years, col=model_colours[1], pch=16)
-abline(0,0,col="grey", lwd=2)
-legend("topleft", legend = c(obs_flags,model_flags), col = c(obs_colours[1:3],model_colours), 
-       lty = c(rep(1,length(obs_flags)),rep(1,length(model_flags))), pch=rep(NA,length(c(obs_flags,model_flags))), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
-mtext(expression(paste("Net Biome Exchange (TgC y",r^-1,")",sep="")), side=2, padj=-2.65,cex=1.5)
-#mtext("Year", side=1, padj=2.0,cex=1.6)
-
-# Now plot GPP
-var3  = cbind(cbind(c(obs_gpp_mean_domain_TgCyr),c(obs_gpp_min_domain_TgCyr)),c(obs_gpp_max_domain_TgCyr))
-var4  = gpp_TgCyr   
-zrange = range(c(var3,var4), na.rm=TRUE)*c(0.9,1.0)
-plot(var4~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
-      col=model_colours[1], type="l", lwd = 4, ylab="", xlab="", lty = 2)
-plotconfidence(var3,run_years,2,obs_colours[2])
-lines(var4~run_years, col=model_colours[1], lwd = 4, lty = 1) ; points(var4~run_years, col=model_colours[1], pch=16)
-#legend("bottomright", legend = c(obs_flags[-5],model_flags), col = c(obs_colours[1:4],model_colours), 
-#       lty = c(rep(1,length(obs_flags[-5])),rep(2,length(model_flags))), pch=rep(NA,length(c(obs_flags[-5],model_flags))), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
-#mtext("Year", side=1, padj=2.0,cex=1.6)
-mtext(expression(paste("Gross Primary Productivity (TgC y",r^-1,")",sep="")), side=2, padj=-2.65, cex=1.5)
-
-# Now plot fire
-var3  = cbind(cbind(c(obs_fire_mean_domain_TgCyr),c(obs_fire_min_domain_TgCyr)),c(obs_fire_max_domain_TgCyr))
-var4  = fire_TgCyr 
-zrange = range(c(var3,var4), na.rm=TRUE)*c(0.9,1.1)
-plot(var4~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
-      col=model_colours[1], type="l", lwd=4, lty=2, ylab="", xlab="")
-plotconfidence(var3,run_years,2,obs_colours[3])
-lines(var4~run_years, col=model_colours[1], lwd=4, lty = 1) ; points(var4~run_years, col=model_colours[1], pch=16)
-mtext("Year", side=1, padj=2.0,cex=1.6)
-mtext(expression(paste("Fire Emissions (TgC y",r^-1,")",sep="")), side=2, padj=-2.65,cex=1.5)
-dev.off()
-
-# Domain wide NBE (yaxis) model (xaxis), include independent estimates
-model_flags=c("CARDAMOM")
-obs_flags=c("CTE","FC/Copernicus/FluxSatv2","GFEDv4.1s / GFAS")
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_Fire_timeseries_comparison_plusCI.png",sep=""), height=3800, width=2500, res=300)
 par(mfrow=c(3,1),mai=c(0.3,0.65,0.3,0.2),omi=c(0.2,0.2,0.3,0.005))
 # Now plot NBE, annual time series TgC/yr
@@ -4035,13 +4030,13 @@ gppfire = lm(var1~var3)
 firebiomass = lm(var3~var2)
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_GPP_Biomass_Fire_correlation.png",sep=""), height = 2700, width = 4900, res = 300)
 par(mfrow=c(2,3), mar=c(4.0,5.0,2.5,2.5),omi=c(0.2,0.2,0.18,0.1))
-plot(var1~var2, pch=16, ylab = expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")), xlab = expression(paste('Biomass (MgC h',a^-1,')',sep="")),
+plot(var1,var2, pch=16, xlab = expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")), ylab = expression(paste('Biomass (MgC h',a^-1,')',sep="")),
      cex.axis = 1.8, cex.lab = 1.8, cex.main=1.8, main=paste('R2 = ',round(summary(gppbiomass)$adj.r.squared,digits = 2),sep=""), cex = 1.2)
 abline(gppbiomass, col="red", lwd=2)
-plot(var1~var3, pch=16, ylab = expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")), xlab = expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")),
+plot(var1,var3, pch=16, xlab = expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")), ylab = expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")),
      cex.axis = 1.8, cex.lab = 1.8, cex.main=1.8, main=paste('R2 = ',round(summary(gppfire)$adj.r.squared,digits = 2),sep=""), cex = 1.2)
 abline(gppfire, col="red", lwd=2)
-plot(var3~var2, pch=16, ylab = expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")), xlab = expression(paste('Biomass (MgC h',a^-1,')',sep="")),
+plot(var3,var2, pch=16, xlab = expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")), ylab = expression(paste('Biomass (MgC h',a^-1,')',sep="")),
      cex.axis = 1.8, cex.lab = 1.8, cex.main=1.8, main=paste('R2 = ',round(summary(firebiomass)$adj.r.squared,digits = 2),sep=""), cex = 1.2)
 abline(firebiomass, col="red", lwd=2)
 hist(var1, main="", ylab="No. pixels", xlab=expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")),
@@ -4303,7 +4298,7 @@ par(mfrow=c(2,3), mar=c(4.0,3.0,2.9,1.0),omi=c(0.01,0.10,0.10,0.35))
 # Correlation between Wood MRT and fire
 plot(as.vector(grid_parameters$MTT_wood_years[,,mid_quant]) ~ as.vector(BurnedFraction), pch=16,
      cex.axis = 1.5, cex.lab = 1.5, cex = 1.2, xlab="", ylab="")
-     mtext(side = 2, text = "Wood MRT (years)", cex = 1.0, padj = -2.50)
+mtext(side = 2, text = "Wood MRT (years)", cex = 1.0, padj = -2.50)
 # Mean C stocks, median estimate
 plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
@@ -4315,7 +4310,8 @@ plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, box = 
 plot(landmask, add=TRUE)
 # Correlation between Soil MRT and fire
 plot(as.vector(grid_parameters$MTT_som_years[,,mid_quant]) ~ as.vector(BurnedFraction), pch=16,
-     cex.axis = 1.5, cex.lab = 1.5, cex = 1.2, xlab="Annual burnt Fraction", ylab="Soil MRT (years)")
+     cex.axis = 1.5, cex.lab = 1.5, cex = 1.2, xlab="Annual burnt Fraction", ylab="")
+mtext(side = 2, text = "Soil MRT (years)", cex = 1.0, padj = -2.50)
 # MRTs for wood and soil
 plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),

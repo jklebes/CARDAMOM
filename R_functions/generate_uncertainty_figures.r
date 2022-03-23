@@ -6,69 +6,50 @@
 # This function is based on an original Matlab function development by A. A. Bloom (UoE, now at the Jet Propulsion Laboratory).
 # Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-generate_uncertainty_figures<-function(PROJECT,n) {
+single_site_plotting_control<-function(n) {
 
-	# load locally needed library
-	require(gplots)
+   # Function deals with the control of site level plotting of parameters and
+   # model stock / fluxes estimates
 
-	# generate file name of the output file created in stage 3
-	loadfile=paste(PROJECT$results_processedpath,PROJECT$sites[n],".RData",sep="")
+   # find relevant parameter information first
+   # output is order dimensions(npar+1,iter,chain)
+   parameters = read_parameter_chains(PROJECT,n)
+   # If an analysis has been carried out for this location (parameters[1] != -9999)
+   if (parameters[1] != -9999) {
+       # Determine whether chains have converged (true/false)
+       converged = have_chains_converged(parameters)
+       plot_parameters(PROJECT,parameters,converged,n)
+     	 # generate file name of the output file created in stage 3
+	     loadfile=paste(PROJECT$results_processedpath,PROJECT$sites[n],".RData",sep="")
+       if (file.exists(loadfile)) {
+           # model state and flux plotting with uncertainty
+           uncertainty_figures(n,PROJECT,load_file)
+       }
+   } # parameters[1] != -9999
 
-	if (file.exists(loadfile) == TRUE) {
-	    #stime=proc.time()["elapsed"]
-	    load(loadfile) ; print(paste("DALEC simulations will be loaded from ",loadfile,sep=""))
-	    #print(paste("load dalec in ",proc.time()["elapsed"]-stime," seconds",sep=""))
-	} else {
-	    # do we run the parameters yet for analysis
-	    run_all=readline("Raw results have not been processed therefore we will do it now. Do you want to run all parameter vectors to generate confidence intervals? (y/n)")
-	    if (run_all == "y") {
-          PROJECT$latter_sample_frac = 0.5 # readline("What (latter) fraction of accepted parameters to use (e.g. 0.5)?")
-          # Run the parameters
-          run_mcmc_results(PROJECT,stage,repair,grid_override)
-          # and read in the results
-          load(loadfile)
-	    } # if condition
-	} # file exists statement
+} # end function plot_each_site
 
-	# how many plots in total do we have
-	nos_plots=0:11
-  if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET") {nos_plots=c(-5,-4,-3,-2,nos_plots,24)}
-  if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_wMRT") {nos_plots=c(-5,-4,-3,-2,nos_plots,24)}
-  if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB") {nos_plots=c(-5,-4,-3,-2,nos_plots,24)}
-  if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB_wMRT") {nos_plots=c(-5,-4,-3,-2,nos_plots,24)}
-  if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg") {nos_plots=c(-5,-4,-3,-2,nos_plots,24)}
-  if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD") {nos_plots=c(-5,-4,-3,-2,nos_plots,15,24)}
-  if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT") {nos_plots = c(-5,-4,-3,-2,nos_plots,15,24)}
-  if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT") {nos_plots = c(-5,-4,-3,-2,nos_plots,15,24)}
-  if (PROJECT$model$name == "DALEC_GSI_BUCKET") {nos_plots=c(-5,-4,-3,-2,nos_plots,12,15,22,24)}
-  if (PROJECT$model$name == "DALEC_BUCKET") {nos_plots=c(-5,-4,-3,-2,nos_plots,12,15,22,24)}
-  if (PROJECT$model$name == "DALEC_G5") {nos_plots=c(-5,-4,-3,-2,nos_plots,12,15,22,24)}
-  if (PROJECT$model$name == "DALEC_G6") {nos_plots=c(-5,-4,-3,-2,nos_plots,15,22,24)}
-  if (PROJECT$model$name == "DALEC_1005" | PROJECT$model$name == "DALEC_1005a") {nos_plots=c(-2,nos_plots)}
-  if (PROJECT$model$name == "DALEC_BUCKET_CanAGE") {nos_plots=c(-5,-4,-3,-2,nos_plots,12,15,22,24)}
-  if (PROJECT$model$name == "DALEC") {nos_plots=c(-5,nos_plots,12,15,22,24)}
-  if (PROJECT$model$name == "DALECN_GSI_BUCKET") {nos_plots=c(-5,-4,-3,-2,nos_plots,12,15,21,22)}
-  if (PROJECT$model$name == "DALECN_BUCKET") {nos_plots=c(-5,-4,-3,-2,nos_plots,15,21,22,23)}
-  if (PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR") {nos_plots=c(nos_plots,12,15,22,24)}
-  if (PROJECT$model$name == "DALEC_GSI_DBio_FR") {nos_plots=0:16}
-  if (PROJECT$model$name == "DALECN_GSI_FR" | PROJECT$model$name == "DALECN_GSI_DFOL_LABILE_FR" | PROJECT$model$name == "DALECN_GSI_DFOL_LABILE_FROOT_FR") {nos_plots=c(0:12,15,17:21)}
-	if (PROJECT$model$name == "ACM") {nos_plots=c(2,-2)}
-	# now request the creation of the plots
-	if (use_parallel & length(nos_plots) > 1) {
-	    cl <- makeCluster(min(length(nos_plots),numWorkers), type = "PSOCK")
-	    # load R libraries in cluster
-	    clusterExport(cl,c("load_r_libraries","rmse","gsi_controlling"))
-	    clusterEvalQ(cl, load_r_libraries())
-	    dummy=parLapply(cl,nos_plots,fun=uncertainty_figures,PROJECT=PROJECT,states_all=states_all,drivers=drivers,parameters=parameters,n=n,plotconfidence=plotconfidence)
-	    stopCluster(cl)
-	} else {
-	    # or use serial
-	    dummy=lapply(nos_plots,FUN=uncertainty_figures,PROJECT=PROJECT,states_all=states_all,drivers=drivers,parameters=parameters,n=n,plotconfidence=plotconfidence)
-	} # parallel option
+generate_uncertainty_figures<-function(PROJECT) {
 
-	# tidy before leaving
-	gc(reset=TRUE, verbose=FALSE)
+   # Function is responsible for using either serial or parallel
+   # approaches to generating site specific plots of retrieved parameter
+   # ensembles and time series information on ecosystem states and fluxes
 
-}
+ 	 # Request the creation of the plots
+   if (use_parallel & PROJECT$nosites > 1) {
+	     cl <- makeCluster(min(PROJECT$nosites,numWorkers), type = "PSOCK")
+	     # load R libraries in cluster
+	     clusterExport(cl,c("load_r_libraries","rmse","gsi_controlling",
+                          "read_parameter_chains","plotconfidence",
+                          "uncertainty_figures"))
+	     clusterEvalQ(cl, load_r_libraries())
+	     dummy=parLapply(cl,1:PROJECT$nosites,fun=single_site_plotting_control,PROJECT=PROJECT)
+	     stopCluster(cl)
+	 } else {
+	     # or use serial
+	     dummy=lapply(1:PROJECT$nosites,fun=single_site_plotting_control,PROJECT=PROJECT)
+	 } # parallel option
+
+} # end function generate_uncertainty_figures
 ## Use byte compile
 generate_uncertainty_figures<-cmpfun(generate_uncertainty_figures)

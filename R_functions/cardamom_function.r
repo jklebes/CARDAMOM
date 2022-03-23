@@ -8,7 +8,7 @@
 # Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
 cardamom <-function (projname,model,method,stage) {
-#stage = 2 ; repair = 1 ; use_parallel = TRUE
+#stage = 4 ; repair = 1 ; use_parallel = TRUE
   ## load needed functions into R environment
   paths = load_paths()
 
@@ -412,30 +412,12 @@ cardamom <-function (projname,model,method,stage) {
 
       print("Beginning stage 4: generating stardard outputs")
 
-      # assume default latter half of analysis to be kept
-      # Deprecated code, can probably be safely removed
-      if (PROJECT$latter_sample_frac == 0 | PROJECT$latter_sample_frac == 1) {
-          PROJECT$latter_sample_frac = 0.75 #readline("What (latter) fraction of accepted parameters to use (e.g. 0.5)?")
-          save(PROJECT,file=PROJECTfile)
-      }
-
       # Generating site level plots or gridded
       if (PROJECT$spatial_type == "site" | grid_override) {
 
-          # will generate site specific information
-          for (n in seq(1,PROJECT$nosites)) {
-               # find relevant parameter information first
-               # output is order dimensions(npar+1,iter,chain)
-               parameters = read_parameter_chains(PROJECT,n)
-               # If an analysis has been carried out for this location (parameters[1] != -9999)
-               if (parameters[1] != -9999) {
-                   # Determine whether chains have converged (true/false)
-                   converged = have_chains_converged(parameters)
-                   plot_parameters(PROJECT,parameters,converged,n)
-                   # uncertainty simulations
-                   generate_uncertainty_figures(PROJECT,n)
-               } # parameters[1] != -9999
-          } # end of site loop
+          # Generate figures of parameters and model values including
+          # uncertainty information
+          generate_uncertainty_figures(PROJECT)
 
       } else if (PROJECT$spatial_type == "grid") {
 

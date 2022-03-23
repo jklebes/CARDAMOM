@@ -15,7 +15,7 @@ load_r_libraries<-function(){
     require(parallel)
     require(rgdal)
     require(raster)
-    require(rhdf5)
+    #require(rhdf5) # from bioconductor - not currently used
     require(sp)
     require(zoo)
     require(apcluster)

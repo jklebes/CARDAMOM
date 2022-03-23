@@ -84,15 +84,15 @@ module cardamom_io
            DATAin%nofluxes = 21
         endif
     else if (DATAin%ID == 3 ) then
-        ! ID = 3 - AT-DALEC
+        ! ID = 3 - DALEC_CROP
         DATAin%nopools = 6
         DATAin%nopars = 22
         DATAin%nofluxes = 16
     else if (DATAin%ID == 4) then
-        ! AT_DALEC_CROP
-        DATAin%nopools = 8
-        DATAin%nopars = 34
-        DATAin%nofluxes = 16
+        ! DALEC_CROP_BUCKET
+        DATAin%nopools = 9
+        DATAin%nopars = 38
+        DATAin%nofluxes = 21
     else if (DATAin%ID == 5) then
         ! DALEC_CDEA_FR
         DATAin%nopools = 6
@@ -159,23 +159,11 @@ module cardamom_io
         DATAin%nopools = 7
         DATAin%nopars = 37
         DATAin%nofluxes = 25
-        if (DATAin%PFT == 1) then
-           ! then actually this is a crop pixel
-           DATAin%nopools = 8
-           DATAin%nopars = 35
-           DATAin%nofluxes = 21
-        endif
     else if (DATAin%ID == 17) then
         ! DALECN_GSI_BUCKET - 8 pools currently
         DATAin%nopools = 8
         DATAin%nopars = 45
         DATAin%nofluxes = 25
-        if (DATAin%PFT == 1) then
-           ! then actually this is a crop pixel
-           DATAin%nopools = 9
-           DATAin%nopars = 38
-           DATAin%nofluxes = 21
-        endif
     else if (DATAin%ID == 18) then
         ! DALEC_CDEA_LU_FIRES_ET - added 03/05/2018 JFE
         DATAin%nopools = 6
@@ -187,23 +175,11 @@ module cardamom_io
         DATAin%nopools = 8
         DATAin%nopars = 49!45
         DATAin%nofluxes = 25
-        if (DATAin%PFT == 1) then
-           ! then actually this is a crop pixel
-           DATAin%nopools = 9
-           DATAin%nopars = 38
-           DATAin%nofluxes = 21
-        endif
     else if (DATAin%ID == 20) then
         ! ID = 20 - DALEC_BUCKET
         DATAin%nopools = 8
         DATAin%nopars = 43
         DATAin%nofluxes = 25
-        if (DATAin%PFT == 1) then
-           ! then actually this is a crop pixel
-           DATAin%nopools = 9
-           DATAin%nopars = 38
-           DATAin%nofluxes = 21
-        endif
     else if (DATAin%ID == 21) then
         ! ID = 21 - DALEC_CDEA_LU_FIRES
         DATAin%nopools = 6
@@ -234,12 +210,6 @@ module cardamom_io
         DATAin%nopools = 7
         DATAin%nopars = 43
         DATAin%nofluxes = 25
-        if (DATAin%PFT == 1) then
-           ! then actually this is a crop pixel
-           DATAin%nopools = 8
-           DATAin%nopars = 37
-           DATAin%nofluxes = 21
-        endif
     else if (DATAin%ID == 27) then
         ! ID = 27 - DALEC_CDEA_ACM2_BUCKET
         DATAin%nopools = 7
@@ -265,34 +235,16 @@ module cardamom_io
         DATAin%nopools = 8
         DATAin%nopars = 48
         DATAin%nofluxes = 25
-        if (DATAin%PFT == 1) then
-           ! then actually this is a crop pixel
-           DATAin%nopools = 9
-           DATAin%nopars = 38
-           DATAin%nofluxes = 21
-        endif
     else if (DATAin%ID == 32) then
         ! ID = 32 - DALEC_G5
         DATAin%nopools = 8
         DATAin%nopars = 46
         DATAin%nofluxes = 25
-        if (DATAin%PFT == 1) then
-           ! then actually this is a crop pixel
-           DATAin%nopools = 9
-           DATAin%nopars = 38
-           DATAin%nofluxes = 21
-        endif
     else if (DATAin%ID == 33) then
         ! ID = 33 - DALEC_G6
         DATAin%nopools = 8
         DATAin%nopars = 46
         DATAin%nofluxes = 25
-        if (DATAin%PFT == 1) then
-           ! then actually this is a crop pixel
-           DATAin%nopools = 9
-           DATAin%nopars = 38
-           DATAin%nofluxes = 21
-        endif
     else if (DATAin%ID == 34) then
         ! ID = 34 - DALEC-1005
         DATAin%nopools = 8
@@ -618,7 +570,7 @@ module cardamom_io
     if (ios /= 0) print*,"error ",ios," opening file",trim(covinfoname)
     ! for the covariance matrix we have a fixed size containing two matrices,
     ! the initial and the current output - therefore we use
-    inquire(iolength = reclen) a ; print*,reclen
+    inquire(iolength = reclen) a !; print*,reclen
     open(cfile_unit,file=trim(covname),form="UNFORMATTED",access="direct",recl=reclen,iostat=ios)
     if (ios /= 0) print*,"error ",ios," opening file",trim(covname)
 

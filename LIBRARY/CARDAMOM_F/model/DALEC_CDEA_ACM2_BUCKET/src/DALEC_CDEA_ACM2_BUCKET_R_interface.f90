@@ -119,7 +119,7 @@ subroutine rdaleccdeaacm2bucket(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
      out_var(i,1:nodays,5)  = NEE
      out_var(i,1:nodays,6)  = POOLS(1:nodays,4) ! wood
      out_var(i,1:nodays,7)  = POOLS(1:nodays,6) ! som
-     out_var(i,1:nodays,8)  = POOLS(1:nodays,1) + POOLS(1:nodays,2) + POOLS(1:nodays,3) & ! common pools
+     out_var(i,1:nodays,8)  = POOLS(1:nodays,1) + POOLS(1:nodays,2) + POOLS(1:nodays,3) & ! Biomass
                             + POOLS(1:nodays,4) !+ POOLS(1:nodays,5) + POOLS(1:nodays,6)
      out_var(i,1:nodays,9)  = POOLS(1:nodays,3) ! root
      out_var(i,1:nodays,10) = POOLS(1:nodays,5) ! litter
@@ -230,6 +230,13 @@ subroutine rdaleccdeaacm2bucket(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
         ! Soil
         out_var5(i,5,y) = sum( ((FLUXES(y_s:y_e,14)+FLUXES(y_s:y_e,23)) &
                                 / POOLS(y_s:y_e,6)) * som_filter(y_s:y_e)) / dble(steps_per_year-sum(som_hak(y_s:y_e)))
+
+!        ! HACK FOR RECCAP Comparison
+!        ! Litter (fol+fine root) + Soil
+!        out_var5(i,4,y) = sum( ((FLUXES(y_s:y_e,13)+FLUXES(y_s:y_e,15)+FLUXES(y_s:y_e,22)+FLUXES(y_s:y_e,28) &
+!                                +FLUXES(y_s:y_e,14)+FLUXES(y_s:y_e,23)) &
+!                               / (POOLS(y_s:y_e,6)+POOLS(y_s:y_e,5))) &
+!                              * lit_filter(y_s:y_e)) / dble(steps_per_year)
 
         ! Estimate annual tissue specific fire emissions
 
