@@ -20,7 +20,8 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
                               fire_litter_litwood, fire_litter_som, fire_residue_to_litter, &
                               fire_residue_to_litwood,fire_residue_to_som,       &
                               gs_demand_supply_ratio, cica_time, Rg_from_labile, &
-                              gs_total_canopy, gb_total_canopy, canopy_par_MJday_time
+                              gs_total_canopy, gb_total_canopy, canopy_par_MJday_time, &
+                              root_depth_time
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -93,7 +94,8 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
 !print*,"time taken per iter",(done-begin) / real(nos_iter)
 
   ! zero initial conditions
-  lai = 0d0 ; GPP = 0d0 ; NEE = 0d0 ; POOLS = 0d0 ; FLUXES = 0d0 ; out_var1 = 0d0
+  lai = 0d0 ; GPP = 0d0 ; NEE = 0d0 ; POOLS = 0d0 ; FLUXES = 0d0
+  out_var1 = 0d0 ; var_out2 = 0d0 ; var_out3 = 0d0
 
   ! update settings
   if (allocated(itemp)) deallocate(itemp,ivpd,iphoto)
@@ -147,8 +149,8 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
      out_var1(i,1:nodays,13) = FLUXES(1:nodays,10)      ! foliage scenesence (gC/m2/day)
      out_var1(i,1:nodays,14) = FLUXES(1:nodays,12)      ! fine root turnover (gC/m2/day)
      out_var1(i,1:nodays,15) = FLUXES(1:nodays,11)      ! wood turnover (gC /m2/day)
-     out_var1(i,1:nodays,16)  = FLUXES(1:nodays,15)     ! Decomp_litter (gC/m2/day)
-     out_var1(i,1:nodays,17)  = FLUXES(1:nodays,20)     ! Decomp_woodlitter (gC/m2/day)
+     out_var1(i,1:nodays,16) = FLUXES(1:nodays,15)      ! Decomp_litter (gC/m2/day)
+     out_var1(i,1:nodays,17) = FLUXES(1:nodays,20)      ! Decomp_woodlitter (gC/m2/day)
      ! C disturbance fluxes (gC/m2/day)
      out_var1(i,1:nodays,18) = fire_emiss_labile        ! fire emission from labile (gC/m2/day)
      out_var1(i,1:nodays,19) = fire_litter_labile       ! fire induced litter from labile (gC/m2/day)
@@ -187,13 +189,15 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
      out_var1(i,1:nodays,49) = FLUXES(1:nodays,18)      ! GSI value (0-1)
      out_var1(i,1:nodays,50) = itemp(1:nodays)          ! GSI temp component (0-1)
      out_var1(i,1:nodays,51) = iphoto(1:nodays)         ! GSI photoperiod component (0-1)
-     out_var1(i,1:nodays,52) = ivpd(1:nodays)           ! GSI vpd component (0-1)
+     out_var1(i,1:nodays,52) = ivpd(1:nodays)           ! GSI wSWP component (0-1)
      ! Photosynthesis / C~water coupling related
      out_var1(i,1:nodays,53) = gs_demand_supply_ratio   ! ratio of evaporative demand over supply
      out_var1(i,1:nodays,54) = gs_total_canopy          ! stomatal conductance (mmolH2O/m2ground/day)
      out_var1(i,1:nodays,55) = canopy_par_MJday_time    ! Canopy absorbed PAR (MJ/m2ground/day)
      out_var1(i,1:nodays,56) = gb_total_canopy          ! boundary conductance (mmolH2O/m2ground/day)
      out_var1(i,1:nodays,57) = cica_time                ! ratio of leaf internal to external CO2
+     ! misc
+     out_var1(i,1:nodays,58) = root_depth_time           ! rooting depth (m)
 
      !!!
      ! Estimate residence time information

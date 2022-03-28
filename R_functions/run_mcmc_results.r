@@ -768,7 +768,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   site_output$dClabile_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
                   # Determine the allocation to labile - in all cases this must be a direct variable
                   site_output$alloc_labile_gCm2day = apply(states_all$alloc_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
-                  site_output$mean_alloc_labile_gCm2 = quantile(apply(states_all$alloc_labile_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                  site_output$mean_alloc_labile_gCm2day = quantile(apply(states_all$alloc_labile_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
                   # Check for the possible loss pathways
                   if (exists(x = "labile_to_foliage_gCm2day", where = states_all)) {
                       site_output$labile_to_foliage_gCm2day = apply(states_all$labile_to_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
@@ -880,6 +880,13 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Calculate the mean annual maximums
                   dCbio = apply(states_all$roots_gCm2, 1, rollapply_mean_annual_max, step = steps_per_year)
                   site_output$annual_max_roots_gCm2 = quantile(dCbio, prob=num_quantiles, na.rm=na_flag)
+                  # Is rooting depth calculate (m) by this model?
+                  if (exists(x = "RootDepth_m", where = states_all)) {
+                      site_output$RootDepth_m = apply(states_all$RootDepth_m,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_RootDepth_m = quantile(apply(states_all$RootDepth_m,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      dCbio = states_all$RootDepth_m - states_all$RootDepth_m[,1] # difference in root from initial
+                      site_output$dRootDepth_m = apply(dCbio,2,quantile,prob=num_quantiles,na.rm=na_flag)
+                  }
                   # Check for the possible pathways
                   if (exists(x = "alloc_roots_gCm2day", where = states_all)) {
                       site_output$alloc_roots_gCm2day = apply(states_all$alloc_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
@@ -1609,6 +1616,13 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$NaturalFractionOfTurnover_roots = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$FireFractionOfTurnover_roots = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$HarvestFractionOfTurnover_roots = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              # Is rooting depth calculate (m) by this model?
+              if (exists(x = "RootDepth_m", where = site_output)) {
+                  grid_output$RootDepth_m = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$dRootDepth_m = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_RootDepth_m = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$final_dRootDepth_m = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
               if (exists(x = "FIREemiss_roots_gCm2day", where = site_output)) {
                   grid_output$FIREemiss_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIREemiss_roots_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -2099,6 +2113,13 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$NaturalFractionOfTurnover_roots[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_roots
                    grid_output$FireFractionOfTurnover_roots[slot_i,slot_j,] = site_output$FireFractionOfTurnover_roots
                    grid_output$HarvestFractionOfTurnover_roots[slot_i,slot_j,] = site_output$HarvestFractionOfTurnover_roots
+                   # Is rooting depth calculate (m) by this model?
+                   if (exists(x = "RootDepth_m", where = site_output)) {
+                       grid_output$RootDepth_m[n,,] = site_output$RootDepth_m
+                       grid_output$dRootDepth_m[n,,] = site_output$dRootDepth_m
+                       grid_output$mean_RootDepth_m[slot_i,slot_j,] = site_output$mean_RootDepth_m
+                       grid_output$final_dRootDepth_m[slot_i,slot_j,] = site_output$dRootDepth_m[,grid_output$time_dim]
+                   }
                    # Conditional variables
                    if (exists(x = "FIREemiss_roots_gCm2day", where = site_output)) {
                        grid_output$FIREemiss_roots_gCm2day[n,,] = site_output$FIREemiss_roots_gCm2day

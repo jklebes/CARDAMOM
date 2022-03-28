@@ -6,7 +6,7 @@
 # This function is based on an original Matlab function development by A. A. Bloom (UoE, now at the Jet Propulsion Laboratory).
 # Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-single_site_plotting_control<-function(n) {
+single_site_plotting_control<-function(n,PROJECT) {
 
    # Function deals with the control of site level plotting of parameters and
    # model stock / fluxes estimates
@@ -43,11 +43,11 @@ generate_uncertainty_figures<-function(PROJECT) {
                           "read_parameter_chains","plotconfidence",
                           "uncertainty_figures"))
 	     clusterEvalQ(cl, load_r_libraries())
-	     dummy=parLapply(cl,1:PROJECT$nosites,fun=single_site_plotting_control,PROJECT=PROJECT)
+	     dummy=parLapply(cl,1:PROJECT$nosites,FUN=single_site_plotting_control,PROJECT=PROJECT)
 	     stopCluster(cl)
 	 } else {
 	     # or use serial
-	     dummy=lapply(1:PROJECT$nosites,fun=single_site_plotting_control,PROJECT=PROJECT)
+	     dummy=lapply(1:PROJECT$nosites,FUN=single_site_plotting_control,PROJECT=PROJECT)
 	 } # parallel option
 
 } # end function generate_uncertainty_figures

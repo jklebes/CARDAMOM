@@ -83,6 +83,7 @@ module CARBON_MODEL_MOD
            ,min_layer                     &
            ,wSWP_time                     &
            ,rSWP_time                     &
+           ,root_depth_time               &
            ,gs_demand_supply_ratio        &
            ,gs_total_canopy               &
            ,gb_total_canopy               &
@@ -476,6 +477,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                           gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/day)
                                     canopy_par_MJday_time, & ! Absorbed PAR by canopy (MJ/m2ground/day)
                                                 cica_time, & ! Internal vs ambient CO2 concentrations
+                                          root_depth_time, & ! rooting depth (m)
                                                 rSWP_time, &
                                                 wSWP_time    ! Soil water potential weighted by root supply of water
 
@@ -858,7 +860,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                  gs_total_canopy(nodays),gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
                  daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
                  airt_zero_fraction_time(nodays),meant_time(nodays),rainfall_time(nodays), &
-                 Rg_from_labile(nodays),cica_time(nodays))
+                 Rg_from_labile(nodays),cica_time(nodays),root_depth_time(nodays))
 
         !
         ! Timing variables which are needed first
@@ -998,6 +1000,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! calculate soil depth to which roots reach - must be here as needed for
     ! layer_thickness calculation!
     root_reach = max_depth * root_biomass / (root_k + root_biomass)
+    ! store in global variable for later output
+    root_depth_time(1) = root_reach
     ! Determine initial soil layer thickness
     layer_thickness(1) = top_soil_depth ; layer_thickness(2) = max(min_layer,root_reach-top_soil_depth)
     layer_thickness(3) = max_depth - sum(layer_thickness(1:2))
@@ -1151,7 +1155,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        root_biomass = fine_root_biomass + max(min_root,POOLS(n,4)*pars(29)*2d0)
        call calculate_Rtot
        ! Pass wSWP to output variable
-       wSWP_time(n) = wSWP ; rSWP_time(n) = rSWP
+       wSWP_time(n) = wSWP ; rSWP_time(n) = rSWP ; root_depth_time(n) = root_reach
 
        ! calculate radiation absorption and estimate stomatal conductance
        call calculate_stomatal_conductance
@@ -1406,8 +1410,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            end if ! C_total > vsmall
 
            ! Total carbon loss from the system
-           C_total = (labile_residue+foliar_residue+roots_residue+wood_residue+sum(NCFF)) &
-                   - (labile_loss+foliar_loss+roots_loss+wood_loss+soil_loss_with_roots+sum(CFF))
+           C_total = (labile_residue+foliar_residue+roots_residue+wood_residue) &
+                   - (labile_loss+foliar_loss+roots_loss+wood_loss+soil_loss_with_roots)
 
            ! If total clearance occured then we need to ensure some minimum
            ! values and reforestation is assumed one year forward

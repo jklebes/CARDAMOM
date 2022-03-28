@@ -353,7 +353,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_GSI_BUCKET") {
-      output_dim=57 ; MTT_dim = 7 ; SS_dim = 7
+      output_dim=58 ; MTT_dim = 7 ; SS_dim = 7
       # Load the required dalec shared object
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalecgsibucket",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim)
@@ -443,6 +443,8 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       APAR_MJm2day = output[,,55],
                       gb_mmolH2Om2day = output[,,56],
                       CiCa = output[,,57],
+                      # misc
+                      RootDepth_m = output[,,58],
                       ## Aggregated variables
                       # Mean Transit times
                       MTT_labile_years = MTT_years[,1],
@@ -1182,49 +1184,122 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # add newly calculated variables
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
   } else if (model_name == "DALEC_GSI_DFOL_CWD_FR") {
-      output_dim=24
+      output_dim=55 ; MTT_dim = 7 ; SS_dim = 7
+      # Load the required dalec shared object
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
-      crop_file_location=paste(PROJECT$exepath,"winter_wheat_development.csv", sep="")
-      if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
       tmp=.Fortran( "rdalecgsidfolcwdfr",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim)
-                                        ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
-                                        ,met=as.double(t(met))
-                                        ,pars=as.double(pars_in),out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
-                                        ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
-                                        ,out_var3=as.double(array(0,dim=c(nos_iter,MTT_dim)))
-                                        ,out_var4=as.double(array(0,dim=c(nos_iter,SS_dim)))
-                                        ,out_var5=as.double(array(0,dim=c(nos_iter,MTT_dim,noyears)))
-                                        ,out_var6=as.double(array(0,dim=c(nos_iter,MTT_dim)))
-                                        ,lat=as.double(lat)
-                                        ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
-                                        ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
-                                        ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
-                                        ,noyears=as.integer(noyears)
-                                        ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
-                                        ,exepath=as.character(crop_file_location),pathlength=as.integer(nchar(crop_file_location)))
-      output = tmp$out_var   ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
-      aNPP = tmp$out_var2    ; aNPP = array(aNPP, dim=c(nos_iter,aNPP_dim))
-      MTT = tmp$out_var3     ; MTT = array(MTT, dim=c(nos_iter,MTT_dim))
-      SS_gCm2 = tmp$out_var4 ; SS_gCm2 = array(SS_gCm2, dim=c(nos_iter,SS_dim))
-      aMTT = tmp$out_var5    ; aMTT = array(aMTT, dim=c(nos_iter,MTT_dim,noyears))
-      MTTnat = tmp$out_var6  ; MTTnat = array(MTTnat, dim=c(nos_iter,MTT_dim))
+                                     ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
+                                     ,fire_dim=as.integer(fire_dim)
+                                     ,met=as.double(t(met)),pars=as.double(pars_in)
+                                     ,out_var1=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
+                                     ,out_var2=as.double(array(0,dim=c(nos_iter,MTT_dim)))
+                                     ,out_var3=as.double(array(0,dim=c(nos_iter,SS_dim)))
+                                     ,lat=as.double(lat),nopars=as.integer(PROJECT$model$nopars[site])
+                                     ,nomet=as.integer(dim(met)[2]),nofluxes=as.integer(PROJECT$model$nofluxes[site])
+                                     ,nopools=as.integer(PROJECT$model$nopools[site]),pft=as.integer(pft)
+                                     ,nodays=as.integer(dim(met)[1])
+                                     ,noyears=as.integer(noyears)
+                                     ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
+                                     ,soil_frac_clay_in=as.double(array(c(soil_info[3],soil_info[3],soil_info[4],soil_info[4]),dim=c(4)))
+                                     ,soil_frac_sand_in=as.double(array(c(soil_info[1],soil_info[1],soil_info[2],soil_info[2]),dim=c(4))))
+      # Extract the different output variables
+      output = tmp$out_var1    ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
+      MTT_years = tmp$out_var2 ; MTT_years = array(MTT_years, dim=c(nos_iter,MTT_dim))
+      SS_gCm2 = tmp$out_var3   ; SS_gCm2 = array(SS_gCm2, dim=c(nos_iter,SS_dim))
+      # Unload the current dalec shared object
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
-      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
-                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
-                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
-                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
-                      root_gCm2 = output[,,9], litter_gCm2 = output[,,10],
-                      labile_gCm2 = output[,,11], foliage_gCm2 = output[,,12],
-                      harvest_gCm2day = output[,,13], gsi = output[,,14],
-                      gsi_itemp = output[,,15], gsi_iphoto = output[,,16],
-                      gsi_ivpd = output[,,17], woodlitter_gCm2 = output[,,18],
-                      fire_gCm2day = output[,,19], gs_demand_supply = output[,,20],
-                      gs_total_canopy = output[,,21], APAR_MJm2day = output[,,22],
-                      gb_total_canopy = output[,,23], CiCa = output[,,24],
-                      aNPP = aNPP, MTT = MTT, SS_gCm2 = SS_gCm2, aMTT = aMTT, natMTT = MTTnat)
-      # add newly calculated variables
-      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
+      # create output object
+      states_all=list(# Ecosystem fluxes
+                      gpp_gCm2day = output[,,1],
+                      rauto_gCm2day = output[,,2],
+                      rg_foliage_gCm2day = output[,,3],
+                      rhet_litter_gCm2day = output[,,4],
+                      rhet_som_gCm2day = output[,,5],
+                      rhet_woodlitter_gCm2day = output[,,6],
+                      fire_gCm2day = output[,,7],
+                      harvest_gCm2day = output[,,8],
+                      # Internal fluxes
+                      alloc_labile_gCm2day = output[,,9],
+                      alloc_roots_gCm2day = output[,,10],
+                      alloc_wood_gCm2day = output[,,11],
+                      labile_to_foliage_gCm2day = output[,,12],
+                      foliage_to_litter_gCm2day = output[,,13],
+                      roots_to_litter_gCm2day = output[,,14],
+                      wood_to_litter_gCm2day = output[,,15],
+                      litter_to_som_gCm2day = output[,,16],
+                      woodlitter_to_som_gCm2day = output[,,17],
+                      # Disturbance fluxes
+                      FIREemiss_labile_gCm2day = output[,,18],
+                      FIRElitter_labile_gCm2day = output[,,19],
+                      FIREemiss_foliage_gCm2day = output[,,20],
+                      FIRElitter_foliage_gCm2day = output[,,21],
+                      FIREemiss_roots_gCm2day = output[,,22],
+                      FIRElitter_roots_gCm2day = output[,,23],
+                      FIREemiss_wood_gCm2day = output[,,24],
+                      FIRElitter_wood_gCm2day = output[,,25],
+                      FIREemiss_litter_gCm2day = output[,,26],
+                      FIRElitter_litter_gCm2day = output[,,27],
+                      FIREemiss_woodlitter_gCm2day = output[,,28],
+                      FIRElitter_woodlitter_gCm2day = output[,,29],
+                      FIREemiss_som_gCm2day = output[,,30],
+                      harvest_labile_gCm2day = output[,,31],
+                      harvest_foliage_gCm2day = output[,,32],
+                      harvest_roots_gCm2day = output[,,33],
+                      harvest_wood_gCm2day = output[,,34],
+                      harvest_litter_gCm2day = output[,,35],
+                      harvest_woodlitter_gCm2day = output[,,36],
+                      harvest_som_gCm2day = output[,,37],
+                      # C pools (gC/m2)
+                      labile_gCm2 = output[,,38],
+                      foliage_gCm2 = output[,,39],
+                      roots_gCm2 = output[,,40],
+                      wood_gCm2 = output[,,41],
+                      litter_gCm2 = output[,,42],
+                      woodlitter_gCm2 = output[,,43],
+                      som_gCm2 = output[,,44],
+                      # Canopy (phenology) properties
+                      lai_m2m2 = output[,,45],
+                      gsi = output[,,46],
+                      gsi_itemp = output[,,47],
+                      gsi_iphoto = output[,,48],
+                      gsi_ivpd = output[,,49],
+                      # Photosynthesis / C~water coupling related
+                      gs_demand_supply_ratio = output[,,50],
+                      gs_mmolH2Om2day = output[,,51],
+                      APAR_MJm2day = output[,,52],
+                      gb_mmolH2Om2day = output[,,53],
+                      CiCa = output[,,54],
+                      # misc
+                      RootDepth_m = output[,,55],
+                      ## Aggregated variables
+                      # Mean Transit times
+                      MTT_labile_years = MTT_years[,1],
+                      MTT_foliage_years = MTT_years[,2],
+                      MTT_roots_years = MTT_years[,3],
+                      MTT_wood_years = MTT_years[,4],
+                      MTT_litter_years = MTT_years[,5],
+                      MTT_woodlitter_years = MTT_years[,6],
+                      MTT_som_years = MTT_years[,7],
+                      # Steady state estimates
+                      SS_labile_gCm2 = SS_gCm2[,1],
+                      SS_foliage_gCm2 = SS_gCm2[,2],
+                      SS_roots_gCm2 = SS_gCm2[,3],
+                      SS_wood_gCm2 = SS_gCm2[,4],
+                      SS_litter_gCm2 = SS_gCm2[,5],
+                      SS_woodlitter_gCm2 = SS_gCm2[,6],
+                      SS_som_gCm2 = SS_gCm2[,7])
+      # Determine the NPP fraction of expressed NPP
+      # i.e. actual growth not GPP-Ra
+      NPP_fraction = apply(states_all$labile_to_foliage_gCm2day +
+                           states_all$alloc_roots_gCm2day +
+                           states_all$alloc_wood_gCm2day,1,mean)
+      NPP_fraction = cbind(apply(states_all$labile_to_foliage_gCm2day,1,mean),
+                           apply(states_all$alloc_roots_gCm2day,1,mean),
+                           apply(states_all$alloc_wood_gCm2day,1,mean)) / NPP_fraction
+      states_all$NPP_foliage_fraction = NPP_fraction[,1]
+      states_all$NPP_roots_fraction = NPP_fraction[,2]
+      states_all$NPP_wood_fraction = NPP_fraction[,3]
   } else {
       stop(paste("Model choice (",model_name,") does not have corresponding R interface",sep=""))
   }
