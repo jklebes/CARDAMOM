@@ -96,7 +96,7 @@ module CARBON_MODEL_MOD
            ,dayl_seconds     &
            ,dayl_hours       &
            ,dayl_hours_fraction &
-           ,Rg_from_labile   &
+           ,Rg_from_labile            &
            ,harvest_residue_to_litter &
            ,harvest_residue_to_litwood&
            ,harvest_residue_to_som    &
@@ -718,9 +718,6 @@ contains
 
     if (.not.allocated(harvest_residue_to_som)) then
         allocate(harvest_residue_to_litter(nodays),  &
-                 harvest_residue_to_som(nodays),     &
-                 harvest_residue_to_litwood(nodays), &
-                 harvest_residue_to_litter(nodays),  &
                  harvest_residue_to_som(nodays),     &
                  harvest_residue_to_litwood(nodays), &
                  harvest_loss_litter(nodays),        &
@@ -2161,15 +2158,16 @@ contains
     double precision :: bonus, &
                         transpiration_resistance,root_reach_local, &
                         root_depth_50
-    double precision, dimension(nos_root_layers) :: root_mass    &
-                                                   ,root_length  &
-                                                   ,ratio
+    double precision, dimension(nos_root_layers) :: Rcond_layer, &
+                                                    root_mass,  &
+                                                    root_length, &
+                                                    ratio
     double precision, parameter :: root_depth_frac_50 = 0.25d0 ! fractional soil depth above which 50 %
                                                                ! of the root mass is assumed to be located
 
     ! reset water flux
     total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0
-    root_mass = 0d0
+    root_mass = 0d0 ; Rcond_layer = 0d0
     ! calculate the plant hydraulic resistance component. Currently unclear
     ! whether this actually varies with height or whether tall trees have a
     ! xylem architecture which keeps the whole plant conductance (gplant) 1-10 (ish).
@@ -2264,7 +2262,7 @@ contains
            ! calculate and accumulate steady state water flux in mmol.m-2.s-1
            call plant_soil_flow(i,root_length(i),root_mass(i) &
                                ,demand(i),root_reach_local &
-                               ,transpiration_resistance,Rtot_layer(i))
+                               ,transpiration_resistance,Rcond_layer(i))
        else
            ! ...if there is not then we wont have any below...
            exit

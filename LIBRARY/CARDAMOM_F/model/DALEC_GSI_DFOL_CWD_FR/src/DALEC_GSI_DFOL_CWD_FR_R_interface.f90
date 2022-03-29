@@ -2,19 +2,23 @@
 
 subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
                              ,met,pars &
-                             ,out_var,out_var2,out_var3,lat &
-                             ,nopars,nomet,nofluxes,nopools,pft, &
+                             ,out_var1,out_var2,out_var3,lat &
+                             ,nopars,nomet,nofluxes,nopools,pft &
                              ,nodays,noyears,deltat,nos_iter)
 
   use CARBON_MODEL_MOD, only: CARBON_MODEL, extracted_C, itemp, ivpd, iphoto, &
+                              Rg_from_labile, &
                               harvest_residue_to_litter, harvest_residue_to_litwood, &
                               harvest_residue_to_som, harvest_loss_litter, &
                               harvest_loss_litwood, harvest_loss_som,      &
                               harvest_loss_labile, harvest_loss_foliar,    &
                               harvest_loss_roots, harvest_loss_wood,       &
-                              fire_loss_labile, fire_loss_foliar, fire_loss_roots, &
-                              fire_loss_wood, fire_loss_litter, fire_loss_litwood, &
-                              fire_loss_som, fire_residue_to_litter, &
+                              fire_emiss_labile, fire_emiss_foliar, fire_emiss_roots, &
+                              fire_emiss_wood, fire_emiss_litter, fire_emiss_litwood, &
+                              fire_emiss_som, &
+                              fire_litter_labile, fire_litter_foliar, fire_litter_roots, &
+                              fire_litter_wood, fire_litter_litter, fire_litter_litwood, &
+                              fire_litter_som, fire_residue_to_litter, &
                               fire_residue_to_litwood,fire_residue_to_som,       &
                               gs_demand_supply_ratio, cica_time, root_depth_time, &
                               gs_total_canopy, gb_total_canopy, canopy_par_MJday_time
@@ -38,6 +42,7 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
                         ,aNPP_dim       & ! NPP allocation fraction variable dimension
                         ,MTT_dim        &
                         ,SS_dim         &
+                        ,fire_dim       &
                         ,pft            & ! plant functional type
                         ,nos_iter       & !
                         ,noyears        &
@@ -82,7 +87,7 @@ subroutine rdalecgsidfolcwdfr(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
 
   ! zero initial conditions
   lai = 0d0 ; GPP = 0d0 ; NEE = 0d0 ; POOLS = 0d0 ; FLUXES = 0d0
-  out_var1 = 0d0 ; var_out2 = 0d0 ; var_out3 = 0d0
+  out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0
 
   ! update settings
   if (allocated(itemp)) deallocate(itemp,ivpd,iphoto)

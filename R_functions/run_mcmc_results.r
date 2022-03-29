@@ -461,8 +461,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
               if (exists(x = "FIRElitter_foliage_gCm2day", where = states_all)) {
                   states_all$FIRElitter_biomass_gCm2day = states_all$FIRElitter_foliage_gCm2day
               }
-              if (exists(x = "harvest_foliage_gCm2day", where = states_all)) {
-                  states_all$harvest_biomass_gCm2day = states_all$harvest_foliage_gCm2day
+              if (exists(x = "HARVESTextracted_foliage_gCm2day", where = states_all)) {
+                  states_all$HARVESTextracted_biomass_gCm2day = states_all$HARVESTextracted_foliage_gCm2day
               }
               if (exists(x = "labile_gCm2", where = states_all)) {
                   states_all$biomass_gCm2 = states_all$biomass_gCm2 + states_all$labile_gCm2
@@ -473,8 +473,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "FIRElitter_labile_gCm2day", where = states_all)) {
                       states_all$FIRElitter_biomass_gCm2day = states_all$FIRElitter_biomass_gCm2day + states_all$FIRElitter_labile_gCm2day
                   }
-                  if (exists(x = "harvest_labile_gCm2day", where = states_all)) {
-                      states_all$outflux_biomass_gCm2day = states_all$outflux_biomass_gCm2day + states_all$harvest_labile_gCm2day
+                  if (exists(x = "HARVESTextracted_labile_gCm2day", where = states_all)) {
+                      states_all$outflux_biomass_gCm2day = states_all$outflux_biomass_gCm2day + states_all$HARVESTextracted_labile_gCm2day
                   }
               }
               if (exists(x = "roots_gCm2", where = states_all)) {
@@ -487,8 +487,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "FIRElitter_roots_gCm2day", where = states_all)) {
                       states_all$FIRElitter_biomass_gCm2day = states_all$FIRElitter_biomass_gCm2day + states_all$FIRElitter_roots_gCm2day
                   }
-                  if (exists(x = "harvest_roots_gCm2day", where = states_all)) {
-                      states_all$outflux_biomass_gCm2day = states_all$outflux_biomass_gCm2day + states_all$harvest_roots_gCm2day
+                  if (exists(x = "HARVESTextracted_roots_gCm2day", where = states_all)) {
+                      states_all$outflux_biomass_gCm2day = states_all$outflux_biomass_gCm2day + states_all$HARVESTextracted_roots_gCm2day
                   }
 
               }
@@ -502,8 +502,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "FIRElitter_wood_gCm2day", where = states_all)) {
                       states_all$FIRElitter_biomass_gCm2day = states_all$FIRElitter_biomass_gCm2day + states_all$FIRElitter_wood_gCm2day
                   }
-                  if (exists(x = "harvest_wood_gCm2day", where = states_all)) {
-                      states_all$outflux_biomass_gCm2day = states_all$outflux_biomass_gCm2day + states_all$harvest_wood_gCm2day
+                  if (exists(x = "HARVESTextracted_wood_gCm2day", where = states_all)) {
+                      states_all$outflux_biomass_gCm2day = states_all$outflux_biomass_gCm2day + states_all$HARVESTextracted_wood_gCm2day
                   }
               } # biomass
 
@@ -519,8 +519,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "FIREemiss_som_gCm2day", where = states_all)) {
                       states_all$FIREemiss_dom_gCm2day = states_all$FIREemiss_som_gCm2day
                   }
-                  if (exists(x = "harvest_som_gCm2day", where = states_all)) {
-                      states_all$harvest_dom_gCm2day = states_all$harvest_som_gCm2day
+                  if (exists(x = "HARVESTextracted_som_gCm2day", where = states_all)) {
+                      states_all$HARVESTextracted_dom_gCm2day = states_all$HARVESTextracted_som_gCm2day
                   }
                   # Check for presence of litter or wood litter pools
                   if (exists(x = "litter_gCm2", where = states_all)) {
@@ -529,8 +529,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       if (exists(x = "FIREemiss_litter_gCm2day", where = states_all)) {
                           states_all$FIREemiss_dom_gCm2day = states_all$FIREemiss_dom_gCm2day + states_all$FIREemiss_litter_gCm2day
                       }
-                      if (exists(x = "harvest_litter_gCm2day", where = states_all)) {
-                          states_all$harvest_dom_gCm2day = states_all$harvest_dom_gCm2day + states_all$harvest_litter_gCm2day
+                      if (exists(x = "HARVESTextracted_litter_gCm2day", where = states_all)) {
+                          states_all$HARVESTextracted_dom_gCm2day = states_all$HARVESTextracted_dom_gCm2day + states_all$HARVESTextracted_litter_gCm2day
                       }
                   } # litter
                   if (exists(x = "woodlitter_gCm2", where = states_all)) {
@@ -539,8 +539,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       if (exists(x = "FIREemiss_woodlitter_gCm2day", where = states_all)) {
                           states_all$FIREemiss_dom_gCm2day = states_all$FIREemiss_dom_gCm2day + states_all$FIREemiss_woodlitter_gCm2day
                       }
-                      if (exists(x = "harvest_woodlitter_gCm2day", where = states_all)) {
-                          states_all$harvest_dom_gCm2day = states_all$harvest_dom_gCm2day + states_all$harvest_woodlitter_gCm2day
+                      if (exists(x = "HARVESTextracted_woodlitter_gCm2day", where = states_all)) {
+                          states_all$HARVESTextracted_dom_gCm2day = states_all$HARVESTextracted_dom_gCm2day + states_all$HARVESTextracted_woodlitter_gCm2day
                       }
                   } # wood litter
               } # DOM pool exists
@@ -735,11 +735,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$outflux_biomass_gCm2day = site_output$outflux_biomass_gCm2day + states_all$FIRElitter_biomass_gCm2day
                       site_output$FireFractionOfTurnover_biomass = site_output$FireFractionOfTurnover_biomass + states_all$FIRElitter_biomass_gCm2day
                   }
-                  if (exists(x = "harvest_biomass_gCm2day", where = states_all)) {
-                      site_output$harvest_biomass_gCm2day = apply(states_all$harvest_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
-                      site_output$mean_harvest_biomass_gCm2day = quantile(apply(states_all$harvest_biomass_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
-                      site_output$outflux_biomass_gCm2day = site_output$outflux_biomass_gCm2day + states_all$harvest_biomass_gCm2day
-                      site_output$HarvestFractionOfTurnover_biomass = states_all$harvest_biomass_gCm2day
+                  if (exists(x = "HARVESTextracted_biomass_gCm2day", where = states_all)) {
+                      site_output$HARVESTextracted_biomass_gCm2day = apply(states_all$HARVESTextracted_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_HARVESTextracted_biomass_gCm2day = quantile(apply(states_all$HARVESTextracted_biomass_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_biomass_gCm2day = site_output$outflux_biomass_gCm2day + states_all$HARVESTextracted_biomass_gCm2day
+                      site_output$HarvestFractionOfTurnover_biomass = states_all$HARVESTextracted_biomass_gCm2day
                   }
                   # Estimate the ecosystem mean transit (residence) times as a function of natural and disturbance processes
                   site_output$MTT_annual_biomass_years = apply(site_output$outflux_biomass_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
@@ -790,11 +790,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$outflux_labile_gCm2day = site_output$outflux_labile_gCm2day + states_all$FIRElitter_labile_gCm2day
                       site_output$FireFractionOfTurnover_labile = site_output$FireFractionOfTurnover_labile + states_all$FIRElitter_labile_gCm2day
                   }
-                  if (exists(x = "harvest_labile_gCm2day", where = states_all)) {
-                      site_output$harvest_labile_gCm2day = apply(states_all$harvest_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
-                      site_output$mean_harvest_labile_gCm2day = quantile(apply(states_all$harvest_labile_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
-                      site_output$outflux_labile_gCm2day = site_output$outflux_labile_gCm2day + states_all$harvest_labile_gCm2day
-                      site_output$HarvestFractionOfTurnover_labile = states_all$harvest_labile_gCm2day
+                  if (exists(x = "HARVESTextracted_labile_gCm2day", where = states_all)) {
+                      site_output$HARVESTextracted_labile_gCm2day = apply(states_all$HARVESTextracted_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_HARVESTextracted_labile_gCm2day = quantile(apply(states_all$HARVESTextracted_labile_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_labile_gCm2day = site_output$outflux_labile_gCm2day + states_all$HARVESTextracted_labile_gCm2day
+                      site_output$HarvestFractionOfTurnover_labile = states_all$HARVESTextracted_labile_gCm2day
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_labile_years = apply(site_output$outflux_labile_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
@@ -845,11 +845,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$outflux_foliage_gCm2day = site_output$outflux_foliage_gCm2day + states_all$FIRElitter_foliage_gCm2day
                       site_output$FireFractionOfTurnover_foliage = site_output$FireFractionOfTurnover_foliage + states_all$FIRElitter_foliage_gCm2day
                   }
-                  if (exists(x = "harvest_foliage_gCm2day", where = states_all)) {
-                      site_output$harvest_foliage_gCm2day = apply(states_all$harvest_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
-                      site_output$mean_harvest_foliage_gCm2day = quantile(apply(states_all$harvest_foliage_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
-                      site_output$outflux_foliage_gCm2day = site_output$outflux_foliage_gCm2day + states_all$harvest_foliage_gCm2day
-                      site_output$HarvestFractionOfTurnover_foliage = states_all$harvest_foliage_gCm2day
+                  if (exists(x = "HARVESTextracted_foliage_gCm2day", where = states_all)) {
+                      site_output$HARVESTextracted_foliage_gCm2day = apply(states_all$HARVESTextracted_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_HARVESTextracted_foliage_gCm2day = quantile(apply(states_all$HARVESTextracted_foliage_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_foliage_gCm2day = site_output$outflux_foliage_gCm2day + states_all$HARVESTextracted_foliage_gCm2day
+                      site_output$HarvestFractionOfTurnover_foliage = states_all$HARVESTextracted_foliage_gCm2day
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_foliage_years = apply(site_output$outflux_foliage_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
@@ -912,11 +912,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$outflux_roots_gCm2day = site_output$outflux_roots_gCm2day + states_all$FIRElitter_roots_gCm2day
                       site_output$FireFractionOfTurnover_roots = site_output$FireFractionOfTurnover_roots + states_all$FIRElitter_roots_gCm2day
                   }
-                  if (exists(x = "harvest_roots_gCm2day", where = states_all)) {
-                      site_output$harvest_roots_gCm2day = apply(states_all$harvest_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
-                      site_output$mean_harvest_roots_gCm2day = quantile(apply(states_all$harvest_roots_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
-                      site_output$outflux_roots_gCm2day = site_output$outflux_roots_gCm2day + states_all$harvest_roots_gCm2day
-                      site_output$HarvestFractionOfTurnover_roots = states_all$harvest_roots_gCm2day
+                  if (exists(x = "HARVESTextracted_roots_gCm2day", where = states_all)) {
+                      site_output$HARVESTextracted_roots_gCm2day = apply(states_all$HARVESTextracted_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_HARVESTextracted_roots_gCm2day = quantile(apply(states_all$HARVESTextracted_roots_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_roots_gCm2day = site_output$outflux_roots_gCm2day + states_all$HARVESTextracted_roots_gCm2day
+                      site_output$HarvestFractionOfTurnover_roots = states_all$HARVESTextracted_roots_gCm2day
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_roots_years = apply(site_output$outflux_roots_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
@@ -972,11 +972,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$outflux_wood_gCm2day = site_output$outflux_wood_gCm2day + states_all$FIRElitter_wood_gCm2day
                       site_output$FireFractionOfTurnover_wood = site_output$FireFractionOfTurnover_wood + states_all$FIRElitter_wood_gCm2day
                   }
-                  if (exists(x = "harvest_wood_gCm2day", where = states_all)) {
-                      site_output$harvest_wood_gCm2day = apply(states_all$harvest_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
-                      site_output$mean_harvest_wood_gCm2day = quantile(apply(states_all$harvest_wood_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
-                      site_output$outflux_wood_gCm2day = site_output$outflux_wood_gCm2day + states_all$harvest_wood_gCm2day
-                      site_output$HarvestFractionOfTurnover_wood = states_all$harvest_wood_gCm2day
+                  if (exists(x = "HARVESTextracted_wood_gCm2day", where = states_all)) {
+                      site_output$HARVESTextracted_wood_gCm2day = apply(states_all$HARVESTextracted_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_HARVESTextracted_wood_gCm2day = quantile(apply(states_all$HARVESTextracted_wood_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_wood_gCm2day = site_output$outflux_wood_gCm2day + states_all$HARVESTextracted_wood_gCm2day
+                      site_output$HarvestFractionOfTurnover_wood = states_all$HARVESTextracted_wood_gCm2day
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_wood_years = apply(site_output$outflux_wood_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
@@ -1026,11 +1026,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$outflux_litter_gCm2day = site_output$outflux_litter_gCm2day + states_all$FIRElitter_litter_gCm2day
                       site_output$FireFractionOfTurnover_litter = site_output$FireFractionOfTurnover_litter + states_all$FIRElitter_litter_gCm2day
                   }
-                  if (exists(x = "harvest_litter_gCm2day", where = states_all)) {
-                      site_output$harvest_litter_gCm2day = apply(states_all$harvest_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
-                      site_output$mean_harvest_litter_gCm2day = quantile(apply(states_all$harvest_litter_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
-                      site_output$outflux_litter_gCm2day = site_output$outflux_litter_gCm2day + states_all$harvest_litter_gCm2day
-                      site_output$HarvestFractionOfTurnover_litter = states_all$harvest_litter_gCm2day
+                  if (exists(x = "HARVESTextracted_litter_gCm2day", where = states_all)) {
+                      site_output$HARVESTextracted_litter_gCm2day = apply(states_all$HARVESTextracted_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_HARVESTextracted_litter_gCm2day = quantile(apply(states_all$HARVESTextracted_litter_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_litter_gCm2day = site_output$outflux_litter_gCm2day + states_all$HARVESTextracted_litter_gCm2day
+                      site_output$HarvestFractionOfTurnover_litter = states_all$HARVESTextracted_litter_gCm2day
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_litter_years = apply(site_output$outflux_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
@@ -1080,11 +1080,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$outflux_woodlitter_gCm2day = site_output$outflux_woodlitter_gCm2day + states_all$FIRElitter_woodlitter_gCm2day
                       site_output$FireFractionOfTurnover_woodlitter = site_output$FireFractionOfTurnover_woodlitter + states_all$FIRElitter_woodlitter_gCm2day
                   }
-                  if (exists(x = "harvest_woodlitter_gCm2day", where = states_all)) {
-                      site_output$harvest_woodlitter_gCm2day = apply(states_all$harvest_woodlitter_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
-                      site_output$mean_harvest_woodlitter_gCm2day = quantile(apply(states_all$harvest_woodlitter_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
-                      site_output$outflux_woodlitter_gCm2day = site_output$outflux_woodlitter_gCm2day + states_all$harvest_woodlitter_gCm2day
-                      site_output$HarvestFractionOfTurnover_woodlitter = states_all$harvest_woodlitter_gCm2day
+                  if (exists(x = "HARVESTextracted_woodlitter_gCm2day", where = states_all)) {
+                      site_output$HARVESTextracted_woodlitter_gCm2day = apply(states_all$HARVESTextracted_woodlitter_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_HARVESTextracted_woodlitter_gCm2day = quantile(apply(states_all$HARVESTextracted_woodlitter_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_woodlitter_gCm2day = site_output$outflux_woodlitter_gCm2day + states_all$HARVESTextracted_woodlitter_gCm2day
+                      site_output$HarvestFractionOfTurnover_woodlitter = states_all$HARVESTextracted_woodlitter_gCm2day
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_woodlitter_years = apply(site_output$outflux_woodlitter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
@@ -1126,11 +1126,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$outflux_som_gCm2day = site_output$outflux_som_gCm2day + states_all$FIREemiss_som_gCm2day
                   }
                   # NOTE: FIRElitter does not exist as there is not litter which leaves the som pool
-                  if (exists(x = "harvest_som_gCm2day", where = states_all)) {
-                      site_output$harvest_som_gCm2day = apply(states_all$harvest_som_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
-                      site_output$mean_harvest_som_gCm2day = quantile(apply(states_all$harvest_som_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
-                      site_output$outflux_som_gCm2day = site_output$outflux_som_gCm2day + states_all$harvest_som_gCm2day
-                      site_output$HarvestFractionOfTurnover_som = states_all$harvest_som_gCm2day
+                  if (exists(x = "HARVESTextracted_som_gCm2day", where = states_all)) {
+                      site_output$HARVESTextracted_som_gCm2day = apply(states_all$HARVESTextracted_som_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_HARVESTextracted_som_gCm2day = quantile(apply(states_all$HARVESTextracted_som_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_som_gCm2day = site_output$outflux_som_gCm2day + states_all$HARVESTextracted_som_gCm2day
+                      site_output$HarvestFractionOfTurnover_som = states_all$HARVESTextracted_som_gCm2day
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_som_years = apply(site_output$outflux_som_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
@@ -1173,11 +1173,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$outflux_dom_gCm2day = site_output$outflux_dom_gCm2day + states_all$FIREemiss_dom_gCm2day
                   }
                   # NOTE: FIRElitter does not exist as there is not litter which leaves the dom pool
-                  if (exists(x = "harvest_dom_gCm2day", where = states_all)) {
-                      site_output$harvest_dom_gCm2day = apply(states_all$harvest_dom_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
-                      site_output$mean_harvest_dom_gCm2day = quantile(apply(states_all$harvest_dom_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
-                      site_output$outflux_dom_gCm2day = site_output$outflux_dom_gCm2day + states_all$harvest_som_gCm2day
-                      site_output$HarvestFractionOfTurnover_dom = states_all$harvest_dom_gCm2day
+                  if (exists(x = "HARVESTextracted_dom_gCm2day", where = states_all)) {
+                      site_output$HARVESTextracted_dom_gCm2day = apply(states_all$HARVESTextracted_dom_gCm2day,2,quantile,prob=num_quantiles, na.rm=na_flag)
+                      site_output$mean_HARVESTextracted_dom_gCm2day = quantile(apply(states_all$HARVESTextracted_dom_gCm2day,1,mean, na.rm=na_flag), prob=num_quantiles)
+                      site_output$outflux_dom_gCm2day = site_output$outflux_dom_gCm2day + states_all$HARVESTextracted_som_gCm2day
+                      site_output$HarvestFractionOfTurnover_dom = states_all$HARVESTextracted_dom_gCm2day
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_dom_years = apply(site_output$outflux_dom_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
@@ -1517,9 +1517,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                   grid_output$FIRElitter_biomass_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIRElitter_biomass_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               }
-              if (exists(x = "harvest_biomass_gCm2day", where = site_output)) {
-                  grid_output$harvest_biomass_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-                  grid_output$mean_harvest_biomass_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              if (exists(x = "HARVESTextracted_biomass_gCm2day", where = site_output)) {
+                  grid_output$HARVESTextracted_biomass_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_HARVESTextracted_biomass_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               }
           }
           # Gridded labile information
@@ -1552,9 +1552,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                   grid_output$FIRElitter_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIRElitter_labile_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               }
-              if (exists(x = "harvest_labile_gCm2day", where = site_output)) {
-                  grid_output$harvest_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-                  grid_output$mean_harvest_labile_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              if (exists(x = "HARVESTextracted_labile_gCm2day", where = site_output)) {
+                  grid_output$HARVESTextracted_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_HARVESTextracted_labile_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               }
           }
           # Gridded foliage information
@@ -1589,9 +1589,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                   grid_output$FIRElitter_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIRElitter_foliage_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               }
-              if (exists(x = "harvest_foliage_gCm2day", where = site_output)) {
-                  grid_output$harvest_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-                  grid_output$mean_harvest_foliage_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              if (exists(x = "HARVESTextracted_foliage_gCm2day", where = site_output)) {
+                  grid_output$HARVESTextracted_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_HARVESTextracted_foliage_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               }
           }
           # Gridded roots information
@@ -1631,9 +1631,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                   grid_output$FIRElitter_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIRElitter_roots_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               }
-              if (exists(x = "harvest_roots_gCm2day", where = site_output)) {
-                  grid_output$harvest_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-                  grid_output$mean_harvest_roots_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              if (exists(x = "HARVESTextracted_roots_gCm2day", where = site_output)) {
+                  grid_output$HARVESTextracted_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_HARVESTextracted_roots_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               }
           }
           # Gridded wood information
@@ -1667,9 +1667,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                   grid_output$FIRElitter_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIRElitter_wood_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               }
-              if (exists(x = "harvest_wood_gCm2day", where = site_output)) {
-                  grid_output$harvest_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-                  grid_output$mean_harvest_wood_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              if (exists(x = "HARVESTextracted_wood_gCm2day", where = site_output)) {
+                  grid_output$HARVESTextracted_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_HARVESTextracted_wood_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               }
           }
           # Gridded litter information
@@ -1702,9 +1702,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                   grid_output$FIRElitter_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIRElitter_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               }
-              if (exists(x = "harvest_litter_gCm2day", where = site_output)) {
-                  grid_output$harvest_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-                  grid_output$mean_harvest_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              if (exists(x = "HARVESTextracted_litter_gCm2day", where = site_output)) {
+                  grid_output$HARVESTextracted_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_HARVESTextracted_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               }
           }
           # Gridded wood litter information
@@ -1737,9 +1737,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                   grid_output$FIRElitter_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIRElitter_woodlitter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               }
-              if (exists(x = "harvest_woodlitter_gCm2day", where = site_output)) {
-                  grid_output$harvest_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-                  grid_output$mean_harvest_woodlitter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              if (exists(x = "HARVESTextracted_woodlitter_gCm2day", where = site_output)) {
+                  grid_output$HARVESTextracted_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_HARVESTextracted_woodlitter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               }
           }
           # Gridded som information
@@ -1766,9 +1766,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                   grid_output$FIREemiss_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIREemiss_som_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               }
-              if (exists(x = "harvest_som_gCm2day", where = site_output)) {
-                  grid_output$harvest_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-                  grid_output$mean_harvest_som_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              if (exists(x = "HARVESTextracted_som_gCm2day", where = site_output)) {
+                  grid_output$HARVESTextracted_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_HARVESTextracted_som_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               }
           }
           # Gridded dom information
@@ -1795,9 +1795,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                   grid_output$FIREemiss_dom_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIREemiss_dom_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               }
-              if (exists(x = "harvest_dom_gCm2day", where = site_output)) {
-                  grid_output$harvest_dom_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-                  grid_output$mean_harvest_dom_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              if (exists(x = "HARVESTextracted_dom_gCm2day", where = site_output)) {
+                  grid_output$HARVESTextracted_dom_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_HARVESTextracted_dom_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               }
           }
 
@@ -2014,9 +2014,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                        grid_output$FIRElitter_biomass_gCm2day[n,,] = site_output$FIRElitter_biomass_gCm2day
                        grid_output$mean_FIRElitter_biomass_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_biomass_gCm2day
                    }
-                   if (exists(x = "harvest_biomass_gCm2day", where = site_output)) {
-                       grid_output$harvest_biomass_gCm2day[n,,] = site_output$harvest_biomass_gCm2day
-                       grid_output$mean_harvest_biomass_gCm2day[slot_i,slot_j,] = site_output$mean_harvest_biomass_gCm2day
+                   if (exists(x = "HARVESTextracted_biomass_gCm2day", where = site_output)) {
+                       grid_output$HARVESTextracted_biomass_gCm2day[n,,] = site_output$HARVESTextracted_biomass_gCm2day
+                       grid_output$mean_HARVESTextracted_biomass_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_biomass_gCm2day
                    }
                }
                # Gridded labile information
@@ -2049,9 +2049,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                        grid_output$FIRElitter_labile_gCm2day[n,,] = site_output$FIRElitter_labile_gCm2day
                        grid_output$mean_FIRElitter_labile_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_labile_gCm2day
                    }
-                   if (exists(x = "harvest_labile_gCm2day", where = site_output)) {
-                       grid_output$harvest_labile_gCm2day[n,,] = site_output$harvest_labile_gCm2day
-                       grid_output$mean_harvest_labile_gCm2day[slot_i,slot_j,] = site_output$mean_harvest_labile_gCm2day
+                   if (exists(x = "HARVESTextracted_labile_gCm2day", where = site_output)) {
+                       grid_output$HARVESTextracted_labile_gCm2day[n,,] = site_output$HARVESTextracted_labile_gCm2day
+                       grid_output$mean_HARVESTextracted_labile_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_labile_gCm2day
                    }
                }
                # Gridded foliage information
@@ -2086,9 +2086,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                        grid_output$FIRElitter_foliage_gCm2day[n,,] = site_output$FIRElitter_foliage_gCm2day
                        grid_output$mean_FIRElitter_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_foliage_gCm2day
                    }
-                   if (exists(x = "harvest_foliage_gCm2day", where = site_output)) {
-                       grid_output$harvest_foliage_gCm2day[n,,] = site_output$harvest_foliage_gCm2day
-                       grid_output$mean_harvest_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_harvest_foliage_gCm2day
+                   if (exists(x = "HARVESTextracted_foliage_gCm2day", where = site_output)) {
+                       grid_output$HARVESTextracted_foliage_gCm2day[n,,] = site_output$HARVESTextracted_foliage_gCm2day
+                       grid_output$mean_HARVESTextracted_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_foliage_gCm2day
                    }
                }
                # Gridded roots information
@@ -2129,9 +2129,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                        grid_output$FIRElitter_roots_gCm2day[n,,] = site_output$FIRElitter_roots_gCm2day
                        grid_output$mean_FIRElitter_roots_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_roots_gCm2day
                    }
-                   if (exists(x = "harvest_roots_gCm2day", where = site_output)) {
-                       grid_output$harvest_roots_gCm2day[n,,] = site_output$harvest_roots_gCm2day
-                       grid_output$mean_harvest_roots_gCm2day[slot_i,slot_j,] = site_output$mean_harvest_roots_gCm2day
+                   if (exists(x = "HARVESTextracted_roots_gCm2day", where = site_output)) {
+                       grid_output$HARVESTextracted_roots_gCm2day[n,,] = site_output$HARVESTextracted_roots_gCm2day
+                       grid_output$mean_HARVESTextracted_roots_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_roots_gCm2day
                    }
                }
                # Gridded wood information
@@ -2165,9 +2165,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                        grid_output$FIRElitter_wood_gCm2day[n,,] = site_output$FIRElitter_wood_gCm2day
                        grid_output$mean_FIRElitter_wood_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_wood_gCm2day
                    }
-                   if (exists(x = "harvest_wood_gCm2day", where = site_output)) {
-                       grid_output$harvest_wood_gCm2day[n,,] = site_output$harvest_wood_gCm2day
-                       grid_output$mean_harvest_wood_gCm2day[slot_i,slot_j,] = site_output$mean_harvest_wood_gCm2day
+                   if (exists(x = "HARVESTextracted_wood_gCm2day", where = site_output)) {
+                       grid_output$HARVESTextracted_wood_gCm2day[n,,] = site_output$HARVESTextracted_wood_gCm2day
+                       grid_output$mean_HARVESTextracted_wood_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_wood_gCm2day
                    }
                }
                # Gridded litter information
@@ -2200,9 +2200,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                        grid_output$FIRElitter_litter_gCm2day[n,,] = site_output$FIRElitter_litter_gCm2day
                        grid_output$mean_FIRElitter_litter_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_litter_gCm2day
                    }
-                   if (exists(x = "harvest_litter_gCm2day", where = site_output)) {
-                       grid_output$harvest_litter_gCm2day[n,,] = site_output$harvest_litter_gCm2day
-                       grid_output$mean_harvest_litter_gCm2day[slot_i,slot_j,] = site_output$mean_harvest_litter_gCm2day
+                   if (exists(x = "HARVESTextracted_litter_gCm2day", where = site_output)) {
+                       grid_output$HARVESTextracted_litter_gCm2day[n,,] = site_output$HARVESTextracted_litter_gCm2day
+                       grid_output$mean_HARVESTextracted_litter_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_litter_gCm2day
                    }
                }
                # Gridded wood litter information
@@ -2235,9 +2235,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                        grid_output$FIRElitter_woodlitter_gCm2day[n,,] = site_output$FIRElitter_woodlitter_gCm2day
                        grid_output$mean_FIRElitter_woodlitter_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_woodlitter_gCm2day
                    }
-                   if (exists(x = "harvest_woodlitter_gCm2day", where = site_output)) {
-                       grid_output$harvest_woodlitter_gCm2day[n,,] = site_output$harvest_woodlitter_gCm2day
-                       grid_output$mean_harvest_woodlitter_gCm2day[slot_i,slot_j,] = site_output$mean_harvest_woodlitter_gCm2day
+                   if (exists(x = "HARVESTextracted_woodlitter_gCm2day", where = site_output)) {
+                       grid_output$HARVESTextracted_woodlitter_gCm2day[n,,] = site_output$HARVESTextracted_woodlitter_gCm2day
+                       grid_output$mean_HARVESTextracted_woodlitter_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_woodlitter_gCm2day
                    }
                }
                # Gridded som information
@@ -2264,9 +2264,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                        grid_output$FIREemiss_som_gCm2day[n,,] = site_output$FIREemiss_som_gCm2day
                        grid_output$mean_FIREemiss_som_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_som_gCm2day
                    }
-                   if (exists(x = "harvest_som_gCm2day", where = site_output)) {
-                       grid_output$harvest_som_gCm2day[n,,] = site_output$harvest_som_gCm2day
-                       grid_output$mean_harvest_som_gCm2day[slot_i,slot_j,] = site_output$mean_harvest_som_gCm2day
+                   if (exists(x = "HARVESTextracted_som_gCm2day", where = site_output)) {
+                       grid_output$HARVESTextracted_som_gCm2day[n,,] = site_output$HARVESTextracted_som_gCm2day
+                       grid_output$mean_HARVESTextracted_som_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_som_gCm2day
                    }
                }
                # Gridded dom information
@@ -2293,9 +2293,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                        grid_output$FIREemiss_dom_gCm2day[n,,] = site_output$FIREemiss_dom_gCm2day
                        grid_output$mean_FIREemiss_dom_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_dom_gCm2day
                    }
-                   if (exists(x = "harvest_dom_gCm2day", where = site_output)) {
-                       grid_output$harvest_dom_gCm2day[n,,] = site_output$harvest_dom_gCm2day
-                       grid_output$mean_harvest_dom_gCm2day[slot_i,slot_j,] = site_output$mean_harvest_dom_gCm2day
+                   if (exists(x = "HARVESTextracted_dom_gCm2day", where = site_output)) {
+                       grid_output$HARVESTextracted_dom_gCm2day[n,,] = site_output$HARVESTextracted_dom_gCm2day
+                       grid_output$mean_HARVESTextracted_dom_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_dom_gCm2day
                    }
                }
 
