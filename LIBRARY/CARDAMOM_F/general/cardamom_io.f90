@@ -214,7 +214,7 @@ module cardamom_io
         ! ID = 27 - DALEC_CDEA_ACM2_BUCKET
         DATAin%nopools = 7
         DATAin%nopars = 32
-        DATAin%nofluxes = 29
+        DATAin%nofluxes = 40
     else if (DATAin%ID == 28) then
         ! ID = 28 - DALEC_CDEA_ACM2_BUCKET_RmRg
         DATAin%nopools = 7

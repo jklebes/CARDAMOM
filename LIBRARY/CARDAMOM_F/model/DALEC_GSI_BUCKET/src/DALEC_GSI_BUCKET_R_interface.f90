@@ -6,24 +6,24 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
                           ,nodays,noyears,deltat,nos_iter,soil_frac_clay_in &
                           ,soil_frac_sand_in)
 
-  use CARBON_MODEL_MOD, only: CARBON_MODEL, itemp, ivpd, iphoto, wSWP_time, &
-                              soil_frac_clay, soil_frac_sand, nos_soil_layers, &
-                              harvest_residue_to_litter, harvest_residue_to_woodlitter, &
-                              harvest_residue_to_som,                          &
-                              harvest_residue_labile, harvest_residue_foliar,    &
-                              harvest_residue_roots, harvest_residue_wood,       &
-                              harvest_extracted_woodlitter, harvest_extracted_som,   &
-                              harvest_extracted_labile, harvest_extracted_foliar,    &
-                              harvest_extracted_roots, harvest_extracted_wood,       &
-                              harvest_extracted_litter,                              &
-                              fire_emiss_labile, fire_emiss_foliar, fire_emiss_roots, &
-                              fire_emiss_wood, fire_emiss_litter, fire_emiss_woodlitter, &
-                              fire_emiss_som, fire_litter_labile, fire_litter_foliar,   &
-                              fire_litter_roots, fire_litter_wood, fire_litter_litter,   &
+  use CARBON_MODEL_MOD, only: CARBON_MODEL, itemp, ivpd, iphoto, wSWP_time,                    &
+                              soil_frac_clay, soil_frac_sand, nos_soil_layers,                 &
+                              harvest_residue_to_litter, harvest_residue_to_woodlitter,        &
+                              harvest_residue_to_som,                                          &
+                              harvest_residue_labile, harvest_residue_foliar,                  &
+                              harvest_residue_roots, harvest_residue_wood,                     &
+                              harvest_extracted_woodlitter, harvest_extracted_som,             &
+                              harvest_extracted_labile, harvest_extracted_foliar,              &
+                              harvest_extracted_roots, harvest_extracted_wood,                 &
+                              harvest_extracted_litter,                                        &
+                              fire_emiss_labile, fire_emiss_foliar, fire_emiss_roots,          &
+                              fire_emiss_wood, fire_emiss_litter, fire_emiss_woodlitter,       &
+                              fire_emiss_som, fire_litter_labile, fire_litter_foliar,          &
+                              fire_litter_roots, fire_litter_wood, fire_litter_litter,         &
                               fire_litter_woodlitter, fire_litter_som, fire_residue_to_litter, &
-                              fire_residue_to_woodlitter,fire_residue_to_som,       &
-                              gs_demand_supply_ratio, cica_time, Rg_from_labile, &
-                              gs_total_canopy, gb_total_canopy, canopy_par_MJday_time, &
+                              fire_residue_to_woodlitter,fire_residue_to_som,                  &
+                              gs_demand_supply_ratio, cica_time, Rg_from_labile,               &
+                              gs_total_canopy, gb_total_canopy, canopy_par_MJday_time,         &
                               root_depth_time
 
   ! subroutine specificially deals with the calling of the fortran code model by
@@ -167,18 +167,18 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
      out_var1(i,1:nodays,27) = fire_litter_litter           ! fire induced litter from litter (gC/m2/day)
      out_var1(i,1:nodays,28) = fire_emiss_woodlitter        ! fire emission from wood litter (gC/m2/day)
      out_var1(i,1:nodays,29) = fire_litter_woodlitter       ! fire induced litter from wood litter (gC/m2/day)
-     out_var1(i,1:nodays,30) = fire_emiss_som               ! fire emission from litter (gC/m2/day)
-     out_var1(i,1:nodays,31) = harvest_extracted_labile     ! harvest loss from labile (gC/m2/day)
-     out_var1(i,1:nodays,32) = harvest_extracted_foliar     ! harvest loss from foliage (gC/m2/day)
-     out_var1(i,1:nodays,33) = harvest_extracted_roots      ! harvest loss from fine roots (gC/m2/day)
-     out_var1(i,1:nodays,34) = harvest_extracted_wood       ! harvest loss from wood (gC/m2/day)
-     out_var1(i,1:nodays,35) = harvest_extracted_litter     ! harvest loss from litter (gC/m2/day)
-     out_var1(i,1:nodays,36) = harvest_extracted_woodlitter ! harvest loss from wood litter (gC/m2/day)
-     out_var1(i,1:nodays,37) = harvest_extracted_som        ! harvest loss from som (gC/m2/day)
-     out_var1(i,1:nodays,38) = harvest_residue_labile        ! harvest loss from labile (gC/m2/day)
-     out_var1(i,1:nodays,39) = harvest_residue_foliar        ! harvest loss from foliage (gC/m2/day)
-     out_var1(i,1:nodays,40) = harvest_residue_roots         ! harvest loss from fine roots (gC/m2/day)
-     out_var1(i,1:nodays,41) = harvest_residue_wood          ! harvest loss from wood (gC/m2/day)
+     out_var1(i,1:nodays,30) = fire_emiss_som               ! fire emission from som (gC/m2/day)
+     out_var1(i,1:nodays,31) = harvest_extracted_labile     ! harvest extracted from labile (gC/m2/day)
+     out_var1(i,1:nodays,32) = harvest_extracted_foliar     ! harvest extracted from foliage (gC/m2/day)
+     out_var1(i,1:nodays,33) = harvest_extracted_roots      ! harvest extracted from fine roots (gC/m2/day)
+     out_var1(i,1:nodays,34) = harvest_extracted_wood       ! harvest extracted from wood (gC/m2/day)
+     out_var1(i,1:nodays,35) = harvest_extracted_litter     ! harvest extracted from litter (gC/m2/day)
+     out_var1(i,1:nodays,36) = harvest_extracted_woodlitter ! harvest extracted from wood litter (gC/m2/day)
+     out_var1(i,1:nodays,37) = harvest_extracted_som        ! harvest extracted from som (gC/m2/day)
+     out_var1(i,1:nodays,38) = harvest_residue_labile       ! harvest litter / residue from labile (gC/m2/day)
+     out_var1(i,1:nodays,39) = harvest_residue_foliar       ! harvest litter / residue from foliage (gC/m2/day)
+     out_var1(i,1:nodays,40) = harvest_residue_roots        ! harvest litter / residue from fine roots (gC/m2/day)
+     out_var1(i,1:nodays,41) = harvest_residue_wood         ! harvest litter / residue from wood (gC/m2/day)
      ! C pools (gC/m2)
      out_var1(i,1:nodays,42) = POOLS(1:nodays,1)        ! labile (gC/m2)
      out_var1(i,1:nodays,43) = POOLS(1:nodays,2)        ! foliage (gC/m2)
@@ -204,7 +204,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
      out_var1(i,1:nodays,60) = gb_total_canopy          ! boundary conductance (mmolH2O/m2ground/day)
      out_var1(i,1:nodays,61) = cica_time                ! ratio of leaf internal to external CO2
      ! misc
-     out_var1(i,1:nodays,62) = root_depth_time           ! rooting depth (m)
+     out_var1(i,1:nodays,62) = root_depth_time          ! rooting depth (m)
 
      !!!
      ! Estimate residence time information
@@ -249,7 +249,9 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
 
      ! Estimate MRT (years)
      ! Labile
-     out_var2(i,1) = sum( ((FLUXES(1:nodays,8) + Rg_from_labile) &
+     out_var2(i,1) = sum( ((FLUXES(1:nodays,8) + Rg_from_labile + &
+                            fire_emiss_labile + fire_litter_labile + &
+                            harvest_extracted_labile + harvest_residue_labile) &
                           / POOLS(1:nodays,1)) * lab_filter) / dble(nodays-sum(lab_hak))
      ! Foliage
      out_var2(i,2) = sum( ((FLUXES(1:nodays,10) + fire_emiss_foliar + fire_litter_foliar + &
@@ -301,13 +303,13 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
   end do ! nos_iter loop
 
   ! MTT - Convert daily fractional loss to years
-  out_var2 = (out_var2*365.25d0)**(-1d0) ! iter,(fol,root,wood,lit,woodlitter,som)
+  out_var2 = (out_var2*365.25d0)**(-1d0) ! iter,(lab,fol,root,wood,lit,woodlitter,som)
 
   ! Steady state gC/m2 estimation
   ! Determine the mean annual input (gC/m2/yr) based on current inputs for all pool,
   ! litter and soil pools updated below...
   out_var3 = (out_var3 / dble(nodays)) * 365.25d0 ! convert to annual mean input
-  ! Then estimate the foliar, fine root, wood steady and fine litter states.
+  ! Then estimate the labile, foliar, fine root, wood steady and fine litter states.
   out_var3(:,1:5) =  out_var3(:,1:5) * out_var2(:,1:5) ! multiply by residence time in years
   ! Using the wood SS estimate (gC/m2) the steady state input to the wood litter pool...
   out_var3(:,6) = (out_var3(:,6) + (out_var3(:,4) / out_var2(:,4))) * out_var2(:,6)

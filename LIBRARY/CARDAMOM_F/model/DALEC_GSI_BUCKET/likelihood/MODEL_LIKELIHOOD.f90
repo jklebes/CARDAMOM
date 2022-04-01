@@ -513,8 +513,8 @@ module model_likelihood_module
   !------------------------------------------------------------------
   !
   subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodays,deltat &
-                     ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
-                     ,meantemp,EDC2)
+                        ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
+                        ,meantemp,EDC2)
 
     use cardamom_structures, only: DATAin
     use CARBON_MODEL_MOD, only: Rg_from_labile, wSWP_time,    &

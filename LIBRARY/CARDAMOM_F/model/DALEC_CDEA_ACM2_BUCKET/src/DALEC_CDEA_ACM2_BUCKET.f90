@@ -27,14 +27,14 @@ module CARBON_MODEL_MOD
            ,wSWP_time        &
            ,rSWP_time        &
            ,cica_time        &
+           ,root_depth_time        &
            ,gs_demand_supply_ratio &
-           ,gs_total_canopy               &
-           ,gb_total_canopy               &
-           ,canopy_par_MJday_time         &
+           ,gs_total_canopy        &
+           ,gb_total_canopy        &
+           ,canopy_par_MJday_time  &
            ,soil_frac_clay   &
            ,soil_frac_sand   &
            ,nos_soil_layers  &
-           ,extracted_C      &
            ,dim_1,dim_2      &
            ,nos_trees        &
            ,nos_inputs       &
@@ -146,8 +146,6 @@ module CARBON_MODEL_MOD
 
   double precision :: minlwp = minlwp_default
 
-  ! forest rotation specific info
-  double precision, allocatable, dimension(:) :: extracted_C
   ! Photosynthetic Metrics
   double precision, allocatable, dimension(:) :: gs_demand_supply_ratio, & ! actual:potential stomatal conductance
                                                         gs_total_canopy, & ! stomatal conductance (mmolH2O/m2ground/day)
@@ -282,6 +280,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                       daylength_seconds_1, &
                                             rainfall_time, &
                                                 cica_time, & ! Internal vs ambient CO2 concentrations
+                                          root_depth_time, &
                                                 rSWP_time, & ! Soil water potential weighted by access water
                                                 wSWP_time    ! Soil water potential weighted by supply of water
 
@@ -330,17 +329,37 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! declare local variables
     double precision :: tmp, infi &
-              ,transpiration & ! kgH2O/m2/day
-            ,soilevaporation & ! kgH2O/m2/day
-             ,wetcanopy_evap & ! kgH2O/m2/day
-           ,snow_sublimation & ! kgH2O/m2/day
-                    ,deltaWP & ! deltaWP (MPa) minlwp-soilWP
-  ,wf,wl,ff,fl,osf,osl,sf,ml   ! phenological controls
+                   ,transpiration & ! kgH2O/m2/day
+                 ,soilevaporation & ! kgH2O/m2/day
+                  ,wetcanopy_evap & ! kgH2O/m2/day
+                ,snow_sublimation & ! kgH2O/m2/day
+                         ,deltaWP & ! deltaWP (MPa) minlwp-soilWP
+       ,wf,wl,ff,fl,osf,osl,sf,ml   ! phenological controls
 
      ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
-    double precision :: cf(6),rfac(6)
+    double precision :: cf(6),rfac(6), burnt_area
+    ! local deforestation related variables
+    double precision, dimension(5) :: post_harvest_burn      & ! how much burning to occur after
+                                     ,foliage_frac_res       &
+                                     ,roots_frac_res         &
+                                     ,rootcr_frac_res        &
+                                     ,stem_frac_res          &
+                                     ,roots_frac_removal     &
+                                     ,rootcr_frac_removal    &
+                                     ,Crootcr_part           &
+                                     ,soil_loss_frac
+    double precision :: labile_loss,foliar_loss      &
+                       ,roots_loss,wood_loss         &
+                       ,rootcr_loss,stem_loss        &
+                       ,labile_residue,foliar_residue&
+                       ,roots_residue,wood_residue   &
+                       ,C_total,labile_frac_res      &
+                       ,labile_frac_removal          &
+                       ,Cstem,Crootcr,stem_residue   &
+                       ,coarse_root_residue          &
+                       ,soil_loss_with_roots
 
-    integer :: p,f,n,ii ! JFE added ii to loop over fluxes
+    integer :: harvest_management,p,f,n,ii ! JFE added ii to loop over fluxes
 
     ! met drivers are:
     ! 1st run day
@@ -406,6 +425,19 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Water fluxes
     ! 29 = Evapotranspiration (kgH2O.m-2.day-1)
 
+    ! Harvest fluxes - extracted C
+    ! 30 = extracted labile
+    ! 31 = extracted foliage
+    ! 32 = extracted fine roots
+    ! 33 = extracted wood
+    ! 34 = extracted litter
+    ! 35 = extracted som
+    ! Harvest fluxes - residues / litter
+    ! 36 = labile harvest residues
+    ! 37 = foliage harvest residues
+    ! 38 = fine roots harvest residues
+    ! 39 = wood harvest residues
+
     ! PARAMETERS
     ! 17 values
 
@@ -434,6 +466,140 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0
     intercepted_rainfall = 0d0 ; canopy_storage = 0d0 ; snow_storage = 0d0
 
+    ! if either of our disturbance drivers indicate disturbance will occur then
+    ! set up these components
+    if (maxval(met(8,:)) > 0d0 .or. maxval(met(9,:)) > 0d0) then
+
+        ! now load the hardcoded forest management parameters into their scenario locations
+
+        ! Deforestation process functions in a sequenctial way.
+        ! Thus, the pool_loss is first determined as a function of met(n,8) and
+        ! for fine and coarse roots whether this felling is associated with a mechanical
+        ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
+        ! fine and coarse roots may subsequently undergo mortality from which they do not recover
+        ! but allows for management activities such as grazing, mowing and coppice.
+        ! The pool_loss is then partitioned between the material which is left within the system
+        ! as a residue and thus direcly placed within one of the dead organic matter pools.
+
+        !! Parameter values for deforestation variables
+        !! Scenario 1
+        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+        ! removal which is imposed directly on these pools. These fractions vary
+        ! the assumption that the fine and coarse roots are mechanically removed.
+        ! 1 = all removed, 0 = all remains.
+        roots_frac_removal(1)  = 0d0
+        rootcr_frac_removal(1) = 0d0
+        ! harvest residue (fraction); 1 = all remains, 0 = all removed
+        foliage_frac_res(1) = 1d0
+        roots_frac_res(1)   = 1d0
+        rootcr_frac_res(1)  = 1d0
+        stem_frac_res(1)    = 0.20d0 !
+        ! wood partitioning (fraction)
+        Crootcr_part(1) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+        ! Csom loss due to phyical removal with roots
+        ! Morison et al (2012) Forestry Commission Research Note
+        soil_loss_frac(1) = 0.02d0 ! actually between 1-3 %
+        ! was the forest burned after deforestation (0-1)
+        ! NOTE: that we refer here to the fraction of the cleared land to be burned
+        post_harvest_burn(1) = 1d0
+
+        !! Scenario 2
+        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+        ! removal which is imposed directly on these pools. These fractions vary
+        ! the assumption that the fine and coarse roots are mechanically removed.
+        ! 1 = all removed, 0 = all remains.
+        roots_frac_removal(1)  = 0d0
+        rootcr_frac_removal(1) = 0d0
+        ! harvest residue (fraction); 1 = all remains, 0 = all removed
+        foliage_frac_res(2) = 1d0
+        roots_frac_res(2)   = 1d0
+        rootcr_frac_res(2) = 1d0
+        stem_frac_res(2)   = 0.20d0 !
+        ! wood partitioning (fraction)
+        Crootcr_part(2) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+        ! Csom loss due to phyical removal with roots
+        ! Morison et al (2012) Forestry Commission Research Note
+        soil_loss_frac(2) = 0.02d0 ! actually between 1-3 %
+        ! was the forest burned after deforestation (0-1)
+        ! NOTE: that we refer here to the fraction of the cleared land to be burned
+        post_harvest_burn(2) = 0d0
+
+        !! Scenario 3
+        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+        ! removal which is imposed directly on these pools. These fractions vary
+        ! the assumption that the fine and coarse roots are mechanically removed.
+        ! 1 = all removed, 0 = all remains.
+        roots_frac_removal(1)  = 0d0
+        rootcr_frac_removal(1) = 0d0
+        ! harvest residue (fraction); 1 = all remains, 0 = all removed
+        foliage_frac_res(3) = 0.5d0
+        roots_frac_res(3)   = 1d0
+        rootcr_frac_res(3) = 1d0
+        stem_frac_res(3)   = 0d0 !
+        ! wood partitioning (fraction)
+        Crootcr_part(3) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+        ! Csom loss due to phyical removal with roots
+        ! Morison et al (2012) Forestry Commission Research Note
+        soil_loss_frac(3) = 0.02d0 ! actually between 1-3 %
+        ! was the forest burned after deforestation (0-1)
+        ! NOTE: that we refer here to the fraction of the cleared land to be burned
+        post_harvest_burn(3) = 0d0
+
+        !! Scenario 4
+        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+        ! removal which is imposed directly on these pools. These fractions vary
+        ! the assumption that the fine and coarse roots are mechanically removed.
+        ! 1 = all removed, 0 = all remains.
+        roots_frac_removal(1)  = 1d0
+        rootcr_frac_removal(1) = 1d0
+        ! harvest residue (fraction); 1 = all remains, 0 = all removed
+        foliage_frac_res(4) = 0.5d0
+        roots_frac_res(4)   = 1d0
+        rootcr_frac_res(4) = 0d0
+        stem_frac_res(4)   = 0d0
+        ! wood partitioning (fraction)
+        Crootcr_part(4) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+        ! Csom loss due to phyical removal with roots
+        ! Morison et al (2012) Forestry Commission Research Note
+        soil_loss_frac(4) = 0.02d0 ! actually between 1-3 %
+        ! was the forest burned after deforestation (0-1)
+        ! NOTE: that we refer here to the fraction of the cleared land to be burned
+        post_harvest_burn(4) = 0d0
+
+        !## Scenario 5 (grassland grazing / cutting)
+        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+        ! removal which is imposed directly on these pools. These fractions vary
+        ! the assumption that the fine and coarse roots are mechanically removed.
+        ! 1 = all removed, 0 = all remains.
+        roots_frac_removal(1)  = 0d0
+        rootcr_frac_removal(1) = 0d0
+        ! harvest residue (fraction); 1 = all remains, 0 = all removed
+        foliage_frac_res(5) = 0.1d0
+        roots_frac_res(5)   = 0d0
+        rootcr_frac_res(5)  = 0d0
+        stem_frac_res(5)    = 0.12d0
+        ! wood partitioning (fraction)
+        Crootcr_part(5) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+        ! Csom loss due to phyical removal with roots
+        ! Morison et al (2012) Forestry Commission Research Note
+        soil_loss_frac(5) = 0d0 ! actually between 1-3 %
+        ! was the forest burned after deforestation (0-1)
+        ! NOTE: that we refer here to the fraction of the cleared land to be burned
+        post_harvest_burn(5) = 0d0
+
+        ! Override all paritioning parameters with those coming from
+        ! CARDAMOM
+        Crootcr_part = pars(25)
+
+        ! Declare combustion efficiency (labile, foliar, roots, wood, litter, soil, woodlitter)
+        cf(1) = 0.1d0 ; cf(2) = 0.9d0
+        cf(3) = 0.1d0 ; cf(4) = 0.1d0
+        cf(5) = 0.7d0 ; cf(6) = 0.01d0
+        ! Resilience factor for non-combusted tissue
+        rfac = 0.5d0 ; rfac(5) = 0.1d0 ; rfac(6) = 0d0
+
+    end if ! disturbance ?
+
     ! load ACM-GPP-ET parameters
     deltaWP = minlwp     ! leafWP-soilWP (i.e. -2-0)
     Ceff = pars(11) ! Canopy efficiency (gC/m2/day)
@@ -459,7 +625,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         allocate(deltat_1(nodays),wSWP_time(nodays),rSWP_time(nodays),gs_demand_supply_ratio(nodays), &
                  gs_total_canopy(nodays),gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
                  daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
-                 meant_time(nodays),rainfall_time(nodays),cica_time(nodays))
+                 meant_time(nodays),rainfall_time(nodays),cica_time(nodays),root_depth_time(nodays))
 
         !
         ! Timing variables which are needed first
@@ -720,7 +886,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        root_biomass = fine_root_biomass + max(min_root,POOLS(n,4)*pars(25)*2d0)
        call calculate_Rtot
        ! Pass wSWP to output variable
-       wSWP_time(n) = wSWP ; rSWP_time(n) = rSWP
+       wSWP_time(n) = wSWP ; rSWP_time(n) = rSWP ; root_depth_time(n) = root_reach
 
        ! calculate radiation absorption and estimate stomatal conductance
        call calculate_stomatal_conductance
@@ -827,56 +993,164 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        POOLS(n+1,7) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
 
        !!!!!!!!!!
-       ! deal first with deforestation
+       ! Extract biomass - e.g. deforestation / degradation
        !!!!!!!!!!
 
-       ! Remove biomass if necessary
+       ! reset values
+       harvest_management = 0 ; burnt_area = 0d0
+
+       ! Does harvest activities occur?
        if (met(8,n) > 0d0) then
-           tmp = (POOLS(n+1,2)+POOLS(n+1,4))/sum(POOLS(n+1,2:4))
-           if (allocated(extracted_C)) then
-               extracted_C(n) = (((POOLS(n+1,1)*tmp) + POOLS(n+1,2) + POOLS(n+1,4)) * met(8,n)) / deltat(n)
+
+           ! Load the management type / scenario into local variable
+           harvest_management = int(met(13,n))
+
+           ! Determine the fraction of cut labile C which remains in system as residue.
+           ! We assume that labile is proportionally distributed through the plants
+           ! root and wood (structural C).
+           C_total = POOLS(n+1,3) + POOLS(n+1,4)
+           ! Ensure there is available C for extraction
+           if (C_total > 0d0) then
+               ! Harvest activities on the wood / structural pool varies depending on
+               ! whether it is above or below ground. As such, partition the wood pool
+               ! between above ground stem(+branches) and below ground coarse root.
+               Crootcr = POOLS(n+1,4)*Crootcr_part(harvest_management)
+               Cstem   = POOLS(n+1,4)-Crootcr
+               ! Calculate the fraction of harvested labile which remains in system as residue
+               labile_frac_res = ((POOLS(n+1,3)/C_total) * roots_frac_res(harvest_management)  ) &
+                               + ((Cstem/C_total)        * stem_frac_res(harvest_management)   ) &
+                               + ((Crootcr/C_total)      * rootcr_frac_res(harvest_management) )
+               ! Calculate the management scenario specific resistance fraction
+               labile_frac_removal = ((POOLS(n+1,3)/C_total) * roots_frac_removal(harvest_management)  ) &
+                                     + ((Cstem/C_total)        * 1d0   ) &
+                                     + ((Crootcr/C_total)      * rootcr_frac_removal(harvest_management) )
+
+               ! Calculate the total loss from biomass pools
+               ! We assume that fractional clearing always equals the fraction
+               ! of foliage and above ground (stem) wood removal. However, we assume
+               ! that coarse root and fine root extractions are dependent on the
+               ! management activity type, e.g. in coppice below ground remains.
+               ! Thus, labile extractions are also dependent.
+               labile_loss = POOLS(n+1,1) * labile_frac_removal * met(8,n)
+               foliar_loss = POOLS(n+1,2) * met(8,n)
+               roots_loss  = POOLS(n+1,3) * roots_frac_removal(harvest_management) * met(8,n)
+               stem_loss   = (Cstem * met(8,n))
+               rootcr_loss = (Crootcr * rootcr_frac_removal(harvest_management) * met(8,n))
+               wood_loss   =  stem_loss + rootcr_loss
+
+               ! Transfer fraction of harvest waste to litter, wood litter or som pools.
+               ! This includes explicit calculation of the stem and coarse root residues due
+               ! to their potentially different treatments under management scenarios
+               labile_residue = labile_loss*labile_frac_res
+               foliar_residue = foliar_loss*foliage_frac_res(harvest_management)
+               roots_residue  = roots_loss*roots_frac_res(harvest_management)
+               coarse_root_residue = rootcr_loss*rootcr_frac_res(harvest_management)
+               stem_residue = stem_loss*stem_frac_res(harvest_management)
+               wood_residue = stem_residue + coarse_root_residue
+               ! Mechanical loss of Csom due to coarse root extraction,
+               ! less the loss remaining as residue
+               soil_loss_with_roots = (rootcr_loss-coarse_root_residue) &
+                                    * soil_loss_frac(harvest_management)
+
+               ! Update pools
+               POOLS(n+1,1) = POOLS(n+1,1) - labile_loss
+               POOLS(n+1,2) = POOLS(n+1,2) - foliar_loss
+               POOLS(n+1,3) = POOLS(n+1,3) - roots_loss
+               POOLS(n+1,4) = POOLS(n+1,4) - wood_loss
+               POOLS(n+1,5) = POOLS(n+1,5) + (labile_residue+foliar_residue+roots_residue)
+               POOLS(n+1,6) = POOLS(n+1,6) - soil_loss_with_roots + wood_residue
+               ! mass balance check
+               where (POOLS(n+1,1:7) < 0d0) POOLS(n+1,1:7) = 0d0
+
+               ! Convert harvest related extractions to daily rate for output
+               ! For dead organic matter pools, in most cases these will be zeros.
+               ! But these variables allow for subseqent management where surface litter
+               ! pools are removed or mechanical extraction from soil occurs.
+               FLUXES(n,31) = (labile_loss-labile_residue) / deltat(n)  ! Labile extraction
+               FLUXES(n,32) = (foliar_loss-foliar_residue) / deltat(n) ! foliage extraction
+               FLUXES(n,33) = (roots_loss-roots_residue) / deltat(n)    ! fine roots extraction
+               FLUXES(n,34) = (wood_loss-wood_residue) / deltat(n)      ! wood extraction
+               FLUXES(n,35) = 0d0 ! litter extraction
+               FLUXES(n,36) = soil_loss_with_roots / deltat(n)          ! som extraction
+               ! Convert harvest related residue generations to daily rate for output
+               FLUXES(n,37) = labile_residue / deltat(n) ! labile residues
+               FLUXES(n,38) = foliar_residue / deltat(n) ! foliage residues
+               FLUXES(n,39) = roots_residue / deltat(n)  ! fine roots residues
+               FLUXES(n,40) = wood_residue / deltat(n)   ! wood residues
+
+               ! Total C extraction, including any potential litter and som.
+               FLUXES(n,30) = sum(FLUXES(n,31:36))
+
+           end if ! C_total > 0d0
+
+       endif ! end deforestation info
+
+
+! TLS: a modified version of the original model which has now been removed 31/03/2022
+!      The replacement provides different scenarios of what is being extracted (e.g. above vs below)
+!      and the re-allocation of C to be either extracted or litter / residues remaining in system
+!       ! Remove biomass if necessary
+!       if (met(8,n) > 0d0) then
+!           tmp = (POOLS(n+1,2)+POOLS(n+1,4))/sum(POOLS(n+1,2:4))
+!           if (allocated(extracted_C)) then
+!               extracted_C(n) = (((POOLS(n+1,1)*tmp) + POOLS(n+1,2) + POOLS(n+1,4)) * met(8,n)) / deltat(n)
+!           endif
+!           POOLS(n+1,1) = tmp &
+!                        * POOLS(n+1,1)*(1d0-met(8,n)) ! remove labile
+!!           POOLS(n+1,1) = max(pars(18),tmp &
+!!                        * POOLS(n+1,1)*(1d0-met(8,n))) ! remove labile
+!           POOLS(n+1,2) = POOLS(n+1,2)*(1d0-met(8,n)) ! remove foliar
+!           POOLS(n+1,4) = POOLS(n+1,4)*(1d0-met(8,n)) ! remove wood
+!           ! NOTE: fine root is left in system this is an issue...
+!       end if
+
+       !!!!!!!!!!
+       ! Impose fire
+       !!!!!!!!!!
+
+       if (met(9,n) > 0d0 .or.(met(8,n) > 0d0 .and. harvest_management > 0)) then
+
+           ! Adjust burnt area to account for the managment decisions which may not be
+           ! reflected in the burnt area drivers
+           burnt_area = met(9,n)
+           if (met(8,n) > 0d0 .and. burnt_area > 0d0) then
+               ! pass harvest management to local integer
+               burnt_area = min(1d0,burnt_area + post_harvest_burn(harvest_management))
+           else if (met(8,n) > 0d0 .and. burnt_area <= 0d0) then
+               burnt_area = post_harvest_burn(harvest_management)
            endif
-           POOLS(n+1,1) = tmp &
-                        * POOLS(n+1,1)*(1d0-met(8,n)) ! remove labile
-!           POOLS(n+1,1) = max(pars(18),tmp &
-!                        * POOLS(n+1,1)*(1d0-met(8,n))) ! remove labile
-           POOLS(n+1,2) = POOLS(n+1,2)*(1d0-met(8,n)) ! remove foliar
-           POOLS(n+1,4) = POOLS(n+1,4)*(1d0-met(8,n)) ! remove wood
-           ! NOTE: fine root is left in system this is an issue...
-       end if
 
-       !!!!!!!!!!
-       ! then deal with fire
-       !!!!!!!!!!
+           ! Determine the corrected burnt area
+           if (burnt_area > 0d0) then
 
-       ! calculate fire emissions and litter transfer
-       if (met(9,n) > 0d0) then
-           ! first calculate combustion / emissions fluxes in g C m-2 d-1
-           FLUXES(n,18) = POOLS(n+1,1)*met(9,n)*cf(1)/deltat(n) ! labile
-           FLUXES(n,19) = POOLS(n+1,2)*met(9,n)*cf(2)/deltat(n) ! foliar
-           FLUXES(n,20) = POOLS(n+1,3)*met(9,n)*cf(3)/deltat(n) ! roots
-           FLUXES(n,21) = POOLS(n+1,4)*met(9,n)*cf(4)/deltat(n) ! wood
-           FLUXES(n,22) = POOLS(n+1,5)*met(9,n)*cf(5)/deltat(n) ! litter
-           FLUXES(n,23) = POOLS(n+1,6)*met(9,n)*cf(6)/deltat(n) ! som
+               ! first calculate combustion / emissions fluxes in g C m-2 d-1
+               FLUXES(n,18) = POOLS(n+1,1)*burnt_area*cf(1)/deltat(n) ! labile
+               FLUXES(n,19) = POOLS(n+1,2)*burnt_area*cf(2)/deltat(n) ! foliar
+               FLUXES(n,20) = POOLS(n+1,3)*burnt_area*cf(3)/deltat(n) ! roots
+               FLUXES(n,21) = POOLS(n+1,4)*burnt_area*cf(4)/deltat(n) ! wood
+               FLUXES(n,22) = POOLS(n+1,5)*burnt_area*cf(5)/deltat(n) ! litter
+               FLUXES(n,23) = POOLS(n+1,6)*burnt_area*cf(6)/deltat(n) ! som
 
-           ! second calculate litter transfer fluxes in g C m-2 d-1, all pools except som
-           FLUXES(n,24) = POOLS(n+1,1)*met(9,n)*(1d0-cf(1))*(1d0-rfac(1))/deltat(n) ! labile into litter
-           FLUXES(n,25) = POOLS(n+1,2)*met(9,n)*(1d0-cf(2))*(1d0-rfac(2))/deltat(n) ! foliar into litter
-           FLUXES(n,26) = POOLS(n+1,3)*met(9,n)*(1d0-cf(3))*(1d0-rfac(3))/deltat(n) ! roots into litter
-           FLUXES(n,27) = POOLS(n+1,4)*met(9,n)*(1d0-cf(4))*(1d0-rfac(4))/deltat(n) ! wood into som
-           FLUXES(n,28) = POOLS(n+1,5)*met(9,n)*(1d0-cf(5))*(1d0-rfac(5))/deltat(n) ! litter into som
+               ! second calculate litter transfer fluxes in g C m-2 d-1, all pools except som
+               FLUXES(n,24) = POOLS(n+1,1)*burnt_area*(1d0-cf(1))*(1d0-rfac(1))/deltat(n) ! labile into litter
+               FLUXES(n,25) = POOLS(n+1,2)*burnt_area*(1d0-cf(2))*(1d0-rfac(2))/deltat(n) ! foliar into litter
+               FLUXES(n,26) = POOLS(n+1,3)*burnt_area*(1d0-cf(3))*(1d0-rfac(3))/deltat(n) ! roots into litter
+               FLUXES(n,27) = POOLS(n+1,4)*burnt_area*(1d0-cf(4))*(1d0-rfac(4))/deltat(n) ! wood into som
+               FLUXES(n,28) = POOLS(n+1,5)*burnt_area*(1d0-cf(5))*(1d0-rfac(5))/deltat(n) ! litter into som
 
-           ! update pools - first remove burned vegetation
-           POOLS(n+1,1) = POOLS(n+1,1) - (FLUXES(n,18) + FLUXES(n,24)) * deltat(n) ! labile
-           POOLS(n+1,2) = POOLS(n+1,2) - (FLUXES(n,19) + FLUXES(n,25)) * deltat(n) ! foliar
-           POOLS(n+1,3) = POOLS(n+1,3) - (FLUXES(n,20) + FLUXES(n,26)) * deltat(n) ! roots
-           POOLS(n+1,4) = POOLS(n+1,4) - (FLUXES(n,21) + FLUXES(n,27)) * deltat(n) ! wood
-           ! update pools - add litter transfer
-           POOLS(n+1,5) = POOLS(n+1,5) + (FLUXES(n,24) + FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22) - FLUXES(n,28)) * deltat(n)
-           POOLS(n+1,6) = POOLS(n+1,6) + (FLUXES(n,27) + FLUXES(n,28) - FLUXES(n,23)) * deltat(n)
+               ! update pools - first remove burned vegetation
+               POOLS(n+1,1) = POOLS(n+1,1) - (FLUXES(n,18) + FLUXES(n,24)) * deltat(n) ! labile
+               POOLS(n+1,2) = POOLS(n+1,2) - (FLUXES(n,19) + FLUXES(n,25)) * deltat(n) ! foliar
+               POOLS(n+1,3) = POOLS(n+1,3) - (FLUXES(n,20) + FLUXES(n,26)) * deltat(n) ! roots
+               POOLS(n+1,4) = POOLS(n+1,4) - (FLUXES(n,21) + FLUXES(n,27)) * deltat(n) ! wood
+               ! update pools - add litter transfer
+               POOLS(n+1,5) = POOLS(n+1,5) + (FLUXES(n,24) + FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22) - FLUXES(n,28)) * deltat(n)
+               POOLS(n+1,6) = POOLS(n+1,6) + (FLUXES(n,27) + FLUXES(n,28) - FLUXES(n,23)) * deltat(n)
 
-           ! calculate ecosystem emissions
-           FLUXES(n,17) = FLUXES(n,18)+FLUXES(n,19)+FLUXES(n,20)+FLUXES(n,21)+FLUXES(n,22)+FLUXES(n,23)
+               ! calculate ecosystem emissions (gC/m2/day)
+               FLUXES(n,17) = FLUXES(n,18)+FLUXES(n,19)+FLUXES(n,20)+FLUXES(n,21)+FLUXES(n,22)+FLUXES(n,23)
+
+           end if ! Burned_area > 0
        else
            ! set fluxes to zero
            FLUXES(n,17:28) = 0d0

@@ -100,13 +100,17 @@ module CARBON_MODEL_MOD
            ,harvest_residue_to_litter &
            ,harvest_residue_to_litwood&
            ,harvest_residue_to_som    &
-           ,harvest_loss_litter           &
-           ,harvest_loss_litwood          &
-           ,harvest_loss_som              &
-           ,harvest_loss_labile           &
-           ,harvest_loss_foliar           &
-           ,harvest_loss_roots            &
-           ,harvest_loss_wood             &
+           ,harvest_extracted_litter      &
+           ,harvest_extracted_woodlitter  &
+           ,harvest_extracted_som         &
+           ,harvest_extracted_labile      &
+           ,harvest_extracted_foliar      &
+           ,harvest_extracted_roots       &
+           ,harvest_extracted_wood        &
+           ,harvest_residue_labile        &
+           ,harvest_residue_foliar        &
+           ,harvest_residue_roots         &
+           ,harvest_residue_wood          &
            ,fire_litter_labile              &
            ,fire_litter_foliar              &
            ,fire_litter_roots               &
@@ -287,14 +291,18 @@ module CARBON_MODEL_MOD
                                                 root_depth_time, & ! rooting depth (m)
                                       harvest_residue_to_litter, &
                                          harvest_residue_to_som, &
-                                     harvest_residue_to_litwood, &
-                                            harvest_loss_litter, &
-                                           harvest_loss_litwood, &
-                                               harvest_loss_som, &
-                                            harvest_loss_labile, &
-                                            harvest_loss_foliar, &
-                                             harvest_loss_roots, &
-                                              harvest_loss_wood, &
+                                     harvest_residue_to_woodlitter, &
+                                       harvest_extracted_litter, &
+                                   harvest_extracted_woodlitter, &
+                                          harvest_extracted_som, &
+                                       harvest_extracted_labile, &
+                                       harvest_extracted_foliar, &
+                                        harvest_extracted_roots, &
+                                         harvest_extracted_wood, &
+                                         harvest_residue_labile, &
+                                         harvest_residue_foliar, &
+                                          harvest_residue_roots, &
+                                           harvest_residue_wood, &
                                              fire_litter_labile, &
                                              fire_litter_foliar, &
                                               fire_litter_roots, &
@@ -608,36 +616,62 @@ contains
                         ! photoperiod (gC/gN/m2leaf/day)
     avN = 10d0**pars(11) ! foliar N gN/m2
 
-    if (maxval(met(8,1:nodays)) > 0d0 .or. maxval(met(9,1:nodays)) > 0d0) then
+    ! if either of our disturbance drivers indicate disturbance will occur then
+    ! set up these components
+    if (maxval(met(8,:)) > 0d0 .or. maxval(met(9,:)) > 0d0) then
 
         ! initial values for deforestation variables
         labile_loss = 0d0    ; foliar_loss = 0d0
         roots_loss = 0d0     ; wood_loss = 0d0
+        rootcr_loss = 0d0    ; stem_loss = 0d0
         labile_residue = 0d0 ; foliar_residue = 0d0
         roots_residue = 0d0  ; wood_residue = 0d0
-        stem_residue = 0d0   ; reforest_day = 0
+        stem_residue = 0d0
+        reforest_day = 0
         soil_loss_with_roots = 0d0
         coarse_root_residue = 0d0
         post_harvest_burn = 0d0
 
         ! now load the hardcoded forest management parameters into their locations
 
-        ! Parameter values for deforestation variables
-        ! scenario 1
+        ! Deforestation process functions in a sequenctial way.
+        ! Thus, the pool_loss is first determined as a function of met(n,8) and
+        ! for fine and coarse roots whether this felling is associated with a mechanical
+        ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
+        ! fine and coarse roots may subsequently undergo mortality from which they do not recover
+        ! but allows for management activities such as grazing, mowing and coppice.
+        ! The pool_loss is then partitioned between the material which is left within the system
+        ! as a residue and thus direcly placed within one of the dead organic matter pools.
+
+        !! Parameter values for deforestation variables
+        !! Scenario 1
+        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+        ! removal which is imposed directly on these pools. These fractions vary
+        ! the assumption that the fine and coarse roots are mechanically removed.
+        ! 1 = all removed, 0 = all remains.
+        roots_frac_removal(1)  = 0d0
+        rootcr_frac_removal(1) = 0d0
         ! harvest residue (fraction); 1 = all remains, 0 = all removed
         foliage_frac_res(1) = 1d0
         roots_frac_res(1)   = 1d0
-        rootcr_frac_res(1) = 1d0
-        stem_frac_res(1)   = 0.20d0 !
+        rootcr_frac_res(1)  = 1d0
+        stem_frac_res(1)    = 0.20d0 !
         ! wood partitioning (fraction)
         Crootcr_part(1) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
         ! Csom loss due to phyical removal with roots
         ! Morison et al (2012) Forestry Commission Research Note
         soil_loss_frac(1) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation
+        ! was the forest burned after deforestation (0-1)
+        ! NOTE: that we refer here to the fraction of the cleared land to be burned
         post_harvest_burn(1) = 1d0
 
-        !## scen 2
+        !! Scenario 2
+        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+        ! removal which is imposed directly on these pools. These fractions vary
+        ! the assumption that the fine and coarse roots are mechanically removed.
+        ! 1 = all removed, 0 = all remains.
+        roots_frac_removal(1)  = 0d0
+        rootcr_frac_removal(1) = 0d0
         ! harvest residue (fraction); 1 = all remains, 0 = all removed
         foliage_frac_res(2) = 1d0
         roots_frac_res(2)   = 1d0
@@ -648,10 +682,17 @@ contains
         ! Csom loss due to phyical removal with roots
         ! Morison et al (2012) Forestry Commission Research Note
         soil_loss_frac(2) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation
+        ! was the forest burned after deforestation (0-1)
+        ! NOTE: that we refer here to the fraction of the cleared land to be burned
         post_harvest_burn(2) = 0d0
 
-        !## scen 3
+        !! Scenario 3
+        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+        ! removal which is imposed directly on these pools. These fractions vary
+        ! the assumption that the fine and coarse roots are mechanically removed.
+        ! 1 = all removed, 0 = all remains.
+        roots_frac_removal(3)  = 0d0
+        rootcr_frac_removal(3) = 0d0
         ! harvest residue (fraction); 1 = all remains, 0 = all removed
         foliage_frac_res(3) = 0.5d0
         roots_frac_res(3)   = 1d0
@@ -662,10 +703,17 @@ contains
         ! Csom loss due to phyical removal with roots
         ! Morison et al (2012) Forestry Commission Research Note
         soil_loss_frac(3) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation
+        ! was the forest burned after deforestation (0-1)
+        ! NOTE: that we refer here to the fraction of the cleared land to be burned
         post_harvest_burn(3) = 0d0
 
-        !## scen 4
+        !! Scenario 4
+        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+        ! removal which is imposed directly on these pools. These fractions vary
+        ! the assumption that the fine and coarse roots are mechanically removed.
+        ! 1 = all removed, 0 = all remains.
+        roots_frac_removal(4)  = 1d0
+        rootcr_frac_removal(4) = 1d0
         ! harvest residue (fraction); 1 = all remains, 0 = all removed
         foliage_frac_res(4) = 0.5d0
         roots_frac_res(4)   = 1d0
@@ -676,10 +724,17 @@ contains
         ! Csom loss due to phyical removal with roots
         ! Morison et al (2012) Forestry Commission Research Note
         soil_loss_frac(4) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation
+        ! was the forest burned after deforestation (0-1)
+        ! NOTE: that we refer here to the fraction of the cleared land to be burned
         post_harvest_burn(4) = 0d0
 
-        !## scen 5 (grassland grazing / cutting)
+        !## Scenario 5 (grassland grazing / cutting)
+        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+        ! removal which is imposed directly on these pools. These fractions vary
+        ! the assumption that the fine and coarse roots are mechanically removed.
+        ! 1 = all removed, 0 = all remains.
+        roots_frac_removal(5)  = 0d0
+        rootcr_frac_removal(5) = 0d0
         ! harvest residue (fraction); 1 = all remains, 0 = all removed
         foliage_frac_res(5) = 0.1d0
         roots_frac_res(5)   = 0d0
@@ -690,10 +745,11 @@ contains
         ! Csom loss due to phyical removal with roots
         ! Morison et al (2012) Forestry Commission Research Note
         soil_loss_frac(5) = 0d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation
+        ! was the forest burned after deforestation (0-1)
+        ! NOTE: that we refer here to the fraction of the cleared land to be burned
         post_harvest_burn(5) = 0d0
 
-        ! for the moment override all paritioning parameters with those coming from
+        ! Override all paritioning parameters with those coming from
         ! CARDAMOM
         Crootcr_part = pars(29)
 
@@ -717,52 +773,59 @@ contains
     POOLS(1,7) = pars(37)
 
     if (.not.allocated(harvest_residue_to_som)) then
-        allocate(harvest_residue_to_litter(nodays),  &
-                 harvest_residue_to_som(nodays),     &
-                 harvest_residue_to_litwood(nodays), &
-                 harvest_loss_litter(nodays),        &
-                 harvest_loss_som(nodays),           &
-                 harvest_loss_litwood(nodays),       &
-                 harvest_loss_labile(nodays),        &
-                 harvest_loss_foliar(nodays),        &
-                 harvest_loss_roots(nodays),         &
-                 harvest_loss_wood(nodays),          &
-                 fire_emiss_labile(nodays),          &
-                 fire_emiss_foliar(nodays),          &
-                 fire_emiss_roots(nodays),           &
-                 fire_emiss_wood(nodays),            &
-                 fire_emiss_litter(nodays),          &
-                 fire_emiss_litwood(nodays),         &
-                 fire_emiss_som(nodays),             &
-                 fire_litter_labile(nodays),         &
-                 fire_litter_foliar(nodays),         &
-                 fire_litter_roots(nodays),          &
-                 fire_litter_wood(nodays),           &
-                 fire_litter_litter(nodays),         &
-                 fire_litter_litwood(nodays),        &
-                 fire_litter_som(nodays),            &
-                 fire_residue_to_litter(nodays),     &
-                 fire_residue_to_litwood(nodays),    &
+        allocate(harvest_residue_to_litter(nodays),    &
+                 harvest_residue_to_som(nodays),       &
+                 harvest_residue_to_woodlitter(nodays),&
+                 harvest_residue_labile(nodays),       &
+                 harvest_residue_foliar(nodays),       &
+                 harvest_residue_roots(nodays),        &
+                 harvest_residue_wood(nodays),         &
+                 harvest_extracted_litter(nodays),     &
+                 harvest_extracted_som(nodays),        &
+                 harvest_extracted_woodlitter(nodays), &
+                 harvest_extracted_labile(nodays),     &
+                 harvest_extracted_foliar(nodays),     &
+                 harvest_extracted_roots(nodays),      &
+                 harvest_extracted_wood(nodays),       &
+                 fire_emiss_labile(nodays),            &
+                 fire_emiss_foliar(nodays),            &
+                 fire_emiss_roots(nodays),             &
+                 fire_emiss_wood(nodays),              &
+                 fire_emiss_litter(nodays),            &
+                 fire_emiss_litwood(nodays),           &
+                 fire_emiss_som(nodays),               &
+                 fire_litter_labile(nodays),           &
+                 fire_litter_foliar(nodays),           &
+                 fire_litter_roots(nodays),            &
+                 fire_litter_wood(nodays),             &
+                 fire_litter_litter(nodays),           &
+                 fire_litter_litwood(nodays),          &
+                 fire_litter_som(nodays),              &
+                 fire_residue_to_litter(nodays),       &
+                 fire_residue_to_litwood(nodays),      &
                  fire_residue_to_som(nodays))
     endif
     ! Reset harvest residue
-    harvest_residue_to_litter = 0d0 ; harvest_residue_to_litwood = 0d0
+    harvest_residue_to_litter = 0d0 ; harvest_residue_to_woodlitter = 0d0
     harvest_residue_to_som = 0d0
-    ! Reset harvest loss
-    harvest_loss_labile = 0d0       ; harvest_loss_foliar = 0d0
-    harvest_loss_roots = 0d0        ; harvest_loss_wood = 0d0
-    harvest_loss_litter = 0d0       ; harvest_loss_som = 0d0
-    harvest_loss_litwood = 0d0
-    ! Reset fire litter
+    ! Reset harvest residue
+    harvest_residue_labile = 0d0       ; harvest_residue_foliar = 0d0
+    harvest_residue_roots = 0d0        ; harvest_residue_wood = 0d0
+    ! Reset harvest extracted
+    harvest_extracted_labile = 0d0       ; harvest_extracted_foliar = 0d0
+    harvest_extracted_roots = 0d0        ; harvest_extracted_wood = 0d0
+    harvest_extracted_litter = 0d0       ; harvest_extracted_som = 0d0
+    harvest_extracted_woodlitter = 0d0
+    ! Reset fire loss to litter
     fire_litter_labile = 0d0 ; fire_litter_foliar = 0d0 ; fire_litter_roots = 0d0
-    fire_litter_wood = 0d0   ; fire_litter_litter = 0d0 ; fire_litter_litwood = 0d0
+    fire_litter_wood = 0d0   ; fire_litter_litter = 0d0 ; fire_litter_woodlitter = 0d0
     fire_litter_som = 0d0
-    ! Reset fire emissions
+    ! Reset fire loss to combustion and emissions
     fire_emiss_labile = 0d0 ; fire_emiss_foliar = 0d0 ; fire_emiss_roots = 0d0
-    fire_emiss_wood = 0d0   ; fire_emiss_litter = 0d0 ; fire_emiss_litwood = 0d0
+    fire_emiss_wood = 0d0   ; fire_emiss_litter = 0d0 ; fire_emiss_woodlitter = 0d0
     fire_emiss_som = 0d0
     ! Reset fire residue
-    fire_residue_to_litter = 0d0 ; fire_residue_to_litwood = 0d0 ; fire_residue_to_som = 0d0
+    fire_residue_to_litter = 0d0 ; fire_residue_to_woodlitter = 0d0 ; fire_residue_to_som = 0d0
 
     ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
     if (.not.allocated(deltat_1)) then
@@ -879,7 +942,8 @@ contains
        call calculate_stomatal_conductance
        ! Estimate stomatal conductance relative to its minimum / maximum, i.e. how
        ! close are we to maxing out supply (note 0.01 taken from min_gs)
-       gs_demand_supply_ratio(n) = (stomatal_conductance - minimum_conductance) / (potential_conductance-minimum_conductance)
+       gs_demand_supply_ratio(n) = (stomatal_conductance - minimum_conductance) &
+                                 / (potential_conductance-minimum_conductance)
        ! Store the canopy level stomatal conductance (mmolH2O/m2/day)
        gs_total_canopy(n) = stomatal_conductance
 
@@ -1114,64 +1178,60 @@ contains
        endif
 
        ! reset values
-       FLUXES(n,17) = 0d0 ; FLUXES(n,21:25) = 0d0
+       FLUXES(n,17) = 0d0 ; FLUXES(n,21) = 0d0
        harvest_management = 0 ; burnt_area = 0d0
 
+       ! Does harvest activities occur?
        if (met(8,n) > 0d0) then
 
-           ! pass harvest management to local integer
+           ! Load the management type / scenario into local variable
            harvest_management = int(met(13,n))
 
-           ! assume that labile is proportionally distributed through the plant
-           ! root and wood and therefore so is the residual fraction
+           ! Determine the fraction of cut labile C which remains in system as residue.
+           ! We assume that labile is proportionally distributed through the plants
+           ! root and wood (structural C).
            C_total = POOLS(n+1,3) + POOLS(n+1,4)
-           ! partition wood into its components
-           Crootcr = POOLS(n+1,4)*Crootcr_part(harvest_management)
-           Cstem   = POOLS(n+1,4)-Crootcr
-           ! now calculate the labile fraction of residue
+           ! Ensure there is available C for extraction
            if (C_total > 0d0) then
+               ! Harvest activities on the wood / structural pool varies depending on
+               ! whether it is above or below ground. As such, partition the wood pool
+               ! between above ground stem(+branches) and below ground coarse root.
+               Crootcr = POOLS(n+1,4)*Crootcr_part(harvest_management)
+               Cstem   = POOLS(n+1,4)-Crootcr
+               ! Calculate the fraction of harvested labile which remains in system as residue
                labile_frac_res = ((POOLS(n+1,3)/C_total) * roots_frac_res(harvest_management)  ) &
                                + ((Cstem/C_total)        * stem_frac_res(harvest_management)   ) &
                                + ((Crootcr/C_total)      * rootcr_frac_res(harvest_management) )
-           else
-               labile_frac_res = 0d0
-           endif
+               ! Calculate the management scenario specific resistance fraction
+               labile_frac_removal = ((POOLS(n+1,3)/C_total) * roots_frac_removal(harvest_management)  ) &
+                                     + ((Cstem/C_total)        * 1d0   ) &
+                                     + ((Crootcr/C_total)      * rootcr_frac_removal(harvest_management) )
 
-           ! you can't remove any biomass if there is none left...
-           if (C_total > vsmall) then
+               ! Calculate the total loss from biomass pools
+               ! We assume that fractional clearing always equals the fraction
+               ! of foliage and above ground (stem) wood removal. However, we assume
+               ! that coarse root and fine root extractions are dependent on the
+               ! management activity type, e.g. in coppice below ground remains.
+               ! Thus, labile extractions are also dependent.
+               labile_loss = POOLS(n+1,1) * labile_frac_removal * met(8,n)
+               foliar_loss = POOLS(n+1,2) * met(8,n)
+               roots_loss  = POOLS(n+1,3) * roots_frac_removal(harvest_management) * met(8,n)
+               stem_loss   = (Cstem * met(8,n))
+               rootcr_loss = (Crootcr * rootcr_frac_removal(harvest_management) * met(8,n))
+               wood_loss   =  stem_loss + rootcr_loss
 
-               ! Loss of carbon from each pools
-               labile_loss = POOLS(n+1,1)*met(8,n)
-               foliar_loss = POOLS(n+1,2)*met(8,n)
-               ! roots are not removed under grazing
-               if (harvest_management /= 5) then
-                   roots_loss = POOLS(n+1,3)*met(8,n)
-               else
-                   roots_loss = 0d0
-               endif
-               wood_loss   = (Crootcr+Cstem)*met(8,n)
-               ! estimate labile loss explicitly from the loss of their storage
-               ! tissues
-               labile_loss = POOLS(n+1,1) * ((roots_loss+wood_loss) / (POOLS(n+1,3)+POOLS(n+1,4)))
-
-               ! For output / EDC updates, convert to daily rate for EDC consistency
-               harvest_loss_labile(n) = labile_loss * deltat_1(n)
-               harvest_loss_foliar(n) = foliar_loss * deltat_1(n)
-               harvest_loss_roots(n) = roots_loss * deltat_1(n)
-               harvest_loss_wood(n) = wood_loss * deltat_1(n)
-
-               ! Transfer fraction of harvest waste to litter or som pools
-               ! easy pools first
+               ! Transfer fraction of harvest waste to litter, wood litter or som pools.
+               ! This includes explicit calculation of the stem and coarse root residues due
+               ! to their potentially different treatments under management scenarios
                labile_residue = labile_loss*labile_frac_res
                foliar_residue = foliar_loss*foliage_frac_res(harvest_management)
                roots_residue  = roots_loss*roots_frac_res(harvest_management)
-               ! Explicit calculation of the residues from each fraction
-               coarse_root_residue  = Crootcr*met(8,n)*rootcr_frac_res(harvest_management)
-               stem_residue = Cstem*met(8,n)*stem_frac_res(harvest_management)
-               ! Now finally calculate the final wood residue
+               coarse_root_residue = rootcr_loss*rootcr_frac_res(harvest_management)
+               stem_residue = stem_loss*stem_frac_res(harvest_management)
                wood_residue = stem_residue + coarse_root_residue
-               ! Mechanical loss of Csom due to coarse root extraction
-               soil_loss_with_roots = Crootcr*met(8,n)*(1d0-rootcr_frac_res(harvest_management)) &
+               ! Mechanical loss of Csom due to coarse root extraction,
+               ! less the loss remaining as residue
+               soil_loss_with_roots = (rootcr_loss-coarse_root_residue) &
                                     * soil_loss_frac(harvest_management)
 
                ! Update pools
@@ -1185,29 +1245,44 @@ contains
                ! mass balance check
                where (POOLS(n+1,1:7) < 0d0) POOLS(n+1,1:7) = 0d0
 
-               ! Some variable needed for the EDCs
-               ! reallocation fluxes for the residues
-               harvest_residue_to_litter(n)  = labile_residue+foliar_residue+roots_residue
-               harvest_loss_litter(n)        = 0d0
-               harvest_residue_to_litwood(n) = wood_residue
-               harvest_loss_litwood(n)       = 0d0
-               harvest_residue_to_som(n)     = 0d0
-               harvest_loss_som(n)           = soil_loss_with_roots
-               ! Convert all to rates to be consistent with the FLUXES in EDCs
-               harvest_residue_to_litter(n)  = harvest_residue_to_litter(n) * deltat_1(n)
-               harvest_loss_litter(n)        = harvest_loss_litter(n) * deltat_1(n)
-               harvest_residue_to_litwood(n) = harvest_residue_to_litwood(n) * deltat_1(n)
-               harvest_loss_litwood(n)       = harvest_loss_litwood(n) * deltat_1(n)
-               harvest_residue_to_som(n)     = harvest_residue_to_som(n) * deltat_1(n)
-               harvest_loss_som(n)           = harvest_loss_som(n) * deltat_1(n)
-               ! estimate total C extraction
-               ! NOTE: this calculation format is to prevent precision error in calculation
-               FLUXES(n,21) = wood_loss + labile_loss + foliar_loss + roots_loss
-               FLUXES(n,21) = FLUXES(n,21) - (wood_residue + labile_residue + foliar_residue + roots_residue)
-               ! Convert to daily rate
-               FLUXES(n,21) = FLUXES(n,21) * deltat_1(n)
+               ! Create combined totals for residues to dead organic matter pools
+               harvest_residue_to_litter(n)     = labile_residue+foliar_residue+roots_residue
+               harvest_residue_to_woodlitter(n) = wood_residue
+               harvest_residue_to_som(n)        = 0d0
+               ! Determine extracted C from dead organic matter pools
+               ! In most cases these will be zeros, but allows for pre-planting experiments
+               ! where surface litter pools are removed or mechanical extraction from soil occurs.
+               harvest_extracted_woodlitter(n)  = 0d0
+               harvest_extracted_litter(n)      = 0d0
+               harvest_extracted_som(n)         = soil_loss_with_roots
+               ! Convert harvest related extractions to daily rate for output
+               harvest_extracted_labile(n)     = labile_loss * deltat_1(n)
+               harvest_extracted_foliar(n)     = foliar_loss * deltat_1(n)
+               harvest_extracted_roots(n)      = roots_loss * deltat_1(n)
+               harvest_extracted_wood(n)       = wood_loss * deltat_1(n)
+               harvest_extracted_litter(n)     = harvest_extracted_litter(n) * deltat_1(n)
+               harvest_extracted_woodlitter(n) = harvest_extracted_woodlitter(n) * deltat_1(n)
+               harvest_extracted_som(n)        = harvest_extracted_som(n) * deltat_1(n)
+               ! Convert harvest related residue generations to daily rate for output
+               harvest_residue_labile(n) = labile_residue * deltat_1(n)
+               harvest_residue_foliar(n) = foliar_residue * deltat_1(n)
+               harvest_residue_roots(n)  = roots_residue * deltat_1(n)
+               harvest_residue_wood(n)   = wood_residue * deltat_1(n)
+               ! Convert the combined residue to dead organic matter pools
+               harvest_residue_to_litter(n)     = harvest_residue_to_litter(n) * deltat_1(n)
+               harvest_residue_to_woodlitter(n) = harvest_residue_to_woodlitter(n) * deltat_1(n)
+               harvest_residue_to_som(n)        = harvest_residue_to_som(n) * deltat_1(n)
 
-           end if ! C_total > vsmall
+               ! Total C extraction, this includes any som or litter clearing
+               FLUXES(n,21) = harvest_extracted_labile(n) &
+                            + harvest_extracted_foliar(n) &
+                            + harvest_extracted_roots(n) &
+                            + harvest_extracted_wood(n) &
+                            + harvest_extracted_litter(n) &
+                            + harvest_extracted_woodlitter(n) &
+                            + harvest_extracted_som(n)
+
+           end if ! C_total > 0d0
 
            ! Total carbon loss from the system
            C_total = (labile_residue+foliar_residue+roots_residue+wood_residue) &

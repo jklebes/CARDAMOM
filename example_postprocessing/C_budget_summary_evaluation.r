@@ -97,7 +97,7 @@ fudgeit <- function(){
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_isimip3a_lca_gpp/infofile.RData")
 load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_gpp_fire/infofile.RData")
 load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_GSI_BUCKET_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_GSI_BUCKET_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Trendyv9_historical/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_AGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_actualCI_agb/infofile.RData")
@@ -1432,6 +1432,451 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
           if (length(filter) > 0) {
               if (create_plot) {
                   plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("NP",P[wood]," (0-1)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+     
+     ## MRT foliage (years)
+
+     # Set to local variables
+     tmp = as.vector(grid_parameters$MTT_foliar_years[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("MR",T[foliar]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+
+     ## MRT fine root (years)
+
+     # Set to local variables
+     tmp = as.vector(grid_parameters$MTT_root_years[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("MR",T[root]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+     
+     ## MRT wood (years)
+
+     # Set to local variables
+     tmp = as.vector(grid_parameters$MTT_wood_years[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("MR",T[wood]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+     
+     ## MRT DeadOrg (litter + CWD; if applicable)
+
+     # Set to local variables
+     tmp = as.vector(grid_parameters$MTT_DeadOrg_years[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("MR",T[DeadOrg]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+     
+     ## MRT soil
+
+     # Set to local variables
+     tmp = as.vector(grid_parameters$MTT_som_years[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("MR",T[som]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+     
+     ## Leaf Carbon per unit leaf Area (gC/m2)
+
+     # Set to local variables
+     tmp = as.vector(grid_parameters$parameters[,,17,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("LCA (gC",m^-2,")",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+
+     ## Canopy Photosynthetic Efficiency (gC/m2/day)
+
+     # Set to local variables
+     tmp = as.vector(grid_parameters$parameters[,,11,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE) # must do this before plotting to get the correct ymax
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("Ceff (gC",m^-2,d^-1,")",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+dev.off()
+
+
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_trait_PDFs_by_cluster_alt.png",sep=""), width = 3000, height = 1800, res = 300)
+par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
+
+     ## CUE
+
+     # Set to local variables
+     tmp = 1-as.vector(grid_output$mean_rauto_gCm2day[,,mid_quant] / grid_output$mean_gpp_gCm2day[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("CUE (0-1)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+
+     ## NPP (gCm2day) to foliage
+
+     # Set to local variables
+     tmp = as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("NP",P[foliar]," (gC",m^-2,d^-1,")",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+
+     ## NPP fraction to fine roots
+
+     # Set to local variables
+     tmp = as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("NP",P[root]," (gC",m^-2,d^-1,")",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+     
+     ## NPP fraction to wood
+
+     # Set to local variables
+     tmp = as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_parameters$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_parameters$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("NP",P[wood]," (gC",m^-2,d^-1,")",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
                   create_plot = FALSE
               } else {
                   lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 

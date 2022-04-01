@@ -325,7 +325,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     #GPP_unc[GPP_unc >= 0] = sqrt(GPP_unc[GPP_unc >= 0]**2 + 2**2)
     # Assumed uncertainty structure as agreed with Anthony Bloom,
     # NOTE minimum bound also applied
-    GPP_unc[GPP_unc >= 0] = pmax(0.5,sqrt(GPP_unc[GPP_unc >= 0]**2 + (0.1*mean(GPP[GPP >= 0]))**2))
+    GPP_unc[GPP_unc >= 0] = pmax(1.0,sqrt(GPP_unc[GPP_unc >= 0]**2 + (0.1*mean(GPP[GPP >= 0]))**2))
 
     ###
     ## Get some fire C emission information (time series; gC/m2/day)

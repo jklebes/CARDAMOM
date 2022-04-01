@@ -561,8 +561,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                      ,roots_frac_res         &
                                      ,rootcr_frac_res        &
                                      ,stem_frac_res          &
-                                     ,roots_frac_removal   &
-                                     ,rootcr_frac_removal  &
+                                     ,roots_frac_removal     &
+                                     ,rootcr_frac_removal    &
                                      ,Crootcr_part           &
                                      ,soil_loss_frac
 
@@ -775,8 +775,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! removal which is imposed directly on these pools. These fractions vary
         ! the assumption that the fine and coarse roots are mechanically removed.
         ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(1)  = 0d0
-        rootcr_frac_removal(1) = 0d0
+        roots_frac_removal(2)  = 0d0
+        rootcr_frac_removal(2) = 0d0
         ! harvest residue (fraction); 1 = all remains, 0 = all removed
         foliage_frac_res(2) = 1d0
         roots_frac_res(2)   = 1d0
@@ -796,8 +796,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! removal which is imposed directly on these pools. These fractions vary
         ! the assumption that the fine and coarse roots are mechanically removed.
         ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(1)  = 0d0
-        rootcr_frac_removal(1) = 0d0
+        roots_frac_removal(3)  = 0d0
+        rootcr_frac_removal(3) = 0d0
         ! harvest residue (fraction); 1 = all remains, 0 = all removed
         foliage_frac_res(3) = 0.5d0
         roots_frac_res(3)   = 1d0
@@ -817,8 +817,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! removal which is imposed directly on these pools. These fractions vary
         ! the assumption that the fine and coarse roots are mechanically removed.
         ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(1)  = 1d0
-        rootcr_frac_removal(1) = 1d0
+        roots_frac_removal(4)  = 1d0
+        rootcr_frac_removal(4) = 1d0
         ! harvest residue (fraction); 1 = all remains, 0 = all removed
         foliage_frac_res(4) = 0.5d0
         roots_frac_res(4)   = 1d0
@@ -838,8 +838,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! removal which is imposed directly on these pools. These fractions vary
         ! the assumption that the fine and coarse roots are mechanically removed.
         ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(1)  = 0d0
-        rootcr_frac_removal(1) = 0d0
+        roots_frac_removal(5)  = 0d0
+        rootcr_frac_removal(5) = 0d0
         ! harvest residue (fraction); 1 = all remains, 0 = all removed
         foliage_frac_res(5) = 0.1d0
         roots_frac_res(5)   = 0d0
@@ -898,32 +898,53 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     if (.not.allocated(deltat_1)) then
         ! allocate variables dimension which are fixed per site only the once
-        allocate(harvest_residue_to_litter(nodays),harvest_residue_to_som(nodays),      &
-                 harvest_residue_to_woodlitter(nodays),                                 &
+        allocate(harvest_residue_to_litter(nodays),    &
+                 harvest_residue_to_som(nodays),       &
+                 harvest_residue_to_woodlitter(nodays),&
                  harvest_residue_labile(nodays),       &
-                 harvest_residue_foliar(nodays),harvest_residue_roots(nodays),          &
-                 harvest_residue_wood(nodays),                                          &
-                 harvest_extracted_litter(nodays),harvest_extracted_som(nodays),        &
-                 harvest_extracted_woodlitter(nodays),harvest_extracted_labile(nodays), &
-                 harvest_extracted_foliar(nodays),harvest_extracted_roots(nodays),      &
-                 harvest_extracted_wood(nodays),                                        &
-                 fire_emiss_labile(nodays),fire_emiss_foliar(nodays),                   &
-                 fire_emiss_roots(nodays),fire_emiss_wood(nodays),                      &
-                 fire_emiss_litter(nodays),fire_emiss_woodlitter(nodays),                  &
-                 fire_emiss_som(nodays),                                                &
-                 fire_litter_labile(nodays),fire_litter_foliar(nodays),                 &
-                 fire_litter_roots(nodays),fire_litter_wood(nodays),                    &
-                 fire_litter_litter(nodays),fire_litter_woodlitter(nodays),                &
-                 fire_litter_som(nodays),fire_residue_to_litter(nodays),                &
-                 fire_residue_to_woodlitter(nodays),fire_residue_to_som(nodays),           &
-                 Cwood_labile_release_coef(nodays),Croot_labile_release_coef(nodays),   &
-                 deltat_1(nodays),wSWP_time(nodays),rSWP_time(nodays),                  &
-                 gs_demand_supply_ratio(nodays),gs_total_canopy(nodays),                &
-                 gb_total_canopy(nodays),canopy_par_MJday_time(nodays),                 &
-                 daylength_hours(nodays),daylength_seconds(nodays),                     &
-                 daylength_seconds_1(nodays),                                           &
-                 airt_zero_fraction_time(nodays),meant_time(nodays),                    &
-                 rainfall_time(nodays),Rg_from_labile(nodays),cica_time(nodays),        &
+                 harvest_residue_foliar(nodays),       &
+                 harvest_residue_roots(nodays),        &
+                 harvest_residue_wood(nodays),         &
+                 harvest_extracted_litter(nodays),     &
+                 harvest_extracted_som(nodays),        &
+                 harvest_extracted_woodlitter(nodays), &
+                 harvest_extracted_labile(nodays),     &
+                 harvest_extracted_foliar(nodays),     &
+                 harvest_extracted_roots(nodays),      &
+                 harvest_extracted_wood(nodays),       &
+                 fire_emiss_labile(nodays),            &
+                 fire_emiss_foliar(nodays),            &
+                 fire_emiss_roots(nodays),             &
+                 fire_emiss_wood(nodays),              &
+                 fire_emiss_litter(nodays),            &
+                 fire_emiss_woodlitter(nodays),        &
+                 fire_emiss_som(nodays),               &
+                 fire_litter_labile(nodays),           &
+                 fire_litter_foliar(nodays),           &
+                 fire_litter_roots(nodays),            &
+                 fire_litter_wood(nodays),             &
+                 fire_litter_litter(nodays),           &
+                 fire_litter_woodlitter(nodays),       &
+                 fire_litter_som(nodays),              &
+                 fire_residue_to_litter(nodays),       &
+                 fire_residue_to_woodlitter(nodays),   &
+                 fire_residue_to_som(nodays),          &
+                 Cwood_labile_release_coef(nodays),    &
+                 Croot_labile_release_coef(nodays),    &
+                 deltat_1(nodays),wSWP_time(nodays),   &
+                 rSWP_time(nodays),                    &
+                 gs_demand_supply_ratio(nodays),       &
+                 gs_total_canopy(nodays),              &
+                 gb_total_canopy(nodays),              &
+                 canopy_par_MJday_time(nodays),        &
+                 daylength_hours(nodays),              &
+                 daylength_seconds(nodays),            &
+                 daylength_seconds_1(nodays),          &
+                 airt_zero_fraction_time(nodays),      &
+                 meant_time(nodays),                   &
+                 rainfall_time(nodays),                &
+                 Rg_from_labile(nodays),               &
+                 cica_time(nodays),                    &
                  root_depth_time(nodays))
 
         !
@@ -1448,33 +1469,24 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                ! mass balance check
                where (POOLS(n+1,1:7) < 0d0) POOLS(n+1,1:7) = 0d0
 
-               ! Create combined totals for residues to dead organic matter pools
-               harvest_residue_to_litter(n)     = labile_residue+foliar_residue+roots_residue
-               harvest_residue_to_woodlitter(n) = wood_residue
-               harvest_residue_to_som(n)        = 0d0
-               ! Determine extracted C from dead organic matter pools
-               ! In most cases these will be zeros, but allows for pre-planting experiments
-               ! where surface litter pools are removed or mechanical extraction from soil occurs.
-               harvest_extracted_woodlitter(n)  = 0d0
-               harvest_extracted_litter(n)      = 0d0
-               harvest_extracted_som(n)         = soil_loss_with_roots
-               ! Convert harvest related extractions to daily rate for output
-               harvest_extracted_labile(n)     = labile_loss * deltat_1(n)
-               harvest_extracted_foliar(n)     = foliar_loss * deltat_1(n)
-               harvest_extracted_roots(n)      = roots_loss * deltat_1(n)
-               harvest_extracted_wood(n)       = wood_loss * deltat_1(n)
-               harvest_extracted_litter(n)     = harvest_extracted_litter(n) * deltat_1(n)
-               harvest_extracted_woodlitter(n) = harvest_extracted_woodlitter(n) * deltat_1(n)
-               harvest_extracted_som(n)        = harvest_extracted_som(n) * deltat_1(n)
+               ! Convert total losses into extracted C by accounting for the residues.
+               ! Conver these totals into to daily rate for output
+               harvest_extracted_labile(n)     = (labile_loss-labile_residue) * deltat_1(n)
+               harvest_extracted_foliar(n)     = (foliar_loss-foliar_residue) * deltat_1(n)
+               harvest_extracted_roots(n)      = (roots_loss-roots_residue) * deltat_1(n)
+               harvest_extracted_wood(n)       = (wood_loss-wood_residue) * deltat_1(n)
+               harvest_extracted_litter(n)     = 0d0
+               harvest_extracted_woodlitter(n) = 0d0
+               harvest_extracted_som(n)        = soil_loss_with_roots * deltat_1(n)
                ! Convert harvest related residue generations to daily rate for output
                harvest_residue_labile(n) = labile_residue * deltat_1(n)
                harvest_residue_foliar(n) = foliar_residue * deltat_1(n)
                harvest_residue_roots(n)  = roots_residue * deltat_1(n)
                harvest_residue_wood(n)   = wood_residue * deltat_1(n)
                ! Convert the combined residue to dead organic matter pools
-               harvest_residue_to_litter(n)     = harvest_residue_to_litter(n) * deltat_1(n)
-               harvest_residue_to_woodlitter(n) = harvest_residue_to_woodlitter(n) * deltat_1(n)
-               harvest_residue_to_som(n)        = harvest_residue_to_som(n) * deltat_1(n)
+               harvest_residue_to_litter(n)     = (labile_residue+foliar_residue+roots_residue) * deltat_1(n)
+               harvest_residue_to_woodlitter(n) = wood_residue * deltat_1(n)
+               harvest_residue_to_som(n)        = 0d0
 
                ! Total C extraction, this includes any som or litter clearing
                FLUXES(n,21) = harvest_extracted_labile(n) &
@@ -1486,10 +1498,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                             + harvest_extracted_som(n)
 
            end if ! C_total > 0d0
-
-           ! Total carbon loss from the system
-           C_total = (labile_residue+foliar_residue+roots_residue+wood_residue) &
-                   - (labile_loss+foliar_loss+roots_loss+wood_loss+soil_loss_with_roots)
 
            ! If total clearance occured then we need to ensure some minimum
            ! values and reforestation is assumed one year forward
