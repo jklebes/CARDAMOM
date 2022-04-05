@@ -769,9 +769,10 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # Determine the NPP fraction of expressed NPP
       # i.e. actual growth not GPP-Ra
       NPP_fraction = apply(states_all$labile_to_foliage_gCm2day +
+                           states_all$alloc_foliage_gCm2day + 
                            states_all$alloc_roots_gCm2day +
                            states_all$alloc_wood_gCm2day,1,mean)
-      NPP_fraction = cbind(apply(states_all$labile_to_foliage_gCm2day,1,mean),
+      NPP_fraction = cbind(apply(states_all$labile_to_foliage_gCm2day+states_all$alloc_foliage_gCm2day,1,mean),
                            apply(states_all$alloc_roots_gCm2day,1,mean),
                            apply(states_all$alloc_wood_gCm2day,1,mean)) / NPP_fraction
       states_all$NPP_foliage_fraction = NPP_fraction[,1]

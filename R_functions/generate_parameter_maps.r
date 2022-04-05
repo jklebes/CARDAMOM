@@ -32,7 +32,8 @@ generate_parameter_maps<-function(PROJECT) {
    median_loc = 4 ; upper_loc = 7 ; lower_loc = 1 # 0.50, 0.025, 0.975 assumed
 
    # Loaded the grid aggregated dataset into memory
-   load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
+   infile = paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep="")
+   load(infile)
    # Ensure that any Inf values are removed to NA
    # This is a hack implemented during a development phase and should be removed
    # or commented out under general operation
@@ -170,6 +171,9 @@ generate_parameter_maps<-function(PROJECT) {
           grid_output$clusters=array(grid_output$clusters,dim=c(dim(par_array_median_normalised)[1:2]))
           # Tidy away the overall analysis in faviour of what we have extracted
           grid_output = within(grid_output, rm(cluster_analysis))
+
+          # Save the now updated cluster analysis into the grid_output
+          save(grid_output, file = infile)
 
           # Now plot both possible cluster maps
           figname = paste("Cluster_map_of_median_parameters_",gsub("%","_",PROJECT$name),".jpeg",sep="")

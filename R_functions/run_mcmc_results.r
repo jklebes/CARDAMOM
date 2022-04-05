@@ -155,21 +155,25 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   states_all$rhet_gCm2day = states_all$rhet_gCm2day + states_all$rhet_woodlitter_gCm2day
               }
 
-              # Combine to make ecosystem rspiration
+              # Combine autotrophic and heterotrophic respiration into ecosystem respiration
               states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
-              # Combine to make net ecosystem exchange
+              # Calculate the net ecosystem exchange of CO2
               states_all$nee_gCm2day = states_all$reco_gCm2day - states_all$gpp_gCm2day
               # Calculate net primary productivity
               states_all$npp_gCm2day = states_all$gpp_gCm2day - states_all$rauto_gCm2day
               # Begin calculation of net biome exchange and net biome productivity
-              states_all$nbe_gCm2day = states_all$nee_gCm2day
-              states_all$nbp_gCm2day = -states_all$nee_gCm2day
-              # If the relevant variables exist then calculate correct values
+              states_all$nbe_gCm2day = states_all$nee_gCm2day  # negative = sink
+              states_all$nbp_gCm2day = -states_all$nee_gCm2day # positive = sink
+              # If fire exists then update the NBE and NBP accordingly
               if (exists(x = "fire_gCm2day", where = states_all)) {
-                  states_all$nbe_gCm2day = states_all$nee_gCm2day + states_all$fire_gCm2day
+                  states_all$nbe_gCm2day = states_all$nbe_gCm2day + states_all$fire_gCm2day
+                  states_all$nbp_gCm2day = states_all$nbp_gCm2day - states_all$fire_gCm2day
               }
-              if (exists(x = "fire_gCm2day", where = states_all)) {
-                  states_all$nbp_gCm2day = -states_all$nbe_gCm2day - states_all$harvest_gCm2day
+              # If a harvest flux exists update the NBP. NOTE: that this harvest flux
+              # specifically accouts for C removed, there may be mortality due to harvest
+              # but remains in system as residues.
+              if (exists(x = "harvest_gCm2day", where = states_all)) {
+                  states_all$nbp_gCm2day = states_all$nbp_gCm2day - states_all$harvest_gCm2day
               }
 
               ###
@@ -453,6 +457,22 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
               # from the ensembles but difficult if not determined here and now before aggregation
               ###
 
+              # The total allocation of C to the foliage pool can, depending on model,
+              # be the combined total of direct allocation and that via a labile pool.
+              # For many comparison we will need their combined total.
+              if (exists(x = "alloc_foliage_gCm2day", where = states_all) &
+                  exists(x = "labile_to_foliage_gCm2day", where = states_all)) {
+                  states_all$combined_alloc_foliage_gCm2day = states_all$alloc_foliage_gCm2day + states_all$labile_to_foliage_gCm2day
+              } else {
+                  if (exists(x = "labile_to_foliage_gCm2day", where = states_all)) {
+                      states_all$combined_alloc_foliage_gCm2day = states_all$labile_to_foliage_gCm2day
+                  } else if (exists(x = "alloc_foliage_gCm2day", where = states_all)) {
+                      states_all$combined_alloc_foliage_gCm2day = states_all$alloc_foliage_gCm2day
+                  } else {
+                      stop("Error, CARDAMOM cannnot determine where C allocation foliage has come from.")
+                  }
+              }
+
               # Determine the total biomass within the system
               # All models have a foliage pool
               states_all$biomass_gCm2 = states_all$foliage_gCm2
@@ -712,7 +732,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
               site_output$dlai_m2m2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
 
               # Then do model specific pool combinations
-              # Include the pool, its net change, the allocation if from GPP / NPP direct
+              # Include the pool, its net change, the allocation of C from GPP / NPP direct
               # and its output flow(s).
 
               # Biomass related pool, change and output variables
@@ -827,6 +847,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
 
               # Foliage related pool, change, input and output variables
               if (exists(x = "foliage_gCm2", where = states_all)) {
+                  # A combined total of C to foliage must always exist
+                  site_output$combined_alloc_foliage_gCm2day = apply(states_all$combined_alloc_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+                  site_output$mean_combined_alloc_foliage_gCm2day = quantile(apply(states_all$foliage_gCm2,1,mean, na.rm = na_flag), prob=num_quantiles)
                   # Assign pool to site_output
                   site_output$foliage_gCm2 = apply(states_all$foliage_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_foliage_gCm2 = quantile(apply(states_all$foliage_gCm2,1,mean, na.rm = na_flag), prob=num_quantiles)
@@ -1591,11 +1614,13 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$final_dCfoliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_outflux_foliage_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_foliage_to_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_combined_alloc_foliage_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               # Time varying pixel specific with quantiles
               grid_output$foliage_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$dCfoliage_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$outflux_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$foliage_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$combined_alloc_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Annual information
               grid_output$MTT_annual_foliage_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               # Fractional partitioning of tunover to different drivers - should they exist
@@ -1863,30 +1888,30 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           }
 
           # Create overlap statistics variables - may not always get filled in the end
-          if (exists(x = "gpp_assim_data_overlap_fraction", where = site_output)) {
+#          if (exists(x = "gpp_assim_data_overlap_fraction", where = site_output)) {
               grid_output$gpp_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-          }
-          if (exists(x = "lai_assim_data_overlap_fraction", where = site_output)) {
+#          }
+#          if (exists(x = "lai_assim_data_overlap_fraction", where = site_output)) {
               grid_output$lai_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-          }
-          if (exists(x = "nee_assim_data_overlap_fraction", where = site_output)) {
+#          }
+#          if (exists(x = "nee_assim_data_overlap_fraction", where = site_output)) {
               grid_output$nee_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-          }
-          if (exists(x = "wood_assim_data_overlap_fraction", where = site_output)) {
+#          }
+#          if (exists(x = "wood_assim_data_overlap_fraction", where = site_output)) {
               grid_output$wood_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-          }
-          if (exists(x = "soil_assim_data_overlap_fraction", where = site_output)) {
+#          }
+#          if (exists(x = "soil_assim_data_overlap_fraction", where = site_output)) {
               grid_output$soil_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-          }
-          if (exists(x = "et_assim_data_overlap_fraction", where = site_output)) {
+#          }
+#          if (exists(x = "et_assim_data_overlap_fraction", where = site_output)) {
               grid_output$et_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-          }
-          if (exists(x = "nbe_assim_data_overlap_fraction", where = site_output)) {
+#          }
+#          if (exists(x = "nbe_assim_data_overlap_fraction", where = site_output)) {
               grid_output$nbe_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-          }
-          if (exists(x = "fire_assim_data_overlap_fraction", where = site_output)) {
+#          }
+#          if (exists(x = "fire_assim_data_overlap_fraction", where = site_output)) {
               grid_output$fire_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-          }
+#          }
 
           # Time and uncertainty invarient information,
           # this is the correlation between ensemble members for parameter and C-cycle flux variables
@@ -2098,11 +2123,13 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$final_dCfoliage_gCm2[slot_i,slot_j,] = site_output$dCfoliage_gCm2[,grid_output$time_dim]
                    grid_output$mean_outflux_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_outflux_foliage_gCm2day
                    grid_output$mean_foliage_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_foliage_to_litter_gCm2day
+                   grid_output$mean_combined_alloc_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_combined_alloc_foliage_gCm2day
                    # Time varying pixel specific
                    grid_output$foliage_gCm2[n,,] = site_output$foliage_gCm2
                    grid_output$dCfoliage_gCm2[n,,] = site_output$dCfoliage_gCm2
                    grid_output$outflux_foliage_gCm2day[n,,] = site_output$outflux_foliage_gCm2day
                    grid_output$foliage_to_litter_gCm2day[n,,] = site_output$foliage_to_litter_gCm2day
+                   grid_output$combined_alloc_foliage_gCm2day[n,,] = site_output$combined_alloc_foliage_gCm2day
                    # Annual information
                    grid_output$MTT_annual_foliage_years[n,,] = site_output$MTT_annual_foliage_years
                    # Fractional partitioning of tunover to different drivers - should they exist
@@ -2223,8 +2250,8 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$mean_rhet_litter_gCm2day[slot_i,slot_j,] = site_output$mean_rhet_litter_gCm2day
                    # Pixel specific time varying
                    grid_output$litter_gCm2[n,,] = site_output$litter_gCm2
-                   grid_output$dClitter_gCm2[n,,] = site_output$litter_gCm2
-                   grid_output$outflux_litter_gCm2day[n,,] = site_output$dClitter_gCm2
+                   grid_output$dClitter_gCm2[n,,] = site_output$dClitter_gCm2
+                   grid_output$outflux_litter_gCm2day[n,,] = site_output$outflux_litter_gCm2day
                    grid_output$litter_to_som_gCm2day[n,,] = site_output$litter_to_som_gCm2day
                    grid_output$rhet_litter_gCm2day[n,,] = site_output$rhet_litter_gCm2day
                    # Annual information
