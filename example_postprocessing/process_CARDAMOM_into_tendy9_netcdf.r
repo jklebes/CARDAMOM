@@ -13,6 +13,7 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 # set input and output directories
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_gpp_fire/"
 input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca/"
+input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_CsomPriorNCSCD/"
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Trendyv9_historical/"
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_gpp_fire_nbe/"
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Mexico_1deg_C7_agb_lca_gpp_fire_nbe/"
@@ -380,77 +381,77 @@ new_file <- nc_open( output_name, write=TRUE )
 ###
 
 # LAI
-if(exists(LAI)) {
+if(exists("LAI")) {
    var_new  = ncvar_def("lai_ensemble", unit="m2.m-2", longname = "Leaf Area Index - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  LAI)
 }
 
 # Labile
-if(exists(LAB)) {
+if(exists("LAB")) {
    var_new  = ncvar_def("cLabile_ensemble", unit="kg.m-2", longname = "Carbon in labile - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	
    ncvar_put(new_file, var_new,  LAB)
 }
 
 # Foliar
-if(exists(FOL)) {
+if(exists("FOL")) {
    var_new = ncvar_def("cLeaf_ensemble", unit="kg.m-2", longname = "Carbon in leaves - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	
    ncvar_put(new_file, var_new,  FOL)
 }
 
 # Fine root
-if(exists(ROOT)) {
+if(exists("ROOT")) {
    var_new = ncvar_def("cFineRoot_ensemble", unit="kg.m-2", longname = "Carbon in fine root - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new,  ROOT)
 }
 
 # Wood
-if(exists(LIT)) {
+if(exists("WOOD")) {
    var_new = ncvar_def("cWoodTotal_ensemble", unit="kg.m-2", longname = "Carbon in (AGB + BGB) wood - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new,  WOOD)
 }
 
 # Foliar + fine root litter
-if(exists(LIT)) {
+if(exists("LIT")) {
    var_new = ncvar_def("cLeafFineRootLitter_ensemble", unit="kg.m-2", longname = "Carbon in (Foliar + fine root) litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	
    ncvar_put(new_file, var_new,  LIT)
 }
 
 # Wood litter
-if(exists(WLIT)) {
+if(exists("WLIT")) {
    var_new = ncvar_def("cWoodLitter_ensemble", unit="kg.m-2", longname = "Carbon in (wood) litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	
    ncvar_put(new_file, var_new,  WLIT)
 }
 
 # Soil organic matter
-if(exists(SOIL)) {
+if(exists("SOIL")) {
    var_new = ncvar_def("cSOM_ensemble", unit="kg.m-2", longname = "Carbon in soil organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	
    ncvar_put(new_file, var_new,  SOIL)
 }
 
 # Dead organic matter
-if(exists(DOM)) {
+if(exists("DOM")) {
    var_new = ncvar_def("cDOM_ensemble", unit="kg.m-2", longname = "Carbon in leaf, fine root, wood litter, and soil organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	
    ncvar_put(new_file, var_new,  DOM)
 }
 
 # Biomass
-if(exists(BIO)) {
+if(exists("BIO")) {
    var_new = ncvar_def("cVeg_ensemble", unit="kg.m-2", longname = "Carbon in live biomass - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, BIO)
 }
 
 # TotalC
-if(exists(TOT)) {
+if(exists("TOT")) {
    var_new = ncvar_def("cTotal_ensemble", unit="kg.m-2", longname = "Carbon in live and dead organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	
    ncvar_put(new_file, var_new, TOT)
@@ -490,350 +491,350 @@ new_file <- nc_open( output_name, write=TRUE )
 ###
 
 # GPP
-if(exists(GPP)) {
+if(exists("GPP")) {
    var_new  = ncvar_def("gpp_ensemble", unit="kg.m-2.s-1", longname = "Gross Primary Productivity - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, GPP)
 }
 
 # Autotrophic respiration
-if(exists(RAU)) {
+if(exists("RAU")) {
    var_new  = ncvar_def("ra_ensemble", unit="kg.m-2.s-1", longname = "Autotrophic (Plant) Respiration - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, RAU)
 }
 
 # Heterotrophic respiration
-if(exists(RHE)) {
+if(exists("RHE")) {
    var_new  = ncvar_def("rh_ensemble", unit="kg.m-2.s-1", longname = "Heterotrophic Respiration - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, RHE)
 }
 
 # Ecosystem respiration
-if(exists(RECO)) {
+if(exists("RECO")) {
    var_new  = ncvar_def("reco_ensemble", unit="kg.m-2.s-1", longname = "Ecosystem (Ra + Rh) Respiration - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, RECO)
 }
 
 # Net Primary Productivity
-if(exists(NPP)) {
+if(exists("NPP")) {
    var_new  = ncvar_def("npp_ensemble", unit="kg.m-2.s-1", longname = "Net Primary Productivity - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, NPP)
 }
 
 # Net Ecosystem Exchange
-if(exists(NEE)) {
+if(exists("NEE")) {
    var_new  = ncvar_def("nee_ensemble", unit="kg.m-2.s-1", longname = "Net Ecosystem Exchange - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, NEE)
 }
 
 # Net Biome Exchange
-if(exists(NBE)) {
+if(exists("NBE")) {
    var_new  = ncvar_def("nbe_ensemble", unit="kg.m-2.s-1", longname = "Net Biome Exchange (NEE + Fire) - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, NBE)
 }
 
 # Net Biome Productivity
-if(exists(NBP)) {
+if(exists("NBP")) {
    var_new  = ncvar_def("nbp_ensemble", unit="kg.m-2.s-1", longname = "Net Biome Productivity (-NEE - Fire - fLuc) - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, NBP)
 }
 
 # Fire emissions
-if(exists(FIR)) {
+if(exists("FIR")) {
    var_new  = ncvar_def("fFire_ensemble", unit="kg.m-2.s-1", longname = "Fire - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIR)
 }
 
 # Flux from forest loss
-if(exists(HARV)) {
+if(exists("HARV")) {
    var_new = ncvar_def("fLuc_ensemble", unit="kg.m-2.s-1", longname = "Forest harvest - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, HARV)
 }
 
 # CiCa
-if(exists(CiCa)) {
+if(exists("CiCa")) {
    var_new = ncvar_def("CiCa_ensemble", unit="1", longname = "Internal:Ambiant CO2 ratio - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, CiCa)
 }
 
 # Total outflux from labile
-if(exists(outflux_labile)) {
+if(exists("outflux_labile")) {
    var_new  = ncvar_def("outflux_cLabile_ensemble", unit="kg.m-2.s-1", longname = "Total C output flux from labile - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, outflux_labile)
 }
 
 # Total outflux from foliage
-if(exists(outflux_foliage)) {
+if(exists("outflux_foliage")) {
    var_new  = ncvar_def("outflux_cLeaf_ensemble", unit="kg.m-2.s-1", longname = "Total C output flux from foliage - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, outflux_foliage)
 }
 
 # Total outflux from root
-if(exists(outflux_root)) {
+if(exists("outflux_root")) {
    var_new  = ncvar_def("outflux_cFineRoot_ensemble", unit="kg.m-2.s-1", longname = "Total C output flux from fine root - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, outflux_root)
 }
 
 # Total outflux from wood
-if(exists(outflux_wood)) {
+if(exists("outflux_wood")) {
    var_new  = ncvar_def("outflux_cWoodTotal_ensemble", unit="kg.m-2.s-1", longname = "Total C output flux from wood - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, outflux_wood)
 }
 
 # Total outflux from litter
-if(exists(outflux_litter)) {
+if(exists("outflux_litter")) {
    var_new  = ncvar_def("outflux_cLeafFineRootlitter_ensemble", unit="kg.m-2.s-1", longname = "Total C output flux from foliar and fine root litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, outflux_litter)
 }
 
 # Total outflux from wood litter
-if(exists(outflux_woodlitter)) {
+if(exists("outflux_woodlitter")) {
    var_new  = ncvar_def("outflux_cWoodlitter_ensemble", unit="kg.m-2.s-1", longname = "Total C output flux from wood litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, outflux_woodlitter)
 }
 
 # Total outflux from som
-if(exists(outflux_som)) {
+if(exists("outflux_som")) {
    var_new  = ncvar_def("outflux_cSOM_ensemble", unit="kg.m-2.s-1", longname = "Total C output flux from soil organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, outflux_som)
 }
 
 # Biomass
-if(exists(outflux_bio)) {
+if(exists("outflux_bio")) {
    var_new  = ncvar_def("outflux_cVeg_ensemble", unit="kg.m-2.s-1", longname = "Total C output flux from vegetation - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, outflux_bio)
 }
 
 # Dead Organic Matter
-if(exists(outflux_dom)) {
+if(exists("outflux_dom")) {
    var_new  = ncvar_def("outflux_cDOM_ensemble", unit="kg.m-2.s-1", longname = "Total C output flux from dead organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, outflux_dom)
 }
 
 # Fire mortality outflux from labile
-if(exists(FIRElitter_labile)) {
+if(exists("FIRElitter_labile")) {
    var_new  = ncvar_def("FIRElitter_cLabile_ensemble", unit="kg.m-2.s-1", longname = "Fire mortality C output flux from labile - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIRElitter_labile)
 }
 
 # Fire mortality outflux from foliage
-if(exists(FIRElitter_foliage)) {
+if(exists("FIRElitter_foliage")) {
    var_new  = ncvar_def("FIRElitter_cLeaf_ensemble", unit="kg.m-2.s-1", longname = "Fire mortality C output flux from foliage - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIRElitter_foliage)
 }
 
 # Fire mortality outflux from root
-if(exists(FIRElitter_root)) {
+if(exists("FIRElitter_root")) {
    var_new  = ncvar_def("FIRElitter_cFineRoot_ensemble", unit="kg.m-2.s-1", longname = "Fire mortality C output flux from fine root - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIRElitter_root)
 }
 
 # Fire mortality outflux from wood
-if(exists(FIRElitter_wood)) {
+if(exists("FIRElitter_wood")) {
    var_new  = ncvar_def("FIRElitter_cWoodTotal_ensemble", unit="kg.m-2.s-1", longname = "Fire mortality C output flux from wood - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIRElitter_wood)
 }
 
 # Fire mortality outflux from litter
-if(exists(FIRElitter_litter)) {
+if(exists("FIRElitter_litter")) {
    var_new  = ncvar_def("FIRElitter_cLeafFineRootlitter_ensemble", unit="kg.m-2.s-1", longname = "Fire mortality C output flux from foliar and fine root litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIRElitter_litter)
 }
 
 # Fire mortality outflux from litter
-if(exists(FIRElitter_woodlitter)) {
+if(exists("FIRElitter_woodlitter")) {
    var_new  = ncvar_def("FIRElitter_cWoodlitter_ensemble", unit="kg.m-2.s-1", longname = "Fire mortality C output flux from wood litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIRElitter_woodlitter)
 }
 
 # Fire mortality outflux from som
-if(exists(FIRElitter_bio)) {
+if(exists("FIRElitter_bio")) {
    var_new  = ncvar_def("FIRElitter_cVeg_ensemble", unit="kg.m-2.s-1", longname = "Fire mortality C output flux from Vegetation - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIRElitter_bio)
 }
 
 # Fire mortality outflux from labile
-if(exists(FIREemiss_labile)) {
+if(exists("FIREemiss_labile")) {
    var_new  = ncvar_def("FIREemiss_cLabile_ensemble", unit="kg.m-2.s-1", longname = "Fire combusted C output flux from labile - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIREemiss_labile)
 }
 
 # Fire mortality outflux from foliage
-if(exists(FIREemiss_foliage)) {
+if(exists("FIREemiss_foliage")) {
    var_new  = ncvar_def("FIREemiss_cLeaf_ensemble", unit="kg.m-2.s-1", longname = "Fire combusted C output flux from foliage - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIREemiss_foliage)
 }
 
 # Fire mortality outflux from root
-if(exists(FIREemiss_root)) {
+if(exists("FIREemiss_root")) {
    var_new  = ncvar_def("FIREemiss_cFineRoot_ensemble", unit="kg.m-2.s-1", longname = "Fire combusted C output flux from fine root - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIREemiss_root)
 }
 
 # Fire mortality outflux from wood
-if(exists(FIREemiss_wood)) {
+if(exists("FIREemiss_wood")) {
    var_new  = ncvar_def("FIREemiss_cWoodTotal_ensemble", unit="kg.m-2.s-1", longname = "Fire combusted C output flux from wood - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIREemiss_wood)
 }
 
 # Fire mortality outflux from litter
-if(exists(FIREemiss_litterLAI)) {
+if(exists("FIREemiss_litterLAI")) {
    var_new  = ncvar_def("FIREemiss_cLeafFineRootlitter_ensemble", unit="kg.m-2.s-1", longname = "Fire combusted C output flux from foliar and fine root litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIREemiss_litter)
 }
 
 # Fire mortality outflux from wood litter
-if(exists(FIREemiss_woodlitter)) {
+if(exists("FIREemiss_woodlitter")) {
    var_new  = ncvar_def("FIREemiss_cWoodlitter_ensemble", unit="kg.m-2.s-1", longname = "Fire combusted C output flux from wood litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIREemiss_woodlitter)
 }
 
 # Fire mortality outflux from som
-if(exists(FIREemiss_som)) {
+if(exists("FIREemiss_som")) {
    var_new  = ncvar_def("FIREemiss_cSOM_ensemble", unit="kg.m-2.s-1", longname = "Fire combusted C output flux from soil organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIREemiss_som)
 }
 
 # Fire mortality outflux from vegetation
-if(exists(FIREemiss_bio)) {
+if(exists("FIREemiss_bio")) {
    var_new  = ncvar_def("FIREemiss_cVeg_ensemble", unit="kg.m-2.s-1", longname = "Fire combusted C output flux from vegetation - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIREemiss_bio)
 }
 
 # Fire mortality outflux from dom
-if(exists(FIREemiss_dom)) {
+if(exists("FIREemiss_dom")) {
    var_new  = ncvar_def("FIREemiss_cDOM_ensemble", unit="kg.m-2.s-1", longname = "Fire combusted C output flux from dead organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIREemiss_dom)
 }
 
 # Harvest litter outflux from labile
-if(exists(HARVESTlitter_labile)) {
+if(exists("HARVESTlitter_labile")) {
    var_new  = ncvar_def("HARVESTlitter_cLabile_ensemble", unit="kg.m-2.s-1", longname = "Harvest litter C output flux from labile - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, HARVESTlitter_labile)
 }
 
 # Harvest litter outflux from foliage
-if(exists(HARVESTlitter_foliage)) {
+if(exists("HARVESTlitter_foliage")) {
    var_new  = ncvar_def("HARVESTlitter_cLeaf_ensemble", unit="kg.m-2.s-1", longname = "Harvest litter C output flux from foliage - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, HARVESTlitter_foliage)
 }
 
 # Harvest litter outflux from root
-if(exists(HARVESTlitter_root)) {
+if(exists("HARVESTlitter_root")) {
    var_new  = ncvar_def("HARVESTlitter_cFineRoot_ensemble", unit="kg.m-2.s-1", longname = "Harvest litter C output flux from fine root - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, HARVESTlitter_root)
 }
 
 # Harvest litter outflux from wood
-if(exists(HARVESTlitter_wood)) {
+if(exists("HARVESTlitter_wood")) {
    var_new  = ncvar_def("HARVESTlitter_cWoodTotal_ensemble", unit="kg.m-2.s-1", longname = "Harvest litter C output flux from wood - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, HARVESTlitter_wood)
 }
 
 # Harvest litter outflux from vegetation
-if(exists(HARVESTlitter_bio)) {
+if(exists("HARVESTlitter_bio")) {
    var_new  = ncvar_def("HARVESTlitter_cVeg_ensemble", unit="kg.m-2.s-1", longname = "Harvest litter C output flux from Vegetation - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, HARVESTlitter_bio)
 }
 
 # Harvest extracted outflux from labile
-if(exists(HARVESTextracted_labile)) {
+if(exists("HARVESTextracted_labile")) {
    var_new  = ncvar_def("HARVESTextracted_cLabile_ensemble", unit="kg.m-2.s-1", longname = "Harvest extracted C output flux from labile - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, HARVESTextracted_labile)
 }
 
 # Harvest extracted outflux from foliage
-if(exists(HARVESTextracted_foliage)) {
+if(exists("HARVESTextracted_foliage")) {
    var_new  = ncvar_def("HARVESTextracted_cLeaf_ensemble", unit="kg.m-2.s-1", longname = "Harvest extracted C output flux from foliage - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, HARVESTextracted_foliage)
 }
 
 # Harvest extracted outflux from root
-if(exists(HARVESTextracted_root)) {
+if(exists("HARVESTextracted_root")) {
    var_new  = ncvar_def("HARVESTextracted_cFineRoot_ensemble", unit="kg.m-2.s-1", longname = "Harvest extracted C output flux from fine root - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, HARVESTextracted_root)
 }
 
 # Harvest extracted outflux from wood
-if(exists(HARVESTextracted_wood)) {
+if(exists("HARVESTextracted_wood")) {
    var_new  = ncvar_def("HARVESTextracted_cWoodTotal_ensemble", unit="kg.m-2.s-1", longname = "Harvest extracted C output flux from wood - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, HARVESTextracted_wood)
 }
 
 # Harvest extracted outflux from litter
-if(exists(HARVESTextracted_litter)) {
+if(exists("HARVESTextracted_litter")) {
    var_new  = ncvar_def("HARVESTextracted_cLeafFineRootlitter_ensemble", unit="kg.m-2.s-1", longname = "Harvest extracted C output flux from foliar and fine root litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, HARVESTextracted_litter)
 }
 
 # Harvest extracted outflux from wood litter
-if(exists(HARVESTextracted_woodlitter)) {
+if(exists("HARVESTextracted_woodlitter")) {
    var_new  = ncvar_def("HARVESTextracted_cWoodlitter_ensemble", unit="kg.m-2.s-1", longname = "Harvest extracted C output flux from wood litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, HARVESTextracted_woodlitter)
 }
 
 # Harvest extracted outflux from som
-if(exists(HARVESTextracted_som)) {
+if(exists("HARVESTextracted_som")) {
    var_new  = ncvar_def("HARVESTextracted_cSOM_ensemble", unit="kg.m-2.s-1", longname = "Harvest extracted C output flux from soil organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, HARVESTextracted_som)
 }
 
 # Harvest extracted outflux from vegetation
-if(exists(HARVESTextracted_bio)) {
+if(exists("HARVESTextracted_bio")) {
    var_new  = ncvar_def("HARVESTextracted_cVeg_ensemble", unit="kg.m-2.s-1", longname = "Harvest extracted C output flux from vegetation - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, HARVESTextracted_bio)
 }
 
 # Harvest extracted outflux from dom
-if(exists(HARVESTextracted_dom)) {
+if(exists("HARVESTextracted_dom")) {
    var_new  = ncvar_def("HARVESTextracted_cDOM_ensemble", unit="kg.m-2.s-1", longname = "Harvest extracted C output flux from dead organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, HARVESTextracted_dom)
@@ -874,63 +875,63 @@ new_file <- nc_open( output_name, write=TRUE )
               
 ## Mean Residence Times 
 # Labile
-if(exists(labMRT)) {
+if(exists("labMRT")) {
    var_new = ncvar_def("MTT_lab_ensemble", unit="year", longname = "Mean Labile Transit Time - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, labMRT)
 }
 
 # Foliar
-if(exists(folMRT)) {
+if(exists("folMRT")) {
    var_new = ncvar_def("MTT_fol_ensemble", unit="year", longname = "Mean Foliar Transit Time - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, folMRT)
 }
 
 # Fine root
-if(exists(rooMRT)) {
+if(exists("rooMRT")) {
    var_new = ncvar_def("MTT_root_ensemble", unit="year", longname = "Mean fine root Transit Time - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, rooMRT)
 }
 
 # Wood
-if(exists(wooMRT)) {
+if(exists("wooMRT")) {
    var_new = ncvar_def("MTT_wood_ensemble", unit="year", longname = "Mean wood Transit Time - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, wooMRT)
 }
 
 # Fine litter (fol + fine root)
-if(exists(litMRT)) {
+if(exists("litMRT")) {
    var_new = ncvar_def("MTT_lit_ensemble", unit="year", longname = "Mean foliar + fine root litter Transit Time - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, litMRT)
 }
 
 # Wood litter 
-if(exists(wlitMRT)) {
+if(exists("wlitMRT")) {
    var_new = ncvar_def("MTT_wlit_ensemble", unit="year", longname = "Mean wood litter Transit Time - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, wlitMRT)
 }
 
 # Soil
-if(exists(somMRT)) {
+if(exists("somMRT")) {
    var_new = ncvar_def("MTT_som_ensemble", unit="year", longname = "Mean Soil Transit Time - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, somMRT)
 }
 
 # Dead Organic Matter
-if(exists(domMRT)) {
+if(exists("domMRT")) {
    var_new = ncvar_def("MTT_dom_ensemble", unit="year", longname = "Mean Soil + litter Transit Time - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, domMRT)
 }
 
 # Biomass / vegetation
-if(exists(bioMRT)) {
+if(exists("bioMRT")) {
    var_new = ncvar_def("MTT_veg_ensemble", unit="year", longname = "Mean biomass / vegetation Transit Time - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, bioMRT)
@@ -938,21 +939,21 @@ if(exists(bioMRT)) {
 
 ## NPP allocation fractions
 # Foliar
-if(exists(fNPP)) {
+if(exists("fNPP")) {
    var_new = ncvar_def("NPP_fol_ensemble", unit="1", longname = "Fraction of Net Primary Productivity to foliage - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, fNPP)
 }
 
 # Fine root
-if(exists(wNPP)) {
+if(exists("rNPP")) {
    var_new = ncvar_def("NPP_root_ensemble", unit="1", longname = "Fraction of Net Primary Productivity to fine root - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, rNPP)
 }
 
 # Wood
-if(exists(wNPP)) {
+if(exists("wNPP")) {
    var_new = ncvar_def("NPP_wood_ensemble", unit="1", longname = "Fraction of Net Primary Productivity to wood - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, wNPP)
@@ -961,35 +962,35 @@ if(exists(wNPP)) {
 
 ## NPP allocation fluxes
 # Labile
-if(exists(NPP_labile_FLX)) {
+if(exists("NPP_labile_FLX")) {
    var_new= ncvar_def("NPP_labile_flx_ensemble", unit="kg.m-2.s-1", longname = "Net Primary Productivity to labile - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, NPP_labile_FLX)
 }
 
 # Direct allocation to Foliar
-if(exists(NPP_foliage_FLX)) {
+if(exists("NPP_foliage_FLX")) {
    var_new = ncvar_def("NPP_direct_fol_flx_ensemble", unit="kg.m-2.s-1", longname = "Net Primary Productivity direct to foliage - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, NPP_foliage_FLX)
 }
 
 # Combined direct and via labile allocation of NPP to foliage
-if(exists(NPP_combinedfoliage_FLX)) {
+if(exists("NPP_combinedfoliage_FLX")) {
    var_new = ncvar_def("NPP_fol_flx_ensemble", unit="kg.m-2.s-1", longname = "Both direct and via labile Net Primary Productivity to foliage - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, NPP_combinedfoliage_FLX)
 }
 
 # Fine root
-if(exists(NPP_root_FLX)) {
+if(exists("NPP_root_FLX")) {
    var_new= ncvar_def("NPP_root_flx_ensemble", unit="kg.m-2.s-1", longname = "Net Primary Productivity to fine root - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, NPP_root_FLX)
 }
 
 # Wood
-if(exists(NPP_wood_FLX)) {
+if(exists("NPP_wood_FLX")) {
    var_new = ncvar_def("NPP_wood_flx_ensemble", unit="kg.m-2.s-1", longname = "Net Primary Productivity to wood - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, NPP_wood_FLX)
