@@ -772,7 +772,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   }
                   # Estimate the ecosystem mean transit (residence) times as a function of natural and disturbance processes
                   site_output$MTT_annual_biomass_years = apply(site_output$outflux_biomass_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
-                  site_output$MTT_annual_biomass_years = site_output$MTT_annual_biomass_years / apply(states_all$biomass_gCm2,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_biomass_years = apply(states_all$biomass_gCm2,1, rollapply_mean_annual, step = steps_per_year) / (site_output$MTT_annual_biomass_years * 365.25)
                   site_output$MTT_annual_biomass_years = t(site_output$MTT_annual_biomass_years) # rollapply inverts the dimensions from that wanted
                   site_output$MTT_annual_biomass_years = apply(site_output$MTT_annual_biomass_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   # Convert to fractions
@@ -829,7 +829,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_labile_years = apply(site_output$outflux_labile_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
-                  site_output$MTT_annual_labile_years = site_output$MTT_annual_labile_years / apply(states_all$labile_gCm2,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_labile_years = apply(states_all$labile_gCm2,1, rollapply_mean_annual, step = steps_per_year) / (site_output$MTT_annual_labile_years * 365.25)
                   site_output$MTT_annual_labile_years = t(site_output$MTT_annual_labile_years) # rollapply inverts the dimensions from that wanted
                   site_output$MTT_annual_labile_years = apply(site_output$MTT_annual_labile_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   # Convert to fractions
@@ -890,7 +890,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_foliage_years = apply(site_output$outflux_foliage_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
-                  site_output$MTT_annual_foliage_years = site_output$MTT_annual_foliage_years / apply(states_all$foliage_gCm2,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_foliage_years = apply(states_all$foliage_gCm2,1, rollapply_mean_annual, step = steps_per_year) / (site_output$MTT_annual_foliage_years * 365.25)
                   site_output$MTT_annual_foliage_years = t(site_output$MTT_annual_foliage_years) # rollapply inverts the dimensions from that wanted
                   site_output$MTT_annual_foliage_years = apply(site_output$MTT_annual_foliage_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   # Convert to fractions
@@ -959,7 +959,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_roots_years = apply(site_output$outflux_roots_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
-                  site_output$MTT_annual_roots_years = site_output$MTT_annual_roots_years / apply(states_all$roots_gCm2,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_roots_years = apply(states_all$roots_gCm2,1, rollapply_mean_annual, step = steps_per_year) / (site_output$MTT_annual_roots_years * 365.25)
                   site_output$MTT_annual_roots_years = t(site_output$MTT_annual_roots_years) # rollapply inverts the dimensions from that wanted
                   site_output$MTT_annual_roots_years = apply(site_output$MTT_annual_roots_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   # Convert to fractions
@@ -1021,7 +1021,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_wood_years = apply(site_output$outflux_wood_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
-                  site_output$MTT_annual_wood_years = site_output$MTT_annual_wood_years / apply(states_all$wood_gCm2,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_wood_years = apply(states_all$wood_gCm2,1, rollapply_mean_annual, step = steps_per_year) / (site_output$MTT_annual_wood_years * 365.25)
                   site_output$MTT_annual_wood_years = t(site_output$MTT_annual_wood_years) # rollapply inverts the dimensions from that wanted
                   site_output$MTT_annual_wood_years = apply(site_output$MTT_annual_wood_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   # Convert to fractions
@@ -1075,7 +1075,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_litter_years = apply(site_output$outflux_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
-                  site_output$MTT_annual_litter_years = site_output$MTT_annual_litter_years / apply(states_all$litter_gCm2,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_litter_years = apply(states_all$litter_gCm2,1, rollapply_mean_annual, step = steps_per_year) / (site_output$MTT_annual_litter_years * 365.25)
                   site_output$MTT_annual_litter_years = t(site_output$MTT_annual_litter_years) # rollapply inverts the dimensions from that wanted
                   site_output$MTT_annual_litter_years = apply(site_output$MTT_annual_litter_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   # Convert to fractions
@@ -1129,7 +1129,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_woodlitter_years = apply(site_output$outflux_woodlitter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
-                  site_output$MTT_annual_woodlitter_years = site_output$MTT_annual_woodlitter_years / apply(states_all$woodlitter_gCm2,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_woodlitter_years = apply(states_all$woodlitter_gCm2,1, rollapply_mean_annual, step = steps_per_year) / (site_output$MTT_annual_woodlitter_years * 365.25)
                   site_output$MTT_annual_woodlitter_years = t(site_output$MTT_annual_woodlitter_years) # rollapply inverts the dimensions from that wanted
                   site_output$MTT_annual_woodlitter_years = apply(site_output$MTT_annual_woodlitter_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   # Convert to fractions
@@ -1175,7 +1175,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_som_years = apply(site_output$outflux_som_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
-                  site_output$MTT_annual_som_years = site_output$MTT_annual_som_years / apply(states_all$som_gCm2,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_som_years = apply(states_all$som_gCm2,1, rollapply_mean_annual, step = steps_per_year) / (site_output$MTT_annual_som_years * 365.25)
                   site_output$MTT_annual_som_years = t(site_output$MTT_annual_som_years) # rollapply inverts the dimensions from that wanted
                   site_output$MTT_annual_som_years = apply(site_output$MTT_annual_som_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   # Convert to fractions
@@ -1222,7 +1222,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_dom_years = apply(site_output$outflux_dom_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
-                  site_output$MTT_annual_dom_years = site_output$MTT_annual_dom_years / apply(states_all$dom_gCm2,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_dom_years = apply(states_all$dom_gCm2,1, rollapply_mean_annual, step = steps_per_year) / (site_output$MTT_annual_dom_years * 365.25)
                   site_output$MTT_annual_dom_years = t(site_output$MTT_annual_dom_years) # rollapply inverts the dimensions from that wanted
                   site_output$MTT_annual_dom_years = apply(site_output$MTT_annual_dom_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   # Convert to fractions

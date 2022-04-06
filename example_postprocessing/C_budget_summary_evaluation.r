@@ -95,7 +95,7 @@ fudgeit <- function(){
 
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_isimip3a_lca_gpp_nbe/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_isimip3a_lca_gpp/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_gpp_fire/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_CsomPriorNCSCD/infofile.RData")
 load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_GSI_BUCKET_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Trendyv9_historical/infofile.RData")
@@ -117,9 +117,9 @@ load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
 
 # Set output path for figures and tables
-#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_reccap2_permafrost_1deg_C7_isimip/"
+out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_reccap2_permafrost_1deg_C7_isimip/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/figures_africa/"
-out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
+#out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/trendy/figures/"
 #out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/dalec_gsi_bucket/"
 #out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/mexico/gridded_figures/"
@@ -449,28 +449,28 @@ for (n in seq(1, PROJECT$nosites)) {
          soil_lower_TgC         = soil_lower_TgC    + rollapply(grid_output$som_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
          soil_upper_TgC         = soil_upper_TgC    + rollapply(grid_output$som_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
          # Fluxes
-         mean_gpp_TgCyr              = mean_gpp_TgCyr           + (rollapply(grid_output$gpp_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         mean_gpp_TgCyr         = mean_gpp_TgCyr      + (rollapply(grid_output$gpp_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          gpp_lower_TgCyr        = gpp_lower_TgCyr     + (rollapply(grid_output$gpp_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          gpp_upper_TgCyr        = gpp_upper_TgCyr     + (rollapply(grid_output$gpp_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
-         mean_npp_TgCyr              = mean_npp_TgCyr           + (rollapply(grid_output$npp_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         mean_npp_TgCyr         = mean_npp_TgCyr      + (rollapply(grid_output$npp_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          npp_lower_TgCyr        = npp_lower_TgCyr     + (rollapply(grid_output$npp_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          npp_upper_TgCyr        = npp_upper_TgCyr     + (rollapply(grid_output$npp_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
-         mean_rauto_TgCyr            = mean_rauto_TgCyr         + (rollapply(grid_output$rauto_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         mean_rauto_TgCyr       = mean_rauto_TgCyr    + (rollapply(grid_output$rauto_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          rauto_lower_TgCyr      = rauto_lower_TgCyr   + (rollapply(grid_output$rauto_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          rauto_upper_TgCyr      = rauto_upper_TgCyr   + (rollapply(grid_output$rauto_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)         
-         mean_rhet_TgCyr             = mean_rhet_TgCyr          + (rollapply(grid_output$rhet_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         mean_rhet_TgCyr        = mean_rhet_TgCyr     + (rollapply(grid_output$rhet_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          rhet_lower_TgCyr       = rhet_lower_TgCyr    + (rollapply(grid_output$rhet_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          rhet_upper_TgCyr       = rhet_upper_TgCyr    + (rollapply(grid_output$rhet_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
-         mean_nee_TgCyr              = mean_nee_TgCyr           + (rollapply(grid_output$nee_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         mean_nee_TgCyr         = mean_nee_TgCyr      + (rollapply(grid_output$nee_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          nee_lower_TgCyr        = nee_lower_TgCyr     + (rollapply(grid_output$nee_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          nee_upper_TgCyr        = nee_upper_TgCyr     + (rollapply(grid_output$nee_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
-         mean_nbe_TgCyr              = mean_nbe_TgCyr           + (rollapply(grid_output$nbe_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         mean_nbe_TgCyr         = mean_nbe_TgCyr      + (rollapply(grid_output$nbe_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          nbe_lower_TgCyr        = nbe_lower_TgCyr     + (rollapply(grid_output$nbe_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          nbe_upper_TgCyr        = nbe_upper_TgCyr     + (rollapply(grid_output$nbe_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
-         mean_fire_TgCyr             = mean_fire_TgCyr          + (rollapply(grid_output$fire_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         mean_fire_TgCyr        = mean_fire_TgCyr     + (rollapply(grid_output$fire_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          fire_lower_TgCyr       = fire_lower_TgCyr    + (rollapply(grid_output$fire_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          fire_upper_TgCyr       = fire_upper_TgCyr    + (rollapply(grid_output$fire_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
-         mean_harvest_TgCyr          = mean_harvest_TgCyr       + (rollapply(grid_output$harvest_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         mean_harvest_TgCyr     = mean_harvest_TgCyr  + (rollapply(grid_output$harvest_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          harvest_lower_TgCyr    = harvest_lower_TgCyr + (rollapply(grid_output$harvest_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          harvest_upper_TgCyr    = harvest_upper_TgCyr + (rollapply(grid_output$harvest_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          
@@ -587,108 +587,120 @@ for (c in seq(1, grid_output$nos_clusters)) {
     # Summary C budgets for output to table, NOTE the use of landfilter removes areas outside of the target area
     dims = dim(grid_output$mean_gpp_gCm2day)
     cluster_area = sum(area * landfilter, na.rm=TRUE) * 1e-4
-    grid_output$mean_gpp_TgCyr                = apply(grid_output$mean_gpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_npp_TgCyr                = apply(grid_output$mean_npp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_rauto_TgCyr              = apply(grid_output$mean_rauto_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_rhet_TgCyr               = apply(grid_output$mean_rhet_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_nbe_TgCyr                = apply(grid_output$mean_nbe_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_nee_TgCyr                = apply(grid_output$mean_nee_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_fire_TgCyr               = apply(grid_output$mean_fire_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_harvest_TgCyr            = apply(grid_output$mean_harvest_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_labile_TgC               = apply(grid_output$mean_labile_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$mean_foliage_TgC              = apply(grid_output$mean_foliage_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$mean_roots_TgC                = apply(grid_output$mean_roots_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$mean_wood_TgC                 = apply(grid_output$mean_wood_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$mean_litter_TgC               = apply(grid_output$mean_litter_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$mean_som_TgC                  = apply(grid_output$mean_som_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$mean_alloc_labile_TgCyr       = apply(grid_output$alloc_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_alloc_foliage_TgCyr      = apply(grid_output$mean_alloc_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_alloc_roots_TgCyr        = apply(grid_output$mean_alloc_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_alloc_wood_TgCyr         = apply(grid_output$mean_alloc_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)   
-    grid_output$mean_FIRElitter_labile_TgCyr  = apply(grid_output$mean_FIRElitter_labile_gCm2yr*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_FIRElitter_foliage_TgCyr = apply(grid_output$mean_FIRElitter_foliage_gCm2yr*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_FIRElitter_roots_TgCyr   = apply(grid_output$mean_FIRElitter_roots_gCm2yr*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_FIRElitter_wood_TgCyr    = apply(grid_output$mean_FIRElitter_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_FIRElitter_litter_TgCyr  = apply(grid_output$mean_FIRElitter_litter_gCm2yr*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_FIRElitter_som_TgCyr     = apply(grid_output$mean_FIRElitter_som_gCm2yr*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_FIREemiss_labile_TgCyr   = apply(grid_output$mean_FIREemiss_labile_gCm2yr*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_FIREemiss_foliage_TgCyr  = apply(grid_output$mean_FIREemiss_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_FIREemiss_roots_TgCyr    = apply(grid_output$mean_FIREemiss_roots_gCm2yr*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_FIREemiss_wood_TgCyr     = apply(grid_output$mean_FIREemiss_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_FIREemiss_litter_TgCyr   = apply(grid_output$mean_FIREemiss_litter_gCm2yr*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_FIREemiss_som_TgCyr      = apply(grid_output$mean_FIREemiss_som_gCm2yr*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_foliage_to_litter_TgCyr  = apply(grid_output$mean_foliage_to_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_roots_to_litter_TgCyr    = apply(grid_output$mean_roots_to_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_wood_to_litter_TgCyr     = apply(grid_output$mean_wood_to_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_litter_to_som_TgCyr      = apply(grid_output$mean_litter_to_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$mean_rhetsom_TgCyr            = apply(grid_output$mean_rhetsom_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-### THIS IS HOW FAR YOU HAVE UPDATED THE VARIABLES....
-    grid_output$fNPP           = apply(array(landfilter,dim = dims)*grid_output$NPP_foliar_fraction,3,mean, na.rm=TRUE)
-    grid_output$rNPP           = apply(array(landfilter,dim = dims)*grid_output$NPP_roots_fraction,3,mean, na.rm=TRUE)
-    grid_output$wNPP           = apply(array(landfilter,dim = dims)*grid_output$NPP_wood_fraction,3,mean, na.rm=TRUE)
-    grid_output$foliage_MTT_yr = apply(array(landfilter,dim = dims)*grid_output$MTT_foliar_years,3,mean, na.rm=TRUE)
-    grid_output$roots_MTT_yr   = apply(array(landfilter,dim = dims)*grid_output$MTT_roots_years,3,mean, na.rm=TRUE)
-    grid_output$wood_MTT_yr    = apply(array(landfilter,dim = dims)*grid_output$MTT_wood_years,3,mean, na.rm=TRUE)
-    grid_output$litter_MTT_yr     = apply(array(landfilter,dim = dims)*grid_output$MTT_DeadOrg_years,3,mean, na.rm=TRUE)
-    grid_output$som_MTT_yr     = apply(array(landfilter,dim = dims)*grid_output$MTT_som_years,3,mean, na.rm=TRUE)
-    grid_output$dCfoliage_gCm2yr   = apply(array(landfilter,dim = dims)*(grid_output$final_dCfoliage_gCm2/nos_years),3,mean, na.rm=TRUE)
-    grid_output$dCroots_gCm2yr     = apply(array(landfilter,dim = dims)*(grid_output$final_dCroots_gCm2/nos_years),3,mean, na.rm=TRUE)
-    grid_output$dCwood_gCm2yr      = apply(array(landfilter,dim = dims)*(grid_output$final_dCwood_gCm2/nos_years),3,mean, na.rm=TRUE)
-    grid_output$dClitter_gCm2yr       = apply(array(landfilter,dim = dims)*(grid_output$final_dClitter_gCm2/nos_years),3,mean, na.rm=TRUE)
-    grid_output$dCsom_gCm2yr       = apply(array(landfilter,dim = dims)*(grid_output$final_dCsom_gCm2/nos_years),3,mean, na.rm=TRUE)
     # Combine output into dataframe
-    output = data.frame(Quantile = grid_output$num_quantiles, area_ha = rep(cluster_area, length(grid_output$num_quantiles)), 
-                        mean_gpp_TgCyr = grid_output$mean_gpp_TgCyr, mean_npp_TgCyr = grid_output$mean_npp_TgCyr, Ra_TgCyr = grid_output$mean_rauto_TgCyr, 
-                        mean_rhet_TgCyr = grid_output$mean_rhet_TgCyr, 
-                        mean_nee_TgCyr = grid_output$mean_nee_TgCyr, mean_nbe_TgCyr = grid_output$mean_nbe_TgCyr, 
-                        mean_fire_TgCyr = grid_output$mean_fire_TgCyr, mean_harvest_TgCyr = grid_output$mean_harvest_TgCyr,
-                        labile_TgC = grid_output$mean_labile_TgC, foliage_TgC = grid_output$mean_foliage_TgC, 
-                        fine_roots_TgC = grid_output$mean_roots_TgC, wood_TgC = grid_output$mean_wood_TgC, 
-                        litter_TgC = grid_output$mean_litter_TgC, som_TgC = grid_output$mean_som_TgC, 
-                        fmean_npp_TgCyr = grid_output$fmean_npp_TgCyr, rmean_npp_TgCyr = grid_output$rmean_npp_TgCyr, wmean_npp_TgCyr = grid_output$wmean_npp_TgCyr,
-                        fFirelitter_TgCyr = grid_output$mean_FIRElitter_foliage_TgCyr, rFirelitter_TgCyr = grid_output$mean_FIRElitter_roots_TgCyr, 
-                        wFirelitter_TgCyr = grid_output$mean_FIRElitter_wood_TgCyr, lFirelitter_TgCyr = grid_output$mean_FIRElitter_litter_TgCyr,
-                        sFirelitter_TgCyr = grid_output$mean_FIRElitter_som_TgCyr, 
-                        fFireEmis_TgCyr = grid_output$mean_FIRElitter_foliage_TgCyr, rFireEmis_TgCyr = grid_output$mean_FIREemiss_roots_TgCyr, 
-                        wFireEmis_TgCyr = grid_output$mean_FIREemiss_wood_TgCyr, lFireEmis_TgCyr = grid_output$mean_FIREemiss_litter_TgCyr,
-                        sFireEmis_TgCyr = grid_output$mean_FIREemiss_som_TgCyr,
-                        fNAToutflux_TgCyr = grid_output$fNAToutflux_TgCyr, rNAToutflux_TgCyr = grid_output$rNAToutflux_TgCyr, 
-                        wNAToutflux_TgCyr = grid_output$wNAToutflux_TgCyr, lNAToutflux_TgCyr = grid_output$lNAToutflux_TgCyr,
-                        sNAToutflux_TgCyr = grid_output$sNAToutflux_TgCyr,
-                        fNPP_fraction = grid_output$fNPP, rNPP_fraction = grid_output$rNPP, wNPP_fraction = grid_output$wNPP,
-                        foliage_MTT_yr = grid_output$foliage_MTT_yr, fine_roots_MTT_yr = grid_output$roots_MTT_yr, 
-                        wood_MTT_yr = grid_output$wood_MTT_yr,
-                        litter_MTT_yr = grid_output$litter_MTT_yr, som_MTT_yr = grid_output$som_MTT_yr,
-                        dCfoliage_gCm2yr = grid_output$dCfoliage_gCm2yr, dCroots_gCm2yr = grid_output$dCroots_gCm2yr,
-                        dCwood_gCm2yr = grid_output$dCwood_gCm2yr,
-                        dClitter_gCm2yr = grid_output$dClitter_gCm2yr, dCsom_gCm2yr = grid_output$dCsom_gCm2yr)
-    # Add any additional variables based on conditional statements
-    if (length(which(names(grid_output) == "mean_woodlitter_gCm2")) > 0) {
-        # Create variables
-        grid_output$woodlitter_TgC = apply(grid_output$mean_woodlitter_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-        grid_output$dCwoodlitter_gCm2yr = apply(array(landfilter,dim = dims)*(grid_output$final_dCwoodlitter_gCm2/nos_years),3,mean, na.rm=TRUE)
-        # Assign to data.frame
-        output$wood_litter_TgC = grid_output$woodlitter_TgC
-        output$dCwoodlitter_gCm2yr = grid_output$dCwoodlitter_gCm2yr
-    } # wood litter is simulated
-    if (length(which(names(grid_output) == "mean_rhet_litter_gCm2")) > 0) {
-        # Create variables
-        grid_output$rhet_litter_TgCyr = apply(grid_output$mean_rhet_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-        # Assign to data.frame
-        output$Rhet_litter_TgCyr = grid_output$rhet_litter_TgCyr
-    } # litter respiration is output
-    if (length(which(names(grid_output) == "mean_rhet_som_gCm2")) > 0) {
-        # Create variables
-        grid_output$rhet_som_TgCyr = apply(grid_output$mean_rhet_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-        # Assign to data.frame
-        output$Rhet_som_TgCyr = grid_output$rhet_som_TgCyr
-    } # som respiration is output
-    if (length(which(names(grid_output) == "mean_rhet_som_gCm2")) > 0) {
-        # Create variables
-        grid_output$decomp_som_TgCyr = apply(grid_output$mean_decomp_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-        # Assign to data.frame
-        output$Decomp_litter_TgCyr = grid_output$decomp_litter_TgCyr
-    } # litter decomposition to som is output          
+    output = data.frame(Quantile = grid_output$num_quantiles, area_ha = rep(cluster_area, length(grid_output$num_quantiles)))
+    # Ecosystem gross fluxes
+    output$mean_gpp_TgCyr                      = apply(grid_output$mean_gpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_npp_TgCyr                      = apply(grid_output$mean_npp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_rauto_TgCyr                    = apply(grid_output$mean_rauto_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_rhet_TgCyr                     = apply(grid_output$mean_rhet_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    if (exists("mean_rhet_litter_gCm2day", where = grid_output)) {output$mean_rhet_litter_TgCyr = apply(grid_output$mean_rhet_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+    if (exists("mean_rhet_woodlitter_gCm2day", where = grid_output)) {output$mean_rhet_woodlitter_TgCyr = apply(grid_output$mean_rhet_woodlitter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+    if (exists("mean_rhet_som_gCm2day", where = grid_output)) {output$mean_rhet_som_TgCyr = apply(grid_output$mean_rhet_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}    
+    output$mean_nbp_TgCyr                      = apply(grid_output$mean_nbp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_nbe_TgCyr                      = apply(grid_output$mean_nbe_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_nee_TgCyr                      = apply(grid_output$mean_nee_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_fire_TgCyr                     = apply(grid_output$mean_fire_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_harvest_TgCyr                  = apply(grid_output$mean_harvest_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    # Ecosystem pools
+    output$mean_biomass_TgC                    = apply(grid_output$mean_biomass_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    output$mean_dom_TgC                        = apply(grid_output$mean_dom_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    output$mean_labile_TgC                     = apply(grid_output$mean_labile_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    output$mean_foliage_TgC                    = apply(grid_output$mean_foliage_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    output$mean_roots_TgC                      = apply(grid_output$mean_roots_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    output$mean_wood_TgC                       = apply(grid_output$mean_wood_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    output$mean_litter_TgC                     = apply(grid_output$mean_litter_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    if (exists(x = "mean_woodlitter_gCm2", where = grid_output)) {output$mean_woodlitter_TgC = apply(grid_output$mean_woodlitter_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)}
+    output$mean_som_TgC                        = apply(grid_output$mean_som_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    # Natural C internal allocation fluxes
+    output$mean_alloc_labile_TgCyr             = apply(grid_output$mean_alloc_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_combined_alloc_foliage_TgCyr   = apply(grid_output$mean_combined_alloc_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_alloc_foliage_TgCyr            = apply(grid_output$mean_alloc_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_alloc_roots_TgCyr              = apply(grid_output$mean_alloc_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_alloc_wood_TgCyr               = apply(grid_output$mean_alloc_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)   
+    output$mean_foliage_to_litter_TgCyr        = apply(grid_output$mean_foliage_to_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_roots_to_litter_TgCyr          = apply(grid_output$mean_roots_to_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_wood_to_litter_TgCyr           = apply(grid_output$mean_wood_to_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_litter_to_som_TgCyr            = apply(grid_output$mean_litter_to_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    if (exists(x = "mean_woodlitter_to_som_gCm2day", where = grid_output)) {output$mean_woodlitter_to_som_gCm2day = apply(grid_output$mean_woodlitter_to_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+    # Fire fluxes
+    output$mean_FIRElitter_labile_TgCyr        = apply(grid_output$mean_FIRElitter_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_FIRElitter_foliage_TgCyr       = apply(grid_output$mean_FIRElitter_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_FIRElitter_roots_TgCyr         = apply(grid_output$mean_FIRElitter_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_FIRElitter_wood_TgCyr          = apply(grid_output$mean_FIRElitter_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_FIRElitter_litter_TgCyr        = apply(grid_output$mean_FIRElitter_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    if (exists(x = "mean_FIRElitter_woodlitter_gCm2day", where = grid_output)) {grid_output$mean_FIRElitter_woodlitter_TgCyr = apply(grid_output$mean_FIRElitter_woodlitter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+    output$mean_FIRElitter_som_TgCyr           = apply(grid_output$mean_FIRElitter_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_FIREemiss_labile_TgCyr         = apply(grid_output$mean_FIREemiss_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_FIREemiss_foliage_TgCyr        = apply(grid_output$mean_FIREemiss_foliar_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_FIREemiss_roots_TgCyr          = apply(grid_output$mean_FIREemiss_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_FIREemiss_wood_TgCyr           = apply(grid_output$mean_FIREemiss_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_FIREemiss_litter_TgCyr         = apply(grid_output$mean_FIREemiss_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    if (exists(x = "mean_FIREemiss_woodlitter_gCm2day", where = grid_output)) {grid_output$mean_FIREemiss_woodlitter_TgCyr = apply(grid_output$mean_FIREemiss_woodlitter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+    output$mean_FIREemiss_som_TgCyr            = apply(grid_output$mean_FIREemiss_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    # Harvest fluxes
+    output$mean_HARVESTlitter_labile_TgCyr     = apply(grid_output$mean_HARVESTlitter_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_HARVESTlitter_foliage_TgCyr    = apply(grid_output$mean_HARVESTlitter_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_HARVESTlitter_roots_TgCyr      = apply(grid_output$mean_HARVESTlitter_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_HARVESTlitter_wood_TgCyr       = apply(grid_output$mean_HARVESTlitter_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_HARVESTextracted_labile_TgCyr  = apply(grid_output$mean_HARVESTextracted_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_HARVESTextracted_foliage_TgCyr = apply(grid_output$mean_HARVESTextracted_foliar_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_HARVESTextracted_roots_TgCyr   = apply(grid_output$mean_HARVESTextracted_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_HARVESTextracted_wood_TgCyr    = apply(grid_output$mean_HARVESTextracted_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_HARVESTextracted_litter_TgCyr  = apply(grid_output$mean_HARVESTextracted_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    if (exists(x = "mean_HARVESTextracted_woodlitter_gCm2day", where = grid_output)) {grid_output$mean_HARVESTextracted_woodlitter_TgCyr = apply(grid_output$mean_HARVESTextracted_woodlitter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+    output$mean_HARVESTextracted_som_TgCyr     = apply(grid_output$mean_HARVESTextracted_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    # Mean transist / residence times
+    output$biomass_MTT_yr = apply(array(landfilter,dim = dims)*grid_output$MTT_annual_biomass_years,3,mean, na.rm=TRUE)
+    output$dom_MTT_yr     = apply(array(landfilter,dim = dims)*grid_output$MTT_annual_dom_years,3,mean, na.rm=TRUE)
+    output$labile_MTT_yr  = apply(array(landfilter,dim = dims)*grid_output$MTT_annual_labile_years,3,mean, na.rm=TRUE)
+    output$foliage_MTT_yr = apply(array(landfilter,dim = dims)*grid_output$MTT_annual_foliage_years,3,mean, na.rm=TRUE)
+    output$roots_MTT_yr   = apply(array(landfilter,dim = dims)*grid_output$MTT_annual_roots_years,3,mean, na.rm=TRUE)
+    output$wood_MTT_yr    = apply(array(landfilter,dim = dims)*grid_output$MTT_annual_wood_years,3,mean, na.rm=TRUE)
+    output$litter_MTT_yr  = apply(array(landfilter,dim = dims)*grid_output$MTT_annual_litter_years,3,mean, na.rm=TRUE)
+    if (exists(x = "MTT_annual_woodlitter_years", where = grid_output)) {grid_output$woodlitter_MTT_yr  = apply(array(landfilter,dim = dims)*grid_output$MTT_annual_woodlitter_years,3,mean, na.rm=TRUE)}
+    output$som_MTT_yr     = apply(array(landfilter,dim = dims)*grid_output$MTT_annual_som_years,3,mean, na.rm=TRUE)
+    # Mean stock changes per year
+    output$dCbiomass_gCm2yr  = apply(array(landfilter,dim = dims)*(grid_output$final_dCbiomass_gCm2/nos_years),3,mean, na.rm=TRUE)
+    output$dCdom_gCm2yr      = apply(array(landfilter,dim = dims)*(grid_output$final_dCdom_gCm2/nos_years),3,mean, na.rm=TRUE)
+    output$dClabile_gCm2yr   = apply(array(landfilter,dim = dims)*(grid_output$final_dClabile_gCm2/nos_years),3,mean, na.rm=TRUE)
+    output$dCfoliage_gCm2yr  = apply(array(landfilter,dim = dims)*(grid_output$final_dCfoliage_gCm2/nos_years),3,mean, na.rm=TRUE)
+    output$dCroots_gCm2yr    = apply(array(landfilter,dim = dims)*(grid_output$final_dCroots_gCm2/nos_years),3,mean, na.rm=TRUE)
+    output$dCwood_gCm2yr     = apply(array(landfilter,dim = dims)*(grid_output$final_dCwood_gCm2/nos_years),3,mean, na.rm=TRUE)
+    output$dClitter_gCm2yr   = apply(array(landfilter,dim = dims)*(grid_output$final_dClitter_gCm2/nos_years),3,mean, na.rm=TRUE)
+    if (exists(x = "final_dCwoodlitter_gCm2", where = grid_output)) {grid_output$dCwoodlitter_gCm2yr = apply(array(landfilter,dim = dims)*(grid_output$final_dCwoodlitter_gCm2/nos_years),3,mean, na.rm=TRUE)}
+    grid_output$dCsom_gCm2yr = apply(array(landfilter,dim = dims)*(grid_output$final_dCsom_gCm2/nos_years),3,mean, na.rm=TRUE)
+
+    # Fractional partitioning of tunover to different drivers - should they exist
+    output$NaturalFractionOfTurnover_biomass = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_biomass,3,mean, na.rm=TRUE)
+    output$FireFractionOfTurnover_biomass = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_biomass,3,mean, na.rm=TRUE)
+    output$HarvestFractionOfTurnover_biomass = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_biomass,3,mean, na.rm=TRUE)
+    output$NaturalFractionOfTurnover_dom = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_dom,3,mean, na.rm=TRUE)
+    output$FireFractionOfTurnover_dom = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_dom,3,mean, na.rm=TRUE)
+    output$HarvestFractionOfTurnover_dom = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_dom,3,mean, na.rm=TRUE)    
+    output$NaturalFractionOfTurnover_labile = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_labile,3,mean, na.rm=TRUE)
+    output$FireFractionOfTurnover_labile = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_labile,3,mean, na.rm=TRUE)
+    output$HarvestFractionOfTurnover_labile = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_labile,3,mean, na.rm=TRUE)    
+    output$NaturalFractionOfTurnover_foliage = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_foliage,3,mean, na.rm=TRUE)
+    output$FireFractionOfTurnover_foliage = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_foliage,3,mean, na.rm=TRUE)
+    output$HarvestFractionOfTurnover_foliage = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_foliage,3,mean, na.rm=TRUE)
+    output$NaturalFractionOfTurnover_roots = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_roots,3,mean, na.rm=TRUE)
+    output$FireFractionOfTurnover_roots = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_roots,3,mean, na.rm=TRUE)
+    output$HarvestFractionOfTurnover_roots = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_roots,3,mean, na.rm=TRUE)
+    output$NaturalFractionOfTurnover_wood = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_wood,3,mean, na.rm=TRUE)
+    output$FireFractionOfTurnover_wood = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_wood,3,mean, na.rm=TRUE)
+    output$HarvestFractionOfTurnover_wood = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_wood,3,mean, na.rm=TRUE)
+    output$NaturalFractionOfTurnover_litter = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_litter,3,mean, na.rm=TRUE)
+    output$FireFractionOfTurnover_litter = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_litter,3,mean, na.rm=TRUE)
+    output$HarvestFractionOfTurnover_litter = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_litter,3,mean, na.rm=TRUE)
+    if (exists(x = "NaturalFractionOfTurnover_woodlitter", where = grid_outputs)) {
+        output$NaturalFractionOfTurnover_woodlitter = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_woodlitter,3,mean, na.rm=TRUE)
+        output$FireFractionOfTurnover_woodlitter = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_woodlitter,3,mean, na.rm=TRUE)
+        output$HarvestFractionOfTurnover_woodlitter = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_woodlitter,3,mean, na.rm=TRUE)
+    } 
+    output$NaturalFractionOfTurnover_som = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_som,3,mean, na.rm=TRUE)
+    output$FireFractionOfTurnover_som = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_som,3,mean, na.rm=TRUE)
+    output$HarvestFractionOfTurnover_som = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_som,3,mean, na.rm=TRUE)
 
     # Write out C budget
     write.table(output, file = paste(out_dir,"/",PROJECT$name,"_cluster_",c,"_C_budget.csv",sep=""), row.names=FALSE, sep=",",append=FALSE)
@@ -707,108 +719,122 @@ landfilter = landfilter_keep
 # Summary C budgets for output to table, NOTE the use of landfilter removes areas outside of the target area
 # These are not time varying (unlike the loop a few sections above)
 dims = dim(grid_output$mean_gpp_gCm2day)
-grid_area = sum(area * landfilter, na.rm=TRUE) * 1e-4 # convertion m2->ha
-grid_output$mean_gpp_TgCyr          = apply(grid_output$mean_gpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$mean_npp_TgCyr          = apply(grid_output$mean_npp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$mean_rauto_TgCyr        = apply(grid_output$mean_rauto_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$mean_rhet_TgCyr         = apply(grid_output$mean_rhet_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$mean_nbe_TgCyr          = apply(grid_output$mean_nbe_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$mean_nee_TgCyr          = apply(grid_output$mean_nee_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$mean_fire_TgCyr         = apply(grid_output$mean_fire_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$mean_harvest_TgCyr      = apply(grid_output$mean_harvest_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$mean_labile_TgC         = apply(grid_output$mean_labile_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$mean_foliage_TgC        = apply(grid_output$mean_foliage_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$mean_roots_TgC          = apply(grid_output$mean_roots_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$mean_wood_TgC           = apply(grid_output$mean_wood_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$mean_litter_TgC            = apply(grid_output$mean_litter_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$mean_som_TgC            = apply(grid_output$mean_som_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$fmean_npp_TgCyr         = apply(grid_output$mean_fnpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$rmean_npp_TgCyr         = apply(grid_output$mean_rnpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$wmean_npp_TgCyr         = apply(grid_output$mean_wnpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$mean_FIRElitter_foliage_TgCyr  = apply(grid_output$mean_FIRElitter_foliage_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$mean_FIRElitter_roots_TgCyr  = apply(grid_output$mean_FIRElitter_roots_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$mean_FIRElitter_wood_TgCyr  = apply(grid_output$mean_FIRElitter_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$mean_FIRElitter_litter_TgCyr  = apply(grid_output$mean_FIRElitter_litter_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$mean_FIRElitter_som_TgCyr  = apply(grid_output$mean_FIRElitter_som_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$mean_FIRElitter_foliage_TgCyr   = apply(grid_output$mean_FIREemiss_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$mean_FIREemiss_roots_TgCyr   = apply(grid_output$mean_FIREemiss_roots_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$mean_FIREemiss_wood_TgCyr   = apply(grid_output$mean_FIREemiss_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$mean_FIREemiss_litter_TgCyr   = apply(grid_output$mean_FIREemiss_litter_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$mean_FIREemiss_som_TgCyr   = apply(grid_output$mean_FIREemiss_som_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$fNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$rNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_roots_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$wNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$lNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_litter_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$sNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_som_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$fNPP           = apply(array(landfilter,dim = dims)*grid_output$NPP_foliar_fraction,3,mean, na.rm=TRUE)
-grid_output$rNPP           = apply(array(landfilter,dim = dims)*grid_output$NPP_roots_fraction,3,mean, na.rm=TRUE)
-grid_output$wNPP           = apply(array(landfilter,dim = dims)*grid_output$NPP_wood_fraction,3,mean, na.rm=TRUE)
-grid_output$foliage_MTT_yr = apply(array(landfilter,dim = dims)*grid_output$MTT_foliar_years,3,mean, na.rm=TRUE)
-grid_output$roots_MTT_yr   = apply(array(landfilter,dim = dims)*grid_output$MTT_roots_years,3,mean, na.rm=TRUE)
-grid_output$wood_MTT_yr    = apply(array(landfilter,dim = dims)*grid_output$MTT_wood_years,3,mean, na.rm=TRUE)
-grid_output$litter_MTT_yr     = apply(array(landfilter,dim = dims)*grid_output$MTT_DeadOrg_years,3,mean, na.rm=TRUE)
-grid_output$som_MTT_yr     = apply(array(landfilter,dim = dims)*grid_output$MTT_som_years,3,mean, na.rm=TRUE)
-grid_output$dCfoliage_gCm2yr   = apply(array(landfilter,dim = dims)*(grid_output$final_dCfoliage_gCm2/nos_years),3,mean, na.rm=TRUE)
-grid_output$dCroots_gCm2yr     = apply(array(landfilter,dim = dims)*(grid_output$final_dCroots_gCm2/nos_years),3,mean, na.rm=TRUE)
-grid_output$dCwood_gCm2yr      = apply(array(landfilter,dim = dims)*(grid_output$final_dCwood_gCm2/nos_years),3,mean, na.rm=TRUE)
-grid_output$dClitter_gCm2yr       = apply(array(landfilter,dim = dims)*(grid_output$final_dClitter_gCm2/nos_years),3,mean, na.rm=TRUE)
-grid_output$dCsom_gCm2yr       = apply(array(landfilter,dim = dims)*(grid_output$final_dCsom_gCm2/nos_years),3,mean, na.rm=TRUE)
-# Combine output into dataframe
-output = data.frame(Quantile = grid_output$num_quantiles, area_ha = rep(grid_area, length(grid_output$num_quantiles)), 
-                    mean_gpp_TgCyr = grid_output$mean_gpp_TgCyr, mean_npp_TgCyr = grid_output$mean_npp_TgCyr, Ra_TgCyr = grid_output$mean_rauto_TgCyr, 
-                    mean_rhet_TgCyr = grid_output$mean_rhet_TgCyr, 
-                    mean_nee_TgCyr = grid_output$mean_nee_TgCyr, mean_nbe_TgCyr = grid_output$mean_nbe_TgCyr, 
-                    mean_fire_TgCyr = grid_output$mean_fire_TgCyr, mean_harvest_TgCyr = grid_output$mean_harvest_TgCyr,
-                    labile_TgC = grid_output$mean_labile_TgC, foliage_TgC = grid_output$mean_foliage_TgC, 
-                    fine_roots_TgC = grid_output$mean_roots_TgC, wood_TgC = grid_output$mean_wood_TgC, 
-                    litter_TgC = grid_output$mean_litter_TgC, som_TgC = grid_output$mean_som_TgC, 
-                    fmean_npp_TgCyr = grid_output$fmean_npp_TgCyr, rmean_npp_TgCyr = grid_output$rmean_npp_TgCyr, wmean_npp_TgCyr = grid_output$wmean_npp_TgCyr,
-                    fFirelitter_TgCyr = grid_output$mean_FIRElitter_foliage_TgCyr, rFirelitter_TgCyr = grid_output$mean_FIRElitter_roots_TgCyr, 
-                    wFirelitter_TgCyr = grid_output$mean_FIRElitter_wood_TgCyr, lFirelitter_TgCyr = grid_output$mean_FIRElitter_litter_TgCyr,
-                    sFirelitter_TgCyr = grid_output$mean_FIRElitter_som_TgCyr, 
-                    fFireEmis_TgCyr = grid_output$mean_FIRElitter_foliage_TgCyr, rFireEmis_TgCyr = grid_output$mean_FIREemiss_roots_TgCyr, 
-                    wFireEmis_TgCyr = grid_output$mean_FIREemiss_wood_TgCyr, lFireEmis_TgCyr = grid_output$mean_FIREemiss_litter_TgCyr,
-                    sFireEmis_TgCyr = grid_output$mean_FIREemiss_som_TgCyr,
-                    fNAToutflux_TgCyr = grid_output$fNAToutflux_TgCyr, rNAToutflux_TgCyr = grid_output$rNAToutflux_TgCyr, 
-                    wNAToutflux_TgCyr = grid_output$wNAToutflux_TgCyr, lNAToutflux_TgCyr = grid_output$lNAToutflux_TgCyr,
-                    sNAToutflux_TgCyr = grid_output$sNAToutflux_TgCyr,                    
-                    fNPP_fraction = grid_output$fNPP, rNPP_fraction = grid_output$rNPP, wNPP_fraction = grid_output$wNPP,
-                    foliage_MTT_yr = grid_output$foliage_MTT_yr, fine_roots_MTT_yr = grid_output$roots_MTT_yr, 
-                    wood_MTT_yr = grid_output$wood_MTT_yr,
-                    litter_MTT_yr = grid_output$litter_MTT_yr, som_MTT_yr = grid_output$som_MTT_yr,
-                    dCfoliage_gCm2yr = grid_output$dCfoliage_gCm2yr, dCroots_gCm2yr = grid_output$dCroots_gCm2yr,
-                    dCwood_gCm2yr = grid_output$dCwood_gCm2yr,
-                    dClitter_gCm2yr = grid_output$dClitter_gCm2yr, dCsom_gCm2yr = grid_output$dCsom_gCm2yr)
-# Add any additional variables based on conditional statements
-if (length(which(names(grid_output) == "mean_woodlitter_gCm2")) > 0) {
-    # Create variables
-    grid_output$woodlitter_TgC = apply(grid_output$mean_woodlitter_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$dCwoodlitter_gCm2yr = apply(array(landfilter,dim = dims)*(grid_output$final_dCwoodlitter_gCm2/nos_years),3,mean, na.rm=TRUE)
-    # Assign to data.frame
-    output$wood_litter_TgC = grid_output$woodlitter_TgC
-    output$dCwoodlitter_gCm2yr = grid_output$dCwoodlitter_gCm2yr
-} # wood litter is simulated
-if (length(which(names(grid_output) == "mean_rhet_litter_gCm2")) > 0) {
-    # Create variables
-    grid_output$rhet_litter_TgCyr = apply(grid_output$mean_rhet_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    # Assign to data.frame
-    output$Rhet_litter_TgCyr = grid_output$rhet_litter_TgCyr
-} # litter respiration is output
-if (length(which(names(grid_output) == "mean_rhet_som_gCm2")) > 0) {
-    # Create variables
-    grid_output$rhet_som_TgCyr = apply(grid_output$mean_rhet_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    # Assign to data.frame
-    output$Rhet_som_TgCyr = grid_output$rhet_som_TgCyr
-} # som respiration is output
-if (length(which(names(grid_output) == "mean_rhet_som_gCm2")) > 0) {
-    # Create variables
-    grid_output$decomp_som_TgCyr = apply(grid_output$mean_decomp_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    # Assign to data.frame
-    output$Decomp_litter_TgCyr = grid_output$decomp_litter_TgCyr
-} # litter decomposition to som is output          
+agg_output = data.frame(area_ha = sum(area * landfilter, na.rm=TRUE) * 1e-4) # convertion m2->ha
+# Ecosystem gross fluxes
+agg_output$mean_gpp_TgCyr  = apply(grid_output$mean_gpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_npp_TgCyr  = apply(grid_output$mean_npp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_rauto_TgCyr= apply(grid_output$mean_rauto_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_rhet_TgCyr = apply(grid_output$mean_rhet_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+if (exists("mean_rhet_litter_gCm2day", where = grid_output)) {agg_output$mean_rhet_litter_TgCyr = apply(grid_output$mean_rhet_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+if (exists("mean_rhet_woodlitter_gCm2day", where = grid_output)) {agg_output$mean_rhet_woodlitter_TgCyr = apply(grid_output$mean_rhet_woodlitter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+if (exists("mean_rhet_som_gCm2day", where = grid_output)) {agg_output$mean_rhet_som_TgCyr = apply(grid_output$mean_rhet_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+agg_output$mean_nbp_TgCyr  = apply(grid_output$mean_nbp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_nbe_TgCyr  = apply(grid_output$mean_nbe_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_nee_TgCyr  = apply(grid_output$mean_nee_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_fire_TgCyr = apply(grid_output$mean_fire_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_harvest_TgCyr  = apply(grid_output$mean_harvest_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+# Ecosystem pools
+agg_output$mean_biomass_TgC= apply(grid_output$mean_biomass_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+agg_output$mean_dom_TgC= apply(grid_output$mean_dom_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+agg_output$mean_labile_TgC = apply(grid_output$mean_labile_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+agg_output$mean_foliage_TgC= apply(grid_output$mean_foliage_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+agg_output$mean_roots_TgC  = apply(grid_output$mean_roots_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+agg_output$mean_wood_TgC   = apply(grid_output$mean_wood_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+agg_output$mean_litter_TgC = apply(grid_output$mean_litter_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+if (exists(x = "mean_woodlitter_gCm2", where = grid_output)) {agg_output$mean_woodlitter_TgC = apply(grid_output$mean_woodlitter_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)}
+agg_output$mean_som_TgC= apply(grid_output$mean_som_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+# Natural C internal allocation fluxes
+agg_output$mean_alloc_labile_TgCyr = apply(grid_output$mean_alloc_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_combined_alloc_foliage_TgCyr   = apply(grid_output$mean_combined_alloc_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_alloc_foliage_TgCyr= apply(grid_output$mean_alloc_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_alloc_roots_TgCyr  = apply(grid_output$mean_alloc_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_alloc_wood_TgCyr   = apply(grid_output$mean_alloc_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)   
+agg_output$mean_foliage_to_litter_TgCyr= apply(grid_output$mean_foliage_to_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_roots_to_litter_TgCyr  = apply(grid_output$mean_roots_to_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_wood_to_litter_TgCyr   = apply(grid_output$mean_wood_to_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_litter_to_som_TgCyr= apply(grid_output$mean_litter_to_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+if (exists(x = "mean_woodlitter_to_som_gCm2day", where = grid_output)) {agg_output$mean_woodlitter_to_som_gCm2day = apply(grid_output$mean_woodlitter_to_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+# Fire fluxes
+agg_output$mean_FIRElitter_labile_TgCyr= apply(grid_output$mean_FIRElitter_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_FIRElitter_foliage_TgCyr   = apply(grid_output$mean_FIRElitter_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_FIRElitter_roots_TgCyr = apply(grid_output$mean_FIRElitter_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_FIRElitter_wood_TgCyr  = apply(grid_output$mean_FIRElitter_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_FIRElitter_litter_TgCyr= apply(grid_output$mean_FIRElitter_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+if (exists(x = "mean_FIRElitter_woodlitter_gCm2day", where = grid_output)) {grid_output$mean_FIRElitter_woodlitter_TgCyr = apply(grid_output$mean_FIRElitter_woodlitter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+agg_output$mean_FIRElitter_som_TgCyr   = apply(grid_output$mean_FIRElitter_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_FIREemiss_labile_TgCyr = apply(grid_output$mean_FIREemiss_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_FIREemiss_foliage_TgCyr= apply(grid_output$mean_FIREemiss_foliar_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_FIREemiss_roots_TgCyr  = apply(grid_output$mean_FIREemiss_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_FIREemiss_wood_TgCyr   = apply(grid_output$mean_FIREemiss_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_FIREemiss_litter_TgCyr = apply(grid_output$mean_FIREemiss_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+if (exists(x = "mean_FIREemiss_woodlitter_gCm2day", where = grid_output)) {grid_output$mean_FIREemiss_woodlitter_TgCyr = apply(grid_output$mean_FIREemiss_woodlitter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+agg_output$mean_FIREemiss_som_TgCyr= apply(grid_output$mean_FIREemiss_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+# Harvest fluxes
+agg_output$mean_HARVESTlitter_labile_TgCyr = apply(grid_output$mean_HARVESTlitter_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_HARVESTlitter_foliage_TgCyr= apply(grid_output$mean_HARVESTlitter_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_HARVESTlitter_roots_TgCyr  = apply(grid_output$mean_HARVESTlitter_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_HARVESTlitter_wood_TgCyr   = apply(grid_output$mean_HARVESTlitter_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_HARVESTextracted_labile_TgCyr  = apply(grid_output$mean_HARVESTextracted_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_HARVESTextracted_foliage_TgCyr = apply(grid_output$mean_HARVESTextracted_foliar_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_HARVESTextracted_roots_TgCyr   = apply(grid_output$mean_HARVESTextracted_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_HARVESTextracted_wood_TgCyr= apply(grid_output$mean_HARVESTextracted_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_HARVESTextracted_litter_TgCyr  = apply(grid_output$mean_HARVESTextracted_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+if (exists(x = "mean_HARVESTextracted_woodlitter_gCm2day", where = grid_output)) {grid_output$mean_HARVESTextracted_woodlitter_TgCyr = apply(grid_output$mean_HARVESTextracted_woodlitter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+agg_output$mean_HARVESTextracted_som_TgCyr = apply(grid_output$mean_HARVESTextracted_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+# Mean transist / residence times
+agg_output$biomass_MTT_yr = apply(array(landfilter,dim = dims)*grid_output$MTT_annual_biomass_years,3,mean, na.rm=TRUE)
+agg_output$dom_MTT_yr = apply(array(landfilter,dim = dims)*grid_output$MTT_annual_dom_years,3,mean, na.rm=TRUE)
+agg_output$labile_MTT_yr  = apply(array(landfilter,dim = dims)*grid_output$MTT_annual_labile_years,3,mean, na.rm=TRUE)
+agg_output$foliage_MTT_yr = apply(array(landfilter,dim = dims)*grid_output$MTT_annual_foliage_years,3,mean, na.rm=TRUE)
+agg_output$roots_MTT_yr   = apply(array(landfilter,dim = dims)*grid_output$MTT_annual_roots_years,3,mean, na.rm=TRUE)
+agg_output$wood_MTT_yr= apply(array(landfilter,dim = dims)*grid_output$MTT_annual_wood_years,3,mean, na.rm=TRUE)
+agg_output$litter_MTT_yr  = apply(array(landfilter,dim = dims)*grid_output$MTT_annual_litter_years,3,mean, na.rm=TRUE)
+if (exists(x = "MTT_annual_woodlitter_years", where = grid_output)) {grid_output$woodlitter_MTT_yr  = apply(array(landfilter,dim = dims)*grid_output$MTT_annual_woodlitter_years,3,mean, na.rm=TRUE)}
+agg_output$som_MTT_yr = apply(array(landfilter,dim = dims)*grid_output$MTT_annual_som_years,3,mean, na.rm=TRUE)
+# Mean stock changes per year
+agg_output$dCbiomass_gCm2yr  = apply(array(landfilter,dim = dims)*(grid_output$final_dCbiomass_gCm2/nos_years),3,mean, na.rm=TRUE)
+agg_output$dCdom_gCm2yr  = apply(array(landfilter,dim = dims)*(grid_output$final_dCdom_gCm2/nos_years),3,mean, na.rm=TRUE)
+agg_output$dClabile_gCm2yr   = apply(array(landfilter,dim = dims)*(grid_output$final_dClabile_gCm2/nos_years),3,mean, na.rm=TRUE)
+agg_output$dCfoliage_gCm2yr  = apply(array(landfilter,dim = dims)*(grid_output$final_dCfoliage_gCm2/nos_years),3,mean, na.rm=TRUE)
+agg_output$dCroots_gCm2yr= apply(array(landfilter,dim = dims)*(grid_output$final_dCroots_gCm2/nos_years),3,mean, na.rm=TRUE)
+agg_output$dCwood_gCm2yr = apply(array(landfilter,dim = dims)*(grid_output$final_dCwood_gCm2/nos_years),3,mean, na.rm=TRUE)
+agg_output$dClitter_gCm2yr   = apply(array(landfilter,dim = dims)*(grid_output$final_dClitter_gCm2/nos_years),3,mean, na.rm=TRUE)
+if (exists(x = "final_dCwoodlitter_gCm2", where = grid_output)) {grid_output$dCwoodlitter_gCm2yr = apply(array(landfilter,dim = dims)*(grid_output$final_dCwoodlitter_gCm2/nos_years),3,mean, na.rm=TRUE)}
+agg_output$dCsom_gCm2yr = apply(array(landfilter,dim = dims)*(grid_output$final_dCsom_gCm2/nos_years),3,mean, na.rm=TRUE)
+
+# Fractional partitioning of tunover to different drivers - should they exist
+agg_output$NaturalFractionOfTurnover_biomass = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_biomass,3,mean, na.rm=TRUE)
+agg_output$FireFractionOfTurnover_biomass = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_biomass,3,mean, na.rm=TRUE)
+agg_output$HarvestFractionOfTurnover_biomass = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_biomass,3,mean, na.rm=TRUE)
+agg_output$NaturalFractionOfTurnover_dom = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_dom,3,mean, na.rm=TRUE)
+agg_output$FireFractionOfTurnover_dom = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_dom,3,mean, na.rm=TRUE)
+agg_output$HarvestFractionOfTurnover_dom = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_dom,3,mean, na.rm=TRUE)
+agg_output$NaturalFractionOfTurnover_labile = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_labile,3,mean, na.rm=TRUE)
+agg_output$FireFractionOfTurnover_labile = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_labile,3,mean, na.rm=TRUE)
+agg_output$HarvestFractionOfTurnover_labile = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_labile,3,mean, na.rm=TRUE)
+agg_output$NaturalFractionOfTurnover_foliage = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_foliage,3,mean, na.rm=TRUE)
+agg_output$FireFractionOfTurnover_foliage = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_foliage,3,mean, na.rm=TRUE)
+agg_output$HarvestFractionOfTurnover_foliage = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_foliage,3,mean, na.rm=TRUE)
+agg_output$NaturalFractionOfTurnover_roots = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_roots,3,mean, na.rm=TRUE)
+agg_output$FireFractionOfTurnover_roots = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_roots,3,mean, na.rm=TRUE)
+agg_output$HarvestFractionOfTurnover_roots = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_roots,3,mean, na.rm=TRUE)
+agg_output$NaturalFractionOfTurnover_wood = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_wood,3,mean, na.rm=TRUE)
+agg_output$FireFractionOfTurnover_wood = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_wood,3,mean, na.rm=TRUE)
+agg_output$HarvestFractionOfTurnover_wood = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_wood,3,mean, na.rm=TRUE)
+agg_output$NaturalFractionOfTurnover_litter = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_litter,3,mean, na.rm=TRUE)
+agg_output$FireFractionOfTurnover_litter = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_litter,3,mean, na.rm=TRUE)
+agg_output$HarvestFractionOfTurnover_litter = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_litter,3,mean, na.rm=TRUE)
+if (exists(x = "NaturalFractionOfTurnover_woodlitter", where = grid_outputs)) {
+agg_output$NaturalFractionOfTurnover_woodlitter = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_woodlitter,3,mean, na.rm=TRUE)
+agg_output$FireFractionOfTurnover_woodlitter = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_woodlitter,3,mean, na.rm=TRUE)
+agg_output$HarvestFractionOfTurnover_woodlitter = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_woodlitter,3,mean, na.rm=TRUE)
+} 
+agg_output$NaturalFractionOfTurnover_som = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_som,3,mean, na.rm=TRUE)
+agg_output$FireFractionOfTurnover_som = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_som,3,mean, na.rm=TRUE)
+agg_output$HarvestFractionOfTurnover_som = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_som,3,mean, na.rm=TRUE)
     
 # Write out C budget
-write.table(output, file = paste(out_dir,"/",PROJECT$name,"_C_budget.csv",sep=""), row.names=FALSE, sep=",",append=FALSE)
+write.table(agg_output, file = paste(out_dir,"/",PROJECT$name,"_C_budget.csv",sep=""), row.names=FALSE, sep=",",append=FALSE)
 
 ###
 ## Plot overlayed PDFs for cluster specific and grid varying parameters and trait maps
