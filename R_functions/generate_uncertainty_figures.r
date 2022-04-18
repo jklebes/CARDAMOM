@@ -23,7 +23,7 @@ single_site_plotting_control<-function(n,PROJECT) {
 	     loadfile=paste(PROJECT$results_processedpath,PROJECT$sites[n],".RData",sep="")
        if (file.exists(loadfile)) {
            # model state and flux plotting with uncertainty
-           uncertainty_figures(n,PROJECT,load_file)
+           uncertainty_figures(n,PROJECT,loadfile)
        }
    } # parameters[1] != -9999
 
@@ -39,15 +39,15 @@ generate_uncertainty_figures<-function(PROJECT) {
    if (use_parallel & PROJECT$nosites > 1) {
 	     cl <- makeCluster(min(PROJECT$nosites,numWorkers), type = "PSOCK")
 	     # load R libraries in cluster
-	     clusterExport(cl,c("load_r_libraries","rmse","gsi_controlling",
-                          "read_parameter_chains","plotconfidence",
-                          "uncertainty_figures"))
+	     clusterExport(cl,c("load_r_libraries","rmse","have_chains_converged",
+                          "read_parameter_chains","plotconfidence","psrf",
+                          "uncertainty_figures","plot_parameters"))
 	     clusterEvalQ(cl, load_r_libraries())
-	     dummy=parLapply(cl,1:PROJECT$nosites,FUN=single_site_plotting_control,PROJECT=PROJECT)
+	     dummy = parLapply(cl,1:PROJECT$nosites,fun=single_site_plotting_control,PROJECT=PROJECT)
 	     stopCluster(cl)
 	 } else {
 	     # or use serial
-	     dummy=lapply(1:PROJECT$nosites,FUN=single_site_plotting_control,PROJECT=PROJECT)
+	     dummy = lapply(1:PROJECT$nosites,FUN=single_site_plotting_control,PROJECT=PROJECT)
 	 } # parallel option
 
 } # end function generate_uncertainty_figures

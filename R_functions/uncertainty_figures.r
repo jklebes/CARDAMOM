@@ -281,7 +281,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
    } # lai_m2m2
 
    # GPP (gC/m2/day)
-   if (which_plot == 2) {
+   if (exists(x = "gpp_gCm2day", where = states_all)) {
 
        # flip it to get the right shape
        var = t(states_all$gpp_gCm2day)
@@ -345,7 +345,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(obs, pch=16,xaxt="n", ylim=c(quantile(as.vector(nee_var),prob=c(0.001),na.rm=TRUE),quantile(as.vector(nee_var),prob=c(0.999),na.rm=TRUE)),
+       plot(obs, pch=16,xaxt="n", ylim=c(quantile(as.vector(var),prob=c(0.001),na.rm=TRUE),quantile(as.vector(var),prob=c(0.999),na.rm=TRUE)),
             cex=0.8,ylab="NEE (gC/m2/day)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
             main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],
