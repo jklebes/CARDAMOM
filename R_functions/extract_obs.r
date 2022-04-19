@@ -703,7 +703,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         deforestation = read_site_specific_obs("deforestation_fraction",infile)
         forest_management = read_site_specific_obs("management_type",infile)
-        if (length(forest_management) == 1) {forest_management = 2}
+        if (length(forest_management) == 1) {forest_management = rep(2, times = length(deforestation))}
         yield_class = -9999 #read_site_specific_obs("yield_class",infile)
         age = read_site_specific_obs("age",infile)
         if (length(age) > 1) {age = age[1]} # we only want the age at the beginning of the simulation
@@ -720,7 +720,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     } else {
         # assume no data available
         deforestation = 0
-        forest_management = 1
+        forest_management = 2
         yield_class = 0
         age = -9999
     }
