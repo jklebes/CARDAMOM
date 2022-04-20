@@ -14,8 +14,18 @@ plotconfidence <- function(y,x,nos_confint=20,col_start="red",low_confint=0.025,
     # Load library if needed
     require(colorspace)
 
-    colour_choices=colorRampPalette(c(lighten(col_start, amount = 0.7, space = "HLS", method = "relative"), col_start))
-    colour_choices=colour_choices(nos_confint)
+    # Ensure minimum value
+    nos_confint = max(nos_confint,2)
+    # Create the colour scheme
+    if (nos_confint > 2) {
+        # If we have more than an upper and lower quantile then we need to create
+        # multiple colours progressively lighter towards the edge
+        colour_choices=colorRampPalette(c(lighten(col_start, amount = 0.7, space = "HLS", method = "relative"), col_start))
+        colour_choices=colour_choices(nos_confint)
+    } else {
+        # If only 2 quantiles, then we will use the start colour itself
+        colour_choices = col_start
+    }
     # confidence ranges
     ci_wanted=seq(low_confint,high_confint,length.out=nos_confint)
     # split between the upper and lower values needed
