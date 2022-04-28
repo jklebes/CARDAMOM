@@ -153,7 +153,9 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     #Csom_initial_unc[Csom_initial_unc >= 0] = sqrt(Csom_initial_unc[Csom_initial_unc >= 0]**2 + 1000**2)
     # Assumed uncertainty structure as agreed with Anthony Bloom
     # NOTE minimum uncertainty bound irrespective of the dataset estimates
-    Csom_initial_unc[Csom_initial_unc > 0] = pmax(1000,sqrt(Csom_initial_unc[Csom_initial_unc > 0]**2 + (0.1*mean(Csom_initial[Csom_initial > 0]))**2))
+    #Csom_initial_unc[Csom_initial_unc > 0] = pmax(1000,sqrt(Csom_initial_unc[Csom_initial_unc > 0]**2 + (0.1*mean(Csom_initial[Csom_initial > 0]))**2))
+    # Assume structural uncertainty does not apply to initial conditions
+    Csom_initial_unc[Csom_initial_unc > 0] = pmax(1000,Csom_initial_unc[Csom_initial_unc > 0])
 
     ###
     ## Get some sand / clay information (%)

@@ -272,9 +272,14 @@ module CARBON_MODEL_MOD
 
   ! ACM-GPP-ET parameters
   double precision, parameter :: &
-                   pn_max_temp = 6.842942d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
-                   pn_opt_temp = 3.155960d+01,  & ! Optimum daily max temperature for photosynthesis (oC)
-                   pn_kurtosis = 1.889026d-01,  & ! Kurtosis of photosynthesis temperature response
+!                   pn_max_temp = 6.842942d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
+!                   pn_min_temp = -1d+06      ,  & ! Minimum daily max temperature for photosynthesis (oC)
+!                   pn_opt_temp = 3.155960d+01,  & ! Optimum daily max temperature for photosynthesis (oC)
+!                   pn_kurtosis = 1.889026d-01,  & ! Kurtosis of photosynthesis temperature response
+                   pn_max_temp = 59d0,          & ! Maximum daily max temperature for photosynthesis (oC)
+                   pn_min_temp = -4d0,          & ! Minimum daily max temperature for photosynthesis (oC)
+                   pn_opt_temp = 30d0,          & ! Optimum daily max temperature for photosynthesis (oC)
+                   pn_kurtosis = 0.07d0,        & ! Kurtosis of photosynthesis temperature response
                             e0 = 3.661204d+00,  & ! Quantum yield gC/MJ/m2/day PAR
                 minlwp_default =-1.808224d+00,  & ! minimum leaf water potential (MPa)
       soil_iso_to_net_coef_LAI =-2.717467d+00,  & ! Coefficient relating soil isothermal net radiation to net.
@@ -1809,7 +1814,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! maximum rate of temperature and nitrogen (canopy efficiency) limited
     ! photosynthesis (gC.m-2.day-1 -> umolC/m2/day)
-    metabolic_limited_photosynthesis = gC_to_umol*lai*ceff*opt_max_scaling(pn_max_temp,-1d6,pn_opt_temp,pn_kurtosis,leafT)
+    metabolic_limited_photosynthesis = gC_to_umol*lai*ceff*opt_max_scaling(pn_max_temp,pn_min_temp,pn_opt_temp,pn_kurtosis,leafT)
 
     !
     ! Light limited photosynthesis
