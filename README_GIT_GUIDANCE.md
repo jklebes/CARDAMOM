@@ -25,10 +25,10 @@
 ## 6) Tips:
 
 ### To the CARDAMOM respository
-1) git clone <remote-repo-url>
+1) git clone '<remote-repo-url>'
 
 ### To clone a specific branch
-1) git clone --branch <branchname> --single-branch <remote-repo-url>
+1) git clone --branch '<branchname>' --single-branch '<remote-repo-url>'
  
 ### To create a new branch from your local and then push to the remote:
 1) git status                 # there shouldn’t be any red or green files which are part of the framework before proceeding, if there are, commit them or resolve conflicts as needed
