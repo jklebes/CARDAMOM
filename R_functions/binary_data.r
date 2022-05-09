@@ -58,8 +58,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     modelid = 16
 #  } else if (modelname == " "){
 #    modelid = 17
-  } else if (modelname == "DALEC_CDEA_FIRE_LU"){
-    modelid = 18
+#  } else if (modelname == " "){
+#    modelid = 18
 #  } else if (modelname == " "){
 #    modelid = 19
   } else if (modelname == "DALEC_BUCKET"){

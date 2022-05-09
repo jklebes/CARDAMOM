@@ -132,7 +132,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ## Get some initial Csom (gC/m2) information
     ###
 
-    if (Csom_source == "HWSD" | Csom_source == "SoilGrids" | Csom_source == "NCSCD") {
+    if (Csom_source == "HWSD" | Csom_source == "SoilGrids" | Csom_source == "NCSCD" | Csom_source == "NCSCD3m") {
         Csom_info = extract_Csom_prior(grid_long_loc,grid_lat_loc,spatial_type,
                                        resolution,grid_type,latlon_wanted,Csom_all)
         Csom_initial = Csom_info$Csom_initial ; Csom_initial_unc = Csom_info$Csom_initial_unc
