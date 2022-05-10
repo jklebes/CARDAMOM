@@ -225,7 +225,7 @@ subroutine rdaleccdeaacm2bucket(output_dim,MTT_dim,SS_dim &
                             FLUXES(1:nodays,35)) &
                           / POOLS(1:nodays,5)) * lit_filter) / dble(nodays-sum(lit_hak))
      ! Soil
-     out_var2(i,6) = sum( ((FLUXES(1:nodays,14) + FLUXES(1:nodays,23) + FLUXES(1:nodays,29) + FLUXES(1:nodays,36)) &
+     out_var2(i,6) = sum( ((FLUXES(1:nodays,14) + FLUXES(1:nodays,23) + FLUXES(1:nodays,36)) &
                           / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
 
      !
