@@ -4,7 +4,7 @@
 ###
 
 # Set working directory in which the CARDAMOM code base can be found
-setwd("<Path to where CARDAMOM has been placed>")
+setwd("/home/s1832644/cardamom/CARDAMOM/")
 
 ###
 ## Options
@@ -25,8 +25,8 @@ timing=FALSE
 debug=FALSE
 
 ## about you (only valid if working on UoE remote server)
-username=" " # put your Edinburgh uun here
-home_computer=" "
+username="s1832644" # put your Edinburgh uun here
+home_computer="ssh.geos.ed.ac.uk"
 
 ## use parallel functions?
 use_parallel = FALSE
@@ -143,7 +143,7 @@ request_use_EDCs = TRUE        # Use EDCs
 # stage  3 : Copy back results and process vectors
 # stage  4 ; Do some standard figure creation (and further processing for gridded analysis)
 # stage  5 ; Currently out of use
-stage=-1
+stage=3
 repair=1 # to force (=1) re-run processed results or driver files if they already exist
 grid_override=FALSE # force site specific files to be saved and figures to be generated when in "grid" operation
 
