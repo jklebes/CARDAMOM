@@ -341,7 +341,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                          ,deltaWP & ! deltaWP (MPa) minlwp-soilWP
        ,wf,wl,ff,fl,osf,osl,sf,ml   ! phenological controls
 
-     ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
+    ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
     double precision :: cf(6),rfac(6), burnt_area
     ! local deforestation related variables
     double precision, dimension(5) :: post_harvest_burn      & ! how much burning to occur after
@@ -364,7 +364,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                        ,coarse_root_residue          &
                        ,soil_loss_with_roots
 
-    integer :: harvest_management,p,f,n,ii ! JFE added ii to loop over fluxes
+    integer :: harvest_management,p,f,n
 
     ! met drivers are:
     ! 1st run day
@@ -470,6 +470,114 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Set some initial states
     infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0
     intercepted_rainfall = 0d0 ; canopy_storage = 0d0 ; snow_storage = 0d0
+
+    ! load ACM-GPP-ET parameters
+    deltaWP = minlwp     ! leafWP-soilWP (i.e. -2-0)
+    Ceff = pars(11) ! Canopy efficiency (gC/m2/day)
+                    ! This is in the full model the product of Nitrogen use efficiency (gC/gN/m2leaf/day)
+                    ! and average foliar nitrogen gC/m2leaf
+    ! Rooting parameters
+    root_k = pars(26) ; max_depth = pars(27)
+
+    ! assigning initial conditions
+    if (start == 1) then
+       POOLS(1,1) = pars(18) ! labile
+       POOLS(1,2) = pars(19) ! foliar
+       POOLS(1,3) = pars(20) ! roots
+       POOLS(1,4) = pars(21) ! wood
+       POOLS(1,5) = pars(22) ! litter
+       POOLS(1,6) = pars(23) ! som
+       !POOLS(1,7) = assigned later ! soil water (0-10cm)
+    endif
+
+    ! Some time consuming variables we only want to set once
+    if (.not.allocated(deltat_1)) then
+        ! allocate variables dimension which are fixed per site only the once
+        allocate(deltat_1(nodays),wSWP_time(nodays),rSWP_time(nodays),gs_demand_supply_ratio(nodays), &
+                 gs_total_canopy(nodays),gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
+                 daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
+                 meant_time(nodays),rainfall_time(nodays),cica_time(nodays),root_depth_time(nodays))
+
+        !
+        ! Timing variables which are needed first
+        !
+
+        deltat_1 = deltat**(-1d0)
+
+        !
+        ! Iteration independent variables using functions and thus need to be in a loop
+        !
+
+        ! first those linked to the time period of the analysis
+        do n = 1, nodays
+           ! check positive values only for rainfall input
+           rainfall_time(n) = max(0d0,met(7,n))
+           ! calculate daylength in hours and seconds
+           call calculate_daylength((met(6,n)-(deltat(n)*0.5d0)),lat)
+           daylength_hours(n) = dayl_hours ; daylength_seconds(n) = dayl_seconds
+        end do
+
+        ! calculate inverse for each time step in seconds
+        daylength_seconds_1 = daylength_seconds ** (-1d0)
+        ! meant time step temperature
+        meant_time = (met(2,:)+met(3,:)) * 0.5d0
+        ! fraction of temperture period above freezing
+        airt_zero_fraction_time = (met(3,:)-0d0) / (met(3,:)-met(2,:))
+
+        ! number of time steps per year
+        steps_per_year = nint(dble(nodays)/(sum(deltat)*0.002737851d0))
+        ! mean days per step
+        mean_days_per_step = sum(deltat) / dble(nodays)
+
+        !
+        ! Initialise the water model
+        !
+
+        ! zero variables not done elsewhere
+        total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0
+        ! initialise some time invarient parameters
+        call saxton_parameters(soil_frac_clay,soil_frac_sand)
+        call initialise_soils(soil_frac_clay,soil_frac_sand)
+        call update_soil_initial_conditions(pars(24))
+        ! save the initial conditions for later
+        soil_waterfrac_initial = soil_waterfrac
+        SWP_initial = SWP
+        field_capacity_initial = field_capacity
+        porosity_initial = porosity
+
+    else ! deltat_1 allocated?
+
+        !
+        ! Load initial soil water conditions from memory
+        !
+
+        total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0
+        soil_waterfrac = soil_waterfrac_initial
+        SWP = SWP_initial
+        field_capacity = field_capacity_initial
+        porosity = porosity_initial
+
+        ! input initial soil water fraction then
+        ! update SWP and soil conductivity accordingly
+        call update_soil_initial_conditions(pars(24))
+
+    endif ! deltat_1 allocated
+
+    ! Defining phenological variables
+    ! release period coefficient, based on duration of labile turnover or leaf
+    ! fall durations
+    wf = pars(16)*sqrt(2d0) * 0.5d0
+    wl = pars(14)*sqrt(2d0) * 0.5d0
+    ! magnitude coefficient
+    ff = (log(pars(5))-log(pars(5)-1d0)) * 0.5d0
+    fl = (log(1.001d0)-log(0.001d0)) * 0.5d0
+    ! set minium labile life span to one year
+    ml = 1.001d0
+    ! offset for labile and leaf turnovers
+    osf = ospolynomial(pars(5),wf)
+    osl = ospolynomial(ml,wl)
+    ! scaling to biyearly sine curve
+    sf = 365.25d0/pi
 
     ! if either of our disturbance drivers indicate disturbance will occur then
     ! set up these components
@@ -603,133 +711,25 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! Resilience factor for non-combusted tissue
         rfac = 0.5d0 ; rfac(5) = 0.1d0 ; rfac(6) = 0d0
 
+        ! JFE added 4 May 2018 - define fire constants
+        ! Update fire parameters derived from
+        ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
+        ! Subsequently expanded by T. L. Smallman & Mat Williams (UoE, 03/09/2021)
+        ! to provide specific CC for litter and wood litter.
+        ! NOTE: changes also result in the addition of further EDCs
+
+        ! Assign proposed resilience factor
+        rfac(1:4) = pars(28)
+        rfac(5) = 0.1d0 ; rfac(6) = 0d0
+        ! Assign combustion completeness to foliage
+        cf(2) = pars(29) ! foliage
+        ! Assign combustion completeness to non-photosynthetic
+        cf(1) = pars(30) ; cf(3) = pars(30) ; cf(4) = pars(30)
+        cf(6) = pars(31) ! soil
+        ! derived values for litter
+        cf(5) = pars(32)
+
     end if ! disturbance ?
-
-    ! load ACM-GPP-ET parameters
-    deltaWP = minlwp     ! leafWP-soilWP (i.e. -2-0)
-    Ceff = pars(11) ! Canopy efficiency (gC/m2/day)
-                    ! This is in the full model the product of Nitrogen use efficiency (gC/gN/m2leaf/day)
-                    ! and average foliar nitrogen gC/m2leaf
-    ! Rooting parameters
-    root_k = pars(26) ; max_depth = pars(27)
-
-    ! assigning initial conditions
-    if (start == 1) then
-       POOLS(1,1) = pars(18) ! labile
-       POOLS(1,2) = pars(19) ! foliar
-       POOLS(1,3) = pars(20) ! roots
-       POOLS(1,4) = pars(21) ! wood
-       POOLS(1,5) = pars(22) ! litter
-       POOLS(1,6) = pars(23) ! som
-       !POOLS(1,7) = assigned later ! soil water (0-10cm)
-    endif
-
-    ! Some time consuming variables we only want to set once
-    if (.not.allocated(deltat_1)) then
-        ! allocate variables dimension which are fixed per site only the once
-        allocate(deltat_1(nodays),wSWP_time(nodays),rSWP_time(nodays),gs_demand_supply_ratio(nodays), &
-                 gs_total_canopy(nodays),gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
-                 daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
-                 meant_time(nodays),rainfall_time(nodays),cica_time(nodays),root_depth_time(nodays))
-
-        !
-        ! Timing variables which are needed first
-        !
-
-        deltat_1 = deltat**(-1d0)
-
-        !
-        ! Iteration independent variables using functions and thus need to be in a loop
-        !
-
-        ! first those linked to the time period of the analysis
-        do n = 1, nodays
-           ! check positive values only for rainfall input
-           rainfall_time(n) = max(0d0,met(7,n))
-           ! calculate daylength in hours and seconds
-           call calculate_daylength((met(6,n)-(deltat(n)*0.5d0)),lat)
-           daylength_hours(n) = dayl_hours ; daylength_seconds(n) = dayl_seconds
-        end do
-
-        ! calculate inverse for each time step in seconds
-        daylength_seconds_1 = daylength_seconds ** (-1d0)
-        ! meant time step temperature
-        meant_time = (met(2,:)+met(3,:)) * 0.5d0
-        ! fraction of temperture period above freezing
-        airt_zero_fraction_time = (met(3,:)-0d0) / (met(3,:)-met(2,:))
-
-        ! number of time steps per year
-        steps_per_year = nint(dble(nodays)/(sum(deltat)*0.002737851d0))
-        ! mean days per step
-        mean_days_per_step = sum(deltat) / dble(nodays)
-
-        !
-        ! Initialise the water model
-        !
-
-        ! zero variables not done elsewhere
-        total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0
-        ! initialise some time invarient parameters
-        call saxton_parameters(soil_frac_clay,soil_frac_sand)
-        call initialise_soils(soil_frac_clay,soil_frac_sand)
-        call update_soil_initial_conditions(pars(24))
-        ! save the initial conditions for later
-        soil_waterfrac_initial = soil_waterfrac
-        SWP_initial = SWP
-        field_capacity_initial = field_capacity
-        porosity_initial = porosity
-
-    else ! deltat_1 allocated?
-
-        !
-        ! Load initial soil water conditions from memory
-        !
-
-        total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0
-        soil_waterfrac = soil_waterfrac_initial
-        SWP = SWP_initial
-        field_capacity = field_capacity_initial
-        porosity = porosity_initial
-
-        ! input initial soil water fraction then
-        ! update SWP and soil conductivity accordingly
-        call update_soil_initial_conditions(pars(24))
-
-    endif ! deltat_1 allocated
-
-    ! Defining phenological variables
-    ! release period coefficient, based on duration of labile turnover or leaf
-    ! fall durations
-    wf = pars(16)*sqrt(2d0) * 0.5d0
-    wl = pars(14)*sqrt(2d0) * 0.5d0
-    ! magnitude coefficient
-    ff = (log(pars(5))-log(pars(5)-1d0)) * 0.5d0
-    fl = (log(1.001d0)-log(0.001d0)) * 0.5d0
-    ! set minium labile life span to one year
-    ml = 1.001d0
-    ! offset for labile and leaf turnovers
-    osf = ospolynomial(pars(5),wf)
-    osl = ospolynomial(ml,wl)
-    ! scaling to biyearly sine curve
-    sf = 365.25d0/pi
-
-    ! JFE added 4 May 2018 - define fire constants
-    ! Update fire parameters derived from
-    ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
-    ! Subsequently expanded by T. L. Smallman & Mat Williams (UoE, 03/09/2021)
-    ! to provide specific CC for litter and wood litter.
-    ! NOTE: changes also result in the addition of further EDCs
-
-    ! Assign proposed resilience factor
-    rfac(1:4) = pars(28)
-    rfac(5) = 0.1d0 ; rfac(6) = 0d0
-    ! Assign combustion completeness to foliage
-    cf(2) = pars(29) ! foliage
-    ! Assign combustion completeness to non-photosynthetic
-    cf(1) = pars(30) ; cf(3) = pars(30) ; cf(4) = pars(30)
-    cf(6) = pars(31) ! soil
-    ! derived values for litter
-    cf(5) = pars(32)
 
     !
     ! Begin looping through each time step
