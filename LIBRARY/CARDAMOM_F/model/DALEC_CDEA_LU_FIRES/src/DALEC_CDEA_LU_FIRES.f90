@@ -565,7 +565,7 @@ contains
               ! But these variables allow for subseqent management where surface litter
               ! pools are removed or mechanical extraction from soil occurs.
               FLUXES(n,30) = (labile_loss-labile_residue) / deltat(n)  ! Labile extraction
-              FLUXES(n,31) = (foliar_loss-foliar_residue) / deltat(n) ! foliage extraction
+              FLUXES(n,31) = (foliar_loss-foliar_residue) / deltat(n)  ! foliage extraction
               FLUXES(n,32) = (roots_loss-roots_residue) / deltat(n)    ! fine roots extraction
               FLUXES(n,33) = (wood_loss-wood_residue) / deltat(n)      ! wood extraction
               FLUXES(n,34) = 0d0 ! litter extraction
@@ -645,7 +645,7 @@ contains
               POOLS(n+1,5) = POOLS(n+1,5) + (FLUXES(n,24) + FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22) - FLUXES(n,28)) * deltat(n)
               POOLS(n+1,6) = POOLS(n+1,6) + (FLUXES(n,27) + FLUXES(n,28) - FLUXES(n,23)) * deltat(n)
 
-              ! calculate ecosystem emissions (gC/m2/day)
+              ! calculate ecosystem fire emissions (gC/m2/day)
               FLUXES(n,17) = FLUXES(n,18)+FLUXES(n,19)+FLUXES(n,20)+FLUXES(n,21)+FLUXES(n,22)+FLUXES(n,23)
 
           end if ! Burned_area > 0
