@@ -675,8 +675,8 @@ contains
         ! removal which is imposed directly on these pools. These fractions vary
         ! the assumption that the fine and coarse roots are mechanically removed.
         ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(1)  = 0d0
-        rootcr_frac_removal(1) = 0d0
+        roots_frac_removal(2)  = 0d0
+        rootcr_frac_removal(2) = 0d0
         ! harvest residue (fraction); 1 = all remains, 0 = all removed
         foliage_frac_res(2) = 1d0
         roots_frac_res(2)   = 1d0
