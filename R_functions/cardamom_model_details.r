@@ -42,7 +42,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     # Number of model parameters to be optimised
     nopools=array(6,dim=c(length(ctessel_pft)))
     nopars=array(28,dim=c(length(ctessel_pft)))
-    nofluxes=array(28,dim=c(length(ctessel_pft)))
+    nofluxes=array(39,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC_CDEA_LU_FIRES",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } else if (modelname == "DALEC_CDEA_ACM2") {
     # information contains is

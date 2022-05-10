@@ -85,7 +85,7 @@ subroutine rdaleccdeaacm2bucketrmrgcwdwmrt(output_dim,aNPP_dim,MTT_dim,SS_dim,fi
 
   ! update soil parameters
   soil_frac_clay = soil_frac_clay_in
-  soil_frac_sand = soil_frac_clay_in
+  soil_frac_sand = soil_frac_sand_in
 
   ! generate deltat step from input data
   deltat(1) = met(1,1)

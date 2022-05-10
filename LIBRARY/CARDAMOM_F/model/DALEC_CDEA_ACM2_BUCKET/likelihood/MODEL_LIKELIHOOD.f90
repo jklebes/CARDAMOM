@@ -1016,8 +1016,7 @@ module model_likelihood_module
         ! Determine the anomalies based on substraction of the global mean
         ! Greater information would come from breaking this down into annual estimates
         tot_exp = sum( (((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)-model) - &
-                        (DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe)) - obs)) / &
-                        DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe)))**2 )
+                        (DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe)) - obs)) / unc)**2 )
         likelihood = likelihood-tot_exp
     endif
 
@@ -1042,8 +1041,7 @@ module model_likelihood_module
         ! Determine the anomalies based on substraction of the global mean
         ! Greater information would come from breaking this down into annual estimates
         tot_exp = sum( (((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-model) - &
-                        (DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp)) - obs)) / &
-                        DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2 )
+                        (DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp)) - obs)) / unc)**2 )
         likelihood = likelihood-tot_exp
     endif
 
@@ -1075,8 +1073,7 @@ module model_likelihood_module
         ! Determine the anomalies based on substraction of the global mean
         ! Greater information would come from breaking this down into annual estimates
         tot_exp = sum( (((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-model) - &
-                        (DATAin%Fire(DATAin%Firepts(1:DATAin%nFire)) - obs)) / &
-                        DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2 )
+                        (DATAin%Fire(DATAin%Firepts(1:DATAin%nFire)) - obs)) / unc)**2 )
         likelihood = likelihood-tot_exp
     endif
 
@@ -1342,8 +1339,7 @@ module model_likelihood_module
         ! Determine the anomalies based on substraction of the global mean
         ! Greater information would come from breaking this down into annual estimates
         tot_exp = sum( (((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)-model) - &
-                        (DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe)) - obs)) / &
-                        DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe)))**2 )
+                        (DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe)) - obs)) / unc)**2 )
         scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nnbe))
     endif
 
@@ -1369,8 +1365,7 @@ module model_likelihood_module
         ! Determine the anomalies based on substraction of the global mean
         ! Greater information would come from breaking this down into annual estimates
         tot_exp = sum( (((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-model) - &
-                        (DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp)) - obs)) / &
-                        DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2 )
+                        (DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp)) - obs)) / unc)**2 )
         scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%ngpp))
     endif
 
@@ -1402,8 +1397,7 @@ module model_likelihood_module
         ! Determine the anomalies based on substraction of the global mean
         ! Greater information would come from breaking this down into annual estimates
         tot_exp = sum( (((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-model) - &
-                        (DATAin%Fire(DATAin%Firepts(1:DATAin%nFire)) - obs)) / &
-                        DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2 )
+                        (DATAin%Fire(DATAin%Firepts(1:DATAin%nFire)) - obs)) / unc)**2 )
         scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nFire))
     endif
 

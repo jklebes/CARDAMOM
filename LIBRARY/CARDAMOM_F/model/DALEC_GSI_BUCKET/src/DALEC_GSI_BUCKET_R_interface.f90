@@ -105,7 +105,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
   allocate(itemp(nodays),ivpd(nodays),iphoto(nodays))
   ! update soil parameters
   soil_frac_clay = soil_frac_clay_in
-  soil_frac_sand = soil_frac_clay_in
+  soil_frac_sand = soil_frac_sand_in
 
   ! generate deltat step from input data
   deltat(1) = met(1,1)

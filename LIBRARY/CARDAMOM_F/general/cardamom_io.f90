@@ -168,7 +168,7 @@ module cardamom_io
         ! DALEC_CDEA_LU_FIRES_ET - added 03/05/2018 JFE
         DATAin%nopools = 6
         DATAin%nopars = 28
-        DATAin%nofluxes = 28
+        DATAin%nofluxes = 39
         !change ID code below to resolve conflict when merging with jeff = 23/10/18
     else if (DATAin%ID == 19) then
         ! ID = 19 - DALECN_BUCKET
