@@ -60,7 +60,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
                   nc_close(data1)
 
                   # Turn lat_in / long_in from vectors to arrays
-                  lat_in = t(array(lat_in, dim=c(dim(var1_in)[2],dim(var1_in)[1])))
+                  lat_in = t(array(lat_in[length(lat_in):1], dim=c(dim(var1_in)[2],dim(var1_in)[1])))
                   long_in = array(long_in, dim=c(dim(var1_in)[1],dim(var1_in)[2]))
 
                   # Loop through each timestep in the year
@@ -87,7 +87,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
                        # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
                        # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
                        if (spatial_type == "grid") {
-                           if (res(var1)[1] < res(cardamom_ext)[1] | res(var1)[2] < res(cardamom_ext)[2]) {
+                           if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
 
                                # Create raster with the target resolution
                                target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
@@ -141,7 +141,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
         # restructure
         nbe_gCm2day = array(nbe_gCm2day, dim=c(xdim,ydim,length(doy_obs)))
         nbe_unc_gCm2day = array(nbe_unc_gCm2day, dim=c(xdim,ydim,length(doy_obs)))
-image.plot(apply(nbe_gCm2day,c(1,2)))
+
         # output variables
         return(list(nbe_gCm2day = nbe_gCm2day, nbe_unc_gCm2day = nbe_unc_gCm2day,
                     doy_obs = doy_obs, lat = lat, long = long, missing_years = missing_years))
