@@ -9,7 +9,7 @@ subroutine rdaleccdeaacm2bucketrmrg(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim 
 
   use CARBON_MODEL_MOD, only: CARBON_MODEL, extracted_C, wSWP_time &
                              ,soil_frac_clay, soil_frac_sand, nos_soil_layers &
-                             ,gs_demand_supply_ratio, cica_time, Rg_from_labile, &
+                             ,gs_demand_supply_ratio, cica_time, Rg_from_labile &
                              ,gs_total_canopy, gb_total_canopy, canopy_par_MJday_time
 
   ! subroutine specificially deals with the calling of the fortran code model by
