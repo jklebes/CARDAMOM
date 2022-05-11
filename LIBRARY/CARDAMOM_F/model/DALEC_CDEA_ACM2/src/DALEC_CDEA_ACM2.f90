@@ -1685,7 +1685,7 @@ metabolic_limited_photosynthesis, &
     root_reach = max_depth * root_biomass / (root_k + root_biomass)
     ! Determine initial soil layer thickness
     layer_thickness(1) = top_soil_depth ; layer_thickness(2) = max(min_layer,root_reach-top_soil_depth)
-    layer_thickness(3) = max_depth - sum(layer_thickness(1:3))
+    layer_thickness(3) = max_depth - sum(layer_thickness(1:2))
     layer_thickness(4) = top_soil_depth
 
     ! The original SPA src generates an exponential distribution which aims

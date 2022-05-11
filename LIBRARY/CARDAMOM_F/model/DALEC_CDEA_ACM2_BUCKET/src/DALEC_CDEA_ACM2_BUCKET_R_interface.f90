@@ -3,7 +3,7 @@ subroutine rdaleccdeaacm2bucket(output_dim,MTT_dim,SS_dim &
                                ,met,pars &
                                ,out_var1,out_var2,out_var3 &
                                ,lat,nopars,nomet &
-                               ,nofluxes,nopools,nodays,noyears,deltat &
+                               ,nofluxes,nopools,nodays,deltat &
                                ,nos_iter,soil_frac_clay_in,soil_frac_sand_in)
 
   use CARBON_MODEL_MOD, only: CARBON_MODEL, wSWP_time &
@@ -30,7 +30,6 @@ subroutine rdaleccdeaacm2bucket(output_dim,MTT_dim,SS_dim &
                         ,MTT_dim        & ! number of pools mean transit time estimates
                         ,SS_dim         & ! number of pools the steady state will be output for
                         ,nos_iter       & !
-                        ,noyears        &
                         ,nomet          & ! number of meteorological fields
                         ,nofluxes       & ! number of model fluxes
                         ,nopools        & ! number of model pools
@@ -50,7 +49,7 @@ subroutine rdaleccdeaacm2bucket(output_dim,MTT_dim,SS_dim &
 
   ! local variables
   ! vector of ecosystem pools
-  integer :: i, y, y_s, y_e, nos_years, steps_per_year
+  integer :: i, nos_years, steps_per_year
   integer, dimension(nodays) :: lab_hak, fol_hak, root_hak, wood_hak, lit_hak, som_hak
   double precision, dimension((nodays+1),nopools) :: POOLS
   ! vector of ecosystem fluxes
@@ -70,8 +69,8 @@ subroutine rdaleccdeaacm2bucket(output_dim,MTT_dim,SS_dim &
   out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0
 
   ! update soil parameters
-  soil_frac_clay = soil_frac_clay_in
-  soil_frac_sand = soil_frac_sand_in
+  soil_frac_clay(1:nos_soil_layers) = soil_frac_clay_in(1:nos_soil_layers)
+  soil_frac_sand(1:nos_soil_layers) = soil_frac_sand_in(1:nos_soil_layers)
 
   ! generate deltat step from input data
   deltat(1) = met(1,1)
@@ -199,7 +198,7 @@ subroutine rdaleccdeaacm2bucket(output_dim,MTT_dim,SS_dim &
      end where
 
      ! Estimate MRT (years)
-     ! Labile18,24,31,37
+     ! Labile
      out_var2(i,1) = sum( ((FLUXES(1:nodays,8) + &
                             FLUXES(1:nodays,18) + FLUXES(1:nodays,24) + &
                             FLUXES(1:nodays,31) + FLUXES(1:nodays,37)) &
@@ -243,8 +242,9 @@ subroutine rdaleccdeaacm2bucket(output_dim,MTT_dim,SS_dim &
                          FLUXES(:,37)+FLUXES(:,38)+FLUXES(:,39)) ! litter (foliage + roots)
      ! While foliar and fine root litter can be reasonably estimated directly (above),
      ! soil C inputs are still changing as the wood pool is not in steady state.
-     ! Therefore, at this point we can account for disturbance inputs but NOT wood.
-     ! The wood input is estimated later based on the steady state its steady state estimate
+     ! Therefore, at this point we can account for disturbance inputs (including wood)
+     ! but NOT natural wood. The natural wood input is estimated later based on the
+     ! its steady state estimate.
      out_var3(i,6) = sum(FLUXES(:,15)+FLUXES(:,27)+FLUXES(:,28)+FLUXES(:,40)) ! som
 
   end do ! nos_iter loop
@@ -257,9 +257,11 @@ subroutine rdaleccdeaacm2bucket(output_dim,MTT_dim,SS_dim &
   ! litter and soil pools updated below...
   out_var3 = (out_var3 / dble(nodays)) * 365.25d0 ! convert to annual mean input
   ! Then estimate the labile, foliar, fine root, wood and litter steady states.
-  out_var3(:,1:5) = out_var3(:,1:5) * out_var2(:,1:5) ! multiply by residence time in years
+  out_var3(1:nos_iter,1:5) = out_var3(1:nos_iter,1:5) * out_var2(1:nos_iter,1:5) ! multiply by residence time in years
   ! Using the wood SS estimate (gC/m2) the steady state input to the som litter pool...
-  out_var3(:,6) = (out_var3(:,6) + (out_var3(:,4) / out_var2(:,4))) * out_var2(:,6)
+  out_var3(1:nos_iter,6) = (out_var3(1:nos_iter,6) + &
+                           (out_var3(1:nos_iter,4) / out_var2(1:nos_iter,4))) &
+                         * out_var2(1:nos_iter,6)
 
   ! return back to the subroutine then
   return
