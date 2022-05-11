@@ -50,7 +50,7 @@ module CARBON_MODEL_MOD
   double precision, parameter :: xacc = 1d-4        & ! accuracy parameter for zbrent bisection proceedure ! 0.0001
                               ,vsmall = tiny(0d0)*1e3
 
-  integer, parameter :: nos_root_layers = 3, nos_soil_layers = nos_root_layers + 1
+  integer, parameter :: nos_root_layers = 2, nos_soil_layers = nos_root_layers + 1
   double precision, parameter :: pi = 3.1415927d0,    &
                                pi_1 = 0.3183099d0,    & ! pi**(-1d0)
                              two_pi = 6.283185d0,     & ! pi*2d0
@@ -105,8 +105,7 @@ module CARBON_MODEL_MOD
                        tower_height = canopy_height + 2d0, & ! tower (observation) height assumed to be 2 m above canopy
                            min_wind = 0.2d0,        & ! minimum wind speed at canopy top
                           min_layer = 0.03d0,       & ! minimum thickness of the third rooting layer (m)
-                     top_soil_depth = 0.15d0,       & ! thickness of the top soil layer (m)
-                     mid_soil_depth = 0.15d0,       & ! thickness of the second soil layer (m)
+                     top_soil_depth = 0.30d0,       & ! thickness of the top soil layer (m)
                            min_root = 5d0,          & ! minimum root biomass (gBiomass.m-2)
                             min_lai = 0.1d0           ! minimum LAI assumed for aerodynamic conductance calculations (m2/m2)
 
@@ -1685,10 +1684,9 @@ metabolic_limited_photosynthesis, &
     ! calculate soil depth to which roots reach
     root_reach = max_depth * root_biomass / (root_k + root_biomass)
     ! Determine initial soil layer thickness
-    layer_thickness(1) = top_soil_depth ; layer_thickness(2) = mid_soil_depth
-    layer_thickness(3) = max(min_layer,root_reach-sum(layer_thickness(1:2)))
-    layer_thickness(4) = max_depth - sum(layer_thickness(1:3))
-    layer_thickness(5) = top_soil_depth
+    layer_thickness(1) = top_soil_depth ; layer_thickness(2) = max(min_layer,root_reach-top_soil_depth)
+    layer_thickness(3) = max_depth - sum(layer_thickness(1:3))
+    layer_thickness(4) = top_soil_depth
 
     ! The original SPA src generates an exponential distribution which aims
     ! to maintain 50 % of root biomass in the top 25 % of the rooting depth.
