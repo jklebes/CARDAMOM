@@ -993,57 +993,57 @@ module model_likelihood_module
     ! initial value
     likelihood = 0d0 ; infini = 0d0 ; mid_state = 0d0
 
-!    ! NBE Log-likelihood
-!    if (DATAin%nnbe > 0) then
-!       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
-!                       -DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
-!                       /DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe)))**2)
-!       likelihood = likelihood-tot_exp
-!    endif
     ! NBE Log-likelihood
-    ! NBE partitioned between the mean flux and seasonal anomalies
     if (DATAin%nnbe > 0) then
-        ! Determine the mean value for model, observtion and uncertainty estimates
-        obs   = sum(DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
-              / dble(DATAin%nnbe)
-        model = sum(DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+ &
-                    DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
-              / dble(DATAin%nnbe)
-        unc   = sum(DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe))) &
-              / dble(DATAin%nnbe)
-        ! Update the likelihood score with the mean bias
-        likelihood = likelihood - (((model - obs) / unc) ** 2)
-        ! Determine the anomalies based on substraction of the global mean
-        ! Greater information would come from breaking this down into annual estimates
-        tot_exp = sum( (((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)-model) - &
-                        (DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe)) - obs)) / unc)**2 )
-        likelihood = likelihood-tot_exp
+       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+                       -DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
+                       /DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe)))**2)
+       likelihood = likelihood-tot_exp
     endif
+!    ! NBE Log-likelihood
+!    ! NBE partitioned between the mean flux and seasonal anomalies
+!    if (DATAin%nnbe > 0) then
+!        ! Determine the mean value for model, observtion and uncertainty estimates
+!        obs   = sum(DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
+!              / dble(DATAin%nnbe)
+!        model = sum(DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+ &
+!                    DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+!              / dble(DATAin%nnbe)
+!        unc   = sum(DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe))) &
+!              / dble(DATAin%nnbe)
+!        ! Update the likelihood score with the mean bias
+!        likelihood = likelihood - (((model - obs) / unc) ** 2)
+!        ! Determine the anomalies based on substraction of the global mean
+!        ! Greater information would come from breaking this down into annual estimates
+!        tot_exp = sum( (((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)-model) - &
+!                        (DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe)) - obs)) / unc)**2 )
+!        likelihood = likelihood-tot_exp
+!    endif
 
     ! GPP Log-likelihood
-!    if (DATAin%ngpp > 0) then
-!       tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
-!                       /DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2)
-!       likelihood = likelihood-tot_exp
-!    endif
-    ! GPP Log-likelihood
-    ! GPP partitioned between the mean flux and seasonal anomalies
     if (DATAin%ngpp > 0) then
-        ! Determine the mean value for model, observtion and uncertainty estimates
-        obs   = sum(DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
-              / dble(DATAin%ngpp)
-        model = sum(DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))) &
-              / dble(DATAin%ngpp)
-        unc   = sum(DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp))) &
-              / dble(DATAin%ngpp)
-        ! Update the likelihood score with the mean bias
-        likelihood = likelihood - (((model - obs) / unc) ** 2)
-        ! Determine the anomalies based on substraction of the global mean
-        ! Greater information would come from breaking this down into annual estimates
-        tot_exp = sum( (((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-model) - &
-                        (DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp)) - obs)) / unc)**2 )
-        likelihood = likelihood-tot_exp
+       tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
+                       /DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2)
+       likelihood = likelihood-tot_exp
     endif
+!    ! GPP Log-likelihood
+!    ! GPP partitioned between the mean flux and seasonal anomalies
+!    if (DATAin%ngpp > 0) then
+!        ! Determine the mean value for model, observtion and uncertainty estimates
+!        obs   = sum(DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
+!              / dble(DATAin%ngpp)
+!        model = sum(DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))) &
+!              / dble(DATAin%ngpp)
+!        unc   = sum(DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp))) &
+!              / dble(DATAin%ngpp)
+!        ! Update the likelihood score with the mean bias
+!        likelihood = likelihood - (((model - obs) / unc) ** 2)
+!        ! Determine the anomalies based on substraction of the global mean
+!        ! Greater information would come from breaking this down into annual estimates
+!        tot_exp = sum( (((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-model) - &
+!                        (DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp)) - obs)) / unc)**2 )
+!        likelihood = likelihood-tot_exp
+!    endif
 
     ! Evap Log-likelihood
     if (DATAin%nEvap > 0) then
@@ -1053,29 +1053,29 @@ module model_likelihood_module
     endif
 
     ! Fire Log-likelihood
-!    if (DATAin%nFire > 0) then
-!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
-!                       /DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2)
-!       likelihood = likelihood-tot_exp
-!    endif
-    ! Fire Log-likelihood
-    ! Fire partitioned between the mean flux and seasonal anomalies
     if (DATAin%nFire > 0) then
-        ! Determine the mean value for model, observtion and uncertainty estimates
-        obs   = sum(DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
-              / dble(DATAin%nFire)
-        model = sum(DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)) &
-              / dble(DATAin%nFire)
-        unc   = sum(DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire))) &
-              / dble(DATAin%nFire)
-        ! Update the likelihood score with the mean bias
-        likelihood = likelihood - (((model - obs) / unc) ** 2)
-        ! Determine the anomalies based on substraction of the global mean
-        ! Greater information would come from breaking this down into annual estimates
-        tot_exp = sum( (((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-model) - &
-                        (DATAin%Fire(DATAin%Firepts(1:DATAin%nFire)) - obs)) / unc)**2 )
-        likelihood = likelihood-tot_exp
+       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
+                       /DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2)
+       likelihood = likelihood-tot_exp
     endif
+!    ! Fire Log-likelihood
+!    ! Fire partitioned between the mean flux and seasonal anomalies
+!    if (DATAin%nFire > 0) then
+!        ! Determine the mean value for model, observtion and uncertainty estimates
+!        obs   = sum(DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
+!              / dble(DATAin%nFire)
+!        model = sum(DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)) &
+!              / dble(DATAin%nFire)
+!        unc   = sum(DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire))) &
+!              / dble(DATAin%nFire)
+!        ! Update the likelihood score with the mean bias
+!        likelihood = likelihood - (((model - obs) / unc) ** 2)
+!        ! Determine the anomalies based on substraction of the global mean
+!        ! Greater information would come from breaking this down into annual estimates
+!        tot_exp = sum( (((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-model) - &
+!                        (DATAin%Fire(DATAin%Firepts(1:DATAin%nFire)) - obs)) / unc)**2 )
+!        likelihood = likelihood-tot_exp
+!    endif
 
     ! Assume physical property is best represented as the mean of value at beginning and end of times step
     if (DATAin%nlai > 0) then
@@ -1315,59 +1315,59 @@ module model_likelihood_module
     scale_likelihood = 0d0 ; infini = 0d0
 
     ! NBE Log-likelihood
-!    if (DATAin%nnbe > 0) then
-!       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
-!                       -DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
-!                       /DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe)))**2)
-!       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nnbe))
-!    endif
-
-    ! NBE Log-likelihood
-    ! NBE partitioned between the mean flux and seasonal anomalies
     if (DATAin%nnbe > 0) then
-        ! Determine the mean value for model, observtion and uncertainty estimates
-        obs   = sum(DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
-              / dble(DATAin%nnbe)
-        model = sum(DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+ &
-                    DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
-              / dble(DATAin%nnbe)
-        unc   = sum(DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe))) &
-              / dble(DATAin%nnbe)
-        ! Update the likelihood score with the mean bias
-        ! NOTE: scaling is implicit in the long term average - this would not be the case if divided into annual estimates
-        scale_likelihood = scale_likelihood - (((model - obs) / unc) ** 2)
-        ! Determine the anomalies based on substraction of the global mean
-        ! Greater information would come from breaking this down into annual estimates
-        tot_exp = sum( (((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)-model) - &
-                        (DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe)) - obs)) / unc)**2 )
-        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nnbe))
+       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+                       -DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
+                       /DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe)))**2)
+       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nnbe))
     endif
 
-
-    ! GPP Log-likelihood
-!    if (DATAin%ngpp > 0) then
-!       tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
-!                       /DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2)
-!       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%ngpp))
+!    ! NBE Log-likelihood
+!    ! NBE partitioned between the mean flux and seasonal anomalies
+!    if (DATAin%nnbe > 0) then
+!        ! Determine the mean value for model, observtion and uncertainty estimates
+!        obs   = sum(DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
+!              / dble(DATAin%nnbe)
+!        model = sum(DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+ &
+!                    DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+!              / dble(DATAin%nnbe)
+!        unc   = sum(DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe))) &
+!              / dble(DATAin%nnbe)
+!        ! Update the likelihood score with the mean bias
+!        ! NOTE: scaling is implicit in the long term average - this would not be the case if divided into annual estimates
+!        scale_likelihood = scale_likelihood - (((model - obs) / unc) ** 2)
+!        ! Determine the anomalies based on substraction of the global mean
+!        ! Greater information would come from breaking this down into annual estimates
+!        tot_exp = sum( (((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)-model) - &
+!                        (DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe)) - obs)) / unc)**2 )
+!        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nnbe))
 !    endif
+
+
     ! GPP Log-likelihood
-    ! GPP partitioned between the mean flux and seasonal anomalies
     if (DATAin%ngpp > 0) then
-        ! Determine the mean value for model, observtion and uncertainty estimates
-        obs   = sum(DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
-              / dble(DATAin%ngpp)
-        model = sum(DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))) &
-              / dble(DATAin%ngpp)
-        unc   = sum(DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp))) &
-              / dble(DATAin%ngpp)
-        ! Update the likelihood score with the mean bias
-        scale_likelihood = scale_likelihood - (((model - obs) / unc) ** 2)
-        ! Determine the anomalies based on substraction of the global mean
-        ! Greater information would come from breaking this down into annual estimates
-        tot_exp = sum( (((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-model) - &
-                        (DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp)) - obs)) / unc)**2 )
-        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%ngpp))
+       tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
+                       /DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2)
+       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%ngpp))
     endif
+!    ! GPP Log-likelihood
+!    ! GPP partitioned between the mean flux and seasonal anomalies
+!    if (DATAin%ngpp > 0) then
+!        ! Determine the mean value for model, observtion and uncertainty estimates
+!        obs   = sum(DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
+!              / dble(DATAin%ngpp)
+!        model = sum(DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))) &
+!              / dble(DATAin%ngpp)
+!        unc   = sum(DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp))) &
+!              / dble(DATAin%ngpp)
+!        ! Update the likelihood score with the mean bias
+!        scale_likelihood = scale_likelihood - (((model - obs) / unc) ** 2)
+!        ! Determine the anomalies based on substraction of the global mean
+!        ! Greater information would come from breaking this down into annual estimates
+!        tot_exp = sum( (((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-model) - &
+!                        (DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp)) - obs)) / unc)**2 )
+!        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%ngpp))
+!    endif
 
     ! Evap Log-likelihood
     if (DATAin%nEvap > 0) then
@@ -1377,29 +1377,29 @@ module model_likelihood_module
     endif
 
     ! Fire Log-likelihood
-!    if (DATAin%nFire > 0) then
-!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
-!                       /DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2)
-!       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nFire))
-!    endif
-    ! Fire Log-likelihood
-    ! Fire partitioned between the mean flux and seasonal anomalies
     if (DATAin%nFire > 0) then
-        ! Determine the mean value for model, observtion and uncertainty estimates
-        obs   = sum(DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
-              / dble(DATAin%nFire)
-        model = sum(DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)) &
-              / dble(DATAin%nFire)
-        unc   = sum(DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire))) &
-              / dble(DATAin%nFire)
-        ! Update the likelihood score with the mean bias
-        scale_likelihood = scale_likelihood - (((model - obs) / unc) ** 2)
-        ! Determine the anomalies based on substraction of the global mean
-        ! Greater information would come from breaking this down into annual estimates
-        tot_exp = sum( (((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-model) - &
-                        (DATAin%Fire(DATAin%Firepts(1:DATAin%nFire)) - obs)) / unc)**2 )
-        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nFire))
+       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
+                       /DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2)
+       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nFire))
     endif
+!    ! Fire Log-likelihood
+!    ! Fire partitioned between the mean flux and seasonal anomalies
+!    if (DATAin%nFire > 0) then
+!        ! Determine the mean value for model, observtion and uncertainty estimates
+!        obs   = sum(DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
+!              / dble(DATAin%nFire)
+!        model = sum(DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)) &
+!              / dble(DATAin%nFire)
+!        unc   = sum(DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire))) &
+!              / dble(DATAin%nFire)
+!        ! Update the likelihood score with the mean bias
+!        scale_likelihood = scale_likelihood - (((model - obs) / unc) ** 2)
+!        ! Determine the anomalies based on substraction of the global mean
+!        ! Greater information would come from breaking this down into annual estimates
+!        tot_exp = sum( (((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-model) - &
+!                        (DATAin%Fire(DATAin%Firepts(1:DATAin%nFire)) - obs)) / unc)**2 )
+!        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nFire))
+!    endif
 
     ! LAI log-likelihood
     if (DATAin%nlai > 0) then
