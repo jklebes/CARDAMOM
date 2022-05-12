@@ -243,8 +243,9 @@ subroutine rdaleccdeaacm2bucket(output_dim,MTT_dim,SS_dim &
                          FLUXES(:,37)+FLUXES(:,38)+FLUXES(:,39)) ! litter (foliage + roots)
      ! While foliar and fine root litter can be reasonably estimated directly (above),
      ! soil C inputs are still changing as the wood pool is not in steady state.
-     ! Therefore, at this point we can account for disturbance inputs but NOT wood.
-     ! The wood input is estimated later based on the steady state its steady state estimate
+     ! Therefore, at this point we can account for disturbance inputs (including wood)
+     ! but NOT natural wood. The natural wood input is estimated later based on
+     ! its steady state estimate
      out_var3(i,6) = sum(FLUXES(:,15)+FLUXES(:,27)+FLUXES(:,28)+FLUXES(:,40)) ! som
 
   end do ! nos_iter loop
