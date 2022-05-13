@@ -396,9 +396,9 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         met_all$swrad[which(met_all$swrad < 0)] = 0
 
         # clean up loose memory
-        rm(lat_dim,long_dim,remove_lat,remove_long,years_to_load,load_years,tmp1,check1,nos_days,
+        rm(lat_dim,long_dim,years_to_load,load_years,tmp1,nos_days,
            lat,long,run_day,wheat_from_chaff,t_grid,swrad_out,mint_out,
-           co2,doy,precip_out,vpd_out,extra_year,maxt_out,wind_out)
+           co2,doy,precip_out,vpd_out,extra_year,maxt_out,wind_out)#,check1)
 
     } # site_specific or not
 
