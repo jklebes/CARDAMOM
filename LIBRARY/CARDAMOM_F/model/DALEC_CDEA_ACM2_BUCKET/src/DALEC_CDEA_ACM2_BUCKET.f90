@@ -1079,7 +1079,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        endif ! end deforestation info
 
-
 ! TLS: a modified version of the original model which has now been removed 31/03/2022
 !      The replacement provides different scenarios of what is being extracted (e.g. above vs below)
 !      and the re-allocation of C to be either extracted or litter / residues remaining in system
