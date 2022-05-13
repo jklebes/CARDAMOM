@@ -1231,7 +1231,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
   } else if (model_name == "DALEC_CDEA_ACM2_BUCKET_RmRg") {
-output_dim = 52 ; MTT_dim = 6 ; SS_dim = 6
+output_dim = 51 ; MTT_dim = 6 ; SS_dim = 6
 dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
 tmp=.Fortran( "rdaleccdeaacm2bucketrmrg",output_dim=as.integer(output_dim)
                                         ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
