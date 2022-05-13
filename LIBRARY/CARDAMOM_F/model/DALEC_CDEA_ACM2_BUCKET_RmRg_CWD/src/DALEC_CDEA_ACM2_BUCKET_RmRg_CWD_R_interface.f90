@@ -1,16 +1,16 @@
 
 subroutine rdaleccdeaacm2bucketrmrgcwd(output_dim,MTT_dim,SS_dim &
-                               ,met,pars &
-                               ,out_var1,out_var2,out_var3 &
-                               ,lat,nopars,nomet &
-                               ,nofluxes,nopools,nodays,noyears,deltat &
-                               ,nos_iter,soil_frac_clay_in,soil_frac_sand_in)
+                                      ,met,pars &
+                                      ,out_var1,out_var2,out_var3 &
+                                      ,lat,nopars,nomet &
+                                      ,nofluxes,nopools,nodays,noyears,deltat &
+                                      ,nos_iter,soil_frac_clay_in,soil_frac_sand_in)
 
   use CARBON_MODEL_MOD, only: CARBON_MODEL, wSWP_time &
                              ,soil_frac_clay, soil_frac_sand, nos_soil_layers &
                              ,gs_demand_supply_ratio, cica_time &
                              ,gs_total_canopy, gb_total_canopy &
-                             ,canopy_par_MJday_time, root_depth_time
+                             ,canopy_par_MJday_time
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -26,11 +26,11 @@ subroutine rdaleccdeaacm2bucketrmrgcwd(output_dim,MTT_dim,SS_dim &
   implicit none
   ! declare input variables
   integer, intent(in) :: nopars         & ! number of paremeters in vector
-                        ,output_dim     & !
+                        ,output_dim     & ! number of outputted variables
                         ,MTT_dim        & ! number of pools mean transit time estimates
                         ,SS_dim         & ! number of pools the steady state will be output for
-                        ,nos_iter       & !
-                        ,noyears        &
+                        ,nos_iter       & ! number of iterations
+                        ,noyears        & ! number of years simulated
                         ,nomet          & ! number of meteorological fields
                         ,nofluxes       & ! number of model fluxes
                         ,nopools        & ! number of model pools
