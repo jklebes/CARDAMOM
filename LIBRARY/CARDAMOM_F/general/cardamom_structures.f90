@@ -116,6 +116,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                                                     ,M_NEE    & !
                                                     ,M_LAI      !
       ! timing variable
+      integer :: nos_years, steps_per_year
       double precision, allocatable, dimension(:) :: deltat ! time step (decimal day)
 
       double precision, allocatable, dimension(:,:) :: M_FLUXES & !

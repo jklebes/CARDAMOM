@@ -340,7 +340,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
     double precision :: burnt_area
-    double precision, dimension(6) :: cf(6),rfac(6)
+    double precision, dimension(6) :: cf,rfac
     ! local deforestation related variables
     double precision, dimension(5) :: post_harvest_burn      & ! how much burning to occur after
                                      ,foliage_frac_res       &
@@ -1054,14 +1054,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                POOLS(n+1,5) = POOLS(n+1,5) + (labile_residue+foliar_residue+roots_residue)
                POOLS(n+1,6) = POOLS(n+1,6) - soil_loss_with_roots + wood_residue
                ! mass balance check
-               where (POOLS(n+1,1:7) < 0d0) POOLS(n+1,1:7) = 0d0
+               where (POOLS(n+1,1:6) < 0d0) POOLS(n+1,1:6) = 0d0
 
                ! Convert harvest related extractions to daily rate for output
                ! For dead organic matter pools, in most cases these will be zeros.
                ! But these variables allow for subseqent management where surface litter
                ! pools are removed or mechanical extraction from soil occurs.
                FLUXES(n,31) = (labile_loss-labile_residue) / deltat(n)  ! Labile extraction
-               FLUXES(n,32) = (foliar_loss-foliar_residue) / deltat(n) ! foliage extraction
+               FLUXES(n,32) = (foliar_loss-foliar_residue) / deltat(n)  ! foliage extraction
                FLUXES(n,33) = (roots_loss-roots_residue) / deltat(n)    ! fine roots extraction
                FLUXES(n,34) = (wood_loss-wood_residue) / deltat(n)      ! wood extraction
                FLUXES(n,35) = 0d0 ! litter extraction

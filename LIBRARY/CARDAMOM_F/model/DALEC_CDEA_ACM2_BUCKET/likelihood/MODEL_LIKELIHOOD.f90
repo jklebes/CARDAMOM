@@ -472,9 +472,9 @@ module model_likelihood_module
     double precision, intent(out) :: EDC2 ! the response flag for the dynamical set of EDCs
 
     ! declare local variables
-    integer :: n, nn, nnn, DIAG, no_years, y, PEDC, steps_per_year, steps_per_month, nd, fl, &
+    integer :: n, nn, nnn, DIAG, y, PEDC, steps_per_month, nd, fl, &
                io_start, io_finish
-    double precision :: no_years_1, infi !, EQF, etol
+    double precision :: infi !, EQF, etol
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
                                             mean_pools, Fin, Fout, Rm, Rs, &
                                             Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
@@ -483,9 +483,7 @@ module model_likelihood_module
                        ,ffol  & ! Fraction of GPP to foliage
                        ,flab  & ! Fraction of GPP to labile pool
                        ,froot & ! Fraction of GPP to root
-                       ,fwood & ! Fraction of GPP to wood
-                       ,fsom  & ! fraction of GPP som under eqilibrium conditions
-                       ,flit    ! fraction of GPP to litter under equilibrium conditions
+                       ,fwood   ! Fraction of GPP to wood
 
     ! Steady State Attractor:
     ! Log ratio difference between inputs and outputs of the system.
@@ -509,30 +507,24 @@ module model_likelihood_module
     flab = (1d0-fauto-ffol)*pars(13)
     froot = (1d0-fauto-ffol-flab)*pars(4)
     fwood = 1d0-fauto-ffol-flab-froot
-    fsom = fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(8))
-    flit = (froot+flab+ffol)
 
     ! derive mean pools
     do n = 1, nopools-1
        mean_pools(n) = cal_mean_pools(M_POOLS,n,nodays+1,nopools)
     end do
 
-    ! number of years in analysis
-    no_years = nint(sum(deltat)/365.25d0)
-    ! number of time steps per year
-    steps_per_year = nodays/no_years
     ! number of time steps per month
-    steps_per_month = ceiling(dble(steps_per_year) * 0.08333333d0)
+    steps_per_month = ceiling(dble(DATAin%steps_per_year) * 0.08333333d0)
 
     ! Determine the mean January pool sizes
     jan_mean_pools = 0d0 ; jan_first_pools = 0d0 ! reset before averaging
     do n = 1, nopools-1
       jan_first_pools(n) = sum(M_POOLS(1:steps_per_month,n)) / dble(steps_per_month)
-      do y = 1, no_years
-         nn = 1 + (steps_per_year * (y - 1)) ; nnn = nn + (steps_per_month - 1)
+      do y = 1, DATAin%nos_years
+         nn = 1 + (DATAin%steps_per_year * (y - 1)) ; nnn = nn + (steps_per_month - 1)
          jan_mean_pools(n) = jan_mean_pools(n) + sum(M_POOLS(nn:nnn,n))
       end do
-      jan_mean_pools(n) = jan_mean_pools(n) / dble(steps_per_month*no_years)
+      jan_mean_pools(n) = jan_mean_pools(n) / dble(steps_per_month*DATAin%nos_years)
     end do
 
     !
@@ -565,58 +557,59 @@ module model_likelihood_module
 !        end do
 !    end do
     ! First calculate total flux for the simulation period
-    io_start = (steps_per_year*2) + 1 ; io_finish = nodays
-    if (no_years < 3) io_start = 1
+    io_start = (DATAin%steps_per_year*2) + 1 ; io_finish = nodays
+    if (DATAin%nos_years < 3) io_start = 1
     do fl = 1, nofluxes
 !       FT(fl) = sum(M_FLUXES(1:nodays,fl)*deltat(1:nodays))
        FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*deltat(io_start:io_finish))
-       FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*deltat(1:steps_per_year))
-       FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl)*deltat((steps_per_year+1):(steps_per_year*2)))
+       FT_yr1(fl) = sum(M_FLUXES(1:DATAin%steps_per_year,fl)*deltat(1:steps_per_year))
+       FT_yr2(fl) = sum(M_FLUXES((DATAin%steps_per_year+1):(DATAin%steps_per_year*2),fl) &
+                       *deltat((DATAin%steps_per_year+1):(DATAin%steps_per_year*2)))
     end do
 
     ! get total in and out for each pool
     ! labile
     Fin(1)  = FT(5)
-    Fout(1) = FT(8)+FT(18)+FT(24)
+    Fout(1) = FT(8)+FT(18)+FT(24)+FT(31)+FT(37)
     Fin_yr1(1)  = FT_yr1(5)
-    Fout_yr1(1) = FT_yr1(8)+FT_yr1(18)+FT_yr1(24)
+    Fout_yr1(1) = FT_yr1(8)+FT_yr1(18)+FT_yr1(24)+FT_yr1(31)+FT_yr1(37)
     Fin_yr2(1)  = FT_yr2(5)
-    Fout_yr2(1) = FT_yr2(8)+FT_yr2(18)+FT_yr2(24)
+    Fout_yr2(1) = FT_yr2(8)+FT_yr2(18)+FT_yr2(24)+FT_yr2(31)+FT_yr2(37)
     ! foliar
     Fin(2)  = FT(4)+FT(8)
-    Fout(2) = FT(10)+FT(19)+FT(25)
+    Fout(2) = FT(10)+FT(19)+FT(25)+FT(32)+FT(38)
     Fin_yr1(2)  = FT_yr1(4)+FT_yr1(8)
-    Fout_yr1(2) = FT_yr1(10)+FT_yr1(19)+FT_yr1(25)
+    Fout_yr1(2) = FT_yr1(10)+FT_yr1(19)+FT_yr1(25)+FT_yr1(32)+FT_yr1(38)
     Fin_yr2(2)  = FT_yr2(4)+FT_yr2(8)
-    Fout_yr2(2) = FT_yr2(10)+FT_yr2(19)+FT_yr2(25)
+    Fout_yr2(2) = FT_yr2(10)+FT_yr2(19)+FT_yr2(25)+FT_yr2(32)+FT_yr2(38)
     ! root
     Fin(3)  = FT(6)
-    Fout(3) = FT(12)+FT(20)+FT(26)
+    Fout(3) = FT(12)+FT(20)+FT(26)+FT(33)+FT(39)
     Fin_yr1(3)  = FT_yr1(6)
-    Fout_yr1(3) = FT_yr1(12)+FT_yr1(20)+FT_yr1(26)
+    Fout_yr1(3) = FT_yr1(12)+FT_yr1(20)+FT_yr1(26)+FT_yr1(33)+FT_yr1(39)
     Fin_yr2(3)  = FT_yr2(6)
-    Fout_yr2(3) = FT_yr2(12)+FT_yr2(20)+FT_yr2(26)
+    Fout_yr2(3) = FT_yr2(12)+FT_yr2(20)+FT_yr2(26)+FT_yr2(33)+FT_yr2(39)
     ! wood
     Fin(4)  = FT(7)
-    Fout(4) = FT(11)+FT(21)+FT(27)
+    Fout(4) = FT(11)+FT(21)+FT(27)+FT(34)+FT(40)
     Fin_yr1(4)  = FT_yr1(7)
-    Fout_yr1(4) = FT_yr1(11)+FT_yr1(21)+FT_yr1(27)
+    Fout_yr1(4) = FT_yr1(11)+FT_yr1(21)+FT_yr1(27)+FT_yr1(34)+FT_yr1(40)
     Fin_yr2(4)  = FT_yr2(7)
-    Fout_yr2(4) = FT_yr2(11)+FT_yr2(21)+FT_yr2(27)
+    Fout_yr2(4) = FT_yr2(11)+FT_yr2(21)+FT_yr2(27)+FT_yr2(34)+FT_yr2(40)
     ! litter
     Fin(5)  = FT(10)+FT(12)+FT(24)+FT(25)+FT(26)
-    Fout(5) = FT(13)+FT(15)+FT(22)+FT(28)
+    Fout(5) = FT(13)+FT(15)+FT(22)+FT(28)+FT(35)
     Fin_yr1(5)  = FT_yr1(10)+FT_yr1(12)+FT_yr1(24)+FT_yr1(25)+FT_yr1(26)
-    Fout_yr1(5) = FT_yr1(13)+FT_yr1(15)+FT_yr1(22)+FT_yr1(28)
+    Fout_yr1(5) = FT_yr1(13)+FT_yr1(15)+FT_yr1(22)+FT_yr1(28)+FT_yr1(35)
     Fin_yr2(5)  = FT_yr2(10)+FT_yr2(12)+FT_yr2(24)+FT_yr2(25)+FT_yr2(26)
-    Fout_yr2(5) = FT_yr2(13)+FT_yr2(15)+FT_yr2(22)+FT_yr2(28)
+    Fout_yr2(5) = FT_yr2(13)+FT_yr2(15)+FT_yr2(22)+FT_yr2(28)+FT_yr2(35)
     ! som
     Fin(6)  = FT(11)+FT(15)+FT(27)+FT(28)
-    Fout(6) = FT(14)+FT(23)
+    Fout(6) = FT(14)+FT(23)+(36)
     Fin_yr1(6)  = FT_yr1(11)+FT_yr1(15)+FT_yr1(27)+FT_yr1(28)
-    Fout_yr1(6) = FT_yr1(14)+FT_yr1(23)
+    Fout_yr1(6) = FT_yr1(14)+FT_yr1(23)+FT_yr1(36)
     Fin_yr2(6)  = FT_yr2(11)+FT_yr2(15)+FT_yr2(27)+FT_yr2(28)
-    Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)
+    Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)+FT_yr2(36)
 
     ! Iterate through C pools to determine whether they have their ratio of
     ! input and outputs are outside of steady state approximation.
@@ -985,13 +978,20 @@ module model_likelihood_module
     double precision, dimension(npars), intent(in) :: pars
 
     ! declare local variables
-    integer :: n, dn, no_years, y, s
+    integer :: n, dn, y, s, f
     double precision :: tot_exp, tmp_var, infini, input, output, obs, model, unc
     double precision, dimension(DATAin%nodays) :: mid_state
     double precision, allocatable :: mean_annual_pools(:)
 
     ! initial value
     likelihood = 0d0 ; infini = 0d0 ; mid_state = 0d0
+
+       ! determine the annual max for each pool
+       do y = 1, DATAin%nos_years
+          ! derive mean annual foliar pool
+          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
+       end do ! year loop
+
 
 !    ! NBE Log-likelihood
 !    if (DATAin%nnbe > 0) then
@@ -1013,6 +1013,22 @@ module model_likelihood_module
               / dble(DATAin%nnbe)
         ! Update the likelihood score with the mean bias
         likelihood = likelihood - (((model - obs) / unc) ** 2)
+!NOTE: HOW TO TURN THE TIME POINT INFORMATION INTO SPECIFIC YEARS
+!do y = 1, DATAin%nos_years
+!   s = (DATAin%steps_per_year*(y-1)+1) ; f = (DATAin%steps_per_year*y)
+!   where (DATAin%NBE(s:f) > -9998)
+! HOW TO DETERMINE THE NUMBER OF VARIABLES BEING APPLIED IN THE WHERE COMMAND?
+! Or maybe just don't do the average and base on the sum?
+! could do that anyway as saves on compute...?
+!        obs   = sum(DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
+!              / dble(DATAin%nnbe)
+!        model = sum(DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+ &
+!                    DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+!              / dble(DATAin%nnbe)
+!        unc   = sqrt(sum(DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe))**2)) &
+!              / dble(DATAin%nnbe)
+!   end where
+!end do ! loop years
         ! Determine the anomalies based on substraction of the global mean
         ! Greater information would come from breaking this down into annual estimates
         tot_exp = sum( (((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)-model) - &
@@ -1162,11 +1178,10 @@ module model_likelihood_module
     ! Annual foliar maximum
     if (DATAin%nCfolmax_stock > 0) then
        tot_exp = 0d0
-       no_years = int(nint(sum(DATAin%deltat)/365.25d0))
        if (allocated(mean_annual_pools)) deallocate(mean_annual_pools)
-       allocate(mean_annual_pools(no_years))
+       allocate(mean_annual_pools(DATAin%nos_years))
        ! determine the annual max for each pool
-       do y = 1, no_years
+       do y = 1, DATAin%nos_years
           ! derive mean annual foliar pool
           mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
        end do ! year loop
@@ -1307,7 +1322,7 @@ module model_likelihood_module
     double precision, dimension(npars), intent(in) :: pars
 
     ! declare local variables
-    integer :: n, dn, no_years, y, s
+    integer :: n, dn, y, s
     double precision :: tot_exp, tmp_var, infini, input, output, model, obs, unc
     double precision, allocatable :: mean_annual_pools(:)
 
@@ -1477,11 +1492,10 @@ module model_likelihood_module
     ! Annual foliar maximum
     if (DATAin%nCfolmax_stock > 0) then
        tot_exp = 0d0
-       no_years = int(nint(sum(DATAin%deltat)/365.25d0))
        if (allocated(mean_annual_pools)) deallocate(mean_annual_pools)
-       allocate(mean_annual_pools(no_years))
+       allocate(mean_annual_pools(DATAin%nos_years))
        ! determine the annual max for each pool
-       do y = 1, no_years
+       do y = 1, DATAin%nos_years
           ! derive mean annual foliar pool
           mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
        end do ! year loop

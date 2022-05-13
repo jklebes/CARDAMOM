@@ -224,12 +224,12 @@ module cardamom_io
         ! ID = 29 - DALEC_CDEA_ACM2_BUCKET_RmRg_CWD
         DATAin%nopools = 8
         DATAin%nopars = 35
-        DATAin%nofluxes = 33
+        DATAin%nofluxes = 44
     else if (DATAin%ID == 30) then
         ! ID = 30 - DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT
         DATAin%nopools = 8
         DATAin%nopars = 36
-        DATAin%nofluxes = 33
+        DATAin%nofluxes = 44
     else if (DATAin%ID == 31) then
         ! ID = 31 - DALEC_BUCKET_CanAGE
         DATAin%nopools = 8
@@ -259,7 +259,7 @@ module cardamom_io
         ! ID = 36 - DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT
         DATAin%nopools = 8
         DATAin%nopars = 38
-        DATAin%nofluxes = 33
+        DATAin%nofluxes = 44
     else if (DATAin%ID == 37) then
         ! ID = 37 - DALEC_CDEA_ACM2_BUCKET_wMRT
         DATAin%nopools = 7
@@ -918,6 +918,12 @@ module cardamom_io
     do i = 2, DATAin%nodays
        DATAin%deltat(i) = DATAin%met(1,i)-DATAin%met(1,(i-1))
     end do
+    ! Calculate the number of years being simulated
+    DATAin%nos_years = nint(sum(DATAin%deltat)/365.25d0)
+    ! Calculate the number of steps per year
+    ! NOTE: this should be doable as integer as there should be an exact division
+    ! as all simulations are conducted in whole years
+    DATAin%steps_per_year = DATAin%nodays/DATAin%nos_years
 
     ! close open binary
     close(ifile_unit)
