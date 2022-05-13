@@ -244,7 +244,9 @@ cardamom_project_setup <- function (paths,PROJECT) {
         } # compile executable on local machine too?
 
         # Generate the shared library needed later by R
-        system(paste("gfortran -O2 -shared ../model/",modelname,"/src/",modelname,".f90 ",
+        #print(paste("gfortran -fcheck=all -O2 -shared ../model/",modelname,"/src/",modelname,".f90 ",
+        #             "../model/",modelname,"/src/",modelname,"_R_interface.f90 ","-o dalec.so -fPIC",sep=""))
+        system(paste("gfortran -fcheck=all -O2 -shared ../model/",modelname,"/src/",modelname,".f90 ",
                      "../model/",modelname,"/src/",modelname,"_R_interface.f90 ","-o dalec.so -fPIC",sep=""))
         system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/executable/dalec.so ",exepath,"/dalec.so",sep=""))
         # Copy crop development file into position

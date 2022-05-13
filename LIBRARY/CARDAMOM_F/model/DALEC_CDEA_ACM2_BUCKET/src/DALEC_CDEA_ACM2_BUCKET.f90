@@ -200,7 +200,7 @@ module CARBON_MODEL_MOD
                                         root_k, & ! biomass to reach half max_depth
                                         runoff, & ! runoff (kgH2O.m-2.day-1)
                                      underflow, & ! drainage from the bottom of soil column (kgH2O.m-2.day-1)
-                      new_depth,previous_depth, & ! depth of bottom of soil profile
+                                previous_depth, & ! depth of bottom of soil profile
                                    canopy_wind, & ! wind speed (m.s-1) at canopy top
                                          ustar, & ! friction velocity (m.s-1)
                                       ustar_Uh, &
@@ -211,7 +211,6 @@ module CARBON_MODEL_MOD
                                     max_supply, & ! maximum water supply (mmolH2O/m2/day)
                                          meant, & ! mean air temperature (oC)
                                          leafT, & ! canopy temperature (oC)
-                              mean_annual_temp, &
                             canopy_swrad_MJday, & ! canopy_absorbed shortwave radiation (MJ.m-2.day-1)
                               canopy_par_MJday, & ! canopy_absorbed PAR radiation (MJ.m-2.day-1)
                               soil_swrad_MJday, & ! soil absorbed shortwave radiation (MJ.m-2.day-1)
@@ -238,10 +237,10 @@ module CARBON_MODEL_MOD
   ! Module level variables for ACM_GPP_ET parameters
   double precision ::   delta_gs, & ! day length corrected gs increment mmolH2O/m2/dayl
                             ceff, & ! canopy efficency, ceff = avN*NUE
-                             avN, & ! average foliar N (gN/m2)
+!                             avN, & ! average foliar N (gN/m2)
                        iWUE_step, & ! Intrinsic water use efficiency for that day (gC/m2leaf/dayl/mmolH2Ogs)
-                             NUE, & ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
-                                    ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
+!                             NUE, & ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
+!                                    ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
 metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limiterd photosynthesis (gC/m2/day)
     light_limited_photosynthesis, & ! light limited photosynthesis (gC/m2/day)
                               ci, & ! Internal CO2 concentration (ppm)
@@ -267,8 +266,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
   ! Module level varoables for step specific timing information
   integer :: steps_per_year
-  double precision :: cos_solar_zenith_angle, &
-                            seconds_per_step, & !
+  double precision ::       seconds_per_step, & !
                                days_per_step, & !
                              days_per_step_1, & !
                           mean_days_per_step, &
@@ -278,7 +276,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                   dayl_hours    ! day length in hours
 
   double precision, dimension(:), allocatable :: deltat_1, & ! inverse of decimal days
-                                               meant_time, &
                                   airt_zero_fraction_time, &
                                           daylength_hours, &
                                         daylength_seconds, &
@@ -333,7 +330,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, dimension(nodays,nofluxes), intent(inout) :: FLUXES ! vector of ecosystem fluxes
 
     ! declare local variables
-    double precision :: tmp, infi &
+    double precision ::      infi &
                    ,transpiration & ! kgH2O/m2/day
                  ,soilevaporation & ! kgH2O/m2/day
                   ,wetcanopy_evap & ! kgH2O/m2/day
@@ -342,7 +339,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ,wf,wl,ff,fl,osf,osl,sf,ml   ! phenological controls
 
     ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
-    double precision :: cf(6),rfac(6), burnt_area
+    double precision :: burnt_area
+    double precision, dimension(6) :: cf(6),rfac(6)
     ! local deforestation related variables
     double precision, dimension(5) :: post_harvest_burn      & ! how much burning to occur after
                                      ,foliage_frac_res       &
@@ -364,7 +362,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                        ,coarse_root_residue          &
                        ,soil_loss_with_roots
 
-    integer :: harvest_management,p,f,n
+    integer :: harvest_management,n
 
     ! met drivers are:
     ! 1st run day
@@ -496,7 +494,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         allocate(deltat_1(nodays),wSWP_time(nodays),rSWP_time(nodays),gs_demand_supply_ratio(nodays), &
                  gs_total_canopy(nodays),gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
                  daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
-                 meant_time(nodays),rainfall_time(nodays),cica_time(nodays),root_depth_time(nodays))
+                 rainfall_time(nodays),cica_time(nodays),root_depth_time(nodays))
 
         !
         ! Timing variables which are needed first
@@ -519,8 +517,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         ! calculate inverse for each time step in seconds
         daylength_seconds_1 = daylength_seconds ** (-1d0)
-        ! meant time step temperature
-        meant_time = (met(2,:)+met(3,:)) * 0.5d0
         ! fraction of temperture period above freezing
         airt_zero_fraction_time = (met(3,:)-0d0) / (met(3,:)-met(2,:))
 
@@ -579,157 +575,151 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! scaling to biyearly sine curve
     sf = 365.25d0/pi
 
-    ! if either of our disturbance drivers indicate disturbance will occur then
-    ! set up these components
-    if (maxval(met(8,:)) > 0d0 .or. maxval(met(9,:)) > 0d0) then
+    ! now load the hardcoded forest management parameters into their scenario locations
 
-        ! now load the hardcoded forest management parameters into their scenario locations
+    ! Deforestation process functions in a sequenctial way.
+    ! Thus, the pool_loss is first determined as a function of met(n,8) and
+    ! for fine and coarse roots whether this felling is associated with a mechanical
+    ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
+    ! fine and coarse roots may subsequently undergo mortality from which they do not recover
+    ! but allows for management activities such as grazing, mowing and coppice.
+    ! The pool_loss is then partitioned between the material which is left within the system
+    ! as a residue and thus direcly placed within one of the dead organic matter pools.
 
-        ! Deforestation process functions in a sequenctial way.
-        ! Thus, the pool_loss is first determined as a function of met(n,8) and
-        ! for fine and coarse roots whether this felling is associated with a mechanical
-        ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
-        ! fine and coarse roots may subsequently undergo mortality from which they do not recover
-        ! but allows for management activities such as grazing, mowing and coppice.
-        ! The pool_loss is then partitioned between the material which is left within the system
-        ! as a residue and thus direcly placed within one of the dead organic matter pools.
+    !! Parameter values for deforestation variables
+    !! Scenario 1
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(1)  = 0d0
+    rootcr_frac_removal(1) = 0d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(1) = 1d0
+    roots_frac_res(1)   = 1d0
+    rootcr_frac_res(1)  = 1d0
+    stem_frac_res(1)    = 0.20d0 !
+    ! wood partitioning (fraction)
+    Crootcr_part(1) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(1) = 0.02d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+    post_harvest_burn(1) = 1d0
 
-        !! Parameter values for deforestation variables
-        !! Scenario 1
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(1)  = 0d0
-        rootcr_frac_removal(1) = 0d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(1) = 1d0
-        roots_frac_res(1)   = 1d0
-        rootcr_frac_res(1)  = 1d0
-        stem_frac_res(1)    = 0.20d0 !
-        ! wood partitioning (fraction)
-        Crootcr_part(1) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(1) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(1) = 1d0
+    !! Scenario 2
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(2)  = 0d0
+    rootcr_frac_removal(2) = 0d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(2) = 1d0
+    roots_frac_res(2)   = 1d0
+    rootcr_frac_res(2) = 1d0
+    stem_frac_res(2)   = 0.20d0 !
+    ! wood partitioning (fraction)
+    Crootcr_part(2) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(2) = 0.02d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+    post_harvest_burn(2) = 0d0
 
-        !! Scenario 2
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(2)  = 0d0
-        rootcr_frac_removal(2) = 0d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(2) = 1d0
-        roots_frac_res(2)   = 1d0
-        rootcr_frac_res(2) = 1d0
-        stem_frac_res(2)   = 0.20d0 !
-        ! wood partitioning (fraction)
-        Crootcr_part(2) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(2) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(2) = 0d0
+    !! Scenario 3
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(3)  = 0d0
+    rootcr_frac_removal(3) = 0d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(3) = 0.5d0
+    roots_frac_res(3)   = 1d0
+    rootcr_frac_res(3) = 1d0
+    stem_frac_res(3)   = 0d0 !
+    ! wood partitioning (fraction)
+    Crootcr_part(3) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(3) = 0.02d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+    post_harvest_burn(3) = 0d0
 
-        !! Scenario 3
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(3)  = 0d0
-        rootcr_frac_removal(3) = 0d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(3) = 0.5d0
-        roots_frac_res(3)   = 1d0
-        rootcr_frac_res(3) = 1d0
-        stem_frac_res(3)   = 0d0 !
-        ! wood partitioning (fraction)
-        Crootcr_part(3) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(3) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(3) = 0d0
+    !! Scenario 4
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(4)  = 1d0
+    rootcr_frac_removal(4) = 1d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(4) = 0.5d0
+    roots_frac_res(4)   = 1d0
+    rootcr_frac_res(4) = 0d0
+    stem_frac_res(4)   = 0d0
+    ! wood partitioning (fraction)
+    Crootcr_part(4) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(4) = 0.02d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+    post_harvest_burn(4) = 0d0
 
-        !! Scenario 4
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(4)  = 1d0
-        rootcr_frac_removal(4) = 1d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(4) = 0.5d0
-        roots_frac_res(4)   = 1d0
-        rootcr_frac_res(4) = 0d0
-        stem_frac_res(4)   = 0d0
-        ! wood partitioning (fraction)
-        Crootcr_part(4) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(4) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(4) = 0d0
+    !## Scenario 5 (grassland grazing / cutting)
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(5)  = 0d0
+    rootcr_frac_removal(5) = 0d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(5) = 0.1d0
+    roots_frac_res(5)   = 0d0
+    rootcr_frac_res(5)  = 0d0
+    stem_frac_res(5)    = 0.12d0
+    ! wood partitioning (fraction)
+    Crootcr_part(5) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(5) = 0d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+    post_harvest_burn(5) = 0d0
 
-        !## Scenario 5 (grassland grazing / cutting)
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(5)  = 0d0
-        rootcr_frac_removal(5) = 0d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(5) = 0.1d0
-        roots_frac_res(5)   = 0d0
-        rootcr_frac_res(5)  = 0d0
-        stem_frac_res(5)    = 0.12d0
-        ! wood partitioning (fraction)
-        Crootcr_part(5) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(5) = 0d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(5) = 0d0
+    ! Override all paritioning parameters with those coming from
+    ! CARDAMOM
+    Crootcr_part = pars(25)
 
-        ! Override all paritioning parameters with those coming from
-        ! CARDAMOM
-        Crootcr_part = pars(25)
+!    ! Declare combustion efficiency (labile, foliar, roots, wood, litter, soil, woodlitter)
+!    cf(1) = 0.1d0 ; cf(2) = 0.9d0
+!    cf(3) = 0.1d0 ; cf(4) = 0.1d0
+!    cf(5) = 0.7d0 ; cf(6) = 0.01d0
+!    ! Resilience factor for non-combusted tissue
+!    rfac = 0.5d0 ; rfac(5) = 0.1d0 ; rfac(6) = 0d0
 
-        ! Declare combustion efficiency (labile, foliar, roots, wood, litter, soil, woodlitter)
-        cf(1) = 0.1d0 ; cf(2) = 0.9d0
-        cf(3) = 0.1d0 ; cf(4) = 0.1d0
-        cf(5) = 0.7d0 ; cf(6) = 0.01d0
-        ! Resilience factor for non-combusted tissue
-        rfac = 0.5d0 ; rfac(5) = 0.1d0 ; rfac(6) = 0d0
+    ! JFE added 4 May 2018 - define fire constants
+    ! Update fire parameters derived from
+    ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
+    ! Subsequently expanded by T. L. Smallman & Mat Williams (UoE, 03/09/2021)
+    ! to provide specific CC for litter and wood litter.
+    ! NOTE: changes also result in the addition of further EDCs
 
-        ! JFE added 4 May 2018 - define fire constants
-        ! Update fire parameters derived from
-        ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
-        ! Subsequently expanded by T. L. Smallman & Mat Williams (UoE, 03/09/2021)
-        ! to provide specific CC for litter and wood litter.
-        ! NOTE: changes also result in the addition of further EDCs
-
-        ! Assign proposed resilience factor
-        rfac(1:4) = pars(28)
-        rfac(5) = 0.1d0 ; rfac(6) = 0d0
-        ! Assign combustion completeness to foliage
-        cf(2) = pars(29) ! foliage
-        ! Assign combustion completeness to non-photosynthetic
-        cf(1) = pars(30) ; cf(3) = pars(30) ; cf(4) = pars(30)
-        cf(6) = pars(31) ! soil
-        ! derived values for litter
-        cf(5) = pars(32)
-
-    end if ! disturbance ?
+    ! Assign proposed resilience factor
+    rfac(1:4) = pars(28)
+    rfac(5) = 0.1d0 ; rfac(6) = 0d0
+    ! Assign combustion completeness to foliage
+    cf(2) = pars(29) ! foliage
+    ! Assign combustion completeness to non-photosynthetic
+    cf(1) = pars(30) ; cf(3) = pars(30) ; cf(4) = pars(30)
+    cf(6) = pars(31) ! soil
+    ! derived values for litter
+    cf(5) = pars(32)
 
     !
     ! Begin looping through each time step
@@ -745,7 +735,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     rainfall = rainfall_time(1) ! rainfall (kgH2O/m2/s)
     wind_spd = met(15,1) ! wind speed (m/s)
     vpd_kPa = met(16,1)*1d-3 ! vapour pressure deficit (Pa->kPa)
-    meant = meant_time(1)
     leafT = maxt     ! initial canopy temperature (oC)
     seconds_per_step = deltat(1) * seconds_per_day
     days_per_step =  deltat(1)
@@ -1303,7 +1292,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     implicit none
 
     ! local variables
-    double precision :: denom, iWUE_lower, iWUE_upper
+    double precision :: denom, iWUE_upper!, iWUE_lower
     double precision, parameter :: max_gs = 2000d0, &  ! mmolH2O.m-2.s-1 (leaf area)
                                    min_gs = 1d0, &     ! mmolH2O.m-2.s-1 (leaf area)
                                    tol_gs = 10d0       ! mmolH2O.m-2.s-1 (leaf area)
@@ -2120,9 +2109,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! local variables
     integer :: i, rooted_layer
-    double precision :: bonus, &
-                        transpiration_resistance,root_reach_local, &
-                        root_depth_50, slpa, mult, prev, exp_func
+    double precision :: transpiration_resistance,root_reach_local, &
+                        slpa, mult, prev, exp_func!, root_depth_50, bonus
     double precision, dimension(nos_root_layers) :: Rcond_layer, &
                                                     root_mass,  &
                                                     root_length
@@ -2308,7 +2296,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                                   ! enters as potential but leaves as water balance adjusted.
                                                   ! Note that this assumes a completely wet leaf surface
     ! local variables
-    integer :: i
     double precision :: a, through_fall, max_storage, max_storage_1, daily_addition, wetcanopy_evaporation &
                        ,potential_drainage_rate ,drain_rate, evap_rate, initial_canopy, co_mass_balance, dx, dz, tmp(3)
     ! local parameters
@@ -2460,7 +2447,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, intent(out) :: corrected_ET     ! water balance corrected evapotranspiration (kgH2O/m2/day)
 
     ! local variables
-    integer :: day, a, i
+    integer :: day, a
     double precision :: depth_change, water_change, initial_soilwater, balance, mass_check
     double precision, dimension(nos_root_layers) :: avail_flux, evaporation_losses, pot_evap_losses
 
@@ -3228,9 +3215,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision,intent(in) :: a , b , t
     double precision            :: arrhenious
 
-    ! local variables..
-    double precision :: denominator, numerator
-
     arrhenious = a * exp( b * (t - 25d0) / (t + freeze) )
 
   end function arrhenious
@@ -3304,7 +3288,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, intent(in) ::  L, w ! polynomial coefficients and scaling factor
 
     ! declare local variables
-    double precision ::  tmp, LLog, mxc(7) ! polynomial coefficients and scaling factor
+    double precision :: LLog, mxc(7) ! polynomial coefficients and scaling factor
 
     ! assign polynomial terms
     mxc(1) = (0.000023599784710d0)

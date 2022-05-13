@@ -57,7 +57,6 @@ module CARBON_MODEL_MOD
            ,max_depth                     &
            ,root_k                        &
            ,top_soil_depth                &
-           ,mid_soil_depth                &
            ,previous_depth                &
            ,nos_root_layers               &
            ,wSWP                          &
@@ -258,8 +257,7 @@ module CARBON_MODEL_MOD
                        min_drythick = 0.001d0,      & ! minimum dry thickness depth (m)
                           min_layer = 0.03d0,       & ! minimum thickness of the third rooting layer (m)
                         soil_roughl = 0.05d0,       & ! soil roughness length (m)
-                     top_soil_depth = 0.15d0,       & ! thickness of the top soil layer (m)
-                     mid_soil_depth = 0.15d0,       & ! thickness of the second soil layer (m)
+                     top_soil_depth = 0.30d0,       & ! thickness of the top soil layer (m)
                            min_root = 5d0,          & ! minimum root biomass (gBiomass.m-2)
                             min_lai = 0.1d0,        & ! minimum LAI assumed for aerodynamic conductance calculations (m2/m2)
                         min_storage = 0.2d0           ! minimum canopy water (surface) storage (mm)
@@ -1090,11 +1088,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! layer_thickness correctly!
     root_reach = max_depth * root_biomass / (root_k + root_biomass)
     ! Determine initial soil layer thickness
-    layer_thickness(1) = top_soil_depth ; layer_thickness(2) = mid_soil_depth
-    layer_thickness(3) = max(min_layer,root_reach-sum(layer_thickness(1:2)))
-    layer_thickness(4) = max_depth - sum(layer_thickness(1:3))
-    layer_thickness(5) = top_soil_depth
-    previous_depth = sum(layer_thickness(1:3))
+    layer_thickness(1) = top_soil_depth ; layer_thickness(2) = max(min_layer,root_reach-top_soil_depth)
+    layer_thickness(3) = max_depth - sum(layer_thickness(1:2))
+    layer_thickness(4) = top_soil_depth
+    previous_depth = sum(layer_thickness(1:2))
     ! Needed to initialise soils
     call calculate_Rtot(Rtot)
     ! Used to initialise soils
@@ -3257,7 +3254,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Update soil layer thickness
     !!!!!!!!!!
 
-    depth_change = (top_soil_depth+mid_soil_depth+min_layer) ; water_change = 0
+    depth_change = (top_soil_depth+min_layer) ; water_change = 0
     ! if roots extent down into the bucket
     if (root_reach > depth_change .and. previous_depth <= depth_change) then
 
@@ -3284,9 +3281,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
             ! explicitly update the soil profile if there has been rooting depth
             ! changes
-            layer_thickness(1) = top_soil_depth ; layer_thickness(2) = mid_soil_depth
-            layer_thickness(3) = root_reach - sum(layer_thickness(1:2))
-            layer_thickness(4) = max_depth - sum(layer_thickness(1:3))
+            layer_thickness(1) = top_soil_depth
+            layer_thickness(2) = root_reach - top_soil_depth
+            layer_thickness(3) = max_depth - sum(layer_thickness(1:2))
 
             ! keep track of the previous rooting depth
             previous_depth = root_reach
@@ -3304,9 +3301,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
             ! explicitly update the soil profile if there has been rooting depth
             ! changes
-            layer_thickness(1) = top_soil_depth ; layer_thickness(2) = mid_soil_depth
-            layer_thickness(3) = root_reach - sum(layer_thickness(1:2))
-            layer_thickness(4) = max_depth - sum(layer_thickness(1:3))
+            layer_thickness(1) = top_soil_depth
+            layer_thickness(2) = root_reach - top_soil_depth
+            layer_thickness(3) = max_depth - sum(layer_thickness(1:2))
 
             ! keep track of the previous rooting depth
             previous_depth = root_reach
@@ -3336,14 +3333,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         ! explicitly update the soil profile if there has been rooting depth
         ! changes
-        layer_thickness(1) = top_soil_depth ; layer_thickness(2) = mid_soil_depth
-        layer_thickness(3) = min_layer
-        layer_thickness(4) = max_depth - sum(layer_thickness(1:3))
+        layer_thickness(1) = top_soil_depth
+        layer_thickness(2) = min_layer
+        layer_thickness(3) = max_depth - sum(layer_thickness(1:2))
 
         ! keep track of the previous rooting depth
         previous_depth = min_layer
 
-    else ! root_reach > (top_soil_depth + mid_soil_depth + min_layer)
+    else ! root_reach > (top_soil_depth + min_layer)
 
         ! if we are outside of the range when we need to consider rooting depth changes keep track in case we move into a zone when we do
         previous_depth = previous_depth
