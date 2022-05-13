@@ -1660,17 +1660,19 @@ metabolic_limited_photosynthesis, &
     integer :: i, rooted_layer
     double precision :: bonus, &
                         transpiration_resistance,root_reach_local, &
-                        root_depth_50
+                        root_depth_50, slpa, mult, exp_func, prev
     double precision, dimension(nos_root_layers) :: root_mass    &
                                                    ,root_length  &
-                                                   ,Rtot_layer &
+                                                   ,Rcond_layer &
                                                    ,ratio
-    double precision, parameter :: root_depth_frac_50 = 0.25d0 ! fractional soil depth above which 50 %
+    double precision, parameter :: rootdist_tol = 13.81551d0 ! log(1d0/rootdist_tol - 1d0) were rootdist_tol = 1d-6
+                                  !rootdist_tol = 1d-6!, & ! Root density assessed for the max rooting depth
+                                   !root_depth_frac_50 = 0.25d0 ! fractional soil depth above which 50 %
                                                                ! of the root mass is assumed to be located
 
     ! reset water flux
     total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0
-    root_mass = 0d0 ; Rtot_layer = 0d0
+    root_mass = 0d0 ; Rcond_layer = 0d0
     ! calculate the plant hydraulic resistance component. Currently unclear
     ! whether this actually varies with height or whether tall trees have a
     ! xylem architecture which keeps the whole plant conductance (gplant) 1-10 (ish).
@@ -1692,57 +1694,57 @@ metabolic_limited_photosynthesis, &
     ! to maintain 50 % of root biomass in the top 25 % of the rooting depth.
     ! In a simple 3 root layer system this can be estimates more simply
 
-    ! top 25 % of root profile
-    root_depth_50 = root_reach * root_depth_frac_50
-    if (root_depth_50 <= layer_thickness(1)) then
-
-        ! Greater than 50 % of the fine root biomass can be found in the top
-        ! soil layer
-
-        ! Start by assigning all 50 % of root biomass to the top soil layer
-        root_mass(1) = root_biomass * 0.5d0
-        ! Then quantify how much additional root is found in the top soil layer
-        ! assuming that the top 25 % depth is found somewhere within the top
-        ! layer
-        bonus = (root_biomass-root_mass(1)) &
-              * (layer_thickness(1)-root_depth_50) / (root_reach - root_depth_50)
-        root_mass(1) = root_mass(1) + bonus
-        ! partition the remaining root biomass between the seconds and third
-        ! soil layers
-        if (root_reach > sum(layer_thickness(1:2))) then
-            root_mass(2) = (root_biomass - root_mass(1)) &
-                         * (layer_thickness(2)/(root_reach-layer_thickness(1)))
-            root_mass(3) = root_biomass - sum(root_mass(1:2))
-        else
-            root_mass(2) = root_biomass - root_mass(1)
-        endif
-
-    else if (root_depth_50 > layer_thickness(1) .and. root_depth_50 <= sum(layer_thickness(1:2))) then
-
-        ! Greater than 50 % of fine root biomass found in the top two soil
-        ! layers. We will divide the root biomass uniformly based on volume,
-        ! plus bonus for the second layer (as done above)
-        root_mass(1) = root_biomass * (layer_thickness(1)/root_depth_50)
-        root_mass(2) = root_biomass * ((root_depth_50-layer_thickness(1))/root_depth_50)
-        root_mass(1:2) = root_mass(1:2) * 0.5d0
-
-        ! determine bonus for the seconds layer
-        bonus = (root_biomass-sum(root_mass(1:2))) &
-              * ((sum(layer_thickness(1:2))-root_depth_50)/(root_reach-root_depth_50))
-        root_mass(2) = root_mass(2) + bonus
-        root_mass(3) = root_biomass - sum(root_mass(1:2))
-
-    else
-
-        ! Greater than 50 % of fine root biomass stock spans across all three
-        ! layers
-        root_mass(1:2) = root_biomass * 0.5d0 * (layer_thickness(1:2)/root_depth_50)
-        root_mass(3) = root_biomass - sum(root_mass(1:2))
-
-    endif
-    ! now convert root mass into lengths
-    root_length = root_mass * root_mass_length_coef_1
-!    root_length = root_mass / (root_density * root_cross_sec_area)
+!    ! top 25 % of root profile
+!    root_depth_50 = root_reach * root_depth_frac_50
+!    if (root_depth_50 <= layer_thickness(1)) then
+!
+!        ! Greater than 50 % of the fine root biomass can be found in the top
+!        ! soil layer
+!
+!        ! Start by assigning all 50 % of root biomass to the top soil layer
+!        root_mass(1) = fine_root_biomass * 0.5d0
+!        ! Then quantify how much additional root is found in the top soil layer
+!        ! assuming that the top 25 % depth is found somewhere within the top
+!        ! layer
+!        bonus = (fine_root_biomass-root_mass(1)) &
+!              * (layer_thickness(1)-root_depth_50) / (root_reach - root_depth_50)
+!        root_mass(1) = root_mass(1) + bonus
+!        ! partition the remaining root biomass between the seconds and third
+!        ! soil layers
+!        if (root_reach > sum(layer_thickness(1:2))) then
+!            root_mass(2) = (fine_root_biomass - root_mass(1)) &
+!                         * (layer_thickness(2)/(root_reach-layer_thickness(1)))
+!            root_mass(3) = fine_root_biomass - sum(root_mass(1:2))
+!        else
+!            root_mass(2) = fine_root_biomass - root_mass(1)
+!        endif
+!
+!    else if (root_depth_50 > layer_thickness(1) .and. root_depth_50 <= sum(layer_thickness(1:2))) then
+!
+!        ! Greater than 50 % of fine root biomass found in the top two soil
+!        ! layers. We will divide the root biomass uniformly based on volume,
+!        ! plus bonus for the second layer (as done above)
+!        root_mass(1) = fine_root_biomass * (layer_thickness(1)/root_depth_50)
+!        root_mass(2) = fine_root_biomass * ((root_depth_50-layer_thickness(1))/root_depth_50)
+!        root_mass(1:2) = root_mass(1:2) * 0.5d0
+!
+!        ! determine bonus for the seconds layer
+!        bonus = (fine_root_biomass-sum(root_mass(1:2))) &
+!              * ((sum(layer_thickness(1:2))-root_depth_50)/(root_reach-root_depth_50))
+!        root_mass(2) = root_mass(2) + bonus
+!        root_mass(3) = fine_root_biomass - sum(root_mass(1:2))
+!
+!    else
+!
+!        ! Greater than 50 % of fine root biomass stock spans across all three
+!        ! layers
+!        root_mass(1:2) = fine_root_biomass * 0.5d0 * (layer_thickness(1:2)/root_depth_50)
+!        root_mass(3) = fine_root_biomass - sum(root_mass(1:2))
+!
+!    endif
+!    ! now convert root mass into lengths
+!    root_length = root_mass * root_mass_length_coef_1
+!!    root_length = root_mass / (root_density * root_cross_sec_area)
 
     !!!!!!!!!!!
     ! Calculate hydraulic properties and each rooted layer
@@ -1752,10 +1754,31 @@ metabolic_limited_photosynthesis, &
     ! NOTE: Depth correction already accounted for in soil resistance
     ! calculations and this is the maximum potential rate of transpiration
     ! assuming saturated soil and leaves at their minimum water potential.
-    demand = -minlwp-(head*canopy_height)
+    demand = -minlwp - (head*canopy_height)
     ! now loop through soil layers, where root is present
     rooted_layer = 1
+    ! Determine the exponential coefficient needed for an exponential decay to the current root reach
+    ! Exponential decay profile following:
+    ! Y = 1 / (1 + exp(-B * Z)), where Y = density at Z, B = gradient, Z = depth
+    ! To determine gradient for current maximum root depth assuming density reaches rootdist_tol value, rearranges to:
+    ! B = ln(1/Y - 1) / Z
+!d = seq(0,2, 0.01) ; c = -2.6 ; rmax = 1 ; d50 = 0.25 ; rd = rmax / (1+ (d/d50)**c)
+!rmax = rd * (1 + (d/d50)**c)
+!(((rmax / rd) - 1)**(1/c)) * d50 = d ! Depth at which rd = 99 %
+    !slpa = log(1d0/rootdist_tol - 1d0) / root_reach
+    slpa = rootdist_tol / root_reach
+    prev = 1d0
     do i = 1, nos_root_layers
+       ! Determine the exponential function for the current cumulative depth
+       exp_func = exp(-slpa * sum(layer_thickness(1:i)))
+       ! Calculate the difference in the integral between depths, i.e. the proportion of root in the current volume
+       mult = prev - (1d0 - (1d0/(1d0+exp_func)) + (0.5d0 * exp_func))
+       ! Assign fine roo the the current layer...
+       root_mass(i) = root_biomass * mult
+       ! and determine the associated amount of root
+       root_length(i) = root_mass(i) * root_mass_length_coef_1
+       prev = prev - mult
+       ! If there is root in the current layer then we should calculate the resistances
        if (root_mass(i) > 0d0) then
            ! Track the deepest root layer assessed
            rooted_layer = i
@@ -1764,12 +1787,15 @@ metabolic_limited_photosynthesis, &
            ! calculate and accumulate steady state water flux in mmol.m-2.s-1
            call plant_soil_flow(i,root_length(i),root_mass(i) &
                                ,demand(i),root_reach_local &
-                               ,transpiration_resistance,Rtot_layer(i))
+                               ,transpiration_resistance,Rcond_layer(i))
        else
            ! ...if there is not then we wont have any below...
            exit
        end if ! root present in current layer?
     end do ! nos_root_layers
+    ! Turn the output resistance into conductance
+    Rcond_layer = Rcond_layer**(-1d0)
+
 
     ! if freezing then assume soil surface is frozen, therefore no water flux
     if (meant < 1d0) water_flux_mmolH2Om2s(1) = 0d0
