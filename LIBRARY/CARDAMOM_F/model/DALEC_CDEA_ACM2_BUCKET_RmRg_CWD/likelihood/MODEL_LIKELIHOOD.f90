@@ -178,7 +178,7 @@ module model_likelihood_module
     if (.not.sanity_check) call model_sanity_check(PI%parini)
 
     ! call EDCs which can be evaluated prior to running the model
-    call EDC1_CDEA_LU_FIRES(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+    call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
@@ -188,7 +188,7 @@ module model_likelihood_module
                      ,DATAin%M_GPP)
 
     ! assess post running EDCs
-    call EDC2_CDEA_LU_FIRES(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+    call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
                      ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                      ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
@@ -242,7 +242,7 @@ module model_likelihood_module
     if (DATAin%EDC == 1) then
 
         ! call EDCs which can be evaluated prior to running the model
-        call EDC1_CDEA_LU_FIRES(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+        call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
@@ -261,7 +261,7 @@ module model_likelihood_module
     if (DATAin%EDC == 1) then
 
         ! check edc2
-        call EDC2_CDEA_LU_FIRES(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
                      ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                      ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
@@ -345,7 +345,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine EDC1_CDEA_LU_FIRES(PARS, npars, meantemp, meanrad, EDC1)
+  subroutine assess_EDC1(PARS, npars, meantemp, meanrad, EDC1)
 
     ! subroutine assessed the current parameter sets for passing ecological and
     ! steady state contraints (Bloom et al., 2015).
@@ -444,11 +444,11 @@ module model_likelihood_module
 
     ! could always add more / remove some
 
-  end subroutine EDC1_CDEA_LU_FIRES
+  end subroutine assess_EDC1
   !
   !------------------------------------------------------------------
   !
-  subroutine EDC2_CDEA_LU_FIRES(npars,nomet,nofluxes,nopools,nodays,deltat &
+  subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodays,deltat &
                       ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
                       ,meantemp,EDC2)
 
@@ -578,56 +578,57 @@ module model_likelihood_module
     ! get total in and out for each pool
     ! labile
     Fin(1)  = FT(5)
-    Fout(1) = FT(8)+FT(18)+FT(24)+sum(Rg_from_labile(io_start:io_finish)*deltat(io_start:io_finish))
+    Fout(1) = FT(8)+FT(18)+FT(24)+FT(34)+FT(41) &
+            + sum(Rg_from_labile(io_start:io_finish)*deltat(io_start:io_finish))
     Fin_yr1(1)  = FT_yr1(5)
-    Fout_yr1(1) = FT_yr1(8)+FT_yr1(18)+FT_yr1(24) &
+    Fout_yr1(1) = FT_yr1(8)+FT_yr1(18)+FT_yr1(24)+FT_yr1(34)+FT_yr1(41) &
                 + sum(Rg_from_labile(1:steps_per_year)*deltat(1:steps_per_year))
     Fin_yr2(1)  = FT_yr2(5)
-    Fout_yr2(1) = FT_yr2(8)+FT_yr2(18)+FT_yr2(24) &
+    Fout_yr2(1) = FT_yr2(8)+FT_yr2(18)+FT_yr2(24)+FT_yr2(34)+FT_yr2(41) &
                 + sum(Rg_from_labile((steps_per_year+1):(steps_per_year*2))*deltat((steps_per_year+1):(steps_per_year*2)))
     ! foliar
     Fin(2)  = FT(4)+FT(8)
-    Fout(2) = FT(10)+FT(19)+FT(25)
+    Fout(2) = FT(10)+FT(19)+FT(25)+FT(35)+FT(42)
     Fin_yr1(2)  = FT_yr1(4)+FT_yr1(8)
-    Fout_yr1(2) = FT_yr1(10)+FT_yr1(19)+FT_yr1(25)
+    Fout_yr1(2) = FT_yr1(10)+FT_yr1(19)+FT_yr1(25)+FT_yr1(35)+FT_yr1(42)
     Fin_yr2(2)  = FT_yr2(4)+FT_yr2(8)
-    Fout_yr2(2) = FT_yr2(10)+FT_yr2(19)+FT_yr2(25)
+    Fout_yr2(2) = FT_yr2(10)+FT_yr2(19)+FT_yr2(25)+FT_yr2(35)+FT_yr2(42)
     ! root
     Fin(3)  = FT(6)
-    Fout(3) = FT(12)+FT(20)+FT(26)
+    Fout(3) = FT(12)+FT(20)+FT(26)+FT(36)+FT(43)
     Fin_yr1(3)  = FT_yr1(6)
-    Fout_yr1(3) = FT_yr1(12)+FT_yr1(20)+FT_yr1(26)
+    Fout_yr1(3) = FT_yr1(12)+FT_yr1(20)+FT_yr1(26)+FT_yr1(36)+FT_yr1(43)
     Fin_yr2(3)  = FT_yr2(6)
-    Fout_yr2(3) = FT_yr2(12)+FT_yr2(20)+FT_yr2(26)
+    Fout_yr2(3) = FT_yr2(12)+FT_yr2(20)+FT_yr2(26)+FT_yr2(36)+FT_yr2(43)
     ! wood
     Fin(4)  = FT(7)
-    Fout(4) = FT(11)+FT(21)+FT(27)
+    Fout(4) = FT(11)+FT(21)+FT(27)+FT(37)+FT(44)
     Fin_yr1(4)  = FT_yr1(7)
-    Fout_yr1(4) = FT_yr1(11)+FT_yr1(21)+FT_yr1(27)
+    Fout_yr1(4) = FT_yr1(11)+FT_yr1(21)+FT_yr1(27)+FT_yr1(37)+FT_yr1(44)
     Fin_yr2(4)  = FT_yr2(7)
-    Fout_yr2(4) = FT_yr2(11)+FT_yr2(21)+FT_yr2(27)
+    Fout_yr2(4) = FT_yr2(11)+FT_yr2(21)+FT_yr2(27)+FT_yr2(37)+FT_yr2(44)
     ! litter
     Fin(5)  = FT(10)+FT(12)+FT(24)+FT(25)+FT(26)
-    Fout(5) = FT(13)+FT(15)+FT(22)+FT(28)
+    Fout(5) = FT(13)+FT(15)+FT(22)+FT(28)+FT(38)
     Fin_yr1(5)  = FT_yr1(10)+FT_yr1(12)+FT_yr1(24)+FT_yr1(25)+FT_yr1(26)
-    Fout_yr1(5) = FT_yr1(13)+FT_yr1(15)+FT_yr1(22)+FT_yr1(28)
+    Fout_yr1(5) = FT_yr1(13)+FT_yr1(15)+FT_yr1(22)+FT_yr1(28)+FT_yr1(38)
     Fin_yr2(5)  = FT_yr2(10)+FT_yr2(12)+FT_yr2(24)+FT_yr2(25)+FT_yr2(26)
-    Fout_yr2(5) = FT_yr2(13)+FT_yr2(15)+FT_yr2(22)+FT_yr2(28)
+    Fout_yr2(5) = FT_yr2(13)+FT_yr2(15)+FT_yr2(22)+FT_yr2(28)+FT_yr2(38)
     ! som
     Fin(6)  = FT(15)+FT(27)+FT(28)+FT(31)+FT(33)
-    Fout(6) = FT(14)+FT(23)
+    Fout(6) = FT(14)+FT(23)+FT(40)
     Fin_yr1(6)  = FT_yr1(15)+FT_yr1(27)+FT_yr1(28)+FT_yr1(31)+FT_yr1(33)
-    Fout_yr1(6) = FT_yr1(14)+FT_yr1(23)
+    Fout_yr1(6) = FT_yr1(14)+FT_yr1(23)+FT_yr1(40)
     Fin_yr2(6)  = FT_yr2(15)+FT_yr2(27)+FT_yr2(28)+FT_yr2(31)+FT_yr2(33)
-    Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)
+    Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)+FT_yr2(40)
 
     ! litwood
     Fin(8)  = FT(11)
-    Fout(8) = FT(30)+FT(31)+FT(32)+FT(33)
+    Fout(8) = FT(30)+FT(31)+FT(32)+FT(33)+FT(39)
     Fin_yr1(8)  = FT_yr1(11)
-    Fout_yr1(8) = FT_yr1(30)+FT_yr1(31)+FT_yr1(32)+FT_yr1(33)
+    Fout_yr1(8) = FT_yr1(30)+FT_yr1(31)+FT_yr1(32)+FT_yr1(33)+FT_yr1(39)
     Fin_yr2(8)  = FT_yr2(11)
-    Fout_yr2(8) = FT_yr2(30)+FT_yr2(31)+FT_yr2(32)+FT_yr2(33)
+    Fout_yr2(8) = FT_yr2(30)+FT_yr2(31)+FT_yr2(32)+FT_yr2(33)+FT_yr2(39)
 
     ! Iterate through C pools to determine whether they have their ratio of
     ! input and outputs are outside of steady state approximation.
@@ -729,9 +730,16 @@ module model_likelihood_module
         EDC2 = 0d0 ; EDCD%PASSFAIL(35) = 0
     end if
 
+    ! Estimate total MRT in years, we assume that this has to be a sensible number even with the turnover suppression
+    MRTwood = ((sum((M_FLUXES(:,11) + M_FLUXES(:,21) + M_FLUXES(:,27) + &
+                     M_FLUXES(:,37) + M_FLUXES(:,44)) / M_POOLS(:,4)) / dble(nodays)) * 365.25d0) ** (-1d0)
+    if ((EDC2 == 1 .or. DIAG == 1) .and. MRTwood > 600d0) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(36) = 0
+    end if
+
     ! Prevent NPP -> foliage (FLX4,8) > NPP (GPP-Ra, FLX1-FLX3) * 0.8d0; i.e. 80 % of NPP
     if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(:,4)+M_FLUXES(:,8)) > sum(M_FLUXES(:,1)-M_FLUXES(:,3))*0.8d0 ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(36) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(37) = 0
     end if
 
     !
@@ -761,7 +769,7 @@ module model_likelihood_module
 
     end if ! min pool assessment
 
-  end subroutine EDC2_CDEA_LU_FIRES
+  end subroutine assess_EDC2
   !
   !------------------------------------------------------------------
   !
@@ -953,7 +961,7 @@ module model_likelihood_module
     if (DATAin%EDC == 1) then
 
         ! call EDCs which can be evaluated prior to running the model
-        call EDC1_CDEA_LU_FIRES(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+        call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
@@ -972,7 +980,7 @@ module model_likelihood_module
     if (DATAin%EDC == 1) then
 
         ! check edc2
-        call EDC2_CDEA_LU_FIRES(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
                      ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                      ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)

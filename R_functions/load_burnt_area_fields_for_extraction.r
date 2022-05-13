@@ -77,7 +77,7 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
                   # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
                   # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
                   if (spatial_type == "grid") {
-                      if (res(var1)[1] < res(cardamom_ext)[1] | res(var1)[2] < res(cardamom_ext)[2]) {
+                      if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
                           # Create raster with the target resolution
                           target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
                           # Resample to correct grid.
@@ -185,7 +185,7 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
                        # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
                        # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
                        if (spatial_type == "grid") {
-                           if (res(var1)[1] < res(cardamom_ext)[1] | res(var1)[2] < res(cardamom_ext)[2]) {
+                           if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
                                # Create raster with the target resolution
                                target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
                                # Resample to correct grid.

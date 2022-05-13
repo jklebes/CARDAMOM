@@ -49,7 +49,7 @@ load_lca_maps_for_extraction<-function(latlon_in,lca_source,cardamom_ext,spatial
         # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
         # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
         if (spatial_type == "grid") {
-            if (res(lca_gCm2)[1] < res(cardamom_ext)[1] | res(lca_gCm2)[2] < res(cardamom_ext)[2]) {
+            if (res(lca_gCm2)[1] != res(cardamom_ext)[1] | res(lca_gCm2)[2] != res(cardamom_ext)[2]) {
 
                 # Create raster with the target resolution
                 target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))

@@ -92,7 +92,7 @@ load_wood_productivity_maps_for_extraction<-function(Cwood_inc_source,cardamom_e
                  # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
                  # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
                  if (spatial_type == "grid") {
-                     if (res(Cwood_increment)[1] < res(cardamom_ext)[1] | res(Cwood_increment)[2] < res(cardamom_ext)[2]) {
+                     if (res(Cwood_increment)[1] != res(cardamom_ext)[1] | res(Cwood_increment)[2] != res(cardamom_ext)[2]) {
 
                          # Create raster with the target resolution
                          target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
