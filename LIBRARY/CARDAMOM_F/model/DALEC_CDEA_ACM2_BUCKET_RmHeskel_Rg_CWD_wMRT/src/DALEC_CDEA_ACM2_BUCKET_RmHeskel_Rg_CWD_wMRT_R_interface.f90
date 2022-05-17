@@ -113,7 +113,7 @@ subroutine rdaleccdeaacm2bucketrmheskelrgcwdwmrt(output_dim,MTT_dim,SS_dim &
      ! C internal fluxes (gC/m2/day)
      out_var1(i,1:nodays,8)  = FLUXES(1:nodays,4)       ! allocation to foliage (gC/m2/day)
      out_var1(i,1:nodays,9)  = FLUXES(1:nodays,5)       ! allocation to labile (gC/m2/day)
-     out_var1(i,1:nodays,10)  = FLUXES(1:nodays,6)       ! allocation to fine roots (gC/m2/day)
+     out_var1(i,1:nodays,10) = FLUXES(1:nodays,6)       ! allocation to fine roots (gC/m2/day)
      out_var1(i,1:nodays,11) = FLUXES(1:nodays,7)       ! allocation to wood (gC/m2/day)
      out_var1(i,1:nodays,12) = FLUXES(1:nodays,8)       ! labile to foliage (gC/m2/day)
      out_var1(i,1:nodays,13) = FLUXES(1:nodays,10)      ! foliage scenesence (gC/m2/day)
