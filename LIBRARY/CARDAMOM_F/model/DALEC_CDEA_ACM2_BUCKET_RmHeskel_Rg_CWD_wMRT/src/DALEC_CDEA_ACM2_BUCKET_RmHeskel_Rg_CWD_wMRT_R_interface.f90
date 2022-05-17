@@ -1,16 +1,16 @@
 
 subroutine rdaleccdeaacm2bucketrmheskelrgcwdwmrt(output_dim,MTT_dim,SS_dim &
-                               ,met,pars &
-                               ,out_var1,out_var2,out_var3 &
-                               ,lat,nopars,nomet &
-                               ,nofluxes,nopools,nodays,deltat &
-                               ,nos_iter,soil_frac_clay_in,soil_frac_sand_in)
+                                                ,met,pars &
+                                                ,out_var1,out_var2,out_var3 &
+                                                ,lat,nopars,nomet &
+                                                ,nofluxes,nopools,nodays,deltat &
+                                                ,nos_iter,soil_frac_clay_in,soil_frac_sand_in)
 
   use CARBON_MODEL_MOD, only: CARBON_MODEL, wSWP_time &
                              ,soil_frac_clay, soil_frac_sand, nos_soil_layers &
                              ,gs_demand_supply_ratio, cica_time &
                              ,gs_total_canopy, gb_total_canopy &
-                             ,canopy_par_MJday_time,Rg_from_labile
+                             ,canopy_par_MJday_time, Rg_from_labile
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -278,6 +278,9 @@ subroutine rdaleccdeaacm2bucketrmheskelrgcwdwmrt(output_dim,MTT_dim,SS_dim &
   out_var3(1:nos_iter,6) = (out_var3(1:nos_iter,6) + &
                            (out_var3(1:nos_iter,4) / out_var2(1:nos_iter,4))) &
                          * out_var2(1:nos_iter,6)
+  ! ...which is then in turn used to update the soil pool
+  ! NOTE: that because not all wood litter
+  out_var3(:,7) = (out_var3(:,7) + ((out_var3(:,6) / out_var2(:,6))*woodlitter_to_som_frac) ) * out_var2(:,7)
 
   ! return back to the subroutine then
   return

@@ -281,6 +281,9 @@ subroutine rdaleccdeaacm2bucketrmrgcwdwmrt(output_dim,MTT_dim,SS_dim &
   out_var3(1:nos_iter,6) = (out_var3(1:nos_iter,6) + &
                            (out_var3(1:nos_iter,4) / out_var2(1:nos_iter,4))) &
                          * out_var2(1:nos_iter,6)
+  ! ...which is then in turn used to update the soil pool
+  ! NOTE: that because not all wood litter
+  out_var3(:,7) = (out_var3(:,7) + ((out_var3(:,6) / out_var2(:,6))*woodlitter_to_som_frac) ) * out_var2(:,7)
 
   ! return back to the subroutine then
   return
