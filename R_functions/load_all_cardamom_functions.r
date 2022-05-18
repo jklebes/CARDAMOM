@@ -13,7 +13,7 @@ load_r_libraries<-function(){
     require(gplots)
     require(ncdf4)
     require(parallel)
-    require(rgdal)
+    #require(rgdal)
     require(raster)
     #require(rhdf5) # from bioconductor - not currently used
     require(sp)
