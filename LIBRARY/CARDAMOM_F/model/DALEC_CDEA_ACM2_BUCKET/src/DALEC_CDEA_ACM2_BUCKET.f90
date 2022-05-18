@@ -465,6 +465,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! p(26) = fine + coarse root biomass (g/m2) needed to reach 50% of max root depth
     ! p(27) = maximum rooting depth (m)
 
+!    ! Debugging print statements
+!    print*,"carbon_model: "
+
     ! Set some initial states
     infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0
     intercepted_rainfall = 0d0 ; canopy_storage = 0d0 ; snow_storage = 0d0
@@ -1150,6 +1153,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        end if
 
     end do ! nodays loop
+
+!    ! Debugging print statements
+!    print*,"carbon_model: done"
 
   end subroutine CARBON_MODEL
   !

@@ -1173,37 +1173,51 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! Impose fire
        !!!!!!!!!!
 
-       ! calculate fire emissions and litter transfer
-       if (met(9,n) > 0d0) then
-           ! first calculate combustion / emissions fluxes in g C m-2 d-1
-           FLUXES(n,18) = POOLS(n+1,1)*met(9,n)*cf(1)/deltat(n) ! labile
-           FLUXES(n,19) = POOLS(n+1,2)*met(9,n)*cf(2)/deltat(n) ! foliar
-           FLUXES(n,20) = POOLS(n+1,3)*met(9,n)*cf(3)/deltat(n) ! roots
-           FLUXES(n,21) = POOLS(n+1,4)*met(9,n)*cf(4)/deltat(n) ! wood
-           FLUXES(n,22) = POOLS(n+1,5)*met(9,n)*cf(5)/deltat(n) ! litter
-           FLUXES(n,23) = POOLS(n+1,6)*met(9,n)*cf(6)/deltat(n) ! som
-           FLUXES(n,32) = POOLS(n+1,8)*met(9,n)*cf(7)/deltat(n) ! litterwood
+       if (met(9,n) > 0d0 .or.(met(8,n) > 0d0 .and. harvest_management > 0)) then
 
-           ! second calculate litter transfer fluxes in g C m-2 d-1, all pools except som
-           FLUXES(n,24) = POOLS(n+1,1)*met(9,n)*(1d0-cf(1))*(1d0-rfac(1))/deltat(n) ! labile into litter
-           FLUXES(n,25) = POOLS(n+1,2)*met(9,n)*(1d0-cf(2))*(1d0-rfac(2))/deltat(n) ! foliar into litter
-           FLUXES(n,26) = POOLS(n+1,3)*met(9,n)*(1d0-cf(3))*(1d0-rfac(3))/deltat(n) ! roots into litter
-           FLUXES(n,27) = POOLS(n+1,4)*met(9,n)*(1d0-cf(4))*(1d0-rfac(4))/deltat(n) ! wood into som
-           FLUXES(n,28) = POOLS(n+1,5)*met(9,n)*(1d0-cf(5))*(1d0-rfac(5))/deltat(n) ! litter into som
-           FLUXES(n,33) = POOLS(n+1,8)*met(9,n)*(1d0-cf(7))*(1d0-rfac(7))/deltat(n) ! wood litter into som
+           ! Adjust burnt area to account for the managment decisions which may not be
+           ! reflected in the burnt area drivers
+           burnt_area = met(9,n)
+           if (met(8,n) > 0d0 .and. burnt_area > 0d0) then
+               ! pass harvest management to local integer
+               burnt_area = min(1d0,burnt_area + post_harvest_burn(harvest_management))
+           else if (met(8,n) > 0d0 .and. burnt_area <= 0d0) then
+               burnt_area = post_harvest_burn(harvest_management)
+           endif
 
-           ! update pools - first remove burned vegetation
-           POOLS(n+1,1) = POOLS(n+1,1) - (FLUXES(n,18) + FLUXES(n,24)) * deltat(n) ! labile
-           POOLS(n+1,2) = POOLS(n+1,2) - (FLUXES(n,19) + FLUXES(n,25)) * deltat(n) ! foliar
-           POOLS(n+1,3) = POOLS(n+1,3) - (FLUXES(n,20) + FLUXES(n,26)) * deltat(n) ! roots
-           POOLS(n+1,4) = POOLS(n+1,4) - (FLUXES(n,21) + FLUXES(n,27)) * deltat(n) ! wood
-           ! update pools - add litter transfer
-           POOLS(n+1,5) = POOLS(n+1,5) + (FLUXES(n,24) + FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22) - FLUXES(n,28)) * deltat(n)
-           POOLS(n+1,6) = POOLS(n+1,6) + (FLUXES(n,27) + FLUXES(n,28) + FLUXES(n,33) - FLUXES(n,23)) * deltat(n)
-           POOLS(n+1,8) = POOLS(n+1,8) - (FLUXES(n,32) + FLUXES(n,33)) * deltat(n)
+           ! Determine the corrected burnt area
+           if (burnt_area > 0d0) then
 
-           ! calculate ecosystem emissions
-           FLUXES(n,17) = FLUXES(n,18)+FLUXES(n,19)+FLUXES(n,20)+FLUXES(n,21)+FLUXES(n,22)+FLUXES(n,23)+FLUXES(n,32)
+               ! first calculate combustion / emissions fluxes in g C m-2 d-1
+               FLUXES(n,18) = POOLS(n+1,1)*burnt_area*cf(1)/deltat(n) ! labile
+               FLUXES(n,19) = POOLS(n+1,2)*burnt_area*cf(2)/deltat(n) ! foliar
+               FLUXES(n,20) = POOLS(n+1,3)*burnt_area*cf(3)/deltat(n) ! roots
+               FLUXES(n,21) = POOLS(n+1,4)*burnt_area*cf(4)/deltat(n) ! wood
+               FLUXES(n,22) = POOLS(n+1,5)*burnt_area*cf(5)/deltat(n) ! litter
+               FLUXES(n,23) = POOLS(n+1,6)*burnt_area*cf(6)/deltat(n) ! som
+               FLUXES(n,32) = POOLS(n+1,8)*burnt_area*cf(7)/deltat(n) ! litterwood
+
+               ! second calculate litter transfer fluxes in g C m-2 d-1, all pools except som
+               FLUXES(n,24) = POOLS(n+1,1)*burnt_area*(1d0-cf(1))*(1d0-rfac(1))/deltat(n) ! labile into litter
+               FLUXES(n,25) = POOLS(n+1,2)*burnt_area*(1d0-cf(2))*(1d0-rfac(2))/deltat(n) ! foliar into litter
+               FLUXES(n,26) = POOLS(n+1,3)*burnt_area*(1d0-cf(3))*(1d0-rfac(3))/deltat(n) ! roots into litter
+               FLUXES(n,27) = POOLS(n+1,4)*burnt_area*(1d0-cf(4))*(1d0-rfac(4))/deltat(n) ! wood into som
+               FLUXES(n,28) = POOLS(n+1,5)*burnt_area*(1d0-cf(5))*(1d0-rfac(5))/deltat(n) ! litter into som
+               FLUXES(n,33) = POOLS(n+1,8)*burnt_area*(1d0-cf(7))*(1d0-rfac(7))/deltat(n) ! wood litter into som
+
+               ! update pools - first remove burned vegetation
+               POOLS(n+1,1) = POOLS(n+1,1) - (FLUXES(n,18) + FLUXES(n,24)) * deltat(n) ! labile
+               POOLS(n+1,2) = POOLS(n+1,2) - (FLUXES(n,19) + FLUXES(n,25)) * deltat(n) ! foliar
+               POOLS(n+1,3) = POOLS(n+1,3) - (FLUXES(n,20) + FLUXES(n,26)) * deltat(n) ! roots
+               POOLS(n+1,4) = POOLS(n+1,4) - (FLUXES(n,21) + FLUXES(n,27)) * deltat(n) ! wood
+               ! update pools - add litter transfer
+               POOLS(n+1,5) = POOLS(n+1,5) + (FLUXES(n,24) + FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22) - FLUXES(n,28)) * deltat(n)
+               POOLS(n+1,6) = POOLS(n+1,6) + (FLUXES(n,27) + FLUXES(n,28) + FLUXES(n,33) - FLUXES(n,23)) * deltat(n)
+               POOLS(n+1,8) = POOLS(n+1,8) - (FLUXES(n,32) + FLUXES(n,33)) * deltat(n)
+
+               ! calculate ecosystem emissions
+               FLUXES(n,17) = FLUXES(n,18)+FLUXES(n,19)+FLUXES(n,20)+FLUXES(n,21)+FLUXES(n,22)+FLUXES(n,23)+FLUXES(n,32)
+           end if ! burnt_area > 0
        else
            ! set fluxes to zero
            FLUXES(n,17:28) = 0d0 ; FLUXES(n,32:33) = 0d0

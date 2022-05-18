@@ -223,7 +223,7 @@ cardamom_project_setup <- function (paths,PROJECT) {
         # Remove the evidence of the previuos compilation
         system("rm *.mod") # depends on being in executable directory
 
-        if (request_compile_server == FALSE) {
+        if (request_compile_server == FALSE | request_compile_local) {
             # compiler options
             compiler_options=""#"-xhost -ipo -no-ftz"
             if (timing) {compiler_options=paste(compiler_options," -pg",sep="")}

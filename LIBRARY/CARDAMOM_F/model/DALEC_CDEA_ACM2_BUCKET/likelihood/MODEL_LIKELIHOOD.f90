@@ -108,7 +108,7 @@ module model_likelihood_module
            PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
            ! turn off random selection for initial values
            MCO%randparini = .false.
-
+           write(*,*)"...intermediate EDC search progress check"
            ! call edc likelihood function to get final edc probability
            call edc_model_likelihood(PI%parini,PEDC,ML_prior)
 
@@ -186,7 +186,7 @@ module model_likelihood_module
                      ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
                      ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
                      ,DATAin%M_GPP)
-
+!print*,"edc_model_likelihood: carbon_model done"
     ! assess post running EDCs
     call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                     ,DATAin%nodays,DATAin%deltat,DATAin%steps_per_year   &
@@ -234,6 +234,9 @@ module model_likelihood_module
     ! declare local variables
     double precision :: EDC1, EDC2
 
+!    ! Debugging print statements
+!    print*,"sub_model_likelihood:"
+
     ! initial values
     ML_obs_out = 0d0 ; ML_prior_out = 0d0 ; EDC1 = 1d0 ; EDC2 = 1d0
     ! if == 0 EDCs are checked only until the first failure occurs
@@ -257,7 +260,7 @@ module model_likelihood_module
                      ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
                      ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
                      ,DATAin%M_GPP)
-
+!print*,"sub_model_likelihood: carbon_model done"
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
 
@@ -278,6 +281,9 @@ module model_likelihood_module
     ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,DATAin%parpriorweight,PARS)
     ! calculate final model likelihood when compared to obs
     ML_obs_out = ML_obs_out + scale_likelihood(PI%npars,PARS)
+
+!    ! Debugging print statements
+!    print*,"sub_model_likelihood: done"
 
   end subroutine sub_model_likelihood
   !
@@ -312,14 +318,14 @@ module model_likelihood_module
                      ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
                      ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
                      ,DATAin%M_GPP)
-
+!print*,"sanity_check: carbon_model done 1"
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
                      ,local_fluxes,local_pools,DATAin%nopars &
                      ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
                      ,DATAin%M_GPP)
-
+!print*,"sanity_check: carbon_model done 2"
     ! Compare outputs
     flux_error = sum(abs(DATAin%M_FLUXES - local_fluxes))
     pool_error = sum(abs(DATAin%M_POOLS - local_pools))
@@ -498,6 +504,9 @@ module model_likelihood_module
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
                                     etol = 0.20d0 !0.10d0 !0.05d0
+
+!    ! Debugging print statements
+!    print*,"assess_EDC2: "
 
     ! update initial values
     DIAG = EDCD%DIAG
@@ -704,6 +713,9 @@ module model_likelihood_module
 
     end if ! min pool assessment
 
+!    ! Debugging print statements
+!    print*,"assess_EDC2: done"
+
   end subroutine assess_EDC2
   !
   !------------------------------------------------------------------
@@ -887,6 +899,9 @@ module model_likelihood_module
     ! declare local variables
     double precision :: EDC1, EDC2
 
+!    ! Debugging print statements
+!    print*,"model_likelihood:"
+
     ! initial values
     ML_obs_out = 0d0 ; ML_prior_out = 0d0 ; EDC1 = 1d0 ; EDC2 = 1d0
     ! if == 0 EDCs are checked only until the first failure occurs
@@ -910,27 +925,31 @@ module model_likelihood_module
                      ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
                      ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
                      ,DATAin%M_GPP)
-
+!print*,"model_likelihood: carbon_model done"
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
-
+!print*,"model_likelihood: EDC2"
         ! check edc2
         call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
                         ,DATAin%nodays,DATAin%deltat,DATAin%steps_per_year     &
                         ,PI%parmax,PARS,DATAin%MET &
                         ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                         ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-
+!print*,"model_likelihood: EDC2 done"
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
-
+!print*,"model_likelihood: EDC2 likelihood update"
     end if ! DATAin%EDC == 1
 
     ! Calculate log-likelihood associated with priors
     ! We always want this
     ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,DATAin%parpriorweight,PARS)
+!print*,"model_likelihood: update likelihood score"
     ! calculate final model likelihood when compared to obs
     ML_obs_out = ML_obs_out + likelihood(PI%npars,PARS)
+!print*,"model_likelihood: update likelihood score done"
+!    ! Debugging print statements
+!    print*,"model_likelihood: done"
 
   end subroutine model_likelihood
   !
@@ -954,14 +973,14 @@ module model_likelihood_module
     ! declare local variables
     integer :: n
     double precision, dimension(npars) :: local_likelihood
-
+!print*,"likelihood_p:"
     ! set initial value
     likelihood_p = 0d0 ; local_likelihood = 0d0
 
     ! now loop through defined parameters for their uncertainties
     where (parpriors > -9999) local_likelihood = parpriorweight*((pars-parpriors)/parpriorunc)**2
     likelihood_p = sum(local_likelihood) * (-0.5d0)
-
+!print*,"likelihood_p: done"
     ! dont for get to return
     return
 
@@ -989,16 +1008,13 @@ module model_likelihood_module
     double precision, dimension(DATAin%steps_per_year) :: sub_time
     double precision, allocatable :: mean_annual_pools(:)
 
+!    ! Debugging print statement
+!    print*,"likelihood: "
+
     ! initial value
     likelihood = 0d0 ; infini = 0d0 ; mid_state = 0d0 ; sub_time = 0d0
 
-       ! determine the annual max for each pool
-       do y = 1, DATAin%nos_years
-          ! derive mean annual foliar pool
-          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
-       end do ! year loop
-
-
+!print*,"likelihood: NBE"
 !    ! NBE Log-likelihood
 !    if (DATAin%nnbe > 0) then
 !       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
@@ -1024,7 +1040,8 @@ module model_likelihood_module
 !        tot_exp = sum( (((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)-model) - &
 !                        (DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe)) - obs)) / unc)**2 )
 !        likelihood = likelihood-tot_exp
-
+        ! Reset variable
+        tot_exp = 0d0
         ! Loop through each year
         do y = 1, DATAin%nos_years
            ! Reset selection variable
@@ -1032,25 +1049,27 @@ module model_likelihood_module
            ! Determine the start and finish of the current year of interest
            s = ((DATAin%steps_per_year*(y-1))+1) ; f = (DATAin%steps_per_year*y)
            where (DATAin%NBE(s:f) > -9998d0) sub_time = 1d0
-           ! Determine the current years mean NBE from observations and model
-           ! assuming we select only time steps in the model time series which have
-           ! an estimate in the observations
-           obs   = sum(DATAin%NBE(s:f)*sub_time)
-           model = sum((DATAin%M_NEE(s:f)+ &
-                       DATAin%M_FLUXES(s:f,17))*sub_time)
-           unc   = sqrt(sum((DATAin%NBE_unc(s:f)*sub_time)**2))
-           ! Update the likelihood score with the mean bias
-           likelihood = likelihood - (((model - obs) / unc) ** 2)
-           ! Determine the anomalies based on substraction of the annual mean
-           ! Greater information would come from breaking this down into annual estimates
-           tot_exp = sum( sub_time*(((DATAin%M_NEE(s:f)+DATAin%M_FLUXES(s:f,17)-model) - &
-                           (DATAin%NBE(s:f) - obs)) / unc)**2 )
-           ! Update the likelihood score with the anomaly estimates
-           likelihood = likelihood-tot_exp
-
+           if (sum(sub_time) > 0d0) then
+               ! Determine the current years mean NBE from observations and model
+               ! assuming we select only time steps in the model time series which have
+               ! an estimate in the observations
+               obs   = sum(DATAin%NBE(s:f)*sub_time)
+               model = sum((DATAin%M_NEE(s:f)+ &
+                           DATAin%M_FLUXES(s:f,17))*sub_time)
+               unc   = sqrt(sum(sub_time*DATAin%NBE_unc(s:f)**2))
+               ! Update the likelihood score with the mean bias
+               tot_exp = tot_exp + (((model - obs) / unc) ** 2)
+               ! Determine the anomalies based on substraction of the annual mean
+               ! Greater information would come from breaking this down into annual estimates
+               tot_exp = tot_exp + sum( sub_time*(((DATAin%M_NEE(s:f)+DATAin%M_FLUXES(s:f,17)-model) - &
+                                        (DATAin%NBE(s:f) - obs)) / unc)**2 )
+           end if ! sum(sub_time) > 0
         end do ! loop years
+        ! Update the likelihood score with the anomaly estimates
+        likelihood = likelihood-tot_exp
     endif ! nnbe > 0
-
+!print*,"likelihood: NBE done"
+!print*,"likelihood: GPP"
 !    ! GPP Log-likelihood
 !    if (DATAin%ngpp > 0) then
 !       tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
@@ -1060,6 +1079,8 @@ module model_likelihood_module
     ! GPP Log-likelihood
     ! GPP partitioned between the mean flux and seasonal anomalies
     if (DATAin%ngpp > 0) then
+        ! Reset variable
+        tot_exp = 0d0
         ! Loop through each year
         do y = 1, DATAin%nos_years
            ! Reset selection variable
@@ -1067,30 +1088,32 @@ module model_likelihood_module
            ! Determine the start and finish of the current year of interest
            s = ((DATAin%steps_per_year*(y-1))+1) ; f = (DATAin%steps_per_year*y)
            where (DATAin%GPP(s:f) > -9998d0) sub_time = 1d0
-           ! Determine the current years mean NBE from observations and model
-           ! assuming we select only time steps in the model time series which have
-           ! an estimate in the observations
-           obs   = sum(DATAin%GPP(s:f)*sub_time)
-           model = sum(DATAin%M_FLUXES(s:f,1)*sub_time)
-           unc   = sqrt(sum(sub_time*DATAin%GPP_unc(s:f)**2))
-           ! Update the likelihood score with the mean bias
-           likelihood = likelihood - (((model - obs) / unc) ** 2)
-           ! Determine the anomalies based on substraction of the annual mean
-           ! Greater information would come from breaking this down into annual estimates
-           tot_exp = sum( sub_time*(((DATAin%M_FLUXES(s:f,1)-model) - &
-                           (DATAin%GPP(s:f) - obs)) / unc)**2 )
-           ! Update the likelihood score with the anomaly estimates
-           likelihood = likelihood-tot_exp
+           if (sum(sub_time) > 0d0) then
+               ! Determine the current years mean NBE from observations and model
+               ! assuming we select only time steps in the model time series which have
+               ! an estimate in the observations
+               obs   = sum(DATAin%GPP(s:f)*sub_time)
+               model = sum(DATAin%M_FLUXES(s:f,1)*sub_time)
+               unc   = sqrt(sum(sub_time*DATAin%GPP_unc(s:f)**2))
+               ! Update the likelihood score with the mean bias
+               tot_exp = tot_exp + (((model - obs) / unc) ** 2)
+               ! Determine the anomalies based on substraction of the annual mean
+               ! Greater information would come from breaking this down into annual estimates
+               tot_exp = tot_exp + sum( sub_time*(((DATAin%M_FLUXES(s:f,1)-model) - &
+                                        (DATAin%GPP(s:f) - obs)) / unc)**2 )
+           end if ! sum(sub_time) > 0
         end do ! loop years
+        ! Update the likelihood score with the anomaly estimates
+        likelihood = likelihood-tot_exp
     endif ! ngpp > 0
-
+!print*,"likelihood: GPP done"
     ! Evap Log-likelihood
     if (DATAin%nEvap > 0) then
        tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),29)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
                        /DATAin%Evap_unc(DATAin%Evappts(1:DATAin%nEvap)))**2)
        likelihood = likelihood-tot_exp
     endif
-
+!print*,"likelihood: Fire"
 !    ! Fire Log-likelihood
 !    if (DATAin%nFire > 0) then
 !       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
@@ -1100,30 +1123,34 @@ module model_likelihood_module
     ! Fire Log-likelihood
     ! Fire partitioned between the mean flux and seasonal anomalies
     if (DATAin%nFire > 0) then
+        ! Reset variable
+        tot_exp = 0d0
         ! Loop through each year
         do y = 1, DATAin%nos_years
            ! Reset selection variable
            sub_time = 0d0
            ! Determine the start and finish of the current year of interest
            s = ((DATAin%steps_per_year*(y-1))+1) ; f = (DATAin%steps_per_year*y)
-           where (DATAin%FIRE(s:f) > -9998d0) sub_time = 1d0
+           where (DATAin%Fire(s:f) > -9998d0) sub_time = 1d0
+           if (sum(sub_time) > 0d0) then
                ! Determine the current years mean NBE from observations and model
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
-               obs   = sum(DATAin%FIRE(s:f)*sub_time)
+               obs   = sum(DATAin%Fire(s:f)*sub_time)
                model = sum(DATAin%M_FLUXES(s:f,17)*sub_time)
-               unc   = sqrt(sum(sub_time*DATAin%FIRE_unc(s:f)**2))
+               unc   = sqrt(sum(sub_time*DATAin%Fire_unc(s:f)**2))
                ! Update the likelihood score with the mean bias
-               likelihood = likelihood - (((model - obs) / unc) ** 2)
+               tot_exp = tot_exp + (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
                ! Greater information would come from breaking this down into annual estimates
-               tot_exp = sum( sub_time*(((DATAin%M_FLUXES(s:f,17)-model) - &
-                               (DATAin%FIRE(s:f) - obs)) / unc)**2 )
-               ! Update the likelihood score with the anomaly estimates
-               likelihood = likelihood-tot_exp
+               tot_exp = tot_exp + sum( sub_time*(((DATAin%M_FLUXES(s:f,17)-model) - &
+                                        (DATAin%Fire(s:f) - obs)) / unc)**2 )
+           end if ! sum(sub_time) > 0
         end do ! loop years
-    endif
-
+        ! Update the likelihood score with the anomaly estimates
+        likelihood = likelihood-tot_exp
+    endif ! nFire > 0
+!print*,"likelihood: Fire done"
     ! Assume physical property is best represented as the mean of value at beginning and end of times step
     if (DATAin%nlai > 0) then
        ! Create vector of (LAI_t0 + LAI_t1) * 0.5, note / pars(17) to convert foliage C to LAI
@@ -1332,6 +1359,10 @@ module model_likelihood_module
     if (likelihood /= likelihood) then
        likelihood = log(infini)
     end if
+
+!    ! Debugging prints
+!    print*,"likelihood: done"
+
     ! don't forget to return
     return
 
@@ -1358,6 +1389,9 @@ module model_likelihood_module
     double precision, dimension(DATAin%steps_per_year) :: sub_time
     double precision, allocatable :: mean_annual_pools(:)
 
+!    ! Debugging print statement
+!    print*,"scale_likelihood: "
+
     ! initial value
     scale_likelihood = 0d0 ; infini = 0d0 ; sub_time = 0d0
 
@@ -1370,7 +1404,6 @@ module model_likelihood_module
 !    endif
     ! NBE Log-likelihood
     ! NBE partitioned between the mean flux and seasonal anomalies
-    tot_exp = 0d0
     if (DATAin%nnbe > 0) then
 !        ! Determine the mean value for model, observtion and uncertainty estimates
 !        obs   = sum(DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
@@ -1387,7 +1420,8 @@ module model_likelihood_module
 !        tot_exp = sum( (((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)-model) - &
 !                        (DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe)) - obs)) / unc)**2 )
 !        likelihood = likelihood-tot_exp
-
+        ! Reset variable
+        tot_exp = 0d0
         ! Loop through each year
         do y = 1, DATAin%nos_years
            ! Reset selection variable
@@ -1395,24 +1429,27 @@ module model_likelihood_module
            ! Determine the start and finish of the current year of interest
            s = ((DATAin%steps_per_year*(y-1))+1) ; f = (DATAin%steps_per_year*y)
            where (DATAin%NBE(s:f) > -9998d0) sub_time = 1d0
-           ! Determine the current years mean NBE from observations and model
-           ! assuming we select only time steps in the model time series which have
-           ! an estimate in the observations
-           obs   = sum(DATAin%NBE(s:f)*sub_time)
-           model = sum((DATAin%M_NEE(s:f)+ &
-                       DATAin%M_FLUXES(s:f,17))*sub_time)
-           unc   = sqrt(sum(sub_time*DATAin%NBE_unc(s:f)**2))
-           ! Update the likelihood score with the mean bias
-           tot_exp = tot_exp - (((model - obs) / unc) ** 2)
-           ! Determine the anomalies based on substraction of the annual mean
-           ! Greater information would come from breaking this down into annual estimates
-           tot_exp = tot_exp - sum( sub_time*(((DATAin%M_NEE(s:f)+DATAin%M_FLUXES(s:f,17)-model) - &
-                                    (DATAin%NBE(s:f) - obs)) / unc)**2 )
+           if (sum(sub_time) > 0d0) then
+               ! Determine the current years mean NBE from observations and model
+               ! assuming we select only time steps in the model time series which have
+               ! an estimate in the observations
+               obs   = sum(DATAin%NBE(s:f)*sub_time)
+               model = sum((DATAin%M_NEE(s:f)+ &
+                           DATAin%M_FLUXES(s:f,17))*sub_time)
+               unc   = sqrt(sum(sub_time*DATAin%NBE_unc(s:f)**2))
+               ! Update the likelihood score with the mean bias
+               tot_exp = tot_exp + (((model - obs) / unc) ** 2)
+               ! Determine the anomalies based on substraction of the annual mean
+               ! Greater information would come from breaking this down into annual estimates
+               tot_exp = tot_exp + sum( sub_time*(((DATAin%M_NEE(s:f)+DATAin%M_FLUXES(s:f,17)-model) - &
+                                        (DATAin%NBE(s:f) - obs)) / unc)**2 )
+           end if ! sum(sub_time) > 0
         end do ! loop years
         ! Update the likelihood score with the anomaly estimates
         scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nnbe))
     endif ! nnbe > 0
-
+!print*,"scale_likelihood: NBE done"
+!print*,"scale_likelihood: GPP"
 !    ! GPP Log-likelihood
 !    if (DATAin%ngpp > 0) then
 !       tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
@@ -1422,6 +1459,8 @@ module model_likelihood_module
     ! GPP Log-likelihood
     ! GPP partitioned between the mean flux and seasonal anomalies
     if (DATAin%ngpp > 0) then
+        ! Reset variable
+        tot_exp = 0d0
         ! Loop through each year
         do y = 1, DATAin%nos_years
            ! Reset selection variable
@@ -1429,30 +1468,32 @@ module model_likelihood_module
            ! Determine the start and finish of the current year of interest
            s = ((DATAin%steps_per_year*(y-1))+1) ; f = (DATAin%steps_per_year*y)
            where (DATAin%GPP(s:f) > -9998d0) sub_time = 1d0
-           ! Determine the current years mean NBE from observations and model
-           ! assuming we select only time steps in the model time series which have
-           ! an estimate in the observations
-           obs   = sum(DATAin%GPP(s:f)*sub_time)
-           model = sum(DATAin%M_FLUXES(s:f,1)*sub_time)
-           unc   = sqrt(sum(sub_time*DATAin%GPP_unc(s:f)**2))
-           ! Update the likelihood score with the mean bias
-           tot_exp = tot_exp - (((model - obs) / unc) ** 2)
-           ! Determine the anomalies based on substraction of the annual mean
-           ! Greater information would come from breaking this down into annual estimates
-           tot_exp = tot_exp - sum( sub_time*(((DATAin%M_FLUXES(s:f,1)-model) - &
-                                    (DATAin%GPP(s:f) - obs)) / unc)**2 )
+           if (sum(sub_time) > 0d0) then
+               ! Determine the current years mean NBE from observations and model
+               ! assuming we select only time steps in the model time series which have
+               ! an estimate in the observations
+               obs   = sum(DATAin%GPP(s:f)*sub_time)
+               model = sum(DATAin%M_FLUXES(s:f,1)*sub_time)
+               unc   = sqrt(sum(sub_time*DATAin%GPP_unc(s:f)**2))
+               ! Update the likelihood score with the mean bias
+               tot_exp = tot_exp + (((model - obs) / unc) ** 2)
+               ! Determine the anomalies based on substraction of the annual mean
+               ! Greater information would come from breaking this down into annual estimates
+               tot_exp = tot_exp + sum( sub_time*(((DATAin%M_FLUXES(s:f,1)-model) - &
+                                        (DATAin%GPP(s:f) - obs)) / unc)**2 )
+           end if ! sum(sub_time) > 0
         end do ! loop years
         ! Update the likelihood score with the anomaly estimates
         scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%ngpp))
     endif
-
+!print*,"scale_likelihood: GPP done"
     ! Evap Log-likelihood
     if (DATAin%nEvap > 0) then
        tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),29)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
                        /DATAin%Evap_unc(DATAin%Evappts(1:DATAin%nEvap)))**2)
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nEvap))
     endif
-
+!print*,"scale_likelihood: Fire"
 !    ! Fire Log-likelihood
 !    if (DATAin%nFire > 0) then
 !       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
@@ -1462,6 +1503,8 @@ module model_likelihood_module
     ! Fire Log-likelihood
     ! Fire partitioned between the mean flux and seasonal anomalies
     if (DATAin%nFire > 0) then
+        ! Reset variable
+        tot_exp = 0d0
         ! Loop through each year
         do y = 1, DATAin%nos_years
            ! Reset selection variable
@@ -1469,23 +1512,25 @@ module model_likelihood_module
            ! Determine the start and finish of the current year of interest
            s = ((DATAin%steps_per_year*(y-1))+1) ; f = (DATAin%steps_per_year*y)
            where (DATAin%Fire(s:f) > -9998d0) sub_time = 1d0
-           ! Determine the current years mean NBE from observations and model
-           ! assuming we select only time steps in the model time series which have
-           ! an estimate in the observations
-           obs   = sum(DATAin%Fire(s:f)*sub_time)
-           model = sum(DATAin%M_FLUXES(s:f,17)*sub_time)
-           unc   = sqrt(sum(sub_time*DATAin%Fire_unc(s:f)**2))
-           ! Update the likelihood score with the mean bias
-           tot_exp = tot_exp - (((model - obs) / unc) ** 2)
-           ! Determine the anomalies based on substraction of the annual mean
-           ! Greater information would come from breaking this down into annual estimates
-           tot_exp = tot_exp - sum( sub_time*(((DATAin%M_FLUXES(s:f,17)-model) - &
-                                    (DATAin%Fire(s:f) - obs)) / unc)**2 )
+           if (sum(sub_time) > 0d0) then
+               ! Determine the current years mean NBE from observations and model
+               ! assuming we select only time steps in the model time series which have
+               ! an estimate in the observations
+               obs   = sum(DATAin%Fire(s:f)*sub_time)
+               model = sum(DATAin%M_FLUXES(s:f,17)*sub_time)
+               unc   = sqrt(sum(sub_time*DATAin%Fire_unc(s:f)**2))
+               ! Update the likelihood score with the mean bias
+               tot_exp = tot_exp + (((model - obs) / unc) ** 2)
+               ! Determine the anomalies based on substraction of the annual mean
+               ! Greater information would come from breaking this down into annual estimates
+               tot_exp = tot_exp + sum( sub_time*(((DATAin%M_FLUXES(s:f,17)-model) - &
+                                        (DATAin%Fire(s:f) - obs)) / unc)**2 )
+           end if ! sum(sub_time) > 0
         end do ! loop years
         ! Update the likelihood score with the anomaly estimates
         scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nFire))
     endif
-
+!print*,"scale_likelihood: Fire done"
     ! LAI log-likelihood
     if (DATAin%nlai > 0) then
        ! loop split to allow vectorisation
@@ -1681,6 +1726,10 @@ module model_likelihood_module
     if (scale_likelihood /= scale_likelihood) then
        scale_likelihood = log(infini)
     end if
+
+!    ! Debugging print statement
+!    print*,"scale_likelihood: done"
+
     ! don't forget to return
     return
 

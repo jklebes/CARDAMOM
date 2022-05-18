@@ -1503,6 +1503,9 @@ module cardamom_io
     ! Local variables
     integer :: i
 
+!    ! Debugging print statements
+!    print*,"write_mcmc_output:"
+
     ! Increment buffer
     io_space%io_buffer_count = io_space%io_buffer_count + 1
 
@@ -1518,7 +1521,6 @@ module cardamom_io
     if (io_space%io_buffer_count == io_space%io_buffer .or. dump_now) then
 
         ! Then we are writing out to file
-
         ! Only write the most current covariance matrix as this would be an overwrite anyway
         call write_covariance_matrix(covariance,npars,.false.)
         ! Everything else loop through the buffered output to write out
@@ -1532,6 +1534,9 @@ module cardamom_io
         io_space%io_buffer_count = 0
 
     endif
+
+!    ! Debugging print statements
+!    print*,"write_mcmc_output:done"
 
   end subroutine write_mcmc_output
   !

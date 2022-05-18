@@ -230,7 +230,6 @@ contains
 
            ! calculate the model likelihood
            call model_likelihood_option(PARS, P, Pprior)
-
            ! accept or reject, draw uniform distribution (0,1)
            crit1 = log(uniform_random_vector(uniform))
            uniform = uniform + 1
@@ -279,6 +278,9 @@ contains
 
        if (MCO%nWRITE > 0 .and. mod(nint(N%ITER),MCO%nWRITE) == 0) then
 
+!           ! Debugging print statements
+!           print*,"mcmc: write_mcmc_output done"
+
            ! calculate the likelhood for the actual uncertainties - this avoid
            ! issues with different phases of the MCMC which may use sub-samples
            ! of observations or inflated uncertainties to aid parameter
@@ -289,11 +291,13 @@ contains
                                   PI%covariance, &
                                   PI%mean_par,PI%Nparvar, &
                                   PARS0,(outputP0+outputP0prior),PI%npars,N%ITER == MCO%nOUT)
-
        end if ! write or not to write
 
        ! time to adapt?
        if (mod(nint(N%ITER),MCO%nADAPT) == 0) then
+
+!           ! Debugging print statements
+!           print*,"mcmc: time to adapt"
 
            ! Total accepted values
            N%ACC = N%ACC + N%ACCLOC

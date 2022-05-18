@@ -484,7 +484,7 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, nn, nnn, DIAG, no_years, y, PEDC, steps_per_year, steps_per_month, nd, fl, &
                io_start, io_finish
-    double precision :: no_years_1, infi, SSwood, SSlitwood, SSsom !, EQF, etol
+    double precision :: no_years_1, infi, SSwood, SSlitwood, SSsom, MRTwood !, EQF, etol
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
                                             mean_pools, Fin, Fout, Rm, Rs, &
                                             Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
