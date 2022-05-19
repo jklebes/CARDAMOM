@@ -238,7 +238,7 @@ subroutine rdaleccdeaacm2bucketrmrgcwdwmrt(output_dim,MTT_dim,SS_dim &
      out_var2(i,6) = sum( ((FLUXES(1:nodays,30) + FLUXES(1:nodays,31) + &
                             FLUXES(1:nodays,32) + FLUXES(1:nodays,33) + &
                             FLUXES(1:nodays,39)) &
-                          / POOLS(1:nodays,8)) * lit_filter) / dble(nodays-sum(lit_hak))
+                          / POOLS(1:nodays,8)) * woodlit_filter) / dble(nodays-sum(woodlit_filter))
      ! Soil
      out_var2(i,7) = sum( ((FLUXES(1:nodays,14) + FLUXES(1:nodays,23) + FLUXES(1:nodays,40)) &
                           / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
@@ -264,7 +264,8 @@ subroutine rdaleccdeaacm2bucketrmrgcwdwmrt(output_dim,MTT_dim,SS_dim &
      ! Therefore, at this point we can account for disturbance inputs (including wood)
      ! but NOT natural wood. The natural wood input is estimated later based on
      ! its steady state estimate
-     out_var3(i,6) = sum(FLUXES(:,15)+FLUXES(:,27)+FLUXES(:,28)+FLUXES(:,44)) ! som
+     out_var3(i,6) = sum(FLUXES(:,44)) ! woodlitter
+     out_var3(i,7) = sum(FLUXES(:,15)+FLUXES(:,27)+FLUXES(:,28)+FLUXES(:,44)) ! som
 
   end do ! nos_iter loop
 

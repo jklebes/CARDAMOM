@@ -3,7 +3,7 @@ subroutine rdaleccdeaacm2bucketrmrgcwd(output_dim,MTT_dim,SS_dim &
                                       ,met,pars &
                                       ,out_var1,out_var2,out_var3 &
                                       ,lat,nopars,nomet &
-                                      ,nofluxes,nopools,nodays,noyears,deltat &
+                                      ,nofluxes,nopools,nodays,deltat &
                                       ,nos_iter,soil_frac_clay_in,soil_frac_sand_in)
 
   use CARBON_MODEL_MOD, only: CARBON_MODEL, wSWP_time &
@@ -30,7 +30,6 @@ subroutine rdaleccdeaacm2bucketrmrgcwd(output_dim,MTT_dim,SS_dim &
                         ,MTT_dim        & ! number of pools mean transit time estimates
                         ,SS_dim         & ! number of pools the steady state will be output for
                         ,nos_iter       & ! number of iterations
-                        ,noyears        & ! number of years simulated
                         ,nomet          & ! number of meteorological fields
                         ,nofluxes       & ! number of model fluxes
                         ,nopools        & ! number of model pools
@@ -240,7 +239,7 @@ subroutine rdaleccdeaacm2bucketrmrgcwd(output_dim,MTT_dim,SS_dim &
      out_var2(i,6) = sum( ((FLUXES(1:nodays,30) + FLUXES(1:nodays,31) + &
                             FLUXES(1:nodays,32) + FLUXES(1:nodays,33) + &
                             FLUXES(1:nodays,39)) &
-                          / POOLS(1:nodays,8)) * lit_filter) / dble(nodays-sum(lit_hak))
+                          / POOLS(1:nodays,8)) * woodlit_filter) / dble(nodays-sum(woodlit_filter))
      ! Soil
      out_var2(i,7) = sum( ((FLUXES(1:nodays,14) + FLUXES(1:nodays,23) + FLUXES(1:nodays,40)) &
                           / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
@@ -267,7 +266,8 @@ subroutine rdaleccdeaacm2bucketrmrgcwd(output_dim,MTT_dim,SS_dim &
      ! Therefore, at this point we can account for disturbance inputs (including wood)
      ! but NOT natural wood. The natural wood input is estimated later based on
      ! its steady state estimate
-     out_var3(i,6) = sum(FLUXES(:,15)+FLUXES(:,27)+FLUXES(:,28)+FLUXES(:,44)) ! som
+     out_var3(i,6) = sum(FLUXES(:,44)) ! woodlitter
+     out_var3(i,7) = sum(FLUXES(:,15)+FLUXES(:,27)+FLUXES(:,28)+FLUXES(:,44)) ! som
 
   end do ! nos_iter loop
 
