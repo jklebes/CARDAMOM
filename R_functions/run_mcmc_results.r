@@ -1284,6 +1284,31 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   dCbio = states_all$CiCa - states_all$CiCa[,1] # difference in dom from initial
                   site_output$dCiCa = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
               }
+              if (exists(x = "gs_demand_supply_ratio", where = states_all)) {
+                  # Extract the ratio of stomatal conductance relative to its maximum value,
+                  # this metric provides information on the demand vs supply constrains on stomatal conductance
+                  site_output$gs_demand_supply_ratio = apply(states_all$gs_demand_supply_ratio,2,quantile, prob=num_quantiles, na.rm = na_flag)
+                  site_output$mean_gs_demand_supply_ratio = quantile(apply(states_all$gs_demand_supply_ratio,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  # Calculate change over time
+                  dCbio = states_all$gs_demand_supply_ratio - states_all$gs_demand_supply_ratio[,1] # difference in dom from initial
+                  site_output$dgs_demand_supply_ratio = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+              }
+              if (exists(x = "gs_mmolH2Om2day", where = states_all)) {
+                  # Extract the canopy stomatal conductance
+                  site_output$gs_mmolH2Om2day = apply(states_all$gs_mmolH2Om2day,2,quantile, prob=num_quantiles, na.rm = na_flag)
+                  site_output$mean_gs_mmolH2Om2day = quantile(apply(states_all$gs_mmolH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  # Calculate change over time
+                  dCbio = states_all$gs_mmolH2Om2day - states_all$gs_mmolH2Om2day[,1] # difference in dom from initial
+                  site_output$dgs_mmolH2Om2day = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+              }
+              if (exists(x = "gb_mmolH2Om2day", where = states_all)) {
+                  # Extract the canopy boundary layer conductance
+                  site_output$gb_mmolH2Om2day = apply(states_all$gb_mmolH2Om2day,2,quantile, prob=num_quantiles, na.rm = na_flag)
+                  site_output$mean_gb_mmolH2Om2day = quantile(apply(states_all$gb_mmolH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  # Calculate change over time
+                  dCbio = states_all$gb_mmolH2Om2day - states_all$gb_mmolH2Om2day[,1] # difference in dom from initial
+                  site_output$dgb_mmolH2Om2day = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+              }
 
               ###
               # Aggregate model ensemble - observation uncertainty consistency
@@ -1886,6 +1911,22 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$mean_CiCa = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$CiCa = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           }
+          if (exists(x = "gs_demand_supply_ratio", where = site_output)) {
+              # Ratio of stomatal conductance relative to its maximum value,
+              # this metric provides information on the demand vs supply constrains on stomatal conductance
+              grid_output$mean_gs_demand_supply_ratio = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$gs_demand_supply_ratio = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          }
+          if (exists(x = "gs_mmolH2Om2day", where = site_output)) {
+              # Canopy stomatal conductance
+              grid_output$mean_gs_mmolH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$gs_mmolH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          }
+          if (exists(x = "gb_mmolH2Om2day", where = site_output)) {
+              # Canopy boundary layer conductance
+              grid_output$mean_gb_mmolH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$gb_mmolH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          }
 
           # Create overlap statistics variables - may not always get filled in the end
 #          if (exists(x = "gpp_assim_data_overlap_fraction", where = site_output)) {
@@ -2395,6 +2436,22 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    # Canopy Ci:Ca
                    grid_output$mean_CiCa[slot_i,slot_j,] = site_output$mean_CiCa
                    grid_output$CiCa[n,,] = site_output$CiCa
+               }
+               if (exists(x = "gs_demand_supply_ratio", where = site_output)) {
+                   # Ratio of stomatal conductance relative to its maximum value,
+                   # this metric provides information on the demand vs supply constrains on stomatal conductance
+                   grid_output$mean_gs_demand_supply_ratio[slot_i,slot_j,] = site_output$mean_gs_demand_supply_ratio
+                   grid_output$gs_demand_supply_ratio[n,,] = site_output$gs_demand_supply_ratio
+               }
+               if (exists(x = "gs_mmolH2Om2day", where = site_output)) {
+                   # Canopy stomatal conductance
+                   grid_output$mean_gs_mmolH2Om2day[slot_i,slot_j,] = site_output$mean_gs_mmolH2Om2day
+                   grid_output$gs_mmolH2Om2day[n,,] = site_output$gs_mmolH2Om2day
+               }
+               if (exists(x = "gb_mmolH2Om2day", where = site_output)) {
+                   # Canopy boundary layer conductance
+                   grid_output$mean_gb_mmolH2Om2day[slot_i,slot_j,] = site_output$mean_gb_mmolH2Om2day
+                   grid_output$gb_mmolH2Om2day[n,,] = site_output$gb_mmolH2Om2day
                }
 
                # Any time series assimilated data overlaps?
