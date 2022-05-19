@@ -1040,12 +1040,8 @@ module model_likelihood_module
 !        tot_exp = sum( (((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)-model) - &
 !                        (DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe)) - obs)) / unc)**2 )
 !        likelihood = likelihood-tot_exp
-        ! Reset variable
-        tot_exp = 0d0
         ! Loop through each year
         do y = 1, DATAin%nos_years
-           ! Reset selection variable
-           sub_time = 0d0
            ! Determine the start and finish of the current year of interest
            s = ((DATAin%steps_per_year*(y-1))+1) ; f = (DATAin%steps_per_year*y)
            where (DATAin%NBE(s:f) > -9998d0) sub_time = 1d0
@@ -1055,18 +1051,16 @@ module model_likelihood_module
                ! an estimate in the observations
                obs   = sum(DATAin%NBE(s:f)*sub_time)
                model = sum((DATAin%M_NEE(s:f)+ &
-                           DATAin%M_FLUXES(s:f,17))*sub_time)
-               unc   = sqrt(sum(sub_time*DATAin%NBE_unc(s:f)**2))
+                            DATAin%M_FLUXES(s:f,17))*sub_time)
+               unc   = sqrt(sum((sub_time*DATAin%NBE_unc(s:f))**2))
                ! Update the likelihood score with the mean bias
-               tot_exp = tot_exp + (((model - obs) / unc) ** 2)
+               likelihood = likelihood - (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
                ! Greater information would come from breaking this down into annual estimates
-               tot_exp = tot_exp + sum( sub_time*(((DATAin%M_NEE(s:f)+DATAin%M_FLUXES(s:f,17)-model) - &
-                                        (DATAin%NBE(s:f) - obs)) / unc)**2 )
+               likelihood = likelihood - sum( (sub_time*(((DATAin%M_NEE(s:f)+DATAin%M_FLUXES(s:f,17)-model) - &
+                                                         (DATAin%NBE(s:f) - obs)) / unc))**2 )
            end if ! sum(sub_time) > 0
         end do ! loop years
-        ! Update the likelihood score with the anomaly estimates
-        likelihood = likelihood-tot_exp
     endif ! nnbe > 0
 !print*,"likelihood: NBE done"
 !print*,"likelihood: GPP"
@@ -1079,8 +1073,6 @@ module model_likelihood_module
     ! GPP Log-likelihood
     ! GPP partitioned between the mean flux and seasonal anomalies
     if (DATAin%ngpp > 0) then
-        ! Reset variable
-        tot_exp = 0d0
         ! Loop through each year
         do y = 1, DATAin%nos_years
            ! Reset selection variable
@@ -1094,17 +1086,15 @@ module model_likelihood_module
                ! an estimate in the observations
                obs   = sum(DATAin%GPP(s:f)*sub_time)
                model = sum(DATAin%M_FLUXES(s:f,1)*sub_time)
-               unc   = sqrt(sum(sub_time*DATAin%GPP_unc(s:f)**2))
+               unc   = sqrt(sum((sub_time*DATAin%GPP_unc(s:f))**2))
                ! Update the likelihood score with the mean bias
-               tot_exp = tot_exp + (((model - obs) / unc) ** 2)
+               likelihood = likelihood - (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
                ! Greater information would come from breaking this down into annual estimates
-               tot_exp = tot_exp + sum( sub_time*(((DATAin%M_FLUXES(s:f,1)-model) - &
-                                        (DATAin%GPP(s:f) - obs)) / unc)**2 )
+               likelihood = likelihood - sum( (sub_time*(((DATAin%M_FLUXES(s:f,1)-model) - &
+                                                          (DATAin%GPP(s:f) - obs)) / unc))**2 )
            end if ! sum(sub_time) > 0
         end do ! loop years
-        ! Update the likelihood score with the anomaly estimates
-        likelihood = likelihood-tot_exp
     endif ! ngpp > 0
 !print*,"likelihood: GPP done"
     ! Evap Log-likelihood
@@ -1123,8 +1113,6 @@ module model_likelihood_module
     ! Fire Log-likelihood
     ! Fire partitioned between the mean flux and seasonal anomalies
     if (DATAin%nFire > 0) then
-        ! Reset variable
-        tot_exp = 0d0
         ! Loop through each year
         do y = 1, DATAin%nos_years
            ! Reset selection variable
@@ -1138,17 +1126,15 @@ module model_likelihood_module
                ! an estimate in the observations
                obs   = sum(DATAin%Fire(s:f)*sub_time)
                model = sum(DATAin%M_FLUXES(s:f,17)*sub_time)
-               unc   = sqrt(sum(sub_time*DATAin%Fire_unc(s:f)**2))
+               unc   = sqrt(sum((sub_time*DATAin%Fire_unc(s:f))**2))
                ! Update the likelihood score with the mean bias
-               tot_exp = tot_exp + (((model - obs) / unc) ** 2)
+               likelihood = likelihood - (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
                ! Greater information would come from breaking this down into annual estimates
-               tot_exp = tot_exp + sum( sub_time*(((DATAin%M_FLUXES(s:f,17)-model) - &
-                                        (DATAin%Fire(s:f) - obs)) / unc)**2 )
+               likelihood = likelihood - sum( (sub_time*(((DATAin%M_FLUXES(s:f,17)-model) - &
+                                                          (DATAin%Fire(s:f) - obs)) / unc))**2 )
            end if ! sum(sub_time) > 0
         end do ! loop years
-        ! Update the likelihood score with the anomaly estimates
-        likelihood = likelihood-tot_exp
     endif ! nFire > 0
 !print*,"likelihood: Fire done"
     ! Assume physical property is best represented as the mean of value at beginning and end of times step
@@ -1436,14 +1422,14 @@ module model_likelihood_module
                ! an estimate in the observations
                obs   = sum(DATAin%NBE(s:f)*sub_time)
                model = sum((DATAin%M_NEE(s:f)+ &
-                           DATAin%M_FLUXES(s:f,17))*sub_time)
-               unc   = sqrt(sum(sub_time*DATAin%NBE_unc(s:f)**2))
+                            DATAin%M_FLUXES(s:f,17))*sub_time)
+               unc   = sqrt(sum((sub_time*DATAin%NBE_unc(s:f))**2))
                ! Update the likelihood score with the mean bias
                tot_exp = tot_exp + (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
                ! Greater information would come from breaking this down into annual estimates
-               tot_exp = tot_exp + sum( sub_time*(((DATAin%M_NEE(s:f)+DATAin%M_FLUXES(s:f,17)-model) - &
-                                        (DATAin%NBE(s:f) - obs)) / unc)**2 )
+               tot_exp = tot_exp + sum( (sub_time*(((DATAin%M_NEE(s:f)+DATAin%M_FLUXES(s:f,17)-model) - &
+                                                    (DATAin%NBE(s:f) - obs)) / unc))**2 )
            end if ! sum(sub_time) > 0
         end do ! loop years
         ! Update the likelihood score with the anomaly estimates
@@ -1475,13 +1461,13 @@ module model_likelihood_module
                ! an estimate in the observations
                obs   = sum(DATAin%GPP(s:f)*sub_time)
                model = sum(DATAin%M_FLUXES(s:f,1)*sub_time)
-               unc   = sqrt(sum(sub_time*DATAin%GPP_unc(s:f)**2))
+               unc   = sqrt(sum((sub_time*DATAin%GPP_unc(s:f))**2))
                ! Update the likelihood score with the mean bias
                tot_exp = tot_exp + (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
                ! Greater information would come from breaking this down into annual estimates
-               tot_exp = tot_exp + sum( sub_time*(((DATAin%M_FLUXES(s:f,1)-model) - &
-                                        (DATAin%GPP(s:f) - obs)) / unc)**2 )
+               tot_exp = tot_exp + sum( (sub_time*(((DATAin%M_FLUXES(s:f,1)-model) - &
+                                                    (DATAin%GPP(s:f) - obs)) / unc))**2 )
            end if ! sum(sub_time) > 0
         end do ! loop years
         ! Update the likelihood score with the anomaly estimates
@@ -1519,13 +1505,13 @@ module model_likelihood_module
                ! an estimate in the observations
                obs   = sum(DATAin%Fire(s:f)*sub_time)
                model = sum(DATAin%M_FLUXES(s:f,17)*sub_time)
-               unc   = sqrt(sum(sub_time*DATAin%Fire_unc(s:f)**2))
+               unc   = sqrt(sum((sub_time*DATAin%Fire_unc(s:f))**2))
                ! Update the likelihood score with the mean bias
                tot_exp = tot_exp + (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
                ! Greater information would come from breaking this down into annual estimates
-               tot_exp = tot_exp + sum( sub_time*(((DATAin%M_FLUXES(s:f,17)-model) - &
-                                        (DATAin%Fire(s:f) - obs)) / unc)**2 )
+               tot_exp = tot_exp + sum( (sub_time*(((DATAin%M_FLUXES(s:f,17)-model) - &
+                                                    (DATAin%Fire(s:f) - obs)) / unc))**2 )
            end if ! sum(sub_time) > 0
         end do ! loop years
         ! Update the likelihood score with the anomaly estimates
