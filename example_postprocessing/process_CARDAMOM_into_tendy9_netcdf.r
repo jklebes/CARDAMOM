@@ -278,7 +278,7 @@ for (n in seq(1, length(PROJECT$sites))) {
               if (exists("labMRT")) {labMRT[grid_output$i_location[n],grid_output$j_location[n],q,]  = rep(grid_output$MTT_annual_labile_years[n,q,], each = steps_per_year)}
               if (exists("folMRT")) {folMRT[grid_output$i_location[n],grid_output$j_location[n],q,]  = rep(grid_output$MTT_annual_foliage_years[n,q,], each = steps_per_year)} 
               if (exists("rooMRT")) {rooMRT[grid_output$i_location[n],grid_output$j_location[n],q,]  = rep(grid_output$MTT_annual_roots_years[n,q,], each = steps_per_year)} 
-              if (exists("wootMRT")) {wooMRT[grid_output$i_location[n],grid_output$j_location[n],q,]  = rep(grid_output$MTT_annual_wood_years[n,q,], each = steps_per_year)}
+              if (exists("wooMRT")) {wooMRT[grid_output$i_location[n],grid_output$j_location[n],q,]  = rep(grid_output$MTT_annual_wood_years[n,q,], each = steps_per_year)}
               if (exists("litMRT")) {litMRT[grid_output$i_location[n],grid_output$j_location[n],q,]  = rep(grid_output$MTT_annual_litter_years[n,q,], each = steps_per_year)}
               if (exists("wlitMRT")) {wlitMRT[grid_output$i_location[n],grid_output$j_location[n],q,] = rep(grid_output$MTT_annual_woodlitter_years[n,q,], each = steps_per_year)}
               if (exists("somMRT")) {somMRT[grid_output$i_location[n],grid_output$j_location[n],q,]  = rep(grid_output$MTT_annual_som_years[n,q,], each = steps_per_year)}
