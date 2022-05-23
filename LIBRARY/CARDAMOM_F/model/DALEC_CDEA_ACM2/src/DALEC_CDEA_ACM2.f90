@@ -790,14 +790,14 @@ metabolic_limited_photosynthesis, &
                POOLS(n+1,5) = POOLS(n+1,5) + (labile_residue+foliar_residue+roots_residue)
                POOLS(n+1,6) = POOLS(n+1,6) - soil_loss_with_roots + wood_residue
                ! mass balance check
-               where (POOLS(n+1,1:7) < 0d0) POOLS(n+1,1:7) = 0d0
+               where (POOLS(n+1,1:6) < 0d0) POOLS(n+1,1:6) = 0d0
 
                ! Convert harvest related extractions to daily rate for output
                ! For dead organic matter pools, in most cases these will be zeros.
                ! But these variables allow for subseqent management where surface litter
                ! pools are removed or mechanical extraction from soil occurs.
                FLUXES(n,30) = (labile_loss-labile_residue) / deltat(n)  ! Labile extraction
-               FLUXES(n,31) = (foliar_loss-foliar_residue) / deltat(n) ! foliage extraction
+               FLUXES(n,31) = (foliar_loss-foliar_residue) / deltat(n)  ! foliage extraction
                FLUXES(n,32) = (roots_loss-roots_residue) / deltat(n)    ! fine roots extraction
                FLUXES(n,33) = (wood_loss-wood_residue) / deltat(n)      ! wood extraction
                FLUXES(n,34) = 0d0 ! litter extraction
@@ -809,7 +809,7 @@ metabolic_limited_photosynthesis, &
                FLUXES(n,39) = wood_residue / deltat(n)   ! wood residues
 
                ! Total C extraction, including any potential litter and som.
-               FLUXES(n,29) = sum(FLUXES(n,31:36))
+               FLUXES(n,29) = sum(FLUXES(n,30:35))
 
            end if ! C_total > 0d0
 

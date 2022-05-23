@@ -50,7 +50,7 @@ generate_parameter_maps<-function(PROJECT) {
        PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALEC_BUCKET" |
        PROJECT$model$name == "DALEC" | PROJECT$model$name == "DALEC_G5" |
        PROJECT$model$name == "DALEC_G6" | PROJECT$model$name == "DALEC_BUCKET_CanAGE") {
-       grid_output$parameters[,,11,]=10**grid_output$parameters[,,11,]
+       grid_output$parameters[,,11,] = 10**grid_output$parameters[,,11,]
    }
 
   # Determine correct height and widths
@@ -64,16 +64,7 @@ generate_parameter_maps<-function(PROJECT) {
   print("......have finished loading - now beginning cluster analysis")
 
   if (exists(x = "clusters", where = grid_output) == FALSE | repair == 1) {
-      if (PROJECT$model$name == "DALEC_EVERGREEN" | PROJECT$model$name == "DALEC_CDEA_LU_FIRES" | PROJECT$model$name == "DALEC_CDEA_ACM2" |
-          PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_wMRT" |
-          PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" |
-          PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD" |
-          PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT" |
-          PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB" | PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB_wMRT" |
-          PROJECT$model$name == "DALEC_GSI_BUCKET" | PROJECT$model$name == "DALEC" |
-          PROJECT$model$name == "DALEC_BUCKET" | PROJECT$model$name == "DALEC_BUCKET_CanAGE" |
-          PROJECT$model$name == "DALEC_G5" | PROJECT$model$name == "DALEC_G6" |
-          PROJECT$model$name == "DALEC_1005" | PROJECT$model$name == "DALEC_1005a") {
+      if (grepl("DALEC",PROJECT$model$name)) {
 
           # remove non-constrained parameters (i.e. those not actually used in this analysis)
           initial_conditions=c(18:23)
