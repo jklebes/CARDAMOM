@@ -351,7 +351,6 @@ module model_likelihood_module
     use cardamom_structures, only: DATAin
     use MCMCOPT, only: PI
     use CARBON_MODEL_MOD, only: carbon_model
-    use CARBON_MODEL_CROP_MOD, only: carbon_model_crop
 
     ! Carries out multiple carbon model iterations using the same parameter set
     ! to ensure that model outputs are consistent between iterations, i.e. that
@@ -371,53 +370,27 @@ module model_likelihood_module
 
     ! Run model
 
-    ! crop or not split....trouble
-    if (DATAin%PFT == 1) then
-       ! PFT has been provided and is crop! Best try running the crop model
-       ! then...
-
-       ! next need to run the model itself
-       call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                             ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                             ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft   &
-                             ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                             ,DATAin%nofluxes,DATAin%M_GPP                &
-                             ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
-                             ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
-                             ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
-
-       call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                             ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                             ,local_fluxes,local_pools,DATAin%pft   &
-                             ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                             ,DATAin%nofluxes,DATAin%M_GPP                &
-                             ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
-                             ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
-                             ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
-
-    else
-
-        ! next need to run the model itself
-        call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                       ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                       ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
-                       ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                       ,DATAin%M_GPP)
-
-        ! next need to run the model itself
-        call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                       ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                       ,local_fluxes,local_pools,DATAin%nopars &
-                       ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                       ,DATAin%M_GPP)
-    end if ! crop or not if
-
+    ! next need to run the model itself
+    call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                     ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
+                     ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
+                     ,DATAin%M_GPP)
+!print*,"sanity_check: carbon_model done 1"
+    ! next need to run the model itself
+    call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                     ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                     ,local_fluxes,local_pools,DATAin%nopars &
+                     ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
+                     ,DATAin%M_GPP)
+!print*,"sanity_check: carbon_model done 2"
     ! Compare outputs
     flux_error = sum(abs(DATAin%M_FLUXES - local_fluxes))
     pool_error = sum(abs(DATAin%M_POOLS - local_pools))
     ! If error between runs exceeds precision error then we have a problem
     if (pool_error > (tiny(0d0)*(DATAin%nopools*DATAin%nodays)) .or. &
-        flux_error > (tiny(0d0)*(DATAin%nofluxes*DATAin%nodays))) then
+        flux_error > (tiny(0d0)*(DATAin%nofluxes*DATAin%nodays)) .or. &
+        pool_error /= pool_error .or. flux_error /= flux_error) then
         print*,"Error: multiple runs of the same parameter set indicates an error"
         print*,"Cumulative POOL error = ",pool_error
         print*,"Cumulative FLUX error = ",flux_error
@@ -431,6 +404,9 @@ module model_likelihood_module
         end do
         stop
     end if
+
+    ! Update the user
+    print*,"Sanity check completed"
 
     ! Set Sanity check as completed
     sanity_check = .true.
@@ -1936,7 +1912,7 @@ module model_likelihood_module
     double precision, dimension(npars), intent(in) :: pars
 
     ! declare local variables
-    integer :: n, dn, y, s
+    integer :: n, dn, y, s, f
     double precision :: tot_exp, tmp_var, infini, input, output, obs, model, unc
     double precision, dimension(DATAin%nodays) :: mid_state
     double precision, dimension(DATAin%steps_per_year) :: sub_time

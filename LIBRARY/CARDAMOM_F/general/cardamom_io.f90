@@ -165,11 +165,8 @@ module cardamom_io
         DATAin%nopars = 45
         DATAin%nofluxes = 25
     else if (DATAin%ID == 18) then
-        ! DALEC_CDEA_LU_FIRES_ET - added 03/05/2018 JFE
-        DATAin%nopools = 6
-        DATAin%nopars = 28
-        DATAin%nofluxes = 39
-        !change ID code below to resolve conflict when merging with jeff = 23/10/18
+        write(*,*) "Oh dear... model ID not valid = ",DATAin%ID
+        stop
     else if (DATAin%ID == 19) then
         ! ID = 19 - DALECN_BUCKET
         DATAin%nopools = 8
@@ -184,7 +181,7 @@ module cardamom_io
         ! ID = 21 - DALEC_CDEA_LU_FIRES
         DATAin%nopools = 6
         DATAin%nopars = 28
-        DATAin%nofluxes = 28
+        DATAin%nofluxes = 39
     else if (DATAin%ID == 22) then
         ! ID = 22 - DALEC_EVERGREEN
         DATAin%nopools = 5

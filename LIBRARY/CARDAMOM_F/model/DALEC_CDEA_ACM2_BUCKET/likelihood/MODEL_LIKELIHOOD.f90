@@ -331,7 +331,8 @@ module model_likelihood_module
     pool_error = sum(abs(DATAin%M_POOLS - local_pools))
     ! If error between runs exceeds precision error then we have a problem
     if (pool_error > (tiny(0d0)*(DATAin%nopools*DATAin%nodays)) .or. &
-        flux_error > (tiny(0d0)*(DATAin%nofluxes*DATAin%nodays))) then
+        flux_error > (tiny(0d0)*(DATAin%nofluxes*DATAin%nodays)) .or. &
+        pool_error /= pool_error .or. flux_error /= flux_error) then
         print*,"Error: multiple runs of the same parameter set indicates an error"
         print*,"Cumulative POOL error = ",pool_error
         print*,"Cumulative FLUX error = ",flux_error
@@ -345,6 +346,9 @@ module model_likelihood_module
         end do
         stop
     end if
+
+    ! Update the user
+    print*,"Sanity check completed"
 
     ! Set Sanity check as completed
     sanity_check = .true.

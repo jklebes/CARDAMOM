@@ -298,10 +298,7 @@ module model_likelihood_module
     integer :: i
     double precision, dimension((DATAin%nodays+1),DATAin%nopools) :: local_pools
     double precision, dimension(DATAin%nodays,DATAin%nofluxes) :: local_fluxes
-    double precision :: pool_error, flux_error, infi
-
-    ! Assign infi value
-    infi = 0d0
+    double precision :: pool_error, flux_error
 
     ! Run model
 
@@ -311,21 +308,20 @@ module model_likelihood_module
                      ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
                      ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
                      ,DATAin%M_GPP)
-
+!print*,"sanity_check: carbon_model done 1"
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
                      ,local_fluxes,local_pools,DATAin%nopars &
                      ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
                      ,DATAin%M_GPP)
-
+!print*,"sanity_check: carbon_model done 2"
     ! Compare outputs
     flux_error = sum(abs(DATAin%M_FLUXES - local_fluxes))
     pool_error = sum(abs(DATAin%M_POOLS - local_pools))
     ! If error between runs exceeds precision error then we have a problem
     if (pool_error > (tiny(0d0)*(DATAin%nopools*DATAin%nodays)) .or. &
         flux_error > (tiny(0d0)*(DATAin%nofluxes*DATAin%nodays)) .or. &
-        abs(pool_error) == abs(log(infi)) .or. abs(flux_error) == abs(log(infi)) .or. &
         pool_error /= pool_error .or. flux_error /= flux_error) then
         print*,"Error: multiple runs of the same parameter set indicates an error"
         print*,"Cumulative POOL error = ",pool_error
@@ -340,6 +336,9 @@ module model_likelihood_module
         end do
         stop
     end if
+
+    ! Update the user
+    print*,"Sanity check completed"
 
     ! Set Sanity check as completed
     sanity_check = .true.
@@ -1032,7 +1031,7 @@ module model_likelihood_module
     double precision, dimension(npars), intent(in) :: pars
 
     ! declare local variables
-    integer :: n, dn, y, s
+    integer :: n, dn, y, s, f
     double precision :: tot_exp, tmp_var, infini, input, output, obs, model, unc
     double precision, dimension(DATAin%nodays) :: mid_state
     double precision, dimension(DATAin%steps_per_year) :: sub_time

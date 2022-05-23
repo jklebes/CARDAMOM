@@ -268,7 +268,7 @@ contains
         ! now load the hardcoded forest management parameters into their scenario locations
 
         ! Deforestation process functions in a sequenctial way.
-        ! Thus, the pool_loss is first determined as a function of met(n,8) and
+        ! Thus, the pool_loss is first determined as a function of met(8,n) and
         ! for fine and coarse roots whether this felling is associated with a mechanical
         ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
         ! fine and coarse roots may subsequently undergo mortality from which they do not recover
@@ -308,8 +308,8 @@ contains
         ! harvest residue (fraction); 1 = all remains, 0 = all removed
         foliage_frac_res(2) = 1d0
         roots_frac_res(2)   = 1d0
-        rootcr_frac_res(2) = 1d0
-        stem_frac_res(2)   = 0.20d0 !
+        rootcr_frac_res(2)  = 1d0
+        stem_frac_res(2)    = 0.20d0 !
         ! wood partitioning (fraction)
         Crootcr_part(2) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
         ! Csom loss due to phyical removal with roots
@@ -329,8 +329,8 @@ contains
         ! harvest residue (fraction); 1 = all remains, 0 = all removed
         foliage_frac_res(3) = 0.5d0
         roots_frac_res(3)   = 1d0
-        rootcr_frac_res(3) = 1d0
-        stem_frac_res(3)   = 0d0 !
+        rootcr_frac_res(3)  = 1d0
+        stem_frac_res(3)    = 0d0 !
         ! wood partitioning (fraction)
         Crootcr_part(3) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
         ! Csom loss due to phyical removal with roots
@@ -350,8 +350,8 @@ contains
         ! harvest residue (fraction); 1 = all remains, 0 = all removed
         foliage_frac_res(4) = 0.5d0
         roots_frac_res(4)   = 1d0
-        rootcr_frac_res(4) = 0d0
-        stem_frac_res(4)   = 0d0
+        rootcr_frac_res(4)  = 0d0
+        stem_frac_res(4)    = 0d0
         ! wood partitioning (fraction)
         Crootcr_part(4) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
         ! Csom loss due to phyical removal with roots
@@ -482,7 +482,7 @@ contains
       ! foliar pool
       POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,4)-FLUXES(n,10) + FLUXES(n,8))*deltat(n)
       ! root pool
-      POOLS(n+1,3) = POOLS(n,3) + (FLUXES(n,6) - FLUXES(n,12))*deltat(n)
+      POOLS(n+1,3) = POOLS(n,3) + (FLUXES(n,6)-FLUXES(n,12))*deltat(n)
       ! wood pool
       POOLS(n+1,4) = POOLS(n,4) + (FLUXES(n,7)-FLUXES(n,11))*deltat(n)
       ! litter pool
@@ -558,7 +558,7 @@ contains
               POOLS(n+1,5) = POOLS(n+1,5) + (labile_residue+foliar_residue+roots_residue)
               POOLS(n+1,6) = POOLS(n+1,6) - soil_loss_with_roots + wood_residue
               ! mass balance check
-              where (POOLS(n+1,1:7) < 0d0) POOLS(n+1,1:7) = 0d0
+              where (POOLS(n+1,1:6) < 0d0) POOLS(n+1,1:6) = 0d0
 
               ! Convert harvest related extractions to daily rate for output
               ! For dead organic matter pools, in most cases these will be zeros.
