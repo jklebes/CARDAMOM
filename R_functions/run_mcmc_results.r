@@ -434,7 +434,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
           }
           print("processing and storing ensemble output")
           # store the results now in binary file
-          save(parameter_covariance,parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,file=outfile_parameters, compress="gzip", compression_level = 9)
+          save(parameter_covariance,parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,
+               file=outfile_parameters, compress="gzip", compression_level = 9)
           # determine whether this is a gridded run (or one with the override in place)
           if (PROJECT$spatial_type == "site" | grid_override == TRUE) {
               # ...if this is a site run save the full ensemble and everything else...
