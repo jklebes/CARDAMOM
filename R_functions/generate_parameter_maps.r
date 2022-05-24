@@ -460,7 +460,7 @@ generate_parameter_maps<-function(PROJECT) {
        par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
        var = grid_output$parameters[,,p,median_loc]
        zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
-       image.plot(x = grid_long, y = grid_lat, z = var, col=colour_choices, zlim=zrange
+       image.plot(x = grid_long, y = grid_lat, z = var, col=colour_choices, zlim=zrange,
                   main=paste(par_names[p]," median estimate",sep=""),axes=FALSE, cex.main=1.1,legend.width=3.0,
                   cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
        map(add=TRUE, lwd = 2)
@@ -471,7 +471,7 @@ generate_parameter_maps<-function(PROJECT) {
        var = grid_output$parameters[,,p,upper_loc]-grid_output$parameters[,,p,lower_loc]
        zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
        image.plot(x = grid_long, y = grid_lat, z = var,
-                  col=colour_choices, main=paste(par_names[p]," uncertainty range",sep=""), axes=FALSE, zlim=zrange
+                  col=colour_choices, main=paste(par_names[p]," uncertainty range",sep=""), axes=FALSE, zlim=zrange,
                   cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
        map(add=TRUE, lwd = 2)
        #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
