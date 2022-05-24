@@ -424,7 +424,7 @@ generate_parameter_maps<-function(PROJECT) {
       jpeg(file=paste("parameter_maps_median_","Cwoodlitter_residence_time","_",gsub("%","_",PROJECT$name),".jpeg",sep=""),
            width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      var = grid_output$MTT_woodlitter_years[,,median_loc], col=colour_choices
+      var = grid_output$MTT_woodlitter_years[,,median_loc]
       zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
       image.plot(x = grid_long, y = grid_lat, z = var
                 ,main=paste("Cwoodlitter residence time median estimate",sep="")
