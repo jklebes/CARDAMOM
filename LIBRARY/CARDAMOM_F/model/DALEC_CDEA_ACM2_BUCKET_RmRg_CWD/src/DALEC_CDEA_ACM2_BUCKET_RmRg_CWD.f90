@@ -1095,8 +1095,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                FLUXES(n,35) = (foliar_loss-foliar_residue) * deltat_1(n)
                FLUXES(n,36) = (roots_loss-roots_residue) * deltat_1(n)
                FLUXES(n,37) = (wood_loss-wood_residue) * deltat_1(n)
-               FLUXES(n,38) = 0d0
-               FLUXES(n,39) = 0d0
+               FLUXES(n,38) = 0d0 ! litter extraction by harvest
+               FLUXES(n,39) = 0d0 ! wood litter extraction by harvest
                FLUXES(n,40) = soil_loss_with_roots * deltat_1(n)
                ! Convert harvest related residue generations to daily rate for output
                FLUXES(n,41) = labile_residue * deltat_1(n)

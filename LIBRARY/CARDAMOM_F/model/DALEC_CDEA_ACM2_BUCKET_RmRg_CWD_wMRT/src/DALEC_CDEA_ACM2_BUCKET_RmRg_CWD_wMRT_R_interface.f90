@@ -238,7 +238,7 @@ subroutine rdaleccdeaacm2bucketrmrgcwdwmrt(output_dim,MTT_dim,SS_dim &
      out_var2(i,6) = sum( ((FLUXES(1:nodays,30) + FLUXES(1:nodays,31) + &
                             FLUXES(1:nodays,32) + FLUXES(1:nodays,33) + &
                             FLUXES(1:nodays,39)) &
-                          / POOLS(1:nodays,8)) * woodlit_filter) / dble(nodays-sum(woodlit_filter))
+                          / POOLS(1:nodays,8)) * woodlit_filter) / dble(nodays-sum(woodlit_hak))
      ! Soil
      out_var2(i,7) = sum( ((FLUXES(1:nodays,14) + FLUXES(1:nodays,23) + FLUXES(1:nodays,40)) &
                           / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
