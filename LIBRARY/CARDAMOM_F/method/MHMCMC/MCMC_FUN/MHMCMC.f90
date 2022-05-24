@@ -188,7 +188,7 @@ contains
            uniform = uniform + 1
        end if
        ! write(*,*) parameter values to screen
-       write(*,*) "p",i,"=",PI%parini(i)
+       if (MCO%print_pars) write(*,*) "p",i,"=",PI%parini(i)
     end do ! for PI%npar loop
 
     ! Inform the user
@@ -253,7 +253,7 @@ contains
 
        end if ! in bound
 
-       if ( AM_likelihood > crit1) then
+       if (AM_likelihood > crit1) then
 
            ! Store accepted parameter proposals
            ! keep record of all parameters accepted since step adaption
