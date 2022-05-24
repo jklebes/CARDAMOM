@@ -386,6 +386,9 @@ metabolic_limited_photosynthesis, &
     ! p(16) = leaf fall duration period - R_f
     ! p(17) = LMA
 
+    ! Reset all POOLS and FLUXES to prevent precision errors
+    FLUXES = 0d0 ; POOLS = 0d0
+
     ! load ACM-GPP-ET parameters
     Ceff = pars(11) ! Canopy efficiency (gC/m2/day)
                     ! This is in the full model the product of Nitrogen use efficiency (gC/gN/m2leaf/day)

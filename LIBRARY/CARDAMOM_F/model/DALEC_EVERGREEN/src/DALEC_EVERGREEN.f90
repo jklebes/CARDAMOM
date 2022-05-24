@@ -176,6 +176,9 @@ contains
     ! p(16) = initial litter C (gC/m2)
     ! p(17) = initial soil C (gC/m2)
 
+    ! Reset all POOLS and FLUXES to prevent precision errors
+    FLUXES = 0d0 ; POOLS = 0d0
+
     ! set constants
     pi = 3.1415927d0
 

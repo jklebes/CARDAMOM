@@ -202,6 +202,9 @@ contains
     ! p(16) = Leaf fall period (days)
     ! p(17) = Leaf Carbon per unit area (gC/m2leaf)
 
+    ! Reset all POOLS and FLUXES to prevent precision errors
+    FLUXES = 0d0 ; POOLS = 0d0
+
     ! set constants
     pi = 3.1415927d0
 

@@ -207,6 +207,9 @@ contains
     ! p(16) = Leaf fall period (days)
     ! p(17) = Leaf Carbon per unit area (gC/m2leaf)
 
+    ! Reset all POOLS and FLUXES to prevent precision errors
+    FLUXES = 0d0 ; POOLS = 0d0
+
     ! set constants
     pi = 3.1415927d0
 
@@ -315,7 +318,7 @@ contains
       ! and relative moisture response linked to precipitation. Scaled now from reference temperature = mean temperature.
       ! See Bloom et al., (2020) doi: https://doi.org/10.5194/bg-17-6393-2020
       ! NOTE: this code contains and error in the following line but is maintained for consistency with the JPL model.
-      ! A corrected version exists under DALEC_1005a 
+      ! A corrected version exists under DALEC_1005a
       FLUXES(n,2) = exp(pars(10)*0.5d0*(met(3,n)+met(2,n)-mean_airt))*(((met(7,n)*86400d0)/mean_precip-1d0)*pars(33)+1d0)
       ! Autotrophic respiration (gC.m-2.day-1)
       FLUXES(n,3) = pars(2)*FLUXES(n,1)

@@ -182,6 +182,9 @@ contains
     ! p(16) Initial wood+roots
     ! p(17) Initial litter + som
 
+    ! Reset all POOLS and FLUXES to prevent precision errors
+    FLUXES = 0d0 ; POOLS = 0d0
+
     ! set constants
     pi = 3.1415927d0
 
