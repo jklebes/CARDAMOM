@@ -213,8 +213,9 @@ generate_parameter_maps<-function(PROJECT) {
       figname = paste("parameter_maps_median_","Cfoliar_NPP_alloc","_",gsub("%","_",PROJECT$name),".jpeg",sep="")
       jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
+      zrange=range(pretty(c(min(grid_output$NPP_foliage_fraction[,,median_loc], na.rm=TRUE),max(grid_output$NPP_foliage_fraction[,,median_loc],na.rm=TRUE))))
       image.plot(x = grid_long, y = grid_lat, z = grid_output$NPP_foliage_fraction[,,median_loc], col=colour_choices
-                ,main=paste("NPP fractional allocation to foliage",sep=""), axes=FALSE
+                ,main=paste("NPP fractional allocation to foliage",sep=""), axes=FALSE, zlim=zrange
                 ,cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
       map(add=TRUE, lwd = 2)
       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
@@ -223,9 +224,11 @@ generate_parameter_maps<-function(PROJECT) {
       figname = paste("parameter_maps_95CI_","Cfoliar_NPP_alloc","_",gsub("%","_",PROJECT$name),".jpeg",sep="")
       jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
+      var = grid_output$NPP_foliage_fraction[,,upper_loc]-grid_output$NPP_foliage_fraction[,,lower_loc]
+      zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
       image.plot(x = grid_long, y = grid_lat, z = grid_output$NPP_foliage_fraction[,,upper_loc]-grid_output$NPP_foliage_fraction[,,lower_loc]
                 ,col=colour_choices, main=paste("Uncertainty on NPP fractional allocation to foliage",sep=""),axes=FALSE
-                ,cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                ,cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1), zlim=zrange)
       map(add=TRUE, lwd = 2)
       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
@@ -235,9 +238,11 @@ generate_parameter_maps<-function(PROJECT) {
       figname = paste("parameter_maps_median_","Cwood_NPP_alloc","_",gsub("%","_",PROJECT$name),".jpeg",sep="")
       jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      image.plot(x = grid_long, y = grid_lat, z = grid_output$NPP_wood_fraction[,,median_loc],col=colour_choices
+      var = grid_output$NPP_wood_fraction[,,median_loc]
+      zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
+      image.plot(x = grid_long, y = grid_lat, z = var,col=colour_choices
                 ,main=paste("NPP fractional allocation to wood",sep=""), axes=FALSE
-                ,cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                ,cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1), zlim=zrange)
       map(add=TRUE, lwd = 2)
       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
@@ -245,9 +250,11 @@ generate_parameter_maps<-function(PROJECT) {
       figname = paste("parameter_maps_95CI_","Cwood_NPP_alloc","_",gsub("%","_",PROJECT$name),".jpeg",sep="")
       jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      image.plot(x = grid_long, y = grid_lat, z = grid_output$NPP_wood_fraction[,,upper_loc]-grid_output$NPP_wood_fraction[,,lower_loc]
+      var = grid_output$NPP_wood_fraction[,,upper_loc]-grid_output$NPP_wood_fraction[,,lower_loc]
+      zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
+      image.plot(x = grid_long, y = grid_lat, z = var
                 ,col=colour_choices, main=paste("Uncertainty on NPP fractional allocation to wood",sep=""),axes=FALSE
-                ,cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                ,cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1), zlim=zrange)
       map(add=TRUE, lwd = 2)
       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
@@ -257,9 +264,11 @@ generate_parameter_maps<-function(PROJECT) {
       figname = paste("parameter_maps_median_","Croot_NPP_alloc","_",gsub("%","_",PROJECT$name),".jpeg",sep="")
       jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      image.plot(x = grid_long, y = grid_lat, z = grid_output$NPP_roots_fraction[,,median_loc], col=colour_choices
+      var = grid_output$NPP_roots_fraction[,,median_loc]
+      zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
+      image.plot(x = grid_long, y = grid_lat, z = var, col=colour_choices
                 ,main=paste("NPP fractional allocation to fine roots",sep=""), axes=FALSE
-                ,cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                ,cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1), zlim=zrange)
       map(add=TRUE, lwd = 2)
       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
@@ -267,9 +276,11 @@ generate_parameter_maps<-function(PROJECT) {
       figname = paste("parameter_maps_95CI_","Croot_NPP_alloc","_",gsub("%","_",PROJECT$name),".jpeg",sep="")
       jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      image.plot(x = grid_long, y = grid_lat, z = grid_output$NPP_roots_fraction[,,upper_loc]-grid_output$NPP_roots_fraction[,,lower_loc]
+      var = grid_output$NPP_roots_fraction[,,upper_loc]-grid_output$NPP_roots_fraction[,,lower_loc]
+      zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
+      image.plot(x = grid_long, y = grid_lat, z = var
                 ,col=colour_choices, main=paste("Uncertainty on NPP fractional allocation to fine roots",sep=""),axes=FALSE
-                ,cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                ,cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1), zlim=zrange)
       map(add=TRUE, lwd = 2)
       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
@@ -281,18 +292,22 @@ generate_parameter_maps<-function(PROJECT) {
       jpeg(file=paste("parameter_maps_median_","Cfoliar_residence_time","_",gsub("%","_",PROJECT$name),".jpeg",sep=""),
            width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      image.plot(x = grid_long, y = grid_lat, z = grid_output$MTT_foliage_years[,,median_loc], col=colour_choices
+      var = grid_output$MTT_foliage_years[,,median_loc]
+      zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
+      image.plot(x = grid_long, y = grid_lat, z = var, col=colour_choices
                 ,main=paste("Mean foliage transit time (years)",sep="")
-                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1), zlim=zrange)
       map(add=TRUE, lwd = 2)
       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
       # Plot uncertainty
       jpeg(file=paste("parameter_maps_median_uncertainty_","Cfoliar_residence_time","_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      image.plot(x = grid_long, y = grid_lat, z = grid_output$MTT_foliage_years[,,upper_loc]-grid_output$MTT_foliage_years[,,lower_loc]
+      var = grid_output$MTT_foliage_years[,,upper_loc]-grid_output$MTT_foliage_years[,,lower_loc]
+      zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
+      image.plot(x = grid_long, y = grid_lat, z = var
                 ,col=colour_choices, main=paste("Uncertainty on foliage transit time (years)",sep="")
-                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1), zlim=zrange)
       map(add=TRUE, lwd = 2)
       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
@@ -303,18 +318,22 @@ generate_parameter_maps<-function(PROJECT) {
       jpeg(file=paste("parameter_maps_median_","Cwood_residence_time","_",gsub("%","_",PROJECT$name),".jpeg",sep=""),
            width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      image.plot(x = grid_long, y = grid_lat, z = grid_output$MTT_wood_years[,,median_loc], col=colour_choices
+      var = grid_output$MTT_wood_years[,,median_loc]
+      zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
+      image.plot(x = grid_long, y = grid_lat, z = var, col=colour_choices
                 ,main=paste("Mean wood transit time (years)",sep="")
-                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1), zlim=zrange)
       map(add=TRUE, lwd = 2)
       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
       # Plot uncertainty
       jpeg(file=paste("parameter_maps_median_uncertainty_","Cwood_residence_time","_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      image.plot(x = grid_long, y = grid_lat, z = grid_output$MTT_wood_years[,,upper_loc]-grid_output$MTT_wood_years[,,lower_loc]
+      var = grid_output$MTT_wood_years[,,upper_loc]-grid_output$MTT_wood_years[,,lower_loc]
+      zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
+      image.plot(x = grid_long, y = grid_lat, z = var
                ,col=colour_choices, main=paste("Uncertainty on wood transit time (years)",sep="")
-               ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+               ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1), zlim=zrange)
       map(add=TRUE, lwd = 2)
       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
@@ -325,18 +344,22 @@ generate_parameter_maps<-function(PROJECT) {
       jpeg(file=paste("parameter_maps_median_","Croot_residence_time","_",gsub("%","_",PROJECT$name),".jpeg",sep=""),
            width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      image.plot(x = grid_long, y = grid_lat, z = grid_output$MTT_roots_years[,,median_loc], col=colour_choices
+      var = grid_output$MTT_roots_years[,,median_loc]
+      zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
+      image.plot(x = grid_long, y = grid_lat, z = var, col=colour_choices
                 ,main=paste("Mean fine roots transit time (years)",sep="")
-                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1), zlim=zrange)
       map(add=TRUE, lwd = 2)
       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
       # Plot uncertainty
       jpeg(file=paste("parameter_maps_median_uncertainty_","Croot_residence_time","_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      image.plot(x = grid_long, y = grid_lat, z = grid_output$MTT_roots_years[,,upper_loc]-grid_output$MTT_roots_years[,,lower_loc]
+      var = grid_output$MTT_roots_years[,,upper_loc]-grid_output$MTT_roots_years[,,lower_loc]
+      zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
+      image.plot(x = grid_long, y = grid_lat, z = var
                 ,col=colour_choices, main=paste("Uncertainty on fine roots transit time (years)",sep="")
-                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1), zlim=zrange)
       map(add=TRUE, lwd = 2)
       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
@@ -347,9 +370,11 @@ generate_parameter_maps<-function(PROJECT) {
       jpeg(file=paste("parameter_maps_median_","Csom_residence_time","_",gsub("%","_",PROJECT$name),".jpeg",sep=""),
            width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      image.plot(x = grid_long, y = grid_lat, z = grid_output$MTT_som_years[,,median_loc], col=colour_choices
+      var = grid_output$MTT_som_years[,,median_loc]
+      zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
+      image.plot(x = grid_long, y = grid_lat, z = var, col=colour_choices
                 ,main=paste("Csom residence time median estimate",sep="")
-                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1), zlim=zrange)
       map(add=TRUE, lwd = 2)
       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
@@ -357,9 +382,11 @@ generate_parameter_maps<-function(PROJECT) {
       jpeg(file=paste("parameter_maps_median_uncertainty_","Csom_residence_time","_",gsub("%","_",PROJECT$name),".jpeg",sep=""),
            width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      image.plot(x = grid_long, y = grid_lat, z = grid_output$MTT_som_years[,,upper_loc]-grid_output$MTT_som_years[,,lower_loc]
+      var = grid_output$MTT_som_years[,,upper_loc]-grid_output$MTT_som_years[,,lower_loc]
+      zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
+      image.plot(x = grid_long, y = grid_lat, z = var
                 ,col=colour_choices, main=paste("Uncertainty on som transit time (years)",sep="")
-                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1), zlim=zrange)
       map(add=TRUE, lwd = 2)
       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
@@ -370,9 +397,11 @@ generate_parameter_maps<-function(PROJECT) {
       jpeg(file=paste("parameter_maps_median_","Clitter_residence_time","_",gsub("%","_",PROJECT$name),".jpeg",sep=""),
            width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      image.plot(x = grid_long, y = grid_lat, z = grid_output$MTT_litter_years[,,median_loc], col=colour_choices
+      var = grid_output$MTT_litter_years[,,median_loc]
+      zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
+      image.plot(x = grid_long, y = grid_lat, z = var, col=colour_choices
                 ,main=paste("Clitter residence time median estimate",sep="")
-                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1), zlim=zrange)
       map(add=TRUE, lwd = 2)
       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
@@ -380,9 +409,11 @@ generate_parameter_maps<-function(PROJECT) {
       jpeg(file=paste("parameter_maps_median_uncertainty_","Clitter_residence_time","_",gsub("%","_",PROJECT$name),".jpeg",sep=""),
            width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      image.plot(x = grid_long, y = grid_lat, z = grid_output$MTT_litter_years[,,upper_loc]-grid_output$MTT_litter_years[,,lower_loc]
+      var = grid_output$MTT_litter_years[,,upper_loc]-grid_output$MTT_litter_years[,,lower_loc]
+      zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
+      image.plot(x = grid_long, y = grid_lat, z = var
                 ,col=colour_choices, main=paste("Uncertainty on litter transit time (years)",sep="")
-                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1), zlim=zrange)
       map(add=TRUE, lwd = 2)
       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
@@ -393,9 +424,11 @@ generate_parameter_maps<-function(PROJECT) {
       jpeg(file=paste("parameter_maps_median_","Cwoodlitter_residence_time","_",gsub("%","_",PROJECT$name),".jpeg",sep=""),
            width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      image.plot(x = grid_long, y = grid_lat, z = grid_output$MTT_woodlitter_years[,,median_loc], col=colour_choices
+      var = grid_output$MTT_woodlitter_years[,,median_loc], col=colour_choices
+      zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
+      image.plot(x = grid_long, y = grid_lat, z = var
                 ,main=paste("Cwoodlitter residence time median estimate",sep="")
-                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1), zlim=zrange)
       map(add=TRUE, lwd = 2)
       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
@@ -403,9 +436,11 @@ generate_parameter_maps<-function(PROJECT) {
       jpeg(file=paste("parameter_maps_median_uncertainty_","Cwoodlitter_residence_time","_",gsub("%","_",PROJECT$name),".jpeg",sep=""),
            width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-      image.plot(x = grid_long, y = grid_lat, z = grid_output$MTT_woodlitter_years[,,upper_loc]-grid_output$MTT_woodlitter_years[,,lower_loc]
+      var = grid_output$MTT_woodlitter_years[,,upper_loc]-grid_output$MTT_woodlitter_years[,,lower_loc]
+      zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
+      image.plot(x = grid_long, y = grid_lat, z = var
                 ,col=colour_choices, main=paste("Uncertainty on wood litter transit time (years)",sep="")
-                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+                ,axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1), zlim=zrange)
       map(add=TRUE, lwd = 2)
       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
@@ -423,7 +458,9 @@ generate_parameter_maps<-function(PROJECT) {
        ## spatial maps
        jpeg(file=paste("parameter_maps_median_",par_names[p],"_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
        par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-       image.plot(x = grid_long, y = grid_lat, z = grid_output$parameters[,,p,median_loc], col=colour_choices,
+       var = grid_output$parameters[,,p,median_loc]
+       zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
+       image.plot(x = grid_long, y = grid_lat, z = var, col=colour_choices, zlim=zrange
                   main=paste(par_names[p]," median estimate",sep=""),axes=FALSE, cex.main=1.1,legend.width=3.0,
                   cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
        map(add=TRUE, lwd = 2)
@@ -431,16 +468,20 @@ generate_parameter_maps<-function(PROJECT) {
        dev.off()
        jpeg(file=paste("parameter_maps_95CI_",par_names[p],"_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
        par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-       image.plot(x = grid_long, y = grid_lat, z = grid_output$parameters[,,p,upper_loc]-grid_output$parameters[,,p,lower_loc],
-                  col=colour_choices, main=paste(par_names[p]," uncertainty range",sep=""), axes=FALSE,
+       var = grid_output$parameters[,,p,upper_loc]-grid_output$parameters[,,p,lower_loc]
+       zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
+       image.plot(x = grid_long, y = grid_lat, z = var,
+                  col=colour_choices, main=paste(par_names[p]," uncertainty range",sep=""), axes=FALSE, zlim=zrange
                   cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
        map(add=TRUE, lwd = 2)
        #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
        dev.off()
        jpeg(file=paste("parameter_maps_converged_",par_names[p],"_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
        par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-       image.plot(x = grid_long, y = grid_lat, z = grid_output$parameters_converged[,,p], col=colour_choices
-                 ,main=paste(par_names[p]," Gelmen-Rubens convergence (1 = PASS / 0 = FALSE)",sep="")
+       var = grid_output$parameters_converged[,,p]
+       zrange=range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
+       image.plot(x = grid_long, y = grid_lat, z = var, col=colour_choices
+                 ,main=paste(par_names[p]," Gelmen-Rubens convergence (1 = PASS / 0 = FALSE)",sep=""), zlim=zrange
                  ,axes=FALSE, zlim=c(0,1), cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
        map(add=TRUE, lwd = 2)
        #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
