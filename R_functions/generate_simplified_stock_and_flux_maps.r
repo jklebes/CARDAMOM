@@ -155,6 +155,34 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
 
   } # loop through all "grid_output" objects
 
+  # extract a list of all the variables stored in the output object
+  par_names = names(grid_output)
+  # filter for those related to the 'mean' status
+  par_names = par_names[grepl("SS_", par_names)]
+
+  # loop through these mean variables, output median and CI range for each of these variables
+  for (p in seq(1,length(par_names))) {
+
+       # determine position in grid_output list which contains the variable of interest
+       pp = which(names(grid_output) == par_names[p])
+
+       jpeg(file=paste("grid_SteadyState_map_",par_names[p],"_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.8), omi=c(0.2, 0.2, 0.2, 0.40))
+       info = " " # assume default is no header, but sometimes we add something extra...
+       var1 = mean(grid_output[[pp]][,,median_loc], na.rm=TRUE)
+       var2 = mean(grid_output[[pp]][,,upper_loc], na.rm=TRUE)
+       var3 = mean(grid_output[[pp]][,,lower_loc], na.rm=TRUE)
+       var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2)
+       info = paste("Steady State: ",par_names[p]," (97.5 % = ",var2,"; 50 % = ",var1,"; 2.5 % = ",var3,")", sep="")
+       zrange=range(pretty(c(min(grid_output[[pp]][,,median_loc], na.rm=TRUE),max(grid_output[[pp]][,,median_loc],na.rm=TRUE))))
+       image.plot(x = grid_long, y = grid_lat, z = grid_output[[pp]][,,median_loc], main=info, col = colour_choices, zlim=zrange,
+                  axes=FALSE, cex.main=0.9, legend.width=3.0, cex=1.5, axis.args=list(cex.axis=1.8, hadj=0.1))
+       map(add=TRUE, lwd = 2)
+       #contour(landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+       dev.off()
+
+  } # loop through all "grid_output" objects
+
   # tidy before leaving
   gc(reset=TRUE, verbose=FALSE)
 
