@@ -1019,6 +1019,8 @@ module model_likelihood_module
 !        likelihood = likelihood-tot_exp
         ! Loop through each year
         do y = 1, DATAin%nos_years
+           ! Reset selection variable
+           sub_time = 0d0
            ! Determine the start and finish of the current year of interest
            s = ((DATAin%steps_per_year*(y-1))+1) ; f = (DATAin%steps_per_year*y)
            where (DATAin%NBE(s:f) > -9998d0) sub_time = 1d0
