@@ -35,12 +35,12 @@ subroutine rdaleccdeaacm2bucketrmrgcwd(output_dim,MTT_dim,SS_dim &
                         ,nopools        & ! number of model pools
                         ,nodays           ! number of days in simulation
 
-  double precision, intent(inout) :: deltat(nodays)     ! time step in decimal days
-  double precision, intent(in) :: met(nomet,nodays)   & ! met drivers, note reverse of needed
-                  ,soil_frac_clay_in(nos_soil_layers) & ! clay in soil (%)
-                  ,soil_frac_sand_in(nos_soil_layers) & ! sand in soil (%)
-                       ,pars(nopars,nos_iter)         & ! number of parameters
-                       ,lat                 ! site latitude (degrees)
+  double precision, intent(inout) :: deltat(nodays)   ! time step in decimal days
+  double precision, intent(in) :: met(nomet,nodays) & ! met drivers, note reverse of needed
+                ,soil_frac_clay_in(nos_soil_layers) & ! clay in soil (%)
+                ,soil_frac_sand_in(nos_soil_layers) & ! sand in soil (%)
+                             ,pars(nopars,nos_iter) & ! number of parameters
+                                              ,lat    ! site latitude (degrees)
 
   ! output declaration
   double precision, intent(out), dimension(nos_iter,nodays,output_dim) :: out_var1

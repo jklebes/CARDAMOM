@@ -1444,8 +1444,8 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       SS_roots_gCm2 = SS_gCm2[,3],
                       SS_wood_gCm2 = SS_gCm2[,4],
                       SS_litter_gCm2 = SS_gCm2[,5],
-                      SS_som_gCm2 = SS_gCm2[,6],
-                      SS_woodlitter_gCm2 = SS_gCm2[,7])
+                      SS_woodlitter_gCm2 = SS_gCm2[,6],
+                      SS_som_gCm2 = SS_gCm2[,7])
       # Determine the NPP fraction of expressed NPP
       # i.e. actual growth not GPP-Ra
       NPP_fraction = apply(states_all$labile_to_foliage_gCm2day +
