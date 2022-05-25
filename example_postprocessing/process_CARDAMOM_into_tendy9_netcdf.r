@@ -202,16 +202,16 @@ for (n in seq(1, length(PROJECT$sites))) {
          drivers = read_binary_file_format(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep=""))
     
          # DRIVERS
-         AIRT_MIN[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,2]   # mint C
-         AIRT_MAX[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,3]   # maxt C
-         SWRAD[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,4]      # SWRAD MJ/m2/day
-         CO2[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,5]        # CO2 ppm
-         DOY[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,6]        # Julian day of year
-         PRECIP[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,7]     # Precipitation kgH2O/m2/s
-         FLOSS_FRAC[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,8] # Forest loss fraction
-         BURNT_FRAC[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,9] # Burned fraction
-         WINDSPD[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,15]   # Wind speed m/s
-         VPD[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,16]       # Vapour pressure deficit Pa
+         AIRT_MIN[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,2]+273.15     # mint C -> K
+         AIRT_MAX[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,3]+273.15     # maxt C -> K
+         SWRAD[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,4]*1e6*(1/86400) # SWRAD MJ/m2/day -> W/m2
+         CO2[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,5]                 # CO2 ppm
+         DOY[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,6]                 # Julian day of year
+         PRECIP[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,7]              # Precipitation kgH2O/m2/s
+         FLOSS_FRAC[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,8]          # Forest loss fraction
+         BURNT_FRAC[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,9]          # Burned fraction
+         WINDSPD[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,15]            # Wind speed m/s
+         VPD[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,16]                # Vapour pressure deficit Pa
 
          # STATE OBSERVATIONS
          LAI_OBS[grid_output$i_location[n],grid_output$j_location[n],] = drivers$obs[,3]     # LAI m2/m2
