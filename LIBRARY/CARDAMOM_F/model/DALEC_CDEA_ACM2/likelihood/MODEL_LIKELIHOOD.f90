@@ -300,7 +300,6 @@ module model_likelihood_module
     double precision :: pool_error, flux_error
 
     ! Run model
-
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
