@@ -1935,10 +1935,10 @@ module model_likelihood_module
                ! Determine the current years mean NBE from observations and model
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
-               obs   = sum(DATAin%NBE(s:f)*sub_time)
+               obs   = sum(DATAin%NBE(s:f)*sub_time) / sum(sub_time)
                model = sum((DATAin%M_NEE(s:f)+ &
-                            DATAin%M_FLUXES(s:f,17))*sub_time)
-               unc   = sqrt(sum((sub_time*DATAin%NBE_unc(s:f))**2))
+                            DATAin%M_FLUXES(s:f,17))*sub_time) / sum(sub_time)
+               unc   = sqrt(sum((sub_time*DATAin%NBE_unc(s:f))**2)) / sum(sub_time)
                ! Update the likelihood score with the mean bias
                likelihood = likelihood - (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
@@ -1970,9 +1970,9 @@ module model_likelihood_module
                ! Determine the current years mean NBE from observations and model
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
-               obs   = sum(DATAin%GPP(s:f)*sub_time)
-               model = sum(DATAin%M_FLUXES(s:f,1)*sub_time)
-               unc   = sqrt(sum((sub_time*DATAin%GPP_unc(s:f))**2))
+               obs   = sum(DATAin%GPP(s:f)*sub_time) / sum(sub_time)
+               model = sum(DATAin%M_FLUXES(s:f,1)*sub_time) / sum(sub_time)
+               unc   = sqrt(sum((sub_time*DATAin%GPP_unc(s:f))**2)) / sum(sub_time)
                ! Update the likelihood score with the mean bias
                likelihood = likelihood - (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
@@ -2012,9 +2012,9 @@ module model_likelihood_module
                ! Determine the current years mean NBE from observations and model
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
-               obs   = sum(DATAin%Fire(s:f)*sub_time)
-               model = sum(DATAin%M_FLUXES(s:f,17)*sub_time)
-               unc   = sqrt(sum((sub_time*DATAin%Fire_unc(s:f))**2))
+               obs   = sum(DATAin%Fire(s:f)*sub_time) / sum(sub_time)
+               model = sum(DATAin%M_FLUXES(s:f,17)*sub_time) / sum(sub_time)
+               unc   = sqrt(sum((sub_time*DATAin%Fire_unc(s:f))**2)) / sum(sub_time)
                ! Update the likelihood score with the mean bias
                likelihood = likelihood - (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
@@ -2314,10 +2314,10 @@ module model_likelihood_module
                ! Determine the current years mean NBE from observations and model
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
-               obs   = sum(DATAin%NBE(s:f)*sub_time)
+               obs   = sum(DATAin%NBE(s:f)*sub_time) / sum(sub_time)
                model = sum((DATAin%M_NEE(s:f)+ &
-                            DATAin%M_FLUXES(s:f,17))*sub_time)
-               unc   = sqrt(sum((sub_time*DATAin%NBE_unc(s:f))**2))
+                            DATAin%M_FLUXES(s:f,17))*sub_time) / sum(sub_time)
+               unc   = sqrt(sum((sub_time*DATAin%NBE_unc(s:f))**2)) / sum(sub_time)
                ! Update the likelihood score with the mean bias
                tot_exp = tot_exp + (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
@@ -2353,9 +2353,9 @@ module model_likelihood_module
                ! Determine the current years mean NBE from observations and model
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
-               obs   = sum(DATAin%GPP(s:f)*sub_time)
-               model = sum(DATAin%M_FLUXES(s:f,1)*sub_time)
-               unc   = sqrt(sum((sub_time*DATAin%GPP_unc(s:f))**2))
+               obs   = sum(DATAin%GPP(s:f)*sub_time) / sum(sub_time)
+               model = sum(DATAin%M_FLUXES(s:f,1)*sub_time) / sum(sub_time)
+               unc   = sqrt(sum((sub_time*DATAin%GPP_unc(s:f))**2)) / sum(sub_time)
                ! Update the likelihood score with the mean bias
                tot_exp = tot_exp + (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
@@ -2397,9 +2397,9 @@ module model_likelihood_module
                ! Determine the current years mean NBE from observations and model
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
-               obs   = sum(DATAin%Fire(s:f)*sub_time)
-               model = sum(DATAin%M_FLUXES(s:f,17)*sub_time)
-               unc   = sqrt(sum((sub_time*DATAin%Fire_unc(s:f))**2))
+               obs   = sum(DATAin%Fire(s:f)*sub_time) / sum(sub_time)
+               model = sum(DATAin%M_FLUXES(s:f,17)*sub_time) / sum(sub_time)
+               unc   = sqrt(sum((sub_time*DATAin%Fire_unc(s:f))**2)) / sum(sub_time)
                ! Update the likelihood score with the mean bias
                tot_exp = tot_exp + (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean

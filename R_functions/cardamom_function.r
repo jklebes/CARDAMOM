@@ -372,14 +372,26 @@ cardamom <-function (projname,model,method,stage) {
           if (copy_back == "y") {
               #home_computer=Sys.info()["nodename"]
               # If yes, then we mist delete the existing files to ensure we do not mix analysis versions
-              if (length(list.files(paste(PROJECT$resultspath,"/*",sep=""))) > 0) {
+              if (length(list.files(paste(PROJECT$resultspath,"/",sep=""))) > 0) {
                   system(paste("rm ",PROJECT$resultspath,"/*",sep=""))
               }
               # Prepare copy back command
-              command = paste("scp -r ",PROJECT$eresultspath,"* ",username,"@",home_computer,":",PROJECT$resultspath,sep="")
+              # Compress all existing files into zip directory
+              command = paste("zip ",PROJECT$eresultspath,"cardamom_outputs.zip ",PROJECT$eresultspath,"/*PARS", sep="")
+              command = c(command,paste("scp -r ",PROJECT$eresultspath,"cardamom_outputs.zip ",username,"@",home_computer,":",PROJECT$resultspath,sep=""))
+              command = c(command,paste("rm ",PROJECT$eresultspath,"cardamom_outputs.zip",sep=""))
+              #command = paste("scp -r ",PROJECT$eresultspath,"* ",username,"@",home_computer,":",PROJECT$resultspath,sep="")
               # Execute on remote server
               ecdf_execute(command,PROJECT$paths$cardamom_cluster)
           } # copy back
+          # Locally check that we have the cardamom_outputs.zip copied back from remote server.
+          # Assuming they are present unzip and delete the zip directory
+          if (file.exists(paste(PROJECT$resultspath,"cardamom_outputs.zip",sep=""))) {
+              # Unzip
+              system(paste("unzip ",PROJECT$resultspath,"cardamom_outputs.zip"))
+              # Delete file now
+              system(paste("rm ",PROJECT$resultspath,"cardamom_outputs.zip"))
+          }
       } # ecdf condition
       # do we run the parameters yet for analysis
       # Changed to a hardcoded run of the analysis
