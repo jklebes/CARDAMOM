@@ -112,6 +112,8 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         Csom_unc = array(Csom * 0.47, dim=c(xdim,ydim))
         # With a minium bound assumption
         Csom_unc[Csom_unc < 100] = 100
+        # Ensure consistency for missing values
+        Csom_unc[Csom == -9999 | is.na(Csom) == TRUE] = -9999
 
         # Return the loaded dataset
         return(list(Csom = Csom, Csom_unc = Csom_unc, lat = lat, long = long))
@@ -177,6 +179,8 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         Csom_unc = array(Csom * 0.47, dim=c(xdim,ydim))
         # With a minimum bound assumption
         Csom_unc[Csom_unc < 100] = 100
+        # Ensure consistency for missing values
+        Csom_unc[Csom == -9999 | is.na(Csom) == TRUE] = -9999
 
         # Return the loaded dataset
         return(list(Csom = Csom, Csom_unc = Csom_unc, lat = lat, long = long))
@@ -242,6 +246,8 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         Csom_unc = array(Csom * 0.47, dim=c(xdim,ydim))
         # With a minimum bound assumption
         Csom_unc[Csom_unc < 100] = 100
+        # Ensure consistency for missing values
+        Csom_unc[Csom == -9999 | is.na(Csom) == TRUE] = -9999
 
         # Return the loaded dataset
         return(list(Csom = Csom, Csom_unc = Csom_unc, lat = lat, long = long))
