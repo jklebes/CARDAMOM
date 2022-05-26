@@ -352,6 +352,7 @@ long_dimen <- ncdim_def( "lon", units="degree east (-180->180)", longitude )
 time_dimen <- ncdim_def( "time", units="", 1:length(PROJECT$model$timestep_days))
 quantile_dimen <- ncdim_def( "quantile", units="-", quantiles_wanted)
 year_dimen <- ncdim_def( "year", units="", 1:nos_years)
+npar_dimen <- ncdim_def( "nos_parameters", units="", 1:(max(PROJECT$model$nopars)+1)) # NOTE: +1 is to account for the log-likelihood 
 
 ###
 ## Create STATES file with timing information
@@ -998,6 +999,57 @@ if(exists("NPP_wood_FLX")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, NPP_wood_FLX)
 }
+###
+## close the file to write to disk
+###
+
+nc_close(new_file)
+
+###
+## Create file for parameters and clusters
+###
+
+# Define the output file name
+output_name = paste(PROJECT$results_processedpath,output_prefix,"PARS_",PROJECT$start_year,"_",PROJECT$end_year,output_suffix,".nc",sep="")
+# Delete if the file currently exists
+if (file.exists(output_name)) {file.remove(output_name)}
+# Create the parameter variable definition
+var_pars = ncvar_def("parameters", unit="-", longname = "Parameter array + log-likelihood, see specific model version for desccription and units - Ensemble", dim=list(long_dimen,lat_dimen,npar_dimen,quantile_dimen), missval = -99999, prec="double",compression = 9)
+# Create the empty file space, using the already defined timing variable
+new_file=nc_create(filename=output_name, vars=list(var_pars), force_v4 = TRUE)
+# Load first variable into the file
+# PARAMETERS
+ncvar_put(new_file, var_pars, grid_output$parameters)
+
+# Close the existing file to ensure its written to file
+nc_close(new_file)
+
+###
+## Re-open the file so that we can add to it a variable at a time
+###
+
+new_file <- nc_open( output_name, write=TRUE )
+
+###
+## Other parameter or cluster related information
+###
+              
+## Cluster by affinity propogation process
+# parameters only, i.e. initial conditions not included
+if(exists(x = "pars_clusters", where = grid_ouptut)) {
+   var_new = ncvar_def("pars_clusters", unit="year", longname = "Affinity propogation clustering based on process parameters (i.e. not including initial conditions)", dim=list(long_dimen,lat_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, grid_ouptut$pars_clusters)
+}
+
+## Cluster by affinity propogation process
+# parameters only, i.e. initial conditions not included
+if(exists(x = "clusters", where = grid_ouptut)) {
+   var_new = ncvar_def("pars_clusters", unit="year", longname = "Affinity propogation clustering based on process parameters and initial conditions", dim=list(long_dimen,lat_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, grid_ouptut$clusters)
+}
+
 ###
 ## close the file to write to disk
 ###
