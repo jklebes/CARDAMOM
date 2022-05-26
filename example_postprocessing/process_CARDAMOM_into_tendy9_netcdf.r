@@ -1037,7 +1037,7 @@ new_file <- nc_open( output_name, write=TRUE )
 ## Cluster by affinity propogation process
 # parameters only, i.e. initial conditions not included
 if(exists(x = "pars_clusters", where = grid_output)) {
-   var_new = ncvar_def("pars_clusters", unit="year", longname = "Affinity propogation clustering based on process parameters (i.e. not including initial conditions)", dim=list(long_dimen,lat_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("pars_clusters", unit="-", longname = "Affinity propogation clustering based on process parameters (i.e. not including initial conditions)", dim=list(long_dimen,lat_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, grid_output$pars_clusters)
 }
@@ -1045,7 +1045,7 @@ if(exists(x = "pars_clusters", where = grid_output)) {
 ## Cluster by affinity propogation process
 # parameters only, i.e. initial conditions not included
 if(exists(x = "clusters", where = grid_output)) {
-   var_new = ncvar_def("pars_clusters", unit="year", longname = "Affinity propogation clustering based on process parameters and initial conditions", dim=list(long_dimen,lat_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("clusters", unit="-", longname = "Affinity propogation clustering based on process parameters and initial conditions", dim=list(long_dimen,lat_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, grid_output$clusters)
 }
