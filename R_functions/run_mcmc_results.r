@@ -147,11 +147,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
               # All models have a som pool, so start with that
               states_all$rhet_gCm2day = states_all$rhet_som_gCm2day
               # If the model has a litter pool (foliar + fine root) add this
-              if (exists(x = "rhet_litter_gCm2", where = states_all)) {
+              if (exists(x = "rhet_litter_gCm2day", where = states_all)) {
                   states_all$rhet_gCm2day = states_all$rhet_gCm2day + states_all$rhet_litter_gCm2day
               }
               # If the model has a wood litter pool add this
-              if (exists(x = "rhet_litter_gCm2", where = states_all)) {
+              if (exists(x = "rhet_litter_gCm2day", where = states_all)) {
                   states_all$rhet_gCm2day = states_all$rhet_gCm2day + states_all$rhet_woodlitter_gCm2day
               }
 
