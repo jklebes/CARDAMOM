@@ -54,6 +54,9 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         Csom = array(as.vector(unlist(Csom)), dim=c(xdim,ydim))
         Csom_unc = array(as.vector(unlist(Csom_unc)), dim=c(xdim,ydim))
 
+        # Assume in all cases than a zero prior value should be classed as missing data
+        Csom[Csom < 1] = NA ; Csom_unc[is.na(Csom)] = NA
+
         return(list(Csom = Csom, Csom_unc = Csom_unc, lat = lat, long = long))
 
     } else if (Csom_source == "HWSD") {
@@ -108,6 +111,8 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         # break out from the rasters into arrays which we can manipulate
         Csom = array(as.vector(unlist(Csom)), dim=c(xdim,ydim))
 
+        # Assume in all cases than a zero prior value should be classed as missing data
+        Csom[Csom < 1] = NA
         # see papers assessing uncertainty of HWSD, ~47 %
         Csom_unc = array(Csom * 0.47, dim=c(xdim,ydim))
         # With a minium bound assumption
@@ -175,6 +180,8 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         # break out from the rasters into arrays which we can manipulate
         Csom = array(as.vector(unlist(Csom)), dim=c(xdim,ydim))
 
+        # Assume in all cases than a zero prior value should be classed as missing data
+        Csom[Csom < 1] = NA
         # assume uncertainty, ~47 %
         Csom_unc = array(Csom * 0.47, dim=c(xdim,ydim))
         # With a minimum bound assumption
@@ -242,6 +249,8 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         # break out from the rasters into arrays which we can manipulate
         Csom = array(as.vector(unlist(Csom)), dim=c(xdim,ydim))
 
+        # Assume in all cases than a zero prior value should be classed as missing data
+        Csom[Csom < 1] = NA
         # assume uncertainty, ~47 %
         Csom_unc = array(Csom * 0.47, dim=c(xdim,ydim))
         # With a minimum bound assumption
