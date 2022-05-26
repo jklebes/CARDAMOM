@@ -377,7 +377,7 @@ cardamom <-function (projname,model,method,stage) {
               }
               # Prepare copy back command
               # Compress all existing files into zip directory
-              command = paste("zip ",PROJECT$eresultspath,"cardamom_outputs.zip ",PROJECT$eresultspath,"/*PARS", sep="")
+              command = paste("zip -j ",PROJECT$eresultspath,"cardamom_outputs.zip ",PROJECT$eresultspath,"/*PARS", sep="")
               command = c(command,paste("scp -r ",PROJECT$eresultspath,"cardamom_outputs.zip ",username,"@",home_computer,":",PROJECT$resultspath,sep=""))
               command = c(command,paste("rm ",PROJECT$eresultspath,"cardamom_outputs.zip",sep=""))
               #command = paste("scp -r ",PROJECT$eresultspath,"* ",username,"@",home_computer,":",PROJECT$resultspath,sep="")
@@ -388,9 +388,9 @@ cardamom <-function (projname,model,method,stage) {
           # Assuming they are present unzip and delete the zip directory
           if (file.exists(paste(PROJECT$resultspath,"cardamom_outputs.zip",sep=""))) {
               # Unzip
-              system(paste("unzip ",PROJECT$resultspath,"cardamom_outputs.zip"))
+              system(paste("unzip ",PROJECT$resultspath,"cardamom_outputs.zip -d ",PROJECT$resultspath, sep=""))
               # Delete file now
-              system(paste("rm ",PROJECT$resultspath,"cardamom_outputs.zip"))
+              system(paste("rm ",PROJECT$resultspath,"cardamom_outputs.zip", sep=""))
           }
       } # ecdf condition
       # do we run the parameters yet for analysis
