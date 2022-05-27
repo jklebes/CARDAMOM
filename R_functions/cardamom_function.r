@@ -323,9 +323,25 @@ cardamom <-function (projname,model,method,stage) {
           }
           if (copy_to == "y") {
              #home_computer=Sys.info()["nodename"]
-              command=paste("scp -r ",username,"@",home_computer,":",PROJECT$datapath,"* ",PROJECT$edatapath,sep="")
+              # Check whether an existing cardamom_inputs.zip exists
+              if (file.exists(paste(PROJECT$datapath,"cardamom_inputs.zip",sep=""))) {
+                  # Delete this file before creating a new one of the latest input files
+                  system(paste("rm ",PROJECT$datapath,"cardamom_inputs.zip", sep=""))
+              }
+              # Compress all input files into zip directory
+              system(paste("zip -j ",PROJECT$datapath,"cardamom_inputs.zip ",PROJECT$datapath,"/*.bin", sep=""))
+              # Copy the zip directory to the remote server
+              command = paste("scp -r ",username,"@",home_computer,":",PROJECT$datapath,"cardamom_inputs.zip ",PROJECT$edatapath,sep="")
+              # Unzip on remote server
+              command = c(command,paste("unzip ",PROJECT$edatapath,"cardamom_inputs.zip -d ",PROJECT$edatapath, sep=""))
+              # Remove the zip directory on remote server
+              command = c(command,paste("rm ",PROJECT$edatapath,"cardamom_inputs.zip" ,sep=""))
+              #command = paste("scp -r ",username,"@",home_computer,":",PROJECT$datapath,"* ",PROJECT$edatapath,sep="")
               print(command)
+              # Execute command on remote server
               ecdf_execute(command,PROJECT$paths$cardamom_cluster)
+              # Delete local copy of the zip directory
+              system(paste("rm ",PROJECT$datapath,"cardamom_inputs.zip", sep=""))
           }
       } # copy to Eddie
 
