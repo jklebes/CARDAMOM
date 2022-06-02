@@ -329,7 +329,7 @@ cardamom <-function (projname,model,method,stage) {
                   system(paste("rm ",PROJECT$datapath,"cardamom_inputs.zip", sep=""))
               }
               # Compress all input files into zip directory
-              system(paste("zip -j ",PROJECT$datapath,"cardamom_inputs.zip ",PROJECT$datapath,"/*.bin", sep=""))
+              system(paste("zip -j -r -qq ",PROJECT$datapath,"cardamom_inputs.zip ",PROJECT$datapath," -i *.bin",sep=""))
               # Copy the zip directory to the remote server
               command = paste("scp -r ",username,"@",home_computer,":",PROJECT$datapath,"cardamom_inputs.zip ",PROJECT$edatapath,sep="")
               # Unzip on remote server
@@ -389,13 +389,17 @@ cardamom <-function (projname,model,method,stage) {
               #home_computer=Sys.info()["nodename"]
               # If yes, then we mist delete the existing files to ensure we do not mix analysis versions
               if (length(list.files(paste(PROJECT$resultspath,"/",sep=""))) > 0) {
-                  system(paste("rm ",PROJECT$resultspath,"/*",sep=""))
+                  system(paste("find ",PROJECT$resultspath," -type f -name '*' -delete",sep=""))
               }
+              # Ensure any existing zip directory has been deleted before creating a new one.
+              command = paste("rm ",PROJECT$eresultspath,"cardamom_outputs.zip",sep="")
               # Prepare copy back command
               # Compress all existing files into zip directory
-              command = paste("zip -j ",PROJECT$eresultspath,"cardamom_outputs.zip ",PROJECT$eresultspath,"/*PARS", sep="")
+              # There is a limit on how many files (based on the command length) that can be added at once using zip alone.
+              # However, we can get around this by listing all files using find and then piping these into zip
+              command = c(command,paste("zip -j -r -qq ",PROJECT$eresultspath,"cardamom_outputs.zip ",PROJECT$eresultspath," -i *PARS",sep=""))
               command = c(command,paste("scp -r ",PROJECT$eresultspath,"cardamom_outputs.zip ",username,"@",home_computer,":",PROJECT$resultspath,sep=""))
-              command = c(command,paste("rm ",PROJECT$eresultspath,"cardamom_outputs.zip",sep=""))
+              #command = c(command,paste("rm ",PROJECT$eresultspath,"cardamom_outputs.zip",sep=""))
               #command = paste("scp -r ",PROJECT$eresultspath,"* ",username,"@",home_computer,":",PROJECT$resultspath,sep="")
               # Execute on remote server
               ecdf_execute(command,PROJECT$paths$cardamom_cluster)
@@ -404,7 +408,7 @@ cardamom <-function (projname,model,method,stage) {
           # Assuming they are present unzip and delete the zip directory
           if (file.exists(paste(PROJECT$resultspath,"cardamom_outputs.zip",sep=""))) {
               # Unzip
-              system(paste("unzip ",PROJECT$resultspath,"cardamom_outputs.zip -d ",PROJECT$resultspath, sep=""))
+              system(paste("unzip -qq ",PROJECT$resultspath,"cardamom_outputs.zip -d ",PROJECT$resultspath, sep=""))
               # Delete file now
               system(paste("rm ",PROJECT$resultspath,"cardamom_outputs.zip", sep=""))
           }
