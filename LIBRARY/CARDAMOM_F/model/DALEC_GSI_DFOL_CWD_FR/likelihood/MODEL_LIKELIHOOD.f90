@@ -1017,32 +1017,32 @@ module model_likelihood_module
                             +fire_litter_som((steps_per_year+1):(steps_per_year*2)) &
                             +harvest_extracted_som((steps_per_year+1):(steps_per_year*2)))
         ! Clitwood
-!        in_out_litwood = sum(M_FLUXES(:,11)+fire_residue_to_litwood+harvest_residue_to_litwood) &
+!        in_out_litwood = sum(M_FLUXES(:,11)+fire_residue_to_litwood+harvest_residue_to_woodlitter) &
 !                       / sum(M_FLUXES(:,20)+M_FLUXES(:,4)+fire_loss_litwood+harvest_loss_litwood)
         in_litwood     = sum(M_FLUXES(io_start:io_finish,11) &
                             +fire_residue_to_litwood(io_start:io_finish) &
-                            +harvest_residue_to_litwood(io_start:io_finish))
+                            +harvest_residue_to_woodlitter(io_start:io_finish))
         out_litwood    = sum(M_FLUXES(io_start:io_finish,20) &
                             +M_FLUXES(io_start:io_finish,4) &
                             +fire_emiss_litwood(io_start:io_finish) &
                             +fire_litter_litwood(io_start:io_finish) &
-                            +harvest_extracted_litwood(io_start:io_finish))
+                            +harvest_extracted_woodlitter(io_start:io_finish))
         in_out_litwood_yr1 = sum(M_FLUXES(1:steps_per_year,11) &
                                 +fire_residue_to_litwood(1:steps_per_year) &
-                                +harvest_residue_to_litwood(1:steps_per_year)) &
+                                +harvest_residue_to_woodlitter(1:steps_per_year)) &
                            / sum(M_FLUXES(1:steps_per_year,20) &
                                 +M_FLUXES(1:steps_per_year,4) &
                                 +fire_emiss_litwood(1:steps_per_year) &
                                 +fire_litter_litwood(1:steps_per_year) &
-                                +harvest_extracted_litwood(1:steps_per_year))
+                                +harvest_extracted_woodlitter(1:steps_per_year))
         in_out_litwood_yr2 = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),11) &
                                 +fire_residue_to_litwood((steps_per_year+1):(steps_per_year*2)) &
-                                +harvest_residue_to_litwood((steps_per_year+1):(steps_per_year*2))) &
+                                +harvest_residue_to_woodlitter((steps_per_year+1):(steps_per_year*2))) &
                            / sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),20) &
                                 +M_FLUXES((steps_per_year+1):(steps_per_year*2),4) &
                                 +fire_emiss_litwood((steps_per_year+1):(steps_per_year*2)) &
                                 +fire_litter_litwood((steps_per_year+1):(steps_per_year*2)) &
-                                +harvest_extracted_litwood((steps_per_year+1):(steps_per_year*2)))
+                                +harvest_extracted_woodlitter((steps_per_year+1):(steps_per_year*2)))
 
         ! Assess pool dynamics relative to their own steady state attractors
         ! Based on Bloom et al (2016), PNAS. Combination of the in/out ratio and
