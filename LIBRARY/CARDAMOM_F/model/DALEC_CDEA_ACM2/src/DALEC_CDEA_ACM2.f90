@@ -1665,7 +1665,6 @@ metabolic_limited_photosynthesis, &
                         root_depth_50, slpa, mult, exp_func, prev
     double precision, dimension(nos_root_layers) :: root_mass    &
                                                    ,root_length  &
-                                                   ,Rcond_layer &
                                                    ,ratio
     double precision, parameter :: rootdist_tol = 13.81551d0 ! log(1d0/rootdist_tol - 1d0) were rootdist_tol = 1d-6
                                   !rootdist_tol = 1d-6!, & ! Root density assessed for the max rooting depth
@@ -1674,7 +1673,7 @@ metabolic_limited_photosynthesis, &
 
     ! reset water flux
     total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0
-    root_mass = 0d0 ; Rcond_layer = 0d0
+    root_mass = 0d0
     ! calculate the plant hydraulic resistance component. Currently unclear
     ! whether this actually varies with height or whether tall trees have a
     ! xylem architecture which keeps the whole plant conductance (gplant) 1-10 (ish).
@@ -1789,15 +1788,12 @@ metabolic_limited_photosynthesis, &
            ! calculate and accumulate steady state water flux in mmol.m-2.s-1
            call plant_soil_flow(i,root_length(i),root_mass(i) &
                                ,demand(i),root_reach_local &
-                               ,transpiration_resistance,Rcond_layer(i))
+                               ,transpiration_resistance)
        else
            ! ...if there is not then we wont have any below...
            exit
        end if ! root present in current layer?
     end do ! nos_root_layers
-    ! Turn the output resistance into conductance
-    Rcond_layer = Rcond_layer**(-1d0)
-
 
     ! if freezing then assume soil surface is frozen, therefore no water flux
     if (meant < 1d0) water_flux_mmolH2Om2s(1) = 0d0
@@ -1864,8 +1860,7 @@ metabolic_limited_photosynthesis, &
   !------------------------------------------------------------------
   !
   subroutine plant_soil_flow(root_layer,root_length,root_mass &
-                            ,demand,root_reach_in,transpiration_resistance &
-                            ,Rtot_layer)
+                            ,demand,root_reach_in,transpiration_resistance)
 
     !
     ! Calculate soil layer specific water flow form the soil to canopy (mmolH2O.m-2.s-1)
@@ -1884,10 +1879,9 @@ metabolic_limited_photosynthesis, &
                                          demand, &
                                   root_reach_in, &
                        transpiration_resistance
-    double precision, intent(out) :: Rtot_layer
 
     ! local arguments
-    double precision :: soilR2
+    double precision :: soilR2, Rtot_layer
 
     ! Calculates root hydraulic resistance (MPa m2 s mmol-1) in a soil-root zone
     soilR2 = root_resist / (root_mass*root_reach_in)
