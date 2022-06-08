@@ -38,7 +38,7 @@ extract_sand_clay<- function(i1,j1,spatial_type,resolution,grid_type,latlon_in,
   if ((bot_sand+bot_clay) > 94) {
        tmp1 = bot_sand / (bot_sand + bot_clay + 6) # 6 % is implicit in the 94 % max value for silt / gravel
        tmp2 = bot_clay / (bot_sand + bot_clay + 6) # 6 % is implicit in the 94 % max value for silt / gravel
-       top_sand = tmp1*100 ; top_clay = tmp2*100
+       bot_sand = tmp1*100 ; bot_clay = tmp2*100
   }
 
   # pass the information back
