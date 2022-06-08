@@ -152,7 +152,6 @@ module model_likelihood_module
     use cardamom_structures, only: DATAin
     use MCMCOPT, only: PI
     use CARBON_MODEL_MOD, only: carbon_model
-    use CARBON_MODEL_CROP_MOD, only: carbon_model_crop
 
     ! Model likelihood function specifically intended for the determination of
     ! appropriate initial parameter choices, consistent with EDCs for DALEC2 /
@@ -178,47 +177,21 @@ module model_likelihood_module
     ! in all fluxes and pools from multiple runs of the same parameter set
     if (.not.sanity_check) call model_sanity_check(PI%parini)
 
-    ! crop or not split....trouble
-    if (DATAin%PFT == 1) then
-       ! PFT has been provided and is crop! Best try running the crop model
-       ! then...
-       ! call EDCs which can be evaluated prior to running the model
-       call EDC1_CROP(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
-       ! next need to run the model itself
-       call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                             ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                             ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft   &
-                             ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                             ,DATAin%nofluxes,DATAin%M_GPP                &
-                             ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
-                             ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
-                             ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
+    ! call EDCs which can be evaluated prior to running the model
+    call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
-        ! assess post running EDCs
-        call EDC2_CROP(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                      ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                      ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-
-    else
-
-        ! call EDCs which can be evaluated prior to running the model
-        call EDC1_GSI(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
-
-        ! next need to run the model itself
-        call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+    ! next need to run the model itself
+    call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                        ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
                        ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
                        ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
                        ,DATAin%M_GPP)
 
-        ! assess post running EDCs
-        call EDC2_GSI(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                      ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                      ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-
-    end if ! crop or not if
+    ! assess post running EDCs
+    call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+                  ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                  ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                  ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
     ! calculate the likelihood
     tot_exp = sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))
@@ -241,8 +214,7 @@ module model_likelihood_module
   !
   subroutine sub_model_likelihood(PARS,ML_obs_out,ML_prior_out)
     use MCMCOPT, only:  PI
-    use CARBON_MODEL_MOD, only: carbon_model
-    use CARBON_MODEL_CROP_MOD, only: carbon_model_crop
+    use CARBON_MODEL_MOD, only: carbon_mode
     use cardamom_structures, only: DATAin
 
     ! this subroutine is responsible for running the model,
@@ -276,7 +248,7 @@ module model_likelihood_module
            call EDC1_CROP(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
         else
            ! call EDCs which can be evaluated prior to running the model
-           call EDC1_GSI(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+           call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
         endif ! crop choice
 
         ! update the likelihood score based on EDCs driving total rejection
@@ -324,7 +296,7 @@ module model_likelihood_module
         else ! PFT == 1
 
             ! check edc2
-            call EDC2_GSI(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+            call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                          ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
                          ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                          ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
@@ -533,7 +505,7 @@ module model_likelihood_module
                       ,meantemp,EDC2)
 
     use cardamom_structures, only: DATAin
-    use CARBON_MODEL_CROP_MOD, only: resp_rate_temp_coeff,ts_length
+
 
     ! the second of two subroutines for assessing current parameters for passing
     ! realism tests for crop ecosystems
@@ -685,7 +657,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine EDC1_GSI(PARS, npars, meantemp, meanrad, EDC1)
+  subroutine assess_EDC1(PARS, npars, meantemp, meanrad, EDC1)
 
     use cardamom_structures, only: DATAin
     use carbon_model_mod, only: opt_max_scaling, minlwp_default
@@ -826,11 +798,11 @@ module model_likelihood_module
     ! --------------------------------------------------------------------
     ! could always add more / remove some
 
-  end subroutine EDC1_GSI
+  end subroutine assess_EDC1
   !
   !------------------------------------------------------------------
   !
-  subroutine EDC2_GSI(npars,nomet,nofluxes,nopools,nodays,deltat &
+  subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodays,deltat &
                      ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
                      ,meantemp,EDC2)
 
@@ -1536,7 +1508,7 @@ module model_likelihood_module
 
     end if ! min pool assessment
 
-  end subroutine EDC2_GSI
+  end subroutine assess_EDC2
   !
   !------------------------------------------------------------------
   !
@@ -1736,7 +1708,6 @@ module model_likelihood_module
   subroutine model_likelihood(PARS,ML_obs_out,ML_prior_out)
     use MCMCOPT, only:  PI
     use CARBON_MODEL_MOD, only: carbon_model
-    use CARBON_MODEL_CROP_MOD, only: carbon_model_crop
     use cardamom_structures, only: DATAin
 
     ! this subroutine is responsible, under normal circumstances for the running
@@ -1769,7 +1740,7 @@ module model_likelihood_module
            call EDC1_CROP(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
         else
            ! call EDCs which can be evaluated prior to running the model
-           call EDC1_GSI(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+           call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
         endif ! crop choice
 
         ! update the likelihood score based on EDCs driving total rejection
@@ -1817,7 +1788,7 @@ module model_likelihood_module
         else ! PFT == 1
 
             ! check edc2
-            call EDC2_GSI(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+            call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                          ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
                          ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                          ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)

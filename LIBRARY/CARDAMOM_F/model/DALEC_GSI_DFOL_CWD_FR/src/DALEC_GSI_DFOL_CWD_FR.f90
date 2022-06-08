@@ -97,7 +97,7 @@ module CARBON_MODEL_MOD
            ,dayl_hours_fraction &
            ,Rg_from_labile            &
            ,harvest_residue_to_litter &
-           ,harvest_residue_to_litwood&
+           ,harvest_residue_to_woodlitter&
            ,harvest_residue_to_som    &
            ,harvest_extracted_litter      &
            ,harvest_extracted_woodlitter  &
@@ -463,7 +463,9 @@ contains
                                      ,rootcr_frac_res   &
                                      ,stem_frac_res     &
                                      ,Crootcr_part      &
-                                     ,soil_loss_frac
+                                     ,soil_loss_frac    &
+                                     ,roots_frac_removal&
+                                     ,rootcr_frac_removal
 
     double precision :: labile_loss,foliar_loss      &
                        ,roots_loss,wood_loss         &
@@ -473,7 +475,9 @@ contains
                        ,labile_frac_res              &
                        ,Cstem,Crootcr,stem_residue   &
                        ,coarse_root_residue          &
-                       ,soil_loss_with_roots
+                       ,soil_loss_with_roots         &
+                       ,rootcr_loss,stem_loss        &
+                       ,labile_frac_removal
 
     ! variables for phenology model update / adjustments
     double precision :: C_invest, &
@@ -821,14 +825,14 @@ contains
     harvest_extracted_woodlitter = 0d0
     ! Reset fire loss to litter
     fire_litter_labile = 0d0 ; fire_litter_foliar = 0d0 ; fire_litter_roots = 0d0
-    fire_litter_wood = 0d0   ; fire_litter_litter = 0d0 ; fire_litter_woodlitter = 0d0
+    fire_litter_wood = 0d0   ; fire_litter_litter = 0d0 ; fire_litter_litwood = 0d0
     fire_litter_som = 0d0
     ! Reset fire loss to combustion and emissions
     fire_emiss_labile = 0d0 ; fire_emiss_foliar = 0d0 ; fire_emiss_roots = 0d0
-    fire_emiss_wood = 0d0   ; fire_emiss_litter = 0d0 ; fire_emiss_woodlitter = 0d0
+    fire_emiss_wood = 0d0   ; fire_emiss_litter = 0d0 ; fire_emiss_litwood = 0d0
     fire_emiss_som = 0d0
     ! Reset fire residue
-    fire_residue_to_litter = 0d0 ; fire_residue_to_woodlitter = 0d0 ; fire_residue_to_som = 0d0
+    fire_residue_to_litter = 0d0 ; fire_residue_to_litwood = 0d0 ; fire_residue_to_som = 0d0
 
     ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
     if (.not.allocated(deltat_1)) then
