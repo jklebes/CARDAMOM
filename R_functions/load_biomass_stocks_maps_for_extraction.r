@@ -583,7 +583,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         biomass_gCm2 = biomass_gCm2 + (0.489 * biomass_gCm2 ** 0.89)
         biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 + (0.489 * biomass_uncertainty_gCm2 ** 0.89)
         # Now back to desired units gC/m2
-        biomass_gC = biomass_gCm2 * 0.48 * 1e2
+        biomass_gCm2 = biomass_gCm2 * 0.48 * 1e2
         biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 * 0.48 * 1e2
 
         if (done_lat) {
@@ -676,7 +676,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         biomass_gCm2 = biomass_gCm2 + (0.489 * biomass_gCm2 ** 0.89)
         biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 + (0.489 * biomass_uncertainty_gCm2 ** 0.89)
         # Now back to desired units gC/m2
-        biomass_gC = biomass_gCm2 * 0.48 * 1e2
+        biomass_gCm2 = biomass_gCm2 * 0.48 * 1e2
         biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 * 0.48 * 1e2
 
        if (done_lat) {
