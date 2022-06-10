@@ -29,7 +29,6 @@ public :: CARBON_MODEL     &
          ,soil_frac_clay   &
          ,soil_frac_sand   &
          ,nos_soil_layers  &
-         ,extracted_C      &
          ,CiCa_time        &
          ,dim_1,dim_2      &
          ,nos_trees        &
@@ -42,7 +41,7 @@ public :: CARBON_MODEL     &
          ,bestvar
 
 ! Biomass removal (e.g. due to forest harvest)
-double precision, allocatable, dimension(:) :: extracted_C, CiCa_time
+double precision, allocatable, dimension(:) :: CiCa_time
 
 ! Variables needed incase of using random forest functions.
 ! None are currently implemented but variables remain for legacy reasons
@@ -377,6 +376,7 @@ contains
         ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
         ! removal which is imposed directly on these pools. These fractions vary
         ! the assumption that the fine and coarse roots are mechanically removed.
+        ! NOTE: this scenario is consistent with JPL default biomass removal model
         ! 1 = all removed, 0 = all remains.
         roots_frac_removal(4)  = 1d0
         rootcr_frac_removal(4) = 1d0

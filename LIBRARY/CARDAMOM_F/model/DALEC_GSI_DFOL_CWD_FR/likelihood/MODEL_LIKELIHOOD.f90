@@ -501,7 +501,7 @@ module model_likelihood_module
                         ,meantemp,EDC2)
 
     use cardamom_structures, only: DATAin
-    use CARBON_MODEL_MOD, only: Rg_from_labile,            &
+    use CARBON_MODEL_MOD, only: Rg_from_labile, wSWP_time,    &
                                 harvest_residue_to_litter,    &
                                 harvest_residue_to_som,       &
                                 harvest_residue_to_woodlitter,&
@@ -516,22 +516,22 @@ module model_likelihood_module
                                 harvest_residue_foliar,       &
                                 harvest_residue_roots,        &
                                 harvest_residue_wood,         &
-                                fire_emiss_labile,          &
-                                fire_emiss_foliar,          &
-                                fire_emiss_roots,           &
-                                fire_emiss_wood,            &
-                                fire_emiss_litter,          &
-                                fire_emiss_litwood,         &
-                                fire_emiss_som,             &
-                                fire_litter_labile,          &
-                                fire_litter_foliar,          &
-                                fire_litter_roots,           &
-                                fire_litter_wood,            &
-                                fire_litter_litter,          &
-                                fire_litter_litwood,         &
-                                fire_litter_som,             &
-                                fire_residue_to_litter,    &
-                                fire_residue_to_litwood,   &
+                                fire_emiss_labile,            &
+                                fire_emiss_foliar,            &
+                                fire_emiss_roots,             &
+                                fire_emiss_wood,              &
+                                fire_emiss_litter,            &
+                                fire_emiss_woodlitter,        &
+                                fire_emiss_som,               &
+                                fire_litter_labile,           &
+                                fire_litter_foliar,           &
+                                fire_litter_roots,            &
+                                fire_litter_wood,             &
+                                fire_litter_litter,           &
+                                fire_litter_woodlitter,       &
+                                fire_litter_som,              &
+                                fire_residue_to_litter,       &
+                                fire_residue_to_woodlitter,   &
                                 fire_residue_to_som
 
     ! Determines whether the dynamical contraints for the search of the initial
@@ -562,42 +562,40 @@ module model_likelihood_module
 
     ! declare local variables
     logical :: found
-    integer :: n, DIAG, no_years, y, PEDC, nn, nnn, num_EDC, i, io_start, io_finish, &
+    integer :: y, n, DIAG, no_years, nn, nnn, num_EDC, i, io_start, io_finish, &
                steps_per_year, steps_per_month
-    double precision :: mean_pools(nopools), meangpp, infi, &
-                        sumgpp, sumnpp, temp_response,hold, &
-                        init_dyn_window, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, Rs, dble_nodays, &
+    double precision :: mean_pools(nopools), meangpp, sumgpp, sumnpp, &
+                        tmp, tmp1, tmp2, tmp3, tmp4, tmp5, temp_response, &
+                        hold, infi, Rs, dble_nodays, &
                         mean_step_size
-    double precision, dimension(nodays) :: mean_ratio, resid_fol,resid_lab
+    double precision, dimension(nodays) :: mean_ratio, resid_fol, resid_lab
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools
     integer, dimension(nodays) :: hak ! variable to determine number of NaN in foliar residence time calculation
-    double precision, dimension(:), allocatable :: mean_annual_pools,tmp
-    double precision :: max_wood    & !
-                       ,in_out_fol, in_out_lab, in_out_lit, in_out_litwood, in_out_som, in_out_root, in_out_wood &
-                       ,SSwood, SSlitwood, SSsom &
+    double precision :: SSwood, SSwoodlitter, SSsom &
+                       ,in_out_fol, in_out_lab, in_out_lit, in_out_woodlitter, in_out_som, in_out_root, in_out_wood &
                        ,in_lab, out_lab  &
                        ,in_fol, out_fol  &
                        ,in_root, out_root &
                        ,in_wood, out_wood &
                        ,in_lit, out_lit  &
-                       ,in_litwood, out_litwood  &
+                       ,in_woodlitter, out_woodlitter  &
                        ,in_som, out_som  &
                        ,in_out_lab_yr1  &
                        ,in_out_fol_yr1  &
                        ,in_out_root_yr1 &
                        ,in_out_wood_yr1 &
                        ,in_out_lit_yr1  &
-                       ,in_out_litwood_yr1  &
+                       ,in_out_woodlitter_yr1  &
                        ,in_out_som_yr1  &
                        ,in_out_lab_yr2  &
                        ,in_out_fol_yr2  &
                        ,in_out_root_yr2 &
                        ,in_out_wood_yr2 &
                        ,in_out_lit_yr2  &
-                       ,in_out_litwood_yr2  &
+                       ,in_out_woodlitter_yr2  &
                        ,in_out_som_yr2  &
-                       ,torfol          & ! yearly average turnover
-                       ,torlab          & !
+                       ,torfol      & ! yearly average turnover
+                       ,torlab      & !
                        ,sumlab_yr1      &
                        ,sumfol_yr1      &
                        ,sumroot_yr1     &
@@ -611,7 +609,7 @@ module model_likelihood_module
                        ,sumfol      &
                        ,sumroot     &
                        ,sumwood     &
-                       ,sumlitwood  &
+                       ,sumwoodlitter  &
                        ,sumlit      &
                        ,sumsom      &
                        ,fNPP        & ! fraction of NPP to foliage
@@ -619,10 +617,7 @@ module model_likelihood_module
                        ,wNPP        & ! fraction of NPP to wood
                        ,fauto       & ! fraction of GPP to autotrophic respiration
                        ,ffol        & ! fraction of GPP to foliage
-                       ,flab        & ! fraction of GPP to labile pool
-                       ,froot       & ! fraction of GPP to root
-                       ,fwood       & ! fraction of GPP to wood
-                       ,delta_gsi
+                       ,froot         ! fraction of GPP to root
 
     ! Steady State Attractor:
     ! Log ratio difference between inputs and outputs of the system.
@@ -632,7 +627,7 @@ module model_likelihood_module
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                    etol = 0.30d0 !0.10d0 !0.05d0
+                                    etol = 0.20d0 !0.10d0 !0.05d0
 
     ! initial value
     infi = 0d0 ; dble_nodays = dble(nodays)
@@ -687,7 +682,7 @@ module model_likelihood_module
     ! calculate and update / adjust timing variables
     !!!!!!!!!!!!
 
-    ! number of years in analysis (0.002737851 = 365.25**-1)
+    ! number of years in analysis, 0.002737851 = 1/365.25
     no_years = nint(sum(deltat)*0.002737851d0)
     ! number of time steps per year
     steps_per_year = nint(dble_nodays/dble(no_years))
@@ -706,7 +701,7 @@ module model_likelihood_module
     ! Estimate mean January pool sizes for dynamics constraints
     !!!!!!!!!!!!
 
-    ! number of time steps per month (1/12 = 0.08333333)
+    ! number of time steps per month, 1/12 = 0.08333333
     steps_per_month = ceiling(dble(steps_per_year) * 0.08333333d0)
 
     ! Determine the mean January pool sizes
@@ -725,7 +720,6 @@ module model_likelihood_module
     !!!!!!!!!!!!
 
     ! calculate sum fluxes
-    ! NOTE the units are gC/m2/day
     sumgpp = sum(M_FLUXES(:,1))
     sumrauto = sum(M_FLUXES(:,3))
     sumlab = sum(M_FLUXES(:,5))
@@ -760,18 +754,21 @@ module model_likelihood_module
     ! GPP allocation to foliage and labile cannot be 5 orders of magnitude
     ! difference from GPP allocation to roots
     if ((EDC2 == 1 .or. DIAG == 1) .and. (ffol > (5d0*froot) .or. (ffol*5d0) < froot)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
     endif
-
+    ! Restrict difference between root and foliar turnover to less than 5 fold
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. (torfol > pars(7)*5d0 .or. torfol*5d0 < pars(7) )) then
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
+!    endif
     ! Restrict maximum leaf lifespan
     ! 0.0003422313 = (8 * 365.25)**-1
     if ((EDC2 == 1 .or. DIAG == 1) .and. torfol < 0.0003422313d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
     endif
 
     ! Average turnover of foliage should not be less than wood (pars(6))
     if ((EDC2 == 1 .or. DIAG == 1) .and. torfol < pars(6) ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
     endif
 
     ! In contrast to the leaf longevity labile carbon stocks can be quite long
@@ -781,7 +778,7 @@ module model_likelihood_module
     !       11 years = 0.0002488955 day-1
     !        6 years = 0.0004563085 day-1
     if ((EDC2 == 1 .or. DIAG == 1) .and. torlab < 0.0002488955d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
     endif
 
     ! Finally we would not expect that the mean labile stock is greater than
@@ -794,10 +791,10 @@ module model_likelihood_module
     ! Richardson et al (2013), New Phytologist, Clab 2.24 +/- 0.44 % in temperate (max = 4.2 %)
     if (EDC2 == 1 .or. DIAG == 1) then
         if ((mean_pools(1) / (mean_pools(3) + mean_pools(4))) > 0.125d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
         endif
         if (maxval(M_POOLS(:,1) / (M_POOLS(:,3) + M_POOLS(:,4))) > 0.25d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
         endif
     endif ! EDC2 == 1 .or. DIAG == 1
 
@@ -827,16 +824,15 @@ module model_likelihood_module
 
     ! Limits on foliar allocation
     if ((EDC2 == 1 .or. DIAG == 1) .and. fNPP < 0.05d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
     endif
     ! Limits on fine root allocation
     if ((EDC2 == 1 .or. DIAG == 1) .and. rNPP < 0.05d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
     endif
-
     ! foliar restrictions
 !    if ((EDC2 == 1 .or. DIAG == 1) .and. (fNPP < 0.1d0 .or. fNPP > 0.5d0)) then
-!        EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
 !    endif
     ! for both roots and wood the NPP > 0.85 is added to prevent large labile
     ! pools being used to support growth that photosynthesis cannot provide over
@@ -848,13 +844,13 @@ module model_likelihood_module
 !        EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
 !    endif
     ! NOTE that within the current framework NPP is split between fol, root, wood and that remaining in labile.
-    ! Thus fail conditions fNPP + rNPP + wNPP > 1.0 .or. fNPP + rNPP + wNPP < 0.95, i.e. abs(lNPP) cannot be > 0.05
-!    tmp1 = 1d0 - rNPP - wNPP - fNPP
-!    if ((EDC2 == 1 .or. DIAG == 1) .and. abs(tmp1) > 0.05d0) then
+    ! Thus fail conditions fNPP + rNPP + wNPP > 1.0 .or. fNPP + rNPP + wNPP < 0.95, i.e. sb(lNPP) cannot be > 0.05
+!    tmp = 1d0 - rNPP - wNPP - fNPP
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. abs(tmp) > 0.05d0) then
 !        EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
 !    endif
 
-!    ! Ra:GPP ratio is unlikely to be outside of 0.2 > Ra:GPP < 0.80
+    ! Ra:GPP ratio is unlikely to be outside of 0.2 > Ra:GPP < 0.80
 !    if ((EDC2 == 1 .or. DIAG == 1) .and. (fauto > 0.80d0 .or. fauto < 0.20d0) ) then
 !        EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
 !    end if
@@ -878,13 +874,10 @@ module model_likelihood_module
         sumwood_yr1 = sum(M_FLUXES(1:steps_per_year,7)) ; sumwood_yr2 = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),7))
 
         ! Determine the input / output ratio
-        ! Three numbrs are calculated:
-        ! in/out for first year
-        ! in/out for second year
-        ! in/out for second until final year
 
         ! Clabile
-!        in_out_lab     = sumlab / sum(M_FLUXES(:,8)+Rg_from_labile+fire_loss_labile+harvest_loss_labile)
+!        in_out_lab     = sumlab &
+!                       / sum(M_FLUXES(:,8)+Rg_from_labile+fire_emiss_labile+fire_litter_labile+harvest_loss_labile)
         in_lab         = sum(M_FLUXES(io_start:io_finish,5))
         out_lab        = sum(M_FLUXES(io_start:io_finish,8) &
                             +Rg_from_labile(io_start:io_finish) &
@@ -907,7 +900,7 @@ module model_likelihood_module
                             +harvest_extracted_labile((steps_per_year+1):(steps_per_year*2)) &
                             +harvest_residue_labile((steps_per_year+1):(steps_per_year*2)))
         ! Cfoliage
-!        in_out_fol  = sumfol  / sum(M_FLUXES(:,10)+fire_loss_foliar+harvest_loss_foliar)
+!        in_out_fol  = sumfol  / sum(M_FLUXES(:,10)+fire_emiss_foliar+fire_litter_foliar+harvest_loss_foliar)
         in_fol      = sum(M_FLUXES(io_start:io_finish,8))
         out_fol     = sum(M_FLUXES(io_start:io_finish,10) &
                          +fire_emiss_foliar(io_start:io_finish) &
@@ -925,7 +918,7 @@ module model_likelihood_module
                                            +harvest_extracted_foliar((steps_per_year+1):(steps_per_year*2)) &
                                            +harvest_residue_foliar((steps_per_year+1):(steps_per_year*2)))
         ! Croot
-!        in_out_root = sumroot / sum(M_FLUXES(:,12)+fire_loss_roots+harvest_loss_roots)
+!        in_out_root = sumroot / sum(M_FLUXES(:,12)+fire_emiss_roots+fire_litter_roots+harvest_loss_roots)
         in_root     = sum(M_FLUXES(io_start:io_finish,6))
         out_root    = sum(M_FLUXES(io_start:io_finish,12) &
                          +fire_emiss_roots(io_start:io_finish) &
@@ -943,7 +936,7 @@ module model_likelihood_module
                                            +harvest_extracted_roots((steps_per_year+1):(steps_per_year*2)) &
                                            +harvest_residue_roots((steps_per_year+1):(steps_per_year*2)))
         ! Cwood
-!        in_out_wood = sumwood / sum(M_FLUXES(:,11)+fire_loss_wood+harvest_loss_wood)
+!        in_out_wood = sumwood / sum(M_FLUXES(:,11)+fire_emiss_wood+fire_litter_wood+harvest_loss_wood)
         in_wood     = sum(M_FLUXES(io_start:io_finish,7))
         out_wood    = sum(M_FLUXES(io_start:io_finish,11) &
                          +fire_emiss_wood(io_start:io_finish) &
@@ -965,7 +958,7 @@ module model_likelihood_module
 !                        +M_FLUXES(:,12) &
 !                        +fire_residue_to_litter &
 !                        +harvest_residue_to_litter) &
-!                   / sum(M_FLUXES(:,13)+M_FLUXES(:,15)+fire_loss_litter+harvest_loss_litter)
+!                   / sum(M_FLUXES(:,13)+M_FLUXES(:,15)+fire_emiss_litter+fire_litter_litter+harvest_loss_litter)
         in_lit     = sum(M_FLUXES(io_start:io_finish,10) &
                         +M_FLUXES(io_start:io_finish,12) &
                         +fire_residue_to_litter(io_start:io_finish) &
@@ -993,7 +986,7 @@ module model_likelihood_module
                             +harvest_extracted_litter((steps_per_year+1):(steps_per_year*2)))
         ! Csom
 !        in_out_som = sum(M_FLUXES(:,15)+M_FLUXES(:,20)+fire_residue_to_som+harvest_residue_to_som) &
-!                   / sum(M_FLUXES(:,14)+fire_loss_som+harvest_loss_som)
+!                   / sum(M_FLUXES(:,14)+fire_emiss_som+fire_litter_som+harvest_loss_som)
         in_som     = sum(M_FLUXES(io_start:io_finish,15)+M_FLUXES(io_start:io_finish,20) &
                         +fire_residue_to_som(io_start:io_finish)+harvest_residue_to_som(io_start:io_finish))
         out_som    = sum(M_FLUXES(io_start:io_finish,14) &
@@ -1016,32 +1009,32 @@ module model_likelihood_module
                             +fire_emiss_som((steps_per_year+1):(steps_per_year*2)) &
                             +fire_litter_som((steps_per_year+1):(steps_per_year*2)) &
                             +harvest_extracted_som((steps_per_year+1):(steps_per_year*2)))
-        ! Clitwood
-!        in_out_litwood = sum(M_FLUXES(:,11)+fire_residue_to_litwood+harvest_residue_to_woodlitter) &
-!                       / sum(M_FLUXES(:,20)+M_FLUXES(:,4)+fire_loss_litwood+harvest_loss_litwood)
-        in_litwood     = sum(M_FLUXES(io_start:io_finish,11) &
-                            +fire_residue_to_litwood(io_start:io_finish) &
+        ! Cwoodlitter
+!        in_out_woodlitter = sum(M_FLUXES(:,11)+fire_residue_to_woodlitter+harvest_residue_to_woodlitter) &
+!                       / sum(M_FLUXES(:,20)+M_FLUXES(:,4)+fire_emiss_woodlitter+fire_litter_woodlitter+harvest_loss_woodlitter)
+        in_woodlitter     = sum(M_FLUXES(io_start:io_finish,11) &
+                            +fire_residue_to_woodlitter(io_start:io_finish) &
                             +harvest_residue_to_woodlitter(io_start:io_finish))
-        out_litwood    = sum(M_FLUXES(io_start:io_finish,20) &
+        out_woodlitter    = sum(M_FLUXES(io_start:io_finish,20) &
                             +M_FLUXES(io_start:io_finish,4) &
-                            +fire_emiss_litwood(io_start:io_finish) &
-                            +fire_litter_litwood(io_start:io_finish) &
+                            +fire_emiss_woodlitter(io_start:io_finish) &
+                            +fire_litter_woodlitter(io_start:io_finish) &
                             +harvest_extracted_woodlitter(io_start:io_finish))
-        in_out_litwood_yr1 = sum(M_FLUXES(1:steps_per_year,11) &
-                                +fire_residue_to_litwood(1:steps_per_year) &
+        in_out_woodlitter_yr1 = sum(M_FLUXES(1:steps_per_year,11) &
+                                +fire_residue_to_woodlitter(1:steps_per_year) &
                                 +harvest_residue_to_woodlitter(1:steps_per_year)) &
                            / sum(M_FLUXES(1:steps_per_year,20) &
                                 +M_FLUXES(1:steps_per_year,4) &
-                                +fire_emiss_litwood(1:steps_per_year) &
-                                +fire_litter_litwood(1:steps_per_year) &
+                                +fire_emiss_woodlitter(1:steps_per_year) &
+                                +fire_litter_woodlitter(1:steps_per_year) &
                                 +harvest_extracted_woodlitter(1:steps_per_year))
-        in_out_litwood_yr2 = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),11) &
-                                +fire_residue_to_litwood((steps_per_year+1):(steps_per_year*2)) &
+        in_out_woodlitter_yr2 = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),11) &
+                                +fire_residue_to_woodlitter((steps_per_year+1):(steps_per_year*2)) &
                                 +harvest_residue_to_woodlitter((steps_per_year+1):(steps_per_year*2))) &
                            / sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),20) &
                                 +M_FLUXES((steps_per_year+1):(steps_per_year*2),4) &
-                                +fire_emiss_litwood((steps_per_year+1):(steps_per_year*2)) &
-                                +fire_litter_litwood((steps_per_year+1):(steps_per_year*2)) &
+                                +fire_emiss_woodlitter((steps_per_year+1):(steps_per_year*2)) &
+                                +fire_litter_woodlitter((steps_per_year+1):(steps_per_year*2)) &
                                 +harvest_extracted_woodlitter((steps_per_year+1):(steps_per_year*2)))
 
         ! Assess pool dynamics relative to their own steady state attractors
@@ -1057,7 +1050,7 @@ module model_likelihood_module
 !        if (abs(Rs-in_out_lab) > 0.1d0 .or. abs(log(in_out_lab)) > EQF10) then
         if (abs(log(in_out_lab_yr1)) - abs(log(in_out_lab_yr2)) > etol .or. &
             abs(log(in_lab/out_lab)) > EQF2) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
         end if
 
         ! Foliage
@@ -1065,7 +1058,7 @@ module model_likelihood_module
 !        if (abs(Rs-in_out_fol) > 0.1d0 .or. abs(log(in_out_fol)) > EQF10) then
         if (abs(log(in_out_fol_yr1)) - abs(log(in_out_fol_yr2)) > etol .or. &
             abs(log(in_fol/out_fol)) > EQF2) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(23) = 0
         end if
 
         ! Fine roots
@@ -1073,71 +1066,71 @@ module model_likelihood_module
 !        if (abs(Rs-in_out_root) > 0.1d0 .or. abs(log(in_out_root)) > EQF10) then
         if (abs(log(in_out_root_yr1)) - abs(log(in_out_root_yr2)) > etol .or. &
             abs(log(in_root/out_root)) > EQF2) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(24) = 0
         end if
 
         ! Wood
 !        Rs = in_out_wood * (jan_mean_pools(4) / jan_first_pools(4))
 !        if (abs(Rs-in_out_wood) > 0.1d0 .or. abs(log(in_out_wood)) > EQF10) then
         if (abs(log(in_out_wood_yr1)) - abs(log(in_out_wood_yr2)) > etol .or. &
-            abs(log(in_wood/out_wood)) > EQF5) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(24) = 0
+            abs(log(in_wood/out_wood)) > EQF2) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(25) = 0
         end if
 
         ! Foliage and root litter
 !        Rs = in_out_lit * (jan_mean_pools(5) / jan_first_pools(5))
 !        if (abs(Rs-in_out_lit) > 0.1d0 .or. abs(log(in_out_lit)) > EQF10) then
         if (abs(log(in_out_lit_yr1)) - abs(log(in_out_lit_yr2)) > etol .or. &
-            abs(log(in_lit/out_lit)) > EQF5) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(25) = 0
+            abs(log(in_lit/out_lit)) > EQF2) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(26) = 0
         end if
 
         ! Soil organic matter
 !        Rs = in_out_som * (jan_mean_pools(6) / jan_first_pools(6))
 !        if (abs(Rs-in_out_som) > 0.1d0 .or. abs(log(in_out_som)) > EQF10) then
         if (abs(log(in_out_som_yr1)) - abs(log(in_out_som_yr2)) > etol .or. &
-            abs(log(in_som/out_som)) > EQF5) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(26) = 0
+            abs(log(in_som/out_som)) > EQF2) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(27) = 0
         end if
 
         ! Coarse+fine woody debris
-!        Rs = in_out_litwood * (jan_mean_pools(7) / jan_first_pools(7))
-!        if (abs(Rs-in_out_litwood) > 0.1d0 .or. abs(log(in_out_litwood)) > EQF10) then
-        if (abs(log(in_out_litwood_yr1)) - abs(log(in_out_litwood_yr2)) > etol .or. &
-            abs(log(in_litwood/out_litwood)) > EQF5) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(27) = 0
+!        Rs = in_out_woodlitter * (jan_mean_pools(7) / jan_first_pools(7))
+!        if (abs(Rs-in_out_woodlitter) > 0.1d0 .or. abs(log(in_out_woodlitter)) > EQF10) then
+        if (abs(log(in_out_woodlitter_yr1)) - abs(log(in_out_woodlitter_yr2)) > etol .or. &
+            abs(log(in_woodlitter/out_woodlitter)) > EQF2) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(28) = 0
         end if
 
         ! Determine the steady state estimate of wood (gC/m2)
         SSwood = (in_wood/out_wood) * jan_mean_pools(4)
-        ! Based on the wood SS (gC/m2) and the sum fractional loss per day determine the mean input to litwood...
-        SSlitwood = SSwood * (out_wood/jan_mean_pools(4))
+        ! Based on the wood SS (gC/m2) and the sum fractional loss per day determine the mean input to woodlitter...
+        SSwoodlitter = SSwood * (out_wood/jan_mean_pools(4))
         ! ...then estimate the actual steady state wood litter
-        SSlitwood = (SSlitwood/out_litwood) * jan_mean_pools(7)
+        SSwoodlitter = (SSwoodlitter/out_woodlitter) * jan_mean_pools(7)
         ! Steady state of som requires accounting for foliar, fine root and wood litter inputs
-        ! and adjusting for the litwood input already included
+        ! and adjusting for the woodlitter input already included
         SSsom = in_som - sum(M_FLUXES(io_start:io_finish,20))
-        ! Now repeat the process as done for litwood to estimate the inputs,
-        ! adjusting for the fraction of litwood output which is respired not decomposed
-        SSsom = SSsom + (SSlitwood * (out_litwood/jan_mean_pools(7)) * pars(1))
+        ! Now repeat the process as done for woodlitter to estimate the inputs,
+        ! adjusting for the fraction of woodlitter output which is respired not decomposed
+        SSsom = SSsom + (SSwoodlitter * (out_woodlitter/jan_mean_pools(7)) * pars(1))
         ! Accounting for losses and scaling to SSsom
         SSsom = (SSsom / out_som) * jan_mean_pools(6)
         ! It is reasonable to assume that the steady state for woody litter
         ! should be ~ less than half that of woody biomass...
-        if (SSlitwood / SSwood > 0.60d0  ) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(28) = 0
+        if (SSwoodlitter / SSwood > 0.60d0  ) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(29) = 0
         end if
         ! ... and less than soil organic matter
-        if ( SSsom < SSlitwood ) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(29) = 0
+        if ( SSsom < SSwoodlitter ) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(30) = 0
         end if
         ! It is reasonable to assume that the steady state for woody litter
 !        ! should be ~ less than half that of woody biomass...
-!        if ((in_out_litwood * jan_mean_pools(7)) / (in_out_wood * jan_mean_pools(4)) > 0.60d0  ) then
+!        if ((in_out_woodlitter * jan_mean_pools(7)) / (in_out_wood * jan_mean_pools(4)) > 0.60d0  ) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(28) = 0
 !        end if
 !        ! ... and less than soil organic matter
-!        if ( (in_out_som * jan_mean_pools(6)) < (in_out_litwood * jan_mean_pools(7)) ) then
+!        if ( (in_out_som * jan_mean_pools(6)) < (in_out_woodlitter * jan_mean_pools(7)) ) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(29) = 0
 !        end if
 !        if (pars(37) / (in_out_wood * jan_mean_pools(4)) > 0.60d0  ) then
@@ -1149,6 +1142,11 @@ module model_likelihood_module
     !
     ! EDCs done, below are additional fault detection conditions
     !
+
+    ! The maximum value for GPP must be greater than 0, 0.001 to guard against precision values
+    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_GPP) < 0.001d0) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(31) = 0
+    end if
 
     ! additional faults can be stored in locations > 55 of the PASSFAIL array
 

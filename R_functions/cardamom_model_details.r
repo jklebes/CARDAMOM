@@ -213,7 +213,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     # Number of met parameters
     # Number of model parameters to be optimised
     nopools=array(7,dim=c(length(ctessel_pft)))
-    nopars=array(37,dim=c(length(ctessel_pft)))
+    nopars=array(43,dim=c(length(ctessel_pft)))
     nofluxes=array(25,dim=c(length(ctessel_pft)))
     if (specific_pft == "pft_specific") {nopars[which(ctessel_pft == 1)]=35 ; nofluxes[which(ctessel_pft == 1)]=21 ; nopools[which(ctessel_pft == 1)]=8}
     cardamom_model_details=list(name="DALEC_GSI_DFOL_CWD_FR",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
@@ -223,8 +223,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     # Number of met parameters
     # Number of model parameters to be optimised
     nopools=array(8,dim=c(length(ctessel_pft)))
-    nopars=array(37,dim=c(length(ctessel_pft)))
-    nofluxes=array(32,dim=c(length(ctessel_pft)))
+    nopars=array(38,dim=c(length(ctessel_pft)))
+    nofluxes=array(43,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC_1005",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } else if (modelname == "DALEC_1005a") {
     # information contains is

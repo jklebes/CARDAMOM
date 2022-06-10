@@ -157,7 +157,7 @@ module cardamom_io
     else if (DATAin%ID == 16) then
         ! DALEC_GSI_DFOL_CWD_FR
         DATAin%nopools = 7
-        DATAin%nopars = 37
+        DATAin%nopars = 43
         DATAin%nofluxes = 25
     else if (DATAin%ID == 17) then
         ! DALECN_GSI_BUCKET - 8 pools currently
@@ -243,12 +243,12 @@ module cardamom_io
         DATAin%nopars = 46
         DATAin%nofluxes = 25
     else if (DATAin%ID == 34) then
-        ! ID = 34 - DALEC-1005
+        ! ID = 34 - DALEC_1005
         DATAin%nopools = 8
-        DATAin%nopars = 37
-        DATAin%nofluxes = 32
+        DATAin%nopars = 38
+        DATAin%nofluxes = 43
     else if (DATAin%ID == 35) then
-        ! ID = 35 - DALEC-1005a
+        ! ID = 35 - DALEC_1005a
         DATAin%nopools = 8
         DATAin%nopars = 38
         DATAin%nofluxes = 43

@@ -177,6 +177,10 @@ module MODEL_PARAMETERS
     PI%parmin(37) = 0.01d0
     PI%parmax(37) = 0.3d0
 
+    ! Combustion completeness factor for foliage + fine root litter
+    PI%parmin(38)= 0.01d0
+    PI%parmax(38) = 0.99d0
+
     !
     ! INITIAL VALUES DECLARED HERE
     !

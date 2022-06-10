@@ -294,7 +294,7 @@ module CARBON_MODEL_MOD
                                                 root_depth_time, & ! rooting depth (m)
                                       harvest_residue_to_litter, &
                                          harvest_residue_to_som, &
-                                     harvest_residue_to_woodlitter, &
+                                  harvest_residue_to_woodlitter, &
                                        harvest_extracted_litter, &
                                    harvest_extracted_woodlitter, &
                                           harvest_extracted_som, &
@@ -311,17 +311,17 @@ module CARBON_MODEL_MOD
                                               fire_litter_roots, &
                                                fire_litter_wood, &
                                              fire_litter_litter, &
-                                            fire_litter_litwood, &
+                                         fire_litter_woodlitter, &
                                                 fire_litter_som, &
                                               fire_emiss_labile, &
                                               fire_emiss_foliar, &
                                                fire_emiss_roots, &
                                                 fire_emiss_wood, &
                                               fire_emiss_litter, &
-                                             fire_emiss_litwood, &
+                                          fire_emiss_woodlitter, &
                                                  fire_emiss_som, &
                                          fire_residue_to_litter, &
-                                        fire_residue_to_litwood, &
+                                     fire_residue_to_woodlitter, &
                                             fire_residue_to_som, &
                                       tmp_x, tmp_m, gsi_history
 
@@ -450,34 +450,31 @@ contains
     integer :: p,f,nxp,n,test,m
 
     ! local fire related variables
-    double precision :: burnt_area &
-                       ,CFF(7) = 0d0, CFF_res(4) = 0d0    & ! combusted and non-combustion fluxes
-                       ,NCFF(7) = 0d0, NCFF_res(4) = 0d0  & ! with residue and non-residue seperates
-                       ,combust_eff(7)                    & ! combustion efficiency
-                       ,rfac(7)                             ! resilience factor
+    double precision :: burnt_area           &
+                       ,combust_eff(7) & ! combustion efficiency
+                       ,rfac(7)          ! resilience factor
 
     ! local deforestation related variables
-    double precision, dimension(5) :: post_harvest_burn & ! how much burning to occur after
-                                     ,foliage_frac_res  &
-                                     ,roots_frac_res    &
-                                     ,rootcr_frac_res   &
-                                     ,stem_frac_res     &
-                                     ,Crootcr_part      &
-                                     ,soil_loss_frac    &
-                                     ,roots_frac_removal&
-                                     ,rootcr_frac_removal
+    double precision, dimension(5) :: post_harvest_burn      & ! how much burning to occur after
+                                     ,foliage_frac_res       &
+                                     ,roots_frac_res         &
+                                     ,rootcr_frac_res        &
+                                     ,stem_frac_res          &
+                                     ,roots_frac_removal     &
+                                     ,rootcr_frac_removal    &
+                                     ,Crootcr_part           &
+                                     ,soil_loss_frac
 
     double precision :: labile_loss,foliar_loss      &
                        ,roots_loss,wood_loss         &
+                       ,rootcr_loss,stem_loss        &
                        ,labile_residue,foliar_residue&
                        ,roots_residue,wood_residue   &
-                       ,wood_pellets,C_total         &
-                       ,labile_frac_res              &
+                       ,C_total,labile_frac_res      &
+                       ,labile_frac_removal        &
                        ,Cstem,Crootcr,stem_residue   &
                        ,coarse_root_residue          &
-                       ,soil_loss_with_roots         &
-                       ,rootcr_loss,stem_loss        &
-                       ,labile_frac_removal
+                       ,soil_loss_with_roots
 
     ! variables for phenology model update / adjustments
     double precision :: C_invest, &
@@ -770,6 +767,24 @@ contains
 
     end if ! disturbance ?
 
+    ! JFE added 4 May 2018 - define fire constants
+    ! Update fire parameters derived from
+    ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
+    ! Subsequently expanded by T. L. Smallman & Mat Williams (UoE, 03/09/2021)
+    ! to provide specific CC for litter and wood litter.
+    ! NOTE: changes also result in the addition of further EDCs
+
+    ! Assign proposed resilience factor
+    rfac(1:4) = pars(38)
+    rfac(5) = 0.1d0 ; rfac(6) = 0d0 ; rfac(7) = 0.1d0
+    ! Assign combustion completeness to foliage
+    combust_eff(2) = pars(39) ! foliage
+    ! Assign combustion completeness to non-photosynthetic
+    combust_eff(1) = pars(40) ; combust_eff(3) = pars(40) ; combust_eff(4) = pars(40)
+    combust_eff(6) = pars(41) ! soil
+    ! derived values for litter and wood litter
+    combust_eff(5) = pars(42) ; combust_eff(7) = pars(43)
+
     ! assigning initial conditions
     POOLS(1,1) = pars(18)
     POOLS(1,2) = pars(19)
@@ -779,7 +794,7 @@ contains
     POOLS(1,6) = pars(23)
     POOLS(1,7) = pars(37)
 
-    if (.not.allocated(harvest_residue_to_som)) then
+    if (.not.allocated(harvest_residue_to_litter)) then
         allocate(harvest_residue_to_litter(nodays),    &
                  harvest_residue_to_som(nodays),       &
                  harvest_residue_to_woodlitter(nodays),&
@@ -799,19 +814,20 @@ contains
                  fire_emiss_roots(nodays),             &
                  fire_emiss_wood(nodays),              &
                  fire_emiss_litter(nodays),            &
-                 fire_emiss_litwood(nodays),           &
+                 fire_emiss_woodlitter(nodays),        &
                  fire_emiss_som(nodays),               &
                  fire_litter_labile(nodays),           &
                  fire_litter_foliar(nodays),           &
                  fire_litter_roots(nodays),            &
                  fire_litter_wood(nodays),             &
                  fire_litter_litter(nodays),           &
-                 fire_litter_litwood(nodays),          &
+                 fire_litter_woodlitter(nodays),       &
                  fire_litter_som(nodays),              &
                  fire_residue_to_litter(nodays),       &
-                 fire_residue_to_litwood(nodays),      &
+                 fire_residue_to_woodlitter(nodays),   &
                  fire_residue_to_som(nodays))
     endif
+
     ! Reset harvest residue
     harvest_residue_to_litter = 0d0 ; harvest_residue_to_woodlitter = 0d0
     harvest_residue_to_som = 0d0
@@ -825,14 +841,14 @@ contains
     harvest_extracted_woodlitter = 0d0
     ! Reset fire loss to litter
     fire_litter_labile = 0d0 ; fire_litter_foliar = 0d0 ; fire_litter_roots = 0d0
-    fire_litter_wood = 0d0   ; fire_litter_litter = 0d0 ; fire_litter_litwood = 0d0
+    fire_litter_wood = 0d0   ; fire_litter_litter = 0d0 ; fire_litter_woodlitter = 0d0
     fire_litter_som = 0d0
     ! Reset fire loss to combustion and emissions
     fire_emiss_labile = 0d0 ; fire_emiss_foliar = 0d0 ; fire_emiss_roots = 0d0
-    fire_emiss_wood = 0d0   ; fire_emiss_litter = 0d0 ; fire_emiss_litwood = 0d0
+    fire_emiss_wood = 0d0   ; fire_emiss_litter = 0d0 ; fire_emiss_woodlitter = 0d0
     fire_emiss_som = 0d0
     ! Reset fire residue
-    fire_residue_to_litter = 0d0 ; fire_residue_to_litwood = 0d0 ; fire_residue_to_som = 0d0
+    fire_residue_to_litter = 0d0 ; fire_residue_to_woodlitter = 0d0 ; fire_residue_to_som = 0d0
 
     ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
     if (.not.allocated(deltat_1)) then
@@ -1178,14 +1194,13 @@ contains
        !!!!!!!!!!
 
        if (n == reforest_day) then
-           POOLS(n+1,1) = pars(30) ! labile
-           POOLS(n+1,2) = pars(31) ! foliar
-           POOLS(n+1,3) = pars(32) ! roots
-           POOLS(n+1,4) = pars(33) ! wood
+           POOLS(n+1,1) = pars(30)
+           POOLS(n+1,2) = pars(31)
+           POOLS(n+1,3) = pars(32)
+           POOLS(n+1,4) = pars(33)
        endif
 
        ! reset values
-       FLUXES(n,17) = 0d0 ; FLUXES(n,21) = 0d0
        harvest_management = 0 ; burnt_area = 0d0
 
        ! Does harvest activities occur?
@@ -1252,33 +1267,24 @@ contains
                ! mass balance check
                where (POOLS(n+1,1:7) < 0d0) POOLS(n+1,1:7) = 0d0
 
-               ! Create combined totals for residues to dead organic matter pools
-               harvest_residue_to_litter(n)     = labile_residue+foliar_residue+roots_residue
-               harvest_residue_to_woodlitter(n) = wood_residue
-               harvest_residue_to_som(n)        = 0d0
-               ! Determine extracted C from dead organic matter pools
-               ! In most cases these will be zeros, but allows for pre-planting experiments
-               ! where surface litter pools are removed or mechanical extraction from soil occurs.
-               harvest_extracted_woodlitter(n)  = 0d0
-               harvest_extracted_litter(n)      = 0d0
-               harvest_extracted_som(n)         = soil_loss_with_roots
-               ! Convert harvest related extractions to daily rate for output
-               harvest_extracted_labile(n)     = labile_loss * deltat_1(n)
-               harvest_extracted_foliar(n)     = foliar_loss * deltat_1(n)
-               harvest_extracted_roots(n)      = roots_loss * deltat_1(n)
-               harvest_extracted_wood(n)       = wood_loss * deltat_1(n)
-               harvest_extracted_litter(n)     = harvest_extracted_litter(n) * deltat_1(n)
-               harvest_extracted_woodlitter(n) = harvest_extracted_woodlitter(n) * deltat_1(n)
-               harvest_extracted_som(n)        = harvest_extracted_som(n) * deltat_1(n)
+               ! Convert total losses into extracted C by accounting for the residues.
+               ! Conver these totals into to daily rate for output
+               harvest_extracted_labile(n)     = (labile_loss-labile_residue) * deltat_1(n)
+               harvest_extracted_foliar(n)     = (foliar_loss-foliar_residue) * deltat_1(n)
+               harvest_extracted_roots(n)      = (roots_loss-roots_residue) * deltat_1(n)
+               harvest_extracted_wood(n)       = (wood_loss-wood_residue) * deltat_1(n)
+               harvest_extracted_litter(n)     = 0d0
+               harvest_extracted_woodlitter(n) = 0d0
+               harvest_extracted_som(n)        = soil_loss_with_roots * deltat_1(n)
                ! Convert harvest related residue generations to daily rate for output
                harvest_residue_labile(n) = labile_residue * deltat_1(n)
                harvest_residue_foliar(n) = foliar_residue * deltat_1(n)
                harvest_residue_roots(n)  = roots_residue * deltat_1(n)
                harvest_residue_wood(n)   = wood_residue * deltat_1(n)
                ! Convert the combined residue to dead organic matter pools
-               harvest_residue_to_litter(n)     = harvest_residue_to_litter(n) * deltat_1(n)
-               harvest_residue_to_woodlitter(n) = harvest_residue_to_woodlitter(n) * deltat_1(n)
-               harvest_residue_to_som(n)        = harvest_residue_to_som(n) * deltat_1(n)
+               harvest_residue_to_litter(n)     = (labile_residue+foliar_residue+roots_residue) * deltat_1(n)
+               harvest_residue_to_woodlitter(n) = wood_residue * deltat_1(n)
+               harvest_residue_to_som(n)        = 0d0
 
                ! Total C extraction, this includes any som or litter clearing
                FLUXES(n,21) = harvest_extracted_labile(n) &
@@ -1290,10 +1296,6 @@ contains
                             + harvest_extracted_som(n)
 
            end if ! C_total > 0d0
-
-           ! Total carbon loss from the system
-           C_total = (labile_residue+foliar_residue+roots_residue+wood_residue) &
-                   - (labile_loss+foliar_loss+roots_loss+wood_loss+soil_loss_with_roots)
 
            ! If total clearance occured then we need to ensure some minimum
            ! values and reforestation is assumed one year forward
@@ -1334,25 +1336,25 @@ contains
                fire_emiss_wood(n) = POOLS(n+1,4)*burnt_area*combust_eff(4)*deltat_1(n) ! wood
                fire_emiss_litter(n) = POOLS(n+1,5)*burnt_area*combust_eff(5)*deltat_1(n) ! litter
                fire_emiss_som(n) = POOLS(n+1,6)*burnt_area*combust_eff(6)*deltat_1(n) ! som
-               fire_emiss_litwood(n) = POOLS(n+1,7)*burnt_area*combust_eff(7)*deltat_1(n) ! litterwood
+               fire_emiss_woodlitter(n) = POOLS(n+1,7)*burnt_area*combust_eff(7)*deltat_1(n) ! litterwood
 
                ! second calculate litter transfer fluxes in g C m-2 d-1, all pools except som
                fire_litter_labile(n) = POOLS(n+1,1)*burnt_area*(1d0-combust_eff(1))*(1d0-rfac(1))*deltat_1(n) ! labile into litter
                fire_litter_foliar(n) = POOLS(n+1,2)*burnt_area*(1d0-combust_eff(2))*(1d0-rfac(2))*deltat_1(n) ! foliar into litter
                fire_litter_roots(n) = POOLS(n+1,3)*burnt_area*(1d0-combust_eff(3))*(1d0-rfac(3))*deltat_1(n) ! roots into litter
-               fire_litter_wood(n) = POOLS(n+1,4)*burnt_area*(1d0-combust_eff(4))*(1d0-rfac(4))*deltat_1(n) ! wood into litwood
+               fire_litter_wood(n) = POOLS(n+1,4)*burnt_area*(1d0-combust_eff(4))*(1d0-rfac(4))*deltat_1(n) ! wood into woodlitter
                fire_litter_litter(n) = POOLS(n+1,5)*burnt_area*(1d0-combust_eff(5))*(1d0-rfac(5))*deltat_1(n) ! litter into som
                !fire_litter_som(n) = ! no litter generation from the som pool
-               fire_litter_litwood(n) = POOLS(n+1,7)*burnt_area*(1d0-combust_eff(7))*(1d0-rfac(7))*deltat_1(n) ! wood litter into som
+               fire_litter_woodlitter(n) = POOLS(n+1,7)*burnt_area*(1d0-combust_eff(7))*(1d0-rfac(7))*deltat_1(n) ! wood litter into som
 
                ! Fire flux (gC/m2/day)
                FLUXES(n,17) = fire_emiss_labile(n) + fire_emiss_foliar(n) + fire_emiss_roots(n) &
-                            + fire_emiss_wood(n) + fire_emiss_litter(n) + fire_emiss_litwood(n) + fire_emiss_som(n)
+                            + fire_emiss_wood(n) + fire_emiss_litter(n) + fire_emiss_woodlitter(n) + fire_emiss_som(n)
 
                ! Residue redistribution
                fire_residue_to_litter(n) = fire_litter_labile(n) + fire_litter_foliar(n) + fire_litter_roots(n)
-               fire_residue_to_som(n)    = fire_litter_litter(n) + fire_litter_litwood(n)
-               fire_residue_to_litwood(n)=  fire_litter_wood(n)
+               fire_residue_to_som(n)    = fire_litter_litter(n) + fire_litter_woodlitter(n)
+               fire_residue_to_woodlitter(n)=  fire_litter_wood(n)
 
                ! Update pools
                POOLS(n+1,1) = POOLS(n+1,1)-(fire_emiss_labile(n)+fire_litter_labile(n)) * deltat(n)
@@ -1361,7 +1363,9 @@ contains
                POOLS(n+1,4) = POOLS(n+1,4)-(fire_emiss_wood(n)+fire_litter_wood(n)) * deltat(n)
                POOLS(n+1,5) = POOLS(n+1,5)+(fire_residue_to_litter(n)-fire_emiss_litter(n)-fire_litter_litter(n)) * deltat(n)
                POOLS(n+1,6) = POOLS(n+1,6)+(fire_residue_to_som(n)-fire_emiss_som(n)) * deltat(n)
-               POOLS(n+1,7) = POOLS(n+1,7)+(fire_residue_to_litwood(n)-fire_emiss_litwood(n)-fire_litter_litwood(n)) * deltat(n)
+               POOLS(n+1,7) = POOLS(n+1,7)+(fire_residue_to_woodlitter(n)- &
+                                            fire_emiss_woodlitter(n)- &
+                                            fire_litter_woodlitter(n)) * deltat(n)
                ! mass balance check
                where (POOLS(n+1,1:7) < 0d0) POOLS(n+1,1:7) = 0d0
 
