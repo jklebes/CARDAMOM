@@ -214,7 +214,7 @@ module model_likelihood_module
   !
   subroutine sub_model_likelihood(PARS,ML_obs_out,ML_prior_out)
     use MCMCOPT, only:  PI
-    use CARBON_MODEL_MOD, only: carbon_mode
+    use CARBON_MODEL_MOD, only: carbon_model
     use cardamom_structures, only: DATAin
 
     ! this subroutine is responsible for running the model,
@@ -241,15 +241,8 @@ module model_likelihood_module
 
     if (DATAin%EDC == 1) then
 
-        ! EDCs are intended for use, best calculate them
-        if (DATAin%PFT == 1) then
-           ! then we are crops so run these EDCs instead
-           ! call EDCs which can be evaluated prior to running the model
-           call EDC1_CROP(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
-        else
-           ! call EDCs which can be evaluated prior to running the model
-           call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
-        endif ! crop choice
+        ! call EDCs which can be evaluated prior to running the model
+        call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
@@ -257,51 +250,21 @@ module model_likelihood_module
 
     endif !
 
-    if (DATAin%PFT == 1) then
 
-       ! then this is a crop run....
-       ! run the dalec model
-       call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                             ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                             ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft   &
-                             ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                             ,DATAin%nofluxes,DATAin%M_GPP                &
-                             ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
-                             ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
-                             ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
-
-    else ! PFT == 1
-
-        ! run the dalec model
-        call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                         ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                         ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
-                         ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                         ,DATAin%M_GPP)
-
-
-    endif ! crop choice
+    call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                      ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                      ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
+                      ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
+                      ,DATAin%M_GPP)
 
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
 
-        if (DATAin%PFT == 1) then
-
-            ! check edc2
-            call EDC2_CROP(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                          ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                          ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                          ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-
-        else ! PFT == 1
-
-            ! check edc2
-            call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+        ! check edc2
+        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                          ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
                          ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                          ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-
-        endif ! crop choice
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -383,277 +346,6 @@ module model_likelihood_module
     sanity_check = .true.
 
   end subroutine model_sanity_check
-  !
-  !------------------------------------------------------------------
-  !
-  subroutine EDC1_CROP (PARS, npars, meantemp, meanrad, EDC1)
-
-    ! the first of two subroutine to assess current parameters for passing
-    ! realism tests for crop
-    ! ecosystems
-
-    implicit none
-
-    ! declare input variables
-    integer, intent(in) :: npars ! number of parameters
-    double precision, intent(out) :: EDC1    ! EDC1 flag
-    double precision, dimension(npars), intent(in) :: PARS ! current parameter set
-    double precision, intent(in) :: meantemp & ! mean temperature (k)
-                                   ,meanrad    ! mean radiation (MJ.m-2.day-1)
-
-    ! declare local variables
-    integer :: n, DIAG
-    double precision :: torfol,tmp ! yearly leaf loss fraction
-
-    ! set initial value
-    EDC1 = 1d0
-    DIAG = EDCD%DIAG
-
-    ! set all EDCs to 1 (pass)
-    EDCD%PASSFAIL(1:EDCD%nedc) = 1
-
-    !
-    ! begin checking EDCs
-    !
-
-    ! Turnover of litter faster than turnover of som
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(10) > pars(9))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(1) = 0
-    endif
-
-    ! decomposition of litter to SOM greater than SOM to air
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(10) > pars(1))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
-    endif
-
-    ! turnover of foliage faster than turnover of wood
-! TLS: turnover off because foliage and stem turnovers are made same
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(6) > pars(5)) then
-!       EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
-!    end if
-
-    ! pre_DR should be greater than post_DR
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(4) > pars(3))) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
-!    endif
-
-    ! for development: Tmin should be < topt and topt should be < tmax
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(26) > pars(28) &
-                                     .or. pars(28) > pars(27) &
-                                     .or. pars(26) > pars(27))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
-    endif
-
-    ! for development: the difference between each Tmin,Topt,Tmax > 1.
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (abs(pars(26)-pars(28)) < 1d0 &
-                                     .or. abs(pars(28)-pars(27)) < 1d0  &
-                                     .or. abs(pars(26)-pars(27)) < 1d0)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
-    endif
-
-   ! for vernalisation: Tmin < Topt < Tmax
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(29) > pars(31) &
-                                     .or. pars(31) > pars(30) &
-                                     .or. pars(29) > pars(30))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
-    endif
-
-   ! for vernalisation: the difference between each Tmin, Topt, Tmax
-    if ((EDC1 == 1 .or. DIAG == 1) .and. ( abs(pars(29)-pars(31)) < 1d0 &
-                                      .or. abs(pars(31)-pars(30)) < 1d0 &
-                                      .or. abs(pars(29)-pars(30)) < 1d0 ) ) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
-    endif
-
-   ! development temperature value should be larger corresponding vernalisation
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(29) > pars(26) &
-                                     .or. pars(31) > pars(28) &
-                                     .or. pars(30) > pars(27))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
-    endif
-
-!    ! plough must be before sow and after harvest: WINTER ONLY
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(16) > pars(12) ) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
-!    endif
-!
-!    ! harvest cannot be more than 345 after harvest
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(15) < pars(12)+345.25d0) ) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
-!    endif
-!
-!    ! plough must be before sow and after harvest: WINTER ONLY
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(16) < pars(15) .or. &
-!        pars(16) > pars(12)) ) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
-!    endif
-
-    ! CN ratio of leaf should also be between 95CI of trait database values
-    ! Kattge et al (2011)
-    tmp = (pars(17)/(10d0**pars(11)))
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 43.76895d0 .or. tmp < 10.82105d0)) then
-       EDC1=0 ; EDCD%PASSFAIL(13) = 0
-    endif
-
-    ! could and probably should add some more
-  end subroutine EDC1_CROP
-  !
-  !------------------------------------------------------------------
-  !
-  subroutine EDC2_CROP(npars,nomet,nofluxes,nopools,nodays,deltat &
-                      ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
-                      ,meantemp,EDC2)
-
-    use cardamom_structures, only: DATAin
-
-
-    ! the second of two subroutines for assessing current parameters for passing
-    ! realism tests for crop ecosystems
-
-    implicit none
-
-    ! declare input variables
-    integer, intent(in) :: npars    & ! number of model parameters
-                          ,nomet    & ! number of met drivers
-                          ,nofluxes & ! number of fluxes from model
-                          ,nopools  & ! number of pools in model
-                          ,nodays     ! number of days in simulation
-
-    double precision, intent(in) :: deltat(nodays)              & ! decimal day model interval
-                                   ,pars(npars)                 & ! vector of current parameters
-                                   ,parmax(npars)               & ! vector of the maximum parameter values
-                                   ,met(nomet,nodays)           & ! array of met drivers
-                                   ,M_LAI(nodays)               & ! LAI output from current model simulation
-                                   ,M_NEE(nodays)               & ! NEE output from current model simulation
-                                   ,M_GPP(nodays)               & ! GPP output from current model simulation
-                                   ,M_POOLS((nodays+1),nopools) & ! time varying states of pools in current model simulation
-                                   ,M_FLUXES(nodays,nofluxes)   & ! time varying fluxes from current model simulation model
-                                   ,meantemp                      ! site mean temperature (oC)
-
-    double precision, intent(out) :: EDC2 ! the response flag for the dynamical set of EDCs
-
-    ! declare local variables
-    integer :: n, DIAG, no_years, nn
-    double precision :: mean_pools(nopools), decay_coef, meangpp, EQF, PEDC, infi
-    double precision :: fauto & ! Fractions of GPP to autotrophic respiration
-             ,ffol  & ! Fraction of GPP to foliage
-             ,flab  & ! Fraction of GPP to labile pool
-             ,froot & ! Fraction of GPP to root
-             ,flit  & !
-             ,fwood & ! Fraction of GPP to wood
-             ,fsom    ! fraction of GPP som under eqilibrium conditions
-
-    ! set initial value
-    fauto = sum(M_FLUXES(:,3)) / sum(M_FLUXES(:,1))
-    ffol = sum(M_FLUXES(:,4)) / (sum(M_FLUXES(:,1))*fauto)
-    flab = sum(M_FLUXES(:,5)) / (sum(M_FLUXES(:,1))*fauto)
-    froot = sum(M_FLUXES(:,6)) / (sum(M_FLUXES(:,1))*fauto)
-    fwood = sum(M_FLUXES(:,7)) / (sum(M_FLUXES(:,1))*fauto)
-    fsom = fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(10))
-    flit = (froot+flab+ffol)
-    ! length of time step in hours..
-    ts_length = 24d0
-    ! initial value
-    infi = 0d0
-    ! update initial values
-    DIAG = EDCD%DIAG
-    ! give EDC2 an initial value
-    EDC2 = 1
-
-    ! SOM attractor - must be within a factor of 2 from Csom0
-    ! eqiulibrium factor (in comparison with initial conditions)
-    EQF = 10d0
-
-    ! initialise and then calculate mean gpp values
-    meangpp = sum(M_GPP(1:nodays))/dble(nodays)
-
-    ! EDC 11 - SOM steady state within order magnitude of initial conditions
-    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-       ((meangpp*fsom)/(pars(10)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) > (pars(23)*EQF)) then
-       EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
-    end if
-    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-       ((meangpp*fsom)/(pars(10)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) < (pars(23)/EQF)) then
-       EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
-    endif
-
-    ! EDC 12 - Litter steady state assumptions
-    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-       ((meangpp*flit)/(pars(9)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) > (pars(22)*EQF)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
-    endif
-    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-       ((meangpp*flit)/(pars(9)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) < (pars(22)/EQF)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
-    endif
-
-    ! EDC 13
-    ! assesses the exponential decay/growth of the Csom pool
-
-    !  work out how many completed years there are in the system
-    no_years=int(nint(sum(deltat)/365.25d0))
-
-    ! only do this for the Csom pool
-    do n = 1, 1 !nopools
-       if (EDC2 == 1 .or. DIAG == 1) then
-          decay_coef=expdecay2(M_POOLS(1:(nodays+1),6),deltat,nodays+1)
-          ! next assess the decay coefficient for meetings the EDC criterion
-          if (abs(-log(2d0)/decay_coef) < (365.25d0*dble(no_years)) .and. decay_coef < 0d0 ) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
-          end if ! EDC conditions
-       end if ! EDC .or. DIAG condition
-    end do ! pools loop
-
-    ! EDC 14
-    ! assesses the exponential decay/growth of the Clit pool
-
-    ! only do this for the Clit pool
-    do n = 1, 1 !nopools
-       if (EDC2 == 1 .or. DIAG == 1) then
-          decay_coef=expdecay2(M_POOLS(1:(nodays+1),5),deltat,nodays+1)
-          ! next assess the decay coefficient for meetings the EDC criterion
-          if (abs(-log(2d0)/decay_coef) < (365.25d0*dble(no_years)) .and. decay_coef < 0d0 ) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
-          end if ! EDC conditions
-       end if ! EDC .or. DIAG condition
-    end do ! pools loop
-
-    ! we know that the crop model should produce some yield - therefore we
-    ! reject parameter sets which generate no yield ever!
-    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(1:nodays,21)) < (1d0*dble(no_years)) ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
-    endif
-
-    ! Function to calculate the gradient of a linear model for a given depentent
-    ! variable (y) based on predictive variable (x). The typical use of this
-    ! function will in fact be to assume that x is time.
-
-    !
-    ! EDCs done, below are additional fault detection conditions
-    !
-
-    ! additional faults can be stored in locations 35 - 40 of the PASSFAIL array
-
-    ! ensure minimum pool values are >= 0 and /= NaN
-    if (EDC2 == 1 .or. DIAG == 1) then
-
-      do n = 1, nopools
-         if (minval(M_POOLS(1:nodays,n)) < 0d0 .or. maxval(abs(M_POOLS(1:nodays,n))) == abs(log(infi)) .or. &
-             minval(M_POOLS(1:nodays,n)) /= minval(M_POOLS(1:nodays,n))) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(55+n) = 0
-         endif
-      end do
-
-      do n = 1, nofluxes
-         if (maxval(abs(M_FLUXES(1:nodays,n))) == abs(log(infi)) .or. &
-            minval(M_FLUXES(1:nodays,n)) /= minval(M_FLUXES(1:nodays,n))) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(55+nopools+n) = 0
-         endif
-      end do
-
-    end if ! min pool assessment
-
-  end subroutine EDC2_CROP
   !
   !------------------------------------------------------------------
   !
@@ -1733,15 +1425,8 @@ module model_likelihood_module
 
     if (DATAin%EDC == 1) then
 
-        ! EDCs are intended for use, best calculate them
-        if (DATAin%PFT == 1) then
-           ! then we are crops so run these EDCs instead
-           ! call EDCs which can be evaluated prior to running the model
-           call EDC1_CROP(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
-        else
-           ! call EDCs which can be evaluated prior to running the model
-           call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
-        endif ! crop choice
+        ! call EDCs which can be evaluated prior to running the model
+        call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
@@ -1749,51 +1434,22 @@ module model_likelihood_module
 
     endif !
 
-    if (DATAin%PFT == 1) then
+    ! run the dalec model
+    call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                      ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                      ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
+                      ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
+                      ,DATAin%M_GPP)
 
-       ! then this is a crop run....
-       ! run the dalec model
-       call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                             ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                             ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft   &
-                             ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                             ,DATAin%nofluxes,DATAin%M_GPP                &
-                             ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
-                             ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
-                             ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
-
-    else ! PFT == 1
-
-        ! run the dalec model
-        call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                         ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                         ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
-                         ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                         ,DATAin%M_GPP)
-
-
-    endif ! crop choice
 
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
 
-        if (DATAin%PFT == 1) then
-
-            ! check edc2
-            call EDC2_CROP(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                          ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                          ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                          ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-
-        else ! PFT == 1
-
-            ! check edc2
-            call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+        ! check edc2
+        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                          ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
                          ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                          ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-
-        endif ! crop choice
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
