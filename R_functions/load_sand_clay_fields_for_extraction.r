@@ -13,11 +13,11 @@ load_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source,cardam
 
         # Read in the data for both the sand and clay
         # Sand
-        top_sand = raster(paste(path_to_sand_clay,"clay_percent_mean_0to30cm.tif", sep=""))
-        bot_sand = raster(paste(path_to_sand_clay,"clay_percent_mean_30to100cm.tif", sep=""))
+        top_sand = raster(paste(path_to_sand_clay,"sand_percent_mean_0to30cm.tif", sep=""))
+        bot_sand = raster(paste(path_to_sand_clay,"sand_percent_mean_30to100cm.tif", sep=""))
         # Clay
-        top_clay = raster(paste(path_to_sand_clay,"sand_percent_mean_0to30cm.tif", sep=""))
-        bot_clay = raster(paste(path_to_sand_clay,"sand_percent_mean_30to100cm.tif", sep=""))
+        top_clay = raster(paste(path_to_sand_clay,"clay_percent_mean_0to30cm.tif", sep=""))
+        bot_clay = raster(paste(path_to_sand_clay,"clay_percent_mean_30to100cm.tif", sep=""))
 
         # Create raster with the target crs
         target = raster(crs = ("+init=epsg:4326"), ext = extent(top_sand), resolution = res(top_sand))
