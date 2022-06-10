@@ -232,8 +232,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     # Number of met parameters
     # Number of model parameters to be optimised
     nopools=array(8,dim=c(length(ctessel_pft)))
-    nopars=array(37,dim=c(length(ctessel_pft)))
-    nofluxes=array(32,dim=c(length(ctessel_pft)))
+    nopars=array(38,dim=c(length(ctessel_pft)))
+    nofluxes=array(43,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC_1005a",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } # If modelname == "..."
 

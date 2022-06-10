@@ -23,6 +23,8 @@ load_r_libraries<-function(){
     require(RColorBrewer)
     require(colorspace)
     require(maps)
+    # Set error options to output line number for broken calls
+    options(error = recover)
 } # function to load all libraries needed by the system
 
 ###

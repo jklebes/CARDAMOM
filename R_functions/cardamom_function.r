@@ -329,7 +329,7 @@ cardamom <-function (projname,model,method,stage) {
                   system(paste("rm ",PROJECT$datapath,"cardamom_inputs.zip", sep=""))
               }
               # Compress all input files into zip directory
-              system(paste("zip -j -r -qq ",PROJECT$datapath,"cardamom_inputs.zip ",PROJECT$datapath," -i *.bin",sep=""))
+              system(paste("zip -j -r -qq ",PROJECT$datapath,"cardamom_inputs.zip ",PROJECT$datapath," -i '*.bin'",sep=""))
               # Copy the zip directory to the remote server
               command = paste("scp -r ",username,"@",home_computer,":",PROJECT$datapath,"cardamom_inputs.zip ",PROJECT$edatapath,sep="")
               # Unzip on remote server
@@ -397,7 +397,7 @@ cardamom <-function (projname,model,method,stage) {
               # Compress all existing files into zip directory
               # There is a limit on how many files (based on the command length) that can be added at once using zip alone.
               # However, we can get around this by listing all files using find and then piping these into zip
-              command = c(command,paste("zip -j -r -qq ",PROJECT$eresultspath,"cardamom_outputs.zip ",PROJECT$eresultspath," -i *PARS",sep=""))
+              command = c(command,paste("zip -j -r -qq ",PROJECT$eresultspath,"cardamom_outputs.zip ",PROJECT$eresultspath," -i '*PARS'",sep=""))
               command = c(command,paste("scp -r ",PROJECT$eresultspath,"cardamom_outputs.zip ",username,"@",home_computer,":",PROJECT$resultspath,sep=""))
               #command = c(command,paste("rm ",PROJECT$eresultspath,"cardamom_outputs.zip",sep=""))
               #command = paste("scp -r ",PROJECT$eresultspath,"* ",username,"@",home_computer,":",PROJECT$resultspath,sep="")

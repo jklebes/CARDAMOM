@@ -250,8 +250,8 @@ module cardamom_io
     else if (DATAin%ID == 35) then
         ! ID = 35 - DALEC-1005a
         DATAin%nopools = 8
-        DATAin%nopars = 37
-        DATAin%nofluxes = 32
+        DATAin%nopars = 38
+        DATAin%nofluxes = 43
     else if (DATAin%ID == 36) then
         ! ID = 36 - DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT
         DATAin%nopools = 8

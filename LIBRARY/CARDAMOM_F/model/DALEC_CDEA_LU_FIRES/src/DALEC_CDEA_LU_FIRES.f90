@@ -130,7 +130,6 @@ contains
                        ,coarse_root_residue          &
                        ,soil_loss_with_roots
 
-
     ! met drivers are:
     ! 1st run day
     ! 2nd min daily temp (oC)

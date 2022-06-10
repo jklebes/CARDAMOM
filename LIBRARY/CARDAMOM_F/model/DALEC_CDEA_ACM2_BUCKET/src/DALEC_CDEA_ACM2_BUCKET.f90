@@ -857,6 +857,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! Estimate drythick for the current step
        drythick = max(min_drythick, top_soil_depth * (1d0 - (soil_waterfrac(1) / porosity(1))))
+       !drythick = max(min_drythick, min(1d0,top_soil_depth * (1d0 - (soil_waterfrac(1) / field_capacity(1)))))
        ! Soil surface (kgH2O.m-2.day-1)
        call calculate_soil_evaporation(soilevaporation)
        ! If snow present assume that soilevaporation is sublimation of soil first
