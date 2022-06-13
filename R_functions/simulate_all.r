@@ -594,7 +594,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
   } else if (model_name == "DALEC_1005") {
-      output_dim = 52 ; MTT_dim = 6 ; SS_dim = 6
+      output_dim = 46 ; MTT_dim = 6 ; SS_dim = 6
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec1005",output_dim=as.integer(output_dim)
                                 ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
@@ -664,17 +664,11 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       # Water cycle related
                       ET_kgH2Om2day = output[,,43],
                       SurfWater_kgH2Om2 = output[,,44],
-                      wSWP_MPa = output[,,45],
+                      # wSWP_MPa = output[,,45],
                       # Canopy (phenology) properties
-                      lai_m2m2 = output[,,46],
+                      lai_m2m2 = output[,,45],
                       # Photosynthesis / C~water coupling related
-                      gs_demand_supply_ratio = output[,,47],
-                      gs_mmolH2Om2day = output[,,48],
-                      APAR_MJm2day = output[,,49],
-                      gb_mmolH2Om2day = output[,,50],
-                      CiCa = output[,,51],
-                      # Misc
-                      RootDepth_m = output[,,52],
+                      CiCa = output[,,46],
                       ## Aggregated variables
                       # Mean Transit times
                       MTT_labile_years = MTT_years[,1],

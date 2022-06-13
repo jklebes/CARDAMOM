@@ -97,7 +97,7 @@ subroutine rdalec1005(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,3)  = FLUXES(1:nodays,13)      ! Rhet_litter (gC/m2/day)
      out_var1(i,1:nodays,4)  = FLUXES(1:nodays,14)      ! Rhet_som (gC/m2/day)
      out_var1(i,1:nodays,5)  = FLUXES(1:nodays,17)      ! Total fire (gC/m2/day)
-     out_var1(i,1:nodays,6)  = FLUXES(1:nodays,43)    ! harvested material (gC/m2/day)
+     out_var1(i,1:nodays,6)  = FLUXES(1:nodays,43)      ! harvested material (gC/m2/day)
      ! C internal fluxes (gC/m2/day)
      out_var1(i,1:nodays,7)  = FLUXES(1:nodays,4)       ! allocation to foliage (gC/m2/day)
      out_var1(i,1:nodays,8)  = FLUXES(1:nodays,5)       ! allocation to labile (gC/m2/day)
@@ -120,20 +120,30 @@ subroutine rdalec1005(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,24) = FLUXES(1:nodays,22)      ! fire emission from litter (gC/m2/day)
      out_var1(i,1:nodays,25) = FLUXES(1:nodays,28)      ! fire induced litter from litter (gC/m2/day)
      out_var1(i,1:nodays,26) = FLUXES(1:nodays,23)      ! fire emission from som (gC/m2/day)
+     out_var1(i,1:nodays,27) = FLUXES(1:nodays,33)      ! harvest extracted from labile (gC/m2/day)
+     out_var1(i,1:nodays,28) = FLUXES(1:nodays,34)      ! harvest extracted from foliage (gC/m2/day)
+     out_var1(i,1:nodays,29) = FLUXES(1:nodays,35)      ! harvest extracted from fine roots (gC/m2/day)
+     out_var1(i,1:nodays,30) = FLUXES(1:nodays,36)      ! harvest extracted from wood (gC/m2/day)
+     out_var1(i,1:nodays,31) = FLUXES(1:nodays,37)      ! harvest extracted from litter (gC/m2/day)
+     out_var1(i,1:nodays,32) = FLUXES(1:nodays,38)      ! harvest extracted from som (gC/m2/day)
+     out_var1(i,1:nodays,33) = FLUXES(1:nodays,39)      ! harvest litter / residue from labile (gC/m2/day)
+     out_var1(i,1:nodays,34) = FLUXES(1:nodays,40)      ! harvest litter / residue from foliage (gC/m2/day)
+     out_var1(i,1:nodays,35) = FLUXES(1:nodays,41)      ! harvest litter / residue from fine roots (gC/m2/day)
+     out_var1(i,1:nodays,36) = FLUXES(1:nodays,42)      ! harvest litter / residue from wood (gC/m2/day)
      ! C pools (gC/m2)
-     out_var1(i,1:nodays,27) = POOLS(1:nodays,1)        ! labile (gC/m2)
-     out_var1(i,1:nodays,28) = POOLS(1:nodays,2)        ! foliage (gC/m2)
-     out_var1(i,1:nodays,29) = POOLS(1:nodays,3)        ! fine root (gC/m2)
-     out_var1(i,1:nodays,30) = POOLS(1:nodays,4)        ! wood (gC/m2)
-     out_var1(i,1:nodays,31) = POOLS(1:nodays,5)        ! litter (gC/m2)
-     out_var1(i,1:nodays,32) = POOLS(1:nodays,6)        ! som (gC/m2)
+     out_var1(i,1:nodays,37) = POOLS(1:nodays,1)        ! labile (gC/m2)
+     out_var1(i,1:nodays,38) = POOLS(1:nodays,2)        ! foliage (gC/m2)
+     out_var1(i,1:nodays,39) = POOLS(1:nodays,3)        ! fine root (gC/m2)
+     out_var1(i,1:nodays,40) = POOLS(1:nodays,4)        ! wood (gC/m2)
+     out_var1(i,1:nodays,41) = POOLS(1:nodays,5)        ! litter (gC/m2)
+     out_var1(i,1:nodays,42) = POOLS(1:nodays,6)        ! som (gC/m2)
      ! Water cycle related
-     out_var1(i,1:nodays,33) = FLUXES(1:nodays,29)      ! Evapotranspiration (kgH2O.m-2.day-1)
-     out_var1(i,1:nodays,34) = POOLS(1:nodays,7)        ! surface water (kgH2O.m-2.30cmdepth)
+     out_var1(i,1:nodays,43) = FLUXES(1:nodays,29)      ! Evapotranspiration (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,44) = POOLS(1:nodays,7)        ! surface water (kgH2O.m-2.30cmdepth)
      ! Canopy (phenology) properties
-     out_var1(i,1:nodays,35) = lai                      ! LAI (m2/m2)
+     out_var1(i,1:nodays,45) = lai                      ! LAI (m2/m2)
      ! Photosynthesis / C~water coupling related
-     out_var1(i,1:nodays,36) = cica_time                ! ratio of leaf internal to external CO2
+     out_var1(i,1:nodays,46) = cica_time                ! ratio of leaf internal to external CO2
 
      !!!
      ! Estimate residence time information
@@ -213,13 +223,13 @@ subroutine rdalec1005(output_dim,MTT_dim,SS_dim &
      out_var3(i,4) = sum(FLUXES(:,7)) ! Wood
      out_var3(i,5) = sum(FLUXES(:,10)+FLUXES(:,12)+ &
                          FLUXES(:,24)+FLUXES(:,25)+FLUXES(:,26)+ &
-                         FLUXES(:,37)+FLUXES(:,38)+FLUXES(:,39)) ! litter (foliage + roots)
+                         FLUXES(:,39)+FLUXES(:,40)+FLUXES(:,41)) ! litter (foliage + roots)
      ! While foliar and fine root litter can be reasonably estimated directly (above),
      ! soil C inputs are still changing as the wood pool is not in steady state.
      ! Therefore, at this point we can account for disturbance inputs (including wood)
      ! but NOT natural wood. The natural wood input is estimated later based on
      ! its steady state estimate
-     out_var3(i,6) = sum(FLUXES(:,15)+FLUXES(:,27)+FLUXES(:,28)+FLUXES(:,40)) ! som
+     out_var3(i,6) = sum(FLUXES(:,15)+FLUXES(:,27)+FLUXES(:,28)+FLUXES(:,42)) ! som
 
   end do ! nos_iter loop
 
