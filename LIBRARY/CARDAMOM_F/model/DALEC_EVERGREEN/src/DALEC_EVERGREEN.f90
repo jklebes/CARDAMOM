@@ -112,13 +112,11 @@ contains
                                      ,rootcr_frac_removal    &
                                      ,Crootcr_part           &
                                      ,soil_loss_frac
-    double precision :: labile_loss,foliar_loss      &
+    double precision :: foliar_loss      &
                        ,roots_loss,wood_loss         &
                        ,rootcr_loss,stem_loss        &
-                       ,labile_residue,foliar_residue&
+                       ,foliar_residue&
                        ,roots_residue,wood_residue   &
-                       ,C_total,labile_frac_res      &
-                       ,labile_frac_removal          &
                        ,Cstem,Crootcr,stem_residue   &
                        ,coarse_root_residue          &
                        ,soil_loss_with_roots
