@@ -456,7 +456,7 @@ contains
           ! Update pools
           POOLS(n+1,1) = POOLS(n+1,1) - foliar_loss
           POOLS(n+1,2) = POOLS(n+1,2) - wood_loss
-          POOLS(n+1,3) = POOLS(n+1,3) + (foliar_residue+roots_residue+wood_residue-soil_loss_with_roots)
+          POOLS(n+1,3) = POOLS(n+1,3) + (foliar_residue+wood_residue-soil_loss_with_roots)
           ! mass balance check
           where (POOLS(n+1,1:3) < 0d0) POOLS(n+1,1:3) = 0d0
 
