@@ -333,7 +333,7 @@ cardamom <-function (projname,model,method,stage) {
               # Copy the zip directory to the remote server
               command = paste("scp -r ",username,"@",home_computer,":",PROJECT$datapath,"cardamom_inputs.zip ",PROJECT$edatapath,sep="")
               # Unzip on remote server
-              command = c(command,paste("unzip ",PROJECT$edatapath,"cardamom_inputs.zip -d ",PROJECT$edatapath, sep=""))
+              command = c(command,paste("unzip -o ",PROJECT$edatapath,"cardamom_inputs.zip -d ",PROJECT$edatapath, sep=""))
               # Remove the zip directory on remote server
               command = c(command,paste("rm ",PROJECT$edatapath,"cardamom_inputs.zip" ,sep=""))
               #command = paste("scp -r ",username,"@",home_computer,":",PROJECT$datapath,"* ",PROJECT$edatapath,sep="")
@@ -408,7 +408,7 @@ cardamom <-function (projname,model,method,stage) {
           # Assuming they are present unzip and delete the zip directory
           if (file.exists(paste(PROJECT$resultspath,"cardamom_outputs.zip",sep=""))) {
               # Unzip
-              system(paste("unzip -qq ",PROJECT$resultspath,"cardamom_outputs.zip -d ",PROJECT$resultspath, sep=""))
+              system(paste("unzip -qq -o ",PROJECT$resultspath,"cardamom_outputs.zip -d ",PROJECT$resultspath, sep=""))
               # Delete file now
               system(paste("rm ",PROJECT$resultspath,"cardamom_outputs.zip", sep=""))
           }
