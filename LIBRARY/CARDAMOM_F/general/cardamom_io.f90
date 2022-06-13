@@ -195,7 +195,7 @@ module cardamom_io
     else if (DATAin%ID == 24) then
         ! ID = 24 - DALEC_EVERGREEN_no_lit_root
         DATAin%nopools = 3
-        DATAin%nopars = 11
+        DATAin%nopars = 15
         DATAin%nofluxes = 28
     else if (DATAin%ID == 25) then
         ! ID = 25 - DALEC_CDEA_ACM2

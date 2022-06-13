@@ -499,13 +499,13 @@ module model_likelihood_module
     ! get total in and out for each pool
     ! foliar
     Fin(1)  = FT(4)
-    Fout(1) = FT(10) + FT(19) + FT(25)
+    Fout(1) = FT(10) + FT(18) + FT(21) + FT(24) + FT(27)
     ! root + wood
     Fin(2)  = FT(6)
-    Fout(2) = FT(11) + FT(20) + FT(26)
+    Fout(2) = FT(11) + FT(19) + FT(22) + FT(25) + FT(28)
     ! litter + som
     Fin(3)  = FT(10) + FT(11)
-    Fout(3) = FT(13) + FT(21)
+    Fout(3) = FT(13) + FT(20) + FT(26)
 
     ! Iterate through C pools to determine whether they have their ratio of
     ! input and outputs are outside of steady state approximation.
