@@ -1839,8 +1839,8 @@ module model_likelihood_module
     end if
 
     ! Estimate the biological steady state attractor on the wood pool.
-    ! NOTE: this arrangement explicitly neglects the impact of disturbance on
-    ! residence time (i.e. no fire and biomass removal)
+    ! NOTE: this arrangement explicitly neglects the impact of harvest disturbance on
+    ! residence time (i.e. biomass removal)
     if (DATAin%otherpriors(5) > -9998) then
         ! Estimate the mean annual input to the wood pool (gC.m-2.day-1) and
         ! remove the day-1 by multiplying by residence time (day)
@@ -2231,8 +2231,8 @@ module model_likelihood_module
     end if
 
     ! Estimate the biological steady state attractor on the wood pool.
-    ! NOTE: this arrangement explicitly neglects the impact of disturbance on
-    ! residence time (i.e. no fire and biomass removal)
+    ! NOTE: this arrangement explicitly neglects the impact of harvest disturbance on
+    ! residence time (i.e. biomass removal)
     if (DATAin%otherpriors(5) > -9998) then
         ! Estimate the mean annual input to the wood pool (gC.m-2.day-1) and
         ! remove the day-1 by multiplying by residence time (day)

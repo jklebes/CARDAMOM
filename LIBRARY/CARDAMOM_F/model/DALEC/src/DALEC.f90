@@ -170,7 +170,7 @@ module CARBON_MODEL_MOD
   double precision, parameter :: vsmall = tiny(0d0)*1d3 & ! *1d3 to add a little breathing room
                                 ,vlarge = huge(0d0)
 
-  integer, parameter :: nos_root_layers = 3, nos_soil_layers = nos_root_layers + 1
+  integer, parameter :: nos_root_layers = 2, nos_soil_layers = nos_root_layers + 1
   double precision, parameter :: pi = 3.1415927d0,  &
                                pi_1 = 0.3183099d0,  & ! pi**(-1d0)
                              two_pi = 6.283185d0,   & ! pi*2d0

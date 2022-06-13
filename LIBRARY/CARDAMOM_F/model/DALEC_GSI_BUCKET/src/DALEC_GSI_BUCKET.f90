@@ -860,33 +860,25 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! CARDAMOM
         Crootcr_part = pars(29)
 
-        ! Declare combustion efficiency (labile, foliar, roots, wood, litter, soil, woodlitter)
-        combust_eff(1) = 0.1d0 ; combust_eff(2) = 0.9d0
-        combust_eff(3) = 0.1d0 ; combust_eff(4) = 0.1d0
-        combust_eff(5) = 0.7d0 ; combust_eff(6) = 0.01d0
-        combust_eff(7) = 0.7d0
-        ! Resilience factor for non-combusted tissue
-        rfac = 0.5d0 ; rfac(5) = 0.1d0 ; rfac(6) = 0d0 ; rfac(7) = 0.1d0
+        ! JFE added 4 May 2018 - define fire constants
+        ! Update fire parameters derived from
+        ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
+        ! Subsequently expanded by T. L. Smallman & Mat Williams (UoE, 03/09/2021)
+        ! to provide specific CC for litter and wood litter.
+        ! NOTE: changes also result in the addition of further EDCs
+
+        ! Assign proposed resilience factor
+        rfac(1:4) = pars(41)
+        rfac(5) = 0.1d0 ; rfac(6) = 0d0 ; rfac(7) = 0.1d0
+        ! Assign combustion completeness to foliage
+        combust_eff(2) = pars(42) ! foliage
+        ! Assign combustion completeness to non-photosynthetic
+        combust_eff(1) = pars(43) ; combust_eff(3) = pars(43) ; combust_eff(4) = pars(43)
+        combust_eff(6) = pars(44) ! soil
+        ! derived values for litter and wood litter
+        combust_eff(5) = pars(45) ; combust_eff(7) = pars(46)
 
     end if ! disturbance ?
-
-    ! JFE added 4 May 2018 - define fire constants
-    ! Update fire parameters derived from
-    ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
-    ! Subsequently expanded by T. L. Smallman & Mat Williams (UoE, 03/09/2021)
-    ! to provide specific CC for litter and wood litter.
-    ! NOTE: changes also result in the addition of further EDCs
-
-    ! Assign proposed resilience factor
-    rfac(1:4) = pars(41)
-    rfac(5) = 0.1d0 ; rfac(6) = 0d0 ; rfac(7) = 0.1d0
-    ! Assign combustion completeness to foliage
-    combust_eff(2) = pars(42) ! foliage
-    ! Assign combustion completeness to non-photosynthetic
-    combust_eff(1) = pars(43) ; combust_eff(3) = pars(43) ; combust_eff(4) = pars(43)
-    combust_eff(6) = pars(44) ! soil
-    ! derived values for litter and wood litter
-    combust_eff(5) = pars(45) ; combust_eff(7) = pars(46)
 
     ! assigning initial conditions for the current iteration
     POOLS(1,1) = pars(18)

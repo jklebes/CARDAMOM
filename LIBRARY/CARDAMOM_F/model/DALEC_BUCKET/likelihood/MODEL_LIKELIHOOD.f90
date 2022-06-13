@@ -189,9 +189,9 @@ module model_likelihood_module
 
     ! assess post running EDCs
     call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                  ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                  ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                  ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+                    ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                    ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                    ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
     ! calculate the likelihood
     tot_exp = sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))
@@ -262,9 +262,9 @@ module model_likelihood_module
 
         ! check edc2
         call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                         ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                         ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                         ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+                        ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                        ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                        ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -495,32 +495,43 @@ module model_likelihood_module
   !------------------------------------------------------------------
   !
   subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodays,deltat &
-                     ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
-                     ,meantemp,EDC2)
+                        ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
+                        ,meantemp,EDC2)
 
     use cardamom_structures, only: DATAin
     use CARBON_MODEL_MOD, only: Rg_from_labile, Rm_from_labile,&
                                 Resp_leaf, Resp_wood_root,     &
                                 Rm_leaf, Rm_wood_root,         &
-                                harvest_residue_to_litter, &
-                                harvest_residue_to_som,    &
-                                harvest_residue_to_litwood,&
-                                harvest_loss_labile,       &
-                                harvest_loss_foliar,       &
-                                harvest_loss_roots,        &
-                                harvest_loss_wood,         &
-                                harvest_loss_litter,       &
-                                harvest_loss_litwood,      &
-                                harvest_loss_som,          &
-                                fire_loss_labile,          &
-                                fire_loss_foliar,          &
-                                fire_loss_roots,           &
-                                fire_loss_wood,            &
-                                fire_loss_litter,          &
-                                fire_loss_litwood,         &
-                                fire_loss_som,             &
-                                fire_residue_to_litter,    &
-                                fire_residue_to_litwood,   &
+                                harvest_residue_to_litter,    &
+                                harvest_residue_to_som,       &
+                                harvest_residue_to_woodlitter,&
+                                harvest_extracted_labile,     &
+                                harvest_extracted_foliar,     &
+                                harvest_extracted_roots,      &
+                                harvest_extracted_wood,       &
+                                harvest_extracted_litter,     &
+                                harvest_extracted_woodlitter, &
+                                harvest_extracted_som,        &
+                                harvest_residue_labile,       &
+                                harvest_residue_foliar,       &
+                                harvest_residue_roots,        &
+                                harvest_residue_wood,         &
+                                fire_emiss_labile,            &
+                                fire_emiss_foliar,            &
+                                fire_emiss_roots,             &
+                                fire_emiss_wood,              &
+                                fire_emiss_litter,            &
+                                fire_emiss_woodlitter,        &
+                                fire_emiss_som,               &
+                                fire_litter_labile,           &
+                                fire_litter_foliar,           &
+                                fire_litter_roots,            &
+                                fire_litter_wood,             &
+                                fire_litter_litter,           &
+                                fire_litter_woodlitter,       &
+                                fire_litter_som,              &
+                                fire_residue_to_litter,       &
+                                fire_residue_to_woodlitter,   &
                                 fire_residue_to_som
 
     ! Determines whether the dynamical contraints for the search of the initial
@@ -561,28 +572,28 @@ module model_likelihood_module
     double precision, dimension(nodays) :: mean_ratio, resid_fol, resid_lab, biomass_root
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools
     integer, dimension(nodays) :: hak ! variable to determine number of NaN in foliar residence time calculation
-    double precision :: SSwood, SSlitwood, SSsom &
-                       ,in_out_fol, in_out_lab, in_out_lit, in_out_litwood, in_out_som, in_out_root, in_out_wood &
+    double precision :: SSwood, SSwoodlitter, SSsom &
+                       ,in_out_fol, in_out_lab, in_out_lit, in_out_woodlitter, in_out_som, in_out_root, in_out_wood &
                        ,in_lab, out_lab  &
                        ,in_fol, out_fol  &
                        ,in_root, out_root &
                        ,in_wood, out_wood &
                        ,in_lit, out_lit  &
-                       ,in_litwood, out_litwood  &
+                       ,in_woodlitter, out_woodlitter  &
                        ,in_som, out_som  &
                        ,in_out_lab_yr1  &
                        ,in_out_fol_yr1  &
                        ,in_out_root_yr1 &
                        ,in_out_wood_yr1 &
                        ,in_out_lit_yr1  &
-                       ,in_out_litwood_yr1  &
+                       ,in_out_woodlitter_yr1  &
                        ,in_out_som_yr1  &
                        ,in_out_lab_yr2  &
                        ,in_out_fol_yr2  &
                        ,in_out_root_yr2 &
                        ,in_out_wood_yr2 &
                        ,in_out_lit_yr2  &
-                       ,in_out_litwood_yr2  &
+                       ,in_out_woodlitter_yr2  &
                        ,in_out_som_yr2  &
                        ,torfol      & ! yearly average turnover
                        ,torlab      & !
@@ -599,7 +610,7 @@ module model_likelihood_module
                        ,sumfol      &
                        ,sumroot     &
                        ,sumwood     &
-                       ,sumlitwood  &
+                       ,sumwoodlitter  &
                        ,sumlit      &
                        ,sumsom      &
                        ,fNPP        & ! fraction of NPP to foliage
@@ -617,7 +628,7 @@ module model_likelihood_module
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                    etol = 0.30d0 !0.10d0 !0.05d0
+                                    etol = 0.20d0 !0.10d0 !0.05d0
 
     ! initial value
     infi = 0d0 ; dble_nodays = dble(nodays)
@@ -637,7 +648,10 @@ module model_likelihood_module
     ! update initial values
     hak = 0 ; resid_fol = 0d0
     ! calculate mean turnover rate for leaves
-    resid_fol = (M_FLUXES(:,10)+harvest_loss_foliar+fire_loss_foliar)/M_POOLS(1:nodays,2)
+    resid_fol = (M_FLUXES(:,10)+ &
+                 harvest_extracted_foliar+harvest_residue_foliar+ &
+                 fire_emiss_foliar+fire_litter_foliar) &
+              / M_POOLS(1:nodays,2)
     ! division by zero results in NaN plus obviously I can't have turned
     ! anything over if there was nothing to start out with...
     where ( M_POOLS(1:nodays,2) == 0d0 )
@@ -653,7 +667,9 @@ module model_likelihood_module
     ! reset initial values
     hak = 0 ; resid_lab = 0d0
     ! calculate mean turnover rate for labile pool
-    resid_lab = (M_FLUXES(:,8)+Rg_from_labile+Rm_from_labile+harvest_loss_labile+fire_loss_labile) &
+    resid_lab = (M_FLUXES(:,8)+Rg_from_labile+Rm_from_labile+ &
+                 harvest_extracted_labile+harvest_residue_labile+ &
+                 fire_emiss_labile+fire_litter_labile) &
               / M_POOLS(1:nodays,1)
     ! division by zero results in NaN plus obviously I can't have turned
     ! anything over if there was nothing to start out with...
@@ -942,130 +958,163 @@ module model_likelihood_module
         out_lab        = sum(M_FLUXES(io_start:io_finish,8) &
                             +Rg_from_labile(io_start:io_finish) &
                             +Rm_from_labile(io_start:io_finish) &
-                            +fire_loss_labile(io_start:io_finish) &
-                            +harvest_loss_labile(io_start:io_finish))
+                            +fire_emiss_labile(io_start:io_finish) &
+                            +fire_litter_labile(io_start:io_finish) &
+                            +harvest_extracted_labile(io_start:io_finish) &
+                            +harvest_residue_labile(io_start:io_finish))
         in_out_lab_yr1 = sumlab_yr1 &
                        / sum(M_FLUXES(1:steps_per_year,8) &
                             +Rg_from_labile(1:steps_per_year) &
                             +Rm_from_labile(1:steps_per_year) &
-                            +fire_loss_labile(1:steps_per_year) &
-                            +harvest_loss_labile(1:steps_per_year))
+                            +fire_emiss_labile(1:steps_per_year) &
+                            +fire_litter_labile(1:steps_per_year) &
+                            +harvest_extracted_labile(1:steps_per_year) &
+                            +harvest_residue_labile(1:steps_per_year))
         in_out_lab_yr2 = sumlab_yr2 &
                        / sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),8) &
                             +Rg_from_labile((steps_per_year+1):(steps_per_year*2)) &
                             +Rm_from_labile((steps_per_year+1):(steps_per_year*2)) &
-                            +fire_loss_labile((steps_per_year+1):(steps_per_year*2)) &
-                            +harvest_loss_labile((steps_per_year+1):(steps_per_year*2)))
+                            +fire_emiss_labile((steps_per_year+1):(steps_per_year*2)) &
+                            +fire_litter_labile((steps_per_year+1):(steps_per_year*2)) &
+                            +harvest_extracted_labile((steps_per_year+1):(steps_per_year*2)) &
+                            +harvest_residue_labile((steps_per_year+1):(steps_per_year*2)))
         ! Cfoliage
 !        in_out_fol  = sumfol  / sum(M_FLUXES(:,10)+fire_loss_foliar+harvest_loss_foliar)
         in_fol      = sum(M_FLUXES(io_start:io_finish,8))
         out_fol     = sum(M_FLUXES(io_start:io_finish,10) &
-                         +fire_loss_foliar(io_start:io_finish) &
-                         +harvest_loss_foliar(io_start:io_finish))
+                         +fire_emiss_foliar(io_start:io_finish) &
+                         +fire_litter_foliar(io_start:io_finish) &
+                         +harvest_extracted_foliar(io_start:io_finish) &
+                         +harvest_residue_foliar(io_start:io_finish))
         in_out_fol_yr1  = sumfol_yr1  / sum(M_FLUXES(1:steps_per_year,10) &
-                                           +fire_loss_foliar(1:steps_per_year) &
-                                           +harvest_loss_foliar(1:steps_per_year))
+                                           +fire_emiss_foliar(1:steps_per_year) &
+                                           +fire_litter_foliar(1:steps_per_year) &
+                                           +harvest_extracted_foliar(1:steps_per_year) &
+                                           +harvest_residue_foliar(1:steps_per_year))
         in_out_fol_yr2  = sumfol_yr2  / sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),10) &
-                                           +fire_loss_foliar((steps_per_year+1):(steps_per_year*2)) &
-                                           +harvest_loss_foliar((steps_per_year+1):(steps_per_year*2)))
+                                           +fire_emiss_foliar((steps_per_year+1):(steps_per_year*2)) &
+                                           +fire_litter_foliar((steps_per_year+1):(steps_per_year*2)) &
+                                           +harvest_extracted_foliar((steps_per_year+1):(steps_per_year*2)) &
+                                           +harvest_residue_foliar((steps_per_year+1):(steps_per_year*2)))
         ! Croot
-!        in_out_root = sumroot / sum(M_FLUXES(:,12)+fire_loss_roots+harvest_loss_roots)
+!        in_out_root = sumroot / sum(M_FLUXES(:,12)+fire_emiss_roots+fire_litter_roots+harvest_loss_roots)
         in_root     = sum(M_FLUXES(io_start:io_finish,6))
         out_root    = sum(M_FLUXES(io_start:io_finish,12) &
-                         +fire_loss_roots(io_start:io_finish) &
-                         +harvest_loss_roots(io_start:io_finish))
+                         +fire_emiss_roots(io_start:io_finish) &
+                         +fire_litter_roots(io_start:io_finish) &
+                         +harvest_extracted_roots(io_start:io_finish) &
+                         +harvest_residue_roots(io_start:io_finish))
         in_out_root_yr1 = sumroot_yr1 / sum(M_FLUXES(1:steps_per_year,12) &
-                                           +fire_loss_roots(1:steps_per_year) &
-                                           +harvest_loss_roots(1:steps_per_year))
+                                           +fire_emiss_roots(1:steps_per_year) &
+                                           +fire_litter_roots(1:steps_per_year) &
+                                           +harvest_extracted_roots(1:steps_per_year) &
+                                           +harvest_residue_roots(1:steps_per_year))
         in_out_root_yr2 = sumroot_yr2 / sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),12) &
-                                           +fire_loss_roots((steps_per_year+1):(steps_per_year*2)) &
-                                           +harvest_loss_roots((steps_per_year+1):(steps_per_year*2)))
+                                           +fire_emiss_roots((steps_per_year+1):(steps_per_year*2)) &
+                                           +fire_litter_roots((steps_per_year+1):(steps_per_year*2)) &
+                                           +harvest_extracted_roots((steps_per_year+1):(steps_per_year*2)) &
+                                           +harvest_residue_roots((steps_per_year+1):(steps_per_year*2)))
         ! Cwood
 !        in_out_wood = sumwood / sum(M_FLUXES(:,11)+fire_loss_wood+harvest_loss_wood)
         in_wood     = sum(M_FLUXES(io_start:io_finish,7))
         out_wood    = sum(M_FLUXES(io_start:io_finish,11) &
-                         +fire_loss_wood(io_start:io_finish) &
-                         +harvest_loss_wood(io_start:io_finish))
+                         +fire_emiss_wood(io_start:io_finish) &
+                         +fire_litter_wood(io_start:io_finish) &
+                         +harvest_extracted_wood(io_start:io_finish) &
+                         +harvest_residue_wood(io_start:io_finish))
         in_out_wood_yr1 = sumwood_yr1 / sum(M_FLUXES(1:steps_per_year,11) &
-                                           +fire_loss_wood(1:steps_per_year) &
-                                           +harvest_loss_wood(1:steps_per_year))
+                                           +fire_emiss_wood(1:steps_per_year) &
+                                           +fire_litter_wood(1:steps_per_year) &
+                                           +harvest_extracted_wood(1:steps_per_year) &
+                                           +harvest_residue_wood(1:steps_per_year))
         in_out_wood_yr2 = sumwood_yr2 / sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),11) &
-                                           +fire_loss_wood((steps_per_year+1):(steps_per_year*2)) &
-                                           +harvest_loss_wood((steps_per_year+1):(steps_per_year*2)))
+                                           +fire_emiss_wood((steps_per_year+1):(steps_per_year*2)) &
+                                           +fire_litter_wood((steps_per_year+1):(steps_per_year*2)) &
+                                           +harvest_extracted_wood((steps_per_year+1):(steps_per_year*2)) &
+                                           +harvest_residue_wood((steps_per_year+1):(steps_per_year*2)))
         ! Clitter
 !        in_out_lit = sum(M_FLUXES(:,10) &
 !                        +M_FLUXES(:,12) &
 !                        +fire_residue_to_litter &
 !                        +harvest_residue_to_litter) &
-!                   / sum(M_FLUXES(:,13)+M_FLUXES(:,15)+fire_loss_litter+harvest_loss_litter)
+!                   / sum(M_FLUXES(:,13)+M_FLUXES(:,15)+fire_emiss_litter+fire_litter_litter+harvest_loss_litter)
         in_lit     = sum(M_FLUXES(io_start:io_finish,10) &
                         +M_FLUXES(io_start:io_finish,12) &
                         +fire_residue_to_litter(io_start:io_finish) &
                         +harvest_residue_to_litter(io_start:io_finish))
         out_lit    = sum(M_FLUXES(io_start:io_finish,13)+M_FLUXES(io_start:io_finish,15) &
-                        +fire_loss_litter(io_start:io_finish)+harvest_loss_litter(io_start:io_finish))
+                        +fire_emiss_litter(io_start:io_finish)+fire_litter_litter(io_start:io_finish) &
+                        +harvest_extracted_litter(io_start:io_finish))
         in_out_lit_yr1 = sum(M_FLUXES(1:steps_per_year,10) &
                             +M_FLUXES(1:steps_per_year,12) &
                             +fire_residue_to_litter(1:steps_per_year) &
                             +harvest_residue_to_litter(1:steps_per_year)) &
                        / sum(M_FLUXES(1:steps_per_year,13) &
                             +M_FLUXES(1:steps_per_year,15) &
-                            +fire_loss_litter(1:steps_per_year) &
-                            +harvest_loss_litter(1:steps_per_year))
+                            +fire_emiss_litter(1:steps_per_year) &
+                            +fire_litter_litter(1:steps_per_year) &
+                            +harvest_extracted_litter(1:steps_per_year))
         in_out_lit_yr2 = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),10) &
                             +M_FLUXES((steps_per_year+1):(steps_per_year*2),12) &
                             +fire_residue_to_litter((steps_per_year+1):(steps_per_year*2)) &
                             +harvest_residue_to_litter((steps_per_year+1):(steps_per_year*2))) &
                        / sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),13) &
                             +M_FLUXES((steps_per_year+1):(steps_per_year*2),15) &
-                            +fire_loss_litter((steps_per_year+1):(steps_per_year*2)) &
-                            +harvest_loss_litter((steps_per_year+1):(steps_per_year*2)))
+                            +fire_emiss_litter((steps_per_year+1):(steps_per_year*2)) &
+                            +fire_litter_litter((steps_per_year+1):(steps_per_year*2)) &
+                            +harvest_extracted_litter((steps_per_year+1):(steps_per_year*2)))
         ! Csom
 !        in_out_som = sum(M_FLUXES(:,15)+M_FLUXES(:,20)+fire_residue_to_som+harvest_residue_to_som) &
-!                   / sum(M_FLUXES(:,14)+fire_loss_som+harvest_loss_som)
+!                   / sum(M_FLUXES(:,14)+fire_emiss_som+fire_litter_som+harvest_loss_som)
         in_som     = sum(M_FLUXES(io_start:io_finish,15)+M_FLUXES(io_start:io_finish,20) &
                         +fire_residue_to_som(io_start:io_finish)+harvest_residue_to_som(io_start:io_finish))
         out_som    = sum(M_FLUXES(io_start:io_finish,14) &
-                        +fire_loss_som(io_start:io_finish) &
-                        +harvest_loss_som(io_start:io_finish))
+                        +fire_emiss_som(io_start:io_finish) &
+                        +fire_litter_som(io_start:io_finish) &
+                        +harvest_extracted_som(io_start:io_finish))
         in_out_som_yr1 = sum(M_FLUXES(1:steps_per_year,15)+ &
                              M_FLUXES(1:steps_per_year,20)+ &
                              fire_residue_to_som(1:steps_per_year)+ &
                              harvest_residue_to_som(1:steps_per_year)) &
                        / sum(M_FLUXES(1:steps_per_year,14) &
-                            +fire_loss_som(1:steps_per_year) &
-                            +harvest_loss_som(1:steps_per_year))
+                            +fire_emiss_som(1:steps_per_year) &
+                            +fire_litter_som(1:steps_per_year) &
+                            +harvest_extracted_som(1:steps_per_year))
         in_out_som_yr2 = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),15)+ &
                              M_FLUXES((steps_per_year+1):(steps_per_year*2),20)+ &
                              fire_residue_to_som((steps_per_year+1):(steps_per_year*2))+ &
                              harvest_residue_to_som((steps_per_year+1):(steps_per_year*2))) &
                        / sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),14) &
-                            +fire_loss_som((steps_per_year+1):(steps_per_year*2)) &
-                            +harvest_loss_som((steps_per_year+1):(steps_per_year*2)))
-        ! Clitwood
-!        in_out_litwood = sum(M_FLUXES(:,11)+fire_residue_to_litwood+harvest_residue_to_litwood) &
-!                       / sum(M_FLUXES(:,20)+M_FLUXES(:,4)+fire_loss_litwood+harvest_loss_litwood)
-        in_litwood     = sum(M_FLUXES(io_start:io_finish,11) &
-                            +fire_residue_to_litwood(io_start:io_finish) &
-                            +harvest_residue_to_litwood(io_start:io_finish))
-        out_litwood    = sum(M_FLUXES(io_start:io_finish,20) &
+                            +fire_emiss_som((steps_per_year+1):(steps_per_year*2)) &
+                            +fire_litter_som((steps_per_year+1):(steps_per_year*2)) &
+                            +harvest_extracted_som((steps_per_year+1):(steps_per_year*2)))
+        ! Cwoodlitter
+!        in_out_woodlitter = sum(M_FLUXES(:,11)+fire_residue_to_woodlitter+harvest_residue_to_woodlitter) &
+!                       / sum(M_FLUXES(:,20)+M_FLUXES(:,4)+fire_emiss_woodlitter+fire_litter_woodlitter+harvest_loss_woodlitter)
+        in_woodlitter     = sum(M_FLUXES(io_start:io_finish,11) &
+                            +fire_residue_to_woodlitter(io_start:io_finish) &
+                            +harvest_residue_to_woodlitter(io_start:io_finish))
+        out_woodlitter    = sum(M_FLUXES(io_start:io_finish,20) &
                             +M_FLUXES(io_start:io_finish,4) &
-                            +fire_loss_litwood(io_start:io_finish) &
-                            +harvest_loss_litwood(io_start:io_finish))
-        in_out_litwood_yr1 = sum(M_FLUXES(1:steps_per_year,11) &
-                                +fire_residue_to_litwood(1:steps_per_year) &
-                                +harvest_residue_to_litwood(1:steps_per_year)) &
+                            +fire_emiss_woodlitter(io_start:io_finish) &
+                            +fire_litter_woodlitter(io_start:io_finish) &
+                            +harvest_extracted_woodlitter(io_start:io_finish))
+        in_out_woodlitter_yr1 = sum(M_FLUXES(1:steps_per_year,11) &
+                                +fire_residue_to_woodlitter(1:steps_per_year) &
+                                +harvest_residue_to_woodlitter(1:steps_per_year)) &
                            / sum(M_FLUXES(1:steps_per_year,20) &
                                 +M_FLUXES(1:steps_per_year,4) &
-                                +fire_loss_litwood(1:steps_per_year) &
-                                +harvest_loss_litwood(1:steps_per_year))
-        in_out_litwood_yr2 = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),11) &
-                                +fire_residue_to_litwood((steps_per_year+1):(steps_per_year*2)) &
-                                +harvest_residue_to_litwood((steps_per_year+1):(steps_per_year*2))) &
+                                +fire_emiss_woodlitter(1:steps_per_year) &
+                                +fire_litter_woodlitter(1:steps_per_year) &
+                                +harvest_extracted_woodlitter(1:steps_per_year))
+        in_out_woodlitter_yr2 = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),11) &
+                                +fire_residue_to_woodlitter((steps_per_year+1):(steps_per_year*2)) &
+                                +harvest_residue_to_woodlitter((steps_per_year+1):(steps_per_year*2))) &
                            / sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),20) &
                                 +M_FLUXES((steps_per_year+1):(steps_per_year*2),4) &
-                                +fire_loss_litwood((steps_per_year+1):(steps_per_year*2)) &
-                                +harvest_loss_litwood((steps_per_year+1):(steps_per_year*2)))
+                                +fire_emiss_woodlitter((steps_per_year+1):(steps_per_year*2)) &
+                                +fire_litter_woodlitter((steps_per_year+1):(steps_per_year*2)) &
+                                +harvest_extracted_woodlitter((steps_per_year+1):(steps_per_year*2)))
 
         ! Assess pool dynamics relative to their own steady state attractors
         ! Based on Bloom et al (2016), PNAS. Combination of the in/out ratio and
@@ -1126,41 +1175,41 @@ module model_likelihood_module
         ! Coarse+fine woody debris
 !        Rs = in_out_litwood * (jan_mean_pools(7) / jan_first_pools(7))
 !        if (abs(Rs-in_out_litwood) > 0.1d0 .or. abs(log(in_out_litwood)) > EQF10) then
-        if (abs(log(in_out_litwood_yr1)) - abs(log(in_out_litwood_yr2)) > etol .or. &
-            abs(log(in_litwood/out_litwood)) > EQF5) then
+        if (abs(log(in_out_woodlitter_yr1)) - abs(log(in_out_woodlitter_yr2)) > etol .or. &
+            abs(log(in_woodlitter/out_woodlitter)) > EQF5) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(27) = 0
         end if
 
         ! Determine the steady state estimate of wood (gC/m2)
         SSwood = (in_wood/out_wood) * jan_mean_pools(4)
         ! Based on the wood SS (gC/m2) and the sum fractional loss per day determine the mean input to litwood...
-        SSlitwood = SSwood * (out_wood/jan_mean_pools(4))
+        SSwoodlitter = SSwood * (out_wood/jan_mean_pools(4))
         ! ...then estimate the actual steady state wood litter
-        SSlitwood = (SSlitwood/out_litwood) * jan_mean_pools(7)
+        SSwoodlitter = (SSwoodlitter/out_woodlitter) * jan_mean_pools(7)
         ! Steady state of som requires accounting for foliar, fine root and wood litter inputs
         ! and adjusting for the litwood input already included
         SSsom = in_som - sum(M_FLUXES(io_start:io_finish,20))
         ! Now repeat the process as done for litwood to estimate the inputs,
         ! adjusting for the fraction of litwood output which is respired not decomposed
-        SSsom = SSsom + (SSlitwood * (out_litwood/jan_mean_pools(7)) * pars(1))
+        SSsom = SSsom + (SSwoodlitter * (out_woodlitter/jan_mean_pools(7)) * pars(1))
         ! Accounting for losses and scaling to SSsom
         SSsom = (SSsom / out_som) * jan_mean_pools(6)
         ! It is reasonable to assume that the steady state for woody litter
         ! should be ~ less than half that of woody biomass...
-        if (SSlitwood / SSwood > 0.60d0  ) then
+        if (SSwoodlitter / SSwood > 0.60d0  ) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(28) = 0
         end if
         ! ... and less than soil organic matter
-        if ( SSsom < SSlitwood ) then
+        if ( SSsom < SSwoodlitter ) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(29) = 0
         end if
         ! It is reasonable to assume that the steady state for woody litter
 !        ! should be ~ less than half that of woody biomass...
-!        if ((in_out_litwood * jan_mean_pools(7)) / (in_out_wood * jan_mean_pools(4)) > 0.60d0  ) then
+!        if ((in_out_woodlitter * jan_mean_pools(7)) / (in_out_wood * jan_mean_pools(4)) > 0.60d0  ) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(28) = 0
 !        end if
 !        ! ... and less than soil organic matter
-!        if ( (in_out_som * jan_mean_pools(6)) < (in_out_litwood * jan_mean_pools(7)) ) then
+!        if ( (in_out_som * jan_mean_pools(6)) < (in_out_woodlitter * jan_mean_pools(7)) ) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(29) = 0
 !        end if
 !        if (pars(37) / (in_out_wood * jan_mean_pools(4)) > 0.60d0  ) then
@@ -1501,7 +1550,9 @@ module model_likelihood_module
   !
   double precision function likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness, fire_loss_wood
+    use carbon_model_mod, only: layer_thickness, &
+                                fire_emiss_wood, &
+                               fire_litter_wood
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -1850,16 +1901,16 @@ module model_likelihood_module
     end if
 
     ! Estimate the biological steady state attractor on the wood pool.
-    ! NOTE: this arrangement explicitly neglects the impact of disturbance on
-    ! residence time (i.e. no fire and biomass removal)
+    ! NOTE: this arrangement explicitly neglects the impact of harvest disturbance on
+    ! residence time (i.e. biomass removal)
     if (DATAin%otherpriors(5) > -9998) then
         ! Estimate the mean annual input to the wood pool (gC.m-2.day-1) and
         ! remove the day-1 by multiplying by residence time (day)
         !tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
         input = sum(DATAin%M_FLUXES(:,7))
-        output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+fire_loss_wood))
+        output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+fire_emiss_wood+fire_litter_wood))
         tot_exp = (input/dble(DATAin%nodays)) * (output/dble(DATAin%nodays))
-        tot_exp =  DATAin%otherpriorweight(5) * ((tot_exp-DATAin%otherpriors(5))/DATAin%otherpriorunc(5))**2
+        tot_exp =  DATAin%otherpriorweight(5)* ((tot_exp-DATAin%otherpriors(5))/DATAin%otherpriorunc(5))**2
         likelihood = likelihood-tot_exp
     endif
 
@@ -1882,7 +1933,9 @@ module model_likelihood_module
   !
   double precision function scale_likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness, fire_loss_wood
+    use carbon_model_mod, only: layer_thickness, &
+                                fire_emiss_wood, &
+                               fire_litter_wood
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -2238,16 +2291,16 @@ module model_likelihood_module
     end if
 
     ! Estimate the biological steady state attractor on the wood pool.
-    ! NOTE: this arrangement explicitly neglects the impact of disturbance on
-    ! residence time (i.e. no fire and biomass removal)
+    ! NOTE: this arrangement explicitly neglects the impact of harvest disturbance on
+    ! residence time (i.e. biomass removal)
     if (DATAin%otherpriors(5) > -9998) then
         ! Estimate the mean annual input to the wood pool (gC.m-2.day-1) and
         ! remove the day-1 by multiplying by residence time (day)
         !tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
         input = sum(DATAin%M_FLUXES(:,7))
-        output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+fire_loss_wood))
+        output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+fire_emiss_wood+fire_litter_wood))
         tot_exp = (input/dble(DATAin%nodays)) * (output/dble(DATAin%nodays))
-        tot_exp =  DATAin%otherpriorweight(5) * ((tot_exp-DATAin%otherpriors(5))/DATAin%otherpriorunc(5))**2
+        tot_exp =  DATAin%otherpriorweight(5)* ((tot_exp-DATAin%otherpriors(5))/DATAin%otherpriorunc(5))**2
         scale_likelihood = scale_likelihood-tot_exp
     endif
 
