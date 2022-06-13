@@ -128,7 +128,6 @@ module CARBON_MODEL_MOD
            ,fire_residue_to_litwood   &
            ,fire_residue_to_som       &
            ,itemp,ivpd,iphoto&
-           ,extracted_C      &
            ,dim_1,dim_2      &
            ,nos_trees        &
            ,nos_inputs       &
@@ -286,7 +285,7 @@ module CARBON_MODEL_MOD
                      ,fol_turn_crit
 
   double precision, allocatable, dimension(:) :: Rg_from_labile,                &
-                                  extracted_C,itemp,ivpd,iphoto, &
+                                              itemp,ivpd,iphoto, &
                                          gs_demand_supply_ratio, & ! actual:potential stomatal conductance
                                                 gs_total_canopy, & ! stomatal conductance (mmolH2O/m2ground/day)
                                                 gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/day)

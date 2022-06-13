@@ -131,8 +131,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     # Number of met parameters
     # Number of model parameters to be optimised
     nopools=array(4,dim=c(length(ctessel_pft)))
-    nopars=array(17,dim=c(length(ctessel_pft)))
-    nofluxes=array(28,dim=c(length(ctessel_pft)))
+    nopars=array(21,dim=c(length(ctessel_pft)))
+    nofluxes=array(32,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC_CDEA_no_lit_root",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } else if (modelname == "DALEC_EVERGREEN") {
     # information contains is
@@ -140,8 +140,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     # Number of met parameters
     # Number of model parameters to be optimised
     nopools=array(5,dim=c(length(ctessel_pft)))
-    nopars=array(17,dim=c(length(ctessel_pft)))
-    nofluxes=array(28,dim=c(length(ctessel_pft)))
+    nopars=array(22,dim=c(length(ctessel_pft)))
+    nofluxes=array(35,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC_EVERGREEN",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } else if (modelname == "DALEC_EVERGREEN_no_lit_root") {
     # information contains is
@@ -149,7 +149,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     # Number of met parameters
     # Number of model parameters to be optimised
     nopools=array(3,dim=c(length(ctessel_pft)))
-    nopars=array(11,dim=c(length(ctessel_pft)))
+    nopars=array(15,dim=c(length(ctessel_pft)))
     nofluxes=array(28,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC_EVERGREEN_no_lit_root",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } else if (modelname == "DALEC") {
@@ -158,7 +158,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     # Number of met parameters
     # Number of model parameters to be optimised
     nopools=array(7,dim=c(length(ctessel_pft)))
-    nopars=array(43,dim=c(length(ctessel_pft)))
+    nopars=array(48,dim=c(length(ctessel_pft)))
     nofluxes=array(25,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } else if (modelname == "DALEC_BUCKET") {

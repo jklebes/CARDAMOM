@@ -185,17 +185,17 @@ module cardamom_io
     else if (DATAin%ID == 22) then
         ! ID = 22 - DALEC_EVERGREEN
         DATAin%nopools = 5
-        DATAin%nopars = 17
-        DATAin%nofluxes = 28
+        DATAin%nopars = 22
+        DATAin%nofluxes = 35
     else if (DATAin%ID == 23) then
         ! ID = 23 - DALEC_CDEA_no_lit_root
         DATAin%nopools = 4
-        DATAin%nopars = 17
-        DATAin%nofluxes = 28
+        DATAin%nopars = 21
+        DATAin%nofluxes = 32
     else if (DATAin%ID == 24) then
         ! ID = 24 - DALEC_EVERGREEN_no_lit_root
         DATAin%nopools = 3
-        DATAin%nopars = 11
+        DATAin%nopars = 15
         DATAin%nofluxes = 28
     else if (DATAin%ID == 25) then
         ! ID = 25 - DALEC_CDEA_ACM2
@@ -205,7 +205,7 @@ module cardamom_io
     else if (DATAin%ID == 26) then
         ! ID = 26 - DALEC
         DATAin%nopools = 7
-        DATAin%nopars = 43
+        DATAin%nopars = 48
         DATAin%nofluxes = 25
     else if (DATAin%ID == 27) then
         ! ID = 27 - DALEC_CDEA_ACM2_BUCKET

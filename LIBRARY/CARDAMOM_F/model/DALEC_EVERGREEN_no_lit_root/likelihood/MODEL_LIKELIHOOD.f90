@@ -174,7 +174,7 @@ module model_likelihood_module
     if (.not.sanity_check) call model_sanity_check(PI%parini)
 
     ! call EDCs which can be evaluated prior to running the model
-    call EDC1_CDEA_LU_FIRES(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+    call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
@@ -184,7 +184,7 @@ module model_likelihood_module
                      ,DATAin%M_GPP)
 
     ! assess post running EDCs
-    call EDC2_CDEA_LU_FIRES(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+    call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
                      ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                      ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
@@ -238,7 +238,7 @@ module model_likelihood_module
     if (DATAin%EDC == 1) then
 
         ! call EDCs which can be evaluated prior to running the model
-        call EDC1_CDEA_LU_FIRES(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+        call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
@@ -257,7 +257,7 @@ module model_likelihood_module
     if (DATAin%EDC == 1) then
 
         ! check edc2
-        call EDC2_CDEA_LU_FIRES(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
                      ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                      ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
@@ -342,7 +342,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine EDC1_CDEA_LU_FIRES(PARS, npars, meantemp, meanrad, EDC1)
+  subroutine assess_EDC1(PARS, npars, meantemp, meanrad, EDC1)
 
     ! subroutine assessed the current parameter sets for passing ecological and
     ! steady state contraints (Bloom et al., 2014).
@@ -402,11 +402,11 @@ module model_likelihood_module
 
     ! could always add more / remove some
 
-  end subroutine EDC1_CDEA_LU_FIRES
+  end subroutine assess_EDC1
   !
   !------------------------------------------------------------------
   !
-  subroutine EDC2_CDEA_LU_FIRES(npars,nomet,nofluxes,nopools,nodays,deltat &
+  subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodays,deltat &
                       ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
                       ,meantemp,EDC2)
 
@@ -499,13 +499,13 @@ module model_likelihood_module
     ! get total in and out for each pool
     ! foliar
     Fin(1)  = FT(4)
-    Fout(1) = FT(10) + FT(19) + FT(25)
+    Fout(1) = FT(10) + FT(18) + FT(21) + FT(24) + FT(27)
     ! root + wood
     Fin(2)  = FT(6)
-    Fout(2) = FT(11) + FT(20) + FT(26)
+    Fout(2) = FT(11) + FT(19) + FT(22) + FT(25) + FT(28)
     ! litter + som
     Fin(3)  = FT(10) + FT(11)
-    Fout(3) = FT(13) + FT(21)
+    Fout(3) = FT(13) + FT(20) + FT(26)
 
     ! Iterate through C pools to determine whether they have their ratio of
     ! input and outputs are outside of steady state approximation.
@@ -552,7 +552,7 @@ module model_likelihood_module
        end do ! for nopools .and. EDC .or. DIAG condition
     end if ! min pool assessment
 
-  end subroutine EDC2_CDEA_LU_FIRES
+  end subroutine assess_EDC2
   !
   !------------------------------------------------------------------
   !
@@ -744,7 +744,7 @@ module model_likelihood_module
     if (DATAin%EDC == 1) then
 
         ! call EDCs which can be evaluated prior to running the model
-        call EDC1_CDEA_LU_FIRES(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+        call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
@@ -763,7 +763,7 @@ module model_likelihood_module
     if (DATAin%EDC == 1) then
 
         ! check edc2
-        call EDC2_CDEA_LU_FIRES(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
                      ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                      ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
