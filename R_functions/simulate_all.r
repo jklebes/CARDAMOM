@@ -1876,7 +1876,6 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
   } else if (model_name == "DALEC_EVERGREEN") {
       output_dim = 27 ; MTT_dim = 5 ; SS_dim = 5
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
-      # if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
       tmp=.Fortran( "rdalecevergreen",output_dim=as.integer(output_dim)
                                      ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
                                      ,met=as.double(t(met))
@@ -1953,18 +1952,6 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$NPP_foliage_fraction = NPP_fraction[,1]
       states_all$NPP_roots_fraction = NPP_fraction[,2]
       states_all$NPP_wood_fraction = NPP_fraction[,3]
-
-
-        #lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
-        #              rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
-        #              nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
-        #              som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
-        #              root_gCm2 = output[,,9], litter_gCm2 = output[,,10],
-        #              labile_gCm2 = output[,,11], foliage_gCm2 = output[,,12],
-        #              harvest_gCm2day = output[,,13], fire_gCm2day = output[,,14],
-        #              aNPP = aNPP, MTT = MTT, SS_gCm2 = SS_gCm2, aMTT = aMTT, natMTT = MTTnat)
-      # add newly calculated variables
-      # states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
       # Final tidy
       rm(output,MTT_years,SS_gCm2)
   } else if (model_name == "DALEC_EVERGREEN_no_lit_root") {
