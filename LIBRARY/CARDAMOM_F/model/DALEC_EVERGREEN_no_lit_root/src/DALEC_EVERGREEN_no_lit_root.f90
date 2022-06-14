@@ -517,7 +517,7 @@ contains
           end if ! Burned_area > 0
       else
           ! set fluxes to zero
-          FLUXES(n,17:26) = 0d0
+          FLUXES(n,17:22) = 0d0
       end if
 
     end do ! nodays loop

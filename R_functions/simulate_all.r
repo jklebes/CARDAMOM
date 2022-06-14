@@ -1834,45 +1834,81 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
   } else if (model_name == "DALEC_CDEA_no_lit_root") {
-      output_dim=19
-      dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
-      if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
-      tmp=.Fortran( "rdaleccdeanolitroot",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim)
-                                         ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
-                                         ,met=as.double(t(met))
-                                         ,pars=as.double(pars_in),out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
-                                         ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
-                                         ,out_var3=as.double(array(0,dim=c(nos_iter,MTT_dim)))
-                                         ,out_var4=as.double(array(0,dim=c(nos_iter,SS_dim)))
-                                         ,out_var5=as.double(array(0,dim=c(nos_iter,MTT_dim,noyears)))
-                                         ,out_var6=as.double(array(0,dim=c(nos_iter,MTT_dim)))
-                                         ,lat=as.double(lat)
-                                         ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
-                                         ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
-                                         ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
-                                         ,noyears=as.integer(noyears)
-                                         ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter))
-      output = tmp$out_var   ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
-      aNPP = tmp$out_var2    ; aNPP = array(aNPP, dim=c(nos_iter,aNPP_dim))
-      MTT = tmp$out_var3     ; MTT = array(MTT, dim=c(nos_iter,MTT_dim))
-      SS_gCm2 = tmp$out_var4 ; SS_gCm2 = array(SS_gCm2, dim=c(nos_iter,SS_dim))
-      aMTT = tmp$out_var5    ; aMTT = array(aMTT, dim=c(nos_iter,MTT_dim,noyears))
-      MTTnat = tmp$out_var6  ; MTTnat = array(MTTnat, dim=c(nos_iter,MTT_dim))
-      dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
-      rm(tmp) ; gc()
-      # Create the output object
-      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
-                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
-                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
-                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
-                      root_gCm2 = output[,,9], litter_gCm2 = output[,,10],
-                      labile_gCm2 = output[,,11], foliage_gCm2 = output[,,12],
-                      harvest_gCm2day = output[,,13], fire_gCm2day = output[,,14],
-                      aNPP = aNPP, MTT = MTT, SS_gCm2 = SS_gCm2, aMTT = aMTT, natMTT = MTTnat)
-      # add newly calculated variables
-      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
-      # Final tidy
-      rm(output,MTT_gCm2,SS_gCm2)
+    output_dim = 22 ; MTT_dim = 4 ; SS_dim = 4
+    dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
+    tmp=.Fortran( "rdaleccdealufires",output_dim=as.integer(output_dim)
+                                     ,MTT_dim=as.integer(MTT_dim)
+                                     ,SS_dim = as.integer(SS_dim)
+                                     ,met=as.double(t(met))
+                                     ,pars=as.double(pars_in)
+                                     ,out_var1=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
+                                     ,out_var2=as.double(array(0,dim=c(nos_iter,MTT_dim)))
+                                     ,out_var3=as.double(array(0,dim=c(nos_iter,SS_dim)))
+                                     ,lat=as.double(lat)
+                                     ,nopars=as.integer(PROJECT$model$nopars[site])
+                                     ,nomet=as.integer(dim(met)[2])
+                                     ,nofluxes=as.integer(PROJECT$model$nofluxes[site])
+                                     ,nopools=as.integer(PROJECT$model$nopools[site])
+                                     ,nodays=as.integer(dim(met)[1])
+                                     ,noyears=as.integer(noyears)
+                                     ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1]))))
+                                     ,nos_iter=as.integer(nos_iter) )
+    output = tmp$out_var1    ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
+    MTT_years = tmp$out_var2 ; MTT_years = array(MTT_years, dim=c(nos_iter,MTT_dim))
+    SS_gCm2 = tmp$out_var3   ; SS_gCm2 = array(SS_gCm2, dim=c(nos_iter,SS_dim))
+    # Unload the current dalec shared object
+    dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
+    rm(tmp) ; gc()
+    # create output object
+    states_all=list(# Ecosystem fluxes
+                    gpp_gCm2day = output[,,1],
+                    rauto_gCm2day = output[,,2],
+                    rhet_dom_gCm2day = output[,,3],
+                    fire_gCm2day = output[,,4],
+                    # Internal fluxes
+                    alloc_foliage_gCm2day = output[,,5],
+                    alloc_labile_gCm2day = output[,,6],
+                    alloc_roots_wood_gCm2day = output[,,7],
+                    labile_to_foliage_gCm2day = output[,,8],
+                    foliage_to_litter_gCm2day = output[,,9],
+                    roots_wood_to_litter_gCm2day = output[,,10],
+                    # Disturbance fluxes
+                    FIREemiss_labile_gCm2day = output[,,11],
+                    FIRElitter_labile_gCm2day = output[,,12],
+                    FIREemiss_foliage_gCm2day = output[,,13],
+                    FIRElitter_foliage_gCm2day = output[,,14],
+                    FIREemiss_roots_wood_gCm2day = output[,,15],
+                    FIRElitter_roots_wood_gCm2day = output[,,16],
+                    FIREemiss_dom_gCm2day = output[,,17],
+                    # C pools (gC/m2)
+                    labile_gCm2 = output[,,18],
+                    foliage_gCm2 = output[,,19],
+                    roots_wood_gCm2 = output[,,20],
+                    dom_gCm2 = output[,,21],
+                    # Canopy (phenology) properties
+                    lai_m2m2 = output[,,22],
+                    ## Aggregated variables
+                    # Mean Transit times
+                    MTT_labile_years = MTT_years[,1],
+                    MTT_foliage_years = MTT_years[,2],
+                    MTT_roots_wood_years = MTT_years[,3],
+                    MTT_dom_years = MTT_years[,4],
+                    # Steady state estimates
+                    SS_labile_gCm2 = SS_gCm2[,1],
+                    SS_foliage_gCm2 = SS_gCm2[,2],
+                    SS_roots_wood_gCm2 = SS_gCm2[,3],
+                    SS_dom_gCm2 = SS_gCm2[,4])
+    # Determine the NPP fraction of expressed NPP
+    # i.e. actual growth not GPP-Ra
+    NPP_fraction = apply(states_all$labile_to_foliage_gCm2day +
+                         states_all$alloc_foliage_gCm2day +
+                         states_all$alloc_roots_wood_gCm2day)
+    NPP_fraction = cbind(apply(states_all$labile_to_foliage_gCm2day+states_all$alloc_foliage_gCm2day,1,mean),
+                         apply(states_all$alloc_roots_wood_gCm2day,1,mean)) / NPP_fraction
+    states_all$NPP_foliage_fraction = NPP_fraction[,1]
+    states_all$NPP_roots_wood_fraction = NPP_fraction[,2]
+    # Tidy up variables
+    rm(output,MTT_years,SS_gCm2)
   } else if (model_name == "DALEC_EVERGREEN") {
       output_dim = 27 ; MTT_dim = 5 ; SS_dim = 5
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
@@ -1955,45 +1991,103 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # Final tidy
       rm(output,MTT_years,SS_gCm2)
   } else if (model_name == "DALEC_EVERGREEN_no_lit_root") {
-      output_dim=19
-      dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
-      if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
-      tmp=.Fortran( "rdalecevergreennolitroot",output_dim=as.integer(output_dim),aNPP_dim=as.integer(aNPP_dim)
-                                     ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
-                                     ,met=as.double(t(met))
-                                     ,pars=as.double(pars_in),out_var=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
-                                     ,out_var2=as.double(array(0,dim=c(nos_iter,aNPP_dim)))
-                                     ,out_var3=as.double(array(0,dim=c(nos_iter,MTT_dim)))
-                                     ,out_var4=as.double(array(0,dim=c(nos_iter,SS_dim)))
-                                     ,out_var5=as.double(array(0,dim=c(nos_iter,MTT_dim,noyears)))
-                                     ,out_var6=as.double(array(0,dim=c(nos_iter,MTT_dim)))
-                                     ,lat=as.double(lat)
-                                     ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
-                                     ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
-                                     ,pft=as.integer(pft),pft_specific=as.integer(pft_specific),nodays=as.integer(dim(met)[1])
-                                     ,noyears=as.integer(noyears)
-                                     ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter))
-      output = tmp$out_var   ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
-      aNPP = tmp$out_var2    ; aNPP = array(aNPP, dim=c(nos_iter,aNPP_dim))
-      MTT = tmp$out_var3     ; MTT = array(MTT, dim=c(nos_iter,MTT_dim))
-      SS_gCm2 = tmp$out_var4 ; SS_gCm2 = array(SS_gCm2, dim=c(nos_iter,SS_dim))
-      aMTT = tmp$out_var5    ; aMTT = array(aMTT, dim=c(nos_iter,MTT_dim,noyears))
-      MTTnat = tmp$out_var6  ; MTTnat = array(MTTnat, dim=c(nos_iter,MTT_dim))
-      dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
-      rm(tmp) ; gc()
-      # Create the output object
-      states_all=list(lai_m2m2 = output[,,1], gpp_gCm2day = output[,,2],
-                      rauto_gCm2day = output[,,3], rhet_gCm2day = output[,,4],
-                      nee_gCm2day = output[,,5], wood_gCm2 = output[,,6],
-                      som_gCm2 = output[,,7], bio_gCm2 = output[,,8],
-                      root_gCm2 = output[,,9], litter_gCm2 = output[,,10],
-                      labile_gCm2 = output[,,11], foliage_gCm2 = output[,,12],
-                      harvest_gCm2day = output[,,13], fire_gCm2day = output[,,14],
-                      aNPP = aNPP, MTT = MTT, SS_gCm2 = SS_gCm2, aMTT = aMTT, natMTT = MTTnat)
-      # add newly calculated variables
-      states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
-      # Final tidy
-      rm(output,MTT_gCm2,SS_gCm2)
+    output_dim = 24 ; MTT_dim = 3 ; SS_dim = 3
+    dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
+    tmp=.Fortran( "rdalecevergreennolitroot",output_dim=as.integer(output_dim)
+                                            ,MTT_dim=as.integer(MTT_dim)
+                                            ,SS_dim = as.integer(SS_dim)
+                                            ,met=as.double(t(met))
+                                            ,pars=as.double(pars_in)
+                                            ,out_var1=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
+                                            ,out_var2=as.double(array(0,dim=c(nos_iter,MTT_dim)))
+                                            ,out_var3=as.double(array(0,dim=c(nos_iter,SS_dim)))
+                                            ,lat=as.double(lat)
+                                            ,nopars=as.integer(PROJECT$model$nopars[site])
+                                            ,nomet=as.integer(dim(met)[2])
+                                            ,nofluxes=as.integer(PROJECT$model$nofluxes[site])
+                                            ,nopools=as.integer(PROJECT$model$nopools[site])
+                                            ,nodays=as.integer(dim(met)[1])
+                                            ,noyears=as.integer(noyears)
+                                            ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1]))))
+                                            ,nos_iter=as.integer(nos_iter) )
+    output = tmp$out_var1    ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
+    MTT_years = tmp$out_var2 ; MTT_years = array(MTT_years, dim=c(nos_iter,MTT_dim))
+    SS_gCm2 = tmp$out_var3   ; SS_gCm2 = array(SS_gCm2, dim=c(nos_iter,SS_dim))
+    # Unload the current dalec shared object
+    dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
+    rm(tmp) ; gc()
+    # create output object
+    states_all=list(# Ecosystem fluxes
+                    gpp_gCm2day = output[,,1],
+                    rauto_gCm2day = output[,,2],
+                    rhet_litter_gCm2day = output[,,3],
+                    fire_gCm2day = output[,,5],
+                    harvest_gCm2day = output[,,6],
+                    # Internal fluxes
+                    alloc_foliage_gCm2day = output[,,7],
+                    alloc_roots_wood_gCm2day = output[,,9],
+                    foliage_to_litter_gCm2day = output[,,12],
+                    roots_wood_to_litter_gCm2day = output[,,13],
+                    # Disturbance fluxes
+                    FIREemiss_foliage_gCm2day = output[,,18],
+                    FIRElitter_foliage_gCm2day = output[,,19],
+                    FIREemiss_roots_gCm2day = output[,,20],
+                    FIRElitter_roots_gCm2day = output[,,21],
+                    FIREemiss_wood_gCm2day = output[,,22],
+                    FIRElitter_wood_gCm2day = output[,,23],
+                    FIREemiss_litter_gCm2day = output[,,24],
+                    FIRElitter_litter_gCm2day = output[,,25],
+                    FIREemiss_som_gCm2day = output[,,26],
+                    HARVESTextracted_labile_gCm2day = output[,,27],
+                    HARVESTextracted_foliage_gCm2day = output[,,28],
+                    HARVESTextracted_roots_gCm2day = output[,,29],
+                    HARVESTextracted_wood_gCm2day = output[,,30],
+                    HARVESTextracted_litter_gCm2day = output[,,31],
+                    HARVESTextracted_som_gCm2day = output[,,32],
+                    HARVESTlitter_labile_gCm2day = output[,,33],
+                    HARVESTlitter_foliage_gCm2day = output[,,34],
+                    HARVESTlitter_roots_gCm2day = output[,,35],
+                    HARVESTlitter_wood_gCm2day = output[,,36],
+                    # C pools (gC/m2)
+                    labile_gCm2 = output[,,37],
+                    foliage_gCm2 = output[,,38],
+                    roots_gCm2 = output[,,39],
+                    wood_gCm2 = output[,,40],
+                    litter_gCm2 = output[,,41],
+                    som_gCm2 = output[,,42],
+                    # Canopy (phenology) properties
+                    lai_m2m2 = output[,,43],
+                    # Photosynthesis / C~water coupling related
+                    CiCa = output[,,44],
+                    ## Aggregated variables
+                    # Mean Transit times
+                    MTT_labile_years = MTT_years[,1],
+                    MTT_foliage_years = MTT_years[,2],
+                    MTT_roots_years = MTT_years[,3],
+                    MTT_wood_years = MTT_years[,4],
+                    MTT_litter_years = MTT_years[,5],
+                    MTT_som_years = MTT_years[,6],
+                    # Steady state estimates
+                    SS_labile_gCm2 = SS_gCm2[,1],
+                    SS_foliage_gCm2 = SS_gCm2[,2],
+                    SS_roots_gCm2 = SS_gCm2[,3],
+                    SS_wood_gCm2 = SS_gCm2[,4],
+                    SS_litter_gCm2 = SS_gCm2[,5],
+                    SS_som_gCm2 = SS_gCm2[,6])
+    # Determine the NPP fraction of expressed NPP
+    # i.e. actual growth not GPP-Ra
+    NPP_fraction = apply(states_all$labile_to_foliage_gCm2day +
+                         states_all$alloc_foliage_gCm2day +
+                         states_all$alloc_roots_gCm2day +
+                         states_all$alloc_wood_gCm2day,1,mean)
+    NPP_fraction = cbind(apply(states_all$labile_to_foliage_gCm2day+states_all$alloc_foliage_gCm2day,1,mean),
+                         apply(states_all$alloc_roots_gCm2day,1,mean),
+                         apply(states_all$alloc_wood_gCm2day,1,mean)) / NPP_fraction
+    states_all$NPP_foliage_fraction = NPP_fraction[,1]
+    states_all$NPP_roots_fraction = NPP_fraction[,2]
+    states_all$NPP_wood_fraction = NPP_fraction[,3]
+    # Tidy up variables
+    rm(output,MTT_years,SS_gCm2)
   } else if (model_name == "DALEC_GSI_DFOL_CWD_FR") {
       output_dim=59 ; MTT_dim = 7 ; SS_dim = 7
       # Load the required dalec shared object
