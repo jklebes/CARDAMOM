@@ -1,5 +1,5 @@
 
-subroutine rdalec1005(output_dim,MTT_dim,SS_dim &
+subroutine rdalec1005a(output_dim,MTT_dim,SS_dim &
                       ,met,pars &
                       ,out_var1,out_var2,out_var3 &
                       ,lat,nopars,nomet &
@@ -250,4 +250,4 @@ subroutine rdalec1005(output_dim,MTT_dim,SS_dim &
   ! return back to the subroutine then
   return
 
-end subroutine rdalec1005
+end subroutine rdalec1005a

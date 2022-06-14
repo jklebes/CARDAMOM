@@ -139,7 +139,7 @@ subroutine rdalec1005(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,42) = POOLS(1:nodays,6)        ! som (gC/m2)
      ! Water cycle related
      out_var1(i,1:nodays,43) = FLUXES(1:nodays,29)      ! Evapotranspiration (kgH2O.m-2.day-1)
-     out_var1(i,1:nodays,44) = POOLS(1:nodays,7)        ! surface water (kgH2O.m-2.30cmdepth)
+     out_var1(i,1:nodays,44) = POOLS(1:nodays,7)        ! plant available water (kgH2O.m-2)
      ! Canopy (phenology) properties
      out_var1(i,1:nodays,45) = lai                      ! LAI (m2/m2)
      ! Photosynthesis / C~water coupling related

@@ -643,10 +643,10 @@ contains
               FLUXES(n,37) = 0d0 ! litter extraction
               FLUXES(n,38) = soil_loss_with_roots / deltat(n)          ! som extraction
               ! Convert harvest related residue generations to daily rate for output
-              FLUXES(n,39) = labile_residue / deltat(n) ! labile residues
-              FLUXES(n,40) = foliar_residue / deltat(n) ! foliage residues
-              FLUXES(n,41) = roots_residue / deltat(n)  ! fine roots residues
-              FLUXES(n,42) = wood_residue / deltat(n)   ! wood residues
+              FLUXES(n,39) = labile_residue / deltat(n) ! labile residues to litter
+              FLUXES(n,40) = foliar_residue / deltat(n) ! foliage residues to litter
+              FLUXES(n,41) = roots_residue / deltat(n)  ! fine roots residues to litter
+              FLUXES(n,42) = wood_residue / deltat(n)   ! wood residues to som
 
               ! Total C extraction, including any potential litter and som.
               FLUXES(n,43) = sum(FLUXES(n,33:38))
