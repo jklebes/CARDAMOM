@@ -153,15 +153,9 @@ subroutine rdaleccdeanolitroot(output_dim,MTT_dim,SS_dim &
                             FLUXES(1:nodays,19) + FLUXES(1:nodays,23)) &
                           / POOLS(1:nodays,2)) * fol_filter) / dble(nodays-sum(fol_hak))
      ! Fine roots + wood
-<<<<<<< HEAD
-     out_var2(i,3) = sum( ((FLUXES(1:nodays,20) + FLUXES(1:nodays,26) + &
-                            FLUXES(1:nodays,11))                        &
-                          / POOLS(1:nodays,3)) * root_filter) / dble(nodays-sum(root_hak))
-=======
      out_var2(i,3) = sum( ((FLUXES(1:nodays,20) + FLUXES(1:nodays,24) + &
                             FLUXES(1:nodays,11)) &
                           / POOLS(1:nodays,3)) * root_wood_filter) / dble(nodays-sum(root_wood_hak))
->>>>>>> b723ffea295fd612cbc3445105fb508b6db1903c
      ! Litter (foliage+fine roots)
      out_var2(i,4) = sum( ((FLUXES(1:nodays,13) + FLUXES(1:nodays,21)) &
                           / POOLS(1:nodays,4)) * dom_filter) / dble(nodays-sum(dom_hak))
