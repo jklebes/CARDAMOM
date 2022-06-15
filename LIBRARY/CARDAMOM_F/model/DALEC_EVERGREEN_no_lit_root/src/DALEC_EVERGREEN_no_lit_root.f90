@@ -515,8 +515,15 @@ contains
               FLUXES(n,17) = FLUXES(n,18)+FLUXES(n,19)+FLUXES(n,20)
 
           end if ! Burned_area > 0
+<<<<<<< HEAD
 
       end if ! is there fire?
+=======
+      else
+          ! set fluxes to zero
+          FLUXES(n,17:22) = 0d0
+      end if
+>>>>>>> b723ffea295fd612cbc3445105fb508b6db1903c
 
     end do ! nodays loop
 
