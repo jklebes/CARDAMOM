@@ -102,7 +102,7 @@ subroutine rdalecevergreen(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,7)  = FLUXES(1:nodays,4)       ! allocation to foliage (gC/m2/day)
      out_var1(i,1:nodays,8)  = FLUXES(1:nodays,6)       ! allocation to fine roots (gC/m2/day)
      out_var1(i,1:nodays,9)  = FLUXES(1:nodays,7)       ! allocation to wood (gC/m2/day)
-     out_var1(i,1:nodays,10)  = FLUXES(1:nodays,10)      ! foliage to litter (gC/m2/day)
+     out_var1(i,1:nodays,10) = FLUXES(1:nodays,10)      ! foliage to litter (gC/m2/day)
      out_var1(i,1:nodays,11) = FLUXES(1:nodays,12)      ! fine root to litter (gC/m2/day)
      out_var1(i,1:nodays,12) = FLUXES(1:nodays,11)      ! wood to som (gC /m2/day)
      out_var1(i,1:nodays,13) = FLUXES(1:nodays,15)      ! litter to som (gC/m2/day)
@@ -167,7 +167,8 @@ subroutine rdalecevergreen(output_dim,MTT_dim,SS_dim &
      ! Estimate MRT (years)
      ! Foliage
      out_var2(i,1) = sum( ((FLUXES(1:nodays,10) + &
-                            FLUXES(1:nodays,18) + FLUXES(1:nodays,23)) &
+                            FLUXES(1:nodays,18) + FLUXES(1:nodays,23) + &
+                            FLUXES(1:nodays,28) + FLUXES(1:nodays,33)) &
                           / POOLS(1:nodays,1)) * fol_filter) / dble(nodays-sum(fol_hak))
      ! Fine roots
      out_var2(i,2) = sum( ((FLUXES(1:nodays,12) + &
@@ -185,7 +186,7 @@ subroutine rdalecevergreen(output_dim,MTT_dim,SS_dim &
                             FLUXES(1:nodays,31)) &
                           / POOLS(1:nodays,4)) * lit_filter) / dble(nodays-sum(lit_hak))
      ! Soil
-     out_var2(i,5) = sum( ((FLUXES(1:nodays,14) + FLUXES(1:nodays,22)+FLUXES(1:nodays,32)) &
+     out_var2(i,5) = sum( ((FLUXES(1:nodays,14) + FLUXES(1:nodays,22) + FLUXES(1:nodays,32)) &
                           / POOLS(1:nodays,5)) * som_filter) / dble(nodays-sum(som_hak))
 
      !
@@ -204,7 +205,7 @@ subroutine rdalecevergreen(output_dim,MTT_dim,SS_dim &
      ! soil C inputs are still changing as the wood pool is not in steady state.
      ! Therefore, at this point we can account for disturbance inputs but NOT wood.
      ! The wood input is estimated later based on the steady state its steady state estimate
-     out_var3(i,5) = sum(FLUXES(:,15)+FLUXES(:,25)+FLUXES(:,26)+FLUXES(:,35)) ! som
+     out_var3(i,5) = sum(FLUXES(:,11+)FLUXES(:,15)+FLUXES(:,25)+FLUXES(:,26)+FLUXES(:,35)) ! som
 
   end do ! nos_iter loop
 

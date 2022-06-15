@@ -164,7 +164,7 @@ subroutine rdalecevergreennolitroot(output_dim,MTT_dim,SS_dim &
      ! soil C inputs are still changing as the wood pool is not in steady state.
      ! Therefore, at this point we can account for disturbance inputs but NOT wood.
      ! The wood input is estimated later based on the steady state its steady state estimate
-     out_var3(i,3) = sum(FLUXES(:,10)+ &
+     out_var3(i,3) = sum(FLUXES(:,10)+FLUXES(:,11)+ &
                          FLUXES(:,21)+FLUXES(:,22)+ &
                          FLUXES(:,27)+FLUXES(:,28)) ! dom
   end do ! nos_iter loop

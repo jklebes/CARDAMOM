@@ -146,18 +146,21 @@ subroutine rdaleccdeanolitroot(output_dim,MTT_dim,SS_dim &
      ! Estimate MRT (years)
      ! Labile
      out_var2(i,1) = sum( ((FLUXES(1:nodays,8) + & ! Natural losses
-                            FLUXES(1:nodays,18) + FLUXES(1:nodays,22)) & ! Fire losses
+                            FLUXES(1:nodays,18) + FLUXES(1:nodays,22) + &
+                            FLUXES(1:nodays,26) + FLUXES(1:nodays,30) ) & ! Fire losses
                           / POOLS(1:nodays,1)) * lab_filter) / dble(nodays-sum(lab_hak))
      ! Foliage
      out_var2(i,2) = sum( ((FLUXES(1:nodays,10) + &
-                            FLUXES(1:nodays,19) + FLUXES(1:nodays,23)) &
+                            FLUXES(1:nodays,19) + FLUXES(1:nodays,23) + &
+                            FLUXES(1:nodays,27) + FLUXES(1:nodays,31) ) &
                           / POOLS(1:nodays,2)) * fol_filter) / dble(nodays-sum(fol_hak))
      ! Fine roots + wood
      out_var2(i,3) = sum( ((FLUXES(1:nodays,20) + FLUXES(1:nodays,24) + &
-                            FLUXES(1:nodays,11)) &
+                            FLUXES(1:nodays,11) + FLUXES(1:nodays,28) + &
+                            FLUXES(1:nodays,32) ) &
                           / POOLS(1:nodays,3)) * root_wood_filter) / dble(nodays-sum(root_wood_hak))
      ! Litter (foliage+fine roots)
-     out_var2(i,4) = sum( ((FLUXES(1:nodays,13) + FLUXES(1:nodays,21)) &
+     out_var2(i,4) = sum( ((FLUXES(1:nodays,13) + FLUXES(1:nodays,21) + FLUXES(1:nodays,29)) &
                           / POOLS(1:nodays,4)) * dom_filter) / dble(nodays-sum(dom_hak))
 
      !
@@ -169,8 +172,9 @@ subroutine rdaleccdeanolitroot(output_dim,MTT_dim,SS_dim &
      out_var3(i,1) = sum(FLUXES(:,5)) ! Labile
      out_var3(i,2) = sum(FLUXES(:,4)+FLUXES(:,8)) ! Foliage
      out_var3(i,3) = sum(FLUXES(:,6)) ! Fine root + wood
-     out_var3(i,4) = sum(FLUXES(:,10)+ &
-                         FLUXES(:,22)+FLUXES(:,23)+FLUXES(:,24))! litter (foliage + roots) + som
+     out_var3(i,4) = sum(FLUXES(:,10)+FLUXES(:,11)+ &
+                         FLUXES(:,22)+FLUXES(:,23)+FLUXES(:,24)+ &
+                         FLUXES(:,30)+FLUXES(:,31)+FLUXES(:,32))! litter (foliage + roots) + som
      ! While foliar and fine root litter can be reasonably estimated directly (above),
      ! soil C inputs are still changing as the wood pool is not in steady state.
      ! Therefore, at this point we can account for disturbance inputs but NOT wood.
