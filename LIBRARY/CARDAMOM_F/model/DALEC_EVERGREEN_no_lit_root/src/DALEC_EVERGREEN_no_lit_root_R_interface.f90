@@ -109,14 +109,14 @@ subroutine rdalecevergreennolitroot(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,15) = FLUXES(1:nodays,24)      ! harvest extracted from foliage (gC/m2/day)
      out_var1(i,1:nodays,16) = FLUXES(1:nodays,25)      ! harvest extracted from root+wood (gC/m2/day)
      out_var1(i,1:nodays,17) = FLUXES(1:nodays,26)      ! harvest extracted from som (gC/m2/day)
-     out_var1(i,1:nodays,19) = FLUXES(1:nodays,27)      ! harvest litter / residue from foliage (gC/m2/day)
-     out_var1(i,1:nodays,20) = FLUXES(1:nodays,28)      ! harvest litter / residue from root+wood (gC/m2/day)
+     out_var1(i,1:nodays,18) = FLUXES(1:nodays,27)      ! harvest litter / residue from foliage (gC/m2/day)
+     out_var1(i,1:nodays,19) = FLUXES(1:nodays,28)      ! harvest litter / residue from root+wood (gC/m2/day)
      ! C pools (gC/m2)
-     out_var1(i,1:nodays,21) = POOLS(1:nodays,1)        ! foliage (gC/m2)
-     out_var1(i,1:nodays,22) = POOLS(1:nodays,2)        ! fine root + wood (gC/m2)
-     out_var1(i,1:nodays,23) = POOLS(1:nodays,3)        ! dom (gC/m2)
+     out_var1(i,1:nodays,20) = POOLS(1:nodays,1)        ! foliage (gC/m2)
+     out_var1(i,1:nodays,21) = POOLS(1:nodays,2)        ! fine root + wood (gC/m2)
+     out_var1(i,1:nodays,22) = POOLS(1:nodays,3)        ! dom (gC/m2)
      ! Canopy (phenology) properties
-     out_var1(i,1:nodays,24) = lai                      ! LAI (m2/m2)
+     out_var1(i,1:nodays,23) = lai                      ! LAI (m2/m2)
 
      !!!
      ! Estimate residence time information
