@@ -143,17 +143,25 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
               # from the ensembles but difficult if not determined here and now before aggregation
               ###
 
-              # Calculate the combined ecosystem heterotrophic respiration.
-              # All models have a som pool, so start with that
-              states_all$rhet_gCm2day = states_all$rhet_som_gCm2day
-              # If the model has a litter pool (foliar + fine root) add this
-              if (exists(x = "rhet_litter_gCm2day", where = states_all)) {
-                  states_all$rhet_gCm2day = states_all$rhet_gCm2day + states_all$rhet_litter_gCm2day
-              }
-              # If the model has a wood litter pool add this
-              if (exists(x = "rhet_woodlitter_gCm2day", where = states_all)) {
-                  states_all$rhet_gCm2day = states_all$rhet_gCm2day + states_all$rhet_woodlitter_gCm2day
-              }
+              # If a combined ecosystem heterotrophic respiration flux does not
+              # exist we shall calculate it
+              if (exists(x = "rhet_gCm2day", where = states_all) == FALSE) {
+                  if (exists(x = "rhet_dom_gCm2day", where = states_all)) {
+                      states_all$rhet_gCm2day = states_all$rhet_dom_gCm2day
+                  } else {
+                      # Calculate the combined ecosystem heterotrophic respiration.
+                      # All models have a som pool, so start with that
+                      states_all$rhet_gCm2day = states_all$rhet_som_gCm2day
+                      # If the model has a litter pool (foliar + fine root) add this
+                      if (exists(x = "rhet_litter_gCm2day", where = states_all)) {
+                         states_all$rhet_gCm2day = states_all$rhet_gCm2day + states_all$rhet_litter_gCm2day
+                      }
+                      # If the model has a wood litter pool add this
+                      if (exists(x = "rhet_woodlitter_gCm2day", where = states_all)) {
+                         states_all$rhet_gCm2day = states_all$rhet_gCm2day + states_all$rhet_woodlitter_gCm2day
+                      }
+                  } # does rhet_dom_gCm2day exist?
+              } # does rhet_gCm2day exist?
 
               # Combine autotrophic and heterotrophic respiration into ecosystem respiration
               states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day

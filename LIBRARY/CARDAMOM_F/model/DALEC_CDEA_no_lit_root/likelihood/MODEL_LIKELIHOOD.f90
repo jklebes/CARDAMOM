@@ -487,12 +487,9 @@ module model_likelihood_module
     ! Pool exponential decay tolerance
     etol = 0.1d0
 
-    ! first calculate total flux for the whole simulation period
+    ! Calculate total flux for the simulation period
     do fl = 1, nofluxes
-        FT(fl) = 0
-        do nd = 1, nodays
-            FT(fl) = FT(fl) + M_FLUXES(nd,fl)*deltat(nd)
-        end do
+       FT(fl) = sum(M_FLUXES(1:nodays,fl)*deltat(1:nodays))
     end do
 
     ! get total in and out for each pool
@@ -506,7 +503,7 @@ module model_likelihood_module
     Fin(3)  = FT(6)
     Fout(3) = FT(11)+FT(20)+FT(24)+FT(28)+FT(32)
     ! litter + som
-    Fin(4)  = FT(10)+FT(11)+FT(24)+FT(25)+(26)
+    Fin(4)  = FT(10)+FT(11)+FT(22)+FT(23)+FT(24)+FT(30)+FT(31)+FT(32)
     Fout(4) = FT(13)+FT(21)+FT(29)
 
     ! Iterate through C pools to determine whether they have their ratio of

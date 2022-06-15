@@ -97,32 +97,41 @@ subroutine rdalecevergreen(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,3)  = FLUXES(1:nodays,13)      ! Rhet_litter (gC/m2/day)
      out_var1(i,1:nodays,4)  = FLUXES(1:nodays,14)      ! Rhet_som (gC/m2/day)
      out_var1(i,1:nodays,5)  = FLUXES(1:nodays,17)      ! Total fire (gC/m2/day)
+     out_var1(i,1:nodays,6)  = FLUXES(1:nodays,27)      ! Total harvest (gC/m2/day)
      ! C internal fluxes (gC/m2/day)
-     out_var1(i,1:nodays,6)  = FLUXES(1:nodays,4)       ! allocation to foliage (gC/m2/day)
-     out_var1(i,1:nodays,7)  = FLUXES(1:nodays,6)       ! allocation to fine roots (gC/m2/day)
-     out_var1(i,1:nodays,8)  = FLUXES(1:nodays,7)       ! allocation to wood (gC/m2/day)
-     out_var1(i,1:nodays,9)  = FLUXES(1:nodays,10)      ! foliage to litter (gC/m2/day)
-     out_var1(i,1:nodays,10) = FLUXES(1:nodays,12)      ! fine root to litter (gC/m2/day)
-     out_var1(i,1:nodays,11) = FLUXES(1:nodays,11)      ! wood to som (gC /m2/day)
-     out_var1(i,1:nodays,12) = FLUXES(1:nodays,15)      ! litter to som (gC/m2/day)
+     out_var1(i,1:nodays,7)  = FLUXES(1:nodays,4)       ! allocation to foliage (gC/m2/day)
+     out_var1(i,1:nodays,8)  = FLUXES(1:nodays,6)       ! allocation to fine roots (gC/m2/day)
+     out_var1(i,1:nodays,9)  = FLUXES(1:nodays,7)       ! allocation to wood (gC/m2/day)
+     out_var1(i,1:nodays,10)  = FLUXES(1:nodays,10)      ! foliage to litter (gC/m2/day)
+     out_var1(i,1:nodays,11) = FLUXES(1:nodays,12)      ! fine root to litter (gC/m2/day)
+     out_var1(i,1:nodays,12) = FLUXES(1:nodays,11)      ! wood to som (gC /m2/day)
+     out_var1(i,1:nodays,13) = FLUXES(1:nodays,15)      ! litter to som (gC/m2/day)
      ! C disturbance fluxes (gC/m2/day)
-     out_var1(i,1:nodays,13) = FLUXES(1:nodays,19)      ! fire emission from foliage (gC/m2/day)
-     out_var1(i,1:nodays,14) = FLUXES(1:nodays,25)      ! fire induced litter from foliage (gC/m2/day)
-     out_var1(i,1:nodays,15) = FLUXES(1:nodays,20)      ! fire emission from fine roots (gC/m2/day)
-     out_var1(i,1:nodays,16) = FLUXES(1:nodays,26)      ! fire induced litter from fine roots (gC/m2/day)
-     out_var1(i,1:nodays,17) = FLUXES(1:nodays,21)      ! fire emission from wood (gC/m2/day)
-     out_var1(i,1:nodays,18) = FLUXES(1:nodays,27)      ! fire induced litter from wood (gC/m2/day)
-     out_var1(i,1:nodays,19) = FLUXES(1:nodays,22)      ! fire emission from litter (gC/m2/day)
-     out_var1(i,1:nodays,20) = FLUXES(1:nodays,28)      ! fire induced litter from litter (gC/m2/day)
-     out_var1(i,1:nodays,21) = FLUXES(1:nodays,23)      ! fire emission from som (gC/m2/day)
+     out_var1(i,1:nodays,14) = FLUXES(1:nodays,18)      ! fire emission from foliage (gC/m2/day)
+     out_var1(i,1:nodays,15) = FLUXES(1:nodays,23)      ! fire induced litter from foliage (gC/m2/day)
+     out_var1(i,1:nodays,16) = FLUXES(1:nodays,19)      ! fire emission from fine roots (gC/m2/day)
+     out_var1(i,1:nodays,17) = FLUXES(1:nodays,24)      ! fire induced litter from fine roots (gC/m2/day)
+     out_var1(i,1:nodays,18) = FLUXES(1:nodays,20)      ! fire emission from wood (gC/m2/day)
+     out_var1(i,1:nodays,19) = FLUXES(1:nodays,25)      ! fire induced litter from wood (gC/m2/day)
+     out_var1(i,1:nodays,20) = FLUXES(1:nodays,21)      ! fire emission from litter (gC/m2/day)
+     out_var1(i,1:nodays,21) = FLUXES(1:nodays,26)      ! fire induced litter from litter (gC/m2/day)
+     out_var1(i,1:nodays,22) = FLUXES(1:nodays,22)      ! fire emission from som (gC/m2/day)
+     out_var1(i,1:nodays,23) = FLUXES(1:nodays,28)      ! harvest extracted from foliage (gC/m2/day)
+     out_var1(i,1:nodays,24) = FLUXES(1:nodays,29)      ! harvest extracted from fine roots (gC/m2/day)
+     out_var1(i,1:nodays,25) = FLUXES(1:nodays,30)      ! harvest extracted from wood (gC/m2/day)
+     out_var1(i,1:nodays,26) = FLUXES(1:nodays,31)      ! harvest extracted from litter (gC/m2/day)
+     out_var1(i,1:nodays,27) = FLUXES(1:nodays,32)      ! harvest extracted from som (gC/m2/day)
+     out_var1(i,1:nodays,28) = FLUXES(1:nodays,33)      ! harvest litter / residue from foliage (gC/m2/day)
+     out_var1(i,1:nodays,29) = FLUXES(1:nodays,34)      ! harvest litter / residue from fine roots (gC/m2/day)
+     out_var1(i,1:nodays,30) = FLUXES(1:nodays,35)      ! harvest litter / residue from wood (gC/m2/day)
      ! C pools (gC/m2)
-     out_var1(i,1:nodays,22) = POOLS(1:nodays,1)        ! foliage (gC/m2)
-     out_var1(i,1:nodays,23) = POOLS(1:nodays,2)        ! fine root (gC/m2)
-     out_var1(i,1:nodays,24) = POOLS(1:nodays,3)        ! wood (gC/m2)
-     out_var1(i,1:nodays,25) = POOLS(1:nodays,4)        ! litter (gC/m2)
-     out_var1(i,1:nodays,26) = POOLS(1:nodays,5)        ! som (gC/m2)
+     out_var1(i,1:nodays,31) = POOLS(1:nodays,1)        ! foliage (gC/m2)
+     out_var1(i,1:nodays,32) = POOLS(1:nodays,2)        ! fine root (gC/m2)
+     out_var1(i,1:nodays,33) = POOLS(1:nodays,3)        ! wood (gC/m2)
+     out_var1(i,1:nodays,34) = POOLS(1:nodays,4)        ! litter (gC/m2)
+     out_var1(i,1:nodays,35) = POOLS(1:nodays,5)        ! som (gC/m2)
      ! Canopy (phenology) properties
-     out_var1(i,1:nodays,27) = lai                      ! LAI (m2/m2)
+     out_var1(i,1:nodays,36) = lai                      ! LAI (m2/m2)
 
      !!!
      ! Estimate residence time information
@@ -158,22 +167,25 @@ subroutine rdalecevergreen(output_dim,MTT_dim,SS_dim &
      ! Estimate MRT (years)
      ! Foliage
      out_var2(i,1) = sum( ((FLUXES(1:nodays,10) + &
-                            FLUXES(1:nodays,19) + FLUXES(1:nodays,25)) &
+                            FLUXES(1:nodays,18) + FLUXES(1:nodays,23)) &
                           / POOLS(1:nodays,1)) * fol_filter) / dble(nodays-sum(fol_hak))
      ! Fine roots
      out_var2(i,2) = sum( ((FLUXES(1:nodays,12) + &
-                            FLUXES(1:nodays,20) + FLUXES(1:nodays,26)) &
+                            FLUXES(1:nodays,19) + FLUXES(1:nodays,24) + &
+                            FLUXES(1:nodays,29) + FLUXES(1:nodays,34)) &
                           / POOLS(1:nodays,2)) * root_filter) / dble(nodays-sum(root_hak))
      ! Wood
      out_var2(i,3) = sum( ((FLUXES(1:nodays,11)+ &
-                            FLUXES(1:nodays,21) + FLUXES(1:nodays,27)) &
+                            FLUXES(1:nodays,20) + FLUXES(1:nodays,25) + &
+                            FLUXES(1:nodays,30) + FLUXES(1:nodays,35)) &
                           / POOLS(1:nodays,3)) * wood_filter) / dble(nodays-sum(wood_hak))
      ! Litter (foliage+fine roots)
      out_var2(i,4) = sum( ((FLUXES(1:nodays,13) + FLUXES(1:nodays,15) + &
-                            FLUXES(1:nodays,22) + FLUXES(1:nodays,28)) &
+                            FLUXES(1:nodays,21) + FLUXES(1:nodays,26) + &
+                            FLUXES(1:nodays,31)) &
                           / POOLS(1:nodays,4)) * lit_filter) / dble(nodays-sum(lit_hak))
      ! Soil
-     out_var2(i,5) = sum( ((FLUXES(1:nodays,14) + FLUXES(1:nodays,23)) &
+     out_var2(i,5) = sum( ((FLUXES(1:nodays,14) + FLUXES(1:nodays,22)+FLUXES(1:nodays,32)) &
                           / POOLS(1:nodays,5)) * som_filter) / dble(nodays-sum(som_hak))
 
      !
@@ -186,12 +198,13 @@ subroutine rdalecevergreen(output_dim,MTT_dim,SS_dim &
      out_var3(i,2) = sum(FLUXES(:,6)) ! Fine root
      out_var3(i,3) = sum(FLUXES(:,7)) ! Wood
      out_var3(i,4) = sum(FLUXES(:,10)+FLUXES(:,12)+ &
-                         FLUXES(:,25)+FLUXES(:,26)) ! litter (foliage + roots)
+                         FLUXES(:,23)+FLUXES(:,24)+ &
+                         FLUXES(:,33)+FLUXES(:,35)) ! litter (foliage + roots)
      ! While foliar and fine root litter can be reasonably estimated directly (above),
      ! soil C inputs are still changing as the wood pool is not in steady state.
      ! Therefore, at this point we can account for disturbance inputs but NOT wood.
      ! The wood input is estimated later based on the steady state its steady state estimate
-     out_var3(i,5) = sum(FLUXES(:,15)+FLUXES(:,27)+FLUXES(:,28)) ! som
+     out_var3(i,5) = sum(FLUXES(:,15)+FLUXES(:,25)+FLUXES(:,26)+FLUXES(:,35)) ! som
 
   end do ! nos_iter loop
 
