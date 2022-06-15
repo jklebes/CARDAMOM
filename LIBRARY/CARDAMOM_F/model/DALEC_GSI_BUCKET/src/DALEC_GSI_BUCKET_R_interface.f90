@@ -295,7 +295,7 @@ subroutine rdalecgsibucket(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
                          fire_residue_to_litter + harvest_residue_to_litter) ! litter (foliage + roots)
      ! While foliar and fine root litter can be reasonably estimated directly (above),
      ! wood litter and soil C inputs are still changing as the wood pool is not in steady state.
-     ! Therefore, at this point we can account for disturbance inputs but NOT wood.
+     ! Therefore, at this point we can account for disturbance inputs (including wood) but NOT natural wood.
      ! The wood input is estimated later based on the steady state its steady state estimate
      out_var3(i,6) = sum(fire_residue_to_woodlitter + harvest_residue_to_woodlitter) ! woodlitter
      out_var3(i,7) = sum(FLUXES(:,15)+fire_residue_to_som+harvest_residue_to_som) ! som

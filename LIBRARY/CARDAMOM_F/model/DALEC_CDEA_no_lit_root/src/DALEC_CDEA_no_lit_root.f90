@@ -580,10 +580,8 @@ contains
               FLUXES(n,17) = FLUXES(n,18)+FLUXES(n,19)+FLUXES(n,20)+FLUXES(n,21)
 
           end if ! Burned_area > 0
-      else
-          ! set fluxes to zero
-          FLUXES(n,17:24) = 0d0
-      end if
+
+      end if ! any fire?
 
     end do ! nodays loop
 

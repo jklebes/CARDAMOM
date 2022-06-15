@@ -133,26 +133,6 @@ module CARBON_MODEL_MOD
            ,snow_storage                  &
            ,canopy_storage                &
            ,intercepted_rainfall          &
-           ,harvest_residue_to_litter     &
-           ,harvest_residue_to_litwood    &
-           ,harvest_residue_to_som        &
-           ,harvest_loss_litter           &
-           ,harvest_loss_litwood          &
-           ,harvest_loss_som              &
-           ,harvest_loss_labile           &
-           ,harvest_loss_foliar           &
-           ,harvest_loss_roots            &
-           ,harvest_loss_wood             &
-           ,fire_loss_labile              &
-           ,fire_loss_foliar              &
-           ,fire_loss_roots               &
-           ,fire_loss_wood                &
-           ,fire_loss_litter              &
-           ,fire_loss_litwood             &
-           ,fire_loss_som                 &
-           ,fire_residue_to_litter        &
-           ,fire_residue_to_litwood       &
-           ,fire_residue_to_som           &
            ,rainfall_time                 &
            ,Rg_from_labile                &
            ,Rm_from_labile                &
@@ -325,26 +305,6 @@ module CARBON_MODEL_MOD
                                       Resp_leaf, Resp_wood_root, & ! Total respiration (gC/m2/day)
                                           Rm_leaf, Rm_wood_root, & ! Maintenance respiration (gC/m2/day)
                                           Rg_leaf, Rg_wood_root, &
-                                      harvest_residue_to_litter, &
-                                         harvest_residue_to_som, &
-                                     harvest_residue_to_litwood, &
-                                            harvest_loss_litter, &
-                                           harvest_loss_litwood, &
-                                               harvest_loss_som, &
-                                            harvest_loss_labile, &
-                                            harvest_loss_foliar, &
-                                             harvest_loss_roots, &
-                                              harvest_loss_wood, &
-                                               fire_loss_labile, &
-                                               fire_loss_foliar, &
-                                                fire_loss_roots, &
-                                                 fire_loss_wood, &
-                                               fire_loss_litter, &
-                                              fire_loss_litwood, &
-                                                  fire_loss_som, &
-                                         fire_residue_to_litter, &
-                                        fire_residue_to_litwood, &
-                                            fire_residue_to_som, &
                                             tmp_x, ncce_history, cmi_history
 
   ! hydraulic model variables
@@ -540,27 +500,26 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     integer :: f,nxp,n,test,m
 
-    ! local fire related variables
-    double precision :: burnt_area           &
-                       ,CFF(7) = 0d0   & ! combusted and non-combustion fluxes
-                       ,NCFF(7) = 0d0  & ! with residue and non-residue seperates
-                       ,combust_eff(7) & ! combustion efficiency
-                       ,rfac(7)          ! resilience factor
-
+    ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
+    ! Modified later with the inclusion of CWD pool by TLS Aug 2020
+    double precision :: cf(7),rfac(7),burnt_area
     ! local deforestation related variables
-    double precision, dimension(5) :: post_harvest_burn   & ! how much burning to occur after
-                                     ,foliage_frac_res    &
-                                     ,roots_frac_res      &
-                                     ,rootcr_frac_res     &
-                                     ,stem_frac_res       &
-                                     ,Crootcr_part        &
+    double precision, dimension(5) :: post_harvest_burn      & ! how much burning to occur after
+                                     ,foliage_frac_res       &
+                                     ,roots_frac_res         &
+                                     ,rootcr_frac_res        &
+                                     ,stem_frac_res          &
+                                     ,roots_frac_removal     &
+                                     ,rootcr_frac_removal    &
+                                     ,Crootcr_part           &
                                      ,soil_loss_frac
-
     double precision :: labile_loss,foliar_loss      &
                        ,roots_loss,wood_loss         &
+                       ,rootcr_loss,stem_loss        &
                        ,labile_residue,foliar_residue&
                        ,roots_residue,wood_residue   &
                        ,C_total,labile_frac_res      &
+                       ,labile_frac_removal          &
                        ,Cstem,Crootcr,stem_residue   &
                        ,coarse_root_residue          &
                        ,soil_loss_with_roots
@@ -737,24 +696,46 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         coarse_root_residue = 0d0
         post_harvest_burn = 0d0
 
-        ! now load the hardcoded forest management parameters into their locations
+        ! now load the hardcoded forest management parameters into their scenario locations
 
-        ! Parameter values for deforestation variables
-        ! scenario 1
+        ! Deforestation process functions in a sequential way.
+        ! Thus, the pool_loss is first determined as a function of met(n,8) and
+        ! for fine and coarse roots whether this felling is associated with a mechanical
+        ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
+        ! fine and coarse roots may subsequently undergo mortality from which they do not recover
+        ! but allows for management activities such as grazing, mowing and coppice.
+        ! The pool_loss is then partitioned between the material which is left within the system
+        ! as a residue and thus direcly placed within one of the dead organic matter pools.
+
+        !! Parameter values for deforestation variables
+        !! Scenario 1
+        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+        ! removal which is imposed directly on these pools. These fractions vary
+        ! the assumption that the fine and coarse roots are mechanically removed.
+        ! 1 = all removed, 0 = all remains.
+        roots_frac_removal(1)  = 0d0
+        rootcr_frac_removal(1) = 0d0
         ! harvest residue (fraction); 1 = all remains, 0 = all removed
         foliage_frac_res(1) = 1d0
         roots_frac_res(1)   = 1d0
-        rootcr_frac_res(1) = 1d0
-        stem_frac_res(1)   = 0.20d0 !
+        rootcr_frac_res(1)  = 1d0
+        stem_frac_res(1)    = 0.20d0 !
         ! wood partitioning (fraction)
         Crootcr_part(1) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
         ! Csom loss due to phyical removal with roots
         ! Morison et al (2012) Forestry Commission Research Note
         soil_loss_frac(1) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation
+        ! was the forest burned after deforestation (0-1)
+        ! NOTE: that we refer here to the fraction of the cleared land to be burned
         post_harvest_burn(1) = 1d0
 
-        !## scen 2
+        !! Scenario 2
+        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+        ! removal which is imposed directly on these pools. These fractions vary
+        ! the assumption that the fine and coarse roots are mechanically removed.
+        ! 1 = all removed, 0 = all remains.
+        roots_frac_removal(2)  = 0d0
+        rootcr_frac_removal(2) = 0d0
         ! harvest residue (fraction); 1 = all remains, 0 = all removed
         foliage_frac_res(2) = 1d0
         roots_frac_res(2)   = 1d0
@@ -765,10 +746,17 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! Csom loss due to phyical removal with roots
         ! Morison et al (2012) Forestry Commission Research Note
         soil_loss_frac(2) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation
+        ! was the forest burned after deforestation (0-1)
+        ! NOTE: that we refer here to the fraction of the cleared land to be burned
         post_harvest_burn(2) = 0d0
 
-        !## scen 3
+        !! Scenario 3
+        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+        ! removal which is imposed directly on these pools. These fractions vary
+        ! the assumption that the fine and coarse roots are mechanically removed.
+        ! 1 = all removed, 0 = all remains.
+        roots_frac_removal(3)  = 0d0
+        rootcr_frac_removal(3) = 0d0
         ! harvest residue (fraction); 1 = all remains, 0 = all removed
         foliage_frac_res(3) = 0.5d0
         roots_frac_res(3)   = 1d0
@@ -779,10 +767,17 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! Csom loss due to phyical removal with roots
         ! Morison et al (2012) Forestry Commission Research Note
         soil_loss_frac(3) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation
+        ! was the forest burned after deforestation (0-1)
+        ! NOTE: that we refer here to the fraction of the cleared land to be burned
         post_harvest_burn(3) = 0d0
 
-        !## scen 4
+        !! Scenario 4
+        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+        ! removal which is imposed directly on these pools. These fractions vary
+        ! the assumption that the fine and coarse roots are mechanically removed.
+        ! 1 = all removed, 0 = all remains.
+        roots_frac_removal(4)  = 1d0
+        rootcr_frac_removal(4) = 1d0
         ! harvest residue (fraction); 1 = all remains, 0 = all removed
         foliage_frac_res(4) = 0.5d0
         roots_frac_res(4)   = 1d0
@@ -790,12 +785,20 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         stem_frac_res(4)   = 0d0
         ! wood partitioning (fraction)
         Crootcr_part(4) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+        ! Csom loss due to phyical removal with roots
         ! Morison et al (2012) Forestry Commission Research Note
         soil_loss_frac(4) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation
+        ! was the forest burned after deforestation (0-1)
+        ! NOTE: that we refer here to the fraction of the cleared land to be burned
         post_harvest_burn(4) = 0d0
 
-        !## scen 5 (grassland grazing / cutting)
+        !## Scenario 5 (grassland grazing / cutting)
+        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+        ! removal which is imposed directly on these pools. These fractions vary
+        ! the assumption that the fine and coarse roots are mechanically removed.
+        ! 1 = all removed, 0 = all remains.
+        roots_frac_removal(5)  = 0d0
+        rootcr_frac_removal(5) = 0d0
         ! harvest residue (fraction); 1 = all remains, 0 = all removed
         foliage_frac_res(5) = 0.1d0
         roots_frac_res(5)   = 0d0
@@ -806,7 +809,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! Csom loss due to phyical removal with roots
         ! Morison et al (2012) Forestry Commission Research Note
         soil_loss_frac(5) = 0d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation
+        ! was the forest burned after deforestation (0-1)
+        ! NOTE: that we refer here to the fraction of the cleared land to be burned
         post_harvest_burn(5) = 0d0
 
         ! for the moment override all paritioning parameters with those coming from

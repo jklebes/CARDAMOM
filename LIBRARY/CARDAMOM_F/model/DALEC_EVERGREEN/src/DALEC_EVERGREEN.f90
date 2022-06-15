@@ -237,7 +237,7 @@ contains
     ! if either of our disturbance drivers indicate disturbance will occur then
     ! set up these components
     if (maxval(met(8,:)) > 0d0 .or. maxval(met(9,:)) > 0d0) then
-
+print*,"ever disturbed"
         ! now load the hardcoded forest management parameters into their scenario locations
 
         ! Deforestation process functions in a sequenctial way.
@@ -372,10 +372,6 @@ contains
     ! Begin looping through each time step
     !
 
-    ! These fluxes / pools are not currently in use and should be reset to
-    ! prevent numeric error when checking model sanity
-    FLUXES(:,24) = 0d0
-
     do n = start, finish
 
       ! calculate LAI value
@@ -445,7 +441,7 @@ contains
       ! litter pool
       POOLS(n+1,4) = POOLS(n,4) + (FLUXES(n,10)+FLUXES(n,12)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
       ! som pool
-      POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,15)-FLUXES(n,14)+FLUXES(n,11))*deltat(n)
+      POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,15)+FLUXES(n,11)-FLUXES(n,14))*deltat(n)
 
       !!!!!!!!!!
       ! Extract biomass - e.g. deforestation / degradation
@@ -560,13 +556,11 @@ contains
               POOLS(n+1,5) = POOLS(n+1,5) + (FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22)) * deltat(n)
 
               ! calculate ecosystem fire emissions (gC/m2/day)
-              FLUXES(n,17) = FLUXES(n,18)+FLUXES(n,19)+FLUXES(n,20)+FLUXES(n,21)+FLUXES(n,22)
+              FLUXES(n,17) = sum(FLUXES(n,18:22))
 
           end if ! Burned_area > 0
-      else
-          ! set fluxes to zero
-          FLUXES(n,17:26) = 0d0
-      end if
+
+      end if ! is their fire?
 
     end do ! nodays loop
 

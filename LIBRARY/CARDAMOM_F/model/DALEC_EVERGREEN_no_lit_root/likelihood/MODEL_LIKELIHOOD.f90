@@ -185,9 +185,9 @@ module model_likelihood_module
 
     ! assess post running EDCs
     call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                     ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                     ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                     ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+                    ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                    ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                    ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
     ! calculate the likelihood
     tot_exp = sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))
@@ -258,9 +258,9 @@ module model_likelihood_module
 
         ! check edc2
         call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                     ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                     ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                     ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+                        ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                        ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                        ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -358,20 +358,11 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n, DIAG
-    double precision :: fauto & ! Fractions of GPP to autotrophic respiration
-                       ,ffol  & ! Fraction of GPP to foliage
-                       ,froot   ! Fraction of GPP to root + wood
-
     double precision :: torfol ! yearly leaf loss fraction
 
     ! set initial value
     EDC1 = 1
     DIAG = EDCD%DIAG
-
-    ! estimate GPP allocation fractions
-    fauto = pars(1)
-    ffol = (1d0-fauto)*pars(2)
-    froot = (1d0-fauto-ffol)
 
     ! convert leaf life span in year to fraction per day
     torfol = 1d0/(pars(3)*365.25d0)
@@ -393,12 +384,6 @@ module model_likelihood_module
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(4) < (pars(5)*exp(pars(6)*meantemp)))) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
     endif
-
-    ! GPP allocation to foliage and labile cannot be 5 orders of magnitude
-    ! difference from GPP allocation to roots
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. (ffol > (5d0*froot) .or. (ffol*5d0) < froot)) then
-!       EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
-!    endif
 
     ! could always add more / remove some
 
@@ -439,9 +424,6 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, nn, nnn, DIAG, no_years, y, PEDC, steps_per_year, steps_per_month
     double precision :: jan_first_pools(nopools), jan_mean_pools(nopools), mean_pools(nopools), EQF, etol
-    double precision :: fauto & ! Fractions of GPP to autotrophic respiration
-                       ,ffol  & ! Fraction of GPP to foliage
-                       ,froot   ! Fraction of GPP to root+wood
 
     !JFE - 27/06/2018 newly defined variables for updated EDCs
     double precision :: FT(nofluxes), Fin(nopools), Fout(nopools), Rm, Rs
@@ -450,11 +432,6 @@ module model_likelihood_module
     ! update initial values
     DIAG = EDCD%DIAG
     EDC2 = 1
-
-    ! estimate GPP allocation fractions
-    fauto = pars(1)
-    ffol = (1d0-fauto)*pars(2)
-    froot = 1d0-fauto-ffol
 
     ! derive mean pools
 !    do n = 1, nopools
@@ -488,12 +465,9 @@ module model_likelihood_module
     ! Pool exponential decay tolerance
     etol = 0.1d0
 
-    ! first calculate total flux for the whole simulation period
+    ! Calculate total flux for the whole simulation period
     do fl = 1, nofluxes
-        FT(fl) = 0
-        do nd = 1, nodays
-            FT(fl) = FT(fl) + M_FLUXES(nd,fl)*deltat(nd)
-        end do
+       FT(fl) = sum(M_FLUXES(1:nodays,fl)*deltat(1:nodays))
     end do
 
     ! get total in and out for each pool
@@ -504,7 +478,7 @@ module model_likelihood_module
     Fin(2)  = FT(6)
     Fout(2) = FT(11) + FT(19) + FT(22) + FT(25) + FT(28)
     ! litter + som
-    Fin(3)  = FT(10) + FT(11)
+    Fin(3)  = FT(10) + FT(11) + FT(21) + FT(22) + FT(27) + FT(28)
     Fout(3) = FT(13) + FT(20) + FT(26)
 
     ! Iterate through C pools to determine whether they have their ratio of
@@ -528,13 +502,6 @@ module model_likelihood_module
     !
 
     ! additional faults can be stored in locations 35 - 40 of the PASSFAIL array
-
-    ! All pools must confirm to the prior ranges
-    do n = 1, nopools
-       if ((EDC2 == 1 .or. DIAG == 1) .and. (M_POOLS(1,n) > parmax(n+npars-nopools))) then
-          EDC2 = 0d0 ; EDCD%PASSFAIL(35) = 0
-       end if ! prior ranges conditions
-    end do ! loop pools
 
     ! ensure minimum pool values are >= 0 and /= NaN
     if (EDC2 == 1 .or. DIAG == 1) then
