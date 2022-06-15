@@ -115,17 +115,17 @@ module CARBON_MODEL_MOD
            ,fire_litter_roots               &
            ,fire_litter_wood                &
            ,fire_litter_litter              &
-           ,fire_litter_litwood             &
+           ,fire_litter_woodlitter             &
            ,fire_litter_som                 &
            ,fire_emiss_labile              &
            ,fire_emiss_foliar              &
            ,fire_emiss_roots               &
            ,fire_emiss_wood                &
            ,fire_emiss_litter              &
-           ,fire_emiss_litwood             &
+           ,fire_emiss_woodlitter             &
            ,fire_emiss_som                 &
            ,fire_residue_to_litter    &
-           ,fire_residue_to_litwood   &
+           ,fire_residue_to_woodlitter   &
            ,fire_residue_to_som       &
            ,itemp,ivpd,iphoto&
            ,dim_1,dim_2      &

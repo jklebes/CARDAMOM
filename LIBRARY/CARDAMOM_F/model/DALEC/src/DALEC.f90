@@ -133,6 +133,7 @@ module CARBON_MODEL_MOD
            ,Rm_leaf, Rm_wood_root         &
            ,Rg_leaf, Rg_wood_root         &
            ,itemp,ivpd,iphoto             &
+           ,root_depth_time               &
            ,dim_1,dim_2                   &
            ,nos_trees                     &
            ,nos_inputs                    &

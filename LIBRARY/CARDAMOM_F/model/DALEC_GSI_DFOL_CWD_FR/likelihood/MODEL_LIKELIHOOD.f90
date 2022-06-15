@@ -501,7 +501,7 @@ module model_likelihood_module
                         ,meantemp,EDC2)
 
     use cardamom_structures, only: DATAin
-    use CARBON_MODEL_MOD, only: Rg_from_labile, wSWP_time,    &
+    use CARBON_MODEL_MOD, only: Rg_from_labile,               &
                                 harvest_residue_to_litter,    &
                                 harvest_residue_to_som,       &
                                 harvest_residue_to_woodlitter,&
