@@ -456,9 +456,9 @@ module model_likelihood_module
     froot = 1d0-fauto-ffol-flab
 
     ! derive mean pools
-    do n = 1, nopools
-       mean_pools(n) = cal_mean_pools(M_POOLS,n,nodays+1,nopools)
-    end do
+!    do n = 1, nopools
+!       mean_pools(n) = cal_mean_pools(M_POOLS,n,nodays+1,nopools)
+!    end do
 
     ! number of years in analysis
     no_years = nint(sum(deltat)/365.25d0)
@@ -527,13 +527,6 @@ module model_likelihood_module
     !
 
     ! additional faults can be stored in locations 35 - 40 of the PASSFAIL array
-
-    ! All pools must confirm to the prior ranges
-    do n = 1, nopools
-       if ((EDC2 == 1 .or. DIAG == 1) .and. (M_POOLS(1,n) > parmax(n+npars-nopools))) then
-          EDC2 = 0d0 ; EDCD%PASSFAIL(35) = 0
-       end if ! prior ranges conditions
-    end do ! loop pools
 
     ! ensure minimum pool values are >= 0 and /= NaN
     if (EDC2 == 1 .or. DIAG == 1) then
