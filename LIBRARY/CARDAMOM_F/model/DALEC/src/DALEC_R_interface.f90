@@ -24,7 +24,7 @@ subroutine rdalec(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
                               fire_residue_to_woodlitter,fire_residue_to_som,                  &
                               gs_demand_supply_ratio, cica_time, Rg_from_labile,               &
                               gs_total_canopy, gb_total_canopy, canopy_par_MJday_time,         &
-                              root_depth_time
+                              root_depth_time, Rm_from_labile
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -182,24 +182,20 @@ subroutine rdalec(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
      out_var1(i,1:nodays,46) = POOLS(1:nodays,5)        ! litter (gC/m2)
      out_var1(i,1:nodays,47) = POOLS(1:nodays,7)        ! wood litter (gC/m2)
      out_var1(i,1:nodays,48) = POOLS(1:nodays,6)        ! som (gC/m2)
-     ! Water cycle related
-     out_var1(i,1:nodays,49) =
-     out_var1(i,1:nodays,50) =
-     out_var1(i,1:nodays,51) =
      ! Canopy (phenology) properties
-     out_var1(i,1:nodays,52) = lai                      ! LAI (m2/m2)
-     out_var1(i,1:nodays,53) = FLUXES(1:nodays,18)      ! GSI value (0-1)
-     out_var1(i,1:nodays,54) = itemp(1:nodays)          ! GSI temp component (0-1)
-     out_var1(i,1:nodays,55) = iphoto(1:nodays)         ! GSI photoperiod component (0-1)
-     out_var1(i,1:nodays,56) = ivpd(1:nodays)           ! GSI vpd component (0-1)
+     out_var1(i,1:nodays,49) = lai                      ! LAI (m2/m2)
+     out_var1(i,1:nodays,50) = FLUXES(1:nodays,18)      ! GSI value (0-1)
+     out_var1(i,1:nodays,51) = itemp(1:nodays)          ! GSI temp component (0-1)
+     out_var1(i,1:nodays,52) = iphoto(1:nodays)         ! GSI photoperiod component (0-1)
+     out_var1(i,1:nodays,53) = ivpd(1:nodays)           ! GSI vpd component (0-1)
      ! Photosynthesis / C~water coupling related
-     out_var1(i,1:nodays,57) = gs_demand_supply_ratio   ! ratio of evaporative demand over supply
-     out_var1(i,1:nodays,58) = gs_total_canopy          ! stomatal conductance (mmolH2O/m2ground/day)
-     out_var1(i,1:nodays,59) = canopy_par_MJday_time    ! Canopy absorbed PAR (MJ/m2ground/day)
-     out_var1(i,1:nodays,60) = gb_total_canopy          ! boundary conductance (mmolH2O/m2ground/day)
-     out_var1(i,1:nodays,61) = cica_time                ! ratio of leaf internal to external CO2
+     out_var1(i,1:nodays,54) = gs_demand_supply_ratio   ! ratio of evaporative demand over supply
+     out_var1(i,1:nodays,55) = gs_total_canopy          ! stomatal conductance (mmolH2O/m2ground/day)
+     out_var1(i,1:nodays,56) = canopy_par_MJday_time    ! Canopy absorbed PAR (MJ/m2ground/day)
+     out_var1(i,1:nodays,57) = gb_total_canopy          ! boundary conductance (mmolH2O/m2ground/day)
+     out_var1(i,1:nodays,58) = cica_time                ! ratio of leaf internal to external CO2
      ! misc
-     out_var1(i,1:nodays,62) = root_depth_time          ! rooting depth (m)
+     out_var1(i,1:nodays,59) = root_depth_time          ! rooting depth (m)
 
      !!!
      ! Estimate residence time information
@@ -244,7 +240,7 @@ subroutine rdalec(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
 
      ! Estimate MRT (years)
      ! Labile
-     out_var2(i,1) = sum( ((FLUXES(1:nodays,8) + Rg_from_labile + &
+     out_var2(i,1) = sum( ((FLUXES(1:nodays,8) + Rg_from_labile + Rm_from_labile + &
                             fire_emiss_labile + fire_litter_labile + &
                             harvest_extracted_labile + harvest_residue_labile) &
                           / POOLS(1:nodays,1)) * lab_filter) / dble(nodays-sum(lab_hak))
@@ -293,7 +289,7 @@ subroutine rdalec(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
      ! Therefore, at this point we can account for disturbance inputs but NOT wood.
      ! The wood input is estimated later based on the steady state its steady state estimate
      out_var3(i,6) = sum(fire_residue_to_woodlitter + harvest_residue_to_woodlitter) ! woodlitter
-     out_var3(i,7) = sum(FLUXES(:,15)+fire_residue_to_som+harvest_residue_to_som) ! som
+     out_var3(i,7) = sum(FLUXES(:,15)+fire_residue_to_som) ! som
 
   end do ! nos_iter loop
 
