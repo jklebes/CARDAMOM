@@ -25,7 +25,7 @@ subroutine rdalecbucket(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
                               fire_residue_to_woodlitter,fire_residue_to_som,                  &
                               gs_demand_supply_ratio, cica_time, Rg_from_labile,               &
                               gs_total_canopy, gb_total_canopy, canopy_par_MJday_time,         &
-                              root_depth_time
+                              root_depth_time, Rm_from_labile
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -250,7 +250,7 @@ subroutine rdalecbucket(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
 
      ! Estimate MRT (years)
      ! Labile
-     out_var2(i,1) = sum( ((FLUXES(1:nodays,8) + Rg_from_labile + &
+     out_var2(i,1) = sum( ((FLUXES(1:nodays,8) + Rg_from_labile + Rm_from_labile + &
                             fire_emiss_labile + fire_litter_labile + &
                             harvest_extracted_labile + harvest_residue_labile) &
                           / POOLS(1:nodays,1)) * lab_filter) / dble(nodays-sum(lab_hak))
