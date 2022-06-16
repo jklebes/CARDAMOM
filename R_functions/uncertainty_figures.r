@@ -233,7 +233,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 		   ymin = quantile(as.vector(var), prob=c(0.001), na.rm=TRUE)
 		   xloc = 0.15*dim(var)[1] ; yloc=(1-0.05)*ymax
 
-		   jpeg(file=paste(PROJECT$figpath,"timeseries_Cfoliage_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+		   jpeg(file=paste(PROJECT$figpath,"timeseries_foliage_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
             width=7200, height=4000, res=280, quality=100)
 		   # now create the plotting area
 		   par(mfrow=c(1,1), mar=c(5,5,3,1))
@@ -428,7 +428,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # flip it to get the right shape
        var=t(states_all$labile_gCm2)
 
-       jpeg(file=paste(PROJECT$figpath,"timeseries_Clabile_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+       jpeg(file=paste(PROJECT$figpath,"timeseries_labile_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
@@ -479,6 +479,40 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 
    } # litter_gCm2
 
+   # Foliage + fine root litter (gCm2)
+   if (exists(x = "woodlitter_gCm2", where = states_all)) {
+
+       # flip it to get the right shape
+       var = t(states_all$woodlitter_gCm2)
+
+#       # pass observations driver
+#       obs = drivers$obs[,17] ; obs_unc = drivers$obs[,18]
+#       # filter -9999 to NA
+#       filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
+
+       jpeg(file=paste(PROJECT$figpath,"timeseries_woodlitter_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+            width=7200, height=4000, res=280, quality=100)
+
+       # now create the plotting area
+       par(mfrow=c(1,1), mar=c(5,5,3,1))
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var[1:(dim(var)[1]-1),]), prob=c(0.999), na.rm=TRUE)),
+            cex=0.8,ylab="wood litter (gC/m2)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
+            main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       axis(1, at=time_vector[seq(1,length(time_vector),interval)],
+            labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
+       # add the confidence intervals
+       plotconfidence(var)
+       # calculate and draw the median values, could be mean instead or other
+       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       # add the data on top if there is any
+#       if (length(which(is.na(obs))) != length(obs) ) {
+#           points(obs, pch=16, cex=0.8)
+#           plotCI(obs,gap=0,uiw=obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
+#       }
+       dev.off()
+
+   } # litter_gCm2
+
    # Fine roots (gC/m2)
    if (exists(x = "roots_gCm2", where = states_all)) {
 
@@ -490,7 +524,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
 
-       jpeg(file=paste(PROJECT$figpath,"timeseries_Croots_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+       jpeg(file=paste(PROJECT$figpath,"timeseries_roots_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
@@ -523,7 +557,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
 
-       jpeg(file=paste(PROJECT$figpath,"timeseries_Cwood_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+       jpeg(file=paste(PROJECT$figpath,"timeseries_wood_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
@@ -555,7 +589,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
 
-       jpeg(file=paste(PROJECT$figpath,"timeseries_Csom_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+       jpeg(file=paste(PROJECT$figpath,"timeseries_som_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
