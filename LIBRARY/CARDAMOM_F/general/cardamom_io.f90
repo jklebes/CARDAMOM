@@ -240,8 +240,8 @@ module cardamom_io
     else if (DATAin%ID == 33) then
         ! ID = 33 - DALEC_G6
         DATAin%nopools = 8
-        DATAin%nopars = 46
-        DATAin%nofluxes = 25
+        DATAin%nopars = 51
+        DATAin%nofluxes = 45
     else if (DATAin%ID == 34) then
         ! ID = 34 - DALEC_1005
         DATAin%nopools = 8

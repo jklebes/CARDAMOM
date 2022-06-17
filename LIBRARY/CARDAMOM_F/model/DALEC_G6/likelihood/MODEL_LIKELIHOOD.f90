@@ -152,7 +152,6 @@ module model_likelihood_module
     use cardamom_structures, only: DATAin
     use MCMCOPT, only: PI
     use CARBON_MODEL_MOD, only: carbon_model
-    use CARBON_MODEL_CROP_MOD, only: carbon_model_crop
 
     ! Model likelihood function specifically intended for the determination of
     ! appropriate initial parameter choices, consistent with EDCs for DALEC2 /
@@ -178,47 +177,21 @@ module model_likelihood_module
     ! in all fluxes and pools from multiple runs of the same parameter set
     if (.not.sanity_check) call model_sanity_check(PI%parini)
 
-    ! crop or not split....trouble
-    if (DATAin%PFT == 1) then
-       ! PFT has been provided and is crop! Best try running the crop model
-       ! then...
-       ! call EDCs which can be evaluated prior to running the model
-       call EDC1_CROP(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
-       ! next need to run the model itself
-       call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                             ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                             ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft   &
-                             ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                             ,DATAin%nofluxes,DATAin%M_GPP                &
-                             ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
-                             ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
-                             ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
+    ! call EDCs which can be evaluated prior to running the model
+    call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
-        ! assess post running EDCs
-        call EDC2_CROP(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                      ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                      ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+    ! next need to run the model itself
+    call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                     ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
+                     ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
+                     ,DATAin%M_GPP)
 
-    else
-
-        ! call EDCs which can be evaluated prior to running the model
-        call EDC1_GSI(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
-
-        ! next need to run the model itself
-        call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                       ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                       ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
-                       ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                       ,DATAin%M_GPP)
-
-        ! assess post running EDCs
-        call EDC2_GSI(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                      ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                      ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-
-    end if ! crop or not if
+    ! assess post running EDCs
+    call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+                    ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                    ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                    ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
     ! calculate the likelihood
     tot_exp = sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))
@@ -241,7 +214,6 @@ module model_likelihood_module
   subroutine sub_model_likelihood(PARS,ML_obs_out,ML_prior_out)
     use MCMCOPT, only:  PI
     use CARBON_MODEL_MOD, only: carbon_model
-    use CARBON_MODEL_CROP_MOD, only: carbon_model_crop
     use cardamom_structures, only: DATAin
 
     ! this subroutine is responsible for running the model,
@@ -268,15 +240,8 @@ module model_likelihood_module
 
     if (DATAin%EDC == 1) then
 
-        ! EDCs are intended for use, best calculate them
-        if (DATAin%PFT == 1) then
-           ! then we are crops so run these EDCs instead
-           ! call EDCs which can be evaluated prior to running the model
-           call EDC1_CROP(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
-        else
-           ! call EDCs which can be evaluated prior to running the model
-           call EDC1_GSI(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
-        endif ! crop choice
+        ! call EDCs which can be evaluated prior to running the model
+        call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
@@ -284,51 +249,21 @@ module model_likelihood_module
 
     endif !
 
-    if (DATAin%PFT == 1) then
-
-       ! then this is a crop run....
-       ! run the dalec model
-       call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                             ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                             ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft   &
-                             ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                             ,DATAin%nofluxes,DATAin%M_GPP                &
-                             ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
-                             ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
-                             ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
-
-    else ! PFT == 1
-
-        ! run the dalec model
-        call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                         ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                         ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
-                         ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                         ,DATAin%M_GPP)
-
-
-    endif ! crop choice
+    ! run the dalec model
+    call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                     ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
+                     ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
+                     ,DATAin%M_GPP)
 
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
 
-        if (DATAin%PFT == 1) then
-
-            ! check edc2
-            call EDC2_CROP(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                          ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                          ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                          ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-
-        else ! PFT == 1
-
-            ! check edc2
-            call EDC2_GSI(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                         ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                         ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                         ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-
-        endif ! crop choice
+        ! check edc2
+        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+                        ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                        ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                        ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -414,278 +349,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine EDC1_CROP (PARS, npars, meantemp, meanrad, EDC1)
-
-    ! the first of two subroutine to assess current parameters for passing
-    ! realism tests for crop
-    ! ecosystems
-
-    implicit none
-
-    ! declare input variables
-    integer, intent(in) :: npars ! number of parameters
-    double precision, intent(out) :: EDC1    ! EDC1 flag
-    double precision, dimension(npars), intent(in) :: PARS ! current parameter set
-    double precision, intent(in) :: meantemp & ! mean temperature (k)
-                                   ,meanrad    ! mean radiation (MJ.m-2.day-1)
-
-    ! declare local variables
-    integer :: n, DIAG
-    double precision :: torfol,tmp ! yearly leaf loss fraction
-
-    ! set initial value
-    EDC1 = 1d0
-    DIAG = EDCD%DIAG
-
-    ! set all EDCs to 1 (pass)
-    EDCD%PASSFAIL(1:EDCD%nedc) = 1
-
-    !
-    ! begin checking EDCs
-    !
-
-    ! Turnover of litter faster than turnover of som
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(10) > pars(9))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(1) = 0
-    endif
-
-    ! decomposition of litter to SOM greater than SOM to air
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(10) > pars(1))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
-    endif
-
-    ! turnover of foliage faster than turnover of wood
-! TLS: turnover off because foliage and stem turnovers are made same
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(6) > pars(5)) then
-!       EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
-!    end if
-
-    ! pre_DR should be greater than post_DR
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(4) > pars(3))) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
-!    endif
-
-    ! for development: Tmin should be < topt and topt should be < tmax
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(26) > pars(28) &
-                                     .or. pars(28) > pars(27) &
-                                     .or. pars(26) > pars(27))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
-    endif
-
-    ! for development: the difference between each Tmin,Topt,Tmax > 1.
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (abs(pars(26)-pars(28)) < 1d0 &
-                                     .or. abs(pars(28)-pars(27)) < 1d0  &
-                                     .or. abs(pars(26)-pars(27)) < 1d0)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
-    endif
-
-   ! for vernalisation: Tmin < Topt < Tmax
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(29) > pars(31) &
-                                     .or. pars(31) > pars(30) &
-                                     .or. pars(29) > pars(30))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
-    endif
-
-   ! for vernalisation: the difference between each Tmin, Topt, Tmax
-    if ((EDC1 == 1 .or. DIAG == 1) .and. ( abs(pars(29)-pars(31)) < 1d0 &
-                                      .or. abs(pars(31)-pars(30)) < 1d0 &
-                                      .or. abs(pars(29)-pars(30)) < 1d0 ) ) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
-    endif
-
-   ! development temperature value should be larger corresponding vernalisation
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(29) > pars(26) &
-                                     .or. pars(31) > pars(28) &
-                                     .or. pars(30) > pars(27))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
-    endif
-
-!    ! plough must be before sow and after harvest: WINTER ONLY
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(16) > pars(12) ) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
-!    endif
-!
-!    ! harvest cannot be more than 345 after harvest
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(15) < pars(12)+345.25d0) ) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
-!    endif
-!
-!    ! plough must be before sow and after harvest: WINTER ONLY
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(16) < pars(15) .or. &
-!        pars(16) > pars(12)) ) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
-!    endif
-
-    ! CN ratio of leaf should also be between 95CI of trait database values
-    ! Kattge et al (2011)
-    tmp = (pars(17)/(10d0**pars(11)))
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 43.76895d0 .or. tmp < 10.82105d0)) then
-       EDC1=0 ; EDCD%PASSFAIL(13) = 0
-    endif
-
-    ! could and probably should add some more
-  end subroutine EDC1_CROP
-  !
-  !------------------------------------------------------------------
-  !
-  subroutine EDC2_CROP(npars,nomet,nofluxes,nopools,nodays,deltat &
-                      ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
-                      ,meantemp,EDC2)
-
-    use cardamom_structures, only: DATAin
-    use CARBON_MODEL_CROP_MOD, only: resp_rate_temp_coeff,ts_length
-
-    ! the second of two subroutines for assessing current parameters for passing
-    ! realism tests for crop ecosystems
-
-    implicit none
-
-    ! declare input variables
-    integer, intent(in) :: npars    & ! number of model parameters
-                          ,nomet    & ! number of met drivers
-                          ,nofluxes & ! number of fluxes from model
-                          ,nopools  & ! number of pools in model
-                          ,nodays     ! number of days in simulation
-
-    double precision, intent(in) :: deltat(nodays)              & ! decimal day model interval
-                                   ,pars(npars)                 & ! vector of current parameters
-                                   ,parmax(npars)               & ! vector of the maximum parameter values
-                                   ,met(nomet,nodays)           & ! array of met drivers
-                                   ,M_LAI(nodays)               & ! LAI output from current model simulation
-                                   ,M_NEE(nodays)               & ! NEE output from current model simulation
-                                   ,M_GPP(nodays)               & ! GPP output from current model simulation
-                                   ,M_POOLS((nodays+1),nopools) & ! time varying states of pools in current model simulation
-                                   ,M_FLUXES(nodays,nofluxes)   & ! time varying fluxes from current model simulation model
-                                   ,meantemp                      ! site mean temperature (oC)
-
-    double precision, intent(out) :: EDC2 ! the response flag for the dynamical set of EDCs
-
-    ! declare local variables
-    integer :: n, DIAG, no_years, nn
-    double precision :: mean_pools(nopools), decay_coef, meangpp, EQF, PEDC, infi
-    double precision :: fauto & ! Fractions of GPP to autotrophic respiration
-             ,ffol  & ! Fraction of GPP to foliage
-             ,flab  & ! Fraction of GPP to labile pool
-             ,froot & ! Fraction of GPP to root
-             ,flit  & !
-             ,fwood & ! Fraction of GPP to wood
-             ,fsom    ! fraction of GPP som under eqilibrium conditions
-
-    ! set initial value
-    fauto = sum(M_FLUXES(:,3)) / sum(M_FLUXES(:,1))
-    ffol = sum(M_FLUXES(:,4)) / (sum(M_FLUXES(:,1))*fauto)
-    flab = sum(M_FLUXES(:,5)) / (sum(M_FLUXES(:,1))*fauto)
-    froot = sum(M_FLUXES(:,6)) / (sum(M_FLUXES(:,1))*fauto)
-    fwood = sum(M_FLUXES(:,7)) / (sum(M_FLUXES(:,1))*fauto)
-    fsom = fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(10))
-    flit = (froot+flab+ffol)
-    ! length of time step in hours..
-    ts_length = 24d0
-    ! initial value
-    infi = 0d0
-    ! update initial values
-    DIAG = EDCD%DIAG
-    ! give EDC2 an initial value
-    EDC2 = 1
-
-    ! SOM attractor - must be within a factor of 2 from Csom0
-    ! eqiulibrium factor (in comparison with initial conditions)
-    EQF = 10d0
-
-    ! initialise and then calculate mean gpp values
-    meangpp = sum(M_GPP(1:nodays))/dble(nodays)
-
-    ! EDC 11 - SOM steady state within order magnitude of initial conditions
-    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-       ((meangpp*fsom)/(pars(10)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) > (pars(23)*EQF)) then
-       EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
-    end if
-    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-       ((meangpp*fsom)/(pars(10)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) < (pars(23)/EQF)) then
-       EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
-    endif
-
-    ! EDC 12 - Litter steady state assumptions
-    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-       ((meangpp*flit)/(pars(9)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) > (pars(22)*EQF)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
-    endif
-    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-       ((meangpp*flit)/(pars(9)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) < (pars(22)/EQF)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
-    endif
-
-    ! EDC 13
-    ! assesses the exponential decay/growth of the Csom pool
-
-    !  work out how many completed years there are in the system
-    no_years=int(nint(sum(deltat)/365.25d0))
-
-    ! only do this for the Csom pool
-    do n = 1, 1 !nopools
-       if (EDC2 == 1 .or. DIAG == 1) then
-          decay_coef=expdecay2(M_POOLS(1:(nodays+1),6),deltat,nodays+1)
-          ! next assess the decay coefficient for meetings the EDC criterion
-          if (abs(-log(2d0)/decay_coef) < (365.25d0*dble(no_years)) .and. decay_coef < 0d0 ) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
-          end if ! EDC conditions
-       end if ! EDC .or. DIAG condition
-    end do ! pools loop
-
-    ! EDC 14
-    ! assesses the exponential decay/growth of the Clit pool
-
-    ! only do this for the Clit pool
-    do n = 1, 1 !nopools
-       if (EDC2 == 1 .or. DIAG == 1) then
-          decay_coef=expdecay2(M_POOLS(1:(nodays+1),5),deltat,nodays+1)
-          ! next assess the decay coefficient for meetings the EDC criterion
-          if (abs(-log(2d0)/decay_coef) < (365.25d0*dble(no_years)) .and. decay_coef < 0d0 ) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
-          end if ! EDC conditions
-       end if ! EDC .or. DIAG condition
-    end do ! pools loop
-
-    ! we know that the crop model should produce some yield - therefore we
-    ! reject parameter sets which generate no yield ever!
-    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(1:nodays,21)) < (1d0*dble(no_years)) ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
-    endif
-
-    ! Function to calculate the gradient of a linear model for a given depentent
-    ! variable (y) based on predictive variable (x). The typical use of this
-    ! function will in fact be to assume that x is time.
-
-    !
-    ! EDCs done, below are additional fault detection conditions
-    !
-
-    ! additional faults can be stored in locations 35 - 40 of the PASSFAIL array
-
-    ! ensure minimum pool values are >= 0 and /= NaN
-    if (EDC2 == 1 .or. DIAG == 1) then
-
-      do n = 1, nopools
-         if (minval(M_POOLS(1:nodays,n)) < 0d0 .or. maxval(abs(M_POOLS(1:nodays,n))) == abs(log(infi)) .or. &
-             minval(M_POOLS(1:nodays,n)) /= minval(M_POOLS(1:nodays,n))) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(55+n) = 0
-         endif
-      end do
-
-      do n = 1, nofluxes
-         if (maxval(abs(M_FLUXES(1:nodays,n))) == abs(log(infi)) .or. &
-            minval(M_FLUXES(1:nodays,n)) /= minval(M_FLUXES(1:nodays,n))) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(55+nopools+n) = 0
-         endif
-      end do
-
-    end if ! min pool assessment
-
-  end subroutine EDC2_CROP
-  !
-  !------------------------------------------------------------------
-  !
-  subroutine EDC1_GSI(PARS, npars, meantemp, meanrad, EDC1)
+  subroutine assess_EDC1(PARS, npars, meantemp, meanrad, EDC1)
 
     use cardamom_structures, only: DATAin
     use carbon_model_mod, only: opt_max_scaling, logistic_func, minlwp_default
@@ -879,39 +543,19 @@ module model_likelihood_module
     ! --------------------------------------------------------------------
     ! could always add more / remove some
 
-  end subroutine EDC1_GSI
+  end subroutine assess_EDC1
   !
   !------------------------------------------------------------------
   !
-  subroutine EDC2_GSI(npars,nomet,nofluxes,nopools,nodays,deltat &
-                     ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
-                     ,meantemp,EDC2)
+  subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodays,deltat &
+                        ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
+                        ,meantemp,EDC2)
 
     use cardamom_structures, only: DATAin
     use CARBON_MODEL_MOD, only: Rg_from_labile, Rm_from_labile,&
                                 Resp_leaf, Resp_wood_root,     &
                                 Rm_leaf, Rm_wood_root,         &
-                                wSWP_time,                 &
-                                harvest_residue_to_litter, &
-                                harvest_residue_to_som,    &
-                                harvest_residue_to_litwood,&
-                                harvest_loss_labile,       &
-                                harvest_loss_foliar,       &
-                                harvest_loss_roots,        &
-                                harvest_loss_wood,         &
-                                harvest_loss_litter,       &
-                                harvest_loss_litwood,      &
-                                harvest_loss_som,          &
-                                fire_loss_labile,          &
-                                fire_loss_foliar,          &
-                                fire_loss_roots,           &
-                                fire_loss_wood,            &
-                                fire_loss_litter,          &
-                                fire_loss_litwood,         &
-                                fire_loss_som,             &
-                                fire_residue_to_litter,    &
-                                fire_residue_to_litwood,   &
-                                fire_residue_to_som
+                                wSWP_time
 
     ! Determines whether the dynamical contraints for the search of the initial
     ! parameters has been successful or whether or not we should abandon the
@@ -942,48 +586,21 @@ module model_likelihood_module
     ! declare local variables
     logical :: found
     integer :: y, n, DIAG, no_years, nn, nnn, num_EDC, i, io_start, io_finish, &
-               steps_per_year, steps_per_month
-    double precision :: mean_pools(nopools), meangpp, sumgpp, sumnpp, &
+               steps_per_year, steps_per_month, fl
+    double precision :: meangpp, sumgpp, sumnpp, &
                         tmp, tmp1, tmp2, tmp3, tmp4, tmp5, temp_response, &
                         hold, infi, Rs, dble_nodays, &
                         mean_step_size
     double precision, allocatable, dimension(:) :: mean_annual_pools
-    double precision, dimension(nodays) :: lab_ratio, mean_ratio, resid_fol, resid_lab, biomass_root
-    double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools
+    double precision, dimension(nodays) :: mean_ratio, lab_ratio, resid_fol, resid_lab, biomass_root
+    double precision, dimension(nofluxes) :: FT, FT_yr1, FT_yr2
+    double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
+                                            mean_pools, Fin, Fout,  &
+                                            Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
     integer, dimension(nodays) :: hak ! variable to determine number of NaN in foliar residence time calculation
     double precision :: SSwood, SSlitwood, SSsom &
-                       ,in_out_fol, in_out_lab, in_out_lit, in_out_litwood, in_out_som, in_out_root, in_out_wood &
-                       ,in_lab, out_lab  &
-                       ,in_fol, out_fol  &
-                       ,in_root, out_root &
-                       ,in_wood, out_wood &
-                       ,in_lit, out_lit  &
-                       ,in_litwood, out_litwood  &
-                       ,in_som, out_som  &
-                       ,in_out_lab_yr1  &
-                       ,in_out_fol_yr1  &
-                       ,in_out_root_yr1 &
-                       ,in_out_wood_yr1 &
-                       ,in_out_lit_yr1  &
-                       ,in_out_litwood_yr1  &
-                       ,in_out_som_yr1  &
-                       ,in_out_lab_yr2  &
-                       ,in_out_fol_yr2  &
-                       ,in_out_root_yr2 &
-                       ,in_out_wood_yr2 &
-                       ,in_out_lit_yr2  &
-                       ,in_out_litwood_yr2  &
-                       ,in_out_som_yr2  &
                        ,torfol      & ! yearly average turnover
                        ,torlab      & !
-                       ,sumlab_yr1      &
-                       ,sumfol_yr1      &
-                       ,sumroot_yr1     &
-                       ,sumwood_yr1     &
-                       ,sumlab_yr2      &
-                       ,sumfol_yr2      &
-                       ,sumroot_yr2     &
-                       ,sumwood_yr2     &
                        ,sumrauto    &
                        ,sumlab      &
                        ,sumfol      &
@@ -1027,7 +644,10 @@ module model_likelihood_module
     ! update initial values
     hak = 0 ; resid_fol = 0d0
     ! calculate mean turnover rate for leaves
-    resid_fol = (M_FLUXES(:,10)+harvest_loss_foliar+fire_loss_foliar)/M_POOLS(1:nodays,2)
+    resid_fol = (M_FLUXES(:,10)+ &                 ! natural
+                 M_FLUXES(:,22)+M_FLUXES(:,29)+ &  ! fire
+                 M_FLUXES(:,35)+M_FLUXES(:,42)) &  ! harvest
+              / M_POOLS(1:nodays,2)
     ! division by zero results in NaN plus obviously I can't have turned
     ! anything over if there was nothing to start out with...
     where ( M_POOLS(1:nodays,2) == 0d0 )
@@ -1043,7 +663,9 @@ module model_likelihood_module
     ! reset initial values
     hak = 0 ; resid_lab = 0d0
     ! calculate mean turnover rate for labile pool
-    resid_lab = (M_FLUXES(:,8)+Rg_from_labile+Rm_from_labile+harvest_loss_labile+fire_loss_labile) &
+    resid_lab = (M_FLUXES(:,8)+Rg_from_labile+Rm_from_labile+ & ! natural
+                 M_FLUXES(:,21)+M_FLUXES(:,28)+ &               ! fire
+                 M_FLUXES(:,34)+M_FLUXES(:,41)) &               ! harvest
               / M_POOLS(1:nodays,1)
     ! division by zero results in NaN plus obviously I can't have turned
     ! anything over if there was nothing to start out with...
@@ -1319,246 +941,109 @@ module model_likelihood_module
         ! Determine correct start and end points of the input / output assessment
         io_start = (steps_per_year*2) + 1 ; io_finish = nodays
         if (no_years < 3) io_start = 1
+        ! Calculate total flux for the simulation period
+        do fl = 1, nofluxes
+!           FT(fl) = sum(M_FLUXES(1:nodays,fl)*deltat(1:nodays))
+           FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*deltat(io_start:io_finish))
+           FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*deltat(1:steps_per_year))
+           FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl)*deltat((steps_per_year+1):(steps_per_year*2)))
+        end do
 
-        ! calculate sum fluxes for the beginning of the timeseries
-        sumlab_yr1 = sum(M_FLUXES(1:steps_per_year,5)) ; sumlab_yr2 = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),5))
-        sumfol_yr1 = sum(M_FLUXES(1:steps_per_year,8)) ; sumfol_yr2 = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),8))
-        sumroot_yr1 = sum(M_FLUXES(1:steps_per_year,6)) ; sumroot_yr2 = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),6))
-        sumwood_yr1 = sum(M_FLUXES(1:steps_per_year,7)) ; sumwood_yr2 = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),7))
+        ! Determine total in and out fluxes for each pool
+        ! labile
+        Fin(1)  = FT(5)
+        Fout(1) = FT(8)+FT(21)+FT(28)+FT(34)+FT(41) &
+                + sum(Rg_from_labile(io_start:io_finish)*deltat(io_start:io_finish)) &
+                + sum(Rm_from_labile(io_start:io_finish)*deltat(io_start:io_finish))
+        Fin_yr1(1)  = FT_yr1(5)
+        Fout_yr1(1) = FT_yr1(8)+FT_yr1(21)+FT_yr1(28)+FT_yr1(34)+FT_yr1(41) &
+                    + sum(Rg_from_labile(1:steps_per_year)*deltat(1:steps_per_year)) &
+                    + sum(Rm_from_labile(1:steps_per_year)*deltat(1:steps_per_year))
+        Fin_yr2(1)  = FT_yr2(5)
+        Fout_yr2(1) = FT_yr2(8)+FT_yr2(21)+FT_yr2(28)+FT_yr2(34)+FT_yr2(41) &
+                    + sum(Rg_from_labile((steps_per_year+1):(steps_per_year*2))*deltat((steps_per_year+1):(steps_per_year*2))) &
+                    + sum(Rm_from_labile((steps_per_year+1):(steps_per_year*2))*deltat((steps_per_year+1):(steps_per_year*2)))
+        ! foliage
+        Fin(2)  = FT(8)
+        Fout(2) = FT(10)+FT(22)+FT(29)+FT(35)+FT(42)
+        Fin_yr1(2)  = FT_yr1(8)
+        Fout_yr1(2) = FT_yr1(10)+FT_yr1(22)+FT_yr1(29)+FT_yr1(35)+FT_yr1(42)
+        Fin_yr2(2)  = FT_yr2(8)
+        Fout_yr2(2) = FT_yr2(10)+FT_yr2(22)+FT_yr2(29)+FT_yr2(35)+FT_yr2(42)
+        ! root
+        Fin(3)  = FT(6)
+        Fout(3) = FT(12)+FT(23)+FT(30)+FT(36)+FT(43)
+        Fin_yr1(3)  = FT_yr1(6)
+        Fout_yr1(3) = FT_yr1(12)+FT_yr1(23)+FT_yr1(30)+FT_yr1(36)+FT_yr1(43)
+        Fin_yr2(3)  = FT_yr2(6)
+        Fout_yr2(3) = FT_yr2(12)+FT_yr2(23)+FT_yr2(30)+FT_yr2(36)+FT_yr2(43)
+        ! wood
+        Fin(4)  = FT(7)
+        Fout(4) = FT(11)+FT(24)+FT(31)+FT(37)+FT(44)
+        Fin_yr1(4)  = FT_yr1(7)
+        Fout_yr1(4) = FT_yr1(11)+FT_yr1(24)+FT_yr1(31)+FT_yr1(37)+FT_yr1(44)
+        Fin_yr2(4)  = FT_yr2(7)
+        Fout_yr2(4) = FT_yr2(11)+FT_yr2(24)+FT_yr2(31)+FT_yr2(37)+FT_yr2(44)
+        ! litter
+        Fin(5)  = FT(10)+FT(12)+FT(28)+FT(29)+FT(30)+FT(41)+FT(42)+FT(43)
+        Fout(5) = FT(13)+FT(15)+FT(25)+FT(32)+FT(38)
+        Fin_yr1(5)  = FT_yr1(10)+FT_yr1(12)+FT_yr1(28)+FT_yr1(29)+FT_yr1(30)+FT_yr1(41)+FT_yr1(42)+FT_yr1(43)
+        Fout_yr1(5) = FT_yr1(13)+FT_yr1(15)+FT_yr1(25)+FT_yr1(32)+FT_yr1(38)
+        Fin_yr2(5)  = FT_yr2(10)+FT_yr2(12)+FT_yr2(28)+FT_yr2(29)+FT_yr2(30)+FT_yr2(41)+FT_yr2(42)+FT_yr2(43)
+        Fout_yr2(5) = FT_yr2(13)+FT_yr2(15)+FT_yr2(25)+FT_yr2(32)+FT_yr2(38)
+        ! som
+        Fin(6)  = FT(15)+FT(20)+FT(31)+FT(32)+FT(33)
+        Fout(6) = FT(14)+FT(26)+FT(40)
+        Fin_yr1(6)  = FT_yr1(15)+FT_yr1(20)+FT_yr1(31)+FT_yr1(32)+FT_yr1(33)
+        Fout_yr1(6) = FT_yr1(14)+FT_yr1(26)+FT_yr1(40)
+        Fin_yr2(6)  = FT_yr2(15)+FT_yr2(20)+FT_yr2(31)+FT_yr2(32)+FT_yr2(33)
+        Fout_yr2(6) = FT_yr2(14)+FT_yr2(26)+FT_yr2(40)
+        ! litwood
+        Fin(7)  = FT(11)+FT(44)
+        Fout(7) = FT(4)+FT(20)+FT(27)+FT(33)+FT(39)
+        Fin_yr1(7)  = FT_yr1(11)+FT_yr1(44)
+        Fout_yr1(7) = FT_yr1(4)+FT_yr1(20)+FT_yr1(27)+FT_yr1(33)+FT_yr1(39)
+        Fin_yr2(7)  = FT_yr2(11)+FT_yr2(44)
+        Fout_yr2(7) = FT_yr2(4)+FT_yr2(20)+FT_yr2(27)+FT_yr2(33)+FT_yr2(39)
 
-        ! Determine the input / output ratio
-
-        ! Clabile
-!        in_out_lab     = sumlab / sum(M_FLUXES(:,8)+Rg_from_labile+Rm_from_labile+fire_loss_labile+harvest_loss_labile)
-        in_lab         = sum(M_FLUXES(io_start:io_finish,5))
-        out_lab        = sum(M_FLUXES(io_start:io_finish,8) &
-                            +Rg_from_labile(io_start:io_finish) &
-                            +Rm_from_labile(io_start:io_finish) &
-                            +fire_loss_labile(io_start:io_finish) &
-                            +harvest_loss_labile(io_start:io_finish))
-        in_out_lab_yr1 = sumlab_yr1 &
-                       / sum(M_FLUXES(1:steps_per_year,8) &
-                            +Rg_from_labile(1:steps_per_year) &
-                            +Rm_from_labile(1:steps_per_year) &
-                            +fire_loss_labile(1:steps_per_year) &
-                            +harvest_loss_labile(1:steps_per_year))
-        in_out_lab_yr2 = sumlab_yr2 &
-                       / sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),8) &
-                            +Rg_from_labile((steps_per_year+1):(steps_per_year*2)) &
-                            +Rm_from_labile((steps_per_year+1):(steps_per_year*2)) &
-                            +fire_loss_labile((steps_per_year+1):(steps_per_year*2)) &
-                            +harvest_loss_labile((steps_per_year+1):(steps_per_year*2)))
-        ! Cfoliage
-!        in_out_fol  = sumfol  / sum(M_FLUXES(:,10)+fire_loss_foliar+harvest_loss_foliar)
-        in_fol      = sum(M_FLUXES(io_start:io_finish,8))
-        out_fol     = sum(M_FLUXES(io_start:io_finish,10) &
-                         +fire_loss_foliar(io_start:io_finish) &
-                         +harvest_loss_foliar(io_start:io_finish))
-        in_out_fol_yr1  = sumfol_yr1  / sum(M_FLUXES(1:steps_per_year,10) &
-                                           +fire_loss_foliar(1:steps_per_year) &
-                                           +harvest_loss_foliar(1:steps_per_year))
-        in_out_fol_yr2  = sumfol_yr2  / sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),10) &
-                                           +fire_loss_foliar((steps_per_year+1):(steps_per_year*2)) &
-                                           +harvest_loss_foliar((steps_per_year+1):(steps_per_year*2)))
-        ! Croot
-!        in_out_root = sumroot / sum(M_FLUXES(:,12)+fire_loss_roots+harvest_loss_roots)
-        in_root     = sum(M_FLUXES(io_start:io_finish,6))
-        out_root    = sum(M_FLUXES(io_start:io_finish,12) &
-                         +fire_loss_roots(io_start:io_finish) &
-                         +harvest_loss_roots(io_start:io_finish))
-        in_out_root_yr1 = sumroot_yr1 / sum(M_FLUXES(1:steps_per_year,12) &
-                                           +fire_loss_roots(1:steps_per_year) &
-                                           +harvest_loss_roots(1:steps_per_year))
-        in_out_root_yr2 = sumroot_yr2 / sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),12) &
-                                           +fire_loss_roots((steps_per_year+1):(steps_per_year*2)) &
-                                           +harvest_loss_roots((steps_per_year+1):(steps_per_year*2)))
-        ! Cwood
-!        in_out_wood = sumwood / sum(M_FLUXES(:,11)+fire_loss_wood+harvest_loss_wood)
-        in_wood     = sum(M_FLUXES(io_start:io_finish,7))
-        out_wood    = sum(M_FLUXES(io_start:io_finish,11) &
-                         +fire_loss_wood(io_start:io_finish) &
-                         +harvest_loss_wood(io_start:io_finish))
-        in_out_wood_yr1 = sumwood_yr1 / sum(M_FLUXES(1:steps_per_year,11) &
-                                           +fire_loss_wood(1:steps_per_year) &
-                                           +harvest_loss_wood(1:steps_per_year))
-        in_out_wood_yr2 = sumwood_yr2 / sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),11) &
-                                           +fire_loss_wood((steps_per_year+1):(steps_per_year*2)) &
-                                           +harvest_loss_wood((steps_per_year+1):(steps_per_year*2)))
-        ! Clitter
-!        in_out_lit = sum(M_FLUXES(:,10) &
-!                        +M_FLUXES(:,12) &
-!                        +fire_residue_to_litter &
-!                        +harvest_residue_to_litter) &
-!                   / sum(M_FLUXES(:,13)+M_FLUXES(:,15)+fire_loss_litter+harvest_loss_litter)
-        in_lit     = sum(M_FLUXES(io_start:io_finish,10) &
-                        +M_FLUXES(io_start:io_finish,12) &
-                        +fire_residue_to_litter(io_start:io_finish) &
-                        +harvest_residue_to_litter(io_start:io_finish))
-        out_lit    = sum(M_FLUXES(io_start:io_finish,13)+M_FLUXES(io_start:io_finish,15) &
-                        +fire_loss_litter(io_start:io_finish)+harvest_loss_litter(io_start:io_finish))
-        in_out_lit_yr1 = sum(M_FLUXES(1:steps_per_year,10) &
-                            +M_FLUXES(1:steps_per_year,12) &
-                            +fire_residue_to_litter(1:steps_per_year) &
-                            +harvest_residue_to_litter(1:steps_per_year)) &
-                       / sum(M_FLUXES(1:steps_per_year,13) &
-                            +M_FLUXES(1:steps_per_year,15) &
-                            +fire_loss_litter(1:steps_per_year) &
-                            +harvest_loss_litter(1:steps_per_year))
-        in_out_lit_yr2 = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),10) &
-                            +M_FLUXES((steps_per_year+1):(steps_per_year*2),12) &
-                            +fire_residue_to_litter((steps_per_year+1):(steps_per_year*2)) &
-                            +harvest_residue_to_litter((steps_per_year+1):(steps_per_year*2))) &
-                       / sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),13) &
-                            +M_FLUXES((steps_per_year+1):(steps_per_year*2),15) &
-                            +fire_loss_litter((steps_per_year+1):(steps_per_year*2)) &
-                            +harvest_loss_litter((steps_per_year+1):(steps_per_year*2)))
-        ! Csom
-!        in_out_som = sum(M_FLUXES(:,15)+M_FLUXES(:,20)+fire_residue_to_som+harvest_residue_to_som) &
-!                   / sum(M_FLUXES(:,14)+fire_loss_som+harvest_loss_som)
-        in_som     = sum(M_FLUXES(io_start:io_finish,15)+M_FLUXES(io_start:io_finish,20) &
-                        +fire_residue_to_som(io_start:io_finish)+harvest_residue_to_som(io_start:io_finish))
-        out_som    = sum(M_FLUXES(io_start:io_finish,14) &
-                        +fire_loss_som(io_start:io_finish) &
-                        +harvest_loss_som(io_start:io_finish))
-        in_out_som_yr1 = sum(M_FLUXES(1:steps_per_year,15)+ &
-                             M_FLUXES(1:steps_per_year,20)+ &
-                             fire_residue_to_som(1:steps_per_year)+ &
-                             harvest_residue_to_som(1:steps_per_year)) &
-                       / sum(M_FLUXES(1:steps_per_year,14) &
-                            +fire_loss_som(1:steps_per_year) &
-                            +harvest_loss_som(1:steps_per_year))
-        in_out_som_yr2 = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),15)+ &
-                             M_FLUXES((steps_per_year+1):(steps_per_year*2),20)+ &
-                             fire_residue_to_som((steps_per_year+1):(steps_per_year*2))+ &
-                             harvest_residue_to_som((steps_per_year+1):(steps_per_year*2))) &
-                       / sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),14) &
-                            +fire_loss_som((steps_per_year+1):(steps_per_year*2)) &
-                            +harvest_loss_som((steps_per_year+1):(steps_per_year*2)))
-        ! Clitwood
-!        in_out_litwood = sum(M_FLUXES(:,11)+fire_residue_to_litwood+harvest_residue_to_litwood) &
-!                       / sum(M_FLUXES(:,20)+M_FLUXES(:,4)+fire_loss_litwood+harvest_loss_litwood)
-        in_litwood     = sum(M_FLUXES(io_start:io_finish,11) &
-                            +fire_residue_to_litwood(io_start:io_finish) &
-                            +harvest_residue_to_litwood(io_start:io_finish))
-        out_litwood    = sum(M_FLUXES(io_start:io_finish,20) &
-                            +M_FLUXES(io_start:io_finish,4) &
-                            +fire_loss_litwood(io_start:io_finish) &
-                            +harvest_loss_litwood(io_start:io_finish))
-        in_out_litwood_yr1 = sum(M_FLUXES(1:steps_per_year,11) &
-                                +fire_residue_to_litwood(1:steps_per_year) &
-                                +harvest_residue_to_litwood(1:steps_per_year)) &
-                           / sum(M_FLUXES(1:steps_per_year,20) &
-                                +M_FLUXES(1:steps_per_year,4) &
-                                +fire_loss_litwood(1:steps_per_year) &
-                                +harvest_loss_litwood(1:steps_per_year))
-        in_out_litwood_yr2 = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),11) &
-                                +fire_residue_to_litwood((steps_per_year+1):(steps_per_year*2)) &
-                                +harvest_residue_to_litwood((steps_per_year+1):(steps_per_year*2))) &
-                           / sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),20) &
-                                +M_FLUXES((steps_per_year+1):(steps_per_year*2),4) &
-                                +fire_loss_litwood((steps_per_year+1):(steps_per_year*2)) &
-                                +harvest_loss_litwood((steps_per_year+1):(steps_per_year*2)))
-
-        ! Assess pool dynamics relative to their own steady state attractors
-        ! Based on Bloom et al (2016), PNAS. Combination of the in/out ratio and
-        ! the ratio of pool size change combines the dynamics with pool
-        ! magnitude correction. i.e. larger accumulations are allowable for
-        ! small pools as is sensible but more restricted in larger pools.
-        ! The etol comparison assesses the exponential dynamics, while
-        ! comparison with EQF assesses the steady state attractor
-
-        ! Labile
-!        Rs = in_out_lab * (jan_mean_pools(1) / jan_first_pools(1))
-!        if (abs(Rs-in_out_lab) > 0.1d0 .or. abs(log(in_out_lab)) > EQF10) then
-        if ((abs(log(in_out_lab_yr1)) - abs(log(in_out_lab_yr2))) > etol*0.5d0 .or. &
-            abs(log(in_lab/out_lab)) > EQF2) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(25) = 0
-        end if
-
-        ! Foliage
-!        Rs = in_out_fol * (jan_mean_pools(2) / jan_first_pools(2))
-!        if (abs(Rs-in_out_fol) > 0.1d0 .or. abs(log(in_out_fol)) > EQF10) then
-        if ((abs(log(in_out_fol_yr1)) - abs(log(in_out_fol_yr2))) > etol*0.5d0 .or. &
-            abs(log(in_fol/out_fol)) > EQF2 .or. in_out_fol_yr1 /= in_out_fol_yr1) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(26) = 0
-        end if
-
-        ! Fine roots
-!        Rs = in_out_root * (jan_mean_pools(3) / jan_first_pools(3))
-!        if (abs(Rs-in_out_root) > 0.1d0 .or. abs(log(in_out_root)) > EQF10) then
-        if ((abs(log(in_out_root_yr1)) - abs(log(in_out_root_yr2))) > etol*0.5d0 .or. &
-            abs(log(in_root/out_root)) > EQF2) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(27) = 0
-        end if
-
-        ! Wood
-!        Rs = in_out_wood * (jan_mean_pools(4) / jan_first_pools(4))
-!        if (abs(Rs-in_out_wood) > 0.1d0 .or. abs(log(in_out_wood)) > EQF10) then
-        if ((abs(log(in_out_wood_yr1)) - abs(log(in_out_wood_yr2))) > etol .or. &
-            abs(log(in_wood/out_wood)) > EQF5) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(28) = 0
-        end if
-
-        ! Foliage and root litter
-!        Rs = in_out_lit * (jan_mean_pools(5) / jan_first_pools(5))
-!        if (abs(Rs-in_out_lit) > 0.1d0 .or. abs(log(in_out_lit)) > EQF10) then
-        if ((abs(log(in_out_lit_yr1)) - abs(log(in_out_lit_yr2))) > etol .or. &
-            abs(log(in_lit/out_lit)) > EQF5) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(29) = 0
-        end if
-
-        ! Soil organic matter
-!        Rs = in_out_som * (jan_mean_pools(6) / jan_first_pools(6))
-!        if (abs(Rs-in_out_som) > 0.1d0 .or. abs(log(in_out_som)) > EQF10) then
-        if ((abs(log(in_out_som_yr1)) - abs(log(in_out_som_yr2))) > etol .or. &
-            abs(log(in_som/out_som)) > EQF5) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(30) = 0
-        end if
-
-        ! Coarse+fine woody debris
-!        Rs = in_out_litwood * (jan_mean_pools(7) / jan_first_pools(7))
-!        if (abs(Rs-in_out_litwood) > 0.1d0 .or. abs(log(in_out_litwood)) > EQF10) then
-        if ((abs(log(in_out_litwood_yr1)) - abs(log(in_out_litwood_yr2))) > etol .or. &
-            abs(log(in_litwood/out_litwood)) > EQF5) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(31) = 0
-        end if
+        ! C pools (labile, foliage fine roots, wood, litter, som, wood litter)
+        do n = 1, 7
+           ! Restrict rates of increase
+           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+               EDC2 = 0d0 ; EDCD%PASSFAIL(25+n-1) = 0
+           end if
+           ! Restrict exponential behaviour at initialisation
+           !if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
+           if (abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
+               EDC2 = 0d0 ; EDCD%PASSFAIL(31+n-1) = 0
+           end if
+        end do
 
         ! Determine the steady state estimate of wood (gC/m2)
-        SSwood = (in_wood/out_wood) * jan_mean_pools(4)
+        SSwood = (Fin(4)/Fout(4)) * jan_mean_pools(4)
         ! Based on the wood SS (gC/m2) and the sum fractional loss per day determine the mean input to litwood...
-        SSlitwood = SSwood * (out_wood/jan_mean_pools(4))
+        SSlitwood = SSwood * (Fout(4)/jan_mean_pools(4))
         ! ...then estimate the actual steady state wood litter
-        SSlitwood = (SSlitwood/out_litwood) * jan_mean_pools(7)
+        SSlitwood = (SSlitwood/Fout(7)) * jan_mean_pools(7)
         ! Steady state of som requires accounting for foliar, fine root and wood litter inputs
         ! and adjusting for the litwood input already included
-        SSsom = in_som - sum(M_FLUXES(io_start:io_finish,20))
+        SSsom = Fin(6) - sum(M_FLUXES(io_start:io_finish,20))
         ! Now repeat the process as done for litwood to estimate the inputs,
         ! adjusting for the fraction of litwood output which is respired not decomposed
-        SSsom = SSsom + (SSlitwood * (out_litwood/jan_mean_pools(7)) * pars(1))
+        SSsom = SSsom + (SSlitwood * (Fout(7)/jan_mean_pools(7)) * pars(1))
         ! Accounting for losses and scaling to SSsom
-        SSsom = (SSsom / out_som) * jan_mean_pools(6)
+        SSsom = (SSsom / Fout(6)) * jan_mean_pools(6)
+
         ! It is reasonable to assume that the steady state for woody litter
         ! should be ~ less than half that of woody biomass...
         !if (SSlitwood / SSwood > 0.60d0  ) then
         if (SSlitwood > SSwood) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(32) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(37) = 0
         end if
         ! ... and less than soil organic matter
         if ( SSsom < SSlitwood ) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(33) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(38) = 0
         end if
-        ! It is reasonable to assume that the steady state for woody litter
-!        ! should be ~ less than half that of woody biomass...
-!        if ((in_out_litwood * jan_mean_pools(7)) / (in_out_wood * jan_mean_pools(4)) > 0.60d0  ) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(28) = 0
-!        end if
-!        ! ... and less than soil organic matter
-!        if ( (in_out_som * jan_mean_pools(6)) < (in_out_litwood * jan_mean_pools(7)) ) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(29) = 0
-!        end if
-!        if (pars(37) / (in_out_wood * jan_mean_pools(4)) > 0.60d0  ) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(23) = 0
-!        end if
 
     endif ! doing the big arrays then?
 
@@ -1606,7 +1091,7 @@ module model_likelihood_module
 
     end if ! min pool assessment
 
-  end subroutine EDC2_GSI
+  end subroutine assess_EDC2
   !
   !------------------------------------------------------------------
   !
@@ -1806,7 +1291,6 @@ module model_likelihood_module
   subroutine model_likelihood(PARS,ML_obs_out,ML_prior_out)
     use MCMCOPT, only:  PI
     use CARBON_MODEL_MOD, only: carbon_model
-    use CARBON_MODEL_CROP_MOD, only: carbon_model_crop
     use cardamom_structures, only: DATAin
 
     ! this subroutine is responsible, under normal circumstances for the running
@@ -1832,15 +1316,8 @@ module model_likelihood_module
 
     if (DATAin%EDC == 1) then
 
-        ! EDCs are intended for use, best calculate them
-        if (DATAin%PFT == 1) then
-           ! then we are crops so run these EDCs instead
-           ! call EDCs which can be evaluated prior to running the model
-           call EDC1_CROP(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
-        else
-           ! call EDCs which can be evaluated prior to running the model
-           call EDC1_GSI(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
-        endif ! crop choice
+        ! call EDCs which can be evaluated prior to running the model
+        call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
@@ -1848,51 +1325,21 @@ module model_likelihood_module
 
     endif !
 
-    if (DATAin%PFT == 1) then
-
-       ! then this is a crop run....
-       ! run the dalec model
-       call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                             ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                             ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft   &
-                             ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                             ,DATAin%nofluxes,DATAin%M_GPP                &
-                             ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
-                             ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
-                             ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
-
-    else ! PFT == 1
-
-        ! run the dalec model
-        call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                         ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                         ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
-                         ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                         ,DATAin%M_GPP)
-
-
-    endif ! crop choice
+    ! run the dalec model
+    call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                     ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
+                     ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
+                     ,DATAin%M_GPP)
 
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
 
-        if (DATAin%PFT == 1) then
-
-            ! check edc2
-            call EDC2_CROP(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                          ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                          ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                          ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-
-        else ! PFT == 1
-
-            ! check edc2
-            call EDC2_GSI(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                         ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                         ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                         ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-
-        endif ! crop choice
+        ! check edc2
+        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
+                        ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                        ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                        ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -1943,7 +1390,7 @@ module model_likelihood_module
   !
   double precision function likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness, fire_loss_wood, Resp_leaf
+    use carbon_model_mod, only: layer_thickness, Resp_leaf
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -2288,14 +1735,14 @@ module model_likelihood_module
     end if
 
     ! Estimate the biological steady state attractor on the wood pool.
-    ! NOTE: this arrangement explicitly neglects the impact of disturbance on
-    ! residence time (i.e. no fire and biomass removal)
+    ! NOTE: this arrangement explicitly neglects the impact of harvest disturbance on
+    ! residence time (i.e. biomass removal)
     if (DATAin%otherpriors(5) > -9998) then
         ! Estimate the mean annual input to the wood pool (gC.m-2.day-1) and
         ! remove the day-1 by multiplying by residence time (day)
         !tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
         input = sum(DATAin%M_FLUXES(:,7))
-        output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+fire_loss_wood))
+        output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+DATAin%M_FLUXES(:,24)+DATAin%M_FLUXES(:,31)))
         tot_exp = (input/dble(DATAin%nodays)) * (output/dble(DATAin%nodays))
         likelihood = likelihood - ((tot_exp - DATAin%otherpriors(5)) / DATAin%otherpriorunc(5))**2
     endif
@@ -2326,7 +1773,7 @@ module model_likelihood_module
   !
   double precision function scale_likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness, fire_loss_wood, Resp_leaf
+    use carbon_model_mod, only: layer_thickness, Resp_leaf
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -2679,14 +2126,14 @@ module model_likelihood_module
     end if
 
     ! Estimate the biological steady state attractor on the wood pool.
-    ! NOTE: this arrangement explicitly neglects the impact of disturbance on
-    ! residence time (i.e. no fire and biomass removal)
+    ! NOTE: this arrangement explicitly neglects the impact of harvest disturbance on
+    ! residence time (i.e. biomass removal)
     if (DATAin%otherpriors(5) > -9998) then
         ! Estimate the mean annual input to the wood pool (gC.m-2.day-1) and
         ! remove the day-1 by multiplying by residence time (day)
         !tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
         input = sum(DATAin%M_FLUXES(:,7))
-        output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+fire_loss_wood))
+        output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+DATAin%M_FLUXES(:,24)+DATAin%M_FLUXES(:,31)))
         tot_exp = (input/dble(DATAin%nodays)) * (output/dble(DATAin%nodays))
         scale_likelihood = scale_likelihood - ((tot_exp - DATAin%otherpriors(5)) / DATAin%otherpriorunc(5))**2
     endif

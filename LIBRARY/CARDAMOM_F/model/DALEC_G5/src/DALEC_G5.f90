@@ -813,7 +813,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! Assign proposed resilience factor for biomass
         rfac(1:4) = pars(43)
         ! Resilience factor for non-combusted tissue (lit, som, wood litter)
-        rfac = 0.5d0 ; rfac(5) = 0.1d0 ; rfac(6) = 0d0 ; rfac(7) = 0.1d0
+        rfac(5) = 0.1d0 ; rfac(6) = 0d0 ; rfac(7) = 0.1d0
         ! Assign combustion completeness to foliage
         cf(2) = pars(44) ! foliage
         ! Assign combustion completeness to non-photosynthetic
