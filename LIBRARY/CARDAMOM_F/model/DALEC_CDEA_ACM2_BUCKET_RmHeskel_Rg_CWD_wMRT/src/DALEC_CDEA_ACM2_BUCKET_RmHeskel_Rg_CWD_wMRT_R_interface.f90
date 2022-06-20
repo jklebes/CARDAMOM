@@ -210,8 +210,8 @@ subroutine rdaleccdeaacm2bucketrmheskelrgcwdwmrt(output_dim,MTT_dim,SS_dim &
 
      ! Estimate MRT (years)
      ! Labile
-     out_var2(i,1) = sum( ((FLUXES(1:nodays,8)  + &
-                            Rg_from_labile(1:nodays)- Rm_from_labile(1:nodays) + &
+     out_var2(i,1) = sum( ((FLUXES(1:nodays,8) + &
+                            Rg_from_labile(1:nodays) + Rm_from_labile(1:nodays) + &
                             FLUXES(1:nodays,18) + FLUXES(1:nodays,24) + &
                             FLUXES(1:nodays,34) + FLUXES(1:nodays,41)) &
                           / POOLS(1:nodays,1)) * lab_filter) / dble(nodays-sum(lab_hak))

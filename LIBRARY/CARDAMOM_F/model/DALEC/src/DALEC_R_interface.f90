@@ -98,10 +98,6 @@ subroutine rdalec(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
   lai = 0d0 ; GPP = 0d0 ; NEE = 0d0 ; POOLS = 0d0 ; FLUXES = 0d0
   out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0
 
-  ! update settings
-  if (allocated(itemp)) deallocate(itemp,ivpd,iphoto)
-  allocate(itemp(nodays),ivpd(nodays),iphoto(nodays))
-
   ! generate deltat step from input data
   deltat(1) = met(1,1)
   do i = 2, nodays
