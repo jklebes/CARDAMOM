@@ -12,8 +12,8 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 
 # set input and output directories
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_gpp_fire/"
-input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca/"
-input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_CsomPriorNCSCD/"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca/"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_CsomPriorNCSCD/"
 input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/"
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Trendyv9_historical/"
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_gpp_fire_nbe/"
@@ -96,7 +96,7 @@ FIRE_UNC_OBS = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(PROJECT$m
 ###
 ## Variables based on their presence
 
-# STATES
+# C STATES
 if (exists(x = "lai_m2m2", where = grid_output)) {LAI = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "Ctotal_gCm2", where = grid_output)) {TOT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "labile_gCm2", where = grid_output)) {LAB = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
@@ -108,7 +108,7 @@ if (exists(x = "som_gCm2", where = grid_output)) {SOIL = array(NA, dim=c(PROJECT
 if (exists(x = "woodlitter_gCm2", where = grid_output)) {WLIT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "dom_gCm2", where = grid_output)) {DOM = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "biomass_gCm2", where = grid_output)) {BIO = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-# FLUXES
+# C FLUXES
 if (exists(x = "gpp_gCm2day", where = grid_output)) {GPP = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "rauto_gCm2day", where = grid_output)) {RAU = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "rhet_gCm2day", where = grid_output)) {RHE = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
@@ -119,8 +119,18 @@ if (exists(x = "reco_gCm2day", where = grid_output)) {RECO = array(NA, dim=c(PRO
 if (exists(x = "nee_gCm2day", where = grid_output)) {NEE = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "nbe_gCm2day", where = grid_output)) {NBE = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "nbp_gCm2day", where = grid_output)) {NBP = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+# H2O FLUXES
+if (exists(x = "ET_kgH2Om2day", where = grid_output)) {ET = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+# H2O STATES
+if (exists(x = "SurfWater_kgH2Om2", where = grid_output)) {SurfWater = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+if (exists(x = "snow_kgH2Om2", where = grid_output)) {SNOW = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 # BIOPHYSICAL
 if (exists(x = "CiCa", where = grid_output)) {CiCa = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+if (exists(x = "wSWP_MPa", where = grid_output)) {wSWP = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+if (exists(x = "APAR_MJm2day", where = grid_output)) {APAR = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+if (exists(x = "gs_demand_supply_ratio", where = grid_output)) {gs_demand_supply_ratio = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+if (exists(x = "gs_mmolH2Om2day", where = grid_output)) {gs = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+if (exists(x = "gb_mmolH2Om2day", where = grid_output)) {gb = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 # Direct allocation of NPP (labile, foliar, fine root, wood, gC/m2/day)
 if (exists(x = "alloc_labile_gCm2day", where = grid_output)) {NPP_labile_FLX = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "alloc_foliage_gCm2day", where = grid_output)) {NPP_foliage_FLX = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
@@ -260,9 +270,18 @@ for (n in seq(1, length(PROJECT$sites))) {
          if (exists("NEE")) {NEE[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$nee_gCm2day[n,,]* 1e-3 * (1/86400)}
          if (exists("NBE")) {NBE[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$nbe_gCm2day[n,,]* 1e-3 * (1/86400)}
          if (exists("NBP")) {NBP[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$nbp_gCm2day[n,,]* 1e-3 * (1/86400)}
+         # H2O FLUXES
+         if (exists(x = "ET_kgH2Om2day", where = grid_output)) {ET[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$ET_kgH2Om2day[n,,] * (1/86400)}
+         # H2O STATES
+         if (exists(x = "SurfWater_kgH2Om2", where = grid_output)) {SurfWater[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$SurfWater_kgH2Om2[n,,]}
+         if (exists(x = "snow_kgH2Om2", where = grid_output)) {SNOW[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$snow_kgH2Om2[n,,]}
          # BIOPHYSICAL
          if (exists("CiCa")) {CiCa[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$CiCa[n,,]}
-
+         if (exists("wSWP")) {wSWP[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$wSWP_MPa[n,,]}
+         if (exists("APAR")) {APAR[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$APAR_MJm2day[n,,]}
+         if (exists("gs_demand_supply_ratio")) {gs_demand_supply_ratio[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$gs_demand_supply_ratio[n,,]}
+         if (exists("gs")) {gs[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$gs_mmolH2Om2day[n,,]}
+         if (exists("gb")) {gb[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$gb_mmolH2Om2day[n,,]}
          # NPP (foliar, root, wood; gC/m2/day -> kgC/m2/s)
          if (exists("NPP_labile_FLX")) {NPP_labile_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$alloc_labile_gCm2day[n,,]* 1e-3 * (1/86400)}
          if (exists("NPP_root_FLX")) {NPP_root_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$alloc_roots_gCm2day[n,,]* 1e-3 * (1/86400)}
@@ -355,7 +374,7 @@ year_dimen <- ncdim_def( "year", units="", 1:nos_years)
 npar_dimen <- ncdim_def( "nos_parameters", units="", 1:(max(PROJECT$model$nopars)+1)) # NOTE: +1 is to account for the log-likelihood 
 
 ###
-## Create STATES file with timing information
+## Create C STATES file with timing information
 ###
 
 ## define output variable
@@ -468,7 +487,7 @@ if(exists("TOT")) {
 nc_close(new_file)
 
 ###
-## Create file for FLUXES with timing information
+## Create file for C FLUXES with timing information
 ###
 
 # Define the output file name
@@ -562,13 +581,6 @@ if(exists("HARV")) {
    var_new = ncvar_def("fLuc_ensemble", unit="kg.m-2.s-1", longname = "Forest harvest - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, HARV)
-}
-
-# CiCa
-if(exists("CiCa")) {
-   var_new = ncvar_def("CiCa_ensemble", unit="1", longname = "Internal:Ambiant CO2 ratio - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   new_file <- ncvar_add( new_file, var_new )
-   ncvar_put(new_file, var_new, CiCa)
 }
 
 # Total outflux from labile
@@ -1198,5 +1210,167 @@ new_file <- ncvar_add( new_file, var_new )
 ncvar_put(new_file, var_new, FIRE_UNC_OBS)
 
 ## close the file to write to disk
+nc_close(new_file)
+
+###
+## Create file for H2O FLUXES with timing information
+###
+
+# Define the output file name
+output_name = paste(PROJECT$results_processedpath,output_prefix,"H2OFLUX_",PROJECT$start_year,"_",PROJECT$end_year,output_suffix,".nc",sep="")
+# Delete if the file currently exists
+if (file.exists(output_name)) {file.remove(output_name)}
+# Create the empty file space, using the already defined timing variable
+new_file=nc_create(filename=output_name, vars=list(var0), force_v4 = TRUE)
+# Load first variable into the file
+# TIMING
+ncvar_put(new_file, var0, drivers$met[,1])
+
+# Close the existing file to ensure its written to file
+nc_close(new_file)
+
+###
+## Re-open the file so that we can add to it a variable at a time
+###
+
+new_file <- nc_open( output_name, write=TRUE )
+
+###
+## H2O FLUXES
+###
+
+# Evapotranspiration
+if(exists("ET")) {
+   var_new  = ncvar_def("et_ensemble", unit="kg.m-2.s-1", longname = "Evapotranspiration - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, ET)
+}
+
+###
+## close the file to write to disk
+###
+
+nc_close(new_file)
+
+###
+## Create file for H2O STATES with timing information
+###
+
+# Define the output file name
+output_name = paste(PROJECT$results_processedpath,output_prefix,"H2OSTATES_",PROJECT$start_year,"_",PROJECT$end_year,output_suffix,".nc",sep="")
+# Delete if the file currently exists
+if (file.exists(output_name)) {file.remove(output_name)}
+# Create the empty file space, using the already defined timing variable
+new_file=nc_create(filename=output_name, vars=list(var0), force_v4 = TRUE)
+# Load first variable into the file
+# TIMING
+ncvar_put(new_file, var0, drivers$met[,1])
+
+# Close the existing file to ensure its written to file
+nc_close(new_file)
+
+###
+## Re-open the file so that we can add to it a variable at a time
+###
+
+new_file <- nc_open( output_name, write=TRUE )
+
+###
+## H2O STATES
+###
+
+# Soil surface water content
+if(exists("SurfWater")) {
+   var_new  = ncvar_def("SurfWater_ensemble", unit="kg.m-2", longname = "Soil water content (0-30 cm) - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, SurfWater)
+}
+
+# Soil surface snow cover
+if(exists("SNOW")) {
+   var_new  = ncvar_def("SNOW_ensemble", unit="kg.m-2", longname = "Soil surface snow cover - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, SNOW)
+}
+
+###
+## close the file to write to disk
+###
+
+nc_close(new_file)
+
+###
+## Create file for Biophysical diagnostics with timing information
+###
+
+# Define the output file name
+output_name = paste(PROJECT$results_processedpath,output_prefix,"BIOPHYSDIAG_",PROJECT$start_year,"_",PROJECT$end_year,output_suffix,".nc",sep="")
+# Delete if the file currently exists
+if (file.exists(output_name)) {file.remove(output_name)}
+# Create the empty file space, using the already defined timing variable
+new_file=nc_create(filename=output_name, vars=list(var0), force_v4 = TRUE)
+# Load first variable into the file
+# TIMING
+ncvar_put(new_file, var0, drivers$met[,1])
+
+# Close the existing file to ensure its written to file
+nc_close(new_file)
+
+###
+## Re-open the file so that we can add to it a variable at a time
+###
+
+new_file <- nc_open( output_name, write=TRUE )
+
+###
+## Biophysical diagnostics
+###
+
+# CiCa
+if(exists("CiCa")) {
+   var_new = ncvar_def("CiCa_ensemble", unit="1", longname = "Internal:Ambiant CO2 ratio - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, CiCa)
+}
+
+# Soil water potential weighted by root access
+if(exists("wSWP")) {
+   var_new  = ncvar_def("wSWP_ensemble", unit="MPa", longname = "Soil water potential weighted by root access - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, wSWP)
+}
+
+# Canopy absorbed photosynthetically active radiation
+if(exists("APAR")) {
+   var_new  = ncvar_def("APAR_ensemble", unit="MJ.m2.d-1", longname = "Canopy absorbed photosynthatically active radiation - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, APAR)
+}
+
+# Ratio of actual stomatal conductance to that allowed by water supply to canopy
+if(exists("gs_demand_supply_ratio")) {
+   var_new  = ncvar_def("gs_demand_supply_ratio_ensemble", unit="1", longname = "Ratio of actual stomatal conductance to potential allowed by water supply to canopy - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, gs_demand_supply_ratio)
+}
+
+# Stomatal conductance for water
+if(exists("gs")) {
+   var_new  = ncvar_def("gs_ensemble", unit="mmol.m-2.d-1", longname = "Stomatal conductance for water - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, gs)
+}
+
+# Boundary layer conductance for water
+if(exists("gb")) {
+   var_new  = ncvar_def("gb_ensemble", unit="mmol.m-2.d-1", longname = "Boundary conductance for water - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, gb)
+}
+
+###
+## close the file to write to disk
+###
+
 nc_close(new_file)
 

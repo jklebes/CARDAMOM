@@ -32,6 +32,7 @@ module CARBON_MODEL_MOD
            ,gs_total_canopy        &
            ,gb_total_canopy        &
            ,canopy_par_MJday_time  &
+           ,snow_storage_time&
            ,soil_frac_clay   &
            ,soil_frac_sand   &
            ,nos_soil_layers  &
@@ -283,6 +284,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                             rainfall_time, &
                                                 cica_time, & ! Internal vs ambient CO2 concentrations
                                           root_depth_time, &
+                                        snow_storage_time, &
                                                 rSWP_time, & ! Soil water potential weighted by access water
                                                 wSWP_time    ! Soil water potential weighted by supply of water
 
@@ -497,7 +499,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         allocate(deltat_1(nodays),wSWP_time(nodays),rSWP_time(nodays),gs_demand_supply_ratio(nodays), &
                  gs_total_canopy(nodays),gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
                  daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
-                 rainfall_time(nodays),cica_time(nodays),root_depth_time(nodays))
+                 rainfall_time(nodays),cica_time(nodays),root_depth_time(nodays),snow_storage_time(nodays))
 
         !
         ! Timing variables which are needed first
@@ -830,6 +832,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        else
            snowfall = 0d0 ; snow_melt = 0d0
        end if
+       snow_storage_time(n) = snow_storage
 
        !!!!!!!!!!
        ! Calculate surface exchange coefficients

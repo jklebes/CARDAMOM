@@ -421,10 +421,11 @@ module model_likelihood_module
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(27) > pars(33) .or. pars(25) > pars(27))) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
     end if
-    ! The min temperature for canopy growth index (p14) cannot be smaller than canopy mortality index (p27).
-    ! Likewise, the maximum temperature for canopy growth index (p16) cannot be higher  than canopy mortality (p33).
-    ! Finally the kurtosis for CGI (p24) cannot be smaller than CMI (p34)
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(34) > pars(24)) then
+    ! The min temperature for canopy growth index (p14) cannot be smaller than minimum temperature for
+    ! canopy mortality index (p27). Likewise, the maximum temperature for canopy growth index (p16)
+    ! cannot be higher than canopy mortality (p33). Finally the kurtosis for CGI (p24) cannot be smaller than CMI (p34)
+    ! NOTE: min / max bounds removed here as comparison of opt_max_scaling at 0C expected to cover most of this
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(34) > pars(24))) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     end if
 
@@ -432,9 +433,10 @@ module model_likelihood_module
     ! possible for combinations of parameters to be misleading as to their actual response.
     ! Therefore, we explicitly test for near zero growth allowed at 0C while giving the min temperature parameters
     ! greater freedom to move.
-    tmp1 = opt_max_scaling( pars(16), pars(14) , pars(15) , pars(24) , 0d0 )
+    tmp1 = opt_max_scaling( pars(16), pars(14) , pars(15) , pars(24) , 0d0 ) !cgi
+    tmp2 = opt_max_scaling( pars(33), pars(25) , pars(27) , pars(33) , 0d0 ) !cmi
 !    tmp2 = opt_max_scaling( max_val, min_val , optimum , kurtosis , current )
-    if ((EDC1 == 1 .or. DIAG == 1) .and. tmp1 > 0.05d0) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp1 > 0.005d0 .or. tmp1 > tmp2)) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
     end if
 

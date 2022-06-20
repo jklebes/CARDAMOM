@@ -1272,6 +1272,13 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   site_output$mean_ET_kgH2Om2day = quantile(apply(states_all$ET_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
               }
 
+              # Snow related
+              if (exists(x = "snow_kgH2Om2", where = states_all)) {
+                  ## Snow on soil surface
+                  site_output$snow_kgH2Om2 = apply(states_all$snow_kgH2Om2,2,quantile,prob=num_quantiles,na.rm = na_flag)
+                  site_output$mean_snow_kgH2Om2 = quantile(apply(states_all$snow_kgH2Om2,1,mean, na.rm = na_flag), prob=num_quantiles)
+              }
+
               ###
               # Aggregate ACM diagnositic information
               ###
@@ -1909,6 +1916,12 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$mean_ET_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$ET_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           }
+          # Snow specific
+          if (exists(x = "snow_kgH2Om2", where = site_output)) {
+              ## snow on soil surface
+              grid_output$snow_kgH2Om2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$mean_snow_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          }
           # Canopy process variables
           if (exists(x = "APAR_MJm2day", where = site_output)) {
               # Absorbed photosynthetically active radation
@@ -2434,6 +2447,12 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    # evapotranspiration (Etrans + Esoil + Ewetcanopy)
                    grid_output$mean_ET_kgH2Om2day[slot_i,slot_j,] = site_output$mean_ET_kgH2Om2day
                    grid_output$ET_kgH2Om2day[n,,] = site_output$ET_kgH2Om2day
+               }
+               # Snow specific
+               if (exists(x = "snow_kgH2Om2", where = site_output)) {
+                   ## snow on soil surface
+                   grid_output$mean_snow_kgH2Om2[slot_i,slot_j,] = site_output$mean_snow_kgH2Om2
+                   grid_output$snow_kgH2Om2[n,,] = site_output$snow_kgH2Om2
                }
                # Canopy process variables
                if (exists(x = "APAR_MJm2day", where = site_output)) {
