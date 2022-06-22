@@ -2851,7 +2851,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! The idea being that the plant may hedge against growth based on the majority of the
     ! profile being dry while not losing leaves within some toleration.
     rSWP = sum(SWP(1:rooted_layer) * (Rcond_layer(1:rooted_layer) / sum(Rcond_layer(1:rooted_layer))))
-
     if (total_water_flux <= vsmall) then
         ! Set values for no water flow situation
         uptake_fraction = (layer_thickness(1:nos_root_layers) / sum(layer_thickness(1:nos_root_layers)))
@@ -3829,7 +3828,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ivpd(current_step) = min(1d0,max(0d0,(rSWP-VPDfac_min) * VPDfac_range_1))
     ! Calculate and store the GSI index
     GSI(current_step) = itemp(current_step) * ivpd(current_step) * iphoto(current_step)
-
     ! load lag for linear regression
     gsi_lag = gsi_lag_remembered
 

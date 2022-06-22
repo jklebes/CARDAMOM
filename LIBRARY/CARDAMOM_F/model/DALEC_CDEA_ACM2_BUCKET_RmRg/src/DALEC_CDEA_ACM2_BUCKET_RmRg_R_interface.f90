@@ -198,7 +198,7 @@ subroutine rdaleccdeaacm2bucketrmrg(output_dim,MTT_dim,SS_dim &
 
      ! Estimate MRT (years)
      ! Labile
-     out_var2(i,1) = sum( ((FLUXES(1:nodays,8) + &
+     out_var2(i,1) = sum( ((FLUXES(1:nodays,8) + Rg_from_labile + &
                             FLUXES(1:nodays,18) + FLUXES(1:nodays,24) + &
                             FLUXES(1:nodays,31) + FLUXES(1:nodays,37)) &
                           / POOLS(1:nodays,1)) * lab_filter) / dble(nodays-sum(lab_hak))
@@ -232,7 +232,7 @@ subroutine rdaleccdeaacm2bucketrmrg(output_dim,MTT_dim,SS_dim &
 
      ! Once the canopy has closes the inputs to the live biomass are stable
      ! and can thus be estimated from the simulated inputs
-     out_var3(i,1) = sum(FLUXES(:,5)+Rg_from_labile) ! Labile
+     out_var3(i,1) = sum(FLUXES(:,5)) ! Labile
      out_var3(i,2) = sum(FLUXES(:,4)+FLUXES(:,8)) ! Foliage
      out_var3(i,3) = sum(FLUXES(:,6)) ! Fine root
      out_var3(i,4) = sum(FLUXES(:,7)) ! Wood

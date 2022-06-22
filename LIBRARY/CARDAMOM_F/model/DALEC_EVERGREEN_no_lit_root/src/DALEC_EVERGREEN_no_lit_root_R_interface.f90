@@ -125,17 +125,17 @@ subroutine rdalecevergreennolitroot(output_dim,MTT_dim,SS_dim &
      ! Determine locations of zeros in pools to correct turnover calculation
      ! Foliage
      fol_hak = 0 ; fol_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,2) == 0) ! protection against NaN from division by zero
+     where (POOLS(1:nodays,1) == 0) ! protection against NaN from division by zero
            fol_hak = 1 ; fol_filter(1:nodays) = 0d0
      end where
      ! Fine roots
      root_wood_hak = 0 ; root_wood_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,3) == 0) ! protection against NaN from division by zero
+     where (POOLS(1:nodays,2) == 0) ! protection against NaN from division by zero
            root_wood_hak = 1 ; root_wood_filter(1:nodays) = 0d0
      end where
      ! Foliage + fine root litter and som (dom)
      dom_hak = 0 ; dom_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,5) == 0) ! protection against NaN from division by zero
+     where (POOLS(1:nodays,3) == 0) ! protection against NaN from division by zero
             dom_hak = 1 ; dom_filter(1:nodays) = 0d0
      end where
 
@@ -150,7 +150,7 @@ subroutine rdalecevergreennolitroot(output_dim,MTT_dim,SS_dim &
                             FLUXES(1:nodays,28) ) &
                           / POOLS(1:nodays,2)) * root_wood_filter) / dble(nodays-sum(root_wood_hak))
      ! Litter (foliage+fine roots) + som (dom)
-     out_var2(i,5) = sum( ((FLUXES(1:nodays,13) + FLUXES(1:nodays,20) + FLUXES(1:nodays,26)) &
+     out_var2(i,3) = sum( ((FLUXES(1:nodays,13) + FLUXES(1:nodays,20) + FLUXES(1:nodays,26)) &
                           / POOLS(1:nodays,3)) * dom_filter) / dble(nodays-sum(dom_hak))
      !
      ! Estimate pool inputs needed for steady state calculation

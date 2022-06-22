@@ -1095,19 +1095,21 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,8) = avail_labile*(1d0-(1d0-FLUXES(n,16))**deltat(n))*deltat_1(n)
 
        ! if 12 months has gone by, update the leaf lifespan variable
-       if (n > steps_per_year .and. met(6,n) < met(6,n-1)) then
-           ! determine the mean life span (days)
-           tmp = sum(POOLS((n-steps_per_year):(n-1),2)) &
-               / sum(FLUXES((n-steps_per_year):(n-1),10) + FLUXES((n-steps_per_year):(n-1),23))
-           ! i.e. we cannot / should not update the leaf lifespan if there has
-           ! been no turnover and / or there is no foliar pool.
-           ! 2933 = 365.25 * 8 years
-           if (tmp > 0d0 .and. tmp < 2933d0) then
-               ! We assume that leaf life span is weighted 50:50 between the
-               ! previous year and its history
-               leaf_life = (tmp + leaf_life) * 0.5d0
-           end if
-       endif ! n /= 1 and new calendar year
+       if (n > steps_per_year) then
+           if(met(6,n) < met(6,n-1)) then
+              ! determine the mean life span (days)
+              tmp = sum(POOLS((n-steps_per_year):(n-1),2)) &
+                  / sum(FLUXES((n-steps_per_year):(n-1),10) + FLUXES((n-steps_per_year):(n-1),23))
+              ! i.e. we cannot / should not update the leaf lifespan if there has
+              ! been no turnover and / or there is no foliar pool.
+              ! 2933 = 365.25 * 8 years
+              if (tmp > 0d0 .and. tmp < 2933d0) then
+                  ! We assume that leaf life span is weighted 50:50 between the
+                  ! previous year and its history
+                  leaf_life = (tmp + leaf_life) * 0.5d0
+              end if
+           end if ! new calendar year
+       endif ! not in first year
 
        !
        ! litter creation with time dependancies

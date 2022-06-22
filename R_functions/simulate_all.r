@@ -635,7 +635,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                     gs_demand_supply_ratio = output[,,54],
                     gs_mmolH2Om2day = output[,,55],
                     APAR_MJm2day = output[,,56],
-                    gb_mmolH2Om2day = output[,,67],
+                    gb_mmolH2Om2day = output[,,57],
                     CiCa = output[,,58],
                     # Misc
                     RootDepth_m = output[,,59],
@@ -2208,7 +2208,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
     # i.e. actual growth not GPP-Ra
     NPP_fraction = apply(states_all$labile_to_foliage_gCm2day +
                          states_all$alloc_foliage_gCm2day +
-                         states_all$alloc_roots_wood_gCm2day)
+                         states_all$alloc_roots_wood_gCm2day,1,mean)
     NPP_fraction = cbind(apply(states_all$labile_to_foliage_gCm2day+states_all$alloc_foliage_gCm2day,1,mean),
                          apply(states_all$alloc_roots_wood_gCm2day,1,mean)) / NPP_fraction
     states_all$NPP_foliage_fraction = NPP_fraction[,1]
@@ -2335,7 +2335,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
     states_all=list(# Ecosystem fluxes
                     gpp_gCm2day = output[,,1],
                     rauto_gCm2day = output[,,2],
-                    rhet_litter_gCm2day = output[,,3],
+                    rhet_dom_gCm2day = output[,,3],
                     fire_gCm2day = output[,,4],
                     harvest_gCm2day = output[,,5],
                     # Internal fluxes

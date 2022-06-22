@@ -210,7 +210,7 @@ subroutine rdaleccdeaacm2bucketrmrgcwdwmrt(output_dim,MTT_dim,SS_dim &
 
      ! Estimate MRT (years)
      ! Labile
-     out_var2(i,1) = sum( ((FLUXES(1:nodays,8) + &
+     out_var2(i,1) = sum( ((FLUXES(1:nodays,8) + Rg_from_labile + &
                             FLUXES(1:nodays,18) + FLUXES(1:nodays,24) + &
                             FLUXES(1:nodays,34) + FLUXES(1:nodays,41)) &
                           / POOLS(1:nodays,1)) * lab_filter) / dble(nodays-sum(lab_hak))
@@ -252,7 +252,7 @@ subroutine rdaleccdeaacm2bucketrmrgcwdwmrt(output_dim,MTT_dim,SS_dim &
 
      ! Once the canopy has closes the inputs to the live biomass are stable
      ! and can thus be estimated from the simulated inputs
-     out_var3(i,1) = sum(FLUXES(:,5)+Rg_from_labile) ! Labile
+     out_var3(i,1) = sum(FLUXES(:,5)) ! Labile
      out_var3(i,2) = sum(FLUXES(:,4)+FLUXES(:,8)) ! Foliage
      out_var3(i,3) = sum(FLUXES(:,6)) ! Fine root
      out_var3(i,4) = sum(FLUXES(:,7)) ! Wood
@@ -265,7 +265,7 @@ subroutine rdaleccdeaacm2bucketrmrgcwdwmrt(output_dim,MTT_dim,SS_dim &
      ! but NOT natural wood. The natural wood input is estimated later based on
      ! its steady state estimate
      out_var3(i,6) = sum(FLUXES(:,44)) ! woodlitter
-     out_var3(i,7) = sum(FLUXES(:,15)+FLUXES(:,27)+FLUXES(:,28)+FLUXES(:,44)) ! som
+     out_var3(i,7) = sum(FLUXES(:,15)+FLUXES(:,27)+FLUXES(:,28)+FLUXES(:,33)) ! som
 
   end do ! nos_iter loop
 
