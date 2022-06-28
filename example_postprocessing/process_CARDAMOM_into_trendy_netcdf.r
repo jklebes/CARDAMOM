@@ -1,7 +1,9 @@
 
 ###
 ## Process CARDAMOM-DALEC output files into NetCDF files 
-## consistent with the TRENDYv9 model intercomparison structure
+## consistent with the TRENDYv11 / GCP model intercomparison structure.
+## NOTE: unlike the sibling script this script does not put each variable into a single file
+## and is thus not consistent with the latest guidance.
 ### 
 
 ###
@@ -38,6 +40,12 @@ source("~/WORK/GREENHOUSE/models/CARDAMOM/R_functions/load_all_cardamom_function
 # load the CARDAMOM files
 load(paste(input_dir,"/infofile.RData",sep=""))
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
+
+# Create output directory to aid storage management
+out_dir = paste(PROJECT$results_processedpath,"/trendy_output",sep="")
+if (dir.exists(out_dir) == FALSE) {
+    dir.create(out_dir)
+}
 
 ###
 ## Begin creating information for processing and subsequent saving to files
@@ -1123,7 +1131,7 @@ new_file <- ncvar_add( new_file, var_new )
 ncvar_put(new_file, var_new, FLOSS_FRAC)
 
 # Burnt fraction
-var_new = ncvar_def("burnt_fraction", unit="1", longname = "Burnt fraction", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+var_new = ncvar_def("burntArea", unit="1", longname = "Burnt fraction", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
 new_file <- ncvar_add( new_file, var_new )
 ncvar_put(new_file, var_new, BURNT_FRAC)
 
@@ -1241,7 +1249,7 @@ new_file <- nc_open( output_name, write=TRUE )
 
 # Evapotranspiration
 if(exists("ET")) {
-   var_new  = ncvar_def("et_ensemble", unit="kg.m-2.s-1", longname = "Evapotranspiration - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new  = ncvar_def("evapotrans_ensemble", unit="kg.m-2.s-1", longname = "Evapotranspiration - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, ET)
 }

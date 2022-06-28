@@ -514,7 +514,6 @@ contains
     ! 5 = litter (fol + fine root) (p22)
     ! 6 = som         (p23)
     ! 7 = wood litter (p37)
-    ! 8 = soil water content (currently assumed to field capacity)
 
     ! p(30) = labile replanting
     ! p(31) = foliar replanting

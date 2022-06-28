@@ -153,6 +153,42 @@ area = calc_pixel_area(output$lat,output$long,PROJECT$resolution)
 # this output is in vector form and we need matching array shapes so...
 area = array(area, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 
+###
+## Allow for optional replacement or creation of alternate clustering analyses
+## CARDAMOM default is affinity propogation but the most commonly used is k-means
+
+# PointsOfChange
+
+# Now generate cluster map using all parameters including the initial conditions
+par_array_median_normalised = grid_output$parameters[,,,mid_quant]
+# now normalise the parameter values
+for (i in seq(1,dim(par_array_median_normalised)[3])) {
+     min_par_val=min(par_array_median_normalised[,,i],na.rm=TRUE)
+     max_par_val=max(par_array_median_normalised[,,i],na.rm=TRUE)
+     par_array_median_normalised[,,i]=((par_array_median_normalised[,,i]-min_par_val)/(max_par_val-min_par_val))
+}
+# Create temporary arrays needed to allow removing of NAs and convert array into (space,par)
+par_array_tmp=array(NA,dim=c(prod(dim(grid_output$parameters)[1:2]),dim(par_array_median_normalised)[3]))
+par_array_tmp[1:prod(dim(par_array_median_normalised)[1:2]),1:dim(par_array_median_normalised)[3]]=par_array_median_normalised
+actual_forests=which(is.na(par_array_tmp[,1]) == FALSE)
+par_array_tmp=par_array_tmp[actual_forests,]
+par_array_tmp=array(par_array_tmp,dim=c((length(par_array_tmp)/dim(par_array_median_normalised)[3]),dim(par_array_median_normalised)[3]))
+
+# K-means
+nos_desired_clusters = 3 # specify the number of clusters wanted
+cluster = kmeans(par_array_tmp, centers = nos_desired_clusters, iter.max = 10, nstart = 50)
+
+# Extract the cluster information which we can then use in maps / aggregation
+grid_output$nos_pars_clusters=dim(cluster$centers)[1] ; grid_output$clusters_exemplars=cluster$centers
+grid_output$pars_clusters_kmeans=array(NA,dim=c(dim(par_array_median_normalised)[1:2]))
+for (i in seq(1, grid_output$nos_pars_clusters)) {
+     grid_output$pars_clusters_kmeans[actual_forests[which(cluster$cluster == i)]] = i
+}
+grid_output$pars_clusters_kmeans=array(grid_output$pars_clusters_kmeans,dim=c(dim(par_array_median_normalised)[1:2]))
+
+#par(mfrow=c(2,2)) ; image.plot(grid_output$pars_clusters) ; image.plot(grid_output$pars_clusters_kmeans)
+image.plot(grid_output$pars_clusters_kmeans, main=3)
+
 ### 
 ## Create land mask / boundary overlays needed
 
