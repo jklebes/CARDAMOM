@@ -757,7 +757,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       gsi = output[,,53],
                       gsi_itemp = output[,,54],
                       gsi_iphoto = output[,,55],
-                      gsi_iwswp = output[,,56],
+                      gsi_ivpd = output[,,56],
                       # Photosynthesis / C~water coupling related
                       gs_demand_supply_ratio = output[,,57],
                       gs_mmolH2Om2day = output[,,58],
