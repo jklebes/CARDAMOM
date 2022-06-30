@@ -94,11 +94,11 @@ fudgeit <- function(){
 # PointsOfChange
 
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_isimip3a_lca_gpp_nbe/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_trendy_lca_agb_gpp_fire/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_trendy_lca_agb_gpp_fire/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_CsomPriorNCSCD/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_nbe/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_GSI_BUCKET_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Trendyv9_historical/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_AGB/infofile.RData")
@@ -122,10 +122,10 @@ load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
 
 # Set output path for figures and tables
-out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_reccap2_permafrost_1deg_C7_isimip/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/figures_africa/"
-#out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
+out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/trendy/figures/"
 #out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/dalec_gsi_bucket/"
 #out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/mexico/gridded_figures/"
@@ -179,15 +179,15 @@ nos_desired_clusters = 3 # specify the number of clusters wanted
 cluster = kmeans(par_array_tmp, centers = nos_desired_clusters, iter.max = 10, nstart = 50)
 
 # Extract the cluster information which we can then use in maps / aggregation
-grid_output$nos_pars_clusters=dim(cluster$centers)[1] ; grid_output$clusters_exemplars=cluster$centers
+grid_output$nos_pars_clusters_kmeans=dim(cluster$centers)[1] ; grid_output$clusters_exemplars_kmeans=cluster$centers
 grid_output$pars_clusters_kmeans=array(NA,dim=c(dim(par_array_median_normalised)[1:2]))
-for (i in seq(1, grid_output$nos_pars_clusters)) {
-     grid_output$pars_clusters_kmeans[actual_forests[which(cluster$cluster == i)]] = i
+for (i in seq(1, grid_output$nos_pars_clusters_kmeans)) {
+     grid_output$clusters_kmeans[actual_forests[which(cluster$cluster == i)]] = i
 }
-grid_output$pars_clusters_kmeans=array(grid_output$pars_clusters_kmeans,dim=c(dim(par_array_median_normalised)[1:2]))
+grid_output$clusters_kmeans=array(grid_output$clusters_kmeans,dim=c(dim(par_array_median_normalised)[1:2]))
 
 #par(mfrow=c(2,2)) ; image.plot(grid_output$pars_clusters) ; image.plot(grid_output$pars_clusters_kmeans)
-image.plot(grid_output$pars_clusters_kmeans, main=3)
+image.plot(grid_output$clusters_kmeans, main=3)
 
 ### 
 ## Create land mask / boundary overlays needed
@@ -208,9 +208,9 @@ landmask = spTransform(landmask,crs(cardamom_ext))
 # Clip to the extent of the CARDAMOM analysis
 landmask = crop(landmask, cardamom_ext)
 
-add_biomes = " "
+#add_biomes = " "
 #add_biomes = "ssa_wwf"
-#add_biomes = "wwf_ecoregions"
+add_biomes = "wwf_ecoregions"
 #add_biomes = "reccap2_permafrost"
 if (add_biomes == "ssa_wwf") {
     # Read in shape file for boundaries
@@ -310,7 +310,7 @@ write.table(data.frame(BiomeCode = c(1:length(biome_names)),BiomeNames = biome_n
 # PointsOfChange
 
 # This will be used to filter the analysis to include specific locations only
-use_filter = FALSE
+use_filter = TRUE
 if (use_filter) {
     #  Design a user created / loaded filter 
     landfilter = array(NA,dim=dim(grid_output$assimilated_wood_mean_gCm2))
