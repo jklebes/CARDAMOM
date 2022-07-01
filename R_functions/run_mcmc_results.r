@@ -858,7 +858,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
               if (exists(x = "foliage_gCm2", where = states_all)) {
                   # A combined total of C to foliage must always exist
                   site_output$combined_alloc_foliage_gCm2day = apply(states_all$combined_alloc_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
-                  site_output$mean_combined_alloc_foliage_gCm2day = quantile(apply(states_all$foliage_gCm2,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_combined_alloc_foliage_gCm2day = quantile(apply(states_all$combined_alloc_foliage_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   # Assign pool to site_output
                   site_output$foliage_gCm2 = apply(states_all$foliage_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_foliage_gCm2 = quantile(apply(states_all$foliage_gCm2,1,mean, na.rm = na_flag), prob=num_quantiles)

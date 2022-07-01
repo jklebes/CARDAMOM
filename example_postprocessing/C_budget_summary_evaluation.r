@@ -210,7 +210,7 @@ landmask = crop(landmask, cardamom_ext)
 
 #add_biomes = " "
 #add_biomes = "ssa_wwf"
-add_biomes = "wwf_ecoregions"
+#add_biomes = "wwf_ecoregions"
 #add_biomes = "reccap2_permafrost"
 if (add_biomes == "ssa_wwf") {
     # Read in shape file for boundaries
