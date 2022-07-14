@@ -21,9 +21,9 @@ library(ncdf4)
 
 # load CARDAMOM gridded project file
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_LU_FIRES_MHMCMC/global_1deg_C1/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_MHMCMC/DAREUK_0.5deg_monthly/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_MHMCMC/DAREUK_0.5deg_monthly/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_trendy_lca_agb_gpp_fire/infofile.RData")
 # Then load parameter and C stocks / flux files
-load(paste(PROJECT$results_processedpath,"/",PROJECT$name,"_parameter_maps.RData",sep=""))
 load(paste(PROJECT$results_processedpath,"/",PROJECT$name,"_stock_flux.RData",sep=""))
 # Output file name modifiers
 output_prefix = "" # must be followed by "_"
@@ -135,7 +135,7 @@ for (yr in seq(1,nos_years)) {
               ## Determine downscaling coefficient for GPP from daily to hourly based on radiation curve
               hold_gpp = swrad_out/rep(rollapply(swrad_out, width = steps_per_day, by = steps_per_day, FUN=sum, na.rm=TRUE), each = steps_per_day)
               ## Determine downscale respiration fluxes based on temperature curve and exponential response function
-              hold_resp=exp(grid_parameters$parameters[slot_i,slot_j,10,quantiles_locs[2]]*sat_out)
+              hold_resp=exp(grid_output$parameters[slot_i,slot_j,10,quantiles_locs[2]]*sat_out)
               hold_resp=hold_resp/rep(rollapply(hold_resp, width = steps_per_day, by = steps_per_day, FUN=sum, na.rm=TRUE), each=steps_per_day)
               # Determine hourly flux rate for variables which we assume constant emission over the day
               hold_const = 1/steps_per_day
