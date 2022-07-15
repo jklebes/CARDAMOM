@@ -31,8 +31,10 @@ outfilename = "latex_C_budget.tex"
 ## Load files from which C-budget is extracted, prepare C-budget values
 
 # Load information file
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Forests2020_Mexico_Kiuic_chronosequence/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Forests2020_Mexico_Kiuic_chronosequence/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Forests2020_Mexico_FCP_chronosequence/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_agb/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
 
 # If this is a site analysis 
 # which site are we using?
@@ -223,7 +225,7 @@ write(paste("         \\put(9.55,5.70){\\small ",npp_labile_gCm2yr[2],"}        
 write(paste("         \\put(10.72,5.75){\\scriptsize $\\frac{",npp_labile_gCm2yr[1],"}{",npp_labile_gCm2yr[3],"}$} % CI",sep=""), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 write(    c("         % NPP to foliage"), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 write(    c("         \\put(8.92,8.6){\\rotatebox[origin=c]{30}{\\vector(1,0){4.0}}}"), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
-write(    c("         \\put(9.15,8.9){\\small \\rotatebox[origin=c]{30}{$NPP_{fol}$}}    % Label"), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+write(    c("         \\put(9.15,8.95){\\small \\rotatebox[origin=c]{30}{$NPP_{fol}$}}    % Label"), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 write(paste("         \\put(9.30,8.2){\\small \\rotatebox[origin=c]{30}{",npp_foliage_gCm2yr[2],"}}                % Median",sep=""), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 write(paste("         \\put(10.60,9.0){\\scriptsize \\rotatebox[origin=c]{30}{$\\frac{",npp_foliage_gCm2yr[1],"}{",npp_foliage_gCm2yr[3],"}$}} % CI",sep=""), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 write(    c("         % labile to foliage"), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
@@ -343,7 +345,7 @@ write(    c("         % Litter C pool"), file = outfilename, ncolumns = nos_cols
 write(    c("         \\put(20.25,5.2){\\framebox(2.5,2)}"), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 write(    c("         \\put(20.75,6.45){$C_{litter}$}"), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 write(paste("         \\put(20.4,5.6){\\small ",litter_gCm2[2],"}               % Median",sep=""), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
-write(paste("         \\put(21.3,5.6){\\scriptsize $\\frac{",litter_gCm2[1],"}{",litter_gCm2[3],"}$} % CI",sep=""), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+write(paste("         \\put(21.6,5.6){\\scriptsize $\\frac{",litter_gCm2[1],"}{",litter_gCm2[3],"}$} % CI",sep=""), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 write(    c(" "), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 write(    c("         % Som C pool"), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 write(    c("         \\put(20.25,1.0){\\framebox(2.5,2.75)}"), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
