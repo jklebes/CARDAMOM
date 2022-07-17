@@ -132,7 +132,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ## Get some initial Csom (gC/m2) information
     ###
 
-    if (Csom_source == "HWSD" | Csom_source == "SoilGrids" | Csom_source == "NCSCD" | Csom_source == "NCSCD3m") {
+    if (Csom_source == "HWSD" | Csom_source == "SoilGrids"  | Csom_source == "SoilGrids_v2" | Csom_source == "NCSCD" | Csom_source == "NCSCD3m") {
         Csom_info = extract_Csom_prior(grid_long_loc,grid_lat_loc,spatial_type,
                                        resolution,grid_type,latlon_wanted,Csom_all)
         Csom_initial = Csom_info$Csom_initial ; Csom_initial_unc = Csom_info$Csom_initial_unc
@@ -161,7 +161,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ## Get some sand / clay information (%)
     ###
 
-    if (sand_clay_source == "HWSD" | sand_clay_source == "SoilGrids") {
+    if (sand_clay_source == "HWSD" | sand_clay_source == "SoilGrids" | sand_clay_source == "SoilGrids_v2") {
         sand_clay=extract_sand_clay(grid_long_loc,grid_lat_loc,spatial_type,
                                     resolution,grid_type,latlon_wanted,sand_clay_all)
         top_sand = sand_clay$top_sand ; bot_sand = sand_clay$bot_sand

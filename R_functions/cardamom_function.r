@@ -16,6 +16,7 @@ cardamom <-function (projname,model,method,stage) {
   if (exists("select_country") == FALSE) {select_country <<- FALSE}
   if (exists("path_to_landsea") == FALSE) {path_to_landsea <<- "default"}
   if (exists("request_compile_local") == FALSE) {request_compile_local <<- FALSE}
+  if (exists("path_to_co2") == FALSE) {path_to_co2 <<- "./R_functions/"}
 
   # define file name for PROJECT file
   # this file will contain all information relating the the PROJECT

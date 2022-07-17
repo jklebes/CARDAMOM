@@ -7,7 +7,7 @@
 
 load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spatial_type) {
 
-    if (Csom_source == "SoilGrids") {
+    if (Csom_source == "SoilGrids" | Csom_source == "SoilGrids_v2") {
 
         # let the user know this might take some time
         print("Loading processed SoilGrids Csom fields for subsequent sub-setting ...")

@@ -20,7 +20,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
 
     } else {
 
-        if (met_source == "trendy_v9") {
+        if (met_source == "trendy_v9" | met_source == "trendy_v11") {
 
             # declare variable ids needed to select files / infile variables
             varid = c("dswrf","tmx","pre","vpd","tmn","wsp")
@@ -305,7 +305,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         #
 
         # convert Trendy air temperature of oC to K
-        if (met_source == "trendy_v9" ) {
+        if (met_source == "trendy_v9" | met_source == "trendy_v11") {
             maxt_out = maxt_out + 273.15
             mint_out = mint_out + 273.15
         }
@@ -326,12 +326,13 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         # This will be corrected later on when the location specific data are extracted
         print("...generating day of year variables")
 
-        # Read in Mauna Loa CO2 (ppm)
-        # Currently not other source is coded for atmospheric CO2 concentrations so we use the Mauna Loa background.
-        # The current dataset is provided with CARDAMOM source code and covers 1959-2019 at monthly time step.
+        # Read in Global CO2 source (ppm)
+        # Default is the Mauna Loa background. The default dataset is provided with CARDAMOM source code and covers 1959-2021 at monthly time step.
         # The data are sourced from https://www.esrl.noaa.gov/gmd/ccgg/trends/data.html .
         # The interpolated (gap-filled) observations were extracted and processed into a simple file for our use.
-        co2_background = read.csv("./R_functions/co2_monthly.csv", header=TRUE)
+        # Assuming the same name and file convension are used, alternate sources can be easily used.
+        # Assumed format, csv col 1 = year, 2 = month, 3 co2_ppm
+        co2_background = read.csv(paste(path_to_co2,"/co2_monthly.csv",sep="", header=TRUE)
         if (years_to_load[1] < co2_background$year[1] | years_to_load[length(years_to_load)] > co2_background$year[dim(co2_background)[1]]) {
             stop("Available CO2 information in ./R_functions/co2_monthly.csv does not cover project time frame...")
         }
@@ -341,7 +342,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
              # is current year a leap or not
              nos_days = nos_days_in_year(years_to_load[yr])
              # Extract this years CO2
-             co2_annual = co2_background$co2[which(co2_background$year == years_to_load[yr])]
+             co2_annual = co2_background$co2_ppm[which(co2_background$year == years_to_load[yr])]
              if (nos_days == 366) {
                  days_per_month=c(31,29,31,30,31,30,31,31,30,31,30,31)
              } else {
