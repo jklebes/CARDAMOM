@@ -32,9 +32,9 @@ outfilename = "latex_C_budget.tex"
 
 # Load information file
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Forests2020_Mexico_Kiuic_chronosequence/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Forests2020_Mexico_FCP_chronosequence/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Forests2020_Mexico_FCP_chronosequence/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_agb/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
 
 # If this is a site analysis 
 # which site are we using?
@@ -107,55 +107,58 @@ if (PROJECT$spatial_type == "grid") {
   
 } else if (PROJECT$spatial_type == "site") {
     # A site analysis
-    
-    # Specifiy quantiles we want to extract, should only be 3 (low/median/high)
-    quantiles_wanted = c(0.025,0.50,0.975)    
-    
+        
     # Load the processed site file
     load(paste(PROJECT$results_processedpath,PROJECT$sites[site_nos],".RData",sep=""))
 
+    # Specifiy quantiles we want to extract, should only be 3 (low/median/high)
+    quantiles_wanted = c(0.025,0.50,0.975)    
+    # Restrict the time bounds?
+    s = 1 ; f = dim(states_all$lai_m2m2)[2]
+#    s = f-(17*12) ; f = dim(states_all$lai_m2m2)[2]
+    
     # Extract or calculate required derived values
     # NOTE: unit conversion from gC/m2/day to gC/m2/yr
 
     # NATURAL FLUXES
-    gpp_gCm2yr = format(round(quantile(apply(states_all$gpp_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    rauto_gCm2yr = format(round(quantile(apply(states_all$rauto_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    rhet_litter_gCm2yr = format(round(quantile(apply(states_all$rhet_litter_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    rhet_som_gCm2yr = format(round(quantile(apply(states_all$rhet_som_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    rhet_gCm2yr = format(round(quantile(apply(states_all$rhet_litter_gCm2day+states_all$rhet_som_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    npp_gCm2yr = format(round(quantile(apply(states_all$gpp_gCm2day-states_all$rauto_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    npp_labile_gCm2yr = format(round(quantile(apply(states_all$alloc_labile_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    npp_foliage_gCm2yr = format(round(quantile(apply(states_all$alloc_foliage_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    labile_to_foliage_gCm2yr = format(round(quantile(apply(states_all$labile_to_foliage_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    npp_roots_gCm2yr = format(round(quantile(apply(states_all$alloc_roots_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    npp_wood_gCm2yr = format(round(quantile(apply(states_all$alloc_wood_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    foliage_to_litter_gCm2yr = format(round(quantile(apply(states_all$foliage_to_litter_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    roots_to_litter_gCm2yr = format(round(quantile(apply(states_all$roots_to_litter_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    wood_to_litter_gCm2yr = format(round(quantile(apply(states_all$wood_to_litter_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    litter_to_som_gCm2yr = format(round(quantile(apply(states_all$litter_to_som_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    gpp_gCm2yr = format(round(quantile(apply(states_all$gpp_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    rauto_gCm2yr = format(round(quantile(apply(states_all$rauto_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    rhet_litter_gCm2yr = format(round(quantile(apply(states_all$rhet_litter_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    rhet_som_gCm2yr = format(round(quantile(apply(states_all$rhet_som_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    rhet_gCm2yr = format(round(quantile(apply(states_all$rhet_litter_gCm2day[,s:f]+states_all$rhet_som_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    npp_gCm2yr = format(round(quantile(apply(states_all$gpp_gCm2day[,s:f]-states_all$rauto_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    npp_labile_gCm2yr = format(round(quantile(apply(states_all$alloc_labile_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    npp_foliage_gCm2yr = format(round(quantile(apply(states_all$alloc_foliage_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    labile_to_foliage_gCm2yr = format(round(quantile(apply(states_all$labile_to_foliage_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    npp_roots_gCm2yr = format(round(quantile(apply(states_all$alloc_roots_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    npp_wood_gCm2yr = format(round(quantile(apply(states_all$alloc_wood_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    foliage_to_litter_gCm2yr = format(round(quantile(apply(states_all$foliage_to_litter_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    roots_to_litter_gCm2yr = format(round(quantile(apply(states_all$roots_to_litter_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    wood_to_litter_gCm2yr = format(round(quantile(apply(states_all$wood_to_litter_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    litter_to_som_gCm2yr = format(round(quantile(apply(states_all$litter_to_som_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
     # FIRE FLUXES
-    FIRElitter_labile_gCm2yr = format(round(quantile(apply(states_all$FIRElitter_labile_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    FIRElitter_foliage_gCm2yr = format(round(quantile(apply(states_all$FIRElitter_foliage_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    FIRElitter_roots_gCm2yr = format(round(quantile(apply(states_all$FIRElitter_roots_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    FIRElitter_wood_gCm2yr = format(round(quantile(apply(states_all$FIRElitter_wood_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    FIRElitter_litter_gCm2yr = format(round(quantile(apply(states_all$FIRElitter_litter_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    FIREemiss_labile_gCm2yr = format(round(quantile(apply(states_all$FIREemiss_labile_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    FIREemiss_foliage_gCm2yr = format(round(quantile(apply(states_all$FIREemiss_foliage_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    FIREemiss_roots_gCm2yr = format(round(quantile(apply(states_all$FIREemiss_roots_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    FIREemiss_wood_gCm2yr = format(round(quantile(apply(states_all$FIREemiss_wood_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    FIREemiss_litter_gCm2yr = format(round(quantile(apply(states_all$FIREemiss_litter_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    FIREemiss_som_gCm2yr = format(round(quantile(apply(states_all$FIREemiss_som_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    fire_gCm2yr = format(round(quantile(apply(states_all$fire_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    FIRElitter_labile_gCm2yr = format(round(quantile(apply(states_all$FIRElitter_labile_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    FIRElitter_foliage_gCm2yr = format(round(quantile(apply(states_all$FIRElitter_foliage_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    FIRElitter_roots_gCm2yr = format(round(quantile(apply(states_all$FIRElitter_roots_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    FIRElitter_wood_gCm2yr = format(round(quantile(apply(states_all$FIRElitter_wood_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    FIRElitter_litter_gCm2yr = format(round(quantile(apply(states_all$FIRElitter_litter_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    FIREemiss_labile_gCm2yr = format(round(quantile(apply(states_all$FIREemiss_labile_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    FIREemiss_foliage_gCm2yr = format(round(quantile(apply(states_all$FIREemiss_foliage_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    FIREemiss_roots_gCm2yr = format(round(quantile(apply(states_all$FIREemiss_roots_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    FIREemiss_wood_gCm2yr = format(round(quantile(apply(states_all$FIREemiss_wood_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    FIREemiss_litter_gCm2yr = format(round(quantile(apply(states_all$FIREemiss_litter_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    FIREemiss_som_gCm2yr = format(round(quantile(apply(states_all$FIREemiss_som_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    fire_gCm2yr = format(round(quantile(apply(states_all$fire_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
     # Net fluxes
-    nbe_gCm2yr = format(round(quantile(apply((states_all$fire_gCm2day+states_all$rhet_litter_gCm2day+states_all$rhet_som_gCm2day+states_all$rauto_gCm2day)-states_all$gpp_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
-    nee_gCm2yr = format(round(quantile(apply((states_all$rhet_litter_gCm2day+states_all$rhet_som_gCm2day+states_all$rauto_gCm2day)-states_all$gpp_gCm2day,1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    nbe_gCm2yr = format(round(quantile(apply((states_all$fire_gCm2day+states_all$rhet_litter_gCm2day+states_all$rhet_som_gCm2day+states_all$rauto_gCm2day)[,s:f]-states_all$gpp_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
+    nee_gCm2yr = format(round(quantile(apply((states_all$rhet_litter_gCm2day+states_all$rhet_som_gCm2day+states_all$rauto_gCm2day)[,s:f]-states_all$gpp_gCm2day[,s:f],1,mean), prob=quantiles_wanted) * 365.25, digits = dp), nsmall = dp)
     # STOCKS
-    labile_gCm2 = format(round(quantile(apply(states_all$labile_gCm2,1,mean), prob=quantiles_wanted), digits = dp), nsmall = dp)
-    foliage_gCm2 = format(round(quantile(apply(states_all$labile_gCm2 + states_all$foliage_gCm2,1,mean), prob=quantiles_wanted), digits = dp), nsmall = dp)
-    roots_gCm2 = format(round(quantile(apply(states_all$roots_gCm2,1,mean), prob=quantiles_wanted), digits = dp), nsmall = dp)
-    wood_gCm2 = format(round(quantile(apply(states_all$wood_gCm2,1,mean), prob=quantiles_wanted), digits = dp), nsmall = dp)
-    litter_gCm2 = format(round(quantile(apply(states_all$litter_gCm2,1,mean), prob=quantiles_wanted), digits = dp), nsmall = dp)
-    som_gCm2 = format(round(quantile(apply(states_all$som_gCm2,1,mean), prob=quantiles_wanted), digits = dp), nsmall = dp)
+    labile_gCm2 = format(round(quantile(apply(states_all$labile_gCm2[,s:f],1,mean), prob=quantiles_wanted), digits = dp), nsmall = dp)
+    foliage_gCm2 = format(round(quantile(apply(states_all$labile_gCm2[,s:f] + states_all$foliage_gCm2[,s:f],1,mean), prob=quantiles_wanted), digits = dp), nsmall = dp)
+    roots_gCm2 = format(round(quantile(apply(states_all$roots_gCm2[,s:f],1,mean), prob=quantiles_wanted), digits = dp), nsmall = dp)
+    wood_gCm2 = format(round(quantile(apply(states_all$wood_gCm2[,s:f],1,mean), prob=quantiles_wanted), digits = dp), nsmall = dp)
+    litter_gCm2 = format(round(quantile(apply(states_all$litter_gCm2[,s:f],1,mean), prob=quantiles_wanted), digits = dp), nsmall = dp)
+    som_gCm2 = format(round(quantile(apply(states_all$som_gCm2[,s:f],1,mean), prob=quantiles_wanted), digits = dp), nsmall = dp)
     
 } else {
     # We have a compatibility problem
@@ -276,8 +279,8 @@ write(    c("         % Foliage"), file = outfilename, ncolumns = nos_cols, sep=
 write(    c("         \\put(15.7,9.95){\\small $Mort_{fol}$}"), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 write(paste("         \\put(15.65,9.15){\\small ",foliage_to_litter_gCm2yr[2],"}                % Median",sep=""), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 write(paste("         \\put(16.85,9.20){\\scriptsize $\\frac{",foliage_to_litter_gCm2yr[1],"}{",foliage_to_litter_gCm2yr[3],"}$} % CI",sep=""), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
-write(paste("         \\put(18.0,9.15){\\color{red}{\\small ",FIRElitter_labile_foliage_gCm2yr[2],"}}                % Median",sep=""), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
-write(paste("         \\put(18.95,9.20){\\color{red}{\\scriptsize $\\frac{",FIRElitter_labile_foliage_gCm2yr[1],"}{",FIRElitter_labile_foliage_gCm2yr[3],"}$}} % CI",sep=""), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+write(paste("         \\put(18.0,9.15){\\color{red}{\\small ",FIRElitter_foliage_gCm2yr[2],"}}                % Median",sep=""), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+write(paste("         \\put(18.95,9.20){\\color{red}{\\scriptsize $\\frac{",FIRElitter_foliage_gCm2yr[1],"}{",FIRElitter_foliage_gCm2yr[3],"}$}} % CI",sep=""), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 write(    c("         % Assign arrow to Clitter"), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 write(    c("         \\put(15.25,9.75){\\line(1,0){4.45}}"), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 write(    c("         \\put(19.70,9.75){\\vector(1,-2){1.25}}"), file = outfilename, ncolumns = nos_cols, sep=col_sep, append = TRUE)
