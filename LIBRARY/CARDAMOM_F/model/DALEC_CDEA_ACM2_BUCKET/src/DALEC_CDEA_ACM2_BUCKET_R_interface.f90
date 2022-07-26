@@ -149,19 +149,22 @@ subroutine rdaleccdeaacm2bucket(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,42) = POOLS(1:nodays,6)           ! som (gC/m2)
      ! Water cycle related
      out_var1(i,1:nodays,43) = FLUXES(1:nodays,29)         ! Evapotranspiration (kgH2O.m-2.day-1)
-     out_var1(i,1:nodays,44) = POOLS(1:nodays,7)           ! surface water (kgH2O.m-2.30cmdepth)
-     out_var1(i,1:nodays,45) = wSWP_time(1:nodays)         ! Weighted Soil Water Potential (MPa)
-     out_var1(i,1:nodays,46) = snow_storage_time(1:nodays) ! Snow storage (kgH2O/m2)
+     out_var1(i,1:nodays,44) = FLUXES(1:nodays,41)         ! transpiration (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,45) = FLUXES(1:nodays,42)         ! soil evaporation (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,46) = FLUXES(1:nodays,43)         ! wet canopy evaporation (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,47) = POOLS(1:nodays,7)           ! surface water (kgH2O.m-2.30cmdepth)
+     out_var1(i,1:nodays,48) = wSWP_time(1:nodays)         ! Weighted Soil Water Potential (MPa)
+     out_var1(i,1:nodays,49) = snow_storage_time(1:nodays) ! Snow storage (kgH2O/m2)
      ! Canopy (phenology) properties
-     out_var1(i,1:nodays,47) = lai                         ! LAI (m2/m2)
+     out_var1(i,1:nodays,50) = lai                         ! LAI (m2/m2)
      ! Photosynthesis / C~water coupling related
-     out_var1(i,1:nodays,48) = gs_demand_supply_ratio      ! ratio of evaporative demand over supply
-     out_var1(i,1:nodays,49) = gs_total_canopy             ! stomatal conductance (mmolH2O/m2ground/day)
-     out_var1(i,1:nodays,50) = canopy_par_MJday_time       ! Canopy absorbed PAR (MJ/m2ground/day)
-     out_var1(i,1:nodays,51) = gb_total_canopy             ! boundary conductance (mmolH2O/m2ground/day)
-     out_var1(i,1:nodays,52) = cica_time                   ! ratio of leaf internal to external CO2
+     out_var1(i,1:nodays,51) = gs_demand_supply_ratio      ! ratio of evaporative demand over supply
+     out_var1(i,1:nodays,52) = gs_total_canopy             ! stomatal conductance (mmolH2O/m2ground/day)
+     out_var1(i,1:nodays,53) = canopy_par_MJday_time       ! Canopy absorbed PAR (MJ/m2ground/day)
+     out_var1(i,1:nodays,54) = gb_total_canopy             ! boundary conductance (mmolH2O/m2ground/day)
+     out_var1(i,1:nodays,55) = cica_time                   ! ratio of leaf internal to external CO2
      ! misc
-     out_var1(i,1:nodays,53) = root_depth_time             ! rooting depth (m)
+     out_var1(i,1:nodays,56) = root_depth_time             ! rooting depth (m)
 
      !!!
      ! Estimate residence time information

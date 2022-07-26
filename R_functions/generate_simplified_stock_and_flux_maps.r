@@ -84,6 +84,8 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
   par_names = names(grid_output)
   # filter for those related to the 'mean' status
   par_names = par_names[grepl("mean", par_names)]
+  # Special case removal for mean annual variables which will not be gridded
+  par_names = par_names[grepl("mean_annual", par_names) == FALSE]
 
   # loop through these mean variables, output median and CI range for each of these variables
   for (p in seq(1,length(par_names))) {

@@ -183,6 +183,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
               if (exists(x = "harvest_gCm2day", where = states_all)) {
                   states_all$nbp_gCm2day = states_all$nbp_gCm2day - states_all$harvest_gCm2day
               }
+              # Now calculate the mean annual carbon use efficiency (NPP:GPP) as some models do now have a parameter for this
+              states_all$mean_annual_cue = apply(states_all$npp_gCm2day,1, rollapply_mean_annual, step = steps_per_year) / apply(states_all$gpp_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
+              states_all$mean_annual_cue = t(states_all$mean_annual_cue) # rollapply inverts the dimensions from that wanted
 
               ###
               ## Post-hoc calculation of parameter correlations with key C-cycle variables
@@ -728,6 +731,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
               site_output$mean_harvest_gCm2day = quantile(apply(states_all$harvest_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
               site_output$fire_gCm2day         = apply(states_all$fire_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
               site_output$mean_fire_gCm2day    = quantile(apply(states_all$fire_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
+              # C-cycle diagnostics which are mean annuals
+              site_output$mean_annual_cue      = apply(states_all$mean_annual_cue, 2, quantile, prob = num_quantiles, na.rm=TRUE)
+              site_output$mean_cue             = quantile(apply(states_all$mean_annual_cue,1,mean), prob = num_quantiles, na.rm=TRUE)
 
               ###
               # Track net pool change over time
@@ -1270,6 +1276,23 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # evapotranspiration (Etrans + Esoil + Ewetcanopy)
                   site_output$ET_kgH2Om2day = apply(states_all$ET_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
                   site_output$mean_ET_kgH2Om2day = quantile(apply(states_all$ET_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+
+                  # Check whether the evaporation components exist
+                  if (exists(x = "Etrans_kgH2Om2day", where = states_all)) {
+                      # Transpiration
+                      site_output$Etrans_kgH2Om2day = apply(states_all$Etrans_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+                      site_output$mean_Etrans_kgH2Om2day = quantile(apply(states_all$Etrans_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  }
+                  if (exists(x = "Esoil_kgH2Om2day", where = states_all)) {
+                      # Soil evaporation
+                      site_output$Esoil_kgH2Om2day = apply(states_all$Esoil_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+                      site_output$mean_Esoil_kgH2Om2day = quantile(apply(states_all$Esoil_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  }
+                  if (exists(x = "Ewetcanopy_kgH2Om2day", where = states_all)) {
+                      # Wet canopy evaporation
+                      site_output$Ewetcanopy_kgH2Om2day = apply(states_all$Ewetcanopy_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+                      site_output$mean_Ewetcanopy_kgH2Om2day = quantile(apply(states_all$Ewetcanopy_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  }
               }
 
               # Snow related
@@ -1556,6 +1579,8 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$mean_fire_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_nbe_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           grid_output$mean_nbp_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+          # Always present but at annual time step
+          grid_output$mean_cue = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
           # Time varying pixel based (i.e. not within the grid) values with quantile based uncertainty for...
           # States
           grid_output$Ctotal_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
@@ -1571,6 +1596,8 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$fire_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$nbe_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           grid_output$nbp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          # Always present but at annual time step
+          grid_output$mean_annual_cue = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
 
           # Based on the presence of each pool define the grids for the mean and final values.
           # Also, create the time varying but quantile based values and time
@@ -1915,6 +1942,22 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               # evapotranspiration (Etrans + Esoil + Ewetcanopy)
               grid_output$mean_ET_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$ET_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              # Check whether the evaporation components exist
+              if (exists(x = "Etrans_kgH2Om2day", where = site_output)) {
+                  # Transpiration
+                  grid_output$mean_Etrans_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$Etrans_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              }
+              if (exists(x = "Esoil_kgH2Om2day", where = site_output)) {
+                  # Soil evaporation
+                  grid_output$mean_Esoil_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$Esoil_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              }
+              if (exists(x = "Ewetcanopy_kgH2Om2day", where = site_output)) {
+                  # Wet canopy evaporation
+                  grid_output$mean_Ewetcanopy_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$Ewetcanopy_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              }
           }
           # Snow specific
           if (exists(x = "snow_kgH2Om2", where = site_output)) {
@@ -2087,6 +2130,8 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                grid_output$mean_fire_gCm2day[slot_i,slot_j,] = site_output$mean_fire_gCm2day
                grid_output$mean_nbe_gCm2day[slot_i,slot_j,] = site_output$mean_nbe_gCm2day
                grid_output$mean_nbp_gCm2day[slot_i,slot_j,] = site_output$mean_nbp_gCm2day
+               # Always present but at annual time step
+               grid_output$mean_cue[slot_i,slot_j,] = site_output$mean_cue
                # Time varying pixel based (i.e. not within the grid) values with quantile based uncertainty for...
                # States
                grid_output$Ctotal_gCm2[n,,] = site_output$Ctotal_gCm2
@@ -2102,6 +2147,8 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                grid_output$fire_gCm2day[n,,]    = site_output$fire_gCm2day
                grid_output$nbe_gCm2day[n,,]     = site_output$nbe_gCm2day
                grid_output$nbp_gCm2day[n,,]     = site_output$nbp_gCm2day
+               # Always present but at annual time step
+               grid_output$mean_annual_cue[n,,] = site_output$mean_annual_cue
 
                # Based on the presence of each pool define the grids for the mean and final values.
                # Also, create the time varying but quantile based values and time
@@ -2447,7 +2494,23 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    # evapotranspiration (Etrans + Esoil + Ewetcanopy)
                    grid_output$mean_ET_kgH2Om2day[slot_i,slot_j,] = site_output$mean_ET_kgH2Om2day
                    grid_output$ET_kgH2Om2day[n,,] = site_output$ET_kgH2Om2day
-               }
+                   # Check whether the evaporation components exist
+                   if (exists(x = "Etrans_kgH2Om2day", where = site_output)) {
+                       # Transpiration
+                       grid_output$mean_Etrans_kgH2Om2day[slot_i,slot_j,] = site_output$mean_Etrans_kgH2Om2day
+                       grid_output$Etrans_kgH2Om2day[n,,] = site_output$Etrans_kgH2Om2day
+                   }
+                  if (exists(x = "Esoil_kgH2Om2day", where = site_output)) {
+                      # Soil evaporation
+                      grid_output$mean_Esoil_kgH2Om2day[slot_i,slot_j,] = site_output$mean_Esoil_kgH2Om2day
+                      grid_output$Esoil_kgH2Om2day[n,,] = site_output$Esoil_kgH2Om2day
+                  }
+                  if (exists(x = "Ewetcanopy_kgH2Om2day", where = site_output)) {
+                      # Wet canopy evaporation
+                      grid_output$mean_Ewetcanopy_kgH2Om2day[slot_i,slot_j,] = site_output$mean_Ewetcanopy_kgH2Om2day
+                      grid_output$Ewetcanopy_kgH2Om2day[n,,] = site_output$Ewetcanopy_kgH2Om2day
+                   }
+               } # ET_kgH2Om2day exists
                # Snow specific
                if (exists(x = "snow_kgH2Om2", where = site_output)) {
                    ## snow on soil surface

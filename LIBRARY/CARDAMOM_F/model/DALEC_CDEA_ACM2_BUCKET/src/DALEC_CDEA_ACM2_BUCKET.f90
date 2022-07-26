@@ -992,6 +992,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,29) = FLUXES(n,29) + wetcanopy_evap
        ! store soil water content of the surface zone (mm)
        POOLS(n+1,7) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
+       ! Assign all water variables to output variables
+       FLUXES(n,41) =  transpiration   ! transpiration
+       FLUXES(n,42) =  soilevaporation ! soil evaporation
+       FLUXES(n,43) =  wetcanopy_evap  ! wet canopy evaporation
 
        !!!!!!!!!!
        ! Extract biomass - e.g. deforestation / degradation
@@ -2451,9 +2455,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     implicit none
 
     ! arguments
-    double precision, intent(in) :: ET_leaf,ET_soil & ! evapotranspiration estimate (kgH2O.m-2.day-1)
-                                       ,rainfall_in   ! rainfall (kgH2O.m-2.day-1)
-    double precision, intent(out) :: corrected_ET     ! water balance corrected evapotranspiration (kgH2O/m2/day)
+    double precision, intent(in) :: rainfall_in   ! rainfall (kgH2O.m-2.day-1)
+    double precision, intent(inout) :: ET_leaf,ET_soil ! evapotranspiration estimate (kgH2O.m-2.day-1)
+    double precision, intent(out) :: corrected_ET      ! water balance corrected evapotranspiration (kgH2O/m2/day)
 
     ! local variables
     integer :: day, a
@@ -2690,6 +2694,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! finally update soil water potential
     call soil_water_potential
+
+    ! Based on the soil mass balance corrected_ET, make assumptions to correct ET_leaf and ET_soil
+    balance = corrected_ET / (ET_leaf + ET_soil)
+    ET_leaf = ET_leaf * balance ; ET_soil = ET_soil * balance
 
 !    ! check water balance
 !    balance = (rainfall_in - corrected_ET - underflow - runoff) * days_per_step
