@@ -1277,11 +1277,18 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   site_output$ET_kgH2Om2day = apply(states_all$ET_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
                   site_output$mean_ET_kgH2Om2day = quantile(apply(states_all$ET_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
 
+                  # Calculate the ecosystem water use efficiency
+                  site_output$wue_eco_gCkgH2O = apply(states_all$gpp_gCm2day/states_all$ET_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+                  site_output$mean_eco_gCkgH2O = quantile(apply(states_all$gpp_gCm2day/states_all$ET_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+
                   # Check whether the evaporation components exist
                   if (exists(x = "Etrans_kgH2Om2day", where = states_all)) {
                       # Transpiration
                       site_output$Etrans_kgH2Om2day = apply(states_all$Etrans_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
                       site_output$mean_Etrans_kgH2Om2day = quantile(apply(states_all$Etrans_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      # Calculate the plant water use efficiency
+                      site_output$wue_plant_gCkgH2O = apply(states_all$gpp_gCm2day/states_all$Etrans_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+                      site_output$mean_plant_gCkgH2O = quantile(apply(states_all$gpp_gCm2day/states_all$Etrans_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   }
                   if (exists(x = "Esoil_kgH2Om2day", where = states_all)) {
                       # Soil evaporation
@@ -1292,6 +1299,28 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       # Wet canopy evaporation
                       site_output$Ewetcanopy_kgH2Om2day = apply(states_all$Ewetcanopy_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
                       site_output$mean_Ewetcanopy_kgH2Om2day = quantile(apply(states_all$Ewetcanopy_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  }
+                  # Check whether surface runoff exists?
+                  if (exists(x = "runoff_kgH2Om2day", where = states_all)) {
+                      # Surface water drainage
+                      site_output$runoff_kgH2Om2day = apply(states_all$runoff_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+                      site_output$mean_runoff_kgH2Om2day = quantile(apply(states_all$runoff_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      # Accumulating total drainage (runoff and underflow)
+                      site_output$total_drainage_kgH2Om2day = states_all$runoff_kgH2Om2day
+                  }
+                  # Check whether underflow exists, i.e. drainage out of the bottom of the soil water column?
+                  if (exists(x = "underflow_kgH2Om2day", where = states_all)) {
+                      # Drainage from bottom of soil column
+                      site_output$underflow_kgH2Om2day = apply(states_all$underflow_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+                      site_output$mean_underflow_kgH2Om2day = quantile(apply(states_all$underflow_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      # Accumulating total drainage (runoff and underflow)
+                      site_output$total_drainage_kgH2Om2day = site_output$total_drainage_kgH2Om2day + states_all$underflow_kgH2Om2day
+                  }
+                  # Update the total drainage variable
+                  if (exists(x = "total_drainage_kgH2Om2day", where = site_output)) {
+                      # Total drainage from surface and soil bottom
+                      site_output$total_drainage_kgH2Om2day = apply(site_output$total_drainage_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+                      site_output$mean_total_drainage_kgH2Om2day = quantile(apply(site_output$total_drainage_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   }
               }
 
@@ -1942,11 +1971,17 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               # evapotranspiration (Etrans + Esoil + Ewetcanopy)
               grid_output$mean_ET_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$ET_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              # Ecosystem water use efficiency (GPP/ET)
+              grid_output$mean_wue_eco_gCkgH2O = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$wue_eco_gCkgH2O = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Check whether the evaporation components exist
               if (exists(x = "Etrans_kgH2Om2day", where = site_output)) {
                   # Transpiration
                   grid_output$mean_Etrans_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
                   grid_output$Etrans_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  # Plant water use efficiency (GPP/Etrans)
+                  grid_output$mean_wue_plant_gCkgH2O = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$wue_plant_gCkgH2O = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               }
               if (exists(x = "Esoil_kgH2Om2day", where = site_output)) {
                   # Soil evaporation
@@ -1957,6 +1992,21 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                   # Wet canopy evaporation
                   grid_output$mean_Ewetcanopy_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
                   grid_output$Ewetcanopy_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              }
+              if (exists(x = "runoff_kgH2Om2day", where = site_output)) {
+                  # Surface water runoff
+                  grid_output$mean_runoff_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$runoff_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              }
+              if (exists(x = "underflow_kgH2Om2day", where = site_output)) {
+                  # Underflow from bottom of soil water column
+                  grid_output$mean_underflow_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$underflow_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              }
+              if (exists(x = "total_drainage_kgH2Om2day", where = site_output)) {
+                  # Total drainage from soil surface andn bottom of soil water column
+                  grid_output$mean_total_drainage_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$total_drainage_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               }
           }
           # Snow specific
@@ -2494,11 +2544,17 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    # evapotranspiration (Etrans + Esoil + Ewetcanopy)
                    grid_output$mean_ET_kgH2Om2day[slot_i,slot_j,] = site_output$mean_ET_kgH2Om2day
                    grid_output$ET_kgH2Om2day[n,,] = site_output$ET_kgH2Om2day
+                   # Ecosystem water use efficiency (GPP/ET)
+                   grid_output$mean_wue_eco_gCkgH2O[slot_i,slot_j,] = site_output$mean_wue_eco_gCkgH2O
+                   grid_output$wue_eco_gCkgH2O[n,,] = site_output$wue_eco_gCkgH2O
                    # Check whether the evaporation components exist
                    if (exists(x = "Etrans_kgH2Om2day", where = site_output)) {
                        # Transpiration
                        grid_output$mean_Etrans_kgH2Om2day[slot_i,slot_j,] = site_output$mean_Etrans_kgH2Om2day
                        grid_output$Etrans_kgH2Om2day[n,,] = site_output$Etrans_kgH2Om2day
+                       # Plant water use efficiency (GPP/Etrans)
+                       grid_output$mean_wue_plant_gCkgH2O[slot_i,slot_j,] = site_output$mean_wue_plant_gCkgH2O
+                       grid_output$wue_plant_gCkgH2O[n,,] = site_output$wue_plant_gCkgH2O
                    }
                   if (exists(x = "Esoil_kgH2Om2day", where = site_output)) {
                       # Soil evaporation
@@ -2509,6 +2565,21 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                       # Wet canopy evaporation
                       grid_output$mean_Ewetcanopy_kgH2Om2day[slot_i,slot_j,] = site_output$mean_Ewetcanopy_kgH2Om2day
                       grid_output$Ewetcanopy_kgH2Om2day[n,,] = site_output$Ewetcanopy_kgH2Om2day
+                   }
+                  if (exists(x = "runoff_kgH2Om2day", where = site_output)) {
+                      # Surface water runoff
+                      grid_output$mean_runoff_kgH2Om2day[slot_i,slot_j,] = site_output$mean_runoff_kgH2Om2day
+                      grid_output$runoff_kgH2Om2day[n,,] = site_output$runoff_kgH2Om2day
+                   }
+                  if (exists(x = "underflow_kgH2Om2day", where = site_output)) {
+                      # Underflow from bottom of soil column
+                      grid_output$mean_underflow_kgH2Om2day[slot_i,slot_j,] = site_output$mean_underflow_kgH2Om2day
+                      grid_output$underflow_kgH2Om2day[n,,] = site_output$underflow_kgH2Om2day
+                   }
+                  if (exists(x = "total_drainage_kgH2Om2day", where = site_output)) {
+                      # Total drainage from soil surface and bottom of soil column
+                      grid_output$mean_total_drainage_kgH2Om2day[slot_i,slot_j,] = site_output$mean_total_drainage_kgH2Om2day
+                      grid_output$total_drainage_kgH2Om2day[n,,] = site_output$total_drainage_kgH2Om2day
                    }
                } # ET_kgH2Om2day exists
                # Snow specific

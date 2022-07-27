@@ -1221,7 +1221,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
   } else if (model_name == "DALEC_CDEA_ACM2_BUCKET") {
-      output_dim = 56 ; MTT_dim = 6 ; SS_dim = 6
+      output_dim = 58 ; MTT_dim = 6 ; SS_dim = 6
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdaleccdeaacm2bucket",output_dim=as.integer(output_dim)
                                           ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
@@ -1295,19 +1295,21 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       Etrans_kgH2Om2day = output[,,44],
                       Esoil_kgH2Om2day = output[,,45],
                       Ewetcanopy_kgH2Om2day = output[,,46],
-                      SurfWater_kgH2Om2 = output[,,47],
-                      wSWP_MPa = output[,,48],
-                      snow_kgH2Om2 = output[,,49],
+                      runoff_kgH2Om2day = output[,,47],
+                      underflow_kgH2Om2day = output[,,48],
+                      SurfWater_kgH2Om2 = output[,,49],
+                      wSWP_MPa = output[,,50],
+                      snow_kgH2Om2 = output[,,51],
                       # Canopy (phenology) properties
-                      lai_m2m2 = output[,,50],
+                      lai_m2m2 = output[,,52],
                       # Photosynthesis / C~water coupling related
-                      gs_demand_supply_ratio = output[,,51],
-                      gs_mmolH2Om2day = output[,,52],
-                      APAR_MJm2day = output[,,53],
-                      gb_mmolH2Om2day = output[,,54],
-                      CiCa = output[,,55],
+                      gs_demand_supply_ratio = output[,,53],
+                      gs_mmolH2Om2day = output[,,54],
+                      APAR_MJm2day = output[,,55],
+                      gb_mmolH2Om2day = output[,,56],
+                      CiCa = output[,,57],
                       # Misc
-                      RootDepth_m = output[,,56],
+                      RootDepth_m = output[,,58],
                       ## Aggregated variables
                       # Mean Transit times
                       MTT_labile_years = MTT_years[,1],

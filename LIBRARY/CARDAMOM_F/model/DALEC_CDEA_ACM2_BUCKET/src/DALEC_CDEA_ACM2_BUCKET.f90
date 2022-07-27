@@ -992,10 +992,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,29) = FLUXES(n,29) + wetcanopy_evap
        ! store soil water content of the surface zone (mm)
        POOLS(n+1,7) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
-       ! Assign all water variables to output variables
+       ! Assign all water variables to output variables (kgH2O/m2/day)
        FLUXES(n,41) =  transpiration   ! transpiration
        FLUXES(n,42) =  soilevaporation ! soil evaporation
        FLUXES(n,43) =  wetcanopy_evap  ! wet canopy evaporation
+       FLUXES(n,44) =  runoff
+       FLUXES(n,45) =  underflow
 
        !!!!!!!!!!
        ! Extract biomass - e.g. deforestation / degradation
