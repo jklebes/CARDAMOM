@@ -473,6 +473,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Set some initial states
     infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0
     intercepted_rainfall = 0d0 ; canopy_storage = 0d0 ; snow_storage = 0d0
+    transpiration = 0d0 ; soilevaporation = 0d0 ; wetcanopy_evap = 0d0
 
     ! load ACM-GPP-ET parameters
     deltaWP = minlwp     ! leafWP-soilWP (i.e. -2-0)
@@ -760,7 +761,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     call calculate_Rtot
     ! Used to initialise soils
 
-    call calculate_update_soil_water(0d0,0d0,0d0,FLUXES(1,29)) ! assume no evap or rainfall
+    call calculate_update_soil_water(transpiration,soilevaporation,0d0,FLUXES(1,29)) ! assume no evap or rainfall
     ! Reset variable used to track ratio of water supply used to meet demand
     gs_demand_supply_ratio = 0d0
 

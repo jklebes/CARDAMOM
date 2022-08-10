@@ -143,6 +143,10 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
               # from the ensembles but difficult if not determined here and now before aggregation
               ###
 
+              # Determine some useful information for the analysis below
+              nos_years = (as.numeric(PROJECT$end_year) - as.numeric(PROJECT$start_year))+1
+              steps_per_year = floor(dim(drivers$met)[1] / nos_years)
+
               # If a combined ecosystem heterotrophic respiration flux does not
               # exist we shall calculate it
               if (exists(x = "rhet_gCm2day", where = states_all) == FALSE) {
@@ -456,9 +460,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
               num_quantiles = c(0.025,0.05,0.25,0.5,0.75,0.95,0.975) ; num_quantiles_agg = seq(0.0,1, length = 100)
               na_flag = TRUE
 
-              # Determine some useful information for the analysis below
-              nos_years = (as.numeric(PROJECT$end_year) - as.numeric(PROJECT$start_year))+1
-              steps_per_year = floor(dim(drivers$met)[1] / nos_years)
+              ## Determine some useful information for the analysis below
+              #nos_years = (as.numeric(PROJECT$end_year) - as.numeric(PROJECT$start_year))+1
+              #steps_per_year = floor(dim(drivers$met)[1] / nos_years)
 
               # Declare the site level output list object
               site_output = list(num_quantiles = num_quantiles)
@@ -485,7 +489,10 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   }
               }
 
+              # Determine pool specific
+
               # Determine the total biomass within the system
+              # Concurrently determine the combined natural, fire and harvest litter fluxes.
               # All models have a foliage pool
               states_all$biomass_gCm2 = states_all$foliage_gCm2
               states_all$biomass_to_litter_gCm2day = states_all$foliage_to_litter_gCm2day
@@ -512,7 +519,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "HARVESTextracted_labile_gCm2day", where = states_all)) {
                       states_all$HARVESTextracted_biomass_gCm2day = states_all$HARVESTextracted_biomass_gCm2day + states_all$HARVESTextracted_labile_gCm2day
                       states_all$HARVESTlitter_biomass_gCm2day = states_all$HARVESTlitter_biomass_gCm2day + states_all$HARVESTlitter_labile_gCm2day
-                  }
+                 }
               }
               if (exists(x = "roots_gCm2", where = states_all)) {
                   states_all$biomass_gCm2 = states_all$biomass_gCm2 + states_all$roots_gCm2
@@ -528,18 +535,19 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       states_all$HARVESTextracted_biomass_gCm2day = states_all$HARVESTextracted_biomass_gCm2day + states_all$HARVESTextracted_roots_gCm2day
                       states_all$HARVESTlitter_biomass_gCm2day = states_all$HARVESTlitter_biomass_gCm2day + states_all$HARVESTlitter_roots_gCm2day
                   }
-
               }
               if (exists(x = "wood_gCm2", where = states_all)) {
                   states_all$biomass_gCm2 = states_all$biomass_gCm2 + states_all$wood_gCm2
                   states_all$biomass_to_litter_gCm2day = states_all$biomass_to_litter_gCm2day + states_all$wood_to_litter_gCm2day
-                  # Now look for accumulating optional disturbance drivers
+                  # Account for wood lost as emission due to fire
                   if (exists(x = "FIREemiss_wood_gCm2day", where = states_all)) {
                       states_all$FIREemiss_biomass_gCm2day = states_all$FIREemiss_biomass_gCm2day + states_all$FIREemiss_wood_gCm2day
                   }
+                  # Account for wood lost as mortality induced litter / non-combusted residues due to fire
                   if (exists(x = "FIRElitter_wood_gCm2day", where = states_all)) {
                       states_all$FIRElitter_biomass_gCm2day = states_all$FIRElitter_biomass_gCm2day + states_all$FIRElitter_wood_gCm2day
                   }
+                  # Account for wood extracted by harvest activities
                   if (exists(x = "HARVESTextracted_wood_gCm2day", where = states_all)) {
                       states_all$HARVESTextracted_biomass_gCm2day = states_all$HARVESTextracted_biomass_gCm2day + states_all$HARVESTextracted_wood_gCm2day
                       states_all$HARVESTlitter_biomass_gCm2day = states_all$HARVESTlitter_biomass_gCm2day + states_all$HARVESTlitter_wood_gCm2day
@@ -704,7 +712,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
               if (exists(x = "SS_litter_gCm2", where = states_all)) {site_output$SS_litter_gCm2 = quantile(states_all$SS_litter_gCm2, prob=num_quantiles, na.rm = na_flag)}
               if (exists(x = "SS_woodlitter_gCm2", where = states_all)) {site_output$SS_woodlitter_gCm2 = quantile(states_all$SS_woodlitter_gCm2, prob=num_quantiles, na.rm = na_flag)}
               if (exists(x = "SS_som_gCm2", where = states_all)) {site_output$SS_som_gCm2 = quantile(states_all$SS_som_gCm2, prob=num_quantiles, na.rm = na_flag)}
-
+# CREATE MEAN ANNUAL FOR ALL
               # State variables - NOTE: extraction of pixel specific means done here to account for different ensemble trajectories, i.e. correlation in time.
               site_output$lai_m2m2         = apply(states_all$lai_m2m2,2,quantile,prob=num_quantiles,na.rm = na_flag)
               site_output$mean_lai_m2m2    = quantile(apply(states_all$lai_m2m2,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
@@ -750,58 +758,6 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
               # Include the pool, its net change, the allocation of C from GPP / NPP direct
               # and its output flow(s).
 
-              # Biomass related pool, change and output variables
-              if (exists(x = "biomass_gCm2", where = states_all)) {
-                  # Assign pool to site_output
-                  site_output$biomass_gCm2 = apply(states_all$biomass_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
-                  site_output$mean_biomass_gCm2 = quantile(apply(states_all$biomass_gCm2,1,mean, na.rm = na_flag), prob=num_quantiles)
-                  # Determine net pool change over time
-                  dCbio = states_all$biomass_gCm2 - states_all$biomass_gCm2[,1] # difference in labile from initial
-                  site_output$dCbiomass_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
-                  # Track natural biomass losses
-                  site_output$biomass_to_litter_gCm2day = apply(states_all$biomass_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
-                  site_output$mean_biomass_to_litter_gCm2day = quantile(apply(states_all$biomass_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
-                  # Begin accumulating the total output
-                  site_output$outflux_biomass_gCm2day = states_all$biomass_to_litter_gCm2day
-                  site_output$NaturalFractionOfTurnover_biomass = states_all$biomass_to_litter_gCm2day
-                  # Other natural flux pathways should really go here before disturbance related
-                  if (exists(x = "FIREemiss_biomass_gCm2day", where = states_all)) {
-                      site_output$FIREemiss_biomass_gCm2day = apply(states_all$FIREemiss_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
-                      site_output$mean_FIREemiss_biomass_gCm2day = quantile(apply(states_all$FIREemiss_biomass_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
-                      site_output$outflux_biomass_gCm2day = site_output$outflux_biomass_gCm2day + states_all$FIREemiss_biomass_gCm2day
-                      site_output$FireFractionOfTurnover_biomass = states_all$FIREemiss_biomass_gCm2day
-                  }
-                  if (exists(x = "FIRElitter_biomass_gCm2day", where = states_all)) {
-                      site_output$FIRElitter_biomass_gCm2day = apply(states_all$FIRElitter_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
-                      site_output$mean_FIRElitter_biomass_gCm2day = quantile(apply(states_all$FIRElitter_biomass_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
-                      site_output$outflux_biomass_gCm2day = site_output$outflux_biomass_gCm2day + states_all$FIRElitter_biomass_gCm2day
-                      site_output$FireFractionOfTurnover_biomass = site_output$FireFractionOfTurnover_biomass + states_all$FIRElitter_biomass_gCm2day
-                  }
-                  if (exists(x = "HARVESTextracted_biomass_gCm2day", where = states_all)) {
-                      site_output$HARVESTextracted_biomass_gCm2day = apply(states_all$HARVESTextracted_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
-                      site_output$mean_HARVESTextracted_biomass_gCm2day = quantile(apply(states_all$HARVESTextracted_biomass_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
-                      site_output$HARVESTlitter_biomass_gCm2day = apply(states_all$HARVESTlitter_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
-                      site_output$mean_HARVESTlitter_biomass_gCm2day = quantile(apply(states_all$HARVESTlitter_biomass_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
-                      site_output$outflux_biomass_gCm2day = site_output$outflux_biomass_gCm2day + states_all$HARVESTextracted_biomass_gCm2day + states_all$HARVESTlitter_biomass_gCm2day
-                      site_output$HarvestFractionOfTurnover_biomass = states_all$HARVESTextracted_biomass_gCm2day + states_all$HARVESTlitter_biomass_gCm2day
-                  }
-                  # Estimate the ecosystem mean transit (residence) times as a function of natural and disturbance processes
-                  site_output$MTT_annual_biomass_years = apply(site_output$outflux_biomass_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
-                  site_output$MTT_annual_biomass_years = apply(states_all$biomass_gCm2,1, rollapply_mean_annual, step = steps_per_year) / (site_output$MTT_annual_biomass_years * 365.25)
-                  site_output$MTT_annual_biomass_years = t(site_output$MTT_annual_biomass_years) # rollapply inverts the dimensions from that wanted
-                  site_output$MTT_annual_biomass_years = apply(site_output$MTT_annual_biomass_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
-                  # Convert to fractions
-                  site_output$NaturalFractionOfTurnover_biomass = quantile(apply(site_output$NaturalFractionOfTurnover_biomass,1,mean, na.rm = na_flag) /
-                                                                           apply(site_output$outflux_biomass_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$FireFractionOfTurnover_biomass = quantile(apply(site_output$FireFractionOfTurnover_biomass,1,mean, na.rm = na_flag) /
-                                                                        apply(site_output$outflux_biomass_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$HarvestFractionOfTurnover_biomass = quantile(apply(site_output$HarvestFractionOfTurnover_biomass,1,mean, na.rm = na_flag) /
-                                                                           apply(site_output$outflux_biomass_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  # Mean outflux from biomass
-                  site_output$mean_outflux_biomass_gCm2day = quantile(apply(site_output$outflux_biomass_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
-                  # Now aggregate across quantiles
-                  site_output$outflux_biomass_gCm2day = apply(site_output$outflux_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
-              }
               # Labile related pool, change, input and output variables
               if (exists(x = "labile_gCm2", where = states_all)) {
                   # Assign pool to site_output
@@ -813,6 +769,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Determine the allocation to labile - in all cases this must be a direct variable
                   site_output$alloc_labile_gCm2day = apply(states_all$alloc_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_alloc_labile_gCm2day = quantile(apply(states_all$alloc_labile_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  # Declare combined natural, fire and harvest driven creation of litter
+                  site_output$combined_labile_to_litter_gCm2day = array(0, dim=dim(states_all$labile_gCm2))
                   # Check for the possible loss pathways
                   if (exists(x = "labile_to_foliage_gCm2day", where = states_all)) {
                       site_output$labile_to_foliage_gCm2day = apply(states_all$labile_to_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -833,6 +791,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$mean_FIRElitter_labile_gCm2day = quantile(apply(states_all$FIRElitter_labile_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                       site_output$outflux_labile_gCm2day = site_output$outflux_labile_gCm2day + states_all$FIRElitter_labile_gCm2day
                       site_output$FireFractionOfTurnover_labile = site_output$FireFractionOfTurnover_labile + states_all$FIRElitter_labile_gCm2day
+                      # Accumulate the combined total of pool lost as litter,
+                      # NOTE depending on DALEC version may go to either a litter pool or som
+                      site_output$combined_labile_to_litter_gCm2day = site_output$combined_labile_to_litter_gCm2day + states_all$FIRElitter_labile_gCm2day
                   }
                   if (exists(x = "HARVESTextracted_labile_gCm2day", where = states_all)) {
                       site_output$HARVESTextracted_labile_gCm2day = apply(states_all$HARVESTextracted_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -841,6 +802,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$mean_HARVESTlitter_labile_gCm2day = quantile(apply(states_all$HARVESTlitter_labile_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                       site_output$outflux_labile_gCm2day = site_output$outflux_labile_gCm2day + states_all$HARVESTextracted_labile_gCm2day + states_all$HARVESTlitter_labile_gCm2day
                       site_output$HarvestFractionOfTurnover_labile = states_all$HARVESTextracted_labile_gCm2day + states_all$HARVESTlitter_labile_gCm2day
+                      # Accumulate the combined total of pool lost as litter,
+                      # NOTE depending on DALEC version may go to either a litter pool or som
+                      site_output$combined_labile_to_litter_gCm2day = site_output$combined_labile_to_litter_gCm2day + states_all$HARVESTlitter_labile_gCm2day
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_labile_years = apply(site_output$outflux_labile_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
@@ -856,9 +820,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                                                                           apply(site_output$outflux_labile_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
                   # Mean outflux from labile
                   site_output$mean_outflux_labile_gCm2day = quantile(apply(site_output$outflux_labile_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_combined_labile_to_litter_gCm2day = quantile(apply(site_output$combined_labile_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   # Now aggregate across quantiles
                   site_output$outflux_labile_gCm2day = apply(site_output$outflux_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
-              }
+                  site_output$combined_labile_to_litter_gCm2day = apply(site_output$combined_labile_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+              } # exists("labile")
 
               # Foliage related pool, change, input and output variables
               if (exists(x = "foliage_gCm2", where = states_all)) {
@@ -882,6 +848,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$NaturalFractionOfTurnover_foliage = states_all$foliage_to_litter_gCm2day
                       # Begin accumulating the total output fluxes here
                       site_output$outflux_foliage_gCm2day = states_all$foliage_to_litter_gCm2day
+                      # Accumulate the combined total of pool lost as litter,
+                      # NOTE depending on DALEC version may go to either a litter pool or som
+                      site_output$combined_foliage_to_litter_gCm2day = states_all$foliage_to_litter_gCm2day
                   }
                   if (exists(x = "FIREemiss_foliage_gCm2day", where = states_all)) {
                       site_output$FIREemiss_foliage_gCm2day = apply(states_all$FIREemiss_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -894,6 +863,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$mean_FIRElitter_foliage_gCm2day = quantile(apply(states_all$FIRElitter_foliage_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                       site_output$outflux_foliage_gCm2day = site_output$outflux_foliage_gCm2day + states_all$FIRElitter_foliage_gCm2day
                       site_output$FireFractionOfTurnover_foliage = site_output$FireFractionOfTurnover_foliage + states_all$FIRElitter_foliage_gCm2day
+                      # Accumulate the combined total of pool lost as litter,
+                      # NOTE depending on DALEC version may go to either a litter pool or som
+                      site_output$combined_foliage_to_litter_gCm2day = site_output$combined_foliage_to_litter_gCm2day + states_all$FIRElitter_foliage_gCm2day
                   }
                   if (exists(x = "HARVESTextracted_foliage_gCm2day", where = states_all)) {
                       site_output$HARVESTextracted_foliage_gCm2day = apply(states_all$HARVESTextracted_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -902,6 +874,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$mean_HARVESTlitter_foliage_gCm2day = quantile(apply(states_all$HARVESTlitter_foliage_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                       site_output$outflux_foliage_gCm2day = site_output$outflux_foliage_gCm2day + states_all$HARVESTextracted_foliage_gCm2day + states_all$HARVESTlitter_foliage_gCm2day
                       site_output$HarvestFractionOfTurnover_foliage = states_all$HARVESTextracted_foliage_gCm2day + states_all$HARVESTlitter_foliage_gCm2day
+                      # Accumulate the combined total of pool lost as litter,
+                      # NOTE depending on DALEC version may go to either a litter pool or som
+                      site_output$combined_foliage_to_litter_gCm2day = site_output$combined_foliage_to_litter_gCm2day + states_all$HARVESTlitter_foliage_gCm2day
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_foliage_years = apply(site_output$outflux_foliage_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
@@ -917,9 +892,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                                                                            apply(site_output$outflux_foliage_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
                   # Mean outflux from foliage
                   site_output$mean_outflux_foliage_gCm2day = quantile(apply(site_output$outflux_foliage_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_combined_foliage_to_litter_gCm2day = quantile(apply(site_output$combined_foliage_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   # Now aggregate across quantiles
                   site_output$outflux_foliage_gCm2day = apply(site_output$outflux_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
-              }
+                  site_output$combined_foliage_to_litter_gCm2day = apply(site_output$combined_foliage_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+              } # exists("foliage")
 
               # Fine roots related pool, change, input and output variables
               if (exists(x = "roots_gCm2", where = states_all)) {
@@ -932,6 +909,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Calculate the mean annual maximums
                   dCbio = apply(states_all$roots_gCm2, 1, rollapply_mean_annual_max, step = steps_per_year)
                   site_output$annual_max_roots_gCm2 = quantile(dCbio, prob=num_quantiles, na.rm = na_flag)
+                  # Declare combined natural, fire and harvest driven creation of litter
+                  site_output$combined_roots_to_litter_gCm2day = array(NA, dim=dim(states_all$roots_gCm2))
                   # Is rooting depth calculate (m) by this model?
                   if (exists(x = "RootDepth_m", where = states_all)) {
                       site_output$RootDepth_m = apply(states_all$RootDepth_m,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -950,6 +929,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$NaturalFractionOfTurnover_roots = states_all$roots_to_litter_gCm2day
                       # Begin accumulation of output fluxes
                       site_output$outflux_roots_gCm2day = states_all$roots_to_litter_gCm2day
+                      # Accumulate the combined total of pool lost as litter,
+                      # NOTE depending on DALEC version may go to either a litter pool or som
+                      site_output$combined_roots_to_litter_gCm2day = states_all$roots_to_litter_gCm2day
                   }
                   # If this one exists then maybe some other fluxes do
                   if (exists(x = "FIREemiss_roots_gCm2day", where = states_all)) {
@@ -963,6 +945,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$mean_FIRElitter_roots_gCm2day = quantile(apply(states_all$FIRElitter_roots_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                       site_output$outflux_roots_gCm2day = site_output$outflux_roots_gCm2day + states_all$FIRElitter_roots_gCm2day
                       site_output$FireFractionOfTurnover_roots = site_output$FireFractionOfTurnover_roots + states_all$FIRElitter_roots_gCm2day
+                      # Accumulate the combined total of pool lost as litter,
+                      # NOTE depending on DALEC version may go to either a litter pool or som
+                      site_output$combined_roots_to_litter_gCm2day = site_output$combined_roots_to_litter_gCm2day + states_all$FIRElitter_roots_gCm2day
                   }
                   if (exists(x = "HARVESTextracted_roots_gCm2day", where = states_all)) {
                       site_output$HARVESTextracted_roots_gCm2day = apply(states_all$HARVESTextracted_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -971,6 +956,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$mean_HARVESTlitter_roots_gCm2day = quantile(apply(states_all$HARVESTlitter_roots_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                       site_output$outflux_roots_gCm2day = site_output$outflux_roots_gCm2day + states_all$HARVESTextracted_roots_gCm2day + states_all$HARVESTlitter_roots_gCm2day
                       site_output$HarvestFractionOfTurnover_roots = states_all$HARVESTextracted_roots_gCm2day + states_all$HARVESTlitter_roots_gCm2day
+                      # Accumulate the combined total of pool lost as litter,
+                      # NOTE depending on DALEC version may go to either a litter pool or som
+                      site_output$combined_roots_to_litter_gCm2day = site_output$combined_roots_to_litter_gCm2day + states_all$HARVESTlitter_roots_gCm2day
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_roots_years = apply(site_output$outflux_roots_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
@@ -986,9 +974,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                                                                          apply(site_output$outflux_roots_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
                   # Mean outflux from roots
                   site_output$mean_outflux_roots_gCm2day = quantile(apply(site_output$outflux_roots_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_combined_roots_to_litter_gCm2day = quantile(apply(site_output$combined_roots_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   # Now aggregate across quantiles
                   site_output$outflux_roots_gCm2day = apply(site_output$outflux_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
-              }
+                  site_output$combined_roots_to_litter_gCm2day = apply(site_output$combined_roots_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+              } # exists("roots")
 
               # Wood related pool, change, input and output variables
               if (exists(x = "wood_gCm2", where = states_all)) {
@@ -1001,6 +991,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Calculate the mean annual maximums
                   dCbio = apply(states_all$wood_gCm2, 1, rollapply_mean_annual_max, step = steps_per_year)
                   site_output$annual_max_wood_gCm2 = quantile(dCbio, prob=num_quantiles, na.rm = na_flag)
+                  # Declare combined natural, fire and harvest driven creation of litter
+                  site_output$combined_wood_to_litter_gCm2day = array(NA, dim=dim(states_all$wood_gCm2))
                   # Check for the possible pathways
                   if (exists(x = "alloc_wood_gCm2day", where = states_all)) {
                       site_output$alloc_wood_gCm2day = apply(states_all$alloc_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -1012,6 +1004,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$NaturalFractionOfTurnover_wood = states_all$wood_to_litter_gCm2day
                       # Begin accumulating output fluxes
                       site_output$outflux_wood_gCm2day = states_all$wood_to_litter_gCm2day
+                      # Accumulate the combined total of pool lost as litter,
+                      # NOTE depending on DALEC version may go to either a litter pool or som
+                      site_output$combined_wood_to_litter_gCm2day = states_all$wood_to_litter_gCm2day
                   }
                   # If this one exists then maybe some other fluxes do
                   if (exists(x = "FIREemiss_wood_gCm2day", where = states_all)) {
@@ -1025,6 +1020,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$mean_FIRElitter_wood_gCm2day = quantile(apply(states_all$FIRElitter_wood_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                       site_output$outflux_wood_gCm2day = site_output$outflux_wood_gCm2day + states_all$FIRElitter_wood_gCm2day
                       site_output$FireFractionOfTurnover_wood = site_output$FireFractionOfTurnover_wood + states_all$FIRElitter_wood_gCm2day
+                      # Accumulate the combined total of pool lost as litter,
+                      # NOTE depending on DALEC version may go to either a litter pool or som
+                      site_output$combined_wood_to_litter_gCm2day = site_output$combined_wood_to_litter_gCm2day + states_all$FIRElitter_wood_gCm2day
                   }
                   if (exists(x = "HARVESTextracted_wood_gCm2day", where = states_all)) {
                       site_output$HARVESTextracted_wood_gCm2day = apply(states_all$HARVESTextracted_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -1033,6 +1031,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$mean_HARVESTlitter_wood_gCm2day = quantile(apply(states_all$HARVESTlitter_wood_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                       site_output$outflux_wood_gCm2day = site_output$outflux_wood_gCm2day + states_all$HARVESTextracted_wood_gCm2day + states_all$HARVESTlitter_wood_gCm2day
                       site_output$HarvestFractionOfTurnover_wood = states_all$HARVESTextracted_wood_gCm2day + states_all$HARVESTlitter_wood_gCm2day
+                      # Accumulate the combined total of pool lost as litter,
+                      # NOTE depending on DALEC version may go to either a litter pool or som
+                      site_output$combined_wood_to_litter_gCm2day = site_output$combined_wood_to_litter_gCm2day + states_all$HARVESTlitter_wood_gCm2day
                   }
                   # Use this information to determine the mean residence times as it evolves over time
                   site_output$MTT_annual_wood_years = apply(site_output$outflux_wood_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
@@ -1048,9 +1049,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                                                                         apply(site_output$outflux_wood_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
                   # Mean outflux from wood
                   site_output$mean_outflux_wood_gCm2day = quantile(apply(site_output$outflux_wood_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_combined_wood_to_litter_gCm2day = quantile(apply(site_output$combined_wood_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   # Now aggregate across quantiles
                   site_output$outflux_wood_gCm2day = apply(site_output$outflux_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
-              }
+                  site_output$combined_wood_to_litter_gCm2day = apply(site_output$combined_wood_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+              } # exists("wood")
 
               # Fine litter pool, change and output variables
               if (exists(x = "litter_gCm2", where = states_all)) {
@@ -1069,6 +1072,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Decomposition
                   site_output$litter_to_som_gCm2day = apply(states_all$litter_to_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_litter_to_som_gCm2day = quantile(apply(states_all$litter_to_som_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  # Accumulate combined natural, fire and harvest related fluxes to som
+                  site_output$combined_litter_to_som_gCm2day = states_all$litter_to_som_gCm2day
                   # If this one exists then maybe some other fluxes do
                   if (exists(x = "FIREemiss_litter_gCm2day", where = states_all)) {
                       site_output$FIREemiss_litter_gCm2day = apply(states_all$FIREemiss_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -1081,6 +1086,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$mean_FIRElitter_litter_gCm2day = quantile(apply(states_all$FIRElitter_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                       site_output$outflux_litter_gCm2day = site_output$outflux_litter_gCm2day + states_all$FIRElitter_litter_gCm2day
                       site_output$FireFractionOfTurnover_litter = site_output$FireFractionOfTurnover_litter + states_all$FIRElitter_litter_gCm2day
+                      # Accumulate combined natural, fire and harvest related fluxes to som
+                      site_output$combined_litter_to_som_gCm2day = site_output$combined_litter_to_som_gCm2day + states_all$FIRElitter_litter_gCm2day
                   }
                   if (exists(x = "HARVESTextracted_litter_gCm2day", where = states_all)) {
                       site_output$HARVESTextracted_litter_gCm2day = apply(states_all$HARVESTextracted_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -1102,9 +1109,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                                                                           apply(site_output$outflux_litter_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
                   # Mean outflux from litter
                   site_output$mean_outflux_litter_gCm2day = quantile(apply(site_output$outflux_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_combined_litter_to_som_gCm2day = quantile(apply(site_output$combined_litter_to_som_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   # Now aggregate across quantiles
                   site_output$outflux_litter_gCm2day = apply(site_output$outflux_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
-              }
+                  site_output$combined_litter_to_som_gCm2day = apply(site_output$combined_litter_to_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+              } # exists("litter")
 
               # Wood litter pool, change and output variables
               if (exists(x = "woodlitter_gCm2", where = states_all)) {
@@ -1123,6 +1132,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Decomposition
                   site_output$woodlitter_to_som_gCm2day = apply(states_all$woodlitter_to_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_woodlitter_to_som_gCm2day = quantile(apply(states_all$woodlitter_to_som_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  # Accumulate combined natural, fire and harvest related fluxes to som
+                  site_output$combined_woodlitter_to_som_gCm2day = states_all$woodlitter_to_som_gCm2day
                   # If this one exists then maybe some other fluxes do
                   if (exists(x = "FIREemiss_woodlitter_gCm2day", where = states_all)) {
                       site_output$FIREemiss_woodlitter_gCm2day = apply(states_all$FIREemiss_woodlitter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -1135,6 +1146,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$mean_FIRElitter_woodlitter_gCm2day = quantile(apply(states_all$FIRElitter_woodlitter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                       site_output$outflux_woodlitter_gCm2day = site_output$outflux_woodlitter_gCm2day + states_all$FIRElitter_woodlitter_gCm2day
                       site_output$FireFractionOfTurnover_woodlitter = site_output$FireFractionOfTurnover_woodlitter + states_all$FIRElitter_woodlitter_gCm2day
+                      # Accumulate combined natural, fire and harvest related fluxes to som
+                      site_output$combined_woodlitter_to_som_gCm2day = site_output$combined_woodlitter_to_som_gCm2day + states_all$FIRElitter_woodlitter_gCm2day
                   }
                   if (exists(x = "HARVESTextracted_woodlitter_gCm2day", where = states_all)) {
                       site_output$HARVESTextracted_woodlitter_gCm2day = apply(states_all$HARVESTextracted_woodlitter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -1156,9 +1169,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                                                                               apply(site_output$outflux_woodlitter_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
                   # Mean outflux from wood
                   site_output$mean_outflux_woodlitter_gCm2day = quantile(apply(site_output$outflux_woodlitter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_combined_woodlitter_to_som_gCm2day = quantile(apply(site_output$combined_woodlitter_to_som_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   # Now aggregate across quantiles
                   site_output$outflux_woodlitter_gCm2day = apply(site_output$outflux_woodlitter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
-              }
+                  site_output$combined_woodlitter_to_som_gCm2day = apply(site_output$combined_woodlitter_to_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+              } # exists("woodlitter")
 
               # Soil organic matter pool, change and output variables
               if (exists(x = "som_gCm2", where = states_all)) {
@@ -1204,7 +1219,66 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   site_output$mean_outflux_som_gCm2day = quantile(apply(site_output$outflux_som_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   # Now aggregate across quantiles
                   site_output$outflux_som_gCm2day = apply(site_output$outflux_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
-              }
+              } # exists("som")
+
+              # Biomass related pool, change and output variables
+              if (exists(x = "biomass_gCm2", where = states_all)) {
+                  # Assign pool to site_output
+                  site_output$biomass_gCm2 = apply(states_all$biomass_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
+                  site_output$mean_biomass_gCm2 = quantile(apply(states_all$biomass_gCm2,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  # Determine net pool change over time
+                  dCbio = states_all$biomass_gCm2 - states_all$biomass_gCm2[,1] # difference in labile from initial
+                  site_output$dCbiomass_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+                  # Track natural biomass losses
+                  site_output$biomass_to_litter_gCm2day = apply(states_all$biomass_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+                  site_output$mean_biomass_to_litter_gCm2day = quantile(apply(states_all$biomass_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  # Begin accumulating the total output
+                  site_output$outflux_biomass_gCm2day = states_all$biomass_to_litter_gCm2day
+                  site_output$NaturalFractionOfTurnover_biomass = states_all$biomass_to_litter_gCm2day
+                  # Begin accumulating the combined natural, fire and harvest litter creation
+                  site_output$combined_biomass_to_litter_gCm2day = states_all$biomass_to_litter_gCm2day
+                  # Other natural flux pathways should really go here before disturbance related
+                  if (exists(x = "FIREemiss_biomass_gCm2day", where = states_all)) {
+                      site_output$FIREemiss_biomass_gCm2day = apply(states_all$FIREemiss_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+                      site_output$mean_FIREemiss_biomass_gCm2day = quantile(apply(states_all$FIREemiss_biomass_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$outflux_biomass_gCm2day = site_output$outflux_biomass_gCm2day + states_all$FIREemiss_biomass_gCm2day
+                      site_output$FireFractionOfTurnover_biomass = states_all$FIREemiss_biomass_gCm2day
+                  }
+                  if (exists(x = "FIRElitter_biomass_gCm2day", where = states_all)) {
+                      site_output$FIRElitter_biomass_gCm2day = apply(states_all$FIRElitter_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+                      site_output$mean_FIRElitter_biomass_gCm2day = quantile(apply(states_all$FIRElitter_biomass_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$outflux_biomass_gCm2day = site_output$outflux_biomass_gCm2day + states_all$FIRElitter_biomass_gCm2day
+                      site_output$FireFractionOfTurnover_biomass = site_output$FireFractionOfTurnover_biomass + states_all$FIRElitter_biomass_gCm2day
+                      # Accumulte the combined fire, harvest and natural biomass flux to litter
+                      site_output$combined_biomass_to_litter_gCm2day = site_output$combined_biomass_to_litter_gCm2day + states_all$FIRElitter_biomass_gCm2day
+                  }
+                  if (exists(x = "HARVESTextracted_biomass_gCm2day", where = states_all)) {
+                      site_output$HARVESTextracted_biomass_gCm2day = apply(states_all$HARVESTextracted_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+                      site_output$mean_HARVESTextracted_biomass_gCm2day = quantile(apply(states_all$HARVESTextracted_biomass_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$HARVESTlitter_biomass_gCm2day = apply(states_all$HARVESTlitter_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+                      site_output$mean_HARVESTlitter_biomass_gCm2day = quantile(apply(states_all$HARVESTlitter_biomass_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$outflux_biomass_gCm2day = site_output$outflux_biomass_gCm2day + states_all$HARVESTextracted_biomass_gCm2day + states_all$HARVESTlitter_biomass_gCm2day
+                      site_output$HarvestFractionOfTurnover_biomass = states_all$HARVESTextracted_biomass_gCm2day + states_all$HARVESTlitter_biomass_gCm2day
+                  }
+                  # Estimate the ecosystem mean transit (residence) times as a function of natural and disturbance processes
+                  site_output$MTT_annual_biomass_years = apply(site_output$outflux_biomass_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
+                  site_output$MTT_annual_biomass_years = apply(states_all$biomass_gCm2,1, rollapply_mean_annual, step = steps_per_year) / (site_output$MTT_annual_biomass_years * 365.25)
+                  site_output$MTT_annual_biomass_years = t(site_output$MTT_annual_biomass_years) # rollapply inverts the dimensions from that wanted
+                  site_output$MTT_annual_biomass_years = apply(site_output$MTT_annual_biomass_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
+                  # Convert to fractions
+                  site_output$NaturalFractionOfTurnover_biomass = quantile(apply(site_output$NaturalFractionOfTurnover_biomass,1,mean, na.rm = na_flag) /
+                                                                           apply(site_output$outflux_biomass_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
+                  site_output$FireFractionOfTurnover_biomass = quantile(apply(site_output$FireFractionOfTurnover_biomass,1,mean, na.rm = na_flag) /
+                                                                        apply(site_output$outflux_biomass_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
+                  site_output$HarvestFractionOfTurnover_biomass = quantile(apply(site_output$HarvestFractionOfTurnover_biomass,1,mean, na.rm = na_flag) /
+                                                                           apply(site_output$outflux_biomass_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
+                  # Mean outflux from biomass
+                  site_output$mean_outflux_biomass_gCm2day = quantile(apply(site_output$outflux_biomass_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_combined_biomass_to_litter_gCm2day = quantile(apply(site_output$combined_biomass_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  # Now aggregate across quantiles
+                  site_output$outflux_biomass_gCm2day = apply(site_output$outflux_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+                  site_output$combined_biomass_to_litter_gCm2day = apply(site_output$combined_biomass_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+              } # exists("biomass_gCm2")
 
               # Dead organic matter pool, change and output variables
               # NOTE: this is potentially the combination of som, litter and wood litter
@@ -1279,7 +1353,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
 
                   # Calculate the ecosystem water use efficiency
                   site_output$wue_eco_gCkgH2O = apply(states_all$gpp_gCm2day/states_all$ET_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
-                  site_output$mean_eco_gCkgH2O = quantile(apply(states_all$gpp_gCm2day/states_all$ET_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_wue_eco_gCkgH2O = quantile(apply(states_all$gpp_gCm2day/states_all$ET_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
 
                   # Check whether the evaporation components exist
                   if (exists(x = "Etrans_kgH2Om2day", where = states_all)) {
@@ -1288,7 +1362,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       site_output$mean_Etrans_kgH2Om2day = quantile(apply(states_all$Etrans_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                       # Calculate the plant water use efficiency
                       site_output$wue_plant_gCkgH2O = apply(states_all$gpp_gCm2day/states_all$Etrans_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
-                      site_output$mean_plant_gCkgH2O = quantile(apply(states_all$gpp_gCm2day/states_all$Etrans_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_wue_plant_gCkgH2O = quantile(apply(states_all$gpp_gCm2day/states_all$Etrans_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   }
                   if (exists(x = "Esoil_kgH2Om2day", where = states_all)) {
                       # Soil evaporation
@@ -1485,7 +1559,6 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
       clusterExport(cl,"load_r_libraries") ; clusterEvalQ(cl, load_r_libraries())
       dummy = parLapply(cl,nos_plots,fun=run_each_site,PROJECT=PROJECT,stage=stage,
                         repair=repair,grid_override=grid_override)
-#print(dummy)
       stopCluster(cl)
       print("...finished parallel operations")
   } else {
@@ -1638,12 +1711,14 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$final_biomass_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$final_dCbiomass_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_outflux_biomass_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$mean_biomass_to_litter_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_combined_biomass_to_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_biomass_to_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               # Time varying pixel specific with quantiles
               grid_output$biomass_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$dCbiomass_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$outflux_biomass_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$biomass_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$combined_biomass_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Annual information
               grid_output$MTT_annual_biomass_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               # Fractional partitioning of tunover to different drivers - should they exist
@@ -1675,12 +1750,14 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$mean_outflux_labile_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_labile_to_foliage_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_alloc_labile_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_combined_labile_to_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               # Time varying pixel specific with quantiles
               grid_output$labile_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$dClabile_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$outflux_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$labile_to_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$alloc_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$combined_labile_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Annual information
               grid_output$MTT_annual_labile_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               # Fractional partitioning of tunover to different drivers - should they exist
@@ -1712,12 +1789,14 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$mean_outflux_foliage_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_foliage_to_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_combined_alloc_foliage_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_combined_foliage_to_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               # Time varying pixel specific with quantiles
               grid_output$foliage_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$dCfoliage_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$outflux_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$foliage_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$combined_alloc_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$combined_foliage_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Annual information
               grid_output$MTT_annual_foliage_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               # Fractional partitioning of tunover to different drivers - should they exist
@@ -1754,12 +1833,14 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$mean_roots_to_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_alloc_roots_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$annual_max_roots_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_combined_roots_to_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               # Time varying pixel specific with quantiles
               grid_output$roots_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$dCroots_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$outflux_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$roots_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$alloc_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$combined_roots_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Annual information
               grid_output$MTT_annual_roots_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               # Fractional partitioning of tunover to different drivers - should they exist
@@ -1798,12 +1879,14 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$mean_wood_to_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_alloc_wood_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$annual_max_wood_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_combined_wood_to_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               # Time varying pixel specific with quantiles
               grid_output$wood_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$dCwood_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$outflux_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$wood_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$alloc_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$combined_wood_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Annual information
               grid_output$MTT_annual_wood_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               # Fractional partitioning of tunover to different drivers - should they exist
@@ -1835,12 +1918,14 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$mean_outflux_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_litter_to_som_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_rhet_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_combined_litter_to_som_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               # Time varying pixel specific with quantiles
               grid_output$litter_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$dClitter_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$outflux_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$litter_to_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$rhet_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$combined_litter_to_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Annual information
               grid_output$MTT_annual_litter_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               # Fractional partitioning of tunover to different drivers - should they exist
@@ -1870,12 +1955,14 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$mean_outflux_woodlitter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_woodlitter_to_som_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_rhet_woodlitter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_combined_woodlitter_to_som_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               # Time varying pixel specific with quantiles
               grid_output$woodlitter_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$dCwoodlitter_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$outflux_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$woodlitter_to_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$rhet_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$mean_combined_woodlitter_to_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Annual information
               grid_output$MTT_annual_woodlitter_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               # Fractional partitioning of tunover to different drivers - should they exist
@@ -2091,12 +2178,15 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$long = array(output$long,dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 
           # Determine grid area (m2)
-          grid_output$area = calc_pixel_area(grid_output$lat,grid_output$long,PROJECT$resolution)
+          grid_output$area_m2 = calc_pixel_area(grid_output$lat,grid_output$long,PROJECT$resolution)
           # this output is in vector form and we need matching array shapes so...
-          grid_output$area = array(grid_output$area, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$area_m2 = array(grid_output$area_m2, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 
-          # calculate land mask
+          # Load the land mask and land fraction, assuming it exists
           grid_output$landmask=array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          if (exists("landsea", where = PROJECT)) {
+              grid_output$land_fraction=array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          }
 
       } else {
 
@@ -2210,12 +2300,14 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$final_biomass_gCm2[slot_i,slot_j,] = site_output$biomass_gCm2[,grid_output$time_dim]
                    grid_output$final_dCbiomass_gCm2[slot_i,slot_j,] = site_output$dCbiomass_gCm2[,grid_output$time_dim]
                    grid_output$mean_outflux_biomass_gCm2day[slot_i,slot_j,] = site_output$mean_outflux_biomass_gCm2day
-                   grid_output$mean_biomass_to_litter_gCm2[slot_i,slot_j,] = site_output$mean_biomass_to_litter_gCm2
+                   grid_output$mean_biomass_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_biomass_to_litter_gCm2day
+                   grid_output$mean_combined_biomass_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_combined_biomass_to_litter_gCm2day
                    # Time varying pixel specific with quantiles
                    grid_output$biomass_gCm2[n,,] = site_output$biomass_gCm2
                    grid_output$dCbiomass_gCm2[n,,] = site_output$dCbiomass_gCm2
                    grid_output$outflux_biomass_gCm2day[n,,] = site_output$outflux_biomass_gCm2day
                    grid_output$biomass_to_litter_gCm2day[n,,] = site_output$biomass_to_litter_gCm2day
+                   grid_output$combined_biomass_to_litter_gCm2day[n,,] = site_output$combined_biomass_to_litter_gCm2day
                    # Annual information
                    grid_output$MTT_annual_biomass_years[n,,] = site_output$MTT_annual_biomass_years
                    # Fractional partitioning of tunover to different drivers - should they exist
@@ -2247,12 +2339,14 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$mean_outflux_labile_gCm2day[slot_i,slot_j,] = site_output$mean_outflux_labile_gCm2day
                    grid_output$mean_labile_to_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_labile_to_foliage_gCm2day
                    grid_output$mean_alloc_labile_gCm2day[slot_i,slot_j,] = site_output$mean_alloc_labile_gCm2day
+                   grid_output$mean_combined_labile_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_combined_labile_to_litter_gCm2day
                    # Time varying
                    grid_output$labile_gCm2[n,,] = site_output$labile_gCm2
                    grid_output$dClabile_gCm2[n,,] = site_output$dClabile_gCm2
                    grid_output$outflux_labile_gCm2day[n,,] = site_output$outflux_labile_gCm2day
                    grid_output$labile_to_foliage_gCm2day[n,,] = site_output$labile_to_foliage_gCm2day
                    grid_output$alloc_labile_gCm2day[n,,] = site_output$alloc_labile_gCm2day
+                   grid_output$combined_labile_to_litter_gCm2day[n,,] = site_output$combined_labile_to_litter_gCm2day
                    # Annual information
                    grid_output$MTT_annual_labile_years[n,,] = site_output$MTT_annual_labile_years
                    # Fractional partitioning of tunover to different drivers - should they exist
@@ -2284,12 +2378,14 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$mean_outflux_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_outflux_foliage_gCm2day
                    grid_output$mean_foliage_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_foliage_to_litter_gCm2day
                    grid_output$mean_combined_alloc_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_combined_alloc_foliage_gCm2day
+                   grid_output$mean_combined_foliage_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_combined_foliage_to_litter_gCm2day
                    # Time varying pixel specific
                    grid_output$foliage_gCm2[n,,] = site_output$foliage_gCm2
                    grid_output$dCfoliage_gCm2[n,,] = site_output$dCfoliage_gCm2
                    grid_output$outflux_foliage_gCm2day[n,,] = site_output$outflux_foliage_gCm2day
                    grid_output$foliage_to_litter_gCm2day[n,,] = site_output$foliage_to_litter_gCm2day
                    grid_output$combined_alloc_foliage_gCm2day[n,,] = site_output$combined_alloc_foliage_gCm2day
+                   grid_output$combined_foliage_to_litter_gCm2day[n,,] = site_output$combined_foliage_to_litter_gCm2day
                    # Annual information
                    grid_output$MTT_annual_foliage_years[n,,] = site_output$MTT_annual_foliage_years
                    # Fractional partitioning of tunover to different drivers - should they exist
@@ -2326,12 +2422,14 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$mean_roots_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_roots_to_litter_gCm2day
                    grid_output$mean_alloc_roots_gCm2day[slot_i,slot_j,] = site_output$mean_alloc_roots_gCm2day
                    grid_output$annual_max_roots_gCm2[slot_i,slot_j,] = site_output$annual_max_roots_gCm2
+                   grid_output$mean_combined_roots_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_combined_roots_to_litter_gCm2day
                    # Pixel specific time varying
                    grid_output$roots_gCm2[n,,] = site_output$roots_gCm2
                    grid_output$dCroots_gCm2[n,,] = site_output$dCroots_gCm2
                    grid_output$outflux_roots_gCm2day[n,,] = site_output$outflux_roots_gCm2day
                    grid_output$roots_to_litter_gCm2day[n,,] = site_output$roots_to_litter_gCm2day
                    grid_output$alloc_roots_gCm2day[n,,] = site_output$alloc_roots_gCm2day
+                   grid_output$combined_roots_to_litter_gCm2day[n,,] = site_output$combined_roots_to_litter_gCm2day
                    # Annual information
                    grid_output$MTT_annual_roots_years[n,,] = site_output$MTT_annual_roots_years
                    # Fractional partitioning of tunover to different drivers - should they exist
@@ -2371,12 +2469,14 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$mean_wood_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_wood_to_litter_gCm2day
                    grid_output$mean_alloc_wood_gCm2day[slot_i,slot_j,] = site_output$mean_alloc_wood_gCm2day
                    grid_output$annual_max_wood_gCm2[slot_i,slot_j,] = site_output$annual_max_wood_gCm2
+                   grid_output$mean_combined_wood_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_combined_wood_to_litter_gCm2day
                    # Pixel specific time varying
                    grid_output$wood_gCm2[n,,] = site_output$wood_gCm2
                    grid_output$dCwood_gCm2[n,,] = site_output$dCwood_gCm2
                    grid_output$outflux_wood_gCm2day[n,,] = site_output$outflux_wood_gCm2day
                    grid_output$wood_to_litter_gCm2day[n,,] = site_output$wood_to_litter_gCm2day
                    grid_output$alloc_wood_gCm2day[n,,] = site_output$alloc_wood_gCm2day
+                   grid_output$combined_wood_to_litter_gCm2day[n,,] = site_output$combined_wood_to_litter_gCm2day
                    # Annual information
                    grid_output$MTT_annual_wood_years[n,,] = site_output$MTT_annual_wood_years
                    # Fractional partitioning of tunover to different drivers - should they exist
@@ -2408,12 +2508,14 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$mean_outflux_litter_gCm2day[slot_i,slot_j,] = site_output$mean_outflux_litter_gCm2day
                    grid_output$mean_litter_to_som_gCm2day[slot_i,slot_j,] = site_output$mean_litter_to_som_gCm2day
                    grid_output$mean_rhet_litter_gCm2day[slot_i,slot_j,] = site_output$mean_rhet_litter_gCm2day
+                   grid_output$mean_combined_litter_to_som_gCm2day[slot_i,slot_j,] = site_output$mean_combined_litter_to_som_gCm2day
                    # Pixel specific time varying
                    grid_output$litter_gCm2[n,,] = site_output$litter_gCm2
                    grid_output$dClitter_gCm2[n,,] = site_output$dClitter_gCm2
                    grid_output$outflux_litter_gCm2day[n,,] = site_output$outflux_litter_gCm2day
                    grid_output$litter_to_som_gCm2day[n,,] = site_output$litter_to_som_gCm2day
                    grid_output$rhet_litter_gCm2day[n,,] = site_output$rhet_litter_gCm2day
+                   grid_output$combined_litter_to_som_gCm2day[n,,] = site_output$combined_litter_to_som_gCm2day
                    # Annual information
                    grid_output$MTT_annual_litter_years[n,,] = site_output$MTT_annual_litter_years
                    # Fractional partitioning of tunover to different drivers - should they exist
@@ -2443,12 +2545,14 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$mean_outflux_woodlitter_gCm2day[slot_i,slot_j,] = site_output$mean_outflux_woodlitter_gCm2day
                    grid_output$mean_woodlitter_to_som_gCm2day[slot_i,slot_j,] = site_output$mean_woodlitter_to_som_gCm2day
                    grid_output$mean_rhet_woodlitter_gCm2day[slot_i,slot_j,] = site_output$mean_rhet_woodlitter_gCm2day
+                   grid_output$mean_combined_woodlitter_to_som_gCm2day[slot_i,slot_j,] = site_output$mean_combined_woodlitter_to_som_gCm2day
                    # Pixel specific time varying
                    grid_output$woodlitter_gCm2[n,,] = site_output$woodlitter_gCm2
                    grid_output$dCwoodlitter_gCm2[n,,] = site_output$dCwoodlitter_gCm2
                    grid_output$outflux_woodlitter_gCm2day[n,,] = site_output$outflux_woodlitter_gCm2day
                    grid_output$woodlitter_to_som_gCm2day[n,,] = site_output$woodlitter_to_som_gCm2day
                    grid_output$rhet_woodlitter_gCm2day[n,,] = site_output$rhet_woodlitter_gCm2day
+                   grid_output$combined_woodlitter_to_som_gCm2day[n,,] = site_output$combined_woodlitter_to_som_gCm2day
                    # Annual information
                    grid_output$MTT_annual_woodlitter_years[n,,] = site_output$MTT_annual_woodlitter_years
                    # Fractional partitioning of tunover to different drivers - should they exist

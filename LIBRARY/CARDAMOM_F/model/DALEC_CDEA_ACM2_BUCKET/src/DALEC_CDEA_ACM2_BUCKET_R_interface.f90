@@ -166,7 +166,7 @@ subroutine rdaleccdeaacm2bucket(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,56) = gb_total_canopy             ! boundary conductance (mmolH2O/m2ground/day)
      out_var1(i,1:nodays,57) = cica_time                   ! ratio of leaf internal to external CO2
      ! misc
-     out_var1(i,1:nodays,57) = root_depth_time             ! rooting depth (m)
+     out_var1(i,1:nodays,58) = root_depth_time             ! rooting depth (m)
 
      !!!
      ! Estimate residence time information

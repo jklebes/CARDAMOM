@@ -16,15 +16,18 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_gpp_fire/"
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca/"
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_CsomPriorNCSCD/"
-input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/"
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Trendyv9_historical/"
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_gpp_fire_nbe/"
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Mexico_1deg_C7_agb_lca_gpp_fire_nbe/"
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Miombo_0.5deg_allWood/"
-input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_trendy_lca_agb_gpp_fire/"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_trendy_lca_agb_gpp_fire/"
+input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB/"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_GPP_FIRE/"
 
 # Specify any extra information for the filename
-output_prefix = "CARDAMOM_" # follow with "_"
+output_prefix = "CARDAMOM_S3_" # follow with "_"
+#output_prefix = "CARDAMOM_S2_" # follow with "_"
 output_suffix = "" # begin with "_"
 
 ###
@@ -65,6 +68,22 @@ rm(output) ; gc(reset=TRUE,verbose=FALSE)
 # Extract the available quantiles 
 quantiles_wanted = grid_output$num_quantiles
 nos_quantiles = length(quantiles_wanted)
+# Check that the quantiles we want to use are available
+if (length(which(quantiles_wanted == 0.025)) == 1) {
+    low_quant = which(quantiles_wanted == 0.025)
+} else {
+    stop("Desired low quantile cannot be found")
+}
+if (length(which(quantiles_wanted == 0.5)) == 1) {
+    mid_quant = which(quantiles_wanted == 0.5)
+} else {
+    stop("Median quantile cannot be found")
+}
+if (length(which(quantiles_wanted == 0.975)) == 1) {
+    high_quant = which(quantiles_wanted == 0.975)
+} else {
+    stop("Desired high quantile cannot be found")
+}
 
 ###
 ## Begin defining variables
@@ -107,16 +126,16 @@ FIRE_UNC_OBS = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(PROJECT$m
 
 # C STATES
 if (exists(x = "lai_m2m2", where = grid_output)) {LAI = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "Ctotal_gCm2", where = grid_output)) {TOT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "labile_gCm2", where = grid_output)) {LAB = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "foliage_gCm2", where = grid_output)) {FOL = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "roots_gCm2", where = grid_output)) {ROOT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "wood_gCm2", where = grid_output)) {WOOD = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "litter_gCm2", where = grid_output)) {LIT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "som_gCm2", where = grid_output)) {SOIL = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "woodlitter_gCm2", where = grid_output)) {WLIT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "dom_gCm2", where = grid_output)) {DOM = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "biomass_gCm2", where = grid_output)) {BIO = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+if (exists(x = "Ctotal_gCm2", where = grid_output)) {TOT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "labile_gCm2", where = grid_output)) {LAB = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "foliage_gCm2", where = grid_output)) {FOL = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "roots_gCm2", where = grid_output)) {ROOT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "wood_gCm2", where = grid_output)) {WOOD = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "litter_gCm2", where = grid_output)) {LIT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "som_gCm2", where = grid_output)) {SOIL = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "woodlitter_gCm2", where = grid_output)) {WLIT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "dom_gCm2", where = grid_output)) {DOM = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "biomass_gCm2", where = grid_output)) {BIO = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
 # C FLUXES
 if (exists(x = "gpp_gCm2day", where = grid_output)) {GPP = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "rauto_gCm2day", where = grid_output)) {RAU = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
@@ -130,82 +149,31 @@ if (exists(x = "nbe_gCm2day", where = grid_output)) {NBE = array(NA, dim=c(PROJE
 if (exists(x = "nbp_gCm2day", where = grid_output)) {NBP = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 # H2O FLUXES
 if (exists(x = "ET_kgH2Om2day", where = grid_output)) {ET = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-# H2O STATES
-if (exists(x = "SurfWater_kgH2Om2", where = grid_output)) {SurfWater = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "snow_kgH2Om2", where = grid_output)) {SNOW = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-# BIOPHYSICAL
-if (exists(x = "CiCa", where = grid_output)) {CiCa = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "wSWP_MPa", where = grid_output)) {wSWP = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "APAR_MJm2day", where = grid_output)) {APAR = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "gs_demand_supply_ratio", where = grid_output)) {gs_demand_supply_ratio = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "gs_mmolH2Om2day", where = grid_output)) {gs = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "gb_mmolH2Om2day", where = grid_output)) {gb = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+if (exists(x = "Etrans_kgH2Om2day", where = grid_output)) {Etrans = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+if (exists(x = "Esoil_kgH2Om2day", where = grid_output)) {Esoil = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+if (exists(x = "Ewetcanopy_kgH2Om2day", where = grid_output)) {Ewetcanopy = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+if (exists(x = "total_drainage_kgH2Om2day", where = grid_output)) {total_drainage = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+if (exists(x = "runoff_kgH2Om2day", where = grid_output)) {runoff = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+if (exists(x = "underflow_kgH2Om2day", where = grid_output)) {underflow = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+# Combined natural, fire and harvest driven litter creation
+if (exists(x = "combined_biomass_to_litter_gCm2day", where = grid_output)) {Combined_bio_litter_FLX = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+if (exists(x = "combined_labile_to_litter_gCm2day", where = grid_output)) {Combined_labile_litter_FLX = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+if (exists(x = "combined_foliage_to_litter_gCm2day", where = grid_output)) {Combined_foliage_litter_FLX = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+if (exists(x = "combined_roots_to_litter_gCm2day", where = grid_output)) {Combined_roots_litter_FLX = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+if (exists(x = "combined_wood_to_litter_gCm2day", where = grid_output)) {Combined_wood_litter_FLX = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+# Combined natural, fire and harvest driven litter to som creation
+if (exists(x = "combined_litter_to_som_gCm2day", where = grid_output)) {Combined_litter_som_FLX = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+if (exists(x = "combined_woodlitter_to_som_gCm2day", where = grid_output)) {Combined_woodlitter_som_FLX = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 # Direct allocation of NPP (labile, foliar, fine root, wood, gC/m2/day)
-if (exists(x = "alloc_labile_gCm2day", where = grid_output)) {NPP_labile_FLX = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "alloc_foliage_gCm2day", where = grid_output)) {NPP_foliage_FLX = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "alloc_wood_gCm2day", where = grid_output)) {NPP_wood_FLX = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "alloc_roots_gCm2day", where = grid_output)) {NPP_root_FLX = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 # Combined (direct / indirect) allocation of C to foliage (gC/m2/day)
 if (exists(x = "combined_alloc_foliage_gCm2day", where = grid_output)) {NPP_combinedfoliage_FLX = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-# Allocation fraction of expressed NPP (foliar, fine root, wood)
-if (exists(x = "NPP_foliage_fraction", where = grid_output)) {fNPP = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "NPP_wood_fraction", where = grid_output)) {wNPP = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "NPP_roots_fraction", where = grid_output)) {rNPP = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-# MRT (labile, foliar, wood, fine root, litter, soil, biomass, dead organic matter; years)
-if (exists(x = "MTT_annual_labile_years", where = grid_output)) {labMRT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "MTT_annual_foliage_years", where = grid_output)) {folMRT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "MTT_annual_wood_years", where = grid_output)) {wooMRT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "MTT_annual_roots_years", where = grid_output)) {rooMRT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "MTT_annual_litter_years", where = grid_output)) {litMRT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "MTT_annual_woodlitter_years", where = grid_output)) {wlitMRT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "MTT_annual_som_years", where = grid_output)) {somMRT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "MTT_annual_biomass_years", where = grid_output)) {bioMRT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "MTT_annual_dom_years", where = grid_output)) {domMRT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-
-# Total outflux from these pools (labile, foliar, wood, fine root, litter, soil, biomass, dead organic matter; gC/m2/day)
-if (exists(x = "outflux_labile_gCm2day", where = grid_output)) {outflux_labile = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "outflux_foliage_gCm2day", where = grid_output)) {outflux_foliage = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "outflux_wood_gCm2day", where = grid_output)) {outflux_wood = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "outflux_roots_gCm2day", where = grid_output)) {outflux_root = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "outflux_litter_gCm2day", where = grid_output)) {outflux_litter = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "outflux_woodlitter_gCm2day", where = grid_output)) {outflux_woodlitter = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "outflux_som_gCm2day", where = grid_output)) {outflux_som = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "outflux_biomass_gCm2day", where = grid_output)) {outflux_bio = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "outflux_dom_gCm2day", where = grid_output)) {outflux_dom = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-# Fire mortality outflux (labile, foliar, wood, fine root, litter, biomass, dead organic matter; gC/m2/day)
-if (exists(x = "FIRElitter_labile_gCm2day", where = grid_output)) {FIRElitter_labile = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "FIRElitter_foliage_gCm2day", where = grid_output)) {FIRElitter_foliage = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "FIRElitter_wood_gCm2day", where = grid_output)) {FIRElitter_wood = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "FIRElitter_roots_gCm2day", where = grid_output)) {FIRElitter_root = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "FIRElitter_litter_gCm2day", where = grid_output)) {FIRElitter_litter = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "FIRElitter_woodlitter_gCm2day", where = grid_output)) {FIRElitter_woodlitter = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "FIRElitter_biomass_gCm2day", where = grid_output)) {FIRElitter_bio = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 # Fire combustion outflux (labile, foliar, wood, fine root, litter, soil, biomass, dead organic matter; gC/m2/day)
-if (exists(x = "FIREemiss_labile_gCm2day", where = grid_output)) {FIREemiss_labile = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "FIREemiss_foliage_gCm2day", where = grid_output)) {FIREemiss_foliage = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "FIREemiss_wood_gCm2day", where = grid_output)) {FIREemiss_wood = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "FIREemiss_roots_gCm2day", where = grid_output)) {FIREemiss_root = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "FIREemiss_litter_gCm2day", where = grid_output)) {FIREemiss_litter = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "FIREemiss_woodlitter_gCm2day", where = grid_output)) {FIREemiss_woodlitter = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "FIREemiss_som_gCm2day", where = grid_output)) {FIREemiss_som = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "FIREemiss_biomass_gCm2day", where = grid_output)) {FIREemiss_bio = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "FIREemiss_dom_gCm2day", where = grid_output)) {FIREemiss_dom = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-# Harvest mortality outflux (labile, foliar, wood, fine root, litter, soil, biomass, dead organic matter; gC/m2/day)
-if (exists(x = "HARVESTlitter_labile_gCm2day", where = grid_output)) {HARVESTlitter_labile = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "HARVESTlitter_foliage_gCm2day", where = grid_output)) {HARVESTlitter_foliage = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "HARVESTlitter_wood_gCm2day", where = grid_output)) {HARVESTlitter_wood = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "HARVESTlitter_roots_gCm2day", where = grid_output)) {HARVESTlitter_root = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "HARVESTlitter_biomass_gCm2day", where = grid_output)) {HARVESTlitter_bio = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-# Harvest extracted outflux (labile, foliar, wood, fine root, litter, soil, biomass, dead organic matter; gC/m2/day)
-if (exists(x = "HARVESTextracted_labile_gCm2day", where = grid_output)) {HARVESTextracted_labile = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "HARVESTextracted_foliage_gCm2day", where = grid_output)) {HARVESTextracted_foliage = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "HARVESTextracted_wood_gCm2day", where = grid_output)) {HARVESTextracted_wood = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "HARVESTextracted_roots_gCm2day", where = grid_output)) {HARVESTextracted_root = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "HARVESTextracted_litter_gCm2day", where = grid_output)) {HARVESTextracted_litter = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "HARVESTextracted_woodlitter_gCm2day", where = grid_output)) {HARVESTextracted_woodlitter = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "HARVESTextracted_som_gCm2day", where = grid_output)) {HARVESTextracted_som = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "HARVESTextracted_biomass_gCm2day", where = grid_output)) {HARVESTextracted_bio = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-if (exists(x = "HARVESTextracted_dom_gCm2day", where = grid_output)) {HARVESTextracted_dom = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 
 # Fill the output arrays
 for (n in seq(1, length(PROJECT$sites))) {
@@ -258,16 +226,18 @@ for (n in seq(1, length(PROJECT$sites))) {
          ## At model time step
          # STATES (NOTE: unit conversions gC/m2 -> kgC/m2, except LAI)
          if (exists("LAI")) {LAI[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$lai_m2m2[n,,]}
-         if (exists("TOT")) {TOT[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$Ctotal_gCm2[n,,]*1e-3}
-         if (exists("LAB")) {LAB[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$labile_gCm2[n,,]*1e-3}
-         if (exists("FOL")) {FOL[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$foliage_gCm2[n,,]*1e-3}
-         if (exists("ROOT")) {ROOT[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$roots_gCm2[n,,]*1e-3}
-         if (exists("WOOD")) {WOOD[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$wood_gCm2[n,,]*1e-3}
-         if (exists("LIT")) {LIT[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$litter_gCm2[n,,]*1e-3}
-         if (exists("SOIL")) {SOIL[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$som_gCm2[n,,]*1e-3}
-         if (exists("WLIT")) {WLIT[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$woodlitter_gCm2[n,,]*1e-3}
-         if (exists("DOM")) {DOM[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$dom_gCm2[n,,]*1e-3}
-         if (exists("BIO")) {BIO[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$biomass_gCm2[n,,]*1e-3}
+         for (i in seq(1, nos_quantiles)) { 
+              if (exists("TOT")) {TOT[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$Ctotal_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
+              if (exists("LAB")) {LAB[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$labile_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
+              if (exists("FOL")) {FOL[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$foliage_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
+              if (exists("ROOT")) {ROOT[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$roots_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
+              if (exists("WOOD")) {WOOD[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$wood_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
+              if (exists("LIT")) {LIT[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$litter_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
+              if (exists("SOIL")) {SOIL[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$som_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
+              if (exists("WLIT")) {WLIT[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$woodlitter_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
+              if (exists("DOM")) {DOM[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$dom_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
+              if (exists("BIO")) {BIO[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$biomass_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
+         }
          # FLUXES (NOTE; unit conversion gC/m2/day -> kgC/m2/s)
          if (exists("GPP")) {GPP[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$gpp_gCm2day[n,,]* 1e-3 * (1/86400)}
          if (exists("RAU")) {RAU[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$rauto_gCm2day[n,,]* 1e-3 * (1/86400)}
@@ -280,92 +250,30 @@ for (n in seq(1, length(PROJECT$sites))) {
          if (exists("NBE")) {NBE[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$nbe_gCm2day[n,,]* 1e-3 * (1/86400)}
          if (exists("NBP")) {NBP[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$nbp_gCm2day[n,,]* 1e-3 * (1/86400)}
          # H2O FLUXES
-         if (exists(x = "ET_kgH2Om2day", where = grid_output)) {ET[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$ET_kgH2Om2day[n,,] * (1/86400)}
-         # H2O STATES
-         if (exists(x = "SurfWater_kgH2Om2", where = grid_output)) {SurfWater[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$SurfWater_kgH2Om2[n,,]}
-         if (exists(x = "snow_kgH2Om2", where = grid_output)) {SNOW[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$snow_kgH2Om2[n,,]}
-         # BIOPHYSICAL
-         if (exists("CiCa")) {CiCa[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$CiCa[n,,]}
-         if (exists("wSWP")) {wSWP[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$wSWP_MPa[n,,]}
-         if (exists("APAR")) {APAR[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$APAR_MJm2day[n,,]}
-         if (exists("gs_demand_supply_ratio")) {gs_demand_supply_ratio[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$gs_demand_supply_ratio[n,,]}
-         if (exists("gs")) {gs[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$gs_mmolH2Om2day[n,,]}
-         if (exists("gb")) {gb[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$gb_mmolH2Om2day[n,,]}
+         if (exists("ET")) {ET[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$ET_kgH2Om2day[n,,] * (1/86400)}
+         if (exists("Etrans")) {Etrans[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$Etrans_kgH2Om2day[n,,] * (1/86400)}
+         if (exists("Esoil")) {Esoil[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$Esoil_kgH2Om2day[n,,] * (1/86400)}
+         if (exists("Ewetcanopy")) {Ewetcanopy[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$Ewetcanopy_kgH2Om2day[n,,] * (1/86400)}
+         if (exists("total_drainage")) {total_drainage[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$total_drainage_kgH2Om2day[n,,] * (1/86400)}         
+         # Combined natural, fire and harvest driven litter creation
+         if (exists(x = "Combined_bio_litter_FLX")) {Combined_bio_litter_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$combined_biomass_to_litter_gCm2day[n,,]* 1e-3 * (1/86400)}
+         if (exists(x = "Combined_labile_litter_FLX")) {Combined_labile_litter_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$combined_labile_to_litter_gCm2day[n,,]* 1e-3 * (1/86400)}
+         if (exists(x = "Combined_foliage_litter_FLX")) {Combined_foliage_litter_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$combined_foliage_to_litter_gCm2day[n,,]* 1e-3 * (1/86400)}
+         if (exists(x = "Combined_roots_litter_FLX")) {Combined_roots_litter_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$combined_roots_to_litter_gCm2day[n,,]* 1e-3 * (1/86400)}
+         if (exists(x = "Combined_wood_litter_FLX")) {Combined_wood_litter_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$combined_wood_to_litter_gCm2day[n,,]* 1e-3 * (1/86400)}
+         # Combined natural, fire and harvest driven litter to som creation
+         if (exists(x = "Combined_litter_som_FLX")) {Combined_litter_som_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$combined_litter_to_som_gCm2day[n,,]* 1e-3 * (1/86400)}
+         if (exists(x = "Combined_woodlitter_som_FLX")) {Combined_woodlitter_som_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$combined_woodlitter_to_som_gCm2day[n,,]* 1e-3 * (1/86400)}
          # NPP (foliar, root, wood; gC/m2/day -> kgC/m2/s)
-         if (exists("NPP_labile_FLX")) {NPP_labile_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$alloc_labile_gCm2day[n,,]* 1e-3 * (1/86400)}
          if (exists("NPP_root_FLX")) {NPP_root_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$alloc_roots_gCm2day[n,,]* 1e-3 * (1/86400)}
          if (exists("NPP_wood_FLX")) {NPP_wood_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$alloc_wood_gCm2day[n,,]* 1e-3 * (1/86400)}
          if (exists("NPP_combinedfoliage_FLX")) {NPP_combinedfoliage_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$combined_alloc_foliage_gCm2day[n,,]* 1e-3 * (1/86400)}
-         if (exists("NPP_foliage_FLX")) {NPP_foliage_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$alloc_foliage_gCm2day[n,,]* 1e-3 * (1/86400)}
-
-         # NPP (fraction) and MRT years are requested to have same number of time steps as stocks and fluxes
-         # This is awkward as no easy way to repeat specific elements without loop for variables which have no meaningful value at sub-annual timescales
-         # (and are therefore calculated as annuals)
-         for (q in seq(1, nos_quantiles)) {
-              # MRT
-              if (exists("labMRT")) {labMRT[grid_output$i_location[n],grid_output$j_location[n],q,]  = rep(grid_output$MTT_annual_labile_years[n,q,], each = steps_per_year)}
-              if (exists("folMRT")) {folMRT[grid_output$i_location[n],grid_output$j_location[n],q,]  = rep(grid_output$MTT_annual_foliage_years[n,q,], each = steps_per_year)} 
-              if (exists("rooMRT")) {rooMRT[grid_output$i_location[n],grid_output$j_location[n],q,]  = rep(grid_output$MTT_annual_roots_years[n,q,], each = steps_per_year)} 
-              if (exists("wooMRT")) {wooMRT[grid_output$i_location[n],grid_output$j_location[n],q,]  = rep(grid_output$MTT_annual_wood_years[n,q,], each = steps_per_year)}
-              if (exists("litMRT")) {litMRT[grid_output$i_location[n],grid_output$j_location[n],q,]  = rep(grid_output$MTT_annual_litter_years[n,q,], each = steps_per_year)}
-              if (exists("wlitMRT")) {wlitMRT[grid_output$i_location[n],grid_output$j_location[n],q,] = rep(grid_output$MTT_annual_woodlitter_years[n,q,], each = steps_per_year)}
-              if (exists("somMRT")) {somMRT[grid_output$i_location[n],grid_output$j_location[n],q,]  = rep(grid_output$MTT_annual_som_years[n,q,], each = steps_per_year)}
-              if (exists("bioMRT")) {bioMRT[grid_output$i_location[n],grid_output$j_location[n],q,]  = rep(grid_output$MTT_annual_biomass_years[n,q,], each = steps_per_year)}
-              if (exists("domMRT")) {domMRT[grid_output$i_location[n],grid_output$j_location[n],q,]  = rep(grid_output$MTT_annual_dom_years[n,q,], each = steps_per_year)}
-              # NPP fractional allocation
-              if (exists("fNPP")) {fNPP[grid_output$i_location[n],grid_output$j_location[n],q,] = rep(grid_output$NPP_foliage_fraction[grid_output$i_location[n],grid_output$j_location[n],q], each = length(PROJECT$model$timestep_days))}
-              if (exists("rNPP")) {rNPP[grid_output$i_location[n],grid_output$j_location[n],q,] = rep(grid_output$NPP_roots_fraction[grid_output$i_location[n],grid_output$j_location[n],q], each = length(PROJECT$model$timestep_days))}
-              if (exists("wNPP")) {wNPP[grid_output$i_location[n],grid_output$j_location[n],q,] = rep(grid_output$NPP_wood_fraction[grid_output$i_location[n],grid_output$j_location[n],q], each = length(PROJECT$model$timestep_days))}
-         } # loop quantiles
-              
-         # Total outflux (labile, foliar, wood, fine root, litter, soil; gC/m2/day -> kgC/m2/s)
-         if (exists("outflux_labile")) {outflux_labile[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$outflux_labile_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("outflux_foliage")) {outflux_foliage[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$outflux_foliage_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("outflux_wood")) {outflux_wood[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$outflux_wood_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("outflux_root")) {outflux_root[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$outflux_roots_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("outflux_litter")) {outflux_litter[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$outflux_litter_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("outflux_woodlitter")) {outflux_woodlitter[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$outflux_woodlitter_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("outflux_som")) {outflux_som[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$outflux_som_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("outflux_bio")) {outflux_bio[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$outflux_biomass_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("outflux_dom")) {outflux_dom[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$outflux_dom_gCm2day[n,,] * 1e-3 * (1/86400)}
-
-         # Fire mortality outflux (labile, foliar, wood, fine root, litter, soil; gC/m2/day -> kgC/m2/s)
-         if (exists("FIRElitter_labile")) {FIRElitter_labile[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIRElitter_labile_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("FIRElitter_foliage")) {FIRElitter_foliage[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIRElitter_foliage_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("FIRElitter_wood")) {FIRElitter_wood[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIRElitter_wood_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("FIRElitter_root")) {FIRElitter_root[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIRElitter_roots_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("FIRElitter_litter")) {FIRElitter_litter[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIRElitter_litter_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("FIRElitter_woodlitter")) {FIRElitter_woodlitter[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIRElitter_woodlitter_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("FIRElitter_bio")) {FIRElitter_bio[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIRElitter_biomass_gCm2day[n,,] * 1e-3 * (1/86400)}
-
+               
          # Fire combustion outflux (labile, foliar, wood, fine root, litter, soil; gC/m2/day -> kgC/m2/s)
-         if (exists("FIREemiss_labile")) {FIREemiss_labile[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIREemiss_labile_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("FIREemiss_foliage")) {FIREemiss_foliage[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIREemiss_foliage_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("FIREemiss_wood")) {FIREemiss_wood[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIREemiss_wood_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("FIREemiss_root")) {FIREemiss_root[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIREemiss_roots_gCm2day[n,,] * 1e-3 * (1/86400)}
          if (exists("FIREemiss_litter")) {FIREemiss_litter[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIREemiss_litter_gCm2day[n,,] * 1e-3 * (1/86400)}
          if (exists("FIREemiss_woodlitter")) {FIREemiss_woodlitter[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIREemiss_woodlitter_gCm2day[n,,] * 1e-3 * (1/86400)}
          if (exists("FIREemiss_som")) {FIREemiss_som[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIREemiss_som_gCm2day[n,,] * 1e-3 * (1/86400)}
          if (exists("FIREemiss_bio")) {FIREemiss_bio[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIREemiss_biomass_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("FIREemiss_dom")) {FIREemiss_dom[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIREemiss_dom_gCm2day[n,,] * 1e-3 * (1/86400)}
-         
-         # HARVEST mortality outflux (labile, foliar, wood, fine root, litter, soil; gC/m2/day -> kgC/m2/s)
-         if (exists("FIRElitter_labile")) {HARVESTlitter_labile[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$HARVESTlitter_labile_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("FIRElitter_foliage")) {HARVESTlitter_foliage[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$HARVESTlitter_foliage_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("FIRElitter_wood")) {HARVESTlitter_wood[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$HARVESTlitter_wood_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("FIRElitter_root")) {HARVESTlitter_root[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$HARVESTlitter_roots_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("FIRElitter_bio")) {HARVESTlitter_bio[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$HARVESTlitter_biomass_gCm2day[n,,] * 1e-3 * (1/86400)}
-
-         # HARVEST extraction outflux (labile, foliar, wood, fine root, litter, soil; gC/m2/day -> kgC/m2/s)
-         if (exists("HARVESTextracted_labile")) {HARVESTextracted_labile[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$HARVESTextracted_labile_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("HARVESTextracted_foliage")) {HARVESTextracted_foliage[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$HARVESTextracted_foliage_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("HARVESTextracted_wood")) {HARVESTextracted_wood[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$HARVESTextracted_wood_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("HARVESTextracted_root")) {HARVESTextracted_root[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$HARVESTextracted_roots_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("HARVESTextracted_litter")) {HARVESTextracted_litter[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$HARVESTextracted_litter_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("HARVESTextracted_woodlitter")) {HARVESTextracted_woodlitter[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$HARVESTextracted_woodlitter_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("HARVESTextracted_som")) {HARVESTextracted_som[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$HARVESTextracted_som_gCm2day[n,,] * 1e-3 * (1/86400)} 
-         if (exists("HARVESTextracted_bio")) {HARVESTextracted_bio[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$HARVESTextracted_biomass_gCm2day[n,,] * 1e-3 * (1/86400)}
-         if (exists("HARVESTextracted_dom")) {HARVESTextracted_dom[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$HARVESTextracted_dom_gCm2day[n,,] * 1e-3 * (1/86400)}
 
      } # Does the file exist / has it been processed
 
@@ -379,7 +287,7 @@ lat_dimen <- ncdim_def( "lat", units="degree north (-90->90)", latitude )
 long_dimen <- ncdim_def( "lon", units="degree east (-180->180)", longitude )
 time_dimen <- ncdim_def( "time", units="", 1:length(PROJECT$model$timestep_days))
 quantile_dimen <- ncdim_def( "quantile", units="-", quantiles_wanted)
-year_dimen <- ncdim_def( "year", units="", 1:nos_years)
+year_dimen <- ncdim_def( "year", units="", as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year))
 npar_dimen <- ncdim_def( "nos_parameters", units="", 1:(max(PROJECT$model$nopars)+1)) # NOTE: +1 is to account for the log-likelihood 
 
 ###
@@ -389,42 +297,62 @@ npar_dimen <- ncdim_def( "nos_parameters", units="", 1:(max(PROJECT$model$nopars
 ## define output variable
 var0 = ncvar_def("Time", units = "d", longname = paste("Monthly time step given in days since 01/01/",PROJECT$start_year,sep=""), 
                  dim=list(time_dimen), missval = -99999, prec="double", compression = 9)
+var1 = ncvar_def("grid_area", units = "m2", longname = paste("Pixel area",sep=""), 
+                 dim=list(long_dimen,lat_dimen), missval = -99999, prec="double", compression = 9)
+var2 = ncvar_def("land_fraction", units = "1", longname = paste("Fraction of pixel which is land",sep=""), 
+                 dim=list(long_dimen,lat_dimen), missval = -99999, prec="double", compression = 9)
 
 # LAI
 if(exists("LAI")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"lai_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"lai",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("lai_ensemble", unit="m2.m-2", longname = "Leaf Area Index - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   # Median
+   var_new  = ncvar_def("lai", unit="m2.m-2", longname = "Leaf Area Index - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("lai_2.5pc", unit="m2.m-2", longname = "Leaf Area Index - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("lai_97.5pc", unit="m2.m-2", longname = "Leaf Area Index - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  LAI)
+   ncvar_put(new_file, var_new,  LAI[,,mid_quant,])
+   ncvar_put(new_file, var_low,  LAI[,,low_quant,])
+   ncvar_put(new_file, var_high,  LAI[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
 
-
 # Labile
 if(exists("LAB")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"cLabile_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"cLabile",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("cLabile_ensemble", unit="kg.m-2", longname = "Carbon in labile - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new  = ncvar_def("cLabile", unit="kg.m-2", longname = "Carbon in labile - Median estimate", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("cLabile_2.5pc", unit="kg.m-2", longname = "Carbon in labile - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("cLabile_97.5pc", unit="kg.m-2", longname = "Carbon in labile - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  LAB)
+   ncvar_put(new_file, var_new,  LAB[,,mid_quant,])
+   ncvar_put(new_file, var_low,  LAB[,,low_quant,])
+   ncvar_put(new_file, var_high,  LAB[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -432,18 +360,26 @@ if(exists("LAB")) {
 # Foliar
 if(exists("FOL")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"cLeaf_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"cLeaf",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new = ncvar_def("cLeaf_ensemble", unit="kg.m-2", longname = "Carbon in leaves - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("cLeaf", unit="kg.m-2", longname = "Carbon in leaves - Median estimate", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("cLeaf_2.5pc", unit="kg.m-2", longname = "Carbon in leaves - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("cLeaf_97.5pc", unit="kg.m-2", longname = "Carbon in leaves - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  FOL)
+   ncvar_put(new_file, var_new,  FOL[,,mid_quant,])
+   ncvar_put(new_file, var_low,  FOL[,,low_quant,])
+   ncvar_put(new_file, var_high,  FOL[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -451,37 +387,53 @@ if(exists("FOL")) {
 # Fine root
 if(exists("ROOT")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"cFineRoot_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"cRoot",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new = ncvar_def("cFineRoot_ensemble", unit="kg.m-2", longname = "Carbon in fine root - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("cRoot", unit="kg.m-2", longname = "Carbon in fine root - Median estimate", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("cRoot_2.5pc", unit="kg.m-2", longname = "Carbon in fine root - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("cRoot_97.5pc", unit="kg.m-2", longname = "Carbon in fine root - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  ROOT)
+   ncvar_put(new_file, var_new,  ROOT[,,mid_quant,])
+   ncvar_put(new_file, var_low,  ROOT[,,low_quant,])
+   ncvar_put(new_file, var_high,  ROOT[,,high_quant,])
    # Close the existing file to ensure its written to file
-   nc_close(new_file)
+   nc_close(new_file)   
 }
 
 # Wood
 if(exists("WOOD")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"cWoodTotal_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"cWoodTotal",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new = ncvar_def("cWoodTotal_ensemble", unit="kg.m-2", longname = "Carbon in (AGB + BGB) wood - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("cWoodTotal", unit="kg.m-2", longname = "Carbon in (AGB + BGB) wood - Median estimate", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("cWoodTotal_2.5pc", unit="kg.m-2", longname = "Carbon in (AGB + BGB) wood - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("cWoodTotal_97.5pc", unit="kg.m-2", longname = "Carbon in (AGB + BGB) wood - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  WOOD)
+   ncvar_put(new_file, var_new,  WOOD[,,mid_quant,])
+   ncvar_put(new_file, var_low,  WOOD[,,low_quant,])
+   ncvar_put(new_file, var_high,  WOOD[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -489,18 +441,26 @@ if(exists("WOOD")) {
 # Foliar + fine root litter
 if(exists("LIT")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"cLeafFineRootLitter_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"cLitter",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new = ncvar_def("cLeafFineRootLitter_ensemble", unit="kg.m-2", longname = "Carbon in (Foliar + fine root) litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("cLitter", unit="kg.m-2", longname = "Carbon in (Foliar + fine root) litter - Median estimate", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("cLitter_2.5pc", unit="kg.m-2", longname = "Carbon in (Foliar + fine root) litter - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("cLitter_97.5pc", unit="kg.m-2", longname = "Carbon in (Foliar + fine root) litter - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  LIT)
+   ncvar_put(new_file, var_new,  LIT[,,mid_quant,])
+   ncvar_put(new_file, var_low,  LIT[,,low_quant,])
+   ncvar_put(new_file, var_high,  LIT[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -508,37 +468,53 @@ if(exists("LIT")) {
 # Wood litter
 if(exists("WLIT")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"cWoodLitter_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"cCwd",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new = ncvar_def("cWoodLitter_ensemble", unit="kg.m-2", longname = "Carbon in (wood) litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("cCwd", unit="kg.m-2", longname = "Carbon in (wood) litter - Median estimate", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("cCwd_2.5pc", unit="kg.m-2", longname = "Carbon in (wood) litter - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("cCwd_97.5pc", unit="kg.m-2", longname = "Carbon in (wood) litter - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  WLIT)
+   ncvar_put(new_file, var_new,  WLIT[,,mid_quant,])
+   ncvar_put(new_file, var_low,  WLIT[,,low_quant,])
+   ncvar_put(new_file, var_high,  WLIT[,,high_quant,])
    # Close the existing file to ensure its written to file
-   nc_close(new_file)
+   nc_close(new_file)   
 }
 
 # Soil organic matter
 if(exists("SOIL")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"cSOM_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"cSOM",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new = ncvar_def("cSOM_ensemble", unit="kg.m-2", longname = "Carbon in soil organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("cSOM", unit="kg.m-2", longname = "Carbon in soil organic matter (0-1m) - Median estimate", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("cSOM_2.5pc", unit="kg.m-2", longname = "Carbon in soil organic matter (0-1m) - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("cSOM_97.5pc", unit="kg.m-2", longname = "Carbon in soil organic matter (0-1m) - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  SOIL)
+   ncvar_put(new_file, var_new,  SOIL[,,mid_quant,])
+   ncvar_put(new_file, var_low,  SOIL[,,low_quant,])
+   ncvar_put(new_file, var_high,  SOIL[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -546,18 +522,26 @@ if(exists("SOIL")) {
 # Dead organic matter
 if(exists("DOM")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"cDOM_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"cDOM",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new = ncvar_def("cDOM_ensemble", unit="kg.m-2", longname = "Carbon in leaf, fine root, wood litter, and soil organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("cDOM", unit="kg.m-2", longname = "Carbon in leaf, fine root, wood litter, and soil organic matter - Median estimate", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("cDOM_2.5pc", unit="kg.m-2", longname = "Carbon in leaf, fine root, wood litter, and soil organic matter - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("cDOM_97.5pc", unit="kg.m-2", longname = "Carbon in leaf, fine root, wood litter, and soil organic matter - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  DOM)
+   ncvar_put(new_file, var_new,  DOM[,,mid_quant,])
+   ncvar_put(new_file, var_low,  DOM[,,low_quant,])
+   ncvar_put(new_file, var_high,  DOM[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -565,18 +549,26 @@ if(exists("DOM")) {
 # Biomass
 if(exists("BIO")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"cVeg_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"cVeg",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new = ncvar_def("cVeg_ensemble", unit="kg.m-2", longname = "Carbon in live biomass - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("cVeg", unit="kg.m-2", longname = "Carbon in live biomass - Median estimate", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("cVeg_2.5pc", unit="kg.m-2", longname = "Carbon in live biomass - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("cVeg_97.5pc", unit="kg.m-2", longname = "Carbon in live biomass - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  BIO)
+   ncvar_put(new_file, var_new,  BIO[,,mid_quant,])
+   ncvar_put(new_file, var_low,  BIO[,,low_quant,])
+   ncvar_put(new_file, var_high,  BIO[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -584,18 +576,26 @@ if(exists("BIO")) {
 # TotalC
 if(exists("TOT")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"cTotal_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"cTotal",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new = ncvar_def("cTotal_ensemble", unit="kg.m-2", longname = "Carbon in live and dead organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("cTotal", unit="kg.m-2", longname = "Carbon in live and dead organic matter - Median estimate", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("cTotal_2.5pc", unit="kg.m-2", longname = "Carbon in live and dead organic matter - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("cTotal_97.5pc", unit="kg.m-2", longname = "Carbon in live and dead organic matter - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  TOT)
+   ncvar_put(new_file, var_new,  TOT[,,mid_quant,])
+   ncvar_put(new_file, var_low,  TOT[,,low_quant,])
+   ncvar_put(new_file, var_high,  TOT[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -603,18 +603,26 @@ if(exists("TOT")) {
 # GPP
 if(exists("GPP")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"gpp_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"gpp",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("gpp_ensemble", unit="kg.m-2.s-1", longname = "Gross Primary Productivity - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new  = ncvar_def("gpp", unit="kg.m-2.s-1", longname = "Gross Primary Productivity - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("gpp_2.5pc", unit="kg.m-2.s-1", longname = "Gross Primary Productivity - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("gpp_97.5pc", unit="kg.m-2.s-1", longname = "Gross Primary Productivity - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  GPP)
+   ncvar_put(new_file, var_new,  GPP[,,mid_quant,])
+   ncvar_put(new_file, var_low,  GPP[,,low_quant,])
+   ncvar_put(new_file, var_high,  GPP[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -622,37 +630,54 @@ if(exists("GPP")) {
 # Autotrophic respiration
 if(exists("RAU")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"ra_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"ra",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("ra_ensemble", unit="kg.m-2.s-1", longname = "Autotrophic (Plant) Respiration - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new  = ncvar_def("ra", unit="kg.m-2.s-1", longname = "Autotrophic (Plant) Respiration - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("ra_2.5pc", unit="kg.m-2.s-1", longname = "Autotrophic (Plant) Respiration - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("ra_97.5pc", unit="kg.m-2.s-1", longname = "Autotrophic (Plant) Respiration - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  RAU)
+   ncvar_put(new_file, var_new,  RAU[,,mid_quant,])
+   ncvar_put(new_file, var_low,  RAU[,,low_quant,])
+   ncvar_put(new_file, var_high,  RAU[,,high_quant,])
    # Close the existing file to ensure its written to file
-   nc_close(new_file)
+   nc_close(new_file)   
 }
 
 # Heterotrophic respiration
 if(exists("RHE")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"rh_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"rh",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("rh_ensemble", unit="kg.m-2.s-1", longname = "Heterotrophic Respiration - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new  = ncvar_def("rh", unit="kg.m-2.s-1", longname = "Heterotrophic Respiration - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("rh_2.5pc", unit="kg.m-2.s-1", longname = "Heterotrophic Respiration - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("rh_97.5pc", unit="kg.m-2.s-1", longname = "Heterotrophic Respiration - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  RHE)
+   ncvar_put(new_file, var_new,  RHE[,,mid_quant,])
+   ncvar_put(new_file, var_low,  RHE[,,low_quant,])
+   ncvar_put(new_file, var_high,  RHE[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -660,18 +685,26 @@ if(exists("RHE")) {
 # Ecosystem respiration
 if(exists("RECO")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"reco_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"reco",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("reco_ensemble", unit="kg.m-2.s-1", longname = "Ecosystem (Ra + Rh) Respiration - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new  = ncvar_def("reco", unit="kg.m-2.s-1", longname = "Ecosystem (Ra + Rh) Respiration - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("reco_2.5pc", unit="kg.m-2.s-1", longname = "Ecosystem (Ra + Rh) Respiration - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("reco_97.5pc", unit="kg.m-2.s-1", longname = "Ecosystem (Ra + Rh) Respiration - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  RECO)
+   ncvar_put(new_file, var_new,  RECO[,,mid_quant,])
+   ncvar_put(new_file, var_low,  RECO[,,low_quant,])
+   ncvar_put(new_file, var_high,  RECO[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -679,18 +712,26 @@ if(exists("RECO")) {
 # Net Primary Productivity
 if(exists("NPP")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"npp_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"npp",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("npp_ensemble", unit="kg.m-2.s-1", longname = "Net Primary Productivity - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new  = ncvar_def("npp", unit="kg.m-2.s-1", longname = "Net Primary Productivity - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("npp_2.5pc", unit="kg.m-2.s-1", longname = "Net Primary Productivity - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("npp_97.5pc", unit="kg.m-2.s-1", longname = "Net Primary Productivity - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  NPP)
+   ncvar_put(new_file, var_new,  NPP[,,mid_quant,])
+   ncvar_put(new_file, var_low,  NPP[,,low_quant,])
+   ncvar_put(new_file, var_high,  NPP[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -698,18 +739,26 @@ if(exists("NPP")) {
 # Net Ecosystem Exchange
 if(exists("NEE")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"nee_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"nee",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("nee_ensemble", unit="kg.m-2.s-1", longname = "Net Ecosystem Exchange - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new  = ncvar_def("nee", unit="kg.m-2.s-1", longname = "Net Ecosystem Exchange - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("nee_2.5pc", unit="kg.m-2.s-1", longname = "Net Ecosystem Exchange - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("nee_97.5pc", unit="kg.m-2.s-1", longname = "Net Ecosystem Exchange - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  NEE)
+   ncvar_put(new_file, var_new,  NEE[,,mid_quant,])
+   ncvar_put(new_file, var_low,  NEE[,,low_quant,])
+   ncvar_put(new_file, var_high,  NEE[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -717,18 +766,26 @@ if(exists("NEE")) {
 # Net Biome Exchange
 if(exists("NBE")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"nbe_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"nbe",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("nbe_ensemble", unit="kg.m-2.s-1", longname = "Net Biome Exchange (NEE + Fire) - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new  = ncvar_def("nbe", unit="kg.m-2.s-1", longname = "Net Biome Exchange (NEE + Fire) - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("nbe_2.5pc", unit="kg.m-2.s-1", longname = "Net Biome Exchange (NEE + Fire) - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("nbe_97.5pc", unit="kg.m-2.s-1", longname = "Net Biome Exchange (NEE + Fire) - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  NBE)
+   ncvar_put(new_file, var_new,  NBE[,,mid_quant,])
+   ncvar_put(new_file, var_low,  NBE[,,low_quant,])
+   ncvar_put(new_file, var_high,  NBE[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -736,18 +793,26 @@ if(exists("NBE")) {
 # Net Biome Productivity
 if(exists("NBP")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"nbp_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"nbp",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("nbp_ensemble", unit="kg.m-2.s-1", longname = "Net Biome Productivity (-NEE - Fire - fLuc) - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new  = ncvar_def("nbp", unit="kg.m-2.s-1", longname = "Net Biome Productivity (-NEE - Fire - fLuc) - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("nbp_2.5pc", unit="kg.m-2.s-1", longname = "Net Biome Productivity (-NEE - Fire - fLuc) - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("nbp_97.5pc", unit="kg.m-2.s-1", longname = "Net Biome Productivity (-NEE - Fire - fLuc) - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  NBP)
+   ncvar_put(new_file, var_new,  NBP[,,mid_quant,])
+   ncvar_put(new_file, var_low,  NBP[,,low_quant,])
+   ncvar_put(new_file, var_high,  NBP[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -755,18 +820,26 @@ if(exists("NBP")) {
 # Fire emissions
 if(exists("FIR")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"fFire_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"fFire",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("fFire_ensemble", unit="kg.m-2.s-1", longname = "Fire - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new  = ncvar_def("fFire", unit="kg.m-2.s-1", longname = "Fire C emission - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("fFire_2.5pc", unit="kg.m-2.s-1", longname = "Fire C emission - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("fFire_97.5pc", unit="kg.m-2.s-1", longname = "Fire C emission - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  FIR)
+   ncvar_put(new_file, var_new,  FIR[,,mid_quant,])
+   ncvar_put(new_file, var_low,  FIR[,,low_quant,])
+   ncvar_put(new_file, var_high,  FIR[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -774,417 +847,241 @@ if(exists("FIR")) {
 # Flux from forest loss
 if(exists("HARV")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"fLuc_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"fLuc",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new = ncvar_def("fLuc_ensemble", unit="kg.m-2.s-1", longname = "Forest harvest - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("fLuc", unit="kg.m-2.s-1", longname = "C extracted due to forest harvest - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("fLuc_2.5pc", unit="kg.m-2.s-1", longname = "C extracted due to forest harvest - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("fLuc_97.5pc", unit="kg.m-2.s-1", longname = "C extracted due to forest harvest - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  HARV)
+   ncvar_put(new_file, var_new,  HARV[,,mid_quant,])
+   ncvar_put(new_file, var_low,  HARV[,,low_quant,])
+   ncvar_put(new_file, var_high,  HARV[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
 
-# Total outflux from labile
-if(exists("outflux_labile")) {
+# Combined natural, fire and harvest driven flux from biomass to litter
+if(exists("Combined_bio_litter_FLX")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"outflux_cLabile_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"fVegLitter",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("outflux_cLabile_ensemble", unit="kg.m-2.s-1", longname = "Total C output flux from labile - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("fVegLitter", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from biomass - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("fVegLitter_2.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from biomass - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("fVegLitter_97.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from biomass - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  outflux_labile)
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # Variables
+   ncvar_put(new_file, var_new, Combined_bio_litter_FLX[,,mid_quant,])
+   ncvar_put(new_file, var_low,  Combined_bio_litter_FLX[,,low_quant,])
+   ncvar_put(new_file, var_high,  Combined_bio_litter_FLX[,,high_quant,])   
+}
+
+# Combined natural, fire and harvest driven flux from foliage to litter
+if(exists("Combined_labile_litter_FLX")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"fLabileLitter",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define the new variable
+   var_new = ncvar_def("fLabileLitter", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from labile - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("fLabileLitter_2.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from labile - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("fLabileLitter_97.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from labile - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # Variables
+   ncvar_put(new_file, var_new, Combined_labile_litter_FLX[,,mid_quant,])
+   ncvar_put(new_file, var_low,  Combined_labile_litter_FLX[,,low_quant,])
+   ncvar_put(new_file, var_high,  Combined_labile_litter_FLX[,,high_quant,])   
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
 
-# Total outflux from foliage
-if(exists("outflux_foliage")) {
+# Combined natural, fire and harvest driven flux from labile to litter
+if(exists("Combined_foliage_litter_FLX")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"outflux_cLeaf_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"fLeafLitter",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("outflux_cLeaf_ensemble", unit="kg.m-2.s-1", longname = "Total C output flux from foliage - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("fLeafLitter", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from foliage - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("fLeafLitter_2.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from foliage - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("fLeafLitter_97.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from foliage - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  outflux_foliage)
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # Variables
+   ncvar_put(new_file, var_new, Combined_foliage_litter_FLX[,,mid_quant,])
+   ncvar_put(new_file, var_low, Combined_foliage_litter_FLX[,,low_quant,])
+   ncvar_put(new_file, var_high, Combined_foliage_litter_FLX[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
 
-# Total outflux from root
-if(exists("outflux_root")) {
+# Combined natural, fire and harvest driven flux from roots to litter
+if(exists("Combined_roots_litter_FLX")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"outflux_cFineRoot_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"fRootLitter",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("outflux_cFineRoot_ensemble", unit="kg.m-2.s-1", longname = "Total C output flux from fine root - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("fRootLitter", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from fine root - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("fRootLitter_2.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from fine root - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("fRootLitter_97.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from fine root - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  outflux_root)
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # Variables
+   ncvar_put(new_file, var_new, Combined_roots_litter_FLX[,,mid_quant,])
+   ncvar_put(new_file, var_low,  Combined_roots_litter_FLX[,,low_quant,])
+   ncvar_put(new_file, var_high,  Combined_roots_litter_FLX[,,high_quant,])
    # Close the existing file to ensure its written to file
-   nc_close(new_file)
+   nc_close(new_file)   
 }
 
-# Total outflux from wood
-if(exists("outflux_wood")) {
+# Combined natural, fire and harvest driven flux from wood to som
+# NOTE due to available variable names in TRENDYv11, this variable is used to provide fVegSoil
+if(exists("Combined_wood_litter_FLX")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"outflux_cWoodTotal_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"fVegSoil",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("outflux_cWoodTotal_ensemble", unit="kg.m-2.s-1", longname = "Total C output flux from wood - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("fVegSoil", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from wood, which is allocated to som - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("fVegSoil_2.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from wood, which is allocated to som - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("fVegSoil_97.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from wood, which is allocaed to som - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  outflux_wood)
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # Variables
+   ncvar_put(new_file, var_new, Combined_wood_litter_FLX[,,mid_quant,])
+   ncvar_put(new_file, var_low,  Combined_wood_litter_FLX[,,low_quant,])
+   ncvar_put(new_file, var_high,  Combined_wood_litter_FLX[,,high_quant,])
    # Close the existing file to ensure its written to file
-   nc_close(new_file)
+   nc_close(new_file)      
 }
 
-# Total outflux from litter
-if(exists("outflux_litter")) {
+# Combined natural, fire and harvest driven flux from litter to som
+if(exists("Combined_litter_som_FLX")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"outflux_cLeafFineRootlitter_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"fLitterSoil",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("outflux_cLeafFineRootlitter_ensemble", unit="kg.m-2.s-1", longname = "Total C output flux from foliar and fine root litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("fLitterSoil", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven allocation of litter to soil - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("fLitterSoil_2.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest allocation of litter to soil - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("fLitterSoil_97.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven allocation of litter to soil - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  outflux_litter)
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # Variables
+   ncvar_put(new_file, var_new, Combined_litter_som_FLX[,,mid_quant,])
+   ncvar_put(new_file, var_low, Combined_litter_som_FLX[,,low_quant,])
+   ncvar_put(new_file, var_high, Combined_litter_som_FLX[,,high_quant,])   
    # Close the existing file to ensure its written to file
-   nc_close(new_file)
+   nc_close(new_file)   
 }
 
-# Total outflux from wood litter
-if(exists("outflux_woodlitter")) {
+# Combined natural, fire and harvest driven flux from wood litter to som
+if(exists("Combined_woodlitter_som_FLX")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"outflux_cWoodlitter_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"fCwdSoil",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("outflux_cWoodlitter_ensemble", unit="kg.m-2.s-1", longname = "Total C output flux from wood litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("fCwdSoil", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven allocation of wood litter to soil - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("fCwdSoil_2.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest allocation of wood litter to soil - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("fCwdSoil_97.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven allocation of wood litter to soil - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new, outflux_woodlitter)
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # Variables
+   ncvar_put(new_file, var_new, Combined_woodlitter_som_FLX[,,mid_quant,])
+   ncvar_put(new_file, var_low,  Combined_woodlitter_som_FLX[,,low_quant,])
+   ncvar_put(new_file, var_high,  Combined_woodlitter_som_FLX[,,high_quant,])   
    # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Total outflux from som
-if(exists("outflux_som")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"outflux_cSOM_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("outflux_cSOM_ensemble", unit="kg.m-2.s-1", longname = "Total C output flux from soil organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  outflux_som)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Biomass
-if(exists("outflux_bio")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"outflux_cVeg_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("outflux_cVeg_ensemble", unit="kg.m-2.s-1", longname = "Total C output flux from vegetation - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  outflux_bio)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Dead Organic Matter
-if(exists("outflux_dom")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"outflux_cDOM_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("outflux_cDOM_ensemble", unit="kg.m-2.s-1", longname = "Total C output flux from dead organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  outflux_dom)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Fire mortality outflux from labile
-if(exists("FIRElitter_labile")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"FIRElitter_cLabile_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("FIRElitter_cLabile_ensemble", unit="kg.m-2.s-1", longname = "Fire mortality C output flux from labile - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  FIRElitter_labile)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Fire mortality outflux from foliage
-if(exists("FIRElitter_foliage")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"FIRElitter_cLeaf_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("FIRElitter_cLeaf_ensemble", unit="kg.m-2.s-1", longname = "Fire mortality C output flux from foliage - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  FIRElitter_foliage)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Fire mortality outflux from root
-if(exists("FIRElitter_root")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"FIRElitter_cFineRoot_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("FIRElitter_cFineRoot_ensemble", unit="kg.m-2.s-1", longname = "Fire mortality C output flux from fine root - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  FIRElitter_root)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Fire mortality outflux from wood
-if(exists("FIRElitter_wood")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"FIRElitter_cWoodTotal_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("FIRElitter_cWoodTotal_ensemble", unit="kg.m-2.s-1", longname = "Fire mortality C output flux from wood - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  FIRElitter_wood)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
+   nc_close(new_file)   
 }
 
 # Fire mortality outflux from litter
-if(exists("FIRElitter_litter")) {
+if(exists("FIREemiss_litter")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"FIRElitter_cLeafFineRootlitter_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"fFireLitter",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("FIRElitter_cLeafFineRootlitter_ensemble", unit="kg.m-2.s-1", longname = "Fire mortality C output flux from foliar and fine root litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new  = ncvar_def("fFireLitter", unit="kg.m-2.s-1", longname = "Fire combusted CO2 output flux from foliar and fine root litter - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("fFireLitter_2.5pc", unit="kg.m-2.s-1", longname = "Fire combusted CO2 output flux from foliar and fine root litter - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("fFireLitter_97.5pc", unit="kg.m-2.s-1", longname = "Fire combusted CO2 output flux from foliar and fine root litter - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  FIRElitter_litter)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Fire mortality outflux from litter
-if(exists("FIRElitter_woodlitter")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"FIRElitter_cWoodlitter_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("FIRElitter_cWoodlitter_ensemble", unit="kg.m-2.s-1", longname = "Fire mortality C output flux from wood litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  FIRElitter_woodlitter)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Fire mortality outflux from som
-if(exists("FIRElitter_bio")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"FIREemiss_cVeg_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("FIRElitter_cVeg_ensemble", unit="kg.m-2.s-1", longname = "Fire mortality C output flux from Vegetation - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  FIRElitter_bio)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Fire mortality outflux from labile
-if(exists("FIREemiss_labile")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"FIREemiss_cLabile_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("FIREemiss_cLabile_ensemble", unit="kg.m-2.s-1", longname = "Fire combusted C output flux from labile - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new, FIREemiss_labile)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Fire mortality outflux from foliage
-if(exists("FIREemiss_foliage")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"FIREemiss_cLeaf_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("FIREemiss_cLeaf_ensemble", unit="kg.m-2.s-1", longname = "Fire combusted C output flux from foliage - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  FIREemiss_foliage)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Fire mortality outflux from root
-if(exists("FIREemiss_root")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"FIREemiss_cFineRoot_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("FIREemiss_cFineRoot_ensemble", unit="kg.m-2.s-1", longname = "Fire combusted C output flux from fine root - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  FIREemiss_root)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Fire mortality outflux from wood
-if(exists("FIREemiss_wood")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"FIREemiss_cWoodTotal_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("FIREemiss_cWoodTotal_ensemble", unit="kg.m-2.s-1", longname = "Fire combusted C output flux from wood - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  FIREemiss_wood)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Fire mortality outflux from litter
-if(exists("FIREemiss_litterLAI")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"FIREemiss_cLeafFineRootlitter_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("FIREemiss_cLeafFineRootlitter_ensemble", unit="kg.m-2.s-1", longname = "Fire combusted C output flux from foliar and fine root litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  FIREemiss_litter)
+   ncvar_put(new_file, var_new,  FIREemiss_litter[,,mid_quant,]*(44/12)) # NOTE: unit change from C -> CO2
+   ncvar_put(new_file, var_low,  FIREemiss_litter[,,low_quant,]*(44/12)) # NOTE: unit change from C -> CO2
+   ncvar_put(new_file, var_high,  FIREemiss_litter[,,high_quant,]*(44/12)) # NOTE: unit change from C -> CO2
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -1192,18 +1089,26 @@ if(exists("FIREemiss_litterLAI")) {
 # Fire mortality outflux from wood litter
 if(exists("FIREemiss_woodlitter")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"FIREemiss_cWoodlitter_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"fFireCcwd",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("FIREemiss_cWoodlitter_ensemble", unit="kg.m-2.s-1", longname = "Fire combusted C output flux from wood litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new  = ncvar_def("fFireCcwd", unit="kg.m-2.s-1", longname = "Fire combusted CO2 output flux from wood litter - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("fFireCcwd_2.5pc", unit="kg.m-2.s-1", longname = "Fire combusted CO2 output flux from wood litter - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("fFireCcwd_97.5pc", unit="kg.m-2.s-1", longname = "Fire combusted CO2 output flux from wood litter - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  FIREemiss_woodlitter)
+   ncvar_put(new_file, var_new,  FIREemiss_woodlitter[,,mid_quant,]*(44/12)) # NOTE: unit change from C -> CO2
+   ncvar_put(new_file, var_low,  FIREemiss_woodlitter[,,low_quant,]*(44/12)) # NOTE: unit change from C -> CO2
+   ncvar_put(new_file, var_high,  FIREemiss_woodlitter[,,high_quant,]*(44/12)) # NOTE: unit change from C -> CO2
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -1211,18 +1116,26 @@ if(exists("FIREemiss_woodlitter")) {
 # Fire mortality outflux from som
 if(exists("FIREemiss_som")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"FIREemiss_cSOM_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"fFireCsoil",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("FIREemiss_cSOM_ensemble", unit="kg.m-2.s-1", longname = "Fire combusted C output flux from soil organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new  = ncvar_def("fFireCsoil", unit="kg.m-2.s-1", longname = "Fire combusted CO2 output flux from soil organic matter - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("fFireCsoil_2.5pc", unit="kg.m-2.s-1", longname = "Fire combusted CO2 output flux from soil organic matter - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high  = ncvar_def("fFireCsoil_97.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven allocation of wood litter to soil - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  FIREemiss_som)
+   ncvar_put(new_file, var_new,  FIREemiss_som[,,mid_quant,]*(44/12)) # NOTE: unit change from C -> CO2
+   ncvar_put(new_file, var_low,  FIREemiss_som[,,low_quant,]*(44/12)) # NOTE: unit change from C -> CO2
+   ncvar_put(new_file, var_high,  FIREemiss_som[,,high_quant,]*(44/12)) # NOTE: unit change from C -> CO2
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -1230,596 +1143,60 @@ if(exists("FIREemiss_som")) {
 # Fire mortality outflux from vegetation
 if(exists("FIREemiss_bio")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"FIREemiss_cVeg_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"fFireCveg",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("FIREemiss_cVeg_ensemble", unit="kg.m-2.s-1", longname = "Fire combusted C output flux from vegetation - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  FIREemiss_bio)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
+   var_new  = ncvar_def("fFireCveg", unit="kg.m-2.s-1", longname = "Fire combusted CO2 output flux from vegetation - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("fFireCveg_2.5pc", unit="kg.m-2.s-1", longname = "Fire combusted CO2 output flux from vegetation - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("fFireCveg_97.5pc", unit="kg.m-2.s-1", longname = "Fire combusted CO2 output flux from vegetation - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
 
-# Fire mortality outflux from dom
-if(exists("FIREemiss_dom")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"FIREemiss_cDOM_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("FIREemiss_cDOM_ensemble", unit="kg.m-2.s-1", longname = "Fire combusted C output flux from dead organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  FIREemiss_dom)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Harvest litter outflux from labile
-if(exists("HARVESTlitter_labile")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"HARVESTlitter_cLabile_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("HARVESTlitter_cLabile_ensemble", unit="kg.m-2.s-1", longname = "Harvest litter C output flux from labile - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new, HARVESTlitter_labile)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Harvest litter outflux from foliage
-if(exists("HARVESTlitter_foliage")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"HARVESTlitter_cLeaf_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("HARVESTlitter_cLeaf_ensemble", unit="kg.m-2.s-1", longname = "Harvest litter C output flux from foliage - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new, HARVESTlitter_foliage)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Harvest litter outflux from root
-if(exists("HARVESTlitter_root")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"HARVESTlitter_cFineRoot_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("HARVESTlitter_cFineRoot_ensemble", unit="kg.m-2.s-1", longname = "Harvest litter C output flux from fine root - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new, HARVESTlitter_root)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Harvest litter outflux from wood
-if(exists("HARVESTlitter_wood")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"HARVESTlitter_cWoodTotal_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("HARVESTlitter_cWoodTotal_ensemble", unit="kg.m-2.s-1", longname = "Harvest litter C output flux from wood - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  HARVESTlitter_wood)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Harvest litter outflux from vegetation
-if(exists("HARVESTlitter_bio")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"HARVESTlitter_cVeg_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("HARVESTlitter_cVeg_ensemble", unit="kg.m-2.s-1", longname = "Harvest litter C output flux from Vegetation - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  HARVESTlitter_bio)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Harvest extracted outflux from labile
-if(exists("HARVESTextracted_labile")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"HARVESTextracted_cLabile_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("HARVESTextracted_cLabile_ensemble", unit="kg.m-2.s-1", longname = "Harvest extracted C output flux from labile - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  HARVESTextracted_labile)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Harvest extracted outflux from foliage
-if(exists("HARVESTextracted_foliage")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"HARVESTextracted_cLeaf_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("HARVESTextracted_cLeaf_ensemble", unit="kg.m-2.s-1", longname = "Harvest extracted C output flux from foliage - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  HARVESTextracted_foliage)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Harvest extracted outflux from root
-if(exists("HARVESTextracted_root")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"HARVESTextracted_cFineRoot_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("HARVESTextracted_cFineRoot_ensemble", unit="kg.m-2.s-1", longname = "Harvest extracted C output flux from fine root - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  HARVESTextracted_root)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Harvest extracted outflux from wood
-if(exists("HARVESTextracted_wood")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"HARVESTextracted_cWoodTotal_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("HARVESTextracted_cWoodTotal_ensemble", unit="kg.m-2.s-1", longname = "Harvest extracted C output flux from wood - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  HARVESTextracted_wood)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Harvest extracted outflux from litter
-if(exists("HARVESTextracted_litter")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"HARVESTextracted_cLeafFineRootlitter_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("HARVESTextracted_cLeafFineRootlitter_ensemble", unit="kg.m-2.s-1", longname = "Harvest extracted C output flux from foliar and fine root litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  HARVESTextracted_litter)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Harvest extracted outflux from wood litter
-if(exists("HARVESTextracted_woodlitter")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"HARVESTextracted_cWoodlitter_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("HARVESTextracted_cWoodlitter_ensemble", unit="kg.m-2.s-1", longname = "Harvest extracted C output flux from wood litter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  HARVESTextracted_woodlitter)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Harvest extracted outflux from som
-if(exists("HARVESTextracted_som")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"HARVESTextracted_cSOM_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("HARVESTextracted_cSOM_ensemble", unit="kg.m-2.s-1", longname = "Harvest extracted C output flux from soil organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  HARVESTextracted_som)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Harvest extracted outflux from vegetation
-if(exists("HARVESTextracted_bio")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"HARVESTextracted_cVeg_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("HARVESTextracted_cVeg_ensemble", unit="kg.m-2.s-1", longname = "Harvest extracted C output flux from vegetation - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  HARVESTextracted_bio)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Harvest extracted outflux from dom
-if(exists("HARVESTextracted_dom")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"HARVESTextracted_cDOM_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("HARVESTextracted_cDOM_ensemble", unit="kg.m-2.s-1", longname = "Harvest extracted C output flux from dead organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  HARVESTextracted_dom)
+   ncvar_put(new_file, var_new,  FIREemiss_bio[,,mid_quant,]*(44/12)) # NOTE: unit change from C -> CO2
+   ncvar_put(new_file, var_low,  FIREemiss_bio[,,low_quant,]*(44/12)) # NOTE: unit change from C -> CO2
+   ncvar_put(new_file, var_high,  FIREemiss_bio[,,high_quant,]*(44/12)) # NOTE: unit change from C -> CO2
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
 
 ###
-## Mean residence times and NPP allocation / fluxes
+## NPP allocation / fluxes
 ###
               
-## Mean Residence Times 
-# Labile
-if(exists("labMRT")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"MTT_lab_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new = ncvar_def("MTT_lab_ensemble", unit="year", longname = "Mean Labile Transit Time - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  labMRT)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Foliar
-if(exists("folMRT")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"MTT_fol_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new = ncvar_def("MTT_fol_ensemble", unit="year", longname = "Mean Foliar Transit Time - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  folMRT)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Fine root
-if(exists("rooMRT")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"MTT_root_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new = ncvar_def("MTT_root_ensemble", unit="year", longname = "Mean fine root Transit Time - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  rooMRT)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Wood
-if(exists("wooMRT")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"MTT_wood_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new = ncvar_def("MTT_wood_ensemble", unit="year", longname = "Mean wood Transit Time - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  wooMRT)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Fine litter (fol + fine root)
-if(exists("litMRT")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"MTT_lit_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new = ncvar_def("MTT_lit_ensemble", unit="year", longname = "Mean foliar + fine root litter Transit Time - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  litMRT)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Wood litter 
-if(exists("wlitMRT")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"MTT_wlit_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new = ncvar_def("MTT_wlit_ensemble", unit="year", longname = "Mean wood litter Transit Time - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  wlitMRT)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Soil
-if(exists("somMRT")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"MTT_som_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new = ncvar_def("MTT_som_ensemble", unit="year", longname = "Mean Soil Transit Time - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  somMRT)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Dead Organic Matter
-if(exists("domMRT")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"MTT_dom_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new = ncvar_def("MTT_dom_ensemble", unit="year", longname = "Mean Soil + litter Transit Time - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  domMRT)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Biomass / vegetation
-if(exists("bioMRT")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"MTT_veg_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new = ncvar_def("MTT_veg_ensemble", unit="year", longname = "Mean biomass / vegetation Transit Time - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  bioMRT)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-## NPP allocation fractions
-# Foliar
-if(exists("fNPP")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"NPP_fol_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new = ncvar_def("NPP_fol_ensemble", unit="1", longname = "Fraction of Net Primary Productivity to foliage - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  fNPP)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Fine root
-if(exists("rNPP")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"NPP_root_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new = ncvar_def("NPP_root_ensemble", unit="1", longname = "Fraction of Net Primary Productivity to fine root - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  rNPP)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Wood
-if(exists("wNPP")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"NPP_wood_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new = ncvar_def("NPP_wood_ensemble", unit="1", longname = "Fraction of Net Primary Productivity to wood - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  wNPP)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-
 ## NPP allocation fluxes
-# Labile
-if(exists("NPP_labile_FLX")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"NPP_labile_flx_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new= ncvar_def("NPP_labile_flx_ensemble", unit="kg.m-2.s-1", longname = "Net Primary Productivity to labile - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  NPP_labile_FLX)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Direct allocation to Foliar
-if(exists("NPP_foliage_FLX")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"NPP_direct_fol_flx_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new = ncvar_def("NPP_direct_fol_flx_ensemble", unit="kg.m-2.s-1", longname = "Net Primary Productivity direct to foliage - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  NPP_foliage_FLX)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
 
 # Combined direct and via labile allocation of NPP to foliage
 if(exists("NPP_combinedfoliage_FLX")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"NPP_fol_flx_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"fAllocLeaf",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new = ncvar_def("NPP_fol_flx_ensemble", unit="kg.m-2.s-1", longname = "Both direct and via labile Net Primary Productivity to foliage - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("fAllocLeaf", unit="kg.m-2.s-1", longname = "Both direct and via labile Net Primary Productivity to foliage - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("fAllocLeaf_2.5pc", unit="kg.m-2.s-1", longname = "Both direct and via labile Net Primary Productivity to foliage - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("fAllocLeaf_97.5pc", unit="kg.m-2.s-1", longname = "Both direct and via labile Net Primary Productivity to foliage - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  NPP_combinedfoliage_FLX)
+   ncvar_put(new_file, var_new,  NPP_combinedfoliage_FLX[,,mid_quant,])
+   ncvar_put(new_file, var_low,  NPP_combinedfoliage_FLX[,,low_quant,])
+   ncvar_put(new_file, var_high,  NPP_combinedfoliage_FLX[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -1827,18 +1204,26 @@ if(exists("NPP_combinedfoliage_FLX")) {
 # Fine root
 if(exists("NPP_root_FLX")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"NPP_root_flx_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"fAllocRoot",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new= ncvar_def("NPP_root_flx_ensemble", unit="kg.m-2.s-1", longname = "Net Primary Productivity to fine root - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("fAllocRoot", unit="kg.m-2.s-1", longname = "Net Primary Productivity to fine root - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("fAllocRoot_2.5pc", unit="kg.m-2.s-1", longname = "Net Primary Productivity to fine root - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("fAllocRoot_97.5pc", unit="kg.m-2.s-1", longname = "Net Primary Productivity to fine root - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  NPP_root_FLX)
+   ncvar_put(new_file, var_new,  NPP_root_FLX[,,mid_quant,])
+   ncvar_put(new_file, var_low,  NPP_root_FLX[,,low_quant,])
+   ncvar_put(new_file, var_high,  NPP_root_FLX[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -1846,18 +1231,26 @@ if(exists("NPP_root_FLX")) {
 # Wood
 if(exists("NPP_wood_FLX")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"NPP_wood_flx_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"fAllocWood",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new = ncvar_def("NPP_wood_flx_ensemble", unit="kg.m-2.s-1", longname = "Net Primary Productivity to wood - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new = ncvar_def("fAllocWood", unit="kg.m-2.s-1", longname = "Net Primary Productivity to wood - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("fAllocWood_2.5pc", unit="kg.m-2.s-1", longname = "Net Primary Productivity to wood - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("fAllocWood_97.5pc", unit="kg.m-2.s-1", longname = "Net Primary Productivity to wood - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  NPP_wood_FLX)
+   ncvar_put(new_file, var_new,  NPP_wood_FLX[,,mid_quant,])
+   ncvar_put(new_file, var_low,  NPP_wood_FLX[,,low_quant,])
+   ncvar_put(new_file, var_high,  NPP_wood_FLX[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
@@ -1869,180 +1262,133 @@ if(exists("NPP_wood_FLX")) {
 # Evapotranspiration
 if(exists("ET")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"evapotrans_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"evapotrans",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("evapotrans_ensemble", unit="kg.m-2.s-1", longname = "Evapotranspiration - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new  = ncvar_def("evapotrans", unit="kg.m-2.s-1", longname = "Evapotranspiration - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("evapotrans_2.5pc", unit="kg.m-2.s-1", longname = "Evapotranspiration - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("evapotrans_97.5pc", unit="kg.m-2.s-1", longname = "Evapotranspiration - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  ET)
+   ncvar_put(new_file, var_new,  ET[,,mid_quant,])
+   ncvar_put(new_file, var_low,  ET[,,low_quant,])
+   ncvar_put(new_file, var_high,  ET[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
 
-###
-## H2O STATES
-###
-
-# Soil surface water content
-if(exists("SurfWater")) {
+# Transpiration
+if(exists("Etrans")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"SurfWater_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"tran",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("SurfWater_ensemble", unit="kg.m-2", longname = "Soil water content (0-30 cm) - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new  = ncvar_def("tran", unit="kg.m-2.s-1", longname = "Transpiration - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("tran_2.5pc", unit="kg.m-2.s-1", longname = "Transpiration - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("tran_97.5pc", unit="kg.m-2.s-1", longname = "Transpiration - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  SurfWater)
+   ncvar_put(new_file, var_new,  Etrans[,,mid_quant,])
+   ncvar_put(new_file, var_low,  Etrans[,,low_quant,])
+   ncvar_put(new_file, var_high,  Etrans[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
 
-# Soil surface snow cover
-if(exists("SNOW")) {
+# Soil evaporation
+if(exists("Esoil")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"SNOW_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"evspsblsoi",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("SNOW_ensemble", unit="kg.m-2", longname = "Soil surface snow cover - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new  = ncvar_def("evspsblsoi", unit="kg.m-2.s-1", longname = "Soil evaporation - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("evspsblsoi_2.5pc", unit="kg.m-2.s-1", longname = "Soil evaporation - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("evspsblsoi_97.5pc", unit="kg.m-2.s-1", longname = "Soil evaporation - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  SNOW)
+   ncvar_put(new_file, var_new,  Esoil[,,mid_quant,])
+   ncvar_put(new_file, var_low,  Esoil[,,low_quant,])
+   ncvar_put(new_file, var_high,  Esoil[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
 
-###
-## Biophysical diagnostics
-###
-
-# CiCa
-if(exists("CiCa")) {
+# Canopy intercepted rainfall evaporation
+if(exists("Ewetevap")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"CiCa_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"evspsblveg",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new = ncvar_def("CiCa_ensemble", unit="1", longname = "Internal:Ambiant CO2 ratio - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new  = ncvar_def("evspsblveg", unit="kg.m-2.s-1", longname = "Canopy intercepted rainfall evaporation - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("evspsblveg_2.5pc", unit="kg.m-2.s-1", longname = "Canopy intercepted rainfall evaporation - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("evspsblveg_97.5pc", unit="kg.m-2.s-1", longname = "Canopy intercepted rainfall evaporation - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  CiCa)
+   ncvar_put(new_file, var_new,  Ewetcanopy[,,mid_quant,])
+   ncvar_put(new_file, var_low,  Ewetcanopy[,,low_quant,])
+   ncvar_put(new_file, var_high,  Ewetcanopy[,,high_quant,])
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 }
 
-# Soil water potential weighted by root access
-if(exists("wSWP")) {
+# Total drainage from soil surface and bottom of soil column
+if(exists("total_drainage")) {
    # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"wSWP_ensemble",output_suffix,".nc",sep="")
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"mrro",output_suffix,".nc",sep="")
    # Delete if the file currently exists
    if (file.exists(output_name)) {file.remove(output_name)}
    # Define the new variable
-   var_new  = ncvar_def("wSWP_ensemble", unit="MPa", longname = "Soil water potential weighted by root access - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_new  = ncvar_def("mrro", unit="kg.m-2.s-1", longname = "Total drainage from soil surface and bottom of soil column - Median estimate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_low  = ncvar_def("mrro_2.5pc", unit="kg.m-2.s-1", longname = "Total drainage from soil surface and bottom of soil column - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   var_high = ncvar_def("mrro_97.5pc", unit="kg.m-2.s-1", longname = "Total drainage from soil surface and bottom of soil column - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_low,var_high), force_v4 = TRUE)
    # Load first variable into the file
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
    # VARIABLE
-   ncvar_put(new_file, var_new,  wSWP)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-   }
-
-# Canopy absorbed photosynthetically active radiation
-if(exists("APAR")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"APAR_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("APAR_ensemble", unit="MJ.m2.d-1", longname = "Canopy absorbed photosynthatically active radiation - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  APAR)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
+   ncvar_put(new_file, var_new, total_drainage[,,mid_quant,])
+   ncvar_put(new_file, var_low,  total_drainage[,,low_quant,])
+   ncvar_put(new_file, var_high,  total_drainage[,,high_quant,])   
 }
-
-# Ratio of actual stomatal conductance to that allowed by water supply to canopy
-if(exists("gs_demand_supply_ratio")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"gs_demand_supply_ratio_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("gs_demand_supply_ratio_ensemble", unit="1", longname = "Ratio of actual stomatal conductance to potential allowed by water supply to canopy - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  gs_demand_supply_ratio)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Stomatal conductance for water
-if(exists("gs")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"gs_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("gs_ensemble", unit="mmol.m-2.d-1", longname = "Stomatal conductance for water - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  gs)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
-# Boundary layer conductance for water
-if(exists("gb")) {
-   # Define the output file name
-   output_name = paste(PROJECT$results_processedpath,output_prefix,"gb_ensemble",output_suffix,".nc",sep="")
-   # Delete if the file currently exists
-   if (file.exists(output_name)) {file.remove(output_name)}
-   # Define the new variable
-   var_new  = ncvar_def("gb_ensemble", unit="mmol.m-2.d-1", longname = "Boundary conductance for water - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var_new), force_v4 = TRUE)
-   # Load first variable into the file
-   # TIMING
-   ncvar_put(new_file, var0, drivers$met[,1])
-   # VARIABLE
-   ncvar_put(new_file, var_new,  gb)
-   # Close the existing file to ensure its written to file
-   nc_close(new_file)
-}
-
 

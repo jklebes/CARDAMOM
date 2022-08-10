@@ -7,8 +7,7 @@
 
 generate_parameter_maps<-function(PROJECT) {
 
-   # work out area matrix for the pixels in meters
-   # include adjustment for g-> Tg (*1e-12)
+   # Determine the lat / long for the grid
    if (PROJECT$grid_type == "UK") {
        output = generate_uk_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
        grid_lat = array(output$lat, dim=c(PROJECT$long_dim,PROJECT$lat_dim))

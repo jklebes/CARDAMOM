@@ -70,6 +70,12 @@ cardamom <-function (projname,model,method,stage) {
           } # pft_wanted
           PROJECT$lat_dim = site_info$lat_dim
           PROJECT$long_dim = site_info$long_dim
+          if (exists(x = "landsea_frac", where = site_info)) {
+              PROJECT$landsea_frac = site_info$landsea_frac
+          }
+          if (exists(x = "area_m2", where = site_info)) {
+              PROJECT$area_m2 = site_info$area_m2
+          }
       } # if (cardamom_type == "site")
 
       # whether we use PFT specific or global parameter ranges

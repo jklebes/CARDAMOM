@@ -6,7 +6,9 @@
 ###
 
 #### TO DO
-# Compare correlations between pixels, how have they changed to improve constraint on wood
+# 1) Update locations where CUE is calculated with the new CUE variable
+# 2) 
+# 3) Compare correlations between pixels, how have they changed to improve constraint on wood
 # Ensure all relative plots are restricted +/- 1 
 # Include parameter correlations check
 #orig_mean_parameter_correlation = array(NA, dim=dim(grid_output$mean_lai_m2m2)[1:2])
@@ -2815,6 +2817,145 @@ plot(var12, zlim = zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box
 plot(landmask, add=TRUE)
 dev.off()
 
+# C fluxes
+# Assign variables
+var1 = ((orig_grid_output$mean_nbe_gCm2day[,,high_quant]-orig_grid_output$mean_nbe_gCm2day[,,low_quant])/abs(orig_grid_output$mean_nbe_gCm2day)[,,mid_quant])
+var2 = ((orig_grid_output$mean_gpp_gCm2day[,,high_quant]-orig_grid_output$mean_gpp_gCm2day[,,low_quant])/abs(orig_grid_output$mean_gpp_gCm2day)[,,mid_quant])
+var3 = ((orig_grid_output$mean_reco_gCm2day[,,high_quant]-orig_grid_output$mean_reco_gCm2day[,,low_quant])/abs(orig_grid_output$mean_reco_gCm2day)[,,mid_quant])
+var4 = ((orig_grid_output$mean_fire_gCm2day[,,high_quant]-orig_grid_output$mean_fire_gCm2day[,,low_quant])/abs(orig_grid_output$mean_fire_gCm2day)[,,mid_quant])
+var5 = ((alt_grid_output$mean_nbe_gCm2day[,,high_quant]-alt_grid_output$mean_nbe_gCm2day[,,low_quant])/abs(alt_grid_output$mean_nbe_gCm2day)[,,mid_quant])
+var6 = ((alt_grid_output$mean_gpp_gCm2day[,,high_quant]-alt_grid_output$mean_gpp_gCm2day[,,low_quant])/abs(alt_grid_output$mean_gpp_gCm2day)[,,mid_quant])
+var7 = ((alt_grid_output$mean_reco_gCm2day[,,high_quant]-alt_grid_output$mean_reco_gCm2day[,,low_quant])/abs(alt_grid_output$mean_reco_gCm2day)[,,mid_quant])
+var8 = ((alt_grid_output$mean_fire_gCm2day[,,high_quant]-alt_grid_output$mean_fire_gCm2day[,,low_quant])/abs(alt_grid_output$mean_fire_gCm2day)[,,mid_quant])
+var9 = var5-var1
+var10 = var6-var2
+var11 = var7-var3
+var12 = var8-var4
+# Apply filters based on quantiles
+# Maximum values only for the positive definites
+var1[which(var1  > quantile(var1, prob=c(0.95), na.rm=TRUE))] = quantile(var1, prob=c(0.95), na.rm=TRUE)
+var2[which(var2  > quantile(var2, prob=c(0.95), na.rm=TRUE))] = quantile(var2, prob=c(0.95), na.rm=TRUE)
+var3[which(var3  > quantile(var3, prob=c(0.95), na.rm=TRUE))] = quantile(var3, prob=c(0.95), na.rm=TRUE)
+var4[which(var4  > quantile(var4, prob=c(0.95), na.rm=TRUE))] = quantile(var4, prob=c(0.95), na.rm=TRUE)
+var5[which(var5  > quantile(var5, prob=c(0.95), na.rm=TRUE))] = quantile(var5, prob=c(0.95), na.rm=TRUE)
+var6[which(var6  > quantile(var6, prob=c(0.95), na.rm=TRUE))] = quantile(var6, prob=c(0.95), na.rm=TRUE)
+var7[which(var7  > quantile(var7, prob=c(0.95), na.rm=TRUE))] = quantile(var7, prob=c(0.95), na.rm=TRUE)
+var8[which(var8  > quantile(var8, prob=c(0.95), na.rm=TRUE))] = quantile(var8, prob=c(0.95), na.rm=TRUE)
+# Maximum and minimum (below) for the differences, i.e. can be negative or positive
+var9[which(var9  > quantile(var9, prob=c(0.95), na.rm=TRUE))] = quantile(var9, prob=c(0.95), na.rm=TRUE)
+var10[which(var10 > quantile(var10, prob=c(0.95), na.rm=TRUE))] = quantile(var10, prob=c(0.95), na.rm=TRUE)
+var11[which(var11 > quantile(var11, prob=c(0.95), na.rm=TRUE))] = quantile(var11, prob=c(0.95), na.rm=TRUE)
+var12[which(var12 > quantile(var12, prob=c(0.95), na.rm=TRUE))] = quantile(var12, prob=c(0.95), na.rm=TRUE)
+var9[which(var9  < quantile(var9, prob=c(0.05), na.rm=TRUE))] = quantile(var9, prob=c(0.05), na.rm=TRUE)
+var10[which(var10 < quantile(var10, prob=c(0.05), na.rm=TRUE))] = quantile(var10, prob=c(0.05), na.rm=TRUE)
+var11[which(var11 < quantile(var11, prob=c(0.05), na.rm=TRUE))] = quantile(var11, prob=c(0.05), na.rm=TRUE)
+var12[which(var12 < quantile(var12, prob=c(0.05), na.rm=TRUE))] = quantile(var12, prob=c(0.05), na.rm=TRUE)
+# Further apply a hard limit on the range of 10
+#var1[which(var1 > 5)] = 5
+#var2[which(var2 > 5)] = 5
+#var3[which(var3 > 5)] = 5
+#var4[which(var4 > 5)] = 5
+#var5[which(var5 > 5)] = 5
+#var6[which(var6 > 5)] = 5
+#var7[which(var7 > 5)] = 5
+#var8[which(var8 > 5)] = 5
+#var9[which(var9 > 5)] = 5   ; var9[which(var9 < -5)] = -5
+#var10[which(var10 > 5)] = 5 ; var10[which(var10 < -5)] = -5
+#var11[which(var11 > 5)] = 5 ; var11[which(var11 < -5)] = -5
+#var12[which(var12 > 5)] = 5 ; var12[which(var12 < -5)] = -5
+# Apply filters to unwanted locations
+var1[which(is.na(landfilter))] = NA 
+var2[which(is.na(landfilter))] = NA 
+var3[which(is.na(landfilter))] = NA 
+var4[which(is.na(landfilter))] = NA 
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var8[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+var10[which(is.na(landfilter))] = NA 
+var11[which(is.na(landfilter))] = NA 
+var12[which(is.na(landfilter))] = NA 
+# Convert to raster
+var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var7 = raster(vals = t((var7)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var8 = raster(vals = t((var8)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var9 = raster(vals = t((var9)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var10 = raster(vals = t((var10)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var11 = raster(vals = t((var11)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var12 = raster(vals = t((var12)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# ranges
+zrange1 = c(0,1)*max(abs(range(c(values(var1),values(var5)),na.rm=TRUE))) #c(0,1)*max(abs(range(c(values(var1),values(var2),values(var3),values(var4),values(var5),values(var6),values(var7),values(var8)),na.rm=TRUE)))
+zrange2 = c(0,1)*max(abs(range(c(values(var2),values(var6)),na.rm=TRUE)))#zrange1
+zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var7)),na.rm=TRUE)))#zrange1
+zrange4 = c(0,1)*max(abs(range(c(values(var4),values(var8)),na.rm=TRUE)))#zrange1
+zrange5 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE))) #c(-1,1)*max(abs(range(c(values(var9),values(var10),values(var11),values(var12)),na.rm=TRUE)))
+zrange6 = c(-1,1)*max(abs(range(c(values(var10)),na.rm=TRUE)))#zrange5
+zrange7 = c(-1,1)*max(abs(range(c(values(var11)),na.rm=TRUE)))#zrange5
+zrange8 = c(-1,1)*max(abs(range(c(values(var12)),na.rm=TRUE)))#zrange5
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_C_fluxes_CI_rel_of_median",outsuffix,".png",sep=""), height = 3000, width = 4900, res = 300)
+par(mfrow=c(3,4), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
+# Original
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("NBE CI:Median", sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(orig_name, side=2, cex=1.8, padj = -0.5)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("GPP CI:Median", sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Reco CI:Median", sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var4, zlim=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Fire CI:Median", sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Alternate
+plot(var5, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(alt_name, side=2,cex=1.8, padj = -0.5)
+plot(var6, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var7, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var8, zlim=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Difference
+plot(var9, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+mtext(paste("Difference",sep=""), side=2, cex=1.8, padj = -0.5)
+plot(var10, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+plot(var11, zlim = zrange7, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+plot(var12, zlim = zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+dev.off()
+
 # Assign key C flux uncertainties and their uncertainties
 # Does the relationship between median and uncertainty change?
 var1 = (orig_grid_output$mean_nbe_gCm2day[,,high_quant]-orig_grid_output$mean_nbe_gCm2day[,,low_quant])*1e-2*365.25
@@ -3696,6 +3837,109 @@ print(paste("Mean (MgC/ha) difference in CI Biomass (",alt_name,"-",orig_name,")
 print(paste("Mean (MgC/ha) difference in CI DOM (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
+# Final stocks CI
+# Assign variables
+var1 = ((orig_grid_output$final_Ctotal_gCm2[,,high_quant]-orig_grid_output$final_Ctotal_gCm2[,,low_quant])/orig_grid_output$final_Ctotal_gCm2[,,mid_quant])
+var2 = ((orig_grid_output$final_biomass_gCm2[,,high_quant]-orig_grid_output$final_biomass_gCm2[,,low_quant])/orig_grid_output$final_biomass_gCm2[,,mid_quant])
+var3 = ((orig_grid_output$final_dom_gCm2[,,high_quant]-orig_grid_output$final_dom_gCm2[,,low_quant])/orig_grid_output$final_dom_gCm2[,,mid_quant])
+var4 = ((alt_grid_output$final_Ctotal_gCm2[,,high_quant]-alt_grid_output$final_Ctotal_gCm2[,,low_quant])/alt_grid_output$final_Ctotal_gCm2[,,mid_quant])
+var5 = ((alt_grid_output$final_biomass_gCm2[,,high_quant]-alt_grid_output$final_biomass_gCm2[,,low_quant])/alt_grid_output$final_biomass_gCm2[,,mid_quant])
+var6 = ((alt_grid_output$final_dom_gCm2[,,high_quant]-alt_grid_output$final_dom_gCm2[,,low_quant])/alt_grid_output$final_dom_gCm2[,,mid_quant])
+var7 = var4-var1
+var8 = var5-var2
+var9 = var6-var3
+# Apply filters based on quantiles
+# Maximum values only for the positive definites
+var1[which(var1  > quantile(var1, prob=c(0.95), na.rm=TRUE))] = quantile(var1, prob=c(0.95), na.rm=TRUE)
+var2[which(var2  > quantile(var2, prob=c(0.95), na.rm=TRUE))] = quantile(var2, prob=c(0.95), na.rm=TRUE)
+var3[which(var3  > quantile(var3, prob=c(0.95), na.rm=TRUE))] = quantile(var3, prob=c(0.95), na.rm=TRUE)
+var4[which(var4  > quantile(var4, prob=c(0.95), na.rm=TRUE))] = quantile(var4, prob=c(0.95), na.rm=TRUE)
+var5[which(var5  > quantile(var5, prob=c(0.95), na.rm=TRUE))] = quantile(var5, prob=c(0.95), na.rm=TRUE)
+var6[which(var6  > quantile(var6, prob=c(0.95), na.rm=TRUE))] = quantile(var6, prob=c(0.95), na.rm=TRUE)
+# Maximum and minimum (below) for the differences, i.e. can be negative or positive
+var7[which(var7  > quantile(var7, prob=c(0.95), na.rm=TRUE))] = quantile(var7, prob=c(0.95), na.rm=TRUE)
+var8[which(var8  > quantile(var8, prob=c(0.95), na.rm=TRUE))] = quantile(var8, prob=c(0.95), na.rm=TRUE)
+var9[which(var9  > quantile(var9, prob=c(0.95), na.rm=TRUE))] = quantile(var9, prob=c(0.95), na.rm=TRUE)
+var7[which(var7  < quantile(var7, prob=c(0.05), na.rm=TRUE))] = quantile(var7, prob=c(0.05), na.rm=TRUE)
+var8[which(var8  < quantile(var8, prob=c(0.05), na.rm=TRUE))] = quantile(var8, prob=c(0.05), na.rm=TRUE)
+var9[which(var9  < quantile(var9, prob=c(0.05), na.rm=TRUE))] = quantile(var9, prob=c(0.05), na.rm=TRUE)
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var4[which(is.na(landfilter))] = NA
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var8[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+# Convert to raster
+var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var7 = raster(vals = t((var7)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var8 = raster(vals = t((var8)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var9 = raster(vals = t((var9)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# ranges
+zrange1 = c(0,1)*max(abs(range(c(values(var1),values(var2),values(var3),values(var4),values(var5),values(var6)),na.rm=TRUE)))
+zrange2 = zrange1
+zrange3 = zrange1
+zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
+zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
+zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks_CI_rel_of_median",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
+par(mfrow=c(3,3), mar=c(0.5,0.8,2.8,7),omi=c(0.11,0.4,0.2,0.2))
+# Original
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Total CI:Median",sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(orig_name, side=2, cex=2.0, padj=-0.5)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Biomass CI:Median",sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("DOM CI:Median",sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Alternate
+plot(var4, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(alt_name, side=2,cex=2.0, padj=-0.5)
+plot(var5, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var6, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Difference
+plot(var7, zlim = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
+plot(var8, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+plot(var9, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+# print summary information to user
+print(paste("Mean difference in CI:Median Total (",alt_name,"-",orig_name,")   = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean difference in CI:Median Biomass (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean difference in CI:Median DOM (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
+dev.off()
+
 # Change stocks CI
 # Assign variables
 var1 = (orig_grid_output$final_dCtotal_gCm2[,,high_quant]-orig_grid_output$final_dCtotal_gCm2[,,low_quant])*1e-2*(1/nos_years)
@@ -3785,6 +4029,109 @@ plot(landmask, add=TRUE)
 print(paste("Mean (MgC/ha/yr) difference in CI Total change (",alt_name,"-",orig_name,")   = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
 print(paste("Mean (MgC/ha/yr) difference in CI Biomass change (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
 print(paste("Mean (MgC/ha/yr) difference in CI DOM change (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
+dev.off()
+
+# Change stocks CI relative to the median
+# Assign variables
+var1 = (orig_grid_output$final_dCtotal_gCm2[,,high_quant]-orig_grid_output$final_dCtotal_gCm2[,,low_quant]) / abs(orig_grid_output$final_dCtotal_gCm2[,,mid_quant])
+var2 = (orig_grid_output$final_dCbiomass_gCm2[,,high_quant]-orig_grid_output$final_dCbiomass_gCm2[,,low_quant]) / abs(orig_grid_output$final_dCbiomass_gCm2[,,mid_quant])
+var3 = (orig_grid_output$final_dCdom_gCm2[,,high_quant]-orig_grid_output$final_dCdom_gCm2[,,low_quant]) / abs(orig_grid_output$final_dCdom_gCm2[,,mid_quant])
+var4 = (alt_grid_output$final_dCtotal_gCm2[,,high_quant]-alt_grid_output$final_dCtotal_gCm2[,,low_quant]) / abs(alt_grid_output$final_dCtotal_gCm2[,,mid_quant])
+var5 = (alt_grid_output$final_dCbiomass_gCm2[,,high_quant]-alt_grid_output$final_dCbiomass_gCm2[,,low_quant]) / abs(alt_grid_output$final_dCbiomass_gCm2[,,mid_quant])
+var6 = (alt_grid_output$final_dCdom_gCm2[,,high_quant]-alt_grid_output$final_dCdom_gCm2[,,low_quant]) / abs(alt_grid_output$final_dCdom_gCm2[,,mid_quant])
+var7 = var4 - var1
+var8 = var5 - var2
+var9 = var6 - var3
+# Apply filters based on quantiles
+# Maximum values only for the positive definites
+var1[which(var1  > quantile(var1, prob=c(0.95), na.rm=TRUE))] = quantile(var1, prob=c(0.95), na.rm=TRUE)
+var2[which(var2  > quantile(var2, prob=c(0.95), na.rm=TRUE))] = quantile(var2, prob=c(0.95), na.rm=TRUE)
+var3[which(var3  > quantile(var3, prob=c(0.95), na.rm=TRUE))] = quantile(var3, prob=c(0.95), na.rm=TRUE)
+var4[which(var4  > quantile(var4, prob=c(0.95), na.rm=TRUE))] = quantile(var4, prob=c(0.95), na.rm=TRUE)
+var5[which(var5  > quantile(var5, prob=c(0.95), na.rm=TRUE))] = quantile(var5, prob=c(0.95), na.rm=TRUE)
+var6[which(var6  > quantile(var6, prob=c(0.95), na.rm=TRUE))] = quantile(var6, prob=c(0.95), na.rm=TRUE)
+# Maximum and minimum (below) for the differences, i.e. can be negative or positive
+var7[which(var7  > quantile(var7, prob=c(0.95), na.rm=TRUE))] = quantile(var7, prob=c(0.95), na.rm=TRUE)
+var8[which(var8  > quantile(var8, prob=c(0.95), na.rm=TRUE))] = quantile(var8, prob=c(0.95), na.rm=TRUE)
+var9[which(var9  > quantile(var9, prob=c(0.95), na.rm=TRUE))] = quantile(var9, prob=c(0.95), na.rm=TRUE)
+var7[which(var7  < quantile(var7, prob=c(0.05), na.rm=TRUE))] = quantile(var7, prob=c(0.05), na.rm=TRUE)
+var8[which(var8  < quantile(var8, prob=c(0.05), na.rm=TRUE))] = quantile(var8, prob=c(0.05), na.rm=TRUE)
+var9[which(var9  < quantile(var9, prob=c(0.05), na.rm=TRUE))] = quantile(var9, prob=c(0.05), na.rm=TRUE)
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var4[which(is.na(landfilter))] = NA
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var8[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+# Convert to raster
+var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var7 = raster(vals = t((var7)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var8 = raster(vals = t((var8)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var9 = raster(vals = t((var9)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# ranges
+zrange1 = c(0,1)*max(abs(range(c(values(var1),values(var4)),na.rm=TRUE)))
+zrange2 = c(0,1)*max(abs(range(c(values(var2),values(var5)),na.rm=TRUE)))
+zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
+zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
+zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
+zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks_change_CI_rel_of_median",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
+par(mfrow=c(3,3), mar=c(0.5,0.9,2.8,7),omi=c(0.11,0.4,0.2,0.2))
+# Original
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste(Delta,"Total CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(orig_name, side=2, cex=2.0, padj=-0.5)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste(Delta,"Biomass CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste(Delta,"DOM CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Alternate
+plot(var4, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(alt_name, side=2,cex=2.0, padj=-0.5)
+plot(var5, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var6, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Difference
+plot(var7, zlim = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
+plot(var8, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+plot(var9, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+# print summary information to user
+print(paste("Mean difference in CI Total change (",alt_name,"-",orig_name,")   = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean difference in CI:median Biomass change (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean difference in CI:median DOM change (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
 
@@ -4203,21 +4550,124 @@ zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.
 zrange5 = zrange4 ; zrange6 = zrange5
 plot(var7, zlim = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
 plot(var8, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 plot(var9, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 # print summary information to user
 print(paste("Mean relative (-1-1) difference in CI wMTT (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
 print(paste("Mean relative (-1-1) difference in CI wNPP (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
 print(paste("Mean relative (-1-1) difference in CI wSS (",alt_name,"-",orig_name,")  = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
+dev.off()
+
+# Traits CI
+# Assign variables
+var1 = (orig_grid_output$MTT_wood_years[,,high_quant] - orig_grid_output$MTT_wood_years[,,low_quant]) / orig_grid_output$MTT_wood_years[,,mid_quant]
+var2 = (orig_grid_output$NPP_wood_fraction[,,high_quant] - orig_grid_output$NPP_wood_fraction[,,low_quant]) / orig_grid_output$NPP_wood_fraction[,,mid_quant]
+var3 = (orig_grid_output$SS_wood_gCm2[,,high_quant] - orig_grid_output$SS_wood_gCm2[,,low_quant]) / orig_grid_output$SS_wood_gCm2[,,mid_quant]
+var4 = (alt_grid_output$MTT_wood_years[,,high_quant] - alt_grid_output$MTT_wood_years[,,low_quant]) / alt_grid_output$MTT_wood_years[,,mid_quant]
+var5 = (alt_grid_output$NPP_wood_fraction[,,high_quant] - alt_grid_output$NPP_wood_fraction[,,low_quant]) / alt_grid_output$NPP_wood_fraction[,,mid_quant]
+var6 = (alt_grid_output$SS_wood_gCm2[,,high_quant] - alt_grid_output$SS_wood_gCm2[,,low_quant]) / alt_grid_output$SS_wood_gCm2[,,mid_quant]
+var7 = var4-var1
+var8 = var5-var2
+var9 = var6-var3
+# Apply filters based on quantiles
+# Maximum values only for the positive definites
+var1[which(var1  > quantile(var1, prob=c(0.95), na.rm=TRUE))] = quantile(var1, prob=c(0.95), na.rm=TRUE)
+var2[which(var2  > quantile(var2, prob=c(0.95), na.rm=TRUE))] = quantile(var2, prob=c(0.95), na.rm=TRUE)
+var3[which(var3  > quantile(var3, prob=c(0.95), na.rm=TRUE))] = quantile(var3, prob=c(0.95), na.rm=TRUE)
+var4[which(var4  > quantile(var4, prob=c(0.95), na.rm=TRUE))] = quantile(var4, prob=c(0.95), na.rm=TRUE)
+var5[which(var5  > quantile(var5, prob=c(0.95), na.rm=TRUE))] = quantile(var5, prob=c(0.95), na.rm=TRUE)
+var6[which(var6  > quantile(var6, prob=c(0.95), na.rm=TRUE))] = quantile(var6, prob=c(0.95), na.rm=TRUE)
+# Maximum and minimum (below) for the differences, i.e. can be negative or positive
+var7[which(var7  > quantile(var7, prob=c(0.95), na.rm=TRUE))] = quantile(var7, prob=c(0.95), na.rm=TRUE)
+var8[which(var8  > quantile(var8, prob=c(0.95), na.rm=TRUE))] = quantile(var8, prob=c(0.95), na.rm=TRUE)
+var9[which(var9  > quantile(var9, prob=c(0.95), na.rm=TRUE))] = quantile(var9, prob=c(0.95), na.rm=TRUE)
+var7[which(var7  < quantile(var7, prob=c(0.05), na.rm=TRUE))] = quantile(var7, prob=c(0.05), na.rm=TRUE)
+var8[which(var8  < quantile(var8, prob=c(0.05), na.rm=TRUE))] = quantile(var8, prob=c(0.05), na.rm=TRUE)
+var9[which(var9  < quantile(var9, prob=c(0.05), na.rm=TRUE))] = quantile(var9, prob=c(0.05), na.rm=TRUE)
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var4[which(is.na(landfilter))] = NA
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var8[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+# Convert to raster
+var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var7 = raster(vals = t((var7)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var8 = raster(vals = t((var8)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var9 = raster(vals = t((var9)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# ranges
+zrange1 = c(0,1)*max(abs(range(c(values(var1),values(var4)),na.rm=TRUE)))
+zrange2 = c(0,1)*max(abs(range(c(values(var2),values(var5)),na.rm=TRUE)))
+zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
+zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
+zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
+zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPP_MRT_SS_CI_rel_of_median",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
+par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
+# Original
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("MRT wood CI:Median",sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(orig_name, side=2, cex=2.0, padj=-0.5)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("NPP wood CI:Median",sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("SS wood CI:Median",sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Alternate
+plot(var4, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(alt_name, side=2,cex=2.0, padj=-0.5)
+plot(var5, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var6, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Difference
+plot(var7, zlim = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
+plot(var8, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+plot(var9, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+# print summary information to user
+print(paste("Mean difference in CI:Median wMTT (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean difference in CI:Median wNPP (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean difference in CI:Median wSS (",alt_name,"-",orig_name,")  = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
 # Assign key C flux uncertainties and their uncertainties
@@ -4423,6 +4873,109 @@ plot(landmask, add=TRUE)
 print(paste("Mean relative (-1-1) difference in CI wMTT (",alt_name,"-",orig_name,")    = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
 print(paste("Mean relative (-1-1) difference in CI wNPPflx (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
 print(paste("Mean relative (-1-1) difference in CI wSS (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
+dev.off()
+
+# Traits CI
+# Assign variables
+var1 = (orig_grid_output$MTT_wood_years[,,high_quant] - orig_grid_output$MTT_wood_years[,,low_quant]) / orig_grid_output$MTT_wood_years[,,mid_quant]
+var2 = (orig_grid_output$mean_alloc_wood_gCm2day[,,high_quant] - orig_grid_output$mean_alloc_wood_gCm2day[,,low_quant]) / orig_grid_output$mean_alloc_wood_gCm2day[,,mid_quant]
+var3 = (orig_grid_output$SS_wood_gCm2[,,high_quant] - orig_grid_output$SS_wood_gCm2[,,low_quant]) / orig_grid_output$SS_wood_gCm2[,,mid_quant]
+var4 = (alt_grid_output$MTT_wood_years[,,high_quant] - alt_grid_output$MTT_wood_years[,,low_quant]) / alt_grid_output$MTT_wood_years[,,mid_quant]
+var5 = (alt_grid_output$mean_alloc_wood_gCm2day[,,high_quant] - alt_grid_output$mean_alloc_wood_gCm2day[,,low_quant]) / alt_grid_output$mean_alloc_wood_gCm2day[,,mid_quant]
+var6 = (alt_grid_output$SS_wood_gCm2[,,high_quant] - alt_grid_output$SS_wood_gCm2[,,low_quant]) / alt_grid_output$SS_wood_gCm2[,,mid_quant]
+var7 = var4-var1
+var8 = var5-var2
+var9 = var6-var3
+# Apply filters based on quantiles
+# Maximum values only for the positive definites
+var1[which(var1  > quantile(var1, prob=c(0.95), na.rm=TRUE))] = quantile(var1, prob=c(0.95), na.rm=TRUE)
+var2[which(var2  > quantile(var2, prob=c(0.95), na.rm=TRUE))] = quantile(var2, prob=c(0.95), na.rm=TRUE)
+var3[which(var3  > quantile(var3, prob=c(0.95), na.rm=TRUE))] = quantile(var3, prob=c(0.95), na.rm=TRUE)
+var4[which(var4  > quantile(var4, prob=c(0.95), na.rm=TRUE))] = quantile(var4, prob=c(0.95), na.rm=TRUE)
+var5[which(var5  > quantile(var5, prob=c(0.95), na.rm=TRUE))] = quantile(var5, prob=c(0.95), na.rm=TRUE)
+var6[which(var6  > quantile(var6, prob=c(0.95), na.rm=TRUE))] = quantile(var6, prob=c(0.95), na.rm=TRUE)
+# Maximum and minimum (below) for the differences, i.e. can be negative or positive
+var7[which(var7  > quantile(var7, prob=c(0.95), na.rm=TRUE))] = quantile(var7, prob=c(0.95), na.rm=TRUE)
+var8[which(var8  > quantile(var8, prob=c(0.95), na.rm=TRUE))] = quantile(var8, prob=c(0.95), na.rm=TRUE)
+var9[which(var9  > quantile(var9, prob=c(0.95), na.rm=TRUE))] = quantile(var9, prob=c(0.95), na.rm=TRUE)
+var7[which(var7  < quantile(var7, prob=c(0.05), na.rm=TRUE))] = quantile(var7, prob=c(0.05), na.rm=TRUE)
+var8[which(var8  < quantile(var8, prob=c(0.05), na.rm=TRUE))] = quantile(var8, prob=c(0.05), na.rm=TRUE)
+var9[which(var9  < quantile(var9, prob=c(0.05), na.rm=TRUE))] = quantile(var9, prob=c(0.05), na.rm=TRUE)
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var4[which(is.na(landfilter))] = NA
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var8[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+# Convert to raster
+var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var7 = raster(vals = t((var7)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var8 = raster(vals = t((var8)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var9 = raster(vals = t((var9)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# ranges
+zrange1 = c(0,1)*max(abs(range(c(values(var1),values(var4)),na.rm=TRUE)))
+zrange2 = c(0,1)*max(abs(range(c(values(var2),values(var5)),na.rm=TRUE)))
+zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
+zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
+zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
+zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPPflx_MRT_SS_CI_rel_of_median",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
+par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
+# Original
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("MRT wood CI (years)",sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(orig_name, side=2, cex=2.0, padj=-0.5)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("NPP wood CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("SS wood CI (MgC h",a^-1,")",sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Alternate
+plot(var4, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(alt_name, side=2,cex=2.0, padj=-0.5)
+plot(var5, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var6, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Difference
+plot(var7, zlim = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
+plot(var8, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+plot(var9, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+# print summary information to user
+print(paste("Mean difference in CI:Median wMTT (",alt_name,"-",orig_name,")    = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean difference in CI:Median wNPPflx (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean difference in CI:Median wSS (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
 # Assign key C flux uncertainties and their uncertainties
