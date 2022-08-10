@@ -712,33 +712,45 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
               if (exists(x = "SS_litter_gCm2", where = states_all)) {site_output$SS_litter_gCm2 = quantile(states_all$SS_litter_gCm2, prob=num_quantiles, na.rm = na_flag)}
               if (exists(x = "SS_woodlitter_gCm2", where = states_all)) {site_output$SS_woodlitter_gCm2 = quantile(states_all$SS_woodlitter_gCm2, prob=num_quantiles, na.rm = na_flag)}
               if (exists(x = "SS_som_gCm2", where = states_all)) {site_output$SS_som_gCm2 = quantile(states_all$SS_som_gCm2, prob=num_quantiles, na.rm = na_flag)}
-# CREATE MEAN ANNUAL FOR ALL
+
               # State variables - NOTE: extraction of pixel specific means done here to account for different ensemble trajectories, i.e. correlation in time.
-              site_output$lai_m2m2         = apply(states_all$lai_m2m2,2,quantile,prob=num_quantiles,na.rm = na_flag)
-              site_output$mean_lai_m2m2    = quantile(apply(states_all$lai_m2m2,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
-              site_output$Ctotal_gCm2      = apply(states_all$Ctotal_gCm2,2,quantile,prob=num_quantiles,na.rm = na_flag)
-              site_output$mean_Ctotal_gCm2 = quantile(apply(states_all$Ctotal_gCm2,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
+              site_output$lai_m2m2                = apply(states_all$lai_m2m2,2,quantile,prob=num_quantiles,na.rm = na_flag)
+              site_output$mean_lai_m2m2           = quantile(apply(states_all$lai_m2m2,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
+              site_output$mean_annual_lai_m2m2    = apply(t(apply(states_all$lai_m2m2,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
+              site_output$Ctotal_gCm2             = apply(states_all$Ctotal_gCm2,2,quantile,prob=num_quantiles,na.rm = na_flag)
+              site_output$mean_Ctotal_gCm2        = quantile(apply(states_all$Ctotal_gCm2,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
+              site_output$mean_annual_Ctotal_gCm2 = apply(t(apply(states_all$Ctotal_gCm2,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
               # Fluxes second
-              site_output$gpp_gCm2day          = apply(states_all$gpp_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
-              site_output$mean_gpp_gCm2day     = quantile(apply(states_all$gpp_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
-              site_output$rauto_gCm2day        = apply(states_all$rauto_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
-              site_output$mean_rauto_gCm2day   = quantile(apply(states_all$rauto_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
-              site_output$rhet_gCm2day         = apply(states_all$rhet_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
-              site_output$mean_rhet_gCm2day    = quantile(apply(states_all$rhet_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
-              site_output$nee_gCm2day          = apply(states_all$nee_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
-              site_output$mean_nee_gCm2day     = quantile(apply(states_all$nee_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
-              site_output$npp_gCm2day          = apply(states_all$npp_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
-              site_output$mean_npp_gCm2day     = quantile(apply(states_all$npp_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
-              site_output$nbe_gCm2day          = apply(states_all$nbe_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
-              site_output$mean_nbe_gCm2day     = quantile(apply(states_all$nbe_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
-              site_output$nbp_gCm2day          = apply(states_all$nbp_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
-              site_output$mean_nbp_gCm2day     = quantile(apply(states_all$nbp_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
-              site_output$reco_gCm2day         = apply(states_all$reco_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
-              site_output$mean_reco_gCm2day    = quantile(apply(states_all$reco_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
-              site_output$harvest_gCm2day      = apply(states_all$harvest_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
-              site_output$mean_harvest_gCm2day = quantile(apply(states_all$harvest_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
-              site_output$fire_gCm2day         = apply(states_all$fire_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
-              site_output$mean_fire_gCm2day    = quantile(apply(states_all$fire_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
+              site_output$gpp_gCm2day                 = apply(states_all$gpp_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+              site_output$mean_gpp_gCm2day            = quantile(apply(states_all$gpp_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
+              site_output$mean_annual_gpp_gCm2day     = apply(t(apply(states_all$gpp_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
+              site_output$rauto_gCm2day               = apply(states_all$rauto_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+              site_output$mean_rauto_gCm2day          = quantile(apply(states_all$rauto_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
+              site_output$mean_annual_rauto_gCm2day   = apply(t(apply(states_all$rauto_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
+              site_output$rhet_gCm2day                = apply(states_all$rhet_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+              site_output$mean_rhet_gCm2day           = quantile(apply(states_all$rhet_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
+              site_output$mean_annual_rhet_gCm2day    = apply(t(apply(states_all$rhet_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
+              site_output$nee_gCm2day                 = apply(states_all$nee_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+              site_output$mean_nee_gCm2day            = quantile(apply(states_all$nee_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
+              site_output$mean_annual_nee_gCm2day     = apply(t(apply(states_all$nee_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
+              site_output$npp_gCm2day                 = apply(states_all$npp_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+              site_output$mean_npp_gCm2day            = quantile(apply(states_all$npp_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
+              site_output$mean_annual_npp_gCm2day     = apply(t(apply(states_all$npp_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
+              site_output$nbe_gCm2day                 = apply(states_all$nbe_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+              site_output$mean_nbe_gCm2day            = quantile(apply(states_all$nbe_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
+              site_output$mean_annual_nbe_gCm2day     = apply(t(apply(states_all$nbe_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
+              site_output$nbp_gCm2day                 = apply(states_all$nbp_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+              site_output$mean_nbp_gCm2day            = quantile(apply(states_all$nbp_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
+              site_output$mean_annual_nbp_gCm2day     = apply(t(apply(states_all$nbp_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
+              site_output$reco_gCm2day                = apply(states_all$reco_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+              site_output$mean_reco_gCm2day           = quantile(apply(states_all$reco_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
+              site_output$mean_annual_reco_gCm2day    = apply(t(apply(states_all$reco_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
+              site_output$harvest_gCm2day             = apply(states_all$harvest_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+              site_output$mean_harvest_gCm2day        = quantile(apply(states_all$harvest_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
+              site_output$mean_annual_harvest_gCm2day = apply(t(apply(states_all$harvest_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
+              site_output$fire_gCm2day                = apply(states_all$fire_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+              site_output$mean_fire_gCm2day           = quantile(apply(states_all$fire_gCm2day,1,mean,na.rm = na_flag) ,prob=num_quantiles, na.rm = TRUE)
+              site_output$mean_annual_fire_gCm2day    = apply(t(apply(states_all$fire_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
               # C-cycle diagnostics which are mean annuals
               site_output$mean_annual_cue      = apply(states_all$mean_annual_cue, 2, quantile, prob = num_quantiles, na.rm=TRUE)
               site_output$mean_cue             = quantile(apply(states_all$mean_annual_cue,1,mean), prob = num_quantiles, na.rm=TRUE)
@@ -763,18 +775,21 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Assign pool to site_output
                   site_output$labile_gCm2 = apply(states_all$labile_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_labile_gCm2 = quantile(apply(states_all$labile_gCm2,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_labile_gCm2 = apply(t(apply(states_all$labile_gCm2,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Determine net pool change over time
                   dCbio = states_all$labile_gCm2 - states_all$labile_gCm2[,1] # difference in labile from initial
                   site_output$dClabile_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
                   # Determine the allocation to labile - in all cases this must be a direct variable
                   site_output$alloc_labile_gCm2day = apply(states_all$alloc_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_alloc_labile_gCm2day = quantile(apply(states_all$alloc_labile_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_alloc_labile_gCm2day = apply(t(apply(states_all$alloc_labile_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Declare combined natural, fire and harvest driven creation of litter
                   site_output$combined_labile_to_litter_gCm2day = array(0, dim=dim(states_all$labile_gCm2))
                   # Check for the possible loss pathways
                   if (exists(x = "labile_to_foliage_gCm2day", where = states_all)) {
                       site_output$labile_to_foliage_gCm2day = apply(states_all$labile_to_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_labile_to_foliage_gCm2day = quantile(apply(states_all$labile_to_foliage_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_labile_to_foliage_gCm2day = apply(t(apply(states_all$labile_to_foliage_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$NaturalFractionOfTurnover_labile = states_all$labile_to_foliage_gCm2day
                       # Begin accumulating the total output
                       site_output$outflux_labile_gCm2day = states_all$labile_to_foliage_gCm2day
@@ -783,12 +798,14 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "FIREemiss_labile_gCm2day", where = states_all)) {
                       site_output$FIREemiss_labile_gCm2day = apply(states_all$FIREemiss_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_FIREemiss_labile_gCm2day = quantile(apply(states_all$FIREemiss_labile_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_FIREemiss_labile_gCm2day = apply(t(apply(states_all$FIREemiss_labile_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$FireFractionOfTurnover_labile = states_all$FIREemiss_labile_gCm2day
                       site_output$outflux_labile_gCm2day = site_output$outflux_labile_gCm2day + states_all$FIREemiss_labile_gCm2day
                   }
                   if (exists(x = "FIRElitter_labile_gCm2day", where = states_all)) {
                       site_output$FIRElitter_labile_gCm2day = apply(states_all$FIRElitter_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_FIRElitter_labile_gCm2day = quantile(apply(states_all$FIRElitter_labile_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_FIRElitter_labile_gCm2day = apply(t(apply(states_all$FIRElitter_labile_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$outflux_labile_gCm2day = site_output$outflux_labile_gCm2day + states_all$FIRElitter_labile_gCm2day
                       site_output$FireFractionOfTurnover_labile = site_output$FireFractionOfTurnover_labile + states_all$FIRElitter_labile_gCm2day
                       # Accumulate the combined total of pool lost as litter,
@@ -798,8 +815,10 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "HARVESTextracted_labile_gCm2day", where = states_all)) {
                       site_output$HARVESTextracted_labile_gCm2day = apply(states_all$HARVESTextracted_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_HARVESTextracted_labile_gCm2day = quantile(apply(states_all$HARVESTextracted_labile_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_HARVESTextracted_labile_gCm2day = apply(t(apply(states_all$HARVESTextracted_labile_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$HARVESTlitter_labile_gCm2day = apply(states_all$HARVESTlitter_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_HARVESTlitter_labile_gCm2day = quantile(apply(states_all$HARVESTlitter_labile_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_HARVESTlitter_labile_gCm2day = apply(t(apply(states_all$HARVESTlitter_labile_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$outflux_labile_gCm2day = site_output$outflux_labile_gCm2day + states_all$HARVESTextracted_labile_gCm2day + states_all$HARVESTlitter_labile_gCm2day
                       site_output$HarvestFractionOfTurnover_labile = states_all$HARVESTextracted_labile_gCm2day + states_all$HARVESTlitter_labile_gCm2day
                       # Accumulate the combined total of pool lost as litter,
@@ -821,6 +840,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Mean outflux from labile
                   site_output$mean_outflux_labile_gCm2day = quantile(apply(site_output$outflux_labile_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   site_output$mean_combined_labile_to_litter_gCm2day = quantile(apply(site_output$combined_labile_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  # Mean annual outflux from labile
+                  site_output$mean_annual_outflux_labile_gCm2day = apply(t(apply(states_all$outflux_labile_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
+                  site_output$mean_annual_combined_labile_to_litter_gCm2day = apply(t(apply(states_all$combined_labile_to_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Now aggregate across quantiles
                   site_output$outflux_labile_gCm2day = apply(site_output$outflux_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$combined_labile_to_litter_gCm2day = apply(site_output$combined_labile_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -831,9 +853,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # A combined total of C to foliage must always exist
                   site_output$combined_alloc_foliage_gCm2day = apply(states_all$combined_alloc_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_combined_alloc_foliage_gCm2day = quantile(apply(states_all$combined_alloc_foliage_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_combined_alloc_foliage_gCm2day = apply(t(apply(states_all$combined_alloc_foliage_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Assign pool to site_output
                   site_output$foliage_gCm2 = apply(states_all$foliage_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_foliage_gCm2 = quantile(apply(states_all$foliage_gCm2,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_foliage_gCm2 = apply(t(apply(states_all$foliage_gCm2,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Determine net pool change over time
                   dCbio = states_all$foliage_gCm2 - states_all$foliage_gCm2[,1] # difference in root from initial
                   site_output$dCfoliage_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
@@ -841,10 +865,12 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "alloc_foliage_gCm2day", where = states_all)) {
                       site_output$alloc_foliage_gCm2day = apply(states_all$alloc_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_alloc_foliage_gCm2day = quantile(apply(states_all$alloc_foliage_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_alloc_foliage_gCm2day = apply(t(apply(states_all$alloc_foliage_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   }
                   if (exists(x = "foliage_to_litter_gCm2day", where = states_all)) {
                       site_output$foliage_to_litter_gCm2day = apply(states_all$foliage_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_foliage_to_litter_gCm2day = quantile(apply(states_all$foliage_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_foliage_to_litter_gCm2day = apply(t(apply(states_all$foliage_to_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$NaturalFractionOfTurnover_foliage = states_all$foliage_to_litter_gCm2day
                       # Begin accumulating the total output fluxes here
                       site_output$outflux_foliage_gCm2day = states_all$foliage_to_litter_gCm2day
@@ -855,12 +881,14 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "FIREemiss_foliage_gCm2day", where = states_all)) {
                       site_output$FIREemiss_foliage_gCm2day = apply(states_all$FIREemiss_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_FIREemiss_foliage_gCm2day = quantile(apply(states_all$FIREemiss_foliage_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_FIREemiss_foliage_gCm2day = apply(t(apply(states_all$FIREemiss_foliage_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$FireFractionOfTurnover_foliage = states_all$FIREemiss_foliage_gCm2day
                       site_output$outflux_foliage_gCm2day = site_output$outflux_foliage_gCm2day + states_all$FIREemiss_foliage_gCm2day
                   }
                   if (exists(x = "FIRElitter_foliage_gCm2day", where = states_all)) {
                       site_output$FIRElitter_foliage_gCm2day = apply(states_all$FIRElitter_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_FIRElitter_foliage_gCm2day = quantile(apply(states_all$FIRElitter_foliage_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_FIRElitter_foliage_gCm2day = apply(t(apply(states_all$FIRElitter_foliage_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$outflux_foliage_gCm2day = site_output$outflux_foliage_gCm2day + states_all$FIRElitter_foliage_gCm2day
                       site_output$FireFractionOfTurnover_foliage = site_output$FireFractionOfTurnover_foliage + states_all$FIRElitter_foliage_gCm2day
                       # Accumulate the combined total of pool lost as litter,
@@ -870,8 +898,10 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "HARVESTextracted_foliage_gCm2day", where = states_all)) {
                       site_output$HARVESTextracted_foliage_gCm2day = apply(states_all$HARVESTextracted_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_HARVESTextracted_foliage_gCm2day = quantile(apply(states_all$HARVESTextracted_foliage_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_HARVESTextracted_foliage_gCm2day = apply(t(apply(states_all$HARVESTextracted_foliage_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$HARVESTlitter_foliage_gCm2day = apply(states_all$HARVESTlitter_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_HARVESTlitter_foliage_gCm2day = quantile(apply(states_all$HARVESTlitter_foliage_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_HARVESTlitter_foliage_gCm2day = apply(t(apply(states_all$HARVESTlitter_foliage_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$outflux_foliage_gCm2day = site_output$outflux_foliage_gCm2day + states_all$HARVESTextracted_foliage_gCm2day + states_all$HARVESTlitter_foliage_gCm2day
                       site_output$HarvestFractionOfTurnover_foliage = states_all$HARVESTextracted_foliage_gCm2day + states_all$HARVESTlitter_foliage_gCm2day
                       # Accumulate the combined total of pool lost as litter,
@@ -893,6 +923,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Mean outflux from foliage
                   site_output$mean_outflux_foliage_gCm2day = quantile(apply(site_output$outflux_foliage_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   site_output$mean_combined_foliage_to_litter_gCm2day = quantile(apply(site_output$combined_foliage_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  # Mean annual outflux from foliage
+                  site_output$mean_annual_outflux_foliage_gCm2day = apply(t(apply(states_all$outflux_foliage_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
+                  site_output$mean_annual_combined_foliage_to_litter_gCm2day = apply(t(apply(states_all$combined_foliage_to_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Now aggregate across quantiles
                   site_output$outflux_foliage_gCm2day = apply(site_output$outflux_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$combined_foliage_to_litter_gCm2day = apply(site_output$combined_foliage_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -903,6 +936,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Assign pool to site_output
                   site_output$roots_gCm2 = apply(states_all$roots_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_roots_gCm2 = quantile(apply(states_all$roots_gCm2,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_roots_gCm2 = apply(t(apply(states_all$roots_gCm2,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Determine net pool change over time
                   dCbio = states_all$roots_gCm2 - states_all$roots_gCm2[,1] # difference in root from initial
                   site_output$dCroots_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
@@ -915,6 +949,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "RootDepth_m", where = states_all)) {
                       site_output$RootDepth_m = apply(states_all$RootDepth_m,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_RootDepth_m = quantile(apply(states_all$RootDepth_m,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_RootDepth_m = apply(t(apply(states_all$RootDepth_m,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       dCbio = states_all$RootDepth_m - states_all$RootDepth_m[,1] # difference in root from initial
                       site_output$dRootDepth_m = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
                   }
@@ -922,10 +957,12 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "alloc_roots_gCm2day", where = states_all)) {
                       site_output$alloc_roots_gCm2day = apply(states_all$alloc_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_alloc_roots_gCm2day = quantile(apply(states_all$alloc_roots_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_alloc_roots_gCm2day = apply(t(apply(states_all$alloc_roots_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   }
                   if (exists(x = "roots_to_litter_gCm2day", where = states_all)) {
                       site_output$roots_to_litter_gCm2day = apply(states_all$roots_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_roots_to_litter_gCm2day = quantile(apply(states_all$roots_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_roots_to_litter_gCm2day = apply(t(apply(states_all$roots_to_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$NaturalFractionOfTurnover_roots = states_all$roots_to_litter_gCm2day
                       # Begin accumulation of output fluxes
                       site_output$outflux_roots_gCm2day = states_all$roots_to_litter_gCm2day
@@ -937,12 +974,14 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "FIREemiss_roots_gCm2day", where = states_all)) {
                       site_output$FIREemiss_roots_gCm2day = apply(states_all$FIREemiss_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_FIREemiss_roots_gCm2day = quantile(apply(states_all$FIREemiss_roots_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_FIREemiss_roots_gCm2day = apply(t(apply(states_all$FIREemiss_roots_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$FireFractionOfTurnover_roots = states_all$FIREemiss_roots_gCm2day
                       site_output$outflux_roots_gCm2day = site_output$outflux_roots_gCm2day + states_all$FIREemiss_roots_gCm2day
                   }
                   if (exists(x = "FIRElitter_roots_gCm2day", where = states_all)) {
                       site_output$FIRElitter_roots_gCm2day = apply(states_all$FIRElitter_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_FIRElitter_roots_gCm2day = quantile(apply(states_all$FIRElitter_roots_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_FIRElitter_roots_gCm2day = apply(t(apply(states_all$FIRElitter_roots_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$outflux_roots_gCm2day = site_output$outflux_roots_gCm2day + states_all$FIRElitter_roots_gCm2day
                       site_output$FireFractionOfTurnover_roots = site_output$FireFractionOfTurnover_roots + states_all$FIRElitter_roots_gCm2day
                       # Accumulate the combined total of pool lost as litter,
@@ -952,8 +991,10 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "HARVESTextracted_roots_gCm2day", where = states_all)) {
                       site_output$HARVESTextracted_roots_gCm2day = apply(states_all$HARVESTextracted_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_HARVESTextracted_roots_gCm2day = quantile(apply(states_all$HARVESTextracted_roots_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_HARVESTextracted_roots_gCm2day = apply(t(apply(states_all$HARVESTextracted_roots_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$HARVESTlitter_roots_gCm2day = apply(states_all$HARVESTlitter_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_HARVESTlitter_roots_gCm2day = quantile(apply(states_all$HARVESTlitter_roots_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_HARVESTlitter_roots_gCm2day = apply(t(apply(states_all$HARVESTlitter_roots_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$outflux_roots_gCm2day = site_output$outflux_roots_gCm2day + states_all$HARVESTextracted_roots_gCm2day + states_all$HARVESTlitter_roots_gCm2day
                       site_output$HarvestFractionOfTurnover_roots = states_all$HARVESTextracted_roots_gCm2day + states_all$HARVESTlitter_roots_gCm2day
                       # Accumulate the combined total of pool lost as litter,
@@ -975,6 +1016,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Mean outflux from roots
                   site_output$mean_outflux_roots_gCm2day = quantile(apply(site_output$outflux_roots_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   site_output$mean_combined_roots_to_litter_gCm2day = quantile(apply(site_output$combined_roots_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  # Mean annual outflux from roots
+                  site_output$mean_annual_outflux_roots_gCm2day = apply(t(apply(states_all$outflux_roots_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
+                  site_output$mean_annual_combined_roots_to_litter_gCm2day = apply(t(apply(states_all$combined_roots_to_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Now aggregate across quantiles
                   site_output$outflux_roots_gCm2day = apply(site_output$outflux_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$combined_roots_to_litter_gCm2day = apply(site_output$combined_roots_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -985,6 +1029,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Assign pool to site_output
                   site_output$wood_gCm2 = apply(states_all$wood_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_wood_gCm2 = quantile(apply(states_all$wood_gCm2,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_wood_gCm2 = apply(t(apply(states_all$wood_gCm2,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Determine net pool change over time
                   dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
                   site_output$dCwood_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
@@ -997,10 +1042,12 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "alloc_wood_gCm2day", where = states_all)) {
                       site_output$alloc_wood_gCm2day = apply(states_all$alloc_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_alloc_wood_gCm2day = quantile(apply(states_all$alloc_wood_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_alloc_wood_gCm2day = apply(t(apply(states_all$alloc_wood_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   }
                   if (exists(x = "wood_to_litter_gCm2day", where = states_all)) {
                       site_output$wood_to_litter_gCm2day = apply(states_all$wood_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_wood_to_litter_gCm2day = quantile(apply(states_all$wood_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_wood_to_litter_gCm2day = apply(t(apply(states_all$wood_to_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$NaturalFractionOfTurnover_wood = states_all$wood_to_litter_gCm2day
                       # Begin accumulating output fluxes
                       site_output$outflux_wood_gCm2day = states_all$wood_to_litter_gCm2day
@@ -1012,12 +1059,14 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "FIREemiss_wood_gCm2day", where = states_all)) {
                       site_output$FIREemiss_wood_gCm2day = apply(states_all$FIREemiss_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_FIREemiss_wood_gCm2day = quantile(apply(states_all$FIREemiss_wood_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_FIREemiss_wood_gCm2day = apply(t(apply(states_all$FIREemiss_wood_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$FireFractionOfTurnover_wood = states_all$FIREemiss_wood_gCm2day
                       site_output$outflux_wood_gCm2day = site_output$outflux_wood_gCm2day + states_all$FIREemiss_wood_gCm2day
                   }
                   if (exists(x = "FIRElitter_wood_gCm2day", where = states_all)) {
                       site_output$FIRElitter_wood_gCm2day = apply(states_all$FIRElitter_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_FIRElitter_wood_gCm2day = quantile(apply(states_all$FIRElitter_wood_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_FIRElitter_wood_gCm2day = apply(t(apply(states_all$FIRElitter_wood_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$outflux_wood_gCm2day = site_output$outflux_wood_gCm2day + states_all$FIRElitter_wood_gCm2day
                       site_output$FireFractionOfTurnover_wood = site_output$FireFractionOfTurnover_wood + states_all$FIRElitter_wood_gCm2day
                       # Accumulate the combined total of pool lost as litter,
@@ -1027,8 +1076,10 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "HARVESTextracted_wood_gCm2day", where = states_all)) {
                       site_output$HARVESTextracted_wood_gCm2day = apply(states_all$HARVESTextracted_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_HARVESTextracted_wood_gCm2day = quantile(apply(states_all$HARVESTextracted_wood_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_HARVESTextracted_wood_gCm2day = apply(t(apply(states_all$HARVESTextracted_wood_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$HARVESTlitter_wood_gCm2day = apply(states_all$HARVESTlitter_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_HARVESTlitter_wood_gCm2day = quantile(apply(states_all$HARVESTlitter_wood_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_HARVESTlitter_wood_gCm2day = apply(t(apply(states_all$HARVESTlitter_wood_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$outflux_wood_gCm2day = site_output$outflux_wood_gCm2day + states_all$HARVESTextracted_wood_gCm2day + states_all$HARVESTlitter_wood_gCm2day
                       site_output$HarvestFractionOfTurnover_wood = states_all$HARVESTextracted_wood_gCm2day + states_all$HARVESTlitter_wood_gCm2day
                       # Accumulate the combined total of pool lost as litter,
@@ -1050,6 +1101,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Mean outflux from wood
                   site_output$mean_outflux_wood_gCm2day = quantile(apply(site_output$outflux_wood_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   site_output$mean_combined_wood_to_litter_gCm2day = quantile(apply(site_output$combined_wood_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  # Mean annual outflux from wood
+                  site_output$mean_annual_outflux_wood_gCm2day = apply(t(apply(states_all$outflux_wood_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
+                  site_output$mean_annual_combined_wood_to_litter_gCm2day = apply(t(apply(states_all$combined_wood_to_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Now aggregate across quantiles
                   site_output$outflux_wood_gCm2day = apply(site_output$outflux_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$combined_wood_to_litter_gCm2day = apply(site_output$combined_wood_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -1060,6 +1114,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Assign pool to site_output
                   site_output$litter_gCm2 = apply(states_all$litter_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_litter_gCm2 = quantile(apply(states_all$litter_gCm2,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_litter_gCm2 = apply(t(apply(states_all$litter_gCm2,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Determine net pool change over time
                   dCbio = states_all$litter_gCm2 - states_all$litter_gCm2[,1] # difference in litter from initial
                   site_output$dClitter_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
@@ -1069,21 +1124,25 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Heterotrophic respiration
                   site_output$rhet_litter_gCm2day = apply(states_all$rhet_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_rhet_litter_gCm2day = quantile(apply(states_all$rhet_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_rhet_litter_gCm2day = apply(t(apply(states_all$rhet_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Decomposition
                   site_output$litter_to_som_gCm2day = apply(states_all$litter_to_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_litter_to_som_gCm2day = quantile(apply(states_all$litter_to_som_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_litter_to_som_gCm2day = apply(t(apply(states_all$litter_to_som_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Accumulate combined natural, fire and harvest related fluxes to som
                   site_output$combined_litter_to_som_gCm2day = states_all$litter_to_som_gCm2day
                   # If this one exists then maybe some other fluxes do
                   if (exists(x = "FIREemiss_litter_gCm2day", where = states_all)) {
                       site_output$FIREemiss_litter_gCm2day = apply(states_all$FIREemiss_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_FIREemiss_litter_gCm2day = quantile(apply(states_all$FIREemiss_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_FIREemiss_litter_gCm2day = apply(t(apply(states_all$FIREemiss_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$FireFractionOfTurnover_litter = states_all$FIREemiss_litter_gCm2day
                       site_output$outflux_litter_gCm2day = site_output$outflux_litter_gCm2day + states_all$FIREemiss_litter_gCm2day
                   }
                   if (exists(x = "FIRElitter_litter_gCm2day", where = states_all)) {
                       site_output$FIRElitter_litter_gCm2day = apply(states_all$FIRElitter_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_FIRElitter_litter_gCm2day = quantile(apply(states_all$FIRElitter_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_FIRElitter_litter_gCm2day = apply(t(apply(states_all$FIRElitter_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$outflux_litter_gCm2day = site_output$outflux_litter_gCm2day + states_all$FIRElitter_litter_gCm2day
                       site_output$FireFractionOfTurnover_litter = site_output$FireFractionOfTurnover_litter + states_all$FIRElitter_litter_gCm2day
                       # Accumulate combined natural, fire and harvest related fluxes to som
@@ -1092,6 +1151,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "HARVESTextracted_litter_gCm2day", where = states_all)) {
                       site_output$HARVESTextracted_litter_gCm2day = apply(states_all$HARVESTextracted_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_HARVESTextracted_litter_gCm2day = quantile(apply(states_all$HARVESTextracted_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_HARVESTextracted_litter_gCm2day = apply(t(apply(states_all$HARVESTextracted_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$outflux_litter_gCm2day = site_output$outflux_litter_gCm2day + states_all$HARVESTextracted_litter_gCm2day
                       site_output$HarvestFractionOfTurnover_litter = states_all$HARVESTextracted_litter_gCm2day
                   }
@@ -1110,6 +1170,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Mean outflux from litter
                   site_output$mean_outflux_litter_gCm2day = quantile(apply(site_output$outflux_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   site_output$mean_combined_litter_to_som_gCm2day = quantile(apply(site_output$combined_litter_to_som_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  # Mean annual outflux from litter
+                  site_output$mean_annual_outflux_litter_gCm2day = apply(t(apply(states_all$outflux_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
+                  site_output$mean_annual_combined_litter_to_som_gCm2day = apply(t(apply(states_all$combined_litter_to_som_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Now aggregate across quantiles
                   site_output$outflux_litter_gCm2day = apply(site_output$outflux_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$combined_litter_to_som_gCm2day = apply(site_output$combined_litter_to_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -1120,6 +1183,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Assign pool to site_output
                   site_output$woodlitter_gCm2 = apply(states_all$woodlitter_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_woodlitter_gCm2 = quantile(apply(states_all$woodlitter_gCm2,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_woodlitter_gCm2 = apply(t(apply(states_all$woodlitter_gCm2,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Determine net pool change over time
                   dCbio = states_all$woodlitter_gCm2 - states_all$woodlitter_gCm2[,1] # difference in wood litter from initial
                   site_output$dCwoodlitter_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
@@ -1129,21 +1193,25 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Heterotrophic respiration
                   site_output$rhet_woodlitter_gCm2day = apply(states_all$rhet_woodlitter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_rhet_woodlitter_gCm2day = quantile(apply(states_all$rhet_woodlitter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_rhet_woodlitter_gCm2day = apply(t(apply(states_all$rhet_woodlitter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Decomposition
                   site_output$woodlitter_to_som_gCm2day = apply(states_all$woodlitter_to_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_woodlitter_to_som_gCm2day = quantile(apply(states_all$woodlitter_to_som_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_woodlitter_to_som_gCm2day = apply(t(apply(states_all$woodlitter_to_som_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Accumulate combined natural, fire and harvest related fluxes to som
                   site_output$combined_woodlitter_to_som_gCm2day = states_all$woodlitter_to_som_gCm2day
                   # If this one exists then maybe some other fluxes do
                   if (exists(x = "FIREemiss_woodlitter_gCm2day", where = states_all)) {
                       site_output$FIREemiss_woodlitter_gCm2day = apply(states_all$FIREemiss_woodlitter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_FIREemiss_woodlitter_gCm2day = quantile(apply(states_all$FIREemiss_woodlitter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_FIREemiss_woodlitter_gCm2day = apply(t(apply(states_all$FIREemiss_woodlitter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$FireFractionOfTurnover_woodlitter = states_all$FIREemiss_woodlitter_gCm2day
                       site_output$outflux_woodlitter_gCm2day = site_output$outflux_woodlitter_gCm2day + states_all$FIREemiss_woodlitter_gCm2day
                   }
                   if (exists(x = "FIRElitter_woodlitter_gCm2day", where = states_all)) {
                       site_output$FIRElitter_woodlitter_gCm2day = apply(states_all$FIRElitter_woodlitter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_FIRElitter_woodlitter_gCm2day = quantile(apply(states_all$FIRElitter_woodlitter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_FIRElitter_woodlitter_gCm2day = apply(t(apply(states_all$FIRElitter_woodlitter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$outflux_woodlitter_gCm2day = site_output$outflux_woodlitter_gCm2day + states_all$FIRElitter_woodlitter_gCm2day
                       site_output$FireFractionOfTurnover_woodlitter = site_output$FireFractionOfTurnover_woodlitter + states_all$FIRElitter_woodlitter_gCm2day
                       # Accumulate combined natural, fire and harvest related fluxes to som
@@ -1152,6 +1220,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "HARVESTextracted_woodlitter_gCm2day", where = states_all)) {
                       site_output$HARVESTextracted_woodlitter_gCm2day = apply(states_all$HARVESTextracted_woodlitter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_HARVESTextracted_woodlitter_gCm2day = quantile(apply(states_all$HARVESTextracted_woodlitter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_HARVESTextracted_woodlitter_gCm2day = apply(t(apply(states_all$HARVESTextracted_woodlitter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$outflux_woodlitter_gCm2day = site_output$outflux_woodlitter_gCm2day + states_all$HARVESTextracted_woodlitter_gCm2day
                       site_output$HarvestFractionOfTurnover_woodlitter = states_all$HARVESTextracted_woodlitter_gCm2day
                   }
@@ -1170,6 +1239,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Mean outflux from wood
                   site_output$mean_outflux_woodlitter_gCm2day = quantile(apply(site_output$outflux_woodlitter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   site_output$mean_combined_woodlitter_to_som_gCm2day = quantile(apply(site_output$combined_woodlitter_to_som_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  # Mean annual outflux from wood
+                  site_output$mean_annual_outflux_woodlitter_gCm2day = apply(t(apply(states_all$outflux_woodlitter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
+                  site_output$mean_annual_combined_woodlitter_to_som_gCm2day = apply(t(apply(states_all$combined_woodlitter_to_som_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Now aggregate across quantiles
                   site_output$outflux_woodlitter_gCm2day = apply(site_output$outflux_woodlitter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$combined_woodlitter_to_som_gCm2day = apply(site_output$combined_woodlitter_to_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -1180,6 +1252,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Assign pool to site_output
                   site_output$som_gCm2 = apply(states_all$som_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_som_gCm2 = quantile(apply(states_all$som_gCm2,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_som_gCm2 = apply(t(apply(states_all$som_gCm2,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Determine net pool change over time
                   dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
                   site_output$dCsom_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
@@ -1189,10 +1262,12 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Heterotrphic respiration
                   site_output$rhet_som_gCm2day = apply(states_all$rhet_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_rhet_som_gCm2day = quantile(apply(states_all$rhet_som_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_rhet_som_gCm2day = apply(t(apply(states_all$rhet_som_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # If this one exists then maybe some other fluxes do
                   if (exists(x = "FIREemiss_som_gCm2day", where = states_all)) {
                       site_output$FIREemiss_som_gCm2day = apply(states_all$FIREemiss_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_FIREemiss_som_gCm2day = quantile(apply(states_all$FIREemiss_som_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_FIREemiss_som_gCm2day = apply(t(apply(states_all$FIREemiss_som_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$FireFractionOfTurnover_som = states_all$FIREemiss_som_gCm2day
                       site_output$outflux_som_gCm2day = site_output$outflux_som_gCm2day + states_all$FIREemiss_som_gCm2day
                   }
@@ -1200,6 +1275,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "HARVESTextracted_som_gCm2day", where = states_all)) {
                       site_output$HARVESTextracted_som_gCm2day = apply(states_all$HARVESTextracted_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_HARVESTextracted_som_gCm2day = quantile(apply(states_all$HARVESTextracted_som_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_HARVESTextracted_som_gCm2day = apply(t(apply(states_all$HARVESTextracted_som_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$outflux_som_gCm2day = site_output$outflux_som_gCm2day + states_all$HARVESTextracted_som_gCm2day
                       site_output$HarvestFractionOfTurnover_som = states_all$HARVESTextracted_som_gCm2day
                   }
@@ -1217,6 +1293,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                                                                        apply(site_output$outflux_som_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
                   # Mean outflux from som
                   site_output$mean_outflux_som_gCm2day = quantile(apply(site_output$outflux_som_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  # Mean annual outflux from som
+                  site_output$mean_annual_outflux_som_gCm2day = apply(t(apply(states_all$outflux_som_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Now aggregate across quantiles
                   site_output$outflux_som_gCm2day = apply(site_output$outflux_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
               } # exists("som")
@@ -1226,12 +1304,14 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Assign pool to site_output
                   site_output$biomass_gCm2 = apply(states_all$biomass_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_biomass_gCm2 = quantile(apply(states_all$biomass_gCm2,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_biomass_gCm2 = apply(t(apply(states_all$biomass_gCm2,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Determine net pool change over time
                   dCbio = states_all$biomass_gCm2 - states_all$biomass_gCm2[,1] # difference in labile from initial
                   site_output$dCbiomass_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
                   # Track natural biomass losses
                   site_output$biomass_to_litter_gCm2day = apply(states_all$biomass_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_biomass_to_litter_gCm2day = quantile(apply(states_all$biomass_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_biomass_to_litter_gCm2day = apply(t(apply(states_all$biomass_to_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Begin accumulating the total output
                   site_output$outflux_biomass_gCm2day = states_all$biomass_to_litter_gCm2day
                   site_output$NaturalFractionOfTurnover_biomass = states_all$biomass_to_litter_gCm2day
@@ -1241,12 +1321,14 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "FIREemiss_biomass_gCm2day", where = states_all)) {
                       site_output$FIREemiss_biomass_gCm2day = apply(states_all$FIREemiss_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_FIREemiss_biomass_gCm2day = quantile(apply(states_all$FIREemiss_biomass_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_FIREemiss_biomass_gCm2day = apply(t(apply(states_all$FIREemiss_biomass_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$outflux_biomass_gCm2day = site_output$outflux_biomass_gCm2day + states_all$FIREemiss_biomass_gCm2day
                       site_output$FireFractionOfTurnover_biomass = states_all$FIREemiss_biomass_gCm2day
                   }
                   if (exists(x = "FIRElitter_biomass_gCm2day", where = states_all)) {
                       site_output$FIRElitter_biomass_gCm2day = apply(states_all$FIRElitter_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_FIRElitter_biomass_gCm2day = quantile(apply(states_all$FIRElitter_biomass_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_FIRElitter_biomass_gCm2day = apply(t(apply(states_all$FIRElitter_biomass_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$outflux_biomass_gCm2day = site_output$outflux_biomass_gCm2day + states_all$FIRElitter_biomass_gCm2day
                       site_output$FireFractionOfTurnover_biomass = site_output$FireFractionOfTurnover_biomass + states_all$FIRElitter_biomass_gCm2day
                       # Accumulte the combined fire, harvest and natural biomass flux to litter
@@ -1255,8 +1337,10 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "HARVESTextracted_biomass_gCm2day", where = states_all)) {
                       site_output$HARVESTextracted_biomass_gCm2day = apply(states_all$HARVESTextracted_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_HARVESTextracted_biomass_gCm2day = quantile(apply(states_all$HARVESTextracted_biomass_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_HARVESTextracted_biomass_gCm2day = apply(t(apply(states_all$HARVESTextracted_biomass_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$HARVESTlitter_biomass_gCm2day = apply(states_all$HARVESTlitter_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_HARVESTlitter_biomass_gCm2day = quantile(apply(states_all$HARVESTlitter_biomass_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_HARVESTlitter_biomass_gCm2day = apply(t(apply(states_all$HARVESTlitter_biomass_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$outflux_biomass_gCm2day = site_output$outflux_biomass_gCm2day + states_all$HARVESTextracted_biomass_gCm2day + states_all$HARVESTlitter_biomass_gCm2day
                       site_output$HarvestFractionOfTurnover_biomass = states_all$HARVESTextracted_biomass_gCm2day + states_all$HARVESTlitter_biomass_gCm2day
                   }
@@ -1275,6 +1359,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Mean outflux from biomass
                   site_output$mean_outflux_biomass_gCm2day = quantile(apply(site_output$outflux_biomass_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   site_output$mean_combined_biomass_to_litter_gCm2day = quantile(apply(site_output$combined_biomass_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  # Mean annual outflux from biomass
+                  site_output$mean_annual_outflux_biomass_gCm2day = apply(t(apply(states_all$outflux_biomass_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
+                  site_output$mean_annual_combined_biomass_to_litter_gCm2day = apply(t(apply(states_all$combined_biomass_to_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Now aggregate across quantiles
                   site_output$outflux_biomass_gCm2day = apply(site_output$outflux_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$combined_biomass_to_litter_gCm2day = apply(site_output$combined_biomass_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -1286,6 +1373,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Assign pool to site_output
                   site_output$dom_gCm2 = apply(states_all$dom_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_dom_gCm2 = quantile(apply(states_all$dom_gCm2,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_dom_gCm2 = apply(t(apply(states_all$dom_gCm2,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Determine net pool change over time
                   dCbio = states_all$dom_gCm2 - states_all$dom_gCm2[,1] # difference in dom from initial
                   site_output$dCdom_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
@@ -1295,10 +1383,12 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Heterotrophic respiration
                   site_output$rhet_dom_gCm2day = apply(states_all$rhet_dom_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_rhet_dom_gCm2day = quantile(apply(states_all$rhet_dom_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_rhet_dom_gCm2day = apply(t(apply(states_all$rhet_dom_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # If this one exists then maybe some other fluxes do
                   if (exists(x = "FIREemiss_dom_gCm2day", where = states_all)) {
                       site_output$FIREemiss_dom_gCm2day = apply(states_all$FIREemiss_dom_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_FIREemiss_dom_gCm2day = quantile(apply(states_all$FIREemiss_dom_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_FIREemiss_dom_gCm2day = apply(t(apply(states_all$FIREemiss_dom_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$FireFractionOfTurnover_dom = states_all$FIREemiss_dom_gCm2day
                       site_output$outflux_dom_gCm2day = site_output$outflux_dom_gCm2day + states_all$FIREemiss_dom_gCm2day
                   }
@@ -1306,6 +1396,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   if (exists(x = "HARVESTextracted_dom_gCm2day", where = states_all)) {
                       site_output$HARVESTextracted_dom_gCm2day = apply(states_all$HARVESTextracted_dom_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
                       site_output$mean_HARVESTextracted_dom_gCm2day = quantile(apply(states_all$HARVESTextracted_dom_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_HARVESTextracted_dom_gCm2day = apply(t(apply(states_all$HARVESTextracted_dom_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       site_output$outflux_dom_gCm2day = site_output$outflux_dom_gCm2day + states_all$HARVESTextracted_som_gCm2day
                       site_output$HarvestFractionOfTurnover_dom = states_all$HARVESTextracted_dom_gCm2day
                   }
@@ -1323,6 +1414,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                                                                        apply(site_output$outflux_dom_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
                   # Mean outflux from dom
                   site_output$mean_outflux_dom_gCm2day = quantile(apply(site_output$outflux_dom_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  # Mean annual outflux from dom
+                  site_output$mean_annual_outflux_dom_gCm2day = apply(t(apply(states_all$outflux_dom_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Now aggregate across quantiles
                   site_output$outflux_dom_gCm2day = apply(site_output$outflux_dom_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
               }
@@ -1336,6 +1429,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   ## current water in the soil surface layer (0-30 cm)
                   site_output$SurfWater_kgH2Om2 = apply(states_all$SurfWater_kgH2Om2,2,quantile,prob=num_quantiles,na.rm = na_flag)
                   site_output$mean_SurfWater_kgH2Om2 = quantile(apply(states_all$SurfWater_kgH2Om2,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_SurfWater_kgH2Om2 = apply(t(apply(states_all$SurfWater_kgH2Om2,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Calculate change over time
                   dCbio = states_all$SurfWater_kgH2Om2 - states_all$SurfWater_kgH2Om2[,1] # difference in surface water from initial
                   site_output$dSurfWater_kgH2Om2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
@@ -1343,6 +1437,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # plant apparent soil water potential (MPa)
                   site_output$wSWP_MPa = apply(states_all$wSWP_MPa,2,quantile,prob=num_quantiles,na.rm = na_flag)
                   site_output$mean_wSWP_MPa = quantile(apply(states_all$wSWP_MPa,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_wSWP_MPa = apply(t(apply(states_all$wSWP_MPa,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Calculate change over time
                   dCbio = states_all$wSWP_MPa - states_all$wSWP_MPa[,1] # difference from initial
                   site_output$dwSWP_MPa = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
@@ -1350,35 +1445,44 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # evapotranspiration (Etrans + Esoil + Ewetcanopy)
                   site_output$ET_kgH2Om2day = apply(states_all$ET_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
                   site_output$mean_ET_kgH2Om2day = quantile(apply(states_all$ET_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_ET_kgH2Om2day = apply(t(apply(states_all$ET_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
 
                   # Calculate the ecosystem water use efficiency
+                  # NOTE: might need to do something about zeros in either GPP or ET...
                   site_output$wue_eco_gCkgH2O = apply(states_all$gpp_gCm2day/states_all$ET_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
                   site_output$mean_wue_eco_gCkgH2O = quantile(apply(states_all$gpp_gCm2day/states_all$ET_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_wue_eco_gCkgH2O = apply(t(apply(states_all$gpp_gCm2day/states_all$ET_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
 
                   # Check whether the evaporation components exist
                   if (exists(x = "Etrans_kgH2Om2day", where = states_all)) {
                       # Transpiration
                       site_output$Etrans_kgH2Om2day = apply(states_all$Etrans_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
                       site_output$mean_Etrans_kgH2Om2day = quantile(apply(states_all$Etrans_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_Etrans_kgH2Om2day = apply(t(apply(states_all$Etrans_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       # Calculate the plant water use efficiency
+                      # NOTE: might need to do something about zeros in either GPP or Etrans
                       site_output$wue_plant_gCkgH2O = apply(states_all$gpp_gCm2day/states_all$Etrans_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
                       site_output$mean_wue_plant_gCkgH2O = quantile(apply(states_all$gpp_gCm2day/states_all$Etrans_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_Etrans_kgH2Om2day = apply(t(apply(states_all$gpp_gCm2day/states_all$Etrans_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   }
                   if (exists(x = "Esoil_kgH2Om2day", where = states_all)) {
                       # Soil evaporation
                       site_output$Esoil_kgH2Om2day = apply(states_all$Esoil_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
                       site_output$mean_Esoil_kgH2Om2day = quantile(apply(states_all$Esoil_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_Esoil_kgH2Om2day = apply(t(apply(states_all$Esoil_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   }
                   if (exists(x = "Ewetcanopy_kgH2Om2day", where = states_all)) {
                       # Wet canopy evaporation
                       site_output$Ewetcanopy_kgH2Om2day = apply(states_all$Ewetcanopy_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
                       site_output$mean_Ewetcanopy_kgH2Om2day = quantile(apply(states_all$Ewetcanopy_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_Ewetcanopy_kgH2Om2day = apply(t(apply(states_all$Ewetcanopy_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   }
                   # Check whether surface runoff exists?
                   if (exists(x = "runoff_kgH2Om2day", where = states_all)) {
                       # Surface water drainage
                       site_output$runoff_kgH2Om2day = apply(states_all$runoff_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
                       site_output$mean_runoff_kgH2Om2day = quantile(apply(states_all$runoff_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_runoff_kgH2Om2day = apply(t(apply(states_all$runoff_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       # Accumulating total drainage (runoff and underflow)
                       site_output$total_drainage_kgH2Om2day = states_all$runoff_kgH2Om2day
                   }
@@ -1387,6 +1491,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       # Drainage from bottom of soil column
                       site_output$underflow_kgH2Om2day = apply(states_all$underflow_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
                       site_output$mean_underflow_kgH2Om2day = quantile(apply(states_all$underflow_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_underflow_kgH2Om2day = apply(t(apply(states_all$underflow_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                       # Accumulating total drainage (runoff and underflow)
                       site_output$total_drainage_kgH2Om2day = site_output$total_drainage_kgH2Om2day + states_all$underflow_kgH2Om2day
                   }
@@ -1395,6 +1500,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       # Total drainage from surface and soil bottom
                       site_output$total_drainage_kgH2Om2day = apply(site_output$total_drainage_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
                       site_output$mean_total_drainage_kgH2Om2day = quantile(apply(site_output$total_drainage_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                      site_output$mean_annual_total_drainage_kgH2Om2day = apply(t(apply(states_all$total_drainage_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   }
               }
 
@@ -1403,6 +1509,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   ## Snow on soil surface
                   site_output$snow_kgH2Om2 = apply(states_all$snow_kgH2Om2,2,quantile,prob=num_quantiles,na.rm = na_flag)
                   site_output$mean_snow_kgH2Om2 = quantile(apply(states_all$snow_kgH2Om2,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_snow_kgH2Om2 = apply(t(apply(states_all$snow_kgH2Om2,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
               }
 
               ###
@@ -1414,6 +1521,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Extract the absorbed photosynthetically active radiation by the canopy
                   site_output$APAR_MJm2day = apply(states_all$APAR_MJm2day,2,quantile, prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_APAR_MJm2day = quantile(apply(states_all$APAR_MJm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_APAR_MJm2day = apply(t(apply(states_all$APAR_MJm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Calculate change over time
                   dCbio = states_all$APAR_MJm2day - states_all$APAR_MJm2day[,1] # difference in dom from initial
                   site_output$dAPAR_MJm2day = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
@@ -1422,6 +1530,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Extract the internal vs ambient CO2 ratio
                   site_output$CiCa = apply(states_all$CiCa,2,quantile, prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_CiCa = quantile(apply(states_all$CiCa,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_CiCa = apply(t(apply(states_all$CiCa,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Calculate change over time
                   dCbio = states_all$CiCa - states_all$CiCa[,1] # difference in dom from initial
                   site_output$dCiCa = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
@@ -1431,6 +1540,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # this metric provides information on the demand vs supply constrains on stomatal conductance
                   site_output$gs_demand_supply_ratio = apply(states_all$gs_demand_supply_ratio,2,quantile, prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_gs_demand_supply_ratio = quantile(apply(states_all$gs_demand_supply_ratio,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_gs_demand_supply_ratio = apply(t(apply(states_all$gs_demand_supply_ratio,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Calculate change over time
                   dCbio = states_all$gs_demand_supply_ratio - states_all$gs_demand_supply_ratio[,1] # difference in dom from initial
                   site_output$dgs_demand_supply_ratio = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
@@ -1439,6 +1549,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Extract the canopy stomatal conductance
                   site_output$gs_mmolH2Om2day = apply(states_all$gs_mmolH2Om2day,2,quantile, prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_gs_mmolH2Om2day = quantile(apply(states_all$gs_mmolH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_gs_mmolH2Om2day = apply(t(apply(states_all$gs_mmolH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Calculate change over time
                   dCbio = states_all$gs_mmolH2Om2day - states_all$gs_mmolH2Om2day[,1] # difference in dom from initial
                   site_output$dgs_mmolH2Om2day = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
@@ -1447,6 +1558,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   # Extract the canopy boundary layer conductance
                   site_output$gb_mmolH2Om2day = apply(states_all$gb_mmolH2Om2day,2,quantile, prob=num_quantiles, na.rm = na_flag)
                   site_output$mean_gb_mmolH2Om2day = quantile(apply(states_all$gb_mmolH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
+                  site_output$mean_annual_gb_mmolH2Om2day = apply(t(apply(states_all$gb_mmolH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2, prob=num_quantiles, na.rm = TRUE)
                   # Calculate change over time
                   dCbio = states_all$gb_mmolH2Om2day - states_all$gb_mmolH2Om2day[,1] # difference in dom from initial
                   site_output$dgb_mmolH2Om2day = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
@@ -1700,6 +1812,18 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           grid_output$nbp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           # Always present but at annual time step
           grid_output$mean_annual_cue = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+          grid_output$mean_annual_Ctotal_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+          grid_output$mean_annual_lai_m2m2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+          grid_output$mean_annual_nee_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+          grid_output$mean_annual_gpp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+          grid_output$mean_annual_rauto_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+          grid_output$mean_annual_rhet_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+          grid_output$mean_annual_reco_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+          grid_output$mean_annual_npp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+          grid_output$mean_annual_harvest_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+          grid_output$mean_annual_fire_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+          grid_output$mean_annual_nbe_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+          grid_output$mean_annual_nbp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
 
           # Based on the presence of each pool define the grids for the mean and final values.
           # Also, create the time varying but quantile based values and time
@@ -1720,6 +1844,10 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$biomass_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$combined_biomass_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Annual information
+              grid_output$mean_annual_biomass_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_outflux_biomass_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_combined_biomass_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_biomass_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               grid_output$MTT_annual_biomass_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               # Fractional partitioning of tunover to different drivers - should they exist
               grid_output$NaturalFractionOfTurnover_biomass = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -1729,18 +1857,23 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               if (exists(x = "FIREemiss_biomass_gCm2day", where = site_output)) {
                   grid_output$FIREemiss_biomass_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIREemiss_biomass_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_FIREemiss_biomass_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
               if (exists(x = "FIRElitter_biomass_gCm2day", where = site_output)) {
                   grid_output$FIRElitter_biomass_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIRElitter_biomass_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_FIRElitter_biomass_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
               if (exists(x = "HARVESTextracted_biomass_gCm2day", where = site_output)) {
                   grid_output$HARVESTextracted_biomass_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_HARVESTextracted_biomass_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_HARVESTextracted_biomass_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
                   grid_output$HARVESTlitter_biomass_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_HARVESTlitter_biomass_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_HARVESTlitter_biomass_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
           }
+##TLS done to here for mean annuals
           # Gridded labile information
           if (exists(x = "labile_gCm2", where = site_output)) {
               # Grid averages
