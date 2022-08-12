@@ -1500,7 +1500,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       # Total drainage from surface and soil bottom
                       site_output$total_drainage_kgH2Om2day = apply(site_output$total_drainage_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
                       site_output$mean_total_drainage_kgH2Om2day = quantile(apply(site_output$total_drainage_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
-                      site_output$mean_annual_total_drainage_kgH2Om2day = apply(t(apply(states_all$total_drainage_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
+                      site_output$mean_annual_total_drainage_kgH2Om2day = apply(t(apply(site_output$total_drainage_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
                   }
               }
 
