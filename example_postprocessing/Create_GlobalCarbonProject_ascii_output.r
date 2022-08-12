@@ -116,38 +116,34 @@ for (n in seq(1, length(PROJECT$sites))) {
          # Extract grid position
          i = grid_output$i_location[n]
          j = grid_output$j_location[n]
-
-         # Read in site specific drivers
-         drivers = read_binary_file_format(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep=""))
          
          # Determine nos days per time step         
-         deltat = drivers$met[,1] # run_day
-         deltat[2:length(deltat)] = diff(deltat)
+         deltat = 365.25
 
          # Accumulate global
-         NBP_global_PgCyr = NBP_global_PgCyr + (rollapply(grid_output$nbp_gCm2day[n,mid_quant,]*deltat, width = steps_per_year, by = steps_per_year, FUN = sum, na.rm=TRUE)*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
-         NBP_global_PgCyr_lowCI = NBP_global_PgCyr_lowCI + (rollapply(grid_output$nbp_gCm2day[n,low_quant,]*deltat, width = steps_per_year, by = steps_per_year, FUN = sum, na.rm=TRUE)*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
-         NBP_global_PgCyr_highCI = NBP_global_PgCyr_highCI + (rollapply(grid_output$nbp_gCm2day[n,high_quant,]*deltat, width = steps_per_year, by = steps_per_year, FUN = sum, na.rm=TRUE)*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         NBP_global_PgCyr = NBP_global_PgCyr + (grid_output$mean_annual_nbp_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         NBP_global_PgCyr_lowCI = NBP_global_PgCyr_lowCI + (grid_output$mean_annual_nbp_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         NBP_global_PgCyr_highCI = NBP_global_PgCyr_highCI + (grid_output$mean_annual_nbp_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          
          # Where appropriate accumulate tropical
          if (grid_output$lat[i,j] <= 30 & grid_output$lat[i,j] >= -30) {
-             NBP_tropics_PgCyr = NBP_tropics_PgCyr + (rollapply(grid_output$nbp_gCm2day[n,mid_quant,]*deltat, width = steps_per_year, by = steps_per_year, FUN = sum, na.rm=TRUE)*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
-             NBP_tropics_PgCyr_lowCI = NBP_tropics_PgCyr_lowCI + (rollapply(grid_output$nbp_gCm2day[n,low_quant,]*deltat, width = steps_per_year, by = steps_per_year, FUN = sum, na.rm=TRUE)*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
-             NBP_tropics_PgCyr_highCI = NBP_tropics_PgCyr_highCI + (rollapply(grid_output$nbp_gCm2day[n,high_quant,]*deltat, width = steps_per_year, by = steps_per_year, FUN = sum, na.rm=TRUE)*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)         
+             NBP_tropics_PgCyr = NBP_tropics_PgCyr + (grid_output$mean_annual_nbp_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBP_tropics_PgCyr_lowCI = NBP_tropics_PgCyr_lowCI + (grid_output$mean_annual_nbp_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBP_tropics_PgCyr_highCI = NBP_tropics_PgCyr_highCI + (grid_output$mean_annual_nbp_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)         
          }
 
          # Where appropriate accumulate north
          if (grid_output$lat[i,j] > 30) {
-             NBP_north_PgCyr = NBP_north_PgCyr + (rollapply(grid_output$nbp_gCm2day[n,mid_quant,]*deltat, width = steps_per_year, by = steps_per_year, FUN = sum, na.rm=TRUE)*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
-             NBP_north_PgCyr_lowCI = NBP_north_PgCyr_lowCI + (rollapply(grid_output$nbp_gCm2day[n,low_quant,]*deltat, width = steps_per_year, by = steps_per_year, FUN = sum, na.rm=TRUE)*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
-             NBP_north_PgCyr_highCI = NBP_north_PgCyr_highCI + (rollapply(grid_output$nbp_gCm2day[n,high_quant,]*deltat, width = steps_per_year, by = steps_per_year, FUN = sum, na.rm=TRUE)*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)         
+             NBP_north_PgCyr = NBP_north_PgCyr + (grid_output$mean_annual_nbp_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBP_north_PgCyr_lowCI = NBP_north_PgCyr_lowCI + (grid_output$mean_annual_nbp_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBP_north_PgCyr_highCI = NBP_north_PgCyr_highCI + (grid_output$mean_annual_nbp_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)         
          }
 
          # Where appropriate accumulate south
          if (grid_output$lat[i,j] < -30) {
-             NBP_south_PgCyr = NBP_south_PgCyr + (rollapply(grid_output$nbp_gCm2day[n,mid_quant,]*deltat, width = steps_per_year, by = steps_per_year, FUN = sum, na.rm=TRUE)*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
-             NBP_south_PgCyr_lowCI = NBP_south_PgCyr_lowCI + (rollapply(grid_output$nbp_gCm2day[n,low_quant,]*deltat, width = steps_per_year, by = steps_per_year, FUN = sum, na.rm=TRUE)*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
-             NBP_south_PgCyr_highCI = NBP_south_PgCyr_highCI + (rollapply(grid_output$nbp_gCm2day[n,high_quant,]*deltat, width = steps_per_year, by = steps_per_year, FUN = sum, na.rm=TRUE)*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)         
+             NBP_south_PgCyr = NBP_south_PgCyr + (grid_output$mean_annual_nbp_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBP_south_PgCyr_lowCI = NBP_south_PgCyr_lowCI + (grid_output$mean_annual_nbp_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBP_south_PgCyr_highCI = NBP_south_PgCyr_highCI + (grid_output$mean_annual_nbp_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)         
          }
 
      } # Does the file exist / has it been processed

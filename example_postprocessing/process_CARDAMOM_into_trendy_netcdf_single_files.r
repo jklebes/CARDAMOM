@@ -226,18 +226,18 @@ for (n in seq(1, length(PROJECT$sites))) {
          ## At model time step
          # STATES (NOTE: unit conversions gC/m2 -> kgC/m2, except LAI)
          if (exists("LAI")) {LAI[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$lai_m2m2[n,,]}
-         for (i in seq(1, nos_quantiles)) { 
-              if (exists("TOT")) {TOT[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$Ctotal_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
-              if (exists("LAB")) {LAB[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$labile_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
-              if (exists("FOL")) {FOL[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$foliage_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
-              if (exists("ROOT")) {ROOT[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$roots_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
-              if (exists("WOOD")) {WOOD[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$wood_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
-              if (exists("LIT")) {LIT[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$litter_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
-              if (exists("SOIL")) {SOIL[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$som_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
-              if (exists("WLIT")) {WLIT[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$woodlitter_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
-              if (exists("DOM")) {DOM[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$dom_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
-              if (exists("BIO")) {BIO[grid_output$i_location[n],grid_output$j_location[n],i,] = rollapply(grid_output$biomass_gCm2[n,i,]*1e-3, FUN=mean, by = steps_per_year, width = steps_per_year)}
-         }
+         # States at annual
+         if (exists("TOT")) {TOT[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_Ctotal_gCm2[n,,]*1e-3
+         if (exists("LAB")) {LAB[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_labile_gCm2[n,,]*1e-3
+         if (exists("FOL")) {FOL[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_foliage_gCm2[n,,]*1e-3
+         if (exists("ROOT")) {ROOT[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_roots_gCm2[n,,]*1e-3
+         if (exists("WOOD")) {WOOD[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_wood_gCm2[n,,]*1e-3
+         if (exists("LIT")) {LIT[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_litter_gCm2[n,,]*1e-3
+         if (exists("SOIL")) {SOIL[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_som_gCm2[n,,]*1e-3
+         if (exists("WLIT")) {WLIT[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_woodlitter_gCm2[n,,]*1e-3
+         if (exists("DOM")) {DOM[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_dom_gCm2[n,,]*1e-3
+         if (exists("BIO")) {BIO[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_biomass_gCm2[n,,]*1e-3
+
          # FLUXES (NOTE; unit conversion gC/m2/day -> kgC/m2/s)
          if (exists("GPP")) {GPP[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$gpp_gCm2day[n,,]* 1e-3 * (1/86400)}
          if (exists("RAU")) {RAU[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$rauto_gCm2day[n,,]* 1e-3 * (1/86400)}
