@@ -1463,7 +1463,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                       # NOTE: might need to do something about zeros in either GPP or Etrans
                       site_output$wue_plant_gCkgH2O = apply(states_all$gpp_gCm2day/states_all$Etrans_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
                       site_output$mean_wue_plant_gCkgH2O = quantile(apply(states_all$gpp_gCm2day/states_all$Etrans_kgH2Om2day,1,mean, na.rm = na_flag), prob=num_quantiles)
-                      site_output$mean_annual_Etrans_kgH2Om2day = apply(t(apply(states_all$gpp_gCm2day/states_all$Etrans_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
+                      site_output$mean_annual_wue_plant_gCkgH2O = apply(t(apply(states_all$gpp_gCm2day/states_all$Etrans_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
                   }
                   if (exists(x = "Esoil_kgH2Om2day", where = states_all)) {
                       # Soil evaporation
@@ -2292,7 +2292,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               }
               if (exists(x = "underflow_kgH2Om2day", where = site_output)) {
                   # Underflow from bottom of soil water column
-                  grid_output$mean_annual_underfow_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+                  grid_output$mean_annual_underflow_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
                   grid_output$mean_underflow_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
                   grid_output$underflow_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               }
