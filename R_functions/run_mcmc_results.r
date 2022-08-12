@@ -1873,7 +1873,6 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                   grid_output$mean_annual_HARVESTlitter_biomass_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
           }
-##TLS done to here for mean annuals
           # Gridded labile information
           if (exists(x = "labile_gCm2", where = site_output)) {
               # Grid averages
@@ -1892,6 +1891,11 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$alloc_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$combined_labile_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Annual information
+              grid_output$mean_annual_labile_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_outflux_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_labile_to_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_alloc_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_combined_labile_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               grid_output$MTT_annual_labile_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               # Fractional partitioning of tunover to different drivers - should they exist
               grid_output$NaturalFractionOfTurnover_labile = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -1901,16 +1905,20 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               if (exists(x = "FIREemiss_labile_gCm2day", where = site_output)) {
                   grid_output$FIREemiss_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIREemiss_labile_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_FIREemiss_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
               if (exists(x = "FIRElitter_labile_gCm2day", where = site_output)) {
                   grid_output$FIRElitter_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIRElitter_labile_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_FIRElitter_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
               if (exists(x = "HARVESTextracted_labile_gCm2day", where = site_output)) {
                   grid_output$HARVESTextracted_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_HARVESTextracted_labile_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_HARVESTextracted_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
                   grid_output$HARVESTlitter_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_HARVESTlitter_labile_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_HARVESTlitter_labile_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
           }
           # Gridded foliage information
@@ -1931,6 +1939,11 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$combined_alloc_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$combined_foliage_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Annual information
+              grid_output$mean_annual_foliage_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_outflux_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_foliage_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_combined_alloc_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_combined_foliage_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               grid_output$MTT_annual_foliage_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               # Fractional partitioning of tunover to different drivers - should they exist
               grid_output$NaturalFractionOfTurnover_foliage = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -1940,20 +1953,25 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               if (exists(x = "alloc_foliage_gCm2day", where = site_output)) {
                   grid_output$alloc_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_alloc_foliage_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_alloc_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
               if (exists(x = "FIREemiss_foliage_gCm2day", where = site_output)) {
                   grid_output$FIREemiss_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIREemiss_foliage_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_FIREemiss_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
               if (exists(x = "FIRElitter_foliage_gCm2day", where = site_output)) {
                   grid_output$FIRElitter_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIRElitter_foliage_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_FIRElitter_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
               if (exists(x = "HARVESTextracted_foliage_gCm2day", where = site_output)) {
                   grid_output$HARVESTextracted_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_HARVESTextracted_foliage_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_HARVESTextracted_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
                   grid_output$HARVESTlitter_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_HARVESTlitter_foliage_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_HARVESTlitter_foliage_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
           }
           # Gridded roots information
@@ -1975,6 +1993,11 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$alloc_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$combined_roots_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Annual information
+              grid_output$mean_annual_roots_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_outflux_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_roots_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_alloc_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_combined_roots_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               grid_output$MTT_annual_roots_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               # Fractional partitioning of tunover to different drivers - should they exist
               grid_output$NaturalFractionOfTurnover_roots = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -1986,20 +2009,25 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                   grid_output$dRootDepth_m = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_RootDepth_m = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
                   grid_output$final_dRootDepth_m = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_RootDepth_m = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
               if (exists(x = "FIREemiss_roots_gCm2day", where = site_output)) {
                   grid_output$FIREemiss_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIREemiss_roots_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_FIREemiss_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
               if (exists(x = "FIRElitter_roots_gCm2day", where = site_output)) {
                   grid_output$FIRElitter_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIRElitter_roots_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_FIRElitter_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
               if (exists(x = "HARVESTextracted_roots_gCm2day", where = site_output)) {
                   grid_output$HARVESTextracted_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_HARVESTextracted_roots_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_HARVESTextracted_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
                   grid_output$HARVESTlitter_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_HARVESTlitter_roots_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_HARVESTlitter_roots_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
           }
           # Gridded wood information
@@ -2021,6 +2049,11 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$alloc_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$combined_wood_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Annual information
+              grid_output$mean_annual_wood_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_outflux_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_wood_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_alloc_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_combined_wood_to_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               grid_output$MTT_annual_wood_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               # Fractional partitioning of tunover to different drivers - should they exist
               grid_output$NaturalFractionOfTurnover_wood = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -2030,16 +2063,20 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               if (exists(x = "FIREemiss_wood_gCm2day", where = site_output)) {
                   grid_output$FIREemiss_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIREemiss_wood_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_FIREemiss_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
               if (exists(x = "FIRElitter_wood_gCm2day", where = site_output)) {
                   grid_output$FIRElitter_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIRElitter_wood_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_FIRElitter_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
               if (exists(x = "HARVESTextracted_wood_gCm2day", where = site_output)) {
                   grid_output$HARVESTextracted_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_HARVESTextracted_wood_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_HARVESTextracted_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
                   grid_output$HARVESTlitter_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_HARVESTlitter_wood_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_HARVESTlitter_wood_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
           }
           # Gridded litter information
@@ -2060,6 +2097,11 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$rhet_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$combined_litter_to_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Annual information
+              grid_output$mean_annual_litter_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_outflux_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_litter_to_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_rhet_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_combined_litter_to_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               grid_output$MTT_annual_litter_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               # Fractional partitioning of tunover to different drivers - should they exist
               grid_output$NaturalFractionOfTurnover_litter = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -2069,14 +2111,17 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               if (exists(x = "FIREemiss_litter_gCm2day", where = site_output)) {
                   grid_output$FIREemiss_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIREemiss_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_FIREemiss_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
               if (exists(x = "FIRElitter_litter_gCm2day", where = site_output)) {
                   grid_output$FIRElitter_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIRElitter_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_FIRElitter_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
               if (exists(x = "HARVESTextracted_litter_gCm2day", where = site_output)) {
                   grid_output$HARVESTextracted_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_HARVESTextracted_litter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_HARVESTextracted_litter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
           }
           # Gridded wood litter information
@@ -2095,8 +2140,13 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$outflux_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$woodlitter_to_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$rhet_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
-              grid_output$mean_combined_woodlitter_to_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$combined_woodlitter_to_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Annual information
+              grid_output$mean_annual_woodlitter_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_outflux_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_woodlitter_to_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_rhet_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_combined_woodlitter_to_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               grid_output$MTT_annual_woodlitter_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               # Fractional partitioning of tunover to different drivers - should they exist
               grid_output$NaturalFractionOfTurnover_woodlitter = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -2106,14 +2156,17 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               if (exists(x = "FIREemiss_woodlitter_gCm2day", where = site_output)) {
                   grid_output$FIREemiss_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIREemiss_woodlitter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_FIREemiss_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
               if (exists(x = "FIRElitter_woodlitter_gCm2day", where = site_output)) {
                   grid_output$FIRElitter_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIRElitter_woodlitter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_FIRElitter_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
               if (exists(x = "HARVESTextracted_woodlitter_gCm2day", where = site_output)) {
                   grid_output$HARVESTextracted_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_HARVESTextracted_woodlitter_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_HARVESTextracted_woodlitter_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
           }
           # Gridded som information
@@ -2130,6 +2183,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$outflux_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$rhet_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Annual information
+              grid_output$mean_annual_som_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_outflux_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_rhet_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               grid_output$MTT_annual_som_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               # Fractional partitioning of tunover to different drivers - should they exist
               grid_output$NaturalFractionOfTurnover_som = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -2139,10 +2195,12 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               if (exists(x = "FIREemiss_som_gCm2day", where = site_output)) {
                   grid_output$FIREemiss_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIREemiss_som_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_FIREemiss_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
               if (exists(x = "HARVESTextracted_som_gCm2day", where = site_output)) {
                   grid_output$HARVESTextracted_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_HARVESTextracted_som_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_HARVESTextracted_som_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
           }
           # Gridded dom information
@@ -2159,6 +2217,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               grid_output$outflux_dom_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$rhet_dom_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Annual information
+              grid_output$mean_annual_dom_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_outflux_dom_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_annual_rhet_dom_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               grid_output$MTT_annual_dom_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               # Fractional partitioning of tunover to different drivers - should they exist
               grid_output$NaturalFractionOfTurnover_dom = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
@@ -2168,10 +2229,12 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               if (exists(x = "FIREemiss_dom_gCm2day", where = site_output)) {
                   grid_output$FIREemiss_dom_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_FIREemiss_dom_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_FIREemiss_dom_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
               if (exists(x = "HARVESTextracted_dom_gCm2day", where = site_output)) {
                   grid_output$HARVESTextracted_dom_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   grid_output$mean_HARVESTextracted_dom_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+                  grid_output$mean_annual_HARVESTextracted_dom_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               }
           }
 
@@ -2179,52 +2242,63 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           if (exists(x = "ET_kgH2Om2day", where = site_output)) {
               # currently water in the soil surface layer (0-30 cm)
               grid_output$mean_SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_annual_SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               grid_output$final_SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$final_dSurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$SurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$dSurfWater_kgH2Om2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # plant apparent soil water potential (MPa)
               grid_output$mean_wSWP_MPa = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_annual_wSWP_MPa = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               grid_output$final_wSWP_MPa = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$wSWP_MPa = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$dwSWP_MPa = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # evapotranspiration (Etrans + Esoil + Ewetcanopy)
+              grid_output$mean_annual_ET_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               grid_output$mean_ET_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$ET_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Ecosystem water use efficiency (GPP/ET)
+              grid_output$mean_annual_wue_eco_gCkgH2O = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               grid_output$mean_wue_eco_gCkgH2O = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$wue_eco_gCkgH2O = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               # Check whether the evaporation components exist
               if (exists(x = "Etrans_kgH2Om2day", where = site_output)) {
                   # Transpiration
+                  grid_output$mean_annual_Etrans_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
                   grid_output$mean_Etrans_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
                   grid_output$Etrans_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
                   # Plant water use efficiency (GPP/Etrans)
+                  grid_output$mean_annual_wue_plant_gCkgH2O = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
                   grid_output$mean_wue_plant_gCkgH2O = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
                   grid_output$wue_plant_gCkgH2O = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               }
               if (exists(x = "Esoil_kgH2Om2day", where = site_output)) {
                   # Soil evaporation
+                  grid_output$mean_annual_Esoil_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
                   grid_output$mean_Esoil_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
                   grid_output$Esoil_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               }
               if (exists(x = "Ewetcanopy_kgH2Om2day", where = site_output)) {
                   # Wet canopy evaporation
+                  grid_output$mean_annual_Ewetcanopy_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
                   grid_output$mean_Ewetcanopy_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
                   grid_output$Ewetcanopy_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               }
               if (exists(x = "runoff_kgH2Om2day", where = site_output)) {
                   # Surface water runoff
+                  grid_output$mean_annual_runoff_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
                   grid_output$mean_runoff_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
                   grid_output$runoff_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               }
               if (exists(x = "underflow_kgH2Om2day", where = site_output)) {
                   # Underflow from bottom of soil water column
+                  grid_output$mean_annual_underfow_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
                   grid_output$mean_underflow_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
                   grid_output$underflow_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               }
               if (exists(x = "total_drainage_kgH2Om2day", where = site_output)) {
                   # Total drainage from soil surface andn bottom of soil water column
+                  grid_output$mean_annual_total_drainage_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
                   grid_output$mean_total_drainage_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
                   grid_output$total_drainage_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               }
@@ -2234,31 +2308,37 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
               ## snow on soil surface
               grid_output$snow_kgH2Om2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$mean_snow_kgH2Om2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$mean_annual_snow_kgH2Om2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
           }
           # Canopy process variables
           if (exists(x = "APAR_MJm2day", where = site_output)) {
               # Absorbed photosynthetically active radation
+              grid_output$mean_annual_APAR_MJm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               grid_output$mean_APAR_MJm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$APAR_MJm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           }
           if (exists(x = "CiCa", where = site_output)) {
               # Canopy Ci:Ca
+              grid_output$mean_annual_CiCa = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               grid_output$mean_CiCa = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$CiCa = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           }
           if (exists(x = "gs_demand_supply_ratio", where = site_output)) {
               # Ratio of stomatal conductance relative to its maximum value,
               # this metric provides information on the demand vs supply constrains on stomatal conductance
+              grid_output$mean_annual_gs_demand_supply_ratio = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               grid_output$mean_gs_demand_supply_ratio = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$gs_demand_supply_ratio = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           }
           if (exists(x = "gs_mmolH2Om2day", where = site_output)) {
               # Canopy stomatal conductance
+              grid_output$mean_annual_gs_mmolH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               grid_output$mean_gs_mmolH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$gs_mmolH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           }
           if (exists(x = "gb_mmolH2Om2day", where = site_output)) {
               # Canopy boundary layer conductance
+              grid_output$mean_annual_gb_mmolH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
               grid_output$mean_gb_mmolH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$gb_mmolH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           }
@@ -2422,6 +2502,18 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                grid_output$nbp_gCm2day[n,,]     = site_output$nbp_gCm2day
                # Always present but at annual time step
                grid_output$mean_annual_cue[n,,] = site_output$mean_annual_cue
+               grid_output$mean_annual_Ctotal_gCm2[n,,] = site_output$mean_annual_Ctotal_gCm2
+               grid_output$mean_annual_lai_m2m2[n,,] = site_output$mean_annual_lai_m2m2
+               grid_output$mean_annual_nee_gCm2day[n,,] = site_output$mean_annual_nee_gCm2day
+               grid_output$mean_annual_gpp_gCm2day[n,,] = site_output$mean_annual_gpp_gCm2day
+               grid_output$mean_annual_rauto_gCm2day[n,,] = site_output$mean_annual_rauto_gCm2day
+               grid_output$mean_annual_rhet_gCm2day[n,,] = site_output$mean_annual_rhet_gCm2day
+               grid_output$mean_annual_reco_gCm2day[n,,] = site_output$mean_annual_reco_gCm2day
+               grid_output$mean_annual_npp_gCm2day[n,,] = site_output$mean_annual_npp_gCm2day
+               grid_output$mean_annual_harvest_gCm2day[n,,] = site_output$mean_annual_harvest_gCm2day
+               grid_output$mean_annual_fire_gCm2day[n,,] = site_output$mean_annual_fire_gCm2day
+               grid_output$mean_annual_nbe_gCm2day[n,,] = site_output$mean_annual_nbe_gCm2day
+               grid_output$mean_annual_nbp_gCm2day[n,,] = site_output$mean_annual_nbp_gCm2day
 
                # Based on the presence of each pool define the grids for the mean and final values.
                # Also, create the time varying but quantile based values and time
@@ -2442,6 +2534,10 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$biomass_to_litter_gCm2day[n,,] = site_output$biomass_to_litter_gCm2day
                    grid_output$combined_biomass_to_litter_gCm2day[n,,] = site_output$combined_biomass_to_litter_gCm2day
                    # Annual information
+                   grid_output$mean_annual_biomass_gCm2[n,,] = site_output$mean_annual_biomass_gCm2
+                   grid_output$mean_annual_outflux_biomass_gCm2day[n,,] = site_output$mean_annual_outflux_biomass_gCm2day
+                   grid_output$mean_annual_combined_biomass_to_litter_gCm2day[n,,] = site_output$mean_annual_combined_biomass_to_litter_gCm2day
+                   grid_output$mean_annual_biomass_to_litter_gCm2day[n,,] = site_output$mean_annual_biomass_to_litter_gCm2day
                    grid_output$MTT_annual_biomass_years[n,,] = site_output$MTT_annual_biomass_years
                    # Fractional partitioning of tunover to different drivers - should they exist
                    grid_output$NaturalFractionOfTurnover_biomass[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_biomass
@@ -2451,16 +2547,20 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    if (exists(x = "FIREemiss_biomass_gCm2day", where = site_output)) {
                        grid_output$FIREemiss_biomass_gCm2day[n,,] = site_output$FIREemiss_biomass_gCm2day
                        grid_output$mean_FIREemiss_biomass_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_biomass_gCm2day
+                       grid_output$mean_annual_FIREemiss_biomass_gCm2day[n,,] = site_output$mean_annual_FIREemiss_biomass_gCm2day
                    }
                    if (exists(x = "FIRElitter_biomass_gCm2day", where = site_output)) {
                        grid_output$FIRElitter_biomass_gCm2day[n,,] = site_output$FIRElitter_biomass_gCm2day
                        grid_output$mean_FIRElitter_biomass_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_biomass_gCm2day
+                       grid_output$mean_annual_FIRElitter_biomass_gCm2day[n,,] = site_output$mean_annual_FIRElitter_biomass_gCm2day
                    }
                    if (exists(x = "HARVESTextracted_biomass_gCm2day", where = site_output)) {
                        grid_output$HARVESTextracted_biomass_gCm2day[n,,] = site_output$HARVESTextracted_biomass_gCm2day
                        grid_output$mean_HARVESTextracted_biomass_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_biomass_gCm2day
+                       grid_output$mean_annual_HARVESTextracted_biomass_gCm2day[n,,] = site_output$mean_annual_HARVESTextracted_biomass_gCm2day
                        grid_output$HARVESTlitter_biomass_gCm2day[n,,] = site_output$HARVESTlitter_biomass_gCm2day
                        grid_output$mean_HARVESTlitter_biomass_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTlitter_biomass_gCm2day
+                       grid_output$mean_annual_HARVESTlitter_biomass_gCm2day[n,,] = site_output$mean_annual_HARVESTlitter_biomass_gCm2day
                    }
                }
                # Gridded labile information
@@ -2481,6 +2581,11 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$alloc_labile_gCm2day[n,,] = site_output$alloc_labile_gCm2day
                    grid_output$combined_labile_to_litter_gCm2day[n,,] = site_output$combined_labile_to_litter_gCm2day
                    # Annual information
+                   grid_output$mean_annual_labile_gCm2[n,,] = site_output$mean_annual_labile_gCm2
+                   grid_output$mean_annual_outflux_labile_gCm2day[n,,] = site_output$mean_annual_outflux_labile_gCm2day
+                   grid_output$mean_annual_labile_to_foliage_gCm2day[n,,] = site_output$mean_annual_labile_to_foliage_gCm2day
+                   grid_output$mean_annual_alloc_labile_gCm2day[n,,] = site_output$mean_annual_alloc_labile_gCm2day
+                   grid_output$mean_annual_combined_labile_to_litter_gCm2day[n,,] = site_output$mean_annual_combined_labile_to_litter_gCm2day
                    grid_output$MTT_annual_labile_years[n,,] = site_output$MTT_annual_labile_years
                    # Fractional partitioning of tunover to different drivers - should they exist
                    grid_output$NaturalFractionOfTurnover_labile[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_labile
@@ -2490,16 +2595,20 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    if (exists(x = "FIREemiss_labile_gCm2day", where = site_output)) {
                        grid_output$FIREemiss_labile_gCm2day[n,,] = site_output$FIREemiss_labile_gCm2day
                        grid_output$mean_FIREemiss_labile_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_labile_gCm2day
+                       grid_output$mean_annual_FIREemiss_labile_gCm2day[n,,] = site_output$mean_annual_FIREemiss_labile_gCm2day
                    }
                    if (exists(x = "FIRElitter_labile_gCm2day", where = site_output)) {
                        grid_output$FIRElitter_labile_gCm2day[n,,] = site_output$FIRElitter_labile_gCm2day
                        grid_output$mean_FIRElitter_labile_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_labile_gCm2day
+                       grid_output$mean_annual_FIRElitter_labile_gCm2day[n,,] = site_output$mean_annual_FIRElitter_labile_gCm2day
                    }
                    if (exists(x = "HARVESTextracted_labile_gCm2day", where = site_output)) {
                        grid_output$HARVESTextracted_labile_gCm2day[n,,] = site_output$HARVESTextracted_labile_gCm2day
                        grid_output$mean_HARVESTextracted_labile_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_labile_gCm2day
+                       grid_output$mean_annual_HARVESTextracted_labile_gCm2day[n,,] = site_output$mean_annual_HARVESTextracted_labile_gCm2day
                        grid_output$HARVESTlitter_labile_gCm2day[n,,] = site_output$HARVESTlitter_labile_gCm2day
                        grid_output$mean_HARVESTlitter_labile_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTlitter_labile_gCm2day
+                       grid_output$mean_annual_HARVESTlitter_labile_gCm2day[n,,] = site_output$mean_annual_HARVESTlitter_labile_gCm2day
                    }
                }
                # Gridded foliage information
@@ -2520,6 +2629,11 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$combined_alloc_foliage_gCm2day[n,,] = site_output$combined_alloc_foliage_gCm2day
                    grid_output$combined_foliage_to_litter_gCm2day[n,,] = site_output$combined_foliage_to_litter_gCm2day
                    # Annual information
+                   grid_output$mean_annual_foliage_gCm2[n,,] = site_output$mean_annual_foliage_gCm2
+                   grid_output$mean_annual_outflux_foliage_gCm2day[n,,] = site_output$mean_annual_outflux_foliage_gCm2day
+                   grid_output$mean_annual_foliage_to_litter_gCm2day[n,,] = site_output$mean_annual_foliage_to_litter_gCm2day
+                   grid_output$mean_annual_combined_alloc_foliage_gCm2day[n,,] = site_output$mean_annual_combined_alloc_foliage_gCm2day
+                   grid_output$mean_annual_combined_foliage_to_litter_gCm2day[n,,] = site_output$mean_annual_combined_foliage_to_litter_gCm2day
                    grid_output$MTT_annual_foliage_years[n,,] = site_output$MTT_annual_foliage_years
                    # Fractional partitioning of tunover to different drivers - should they exist
                    grid_output$NaturalFractionOfTurnover_foliage[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_foliage
@@ -2529,20 +2643,25 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    if (exists(x = "alloc_foliage_gCm2day", where = site_output)) {
                        grid_output$alloc_foliage_gCm2day[n,,] = site_output$alloc_foliage_gCm2day
                        grid_output$mean_alloc_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_alloc_foliage_gCm2day
+                       grid_output$mean_annual_alloc_foliage_gCm2day[n,,] = site_output$mean_annual_alloc_foliage_gCm2day
                    }
                    if (exists(x = "FIREemiss_foliage_gCm2day", where = site_output)) {
                        grid_output$FIREemiss_foliage_gCm2day[n,,] = site_output$FIREemiss_foliage_gCm2day
                        grid_output$mean_FIREemiss_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_foliage_gCm2day
+                       grid_output$mean_annual_FIREemiss_foliage_gCm2day[n,,] = site_output$mean_annual_FIREemiss_foliage_gCm2day
                    }
                    if (exists(x = "FIRElitter_foliage_gCm2day", where = site_output)) {
                        grid_output$FIRElitter_foliage_gCm2day[n,,] = site_output$FIRElitter_foliage_gCm2day
                        grid_output$mean_FIRElitter_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_foliage_gCm2day
+                       grid_output$mean_annual_FIRElitter_foliage_gCm2day[n,,] = site_output$mean_annual_FIRElitter_foliage_gCm2day
                    }
                    if (exists(x = "HARVESTextracted_foliage_gCm2day", where = site_output)) {
                        grid_output$HARVESTextracted_foliage_gCm2day[n,,] = site_output$HARVESTextracted_foliage_gCm2day
                        grid_output$mean_HARVESTextracted_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_foliage_gCm2day
+                       grid_output$mean_annual_HARVESTextracted_foliage_gCm2day[n,,] = site_output$mean_annual_HARVESTextracted_foliage_gCm2day
                        grid_output$HARVESTlitter_foliage_gCm2day[n,,] = site_output$HARVESTlitter_foliage_gCm2day
                        grid_output$mean_HARVESTlitter_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTlitter_foliage_gCm2day
+                       grid_output$mean_annual_HARVESTlitter_foliage_gCm2day[n,,] = site_output$mean_annual_HARVESTlitter_foliage_gCm2day
                    }
                }
                # Gridded roots information
@@ -2564,6 +2683,11 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$alloc_roots_gCm2day[n,,] = site_output$alloc_roots_gCm2day
                    grid_output$combined_roots_to_litter_gCm2day[n,,] = site_output$combined_roots_to_litter_gCm2day
                    # Annual information
+                   grid_output$mean_annual_roots_gCm2[n,,] = site_output$mean_annual_roots_gCm2
+                   grid_output$mean_annual_outflux_roots_gCm2day[n,,] = site_output$mean_annual_outflux_roots_gCm2day
+                   grid_output$mean_annual_roots_to_litter_gCm2day[n,,] = site_output$mean_annual_roots_to_litter_gCm2day
+                   grid_output$mean_annual_alloc_roots_gCm2day[n,,] = site_output$mean_annual_alloc_roots_gCm2day
+                   grid_output$mean_annual_combined_roots_to_litter_gCm2day[n,,] = site_output$mean_annual_combined_roots_to_litter_gCm2day
                    grid_output$MTT_annual_roots_years[n,,] = site_output$MTT_annual_roots_years
                    # Fractional partitioning of tunover to different drivers - should they exist
                    grid_output$NaturalFractionOfTurnover_roots[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_roots
@@ -2575,21 +2699,26 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                        grid_output$dRootDepth_m[n,,] = site_output$dRootDepth_m
                        grid_output$mean_RootDepth_m[slot_i,slot_j,] = site_output$mean_RootDepth_m
                        grid_output$final_dRootDepth_m[slot_i,slot_j,] = site_output$dRootDepth_m[,grid_output$time_dim]
+                       grid_output$mean_annual_RootDepth_m[n,,] = site_output$mean_annual_RootDepth_m
                    }
                    # Conditional variables
                    if (exists(x = "FIREemiss_roots_gCm2day", where = site_output)) {
                        grid_output$FIREemiss_roots_gCm2day[n,,] = site_output$FIREemiss_roots_gCm2day
                        grid_output$mean_FIREemiss_roots_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_roots_gCm2day
+                       grid_output$mean_annual_FIREemiss_roots_gCm2day[n,,] = site_output$mean_annual_FIREemiss_roots_gCm2day
                    }
                    if (exists(x = "FIRElitter_roots_gCm2day", where = site_output)) {
                        grid_output$FIRElitter_roots_gCm2day[n,,] = site_output$FIRElitter_roots_gCm2day
                        grid_output$mean_FIRElitter_roots_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_roots_gCm2day
+                       grid_output$mean_annual_FIRElitter_roots_gCm2day[n,,] = site_output$mean_annual_FIRElitter_roots_gCm2day
                    }
                    if (exists(x = "HARVESTextracted_roots_gCm2day", where = site_output)) {
                        grid_output$HARVESTextracted_roots_gCm2day[n,,] = site_output$HARVESTextracted_roots_gCm2day
                        grid_output$mean_HARVESTextracted_roots_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_roots_gCm2day
+                       grid_output$mean_annual_HARVESTextracted_roots_gCm2day[n,,] = site_output$mean_annual_HARVESTextracted_roots_gCm2day
                        grid_output$HARVESTlitter_roots_gCm2day[n,,] = site_output$HARVESTlitter_roots_gCm2day
                        grid_output$mean_HARVESTlitter_roots_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTlitter_roots_gCm2day
+                       grid_output$mean_annual_HARVESTlitter_roots_gCm2day[n,,] = site_output$mean_annual_HARVESTlitter_roots_gCm2day
                    }
                }
                # Gridded wood information
@@ -2611,6 +2740,11 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$alloc_wood_gCm2day[n,,] = site_output$alloc_wood_gCm2day
                    grid_output$combined_wood_to_litter_gCm2day[n,,] = site_output$combined_wood_to_litter_gCm2day
                    # Annual information
+                   grid_output$mean_annual_wood_gCm2[n,,] = site_output$mean_annual_wood_gCm2
+                   grid_output$mean_annual_outflux_wood_gCm2day[n,,] = site_output$mean_annual_outflux_wood_gCm2day
+                   grid_output$mean_annual_wood_to_litter_gCm2day[n,,] = site_output$mean_annual_wood_to_litter_gCm2day
+                   grid_output$mean_annual_alloc_wood_gCm2day[n,,] = site_output$mean_annual_alloc_wood_gCm2day
+                   grid_output$mean_annual_combined_wood_to_litter_gCm2day[n,,] = site_output$mean_annual_combined_wood_to_litter_gCm2day
                    grid_output$MTT_annual_wood_years[n,,] = site_output$MTT_annual_wood_years
                    # Fractional partitioning of tunover to different drivers - should they exist
                    grid_output$NaturalFractionOfTurnover_wood[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_wood
@@ -2620,16 +2754,20 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    if (exists(x = "FIREemiss_wood_gCm2day", where = site_output)) {
                         grid_output$FIREemiss_wood_gCm2day[n,,] = site_output$FIREemiss_wood_gCm2day
                         grid_output$mean_FIREemiss_wood_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_wood_gCm2day
+                        grid_output$mean_annual_FIREemiss_wood_gCm2day[n,,] = site_output$mean_annual_FIREemiss_wood_gCm2day
                    }
                    if (exists(x = "FIRElitter_wood_gCm2day", where = site_output)) {
                        grid_output$FIRElitter_wood_gCm2day[n,,] = site_output$FIRElitter_wood_gCm2day
                        grid_output$mean_FIRElitter_wood_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_wood_gCm2day
+                       grid_output$mean_annual_FIRElitter_wood_gCm2day[n,,] = site_output$mean_annual_FIRElitter_wood_gCm2day
                    }
                    if (exists(x = "HARVESTextracted_wood_gCm2day", where = site_output)) {
                        grid_output$HARVESTextracted_wood_gCm2day[n,,] = site_output$HARVESTextracted_wood_gCm2day
                        grid_output$mean_HARVESTextracted_wood_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_wood_gCm2day
+                       grid_output$mean_annual_HARVESTextracted_wood_gCm2day[n,,] = site_output$mean_annual_HARVESTextracted_wood_gCm2day
                        grid_output$HARVESTlitter_wood_gCm2day[n,,] = site_output$HARVESTlitter_wood_gCm2day
                        grid_output$mean_HARVESTlitter_wood_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTlitter_wood_gCm2day
+                       grid_output$mean_annual_HARVESTlitter_wood_gCm2day[n,,] = site_output$mean_annual_HARVESTlitter_wood_gCm2day
                    }
                }
                # Gridded litter information
@@ -2650,6 +2788,11 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$rhet_litter_gCm2day[n,,] = site_output$rhet_litter_gCm2day
                    grid_output$combined_litter_to_som_gCm2day[n,,] = site_output$combined_litter_to_som_gCm2day
                    # Annual information
+                   grid_output$mean_annual_litter_gCm2[n,,] = site_output$mean_annual_litter_gCm2
+                   grid_output$mean_annual_outflux_litter_gCm2day[n,,] = site_output$mean_annual_outflux_litter_gCm2day
+                   grid_output$mean_annual_litter_to_som_gCm2day[n,,] = site_output$mean_annual_litter_to_som_gCm2day
+                   grid_output$mean_annual_rhet_litter_gCm2day[n,,] = site_output$mean_annual_rhet_litter_gCm2day
+                   grid_output$mean_annual_combined_litter_to_som_gCm2day[n,,] = site_output$mean_annual_combined_litter_to_som_gCm2day
                    grid_output$MTT_annual_litter_years[n,,] = site_output$MTT_annual_litter_years
                    # Fractional partitioning of tunover to different drivers - should they exist
                    grid_output$NaturalFractionOfTurnover_litter[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_litter
@@ -2659,14 +2802,17 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    if (exists(x = "FIREemiss_litter_gCm2day", where = site_output)) {
                        grid_output$FIREemiss_litter_gCm2day[n,,] = site_output$FIREemiss_litter_gCm2day
                        grid_output$mean_FIREemiss_litter_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_litter_gCm2day
+                       grid_output$mean_annual_FIREemiss_litter_gCm2day[n,,] = site_output$mean_annual_FIREemiss_litter_gCm2day
                    }
                    if (exists(x = "FIRElitter_litter_gCm2day", where = site_output)) {
                        grid_output$FIRElitter_litter_gCm2day[n,,] = site_output$FIRElitter_litter_gCm2day
                        grid_output$mean_FIRElitter_litter_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_litter_gCm2day
+                       grid_output$mean_annual_FIRElitter_litter_gCm2day[n,,] = site_output$mean_annual_FIRElitter_litter_gCm2day
                    }
                    if (exists(x = "HARVESTextracted_litter_gCm2day", where = site_output)) {
                        grid_output$HARVESTextracted_litter_gCm2day[n,,] = site_output$HARVESTextracted_litter_gCm2day
                        grid_output$mean_HARVESTextracted_litter_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_litter_gCm2day
+                       grid_output$mean_annual_HARVESTextracted_litter_gCm2day[n,,] = site_output$mean_annual_HARVESTextracted_litter_gCm2day
                    }
                }
                # Gridded wood litter information
@@ -2687,6 +2833,11 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$rhet_woodlitter_gCm2day[n,,] = site_output$rhet_woodlitter_gCm2day
                    grid_output$combined_woodlitter_to_som_gCm2day[n,,] = site_output$combined_woodlitter_to_som_gCm2day
                    # Annual information
+                   grid_output$mean_annual_woodlitter_gCm2[n,,] = site_output$mean_annual_woodlitter_gCm2
+                   grid_output$mean_annual_outflux_woodlitter_gCm2day[n,,] = site_output$mean_annual_outflux_woodlitter_gCm2day
+                   grid_output$mean_annual_woodlitter_to_som_gCm2day[n,,] = site_output$mean_annual_woodlitter_to_som_gCm2day
+                   grid_output$mean_annual_rhet_woodlitter_gCm2day[n,,] = site_output$mean_annual_rhet_woodlitter_gCm2day
+                   grid_output$mean_annual_combined_woodlitter_to_som_gCm2day[n,,] = site_output$mean_annual_combined_woodlitter_to_som_gCm2day
                    grid_output$MTT_annual_woodlitter_years[n,,] = site_output$MTT_annual_woodlitter_years
                    # Fractional partitioning of tunover to different drivers - should they exist
                    grid_output$NaturalFractionOfTurnover_woodlitter[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_woodlitter
@@ -2696,14 +2847,17 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    if (exists(x = "FIREemiss_woodlitter_gCm2day", where = site_output)) {
                        grid_output$FIREemiss_woodlitter_gCm2day[n,,] = site_output$FIREemiss_woodlitter_gCm2day
                        grid_output$mean_FIREemiss_woodlitter_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_woodlitter_gCm2day
+                       grid_output$mean_annual_FIREemiss_woodlitter_gCm2day[n,,] = site_output$mean_annual_FIREemiss_woodlitter_gCm2day
                    }
                    if (exists(x = "FIRElitter_woodlitter_gCm2day", where = site_output)) {
                        grid_output$FIRElitter_woodlitter_gCm2day[n,,] = site_output$FIRElitter_woodlitter_gCm2day
                        grid_output$mean_FIRElitter_woodlitter_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_woodlitter_gCm2day
+                       grid_output$mean_annual_FIRElitter_woodlitter_gCm2day[n,,] = site_output$mean_annual_FIRElitter_woodlitter_gCm2day
                    }
                    if (exists(x = "HARVESTextracted_woodlitter_gCm2day", where = site_output)) {
                        grid_output$HARVESTextracted_woodlitter_gCm2day[n,,] = site_output$HARVESTextracted_woodlitter_gCm2day
                        grid_output$mean_HARVESTextracted_woodlitter_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_woodlitter_gCm2day
+                       grid_output$mean_annual_HARVESTextracted_woodlitter_gCm2day[n,,] = site_output$mean_annual_HARVESTextracted_woodlitter_gCm2day
                    }
                }
                # Gridded som information
@@ -2720,6 +2874,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$outflux_som_gCm2day[n,,] = site_output$outflux_som_gCm2day
                    grid_output$rhet_som_gCm2day[n,,] = site_output$rhet_som_gCm2day
                    # Annual information
+                   grid_output$mean_annual_som_gCm2[n,,] = site_output$mean_annual_som_gCm2
+                   grid_output$mean_annual_outflux_som_gCm2day[n,,] = site_output$mean_annual_outflux_som_gCm2day
+                   grid_output$mean_annual_rhet_som_gCm2day[n,,] = site_output$mean_annual_rhet_som_gCm2day
                    grid_output$MTT_annual_som_years[n,,] = site_output$MTT_annual_som_years
                    # Fractional partitioning of tunover to different drivers - should they exist
                    grid_output$NaturalFractionOfTurnover_som[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_som
@@ -2729,10 +2886,12 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    if (exists(x = "FIREemiss_som_gCm2day", where = site_output)) {
                        grid_output$FIREemiss_som_gCm2day[n,,] = site_output$FIREemiss_som_gCm2day
                        grid_output$mean_FIREemiss_som_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_som_gCm2day
+                       grid_output$mean_annual_FIREemiss_som_gCm2day[n,,] = site_output$mean_annual_FIREemiss_som_gCm2day
                    }
                    if (exists(x = "HARVESTextracted_som_gCm2day", where = site_output)) {
                        grid_output$HARVESTextracted_som_gCm2day[n,,] = site_output$HARVESTextracted_som_gCm2day
                        grid_output$mean_HARVESTextracted_som_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_som_gCm2day
+                       grid_output$mean_annual_HARVESTextracted_som_gCm2day[n,,] = site_output$mean_annual_HARVESTextracted_som_gCm2day
                    }
                }
                # Gridded dom information
@@ -2749,6 +2908,9 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$outflux_dom_gCm2day[n,,] = site_output$outflux_dom_gCm2day
                    grid_output$rhet_dom_gCm2day[n,,] = site_output$rhet_dom_gCm2day
                    # Annual information
+                   grid_output$mean_annual_dom_gCm2[n,,] = site_output$mean_annual_dom_gCm2
+                   grid_output$mean_annual_outflux_dom_gCm2day[n,,] = site_output$mean_annual_outflux_dom_gCm2day
+                   grid_output$mean_annual_rhet_dom_gCm2day[n,,] = site_output$mean_annual_rhet_dom_gCm2day
                    grid_output$MTT_annual_dom_years[n,,] = site_output$MTT_annual_dom_years
                    # Fractional partitioning of tunover to different drivers - should they exist
                    grid_output$NaturalFractionOfTurnover_dom[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_dom
@@ -2758,10 +2920,12 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    if (exists(x = "FIREemiss_dom_gCm2day", where = site_output)) {
                        grid_output$FIREemiss_dom_gCm2day[n,,] = site_output$FIREemiss_dom_gCm2day
                        grid_output$mean_FIREemiss_dom_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_dom_gCm2day
+                       grid_output$mean_annual_FIREemiss_dom_gCm2day[n,,] = site_output$mean_annual_FIREemiss_dom_gCm2day
                    }
                    if (exists(x = "HARVESTextracted_dom_gCm2day", where = site_output)) {
                        grid_output$HARVESTextracted_dom_gCm2day[n,,] = site_output$HARVESTextracted_dom_gCm2day
                        grid_output$mean_HARVESTextracted_dom_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_dom_gCm2day
+                       grid_output$mean_annual_HARVESTextracted_dom_gCm2day[n,,] = site_output$mean_annual_HARVESTextracted_dom_gCm2day
                    }
                }
 
@@ -2769,52 +2933,63 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                if (exists(x = "ET_kgH2Om2day", where = site_output)) {
                    # currently water in the soil surface layer (0-30 cm)
                    grid_output$mean_SurfWater_kgH2Om2[slot_i,slot_j,] = site_output$mean_SurfWater_kgH2Om2
+                   grid_output$mean_annual_SurfWater_kgH2Om2[n,,] = site_output$mean_annual_SurfWater_kgH2Om2
                    grid_output$final_SurfWater_kgH2Om2[slot_i,slot_j,] = site_output$SurfWater_kgH2Om2[,grid_output$time_dim]
                    grid_output$final_dSurfWater_kgH2Om2[slot_i,slot_j,] = site_output$dSurfWater_kgH2Om2[,grid_output$time_dim]
                    grid_output$SurfWater_kgH2Om2[n,,] = site_output$SurfWater_kgH2Om2
                    grid_output$dSurfWater_kgH2Om2[n,,] = site_output$dSurfWater_kgH2Om2
                    # plant apparent soil water potential (MPa)
                    grid_output$mean_wSWP_MPa[slot_i,slot_j,] = site_output$mean_wSWP_MPa
+                   grid_output$mean_annual_wSWP_MPa[n,,] = site_output$mean_annual_wSWP_MPa
                    grid_output$final_wSWP_MPa[slot_i,slot_j,] = site_output$wSWP_MPa[,grid_output$time_dim]
                    grid_output$wSWP_MPa[n,,] = site_output$wSWP_MPa
                    grid_output$dwSWP_MPa[n,,] = site_output$dwSWP_MPa
                    # evapotranspiration (Etrans + Esoil + Ewetcanopy)
+                   grid_output$mean_annual_ET_kgH2Om2day[n,,] = site_output$mean_annual_ET_kgH2Om2day
                    grid_output$mean_ET_kgH2Om2day[slot_i,slot_j,] = site_output$mean_ET_kgH2Om2day
                    grid_output$ET_kgH2Om2day[n,,] = site_output$ET_kgH2Om2day
                    # Ecosystem water use efficiency (GPP/ET)
+                   grid_output$mean_annual_wue_eco_gCkgH2O[n,,] = site_output$mean_annual_wue_eco_gCkgH2O
                    grid_output$mean_wue_eco_gCkgH2O[slot_i,slot_j,] = site_output$mean_wue_eco_gCkgH2O
                    grid_output$wue_eco_gCkgH2O[n,,] = site_output$wue_eco_gCkgH2O
                    # Check whether the evaporation components exist
                    if (exists(x = "Etrans_kgH2Om2day", where = site_output)) {
                        # Transpiration
+                       grid_output$mean_annual_Etrans_kgH2Om2day[n,,] = site_output$mean_annual_Etrans_kgH2Om2day
                        grid_output$mean_Etrans_kgH2Om2day[slot_i,slot_j,] = site_output$mean_Etrans_kgH2Om2day
                        grid_output$Etrans_kgH2Om2day[n,,] = site_output$Etrans_kgH2Om2day
                        # Plant water use efficiency (GPP/Etrans)
+                       grid_output$mean_annual_wue_plant_gCkgH2O[n,,] = site_output$mean_annual_wue_plant_gCkgH2O
                        grid_output$mean_wue_plant_gCkgH2O[slot_i,slot_j,] = site_output$mean_wue_plant_gCkgH2O
                        grid_output$wue_plant_gCkgH2O[n,,] = site_output$wue_plant_gCkgH2O
                    }
                   if (exists(x = "Esoil_kgH2Om2day", where = site_output)) {
                       # Soil evaporation
+                      grid_output$mean_annual_Esoil_kgH2Om2day[n,,] = site_output$mean_annual_Esoil_kgH2Om2day
                       grid_output$mean_Esoil_kgH2Om2day[slot_i,slot_j,] = site_output$mean_Esoil_kgH2Om2day
                       grid_output$Esoil_kgH2Om2day[n,,] = site_output$Esoil_kgH2Om2day
                   }
                   if (exists(x = "Ewetcanopy_kgH2Om2day", where = site_output)) {
                       # Wet canopy evaporation
+                      grid_output$mean_annual_Ewetcanopy_kgH2Om2day[n,,] = site_output$mean_annual_Ewetcanopy_kgH2Om2day
                       grid_output$mean_Ewetcanopy_kgH2Om2day[slot_i,slot_j,] = site_output$mean_Ewetcanopy_kgH2Om2day
                       grid_output$Ewetcanopy_kgH2Om2day[n,,] = site_output$Ewetcanopy_kgH2Om2day
                    }
                   if (exists(x = "runoff_kgH2Om2day", where = site_output)) {
                       # Surface water runoff
+                      grid_output$mean_annual_runoff_kgH2Om2day[n,,] = site_output$mean_annual_runoff_kgH2Om2day
                       grid_output$mean_runoff_kgH2Om2day[slot_i,slot_j,] = site_output$mean_runoff_kgH2Om2day
                       grid_output$runoff_kgH2Om2day[n,,] = site_output$runoff_kgH2Om2day
                    }
                   if (exists(x = "underflow_kgH2Om2day", where = site_output)) {
                       # Underflow from bottom of soil column
+                      grid_output$mean_annual_underflow_kgH2Om2day[n,,] = site_output$mean_annual_underflow_kgH2Om2day
                       grid_output$mean_underflow_kgH2Om2day[slot_i,slot_j,] = site_output$mean_underflow_kgH2Om2day
                       grid_output$underflow_kgH2Om2day[n,,] = site_output$underflow_kgH2Om2day
                    }
                   if (exists(x = "total_drainage_kgH2Om2day", where = site_output)) {
                       # Total drainage from soil surface and bottom of soil column
+                      grid_output$mean_annual_total_drainage_kgH2Om2day[n,,] = site_output$mean_annual_total_drainage_kgH2Om2day
                       grid_output$mean_total_drainage_kgH2Om2day[slot_i,slot_j,] = site_output$mean_total_drainage_kgH2Om2day
                       grid_output$total_drainage_kgH2Om2day[n,,] = site_output$total_drainage_kgH2Om2day
                    }
@@ -2822,33 +2997,39 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                # Snow specific
                if (exists(x = "snow_kgH2Om2", where = site_output)) {
                    ## snow on soil surface
+                   grid_output$mean_annual_snow_kgH2Om2[n,,] = site_output$mean_annual_snow_kgH2Om2
                    grid_output$mean_snow_kgH2Om2[slot_i,slot_j,] = site_output$mean_snow_kgH2Om2
                    grid_output$snow_kgH2Om2[n,,] = site_output$snow_kgH2Om2
                }
                # Canopy process variables
                if (exists(x = "APAR_MJm2day", where = site_output)) {
                    # Absorbed photosynthetically active radation
+                   grid_output$mean_annual_APAR_MJm2day[n,,] = site_output$mean_annual_APAR_MJm2day
                    grid_output$mean_APAR_MJm2day[slot_i,slot_j,] = site_output$mean_APAR_MJm2day
                    grid_output$APAR_MJm2day[n,,] = site_output$APAR_MJm2day
                }
                if (exists(x = "CiCa", where = site_output)) {
                    # Canopy Ci:Ca
+                   grid_output$mean_annual_CiCa[n,,] = site_output$mean_annual_CiCa
                    grid_output$mean_CiCa[slot_i,slot_j,] = site_output$mean_CiCa
                    grid_output$CiCa[n,,] = site_output$CiCa
                }
                if (exists(x = "gs_demand_supply_ratio", where = site_output)) {
                    # Ratio of stomatal conductance relative to its maximum value,
                    # this metric provides information on the demand vs supply constrains on stomatal conductance
+                   grid_output$mean_annual_gs_demand_supply_ratio[n,,] = site_output$mean_annual_gs_demand_supply_ratio
                    grid_output$mean_gs_demand_supply_ratio[slot_i,slot_j,] = site_output$mean_gs_demand_supply_ratio
                    grid_output$gs_demand_supply_ratio[n,,] = site_output$gs_demand_supply_ratio
                }
                if (exists(x = "gs_mmolH2Om2day", where = site_output)) {
                    # Canopy stomatal conductance
+                   grid_output$mean_annual_gs_mmolH2Om2day[n,,] = site_output$mean_annual_gs_mmolH2Om2day
                    grid_output$mean_gs_mmolH2Om2day[slot_i,slot_j,] = site_output$mean_gs_mmolH2Om2day
                    grid_output$gs_mmolH2Om2day[n,,] = site_output$gs_mmolH2Om2day
                }
                if (exists(x = "gb_mmolH2Om2day", where = site_output)) {
                    # Canopy boundary layer conductance
+                   grid_output$mean_annual_gb_mmolH2Om2day[n,,] = site_output$mean_annual_gb_mmolH2Om2day
                    grid_output$mean_gb_mmolH2Om2day[slot_i,slot_j,] = site_output$mean_gb_mmolH2Om2day
                    grid_output$gb_mmolH2Om2day[n,,] = site_output$gb_mmolH2Om2day
                }
