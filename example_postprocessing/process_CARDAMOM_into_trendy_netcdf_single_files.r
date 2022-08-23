@@ -9,6 +9,8 @@
 ###
 ## Job specific information
 
+print("Begin creation of Trendy v11 compatible single variable netcdf files...")
+
 # set working directory
 setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 
@@ -24,7 +26,7 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_trendy_lca_agb_gpp_fire/"
 input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB/"
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_GPP_FIRE/"
-input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_etol_EQF_harsh/"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_etol_EQF_harsh/"
 
 # Specify any extra information for the filename
 output_prefix = "CARDAMOM_S3_" # follow with "_"
@@ -238,7 +240,7 @@ for (n in seq(1, length(PROJECT$sites))) {
          if (exists("WLIT")) {WLIT[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_woodlitter_gCm2[n,,]*1e-3}
          if (exists("DOM")) {DOM[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_dom_gCm2[n,,]*1e-3}
          if (exists("BIO")) {BIO[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_biomass_gCm2[n,,]*1e-3}
-s
+
          # FLUXES (NOTE; unit conversion gC/m2/day -> kgC/m2/s)
          if (exists("GPP")) {GPP[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$gpp_gCm2day[n,,]* 1e-3 * (1/86400)}
          if (exists("RAU")) {RAU[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$rauto_gCm2day[n,,]* 1e-3 * (1/86400)}

@@ -493,7 +493,7 @@ module model_likelihood_module
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                    etol = 0.20d0 !0.10d0 !0.05d0
+                                    etol = 0.05d0 ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
     ! update initial values
     DIAG = EDCD%DIAG
     EDC2 = 1

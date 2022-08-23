@@ -2700,7 +2700,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Based on the soil mass balance corrected_ET, make assumptions to correct ET_leaf and ET_soil
     balance = corrected_ET / (ET_leaf + ET_soil)
-    ET_leaf = ET_leaf * balance ; ET_soil = ET_soil * balance
+    if (balance == balance) then
+        ET_leaf = ET_leaf * balance ; ET_soil = ET_soil * balance
+    end if
 
 !    ! check water balance
 !    balance = (rainfall_in - corrected_ET - underflow - runoff) * days_per_step

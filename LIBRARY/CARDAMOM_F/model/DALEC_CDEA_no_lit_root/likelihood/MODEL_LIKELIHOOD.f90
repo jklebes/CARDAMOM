@@ -485,7 +485,7 @@ module model_likelihood_module
     ! Equilibrium factor (in comparison with initial conditions)
     EQF = 10d0 ! TLS 06/11/2019 !10d0 ! JFE replaced 10 by 2 - 27/06/2018
     ! Pool exponential decay tolerance
-    etol = 0.1d0
+    etol = 0.05d0 ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
 
     ! Calculate total flux for the simulation period
     do fl = 1, nofluxes
