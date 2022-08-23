@@ -195,7 +195,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       avgTemp_out = (mint_out + maxt_out) * 0.5
 
       # user update
-      print(paste("Met data extracted for current location ",Sys.time(),sep=""))
+      if (use_parallel == FALSE) {print(paste("Met data extracted for current location ",Sys.time(),sep=""))}
 
       avg_days = 21 # assume that the first 21 days are just the actual values
       # create photoperiod information; add 21 days to the output
@@ -245,7 +245,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
               timestep_days = rep(timestep_days, length.out=length(met_in$run_day))
           }
 
-          print("...calculating monthly or weekly averages for met drivers")
+          if (use_parallel == FALSE) {print("...calculating monthly or weekly averages for met drivers")}
           # determine the actual daily positions
           run_day_selector = cumsum(timestep_days)
           # create needed variables

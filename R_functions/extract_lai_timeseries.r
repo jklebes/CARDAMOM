@@ -9,7 +9,7 @@ extract_lai_timeseries<- function(i1,j1,timestep_days,spatial_type,resolution,
                                   grid_type,latlon_in,lai_all,years_to_load,doy_obs) {
 
    # Update the user
-   print(paste("LAI data extracted for current location ",Sys.time(),sep=""))
+   if (use_parallel == FALSE) {print(paste("LAI data extracted for current location ",Sys.time(),sep=""))}
 
 #   # find the nearest location
 #   output = closest2d_2(1,lai_all$lat,lai_all$long,latlon_in[1],latlon_in[2])
@@ -27,7 +27,7 @@ extract_lai_timeseries<- function(i1,j1,timestep_days,spatial_type,resolution,
    lai_unc_out = array(NA, dim=length(doy_obs))
    # now line up the obs days with all days
    b = 1 ; i = 1 ; a = 1 ; start_year = as.numeric(years_to_load[1])
-   print("...begin inserting LAI observations into model time steps")
+   #print("...begin inserting LAI observations into model time steps")
    while (b <= length(lai_all$doy_obs)) {
 
       # if we are in a year which is missing then we do not allow consideration of DOY
@@ -60,7 +60,7 @@ extract_lai_timeseries<- function(i1,j1,timestep_days,spatial_type,resolution,
            run_day_selector=seq(1,length(lai_out),timestep_days)
            timestep_days=rep(timestep_days, length.out=length(lai_out))
        }
-       print("...calculating monthly averages for lai")
+       #print("...calculating monthly averages for lai")
        # determine the actual daily positions
        run_day_selector=cumsum(timestep_days)
        # create needed variables
