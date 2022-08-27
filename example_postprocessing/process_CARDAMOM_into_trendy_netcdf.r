@@ -289,8 +289,8 @@ for (n in seq(1, length(PROJECT$sites))) {
 ## Define dimensions which will be used across all files
 
 ## define dimension
-lat_dimen <- ncdim_def( "lat", units="degree north (-90->90)", latitude )
-long_dimen <- ncdim_def( "lon", units="degree east (-180->180)", longitude )
+lat_dimen <- ncdim_def( "latitude", units="degree north (-90->90)", latitude )
+long_dimen <- ncdim_def( "longitude", units="degree east (-180->180)", longitude )
 time_dimen <- ncdim_def( "time", units="", 1:length(PROJECT$model$timestep_days))
 quantile_dimen <- ncdim_def( "quantile", units="-", quantiles_wanted)
 year_dimen <- ncdim_def( "year", units="", as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year))

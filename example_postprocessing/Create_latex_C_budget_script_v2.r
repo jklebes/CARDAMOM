@@ -35,6 +35,7 @@ outfilename = "latex_C_budget.tex"
 load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Forests2020_Mexico_FCP_chronosequence/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_agb/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB/infofile.RData")
 
 # If this is a site analysis 
 # which site are we using?
@@ -45,9 +46,9 @@ site_nos = 1
 
 # The caption must be written in correct latex syntex
 # NOTE: if the latex language requires use of "\" ensure it is a "\\".
-figure_caption = "Steady state C-budget for semi-evergreen FCP. Numbers show median estimate of fluxes (alongside arrows) and of stocks (in boxes). Units are gC m$^{-2}$ for stocks and gC m$^{-2}$ y$^{-1}$ for fluxes. 95\\% confidence intervals are shown in a fractional form with 2.5 and 97.5 percentiles as numerator and denominator. Black fluxes are biogenic, including net primary production ($NPP$), mortality ($Mort$), autotrophic respiration ($Ra$) and heterotrophic respiration ($Rh$). $NEE = Ra + Rh - GPP$. $NBE = NEE + E_{total}$. Red fluxes are fire-driven emissions ($E$)."
+figure_caption = "C-budget for global CARDAMOM analysis at 1x1 degree, monthly time step between 2000-2021. Numbers show median estimate of fluxes (alongside arrows) and of stocks (in boxes). Units are gC m$^{-2}$ for stocks and gC m$^{-2}$ y$^{-1}$ for fluxes. 95\\% confidence intervals are shown in a fractional form with 2.5 and 97.5 percentiles as numerator and denominator. Black fluxes are biogenic, including net primary production ($NPP$), mortality ($Mort$), autotrophic respiration ($Ra$) and heterotrophic respiration ($Rh$). $NEE = Ra + Rh - GPP$. $NBE = NEE + E_{total}$. Red fluxes are fire-driven emissions ($E$)."
 # The label will be used for referencing the figure in the latex document
-figure_label = "SIFig:fcp_budget"
+figure_label = "SIFig:global_budget"
 # Desired precision, i.e. decimal places
 dp = 1
 
