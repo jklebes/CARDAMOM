@@ -126,7 +126,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
 
           # load the met data for each site
           drivers = read_binary_file_format(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep=""))
-
+## HACK to create S2 simulations for GCP / Trendy v11
+#drivers$met[,8] = 0
           # run parameters for full results / propogation
           soil_info = c(drivers$top_sand,drivers$bot_sand,drivers$top_clay,drivers$bot_clay)
           print("running model ensemble")

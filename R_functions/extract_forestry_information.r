@@ -38,7 +38,7 @@ extract_forestry_information<-function(i1,j1,timestep_days,spatial_type,resoluti
        timestep_days=rep(timestep_days, length.out=length(deforestation))
    }
 
-   print("...calculating weekly / monthly averages for deforestation info")
+   if (use_parallel == FALSE) {print("...calculating weekly / monthly averages for deforestation info")}
    # determine the actual daily positions
    run_day_selector = cumsum(timestep_days)
    # create needed variables

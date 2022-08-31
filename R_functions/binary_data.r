@@ -19,7 +19,7 @@
 binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter_type,nopars,noyears) {
 
   # Inform the user
-  print(paste("writing out binary...",Sys.time(),sep=""))
+  if (use_parallel == FALSE) {print(paste("writing out binary...",Sys.time(),sep=""))}
 
   # set model ID
   if (modelname == "ACM") {
