@@ -68,20 +68,20 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
           # test for convergence and whether or not there is any single chain which can be removed in they do not converge
           notconv = TRUE ; converged = rep("TRUE", times = max(PROJECT$model$nopars))
           while (dim(parameters)[3] > 2 & notconv) {
-              print("begin convergence checking")
+              if (use_parallel == FALSE) {print("begin convergence checking")}
               converged = have_chains_converged(parameters)
               # if log-likelihood has passed then we are not interested
               if (converged[length(converged)] == "FAIL") {
-                  print("...not converged begin removing potential parameter vectors")
+                  if (use_parallel == FALSE) {print("...not converged begin removing potential parameter vectors")}
                   i = 1 ; max_likelihood = rep(NA, length.out=dim(parameters)[3]) ; CI90 = rep(NA,length.out=c(2))
                   while (notconv){
-                     print(paste("......trying removal of parameter vector ",i,sep=""))
+                     if (use_parallel == FALSE) {print(paste("......trying removal of parameter vector ",i,sep=""))}
                      # Track the maximum likelihood across each chain.
                      max_likelihood[i] = max(parameters[dim(parameters)[1],,i])
                      converged = have_chains_converged(parameters[,,-i]) ; i = i + 1
                      # if removing one of the chains get convergence then great
                      if (converged[length(converged)] == "PASS") {
-                         print(".........convergence found on chain removal")
+                         if (use_parallel == FALSE) {print(".........convergence found on chain removal")}
                          # likelihoods converge now but we need to check for the possibility that the chain we have removed is actually better than the others
                          CI90[1] = quantile(parameters[dim(parameters)[1],,(i-1)], prob=c(0.10)) ; CI90[2] = quantile(parameters[dim(parameters)[1],,-(i-1)], prob=c(0.90))
                          # if the rejected chain is significantly better (at 90 % CI) than the converged chains then we have a problem
@@ -90,12 +90,12 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                              # we will now assume that we use the single good chain instead...
                              parameters = array(parameters[,,(i-1)],dim=c(dim(parameters)[1:2],2))
                              notconv = FALSE ; i = (i-1) * -1
-                             print(paste("............chain ",i*-1," only has been accepted",sep=""))
+                             if (use_parallel == FALSE) {print(paste("............chain ",i*-1," only has been accepted",sep=""))}
                          } else {
                              # if the non-converged chain is worse or just the same in likelihood terms as the others then we will ditch it
                              notconv = FALSE ; i = i-1 # converged now?
                              parameters = parameters[,,-i]
-                             print(paste("............chain rejected = ",i,sep=""))
+                             if (use_parallel == FALSE) {print(paste("............chain rejected = ",i,sep=""))}
                          }
                      }
                      # If removing one chain does not lead to convergence then lowest average likelihood chain could be removed
@@ -108,17 +108,18 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                          # Update the maximum likelihood vector also
                          max_likelihood = max_likelihood[-i]
                          # Update the user
-                         print(paste(".........single chain removal couldn't find convergence; removing lowest likelihood chain = ",i,sep=""))
+                         if (use_parallel == FALSE) {print(paste(".........single chain removal couldn't find convergence; removing lowest likelihood chain = ",i,sep=""))}
                          # reset counter
                          i = 1
                          # If we have removed chains down to 2 (or kept just one) we need to abort
                          if (dim(parameters)[3] < 3 & notconv) {
-                             notconv = FALSE ; print(".........have removed all low likelihood chains without successful convergence")
+                             notconv = FALSE
+                             if (use_parallel == FALSE) {print(".........have removed all low likelihood chains without successful convergence")}
                          }
                      }
                   } # while to removing chains
               } else {
-                  print("All chains converge")
+                  if (use_parallel == FALSE) {print("All chains converge")}
                   # we have conveged
                   notconv = FALSE
               } # if likelihood not converged
@@ -126,11 +127,13 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
 
           # load the met data for each site
           drivers = read_binary_file_format(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep=""))
+# HACK to remove CO2 effect
+#drivers$met[,5] = drivers$met[1,5]
 ## HACK to create S2 simulations for GCP / Trendy v11
 #drivers$met[,8] = 0
           # run parameters for full results / propogation
           soil_info = c(drivers$top_sand,drivers$bot_sand,drivers$top_clay,drivers$bot_clay)
-          print("running model ensemble")
+          if (use_parallel == FALSE) {print("running model ensemble")}
           states_all = simulate_all(n,PROJECT,PROJECT$model$name,drivers$met,parameters[1:PROJECT$model$nopars[n],,],
                                     drivers$lat,PROJECT$ctessel_pft[n],PROJECT$parameter_type,
                                     PROJECT$exepath,soil_info)
@@ -448,7 +451,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
           if (length(which(is.na(as.vector(NPP_fraction))) == TRUE) > 0) {
               print(paste("NA value found in NPP for site ",PROJECT$site[n],sep="")) ; dummy = -1 ; return(dummy)
           }
-          print("processing and storing ensemble output")
+          if (use_parallel == FALSE) {print("processing and storing ensemble output")}
           # store the results now in binary file
           save(parameter_covariance,parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,
                file=outfile_parameters, compress="gzip", compression_level = 9)
@@ -1639,11 +1642,11 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
   print('Welcome to RUN_MCMC_RESULTS!!')
 
   # bundle needed functions down the chain
-  functions_list=c("read_parameter_chains","read_binary_file_format","simulate_all",
-                   "read_binary_response_surface","crop_development_parameters",
-                   "have_chains_converged","psrf","read_parameter_covariance",
-                   "ensemble_within_range","rollapply_mean_annual_max",
-                   "rollapply_mean_annual")
+  #functions_list=c("read_parameter_chains","read_binary_file_format","simulate_all",
+  #                 "read_binary_response_surface","crop_development_parameters",
+  #                 "have_chains_converged","psrf","read_parameter_covariance",
+  #                 "ensemble_within_range","rollapply_mean_annual_max",
+  #                 "rollapply_mean_annual")
   # start marker
   stime = proc.time()["elapsed"]
 
@@ -1666,13 +1669,18 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
   # now request the creation of the plots
   if (use_parallel & length(nos_plots) > 1) {
       print("...beginning parallel operations")
-      cl <- makeCluster(min(length(nos_plots),numWorkers), type = "PSOCK")
-      clusterExport(cl,functions_list)
-      # load R libraries in cluster
-      clusterExport(cl,"load_r_libraries") ; clusterEvalQ(cl, load_r_libraries())
-      dummy = parLapply(cl,nos_plots,fun=run_each_site,PROJECT=PROJECT,stage=stage,
-                        repair=repair,grid_override=grid_override)
-      stopCluster(cl)
+#      cl <- makeCluster(min(length(nos_plots),numWorkers), type = "PSOCK")
+#      clusterExport(cl,functions_list)
+#      # load R libraries in cluster
+#      clusterExport(cl,"load_r_libraries") ; clusterEvalQ(cl, load_r_libraries())
+#      dummy = parLapply(cl,nos_plots,fun=run_each_site,PROJECT=PROJECT,stage=stage,
+#                        repair=repair,grid_override=grid_override)
+#      stopCluster(cl)
+      # NOTE: that the use of mclapply() is due to reported improved efficiency over creating a virtual cluster.
+      # However, mclapply does not (at the time of typing) work on Windows, i.e. Linux and Mac only
+      cl <- min(length(nos_plots),numWorkers)
+      dummy = mclapply(nos_plots,FUN=run_each_site,PROJECT=PROJECT,stage=stage,
+                       repair=repair,grid_override=grid_override, mc.cores = cl)
       print("...finished parallel operations")
   } else {
       print("...beginning serial operations")
@@ -3080,7 +3088,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
   } # gridded run?
 
   # tell me whats happening
-  print(paste("...time to process ",round((proc.time()["elapsed"]-stime)/60,1)," minutes",sep=""))
+  if (use_parallel == FALSE) {print(paste("...time to process ",round((proc.time()["elapsed"]-stime)/60,1)," minutes",sep=""))}
 
 } # end function run_mcmc_results
 

@@ -117,6 +117,27 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
            #contour(landmask, add = TRUE, lwd = 1.0, nlevels = 1,axes = FALSE,drawlabels = FALSE,col = "black")
            dev.off()
 
+           # create maps
+           jpeg(file=paste("grid_95CI_map_",par_names[p],"_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+           par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.8), omi=c(0.2, 0.2, 0.2, 0.40))
+           info = " " # assume default is no header, but sometimes we add something extra...
+           var2 = grid_output[[pp]][,,upper_loc] - grid_output[[pp]][,,lower_loc]
+           var1 = mean(var2, na.rm=TRUE)
+           #var2 = mean(grid_output[[pp]][,,upper_loc], na.rm=TRUE)
+           #var3 = mean(grid_output[[pp]][,,lower_loc], na.rm=TRUE)
+           #var4 = mean(grid_output[[pp]][,,loc_25], na.rm=TRUE)
+           #var5 = mean(grid_output[[pp]][,,loc_75], na.rm=TRUE)
+           var1 = round(var1,digit=2) #; var2=round(var2,digit=2) ; var3=round(var3,digit=2) #; var4 = round(var4,digit=2) ; var5 = round(var5,digit=2)
+           #var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2) ; var4 = round(var4,digit=2) ; var5 = round(var5,digit=2)
+           #info = paste("Mean estimate: ",par_names[p]," (97.5 % = ",var2,"; 75 % = ",var5,"; 50 % = ",var1,"; 25 % = ",var4,"; 2.5 % = ",var3,")", sep="")
+           info = paste("Mean 95CI estimate: ",par_names[p]," = ",var1, sep="")
+           zrange=range(pretty(c(min(var2, na.rm=TRUE),max(var2,na.rm=TRUE))))
+           image.plot(x = grid_long, y = grid_lat, z = var2, zlim=zrange, main=info, col = colour_choices,
+                      axes=FALSE, cex.main=0.9, legend.width=3.0, cex=1.5, axis.args=list(cex.axis=1.8, hadj=0.1))
+           map(add=TRUE, lwd = 2)
+           #contour(landmask, add = TRUE, lwd = 1.0, nlevels = 1,axes = FALSE,drawlabels = FALSE,col = "black")
+           dev.off()
+
            # Histrograms of fluxes
            jpeg(file=paste("grid_mean_hist_median_",par_names[p],"_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
            par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))

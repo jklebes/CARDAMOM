@@ -406,29 +406,29 @@ module model_likelihood_module
     !
 
     ! Turnover of litter faster than turnover of som
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(9) > pars(8))) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(8) < pars(9))) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(1) = 0
     endif
 
     ! litter2som greater than som to atm rate
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(1) < pars(9))) then
-       EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
     endif
 
     ! turnover of foliage faster than turnover of wood
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(6) > torfol) then
-       EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
     end if
 
     ! root turnover greater than som turnover at mean temperature
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(7) < (pars(9)*exp(pars(10)*meantemp)))) then
-       EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
     endif
 
     ! GPP allocation to foliage and labile cannot be 5 orders of magnitude
     ! difference from GPP allocation to roots
     if ((EDC1 == 1 .or. DIAG == 1) .and. ((ffol+flab) > (5d0*froot) .or. ((ffol+flab)*5d0) < froot)) then
-       EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     endif
 
     ! IMPLICIT Combustion completeness for foliage should be greater than soil
@@ -436,15 +436,15 @@ module model_likelihood_module
 
     ! Combustion completeness for foliage should be greater than non-photosynthetic tissues
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(29) < pars(30)) then
-       EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
     endif
     ! Combustion completeness for non-photosynthetic tissue should be greater than soil
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(30) < pars(31)) then
-       EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
     endif
     ! Combustion completeness for foliar + fine root litter should be greater than non-photosynthetic tissue
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(30)) then
-       EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
     endif
 
     ! could always add more / remove some
@@ -507,7 +507,7 @@ module model_likelihood_module
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                    etol = 0.05d0 ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                    etol = 0.10d0 ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
 
 !    ! Debugging print statements
 !    print*,"assess_EDC2: "
@@ -650,31 +650,45 @@ module model_likelihood_module
 
         ! Living pools
         do n = 1, 3
-         ! Restrict rates of increase
+           ! Restrict mean rates of increase
            if (abs(log(Fin(n)/Fout(n))) > EQF2) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
            end if
+!           ! Restrict rates from deviating unrealistically from the mean
+!           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2)/(Fout_yr1(n)+Fout_yr2))) - &
+!                    abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
+!               EDC2 = 0d0  ECDF%PASSFAIL(20+n-1)
+!           end if
            ! Restrict exponential behaviour at initialisation
-           if (abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
+           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            end if
         end do
         ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
         n = 4
-        if (abs(log(Fin(n)/Fout(n))) > EQF1_5) then
+        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
         end if
-        if (abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
+!        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2)/(Fout_yr1(n)+Fout_yr2))) - &
+!                 abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
+!            EDC2 = 0d0  ECDF%PASSFAIL(20+n-1)
+!        end if
+        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
         end if
         ! Dead pools
         do n = 5, 6
            ! Restrict rates of increase
-           if (abs(log(Fin(n)/Fout(n))) > EQF1_5) then
+           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
            end if
+!           ! Restrict rates from deviating unrealistically from the mean
+!           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2)/(Fout_yr1(n)+Fout_yr2))) - &
+!                    abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
+!               EDC2 = 0d0  ECDF%PASSFAIL(20+n-1)
+!           end if
            ! Restrict exponential behaviour at initialisation
-           if (abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
+           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            end if
         end do

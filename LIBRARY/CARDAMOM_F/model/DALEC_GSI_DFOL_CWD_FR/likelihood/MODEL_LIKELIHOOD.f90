@@ -1048,7 +1048,7 @@ module model_likelihood_module
         ! Labile
 !        Rs = in_out_lab * (jan_mean_pools(1) / jan_first_pools(1))
 !        if (abs(Rs-in_out_lab) > 0.1d0 .or. abs(log(in_out_lab)) > EQF10) then
-        if (abs(log(in_out_lab_yr1)) - abs(log(in_out_lab_yr2)) > etol .or. &
+        if (abs(abs(log(in_out_lab_yr1)) - abs(log(in_out_lab_yr2))) > etol .or. &
             abs(log(in_lab/out_lab)) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
         end if
@@ -1056,7 +1056,7 @@ module model_likelihood_module
         ! Foliage
 !        Rs = in_out_fol * (jan_mean_pools(2) / jan_first_pools(2))
 !        if (abs(Rs-in_out_fol) > 0.1d0 .or. abs(log(in_out_fol)) > EQF10) then
-        if (abs(log(in_out_fol_yr1)) - abs(log(in_out_fol_yr2)) > etol .or. &
+        if (abs(abs(log(in_out_fol_yr1)) - abs(log(in_out_fol_yr2))) > etol .or. &
             abs(log(in_fol/out_fol)) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(23) = 0
         end if
@@ -1064,7 +1064,7 @@ module model_likelihood_module
         ! Fine roots
 !        Rs = in_out_root * (jan_mean_pools(3) / jan_first_pools(3))
 !        if (abs(Rs-in_out_root) > 0.1d0 .or. abs(log(in_out_root)) > EQF10) then
-        if (abs(log(in_out_root_yr1)) - abs(log(in_out_root_yr2)) > etol .or. &
+        if (abs(abs(log(in_out_root_yr1)) - abs(log(in_out_root_yr2))) > etol .or. &
             abs(log(in_root/out_root)) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(24) = 0
         end if
@@ -1072,7 +1072,7 @@ module model_likelihood_module
         ! Wood
 !        Rs = in_out_wood * (jan_mean_pools(4) / jan_first_pools(4))
 !        if (abs(Rs-in_out_wood) > 0.1d0 .or. abs(log(in_out_wood)) > EQF10) then
-        if (abs(log(in_out_wood_yr1)) - abs(log(in_out_wood_yr2)) > etol .or. &
+        if (abs(abs(log(in_out_wood_yr1)) - abs(log(in_out_wood_yr2))) > etol .or. &
             abs(log(in_wood/out_wood)) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(25) = 0
         end if
@@ -1080,7 +1080,7 @@ module model_likelihood_module
         ! Foliage and root litter
 !        Rs = in_out_lit * (jan_mean_pools(5) / jan_first_pools(5))
 !        if (abs(Rs-in_out_lit) > 0.1d0 .or. abs(log(in_out_lit)) > EQF10) then
-        if (abs(log(in_out_lit_yr1)) - abs(log(in_out_lit_yr2)) > etol .or. &
+        if (abs(abs(log(in_out_lit_yr1)) - abs(log(in_out_lit_yr2))) > etol .or. &
             abs(log(in_lit/out_lit)) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(26) = 0
         end if
@@ -1088,7 +1088,7 @@ module model_likelihood_module
         ! Soil organic matter
 !        Rs = in_out_som * (jan_mean_pools(6) / jan_first_pools(6))
 !        if (abs(Rs-in_out_som) > 0.1d0 .or. abs(log(in_out_som)) > EQF10) then
-        if (abs(log(in_out_som_yr1)) - abs(log(in_out_som_yr2)) > etol .or. &
+        if (abs(abs(log(in_out_som_yr1)) - abs(log(in_out_som_yr2))) > etol .or. &
             abs(log(in_som/out_som)) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(27) = 0
         end if
@@ -1096,7 +1096,7 @@ module model_likelihood_module
         ! Coarse+fine woody debris
 !        Rs = in_out_woodlitter * (jan_mean_pools(7) / jan_first_pools(7))
 !        if (abs(Rs-in_out_woodlitter) > 0.1d0 .or. abs(log(in_out_woodlitter)) > EQF10) then
-        if (abs(log(in_out_woodlitter_yr1)) - abs(log(in_out_woodlitter_yr2)) > etol .or. &
+        if (abs(abs(log(in_out_woodlitter_yr1)) - abs(log(in_out_woodlitter_yr2))) > etol .or. &
             abs(log(in_woodlitter/out_woodlitter)) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(28) = 0
         end if

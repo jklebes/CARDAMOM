@@ -81,9 +81,9 @@ module CARBON_MODEL_MOD
   ! photosynthesis / respiration parameters
   double precision, parameter :: &
                       kc_saturation = 310d0,        & ! CO2 half saturation, saturation value
-                   kc_half_sat_conc = 23.956d0,     & ! CO2 half sat, half sat
+                   kc_half_sat_conc = 23.956d0,     & ! CO2 half sat, achieved at oC
                  co2comp_saturation = 36.5d0,       & ! CO2 compensation point, saturation
-              co2comp_half_sat_conc = 9.46d0          ! CO2 comp point, half sat
+              co2comp_half_sat_conc = 9.46d0          ! CO2 comp point, achieved at oC
                                                       ! Each of these are temperature sensitivty
 
   ! hydraulic parameters
@@ -133,7 +133,8 @@ module CARBON_MODEL_MOD
                    pn_min_temp = -4d0,          & ! Minimum daily max temperature for photosynthesis (oC)
                    pn_opt_temp = 30d0,          & ! Optimum daily max temperature for photosynthesis (oC)
                    pn_kurtosis = 0.07d0,        & ! Kurtosis of photosynthesis temperature response
-                            e0 = 3.661204d+00,  & ! Quantum yield gC/MJ/m2/day PAR
+!                            e0 = 3.661204d+00,  & ! Quantum yield (gC/MJ/m2/day PAR)
+                            e0 = 5.13d0,        & ! Quantum yield at light compensation (gC/MJ/m2/day PAR)
                 minlwp_default =-1.808224d+00,  & ! minimum leaf water potential (MPa)
       soil_iso_to_net_coef_LAI =-2.717467d+00,  & ! Coefficient relating soil isothermal net radiation to net.
                           iWUE = 6.431150d-06,  & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
@@ -1180,20 +1181,31 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
+    ! Declare local variables
+    double precision :: a, b, c, Pl_max
+    double precision, parameter :: theta = 0.7 ! curvature parameter of light response
+
     !
     ! Metabolic limited photosynthesis
     !
 
     ! maximum rate of temperature and nitrogen (canopy efficiency) limited
     ! photosynthesis (gC.m-2.day-1 -> umolC/m2/day)
-    metabolic_limited_photosynthesis = gC_to_umol*lai*ceff*opt_max_scaling(pn_max_temp,pn_min_temp,pn_opt_temp,pn_kurtosis,leafT)
+    metabolic_limited_photosynthesis = gC_to_umol*lai*ceff* &
+                                     opt_max_scaling(pn_max_temp,pn_min_temp,pn_opt_temp,pn_kurtosis,leafT)
 
     !
     ! Light limited photosynthesis
     !
 
     ! calculate light limted rate of photosynthesis (gC.m-2.day-1)
-    light_limited_photosynthesis = e0 * canopy_par_MJday
+    !light_limited_photosynthesis = e0 * canopy_par_MJday
+    ! Pmax = maximum light limited photosynthesis
+    ! e0 in this case would be the quantum yield at light compensation, expected ~5.13
+    ! directly matches vj calculation from Farquhar model.
+    Pl_max = lai * exp((log(ceff)*0.750d0)+1.677d0) ! Jmax calculation in gC/m2/day
+    a = theta ; b = -(e0*canopy_par_MJday+Pl_max) ; c = e0*canopy_par_MJday*Pl_max
+    light_limited_photosynthesis = (-b - sqrt(b**2 - (4*a*c))) / (2*a)
 
     !
     ! Stomatal conductance independent variables for diffusion limited
@@ -1207,7 +1219,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     gb_mol = aerodynamic_conductance * seconds_per_day * convert_ms1_mol_1 * gb_H2O_CO2
     rb_mol_1 = (gb_mol)**(-1d0)
 
-    ! Temperature adjustments for Michaelis-Menten coefficients
+    ! Arrhenious Temperature adjustments for Michaelis-Menten coefficients
     ! for CO2 (kc) and O2 (ko) and CO2 compensation point
     ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
     co2_half_sat   = arrhenious(kc_saturation,kc_half_sat_conc,leafT)
