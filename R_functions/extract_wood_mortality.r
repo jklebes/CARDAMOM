@@ -12,7 +12,7 @@ extract_wood_mortality<- function(i1,j1,timestep_days,spatial_type,resolution,
                                   grid_type,latlon_in,Cwood_mortality_all) {
 
    # Update the user
-   print(paste("Cwood mortality extracted for current location ",Sys.time(),sep=""))
+   if (use_parallel == FALSE) {print(paste("Cwood mortality extracted for current location ",Sys.time(),sep=""))}
 
 #   # find the nearest location
 #   output = closest2d_2(1,Cwood_mortality_all$lat,Cwood_mortality_all$long,latlon_in[1],latlon_in[2])

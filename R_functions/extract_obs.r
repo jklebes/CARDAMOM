@@ -132,7 +132,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ## Get some initial Csom (gC/m2) information
     ###
 
-    if (Csom_source == "HWSD" | Csom_source == "SoilGrids" | Csom_source == "NCSCD" | Csom_source == "NCSCD3m") {
+    if (Csom_source == "HWSD" | Csom_source == "SoilGrids"  | Csom_source == "SoilGrids_v2" | Csom_source == "NCSCD" | Csom_source == "NCSCD3m") {
         Csom_info = extract_Csom_prior(grid_long_loc,grid_lat_loc,spatial_type,
                                        resolution,grid_type,latlon_wanted,Csom_all)
         Csom_initial = Csom_info$Csom_initial ; Csom_initial_unc = Csom_info$Csom_initial_unc
@@ -161,7 +161,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ## Get some sand / clay information (%)
     ###
 
-    if (sand_clay_source == "HWSD" | sand_clay_source == "SoilGrids") {
+    if (sand_clay_source == "HWSD" | sand_clay_source == "SoilGrids" | sand_clay_source == "SoilGrids_v2") {
         sand_clay=extract_sand_clay(grid_long_loc,grid_lat_loc,spatial_type,
                                     resolution,grid_type,latlon_wanted,sand_clay_all)
         top_sand = sand_clay$top_sand ; bot_sand = sand_clay$bot_sand
@@ -364,7 +364,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     # Fire emissions are dominated by zero (or effectively zero) values. This bias' the APMCMC (or MHMCMC)
     # away from fitting the more important emission values in favour of the more common zero (or near zero values.)
     # To address this we remove fire emission observations less than 0.01 gC/m2/day
-    print("Fire observations < 0.01 gC/m2/day have been removed to prevent bias to MDF calibration")
+    if (use_parallel == FALSE) {print("Fire observations < 0.01 gC/m2/day have been removed to prevent bias to MDF calibration")}
     Fire_unc[Fire < 0.01] = -9999 ; Fire[Fire < 0.01] = -9999
 
     ###
@@ -738,7 +738,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         # assume no data available
         burnt_area = 0
     } else {
-
+        # Assume all burnt area product follow the same structure
         burnt_area = extract_burnt_area_information(grid_long_loc,grid_lat_loc,latlon_wanted,
                                                     timestep_days,spatial_type,grid_type,resolution,
                                                     start_year,end_year,burnt_all,years_to_load,doy_obs)
@@ -821,7 +821,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     }
     # Assumed uncertainty structure as agreed with Anthony Bloom
     # NOTE minimum uncertainty bound irrespective of the dataset estimates
-    lca_unc[lca_unc >= 0] = pmax(10,sqrt(lca_unc[lca_unc >= 0]**2 + (0.1*mean(lca[lca > 0]))**2))
+    #lca_unc[lca_unc >= 0] = pmax(10,sqrt(lca_unc[lca_unc >= 0]**2 + (0.1*mean(lca[lca > 0]))**2))
 
     # return output now
     return(list(LAT = latlon_wanted[1], LAI = lai, LAI_unc = lai_unc, GPP = GPP, GPP_unc = GPP_unc, Fire = Fire, Fire_unc = Fire_unc

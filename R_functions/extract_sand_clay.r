@@ -10,7 +10,7 @@ extract_sand_clay<- function(i1,j1,spatial_type,resolution,grid_type,latlon_in,
                              sand_clay_all) {
 
   # Update the user
-  print(paste("Sand/clay data extracted for current location ",Sys.time(),sep=""))
+  if (use_parallel == FALSE) {print(paste("Sand/clay data extracted for current location ",Sys.time(),sep=""))}
 
 #  # find the nearest location
 #  output=closest2d_2(1,sand_clay_all$lat,sand_clay_all$long,latlon_in[1],latlon_in[2])

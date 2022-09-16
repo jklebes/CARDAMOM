@@ -507,7 +507,7 @@ module model_likelihood_module
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                    etol = 0.20d0 !0.10d0 !0.05d0
+                                    etol = 0.05d0 ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
 
 !    ! Debugging print statements
 !    print*,"assess_EDC2: "
@@ -661,7 +661,7 @@ module model_likelihood_module
         end do
         ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
         n = 4
-        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+        if (abs(log(Fin(n)/Fout(n))) > EQF1_5) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
         end if
         if (abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
@@ -670,7 +670,7 @@ module model_likelihood_module
         ! Dead pools
         do n = 5, 6
            ! Restrict rates of increase
-           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+           if (abs(log(Fin(n)/Fout(n))) > EQF1_5) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
            end if
            ! Restrict exponential behaviour at initialisation

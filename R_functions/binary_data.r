@@ -19,7 +19,7 @@
 binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter_type,nopars,noyears) {
 
   # Inform the user
-  print(paste("writing out binary...",Sys.time(),sep=""))
+  if (use_parallel == FALSE) {print(paste("writing out binary...",Sys.time(),sep=""))}
 
   # set model ID
   if (modelname == "ACM") {
@@ -211,10 +211,10 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   # age           = static_data[9]; NOT IN USE
   # nos. pars     = static_data[10]; number of parameters to be optimised for model
   # random search = static_data[11]; force random starting points for all parameters
-  # top_sand      = static_data[12]; top soil (0-30cm) sand fractional content
-  # bot_sand      = static_data[13]; bottom soil (31cm-maxdepth) sand fractional content
-  # top_clay      = static_data[14]; top soil (0-30cm) clay fractional content
-  # bot_clay      = static_data[15]; bottom soil (31cm-maxdepth) clay fraction content
+  # top_sand      = static_data[12]; top soil (0-30cm) sand % content
+  # bot_sand      = static_data[13]; bottom soil (31cm-maxdepth) sand % content
+  # top_clay      = static_data[14]; top soil (0-30cm) clay % content
+  # bot_clay      = static_data[15]; bottom soil (31cm-maxdepth) clay % content
 
   # if force_random_search == 1 then CARDAMOM ignores parameter priors even if present in the file during the EDC initialisation
   force_random_search = -9999 #; OBS$age = -9999
@@ -332,7 +332,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       # Other priors
       OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
   } else if (modelname == "DALEC_CDEA_ACM2_BUCKET") {
-      PARPRIORS[2] = 0.46                  ; PARPRIORUNC[2] = 0.12 ; PARPRIORWEIGHT[2] = noyears # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+      PARPRIORS[2] = 0.46                  ; PARPRIORUNC[2] = 0.12 #; PARPRIORWEIGHT[2] = noyears # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
 #      PARPRIORS[11]=1.89*14.77735          ; PARPRIORUNC[11]=1.89*0.4696238 # Derived from ACM2 recalibration.
                                                                            # Note despite having the same name as ecosystem property of Amax per gN or SPA's kappaC
                                                                            # These observational constraints are not the same and would lead to
@@ -346,10 +346,11 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[21]=OBS$Cwood_initial      ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
       PARPRIORS[22]=OBS$Clit_initial       ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
       PARPRIORS[23]=OBS$Csom_initial       ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
-      #PARPRIORS[28] = 0.5                  ; PARPRIORUNC[28] = 0.25 # Resilience factor
+      #PARPRIORS[28] = 0.87                ; PARPRIORUNC[28] = 0.41 # Resilience factor
       #PARPRIORS[29] = 0.5                  ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
       #PARPRIORS[30] = 0.1                  ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
       PARPRIORS[31] = 0.01                 ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
+      #PARPRIORS[32] = 0.25                 ; PARPRIORUNC[32] = 0.25 # Foliage + root litter combustion completeness
       # Other priors
       OTHERPRIORS[1] = OBS$soilwater       ; OTHERPRIORUNC[1] = OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
       OTHERPRIORS[4] = 0.66                ; OTHERPRIORUNC[4] = 0.12 ; OTHERPRIORWEIGHT[4] = noyears # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018

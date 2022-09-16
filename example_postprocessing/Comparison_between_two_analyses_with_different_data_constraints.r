@@ -6,7 +6,9 @@
 ###
 
 #### TO DO
-# Compare correlations between pixels, how have they changed to improve constraint on wood
+# 1) Update locations where CUE is calculated with the new CUE variable
+# 2) 
+# 3) Compare correlations between pixels, how have they changed to improve constraint on wood
 # Ensure all relative plots are restricted +/- 1 
 # Include parameter correlations check
 #orig_mean_parameter_correlation = array(NA, dim=dim(grid_output$mean_lai_m2m2)[1:2])
@@ -83,36 +85,34 @@ source("./R_functions/plotconfidence.r")
 # Here assuming a total of 7 quantiles (2.5 %, 5 %, 25 %, 50 %, 75 %, 95 %, 97.5 %)
 mid_quant = 4 ; low_quant = 2 ; high_quant = 6
 # Set output directory
-out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/figures_africa_one_vs_all/"
+out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/InternationalScience/figures_africa_one_vs_all/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/figures_africa_nbe_vs_plusRaGPPhighConf/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/cssp_brazil_2/figures_productivity_without_vs_with/"
 outsuffix = "_original_vs_alternate"
 
 # Assign the baseline analysis - the original
 # Original AGB assimilated (2007)
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_AGB/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_agb/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_nbe/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/NoRainfor_woody_productivity_mortality/infofile.RData")
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
-load(paste(PROJECT$results_processedpath,PROJECT$name,"_parameter_maps.RData",sep=""))
-orig_PROJECT = PROJECT ; orig_grid_parameters = grid_parameters ; orig_grid_output = grid_output
+orig_PROJECT = PROJECT ; orig_grid_output = grid_output
 #orig_name = "Baseline"
-orig_name = "One AGB" # used in labelling figures
+orig_name = "Single" # used in labelling figures
 #orig_name = "NBE" # used in labelling figures
 # Assign the alternate analysis - the new data constraint
 # Repeat AGB assimilated (2007-2010)
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_actualCI_agb/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_agb/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_nbe_RaGPPhighConf/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Rainfor_woody_productivity_mortality/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTSs/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Rainfor_woody_productivity_mortality/infofile.RData")
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
-load(paste(PROJECT$results_processedpath,PROJECT$name,"_parameter_maps.RData",sep=""))
-alt_PROJECT = PROJECT ; alt_grid_parameters = grid_parameters ; alt_grid_output = grid_output
+alt_PROJECT = PROJECT ; alt_grid_output = grid_output 
 alt_name = "Repeat" # used in labelling figures
 #alt_name = "+Productivity" # used in labelling figures
 #alt_name = "+RaGPPhighConf" # used in labelling figures
 
 # Tidy
-rm(PROJECT,grid_parameters,grid_output)
+rm(PROJECT,grid_output)
 
 ###
 ## Determine needed spatial and temporal information
@@ -144,7 +144,7 @@ landmask = shapefile("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/R_functions
 landmask = spTransform(landmask,crs(cardamom_ext))
 # subset by continent (could also do by country)
 #landmask = subset(landmask, CONTINENT == "South America") # Change continent to target area or comment out if spanning zones
-#landmask = subset(landmask, CONTINENT == "Africa") # Change continent to target area or comment out if spanning zones
+landmask = subset(landmask, CONTINENT == "Africa") # Change continent to target area or comment out if spanning zones
 # Clip to the extent of the CARDAMOM analysis
 landmask = crop(landmask, cardamom_ext)
 
@@ -195,18 +195,18 @@ if (add_biomes == "ssa_wwf") {
 use_filter = TRUE
 if (use_filter) {
     #  Design a user created / loaded filter 
-    landfilter = array(NA,dim=dim(orig_grid_parameters$obs_wood_gCm2))
-    landfilter[which(orig_grid_parameters$obs_wood_gCm2 > 0)] = 1
+    landfilter = array(NA,dim=dim(orig_grid_output$assimilated_wood_mean_gCm2))
+    landfilter[which(orig_grid_output$assimilated_wood_mean_gCm2 > 0)] = 1
 } else { 
     # Use this option if you don't want to filter
-    landfilter = array(1,dim=dim(orig_grid_parameters$obs_wood_gCm2)) 
+    landfilter = array(1,dim=dim(orig_grid_output$assimilated_wood_mean_gCm2)) 
 }
 
 # Update the land filter with the mask information
 landfilter = raster(vals = t(landfilter[,dim(landfilter)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 landfilter = mask(landfilter, landmask, updatevalue = NA)
 # Reconstruct back into an array
-landfilter = (array(as.vector(landfilter), dim=c(dim(orig_grid_parameters$obs_wood_gCm2)[1],dim(orig_grid_parameters$obs_wood_gCm2)[2])))
+landfilter = (array(as.vector(landfilter), dim=c(dim(orig_grid_output$assimilated_wood_mean_gCm2)[1],dim(orig_grid_output$assimilated_wood_mean_gCm2)[2])))
 landfilter = landfilter[,dim(landfilter)[2]:1]
 
 ###
@@ -351,13 +351,13 @@ for (n in seq(1, orig_PROJECT$nosites)) {
              orig_wood_TgC               = orig_wood_TgC            + rollapply(orig_grid_output$wood_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
              orig_wood_lower_TgC         = orig_wood_lower_TgC      + rollapply(orig_grid_output$wood_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
              orig_wood_upper_TgC         = orig_wood_upper_TgC      + rollapply(orig_grid_output$wood_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
-             orig_lit_TgC                = orig_lit_TgC             + rollapply(orig_grid_output$lit_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
-             orig_lit_lower_TgC          = orig_lit_lower_TgC       + rollapply(orig_grid_output$lit_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
-             orig_lit_upper_TgC          = orig_lit_upper_TgC       + rollapply(orig_grid_output$lit_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
-             if (length(which(names(orig_grid_output) == "litwood_gCm2")) > 0) {
-                 orig_litwood_TgC        = orig_litwood_TgC         + rollapply(orig_grid_output$litwood_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
-                 orig_litwood_lower_TgC  = orig_litwood_lower_TgC   + rollapply(orig_grid_output$litwood_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
-                 orig_litwood_upper_TgC  = orig_litwood_upper_TgC   + rollapply(orig_grid_output$litwood_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+             orig_lit_TgC                = orig_lit_TgC             + rollapply(orig_grid_output$litter_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             orig_lit_lower_TgC          = orig_lit_lower_TgC       + rollapply(orig_grid_output$litter_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+             orig_lit_upper_TgC          = orig_lit_upper_TgC       + rollapply(orig_grid_output$litter_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+             if (length(which(names(orig_grid_output) == "woodlitter_gCm2")) > 0) {
+                 orig_litwood_TgC        = orig_litwood_TgC         + rollapply(orig_grid_output$woodlitter_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+                 orig_litwood_lower_TgC  = orig_litwood_lower_TgC   + rollapply(orig_grid_output$woodlitter_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+                 orig_litwood_upper_TgC  = orig_litwood_upper_TgC   + rollapply(orig_grid_output$woodlitter_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
              }
              orig_soil_TgC               = orig_soil_TgC            + rollapply(orig_grid_output$som_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
              orig_soil_lower_TgC         = orig_soil_lower_TgC      + rollapply(orig_grid_output$som_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
@@ -391,13 +391,13 @@ for (n in seq(1, orig_PROJECT$nosites)) {
              alt_wood_TgC               = alt_wood_TgC            + rollapply(alt_grid_output$wood_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
              alt_wood_lower_TgC         = alt_wood_lower_TgC      + rollapply(alt_grid_output$wood_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
              alt_wood_upper_TgC         = alt_wood_upper_TgC      + rollapply(alt_grid_output$wood_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
-             alt_lit_TgC                = alt_lit_TgC             + rollapply(alt_grid_output$lit_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
-             alt_lit_lower_TgC          = alt_lit_lower_TgC       + rollapply(alt_grid_output$lit_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
-             alt_lit_upper_TgC          = alt_lit_upper_TgC       + rollapply(alt_grid_output$lit_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
-             if (length(which(names(alt_grid_output) == "litwood_gCm2")) > 0) {
-                 alt_litwood_TgC        = alt_litwood_TgC         + rollapply(alt_grid_output$litwood_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
-                 alt_litwood_lower_TgC  = alt_litwood_lower_TgC   + rollapply(alt_grid_output$litwood_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
-                 alt_litwood_upper_TgC  = alt_litwood_upper_TgC   + rollapply(alt_grid_output$litwood_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+             alt_lit_TgC                = alt_lit_TgC             + rollapply(alt_grid_output$litter_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             alt_lit_lower_TgC          = alt_lit_lower_TgC       + rollapply(alt_grid_output$litter_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+             alt_lit_upper_TgC          = alt_lit_upper_TgC       + rollapply(alt_grid_output$litter_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+             if (length(which(names(alt_grid_output) == "woodlitter_gCm2")) > 0) {
+                 alt_litwood_TgC        = alt_litwood_TgC         + rollapply(alt_grid_output$woodlitter_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+                 alt_litwood_lower_TgC  = alt_litwood_lower_TgC   + rollapply(alt_grid_output$woodlitter_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+                 alt_litwood_upper_TgC  = alt_litwood_upper_TgC   + rollapply(alt_grid_output$woodlitter_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
              }
              alt_soil_TgC               = alt_soil_TgC            + rollapply(alt_grid_output$som_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
              alt_soil_lower_TgC         = alt_soil_lower_TgC      + rollapply(alt_grid_output$som_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
@@ -569,10 +569,10 @@ nbins = 30 # desired number of catagories, you might not get this many
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_parameter_PDFs_by",outsuffix,".png",sep=""), height = 2000, width = 3000, res = 300)
 par(mfrow=c(6,6), mar = c(2,2,2,1))
 # Loop parameters
-for (p in seq(1, dim(orig_grid_parameters$parameters)[3]-1)) {
+for (p in seq(1, dim(orig_grid_output$parameters)[3]-1)) {
      # Set to local variables
-     tmp1 = as.vector(orig_grid_parameters$parameters[,,p,mid_quant])
-     tmp2 = as.vector(alt_grid_parameters$parameters[,,p,mid_quant])
+     tmp1 = as.vector(orig_grid_output$parameters[,,p,mid_quant])
+     tmp2 = as.vector(alt_grid_output$parameters[,,p,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -595,10 +595,10 @@ dev.off()
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_log_parameter_PDFs_by",outsuffix,".png",sep=""), height = 2000, width = 3000, res = 300)
 par(mfrow=c(6,6), mar = c(2,2,2,1))
 # Loop parameters
-for (p in seq(1, dim(orig_grid_parameters$parameters)[3]-1)) {
+for (p in seq(1, dim(orig_grid_output$parameters)[3]-1)) {
      # Set to local variables
-     tmp1 = log(as.vector(orig_grid_parameters$parameters[,,p,mid_quant]))
-     tmp2 = log(as.vector(alt_grid_parameters$parameters[,,p,mid_quant]))
+     tmp1 = log(as.vector(orig_grid_output$parameters[,,p,mid_quant]))
+     tmp2 = log(as.vector(alt_grid_output$parameters[,,p,mid_quant]))
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -647,8 +647,8 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## NPP MgC/ha/yr to foliage
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_output$mean_fnpp_gCm2day[,,mid_quant])*365.25*1e-2
-     tmp2 = as.vector(alt_grid_output$mean_fnpp_gCm2day[,,mid_quant])*365.25*1e-2
+     tmp1 = as.vector(orig_grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant])*365.25*1e-2
+     tmp2 = as.vector(alt_grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant])*365.25*1e-2
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -670,8 +670,8 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## NPP MgC/ha/yr to fine roots
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_output$mean_rnpp_gCm2day[,,mid_quant])*365.25*1e-2
-     tmp2 = as.vector(alt_grid_output$mean_rnpp_gCm2day[,,mid_quant])*365.25*1e-2
+     tmp1 = as.vector(orig_grid_output$mean_alloc_roots_gCm2day[,,mid_quant])*365.25*1e-2
+     tmp2 = as.vector(alt_grid_output$mean_alloc_roots_gCm2day[,,mid_quant])*365.25*1e-2
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -693,8 +693,8 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## NPP MgC/ha/yr to wood
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_output$mean_wnpp_gCm2day[,,mid_quant])*365.25*1e-2
-     tmp2 = as.vector(alt_grid_output$mean_wnpp_gCm2day[,,mid_quant])*365.25*1e-2
+     tmp1 = as.vector(orig_grid_output$mean_alloc_wood_gCm2day[,,mid_quant])*365.25*1e-2
+     tmp2 = as.vector(alt_grid_output$mean_alloc_wood_gCm2day[,,mid_quant])*365.25*1e-2
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -716,8 +716,8 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## MRT foliage (years)
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_parameters$MTT_foliar_years[,,mid_quant])
-     tmp2 = as.vector(alt_grid_parameters$MTT_foliar_years[,,mid_quant])
+     tmp1 = as.vector(orig_grid_output$MTT_foliage_years[,,mid_quant])
+     tmp2 = as.vector(alt_grid_output$MTT_foliage_years[,,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -738,8 +738,8 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## MRT fine root (years)
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_parameters$MTT_root_years[,,mid_quant])
-     tmp2 = as.vector(alt_grid_parameters$MTT_foliar_years[,,mid_quant])
+     tmp1 = as.vector(orig_grid_output$MTT_roots_years[,,mid_quant])
+     tmp2 = as.vector(alt_grid_output$MTT_roots_years[,,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -760,8 +760,8 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## MRT wood (years)
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_parameters$MTT_wood_years[,,mid_quant])
-     tmp2 = as.vector(alt_grid_parameters$MTT_wood_years[,,mid_quant])
+     tmp1 = as.vector(orig_grid_output$MTT_wood_years[,,mid_quant])
+     tmp2 = as.vector(alt_grid_output$MTT_wood_years[,,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -780,11 +780,11 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
           xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax)) # Start with first cluster
      lines(tmp2~x_axis, col = c_colours[2], lwd=2) 
      
-     ## MRT DeadOrg (litter + CWD; if applicable)
+     ## MRT litter 
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_parameters$MTT_DeadOrg_years[,,mid_quant])
-     tmp2 = as.vector(alt_grid_parameters$MTT_DeadOrg_years[,,mid_quant])
+     tmp1 = as.vector(orig_grid_output$MTT_litter_years[,,mid_quant])
+     tmp2 = as.vector(alt_grid_output$MTT_litter_years[,,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -798,15 +798,15 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      tmp2 = tmp2$counts / sum(tmp2$counts)
      # Now plot them together
      ymax = max(c(tmp1,tmp2))
-     plot(tmp1~x_axis, type="l", lwd=2, col = c_colours[1], main=expression(paste("MR",T[DeadOrg]," (y)",sep="")), 
+     plot(tmp1~x_axis, type="l", lwd=2, col = c_colours[1], main=expression(paste("MR",T[litter]," (y)",sep="")), 
           xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax)) # Start with first cluster
      lines(tmp2~x_axis, col = c_colours[2], lwd=2) 
      
      ## MRT soil
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_parameters$MTT_som_years[,,mid_quant])
-     tmp2 = as.vector(alt_grid_parameters$MTT_som_years[,,mid_quant])
+     tmp1 = as.vector(orig_grid_output$MTT_som_years[,,mid_quant])
+     tmp2 = as.vector(alt_grid_output$MTT_som_years[,,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -827,8 +827,8 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## Leaf Carbon per unit leaf Area (gC/m2)
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_parameters$parameters[,,17,mid_quant])
-     tmp2 = as.vector(alt_grid_parameters$parameters[,,17,mid_quant])
+     tmp1 = as.vector(orig_grid_output$parameters[,,17,mid_quant])
+     tmp2 = as.vector(alt_grid_output$parameters[,,17,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -849,8 +849,8 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## Canopy Photosynthetic Efficiency (gC/m2/day)
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_parameters$parameters[,,11,mid_quant])
-     tmp2 = as.vector(alt_grid_parameters$parameters[,,11,mid_quant])
+     tmp1 = as.vector(orig_grid_output$parameters[,,11,mid_quant])
+     tmp2 = as.vector(alt_grid_output$parameters[,,11,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -899,8 +899,8 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## NPP fraction to foliage
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_parameters$NPP_foliar_fraction[,,mid_quant])
-     tmp2 = as.vector(alt_grid_parameters$NPP_foliar_fraction[,,mid_quant])
+     tmp1 = as.vector(orig_grid_output$NPP_foliage_fraction[,,mid_quant])
+     tmp2 = as.vector(alt_grid_output$NPP_foliage_fraction[,,mid_quant])
      tmp1[which(tmp1 > 1)] = NA ; tmp2[which(tmp2 > 1)] = NA # prevents against precision error in codes not picking up on very small fl allocations but turn into large fractional ones
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
@@ -923,8 +923,8 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## NPP fraction to fine roots
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_parameters$NPP_root_fraction[,,mid_quant])
-     tmp2 = as.vector(alt_grid_parameters$NPP_root_fraction[,,mid_quant])
+     tmp1 = as.vector(orig_grid_output$NPP_roots_fraction[,,mid_quant])
+     tmp2 = as.vector(alt_grid_output$NPP_roots_fraction[,,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -946,8 +946,8 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## NPP fraction to wood
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_parameters$NPP_wood_fraction[,,mid_quant])
-     tmp2 = as.vector(alt_grid_parameters$NPP_wood_fraction[,,mid_quant])
+     tmp1 = as.vector(orig_grid_output$NPP_wood_fraction[,,mid_quant])
+     tmp2 = as.vector(alt_grid_output$NPP_wood_fraction[,,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -969,8 +969,8 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## MRT foliage (years)
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_parameters$MTT_foliar_years[,,mid_quant])
-     tmp2 = as.vector(alt_grid_parameters$MTT_foliar_years[,,mid_quant])
+     tmp1 = as.vector(orig_grid_output$MTT_foliage_years[,,mid_quant])
+     tmp2 = as.vector(alt_grid_output$MTT_foliage_years[,,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -991,8 +991,8 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## MRT fine root (years)
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_parameters$MTT_root_years[,,mid_quant])
-     tmp2 = as.vector(alt_grid_parameters$MTT_foliar_years[,,mid_quant])
+     tmp1 = as.vector(orig_grid_output$MTT_roots_years[,,mid_quant])
+     tmp2 = as.vector(alt_grid_output$MTT_roots_years[,,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -1013,8 +1013,8 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## MRT wood (years)
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_parameters$MTT_wood_years[,,mid_quant])
-     tmp2 = as.vector(alt_grid_parameters$MTT_wood_years[,,mid_quant])
+     tmp1 = as.vector(orig_grid_output$MTT_wood_years[,,mid_quant])
+     tmp2 = as.vector(alt_grid_output$MTT_wood_years[,,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -1033,11 +1033,11 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
           xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax)) # Start with first cluster
      lines(tmp2~x_axis, col = c_colours[2], lwd=2) 
      
-     ## MRT DeadOrg (litter + CWD; if applicable)
+     ## MRT litter
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_parameters$MTT_DeadOrg_years[,,mid_quant])
-     tmp2 = as.vector(alt_grid_parameters$MTT_DeadOrg_years[,,mid_quant])
+     tmp1 = as.vector(orig_grid_output$MTT_litter_years[,,mid_quant])
+     tmp2 = as.vector(alt_grid_output$MTT_litter_years[,,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -1051,15 +1051,15 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      tmp2 = tmp2$counts / sum(tmp2$counts)
      # Now plot them together
      ymax = max(c(tmp1,tmp2))
-     plot(tmp1~x_axis, type="l", lwd=2, col = c_colours[1], main=expression(paste("MR",T[DeadOrg]," (y)",sep="")), 
+     plot(tmp1~x_axis, type="l", lwd=2, col = c_colours[1], main=expression(paste("MR",T[litter]," (y)",sep="")), 
           xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax)) # Start with first cluster
      lines(tmp2~x_axis, col = c_colours[2], lwd=2) 
      
      ## MRT soil
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_parameters$MTT_som_years[,,mid_quant])
-     tmp2 = as.vector(alt_grid_parameters$MTT_som_years[,,mid_quant])
+     tmp1 = as.vector(orig_grid_output$MTT_som_years[,,mid_quant])
+     tmp2 = as.vector(alt_grid_output$MTT_som_years[,,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -1080,8 +1080,8 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## Leaf Carbon per unit leaf Area (gC/m2)
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_parameters$parameters[,,17,mid_quant])
-     tmp2 = as.vector(alt_grid_parameters$parameters[,,17,mid_quant])
+     tmp1 = as.vector(orig_grid_output$parameters[,,17,mid_quant])
+     tmp2 = as.vector(alt_grid_output$parameters[,,17,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -1102,8 +1102,8 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## Canopy Photosynthetic Efficiency (gC/m2/day)
 
      # Set to local variables
-     tmp1 = as.vector(orig_grid_parameters$parameters[,,11,mid_quant])
-     tmp2 = as.vector(alt_grid_parameters$parameters[,,11,mid_quant])
+     tmp1 = as.vector(orig_grid_output$parameters[,,11,mid_quant])
+     tmp2 = as.vector(alt_grid_output$parameters[,,11,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -1131,8 +1131,8 @@ dev.off()
 prior_ranges = read_src_model_priors(orig_PROJECT)
 
 # Create ratio array
-orig_posterior_prior = array(NA, dim=c(dim(orig_grid_parameters$parameters)[1:2],length(prior_ranges$parmin)))
-alt_posterior_prior = array(NA, dim=c(dim(orig_grid_parameters$parameters)[1:2],length(prior_ranges$parmin)))
+orig_posterior_prior = array(NA, dim=c(dim(orig_grid_output$parameters)[1:2],length(prior_ranges$parmin)))
+alt_posterior_prior = array(NA, dim=c(dim(orig_grid_output$parameters)[1:2],length(prior_ranges$parmin)))
 for (n in seq(1, orig_PROJECT$nosites)) {
 
      # Check that location has run
@@ -1141,12 +1141,12 @@ for (n in seq(1, orig_PROJECT$nosites)) {
          if (is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
              for (p in seq(1,length(prior_ranges$parmin))) {
                   # Original
-                  tmp = orig_grid_parameters$parameters[orig_grid_output$i_location[n],orig_grid_output$j_location[n],p,high_quant] 
-                  tmp = tmp - orig_grid_parameters$parameters[orig_grid_output$i_location[n],orig_grid_output$j_location[n],p,low_quant] 
+                  tmp = orig_grid_output$parameters[orig_grid_output$i_location[n],orig_grid_output$j_location[n],p,high_quant] 
+                  tmp = tmp - orig_grid_output$parameters[orig_grid_output$i_location[n],orig_grid_output$j_location[n],p,low_quant] 
                   orig_posterior_prior[orig_grid_output$i_location[n],orig_grid_output$j_location[n],p] = tmp / (prior_ranges$parmax[p]-prior_ranges$parmin[p])
                   # Alternate
-                  tmp = alt_grid_parameters$parameters[orig_grid_output$i_location[n],orig_grid_output$j_location[n],p,high_quant] 
-                  tmp = tmp - alt_grid_parameters$parameters[orig_grid_output$i_location[n],orig_grid_output$j_location[n],p,low_quant] 
+                  tmp = alt_grid_output$parameters[orig_grid_output$i_location[n],orig_grid_output$j_location[n],p,high_quant] 
+                  tmp = tmp - alt_grid_output$parameters[orig_grid_output$i_location[n],orig_grid_output$j_location[n],p,low_quant] 
                   alt_posterior_prior[orig_grid_output$i_location[n],orig_grid_output$j_location[n],p] = tmp / (prior_ranges$parmax[p]-prior_ranges$parmin[p])
              } # Loop parameters
          } # Inclued in land filter?
@@ -1235,7 +1235,7 @@ cte_m2 = array(NA, dim=dim(orig_grid_output$mean_lai_m2m2)[1:2])
 for (n in seq(1,orig_PROJECT$nosites)) {
      if (is.na(orig_grid_output$i_location[n]) == FALSE & is.na(orig_grid_output$j_location[n]) == FALSE & 
          is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,cte_lat,cte_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],3)
+         output = closest2d_3(1,cte_lat,cte_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          cte_nbe_gCm2yr[orig_grid_output$i_location[n],orig_grid_output$j_location[n],] = cte_nbe[i1,j1,overlap_start:overlap_end]
          cte_nee_gCm2yr[orig_grid_output$i_location[n],orig_grid_output$j_location[n],] = cte_nee[i1,j1,overlap_start:overlap_end]
@@ -1406,7 +1406,7 @@ flask_cardamom_fire_gCm2yr = array(NA, dim=c(dim(orig_grid_output$mean_lai_m2m2)
 for (n in seq(1,orig_PROJECT$nosites)) {
      if (is.na(orig_grid_output$i_location[n]) == FALSE & is.na(orig_grid_output$j_location[n]) == FALSE & 
          is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,flask_lat,flask_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],3)
+         output = closest2d_3(1,flask_lat,flask_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          flask_cardamom_nee_gCm2yr[orig_grid_output$i_location[n],orig_grid_output$j_location[n],,] = flask_nee_gCm2yr[i1,j1,,]
          flask_cardamom_nbe_gCm2yr[orig_grid_output$i_location[n],orig_grid_output$j_location[n],,] = flask_nbe_gCm2yr[i1,j1,,]
@@ -1528,7 +1528,7 @@ oco2_cardamom_fire_gCm2yr = array(NA, dim=c(dim(orig_grid_output$mean_lai_m2m2)[
 for (n in seq(1,orig_PROJECT$nosites)) {
      if (is.na(orig_grid_output$i_location[n]) == FALSE & is.na(orig_grid_output$j_location[n]) == FALSE & 
          is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,oco2_lat,oco2_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],3)
+         output = closest2d_3(1,oco2_lat,oco2_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          oco2_cardamom_nee_gCm2yr[orig_grid_output$i_location[n],orig_grid_output$j_location[n],,] = oco2_nee_gCm2yr[i1,j1,,]
          oco2_cardamom_nbe_gCm2yr[orig_grid_output$i_location[n],orig_grid_output$j_location[n],,] = oco2_nbe_gCm2yr[i1,j1,,]
@@ -1695,7 +1695,7 @@ fc_cardamom_gpp_gCm2yr = array(NA, dim=c(dim(orig_grid_output$mean_lai_m2m2)[1:2
 for (n in seq(1,orig_PROJECT$nosites)) {
      if (is.na(orig_grid_output$i_location[n]) == FALSE & is.na(orig_grid_output$j_location[n]) == FALSE & 
          is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,fc_lat,fc_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],3)
+         output = closest2d_3(1,fc_lat,fc_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          fc_cardamom_gpp_gCm2yr[orig_grid_output$i_location[n],orig_grid_output$j_location[n],] = fc_gpp[i1,j1,]
      } # valid value exists
@@ -1753,7 +1753,7 @@ copernicus_cardamom_gpp_gCm2yr = array(NA, dim=c(dim(orig_grid_output$mean_lai_m
 for (n in seq(1,orig_PROJECT$nosites)) {
      if (is.na(orig_grid_output$i_location[n]) == FALSE & is.na(orig_grid_output$j_location[n]) == FALSE & 
          is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,copernicus_lat,copernicus_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],3)
+         output = closest2d_3(1,copernicus_lat,copernicus_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          copernicus_cardamom_gpp_gCm2yr[orig_grid_output$i_location[n],orig_grid_output$j_location[n],] = copernicus_gpp[i1,j1,]
      } # valid value exists
@@ -1813,7 +1813,7 @@ fluxsat_cardamom_gpp_gCm2yr_trend = array(NA, dim=c(dim(orig_grid_output$mean_la
 for (n in seq(1,orig_PROJECT$nosites)) {
      if (is.na(orig_grid_output$i_location[n]) == FALSE & is.na(orig_grid_output$j_location[n]) == FALSE &
          is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,fluxsat_lat,fluxsat_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],3)
+         output = closest2d_3(1,fluxsat_lat,fluxsat_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          fluxsat_cardamom_gpp_gCm2yr[orig_grid_output$i_location[n],orig_grid_output$j_location[n],] = fluxsat_gpp[i1,j1,]
          # Estimate the GPP trend at this time too
@@ -1932,7 +1932,7 @@ gfed_m2 = array(NA, dim=dim(orig_grid_output$mean_lai_m2m2)[1:2])
 for (n in seq(1,orig_PROJECT$nosites)) {
      if (is.na(orig_grid_output$i_location[n]) == FALSE & is.na(orig_grid_output$j_location[n]) == FALSE & 
          is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,gfed_lat,gfed_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],3)
+         output = closest2d_3(1,gfed_lat,gfed_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          gfed_cardamom_fire_gCm2yr[orig_grid_output$i_location[n],orig_grid_output$j_location[n],] = gfed_fire[i1,j1,]
      }
@@ -1966,7 +1966,7 @@ gfas_cardamom_fire_gCm2yr = array(NA, dim=c(dim(orig_grid_output$mean_lai_m2m2)[
 for (n in seq(1,orig_PROJECT$nosites)) {
      if (is.na(orig_grid_output$i_location[n]) == FALSE & is.na(orig_grid_output$j_location[n]) == FALSE & 
          is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,gfas_lat,gfas_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],3)
+         output = closest2d_3(1,gfas_lat,gfas_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          gfas_cardamom_fire_gCm2yr[orig_grid_output$i_location[n],orig_grid_output$j_location[n],] = gfas_fire[i1,j1,]
      }
@@ -2168,8 +2168,8 @@ mtext(expression(paste('Year',sep="")), side = 1, cex = 2.4, padj = 1.85)
 mtext(expression(paste('Analysis-wide LAI (',m^2,'/',m^2,')',sep="")), side = 2, cex = 2.4, padj = -1.05)
 abline(0,1, col="grey", lwd=3)
 # Now plot initial soil
-plot(as.vector(1e-2*orig_grid_parameters$parameters[,,23,mid_quant]) ~ as.vector(1e-2*SoilCPrior), pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.0, ylab="", xlab="", main="", col=model_colours[1])
-points(as.vector(1e-2*alt_grid_parameters$parameters[,,23,mid_quant]) ~ as.vector(1e-2*SoilCPrior), pch=1, cex = 1.6, col=model_colours[2])
+plot(as.vector(1e-2*orig_grid_output$parameters[,,23,mid_quant]) ~ as.vector(1e-2*SoilCPrior), pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.0, ylab="", xlab="", main="", col=model_colours[1])
+points(as.vector(1e-2*alt_grid_output$parameters[,,23,mid_quant]) ~ as.vector(1e-2*SoilCPrior), pch=1, cex = 1.6, col=model_colours[2])
 mtext(expression(paste('CARDAMOM',sep="")), side = 1, cex = 2.4, padj = 1.85)
 mtext(expression(paste('Initial soil C (MgC h',a^-1,')',sep="")), side = 2, cex = 2.4, padj = -1.00)
 abline(0,1, col="grey", lwd=3)
@@ -2237,7 +2237,6 @@ lines(var6~run_years, col=model_colours[1], lwd=4, lty = 2) ; points(var6~run_ye
 lines(var7~run_years, col=model_colours[2], lwd=4, lty = 1) ; points(var7~run_years, col=model_colours[2], pch=16)
 lines(var8~run_years, col=model_colours[2], lwd=4, lty = 2) ; points(var8~run_years, col=model_colours[2], pch=16)
 lines(var9~run_years, col=model_colours[2], lwd=4, lty = 2) ; points(var9~run_years, col=model_colours[2], pch=16)
-
 mtext("Year", side=1, padj=2.0,cex=1.6)
 mtext(expression(paste("Fire Emissions (TgC y",r^-1,")",sep="")), side=2, padj=-2.65,cex=1.5)
 dev.off()
@@ -2818,18 +2817,237 @@ plot(var12, zlim = zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box
 plot(landmask, add=TRUE)
 dev.off()
 
+# C fluxes
+# Assign variables
+var1 = ((orig_grid_output$mean_nbe_gCm2day[,,high_quant]-orig_grid_output$mean_nbe_gCm2day[,,low_quant])/abs(orig_grid_output$mean_nbe_gCm2day)[,,mid_quant])
+var2 = ((orig_grid_output$mean_gpp_gCm2day[,,high_quant]-orig_grid_output$mean_gpp_gCm2day[,,low_quant])/abs(orig_grid_output$mean_gpp_gCm2day)[,,mid_quant])
+var3 = ((orig_grid_output$mean_reco_gCm2day[,,high_quant]-orig_grid_output$mean_reco_gCm2day[,,low_quant])/abs(orig_grid_output$mean_reco_gCm2day)[,,mid_quant])
+var4 = ((orig_grid_output$mean_fire_gCm2day[,,high_quant]-orig_grid_output$mean_fire_gCm2day[,,low_quant])/abs(orig_grid_output$mean_fire_gCm2day)[,,mid_quant])
+var5 = ((alt_grid_output$mean_nbe_gCm2day[,,high_quant]-alt_grid_output$mean_nbe_gCm2day[,,low_quant])/abs(alt_grid_output$mean_nbe_gCm2day)[,,mid_quant])
+var6 = ((alt_grid_output$mean_gpp_gCm2day[,,high_quant]-alt_grid_output$mean_gpp_gCm2day[,,low_quant])/abs(alt_grid_output$mean_gpp_gCm2day)[,,mid_quant])
+var7 = ((alt_grid_output$mean_reco_gCm2day[,,high_quant]-alt_grid_output$mean_reco_gCm2day[,,low_quant])/abs(alt_grid_output$mean_reco_gCm2day)[,,mid_quant])
+var8 = ((alt_grid_output$mean_fire_gCm2day[,,high_quant]-alt_grid_output$mean_fire_gCm2day[,,low_quant])/abs(alt_grid_output$mean_fire_gCm2day)[,,mid_quant])
+var9 = var5-var1
+var10 = var6-var2
+var11 = var7-var3
+var12 = var8-var4
+# Apply filters based on quantiles
+# Maximum values only for the positive definites
+var1[which(var1  > quantile(var1, prob=c(0.95), na.rm=TRUE))] = quantile(var1, prob=c(0.95), na.rm=TRUE)
+var2[which(var2  > quantile(var2, prob=c(0.95), na.rm=TRUE))] = quantile(var2, prob=c(0.95), na.rm=TRUE)
+var3[which(var3  > quantile(var3, prob=c(0.95), na.rm=TRUE))] = quantile(var3, prob=c(0.95), na.rm=TRUE)
+var4[which(var4  > quantile(var4, prob=c(0.95), na.rm=TRUE))] = quantile(var4, prob=c(0.95), na.rm=TRUE)
+var5[which(var5  > quantile(var5, prob=c(0.95), na.rm=TRUE))] = quantile(var5, prob=c(0.95), na.rm=TRUE)
+var6[which(var6  > quantile(var6, prob=c(0.95), na.rm=TRUE))] = quantile(var6, prob=c(0.95), na.rm=TRUE)
+var7[which(var7  > quantile(var7, prob=c(0.95), na.rm=TRUE))] = quantile(var7, prob=c(0.95), na.rm=TRUE)
+var8[which(var8  > quantile(var8, prob=c(0.95), na.rm=TRUE))] = quantile(var8, prob=c(0.95), na.rm=TRUE)
+# Maximum and minimum (below) for the differences, i.e. can be negative or positive
+var9[which(var9  > quantile(var9, prob=c(0.95), na.rm=TRUE))] = quantile(var9, prob=c(0.95), na.rm=TRUE)
+var10[which(var10 > quantile(var10, prob=c(0.95), na.rm=TRUE))] = quantile(var10, prob=c(0.95), na.rm=TRUE)
+var11[which(var11 > quantile(var11, prob=c(0.95), na.rm=TRUE))] = quantile(var11, prob=c(0.95), na.rm=TRUE)
+var12[which(var12 > quantile(var12, prob=c(0.95), na.rm=TRUE))] = quantile(var12, prob=c(0.95), na.rm=TRUE)
+var9[which(var9  < quantile(var9, prob=c(0.05), na.rm=TRUE))] = quantile(var9, prob=c(0.05), na.rm=TRUE)
+var10[which(var10 < quantile(var10, prob=c(0.05), na.rm=TRUE))] = quantile(var10, prob=c(0.05), na.rm=TRUE)
+var11[which(var11 < quantile(var11, prob=c(0.05), na.rm=TRUE))] = quantile(var11, prob=c(0.05), na.rm=TRUE)
+var12[which(var12 < quantile(var12, prob=c(0.05), na.rm=TRUE))] = quantile(var12, prob=c(0.05), na.rm=TRUE)
+# Further apply a hard limit on the range of 10
+#var1[which(var1 > 5)] = 5
+#var2[which(var2 > 5)] = 5
+#var3[which(var3 > 5)] = 5
+#var4[which(var4 > 5)] = 5
+#var5[which(var5 > 5)] = 5
+#var6[which(var6 > 5)] = 5
+#var7[which(var7 > 5)] = 5
+#var8[which(var8 > 5)] = 5
+#var9[which(var9 > 5)] = 5   ; var9[which(var9 < -5)] = -5
+#var10[which(var10 > 5)] = 5 ; var10[which(var10 < -5)] = -5
+#var11[which(var11 > 5)] = 5 ; var11[which(var11 < -5)] = -5
+#var12[which(var12 > 5)] = 5 ; var12[which(var12 < -5)] = -5
+# Apply filters to unwanted locations
+var1[which(is.na(landfilter))] = NA 
+var2[which(is.na(landfilter))] = NA 
+var3[which(is.na(landfilter))] = NA 
+var4[which(is.na(landfilter))] = NA 
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var8[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+var10[which(is.na(landfilter))] = NA 
+var11[which(is.na(landfilter))] = NA 
+var12[which(is.na(landfilter))] = NA 
+# Convert to raster
+var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var7 = raster(vals = t((var7)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var8 = raster(vals = t((var8)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var9 = raster(vals = t((var9)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var10 = raster(vals = t((var10)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var11 = raster(vals = t((var11)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var12 = raster(vals = t((var12)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# ranges
+zrange1 = c(0,1)*max(abs(range(c(values(var1),values(var5)),na.rm=TRUE))) #c(0,1)*max(abs(range(c(values(var1),values(var2),values(var3),values(var4),values(var5),values(var6),values(var7),values(var8)),na.rm=TRUE)))
+zrange2 = c(0,1)*max(abs(range(c(values(var2),values(var6)),na.rm=TRUE)))#zrange1
+zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var7)),na.rm=TRUE)))#zrange1
+zrange4 = c(0,1)*max(abs(range(c(values(var4),values(var8)),na.rm=TRUE)))#zrange1
+zrange5 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE))) #c(-1,1)*max(abs(range(c(values(var9),values(var10),values(var11),values(var12)),na.rm=TRUE)))
+zrange6 = c(-1,1)*max(abs(range(c(values(var10)),na.rm=TRUE)))#zrange5
+zrange7 = c(-1,1)*max(abs(range(c(values(var11)),na.rm=TRUE)))#zrange5
+zrange8 = c(-1,1)*max(abs(range(c(values(var12)),na.rm=TRUE)))#zrange5
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_C_fluxes_CI_rel_of_median",outsuffix,".png",sep=""), height = 3000, width = 4900, res = 300)
+par(mfrow=c(3,4), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
+# Original
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("NBE CI:Median", sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(orig_name, side=2, cex=1.8, padj = -0.5)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("GPP CI:Median", sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Reco CI:Median", sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var4, zlim=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Fire CI:Median", sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Alternate
+plot(var5, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(alt_name, side=2,cex=1.8, padj = -0.5)
+plot(var6, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var7, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var8, zlim=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Difference
+plot(var9, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+mtext(paste("Difference",sep=""), side=2, cex=1.8, padj = -0.5)
+plot(var10, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+plot(var11, zlim = zrange7, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+plot(var12, zlim = zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+dev.off()
+
+# Assign key C flux uncertainties and their uncertainties
+# Does the relationship between median and uncertainty change?
+var1 = (orig_grid_output$mean_nbe_gCm2day[,,high_quant]-orig_grid_output$mean_nbe_gCm2day[,,low_quant])*1e-2*365.25
+var2 = (orig_grid_output$mean_gpp_gCm2day[,,high_quant]-orig_grid_output$mean_gpp_gCm2day[,,low_quant])*1e-2*365.25
+var3 = (orig_grid_output$mean_reco_gCm2day[,,high_quant]-orig_grid_output$mean_reco_gCm2day[,,low_quant])*1e-2*365.25
+var4 = (orig_grid_output$mean_fire_gCm2day[,,high_quant]-orig_grid_output$mean_fire_gCm2day[,,low_quant])*1e-2*365.25
+var5 = (alt_grid_output$mean_nbe_gCm2day[,,high_quant]-alt_grid_output$mean_nbe_gCm2day[,,low_quant])*1e-2*365.25
+var6 = (alt_grid_output$mean_gpp_gCm2day[,,high_quant]-alt_grid_output$mean_gpp_gCm2day[,,low_quant])*1e-2*365.25
+var7 = (alt_grid_output$mean_reco_gCm2day[,,high_quant]-alt_grid_output$mean_reco_gCm2day[,,low_quant])*1e-2*365.25
+var8 = (alt_grid_output$mean_fire_gCm2day[,,high_quant]-alt_grid_output$mean_fire_gCm2day[,,low_quant])*1e-2*365.25
+var9 = orig_grid_output$mean_nbe_gCm2day[,,mid_quant]*1e-2*365.25
+var10 = orig_grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25
+var11 = orig_grid_output$mean_reco_gCm2day[,,mid_quant]*1e-2*365.25
+var12 = orig_grid_output$mean_fire_gCm2day[,,mid_quant]*1e-2*365.25
+var13 = alt_grid_output$mean_nbe_gCm2day[,,mid_quant]*1e-2*365.25
+var14 = alt_grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25
+var15 = alt_grid_output$mean_reco_gCm2day[,,mid_quant]*1e-2*365.25
+var16 = alt_grid_output$mean_fire_gCm2day[,,mid_quant]*1e-2*365.25
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var4[which(is.na(landfilter))] = NA
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var8[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+var10[which(is.na(landfilter))] = NA
+var11[which(is.na(landfilter))] = NA
+var12[which(is.na(landfilter))] = NA
+var13[which(is.na(landfilter))] = NA
+var14[which(is.na(landfilter))] = NA
+var15[which(is.na(landfilter))] = NA
+var16[which(is.na(landfilter))] = NA
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_C_fluxes_CI_xy",outsuffix,".png",sep=""), height = 4000, width = 4500, res = 300)
+par(mfrow=c(2,2), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
+# NBE 
+plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("NBE (MgC h",a^-1,"y",r^-1,")", sep="")))
+points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
+mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
+legend("topleft", legend = c(orig_name,alt_name), col = model_colours[1:2], lty = 2, pch=rep(16,2), horiz = FALSE, bty = "n", cex=2.1, lwd=3, ncol = 2)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var1) ~ as.vector(var9)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
+# GPP 
+plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("GPP (MgC h",a^-1,"y",r^-1,")", sep="")))
+points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var2) ~ as.vector(var10)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
+# Reco
+plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Reco (MgC h",a^-1,"y",r^-1,")", sep="")))
+points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
+mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
+mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var3) ~ as.vector(var11)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var7) ~ as.vector(var15)), lwd=3, col=model_colours[2])
+# Fire
+plot(var4 ~ var12, col=model_colours[1], ylim=range(c(var4,var8), na.rm=TRUE), xlim=range(c(var12,var16), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Fire (MgC h",a^-1,"y",r^-1,")", sep="")))
+points(var8 ~ var16, pch=1, col=model_colours[2], cex = 1.6)
+mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var4) ~ as.vector(var12)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var8) ~ as.vector(var16)), lwd=3, col=model_colours[2])
+dev.off()
+
 ###
 ## Plot the final C stocks, change and uncertainty
 
 # Final stocks
 # Assign variables
-var1 = orig_grid_output$final_totalC_gCm2[,,mid_quant]*1e-2
+var1 = orig_grid_output$final_Ctotal_gCm2[,,mid_quant]*1e-2
 var2 = orig_grid_output$final_biomass_gCm2[,,mid_quant]*1e-2 
 var3 = orig_grid_output$final_dom_gCm2[,,mid_quant]*1e-2 
-var4 = alt_grid_output$final_totalC_gCm2[,,mid_quant]*1e-2
+var4 = alt_grid_output$final_Ctotal_gCm2[,,mid_quant]*1e-2
 var5 = alt_grid_output$final_biomass_gCm2[,,mid_quant]*1e-2
 var6 = alt_grid_output$final_dom_gCm2[,,mid_quant]*1e-2
-var7 = (alt_grid_output$final_totalC_gCm2[,,mid_quant]-orig_grid_output$final_totalC_gCm2[,,mid_quant])*1e-2
+var7 = (alt_grid_output$final_Ctotal_gCm2[,,mid_quant]-orig_grid_output$final_Ctotal_gCm2[,,mid_quant])*1e-2
 var8 = (alt_grid_output$final_biomass_gCm2[,,mid_quant]-orig_grid_output$final_biomass_gCm2[,,mid_quant])*1e-2
 var9 = (alt_grid_output$final_dom_gCm2[,,mid_quant]-orig_grid_output$final_dom_gCm2[,,mid_quant])*1e-2
 var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
@@ -2914,14 +3132,14 @@ dev.off()
 
 # Change stocks
 # Assign variables
-var1 = orig_grid_output$final_dCtotalC_gCm2[,,mid_quant]*1e-2*(1/nos_years)
-var2 = orig_grid_output$final_dCbio_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var1 = orig_grid_output$final_dCtotal_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var2 = orig_grid_output$final_dCbiomass_gCm2[,,mid_quant]*1e-2*(1/nos_years)
 var3 = orig_grid_output$final_dCdom_gCm2[,,mid_quant]*1e-2*(1/nos_years)
-var4 = alt_grid_output$final_dCtotalC_gCm2[,,mid_quant]*1e-2*(1/nos_years)
-var5 = alt_grid_output$final_dCbio_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var4 = alt_grid_output$final_dCtotal_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var5 = alt_grid_output$final_dCbiomass_gCm2[,,mid_quant]*1e-2*(1/nos_years)
 var6 = alt_grid_output$final_dCdom_gCm2[,,mid_quant]*1e-2*(1/nos_years)
-var7 = (alt_grid_output$final_dCtotalC_gCm2[,,mid_quant]-orig_grid_output$final_dCtotalC_gCm2[,,mid_quant])*1e-2*(1/nos_years)
-var8 = (alt_grid_output$final_dCbio_gCm2[,,mid_quant]-orig_grid_output$final_dCbio_gCm2[,,mid_quant])*1e-2*(1/nos_years)
+var7 = (alt_grid_output$final_dCtotal_gCm2[,,mid_quant]-orig_grid_output$final_dCtotal_gCm2[,,mid_quant])*1e-2*(1/nos_years)
+var8 = (alt_grid_output$final_dCbiomass_gCm2[,,mid_quant]-orig_grid_output$final_dCbiomass_gCm2[,,mid_quant])*1e-2*(1/nos_years)
 var9 = (alt_grid_output$final_dCdom_gCm2[,,mid_quant]-orig_grid_output$final_dCdom_gCm2[,,mid_quant])*1e-2*(1/nos_years)
 var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var8[var8 > 1] = 1 ; var9[var9 > 1] = 1
@@ -2958,16 +3176,16 @@ par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
 plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Total (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_default)
+     main = expression(paste(Delta,"Total (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_default)
 plot(landmask, add=TRUE)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
 plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Biomass (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_default)
+     main = expression(paste(Delta,"Biomass (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_default)
 plot(landmask, add=TRUE)
 plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("DOM (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_default)
+     main = expression(paste(Delta,"DOM (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_default)
 plot(landmask, add=TRUE)
 # Alternate
 plot(var4, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
@@ -3005,14 +3223,14 @@ dev.off()
 
 # Final stocks CI
 # Assign variables
-var1 = (orig_grid_output$final_totalC_gCm2[,,high_quant]-orig_grid_output$final_totalC_gCm2[,,low_quant])*1e-2 
+var1 = (orig_grid_output$final_Ctotal_gCm2[,,high_quant]-orig_grid_output$final_Ctotal_gCm2[,,low_quant])*1e-2 
 var2 = (orig_grid_output$final_biomass_gCm2[,,high_quant]-orig_grid_output$final_biomass_gCm2[,,low_quant])*1e-2  
 var3 = (orig_grid_output$final_dom_gCm2[,,high_quant]-orig_grid_output$final_dom_gCm2[,,low_quant])*1e-2  
-var4 = (alt_grid_output$final_totalC_gCm2[,,high_quant]-alt_grid_output$final_totalC_gCm2[,,low_quant])*1e-2 
+var4 = (alt_grid_output$final_Ctotal_gCm2[,,high_quant]-alt_grid_output$final_Ctotal_gCm2[,,low_quant])*1e-2 
 var5 = (alt_grid_output$final_biomass_gCm2[,,high_quant]-alt_grid_output$final_biomass_gCm2[,,low_quant])*1e-2  
 var6 = (alt_grid_output$final_dom_gCm2[,,high_quant]-alt_grid_output$final_dom_gCm2[,,low_quant])*1e-2  
-var7 = (alt_grid_output$final_totalC_gCm2[,,high_quant] - alt_grid_output$final_totalC_gCm2[,,low_quant])
-var7 = (var7 - (orig_grid_output$final_totalC_gCm2[,,high_quant] - orig_grid_output$final_totalC_gCm2[,,low_quant])) * 1e-2
+var7 = (alt_grid_output$final_Ctotal_gCm2[,,high_quant] - alt_grid_output$final_Ctotal_gCm2[,,low_quant])
+var7 = (var7 - (orig_grid_output$final_Ctotal_gCm2[,,high_quant] - orig_grid_output$final_Ctotal_gCm2[,,low_quant])) * 1e-2
 var8 = (alt_grid_output$final_biomass_gCm2[,,high_quant] - alt_grid_output$final_biomass_gCm2[,,low_quant])
 var8 = (var8 - (orig_grid_output$final_biomass_gCm2[,,high_quant] - orig_grid_output$final_biomass_gCm2[,,low_quant])) * 1e-2
 var9 = (alt_grid_output$final_dom_gCm2[,,high_quant] - alt_grid_output$final_dom_gCm2[,,low_quant])
@@ -3099,16 +3317,16 @@ dev.off()
 
 # Change stocks CI
 # Assign variables
-var1 = (orig_grid_output$final_dCtotalC_gCm2[,,high_quant]-orig_grid_output$final_dCtotalC_gCm2[,,low_quant])*1e-2*(1/nos_years)
-var2 = (orig_grid_output$final_dCbio_gCm2[,,high_quant]-orig_grid_output$final_dCbio_gCm2[,,low_quant])*1e-2*(1/nos_years)
+var1 = (orig_grid_output$final_dCtotal_gCm2[,,high_quant]-orig_grid_output$final_dCtotal_gCm2[,,low_quant])*1e-2*(1/nos_years)
+var2 = (orig_grid_output$final_dCbiomass_gCm2[,,high_quant]-orig_grid_output$final_dCbiomass_gCm2[,,low_quant])*1e-2*(1/nos_years)
 var3 = (orig_grid_output$final_dCdom_gCm2[,,high_quant]-orig_grid_output$final_dCdom_gCm2[,,low_quant])*1e-2*(1/nos_years)
-var4 = (alt_grid_output$final_dCtotalC_gCm2[,,high_quant]-alt_grid_output$final_dCtotalC_gCm2[,,low_quant])*1e-2*(1/nos_years)
-var5 = (alt_grid_output$final_dCbio_gCm2[,,high_quant]-alt_grid_output$final_dCbio_gCm2[,,low_quant])*1e-2*(1/nos_years)
+var4 = (alt_grid_output$final_dCtotal_gCm2[,,high_quant]-alt_grid_output$final_dCtotal_gCm2[,,low_quant])*1e-2*(1/nos_years)
+var5 = (alt_grid_output$final_dCbiomass_gCm2[,,high_quant]-alt_grid_output$final_dCbiomass_gCm2[,,low_quant])*1e-2*(1/nos_years)
 var6 = (alt_grid_output$final_dCdom_gCm2[,,high_quant]-alt_grid_output$final_dCdom_gCm2[,,low_quant])*1e-2*(1/nos_years)
-var7 = (alt_grid_output$final_dCtotalC_gCm2[,,high_quant]-alt_grid_output$final_dCtotalC_gCm2[,,low_quant])*1e-2*(1/nos_years)
-var7 = var7 - ((orig_grid_output$final_dCtotalC_gCm2[,,high_quant]-orig_grid_output$final_dCtotalC_gCm2[,,low_quant])*1e-2*(1/nos_years))
-var8 = (alt_grid_output$final_dCbio_gCm2[,,high_quant]-alt_grid_output$final_dCbio_gCm2[,,low_quant])*1e-2*(1/nos_years)
-var8 = var8 - ((orig_grid_output$final_dCbio_gCm2[,,high_quant]-orig_grid_output$final_dCbio_gCm2[,,low_quant])*1e-2*(1/nos_years))
+var7 = (alt_grid_output$final_dCtotal_gCm2[,,high_quant]-alt_grid_output$final_dCtotal_gCm2[,,low_quant])*1e-2*(1/nos_years)
+var7 = var7 - ((orig_grid_output$final_dCtotal_gCm2[,,high_quant]-orig_grid_output$final_dCtotal_gCm2[,,low_quant])*1e-2*(1/nos_years))
+var8 = (alt_grid_output$final_dCbiomass_gCm2[,,high_quant]-alt_grid_output$final_dCbiomass_gCm2[,,low_quant])*1e-2*(1/nos_years)
+var8 = var8 - ((orig_grid_output$final_dCbiomass_gCm2[,,high_quant]-orig_grid_output$final_dCbiomass_gCm2[,,low_quant])*1e-2*(1/nos_years))
 var9 = (alt_grid_output$final_dCdom_gCm2[,,high_quant]-alt_grid_output$final_dCdom_gCm2[,,low_quant])*1e-2*(1/nos_years)
 var9 = var9 - ((orig_grid_output$final_dCdom_gCm2[,,high_quant]-orig_grid_output$final_dCdom_gCm2[,,low_quant])*1e-2*(1/nos_years))
 var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
@@ -3146,16 +3364,16 @@ par(mfrow=c(3,3), mar=c(0.5,0.9,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
 plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Total CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+     main = expression(paste(Delta,"Total CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
 plot(landmask, add=TRUE)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
 plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Biomass CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+     main = expression(paste(Delta,"Biomass CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
 plot(landmask, add=TRUE)
 plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("DOM CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+     main = expression(paste(Delta,"DOM CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
 plot(landmask, add=TRUE)
 # Alternate
 plot(var4, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
@@ -3191,15 +3409,95 @@ print(paste("Mean (-1-1) relative difference in CI Biomass change (",alt_name,"-
 print(paste("Mean (-1-1) relative difference in CI DOM change (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
+# Assign key C flux uncertainties and their uncertainties
+# Does the relationship between median and uncertainty change?
+var1 = (orig_grid_output$final_Ctotal_gCm2[,,high_quant]-orig_grid_output$final_Ctotal_gCm2[,,low_quant])*1e-2 
+var2 = (orig_grid_output$final_biomass_gCm2[,,high_quant]-orig_grid_output$final_biomass_gCm2[,,low_quant])*1e-2  
+var3 = (orig_grid_output$final_litter_gCm2[,,high_quant]-orig_grid_output$final_litter_gCm2[,,low_quant])*1e-2  
+var4 = (orig_grid_output$final_som_gCm2[,,high_quant]-orig_grid_output$final_som_gCm2[,,low_quant])*1e-2  
+var5 = (alt_grid_output$final_Ctotal_gCm2[,,high_quant]-alt_grid_output$final_Ctotal_gCm2[,,low_quant])*1e-2 
+var6 = (alt_grid_output$final_biomass_gCm2[,,high_quant]-alt_grid_output$final_biomass_gCm2[,,low_quant])*1e-2  
+var7 = (alt_grid_output$final_litter_gCm2[,,high_quant]-alt_grid_output$final_litter_gCm2[,,low_quant])*1e-2  
+var8 = (alt_grid_output$final_som_gCm2[,,high_quant]-alt_grid_output$final_som_gCm2[,,low_quant])*1e-2
+var9 = orig_grid_output$final_Ctotal_gCm2[,,mid_quant]*1e-2
+var10 = orig_grid_output$final_biomass_gCm2[,,mid_quant]*1e-2
+var11 = orig_grid_output$final_litter_gCm2[,,mid_quant]*1e-2
+var12 = orig_grid_output$final_som_gCm2[,,mid_quant]*1e-2
+var13 = alt_grid_output$final_Ctotal_gCm2[,,mid_quant]*1e-2
+var14 = alt_grid_output$final_biomass_gCm2[,,mid_quant]*1e-2
+var15 = alt_grid_output$final_litter_gCm2[,,mid_quant]*1e-2
+var16 = alt_grid_output$final_som_gCm2[,,mid_quant]*1e-2
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var4[which(is.na(landfilter))] = NA
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var8[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+var10[which(is.na(landfilter))] = NA
+var11[which(is.na(landfilter))] = NA
+var12[which(is.na(landfilter))] = NA
+var13[which(is.na(landfilter))] = NA
+var14[which(is.na(landfilter))] = NA
+var15[which(is.na(landfilter))] = NA
+var16[which(is.na(landfilter))] = NA
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks_CI_xy",outsuffix,".png",sep=""), height = 4000, width = 4500, res = 300)
+par(mfrow=c(2,2), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
+# Total 
+plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Total (MgC h",a^-1,")", sep="")))
+points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
+mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
+legend("topleft", legend = c(orig_name,alt_name), col = model_colours[1:2], lty = 2, pch=rep(16,2), horiz = FALSE, bty = "n", cex=2.1, lwd=3, ncol = 2)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var1) ~ as.vector(var9)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
+# Biomass
+plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Biomass (MgC h",a^-1,")", sep="")))
+points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var2) ~ as.vector(var10)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
+# Litter
+plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Litter (MgC h",a^-1,")", sep="")))
+points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
+mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
+mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var3) ~ as.vector(var11)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var7) ~ as.vector(var15)), lwd=3, col=model_colours[2])
+# SOM
+plot(var4 ~ var12, col=model_colours[1], ylim=range(c(var4,var8), na.rm=TRUE), xlim=range(c(var12,var16), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Soil (MgC h",a^-1,")", sep="")))
+points(var8 ~ var16, pch=1, col=model_colours[2], cex = 1.6)
+mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var4) ~ as.vector(var12)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var8) ~ as.vector(var16)), lwd=3, col=model_colours[2])
+dev.off()
+
 # Final stocks
 # Assign variables
-var1 = orig_grid_output$final_totalC_gCm2[,,mid_quant]*1e-2
+var1 = orig_grid_output$final_Ctotal_gCm2[,,mid_quant]*1e-2
 var2 = orig_grid_output$final_biomass_gCm2[,,mid_quant]*1e-2 
 var3 = orig_grid_output$final_dom_gCm2[,,mid_quant]*1e-2 
-var4 = alt_grid_output$final_totalC_gCm2[,,mid_quant]*1e-2
+var4 = alt_grid_output$final_Ctotal_gCm2[,,mid_quant]*1e-2
 var5 = alt_grid_output$final_biomass_gCm2[,,mid_quant]*1e-2
 var6 = alt_grid_output$final_dom_gCm2[,,mid_quant]*1e-2
-var7 = (alt_grid_output$final_totalC_gCm2[,,mid_quant]-orig_grid_output$final_totalC_gCm2[,,mid_quant])*1e-2
+var7 = (alt_grid_output$final_Ctotal_gCm2[,,mid_quant]-orig_grid_output$final_Ctotal_gCm2[,,mid_quant])*1e-2
 var8 = (alt_grid_output$final_biomass_gCm2[,,mid_quant]-orig_grid_output$final_biomass_gCm2[,,mid_quant])*1e-2
 var9 = (alt_grid_output$final_dom_gCm2[,,mid_quant]-orig_grid_output$final_dom_gCm2[,,mid_quant])*1e-2
 # Apply filter
@@ -3282,14 +3580,14 @@ dev.off()
 
 # Change stocks
 # Assign variables
-var1 = orig_grid_output$final_dCtotalC_gCm2[,,mid_quant]*1e-2*(1/nos_years)
-var2 = orig_grid_output$final_dCbio_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var1 = orig_grid_output$final_dCtotal_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var2 = orig_grid_output$final_dCbiomass_gCm2[,,mid_quant]*1e-2*(1/nos_years)
 var3 = orig_grid_output$final_dCdom_gCm2[,,mid_quant]*1e-2*(1/nos_years)
-var4 = alt_grid_output$final_dCtotalC_gCm2[,,mid_quant]*1e-2*(1/nos_years)
-var5 = alt_grid_output$final_dCbio_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var4 = alt_grid_output$final_dCtotal_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var5 = alt_grid_output$final_dCbiomass_gCm2[,,mid_quant]*1e-2*(1/nos_years)
 var6 = alt_grid_output$final_dCdom_gCm2[,,mid_quant]*1e-2*(1/nos_years)
-var7 = (alt_grid_output$final_dCtotalC_gCm2[,,mid_quant]-orig_grid_output$final_dCtotalC_gCm2[,,mid_quant])*1e-2*(1/nos_years)
-var8 = (alt_grid_output$final_dCbio_gCm2[,,mid_quant]-orig_grid_output$final_dCbio_gCm2[,,mid_quant])*1e-2*(1/nos_years)
+var7 = (alt_grid_output$final_dCtotal_gCm2[,,mid_quant]-orig_grid_output$final_dCtotal_gCm2[,,mid_quant])*1e-2*(1/nos_years)
+var8 = (alt_grid_output$final_dCbiomass_gCm2[,,mid_quant]-orig_grid_output$final_dCbiomass_gCm2[,,mid_quant])*1e-2*(1/nos_years)
 var9 = (alt_grid_output$final_dCdom_gCm2[,,mid_quant]-orig_grid_output$final_dCdom_gCm2[,,mid_quant])*1e-2*(1/nos_years)
 # Apply filter
 var1[which(is.na(landfilter))] = NA
@@ -3323,16 +3621,16 @@ par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
 plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Total (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_default)
+     main = expression(paste(Delta,"Total (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_default)
 plot(landmask, add=TRUE)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
 plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Biomass (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_default)
+     main = expression(paste(Delta,"Biomass (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_default)
 plot(landmask, add=TRUE)
 plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("DOM (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_default)
+     main = expression(paste(Delta,"DOM (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_default)
 plot(landmask, add=TRUE)
 # Alternate
 plot(var4, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
@@ -3368,16 +3666,96 @@ print(paste("Mean (MgC/ha/yr) difference in Biomass change (",alt_name,"-",orig_
 print(paste("Mean (MgC/ha/yr) difference in DOM change (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
+# Assign key C flux uncertainties and their uncertainties
+# Does the relationship between median and uncertainty change?
+var1 = (orig_grid_output$final_dCtotal_gCm2[,,high_quant]-orig_grid_output$final_dCtotal_gCm2[,,low_quant])*1e-2*(1/nos_years)
+var2 = (orig_grid_output$final_dCbiomass_gCm2[,,high_quant]-orig_grid_output$final_dCbiomass_gCm2[,,low_quant])*1e-2*(1/nos_years)
+var3 = (orig_grid_output$final_dClitter_gCm2[,,high_quant]-orig_grid_output$final_dClitter_gCm2[,,low_quant])*1e-2*(1/nos_years)
+var4 = (orig_grid_output$final_dCsom_gCm2[,,high_quant]-orig_grid_output$final_dCsom_gCm2[,,low_quant])*1e-2*(1/nos_years)  
+var5 = (alt_grid_output$final_dCtotal_gCm2[,,high_quant]-alt_grid_output$final_dCtotal_gCm2[,,low_quant])*1e-2*(1/nos_years) 
+var6 = (alt_grid_output$final_dCbiomass_gCm2[,,high_quant]-alt_grid_output$final_dCbiomass_gCm2[,,low_quant])*1e-2*(1/nos_years)  
+var7 = (alt_grid_output$final_dClitter_gCm2[,,high_quant]-alt_grid_output$final_dClitter_gCm2[,,low_quant])*1e-2*(1/nos_years)  
+var8 = (alt_grid_output$final_dCsom_gCm2[,,high_quant]-alt_grid_output$final_dCsom_gCm2[,,low_quant])*1e-2*(1/nos_years)
+var9 = orig_grid_output$final_dCtotal_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var10 = orig_grid_output$final_dCbiomass_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var11 = orig_grid_output$final_dClitter_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var12 = orig_grid_output$final_dCsom_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var13 = alt_grid_output$final_dCtotal_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var14 = alt_grid_output$final_dCbiomass_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var15 = alt_grid_output$final_dClitter_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var16 = alt_grid_output$final_dCsom_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var4[which(is.na(landfilter))] = NA
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var8[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+var10[which(is.na(landfilter))] = NA
+var11[which(is.na(landfilter))] = NA
+var12[which(is.na(landfilter))] = NA
+var13[which(is.na(landfilter))] = NA
+var14[which(is.na(landfilter))] = NA
+var15[which(is.na(landfilter))] = NA
+var16[which(is.na(landfilter))] = NA
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks_change_CI_xy",outsuffix,".png",sep=""), height = 4000, width = 4500, res = 300)
+par(mfrow=c(2,2), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
+# Total 
+plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste(Delta,"Total (MgC h",a^-1,y^-1,")", sep="")))
+points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
+mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
+legend("topleft", legend = c(orig_name,alt_name), col = model_colours[1:2], lty = 2, pch=rep(16,2), horiz = FALSE, bty = "n", cex=2.1, lwd=3, ncol = 2)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var1) ~ as.vector(var9)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
+# Biomass
+plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste(Delta,"Biomass (MgC h",a^-1,y^-1,")", sep="")))
+points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var2) ~ as.vector(var10)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
+# Litter
+plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste(Delta,"Litter (MgC h",a^-1,y^-1,")", sep="")))
+points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
+mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
+mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var3) ~ as.vector(var11)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var7) ~ as.vector(var15)), lwd=3, col=model_colours[2])
+# SOM
+plot(var4 ~ var12, col=model_colours[1], ylim=range(c(var4,var8), na.rm=TRUE), xlim=range(c(var12,var16), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste(Delta,"Soil (MgC h",a^-1,y^-1,")", sep="")))
+points(var8 ~ var16, pch=1, col=model_colours[2], cex = 1.6)
+mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var4) ~ as.vector(var12)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var8) ~ as.vector(var16)), lwd=3, col=model_colours[2])
+dev.off()
+
 # Final stocks CI
 # Assign variables
-var1 = (orig_grid_output$final_totalC_gCm2[,,high_quant]-orig_grid_output$final_totalC_gCm2[,,low_quant])*1e-2 
+var1 = (orig_grid_output$final_Ctotal_gCm2[,,high_quant]-orig_grid_output$final_Ctotal_gCm2[,,low_quant])*1e-2 
 var2 = (orig_grid_output$final_biomass_gCm2[,,high_quant]-orig_grid_output$final_biomass_gCm2[,,low_quant])*1e-2  
 var3 = (orig_grid_output$final_dom_gCm2[,,high_quant]-orig_grid_output$final_dom_gCm2[,,low_quant])*1e-2  
-var4 = (alt_grid_output$final_totalC_gCm2[,,high_quant]-alt_grid_output$final_totalC_gCm2[,,low_quant])*1e-2 
+var4 = (alt_grid_output$final_Ctotal_gCm2[,,high_quant]-alt_grid_output$final_Ctotal_gCm2[,,low_quant])*1e-2 
 var5 = (alt_grid_output$final_biomass_gCm2[,,high_quant]-alt_grid_output$final_biomass_gCm2[,,low_quant])*1e-2  
 var6 = (alt_grid_output$final_dom_gCm2[,,high_quant]-alt_grid_output$final_dom_gCm2[,,low_quant])*1e-2  
-var7 = (alt_grid_output$final_totalC_gCm2[,,high_quant] - alt_grid_output$final_totalC_gCm2[,,low_quant])
-var7 = (var7 - (orig_grid_output$final_totalC_gCm2[,,high_quant] - orig_grid_output$final_totalC_gCm2[,,low_quant])) * 1e-2
+var7 = (alt_grid_output$final_Ctotal_gCm2[,,high_quant] - alt_grid_output$final_Ctotal_gCm2[,,low_quant])
+var7 = (var7 - (orig_grid_output$final_Ctotal_gCm2[,,high_quant] - orig_grid_output$final_Ctotal_gCm2[,,low_quant])) * 1e-2
 var8 = (alt_grid_output$final_biomass_gCm2[,,high_quant] - alt_grid_output$final_biomass_gCm2[,,low_quant])
 var8 = (var8 - (orig_grid_output$final_biomass_gCm2[,,high_quant] - orig_grid_output$final_biomass_gCm2[,,low_quant])) * 1e-2
 var9 = (alt_grid_output$final_dom_gCm2[,,high_quant] - alt_grid_output$final_dom_gCm2[,,low_quant])
@@ -3459,18 +3837,121 @@ print(paste("Mean (MgC/ha) difference in CI Biomass (",alt_name,"-",orig_name,")
 print(paste("Mean (MgC/ha) difference in CI DOM (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
+# Final stocks CI
+# Assign variables
+var1 = ((orig_grid_output$final_Ctotal_gCm2[,,high_quant]-orig_grid_output$final_Ctotal_gCm2[,,low_quant])/orig_grid_output$final_Ctotal_gCm2[,,mid_quant])
+var2 = ((orig_grid_output$final_biomass_gCm2[,,high_quant]-orig_grid_output$final_biomass_gCm2[,,low_quant])/orig_grid_output$final_biomass_gCm2[,,mid_quant])
+var3 = ((orig_grid_output$final_dom_gCm2[,,high_quant]-orig_grid_output$final_dom_gCm2[,,low_quant])/orig_grid_output$final_dom_gCm2[,,mid_quant])
+var4 = ((alt_grid_output$final_Ctotal_gCm2[,,high_quant]-alt_grid_output$final_Ctotal_gCm2[,,low_quant])/alt_grid_output$final_Ctotal_gCm2[,,mid_quant])
+var5 = ((alt_grid_output$final_biomass_gCm2[,,high_quant]-alt_grid_output$final_biomass_gCm2[,,low_quant])/alt_grid_output$final_biomass_gCm2[,,mid_quant])
+var6 = ((alt_grid_output$final_dom_gCm2[,,high_quant]-alt_grid_output$final_dom_gCm2[,,low_quant])/alt_grid_output$final_dom_gCm2[,,mid_quant])
+var7 = var4-var1
+var8 = var5-var2
+var9 = var6-var3
+# Apply filters based on quantiles
+# Maximum values only for the positive definites
+var1[which(var1  > quantile(var1, prob=c(0.95), na.rm=TRUE))] = quantile(var1, prob=c(0.95), na.rm=TRUE)
+var2[which(var2  > quantile(var2, prob=c(0.95), na.rm=TRUE))] = quantile(var2, prob=c(0.95), na.rm=TRUE)
+var3[which(var3  > quantile(var3, prob=c(0.95), na.rm=TRUE))] = quantile(var3, prob=c(0.95), na.rm=TRUE)
+var4[which(var4  > quantile(var4, prob=c(0.95), na.rm=TRUE))] = quantile(var4, prob=c(0.95), na.rm=TRUE)
+var5[which(var5  > quantile(var5, prob=c(0.95), na.rm=TRUE))] = quantile(var5, prob=c(0.95), na.rm=TRUE)
+var6[which(var6  > quantile(var6, prob=c(0.95), na.rm=TRUE))] = quantile(var6, prob=c(0.95), na.rm=TRUE)
+# Maximum and minimum (below) for the differences, i.e. can be negative or positive
+var7[which(var7  > quantile(var7, prob=c(0.95), na.rm=TRUE))] = quantile(var7, prob=c(0.95), na.rm=TRUE)
+var8[which(var8  > quantile(var8, prob=c(0.95), na.rm=TRUE))] = quantile(var8, prob=c(0.95), na.rm=TRUE)
+var9[which(var9  > quantile(var9, prob=c(0.95), na.rm=TRUE))] = quantile(var9, prob=c(0.95), na.rm=TRUE)
+var7[which(var7  < quantile(var7, prob=c(0.05), na.rm=TRUE))] = quantile(var7, prob=c(0.05), na.rm=TRUE)
+var8[which(var8  < quantile(var8, prob=c(0.05), na.rm=TRUE))] = quantile(var8, prob=c(0.05), na.rm=TRUE)
+var9[which(var9  < quantile(var9, prob=c(0.05), na.rm=TRUE))] = quantile(var9, prob=c(0.05), na.rm=TRUE)
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var4[which(is.na(landfilter))] = NA
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var8[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+# Convert to raster
+var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var7 = raster(vals = t((var7)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var8 = raster(vals = t((var8)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var9 = raster(vals = t((var9)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# ranges
+zrange1 = c(0,1)*max(abs(range(c(values(var1),values(var2),values(var3),values(var4),values(var5),values(var6)),na.rm=TRUE)))
+zrange2 = zrange1
+zrange3 = zrange1
+zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
+zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
+zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks_CI_rel_of_median",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
+par(mfrow=c(3,3), mar=c(0.5,0.8,2.8,7),omi=c(0.11,0.4,0.2,0.2))
+# Original
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Total CI:Median",sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(orig_name, side=2, cex=2.0, padj=-0.5)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Biomass CI:Median",sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("DOM CI:Median",sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Alternate
+plot(var4, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(alt_name, side=2,cex=2.0, padj=-0.5)
+plot(var5, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var6, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Difference
+plot(var7, zlim = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
+plot(var8, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+plot(var9, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+# print summary information to user
+print(paste("Mean difference in CI:Median Total (",alt_name,"-",orig_name,")   = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean difference in CI:Median Biomass (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean difference in CI:Median DOM (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
+dev.off()
+
 # Change stocks CI
 # Assign variables
-var1 = (orig_grid_output$final_dCtotalC_gCm2[,,high_quant]-orig_grid_output$final_dCtotalC_gCm2[,,low_quant])*1e-2*(1/nos_years)
-var2 = (orig_grid_output$final_dCbio_gCm2[,,high_quant]-orig_grid_output$final_dCbio_gCm2[,,low_quant])*1e-2*(1/nos_years)
+var1 = (orig_grid_output$final_dCtotal_gCm2[,,high_quant]-orig_grid_output$final_dCtotal_gCm2[,,low_quant])*1e-2*(1/nos_years)
+var2 = (orig_grid_output$final_dCbiomass_gCm2[,,high_quant]-orig_grid_output$final_dCbiomass_gCm2[,,low_quant])*1e-2*(1/nos_years)
 var3 = (orig_grid_output$final_dCdom_gCm2[,,high_quant]-orig_grid_output$final_dCdom_gCm2[,,low_quant])*1e-2*(1/nos_years)
-var4 = (alt_grid_output$final_dCtotalC_gCm2[,,high_quant]-alt_grid_output$final_dCtotalC_gCm2[,,low_quant])*1e-2*(1/nos_years)
-var5 = (alt_grid_output$final_dCbio_gCm2[,,high_quant]-alt_grid_output$final_dCbio_gCm2[,,low_quant])*1e-2*(1/nos_years)
+var4 = (alt_grid_output$final_dCtotal_gCm2[,,high_quant]-alt_grid_output$final_dCtotal_gCm2[,,low_quant])*1e-2*(1/nos_years)
+var5 = (alt_grid_output$final_dCbiomass_gCm2[,,high_quant]-alt_grid_output$final_dCbiomass_gCm2[,,low_quant])*1e-2*(1/nos_years)
 var6 = (alt_grid_output$final_dCdom_gCm2[,,high_quant]-alt_grid_output$final_dCdom_gCm2[,,low_quant])*1e-2*(1/nos_years)
-var7 = (alt_grid_output$final_dCtotalC_gCm2[,,high_quant]-alt_grid_output$final_dCtotalC_gCm2[,,low_quant])*1e-2*(1/nos_years)
-var7 = var7 - ((orig_grid_output$final_dCtotalC_gCm2[,,high_quant]-orig_grid_output$final_dCtotalC_gCm2[,,low_quant])*1e-2*(1/nos_years))
-var8 = (alt_grid_output$final_dCbio_gCm2[,,high_quant]-alt_grid_output$final_dCbio_gCm2[,,low_quant])*1e-2*(1/nos_years)
-var8 = var8 - ((orig_grid_output$final_dCbio_gCm2[,,high_quant]-orig_grid_output$final_dCbio_gCm2[,,low_quant])*1e-2*(1/nos_years))
+var7 = (alt_grid_output$final_dCtotal_gCm2[,,high_quant]-alt_grid_output$final_dCtotal_gCm2[,,low_quant])*1e-2*(1/nos_years)
+var7 = var7 - ((orig_grid_output$final_dCtotal_gCm2[,,high_quant]-orig_grid_output$final_dCtotal_gCm2[,,low_quant])*1e-2*(1/nos_years))
+var8 = (alt_grid_output$final_dCbiomass_gCm2[,,high_quant]-alt_grid_output$final_dCbiomass_gCm2[,,low_quant])*1e-2*(1/nos_years)
+var8 = var8 - ((orig_grid_output$final_dCbiomass_gCm2[,,high_quant]-orig_grid_output$final_dCbiomass_gCm2[,,low_quant])*1e-2*(1/nos_years))
 var9 = (alt_grid_output$final_dCdom_gCm2[,,high_quant]-alt_grid_output$final_dCdom_gCm2[,,low_quant])*1e-2*(1/nos_years)
 var9 = var9 - ((orig_grid_output$final_dCdom_gCm2[,,high_quant]-orig_grid_output$final_dCdom_gCm2[,,low_quant])*1e-2*(1/nos_years))
 # Apply filter
@@ -3505,16 +3986,16 @@ par(mfrow=c(3,3), mar=c(0.5,0.9,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
 plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Total CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+     main = expression(paste(Delta,"Total CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
 plot(landmask, add=TRUE)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
 plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Biomass CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+     main = expression(paste(Delta,"Biomass CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
 plot(landmask, add=TRUE)
 plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("DOM CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+     main = expression(paste(Delta,"DOM CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
 plot(landmask, add=TRUE)
 # Alternate
 plot(var4, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
@@ -3550,18 +4031,121 @@ print(paste("Mean (MgC/ha/yr) difference in CI Biomass change (",alt_name,"-",or
 print(paste("Mean (MgC/ha/yr) difference in CI DOM change (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
+# Change stocks CI relative to the median
+# Assign variables
+var1 = (orig_grid_output$final_dCtotal_gCm2[,,high_quant]-orig_grid_output$final_dCtotal_gCm2[,,low_quant]) / abs(orig_grid_output$final_dCtotal_gCm2[,,mid_quant])
+var2 = (orig_grid_output$final_dCbiomass_gCm2[,,high_quant]-orig_grid_output$final_dCbiomass_gCm2[,,low_quant]) / abs(orig_grid_output$final_dCbiomass_gCm2[,,mid_quant])
+var3 = (orig_grid_output$final_dCdom_gCm2[,,high_quant]-orig_grid_output$final_dCdom_gCm2[,,low_quant]) / abs(orig_grid_output$final_dCdom_gCm2[,,mid_quant])
+var4 = (alt_grid_output$final_dCtotal_gCm2[,,high_quant]-alt_grid_output$final_dCtotal_gCm2[,,low_quant]) / abs(alt_grid_output$final_dCtotal_gCm2[,,mid_quant])
+var5 = (alt_grid_output$final_dCbiomass_gCm2[,,high_quant]-alt_grid_output$final_dCbiomass_gCm2[,,low_quant]) / abs(alt_grid_output$final_dCbiomass_gCm2[,,mid_quant])
+var6 = (alt_grid_output$final_dCdom_gCm2[,,high_quant]-alt_grid_output$final_dCdom_gCm2[,,low_quant]) / abs(alt_grid_output$final_dCdom_gCm2[,,mid_quant])
+var7 = var4 - var1
+var8 = var5 - var2
+var9 = var6 - var3
+# Apply filters based on quantiles
+# Maximum values only for the positive definites
+var1[which(var1  > quantile(var1, prob=c(0.95), na.rm=TRUE))] = quantile(var1, prob=c(0.95), na.rm=TRUE)
+var2[which(var2  > quantile(var2, prob=c(0.95), na.rm=TRUE))] = quantile(var2, prob=c(0.95), na.rm=TRUE)
+var3[which(var3  > quantile(var3, prob=c(0.95), na.rm=TRUE))] = quantile(var3, prob=c(0.95), na.rm=TRUE)
+var4[which(var4  > quantile(var4, prob=c(0.95), na.rm=TRUE))] = quantile(var4, prob=c(0.95), na.rm=TRUE)
+var5[which(var5  > quantile(var5, prob=c(0.95), na.rm=TRUE))] = quantile(var5, prob=c(0.95), na.rm=TRUE)
+var6[which(var6  > quantile(var6, prob=c(0.95), na.rm=TRUE))] = quantile(var6, prob=c(0.95), na.rm=TRUE)
+# Maximum and minimum (below) for the differences, i.e. can be negative or positive
+var7[which(var7  > quantile(var7, prob=c(0.95), na.rm=TRUE))] = quantile(var7, prob=c(0.95), na.rm=TRUE)
+var8[which(var8  > quantile(var8, prob=c(0.95), na.rm=TRUE))] = quantile(var8, prob=c(0.95), na.rm=TRUE)
+var9[which(var9  > quantile(var9, prob=c(0.95), na.rm=TRUE))] = quantile(var9, prob=c(0.95), na.rm=TRUE)
+var7[which(var7  < quantile(var7, prob=c(0.05), na.rm=TRUE))] = quantile(var7, prob=c(0.05), na.rm=TRUE)
+var8[which(var8  < quantile(var8, prob=c(0.05), na.rm=TRUE))] = quantile(var8, prob=c(0.05), na.rm=TRUE)
+var9[which(var9  < quantile(var9, prob=c(0.05), na.rm=TRUE))] = quantile(var9, prob=c(0.05), na.rm=TRUE)
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var4[which(is.na(landfilter))] = NA
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var8[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+# Convert to raster
+var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var7 = raster(vals = t((var7)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var8 = raster(vals = t((var8)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var9 = raster(vals = t((var9)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# ranges
+zrange1 = c(0,1)*max(abs(range(c(values(var1),values(var4)),na.rm=TRUE)))
+zrange2 = c(0,1)*max(abs(range(c(values(var2),values(var5)),na.rm=TRUE)))
+zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
+zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
+zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
+zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks_change_CI_rel_of_median",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
+par(mfrow=c(3,3), mar=c(0.5,0.9,2.8,7),omi=c(0.11,0.4,0.2,0.2))
+# Original
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste(Delta,"Total CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(orig_name, side=2, cex=2.0, padj=-0.5)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste(Delta,"Biomass CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste(Delta,"DOM CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Alternate
+plot(var4, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(alt_name, side=2,cex=2.0, padj=-0.5)
+plot(var5, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var6, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Difference
+plot(var7, zlim = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
+plot(var8, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+plot(var9, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+# print summary information to user
+print(paste("Mean difference in CI Total change (",alt_name,"-",orig_name,")   = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean difference in CI:median Biomass change (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean difference in CI:median DOM change (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
+dev.off()
+
 
 ###
 ## Plot the MRTwood and NPPwood
 
 # Traits
 # Assign variables
-var1 = orig_grid_parameters$MTT_wood_years[,,mid_quant]
-var2 = orig_grid_parameters$NPP_wood_fraction[,,mid_quant]
-var3 = orig_grid_parameters$SS_wood_gCm2[,,mid_quant]*1e-2
-var4 = alt_grid_parameters$MTT_wood_years[,,mid_quant]
-var5 = alt_grid_parameters$NPP_wood_fraction[,,mid_quant]
-var6 = alt_grid_parameters$SS_wood_gCm2[,,mid_quant]*1e-2
+var1 = orig_grid_output$MTT_wood_years[,,mid_quant]
+var2 = orig_grid_output$NPP_wood_fraction[,,mid_quant]
+var3 = orig_grid_output$SS_wood_gCm2[,,mid_quant]*1e-2
+var4 = alt_grid_output$MTT_wood_years[,,mid_quant]
+var5 = alt_grid_output$NPP_wood_fraction[,,mid_quant]
+var6 = alt_grid_output$SS_wood_gCm2[,,mid_quant]*1e-2
 var7 = var4-var1
 var8 = var5-var2
 var9 = var6-var3
@@ -3699,12 +4283,12 @@ dev.off()
 
 # Traits
 # Assign variables
-var1 = orig_grid_parameters$MTT_wood_years[,,mid_quant]
-var2 = orig_grid_output$mean_wnpp_gCm2day[,,mid_quant]*365.25*1e-2
-var3 = orig_grid_parameters$SS_wood_gCm2[,,mid_quant]*1e-2
-var4 = alt_grid_parameters$MTT_wood_years[,,mid_quant]
-var5 = alt_grid_output$mean_wnpp_gCm2day[,,mid_quant]*365.25*1e-2
-var6 = alt_grid_parameters$SS_wood_gCm2[,,mid_quant]*1e-2
+var1 = orig_grid_output$MTT_wood_years[,,mid_quant]
+var2 = orig_grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*365.25*1e-2
+var3 = orig_grid_output$SS_wood_gCm2[,,mid_quant]*1e-2
+var4 = alt_grid_output$MTT_wood_years[,,mid_quant]
+var5 = alt_grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*365.25*1e-2
+var6 = alt_grid_output$SS_wood_gCm2[,,mid_quant]*1e-2
 var7 = var4-var1
 var8 = var5-var2
 var9 = var6-var3
@@ -3842,12 +4426,12 @@ dev.off()
 
 # Traits CI
 # Assign variables
-var1 = orig_grid_parameters$MTT_wood_years[,,high_quant] - orig_grid_parameters$MTT_wood_years[,,low_quant]
-var2 = orig_grid_parameters$NPP_wood_fraction[,,high_quant] - orig_grid_parameters$NPP_wood_fraction[,,low_quant]
-var3 = (orig_grid_parameters$SS_wood_gCm2[,,high_quant]*1e-2) - (orig_grid_parameters$SS_wood_gCm2[,,low_quant]*1e-2)
-var4 = alt_grid_parameters$MTT_wood_years[,,high_quant] - alt_grid_parameters$MTT_wood_years[,,low_quant]
-var5 = alt_grid_parameters$NPP_wood_fraction[,,high_quant] - alt_grid_parameters$NPP_wood_fraction[,,low_quant]
-var6 = (alt_grid_parameters$SS_wood_gCm2[,,high_quant]*1e-2) - (alt_grid_parameters$SS_wood_gCm2[,,low_quant]*1e-2)
+var1 = orig_grid_output$MTT_wood_years[,,high_quant] - orig_grid_output$MTT_wood_years[,,low_quant]
+var2 = orig_grid_output$NPP_wood_fraction[,,high_quant] - orig_grid_output$NPP_wood_fraction[,,low_quant]
+var3 = (orig_grid_output$SS_wood_gCm2[,,high_quant]*1e-2) - (orig_grid_output$SS_wood_gCm2[,,low_quant]*1e-2)
+var4 = alt_grid_output$MTT_wood_years[,,high_quant] - alt_grid_output$MTT_wood_years[,,low_quant]
+var5 = alt_grid_output$NPP_wood_fraction[,,high_quant] - alt_grid_output$NPP_wood_fraction[,,low_quant]
+var6 = (alt_grid_output$SS_wood_gCm2[,,high_quant]*1e-2) - (alt_grid_output$SS_wood_gCm2[,,low_quant]*1e-2)
 var7 = var4-var1
 var8 = var5-var2
 var9 = var6-var3
@@ -3966,16 +4550,16 @@ zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.
 zrange5 = zrange4 ; zrange6 = zrange5
 plot(var7, zlim = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
 plot(var8, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 plot(var9, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 # print summary information to user
 print(paste("Mean relative (-1-1) difference in CI wMTT (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
@@ -3985,12 +4569,177 @@ dev.off()
 
 # Traits CI
 # Assign variables
-var1 = orig_grid_parameters$MTT_wood_years[,,high_quant] - orig_grid_parameters$MTT_wood_years[,,low_quant]
-var2 = (orig_grid_output$mean_wnpp_gCm2day[,,high_quant] - orig_grid_output$mean_wnpp_gCm2day[,,low_quant])*365.25*1e-2
-var3 = (orig_grid_parameters$SS_wood_gCm2[,,high_quant]*1e-2) - (orig_grid_parameters$SS_wood_gCm2[,,low_quant]*1e-2)
-var4 = alt_grid_parameters$MTT_wood_years[,,high_quant] - alt_grid_parameters$MTT_wood_years[,,low_quant]
-var5 = (alt_grid_output$mean_wnpp_gCm2day[,,high_quant] - alt_grid_output$mean_wnpp_gCm2day[,,low_quant])*365.25*1e-2
-var6 = (alt_grid_parameters$SS_wood_gCm2[,,high_quant]*1e-2) - (alt_grid_parameters$SS_wood_gCm2[,,low_quant]*1e-2)
+var1 = (orig_grid_output$MTT_wood_years[,,high_quant] - orig_grid_output$MTT_wood_years[,,low_quant]) / orig_grid_output$MTT_wood_years[,,mid_quant]
+var2 = (orig_grid_output$NPP_wood_fraction[,,high_quant] - orig_grid_output$NPP_wood_fraction[,,low_quant]) / orig_grid_output$NPP_wood_fraction[,,mid_quant]
+var3 = (orig_grid_output$SS_wood_gCm2[,,high_quant] - orig_grid_output$SS_wood_gCm2[,,low_quant]) / orig_grid_output$SS_wood_gCm2[,,mid_quant]
+var4 = (alt_grid_output$MTT_wood_years[,,high_quant] - alt_grid_output$MTT_wood_years[,,low_quant]) / alt_grid_output$MTT_wood_years[,,mid_quant]
+var5 = (alt_grid_output$NPP_wood_fraction[,,high_quant] - alt_grid_output$NPP_wood_fraction[,,low_quant]) / alt_grid_output$NPP_wood_fraction[,,mid_quant]
+var6 = (alt_grid_output$SS_wood_gCm2[,,high_quant] - alt_grid_output$SS_wood_gCm2[,,low_quant]) / alt_grid_output$SS_wood_gCm2[,,mid_quant]
+var7 = var4-var1
+var8 = var5-var2
+var9 = var6-var3
+# Apply filters based on quantiles
+# Maximum values only for the positive definites
+var1[which(var1  > quantile(var1, prob=c(0.95), na.rm=TRUE))] = quantile(var1, prob=c(0.95), na.rm=TRUE)
+var2[which(var2  > quantile(var2, prob=c(0.95), na.rm=TRUE))] = quantile(var2, prob=c(0.95), na.rm=TRUE)
+var3[which(var3  > quantile(var3, prob=c(0.95), na.rm=TRUE))] = quantile(var3, prob=c(0.95), na.rm=TRUE)
+var4[which(var4  > quantile(var4, prob=c(0.95), na.rm=TRUE))] = quantile(var4, prob=c(0.95), na.rm=TRUE)
+var5[which(var5  > quantile(var5, prob=c(0.95), na.rm=TRUE))] = quantile(var5, prob=c(0.95), na.rm=TRUE)
+var6[which(var6  > quantile(var6, prob=c(0.95), na.rm=TRUE))] = quantile(var6, prob=c(0.95), na.rm=TRUE)
+# Maximum and minimum (below) for the differences, i.e. can be negative or positive
+var7[which(var7  > quantile(var7, prob=c(0.95), na.rm=TRUE))] = quantile(var7, prob=c(0.95), na.rm=TRUE)
+var8[which(var8  > quantile(var8, prob=c(0.95), na.rm=TRUE))] = quantile(var8, prob=c(0.95), na.rm=TRUE)
+var9[which(var9  > quantile(var9, prob=c(0.95), na.rm=TRUE))] = quantile(var9, prob=c(0.95), na.rm=TRUE)
+var7[which(var7  < quantile(var7, prob=c(0.05), na.rm=TRUE))] = quantile(var7, prob=c(0.05), na.rm=TRUE)
+var8[which(var8  < quantile(var8, prob=c(0.05), na.rm=TRUE))] = quantile(var8, prob=c(0.05), na.rm=TRUE)
+var9[which(var9  < quantile(var9, prob=c(0.05), na.rm=TRUE))] = quantile(var9, prob=c(0.05), na.rm=TRUE)
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var4[which(is.na(landfilter))] = NA
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var8[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+# Convert to raster
+var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var7 = raster(vals = t((var7)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var8 = raster(vals = t((var8)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var9 = raster(vals = t((var9)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# ranges
+zrange1 = c(0,1)*max(abs(range(c(values(var1),values(var4)),na.rm=TRUE)))
+zrange2 = c(0,1)*max(abs(range(c(values(var2),values(var5)),na.rm=TRUE)))
+zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
+zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
+zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
+zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPP_MRT_SS_CI_rel_of_median",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
+par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
+# Original
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("MRT wood CI:Median",sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(orig_name, side=2, cex=2.0, padj=-0.5)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("NPP wood CI:Median",sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("SS wood CI:Median",sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Alternate
+plot(var4, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(alt_name, side=2,cex=2.0, padj=-0.5)
+plot(var5, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var6, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Difference
+plot(var7, zlim = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
+plot(var8, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+plot(var9, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+# print summary information to user
+print(paste("Mean difference in CI:Median wMTT (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean difference in CI:Median wNPP (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean difference in CI:Median wSS (",alt_name,"-",orig_name,")  = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
+dev.off()
+
+# Assign key C flux uncertainties and their uncertainties
+# Does the relationship between median and uncertainty change?
+var1 = (orig_grid_output$MTT_wood_years[,,high_quant]-orig_grid_output$MTT_wood_years[,,low_quant])
+var2 = (orig_grid_output$NPP_wood_fraction[,,high_quant]-orig_grid_output$NPP_wood_fraction[,,low_quant])
+var3 = (orig_grid_output$SS_wood_gCm2[,,high_quant]-orig_grid_output$SS_wood_gCm2[,,low_quant])*1e-2
+var5 = (alt_grid_output$MTT_wood_years[,,high_quant]-alt_grid_output$MTT_wood_years[,,low_quant])
+var6 = (alt_grid_output$NPP_wood_fraction[,,high_quant]-alt_grid_output$NPP_wood_fraction[,,low_quant])
+var7 = (alt_grid_output$SS_wood_gCm2[,,high_quant]-alt_grid_output$SS_wood_gCm2[,,low_quant])*1e-2
+var9 = orig_grid_output$MTT_wood_years[,,mid_quant]
+var10 = orig_grid_output$NPP_wood_fraction[,,mid_quant]
+var11 = orig_grid_output$SS_wood_gCm2[,,mid_quant]*1e-2
+var13 = alt_grid_output$MTT_wood_years[,,mid_quant]
+var14 = alt_grid_output$NPP_wood_fraction[,,mid_quant]
+var15 = alt_grid_output$SS_wood_gCm2[,,mid_quant]*1e-2
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+var10[which(is.na(landfilter))] = NA
+var11[which(is.na(landfilter))] = NA
+var13[which(is.na(landfilter))] = NA
+var14[which(is.na(landfilter))] = NA
+var15[which(is.na(landfilter))] = NA
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPP_MRT_SS_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
+par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
+# Wood MRT
+plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Wood MRT (years)", sep="")))
+points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+legend("topleft", legend = c(orig_name,alt_name), col = model_colours[1:2], lty = 2, pch=rep(16,2), horiz = FALSE, bty = "n", cex=2.1, lwd=3, ncol = 2)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var1) ~ as.vector(var9)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
+# Wood NPP (fraction)
+plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Wood NPP (0-1)", sep="")))
+points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
+mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var2) ~ as.vector(var10)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
+# Wood Steady state
+plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Wood Steady State (MgC h",a^-1,")", sep="")))
+points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var3) ~ as.vector(var11)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var7) ~ as.vector(var15)), lwd=3, col=model_colours[2])
+dev.off()
+
+# Traits CI
+# Assign variables
+var1 = orig_grid_output$MTT_wood_years[,,high_quant] - orig_grid_output$MTT_wood_years[,,low_quant]
+var2 = (orig_grid_output$mean_alloc_wood_gCm2day[,,high_quant] - orig_grid_output$mean_alloc_wood_gCm2day[,,low_quant])*365.25*1e-2
+var3 = (orig_grid_output$SS_wood_gCm2[,,high_quant]*1e-2) - (orig_grid_output$SS_wood_gCm2[,,low_quant]*1e-2)
+var4 = alt_grid_output$MTT_wood_years[,,high_quant] - alt_grid_output$MTT_wood_years[,,low_quant]
+var5 = (alt_grid_output$mean_alloc_wood_gCm2day[,,high_quant] - alt_grid_output$mean_alloc_wood_gCm2day[,,low_quant])*365.25*1e-2
+var6 = (alt_grid_output$SS_wood_gCm2[,,high_quant]*1e-2) - (alt_grid_output$SS_wood_gCm2[,,low_quant]*1e-2)
 var7 = var4-var1
 var8 = var5-var2
 var9 = var6-var3
@@ -4109,16 +4858,16 @@ zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.
 zrange5 = zrange4 ; zrange6 = zrange5
 plot(var7, zlim = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
 plot(var8, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 plot(var9, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 # print summary information to user
 print(paste("Mean relative (-1-1) difference in CI wMTT (",alt_name,"-",orig_name,")    = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
@@ -4126,17 +4875,182 @@ print(paste("Mean relative (-1-1) difference in CI wNPPflx (",alt_name,"-",orig_
 print(paste("Mean relative (-1-1) difference in CI wSS (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
+# Traits CI
+# Assign variables
+var1 = (orig_grid_output$MTT_wood_years[,,high_quant] - orig_grid_output$MTT_wood_years[,,low_quant]) / orig_grid_output$MTT_wood_years[,,mid_quant]
+var2 = (orig_grid_output$mean_alloc_wood_gCm2day[,,high_quant] - orig_grid_output$mean_alloc_wood_gCm2day[,,low_quant]) / orig_grid_output$mean_alloc_wood_gCm2day[,,mid_quant]
+var3 = (orig_grid_output$SS_wood_gCm2[,,high_quant] - orig_grid_output$SS_wood_gCm2[,,low_quant]) / orig_grid_output$SS_wood_gCm2[,,mid_quant]
+var4 = (alt_grid_output$MTT_wood_years[,,high_quant] - alt_grid_output$MTT_wood_years[,,low_quant]) / alt_grid_output$MTT_wood_years[,,mid_quant]
+var5 = (alt_grid_output$mean_alloc_wood_gCm2day[,,high_quant] - alt_grid_output$mean_alloc_wood_gCm2day[,,low_quant]) / alt_grid_output$mean_alloc_wood_gCm2day[,,mid_quant]
+var6 = (alt_grid_output$SS_wood_gCm2[,,high_quant] - alt_grid_output$SS_wood_gCm2[,,low_quant]) / alt_grid_output$SS_wood_gCm2[,,mid_quant]
+var7 = var4-var1
+var8 = var5-var2
+var9 = var6-var3
+# Apply filters based on quantiles
+# Maximum values only for the positive definites
+var1[which(var1  > quantile(var1, prob=c(0.95), na.rm=TRUE))] = quantile(var1, prob=c(0.95), na.rm=TRUE)
+var2[which(var2  > quantile(var2, prob=c(0.95), na.rm=TRUE))] = quantile(var2, prob=c(0.95), na.rm=TRUE)
+var3[which(var3  > quantile(var3, prob=c(0.95), na.rm=TRUE))] = quantile(var3, prob=c(0.95), na.rm=TRUE)
+var4[which(var4  > quantile(var4, prob=c(0.95), na.rm=TRUE))] = quantile(var4, prob=c(0.95), na.rm=TRUE)
+var5[which(var5  > quantile(var5, prob=c(0.95), na.rm=TRUE))] = quantile(var5, prob=c(0.95), na.rm=TRUE)
+var6[which(var6  > quantile(var6, prob=c(0.95), na.rm=TRUE))] = quantile(var6, prob=c(0.95), na.rm=TRUE)
+# Maximum and minimum (below) for the differences, i.e. can be negative or positive
+var7[which(var7  > quantile(var7, prob=c(0.95), na.rm=TRUE))] = quantile(var7, prob=c(0.95), na.rm=TRUE)
+var8[which(var8  > quantile(var8, prob=c(0.95), na.rm=TRUE))] = quantile(var8, prob=c(0.95), na.rm=TRUE)
+var9[which(var9  > quantile(var9, prob=c(0.95), na.rm=TRUE))] = quantile(var9, prob=c(0.95), na.rm=TRUE)
+var7[which(var7  < quantile(var7, prob=c(0.05), na.rm=TRUE))] = quantile(var7, prob=c(0.05), na.rm=TRUE)
+var8[which(var8  < quantile(var8, prob=c(0.05), na.rm=TRUE))] = quantile(var8, prob=c(0.05), na.rm=TRUE)
+var9[which(var9  < quantile(var9, prob=c(0.05), na.rm=TRUE))] = quantile(var9, prob=c(0.05), na.rm=TRUE)
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var4[which(is.na(landfilter))] = NA
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var8[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+# Convert to raster
+var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var7 = raster(vals = t((var7)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var8 = raster(vals = t((var8)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var9 = raster(vals = t((var9)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# ranges
+zrange1 = c(0,1)*max(abs(range(c(values(var1),values(var4)),na.rm=TRUE)))
+zrange2 = c(0,1)*max(abs(range(c(values(var2),values(var5)),na.rm=TRUE)))
+zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
+zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
+zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
+zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPPflx_MRT_SS_CI_rel_of_median",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
+par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
+# Original
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("MRT wood CI (years)",sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(orig_name, side=2, cex=2.0, padj=-0.5)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("NPP wood CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("SS wood CI (MgC h",a^-1,")",sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Alternate
+plot(var4, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(alt_name, side=2,cex=2.0, padj=-0.5)
+plot(var5, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var6, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Difference
+plot(var7, zlim = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
+plot(var8, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+plot(var9, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+# print summary information to user
+print(paste("Mean difference in CI:Median wMTT (",alt_name,"-",orig_name,")    = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean difference in CI:Median wNPPflx (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean difference in CI:Median wSS (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
+dev.off()
+
+# Assign key C flux uncertainties and their uncertainties
+# Does the relationship between median and uncertainty change?
+var1 = (orig_grid_output$MTT_wood_years[,,high_quant]-orig_grid_output$MTT_wood_years[,,low_quant])
+var2 = (orig_grid_output$mean_alloc_wood_gCm2day[,,high_quant]-orig_grid_output$mean_alloc_wood_gCm2day[,,low_quant])*1e-2*365.25
+var3 = (orig_grid_output$SS_wood_gCm2[,,high_quant]-orig_grid_output$SS_wood_gCm2[,,low_quant])*1e-2
+var5 = (alt_grid_output$MTT_wood_years[,,high_quant]-alt_grid_output$MTT_wood_years[,,low_quant])
+var6 = (alt_grid_output$mean_alloc_wood_gCm2day[,,high_quant]-alt_grid_output$mean_alloc_wood_gCm2day[,,low_quant])*1e-2*365.25
+var7 = (alt_grid_output$SS_wood_gCm2[,,high_quant]-alt_grid_output$SS_wood_gCm2[,,low_quant])*1e-2
+var9 = orig_grid_output$MTT_wood_years[,,mid_quant]
+var10 = orig_grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25
+var11 = orig_grid_output$SS_wood_gCm2[,,mid_quant]*1e-2
+var13 = alt_grid_output$MTT_wood_years[,,mid_quant]
+var14 = alt_grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25
+var15 = alt_grid_output$SS_wood_gCm2[,,mid_quant]*1e-2
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+var10[which(is.na(landfilter))] = NA
+var11[which(is.na(landfilter))] = NA
+var13[which(is.na(landfilter))] = NA
+var14[which(is.na(landfilter))] = NA
+var15[which(is.na(landfilter))] = NA
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPPflx_MRT_SS_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
+par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
+# Wood MRT
+plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Wood MRT (years)", sep="")))
+points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+legend("topleft", legend = c(orig_name,alt_name), col = model_colours[1:2], lty = 2, pch=rep(16,2), horiz = FALSE, bty = "n", cex=2.1, lwd=3, ncol = 2)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var1) ~ as.vector(var9)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
+# Wood NPP (fraction)
+plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Wood NPP (MgC h",a^-1,y^-1,")", sep="")))
+points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
+mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var2) ~ as.vector(var10)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
+# Wood Steady state
+plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Wood Steady State (MgC h",a^-1,")", sep="")))
+points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var3) ~ as.vector(var11)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var7) ~ as.vector(var15)), lwd=3, col=model_colours[2])
+dev.off()
+
 ###
 ## Plot the Foliage, fine root and wood NPP, NPPflx and NPPwood
 
 # Traits
 # Assign variables
-var1 = orig_grid_parameters$NPP_foliar_fraction[,,mid_quant]
-var2 = orig_grid_parameters$NPP_root_fraction[,,mid_quant]
-var3 = orig_grid_parameters$NPP_wood_fraction[,,mid_quant]
-var4 = alt_grid_parameters$NPP_foliar_fraction[,,mid_quant]
-var5 = alt_grid_parameters$NPP_root_fraction[,,mid_quant]
-var6 = alt_grid_parameters$NPP_wood_fraction[,,mid_quant]
+var1 = orig_grid_output$NPP_foliage_fraction[,,mid_quant]
+var2 = orig_grid_output$NPP_roots_fraction[,,mid_quant]
+var3 = orig_grid_output$NPP_wood_fraction[,,mid_quant]
+var4 = alt_grid_output$NPP_foliage_fraction[,,mid_quant]
+var5 = alt_grid_output$NPP_roots_fraction[,,mid_quant]
+var6 = alt_grid_output$NPP_wood_fraction[,,mid_quant]
 var7 = var4-var1
 var8 = var5-var2
 var9 = var6-var3
@@ -4274,12 +5188,12 @@ dev.off()
 
 # Traits
 # Assign variables
-var1 = orig_grid_output$mean_fnpp_gCm2day[,,mid_quant]*365.25*1e-2
-var2 = orig_grid_output$mean_rnpp_gCm2day[,,mid_quant]*365.25*1e-2
-var3 = orig_grid_output$mean_wnpp_gCm2day[,,mid_quant]*365.25*1e-2
-var4 = alt_grid_output$mean_fnpp_gCm2day[,,mid_quant]*365.25*1e-2
-var5 = alt_grid_output$mean_rnpp_gCm2day[,,mid_quant]*365.25*1e-2
-var6 = alt_grid_output$mean_wnpp_gCm2day[,,mid_quant]*365.25*1e-2
+var1 = orig_grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*365.25*1e-2
+var2 = orig_grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*365.25*1e-2
+var3 = orig_grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*365.25*1e-2
+var4 = alt_grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*365.25*1e-2
+var5 = alt_grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*365.25*1e-2
+var6 = alt_grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*365.25*1e-2
 var7 = var4-var1
 var8 = var5-var2
 var9 = var6-var3
@@ -4417,12 +5331,12 @@ dev.off()
 
 # Traits CI
 # Assign variables
-var1 = orig_grid_parameters$NPP_foliar_fraction[,,high_quant] - orig_grid_parameters$NPP_foliar_fraction[,,low_quant]
-var2 = orig_grid_parameters$NPP_root_fraction[,,high_quant] - orig_grid_parameters$NPP_root_fraction[,,low_quant]
-var3 = orig_grid_parameters$NPP_wood_fraction[,,high_quant] - orig_grid_parameters$NPP_wood_fraction[,,low_quant]
-var4 = alt_grid_parameters$NPP_foliar_fraction[,,high_quant] - alt_grid_parameters$NPP_foliar_fraction[,,low_quant]
-var5 = alt_grid_parameters$NPP_root_fraction[,,high_quant] - alt_grid_parameters$NPP_root_fraction[,,low_quant]
-var6 = alt_grid_parameters$NPP_wood_fraction[,,high_quant] - alt_grid_parameters$NPP_wood_fraction[,,low_quant]
+var1 = orig_grid_output$NPP_foliage_fraction[,,high_quant] - orig_grid_output$NPP_foliage_fraction[,,low_quant]
+var2 = orig_grid_output$NPP_roots_fraction[,,high_quant] - orig_grid_output$NPP_roots_fraction[,,low_quant]
+var3 = orig_grid_output$NPP_wood_fraction[,,high_quant] - orig_grid_output$NPP_wood_fraction[,,low_quant]
+var4 = alt_grid_output$NPP_foliage_fraction[,,high_quant] - alt_grid_output$NPP_foliage_fraction[,,low_quant]
+var5 = alt_grid_output$NPP_roots_fraction[,,high_quant] - alt_grid_output$NPP_roots_fraction[,,low_quant]
+var6 = alt_grid_output$NPP_wood_fraction[,,high_quant] - alt_grid_output$NPP_wood_fraction[,,low_quant]
 var7 = var4-var1
 var8 = var5-var2
 var9 = var6-var3
@@ -4541,16 +5455,16 @@ zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.
 zrange5 = zrange4 ; zrange6 = zrange5
 plot(var7, zlim = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
 plot(var8, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 plot(var9, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 # print summary information to user
 print(paste("Mean relative (-1-1) difference in CI fNPP (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
@@ -4558,14 +5472,76 @@ print(paste("Mean relative (-1-1) difference in CI rNPP (",alt_name,"-",orig_nam
 print(paste("Mean relative (-1-1) difference in CI wNPP (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
+# Assign key C flux uncertainties and their uncertainties
+# Does the relationship between median and uncertainty change?
+var1 = (orig_grid_output$NPP_foliage_fraction[,,high_quant]-orig_grid_output$NPP_foliage_fraction[,,low_quant])
+var2 = (orig_grid_output$NPP_roots_fraction[,,high_quant]-orig_grid_output$NPP_roots_fraction[,,low_quant])
+var3 = (orig_grid_output$NPP_wood_fraction[,,high_quant]-orig_grid_output$NPP_wood_fraction[,,low_quant])
+var5 = (alt_grid_output$NPP_foliage_fraction[,,high_quant]-alt_grid_output$NPP_foliage_fraction[,,low_quant])
+var6 = (alt_grid_output$NPP_roots_fraction[,,high_quant]-alt_grid_output$NPP_roots_fraction[,,low_quant])
+var7 = (alt_grid_output$NPP_wood_fraction[,,high_quant]-alt_grid_output$NPP_wood_fraction[,,low_quant])
+var9 = orig_grid_output$NPP_foliage_fraction[,,mid_quant]
+var10 = orig_grid_output$NPP_roots_fraction[,,mid_quant]
+var11 = orig_grid_output$NPP_wood_fraction[,,mid_quant]
+var13 = alt_grid_output$NPP_foliage_fraction[,,mid_quant]
+var14 = alt_grid_output$NPP_roots_fraction[,,mid_quant]
+var15 = alt_grid_output$NPP_wood_fraction[,,mid_quant]
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+var10[which(is.na(landfilter))] = NA
+var11[which(is.na(landfilter))] = NA
+var13[which(is.na(landfilter))] = NA
+var14[which(is.na(landfilter))] = NA
+var15[which(is.na(landfilter))] = NA
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_NPP_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
+par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
+# Wood MRT
+plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Foliage NPP (0-1)", sep="")))
+points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+legend("topleft", legend = c(orig_name,alt_name), col = model_colours[1:2], lty = 2, pch=rep(16,2), horiz = FALSE, bty = "n", cex=2.1, lwd=3, ncol = 2)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var1) ~ as.vector(var9)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
+# Wood NPP (fraction)
+plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Root NPP (0-1)", sep="")))
+points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
+mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var2) ~ as.vector(var10)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
+# Wood Steady state
+plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Wood NPP (0-1)", sep="")))
+points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var3) ~ as.vector(var11)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var7) ~ as.vector(var15)), lwd=3, col=model_colours[2])
+dev.off()
+
 # Traits CI
 # Assign variables
-var1 = (orig_grid_output$mean_fnpp_gCm2day[,,high_quant] - orig_grid_output$mean_fnpp_gCm2day[,,low_quant])*365.25*1e-2
-var2 = (orig_grid_output$mean_rnpp_gCm2day[,,high_quant] - orig_grid_output$mean_rnpp_gCm2day[,,low_quant])*365.25*1e-2
-var3 = (orig_grid_output$mean_wnpp_gCm2day[,,high_quant] - orig_grid_output$mean_wnpp_gCm2day[,,low_quant])*365.25*1e-2
-var4 = (alt_grid_output$mean_fnpp_gCm2day[,,high_quant] - alt_grid_output$mean_fnpp_gCm2day[,,low_quant])*365.25*1e-2
-var5 = (alt_grid_output$mean_rnpp_gCm2day[,,high_quant] - alt_grid_output$mean_rnpp_gCm2day[,,low_quant])*365.25*1e-2
-var6 = (alt_grid_output$mean_wnpp_gCm2day[,,high_quant] - alt_grid_output$mean_wnpp_gCm2day[,,low_quant])*365.25*1e-2
+var1 = (orig_grid_output$mean_combined_alloc_foliage_gCm2day[,,high_quant] - orig_grid_output$mean_combined_alloc_foliage_gCm2day[,,low_quant])*365.25*1e-2
+var2 = (orig_grid_output$mean_alloc_roots_gCm2day[,,high_quant] - orig_grid_output$mean_alloc_roots_gCm2day[,,low_quant])*365.25*1e-2
+var3 = (orig_grid_output$mean_alloc_wood_gCm2day[,,high_quant] - orig_grid_output$mean_alloc_wood_gCm2day[,,low_quant])*365.25*1e-2
+var4 = (alt_grid_output$mean_combined_alloc_foliage_gCm2day[,,high_quant] - alt_grid_output$mean_combined_alloc_foliage_gCm2day[,,low_quant])*365.25*1e-2
+var5 = (alt_grid_output$mean_alloc_roots_gCm2day[,,high_quant] - alt_grid_output$mean_alloc_roots_gCm2day[,,low_quant])*365.25*1e-2
+var6 = (alt_grid_output$mean_alloc_wood_gCm2day[,,high_quant] - alt_grid_output$mean_alloc_wood_gCm2day[,,low_quant])*365.25*1e-2
 var7 = var4-var1
 var8 = var5-var2
 var9 = var6-var3
@@ -4684,16 +5660,16 @@ zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.
 zrange5 = zrange4 ; zrange6 = zrange5
 plot(var7, zlim = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
 plot(var8, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 plot(var9, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 # print summary information to user
 print(paste("Mean relative (-1-1) difference in CI fNPPflx (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
@@ -4701,17 +5677,79 @@ print(paste("Mean relative (-1-1) difference in CI rNPPflx (",alt_name,"-",orig_
 print(paste("Mean relative (-1-1) difference in CI wNPPflx (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
+# Assign key C flux uncertainties and their uncertainties
+# Does the relationship between median and uncertainty change?
+var1 = (orig_grid_output$mean_combined_alloc_foliage_gCm2day[,,high_quant]-orig_grid_output$mean_combined_alloc_foliage_gCm2day[,,low_quant])*365.25*1e-2
+var2 = (orig_grid_output$mean_alloc_roots_gCm2day[,,high_quant]-orig_grid_output$mean_alloc_roots_gCm2day[,,low_quant])*365.25*1e-2
+var3 = (orig_grid_output$mean_alloc_wood_gCm2day[,,high_quant]-orig_grid_output$mean_alloc_wood_gCm2day[,,low_quant])*365.25*1e-2
+var5 = (alt_grid_output$mean_combined_alloc_foliage_gCm2day[,,high_quant]-alt_grid_output$mean_combined_alloc_foliage_gCm2day[,,low_quant])*365.25*1e-2
+var6 = (alt_grid_output$mean_alloc_roots_gCm2day[,,high_quant]-alt_grid_output$mean_alloc_roots_gCm2day[,,low_quant])*365.25*1e-2
+var7 = (alt_grid_output$mean_alloc_wood_gCm2day[,,high_quant]-alt_grid_output$mean_alloc_wood_gCm2day[,,low_quant])*365.25*1e-2
+var9 = orig_grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*365.25*1e-2
+var10 = orig_grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*365.25*1e-2
+var11 = orig_grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*365.25*1e-2
+var13 = alt_grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*365.25*1e-2
+var14 = alt_grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*365.25*1e-2
+var15 = alt_grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*365.25*1e-2
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+var10[which(is.na(landfilter))] = NA
+var11[which(is.na(landfilter))] = NA
+var13[which(is.na(landfilter))] = NA
+var14[which(is.na(landfilter))] = NA
+var15[which(is.na(landfilter))] = NA
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_NPPflx_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
+par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
+# Wood MRT
+plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Foliage NPP (MgC h",a^-1,y^-1,")", sep="")))
+points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+legend("topleft", legend = c(orig_name,alt_name), col = model_colours[1:2], lty = 2, pch=rep(16,2), horiz = FALSE, bty = "n", cex=2.1, lwd=3, ncol = 2)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var1) ~ as.vector(var9)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
+# Wood NPP (fraction)
+plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Root NPP (MgC h",a^-1,y^-1,")", sep="")))
+points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
+mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var2) ~ as.vector(var10)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
+# Wood Steady state
+plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Wood NPP (MgC h",a^-1,y^-1,")", sep="")))
+points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var3) ~ as.vector(var11)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var7) ~ as.vector(var15)), lwd=3, col=model_colours[2])
+dev.off()
+
 ###
 ## Plot the Foliage, fine root and wood wMRT 
 
 # Traits
 # Assign variables
-var1 = orig_grid_parameters$MTT_foliar_years[,,mid_quant]
-var2 = orig_grid_parameters$MTT_root_years[,,mid_quant]
-var3 = orig_grid_parameters$MTT_wood_years[,,mid_quant]
-var4 = alt_grid_parameters$MTT_foliar_years[,,mid_quant]
-var5 = alt_grid_parameters$MTT_root_years[,,mid_quant]
-var6 = alt_grid_parameters$MTT_wood_years[,,mid_quant]
+var1 = orig_grid_output$MTT_foliage_years[,,mid_quant]
+var2 = orig_grid_output$MTT_roots_years[,,mid_quant]
+var3 = orig_grid_output$MTT_wood_years[,,mid_quant]
+var4 = alt_grid_output$MTT_foliage_years[,,mid_quant]
+var5 = alt_grid_output$MTT_roots_years[,,mid_quant]
+var6 = alt_grid_output$MTT_wood_years[,,mid_quant]
 var7 = var4-var1
 var8 = var5-var2
 var9 = var6-var3
@@ -4849,12 +5887,12 @@ dev.off()
 
 # Traits CI
 # Assign variables
-var1 = orig_grid_parameters$MTT_foliar_years[,,high_quant] - orig_grid_parameters$MTT_foliar_years[,,low_quant]
-var2 = orig_grid_parameters$MTT_root_years[,,high_quant] - orig_grid_parameters$MTT_root_years[,,low_quant]
-var3 = orig_grid_parameters$MTT_wood_years[,,high_quant] - orig_grid_parameters$MTT_wood_years[,,low_quant]
-var4 = alt_grid_parameters$MTT_foliar_years[,,high_quant] - alt_grid_parameters$MTT_foliar_years[,,low_quant]
-var5 = alt_grid_parameters$MTT_root_years[,,high_quant] - alt_grid_parameters$MTT_root_years[,,low_quant]
-var6 = alt_grid_parameters$MTT_wood_years[,,high_quant] - alt_grid_parameters$MTT_wood_years[,,low_quant]
+var1 = orig_grid_output$MTT_foliage_years[,,high_quant] - orig_grid_output$MTT_foliage_years[,,low_quant]
+var2 = orig_grid_output$MTT_roots_years[,,high_quant] - orig_grid_output$MTT_roots_years[,,low_quant]
+var3 = orig_grid_output$MTT_wood_years[,,high_quant] - orig_grid_output$MTT_wood_years[,,low_quant]
+var4 = alt_grid_output$MTT_foliage_years[,,high_quant] - alt_grid_output$MTT_foliage_years[,,low_quant]
+var5 = alt_grid_output$MTT_roots_years[,,high_quant] - alt_grid_output$MTT_roots_years[,,low_quant]
+var6 = alt_grid_output$MTT_wood_years[,,high_quant] - alt_grid_output$MTT_wood_years[,,low_quant]
 var7 = var4-var1
 var8 = var5-var2
 var9 = var6-var3
@@ -4990,21 +6028,78 @@ print(paste("Mean relative (-1-1) difference in CI rMRT (",alt_name,"-",orig_nam
 print(paste("Mean relative (-1-1) difference in CI wMRT (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
+# Assign key C flux uncertainties and their uncertainties
+# Does the relationship between median and uncertainty change?
+var1 = (orig_grid_output$MTT_foliage_years[,,high_quant]-orig_grid_output$MTT_foliage_years[,,low_quant])
+var2 = (orig_grid_output$MTT_roots_years[,,high_quant]-orig_grid_output$MTT_roots_years[,,low_quant])
+var3 = (orig_grid_output$MTT_wood_years[,,high_quant]-orig_grid_output$MTT_wood_years[,,low_quant])
+var5 = (alt_grid_output$MTT_foliage_years[,,high_quant]-alt_grid_output$MTT_foliage_years[,,low_quant])
+var6 = (alt_grid_output$MTT_roots_years[,,high_quant]-alt_grid_output$MTT_roots_years[,,low_quant])
+var7 = (alt_grid_output$MTT_wood_years[,,high_quant]-alt_grid_output$MTT_wood_years[,,low_quant])
+var9 = orig_grid_output$MTT_foliage_years[,,mid_quant]
+var10 = orig_grid_output$MTT_roots_years[,,mid_quant]
+var11 = orig_grid_output$MTT_wood_years[,,mid_quant]
+var13 = alt_grid_output$MTT_foliage_years[,,mid_quant]
+var14 = alt_grid_output$MTT_roots_years[,,mid_quant]
+var15 = alt_grid_output$MTT_wood_years[,,mid_quant]
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+var10[which(is.na(landfilter))] = NA
+var11[which(is.na(landfilter))] = NA
+var13[which(is.na(landfilter))] = NA
+var14[which(is.na(landfilter))] = NA
+var15[which(is.na(landfilter))] = NA
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_MRT_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
+par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
+# Wood MRT
+plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Foliage MRT (years)", sep="")))
+points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+legend("topleft", legend = c(orig_name,alt_name), col = model_colours[1:2], lty = 2, pch=rep(16,2), horiz = FALSE, bty = "n", cex=2.1, lwd=3, ncol = 2)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var1) ~ as.vector(var9)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
+# Wood NPP (fraction)
+plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Root MRT (years)", sep="")))
+points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
+mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var2) ~ as.vector(var10)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
+# Wood Steady state
+plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Wood MRT (years)", sep="")))
+points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var3) ~ as.vector(var11)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var7) ~ as.vector(var15)), lwd=3, col=model_colours[2])
+dev.off()
+
 ###
 ## Partition the importance of disturbance on residence times
 
 # Estimate the proportion of turnover determined by natural
-orig_turn = (orig_grid_parameters$MTT_wood_years[,,mid_quant]**-1)
-alt_turn = (alt_grid_parameters$MTT_wood_years[,,mid_quant]**-1)
-var1 = orig_grid_parameters$MTTnatural_wood_years[,,mid_quant]**-1 
-var2 = orig_grid_parameters$MTTfire_wood_years[,,mid_quant]**-1
-var3 = orig_grid_parameters$MTTharvest_wood_years[,,mid_quant]**-1
-var4 = alt_grid_parameters$MTTnatural_wood_years[,,mid_quant]**-1 
-var5 = alt_grid_parameters$MTTfire_wood_years[,,mid_quant]**-1
-var6 = alt_grid_parameters$MTTharvest_wood_years[,,mid_quant]**-1
-# Now make proportional
-var1 = var1 / orig_turn ; var2 = var2 / orig_turn ; var3 = var3 / orig_turn
-var4 = var4 / alt_turn ; var5 = var5 / alt_turn ; var6 = var6 / alt_turn
+var1 = orig_grid_output$NaturalFractionOfTurnover_wood[,,mid_quant]
+var2 = orig_grid_output$FireFractionOfTurnover_wood[,,mid_quant]
+var3 = orig_grid_output$HarvestFractionOfTurnover_wood[,,mid_quant]
+var4 = alt_grid_output$NaturalFractionOfTurnover_wood[,,mid_quant]
+var5 = alt_grid_output$FireFractionOfTurnover_wood[,,mid_quant]
+var6 = alt_grid_output$HarvestFractionOfTurnover_wood[,,mid_quant]
 # Filter for the AGB map locations
 var1[which(is.na(landfilter))] = NA
 var2[which(is.na(landfilter))] = NA
@@ -5020,12 +6115,12 @@ var4[which(landfilter == 1 & is.na(var4) == TRUE)] = 0
 var5[which(landfilter == 1 & is.na(var5) == TRUE)] = 0
 var6[which(landfilter == 1 & is.na(var6) == TRUE)] = 0
 # print summary information to user
-print(paste("Mean natural ",orig_name," wMTT (years)     = ",round(mean(as.vector(var1),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean fire ",orig_name," wMTT (years)        = ",round(mean(as.vector(var2),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean forest loss ",orig_name," wMTT (years) = ",round(mean(as.vector(var3),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean natural ",alt_name," wMTT (years)      = ",round(mean(as.vector(var4),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean fire ",alt_name," wMTT (years)         = ",round(mean(as.vector(var5),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean forest loss ",alt_name," wMTT (years)  = ",round(mean(as.vector(var6),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean natural component ",orig_name," wMTT (0-1)     = ",round(mean(as.vector(var1),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean fire component ",orig_name," wMTT (0-1)        = ",round(mean(as.vector(var2),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean forest loss component ",orig_name," wMTT (0-1) = ",round(mean(as.vector(var3),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean natural component ",alt_name," wMTT (0-1)      = ",round(mean(as.vector(var4),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean fire component ",alt_name," wMTT (0-1)         = ",round(mean(as.vector(var5),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean forest loss component ",alt_name," wMTT (0-1)  = ",round(mean(as.vector(var6),na.rm=TRUE),digits=3),sep=""))
 # Convert to raster
 var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
 var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -5069,12 +6164,12 @@ dev.off()
 
 # Fire driven tissue specific emissions of C
 # Assign variables
-var1 = orig_grid_output$mean_FIREemiss_foliar_gCm2yr[,,mid_quant]*1e-2
-var2 = orig_grid_output$mean_FIREemiss_root_gCm2yr[,,mid_quant]*1e-2
-var3 = orig_grid_output$mean_FIREemiss_wood_gCm2yr[,,mid_quant]*1e-2
-var4 = alt_grid_output$mean_FIREemiss_foliar_gCm2yr[,,mid_quant]*1e-2
-var5 = alt_grid_output$mean_FIREemiss_root_gCm2yr[,,mid_quant]*1e-2
-var6 = alt_grid_output$mean_FIREemiss_wood_gCm2yr[,,mid_quant]*1e-2
+var1 = orig_grid_output$mean_FIREemiss_foliage_gCm2day[,,mid_quant]*1e-2*365.25
+var2 = orig_grid_output$mean_FIREemiss_roots_gCm2day[,,mid_quant]*1e-2*365.25
+var3 = orig_grid_output$mean_FIREemiss_wood_gCm2day[,,mid_quant]*1e-2*365.25
+var4 = alt_grid_output$mean_FIREemiss_foliage_gCm2day[,,mid_quant]*1e-2*365.25
+var5 = alt_grid_output$mean_FIREemiss_roots_gCm2day[,,mid_quant]*1e-2*365.25
+var6 = alt_grid_output$mean_FIREemiss_wood_gCm2day[,,mid_quant]*1e-2*365.25
 var7 = var4-var1
 var8 = var5-var2
 var9 = var6-var3
@@ -5138,16 +6233,16 @@ plot(landmask, add=TRUE)
 # Difference
 plot(var7, zlim = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=rev(colour_choices_sign))
+     main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
 plot(var8, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=rev(colour_choices_sign))
+     main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE)
 plot(var9, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=rev(colour_choices_sign))
+     main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE)
 # print summary information to user
 print(paste("Mean (MgC/ha/yr) difference in fFireEmiss (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
@@ -5212,12 +6307,12 @@ dev.off()
 
 # Fire driven tissue specific litter of C
 # Assign variables
-var1 = orig_grid_output$mean_FIRElitter_foliar_gCm2yr[,,mid_quant]*1e-2
-var2 = orig_grid_output$mean_FIRElitter_root_gCm2yr[,,mid_quant]*1e-2
-var3 = orig_grid_output$mean_FIRElitter_wood_gCm2yr[,,mid_quant]*1e-2
-var4 = alt_grid_output$mean_FIRElitter_foliar_gCm2yr[,,mid_quant]*1e-2
-var5 = alt_grid_output$mean_FIRElitter_root_gCm2yr[,,mid_quant]*1e-2
-var6 = alt_grid_output$mean_FIRElitter_wood_gCm2yr[,,mid_quant]*1e-2
+var1 = orig_grid_output$mean_FIRElitter_foliage_gCm2day[,,mid_quant]*1e-2*365.25
+var2 = orig_grid_output$mean_FIRElitter_roots_gCm2day[,,mid_quant]*1e-2*365.25
+var3 = orig_grid_output$mean_FIRElitter_wood_gCm2day[,,mid_quant]*1e-2*365.25
+var4 = alt_grid_output$mean_FIRElitter_foliage_gCm2day[,,mid_quant]*1e-2*365.25
+var5 = alt_grid_output$mean_FIRElitter_roots_gCm2day[,,mid_quant]*1e-2*365.25
+var6 = alt_grid_output$mean_FIRElitter_wood_gCm2day[,,mid_quant]*1e-2*365.25
 var7 = var4-var1
 var8 = var5-var2
 var9 = var6-var3
@@ -5281,16 +6376,16 @@ plot(landmask, add=TRUE)
 # Difference
 plot(var7, zlim = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=rev(colour_choices_sign))
+     main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
 plot(var8, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=rev(colour_choices_sign))
+     main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE)
 plot(var9, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=rev(colour_choices_sign))
+     main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE)
 # print summary information to user
 print(paste("Mean (MgC/ha/yr) difference in fFireLitter (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
@@ -5355,12 +6450,12 @@ dev.off()
 
 # Fire driven tissue specific emissions of C
 # Assign variables
-var1 = (orig_grid_output$mean_FIREemiss_foliar_gCm2yr[,,high_quant] - orig_grid_output$mean_FIREemiss_foliar_gCm2yr[,,low_quant])*1e-2
-var2 = (orig_grid_output$mean_FIREemiss_root_gCm2yr[,,high_quant] - orig_grid_output$mean_FIREemiss_root_gCm2yr[,,low_quant])*1e-2
-var3 = (orig_grid_output$mean_FIREemiss_wood_gCm2yr[,,high_quant] - orig_grid_output$mean_FIREemiss_wood_gCm2yr[,,low_quant])*1e-2
-var4 = (alt_grid_output$mean_FIREemiss_foliar_gCm2yr[,,high_quant] - alt_grid_output$mean_FIREemiss_foliar_gCm2yr[,,low_quant])*1e-2
-var5 = (alt_grid_output$mean_FIREemiss_root_gCm2yr[,,high_quant] - alt_grid_output$mean_FIREemiss_root_gCm2yr[,,low_quant])*1e-2
-var6 = (alt_grid_output$mean_FIREemiss_wood_gCm2yr[,,high_quant] - alt_grid_output$mean_FIREemiss_wood_gCm2yr[,,low_quant])*1e-2
+var1 = (orig_grid_output$mean_FIREemiss_foliage_gCm2day[,,high_quant] - orig_grid_output$mean_FIREemiss_foliage_gCm2day[,,low_quant])*1e-2*365.25
+var2 = (orig_grid_output$mean_FIREemiss_roots_gCm2day[,,high_quant] - orig_grid_output$mean_FIREemiss_roots_gCm2day[,,low_quant])*1e-2*365.25
+var3 = (orig_grid_output$mean_FIREemiss_wood_gCm2day[,,high_quant] - orig_grid_output$mean_FIREemiss_wood_gCm2day[,,low_quant])*1e-2*365.25
+var4 = (alt_grid_output$mean_FIREemiss_foliage_gCm2day[,,high_quant] - alt_grid_output$mean_FIREemiss_foliage_gCm2day[,,low_quant])*1e-2*365.25
+var5 = (alt_grid_output$mean_FIREemiss_roots_gCm2day[,,high_quant] - alt_grid_output$mean_FIREemiss_roots_gCm2day[,,low_quant])*1e-2*365.25
+var6 = (alt_grid_output$mean_FIREemiss_wood_gCm2day[,,high_quant] - alt_grid_output$mean_FIREemiss_wood_gCm2day[,,low_quant])*1e-2*365.25
 var7 = var4-var1
 var8 = var5-var2
 var9 = var6-var3
@@ -5392,7 +6487,7 @@ zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_FireEmiss_CI",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
-par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
+par(mfrow=c(3,3), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
 plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
@@ -5443,7 +6538,7 @@ dev.off()
 
 zrange4 = c(-1,1) ; zrange5 = zrange4 ; zrange6 = zrange4
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_FireEmiss_CI_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
-par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
+par(mfrow=c(3,3), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
 plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
@@ -5479,16 +6574,16 @@ zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.
 zrange5 = zrange4 ; zrange6 = zrange5
 plot(var7, zlim = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
 plot(var8, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 plot(var9, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 # print summary information to user
 print(paste("Mean relative (-1-1) difference in fFireEmiss CI (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
@@ -5496,14 +6591,75 @@ print(paste("Mean relative (-1-1) difference in rFireEmiss CI (",alt_name,"-",or
 print(paste("Mean relative (-1-1) difference in wFireEmiss CI (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
+# Check the relationship between median and CI
+var1 = (orig_grid_output$mean_FIREemiss_foliage_gCm2day[,,high_quant]-orig_grid_output$mean_FIREemiss_foliage_gCm2day[,,low_quant])*1e-2*365.25
+var2 = (orig_grid_output$mean_FIREemiss_roots_gCm2day[,,high_quant]-orig_grid_output$mean_FIREemiss_roots_gCm2day[,,low_quant])*1e-2*365.25
+var3 = (orig_grid_output$mean_FIREemiss_wood_gCm2day[,,high_quant]-orig_grid_output$mean_FIREemiss_wood_gCm2day[,,low_quant])*1e-2*365.25
+var5 = (alt_grid_output$mean_FIREemiss_foliage_gCm2day[,,high_quant]-alt_grid_output$mean_FIREemiss_foliage_gCm2day[,,low_quant])*1e-2*365.25
+var6 = (alt_grid_output$mean_FIREemiss_roots_gCm2day[,,high_quant]-alt_grid_output$mean_FIREemiss_roots_gCm2day[,,low_quant])*1e-2*365.25
+var7 = (alt_grid_output$mean_FIREemiss_wood_gCm2day[,,high_quant]-alt_grid_output$mean_FIREemiss_wood_gCm2day[,,low_quant])*1e-2*365.25
+var9 = orig_grid_output$mean_FIREemiss_foliage_gCm2day[,,mid_quant]*1e-2*365.25
+var10 = orig_grid_output$mean_FIREemiss_roots_gCm2day[,,mid_quant]*1e-2*365.25
+var11 = orig_grid_output$mean_FIREemiss_wood_gCm2day[,,mid_quant]*1e-2*365.25
+var13 = alt_grid_output$mean_FIREemiss_foliage_gCm2day[,,mid_quant]*1e-2*365.25
+var14 = alt_grid_output$mean_FIREemiss_roots_gCm2day[,,mid_quant]*1e-2*365.25
+var15 = alt_grid_output$mean_FIREemiss_wood_gCm2day[,,mid_quant]*1e-2*365.25
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+var10[which(is.na(landfilter))] = NA
+var11[which(is.na(landfilter))] = NA
+var13[which(is.na(landfilter))] = NA
+var14[which(is.na(landfilter))] = NA
+var15[which(is.na(landfilter))] = NA
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_FireEmiss_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
+par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
+# Wood MRT
+plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Combusted foliage CI (MgC h",a^-1,y^-1,")", sep="")))
+points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+legend("topleft", legend = c(orig_name,alt_name), col = model_colours[1:2], lty = 2, pch=rep(16,2), horiz = FALSE, bty = "n", cex=2.1, lwd=3, ncol = 2)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var1) ~ as.vector(var9)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
+# Wood NPP (fraction)
+plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Combusted root CI (MgC h",a^-1,y^-1,")", sep="")))
+points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
+mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var2) ~ as.vector(var10)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
+# Wood Steady state
+plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Combusted wood CI (MgC h",a^-1,y^-1,")", sep="")))
+points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var3) ~ as.vector(var11)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var7) ~ as.vector(var15)), lwd=3, col=model_colours[2])
+dev.off()
+
 # Fire driven tissue specific litter of C
 # Assign variables
-var1 = (orig_grid_output$mean_FIRElitter_foliar_gCm2yr[,,high_quant] - orig_grid_output$mean_FIRElitter_foliar_gCm2yr[,,low_quant])*1e-2
-var2 = (orig_grid_output$mean_FIRElitter_root_gCm2yr[,,high_quant] - orig_grid_output$mean_FIRElitter_root_gCm2yr[,,low_quant])*1e-2
-var3 = (orig_grid_output$mean_FIRElitter_wood_gCm2yr[,,high_quant] - orig_grid_output$mean_FIRElitter_wood_gCm2yr[,,low_quant])*1e-2
-var4 = (alt_grid_output$mean_FIRElitter_foliar_gCm2yr[,,high_quant] - alt_grid_output$mean_FIRElitter_foliar_gCm2yr[,,low_quant])*1e-2
-var5 = (alt_grid_output$mean_FIRElitter_root_gCm2yr[,,high_quant] - alt_grid_output$mean_FIRElitter_root_gCm2yr[,,low_quant])*1e-2
-var6 = (alt_grid_output$mean_FIRElitter_wood_gCm2yr[,,high_quant] - alt_grid_output$mean_FIRElitter_wood_gCm2yr[,,low_quant])*1e-2
+var1 = (orig_grid_output$mean_FIRElitter_foliage_gCm2day[,,high_quant] - orig_grid_output$mean_FIRElitter_foliage_gCm2day[,,low_quant])*1e-2*365.25
+var2 = (orig_grid_output$mean_FIRElitter_roots_gCm2day[,,high_quant] - orig_grid_output$mean_FIRElitter_roots_gCm2day[,,low_quant])*1e-2*365.25
+var3 = (orig_grid_output$mean_FIRElitter_wood_gCm2day[,,high_quant] - orig_grid_output$mean_FIRElitter_wood_gCm2day[,,low_quant])*1e-2*365.25
+var4 = (alt_grid_output$mean_FIRElitter_foliage_gCm2day[,,high_quant] - alt_grid_output$mean_FIRElitter_foliage_gCm2day[,,low_quant])*1e-2*365.25
+var5 = (alt_grid_output$mean_FIRElitter_roots_gCm2day[,,high_quant] - alt_grid_output$mean_FIRElitter_roots_gCm2day[,,low_quant])*1e-2*365.25
+var6 = (alt_grid_output$mean_FIRElitter_wood_gCm2day[,,high_quant] - alt_grid_output$mean_FIRElitter_wood_gCm2day[,,low_quant])*1e-2*365.25
 var7 = var4-var1
 var8 = var5-var2
 var9 = var6-var3
@@ -5535,7 +6691,7 @@ zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_FireLitter_CI",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
-par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
+par(mfrow=c(3,3), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
 plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
@@ -5586,7 +6742,7 @@ dev.off()
 
 zrange4 = c(-1,1) ; zrange5 = zrange4 ; zrange6 = zrange4
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_FireLitter_CI_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
-par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
+par(mfrow=c(3,3), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
 plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
@@ -5622,16 +6778,16 @@ zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.
 zrange5 = zrange4 ; zrange6 = zrange5
 plot(var7, zlim = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
 plot(var8, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 plot(var9, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
      cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=(colour_choices_sign))
+     main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE)
 # print summary information to user
 print(paste("Mean relative (-1-1) difference in fFireLitter CI (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
@@ -5639,21 +6795,77 @@ print(paste("Mean relative (-1-1) difference in rFireLitter CI (",alt_name,"-",o
 print(paste("Mean relative (-1-1) difference in wFireLitter CI (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
+# Check the relationship between median and CI
+var1 = (orig_grid_output$mean_FIRElitter_foliage_gCm2day[,,high_quant]-orig_grid_output$mean_FIRElitter_foliage_gCm2day[,,low_quant])*1e-2*365.25
+var2 = (orig_grid_output$mean_FIRElitter_roots_gCm2day[,,high_quant]-orig_grid_output$mean_FIRElitter_roots_gCm2day[,,low_quant])*1e-2*365.25
+var3 = (orig_grid_output$mean_FIRElitter_wood_gCm2day[,,high_quant]-orig_grid_output$mean_FIRElitter_wood_gCm2day[,,low_quant])*1e-2*365.25
+var5 = (alt_grid_output$mean_FIRElitter_foliage_gCm2day[,,high_quant]-alt_grid_output$mean_FIRElitter_foliage_gCm2day[,,low_quant])*1e-2*365.25
+var6 = (alt_grid_output$mean_FIRElitter_roots_gCm2day[,,high_quant]-alt_grid_output$mean_FIRElitter_roots_gCm2day[,,low_quant])*1e-2*365.25
+var7 = (alt_grid_output$mean_FIRElitter_wood_gCm2day[,,high_quant]-alt_grid_output$mean_FIRElitter_wood_gCm2day[,,low_quant])*1e-2*365.25
+var9 = orig_grid_output$mean_FIRElitter_foliage_gCm2day[,,mid_quant]*1e-2*365.25
+var10 = orig_grid_output$mean_FIRElitter_roots_gCm2day[,,mid_quant]*1e-2*365.25
+var11 = orig_grid_output$mean_FIRElitter_wood_gCm2day[,,mid_quant]*1e-2*365.25
+var13 = alt_grid_output$mean_FIRElitter_foliage_gCm2day[,,mid_quant]*1e-2*365.25
+var14 = alt_grid_output$mean_FIRElitter_roots_gCm2day[,,mid_quant]*1e-2*365.25
+var15 = alt_grid_output$mean_FIRElitter_wood_gCm2day[,,mid_quant]*1e-2*365.25
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var5[which(is.na(landfilter))] = NA
+var6[which(is.na(landfilter))] = NA
+var7[which(is.na(landfilter))] = NA
+var9[which(is.na(landfilter))] = NA
+var10[which(is.na(landfilter))] = NA
+var11[which(is.na(landfilter))] = NA
+var13[which(is.na(landfilter))] = NA
+var14[which(is.na(landfilter))] = NA
+var15[which(is.na(landfilter))] = NA
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_Firelitter_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
+par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
+# Wood MRT
+plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Foliage fire mortality CI (MgC h",a^-1,y^-1,")", sep="")))
+points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+legend("topleft", legend = c(orig_name,alt_name), col = model_colours[1:2], lty = 2, pch=rep(16,2), horiz = FALSE, bty = "n", cex=2.1, lwd=3, ncol = 2)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var1) ~ as.vector(var9)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
+# Wood NPP (fraction)
+plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Root fire mortality CI (MgC h",a^-1,y^-1,")", sep="")))
+points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
+mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var2) ~ as.vector(var10)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
+# Wood Steady state
+plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
+     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
+     main=expression(paste("Wood fire mortality CI (MgC h",a^-1,y^-1,")", sep="")))
+points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
+#mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
+#mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
+abline(0,1, col="grey", lwd=3)
+abline(lm(as.vector(var3) ~ as.vector(var11)), lwd=3, col=model_colours[1])
+abline(lm(as.vector(var7) ~ as.vector(var15)), lwd=3, col=model_colours[2])
+dev.off()
+
 ###
 ## Partition the importance of disturbance on residence times
 
 # Estimate the proportion of turnover determined by natural
-orig_turn = (orig_grid_parameters$MTT_wood_years[,,mid_quant]**-1)
-alt_turn = (alt_grid_parameters$MTT_wood_years[,,mid_quant]**-1)
-var1 = orig_grid_parameters$MTTnatural_wood_years[,,mid_quant]**-1 
-var2 = orig_grid_parameters$MTTfire_wood_years[,,mid_quant]**-1
-var3 = orig_grid_parameters$MTTharvest_wood_years[,,mid_quant]**-1
-var4 = alt_grid_parameters$MTTnatural_wood_years[,,mid_quant]**-1 
-var5 = alt_grid_parameters$MTTfire_wood_years[,,mid_quant]**-1
-var6 = alt_grid_parameters$MTTharvest_wood_years[,,mid_quant]**-1
-# Now make proportional
-var1 = var1 / orig_turn ; var2 = var2 / orig_turn ; var3 = var3 / orig_turn
-var4 = var4 / alt_turn ; var5 = var5 / alt_turn ; var6 = var6 / alt_turn
+var1 = orig_grid_output$NaturalFractionOfTurnover_wood[,,mid_quant]
+var2 = orig_grid_output$FireFractionOfTurnover_wood[,,mid_quant]
+var3 = orig_grid_output$HarvestFractionOfTurnover_wood[,,mid_quant]
+var4 = alt_grid_output$NaturalFractionOfTurnover_wood[,,mid_quant]
+var5 = alt_grid_output$FireFractionOfTurnover_wood[,,mid_quant]
+var6 = alt_grid_output$HarvestFractionOfTurnover_wood[,,mid_quant]
 # Create difference
 var7 = var4 - var1 ; var8 = var5 - var2 ; var9 = var6 - var3
 # Filter for the AGB map locations
@@ -5677,12 +6889,12 @@ var7[which(landfilter == 1 & is.na(var7) == TRUE)] = 0
 var8[which(landfilter == 1 & is.na(var8) == TRUE)] = 0
 var9[which(landfilter == 1 & is.na(var9) == TRUE)] = 0
 # print summary information to user
-print(paste("Mean natural ",orig_name," wMTT (years)     = ",round(mean(as.vector(var1),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean fire ",orig_name," wMTT (years)        = ",round(mean(as.vector(var2),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean forest loss ",orig_name," wMTT (years) = ",round(mean(as.vector(var3),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean natural ",alt_name," wMTT (years)      = ",round(mean(as.vector(var4),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean fire ",alt_name," wMTT (years)         = ",round(mean(as.vector(var5),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean forest loss ",alt_name," wMTT (years)  = ",round(mean(as.vector(var6),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean natural component",orig_name," wMTT (0-1)     = ",round(mean(as.vector(var1),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean fire component",orig_name," wMTT (0-1)        = ",round(mean(as.vector(var2),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean forest loss component",orig_name," wMTT (0-1) = ",round(mean(as.vector(var3),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean natural component",alt_name," wMTT (0-1)      = ",round(mean(as.vector(var4),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean fire component",alt_name," wMTT (0-1)         = ",round(mean(as.vector(var5),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean forest loss component",alt_name," wMTT (0-1)  = ",round(mean(as.vector(var6),na.rm=TRUE),digits=3),sep=""))
 # Convert to raster
 var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
 var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -5805,7 +7017,7 @@ dev.off()
 ###
 ## Extract pixels constaining the 200 sites
 
-skip = TRUE
+skip = FALSE
 if (skip == FALSE) {
 tmp = read.csv("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/SECO/miombo_site_information/extract_points2.csv", header=TRUE)
 sites_cardamom=paste(names(tmp)[1],tmp$ID,sep="")
@@ -5827,7 +7039,7 @@ orig_wood_npp = rep(NA, dim(tmp)[1]) # fraction
 alt_wood_npp = rep(NA, dim(tmp)[1]) # fraction
 obs_period_end = 5*12 ; obs_period_years = 5
 for (n in seq(1, dim(tmp)[1])) {
-     ij = unlist(closest2d(n,grid_lat,grid_long,tmp$lat,tmp$long,2))
+     ij = unlist(closest2d_2(n,grid_lat,grid_long,tmp$lat,tmp$long))
      nn = which(as.numeric(alt_PROJECT$sites) == ((ij[2]-1) * alt_PROJECT$long_dim) + ij[1])
      ## Trends
      if (length(which(is.na(WoodCobs[ij[1],ij[2],]) == FALSE)) > 0) {
@@ -5838,12 +7050,12 @@ for (n in seq(1, dim(tmp)[1])) {
          alt_obs_wood_stock[n] = mean(WoodCobs[ij[1],ij[2],], na.rm=TRUE)
      }
      ## Static
-     orig_wood_natural_mrt[n] = as.vector(orig_grid_parameters$parameters[ij[1],ij[2],6,mid_quant]*365.25)**-1
-     alt_wood_natural_mrt[n] = as.vector(alt_grid_parameters$parameters[ij[1],ij[2],6,mid_quant]*365.25)**-1
-     orig_wood_mrt[n] = as.vector(orig_grid_parameters$MTT_wood_years[ij[1],ij[2],mid_quant])
-     alt_wood_mrt[n] = as.vector(alt_grid_parameters$MTT_wood_years[ij[1],ij[2],mid_quant])
-     orig_wood_npp[n] = as.vector(orig_grid_parameters$NPP_wood_fraction[ij[1],ij[2],mid_quant])
-     alt_wood_npp[n] = as.vector(alt_grid_parameters$NPP_wood_fraction[ij[1],ij[2],mid_quant])
+     orig_wood_natural_mrt[n] = as.vector(orig_grid_output$parameters[ij[1],ij[2],6,mid_quant]*365.25)**-1
+     alt_wood_natural_mrt[n] = as.vector(alt_grid_output$parameters[ij[1],ij[2],6,mid_quant]*365.25)**-1
+     orig_wood_mrt[n] = as.vector(orig_grid_output$MTT_wood_years[ij[1],ij[2],mid_quant])
+     alt_wood_mrt[n] = as.vector(alt_grid_output$MTT_wood_years[ij[1],ij[2],mid_quant])
+     orig_wood_npp[n] = as.vector(orig_grid_output$NPP_wood_fraction[ij[1],ij[2],mid_quant])
+     alt_wood_npp[n] = as.vector(alt_grid_output$NPP_wood_fraction[ij[1],ij[2],mid_quant])
 }
 
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"wood_trend_199pixels",outsuffix,".png",sep=""), 
@@ -5940,7 +7152,7 @@ png(file=paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_Comparison_of_gpp_n
 par(mfrow=c(2,2))
 # find location in grid for this site
 n = 2
-ij = unlist(closest2d(n,grid_lat,grid_long,tmp$lat,tmp$long,2))
+ij = unlist(closest2d_2(n,grid_lat,grid_long,tmp$lat,tmp$long))
 nn = which(as.numeric(alt_PROJECT$sites) == ((ij[2]-1) * alt_PROJECT$long_dim) + ij[1])
 # read assimilated observations
 drivers = read_binary_file_format(paste(alt_PROJECT$datapath,alt_PROJECT$name,"_",alt_PROJECT$sites[nn],".bin",sep=""))

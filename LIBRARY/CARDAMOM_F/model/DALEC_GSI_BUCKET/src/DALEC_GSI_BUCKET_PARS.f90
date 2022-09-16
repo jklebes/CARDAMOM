@@ -48,11 +48,9 @@ module MODEL_PARAMETERS
     PI%parmax(2) = 0.8d0
 
     ! Background leaf turnover rate
-!    PI%parmin(3) = 0.0002737851d0 ! 10 years
-!    PI%parmax(3) = 0.0009126169d0 !  3 year
-    ! Critical GSI value below which GSI declines are assumed to have impact
-    PI%parmin(3) = 0d0
-    PI%parmax(3) = 1d0
+    ! NOT IN USE
+    PI%parmin(3) = 0.0002737851d0 ! 10 years
+    PI%parmax(3) = 0.0009126169d0 !  3 year
 
     ! Fraction of (1-fgpp) to roots*/
     PI%parmin(4) = 0.1d0
@@ -122,26 +120,16 @@ module MODEL_PARAMETERS
     PI%parmax(24) = 3600d0*24d0  ! 24 hours
 
     ! GSI min VPD threshold (Pa)
-!    PI%parmin(25) =   10d0 !100d0
-!    PI%parmax(25) =  5500d0
-    ! GSI min SWP threshold (MPa)
-    PI%parmin(25) = -10d0 !10d0 !100d0
-    PI%parmax(25) =   0d0 !5500d0
+    PI%parmin(25) =   10d0 !100d0
+    PI%parmax(25) =  5500d0
 
     ! GSI max VPD threshold (Pa)
-!    PI%parmin(26) = 10d0 !1000d0
-!    PI%parmax(26) = 5500d0
-    ! GSI max SWP threshold (MPa)
-    PI%parmin(26) = -10d0 !10d0 !1000d0
-    PI%parmax(26) =   0d0 !5500d0
+    PI%parmin(26) = 10d0 !1000d0
+    PI%parmax(26) = 5500d0
 
     ! GPP return on new Cfol investment (gCperGPP per gCnewfol)
     PI%parmin(27) = 0.001d0
     PI%parmax(27) = 1.0d0
-    ! Michaelis-Menten half saturation describing the response to
-    ! GPP return on new Cfol investment (gCperGPP per gCnewfol)
-!    PI%parmin(27) = 0.0d0
-!    PI%parmax(27) = 1d0
 
     ! Initial GSI value
     PI%parmin(28) = 0d0
@@ -241,20 +229,12 @@ module MODEL_PARAMETERS
     !
 
     ! C labile
-!    PI%parmin(30) = 1.0d0
-!    PI%parmax(30) = 500.0d0
-    ! Borrowed for Michaelis-Menten half saturation coefficient (m2/m2)
-    ! on leaf turnover
-    PI%parmin(30) = 0d0
-    PI%parmax(30) = 10d0
+    PI%parmin(30) = 1.0d0
+    PI%parmax(30) = 500.0d0
 
     ! C foliar
-!    PI%parmin(31) = 1.0d0
-!    PI%parmax(31) = 500.0d0
-    ! Borrowed for Michaelis-Menten half saturation coefficient (gC/m2)
-    ! on labile turnover
-    PI%parmin(31) = 1d0
-    PI%parmax(31) = 500d0
+    PI%parmin(31) = 1.0d0
+    PI%parmax(31) = 500.0d0
 
     ! C roots
     PI%parmin(32) = 1.0d0

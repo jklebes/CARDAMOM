@@ -10,7 +10,7 @@ extract_Cwood_stocks<- function(i1,j1,timestep_days,spatial_type,resolution,grid
                                 latlon_in,Cwood_stock_all) {
 
    # Update the user
-   print(paste("Cwood stocks extracted for current location ",Sys.time(),sep=""))
+   if (use_parallel == FALSE) {print(paste("Cwood stocks extracted for current location ",Sys.time(),sep=""))}
 
 #   # find the nearest location
 #   output = closest2d_2(1,Cwood_stock_all$lat,Cwood_stock_all$long,latlon_in[1],latlon_in[2])

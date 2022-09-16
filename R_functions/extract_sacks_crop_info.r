@@ -9,7 +9,7 @@
 extract_sacks_crop_info<- function(spatial_type,resolution,grid_type,latlon_in,crop_man_all) {
 
   # Update the user
-	print(paste("Crop management data extracted for current location ",Sys.time(),sep=""))
+	if (use_parallel == FALSE) {print(paste("Crop management data extracted for current location ",Sys.time(),sep=""))}
 
 	# convert input data long to conform to what we need
 	check1=which(crop_man_all$long > 180) ; if (length(check1) > 0) { crop_man_all$long[check1]=crop_man_all$long[check1]-360 }
@@ -61,7 +61,7 @@ extract_sacks_crop_info<- function(spatial_type,resolution,grid_type,latlon_in,c
 	    # error checking
 	    if (is.na(plant) | plant == 0 | harvest == 0 | is.na(harvest)) {radius=radius+1 ; answer=NA} else {answer=0}
 	}
-	print(paste("NOTE Sowing and Harvest dates averaged over a pixel radius (i.e. centre + radius) of ",radius," points",sep=""))
+	if (use_parallel == FALSE) {print(paste("NOTE Sowing and Harvest dates averaged over a pixel radius (i.e. centre + radius) of ",radius," points",sep=""))}
 	# pass the information back
 	return(list(plant=plant,plant_range=plant_range,harvest=harvest,harvest_range=harvest_range))
 

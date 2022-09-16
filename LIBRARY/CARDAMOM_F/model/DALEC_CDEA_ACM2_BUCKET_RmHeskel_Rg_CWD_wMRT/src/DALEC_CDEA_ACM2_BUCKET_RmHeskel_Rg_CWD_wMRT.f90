@@ -36,7 +36,6 @@ module CARBON_MODEL_MOD
            ,soil_frac_clay   &
            ,soil_frac_sand   &
            ,nos_soil_layers  &
-           ,extracted_C      &
            ,Rg_from_labile                &
            ,Rm_from_labile                &
            ,Resp_leaf, Resp_wood_root     &
@@ -164,8 +163,6 @@ module CARBON_MODEL_MOD
 
   ! Plant respiration model
   double precision :: Rm_leaf_per_gC
-  ! forest rotation specific info
-  double precision, allocatable, dimension(:) :: extracted_C
   ! Photosynthetic Metrics
   double precision, allocatable, dimension(:) :: Rg_from_labile, &
                                                  Rm_from_labile, &
@@ -367,7 +364,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
              ,wetcanopy_evap & ! kgH2O/m2/day
            ,snow_sublimation & ! kgH2O/m2/day
                     ,deltaWP & ! deltaWP (MPa) minlwp-soilWP
-  ,wf,wl,ff,fl,osf,osl,sf      ! phenological controls
+     ,wf,wl,ff,fl,osf,osl,sf   ! phenological controls
 
     ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
     ! Modified later with the inclusion of CWD pool by TLS Aug 2020
@@ -599,7 +596,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! now load the hardcoded forest management parameters into their scenario locations
 
-    ! Deforestation process functions in a sequenctial way.
+    ! Deforestation process functions in a sequential way.
     ! Thus, the pool_loss is first determined as a function of met(n,8) and
     ! for fine and coarse roots whether this felling is associated with a mechanical
     ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
@@ -732,15 +729,16 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! to provide specific CC for litter and wood litter.
     ! NOTE: changes also result in the addition of further EDCs
 
-    ! Assign proposed resilience factor
+    ! Assign proposed resilience factor for biomass
     rfac(1:4) = pars(31)
+    ! Resilience factor for non-combusted tissue (lit, som, wood litter)
     rfac(5) = 0.1d0 ; rfac(6) = 0d0 ; rfac(7) = 0.1d0
     ! Assign combustion completeness to foliage
     cf(2) = pars(32) ! foliage
     ! Assign combustion completeness to non-photosynthetic
     cf(1) = pars(33) ; cf(3) = pars(33) ; cf(4) = pars(33)
     cf(6) = pars(34) ! soil
-    ! derived values for litter and wood litter
+    ! values for litter and wood litter
     cf(5) = pars(35)  ; cf(7) = pars(36)
 
     !
@@ -1043,11 +1041,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! labile pool
        POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8)-Rg_from_labile(n)-Rm_from_labile(n))*deltat(n)
        ! foliar pool
-       POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,4)-FLUXES(n,10)+FLUXES(n,8))*deltat(n)
-       ! wood pool
-       POOLS(n+1,4) = POOLS(n,4) + (FLUXES(n,7)-FLUXES(n,11))*deltat(n)
+       POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,4)+FLUXES(n,8)-FLUXES(n,10))*deltat(n)
        ! root pool
        POOLS(n+1,3) = POOLS(n,3) + (FLUXES(n,6)-FLUXES(n,12))*deltat(n)
+       ! wood pool
+       POOLS(n+1,4) = POOLS(n,4) + (FLUXES(n,7)-FLUXES(n,11))*deltat(n)
        ! litter pool
        POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
        ! som pool
@@ -1153,8 +1151,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                FLUXES(n,35) = (foliar_loss-foliar_residue) * deltat_1(n)
                FLUXES(n,36) = (roots_loss-roots_residue) * deltat_1(n)
                FLUXES(n,37) = (wood_loss-wood_residue) * deltat_1(n)
-               FLUXES(n,38) = 0d0
-               FLUXES(n,39) = 0d0
+               FLUXES(n,38) = 0d0 ! litter
+               FLUXES(n,39) = 0d0 ! wood litter
                FLUXES(n,40) = soil_loss_with_roots * deltat_1(n)
                ! Convert harvest related residue generations to daily rate for output
                FLUXES(n,41) = labile_residue * deltat_1(n)
@@ -1218,10 +1216,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                ! calculate ecosystem emissions
                FLUXES(n,17) = FLUXES(n,18)+FLUXES(n,19)+FLUXES(n,20)+FLUXES(n,21)+FLUXES(n,22)+FLUXES(n,23)+FLUXES(n,32)
            end if ! burnt_area > 0
-       else
-           ! set fluxes to zero
-           FLUXES(n,17:28) = 0d0 ; FLUXES(n,32:33) = 0d0
-       end if
+       end if ! any fire
 
     end do ! nodays loop
 
@@ -3323,12 +3318,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !    end if
 
     ! Code with explicit min bound
-    if (current >= max_val .or. current <= min_val) then
-        opt_max_scaling = 0d0
-    else
-        opt_max_scaling = exp( kurtosis * log((max_val-current)/(max_val-optimum)) * (max_val-optimum) ) &
-                        * exp( kurtosis * log((current-min_val)/(optimum-min_val)) * (optimum-min_val) )
-    endif
+    opt_max_scaling = exp( kurtosis * log((max_val-current)/(max_val-optimum)) * (max_val-optimum) ) &
+                    * exp( kurtosis * log((current-min_val)/(optimum-min_val)) * (optimum-min_val) )
+    ! Sanity check, allows for overlapping parameter ranges
+    if (opt_max_scaling /= opt_max_scaling) opt_max_scaling = 0d0
 
   end function opt_max_scaling
   !

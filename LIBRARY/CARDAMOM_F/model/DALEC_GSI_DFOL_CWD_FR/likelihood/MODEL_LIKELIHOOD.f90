@@ -501,7 +501,7 @@ module model_likelihood_module
                         ,meantemp,EDC2)
 
     use cardamom_structures, only: DATAin
-    use CARBON_MODEL_MOD, only: Rg_from_labile, wSWP_time,    &
+    use CARBON_MODEL_MOD, only: Rg_from_labile,               &
                                 harvest_residue_to_litter,    &
                                 harvest_residue_to_som,       &
                                 harvest_residue_to_woodlitter,&
@@ -627,7 +627,7 @@ module model_likelihood_module
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                    etol = 0.20d0 !0.10d0 !0.05d0
+                                    etol = 0.05d0 ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
 
     ! initial value
     infi = 0d0 ; dble_nodays = dble(nodays)
@@ -1795,7 +1795,7 @@ module model_likelihood_module
     end if
 
     ! Estimate the biological steady state attractor on the wood pool.
-    ! NOTE: this arrangement explicitly neglects the impact of disturbance on
+    ! NOTE: this arrangement explicitly neglects the impact of harvest disturbance on
     ! residence time (i.e. biomass removal)
     if (DATAin%otherpriors(5) > -9998) then
         ! Estimate the mean annual input to the wood pool (gC.m-2.yr-1) and remove

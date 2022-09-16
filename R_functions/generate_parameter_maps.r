@@ -7,8 +7,7 @@
 
 generate_parameter_maps<-function(PROJECT) {
 
-   # work out area matrix for the pixels in meters
-   # include adjustment for g-> Tg (*1e-12)
+   # Determine the lat / long for the grid
    if (PROJECT$grid_type == "UK") {
        output = generate_uk_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
        grid_lat = array(output$lat, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
@@ -99,22 +98,30 @@ generate_parameter_maps<-function(PROJECT) {
               par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,27,36),median_loc]
           } # PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR"
 
-          # now normalise the parameter values
+          ###
+          ## Begin Affinity propagation clustering - for process parameters only
+
+          # Normalise the parameter values as this helps with the cluster
+          # analyses to account for very different parameter ranges
           for (i in seq(1,dim(par_array_median_normalised)[3])) {
                min_par_val=min(par_array_median_normalised[,,i],na.rm=TRUE)
                max_par_val=max(par_array_median_normalised[,,i],na.rm=TRUE)
-               par_array_median_normalised[,,i]=((par_array_median_normalised[,,i]-min_par_val)/(max_par_val-min_par_val))
+               par_array_median_normalised[,,i] = ((par_array_median_normalised[,,i]-min_par_val)/(max_par_val-min_par_val))
           }
 
+          # Create temporary arrays needed to allow removing of NAs and convert array into (space,par)
           par_array_tmp=array(NA,dim=c(prod(dim(grid_output$parameters)[1:2]),dim(par_array_median_normalised)[3]))
           par_array_tmp[1:prod(dim(par_array_median_normalised)[1:2]),1:dim(par_array_median_normalised)[3]]=par_array_median_normalised
           actual_forests=which(is.na(par_array_tmp[,1]) == FALSE)
           par_array_tmp=par_array_tmp[actual_forests,]
           par_array_tmp=array(par_array_tmp,dim=c((length(par_array_tmp)/dim(par_array_median_normalised)[3]),dim(par_array_median_normalised)[3]))
+
+          # Looping to find preference_input, the preferenceRange() returns 2 values,
+          # the first of which minimises the number of clusters, while the seconds
+          # would return as many clusters as there are observations. It is the
+          # responsibility of the user to ensure the most appropriate use of these
+          # information to result in an appropriate number of clusters for error propagation
           tmp = 0
-          # Looping to find preference_input, the preferenceRange() returns 2 values, the first of which minimises the number of clusters,
-          # while the seconds would return as many clusters as there are observations.
-          # It is the responsibility of the user to ensure the most appropriate use of these information to result in an appropriate number of clusters for error propagation
           for (i in seq(1,10)) {
                tmp=append(tmp,preferenceRange(negDistMat(par_array_tmp[sample(1:dim(par_array_tmp)[1],0.05*dim(par_array_tmp)[1], replace=FALSE),],r=2))[1])
           } ; preference_input=max(mean(tmp[-1]),median(tmp[-1]))
@@ -130,6 +137,9 @@ generate_parameter_maps<-function(PROJECT) {
           # Tidy away the overall analysis in faviour of what we have extracted
           grid_output = within(grid_output, rm(cluster_analysis))
 
+          ###
+          ## Begin Affinity propagation clustering - for process parameters + initial conditions
+
           # Now generate cluster map using all parameters including the initial conditions
           par_array_median_normalised = grid_output$parameters[,,,median_loc]
           # now normalise the parameter values
@@ -138,16 +148,19 @@ generate_parameter_maps<-function(PROJECT) {
                max_par_val=max(par_array_median_normalised[,,i],na.rm=TRUE)
                par_array_median_normalised[,,i]=((par_array_median_normalised[,,i]-min_par_val)/(max_par_val-min_par_val))
           }
+          # Create temporary arrays needed to allow removing of NAs and convert array into (space,par)
           par_array_tmp=array(NA,dim=c(prod(dim(grid_output$parameters)[1:2]),dim(par_array_median_normalised)[3]))
           par_array_tmp[1:prod(dim(par_array_median_normalised)[1:2]),1:dim(par_array_median_normalised)[3]]=par_array_median_normalised
           actual_forests=which(is.na(par_array_tmp[,1]) == FALSE)
           par_array_tmp=par_array_tmp[actual_forests,]
           par_array_tmp=array(par_array_tmp,dim=c((length(par_array_tmp)/dim(par_array_median_normalised)[3]),dim(par_array_median_normalised)[3]))
 
+          # Looping to find preference_input, the preferenceRange() returns 2 values,
+          # the first of which minimises the number of clusters, while the seconds
+          # would return as many clusters as there are observations. It is the
+          # responsibility of the user to ensure the most appropriate use of these
+          # information to result in an appropriate number of clusters for error propagation
           tmp = 0
-          # Looping to find preference_input, the preferenceRange() returns 2 values, the first of which minimises the number of clusters,
-          # while the seconds would return as many clusters as there are observations.
-          # It is the responsibility of the user to ensure the most appropriate use of these information to result in an appropriate number of clusters for error propagation
           for (i in seq(1,10)) {
                tmp=append(tmp,preferenceRange(negDistMat(par_array_tmp[sample(1:dim(par_array_tmp)[1],0.05*dim(par_array_tmp)[1], replace=FALSE),],r=2))[1])
           } ; preference_input=max(mean(tmp[-1]),median(tmp[-1]))

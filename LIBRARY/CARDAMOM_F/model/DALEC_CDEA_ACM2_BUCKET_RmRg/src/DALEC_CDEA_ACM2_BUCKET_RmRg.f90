@@ -3280,12 +3280,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !    end if
 
     ! Code with explicit min bound
-    if (current >= max_val .or. current <= min_val) then
-        opt_max_scaling = 0d0
-    else
-        opt_max_scaling = exp( kurtosis * log((max_val-current)/(max_val-optimum)) * (max_val-optimum) ) &
-                        * exp( kurtosis * log((current-min_val)/(optimum-min_val)) * (optimum-min_val) )
-    endif
+    opt_max_scaling = exp( kurtosis * log((max_val-current)/(max_val-optimum)) * (max_val-optimum) ) &
+                    * exp( kurtosis * log((current-min_val)/(optimum-min_val)) * (optimum-min_val) )
+    ! Sanity check, allows for overlapping parameter ranges
+    if (opt_max_scaling /= opt_max_scaling) opt_max_scaling = 0d0
 
   end function opt_max_scaling
   !

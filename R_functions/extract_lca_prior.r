@@ -8,7 +8,7 @@
 extract_lca_prior<- function(i1,j1,spatial_type,resolution,grid_type,latlon_in,lca_all) {
 
    # Update the user
-   print(paste("LCA prior extracted for current location ",Sys.time(),sep=""))
+   if (use_parallel == FALSE) {print(paste("LCA prior extracted for current location ",Sys.time(),sep=""))}
 
 #   # find the nearest location
 #   output = closest2d_2(1,lca_all$lat,lca_all$long,latlon_in[1],latlon_in[2])

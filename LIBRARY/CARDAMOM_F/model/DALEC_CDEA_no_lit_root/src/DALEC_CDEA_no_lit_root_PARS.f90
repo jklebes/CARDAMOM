@@ -101,6 +101,19 @@ module MODEL_PARAMETERS
     PI%parmin(13) = 5d0
     PI%parmax(13) = 200d0
 
+    ! Resilience factor for burned but not combusted C stocks
+    PI%parmin(18) = 0.1d0
+    PI%parmax(18) = 1d0
+    ! Combustion completeness factor for foliage
+    PI%parmin(19) = 0.01d0
+    PI%parmax(19) = 0.99d0
+    ! Combustion completeness factor for fine root and wood
+    PI%parmin(20) = 0.01d0
+    PI%parmax(20) = 0.99d0
+    ! Combustion completeness factor for DOM
+    PI%parmin(21) = 0.001d0
+    PI%parmax(21) = 0.99d0
+
     !
     ! INITIAL VALUES DECLARED HERE
     !

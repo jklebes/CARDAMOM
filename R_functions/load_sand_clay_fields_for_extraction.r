@@ -7,7 +7,7 @@
 
 load_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source,cardamom_ext,spatial_type) {
 
-    if (sand_clay_source == "SoilGrids") {
+    if (sand_clay_source == "SoilGrids" | sand_clay_source == "SoilGrids_v2") {
 
         print("Loading sand / clay fractions from SoilGrids")
 

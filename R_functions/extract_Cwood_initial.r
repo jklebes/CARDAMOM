@@ -9,7 +9,7 @@ extract_Cwood_initial<- function(i1,j1,spatial_type,resolution,grid_type,latlon_
                                  Cwood_initial_all) {
 
    # Update the user
-   print(paste("Cwood initial extracted for current location ",Sys.time(),sep=""))
+   if (use_parallel == FALSE) {print(paste("Cwood initial extracted for current location ",Sys.time(),sep=""))}
 
 #   # find the nearest location
 #   output = closest2d_2(1,Cwood_initial_all$lat,Cwood_initial_all$long,latlon_in[1],latlon_in[2])

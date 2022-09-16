@@ -92,17 +92,18 @@ fudgeit <- function(){
 ## Load analysis
 
 # PointsOfChange
-
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_isimip3a_lca_gpp_nbe/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_isimip3a_lca_gpp/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_trendy_lca_agb_gpp_fire/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_CsomPriorNCSCD/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_nbe/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_GSI_BUCKET_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Trendyv9_historical/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_AGB/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_actualCI_agb/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_agb/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_agb/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_agb/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_gpp/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_nbe/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_nbe_fire/infofile.RData")
@@ -122,8 +123,9 @@ load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
 
 # Set output path for figures and tables
-out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_reccap2_permafrost_1deg_C7_isimip/"
-#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/figures_africa/"
+out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_reccap2_permafrost_1deg_C7_isimip/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/InternationalScience/figures_africa/"
 #out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/trendy/figures/"
 #out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/dalec_gsi_bucket/"
@@ -152,6 +154,42 @@ area = calc_pixel_area(output$lat,output$long,PROJECT$resolution)
 # this output is in vector form and we need matching array shapes so...
 area = array(area, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 
+###
+## Allow for optional replacement or creation of alternate clustering analyses
+## CARDAMOM default is affinity propogation but the most commonly used is k-means
+
+# PointsOfChange
+
+# Now generate cluster map using all parameters including the initial conditions
+par_array_median_normalised = grid_output$parameters[,,,mid_quant]
+# now normalise the parameter values
+for (i in seq(1,dim(par_array_median_normalised)[3])) {
+     min_par_val=min(par_array_median_normalised[,,i],na.rm=TRUE)
+     max_par_val=max(par_array_median_normalised[,,i],na.rm=TRUE)
+     par_array_median_normalised[,,i]=((par_array_median_normalised[,,i]-min_par_val)/(max_par_val-min_par_val))
+}
+# Create temporary arrays needed to allow removing of NAs and convert array into (space,par)
+par_array_tmp=array(NA,dim=c(prod(dim(grid_output$parameters)[1:2]),dim(par_array_median_normalised)[3]))
+par_array_tmp[1:prod(dim(par_array_median_normalised)[1:2]),1:dim(par_array_median_normalised)[3]]=par_array_median_normalised
+actual_forests=which(is.na(par_array_tmp[,1]) == FALSE)
+par_array_tmp=par_array_tmp[actual_forests,]
+par_array_tmp=array(par_array_tmp,dim=c((length(par_array_tmp)/dim(par_array_median_normalised)[3]),dim(par_array_median_normalised)[3]))
+
+# K-means
+nos_desired_clusters = 3 # specify the number of clusters wanted
+cluster = kmeans(par_array_tmp, centers = nos_desired_clusters, iter.max = 10, nstart = 50)
+
+# Extract the cluster information which we can then use in maps / aggregation
+grid_output$nos_pars_clusters_kmeans=dim(cluster$centers)[1] ; grid_output$clusters_exemplars_kmeans=cluster$centers
+grid_output$pars_clusters_kmeans=array(NA,dim=c(dim(par_array_median_normalised)[1:2]))
+for (i in seq(1, grid_output$nos_pars_clusters_kmeans)) {
+     grid_output$clusters_kmeans[actual_forests[which(cluster$cluster == i)]] = i
+}
+grid_output$clusters_kmeans=array(grid_output$clusters_kmeans,dim=c(dim(par_array_median_normalised)[1:2]))
+
+#par(mfrow=c(2,2)) ; image.plot(grid_output$pars_clusters) ; image.plot(grid_output$pars_clusters_kmeans)
+image.plot(grid_output$clusters_kmeans, main=3)
+
 ### 
 ## Create land mask / boundary overlays needed
 
@@ -174,7 +212,7 @@ landmask = crop(landmask, cardamom_ext)
 add_biomes = " "
 #add_biomes = "ssa_wwf"
 #add_biomes = "wwf_ecoregions"
-add_biomes = "reccap2_permafrost"
+#add_biomes = "reccap2_permafrost"
 if (add_biomes == "ssa_wwf") {
     # Read in shape file for boundaries
     biomes = shapefile("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/SECO/analysis/ssa_wwf_dissolve/ssa_wwf_dissolve.shp")
@@ -273,7 +311,7 @@ write.table(data.frame(BiomeCode = c(1:length(biome_names)),BiomeNames = biome_n
 # PointsOfChange
 
 # This will be used to filter the analysis to include specific locations only
-use_filter = FALSE
+use_filter = TRUE
 if (use_filter) {
     #  Design a user created / loaded filter 
     landfilter = array(NA,dim=dim(grid_output$assimilated_wood_mean_gCm2))
@@ -3262,12 +3300,12 @@ for (n in seq(1,PROJECT$nosites)) {
 } # loop sites
 
 
-## Extract FluxSat v2 GPP (2000-2019)
+## Extract FluxSat v2 GPP (2001-2019)
 
 # "PointsOfChange"
 
 # Read first file to get additional information
-fluxsat_years = c(2000:2019)
+fluxsat_years = c(2001:2019)
 fluxsat_years = intersect(fluxsat_years,run_years)
 
 # Make a list of all available files
@@ -3397,6 +3435,10 @@ apply(copernicus_cardamom_gpp_gCm2yr*array(area, dim=c(dim(area)[1:2],dim(copern
 obs_gpp_mean_domain_TgCyr = apply(obs_gpp_mean_gCm2yr*array(area, dim=c(dim(area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
 obs_gpp_min_domain_TgCyr = apply(obs_gpp_min_gCm2yr*array(area, dim=c(dim(area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
 obs_gpp_max_domain_TgCyr = apply(obs_gpp_max_gCm2yr*array(area, dim=c(dim(area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
+# where the whole grid is zero can lead to zero being introduced - remove these
+obs_gpp_mean_domain_TgCyr[which(obs_gpp_mean_domain_TgCyr == 0)] = NA 
+obs_gpp_min_domain_TgCyr[which(obs_gpp_min_domain_TgCyr == 0)] = NA
+obs_gpp_max_domain_TgCyr[which(obs_gpp_max_domain_TgCyr == 0)] = NA
 
 ###
 ## Independent fire emissions estimate

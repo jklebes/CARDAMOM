@@ -11,7 +11,7 @@ extract_burnt_area_information<- function(i1,j1,latlon_in,timestep_days,spatial_
                                           years_to_load,doy_obs) {
 
   # Update the user
-  print(paste("Beginning burned fraction data extraction for current location ",Sys.time(),sep=""))
+  if (use_parallel == FALSE) {print(paste("Beginning burned fraction data extraction for current location ",Sys.time(),sep=""))}
 
 #  # find the nearest location
 #  output = closest2d_2(1,burnt_all$lat,burnt_all$long,latlon_in[1],latlon_in[2])
@@ -53,7 +53,7 @@ extract_burnt_area_information<- function(i1,j1,latlon_in,timestep_days,spatial_
           run_day_selector = seq(1,length(burnt_area_out),timestep_days)
           timestep_days = rep(timestep_days, length.out=length(burnt_area_out))
       }
-      print("...calculating monthly averages for burnt area")
+      #print("...calculating monthly averages for burnt area")
       # determine the actual daily positions
       run_day_selector = cumsum(timestep_days)
       # create needed variables

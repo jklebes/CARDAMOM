@@ -175,7 +175,7 @@ module cardamom_io
     else if (DATAin%ID == 20) then
         ! ID = 20 - DALEC_BUCKET
         DATAin%nopools = 8
-        DATAin%nopars = 43
+        DATAin%nopars = 49
         DATAin%nofluxes = 25
     else if (DATAin%ID == 21) then
         ! ID = 21 - DALEC_CDEA_LU_FIRES
@@ -185,17 +185,17 @@ module cardamom_io
     else if (DATAin%ID == 22) then
         ! ID = 22 - DALEC_EVERGREEN
         DATAin%nopools = 5
-        DATAin%nopars = 17
-        DATAin%nofluxes = 28
+        DATAin%nopars = 22
+        DATAin%nofluxes = 35
     else if (DATAin%ID == 23) then
         ! ID = 23 - DALEC_CDEA_no_lit_root
         DATAin%nopools = 4
-        DATAin%nopars = 17
-        DATAin%nofluxes = 28
+        DATAin%nopars = 21
+        DATAin%nofluxes = 32
     else if (DATAin%ID == 24) then
         ! ID = 24 - DALEC_EVERGREEN_no_lit_root
         DATAin%nopools = 3
-        DATAin%nopars = 11
+        DATAin%nopars = 15
         DATAin%nofluxes = 28
     else if (DATAin%ID == 25) then
         ! ID = 25 - DALEC_CDEA_ACM2
@@ -205,13 +205,13 @@ module cardamom_io
     else if (DATAin%ID == 26) then
         ! ID = 26 - DALEC
         DATAin%nopools = 7
-        DATAin%nopars = 43
+        DATAin%nopars = 48
         DATAin%nofluxes = 25
     else if (DATAin%ID == 27) then
         ! ID = 27 - DALEC_CDEA_ACM2_BUCKET
         DATAin%nopools = 7
         DATAin%nopars = 32
-        DATAin%nofluxes = 40
+        DATAin%nofluxes = 45
     else if (DATAin%ID == 28) then
         ! ID = 28 - DALEC_CDEA_ACM2_BUCKET_RmRg
         DATAin%nopools = 7
@@ -235,13 +235,13 @@ module cardamom_io
     else if (DATAin%ID == 32) then
         ! ID = 32 - DALEC_G5
         DATAin%nopools = 8
-        DATAin%nopars = 46
-        DATAin%nofluxes = 25
+        DATAin%nopars = 48
+        DATAin%nofluxes = 45
     else if (DATAin%ID == 33) then
         ! ID = 33 - DALEC_G6
         DATAin%nopools = 8
-        DATAin%nopars = 46
-        DATAin%nofluxes = 25
+        DATAin%nopars = 51
+        DATAin%nofluxes = 45
     else if (DATAin%ID == 34) then
         ! ID = 34 - DALEC_1005
         DATAin%nopools = 8

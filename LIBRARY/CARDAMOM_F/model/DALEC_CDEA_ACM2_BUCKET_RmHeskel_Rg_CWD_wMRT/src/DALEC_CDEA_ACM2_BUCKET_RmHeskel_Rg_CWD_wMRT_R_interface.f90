@@ -10,7 +10,7 @@ subroutine rdaleccdeaacm2bucketrmheskelrgcwdwmrt(output_dim,MTT_dim,SS_dim &
                              ,soil_frac_clay, soil_frac_sand, nos_soil_layers &
                              ,gs_demand_supply_ratio, cica_time &
                              ,gs_total_canopy, gb_total_canopy &
-                             ,canopy_par_MJday_time, Rg_from_labile
+                             ,canopy_par_MJday_time, Rg_from_labile, Rm_from_labile
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -211,6 +211,7 @@ subroutine rdaleccdeaacm2bucketrmheskelrgcwdwmrt(output_dim,MTT_dim,SS_dim &
      ! Estimate MRT (years)
      ! Labile
      out_var2(i,1) = sum( ((FLUXES(1:nodays,8) + &
+                            Rg_from_labile(1:nodays) + Rm_from_labile(1:nodays) + &
                             FLUXES(1:nodays,18) + FLUXES(1:nodays,24) + &
                             FLUXES(1:nodays,34) + FLUXES(1:nodays,41)) &
                           / POOLS(1:nodays,1)) * lab_filter) / dble(nodays-sum(lab_hak))
@@ -232,7 +233,7 @@ subroutine rdaleccdeaacm2bucketrmheskelrgcwdwmrt(output_dim,MTT_dim,SS_dim &
      ! Litter (foliage+fine roots)
      out_var2(i,5) = sum( ((FLUXES(1:nodays,13) + FLUXES(1:nodays,15) + &
                             FLUXES(1:nodays,22) + FLUXES(1:nodays,28) + &
-                            FLUXES(1:nodays,35)) &
+                            FLUXES(1:nodays,38)) &
                           / POOLS(1:nodays,5)) * lit_filter) / dble(nodays-sum(lit_hak))
      ! Woodlitter
      out_var2(i,6) = sum( ((FLUXES(1:nodays,30) + FLUXES(1:nodays,31) + &
@@ -243,13 +244,17 @@ subroutine rdaleccdeaacm2bucketrmheskelrgcwdwmrt(output_dim,MTT_dim,SS_dim &
      out_var2(i,7) = sum( ((FLUXES(1:nodays,14) + FLUXES(1:nodays,23) + FLUXES(1:nodays,40)) &
                           / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
 
+     ! Keep track of the fraction of wood litter transfer to som, this value is needed for the steady state estimation
+     woodlitter_to_som_frac(i) = sum( (FLUXES(1:nodays,31) / POOLS(1:nodays,8)) * woodlit_filter) &
+                               / dble(nodays-sum(woodlit_hak))
+
      !
      ! Estimate pool inputs needed for steady state calculation
      !
 
      ! Once the canopy has closes the inputs to the live biomass are stable
      ! and can thus be estimated from the simulated inputs
-     out_var3(i,1) = sum(FLUXES(:,5)+Rg_from_labile) ! Labile
+     out_var3(i,1) = sum(FLUXES(:,5)) ! Labile
      out_var3(i,2) = sum(FLUXES(:,4)+FLUXES(:,8)) ! Foliage
      out_var3(i,3) = sum(FLUXES(:,6)) ! Fine root
      out_var3(i,4) = sum(FLUXES(:,7)) ! Wood
@@ -261,27 +266,26 @@ subroutine rdaleccdeaacm2bucketrmheskelrgcwdwmrt(output_dim,MTT_dim,SS_dim &
      ! Therefore, at this point we can account for disturbance inputs (including wood)
      ! but NOT natural wood. The natural wood input is estimated later based on
      ! its steady state estimate
-     out_var3(i,6) = sum(FLUXES(:,15)+FLUXES(:,27)+FLUXES(:,28)+FLUXES(:,44)) ! som
+     out_var3(i,6) = sum(FLUXES(:,44)) ! woodlitter
+     out_var3(i,7) = sum(FLUXES(:,15)+FLUXES(:,27)+FLUXES(:,28)+FLUXES(:,33)) ! som
 
   end do ! nos_iter loop
 
   ! MTT - Convert daily fractional loss to years
-  out_var2 = (out_var2*365.25d0)**(-1d0) ! iter,(lab,fol,root,wood,lit,som)
+  out_var2 = (out_var2*365.25d0)**(-1d0) ! iter,(lab,fol,root,wood,lit,woodlitter,som)
 
   ! Steady state gC/m2 estimation
   ! Determine the mean annual input (gC/m2/yr) based on current inputs for all pool,
   ! litter and soil pools updated below...
   out_var3 = (out_var3 / dble(nodays)) * 365.25d0 ! convert to annual mean input
-  ! Then estimate the labile, foliar, fine root, wood and litter steady states.
-  out_var3(1:nos_iter,1:5) = out_var3(1:nos_iter,1:5) * out_var2(1:nos_iter,1:5) ! multiply by residence time in years
-  ! Using the wood SS estimate (gC/m2) the steady state input to the som litter pool...
-  out_var3(1:nos_iter,6) = (out_var3(1:nos_iter,6) + &
-                           (out_var3(1:nos_iter,4) / out_var2(1:nos_iter,4))) &
-                         * out_var2(1:nos_iter,6)
+  ! Then estimate the labile, foliar, fine root, wood steady and fine litter states.
+  out_var3(:,1:5) =  out_var3(:,1:5) * out_var2(:,1:5) ! multiply by residence time in years
+  ! Using the wood SS estimate (gC/m2) the steady state input to the wood litter pool...
+  out_var3(:,6) = (out_var3(:,6) + (out_var3(:,4) / out_var2(:,4))) * out_var2(:,6)
   ! ...which is then in turn used to update the soil pool
   ! NOTE: that because not all wood litter
   out_var3(:,7) = (out_var3(:,7) + ((out_var3(:,6) / out_var2(:,6))*woodlitter_to_som_frac) ) * out_var2(:,7)
-
+!STEADY STATE ADJUSTMENT FOR WOOD LIT / WOOD NON-CONSTANT TURNOVER?
   ! return back to the subroutine then
   return
 

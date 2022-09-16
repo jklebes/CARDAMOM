@@ -77,7 +77,7 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
         # clean up
         rm(var1,i,m) ; gc(reset=TRUE,verbose=FALSE)
 
-    } else if (met_source == "trendy_v9") {
+    } else if (met_source == "trendy_v9" | met_source == "trendy_v11") {
 
         # Check whether this is a leap year or not
         nos_days = nos_days_in_year(year_to_do)

@@ -9,7 +9,7 @@ extract_fire<- function(i1,j1,timestep_days,spatial_type,resolution,grid_type,
                         latlon_in,fire_all,years_to_load,doy_obs) {
 
   # Update the user
-  print(paste("Fire data extracted for current location ",Sys.time(),sep=""))
+  if (use_parallel == FALSE) {print(paste("Fire data extracted for current location ",Sys.time(),sep=""))}
 
 #  # find the nearest location
 #  output = closest2d_2(1,fire_all$lat,fire_all$long,latlon_in[1],latlon_in[2])
@@ -59,7 +59,7 @@ extract_fire<- function(i1,j1,timestep_days,spatial_type,resolution,grid_type,
           run_day_selector = seq(1,length(fire_out),timestep_days)
           timestep_days = rep(timestep_days, length.out=length(fire_out))
       }
-      print("...calculating monthly averages for Fire")
+      #print("...calculating monthly averages for Fire")
       # determine the actual daily positions
       run_day_selector = cumsum(timestep_days)
       # create needed variables

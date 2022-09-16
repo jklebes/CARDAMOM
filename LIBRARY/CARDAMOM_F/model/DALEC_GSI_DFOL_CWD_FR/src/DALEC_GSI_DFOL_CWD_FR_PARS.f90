@@ -48,6 +48,7 @@ module MODEL_PARAMETERS
     PI%parmax(2) = 0.8d0
 
     ! Background leaf turnover rate
+    ! NOT IN USE
     PI%parmin(3) = 0.0002737851d0 ! 10 years
     PI%parmax(3) = 0.0009126169d0 !  3 year
 

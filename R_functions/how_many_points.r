@@ -132,8 +132,11 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
     # generate UK or WGS-84 lat long grid
     if (grid_type == "UK") {
         output = generate_uk_grid(lat,long,resolution)
+        area = array(PROJECT$resolution**2, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
     } else if (grid_type=="wgs84") {
         output = generate_wgs84_grid(lat,long,resolution)
+        # then generate the area estimates for each pixel
+        area = calc_pixel_area(output$lat,output$long,resolution)
     } else {
         stop('have selected invalid grid type, the valid options are "UK" and "wgs84"')
     }
@@ -244,7 +247,7 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
         # create raster, passing the raster values corresponding to the sovereign state
         # NOTE: the actual value assigned is linked the factor levels
         landsea = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), fun = "last")
-        landsea_frac = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), getCover=TRUE)
+        landsea_frac = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), fun = "last", getCover=TRUE)
 
         # Sometimes we want to simulate a particular country, which we will check now...
         country_match = factor(landmask$SOVEREIGNT) ; country_match = levels(country_match)
@@ -267,13 +270,13 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
         # Set non country areas to NA, and all other to 1
         landsea[keep == 0] = NA
         # Add a buffer based on the land sea fraction to avoid missing land area we want
-        landsea_frac = (boundaries(landsea, type="outer")*landsea_frac)
+        landsea_frac_buffer = boundaries(landsea, type="outer")*landsea_frac
         # Set all actual data to 1
         landsea[as.vector(landsea) > 0] = 1
         # set missing data to 0
         landsea[is.na(as.vector(landsea))] = 0
-        # Now combine the maps
-        landsea = landsea + landsea_frac
+        # Now combine the maps, giving a complete landsea fractional map
+        landsea = (landsea*landsea_frac) + landsea_frac_buffer
         # Reset any newly created NaN from the merge
         landsea[is.na(as.vector(landsea))] = 0
 
@@ -368,12 +371,18 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
     # re-arrange landsea mask so that it matches with the actual grid
     landsea = as.vector(array(landsea, dim=c(long_dim,lat_dim))[,lat_dim:1])
 
-    # product is the number of points
-    return(list(nosites=length(lat),waterpixels=remove,landsea=landsea,ctessel_pft=pft_keep,lat_dim=lat_dim,long_dim=long_dim,sites=sites))
+    # Combine outputs
+    output = list(nosites=length(lat),waterpixels=remove,landsea=landsea,ctessel_pft=pft_keep,lat_dim=lat_dim,long_dim=long_dim,sites=sites)
+    # If the grid area has been calculated we will keep this too
+    if (exists("area")) {
+        output$area_m2 = area
+    }
+
     # clean up
     gc(reset=TRUE, verbose=FALSE)
-
-}
+    # Return back to user
+    return(output)
+} # end function how_many_points
 
 ## Use byte compile
 how_many_points<-cmpfun(how_many_points)

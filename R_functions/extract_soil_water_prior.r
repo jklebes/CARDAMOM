@@ -8,7 +8,7 @@
 extract_soilwater_initial<- function(spatial_type,resolution,grid_type,latlon_in,soilwater_all) {
 
   # Update the user
-  print(paste("Initial soil water fraction extracted for current location ",Sys.time(),sep=""))
+  if (use_parallel == FALSE) {print(paste("Initial soil water fraction extracted for current location ",Sys.time(),sep=""))}
 
   # convert input data long to conform to what we need
   check1=which(soilwater_all$long > 180) ; if (length(check1) > 0) { soilwater_all$long[check1] = soilwater_all$long[check1]-360 }
@@ -55,7 +55,7 @@ extract_soilwater_initial<- function(spatial_type,resolution,grid_type,latlon_in
      # error checking
      if (is.na(soilwater) | soilwater == 0) {radius = radius+1 ; answer = NA} else {answer = 0}
   }
-  print(paste("NOTE: Initial soil water averaged over a pixel radius (i.e. centre + radius) of ",radius," points",sep=""))
+  if (use_parallel == FALSE) {print(paste("NOTE: Initial soil water averaged over a pixel radius (i.e. centre + radius) of ",radius," points",sep=""))}
 
   # restrict minimum uncertainty allowed to prevent errors
   # uncertainty provided is standard error averaged across 15 years of annual averages

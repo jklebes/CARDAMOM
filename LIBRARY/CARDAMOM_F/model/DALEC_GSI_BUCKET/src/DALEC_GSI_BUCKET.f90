@@ -860,33 +860,25 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! CARDAMOM
         Crootcr_part = pars(29)
 
-        ! Declare combustion efficiency (labile, foliar, roots, wood, litter, soil, woodlitter)
-        combust_eff(1) = 0.1d0 ; combust_eff(2) = 0.9d0
-        combust_eff(3) = 0.1d0 ; combust_eff(4) = 0.1d0
-        combust_eff(5) = 0.7d0 ; combust_eff(6) = 0.01d0
-        combust_eff(7) = 0.7d0
-        ! Resilience factor for non-combusted tissue
-        rfac = 0.5d0 ; rfac(5) = 0.1d0 ; rfac(6) = 0d0 ; rfac(7) = 0.1d0
+        ! JFE added 4 May 2018 - define fire constants
+        ! Update fire parameters derived from
+        ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
+        ! Subsequently expanded by T. L. Smallman & Mat Williams (UoE, 03/09/2021)
+        ! to provide specific CC for litter and wood litter.
+        ! NOTE: changes also result in the addition of further EDCs
+
+        ! Assign proposed resilience factor
+        rfac(1:4) = pars(41)
+        rfac(5) = 0.1d0 ; rfac(6) = 0d0 ; rfac(7) = 0.1d0
+        ! Assign combustion completeness to foliage
+        combust_eff(2) = pars(42) ! foliage
+        ! Assign combustion completeness to non-photosynthetic
+        combust_eff(1) = pars(43) ; combust_eff(3) = pars(43) ; combust_eff(4) = pars(43)
+        combust_eff(6) = pars(44) ! soil
+        ! derived values for litter and wood litter
+        combust_eff(5) = pars(45) ; combust_eff(7) = pars(46)
 
     end if ! disturbance ?
-
-    ! JFE added 4 May 2018 - define fire constants
-    ! Update fire parameters derived from
-    ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
-    ! Subsequently expanded by T. L. Smallman & Mat Williams (UoE, 03/09/2021)
-    ! to provide specific CC for litter and wood litter.
-    ! NOTE: changes also result in the addition of further EDCs
-
-    ! Assign proposed resilience factor
-    rfac(1:4) = pars(41)
-    rfac(5) = 0.1d0 ; rfac(6) = 0d0 ; rfac(7) = 0.1d0
-    ! Assign combustion completeness to foliage
-    combust_eff(2) = pars(42) ! foliage
-    ! Assign combustion completeness to non-photosynthetic
-    combust_eff(1) = pars(43) ; combust_eff(3) = pars(43) ; combust_eff(4) = pars(43)
-    combust_eff(6) = pars(44) ! soil
-    ! derived values for litter and wood litter
-    combust_eff(5) = pars(45) ; combust_eff(7) = pars(46)
 
     ! assigning initial conditions for the current iteration
     POOLS(1,1) = pars(18)
@@ -1297,18 +1289,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! should available labile be exhausted
        call calculate_leaf_dynamics(n,deltat,nodays        &
                                    ,pars(14),pars(16),pars(25)       &
-                                   ,Tfac_range_1,Photofac_range_1,VPDfac_range_1&
-                                   ,pars(3),pars(5),pars(12),pars(30),pars(31)  &
+                                   ,Tfac_range_1,Photofac_range_1    &
+                                   ,VPDfac_range_1,pars(5),pars(12)  &
                                    ,met(10,n),met(11,n),met(12,n),(minlwp-wSWP) &
                                    ,FLUXES(n,1),POOLS(n,2),pars(27)  &
                                    ,FLUXES(:,18),FLUXES(n,9),FLUXES(n,16))
-!       call calculate_leaf_dynamics(n,deltat,nodays        &
-!                                   ,pars(14),pars(16),pars(25)       &
-!                                   ,Tfac_range_1,Photofac_range_1    &
-!                                   ,VPDfac_range_1,pars(3),pars(5),pars(12)  &
-!                                   ,met(10,n),met(11,n),met(12,n),(minlwp-wSWP) &
-!                                   ,FLUXES(n,1),POOLS(n,2),pars(27)  &
-!                                   ,FLUXES(:,18),FLUXES(n,9),FLUXES(n,16))
 
        ! Total labile release to foliage
        FLUXES(n,8) = avail_labile*(1d0-(1d0-FLUXES(n,16))**deltat(n))*deltat_1(n)
@@ -3681,9 +3666,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   subroutine calculate_leaf_dynamics(current_step,deltat,nodays           &
                                     ,Tfac_min,Photofac_min,VPDfac_min     &
                                     ,Tfac_range_1,Photofac_range_1        &
-                                    ,VPDfac_range_1,base_leaf_fall        &
+                                    ,VPDfac_range_1                       &
                                     ,pot_leaf_fall,pot_leaf_growth        &
-                                    ,MM_fall_coef,MM_grow_coef            &
                                     ,mean_max_airt,mean_daylength,mean_vpd&
                                     ,deltaWP &
                                     ,GPP_current,foliage,gpp_crit_frac    &
@@ -3716,10 +3700,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                      ,Tfac_range_1 & !
                                  ,Photofac_range_1 & !
                                    ,VPDfac_range_1 & !
-                                   ,base_leaf_fall & !
                                     ,pot_leaf_fall & !
-                                     ,MM_fall_coef &
-                                     ,MM_grow_coef &
                                   ,pot_leaf_growth
 
     double precision, intent(inout) :: GSI(nodays) &
@@ -3758,11 +3739,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! photoperiod limitation
     Photofac = min(1d0,max(0d0,(mean_daylength-Photofac_min) * Photofac_range_1))
     ! VPD limitation (kPa)
-!    VPDfac = 1d0 - ((mean_VPD-VPDfac_min) * VPDfac_range_1)
-!    VPDfac = min(1d0,max(0d0,VPDfac))
-    VPDfac = min(1d0,max(0d0,(rSWP-VPDfac_min) * VPDfac_range_1))
-!    tmp = sum(soil_waterfrac(1:2)) * 0.5d0
-!    VPDfac = min(1d0,max(0d0,(tmp-VPDfac_min) * VPDfac_range_1))
+    VPDfac = 1d0 - ((mean_VPD-VPDfac_min) * VPDfac_range_1)
+    VPDfac = min(1d0,max(0d0,VPDfac))
 
     ! if this is a re-run we want to output these variables too
     if (allocated(itemp)) then
@@ -3778,24 +3756,24 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     gsi_lag = gsi_lag_remembered
 
     !!!
-    ! Estimate of change (i.e. gradient) in the GSI / NCE
+    ! Estimate of change (i.e. gradient) in the GSI
 
-    ! Determine GSI / NCE section to have linear regression applied to and
+    ! Determine GSI section to have linear regression applied to and
     ! determine the number of values, i.e. the interval
-!    if (current_step < gsi_lag) then
-!        if (current_step == 1) then
-!            gsi_history(2) = GSI(current_step)
-!            interval = 2
-!        else
-!            gsi_history(1:current_step) = GSI(1:current_step)
-!            interval = current_step
-!        endif
-!    else
-!        gsi_history(1:gsi_lag) = GSI((current_step-gsi_lag+1):current_step)
-!        interval = gsi_lag
-!    end if
-!    ! Now calculate the linear gradient
-!    gradient = linear_model_gradient(tmp_x(1:interval),gsi_history(1:interval),interval)
+    if (current_step < gsi_lag) then
+        if (current_step == 1) then
+            gsi_history(2) = GSI(current_step)
+            interval = 2
+        else
+            gsi_history(1:current_step) = GSI(1:current_step)
+            interval = current_step
+        endif
+    else
+        gsi_history(1:gsi_lag) = GSI((current_step-gsi_lag+1):current_step)
+        interval = gsi_lag
+    end if
+    ! Now calculate the linear gradient
+    gradient = linear_model_gradient(tmp_x(1:interval),gsi_history(1:interval),interval)
 
     ! store lag to keep fresh in memory - yes this is a hack to get around a
     ! memory problem
@@ -3807,11 +3785,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Can we grow? There must be labile, water pressure and gradient must be
     ! above that which leaf fall occurs
-    if (GSI(current_step) > 0d0 .and. deltaWP < 0d0 .and. avail_labile > vsmall) then
-!default    if (gradient > fol_turn_crit .and. GSI(current_step) > 0d0 .and. deltaWP < 0d0 .and. avail_labile > vsmall) then
+    if (gradient > fol_turn_crit .and. GSI(current_step) > 0d0 .and. deltaWP < 0d0 .and. avail_labile > vsmall) then
 
         ! Attempt growth - estimate labile turnover rate
-        leaf_growth = pot_leaf_growth*GSI(current_step)*(avail_labile / (avail_labile + MM_grow_coef))
+        leaf_growth = pot_leaf_growth*GSI(current_step)
 
         ! Convert labile turnover rate into new carbon to leaves
         tmp = avail_labile * &
@@ -3838,9 +3815,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! Estimate per gC investment return on GPP
         deltaGPP = (tmp - GPP_current) / C_invest
 
-        ! Apply a Michaelis-Menten based approach to limiting the actual turnover
-        ! to hedge against over allocating with low marginal returns
-        !leaf_growth = leaf_growth * max(0d0, deltaGPP / (gpp_crit_frac + deltaGPP))
         ! Is GPP return greater than a critical value, if not then no new leaf
         ! growth
         if (deltaGPP < gpp_crit_frac) leaf_growth = 0d0
@@ -3848,16 +3822,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     end if ! Can we grow
 
     ! Are we losing leaves?
-    if (GSI(current_step) < base_leaf_fall) then
-! alt1-4    if ((gradient < fol_turn_crit .and. GSI(current_step) < base_leaf_fall) .or. GSI(current_step) < vsmall) then
-! default   if (gradient < fol_turn_crit .or. GSI(current_step) < vsmall) then
+    if (gradient < fol_turn_crit .or. GSI(current_step) < vsmall) then
 
         ! The environment is decling therefore we lose some leaves
-        leaf_fall = pot_leaf_fall*(1d0-GSI(current_step))*(lai_save / (lai_save + MM_fall_coef))
+        leaf_fall = pot_leaf_fall*(1d0-GSI(current_step))
 
     end if ! gradient decline / zero GSI
-    ! If neither growing or turnover assume that some minimum turnover occurs
-    !if (leaf_fall == 0d0 .and. leaf_growth == 0d0) leaf_fall = base_leaf_fall
 
     ! restore original value back from memory
     lai = lai_save
@@ -4064,12 +4034,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !    end if
 
     ! Code with explicit min bound
-    if (current >= max_val .or. current <= min_val) then
-        opt_max_scaling = 0d0
-    else
-        opt_max_scaling = exp( kurtosis * log((max_val-current)/(max_val-optimum)) * (max_val-optimum) ) &
-                        * exp( kurtosis * log((current-min_val)/(optimum-min_val)) * (optimum-min_val) )
-    endif
+    opt_max_scaling = exp( kurtosis * log((max_val-current)/(max_val-optimum)) * (max_val-optimum) ) &
+                    * exp( kurtosis * log((current-min_val)/(optimum-min_val)) * (optimum-min_val) )
+    ! Sanity check, allows for overlapping parameter ranges
+    if (opt_max_scaling /= opt_max_scaling) opt_max_scaling = 0d0
 
   end function opt_max_scaling
   !

@@ -32,6 +32,7 @@ module CARBON_MODEL_MOD
            ,gs_total_canopy        &
            ,gb_total_canopy        &
            ,canopy_par_MJday_time  &
+           ,snow_storage_time&
            ,soil_frac_clay   &
            ,soil_frac_sand   &
            ,nos_soil_layers  &
@@ -283,6 +284,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                             rainfall_time, &
                                                 cica_time, & ! Internal vs ambient CO2 concentrations
                                           root_depth_time, &
+                                        snow_storage_time, &
                                                 rSWP_time, & ! Soil water potential weighted by access water
                                                 wSWP_time    ! Soil water potential weighted by supply of water
 
@@ -471,6 +473,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Set some initial states
     infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0
     intercepted_rainfall = 0d0 ; canopy_storage = 0d0 ; snow_storage = 0d0
+    transpiration = 0d0 ; soilevaporation = 0d0 ; wetcanopy_evap = 0d0
 
     ! load ACM-GPP-ET parameters
     deltaWP = minlwp     ! leafWP-soilWP (i.e. -2-0)
@@ -497,7 +500,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         allocate(deltat_1(nodays),wSWP_time(nodays),rSWP_time(nodays),gs_demand_supply_ratio(nodays), &
                  gs_total_canopy(nodays),gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
                  daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
-                 rainfall_time(nodays),cica_time(nodays),root_depth_time(nodays))
+                 rainfall_time(nodays),cica_time(nodays),root_depth_time(nodays),snow_storage_time(nodays))
 
         !
         ! Timing variables which are needed first
@@ -758,7 +761,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     call calculate_Rtot
     ! Used to initialise soils
 
-    call calculate_update_soil_water(0d0,0d0,0d0,FLUXES(1,29)) ! assume no evap or rainfall
+    call calculate_update_soil_water(transpiration,soilevaporation,0d0,FLUXES(1,29)) ! assume no evap or rainfall
     ! Reset variable used to track ratio of water supply used to meet demand
     gs_demand_supply_ratio = 0d0
 
@@ -830,6 +833,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        else
            snowfall = 0d0 ; snow_melt = 0d0
        end if
+       snow_storage_time(n) = snow_storage
 
        !!!!!!!!!!
        ! Calculate surface exchange coefficients
@@ -989,6 +993,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,29) = FLUXES(n,29) + wetcanopy_evap
        ! store soil water content of the surface zone (mm)
        POOLS(n+1,7) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
+       ! Assign all water variables to output variables (kgH2O/m2/day)
+       FLUXES(n,41) =  transpiration   ! transpiration
+       FLUXES(n,42) =  soilevaporation ! soil evaporation
+       FLUXES(n,43) =  wetcanopy_evap  ! wet canopy evaporation
+       FLUXES(n,44) =  runoff
+       FLUXES(n,45) =  underflow
 
        !!!!!!!!!!
        ! Extract biomass - e.g. deforestation / degradation
@@ -2448,9 +2458,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     implicit none
 
     ! arguments
-    double precision, intent(in) :: ET_leaf,ET_soil & ! evapotranspiration estimate (kgH2O.m-2.day-1)
-                                       ,rainfall_in   ! rainfall (kgH2O.m-2.day-1)
-    double precision, intent(out) :: corrected_ET     ! water balance corrected evapotranspiration (kgH2O/m2/day)
+    double precision, intent(in) :: rainfall_in   ! rainfall (kgH2O.m-2.day-1)
+    double precision, intent(inout) :: ET_leaf,ET_soil ! evapotranspiration estimate (kgH2O.m-2.day-1)
+    double precision, intent(out) :: corrected_ET      ! water balance corrected evapotranspiration (kgH2O/m2/day)
 
     ! local variables
     integer :: day, a
@@ -2687,6 +2697,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! finally update soil water potential
     call soil_water_potential
+
+    ! Based on the soil mass balance corrected_ET, make assumptions to correct ET_leaf and ET_soil
+    balance = corrected_ET / (ET_leaf + ET_soil)
+    if (balance == balance) then
+        ET_leaf = ET_leaf * balance ; ET_soil = ET_soil * balance
+    end if
 
 !    ! check water balance
 !    balance = (rainfall_in - corrected_ET - underflow - runoff) * days_per_step
@@ -3250,12 +3266,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !    end if
 
     ! Code with explicit min bound
-    if (current >= max_val .or. current <= min_val) then
-        opt_max_scaling = 0d0
-    else
-        opt_max_scaling = exp( kurtosis * log((max_val-current)/(max_val-optimum)) * (max_val-optimum) ) &
-                        * exp( kurtosis * log((current-min_val)/(optimum-min_val)) * (optimum-min_val) )
-    endif
+    opt_max_scaling = exp( kurtosis * log((max_val-current)/(max_val-optimum)) * (max_val-optimum) ) &
+                    * exp( kurtosis * log((current-min_val)/(optimum-min_val)) * (optimum-min_val) )
+    ! Sanity check, allows for overlapping parameter ranges
+    if (opt_max_scaling /= opt_max_scaling) opt_max_scaling = 0d0
 
   end function opt_max_scaling
   !

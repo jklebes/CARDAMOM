@@ -11,7 +11,7 @@ extract_Csom_prior<-function(i1,j1,spatial_type,resolution,grid_type,
   # extract information on soil C content from soil grids database
 
   # Update the user
-  print(paste("Csom prior data extracted for current location ",Sys.time(),sep=""))
+  if (use_parallel == FALSE) {print(paste("Csom prior data extracted for current location ",Sys.time(),sep=""))}
 
 #  # find desired lat / long location within the soilgrid database
 #  output = closest2d_2(1,Csom_all$lat,Csom_all$long,latlon_wanted[1],latlon_wanted[2])

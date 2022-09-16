@@ -189,9 +189,9 @@ module model_likelihood_module
 
     ! assess post running EDCs
     call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                     ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                     ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                     ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+                    ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                    ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                    ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
     ! calculate the likelihood
     tot_exp = sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))
@@ -262,9 +262,9 @@ module model_likelihood_module
 
         ! check edc2
         call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                     ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                     ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                     ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+                        ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+                        ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                        ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -439,8 +439,8 @@ module model_likelihood_module
   !------------------------------------------------------------------
   !
   subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodays,deltat &
-                      ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
-                      ,meantemp,EDC2)
+                        ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
+                        ,meantemp,EDC2)
 
     use cardamom_structures, only: DATAin
     use CARBON_MODEL_MOD, only: Rg_from_labile, Rm_from_labile, &
@@ -511,7 +511,7 @@ module model_likelihood_module
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                    etol = 0.20d0 !0.10d0 !0.05d0
+                                    etol = 0.05d0 ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
 
     ! update initial values
     DIAG = EDCD%DIAG
@@ -530,12 +530,12 @@ module model_likelihood_module
     no_years = nint(sum(deltat)/365.25d0)
     ! number of time steps per year
     steps_per_year = nodays/no_years
-    ! number of time steps per month
-    steps_per_month = ceiling(dble(steps_per_year) / 12d0)
+    ! number of time steps per month, 1/12 = 0.08333333
+    steps_per_month = ceiling(dble(steps_per_year) * 0.08333333d0)
 
     ! Determine the mean January pool sizes
     jan_mean_pools = 0d0 ; jan_first_pools = 0d0 ! reset before averaging
-    do n = 1, nopools-1
+    do n = 1, nopools
       jan_first_pools(n) = sum(M_POOLS(1:steps_per_month,n)) / dble(steps_per_month)
       do y = 1, no_years
          nn = 1 + (steps_per_year * (y - 1)) ; nnn = nn + (steps_per_month - 1)
@@ -543,13 +543,6 @@ module model_likelihood_module
       end do
       jan_mean_pools(n) = jan_mean_pools(n) / dble(steps_per_month*no_years)
     end do
-    ! Bespoke call for lit wood
-    jan_first_pools(8) = sum(M_POOLS(1:steps_per_month,8)) / dble(steps_per_month)
-    do y = 1, no_years
-       nn = 1 + (steps_per_year * (y - 1)) ; nnn = nn + (steps_per_month - 1)
-       jan_mean_pools(8) = jan_mean_pools(8) + sum(M_POOLS(nn:nnn,8))
-    end do
-    jan_mean_pools(8) = jan_mean_pools(8) / dble(steps_per_month*no_years)
 
     !!!!!!!!!!!!
     ! calculate photosynthate / NPP allocations
@@ -708,11 +701,11 @@ module model_likelihood_module
     Fin_yr2(4)  = FT_yr2(7)
     Fout_yr2(4) = FT_yr2(11)+FT_yr2(21)+FT_yr2(27)+FT_yr2(37)+FT_yr2(44)
     ! litter
-    Fin(5)  = FT(10)+FT(12)+FT(24)+FT(25)+FT(26)
+    Fin(5)  = FT(10)+FT(12)+FT(24)+FT(25)+FT(26)+FT(41)+FT(42)+FT(43)
     Fout(5) = FT(13)+FT(15)+FT(22)+FT(28)+FT(38)
-    Fin_yr1(5)  = FT_yr1(10)+FT_yr1(12)+FT_yr1(24)+FT_yr1(25)+FT_yr1(26)
+    Fin_yr1(5)  = FT_yr1(10)+FT_yr1(12)+FT_yr1(24)+FT_yr1(25)+FT_yr1(26)+FT_yr1(41)+FT_yr1(42)+FT_yr1(43)
     Fout_yr1(5) = FT_yr1(13)+FT_yr1(15)+FT_yr1(22)+FT_yr1(28)+FT_yr1(38)
-    Fin_yr2(5)  = FT_yr2(10)+FT_yr2(12)+FT_yr2(24)+FT_yr2(25)+FT_yr2(26)
+    Fin_yr2(5)  = FT_yr2(10)+FT_yr2(12)+FT_yr2(24)+FT_yr2(25)+FT_yr2(26)+FT_yr2(41)+FT_yr2(42)+FT_yr2(43)
     Fout_yr2(5) = FT_yr2(13)+FT_yr2(15)+FT_yr2(22)+FT_yr2(28)+FT_yr2(38)
     ! som
     Fin(6)  = FT(15)+FT(27)+FT(28)+FT(31)+FT(33)
@@ -723,11 +716,11 @@ module model_likelihood_module
     Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)+FT_yr2(40)
 
     ! litwood
-    Fin(8)  = FT(11)
+    Fin(8)  = FT(11)+FT(44)
     Fout(8) = FT(30)+FT(31)+FT(32)+FT(33)+FT(39)
-    Fin_yr1(8)  = FT_yr1(11)
+    Fin_yr1(8)  = FT_yr1(11)+FT_yr1(44)
     Fout_yr1(8) = FT_yr1(30)+FT_yr1(31)+FT_yr1(32)+FT_yr1(33)+FT_yr1(39)
-    Fin_yr2(8)  = FT_yr2(11)
+    Fin_yr2(8)  = FT_yr2(11)+FT_yr2(44)
     Fout_yr2(8) = FT_yr2(30)+FT_yr2(31)+FT_yr2(32)+FT_yr2(33)+FT_yr2(39)
 
     ! Iterate through C pools to determine whether they have their ratio of

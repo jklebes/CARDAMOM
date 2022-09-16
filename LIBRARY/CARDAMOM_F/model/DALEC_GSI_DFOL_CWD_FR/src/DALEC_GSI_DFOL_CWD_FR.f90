@@ -115,20 +115,19 @@ module CARBON_MODEL_MOD
            ,fire_litter_roots               &
            ,fire_litter_wood                &
            ,fire_litter_litter              &
-           ,fire_litter_litwood             &
+           ,fire_litter_woodlitter             &
            ,fire_litter_som                 &
            ,fire_emiss_labile              &
            ,fire_emiss_foliar              &
            ,fire_emiss_roots               &
            ,fire_emiss_wood                &
            ,fire_emiss_litter              &
-           ,fire_emiss_litwood             &
+           ,fire_emiss_woodlitter             &
            ,fire_emiss_som                 &
            ,fire_residue_to_litter    &
-           ,fire_residue_to_litwood   &
+           ,fire_residue_to_woodlitter   &
            ,fire_residue_to_som       &
            ,itemp,ivpd,iphoto&
-           ,extracted_C      &
            ,dim_1,dim_2      &
            ,nos_trees        &
            ,nos_inputs       &
@@ -286,7 +285,7 @@ module CARBON_MODEL_MOD
                      ,fol_turn_crit
 
   double precision, allocatable, dimension(:) :: Rg_from_labile,                &
-                                  extracted_C,itemp,ivpd,iphoto, &
+                                              itemp,ivpd,iphoto, &
                                          gs_demand_supply_ratio, & ! actual:potential stomatal conductance
                                                 gs_total_canopy, & ! stomatal conductance (mmolH2O/m2ground/day)
                                                 gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/day)
@@ -515,7 +514,6 @@ contains
     ! 5 = litter (fol + fine root) (p22)
     ! 6 = som         (p23)
     ! 7 = wood litter (p37)
-    ! 8 = soil water content (currently assumed to field capacity)
 
     ! p(30) = labile replanting
     ! p(31) = foliar replanting
@@ -2581,12 +2579,10 @@ contains
 !    end if
 
     ! Code with explicit min bound
-    if (current >= max_val .or. current <= min_val) then
-        opt_max_scaling = 0d0
-    else
-        opt_max_scaling = exp( kurtosis * log((max_val-current)/(max_val-optimum)) * (max_val-optimum) ) &
-                        * exp( kurtosis * log((current-min_val)/(optimum-min_val)) * (optimum-min_val) )
-    endif
+    opt_max_scaling = exp( kurtosis * log((max_val-current)/(max_val-optimum)) * (max_val-optimum) ) &
+                    * exp( kurtosis * log((current-min_val)/(optimum-min_val)) * (optimum-min_val) )
+    ! Sanity check, allows for overlapping parameter ranges
+    if (opt_max_scaling /= opt_max_scaling) opt_max_scaling = 0d0
 
   end function opt_max_scaling
   !
