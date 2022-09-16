@@ -316,6 +316,73 @@ load_initial_biomass_maps_for_extraction<-function(latlon_in,Cwood_initial_sourc
         return(list(lat = lat, long = long,
                     biomass_gCm2 = biomass_gCm2, biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2))
 
+    } else if (Cwood_initial_source == "Rainfor") {
+
+        # this is a very bespoke modification so leave it here to avoid getting lost
+        print("Loading UoL Rainfor AGB...")
+
+        # Read in estimate and uncertainty rasters
+        # NOTE: this data assimilates total biomass
+        biomass_gCm2 = raster(paste(path_to_Cwood_initial,"wood_biomass_gCm2.tif", sep=""))
+        biomass_uncertainty_gCm2 = raster(paste(path_to_Cwood_initial,"unc_wood_biomass_gCm2.tif", sep=""))
+
+        # Create raster with the target crs
+        target = raster(crs = ("+init=epsg:4326"), ext = extent(biomass_gCm2), resolution = res(biomass_gCm2))
+        # Check whether the target and actual analyses have the same CRS
+        if (compareCRS(biomass_gCm2,target) == FALSE) {
+            # Resample to correct grid
+            biomass_gCm2 = resample(biomass_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
+            biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
+        }
+        # Extend the extent of the overall grid to the analysis domain
+        biomass_gCm2 = extend(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = extend(biomass_uncertainty_gCm2,cardamom_ext)
+        # Trim the extent of the overall grid to the analysis domain
+        biomass_gCm2 = crop(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = crop(biomass_uncertainty_gCm2,cardamom_ext)
+        # now remove the ones that are actual missing data
+        biomass_gCm2[which(as.vector(biomass_gCm2) < 0)] = NA
+        biomass_uncertainty_gCm2[which(as.vector(biomass_uncertainty_gCm2) < 0)] = NA
+        # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
+        # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+        if (spatial_type == "grid") {
+            if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
+
+                # Create raster with the target resolution
+                target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+
+                # Resample to correct grid
+                biomass_gCm2 = resample(biomass_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
+                biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
+
+            } # Aggrgeate to resolution
+        } # spatial_type == "grid"
+
+        # extract dimension information for the grid, note the axis switching between raster and actual array
+        xdim = dim(biomass_gCm2)[2] ; ydim = dim(biomass_gCm2)[1]
+        # extract the lat / long information needed
+        long = coordinates(biomass_gCm2)[,1] ; lat = coordinates(biomass_gCm2)[,2]
+        # restructure into correct orientation
+        long = array(long, dim=c(xdim,ydim))
+        lat = array(lat, dim=c(xdim,ydim))
+        # break out from the rasters into arrays which we can manipulate
+        biomass_gCm2 = array(as.vector(unlist(biomass_gCm2)), dim=c(xdim,ydim))
+        biomass_uncertainty_gCm2 = array(as.vector(unlist(biomass_uncertainty_gCm2)), dim=c(xdim,ydim))
+
+        # # Convert gC/m2 -> Mg/ha needed for Saatchi et al (2011)
+        # biomass_gCm2 = biomass_gCm2 * 2.083333 * 1e-2
+        # biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 * 2.083333 * 1e-2
+        # # Use allometry to estimate below ground biomass stock and
+        # # combined with the above ground (Mg/ha) to give a total woody biomass estimate
+        # # Saatchi et al., (2011), PNAS, 108, 9899-9904, https://www.pnas.org/content/108/24/9899
+        # biomass_gCm2 = biomass_gCm2 + (0.489 * biomass_gCm2 ** 0.89)
+        # biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 + (0.489 * biomass_uncertainty_gCm2 ** 0.89)
+        # # Now back to desired units gC/m2
+        # biomass_gCm2 = biomass_gCm2 * 0.48 * 1e2
+        # biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 * 0.48 * 1e2
+
+        # Output variables
+        return(list(lat = lat, long = long,
+                    biomass_gCm2 = biomass_gCm2, biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2))
+
     } else {
          # Output variables
          return(list(lat = -9999, long = -9999,
