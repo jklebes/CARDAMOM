@@ -52,9 +52,11 @@ program cardamom_framework
  implicit none
 
  ! declare local variables
- character(350) :: infile, outfile, solution_wanted_char, freq_print_char, freq_write_char
- integer :: solution_wanted, freq_print, freq_write, time1, time2, time3, n, nOUT_save
- logical :: do_inflate
+ character(350) :: infile, outfile, solution_wanted_char, freq_print_char, &
+                   freq_write_char, do_inflate_char
+ integer :: solution_wanted, freq_print, freq_write, time1, time2, time3, n, &
+            nOUT_save, do_inflate_dble
+ logical :: do_inflate = .false.
 
  ! user update
  write(*,*)"Beginning read of the command line"
@@ -65,6 +67,7 @@ program cardamom_framework
  call get_command_argument(3 ,solution_wanted_char)
  call get_command_argument(4 ,freq_print_char)
  call get_command_argument(5 ,freq_write_char)
+ call get_command_argument(6 ,do_inflate_char)
 
  ! now convert relevant ones to integeter
  ! Note: that I10 is the maximum allowed with the default integer kind (kind = 4).
@@ -72,6 +75,10 @@ program cardamom_framework
  read(solution_wanted_char,'(I10)') solution_wanted
  read(freq_print_char,'(I10)') freq_print
  read(freq_write_char,'(I10)') freq_write
+ read(do_inflate_char,'(I10)') do_inflate_dble
+
+ ! Assign inflate logical condition
+ if (do_inflate_dble == 1) do_inflate = .true.
 
  ! user update
  write(*,*)"Command line options read, moving on now"
@@ -138,7 +145,6 @@ program cardamom_framework
      ! number of observations
      ! This process allows for very bad starting points to more easily move
      ! towards the general area of the observatons.
-     do_inflate = .true.
      if (MCOUT%nos_iterations < (MCO%nOUT*MCO%sub_fraction) .and. do_inflate) then
 
          ! Having found an EDC compliant parameter vector, we want to do a MCMC
@@ -244,7 +250,6 @@ program cardamom_framework
 
      ! Do we do the initial MCMC period where we normalise the likelihood by number of observations
      ! This process allows for very bad starting points to more easily move towards the general area of the observatons.
-     do_inflate = .true.
      if (DATAin%total_obs > 0 .and. MCOUT%nos_iterations < (MCO%nOUT*MCO%sub_fraction) .and. do_inflate) then
 
          ! Having found an EDC compliant parameter vector, we want to do a MCMC

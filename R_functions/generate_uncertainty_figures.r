@@ -41,7 +41,8 @@ generate_uncertainty_figures<-function(PROJECT) {
 	     # load R libraries in cluster
 	     clusterExport(cl,c("load_r_libraries","rmse","have_chains_converged",
                           "read_parameter_chains","plotconfidence","psrf",
-                          "uncertainty_figures","plot_parameters"))
+                          "uncertainty_figures","plot_parameters",
+                          "use_parallel"))
 	     clusterEvalQ(cl, load_r_libraries())
 	     dummy = parLapply(cl,1:PROJECT$nosites,fun=single_site_plotting_control,PROJECT=PROJECT)
 	     stopCluster(cl)

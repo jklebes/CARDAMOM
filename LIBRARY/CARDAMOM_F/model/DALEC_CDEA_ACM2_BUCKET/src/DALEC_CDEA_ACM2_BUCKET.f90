@@ -1182,7 +1182,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     implicit none
 
     ! Declare local variables
-    double precision :: a, b, c, Pl_max
+    double precision :: a, b, c, Pl_max, PAR_m2
     double precision, parameter :: theta = 0.7 ! curvature parameter of light response
 
     !
@@ -1203,9 +1203,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Pmax = maximum light limited photosynthesis
     ! e0 in this case would be the quantum yield at light compensation, expected ~5.13
     ! directly matches vj calculation from Farquhar model.
-    Pl_max = lai * exp((log(ceff)*0.750d0)+1.677d0) ! Jmax calculation in gC/m2/day
-    a = theta ; b = -(e0*canopy_par_MJday+Pl_max) ; c = e0*canopy_par_MJday*Pl_max
-    light_limited_photosynthesis = (-b - sqrt(b**2 - (4*a*c))) / (2*a)
+    Pl_max = exp((log(ceff)*0.750d0)+1.677d0) ! Jmax calculation in gC/m2/day
+    PAR_m2 = canopy_par_MJday * lai_1
+    a = theta ; b = -(e0*PAR_m2+Pl_max) ; c = e0*PAR_m2*Pl_max
+    light_limited_photosynthesis = lai * ((-b - sqrt(b**2d0 - (4d0*a*c))) / (2d0*a))
+    ! Could we in theory take the minimum of metabolic_limited_photosynthesis and
+    ! light_limited_photosynthesis to then apply with the CO2 limitation?
 
     !
     ! Stomatal conductance independent variables for diffusion limited
