@@ -321,7 +321,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
               } # was the obs assimilated?
 
               ## Soil (gC/m2)
-              obs_id = 15 ; unc_id = obs_id+1
+              obs_id = 19 ; unc_id = obs_id+1
               # If there is a prior assign it to the first timestep of the observation timeseries
               if (drivers$parpriors[23] > 0) { drivers$obs[1,obs_id] = drivers$parpriors[23] ; drivers$obs[1,unc_id] = drivers$parpriorunc[23] }
               if (length(which(drivers$obs[,obs_id] != -9999)) > 0 & length(which(drivers$obs[,unc_id] != -9999)) > 0) {
@@ -333,7 +333,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                            obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
                            obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
                            # Create list object containing each observations distributions
-                           hist_list = list(o = c(obs_min,obs_max), m = states_all$soil_gCm2[,t])
+                           hist_list = list(o = c(obs_min,obs_max), m = states_all$som_gCm2[,t])
                            # Estimate average model ensemble within observated range
                            tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
                            states_all$soil_assim_data_overlap_fraction = states_all$soil_assim_data_overlap_fraction + tmp2
@@ -1670,13 +1670,6 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
   # now request the creation of the plots
   if (use_parallel & length(nos_plots) > 1) {
       print("...beginning parallel operations")
-#      cl <- makeCluster(min(length(nos_plots),numWorkers), type = "PSOCK")
-#      clusterExport(cl,functions_list)
-#      # load R libraries in cluster
-#      clusterExport(cl,"load_r_libraries") ; clusterEvalQ(cl, load_r_libraries())
-#      dummy = parLapply(cl,nos_plots,fun=run_each_site,PROJECT=PROJECT,stage=stage,
-#                        repair=repair,grid_override=grid_override)
-#      stopCluster(cl)
       # NOTE: that the use of mclapply() is due to reported improved efficiency over creating a virtual cluster.
       # However, mclapply does not (at the time of typing) work on Windows, i.e. Linux and Mac only
       cl <- min(length(nos_plots),numWorkers)
@@ -1687,7 +1680,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
       print("...beginning serial operations")
       # or use serial
       dummy = lapply(nos_plots,FUN=run_each_site,PROJECT=PROJECT,stage=stage,
-                   repair=repair,grid_override=grid_override)
+                     repair=repair,grid_override=grid_override)
       print("...finished serial operations")
   } # parallel option
 
@@ -1722,6 +1715,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           # make a list of all the files we will be reading in
           to_do = list.files(PROJECT$results_processedpath, full.names=TRUE)
           to_do = to_do[grepl("_stock_fluxes",to_do)]
+
           # read in the first file so that we can then set up all the grids for combined summary output
           load(to_do[1])
 

@@ -134,7 +134,7 @@ module CARBON_MODEL_MOD
                    pn_opt_temp = 30d0,          & ! Optimum daily max temperature for photosynthesis (oC)
                    pn_kurtosis = 0.07d0,        & ! Kurtosis of photosynthesis temperature response
 !                            e0 = 3.661204d+00,  & ! Quantum yield (gC/MJ/m2/day PAR)
-                            e0 = 5.13d0,        & ! Quantum yield at light compensation (gC/MJ/m2/day PAR)
+                            e0 = 0.385d0,       & ! Quantum yield at light compensation (umolE/J PAR)
                 minlwp_default =-1.808224d+00,  & ! minimum leaf water potential (MPa)
       soil_iso_to_net_coef_LAI =-2.717467d+00,  & ! Coefficient relating soil isothermal net radiation to net.
                           iWUE = 6.431150d-06,  & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
@@ -1183,7 +1183,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Declare local variables
     double precision :: a, b, c, Pl_max, PAR_m2
-    double precision, parameter :: theta = 0.7 ! curvature parameter of light response
+    double precision, parameter :: theta = 0.7, & ! curvature parameter of light response
+                           ppfd_to_par = 4.6d0    ! Conversion of umolPAR -> J
 
     !
     ! Metabolic limited photosynthesis
@@ -1201,12 +1202,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! calculate light limted rate of photosynthesis (gC.m-2.day-1)
     !light_limited_photosynthesis = e0 * canopy_par_MJday
     ! Pmax = maximum light limited photosynthesis
-    ! e0 in this case would be the quantum yield at light compensation, expected ~5.13
+    ! e0 in this case would be the quantum yield at light compensation
     ! directly matches vj calculation from Farquhar model.
-    Pl_max = exp((log(ceff)*0.750d0)+1.677d0) ! Jmax calculation in gC/m2/day
-    PAR_m2 = canopy_par_MJday * lai_1
+    ! Alternate, if ceff umol/m2/s exp(log(ceff) * 0.750 + 1.677) Walker et al., (2014), Ecology and Evolution 4(16): 3218–3235
+    Pl_max = gC_to_umol*ceff*1.65 ! Jmax calculation in umolE/umolPAR
+    PAR_m2 = canopy_par_MJday * lai_1 * ppfd_to_par * 1d6 ! Convert to umolPAR
     a = theta ; b = -(e0*PAR_m2+Pl_max) ; c = e0*PAR_m2*Pl_max
     light_limited_photosynthesis = lai * ((-b - sqrt(b**2d0 - (4d0*a*c))) / (2d0*a))
+
     ! Could we in theory take the minimum of metabolic_limited_photosynthesis and
     ! light_limited_photosynthesis to then apply with the CO2 limitation?
 
@@ -1247,11 +1250,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, intent(in) :: gs
 
     ! declare local variables
-    double precision :: pp, qq, mult, rc, pd
+    double precision :: pp, qq, mult, rc, pd, pl
 
     !
     ! Diffusion limited photosynthesis
     !
+
+    ! Estimation of ci is based on the assumption that metabilic limited
+    ! photosynthesis is equal to diffusion limited. For details
+    ! see Williams et al, (1997), Ecological Applications,7(3), 1997, pp. 882–894
 
     ! Daily canopy conductance (mmolH2O.m-2.s-1-> molCO2.m-2.day-1)
     ! The ratio of H20:CO2 diffusion is 1.646259 (Jones appendix 2).
@@ -1277,8 +1284,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Estimate CO2 and light co-limitation
     !
 
-    ! calculate combined light and CO2 limited photosynthesis
-    acm_gpp_stage_2 = light_limited_photosynthesis*pd/(light_limited_photosynthesis+pd)
+    ! Update rate of electron transport into light limited CO2 uptake
+    ! NOTE that at this point temperature limitation has not been applied to
+    ! light limited
+    pl = umol_to_gC * &
+        (light_limited_photosynthesis * ci / (4.5d0 * ci + 10.5d0 * co2_comp_point))
+
+    ! Calculate combined light and CO2 and metabolic limited photosynthesis
+    acm_gpp_stage_2 = pl*pd/(pl+pd)
+!    acm_gpp_stage_2 = light_limited_photosynthesis*pd/(light_limited_photosynthesis+pd)
 
     ! sanity check
     if (acm_gpp_stage_2 /= acm_gpp_stage_2 .or. acm_gpp_stage_2 < 0d0) acm_gpp_stage_2 = 0d0
