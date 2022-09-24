@@ -298,6 +298,9 @@ cardamom <-function (projname,model,method,stage) {
           Cwood_mortality_all = load_wood_mortality_maps_for_extraction(Cwood_mortality_source,cardamom_ext,PROJECT$spatial_type,latlon,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
       } # # if (PROJECT$model$name != "ACM")
 
+      # Update user
+      print("Loading completed, beginning writing out file write out")
+
       if (use_parallel) {
           # Create function needed to process the site specific creation
           write_bin_files<-function(n) {

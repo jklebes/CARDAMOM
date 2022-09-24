@@ -462,7 +462,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
               save(parameters,drivers,states_all,site_ctessel_pft,file=outfile_site, compress="gzip", compression_level = 9)
           } else {
               # ...otherwise this is a grid and we want straight forward reduced dataset of common stocks and fluxes
-              num_quantiles = c(0.025,0.05,0.25,0.5,0.75,0.95,0.975) ; num_quantiles_agg = seq(0.0,1, length = 100)
+              num_quantiles = c(0.025,0.05,0.25,0.5,0.75,0.95,0.975) #; num_quantiles_agg = seq(0.0,1, length = 100)
               na_flag = TRUE
 
               ## Determine some useful information for the analysis below
@@ -657,9 +657,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   site_output$assimilated_wood_mean_gCm2 = mean(site_output$assimilated_wood_mean_gCm2[-1], na.rm = na_flag)
                   site_output$assimilated_wood_mean_unc_gCm2 = mean(site_output$assimilated_wood_mean_unc_gCm2[-1], na.rm = na_flag)
               } else {
-                 # assign missing value flag for consistency
-                 site_output$assimilated_wood_mean_gCm2 = NA
-                 site_output$assimilated_wood_mean_unc_gCm2 = NA
+                  # assign missing value flag for consistency
+                  site_output$assimilated_wood_mean_gCm2 = NA
+                  site_output$assimilated_wood_mean_unc_gCm2 = NA
               } # wood stock or prior information was assimilated
               # Assimilated som stock / prior information
               # Do we have one or both som stock prior and time series inforamtion
@@ -687,9 +687,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   site_output$assimilated_som_mean_gCm2 = mean(site_output$assimilated_som_mean_gCm2[-1], na.rm = na_flag)
                   site_output$assimilated_som_mean_unc_gCm2 = mean(site_output$assimilated_som_mean_unc_gCm2[-1], na.rm = na_flag)
               } else {
-                 # assign missing value flag for consistency
-                 site_output$assimilated_som_mean_gCm2 = NA
-                 site_output$assimilated_som_mean_unc_gCm2 = NA
+                  # assign missing value flag for consistency
+                  site_output$assimilated_som_mean_gCm2 = NA
+                  site_output$assimilated_som_mean_unc_gCm2 = NA
               } # som stock or prior information was assimilated
 
               ###
@@ -836,12 +836,13 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                                                           / (apply(site_output$outflux_labile_gCm2day,1, rollapply_mean_annual, step = steps_per_year) * 365.25) )
                   site_output$MTT_annual_labile_years = apply(site_output$MTT_annual_labile_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   # Convert to fractions
-                  site_output$NaturalFractionOfTurnover_labile = quantile(apply(site_output$NaturalFractionOfTurnover_labile,1,mean, na.rm = na_flag) /
-                                                                          apply(site_output$outflux_labile_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$FireFractionOfTurnover_labile = quantile(apply(site_output$FireFractionOfTurnover_labile,1,mean, na.rm = na_flag) /
-                                                                       apply(site_output$outflux_labile_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$HarvestFractionOfTurnover_labile = quantile(apply(site_output$HarvestFractionOfTurnover_labile,1,mean, na.rm = na_flag) /
-                                                                          apply(site_output$outflux_labile_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
+                  tmp = apply(site_output$outflux_labile_gCm2day,1,mean, na.rm = na_flag)
+                  site_output$NaturalFractionOfTurnover_labile = quantile(apply(site_output$NaturalFractionOfTurnover_labile,1,mean, na.rm = na_flag) / tmp,
+                                                                          prob = num_quantiles, na.rm = na_flag)
+                  site_output$FireFractionOfTurnover_labile = quantile(apply(site_output$FireFractionOfTurnover_labile,1,mean, na.rm = na_flag) / tmp,
+                                                                       prob = num_quantiles, na.rm = na_flag)
+                  site_output$HarvestFractionOfTurnover_labile = quantile(apply(site_output$HarvestFractionOfTurnover_labile,1,mean, na.rm = na_flag) / tmp,
+                                                                          prob = num_quantiles, na.rm = na_flag)
                   # Mean outflux from labile
                   site_output$mean_outflux_labile_gCm2day = quantile(apply(site_output$outflux_labile_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   site_output$mean_combined_labile_to_litter_gCm2day = quantile(apply(site_output$combined_labile_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
@@ -919,12 +920,13 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                                                           / (apply(site_output$outflux_foliage_gCm2day,1, rollapply_mean_annual, step = steps_per_year) * 365.25) )
                   site_output$MTT_annual_foliage_years = apply(site_output$MTT_annual_foliage_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   # Convert to fractions
-                  site_output$NaturalFractionOfTurnover_foliage = quantile(apply(site_output$NaturalFractionOfTurnover_foliage,1,mean, na.rm = na_flag) /
-                                                                           apply(site_output$outflux_foliage_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$FireFractionOfTurnover_foliage = quantile(apply(site_output$FireFractionOfTurnover_foliage,1,mean, na.rm = na_flag) /
-                                                                        apply(site_output$outflux_foliage_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$HarvestFractionOfTurnover_foliage = quantile(apply(site_output$HarvestFractionOfTurnover_foliage,1,mean, na.rm = na_flag) /
-                                                                           apply(site_output$outflux_foliage_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
+                  tmp = apply(site_output$outflux_foliage_gCm2day,1,mean, na.rm = na_flag)
+                  site_output$NaturalFractionOfTurnover_foliage = quantile(apply(site_output$NaturalFractionOfTurnover_foliage,1,mean, na.rm = na_flag) / tmp,
+                                                                           prob = num_quantiles, na.rm = na_flag)
+                  site_output$FireFractionOfTurnover_foliage = quantile(apply(site_output$FireFractionOfTurnover_foliage,1,mean, na.rm = na_flag) / tmp,
+                                                                        prob = num_quantiles, na.rm = na_flag)
+                  site_output$HarvestFractionOfTurnover_foliage = quantile(apply(site_output$HarvestFractionOfTurnover_foliage,1,mean, na.rm = na_flag) / tmp,
+                                                                           prob = num_quantiles, na.rm = na_flag)
                   # Mean outflux from foliage
                   site_output$mean_outflux_foliage_gCm2day = quantile(apply(site_output$outflux_foliage_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   site_output$mean_combined_foliage_to_litter_gCm2day = quantile(apply(site_output$combined_foliage_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
@@ -1012,12 +1014,13 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                                                           / (apply(site_output$outflux_roots_gCm2day,1, rollapply_mean_annual, step = steps_per_year) * 365.25) )
                   site_output$MTT_annual_roots_years = apply(site_output$MTT_annual_roots_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   # Convert to fractions
-                  site_output$NaturalFractionOfTurnover_roots = quantile(apply(site_output$NaturalFractionOfTurnover_roots,1,mean, na.rm = na_flag) /
-                                                                         apply(site_output$outflux_roots_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$FireFractionOfTurnover_roots = quantile(apply(site_output$FireFractionOfTurnover_roots,1,mean, na.rm = na_flag) /
-                                                                      apply(site_output$outflux_roots_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$HarvestFractionOfTurnover_roots = quantile(apply(site_output$HarvestFractionOfTurnover_roots,1,mean, na.rm = na_flag) /
-                                                                         apply(site_output$outflux_roots_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
+                  tmp = apply(site_output$outflux_roots_gCm2day,1,mean, na.rm = na_flag)
+                  site_output$NaturalFractionOfTurnover_roots = quantile(apply(site_output$NaturalFractionOfTurnover_roots,1,mean, na.rm = na_flag) / tmp,
+                                                                         prob = num_quantiles, na.rm = na_flag)
+                  site_output$FireFractionOfTurnover_roots = quantile(apply(site_output$FireFractionOfTurnover_roots,1,mean, na.rm = na_flag) / tmp,
+                                                                      prob = num_quantiles, na.rm = na_flag)
+                  site_output$HarvestFractionOfTurnover_roots = quantile(apply(site_output$HarvestFractionOfTurnover_roots,1,mean, na.rm = na_flag) / tmp,
+                                                                         prob = num_quantiles, na.rm = na_flag)
                   # Mean outflux from roots
                   site_output$mean_outflux_roots_gCm2day = quantile(apply(site_output$outflux_roots_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   site_output$mean_combined_roots_to_litter_gCm2day = quantile(apply(site_output$combined_roots_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
@@ -1097,12 +1100,13 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                                                           / (apply(site_output$outflux_wood_gCm2day,1, rollapply_mean_annual, step = steps_per_year) * 365.25) )
                   site_output$MTT_annual_wood_years = apply(site_output$MTT_annual_wood_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   # Convert to fractions
-                  site_output$NaturalFractionOfTurnover_wood = quantile(apply(site_output$NaturalFractionOfTurnover_wood,1,mean, na.rm = na_flag) /
-                                                                        apply(site_output$outflux_wood_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$FireFractionOfTurnover_wood = quantile(apply(site_output$FireFractionOfTurnover_wood,1,mean, na.rm = na_flag) /
-                                                                     apply(site_output$outflux_wood_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$HarvestFractionOfTurnover_wood = quantile(apply(site_output$HarvestFractionOfTurnover_wood,1,mean, na.rm = na_flag) /
-                                                                        apply(site_output$outflux_wood_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
+                  tmp = apply(site_output$outflux_wood_gCm2day,1,mean, na.rm = na_flag)
+                  site_output$NaturalFractionOfTurnover_wood = quantile(apply(site_output$NaturalFractionOfTurnover_wood,1,mean, na.rm = na_flag) / tmp,
+                                                                        prob = num_quantiles, na.rm = na_flag)
+                  site_output$FireFractionOfTurnover_wood = quantile(apply(site_output$FireFractionOfTurnover_wood,1,mean, na.rm = na_flag) / tmp,
+                                                                     prob = num_quantiles, na.rm = na_flag)
+                  site_output$HarvestFractionOfTurnover_wood = quantile(apply(site_output$HarvestFractionOfTurnover_wood,1,mean, na.rm = na_flag) / tmp,
+                                                                        prob = num_quantiles, na.rm = na_flag)
                   # Mean outflux from wood
                   site_output$mean_outflux_wood_gCm2day = quantile(apply(site_output$outflux_wood_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   site_output$mean_combined_wood_to_litter_gCm2day = quantile(apply(site_output$combined_wood_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
@@ -1166,12 +1170,13 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                                                           / (apply(site_output$outflux_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year) * 365.25) )
                   site_output$MTT_annual_litter_years = apply(site_output$MTT_annual_litter_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   # Convert to fractions
-                  site_output$NaturalFractionOfTurnover_litter = quantile(apply(site_output$NaturalFractionOfTurnover_litter,1,mean, na.rm = na_flag) /
-                                                                          apply(site_output$outflux_litter_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$FireFractionOfTurnover_litter = quantile(apply(site_output$FireFractionOfTurnover_litter,1,mean, na.rm = na_flag) /
-                                                                       apply(site_output$outflux_litter_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$HarvestFractionOfTurnover_litter = quantile(apply(site_output$HarvestFractionOfTurnover_litter,1,mean, na.rm = na_flag) /
-                                                                          apply(site_output$outflux_litter_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
+                  tmp = apply(site_output$outflux_litter_gCm2day,1,mean, na.rm = na_flag)
+                  site_output$NaturalFractionOfTurnover_litter = quantile(apply(site_output$NaturalFractionOfTurnover_litter,1,mean, na.rm = na_flag) / tmp,
+                                                                          prob = num_quantiles, na.rm = na_flag)
+                  site_output$FireFractionOfTurnover_litter = quantile(apply(site_output$FireFractionOfTurnover_litter,1,mean, na.rm = na_flag) / tmp,
+                                                                       prob = num_quantiles, na.rm = na_flag)
+                  site_output$HarvestFractionOfTurnover_litter = quantile(apply(site_output$HarvestFractionOfTurnover_litter,1,mean, na.rm = na_flag) / tmp,
+                                                                          prob = num_quantiles, na.rm = na_flag)
                   # Mean outflux from litter
                   site_output$mean_outflux_litter_gCm2day = quantile(apply(site_output$outflux_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   site_output$mean_combined_litter_to_som_gCm2day = quantile(apply(site_output$combined_litter_to_som_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
@@ -1235,12 +1240,13 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                                                           / (apply(site_output$outflux_woodlitter_gCm2day,1, rollapply_mean_annual, step = steps_per_year) * 365.25) )
                   site_output$MTT_annual_woodlitter_years = apply(site_output$MTT_annual_woodlitter_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   # Convert to fractions
-                  site_output$NaturalFractionOfTurnover_woodlitter = quantile(apply(site_output$NaturalFractionOfTurnover_woodlitter,1,mean, na.rm = na_flag) /
-                                                                              apply(site_output$outflux_woodlitter_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$FireFractionOfTurnover_woodlitter = quantile(apply(site_output$FireFractionOfTurnover_woodlitter,1,mean, na.rm = na_flag) /
-                                                                           apply(site_output$outflux_woodlitter_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$HarvestFractionOfTurnover_woodlitter = quantile(apply(site_output$HarvestFractionOfTurnover_woodlitter,1,mean, na.rm = na_flag) /
-                                                                              apply(site_output$outflux_woodlitter_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
+                  tmp = apply(site_output$outflux_woodlitter_gCm2day,1,mean, na.rm = na_flag)
+                  site_output$NaturalFractionOfTurnover_woodlitter = quantile(apply(site_output$NaturalFractionOfTurnover_woodlitter,1,mean, na.rm = na_flag) / tmp,
+                                                                              prob = num_quantiles, na.rm = na_flag)
+                  site_output$FireFractionOfTurnover_woodlitter = quantile(apply(site_output$FireFractionOfTurnover_woodlitter,1,mean, na.rm = na_flag) / tmp,
+                                                                           prob = num_quantiles, na.rm = na_flag)
+                  site_output$HarvestFractionOfTurnover_woodlitter = quantile(apply(site_output$HarvestFractionOfTurnover_woodlitter,1,mean, na.rm = na_flag) / tmp,
+                                                                              prob = num_quantiles, na.rm = na_flag)
                   # Mean outflux from wood
                   site_output$mean_outflux_woodlitter_gCm2day = quantile(apply(site_output$outflux_woodlitter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   site_output$mean_combined_woodlitter_to_som_gCm2day = quantile(apply(site_output$combined_woodlitter_to_som_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
@@ -1290,12 +1296,13 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                                                           / (apply(site_output$outflux_som_gCm2day,1, rollapply_mean_annual, step = steps_per_year) * 365.25) )
                   site_output$MTT_annual_som_years = apply(site_output$MTT_annual_som_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   # Convert to fractions
-                  site_output$NaturalFractionOfTurnover_som = quantile(apply(site_output$NaturalFractionOfTurnover_som,1,mean, na.rm = na_flag) /
-                                                                       apply(site_output$outflux_som_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$FireFractionOfTurnover_som = quantile(apply(site_output$FireFractionOfTurnover_som,1,mean, na.rm = na_flag) /
-                                                                    apply(site_output$outflux_som_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$HarvestFractionOfTurnover_som = quantile(apply(site_output$HarvestFractionOfTurnover_som,1,mean, na.rm = na_flag) /
-                                                                       apply(site_output$outflux_som_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
+                  tmp = apply(site_output$outflux_som_gCm2day,1,mean, na.rm = na_flag)
+                  site_output$NaturalFractionOfTurnover_som = quantile(apply(site_output$NaturalFractionOfTurnover_som,1,mean, na.rm = na_flag) / tmp,
+                                                                       prob = num_quantiles, na.rm = na_flag)
+                  site_output$FireFractionOfTurnover_som = quantile(apply(site_output$FireFractionOfTurnover_som,1,mean, na.rm = na_flag) / tmp,
+                                                                    prob = num_quantiles, na.rm = na_flag)
+                  site_output$HarvestFractionOfTurnover_som = quantile(apply(site_output$HarvestFractionOfTurnover_som,1,mean, na.rm = na_flag) / tmp,
+                                                                       prob = num_quantiles, na.rm = na_flag)
                   # Mean outflux from som
                   site_output$mean_outflux_som_gCm2day = quantile(apply(site_output$outflux_som_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   # Mean annual outflux from som
@@ -1355,12 +1362,13 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                                                           / (apply(site_output$outflux_biomass_gCm2day,1, rollapply_mean_annual, step = steps_per_year) * 365.25) )
                   site_output$MTT_annual_biomass_years = apply(site_output$MTT_annual_biomass_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   # Convert to fractions
-                  site_output$NaturalFractionOfTurnover_biomass = quantile(apply(site_output$NaturalFractionOfTurnover_biomass,1,mean, na.rm = na_flag) /
-                                                                           apply(site_output$outflux_biomass_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$FireFractionOfTurnover_biomass = quantile(apply(site_output$FireFractionOfTurnover_biomass,1,mean, na.rm = na_flag) /
-                                                                        apply(site_output$outflux_biomass_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$HarvestFractionOfTurnover_biomass = quantile(apply(site_output$HarvestFractionOfTurnover_biomass,1,mean, na.rm = na_flag) /
-                                                                           apply(site_output$outflux_biomass_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
+                  tmp = apply(site_output$outflux_biomass_gCm2day,1,mean, na.rm = na_flag)
+                  site_output$NaturalFractionOfTurnover_biomass = quantile(apply(site_output$NaturalFractionOfTurnover_biomass,1,mean, na.rm = na_flag) / tmp,
+                                                                           prob = num_quantiles, na.rm = na_flag)
+                  site_output$FireFractionOfTurnover_biomass = quantile(apply(site_output$FireFractionOfTurnover_biomass,1,mean, na.rm = na_flag) / tmp,
+                                                                        prob = num_quantiles, na.rm = na_flag)
+                  site_output$HarvestFractionOfTurnover_biomass = quantile(apply(site_output$HarvestFractionOfTurnover_biomass,1,mean, na.rm = na_flag) /tmp,
+                                                                           prob = num_quantiles, na.rm = na_flag)
                   # Mean outflux from biomass
                   site_output$mean_outflux_biomass_gCm2day = quantile(apply(site_output$outflux_biomass_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   site_output$mean_combined_biomass_to_litter_gCm2day = quantile(apply(site_output$combined_biomass_to_litter_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
@@ -1411,12 +1419,13 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                                                           / (apply(site_output$outflux_dom_gCm2day,1, rollapply_mean_annual, step = steps_per_year) * 365.25) )
                   site_output$MTT_annual_dom_years = apply(site_output$MTT_annual_dom_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
                   # Convert to fractions
-                  site_output$NaturalFractionOfTurnover_dom = quantile(apply(site_output$NaturalFractionOfTurnover_dom,1,mean, na.rm = na_flag) /
-                                                                       apply(site_output$outflux_dom_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$FireFractionOfTurnover_dom = quantile(apply(site_output$FireFractionOfTurnover_dom,1,mean, na.rm = na_flag) /
-                                                                    apply(site_output$outflux_dom_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
-                  site_output$HarvestFractionOfTurnover_dom = quantile(apply(site_output$HarvestFractionOfTurnover_dom,1,mean, na.rm = na_flag) /
-                                                                       apply(site_output$outflux_dom_gCm2day,1,mean, na.rm = na_flag), prob = num_quantiles, na.rm = na_flag)
+                  tmp = apply(site_output$outflux_dom_gCm2day,1,mean, na.rm = na_flag)
+                  site_output$NaturalFractionOfTurnover_dom = quantile(apply(site_output$NaturalFractionOfTurnover_dom,1,mean, na.rm = na_flag) / tmp,
+                                                                       prob = num_quantiles, na.rm = na_flag)
+                  site_output$FireFractionOfTurnover_dom = quantile(apply(site_output$FireFractionOfTurnover_dom,1,mean, na.rm = na_flag) / tmp,
+                                                                    prob = num_quantiles, na.rm = na_flag)
+                  site_output$HarvestFractionOfTurnover_dom = quantile(apply(site_output$HarvestFractionOfTurnover_dom,1,mean, na.rm = na_flag) / tmp,
+                                                                       prob = num_quantiles, na.rm = na_flag)
                   # Mean outflux from dom
                   site_output$mean_outflux_dom_gCm2day = quantile(apply(site_output$outflux_dom_gCm2day,1,mean, na.rm = na_flag), prob=num_quantiles)
                   # Mean annual outflux from dom

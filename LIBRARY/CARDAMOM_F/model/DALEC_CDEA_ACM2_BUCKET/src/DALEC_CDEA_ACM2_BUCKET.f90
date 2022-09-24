@@ -63,8 +63,9 @@ module CARBON_MODEL_MOD
                               boltz = 5.670400d-8,  & ! Boltzmann constant (W.m-2.K-4)
                          emissivity = 0.96d0,       &
                         emiss_boltz = 5.443584d-08, & ! emissivity * boltz
+                        ppfd_to_par = 4.6d0,        & ! Conversion of umolPAR -> J
                     sw_par_fraction = 0.5d0,        & ! fraction of short-wave radiation which is PAR
-                             freeze = 273.15d0,     &
+                             freeze = 273.15d0,     & !
                   gs_H2Ommol_CO2mol = 0.001646259d0,& ! The ratio of H20:CO2 diffusion for gs (Jones appendix 2)
               gs_H2Ommol_CO2mol_day = 142.2368d0,   & ! The ratio of H20:CO2 diffusion for gs, including seconds per day correction
                          gb_H2O_CO2 = 1.37d0,       & ! The ratio of H20:CO2 diffusion for gb (Jones appendix 2)
@@ -125,14 +126,22 @@ module CARBON_MODEL_MOD
 
   ! ACM-GPP-ET parameters
   double precision, parameter :: &
-!                   pn_max_temp = 6.842942d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
+!ACM cal                   pn_max_temp = 6.842942d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
 !                   pn_min_temp = -1d+06      ,  & ! Minimum daily max temperature for photosynthesis (oC)
 !                   pn_opt_temp = 3.155960d+01,  & ! Optimum daily max temperature for photosynthesis (oC)
 !                   pn_kurtosis = 1.889026d-01,  & ! Kurtosis of photosynthesis temperature response
-                   pn_max_temp = 59d0,          & ! Maximum daily max temperature for photosynthesis (oC)
-                   pn_min_temp = -4d0,          & ! Minimum daily max temperature for photosynthesis (oC)
+!bespoke                   pn_max_temp = 59d0,          & ! Maximum daily max temperature for photosynthesis (oC)
+!                   pn_min_temp = -4d0,          & ! Minimum daily max temperature for photosynthesis (oC)
+!                   pn_opt_temp = 30d0,          & ! Optimum daily max temperature for photosynthesis (oC)
+!                   pn_kurtosis = 0.07d0,        & ! Kurtosis of photosynthesis temperature response
+                   pn_max_temp = 65.03d0,          & ! Maximum daily max temperature for photosynthesis (oC)
+                   pn_min_temp = -1d+06,          & ! Minimum daily max temperature for photosynthesis (oC)
                    pn_opt_temp = 30d0,          & ! Optimum daily max temperature for photosynthesis (oC)
-                   pn_kurtosis = 0.07d0,        & ! Kurtosis of photosynthesis temperature response
+                   pn_kurtosis = 0.143d0,        & ! Kurtosis of carboxylation temperature response
+                   pl_max_temp = 57.05d0,          & ! Maximum daily max temperature for photosynthesis (oC)
+                   pl_min_temp = -1d+06,          & ! Minimum daily max temperature for photosynthesis (oC)
+                   pl_opt_temp = 30d0,          & ! Optimum daily max temperature for photosynthesis (oC)
+                   pl_kurtosis = 0.172d0,        & ! Kurtosis of Jmax temperature response
 !                            e0 = 3.661204d+00,  & ! Quantum yield (gC/MJ/m2/day PAR)
                             e0 = 0.385d0,       & ! Quantum yield at light compensation (umolE/J PAR)
                 minlwp_default =-1.808224d+00,  & ! minimum leaf water potential (MPa)
@@ -1183,8 +1192,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Declare local variables
     double precision :: a, b, c, Pl_max, PAR_m2
-    double precision, parameter :: theta = 0.7, & ! curvature parameter of light response
-                           ppfd_to_par = 4.6d0    ! Conversion of umolPAR -> J
+    double precision, parameter :: theta = 0.7 ! curvature parameter of light response
 
     !
     ! Metabolic limited photosynthesis
@@ -1205,7 +1213,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! e0 in this case would be the quantum yield at light compensation
     ! directly matches vj calculation from Farquhar model.
     ! Alternate, if ceff umol/m2/s exp(log(ceff) * 0.750 + 1.677) Walker et al., (2014), Ecology and Evolution 4(16): 3218–3235
-    Pl_max = gC_to_umol*ceff*1.65 ! Jmax calculation in umolE/umolPAR
+    ! Jmax calculation in umolE/umolPAR
+    Pl_max = gC_to_umol*ceff*1.65*opt_max_scaling(pl_max_temp,pl_min_temp,pl_opt_temp,pl_kurtosis,leafT)
     PAR_m2 = canopy_par_MJday * lai_1 * ppfd_to_par * 1d6 ! Convert to umolPAR
     a = theta ; b = -(e0*PAR_m2+Pl_max) ; c = e0*PAR_m2*Pl_max
     light_limited_photosynthesis = lai * ((-b - sqrt(b**2d0 - (4d0*a*c))) / (2d0*a))

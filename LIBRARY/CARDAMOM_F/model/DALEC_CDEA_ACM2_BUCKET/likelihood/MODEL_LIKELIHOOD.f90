@@ -654,43 +654,43 @@ module model_likelihood_module
            if (abs(log(Fin(n)/Fout(n))) > EQF2) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
            end if
-!           ! Restrict rates from deviating unrealistically from the mean
-!           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2)/(Fout_yr1(n)+Fout_yr2))) - &
-!                    abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
-!               EDC2 = 0d0  ECDF%PASSFAIL(20+n-1)
-!           end if
-           ! Restrict exponential behaviour at initialisation
-           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
+           ! Restrict rates from deviating unrealistically from the mean
+           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
+                    abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            end if
+!           ! Restrict exponential behaviour at initialisation
+!           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
+!               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!           end if
         end do
         ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
         n = 4
         if (abs(log(Fin(n)/Fout(n))) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
         end if
-!        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2)/(Fout_yr1(n)+Fout_yr2))) - &
-!                 abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
-!            EDC2 = 0d0  ECDF%PASSFAIL(20+n-1)
-!        end if
-        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
+        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
+                 abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
         end if
+!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
         ! Dead pools
         do n = 5, 6
            ! Restrict rates of increase
            if (abs(log(Fin(n)/Fout(n))) > EQF2) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
            end if
-!           ! Restrict rates from deviating unrealistically from the mean
-!           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2)/(Fout_yr1(n)+Fout_yr2))) - &
-!                    abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
-!               EDC2 = 0d0  ECDF%PASSFAIL(20+n-1)
-!           end if
-           ! Restrict exponential behaviour at initialisation
-           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
+           ! Restrict rates from deviating unrealistically from the mean
+           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
+                    abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            end if
+!           ! Restrict exponential behaviour at initialisation
+!           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
+!               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!           end if
         end do
 
     end if ! EDC2 == 1 .or. DIAG == 1
