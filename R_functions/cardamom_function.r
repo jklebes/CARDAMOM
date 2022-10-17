@@ -17,6 +17,7 @@ cardamom <-function (projname,model,method,stage) {
   if (exists("path_to_landsea") == FALSE) {path_to_landsea <<- "default"}
   if (exists("request_compile_local") == FALSE) {request_compile_local <<- FALSE}
   if (exists("path_to_co2") == FALSE) {path_to_co2 <<- "./R_functions/"}
+  if (exists("request_extended_mcmc") == FALSE) {request_extended_mcmc <<- FALSE}
 
   # define file name for PROJECT file
   # this file will contain all information relating the the PROJECT
@@ -296,6 +297,9 @@ cardamom <-function (projname,model,method,stage) {
           Cwood_inc_all = load_wood_productivity_maps_for_extraction(Cwood_inc_source,cardamom_ext,PROJECT$spatial_type,latlon,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
           Cwood_mortality_all = load_wood_mortality_maps_for_extraction(Cwood_mortality_source,cardamom_ext,PROJECT$spatial_type,latlon,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
       } # # if (PROJECT$model$name != "ACM")
+
+      # Update user
+      print("Loading completed, beginning writing out file write out")
 
       if (use_parallel) {
           # Create function needed to process the site specific creation

@@ -671,7 +671,7 @@ module model_likelihood_module
                end if
                ! Restrict exponential behaviour at initialisation
 !               if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
-               if (abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
+               if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
                    EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
                end if
             end do
@@ -682,7 +682,7 @@ module model_likelihood_module
                 EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
             end if
 !            if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
-            if (abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
+            if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
                 EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
             end if
             ! Dead pools + water pools
@@ -693,7 +693,7 @@ module model_likelihood_module
                end if
                ! Restrict exponential behaviour at initialisation
 !               if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
-               if (abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
+               if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
                    EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
                end if
             end do

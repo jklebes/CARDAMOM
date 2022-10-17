@@ -63,6 +63,7 @@ generate_parameter_maps<-function(PROJECT) {
   print("......have finished loading - now beginning cluster analysis")
 
   if (exists(x = "clusters", where = grid_output) == FALSE | repair == 1) {
+#  if (exists(x = "clusters", where = grid_output) == FALSE) {
       if (grepl("DALEC",PROJECT$model$name)) {
 
           # remove non-constrained parameters (i.e. those not actually used in this analysis)
@@ -122,7 +123,7 @@ generate_parameter_maps<-function(PROJECT) {
           # responsibility of the user to ensure the most appropriate use of these
           # information to result in an appropriate number of clusters for error propagation
           tmp = 0
-          for (i in seq(1,10)) {
+          for (i in seq(1,5)) {
                tmp=append(tmp,preferenceRange(negDistMat(par_array_tmp[sample(1:dim(par_array_tmp)[1],0.05*dim(par_array_tmp)[1], replace=FALSE),],r=2))[1])
           } ; preference_input=max(mean(tmp[-1]),median(tmp[-1]))
 
@@ -161,7 +162,7 @@ generate_parameter_maps<-function(PROJECT) {
           # responsibility of the user to ensure the most appropriate use of these
           # information to result in an appropriate number of clusters for error propagation
           tmp = 0
-          for (i in seq(1,10)) {
+          for (i in seq(1,5)) {
                tmp=append(tmp,preferenceRange(negDistMat(par_array_tmp[sample(1:dim(par_array_tmp)[1],0.05*dim(par_array_tmp)[1], replace=FALSE),],r=2))[1])
           } ; preference_input=max(mean(tmp[-1]),median(tmp[-1]))
 
