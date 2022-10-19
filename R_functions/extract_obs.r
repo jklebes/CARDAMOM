@@ -479,7 +479,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         }
 
     } else if (Cwood_initial_source == "Avitabile" | Cwood_initial_source == "mpi_biomass" |
-               Cwood_initial_source == "UoL_stable_forest" |
+               Cwood_initial_source == "UoL_stable_forest" |Cwood_initial_source == "Rainfor" |
                Cwood_initial_source == "UoL_stable_savannah") {
 
         # All maps converted into common format, therefore a common extraction subroutine can be used
@@ -540,6 +540,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         }
     } else if (Cwood_stock_source == "mpi_biomass" |
                Cwood_stock_source == "INPE_Avitabile" | Cwood_stock_source == "Avitabile" |
+               Cwood_stock_source == "Rainfor" | Cwood_stock_source == "Rainfor_annual" |
                Cwood_stock_source == "McNicol" | Cwood_stock_source == "Biomass_maps_Africa_UoL" |
                Cwood_stock_source == "ESA_CCI_Biomass") {
 

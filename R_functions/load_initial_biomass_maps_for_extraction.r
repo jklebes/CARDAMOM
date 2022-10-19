@@ -323,8 +323,8 @@ load_initial_biomass_maps_for_extraction<-function(latlon_in,Cwood_initial_sourc
 
         # Read in estimate and uncertainty rasters
         # NOTE: this data assimilates total biomass
-        biomass_gCm2 = raster(paste(path_to_Cwood_initial,"wood_biomass_gCm2.tif", sep=""))
-        biomass_uncertainty_gCm2 = raster(paste(path_to_Cwood_initial,"unc_wood_biomass_gCm2.tif", sep=""))
+        biomass_gCm2 = raster(paste(path_to_Cwood_initial,"wood_biomass_gCm2_2000.tif", sep=""))
+        biomass_uncertainty_gCm2 = raster(paste(path_to_Cwood_initial,"unc_wood_biomass_gCm2_2000.tif", sep=""))
 
         # Create raster with the target crs
         target = raster(crs = ("+init=epsg:4326"), ext = extent(biomass_gCm2), resolution = res(biomass_gCm2))
