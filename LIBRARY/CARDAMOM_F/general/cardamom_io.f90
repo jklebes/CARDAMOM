@@ -94,10 +94,10 @@ module cardamom_io
         DATAin%nopars = 38
         DATAin%nofluxes = 21
     else if (DATAin%ID == 5) then
-        ! DALEC_CDEA_FR
-        DATAin%nopools = 6
-        DATAin%nopars = 23
-        DATAin%nofluxes = 18
+        ! DALEC_CDEA_ACM_FARQUHAR_BUCKET
+        DATAin%nopools = 7
+        DATAin%nopars = 32
+        DATAin%nofluxes = 45
     else if (DATAin%ID == 6) then
         ! DALEC_GSI_FR
         DATAin%nopools = 6

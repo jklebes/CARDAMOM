@@ -12,7 +12,7 @@
 ###
 ## Job specific information
 
-print("Begin creation of GCP compatible ascii file for annual NBP / GPP / RECO / RHET / RAUTO / FIRE")
+print("Begin creation of GCP compatible ascii file for annual NBP / GPP / RECO / RHET / RAUTO / FIRE / LAI")
 
 # set working directory
 setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
@@ -27,9 +27,13 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Mexico_1deg_C7_agb_lca_gpp_fire_NBP/"
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Miombo_0.5deg_allWood/"
 input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB/"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_GPP/"
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_GPP_FIRE/"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_NBE/"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_constantCO2/"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_2010_2020/"
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_etol_EQF_harsh/"
-input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_ACM2_LUE/"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_ACM2_LUE/"
 
 # Specify any extra information for the filename
 output_prefix = "CARDAMOM_S3_" # follow with "_"
@@ -130,6 +134,10 @@ FIRE_global_PgCyr = rep(0, nos_years)
 FIRE_north_PgCyr = rep(0, nos_years)
 FIRE_tropics_PgCyr = rep(0, nos_years)
 FIRE_south_PgCyr = rep(0, nos_years)
+LAI_global_m2m2 = rep(0, nos_years)
+LAI_north_m2m2 = rep(0, nos_years)
+LAI_tropics_m2m2 = rep(0, nos_years)
+LAI_south_m2m2 = rep(0, nos_years)
 
 # Minimum CI
 NBP_global_PgCyr_minCI = rep(0, nos_years)
@@ -156,6 +164,10 @@ FIRE_global_PgCyr_minCI = rep(0, nos_years)
 FIRE_north_PgCyr_minCI = rep(0, nos_years)
 FIRE_tropics_PgCyr_minCI = rep(0, nos_years)
 FIRE_south_PgCyr_minCI = rep(0, nos_years)
+LAI_global_m2m2_minCI = rep(0, nos_years)
+LAI_north_m2m2_minCI = rep(0, nos_years)
+LAI_tropics_m2m2_minCI = rep(0, nos_years)
+LAI_south_m2m2_minCI = rep(0, nos_years)
 # Lower CI
 NBP_global_PgCyr_lowCI = rep(0, nos_years)
 NBP_north_PgCyr_lowCI = rep(0, nos_years)
@@ -181,6 +193,10 @@ FIRE_global_PgCyr_lowCI = rep(0, nos_years)
 FIRE_north_PgCyr_lowCI = rep(0, nos_years)
 FIRE_tropics_PgCyr_lowCI = rep(0, nos_years)
 FIRE_south_PgCyr_lowCI = rep(0, nos_years)
+LAI_global_m2m2_lowCI = rep(0, nos_years)
+LAI_north_m2m2_lowCI = rep(0, nos_years)
+LAI_tropics_m2m2_lowCI = rep(0, nos_years)
+LAI_south_m2m2_lowCI = rep(0, nos_years)
 # Upper CI
 NBP_global_PgCyr_highCI = rep(0, nos_years)
 NBP_north_PgCyr_highCI = rep(0, nos_years)
@@ -206,6 +222,10 @@ FIRE_global_PgCyr_highCI = rep(0, nos_years)
 FIRE_north_PgCyr_highCI = rep(0, nos_years)
 FIRE_tropics_PgCyr_highCI = rep(0, nos_years)
 FIRE_south_PgCyr_highCI = rep(0, nos_years)
+LAI_global_m2m2_highCI = rep(0, nos_years)
+LAI_north_m2m2_highCI = rep(0, nos_years)
+LAI_tropics_m2m2_highCI = rep(0, nos_years)
+LAI_south_m2m2_highCI = rep(0, nos_years)
 # Maximum CI
 NBP_global_PgCyr_maxCI = rep(0, nos_years)
 NBP_north_PgCyr_maxCI = rep(0, nos_years)
@@ -231,6 +251,16 @@ FIRE_global_PgCyr_maxCI = rep(0, nos_years)
 FIRE_north_PgCyr_maxCI = rep(0, nos_years)
 FIRE_tropics_PgCyr_maxCI = rep(0, nos_years)
 FIRE_south_PgCyr_maxCI = rep(0, nos_years)
+LAI_global_m2m2_maxCI = rep(0, nos_years)
+LAI_north_m2m2_maxCI = rep(0, nos_years)
+LAI_tropics_m2m2_maxCI = rep(0, nos_years)
+LAI_south_m2m2_maxCI = rep(0, nos_years)
+
+# Counters
+nos_global = 0
+nos_tropics = 0
+nos_north = 0
+nos_south = 0
 
 # Fill the output arrays
 for (n in seq(1, length(PROJECT$sites))) {
@@ -244,6 +274,9 @@ for (n in seq(1, length(PROJECT$sites))) {
          
          # Determine nos days per time step         
          deltat = 365.25
+
+         # Update counter
+         nos_global = nos_global + 1
 
          # Accumulate global
          NBP_global_PgCyr = NBP_global_PgCyr + (grid_output$mean_annual_nbp_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
@@ -276,9 +309,18 @@ for (n in seq(1, length(PROJECT$sites))) {
          FIRE_global_PgCyr_lowCI = FIRE_global_PgCyr_lowCI + (grid_output$mean_annual_fire_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          FIRE_global_PgCyr_highCI = FIRE_global_PgCyr_highCI + (grid_output$mean_annual_fire_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          FIRE_global_PgCyr_maxCI = FIRE_global_PgCyr_maxCI + (grid_output$mean_annual_fire_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         LAI_global_m2m2 = LAI_global_m2m2 + (grid_output$mean_annual_lai_m2m2[n,mid_quant,])
+         LAI_global_m2m2_minCI = LAI_global_m2m2_minCI + (grid_output$mean_annual_lai_m2m2[n,min_quant,])
+         LAI_global_m2m2_lowCI = LAI_global_m2m2_lowCI + (grid_output$mean_annual_lai_m2m2[n,low_quant,])
+         LAI_global_m2m2_highCI = LAI_global_m2m2_highCI + (grid_output$mean_annual_lai_m2m2[n,high_quant,])
+         LAI_global_m2m2_maxCI = LAI_global_m2m2_maxCI + (grid_output$mean_annual_lai_m2m2[n,max_quant,])
                   
          # Where appropriate accumulate tropical
          if (grid_output$lat[i,j] <= 30 & grid_output$lat[i,j] >= -30) {
+
+             # Update counter
+             nos_tropics = nos_tropics + 1
+
              NBP_tropics_PgCyr = NBP_tropics_PgCyr + (grid_output$mean_annual_nbp_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              NBP_tropics_PgCyr_minCI = NBP_tropics_PgCyr_minCI + (grid_output$mean_annual_nbp_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              NBP_tropics_PgCyr_lowCI = NBP_tropics_PgCyr_lowCI + (grid_output$mean_annual_nbp_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
@@ -309,10 +351,20 @@ for (n in seq(1, length(PROJECT$sites))) {
              FIRE_tropics_PgCyr_lowCI = FIRE_tropics_PgCyr_lowCI + (grid_output$mean_annual_fire_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              FIRE_tropics_PgCyr_highCI = FIRE_tropics_PgCyr_highCI + (grid_output$mean_annual_fire_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              FIRE_tropics_PgCyr_maxCI = FIRE_tropics_PgCyr_maxCI + (grid_output$mean_annual_fire_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LAI_tropics_m2m2 = LAI_tropics_m2m2 + (grid_output$mean_annual_lai_m2m2[n,mid_quant,])
+             LAI_tropics_m2m2_minCI = LAI_tropics_m2m2_minCI + (grid_output$mean_annual_lai_m2m2[n,min_quant,])
+             LAI_tropics_m2m2_lowCI = LAI_tropics_m2m2_lowCI + (grid_output$mean_annual_lai_m2m2[n,low_quant,])
+             LAI_tropics_m2m2_highCI = LAI_tropics_m2m2_highCI + (grid_output$mean_annual_lai_m2m2[n,high_quant,])
+             LAI_tropics_m2m2_maxCI = LAI_tropics_m2m2_maxCI + (grid_output$mean_annual_lai_m2m2[n,max_quant,])
+
          }
 
          # Where appropriate accumulate north
          if (grid_output$lat[i,j] > 30) {
+         
+             # Update counter
+             nos_north = nos_north + 1
+             
              NBP_north_PgCyr = NBP_north_PgCyr + (grid_output$mean_annual_nbp_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              NBP_north_PgCyr_minCI = NBP_north_PgCyr_minCI + (grid_output$mean_annual_nbp_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              NBP_north_PgCyr_lowCI = NBP_north_PgCyr_lowCI + (grid_output$mean_annual_nbp_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
@@ -343,10 +395,19 @@ for (n in seq(1, length(PROJECT$sites))) {
              FIRE_north_PgCyr_lowCI = FIRE_north_PgCyr_lowCI + (grid_output$mean_annual_fire_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              FIRE_north_PgCyr_highCI = FIRE_north_PgCyr_highCI + (grid_output$mean_annual_fire_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              FIRE_north_PgCyr_maxCI = FIRE_north_PgCyr_maxCI + (grid_output$mean_annual_fire_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)         
+             LAI_north_m2m2 = LAI_north_m2m2 + (grid_output$mean_annual_lai_m2m2[n,mid_quant,])
+             LAI_north_m2m2_minCI = LAI_north_m2m2_minCI + (grid_output$mean_annual_lai_m2m2[n,min_quant,])
+             LAI_north_m2m2_lowCI = LAI_north_m2m2_lowCI + (grid_output$mean_annual_lai_m2m2[n,low_quant,])
+             LAI_north_m2m2_highCI = LAI_north_m2m2_highCI + (grid_output$mean_annual_lai_m2m2[n,high_quant,])
+             LAI_north_m2m2_maxCI = LAI_north_m2m2_maxCI + (grid_output$mean_annual_lai_m2m2[n,max_quant,])         
          }
 
          # Where appropriate accumulate south
          if (grid_output$lat[i,j] < -30) {
+
+             # Update counter
+             nos_south = nos_south + 1         
+         
              NBP_south_PgCyr = NBP_south_PgCyr + (grid_output$mean_annual_nbp_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              NBP_south_PgCyr_minCI = NBP_south_PgCyr_minCI + (grid_output$mean_annual_nbp_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              NBP_south_PgCyr_lowCI = NBP_south_PgCyr_lowCI + (grid_output$mean_annual_nbp_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
@@ -377,11 +438,43 @@ for (n in seq(1, length(PROJECT$sites))) {
              FIRE_south_PgCyr_lowCI = FIRE_south_PgCyr_lowCI + (grid_output$mean_annual_fire_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              FIRE_south_PgCyr_highCI = FIRE_south_PgCyr_highCI + (grid_output$mean_annual_fire_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              FIRE_south_PgCyr_maxCI = FIRE_south_PgCyr_maxCI + (grid_output$mean_annual_fire_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LAI_south_m2m2 = LAI_south_m2m2 + (grid_output$mean_annual_lai_m2m2[n,max_quant,])         
+             LAI_south_m2m2_minCI = LAI_south_m2m2_minCI + (grid_output$mean_annual_lai_m2m2[n,max_quant,])         
+             LAI_south_m2m2_lowCI = LAI_south_m2m2_lowCI + (grid_output$mean_annual_lai_m2m2[n,max_quant,])         
+             LAI_south_m2m2_highCI = LAI_south_m2m2_highCI + (grid_output$mean_annual_lai_m2m2[n,max_quant,])         
+             LAI_south_m2m2_maxCI = LAI_south_m2m2_maxCI + (grid_output$mean_annual_lai_m2m2[n,max_quant,])         
+
          }
 
      } # Does the file exist / has it been processed
 
 } # site loop
+
+# Median
+LAI_global_m2m2 = LAI_global_m2m2 / nos_global
+LAI_north_m2m2 = LAI_north_m2m2 / nos_north
+LAI_tropics_m2m2 = LAI_tropics_m2m2 / nos_tropics
+LAI_south_m2m2 = LAI_south_m2m2 / nos_south
+# Minimum CI
+LAI_global_m2m2_minCI = LAI_global_m2m2_minCI / nos_global
+LAI_north_m2m2_minCI = LAI_north_m2m2_minCI / nos_north
+LAI_tropics_m2m2_minCI = LAI_tropics_m2m2_minCI / nos_tropics
+LAI_south_m2m2_minCI = LAI_south_m2m2_minCI / nos_south
+# Lower CI
+LAI_global_m2m2_lowCI = LAI_global_m2m2_lowCI / nos_global
+LAI_north_m2m2_lowCI = LAI_north_m2m2_lowCI / nos_north
+LAI_tropics_m2m2_lowCI = LAI_tropics_m2m2_lowCI / nos_tropics
+LAI_south_m2m2_lowCI = LAI_south_m2m2_lowCI / nos_south
+# Upper CI
+LAI_global_m2m2_highCI = LAI_global_m2m2_highCI / nos_global
+LAI_north_m2m2_highCI = LAI_north_m2m2_highCI / nos_north
+LAI_tropics_m2m2_highCI = LAI_tropics_m2m2_highCI / nos_tropics
+LAI_south_m2m2_highCI = LAI_south_m2m2_highCI / nos_south
+# Maximum CI
+LAI_global_m2m2_maxCI = LAI_global_m2m2_maxCI / nos_global
+LAI_north_m2m2_maxCI = LAI_north_m2m2_maxCI / nos_north
+LAI_tropics_m2m2_maxCI = LAI_tropics_m2m2_maxCI / nos_tropics
+LAI_south_m2m2_maxCI = LAI_south_m2m2_maxCI / nos_south
 
 ###
 ## Combine NBP together the data into an output variable
@@ -467,4 +560,17 @@ output = data.frame(Year = years, Global = FIRE_global_PgCyr, North = FIRE_north
 
 write.table(output,file = paste(out_dir,"/",output_prefix,"FIRE",output_suffix,".txt",sep=""), sep=" ", row.names = FALSE)
 
+###
+## Combine LAI together the data into an output variable
+
+output = data.frame(Year = years, Global = LAI_global_m2m2, North = LAI_north_m2m2, Tropics = LAI_tropics_m2m2, South = LAI_south_m2m2,
+                                  Global_2.5pc = LAI_global_m2m2_minCI, North_2.5pc = LAI_north_m2m2_minCI, Tropics_2.5pc = LAI_tropics_m2m2_minCI, South_2.5pc = LAI_south_m2m2_minCI,
+                                  Global_25pc = LAI_global_m2m2_lowCI, North_25pc = LAI_north_m2m2_lowCI, Tropics_25pc = LAI_tropics_m2m2_lowCI, South_25pc = LAI_south_m2m2_lowCI,
+                                  Global_75pc = LAI_global_m2m2_highCI, North_75pc = LAI_north_m2m2_highCI, Tropics_75pc = LAI_tropics_m2m2_highCI, South_75pc = LAI_south_m2m2_highCI,
+                                  Global_97.5pc = LAI_global_m2m2_maxCI, North_97.5pc = LAI_north_m2m2_maxCI, Tropics_97.5pc = LAI_tropics_m2m2_maxCI, South_97.5pc = LAI_south_m2m2_maxCI)
+                                  
+###
+## Begin writing out LAI to file
+
+write.table(output,file = paste(out_dir,"/",output_prefix,"LAI",output_suffix,".txt",sep=""), sep=" ", row.names = FALSE)
 

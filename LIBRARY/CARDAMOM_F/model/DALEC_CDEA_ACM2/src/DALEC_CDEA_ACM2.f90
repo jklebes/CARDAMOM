@@ -74,15 +74,15 @@ module CARBON_MODEL_MOD
 
   ! photosynthesis / respiration parameters
   double precision, parameter :: &
-                      kc_saturation = 310d0,        & ! CO2 half saturation, saturation value
-                   kc_half_sat_conc = 23.956d0,     & ! CO2 half sat, half sat
-                 co2comp_saturation = 36.5d0,       & ! CO2 compensation point, saturation
-              co2comp_half_sat_conc = 9.46d0          ! CO2 comp point, half sat
-                                                      ! Each of these are temperature sensitivty
+                      kc_half_sat_25C = 310d0,        & ! CO2 half saturation, saturation value
+                 kc_half_sat_gradient = 23.956d0,     & ! CO2 half sat, half sat
+                      co2comp_sat_25C = 36.5d0,       & ! CO2 compensation point, saturation
+                     co2comp_gradient = 9.46d0          ! CO2 comp point, half sat
+                                                        ! Each of these are temperature sensitivty
 
   ! hydraulic parameters
   double precision, parameter :: &
-                             gplant = 5d0,          & ! plant hydraulic conductivity (mmol m-1 s-1 MPa-1)
+                             gplant = 4d0,          & ! plant hydraulic conductivity (mmol m-1 s-1 MPa-1)
                         root_resist = 25d0,         & ! Root resistivity (MPa s g mmol−1 H2O)
                           max_depth = 2d0,          & ! max root depth (m)
                              root_k = 100d0,        & ! root biomass needed to reach 50% depth (gbiomass/m2)
@@ -117,18 +117,18 @@ module CARBON_MODEL_MOD
 
   ! ACM-GPP-ET parameters
   double precision, parameter :: &
-!                   pn_max_temp = 6.842942d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
-!                   pn_min_temp = -1d+06      ,  & ! Minimum daily max temperature for photosynthesis (oC)
-!                   pn_opt_temp = 3.155960d+01,  & ! Optimum daily max temperature for photosynthesis (oC)
-!                   pn_kurtosis = 1.889026d-01,  & ! Kurtosis of photosynthesis temperature response
-                   pn_max_temp = 59d0,          & ! Maximum daily max temperature for photosynthesis (oC)
-                   pn_min_temp = -4d0,          & ! Minimum daily max temperature for photosynthesis (oC)
-                   pn_opt_temp = 30d0,          & ! Optimum daily max temperature for photosynthesis (oC)
-                   pn_kurtosis = 0.07d0,        & ! Kurtosis of photosynthesis temperature response
+                   pn_max_temp = 6.842942d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
+                   pn_min_temp = -1d+06      ,  & ! Minimum daily max temperature for photosynthesis (oC)
+                   pn_opt_temp = 3.155960d+01,  & ! Optimum daily max temperature for photosynthesis (oC)
+                   pn_kurtosis = 1.889026d-01,  & ! Kurtosis of photosynthesis temperature response
+!bespoke                   pn_max_temp = 59d0,          & ! Maximum daily max temperature for photosynthesis (oC)
+!                   pn_min_temp = -4d0,          & ! Minimum daily max temperature for photosynthesis (oC)
+!                   pn_opt_temp = 30d0,          & ! Optimum daily max temperature for photosynthesis (oC)
+!                   pn_kurtosis = 0.07d0,        & ! Kurtosis of photosynthesis temperature response
                             e0 = 3.661204d+00,  & ! Quantum yield gC/MJ/m2/day PAR
                 minlwp_default =-1.808224d+00,  & ! minimum leaf water potential (MPa)
       soil_iso_to_net_coef_LAI =-2.717467d+00,  & ! Coefficient relating soil isothermal net radiation to net.
-                          iWUE = 6.431150d-06,  & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
+                          iWUE = 6.431150d-03,  & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
          soil_swrad_absorption = 9.989852d-01,  & ! Fraction of SW rad absorbed by soil
          max_lai_lwrad_release = 9.516639d-01,  & ! 1-Max fraction of LW emitted from canopy to be released
         lai_half_lwrad_release = 4.693329d+00,  & ! LAI at which LW emitted from canopy to be released at 50 %
@@ -597,7 +597,7 @@ metabolic_limited_photosynthesis, &
        ! Incoming drivers
        mint = met(2,n)  ! minimum temperature (oC)
        maxt = met(3,n)  ! maximum temperature (oC)
-       leafT = maxt
+       leafT = (maxt*0.75d0) + (mint*0.25d0)   ! initial day time canopy temperature (oC)
        swrad = met(4,n) ! incoming short wave radiation (MJ/m2/day)
        co2 = met(5,n)   ! CO2 (ppm)
        doy = met(6,n)   ! Day of year
@@ -932,8 +932,8 @@ metabolic_limited_photosynthesis, &
     ! Temperature adjustments for Michaelis-Menten coefficients
     ! for CO2 (kc) and O2 (ko) and CO2 compensation point
     ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
-    co2_half_sat   = arrhenious(kc_saturation,kc_half_sat_conc,maxt)
-    co2_comp_point = arrhenious(co2comp_saturation,co2comp_half_sat_conc,maxt)
+    co2_half_sat   = arrhenious(kc_half_sat_25C,kc_half_sat_gradient,leafT)
+    co2_comp_point = arrhenious(co2comp_sat_25C,co2comp_gradient,leafT)
 
     ! don't forget to return
     return
@@ -1064,7 +1064,7 @@ metabolic_limited_photosynthesis, &
 
         ! If there is a positive demand for water then we will solve for
         ! photosynthesis limits on gs through iterative solution
-        delta_gs = 1d-3*lai ! mmolH2O/m2leaf/day
+        delta_gs = 1d0*lai ! mmolH2O/m2leaf/day
         ! Estimate inverse of LAI to avoid division in optimisation
         lai_1 = lai**(-1d0)
         ! Calculate stage one acm, temperature and light limitation which
@@ -1090,29 +1090,6 @@ metabolic_limited_photosynthesis, &
                                               find_gs_iWUE,minimum_conductance,potential_conductance,tol_gs*lai,iWUE_step*0.10d0)
 
             end if
-!            ! Empirical fit to outputs generated by bisection procedure.
-!            ! Assumes that water supply is not limiting, thus there is still the need to estimate supply limit and apply as bookend.
-!            ! Note also that the order of covariates reflects their importance in the prediction,
-!            ! i.e. R > 0.9 just for first independent variable
-!            pn = metabolic_limited_photosynthesis
-!            pn_day = metabolic_limited_photosynthesis * dayl_hours_fraction
-!            pl = light_limited_photosynthesis
-!            stomatal_conductance =   50.92693d0 &
-!                                 + ( 14.73576d0    * ((pn_day*pl) / (pn_day+pl)) ) &
-!                                 + (  1.0555d0     * pn )                          &
-!                                 + ((-8.140542d-4) * pn**2d0 )                     &
-!                                 + ((-0.7185823d0) * pl )                          &
-!                                 + ((-1.565065d0)  * co2_comp_point )              &
-!                                 + (( 0.2258834d0) * co2_half_sat )                &
-!                                 + ((-2.486837d-4) * co2_half_sat**2d0 )           &
-!                                 + (( 4.344512d-2) * co2 )                         &
-!                                 + ((-2.969554d-4) * co2**2d0 )                    &
-!                                 + ((-41.61914d0)  * iWUE )
-!            stomatal_conductance = max(min_gs,min(stomatal_conductance,potential_conductance))
-!       else
-!            ! WUE optimisation
-!            stomatal_conductance = zbrent('calculate_gs:find_gs_WUE',find_gs_WUE,min_gs,potential_conductance,tol_gs,iWUE*0.10d0)
-!       endif
 
     else
 

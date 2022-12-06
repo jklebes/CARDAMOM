@@ -48,6 +48,7 @@ program cardamom_framework
  ! 3) integer number of solutions requested
  ! 4) print-to-screen frequency
  ! 5) write-to-file frequency
+ ! 6) 0 / 1 flag to use normalised log-likelihood pre-mcmc
 
  implicit none
 

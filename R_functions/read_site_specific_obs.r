@@ -12,7 +12,7 @@ read_site_specific_obs <- function(variable,infile) {
     # check the variable exists in file
     if (length(which(names(input) == variable)) > 0) {
         # read from the table the desired informatin
-        output=input[,variable]
+        output = input[,variable]
 #if (variable == "Evap_kgH2Om2day") {
 #    tmp1=input[,"soilevap_kgH2Om2day"]
 #    tmp2=input[,"wetevap_kgH2Om2day"]
@@ -20,7 +20,7 @@ read_site_specific_obs <- function(variable,infile) {
 #}
     } else {
         # if not then return missing value variable
-        output=-9999
+        output = -9999
     }
     # return the desired variable
     return(output)

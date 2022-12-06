@@ -79,18 +79,10 @@ module CARBON_MODEL_MOD
                         vonkarman_1 = 2.439024d0,   & ! 1 / von Karman's constant
                               cpair = 1004.6d0        ! Specific heat capacity of air; used in energy balance J.kg-1.K-1
 
-  ! photosynthesis / respiration parameters
-  double precision, parameter :: &
-                      kc_saturation = 310d0,        & ! CO2 half saturation, saturation value
-                   kc_half_sat_conc = 23.956d0,     & ! CO2 half sat, achieved at oC
-                 co2comp_saturation = 36.5d0,       & ! CO2 compensation point, saturation
-              co2comp_half_sat_conc = 9.46d0          ! CO2 comp point, achieved at oC
-                                                      ! Each of these are temperature sensitivty
-
   ! hydraulic parameters
   double precision, parameter :: &
                          tortuosity = 2.5d0,        & ! tortuosity
-                             gplant = 5d0,          & ! plant hydraulic conductivity (mmol m-1 s-1 MPa-1)
+                             gplant = 4d0,          & ! plant hydraulic conductivity (mmol m-1 s-1 MPa-1)
                         root_resist = 25d0,         & ! Root resistivity (MPa s g mmol−1 H2O)
                         root_radius = 0.00029d0,    & ! root radius (m) Bonen et al 2014 = 0.00029
                                                       ! Williams et al 1996 = 0.0001
@@ -110,7 +102,7 @@ module CARBON_MODEL_MOD
                       canopy_height = 9d0,          & ! canopy height assumed to be 9 m
                        tower_height = canopy_height + 2d0, & ! tower (observation) height assumed to be 2 m above canopy
                            min_wind = 0.2d0,        & ! minimum wind speed at canopy top
-                       min_drythick = 0.001d0,      & ! minimum dry thickness depth (m)
+                       min_drythick = 0.0001d0,     & ! minimum dry thickness depth (m)
                           min_layer = 0.03d0,       & ! minimum thickness of the third rooting layer (m)
                         soil_roughl = 0.05d0,       & ! soil roughness length (m)
                      top_soil_depth = 0.30d0,       & ! thickness of the top soil layer (m)
@@ -126,27 +118,25 @@ module CARBON_MODEL_MOD
 
   ! ACM-GPP-ET parameters
   double precision, parameter :: &
-!ACM cal                   pn_max_temp = 6.842942d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
-!                   pn_min_temp = -1d+06      ,  & ! Minimum daily max temperature for photosynthesis (oC)
-!                   pn_opt_temp = 3.155960d+01,  & ! Optimum daily max temperature for photosynthesis (oC)
-!                   pn_kurtosis = 1.889026d-01,  & ! Kurtosis of photosynthesis temperature response
+                   pn_max_temp = 6.842942d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
+                   pn_min_temp = -1d+06      ,  & ! Minimum daily max temperature for photosynthesis (oC)
+                   pn_opt_temp = 3.155960d+01,  & ! Optimum daily max temperature for photosynthesis (oC)
+                   pn_kurtosis = 1.889026d-01,  & ! Kurtosis of photosynthesis temperature response
 !bespoke                   pn_max_temp = 59d0,          & ! Maximum daily max temperature for photosynthesis (oC)
 !                   pn_min_temp = -4d0,          & ! Minimum daily max temperature for photosynthesis (oC)
 !                   pn_opt_temp = 30d0,          & ! Optimum daily max temperature for photosynthesis (oC)
 !                   pn_kurtosis = 0.07d0,        & ! Kurtosis of photosynthesis temperature response
-                   pn_max_temp = 65.03d0,          & ! Maximum daily max temperature for photosynthesis (oC)
-                   pn_min_temp = -1d+06,          & ! Minimum daily max temperature for photosynthesis (oC)
-                   pn_opt_temp = 30d0,          & ! Optimum daily max temperature for photosynthesis (oC)
-                   pn_kurtosis = 0.143d0,        & ! Kurtosis of carboxylation temperature response
-                   pl_max_temp = 57.05d0,          & ! Maximum daily max temperature for photosynthesis (oC)
-                   pl_min_temp = -1d+06,          & ! Minimum daily max temperature for photosynthesis (oC)
-                   pl_opt_temp = 30d0,          & ! Optimum daily max temperature for photosynthesis (oC)
-                   pl_kurtosis = 0.172d0,        & ! Kurtosis of Jmax temperature response
-!                            e0 = 3.661204d+00,  & ! Quantum yield (gC/MJ/m2/day PAR)
-                            e0 = 0.385d0,       & ! Quantum yield at light compensation (umolE/J PAR)
-                minlwp_default =-1.808224d+00,  & ! minimum leaf water potential (MPa)
+                ko_half_sat_25C = 157.46892d0,  & ! photorespiration O2 half sat(mmolO2/mol), achieved at 25oC
+           ko_half_sat_gradient = 14.93643d0,   & ! photorespiration O2 half sat gradient
+                kc_half_sat_25C = 319.58548d0,  & ! carboxylation CO2 half sat (umolCO2/mol), achieved at 25oC
+           kc_half_sat_gradient = 24.72297d0,   & ! carboxylation CO2 half sat gradient
+                co2comp_sat_25C = 36.839214d0,  & ! carboxylation CO2 compensation point(umolCO2/mol), saturation
+               co2comp_gradient = 9.734371d0,   & ! carboxylation CO2 comp point, achieved at oC
+                                                  ! Each of these are temperature sensitivty
+                            e0 = 3.661204d+00,  & ! Quantum yield (gC/MJ/m2/day PAR)
+                minlwp_default =-1.808224d+00,  & ! minimum leaf water potential (MPa). NOTE: actual SPA = -2 MPa
       soil_iso_to_net_coef_LAI =-2.717467d+00,  & ! Coefficient relating soil isothermal net radiation to net.
-                          iWUE = 6.431150d-06,  & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
+                          iWUE = 6.431150d-03,  & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
          soil_swrad_absorption = 9.989852d-01,  & ! Fraction of SW rad absorbed by soil
          max_lai_lwrad_release = 9.516639d-01,  & ! 1-Max fraction of LW emitted from canopy to be released
         lai_half_lwrad_release = 4.693329d+00,  & ! LAI at which LW emitted from canopy to be released at 50 %
@@ -221,14 +211,14 @@ module CARBON_MODEL_MOD
                                   displacement, & ! zero plane displacement (m)
                                     max_supply, & ! maximum water supply (mmolH2O/m2/day)
                                          meant, & ! mean air temperature (oC)
-                                         leafT, & ! canopy temperature (oC)
+                                         leafT, & ! canopy day time temperature temperature (oC)
                             canopy_swrad_MJday, & ! canopy_absorbed shortwave radiation (MJ.m-2.day-1)
                               canopy_par_MJday, & ! canopy_absorbed PAR radiation (MJ.m-2.day-1)
                               soil_swrad_MJday, & ! soil absorbed shortwave radiation (MJ.m-2.day-1)
                               canopy_lwrad_Wm2, & ! canopy absorbed longwave radiation (W.m-2)
                                 soil_lwrad_Wm2, & ! soil absorbed longwave radiation (W.m-2)
                                  sky_lwrad_Wm2, & ! sky absorbed longwave radiation (W.m-2)
-                          stomatal_conductance, & ! stomatal conductance (mmolH2O.m-2ground.s-1)
+                          stomatal_conductance, & ! stomatal conductance (mmolH2O.m-2leaf.s-1)
                          potential_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
                            minimum_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
                        aerodynamic_conductance, & ! bulk surface layer conductance (m.s-1)
@@ -246,17 +236,18 @@ module CARBON_MODEL_MOD
                           intercepted_rainfall    ! intercepted rainfall rate equivalent (kgH2O.m-2.s-1)
 
   ! Module level variables for ACM_GPP_ET parameters
-  double precision ::   delta_gs, & ! day length corrected gs increment mmolH2O/m2/dayl
-                            ceff, & ! canopy efficency, ceff = avN*NUE
+  double precision ::   delta_gs, & ! day length corrected gs increment mmolH2O/m2/day
+                            ceff, & ! Maximum rate of carboxylation (umolC/m2/s), Vcmax_ref = avN*NUE
 !                             avN, & ! average foliar N (gN/m2)
                        iWUE_step, & ! Intrinsic water use efficiency for that day (gC/m2leaf/dayl/mmolH2Ogs)
 !                             NUE, & ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
-!                                    ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
+!                                    ! ,unlimited by CO2, light and photoperiod (umolC/gN/m2leaf)
 metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limiterd photosynthesis (gC/m2/day)
     light_limited_photosynthesis, & ! light limited photosynthesis (gC/m2/day)
                               ci, & ! Internal CO2 concentration (ppm)
                           gb_mol, & ! Canopy boundary layer conductance (molCO2/m2/day)
-                        rb_mol_1, & ! Canopy boundary layer resistance (day/m2/molCO2)
+                        rb_mol_1, & ! Canopy boundary layer resistance (day/m2/molCO2
+                     o2_half_sat, & ! O2 at which photorespiration is 50 % of maximum
                     co2_half_sat, & ! CO2 at which photosynthesis is 50 % of maximum (ppm)
                   co2_comp_point    ! CO2 at which photosynthesis > 0 (ppm)
 
@@ -486,10 +477,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     transpiration = 0d0 ; soilevaporation = 0d0 ; wetcanopy_evap = 0d0
 
     ! load ACM-GPP-ET parameters
-    deltaWP = minlwp     ! leafWP-soilWP (i.e. -2-0)
-    Ceff = pars(11) ! Canopy efficiency (gC/m2/day)
-                    ! This is in the full model the product of Nitrogen use efficiency (gC/gN/m2leaf/day)
-                    ! and average foliar nitrogen gC/m2leaf
+    ceff = pars(11) ! Canopy efficiency (umolC/m2/s)
+                         ! This is in the full model the product of Nitrogen use efficiency (umolC/gN/m2leaf)
+                         ! and average foliar nitrogen gN/m2leaf
     ! Rooting parameters
     root_k = pars(26) ; max_depth = pars(27)
 
@@ -751,7 +741,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     rainfall = rainfall_time(1) ! rainfall (kgH2O/m2/s)
     wind_spd = met(15,1) ! wind speed (m/s)
     vpd_kPa = met(16,1)*1d-3 ! vapour pressure deficit (Pa->kPa)
-    leafT = maxt     ! initial canopy temperature (oC)
+    leafT = (maxt*0.75d0) + (mint*0.25d0)   ! initial day time canopy temperature (oC)
     seconds_per_step = deltat(1) * seconds_per_day
     days_per_step =  deltat(1)
     days_per_step_1 =  deltat_1(1)
@@ -787,12 +777,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! Incoming drivers
        mint = met(2,n)  ! minimum temperature (oC)
        maxt = met(3,n)  ! maximum temperature (oC)
-       leafT = maxt
        swrad = met(4,n) ! incoming short wave radiation (MJ/m2/day)
        co2 = met(5,n)   ! CO2 (ppm)
        doy = met(6,n)   ! Day of year
        rainfall = rainfall_time(n)
        meant = (mint + maxt) * 0.5d0 ! mean air temperature (oC)
+       leafT = (meant + maxt) * 0.5d0 ! estimate mean daytime air temperature (oC)
        wind_spd = met(15,n) ! wind speed (m/s)
        vpd_kPa = met(16,n)*1d-3  ! Vapour pressure deficit (Pa -> kPa)
 
@@ -850,7 +840,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !!!!!!!!!!
 
        ! calculate some temperature dependent meteorologial properties
-       call meteorological_constants(maxt,maxt+freeze,vpd_kPa)
+       call meteorological_constants(leafT,leafT+freeze,vpd_kPa)
        ! pass variables from memory objects
        convert_ms1_mmol_1 = convert_ms1_mol_1 * 1d3
        ! calculate aerodynamic using consistent approach with SPA
@@ -870,8 +860,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !!!!!!!!!!
 
        ! Estimate drythick for the current step
-       drythick = max(min_drythick, top_soil_depth * (1d0 - (soil_waterfrac(1) / porosity(1))))
-       !drythick = max(min_drythick, min(1d0,top_soil_depth * (1d0 - (soil_waterfrac(1) / field_capacity(1)))))
+       drythick = max(min_drythick, top_soil_depth * max(0d0,(1d0 - (soil_waterfrac(1) / field_capacity(1)))))
        ! Soil surface (kgH2O.m-2.day-1)
        call calculate_soil_evaporation(soilevaporation)
        ! If snow present assume that soilevaporation is sublimation of soil first
@@ -906,7 +895,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! close are we to maxing out supply (note 0.01 taken from min_gs)
        gs_demand_supply_ratio(n) = (stomatal_conductance  - minimum_conductance) &
                                  / (potential_conductance - minimum_conductance)
-       ! Store the canopy level stomatal conductance (mmolH2O/m2/day)
+       ! Store the canopy level stomatal conductance (mmolH2O/m2leaf/day)
        gs_total_canopy(n) = stomatal_conductance
 
        ! Note that soil mass balance will be calculated after phenology
@@ -914,7 +903,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! Reset output variable
        if (stomatal_conductance > vsmall) then
-           ! Gross primary productivity (gC/m2/day)
+           ! Gross primary productivity (umolC/m2/s -> gC/m2/day)
            call acm_gpp_stage_1 ; FLUXES(n,1) = acm_gpp_stage_2(stomatal_conductance)
            cica_time(n) = ci / co2
            ! Canopy transpiration (kgH2O/m2/day)
@@ -1191,8 +1180,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     implicit none
 
     ! Declare local variables
-    double precision :: a, b, c, Pl_max, PAR_m2
-    double precision, parameter :: theta = 0.7d0 ! curvature parameter of light response
+    double precision :: a, b, c, Pl_max, PAR_m2, airt_ad
 
     !
     ! Metabolic limited photosynthesis
@@ -1200,27 +1188,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! maximum rate of temperature and nitrogen (canopy efficiency) limited
     ! photosynthesis (gC.m-2.day-1 -> umolC/m2/day)
-    metabolic_limited_photosynthesis = gC_to_umol*lai*ceff* &
-                                     opt_max_scaling(pn_max_temp,pn_min_temp,pn_opt_temp,pn_kurtosis,leafT)
+    metabolic_limited_photosynthesis = gC_to_umol*lai*ceff*opt_max_scaling(pn_max_temp,pn_min_temp,pn_opt_temp,pn_kurtosis,leafT)
 
     !
     ! Light limited photosynthesis
     !
 
     ! calculate light limted rate of photosynthesis (gC.m-2.day-1)
-    !light_limited_photosynthesis = e0 * canopy_par_MJday
-    ! Pmax = maximum light limited photosynthesis
-    ! e0 in this case would be the quantum yield at light compensation
-    ! directly matches vj calculation from Farquhar model.
-    ! Alternate, if ceff umol/m2/s exp(log(ceff) * 0.750 + 1.677) Walker et al., (2014), Ecology and Evolution 4(16): 3218–3235
-    ! Jmax calculation in umolE/umolPAR
-    Pl_max = gC_to_umol*ceff*1.65d0*opt_max_scaling(pl_max_temp,pl_min_temp,pl_opt_temp,pl_kurtosis,leafT)
-    PAR_m2 = canopy_par_MJday * lai_1 * ppfd_to_par * 1d6 ! Convert to umolPAR
-    a = theta ; b = -(e0*PAR_m2+Pl_max) ; c = e0*PAR_m2*Pl_max
-    light_limited_photosynthesis = lai * ((-b - sqrt(b**2d0 - (4d0*a*c))) / (2d0*a))
-
-    ! Could we in theory take the minimum of metabolic_limited_photosynthesis and
-    ! light_limited_photosynthesis to then apply with the CO2 limitation?
+    light_limited_photosynthesis = e0 * canopy_par_MJday
 
     !
     ! Stomatal conductance independent variables for diffusion limited
@@ -1237,8 +1212,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Arrhenious Temperature adjustments for Michaelis-Menten coefficients
     ! for CO2 (kc) and O2 (ko) and CO2 compensation point
     ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
-    co2_half_sat   = arrhenious(kc_saturation,kc_half_sat_conc,leafT)
-    co2_comp_point = arrhenious(co2comp_saturation,co2comp_half_sat_conc,leafT)
+    co2_half_sat   = arrhenious(kc_half_sat_25C,kc_half_sat_gradient,leafT)
+    co2_comp_point = arrhenious(co2comp_sat_25C,co2comp_gradient,leafT)
 
     ! don't forget to return
     return
@@ -1259,17 +1234,17 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, intent(in) :: gs
 
     ! declare local variables
-    double precision :: pp, qq, mult, rc, pd, pl
+    double precision :: pp, qq, mult, rc, pd
 
     !
-    ! Diffusion limited photosynthesis
+    ! Combined diffusion limitation and carboxylation limited photosynthesis
     !
 
     ! Estimation of ci is based on the assumption that metabilic limited
     ! photosynthesis is equal to diffusion limited. For details
     ! see Williams et al, (1997), Ecological Applications,7(3), 1997, pp. 882–894
 
-    ! Daily canopy conductance (mmolH2O.m-2.s-1-> molCO2.m-2.day-1)
+    ! Daily canopy conductance (mmolH2O.m-2.s-1-> molCO2.m-2.s-1)
     ! The ratio of H20:CO2 diffusion is 1.646259 (Jones appendix 2).
     ! i.e. gcH2O*1.646259 = gcCO2 then all multiplied by 86400 seconds
     !
@@ -1293,15 +1268,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Estimate CO2 and light co-limitation
     !
 
-    ! Update rate of electron transport into light limited CO2 uptake
-    ! NOTE that at this point temperature limitation has not been applied to
-    ! light limited
-    pl = umol_to_gC * &
-        (light_limited_photosynthesis * ci / (4.5d0 * ci + 10.5d0 * co2_comp_point))
-
-    ! Calculate combined light and CO2 and metabolic limited photosynthesis
-    acm_gpp_stage_2 = pl*pd/(pl+pd)
-!    acm_gpp_stage_2 = light_limited_photosynthesis*pd/(light_limited_photosynthesis+pd)
+    ! calculate combined light and CO2 limited photosynthesis
+    acm_gpp_stage_2 = light_limited_photosynthesis*pd/(light_limited_photosynthesis+pd)
 
     ! sanity check
     if (acm_gpp_stage_2 /= acm_gpp_stage_2 .or. acm_gpp_stage_2 < 0d0) acm_gpp_stage_2 = 0d0
@@ -1358,11 +1326,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     if (aerodynamic_conductance > vsmall .and. total_water_flux > vsmall) then
 
         ! Determine potential water flow rate (mmolH2O.m-2.dayl-1)
-        max_supply = total_water_flux * seconds_per_day
+        max_supply = total_water_flux * seconds_per_day ! should this be day length *dayl_seconds
 
         ! Pass minimum conductance from local parameter to global value
-        ! There is uncertainty whether this should be a leaf area scaled value...
-        minimum_conductance = min_gs * lai
+        minimum_conductance = min_gs
 
         ! Invert Penman-Monteith equation to give gs (m.s-1) needed to meet
         ! maximum possible evaporation for the day.
@@ -1373,15 +1340,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         denom = (denom / (lambda * max_supply * mmol_to_kg_water * dayl_seconds_1)) - slope
         potential_conductance = aerodynamic_conductance / (denom / psych)
 
-        ! convert m.s-1 to mmolH2O.m-2.s-1
-        potential_conductance = potential_conductance * convert_ms1_mmol_1
+        ! convert m.s-1 to mmolH2O.m-2.s-1, per unit leaf area
+        potential_conductance = potential_conductance * convert_ms1_mol_1 * 1d3
         ! if conditions are dew forming then set conductance to maximum as we
         ! are not going to be limited by water demand
         if (potential_conductance <= 0d0 .or. potential_conductance > max_gs*lai) potential_conductance = max_gs*lai
 
         ! If there is a positive demand for water then we will solve for
         ! photosynthesis limits on gs through iterative solution
-        delta_gs = 1d-3*lai ! mmolH2O/m2leaf/day
+        delta_gs = 1d0*lai ! mmolH2O/m2leaf/day
         ! Estimate inverse of LAI to avoid division in optimisation
         lai_1 = lai**(-1d0)
         ! Calculate stage one acm, temperature and light limitation which
@@ -1407,29 +1374,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                               find_gs_iWUE,minimum_conductance,potential_conductance,tol_gs*lai,iWUE_step*0.10d0)
 
             end if
-!            ! Empirical fit to outputs generated by bisection procedure.
-!            ! Assumes that water supply is not limiting, thus there is still the need to estimate supply limit and apply as bookend.
-!            ! Note also that the order of covariates reflects their importance in the prediction,
-!            ! i.e. R > 0.9 just for first independent variable
-!            pn = metabolic_limited_photosynthesis
-!            pn_day = metabolic_limited_photosynthesis * dayl_hours_fraction
-!            pl = light_limited_photosynthesis
-!            stomatal_conductance =   50.92693d0 &
-!                                 + ( 14.73576d0    * ((pn_day*pl) / (pn_day+pl)) ) &
-!                                 + (  1.0555d0     * pn )                          &
-!                                 + ((-8.140542d-4) * pn**2d0 )                     &
-!                                 + ((-0.7185823d0) * pl )                          &
-!                                 + ((-1.565065d0)  * co2_comp_point )              &
-!                                 + (( 0.2258834d0) * co2_half_sat )                &
-!                                 + ((-2.486837d-4) * co2_half_sat**2d0 )           &
-!                                 + (( 4.344512d-2) * co2 )                         &
-!                                 + ((-2.969554d-4) * co2**2d0 )                    &
-!                                 + ((-41.61914d0)  * iWUE )
-!            stomatal_conductance = max(min_gs,min(stomatal_conductance,potential_conductance))
-!       else
-!            ! WUE optimisation
-!            stomatal_conductance = zbrent('calculate_gs:find_gs_WUE',find_gs_WUE,min_gs,potential_conductance,tol_gs,iWUE*0.10d0)
-!       endif
 
     else
 
@@ -1537,7 +1481,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! (mmolH2O.m-2.s-1 -> m.s-1).
     ! Note assumption of sea surface pressure only
     gs = stomatal_conductance / convert_ms1_mmol_1
-    ! Combine in series stomatal conductance with boundary layer
+    ! Scale aerodynamic conductance to canopy scale
     gb = aerodynamic_conductance
 
     !!!!!!!!!!
@@ -1589,7 +1533,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !!!!!!!!!!
 
     ! Calculate numerator of Penman Montheith (kgH2O.m-2.day-1)
-    wetcanopy_evap = max(0d0,(((slope*canopy_radiation) + (ET_demand_coef*gb)) / (lambda*(slope+psych))) * seconds_per_day)
+    wetcanopy_evap = max(0d0,(((slope*canopy_radiation) + (ET_demand_coef*gb)) / &
+                             (lambda*(slope+psych))) * seconds_per_day)
 
     ! assuming there is any rainfall, currently water on the canopy or dew formation
     if (rainfall > 0d0 .or. storage > 0d0) then
@@ -2087,6 +2032,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     par = par - trans_par_MJday
     nir = nir - trans_nir_MJday
 
+! NOTE: Can something about snow reflectance be added here to reduce radiation available for subsequent absorption / reflectance, and just reflect back to sky?
+
     ! Estimate incoming shortwave radiation absorbed, transmitted and reflected
     ! by the canopy (MJ.m-2.day-1)
     canopy_par_MJday = par * absorbed_par_fraction
@@ -2182,6 +2129,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! whether this actually varies with height or whether tall trees have a
     ! xylem architecture which keeps the whole plant conductance (gplant) 1-10 (ish).
     !    transpiration_resistance = (gplant * lai)**(-1d0)
+    ! Following Weiburg function, the potential conductance is reduced under increasing
+    ! potential differences between the canopy and soil
+ !SOME THOUGHT NEEDED HERE ON HOW TO QUANTIFY THIS IMPACT ON GPLANT, AS STRESS VARIES DEPENDING ON THE ROOT ZONE LAYERS...
+    !transpiration_resistance = gplant * exp(-(abs(SWP(1:nos_root_layers) - minlwp) / s1)**(s2))
+    !transpiration_resistance = canopy_height / (transpiration_resistance * max(min_lai,lai))
     transpiration_resistance = canopy_height / (gplant * max(min_lai,lai))
 
     !!!!!!!!!!!
@@ -3129,6 +3081,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     soil_conductance = ( canopy_height/(canopy_decay*Kh_canht) &
                        * (exp(canopy_decay*(1d0-(soil_roughl/canopy_height)))- &
                           exp(canopy_decay*(1d0-((roughl+displacement)/canopy_height)))) ) ** (-1d0)
+
+    return
 
   end subroutine calculate_soil_conductance
   !

@@ -54,6 +54,13 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # Now estimate the rooting depth based on the equation imbedded in DALEC_GSI_BUCKET
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
+   }  else if (PROJECT$model$name == "DALEC_CDEA_ACM_FARQUHAR_BUCKET"){
+       # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
+       tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
+       var = t(states_all$roots_gCm2) + tmp
+       # Now estimate the rooting depth based on the equation imbedded in DALEC_GSI_BUCKET
+       var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
+       plot_root_depth = TRUE
    }  else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
@@ -110,6 +117,58 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
        dev.off()
    } # plot_root_depth
+
+   # Soil surface snow cover
+   if (exists(x = "CiCa", where = states_all)) {
+
+       # incoming data from states_all is dim=c(iter, chain, time)
+       # structure needed by function is dim=c(time,iter)
+
+       # flip it to get the right shape
+       var = t(states_all$CiCa)
+
+       jpeg(file=paste(PROJECT$figpath,"timeseries_CiCa_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+            width=7200, height=4000, res=280, quality=100)
+       # now create the plotting area
+       par(mfrow=c(1,1), mar=c(5,5,3,1))
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(quantile(as.vector(var)[which(var != Inf)], prob=c(0.001,0.999), na.rm=TRUE)),
+            cex=0.8,ylab="Ci:Ca (0-1)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
+            main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       axis(1, at=time_vector[seq(1,length(time_vector),interval)],labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),
+            tck=-0.02, padj=+0.15, cex.axis=1.9)
+       # add the confidence intervals
+       plotconfidence(var)
+       # calculate and draw the median values, could be mean instead or other
+       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       dev.off()
+
+   } # CiCa
+
+   # Soil surface snow cover
+   if (exists(x = "snow_kgH2Om2", where = states_all)) {
+
+       # incoming data from states_all is dim=c(iter, chain, time)
+       # structure needed by function is dim=c(time,iter)
+
+       # flip it to get the right shape
+       var = t(states_all$snow_kgH2Om2)
+
+       jpeg(file=paste(PROJECT$figpath,"timeseries_snow_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+            width=7200, height=4000, res=280, quality=100)
+       # now create the plotting area
+       par(mfrow=c(1,1), mar=c(5,5,3,1))
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(quantile(as.vector(var)[which(var != Inf)], prob=c(0.001,0.999), na.rm=TRUE)),
+            cex=0.8,ylab="Soil surface snow cover (kgH2O/m2)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
+            main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       axis(1, at=time_vector[seq(1,length(time_vector),interval)],labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),
+            tck=-0.02, padj=+0.15, cex.axis=1.9)
+       # add the confidence intervals
+       plotconfidence(var)
+       # calculate and draw the median values, could be mean instead or other
+       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       dev.off()
+
+   } # snow_kgH2Om2
 
    # Weighted soil water potential
    if (exists(x = "wSWP_MPa", where = states_all)) {
@@ -169,7 +228,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # flip it to get the right shape
        var = t(states_all$ET_kgH2Om2day)
 
-       obs=drivers$obs[,31] ; obs_unc = drivers$obs[,32]
+       obs = drivers$obs[,31] ; obs_unc = drivers$obs[,32]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
 
@@ -211,7 +270,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
             # add the data on top if there is any
             if (length(which(is.na(obs))) != length(obs) ) {
                 points(obs, pch=16, cex=0.8)
-                plotCI(obs,gap=0,uiw=evap_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
+                plotCI(obs,gap=0,uiw=obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
             }
        } # acm or not
        dev.off()

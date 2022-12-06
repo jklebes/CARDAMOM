@@ -75,7 +75,7 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
         }  # month loop
 
         # clean up
-        rm(var1,i,m) ; gc(reset=TRUE,verbose=FALSE)
+        rm(var1,m) ; gc(reset=TRUE,verbose=FALSE)
 
     } else if (met_source == "trendy_v9" | met_source == "trendy_v11") {
 

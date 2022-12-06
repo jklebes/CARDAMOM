@@ -62,6 +62,15 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopars=array(32,dim=c(length(ctessel_pft)))
     nofluxes=array(45,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC_CDEA_ACM2_BUCKET",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC_CDEA_ACM_FARQUHAR_BUCKET") {
+    # information contains is
+    # The model name
+    # Number of met parameters
+    # Number of model parameters to be optimised
+    nopools=array(7,dim=c(length(ctessel_pft)))
+    nopars=array(32,dim=c(length(ctessel_pft)))
+    nofluxes=array(45,dim=c(length(ctessel_pft)))
+    cardamom_model_details=list(name="DALEC_CDEA_ACM_FARQUHAR_BUCKET",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } else if (modelname == "DALEC_CDEA_ACM2_BUCKET_wMRT") {
     # information contains is
     # The model name

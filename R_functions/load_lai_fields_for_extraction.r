@@ -42,6 +42,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                data1 = nc_open(input_file_1)
                # get timing variable
                doy_in = ncvar_get(data1,"doy")
+               doy_out = append(doy_out,doy_in)
 
                # read the modis lai drivers
                var1 = ncvar_get(data1, "modis_lai")
@@ -96,7 +97,6 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
 
                     # begin populating the various outputs
                     lai_year_hold[1:length(as.vector(var2)),t] = as.vector(var2)
-                    doy_out = append(doy_out,doy_in)
 
                } # end of year loop
 
@@ -154,7 +154,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
     lat_done = FALSE ; missing_years = 0 ; keepers = 0 ; yrs = 1 ; doy_out = 0
     # loop for year here
     for (yr in seq(1, length(years_to_load))) {
-
+#WHERE TO DETERMINE THE DOMAIN WE WANT TO READ IN SO REDUCE THE AMOUNT OF TIME SPEND LOADING?
          # Update the user as to our progress
          print(paste("... ",round((yr/length(years_to_load))*100,0),"% completed ",Sys.time(),sep=""))
 
@@ -229,16 +229,38 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
 
                   # Convert to a raster, assuming standad WGS84 grid
                   var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1))
-                  var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326"))
+                  var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326")) ; f1 = filename(var1)
                   var2 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var2))
-                  var2 = rasterFromXYZ(var2, crs = ("+init=epsg:4326"))
+                  var2 = rasterFromXYZ(var2, crs = ("+init=epsg:4326")) ; f2 = filename(var2)
                   # Remove the input lat / long information
                   rm(lat_in,long_in)
 
                   # Extend the extent of the overall grid to the analysis domain
                   var1 = extend(var1,cardamom_ext) ; var2 = extend(var2,cardamom_ext)
+                  ff1 = filename(var1) ; ff2 = filename(var2)
+
+                  # Check and remove unwanted tmp files
+                  if (f1 != ff1 & f1 != "") {
+                      if (file.exists(f1)) { file.remove(f1) }
+                      if (file.exists(gsub(".grd",".gri",f1))) { file.remove(gsub(".grd",".gri",f1)) }
+                  } ; f1 = filename(var1)
+                  if (f2 != ff2 & f2 != "") {
+                      if (file.exists(f2)) { file.remove(f2) }
+                      if (file.exists(gsub(".grd",".gri",f2))) { file.remove(gsub(".grd",".gri",f2)) }
+                  } ; f2 = filename(var2)
                   # Trim the extent of the overall grid to the analysis domain
                   var1 = crop(var1,cardamom_ext) ; var2 = crop(var2,cardamom_ext)
+                  ff1 = filename(var1) ; ff2 = filename(var2)
+
+                  # Check and remove unwanted tmp files
+                  if (f1 != ff1 & f1 != "") {
+                      if (file.exists(f1)) { file.remove(f1) }
+                      if (file.exists(gsub(".grd",".gri",f1))) { file.remove(gsub(".grd",".gri",f1)) }
+                  } ; f1 = filename(var1)
+                  if (f2 != ff2 & f2 != "") {
+                      if (file.exists(f2)) { file.remove(f2) }
+                      if (file.exists(gsub(".grd",".gri",f2))) { file.remove(gsub(".grd",".gri",f2)) }
+                  } ; f2 = filename(var2)
                   # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
                   # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
                   if (spatial_type == "grid") {
@@ -249,6 +271,17 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                           # Probably should be done via aggregate function to allow for correct error propogation
                           var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
                           var2 = resample(var2, target, method="bilinear") ; gc() ; removeTmpFiles()
+                          ff1 = filename(var1) ; ff2 = filename(var2)
+                          # Check and remove unwanted tmp files
+                          if (f1 != ff1 & f1 != "") {
+                              if (file.exists(f1)) { file.remove(f1) }
+                              if (file.exists(gsub(".grd",".gri",f1))) { file.remove(gsub(".grd",".gri",f1)) }
+                          } ; f1 = filename(var1)
+                          if (f2 != ff2 & f2 != "") {
+                              if (file.exists(f2)) { file.remove(f2) }
+                              if (file.exists(gsub(".grd",".gri",f2))) { file.remove(gsub(".grd",".gri",f2)) }
+                          } ; f2 = filename(var2)
+
                       } # Aggrgeate to resolution
                   } # spatial_type == "grid"
 
@@ -270,6 +303,16 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                   # break out from the rasters into arrays which we can manipulate
                   var1 = array(as.vector(unlist(var1)), dim=c(xdim,ydim))
                   var2 = array(as.vector(unlist(var2)), dim=c(xdim,ydim))
+
+                  # Check and remove unwanted tmp files
+                  if (f1 != "") {
+                      if (file.exists(f1)) { file.remove(f1) }
+                      if (file.exists(gsub(".grd",".gri",f1))) { file.remove(gsub(".grd",".gri",f1)) }
+                  } # no longer using rasters at this point, so no file name to track
+                  if (f2 != "") {
+                      if (file.exists(f2)) { file.remove(f2) }
+                      if (file.exists(gsub(".grd",".gri",f2))) { file.remove(gsub(".grd",".gri",f2)) }
+                  } # no longer using rasters at this point, so no file name to track
                   # set actual missing data to -9999
                   var1[which(is.na(as.vector(var1)))] = -9999
                   var2[which(is.na(as.vector(var2)))] = -9999

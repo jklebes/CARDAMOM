@@ -373,7 +373,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
 #                co2 = append(co2,rep(380,length.out=(nos_days*steps_in_day)))
              }
         } # end of years loop
-
+#co2 = rep(co2[1], length.out = length(co2))
         # create day of run variable
         run_day = seq(1:length(doy))
 

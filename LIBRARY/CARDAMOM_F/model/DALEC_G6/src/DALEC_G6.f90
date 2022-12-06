@@ -40,10 +40,10 @@ module CARBON_MODEL_MOD
            ,logistic_func                 &
            ,freeze                        &
            ,minlwp_default                &
-           ,co2comp_saturation            &
-           ,co2comp_half_sat_conc         &
-           ,kc_saturation                 &
-           ,kc_half_sat_conc              &
+           ,co2comp_sat_25C            &
+           ,co2comp_gradient         &
+           ,kc_half_sat_25C                 &
+           ,kc_half_sat_gradient              &
            ,calculate_update_soil_water   &
            ,calculate_Rtot                &
            ,calculate_aerodynamic_conductance &
@@ -141,7 +141,7 @@ module CARBON_MODEL_MOD
            ,Rm_leaf, Rm_wood_root         &
            ,Rg_leaf, Rg_wood_root         &
            ,NCCE                          &
-           ,CMI                           & 
+           ,CMI                           &
            ,dim_1,dim_2                   &
            ,nos_trees                     &
            ,nos_inputs                    &
@@ -205,10 +205,10 @@ module CARBON_MODEL_MOD
 
   ! photosynthesis / respiration parameters
   double precision, parameter :: &
-                      kc_saturation = 310d0,        & ! CO2 half saturation, saturation value
-                   kc_half_sat_conc = 23.956d0,     & ! CO2 half sat, half sat
-                 co2comp_saturation = 36.5d0,       & ! CO2 compensation point, saturation
-              co2comp_half_sat_conc = 9.46d0,       & ! CO2 comp point, half sat
+                    kc_half_sat_25C = 310d0,        & ! CO2 half saturation, saturation value
+               kc_half_sat_gradient = 23.956d0,     & ! CO2 half sat, half sat
+                    co2comp_sat_25C = 36.5d0,       & ! CO2 compensation point, saturation
+                   co2comp_gradient = 9.46d0,       & ! CO2 comp point, half sat
                                                       ! Each of these are temperature sensitivty
                         Rg_fraction = 0.21875d0,    & ! fraction of C allocation towards each pool
                                                       ! lost as growth respiration
@@ -218,7 +218,7 @@ module CARBON_MODEL_MOD
   ! hydraulic parameters
   double precision, parameter :: &
                          tortuosity = 2.5d0,        & ! tortuosity
-                             gplant = 5d0,          & ! plant hydraulic conductivity (mmol m-1 s-1 MPa-1)
+                             gplant = 4d0,          & ! plant hydraulic conductivity (mmol m-1 s-1 MPa-1)
                         root_resist = 25d0,         & ! Root resistivity (MPa s g mmol−1 H2O)
                         root_radius = 0.00029d0,    & ! root radius (m) Bonen et al 2014 = 0.00029
                                                       ! Williams et al 1996 = 0.0001
@@ -254,18 +254,18 @@ module CARBON_MODEL_MOD
 
   ! ACM-GPP-ET parameters
   double precision, parameter :: &
-!                   pn_max_temp = 6.842942d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
-!                   pn_min_temp = -1d+06      ,  & ! Minimum daily max temperature for photosynthesis (oC)
-!                   pn_opt_temp = 3.155960d+01,  & ! Optimum daily max temperature for photosynthesis (oC)
-!                   pn_kurtosis = 1.889026d-01,  & ! Kurtosis of photosynthesis temperature response
-                   pn_max_temp = 59d0,          & ! Maximum daily max temperature for photosynthesis (oC)
-                   pn_min_temp = -4d0,          & ! Minimum daily max temperature for photosynthesis (oC)
-                   pn_opt_temp = 30d0,          & ! Optimum daily max temperature for photosynthesis (oC)
-                   pn_kurtosis = 0.07d0,        & ! Kurtosis of photosynthesis temperature response
+                   pn_max_temp = 6.842942d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
+                   pn_min_temp = -1d+06      ,  & ! Minimum daily max temperature for photosynthesis (oC)
+                   pn_opt_temp = 3.155960d+01,  & ! Optimum daily max temperature for photosynthesis (oC)
+                   pn_kurtosis = 1.889026d-01,  & ! Kurtosis of photosynthesis temperature response
+!bespoke                   pn_max_temp = 59d0,          & ! Maximum daily max temperature for photosynthesis (oC)
+!                   pn_min_temp = -4d0,          & ! Minimum daily max temperature for photosynthesis (oC)
+!                   pn_opt_temp = 30d0,          & ! Optimum daily max temperature for photosynthesis (oC)
+!                   pn_kurtosis = 0.07d0,        & ! Kurtosis of photosynthesis temperature response
                             e0 = 3.661204d+00,  & ! Quantum yield gC/MJ/m2/day PAR
                 minlwp_default =-1.808224d+00,  & ! minimum leaf water potential (MPa)
       soil_iso_to_net_coef_LAI =-2.717467d+00,  & ! Coefficient relating soil isothermal net radiation to net.
-                          iWUE = 6.431150d-06,  & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
+                          iWUE = 6.431150d-03,  & ! Intrinsic water use efficiency (gC/m2leaf/day/mmolH2Ogs)
          soil_swrad_absorption = 9.989852d-01,  & ! Fraction of SW rad absorbed by soil
          max_lai_lwrad_release = 9.516639d-01,  & ! 1-Max fraction of LW emitted from canopy to be released
         lai_half_lwrad_release = 4.693329d+00,  & ! LAI at which LW emitted from canopy to be released at 50 %
@@ -969,7 +969,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     wind_spd = met(15,1) ! wind speed (m/s)
     vpd_kPa = met(16,1)*1d-3 ! vapour pressure deficit (Pa->kPa)
     meant = meant_time(1)
-    leafT = maxt     ! initial canopy temperature (oC)
+    leafT = (maxt*0.75d0) + (mint*0.25d0)   ! initial day time canopy temperature (oC)
     soilT = maxt     ! initial soil temperature (oC)
     seconds_per_step = deltat(1) * seconds_per_day
     days_per_step =  deltat(1)
@@ -1016,7 +1016,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        run_day = met(1,n) ! day of analysis
        mint = met(2,n)  ! minimum temperature (oC)
        maxt = met(3,n)  ! maximum temperature (oC)
-       leafT = maxt     ! initial canopy temperature (oC)
+       leafT = (maxt*0.75d0) + (mint*0.25d0)   ! initial day time canopy temperature (oC)
        soilT = maxt     ! initial soil temperature (oC)
        swrad = met(4,n) ! incoming short wave radiation (MJ/m2/day)
        co2 = met(5,n)   ! CO2 (ppm)
@@ -1101,7 +1101,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !!!!!!!!!!
 
        ! Estimate drythick for the current step
-       drythick = max(min_drythick, top_soil_depth * (1d0 - (soil_waterfrac(1) / porosity(1))))
+       drythick = max(min_drythick, top_soil_depth * max(0d0,(1d0 - (soil_waterfrac(1) / field_capacity(1)))))
        ! Soil surface (kgH2O.m-2.day-1)
        call calculate_soil_evaporation(soilevaporation)
        ! If snow present assume that soilevaporation is sublimation of soil first
@@ -1583,8 +1583,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Temperature adjustments for Michaelis-Menten coefficients
     ! for CO2 (kc) and O2 (ko; in Farquhar model) and CO2 compensation point
     ! See McMurtrie et al., (1992) Australian Journal of Botany, vol 40, 657-677
-    co2_half_sat   = arrhenious(kc_saturation,kc_half_sat_conc,leafT)
-    co2_comp_point = arrhenious(co2comp_saturation,co2comp_half_sat_conc,leafT)
+    co2_half_sat   = arrhenious(kc_half_sat_25C,kc_half_sat_gradient,leafT)
+    co2_comp_point = arrhenious(co2comp_sat_25C,co2comp_gradient,leafT)
 
     ! don't forget to return
     return
@@ -1767,7 +1767,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         ! If there is a positive demand for water then we will solve for
         ! photosynthesis limits on gs through iterative solution
-        delta_gs = 1d-3*lai ! mmolH2O/m2leaf/day
+        delta_gs = 1d0*lai ! mmolH2O/m2leaf/day
         ! Estimate inverse of LAI to avoid division in optimisation
         lai_1 = lai**(-1d0)
         ! Calculate stage one acm, temperature and light limitation which

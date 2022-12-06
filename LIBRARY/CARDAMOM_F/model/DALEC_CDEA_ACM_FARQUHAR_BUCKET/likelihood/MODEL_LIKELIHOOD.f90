@@ -434,18 +434,18 @@ module model_likelihood_module
     ! IMPLICIT Combustion completeness for foliage should be greater than soil
     ! IMPLICIT Combustion completeness for fol+root litter should be greater than soil
 
-    ! Combustion completeness for foliage should be greater than non-photosynthetic tissues
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(29) < pars(30)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
-    endif
-    ! Combustion completeness for non-photosynthetic tissue should be greater than soil
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(30) < pars(31)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
-    endif
-    ! Combustion completeness for foliar + fine root litter should be greater than non-photosynthetic tissue
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(30)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
-    endif
+!    ! Combustion completeness for foliage should be greater than non-photosynthetic tissues
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(29) < pars(30)) then
+!        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
+!    endif
+!    ! Combustion completeness for non-photosynthetic tissue should be greater than soil
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(30) < pars(31)) then
+!        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
+!    endif
+!    ! Combustion completeness for foliar + fine root litter should be greater than non-photosynthetic tissue
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(30)) then
+!        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
+!    endif
 
     ! could always add more / remove some
 
