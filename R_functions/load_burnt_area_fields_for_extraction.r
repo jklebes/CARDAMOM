@@ -158,6 +158,22 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
                   lat_in = ncvar_get(data1, "latitude") ; long_in = ncvar_get(data1, "longitude")
                   # read the burnt fraction estimate (units are 0-1)
                   var1_in = ncvar_get(data1, "BurnedFraction")
+                  # Check that lat / long are 2D arrays, if not we can try to force them
+                  if (length(dim(lat_in)) == 1 | length(dim(long_in)) == 1) {
+                      # Ok, one (or hopefully both) of the lat / long variables is not in the expected grid format
+                      if (length(dim(lat_in)) == 1 & length(dim(long_in)) == 2) {
+                          # Not good
+                          stop("MCD64A1 latitude is a vector but longitude is an array")
+                      }
+                      if (length(dim(lat_in)) == 2 & length(dim(long_in)) == 1) {
+                          # Not good
+                          stop("MCD64A1 longitude is a vector but latitude is an array")
+                      }
+                      # From here assume they are both vectors
+                      # Turn lat_in / long_in from vectors to arrays
+                      lat_in = t(array(lat_in, dim=c(dim(var1_in)[2],dim(var1_in)[1])))
+                      long_in = array(long_in, dim=c(dim(var1_in)[1],dim(var1_in)[2]))
+                  }
                   # MODIS has some negative values which are codes for missing data and sea.
                   # -2 = sea, -1 missing data
                   var1_in[var1_in == -2] = NA ; var1_in[var1_in == -1] = 0

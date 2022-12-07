@@ -63,7 +63,7 @@ module CARBON_MODEL_MOD
                               boltz = 5.670400d-8,  & ! Boltzmann constant (W.m-2.K-4)
                          emissivity = 0.96d0,       &
                         emiss_boltz = 5.443584d-08, & ! emissivity * boltz
-                        ppfd_to_par = 4.6d0,        & ! Conversion of umolPAR -> J
+                        ppfd_to_par = 4.6d0,        & ! Conversion of SW -> PAR (umol.J-1)
                     sw_par_fraction = 0.5d0,        & ! fraction of short-wave radiation which is PAR
                              freeze = 273.15d0,     & !
                   gs_H2Ommol_CO2mol = 0.001646259d0,& ! The ratio of H20:CO2 diffusion for gs (Jones appendix 2)
