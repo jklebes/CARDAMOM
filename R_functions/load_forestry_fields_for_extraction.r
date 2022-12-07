@@ -32,6 +32,23 @@ load_forestry_fields_for_extraction<-function(latlon_in,forestry_source,years_to
               # tidy up
               nc_close(data2)
 
+              # Check that lat / long are 2D arrays, if not we can try to force them
+              if (length(dim(lat_in)) == 1 | length(dim(long_in)) == 1) {
+                  # Ok, one (or hopefully both) of the lat / long variables is not in the expected grid format
+                  if (length(dim(lat_in)) == 1 & length(dim(long_in)) == 2) {
+                      # Not good
+                      stop("GFW latitude is a vector but longitude is an array")
+                  }
+                  if (length(dim(lat_in)) == 2 & length(dim(long_in)) == 1) {
+                      # Not good
+                      stop("GFW longitude is a vector but latitude is an array")
+                  }
+                  # From here assume they are both vectors
+                  # Turn lat_in / long_in from vectors to arrays
+                  lat_in = t(array(lat_in, dim=c(dim(var1)[2],dim(var1)[1])))
+                  long_in = array(long_in, dim=c(dim(var1)[1],dim(var1)[2]))
+              }
+
               # Convert to a raster, assuming standad WGS84 grid
               var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1))
               var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326"))
