@@ -300,8 +300,8 @@ module CARBON_MODEL_MOD
   double precision, allocatable, dimension(:) :: &
                                               tmp_x,gsi_history, &
                                          gs_demand_supply_ratio, & ! actual:potential stomatal conductance
-                                                gs_total_canopy, & ! stomatal conductance (mmolH2O/m2ground/day)
-                                                gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/day)
+                                                gs_total_canopy, & ! stomatal conductance (mmolH2O/m2ground/s)
+                                                gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/s)
                                           canopy_par_MJday_time, & ! Absorbed PAR by canopy (MJ/m2ground/day)
                                                  Q10_adjustment, &
                                                  Rg_from_labile, &
@@ -1005,6 +1005,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        convert_ms1_mmol_1 = convert_ms1_mol_1 * 1d3
        ! calculate aerodynamic using consistent approach with SPA
        call calculate_aerodynamic_conductance
+       ! Aerodynamic conductance (mmolH2O/m2ground/s)
        gb_total_canopy(n) = aerodynamic_conductance * convert_ms1_mmol_1
 
        !!!!!!!!!!
@@ -1030,7 +1031,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! Estimate stomatal conductance relative to its minimum / maximum, i.e. how
        ! close are we to maxing out supply (note 0.01 taken from min_gs)
        gs_demand_supply_ratio(n) = (stomatal_conductance - minimum_conductance) / (potential_conductance-minimum_conductance)
-       ! Store the canopy level stomatal conductance (mmolH2O/m2/day)
+       ! Store the canopy level stomatal conductance (mmolH2O/m2/s)
        gs_total_canopy(n) = stomatal_conductance
 
        ! Note that soil mass balance will be calculated after phenology
@@ -1576,7 +1577,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         ! If there is a positive demand for water then we will solve for
         ! photosynthesis limits on gs through iterative solution
-        delta_gs = 1d0*lai ! mmolH2O/m2leaf/day
+        delta_gs = 1d0*lai ! mmolH2O/m2leaf/s
         ! Estimate inverse of LAI to avoid division in optimisation
         lai_1 = lai**(-1d0)
         ! Calculate stage one acm, temperature and light limitation which

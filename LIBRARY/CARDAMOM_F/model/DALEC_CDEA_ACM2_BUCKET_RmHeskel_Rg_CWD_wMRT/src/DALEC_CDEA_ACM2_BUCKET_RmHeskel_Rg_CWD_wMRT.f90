@@ -170,8 +170,8 @@ module CARBON_MODEL_MOD
                                           Rm_leaf, Rm_wood_root, & ! Maintenance respiration (gC/m2/day)
                                           Rg_leaf, Rg_wood_root, &
                                          gs_demand_supply_ratio, & ! actual:potential stomatal conductance
-                                                gs_total_canopy, & ! stomatal conductance (mmolH2O/m2ground/day)
-                                                gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/day)
+                                                gs_total_canopy, & ! stomatal conductance (mmolH2O/m2ground/s)
+                                                gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/s)
                                           canopy_par_MJday_time    ! Absorbed PAR by canopy (MJ/m2ground/day)
 
   ! arrays for the emulator, just so we load them once and that is it cos they be
@@ -859,6 +859,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        convert_ms1_mmol_1 = convert_ms1_mol_1 * 1d3
        ! calculate aerodynamic using consistent approach with SPA
        call calculate_aerodynamic_conductance
+       ! Aerodynamimc conductance (mmolH2O/m2ground/s)
        gb_total_canopy(n) = aerodynamic_conductance * convert_ms1_mmol_1
 
        !!!!!!!!!!
@@ -874,7 +875,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !!!!!!!!!!
 
        ! Estimate drythick for the current step
-       drythick = max(min_drythick, top_soil_depth * (1d0 - (soil_waterfrac(1) / porosity(1))))
+       drythick = max(min_drythick, top_soil_depth * max(0d0,(1d0 - (soil_waterfrac(1) / field_capacity(1)))))
        ! Soil surface (kgH2O.m-2.day-1)
        call calculate_soil_evaporation(soilevaporation)
        ! If snow present assume that soilevaporation is sublimation of soil first
@@ -909,7 +910,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! close are we to maxing out supply (note 0.01 taken from min_gs)
        gs_demand_supply_ratio(n) = (stomatal_conductance  - minimum_conductance) &
                                  / (potential_conductance - minimum_conductance)
-       ! Store the canopy level stomatal conductance (mmolH2O/m2/day)
+       ! Store the canopy level stomatal conductance (mmolH2O/m2/s)
        gs_total_canopy(n) = stomatal_conductance
 
        ! Note that soil mass balance will be calculated after phenology
@@ -1395,7 +1396,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         ! If there is a positive demand for water then we will solve for
         ! photosynthesis limits on gs through iterative solution
-        delta_gs = 1d0*lai ! mmolH2O/m2leaf/day
+        delta_gs = 1d0*lai ! mmolH2O/m2leaf/s
         ! Estimate inverse of LAI to avoid division in optimisation
         lai_1 = lai**(-1d0)
         ! Calculate stage one acm, temperature and light limitation which

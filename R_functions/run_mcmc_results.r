@@ -662,17 +662,17 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
               grid_output$mean_gs_demand_supply_ratio = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$gs_demand_supply_ratio = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           }
-          if (exists(x = "gs_mmolH2Om2day", where = site_output)) {
+          if (exists(x = "gs_mmolH2Om2s", where = site_output)) {
               # Canopy stomatal conductance
-              grid_output$mean_annual_gs_mmolH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
-              grid_output$mean_gs_mmolH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$gs_mmolH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$mean_annual_gs_mmolH2Om2s = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_gs_mmolH2Om2s = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$gs_mmolH2Om2s = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           }
-          if (exists(x = "gb_mmolH2Om2day", where = site_output)) {
+          if (exists(x = "gb_mmolH2Om2s", where = site_output)) {
               # Canopy boundary layer conductance
-              grid_output$mean_annual_gb_mmolH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
-              grid_output$mean_gb_mmolH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$gb_mmolH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              grid_output$mean_annual_gb_mmolH2Om2s = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_gb_mmolH2Om2s = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$gb_mmolH2Om2s = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           }
 
           # Create overlap statistics variables - may not always get filled in the end
@@ -2288,23 +2288,23 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
               dCbio = states_all$gs_demand_supply_ratio - states_all$gs_demand_supply_ratio[,1] # difference in dom from initial
               site_output$dgs_demand_supply_ratio = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
           }
-          if (exists(x = "gs_mmolH2Om2day", where = states_all)) {
+          if (exists(x = "gs_mmolH2Om2s", where = states_all)) {
               # Extract the canopy stomatal conductance
-              site_output$gs_mmolH2Om2day = apply(states_all$gs_mmolH2Om2day,2,quantile, prob=num_quantiles, na.rm = na_flag)
-              site_output$mean_gs_mmolH2Om2day = quantile(rowMeans(states_all$gs_mmolH2Om2day, na.rm = na_flag), prob=num_quantiles)
-              site_output$mean_annual_gs_mmolH2Om2day = apply(t(apply(states_all$gs_mmolH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
+              site_output$gs_mmolH2Om2s = apply(states_all$gs_mmolH2Om2s,2,quantile, prob=num_quantiles, na.rm = na_flag)
+              site_output$mean_gs_mmolH2Om2s = quantile(rowMeans(states_all$gs_mmolH2Om2s, na.rm = na_flag), prob=num_quantiles)
+              site_output$mean_annual_gs_mmolH2Om2s = apply(t(apply(states_all$gs_mmolH2Om2s,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
               # Calculate change over time
-              dCbio = states_all$gs_mmolH2Om2day - states_all$gs_mmolH2Om2day[,1] # difference in dom from initial
-              site_output$dgs_mmolH2Om2day = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+              dCbio = states_all$gs_mmolH2Om2s - states_all$gs_mmolH2Om2s[,1] # difference in dom from initial
+              site_output$dgs_mmolH2Om2s = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
           }
-          if (exists(x = "gb_mmolH2Om2day", where = states_all)) {
+          if (exists(x = "gb_mmolH2Om2s", where = states_all)) {
               # Extract the canopy boundary layer conductance
-              site_output$gb_mmolH2Om2day = apply(states_all$gb_mmolH2Om2day,2,quantile, prob=num_quantiles, na.rm = na_flag)
-              site_output$mean_gb_mmolH2Om2day = quantile(rowMeans(states_all$gb_mmolH2Om2day, na.rm = na_flag), prob=num_quantiles)
-              site_output$mean_annual_gb_mmolH2Om2day = apply(t(apply(states_all$gb_mmolH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
+              site_output$gb_mmolH2Om2s = apply(states_all$gb_mmolH2Om2s,2,quantile, prob=num_quantiles, na.rm = na_flag)
+              site_output$mean_gb_mmolH2Om2s = quantile(rowMeans(states_all$gb_mmolH2Om2s, na.rm = na_flag), prob=num_quantiles)
+              site_output$mean_annual_gb_mmolH2Om2s = apply(t(apply(states_all$gb_mmolH2Om2s,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
               # Calculate change over time
-              dCbio = states_all$gb_mmolH2Om2day - states_all$gb_mmolH2Om2day[,1] # difference in dom from initial
-              site_output$dgb_mmolH2Om2day = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+              dCbio = states_all$gb_mmolH2Om2s - states_all$gb_mmolH2Om2s[,1] # difference in dom from initial
+              site_output$dgb_mmolH2Om2s = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
           }
 
           ###
@@ -3080,17 +3080,17 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                    grid_output$mean_gs_demand_supply_ratio[slot_i,slot_j,] = site_output$mean_gs_demand_supply_ratio
                    grid_output$gs_demand_supply_ratio[n,,] = site_output$gs_demand_supply_ratio
                }
-               if (exists(x = "gs_mmolH2Om2day", where = site_output)) {
+               if (exists(x = "gs_mmolH2Om2s", where = site_output)) {
                    # Canopy stomatal conductance
-                   grid_output$mean_annual_gs_mmolH2Om2day[n,,] = site_output$mean_annual_gs_mmolH2Om2day
-                   grid_output$mean_gs_mmolH2Om2day[slot_i,slot_j,] = site_output$mean_gs_mmolH2Om2day
-                   grid_output$gs_mmolH2Om2day[n,,] = site_output$gs_mmolH2Om2day
+                   grid_output$mean_annual_gs_mmolH2Om2s[n,,] = site_output$mean_annual_gs_mmolH2Om2s
+                   grid_output$mean_gs_mmolH2Om2s[slot_i,slot_j,] = site_output$mean_gs_mmolH2Om2s
+                   grid_output$gs_mmolH2Om2s[n,,] = site_output$gs_mmolH2Om2s
                }
-               if (exists(x = "gb_mmolH2Om2day", where = site_output)) {
+               if (exists(x = "gb_mmolH2Om2s", where = site_output)) {
                    # Canopy boundary layer conductance
-                   grid_output$mean_annual_gb_mmolH2Om2day[n,,] = site_output$mean_annual_gb_mmolH2Om2day
-                   grid_output$mean_gb_mmolH2Om2day[slot_i,slot_j,] = site_output$mean_gb_mmolH2Om2day
-                   grid_output$gb_mmolH2Om2day[n,,] = site_output$gb_mmolH2Om2day
+                   grid_output$mean_annual_gb_mmolH2Om2s[n,,] = site_output$mean_annual_gb_mmolH2Om2s
+                   grid_output$mean_gb_mmolH2Om2s[slot_i,slot_j,] = site_output$mean_gb_mmolH2Om2s
+                   grid_output$gb_mmolH2Om2s[n,,] = site_output$gb_mmolH2Om2s
                }
 
                # Any time series assimilated data overlaps?
