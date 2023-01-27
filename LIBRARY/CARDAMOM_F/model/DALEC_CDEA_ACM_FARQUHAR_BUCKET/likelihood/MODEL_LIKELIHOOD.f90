@@ -679,14 +679,14 @@ module model_likelihood_module
         ! Dead pools
         do n = 5, 6
            ! Restrict rates of increase
-           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+           if (abs(log(Fin(n)/Fout(n))) > EQF1_5) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
            end if
            ! Restrict rates from deviating unrealistically from the mean
            if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
-                    abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
+                    abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-           end if
+            end if
 !           ! Restrict exponential behaviour at initialisation
 !           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
 !               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0

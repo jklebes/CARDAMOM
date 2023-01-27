@@ -89,7 +89,7 @@ load_fire_emission_fields_for_extraction<-function(latlon_in,fire_source,start_y
 
                        # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
                        # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-                       if (spatial_type == "grid") {
+                       #if (spatial_type == "grid") {
                            if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
 
                                # Create raster with the target resolution
@@ -99,7 +99,7 @@ load_fire_emission_fields_for_extraction<-function(latlon_in,fire_source,start_y
                                var2 = resample(var2, target, method="bilinear") ; gc() ; removeTmpFiles()
 
                           } # Aggrgeate to resolution
-                       } # spatial_type == "grid"
+                       #} # spatial_type == "grid"
 
                        if (lat_done == FALSE) {
                            # extract dimension information for the grid, note the axis switching between raster and actual array

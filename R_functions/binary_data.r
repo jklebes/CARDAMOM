@@ -363,9 +363,9 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
                                                                            # These observational constraints are not the same and would lead to
                                                                            # overestimation of GPP (SPA = 34, ACM2 = 15), but here multiple by avN (1.89) to get Ceff
 #      PARPRIORS[11] = 65.0               ; PARPRIORUNC[11] = 30.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax (gC/m2/day): Wullscheller (1993)
-#      PARPRIORS[11]=21.1491                ; PARPRIORUNC[11]=8.534234 #; PARPRIORWEIGHT[11] = 1 # Ceff: derived from multiple trait values from Kattge et al., (2011)
-#                                                                      # Note that this prior is difference from DALEC_CDEA_LU_FIRES
-#                                                                      # due to the different temperature response functions used in ACM2 vs ACM 1
+      PARPRIORS[11]=21.1491                ; PARPRIORUNC[11]=8.534234 #; PARPRIORWEIGHT[11] = 1 # Vcmax: derived from multiple trait values from Kattge et al., (2011)
+                                                                      # Note that this prior is difference from DALEC_CDEA_LU_FIRES
+                                                                      # due to the different temperature response functions used in ACM2 vs ACM 1
       PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc #; PARPRIORWEIGHT[17] = noyears
       PARPRIORS[19]=OBS$Cfol_initial       ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
       PARPRIORS[20]=OBS$Croots_initial     ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior

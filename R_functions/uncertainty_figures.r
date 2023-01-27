@@ -114,7 +114,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
        dev.off()
    } # plot_root_depth
 
@@ -139,7 +139,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
        dev.off()
 
    } # CiCa
@@ -165,7 +165,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
        dev.off()
 
    } # snow_kgH2Om2
@@ -191,7 +191,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
        dev.off()
 
    } # wSWP_MPa
@@ -215,7 +215,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
        dev.off()
 
    }  # SurfWater_kgH2Om2
@@ -266,13 +266,143 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
             # add the confidence intervals
             plotconfidence(var)
             # calculate and draw the median values, could be mean instead or other
-            #lines(apply(evap_var[1:(dim(evap_var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+            lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
             # add the data on top if there is any
             if (length(which(is.na(obs))) != length(obs) ) {
                 points(obs, pch=16, cex=0.8)
                 plotCI(obs,gap=0,uiw=obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
             }
        } # acm or not
+       dev.off()
+
+   }
+
+   # Canopy scale aerodynamic conductance (mmH2O/m2/s)
+   if (exists(x = "gb_mmolH2Om2s", where = states_all)) {
+
+       # incoming data from states_all is dim=c(iter, time)
+       # structure needed by function is dim=c(time,iter)
+       # flip it to get the right shape
+       var = t(states_all$gs_mmolH2Om2s)
+       obs = rep(NA, dim(var)[1])
+
+       jpeg(file=paste(PROJECT$figpath,"timeseries_aerodynamic_conductance_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""), width=7200, height=4000, res=280, quality=100)
+       # now create the plotting area
+       par(mfrow=c(1,1), mar=c(5,5,3,1))
+       plot(obs, pch=16,xaxt="n", ylim=c(0,quantile(as.vector(var), prob=c(0.999),na.rm=TRUE)), cex=0.8,
+            ylab="Canopy-scale aerodynamic conductance (mmH2O.m-2.s-1)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
+            main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       axis(1, at=time_vector[seq(1,length(time_vector),interval)],
+            labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
+       # add the confidence intervals
+       plotconfidence(var)
+       # calculate and draw the median values, could be mean instead or other
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
+
+       dev.off()
+
+   }
+
+   # Canopy scale stomatal conductance (mmH2O/m2/s)
+   if (exists(x = "gs_mmolH2Om2s", where = states_all)) {
+
+       # incoming data from states_all is dim=c(iter, time)
+       # structure needed by function is dim=c(time,iter)
+       # flip it to get the right shape
+       var = t(states_all$gs_mmolH2Om2s)
+       obs = rep(NA, dim(var)[1])
+
+       jpeg(file=paste(PROJECT$figpath,"timeseries_stomatal_conductance_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""), width=7200, height=4000, res=280, quality=100)
+       # now create the plotting area
+       par(mfrow=c(1,1), mar=c(5,5,3,1))
+       plot(obs, pch=16,xaxt="n", ylim=c(0,quantile(as.vector(var), prob=c(0.999),na.rm=TRUE)), cex=0.8,
+            ylab="Canopy-scale stomatal conductance (mmH2O.m-2.s-1)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
+            main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       axis(1, at=time_vector[seq(1,length(time_vector),interval)],
+            labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
+       # add the confidence intervals
+       plotconfidence(var)
+       # calculate and draw the median values, could be mean instead or other
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
+
+       dev.off()
+
+   }
+
+   # Transpiration (kgH2O/m2/day)
+   if (exists(x = "Etrans_kgH2Om2day", where = states_all)) {
+
+       # incoming data from states_all is dim=c(iter, time)
+       # structure needed by function is dim=c(time,iter)
+       # flip it to get the right shape
+       var = t(states_all$Etrans_kgH2Om2day)
+       obs = rep(NA, dim(var)[1])
+
+       jpeg(file=paste(PROJECT$figpath,"timeseries_Etrans_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""), width=7200, height=4000, res=280, quality=100)
+       # now create the plotting area
+       par(mfrow=c(1,1), mar=c(5,5,3,1))
+       plot(obs, pch=16,xaxt="n", ylim=c(0,quantile(as.vector(var), prob=c(0.999),na.rm=TRUE)), cex=0.8,
+            ylab="Transpiration (kgH2O.m-2.day-1)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
+            main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       axis(1, at=time_vector[seq(1,length(time_vector),interval)],
+            labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
+       # add the confidence intervals
+       plotconfidence(var)
+       # calculate and draw the median values, could be mean instead or other
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
+
+       dev.off()
+
+   }
+
+   # Soil evaporation (kgH2O/m2/day)
+   if (exists(x = "Esoil_kgH2Om2day", where = states_all)) {
+
+       # incoming data from states_all is dim=c(iter, time)
+       # structure needed by function is dim=c(time,iter)
+       # flip it to get the right shape
+       var = t(states_all$Esoil_kgH2Om2day)
+       obs = rep(NA, dim(var)[1])
+
+       jpeg(file=paste(PROJECT$figpath,"timeseries_Esoil_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""), width=7200, height=4000, res=280, quality=100)
+       # now create the plotting area
+       par(mfrow=c(1,1), mar=c(5,5,3,1))
+       plot(obs, pch=16,xaxt="n", ylim=c(0,quantile(as.vector(var), prob=c(0.999),na.rm=TRUE)), cex=0.8,
+            ylab="Soil evaporation (kgH2O.m-2.day-1)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
+            main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       axis(1, at=time_vector[seq(1,length(time_vector),interval)],
+            labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
+       # add the confidence intervals
+       plotconfidence(var)
+       # calculate and draw the median values, could be mean instead or other
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
+
+       dev.off()
+
+   }
+
+   # SoiWet canopy evaporation (kgH2O/m2/day)
+   if (exists(x = "Ewetcanopy_kgH2Om2day", where = states_all)) {
+
+       # incoming data from states_all is dim=c(iter, time)
+       # structure needed by function is dim=c(time,iter)
+       # flip it to get the right shape
+       var = t(states_all$Ewetcanopy_kgH2Om2day)
+       obs = rep(NA, dim(var)[1])
+
+       jpeg(file=paste(PROJECT$figpath,"timeseries_Ewetcanopy_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""), width=7200, height=4000, res=280, quality=100)
+       # now create the plotting area
+       par(mfrow=c(1,1), mar=c(5,5,3,1))
+       plot(obs, pch=16,xaxt="n", ylim=c(0,quantile(as.vector(var), prob=c(0.999),na.rm=TRUE)), cex=0.8,
+            ylab="Wet canopy evaporation (kgH2O.m-2.day-1)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
+            main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       axis(1, at=time_vector[seq(1,length(time_vector),interval)],
+            labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
+       # add the confidence intervals
+       plotconfidence(var)
+       # calculate and draw the median values, could be mean instead or other
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
+
        dev.off()
 
    }
@@ -303,7 +433,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 		   # add the confidence intervals
 		   plotconfidence(var)
    	   # calculate and draw the median values, could be mean instead or other
-     	 #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+     	 lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
 		   # add the data on top if there is any
    		 if (length(which(is.na(obs))) != length(obs) ) {
 		     	 points(obs, pch=16, cex=0.8)
@@ -332,7 +462,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 		    # add the confidence intervals
 		    plotconfidence(var)
 		    # calculate and draw the median values, could be mean instead or other
-		    #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+		    lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
 		    # add the data on top
 		    points(obs, pch=16, cex=0.8)
     		dev.off()
@@ -379,7 +509,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
            # add the confidence intervals
            plotconfidence(var)
            # calculate and draw the median values, could be mean instead or other
-           #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+           lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
            # add the data on top if there is any
            if (length(which(is.na(obs))) != length(obs) ) {
                points(obs, pch=16, cex=0.8)
@@ -412,7 +542,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
        # add the data on top if there is any
        if (length(which(is.na(obs))) != length(obs) ) {
            points(obs, pch=16, cex=0.8)
@@ -447,7 +577,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
        # add the data on top if there is any
        if (length(which(is.na(obs))) != length(obs) ) {
            points(obs, pch=16, cex=0.8)
@@ -475,7 +605,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
 
        dev.off()
 
@@ -499,7 +629,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
        dev.off()
 
    } # labile_gCm2
@@ -528,7 +658,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(Clit_var[1:(dim(Clit_var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
        # add the data on top if there is any
        if (length(which(is.na(obs))) != length(obs) ) {
            points(obs, pch=16, cex=0.8)
@@ -562,7 +692,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
        # add the data on top if there is any
 #       if (length(which(is.na(obs))) != length(obs) ) {
 #           points(obs, pch=16, cex=0.8)
@@ -595,7 +725,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
        # add the data on top if there is any
        if (length(which(is.na(obs))) != length(obs) ) {
            points(obs, pch=16, cex=0.8)
@@ -627,7 +757,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
        # add the data on top if there is any
        if (length(which(is.na(obs))) != length(obs) ) {
            points(obs, pch=16, cex=0.8)
@@ -660,7 +790,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
        # add the data if there is any which is not missing
        if (length(which(is.na(obs))) != length(obs) ) {
            # add the data on top
@@ -690,7 +820,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
         # add the confidence intervals
         plotconfidence(var)
         # calculate and draw the median values, could be mean instead or other
-        #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+        lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
 
         dev.off()
 
@@ -715,7 +845,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
        dev.off()
 
    } # gsi
@@ -739,7 +869,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
        dev.off()
 
    } # gsi_iphoto
@@ -763,7 +893,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
        dev.off()
 
    } # gsi_itemp
@@ -787,7 +917,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
        dev.off()
 
    } # gsi_ivpd
@@ -811,17 +941,17 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
        dev.off()
 
    } # gsi_iwSWP
 
    # Total ecosystem harvested C (gC/m2/day)
-   if (exists(x = "grid_output", where = states_all)) {
+   if (exists(x = "harvest_gCm2day", where = states_all)) {
 
        # structure needed by function is dim=c(time,iter)
        # flip it to get the right shape
-       var=t(states_all$grid_output)
+       var=t(states_all$harvest_gCm2day)
 
        ymax=quantile(as.vector(var), prob=c(0.999), na.rm=TRUE)
        jpeg(file=paste(PROJECT$figpath,"timeseries_harvestedC_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
@@ -835,7 +965,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(harvestC_var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
 
        dev.off()
 
@@ -860,7 +990,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(canopyage_var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
 
        dev.off()
 
@@ -885,7 +1015,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # add the confidence intervals
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
-       #lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="blue")
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
 
        dev.off()
 

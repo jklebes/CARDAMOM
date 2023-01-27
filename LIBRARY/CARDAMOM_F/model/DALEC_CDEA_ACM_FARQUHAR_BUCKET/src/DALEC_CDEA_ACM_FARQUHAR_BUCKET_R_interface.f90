@@ -161,9 +161,9 @@ subroutine rdaleccdeaacmfarquharbucket(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,52) = lai                         ! LAI (m2/m2)
      ! Photosynthesis / C~water coupling related
      out_var1(i,1:nodays,53) = gs_demand_supply_ratio      ! ratio of evaporative demand over supply
-     out_var1(i,1:nodays,54) = gs_total_canopy             ! stomatal conductance (mmolH2O/m2ground/day)
+     out_var1(i,1:nodays,54) = gs_total_canopy             ! Canopy scale stomatal conductance during day light (mmolH2O/m2ground/s)
      out_var1(i,1:nodays,55) = canopy_par_MJday_time       ! Canopy absorbed PAR (MJ/m2ground/day)
-     out_var1(i,1:nodays,56) = gb_total_canopy             ! boundary conductance (mmolH2O/m2ground/day)
+     out_var1(i,1:nodays,56) = gb_total_canopy             ! Canopy scale aerodynamic conductance (mmolH2O/m2ground/s)
      out_var1(i,1:nodays,57) = cica_time                   ! ratio of leaf internal to external CO2
      ! misc
      out_var1(i,1:nodays,58) = root_depth_time             ! rooting depth (m)

@@ -60,7 +60,7 @@ module MODEL_PARAMETERS
     ! Leaf Lifespan (yr)
     ! Wright et al. 2004
     PI%parmin(5) = 1.001d0
-    PI%parmax(5) = 8d0
+    PI%parmax(5) = 6d0 !8d0
 
     ! TOR wood* - 1% loss per year value
     PI%parmin(6) = 0.000009d0 ! 304  years
@@ -84,14 +84,10 @@ module MODEL_PARAMETERS
     PI%parmin(10) = 0.019d0
     PI%parmax(10) = 0.08d0
 
-    ! Canopy Efficiency
-    ! NUE and avN combination give a Vcmax equivalent, the canopy efficiency.
-    ! Kattge et al (2011) offers a potential prior range of 3.4 - 30.7 gC/m2leaf/day.
-    ! Here, to be cautious we will expand accepted range
-    ! Thus CUE = NUE * avN -> 1.64 / 42.0
-    ! TLS: 27/10/2021 restricted again based now on 95 %CI (12.61 / 29.68) from TRY
-    PI%parmin(11) = 1d0   !12d0 !3.4d0 !5d0
-    PI%parmax(11) = 100d0 !30d0 !42d0 !50d0
+    ! Vcmax, the maximum rate of carboxylation at the canopy top
+    ! umolC/m2/s
+    PI%parmin(11) = 10d0
+    PI%parmax(11) = 150d0
 
     ! max bud burst day
     PI%parmin(12) = 365.25d0

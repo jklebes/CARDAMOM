@@ -64,7 +64,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                     var2 = crop(var2,cardamom_ext)
                     # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
                     # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-                    if (spatial_type == "grid") {
+                    #if (spatial_type == "grid") {
                         if (res(var2)[1] != res(cardamom_ext)[1] | res(var2)[2] != res(cardamom_ext)[2]) {
                             # Create raster with the target resolution
                             target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
@@ -72,7 +72,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                             # Probably should be done via aggregate function to allow for correct error propogation
                             var2 = resample(var2, target, method="bilinear") ; gc() ; removeTmpFiles()
                         } # Aggrgeate to resolution
-                    } # spatial_type == "grid"
+                    #} # spatial_type == "grid"
 
                     # Extract spatial information just the once
                     if (lat_done == FALSE) {
@@ -263,7 +263,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                   } ; f2 = filename(var2)
                   # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
                   # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-                  if (spatial_type == "grid") {
+                  #if (spatial_type == "grid") {
                       if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
                           # Create raster with the target resolution
                           target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
@@ -283,7 +283,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                           } ; f2 = filename(var2)
 
                       } # Aggrgeate to resolution
-                  } # spatial_type == "grid"
+                  #} # spatial_type == "grid"
 
                   # Extract spatial information just the once
                   if (lat_done == FALSE) {

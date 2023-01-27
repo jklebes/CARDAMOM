@@ -60,7 +60,7 @@ module MODEL_PARAMETERS
     ! Leaf Lifespan (yr)
     ! Wright et al. 2004
     PI%parmin(5) = 1.001d0
-    PI%parmax(5) = 8d0
+    PI%parmax(5) = 6d0 !8d0
 
     ! TOR wood* - 1% loss per year value
     PI%parmin(6) = 0.000009d0 ! 304  years
@@ -91,7 +91,7 @@ module MODEL_PARAMETERS
     ! Thus CUE = NUE * avN -> 1.64 / 42.0
     ! TLS: 27/10/2021 restricted again based now on 95 %CI (12.61 / 29.68) from TRY
     PI%parmin(11) = 3.4d0 !5d0
-    PI%parmax(11) = 42d0 !50d0
+    PI%parmax(11) = 100d0 !42d0 !50d0
 
     ! max bud burst day
     PI%parmin(12) = 365.25d0

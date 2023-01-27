@@ -211,9 +211,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                     gsi_ivpd = output[,,56],
                     # Photosynthesis / C~water coupling related
                     gs_demand_supply_ratio = output[,,57],
-                    gs_mmolH2Om2day = output[,,58],
+                    gs_mmolH2Om2s = output[,,58],
                     APAR_MJm2day = output[,,59],
-                    gb_mmolH2Om2day = output[,,60],
+                    gb_mmolH2Om2s = output[,,60],
                     CiCa = output[,,61],
                     # Misc
                     RootDepth_m = output[,,62],
@@ -332,9 +332,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       ncce_gCm2day = output[,,53],
                       # Photosynthesis / C~water coupling related
                       gs_demand_supply_ratio = output[,,54],
-                      gs_mmolH2Om2day = output[,,55],
+                      gs_mmolH2Om2s = output[,,55],
                       APAR_MJm2day = output[,,56],
-                      gb_mmolH2Om2day = output[,,57],
+                      gb_mmolH2Om2s = output[,,57],
                       CiCa = output[,,58],
                       # Misc
                       RootDepth_m = output[,,59],
@@ -454,9 +454,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       ncce_gCm2day = output[,,54],
                       # Photosynthesis / C~water coupling related
                       gs_demand_supply_ratio = output[,,55],
-                      gs_mmolH2Om2day = output[,,56],
+                      gs_mmolH2Om2s = output[,,56],
                       APAR_MJm2day = output[,,57],
-                      gb_mmolH2Om2day = output[,,58],
+                      gb_mmolH2Om2s = output[,,58],
                       CiCa = output[,,59],
                       # Misc
                       RootDepth_m = output[,,60],
@@ -633,9 +633,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                     gsi_ivpd = output[,,53],
                     # Photosynthesis / C~water coupling related
                     gs_demand_supply_ratio = output[,,54],
-                    gs_mmolH2Om2day = output[,,55],
+                    gs_mmolH2Om2s = output[,,55],
                     APAR_MJm2day = output[,,56],
-                    gb_mmolH2Om2day = output[,,57],
+                    gb_mmolH2Om2s = output[,,57],
                     CiCa = output[,,58],
                     # Misc
                     RootDepth_m = output[,,59],
@@ -760,9 +760,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       gsi_ivpd = output[,,56],
                       # Photosynthesis / C~water coupling related
                       gs_demand_supply_ratio = output[,,57],
-                      gs_mmolH2Om2day = output[,,58],
+                      gs_mmolH2Om2s = output[,,58],
                       APAR_MJm2day = output[,,59],
-                      gb_mmolH2Om2day = output[,,60],
+                      gb_mmolH2Om2s = output[,,60],
                       CiCa = output[,,61],
                       # Misc
                       RootDepth_m = output[,,62],
@@ -1187,9 +1187,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       lai_m2m2 = output[,,43],
                       # Photosynthesis / C~water coupling related
                       gs_demand_supply_ratio = output[,,44],
-                      gs_mmolH2Om2day = output[,,45],
+                      gs_mmolH2Om2s = output[,,45],
                       APAR_MJm2day = output[,,46],
-                      gb_mmolH2Om2day = output[,,47],
+                      gb_mmolH2Om2s = output[,,47],
                       CiCa = output[,,48],
                       ## Aggregated variables
                       # Mean Transit times
@@ -1304,9 +1304,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       lai_m2m2 = output[,,52],
                       # Photosynthesis / C~water coupling related
                       gs_demand_supply_ratio = output[,,53],
-                      gs_mmolH2Om2day = output[,,54],
+                      gs_mmolH2Om2s = output[,,54],
                       APAR_MJm2day = output[,,55],
-                      gb_mmolH2Om2day = output[,,56],
+                      gb_mmolH2Om2s = output[,,56],
                       CiCa = output[,,57],
                       # Misc
                       RootDepth_m = output[,,58],
@@ -1423,9 +1423,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       lai_m2m2 = output[,,52],
                       # Photosynthesis / C~water coupling related
                       gs_demand_supply_ratio = output[,,53],
-                      gs_mmolH2Om2day = output[,,54],
+                      gs_mmolH2Om2s = output[,,54],
                       APAR_MJm2day = output[,,55],
-                      gb_mmolH2Om2day = output[,,56],
+                      gb_mmolH2Om2s = output[,,56],
                       CiCa = output[,,57],
                       # Misc
                       RootDepth_m = output[,,58],
@@ -1537,9 +1537,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       lai_m2m2 = output[,,46],
                       # Photosynthesis / C~water coupling related
                       gs_demand_supply_ratio = output[,,47],
-                      gs_mmolH2Om2day = output[,,48],
+                      gs_mmolH2Om2s = output[,,48],
                       APAR_MJm2day = output[,,49],
-                      gb_mmolH2Om2day = output[,,50],
+                      gb_mmolH2Om2s = output[,,50],
                       CiCa = output[,,51],
                       ## Aggregated variables
                       # Mean Transit times
@@ -1649,9 +1649,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       lai_m2m2 = output[,,46],
                       # Photosynthesis / C~water coupling related
                       gs_demand_supply_ratio = output[,,47],
-                      gs_mmolH2Om2day = output[,,48],
+                      gs_mmolH2Om2s = output[,,48],
                       APAR_MJm2day = output[,,49],
-                      gb_mmolH2Om2day = output[,,50],
+                      gb_mmolH2Om2s = output[,,50],
                       CiCa = output[,,51],
                       ## Aggregated variables
                       # Mean Transit times
@@ -1761,9 +1761,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       lai_m2m2 = output[,,46],
                       # Photosynthesis / C~water coupling related
                       gs_demand_supply_ratio = output[,,47],
-                      gs_mmolH2Om2day = output[,,48],
+                      gs_mmolH2Om2s = output[,,48],
                       APAR_MJm2day = output[,,49],
-                      gb_mmolH2Om2day = output[,,50],
+                      gb_mmolH2Om2s = output[,,50],
                       CiCa = output[,,51],
                       ## Aggregated variables
                       # Mean Transit times
@@ -1873,9 +1873,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       lai_m2m2 = output[,,46],
                       # Photosynthesis / C~water coupling related
                       gs_demand_supply_ratio = output[,,47],
-                      gs_mmolH2Om2day = output[,,48],
+                      gs_mmolH2Om2s = output[,,48],
                       APAR_MJm2day = output[,,49],
-                      gb_mmolH2Om2day = output[,,50],
+                      gb_mmolH2Om2s = output[,,50],
                       CiCa = output[,,51],
                       ## Aggregated variables
                       # Mean Transit times
@@ -1990,9 +1990,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       lai_m2m2 = output[,,52],
                       # Photosynthesis / C~water coupling related
                       gs_demand_supply_ratio = output[,,53],
-                      gs_mmolH2Om2day = output[,,54],
+                      gs_mmolH2Om2s = output[,,54],
                       APAR_MJm2day = output[,,55],
-                      gb_mmolH2Om2day = output[,,56],
+                      gb_mmolH2Om2s = output[,,56],
                       CiCa = output[,,57],
                       ## Aggregated variables
                       # Mean Transit times
@@ -2109,9 +2109,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       lai_m2m2 = output[,,52],
                       # Photosynthesis / C~water coupling related
                       gs_demand_supply_ratio = output[,,53],
-                      gs_mmolH2Om2day = output[,,54],
+                      gs_mmolH2Om2s = output[,,54],
                       APAR_MJm2day = output[,,55],
-                      gb_mmolH2Om2day = output[,,56],
+                      gb_mmolH2Om2s = output[,,56],
                       CiCa = output[,,57],
                       ## Aggregated variables
                       # Mean Transit times
@@ -2228,9 +2228,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       lai_m2m2 = output[,,52],
                       # Photosynthesis / C~water coupling related
                       gs_demand_supply_ratio = output[,,53],
-                      gs_mmolH2Om2day = output[,,54],
+                      gs_mmolH2Om2s = output[,,54],
                       APAR_MJm2day = output[,,55],
-                      gb_mmolH2Om2day = output[,,56],
+                      gb_mmolH2Om2s = output[,,56],
                       CiCa = output[,,57],
                       ## Aggregated variables
                       # Mean Transit times
@@ -2594,9 +2594,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                     gsi_ivpd = output[,,53],
                     # Photosynthesis / C~water coupling related
                     gs_demand_supply_ratio = output[,,54],
-                    gs_mmolH2Om2day = output[,,55],
+                    gs_mmolH2Om2s = output[,,55],
                     APAR_MJm2day = output[,,56],
-                    gb_mmolH2Om2day = output[,,57],
+                    gb_mmolH2Om2s = output[,,57],
                     CiCa = output[,,58],
                     # Misc
                     RootDepth_m = output[,,59],

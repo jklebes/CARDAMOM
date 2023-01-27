@@ -755,7 +755,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
   #outfile_stock_fluxes = paste(PROJECT$results_processedpath,PROJECT$sites[n],"_stock_fluxes.RData",sep="")
 
   # Set dummy output variable, the value may be changes by the code below
-  dummy = -1
+  dummy = 0
 
   if (file.exists(outfile_parameters) == FALSE | repair == 1) {
       # load only the desired latter fraction of the parameter vectors
@@ -765,7 +765,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
 
       # determine whether we have any actual completed chains and whether they include EDC consistent value only
       error_check = FALSE
-      if (parameters[1] == -9999) {
+      if (length(parameters) == 1 & parameters[1] == -9999) {
           error_check = TRUE
           #print("Site not available / parameters file empty")
           dummy = -1 ; return(dummy)
@@ -773,12 +773,12 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
           if (length(which(as.vector(is.na(parameters)))) > 0 ) {
               error_check = TRUE
               print("NA found in likelihood score")
-              dummy = -1 ; return(dummy)
+              dummy = -2 ; return(dummy)
            } else if (min(as.vector(parameters)) == -Inf) {
               error_check = TRUE
               print("Inf found in likelihood score")
              #print("Site not available / parameters file empty")
-              dummy = -1 ; return(dummy)
+              dummy = -3 ; return(dummy)
           } # NaN / Inf check
       } # error check
 
@@ -800,7 +800,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                  if (converged[length(converged)] == "PASS") {
                      #if (use_parallel == FALSE) {print(".........convergence found on chain removal")}
                      # likelihoods converge now but we need to check for the possibility that the chain we have removed is actually better than the others
-                     CI90[1] = quantile(parameters[dim(parameters)[1],,(i-1)], prob=c(0.10)) ; CI90[2] = quantile(parameters[dim(parameters)[1],,-(i-1)], prob=c(0.90))
+                     CI90[1] = quantile(parameters[dim(parameters)[1],,(i-1)], prob=c(0.10))
+                     CI90[2] = quantile(parameters[dim(parameters)[1],,-(i-1)], prob=c(0.90))
                      # if the rejected chain is significantly better (at 90 % CI) than the converged chains then we have a problem
                      if (CI90[1] > CI90[2]) {
                          # rejected chain (while others converge) is actually better and the others have gotten stuck in a local minima.
@@ -1174,16 +1175,18 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
 
       # Sanity check
       if (length(which(is.na(as.vector(NPP_fraction))) == TRUE) > 0) {
-          print(paste("NA value found in NPP for site ",PROJECT$site[n],sep="")) ; dummy = -1 ; return(dummy)
+          print(paste("NA value found in NPP for site ",PROJECT$site[n],sep="")) ; dummy = -4 ; return(dummy)
       }
       #if (use_parallel == FALSE) {print("processing and storing ensemble output")}
+
       # determine whether this is a gridded run (or one with the override in place)
       if (PROJECT$spatial_type == "site" | grid_override == TRUE) {
+
           # ...if this is a site run save the full ensemble and everything else...
           save(parameters,drivers,states_all,site_ctessel_pft,file=outfile_site, compress="gzip", compression_level = 6)
           # store the parameters and driver information
           save(parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,
-           file=outfile_parameters, compress="gzip", compression_level = 6)
+               file=outfile_parameters, compress="gzip", compression_level = 6)
 #          save(parameter_covariance,parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,
 #               file=outfile_parameters, compress="gzip", compression_level = 6)
           # Return
@@ -2191,10 +2194,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
               site_output$mean_annual_ET_kgH2Om2day = apply(t(apply(states_all$ET_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
 
               # Calculate the ecosystem water use efficiency
-              # NOTE: might need to do something about zeros in either GPP or ET...
               site_output$wue_eco_gCkgH2O = apply(states_all$gpp_gCm2day/states_all$ET_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
-              site_output$mean_wue_eco_gCkgH2O = quantile(rowMeans(states_all$gpp_gCm2day/states_all$ET_kgH2Om2day,, na.rm = na_flag), prob=num_quantiles)
-              site_output$mean_annual_wue_eco_gCkgH2O = apply(t(apply(states_all$gpp_gCm2day/states_all$ET_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
+              site_output$mean_wue_eco_gCkgH2O = quantile(rowSums(states_all$gpp_gCm2day)/rowSums(states_all$ET_kgH2Om2day), prob=num_quantiles, na.rm = na_flag)
+              site_output$mean_annual_wue_eco_gCkgH2O = apply(t(apply(states_all$gpp_gCm2day,1, rollapply_mean_annual, step = steps_per_year) /
+                                                                apply(states_all$ET_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)),
+                                                              2, quantile, prob=num_quantiles, na.rm = TRUE)
 
               # Check whether the evaporation components exist
               if (exists(x = "Etrans_kgH2Om2day", where = states_all)) {
@@ -2203,10 +2207,11 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   site_output$mean_Etrans_kgH2Om2day = quantile(rowMeans(states_all$Etrans_kgH2Om2day, na.rm = na_flag), prob=num_quantiles)
                   site_output$mean_annual_Etrans_kgH2Om2day = apply(t(apply(states_all$Etrans_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
                   # Calculate the plant water use efficiency
-                  # NOTE: might need to do something about zeros in either GPP or Etrans
                   site_output$wue_plant_gCkgH2O = apply(states_all$gpp_gCm2day/states_all$Etrans_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
-                  site_output$mean_wue_plant_gCkgH2O = quantile(rowMeans(states_all$gpp_gCm2day/states_all$Etrans_kgH2Om2day, na.rm = na_flag), prob=num_quantiles)
-                  site_output$mean_annual_wue_plant_gCkgH2O = apply(t(apply(states_all$gpp_gCm2day/states_all$Etrans_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
+                  site_output$mean_wue_plant_gCkgH2O = quantile(rowSums(states_all$gpp_gCm2day)/rowSums(states_all$Etrans_kgH2Om2day), prob=num_quantiles, na.rm = na_flag)
+                  site_output$mean_annual_wue_plant_gCkgH2O = apply(t(apply(states_all$gpp_gCm2day,1, rollapply_mean_annual, step = steps_per_year) /
+                                                                      apply(states_all$Etrans_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)),
+                                                                    2, quantile, prob=num_quantiles, na.rm = TRUE)
               }
               if (exists(x = "Esoil_kgH2Om2day", where = states_all)) {
                   # Soil evaporation
@@ -2356,15 +2361,15 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
 
       } # gridded run?
 
-      # Return
-      dummy = 0 ; return(dummy)
+      # Return, check just in case
+      dummy = -5 ; return(dummy)
 
   } else { # *parameters.RData already exists
 
       # Report to user
       print('Already extracted result vectors (set repair = 1 if re-run is needed)')
       # Return
-      dummy = -1 ; return(dummy)
+      dummy = 0 ; return(dummy)
 
 
   } # *parameters.RData already exists
@@ -2397,7 +2402,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
   # now check which ones we need to calculate, but only if override not in play
   if (repair != 1) {
       # Inform the user
-# NEED TO CHANGE THIS TO DETERMINE ALREADY PROCESSED SITES IN ANOTHER WAY AS NO LONGER WANT TYO CREATE THESE FILES...for gridded runs...
+# NEED TO CHANGE THIS TO DETERMINE ALREADY PROCESSED SITES IN ANOTHER WAY AS NO LONGER CREATE THESE FILES...for gridded runs...
       print("...beginning filterings for sites we have already processed")
       keep_list = 0
       for (i in seq(1, length(nos_plots))) {
@@ -2450,9 +2455,16 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
       if (file.exists(outfile_grid) == FALSE | repair == 1) {
           # Extract the first of the completed site_output list to great the grid_output
           n = 0 ; site_output = -1
-          while (class(site_output) != "list") {
+          while (class(site_output) != "list" & n < length(site_output_all)) {
                  n = n + 1
                  site_output = site_output_all[[n]]
+          }
+          # Check if the loop has finished with error
+          if (n == length(site_output_all) & class(site_output_all[[n]]) != "list") {
+              # Difficult to say what will come out of here, so dump it all!
+              print(site_output_all)
+              print("Above error from run_mcmc_results.r L2462, problem with site_output_all")
+              return(c(-1))
           }
           # Now assuming this has worked correctly, we can create the grid_output
           # list object
@@ -3137,6 +3149,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 
       # Tidy up
       rm(site_output,grid_output) ; gc(reset=TRUE)
+
   } # gridded run?
 
   # tell me whats happening

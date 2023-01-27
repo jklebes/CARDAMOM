@@ -57,7 +57,7 @@ module MODEL_PARAMETERS
     ! Leaf Lifespan (yr)
     ! Wright et al. 2004
     PI%parmin(5) = 1.001d0
-    PI%parmax(5) = 8d0
+    PI%parmax(5) = 6d0 !8d0
 
     ! TOR wood* - 1% loss per year value
     !PI%parmin(6) = 0.000009d0 ! 304  years

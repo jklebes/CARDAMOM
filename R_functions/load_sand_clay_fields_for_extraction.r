@@ -37,7 +37,7 @@ load_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source,cardam
         top_clay = crop(top_clay,cardamom_ext) ; bot_clay = crop(bot_clay,cardamom_ext)
         # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
         # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-        if (spatial_type == "grid") {
+        #if (spatial_type == "grid") {
             if (res(top_sand)[1] != res(cardamom_ext)[1] | res(top_sand)[2] != res(cardamom_ext)[2]) {
 
                 # Create raster with the target resolution
@@ -50,7 +50,7 @@ load_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source,cardam
                 bot_clay = resample(bot_clay, target, method="bilinear") ; gc() ; removeTmpFiles()
 
             } # Aggrgeate to resolution
-        } # spatial_type == "grid"
+        #} # spatial_type == "grid"
 
         # Extract dimension information for the grid.
         # Note 1) the axis switching between raster and actual array
@@ -79,14 +79,14 @@ load_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source,cardam
         print("Loading processed HWSD sand clay fields for subsequent sub-setting ...")
 
         # open processed modis files
-        input_file_1=paste(path_to_sand_clay,"/HWSD_sand_clay_with_lat_long.nc",sep="")
-        data1=nc_open(input_file_1)
+        input_file_1 = paste(path_to_sand_clay,"/HWSD_sand_clay_with_lat_long.nc",sep="")
+        data1 = nc_open(input_file_1)
 
         # extract location variables
-        lat=ncvar_get(data1, "lat") ; long=ncvar_get(data1, "long")
+        lat = ncvar_get(data1, "lat") ; long = ncvar_get(data1, "long")
         # read the HWSD datasets
-	      top_sand=ncvar_get(data1, "HWSD_top_sand") ; top_clay=ncvar_get(data1, "HWSD_top_clay")
-        bot_sand=ncvar_get(data1, "HWSD_bot_sand") ; bot_clay=ncvar_get(data1, "HWSD_bot_clay")
+	      top_sand = ncvar_get(data1, "HWSD_top_sand") ; top_clay = ncvar_get(data1, "HWSD_top_clay")
+        bot_sand = ncvar_get(data1, "HWSD_bot_sand") ; bot_clay = ncvar_get(data1, "HWSD_bot_clay")
         nc_close(data1)
 
         # Convert to a raster, assuming standad WGS84 grid
@@ -117,7 +117,7 @@ load_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source,cardam
         top_clay = crop(top_clay,cardamom_ext) ; bot_clay = crop(bot_clay,cardamom_ext)
         # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
         # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-        if (spatial_type == "grid") {
+        #if (spatial_type == "grid") {
             if (res(top_sand)[1] != res(cardamom_ext)[1] | res(top_sand)[2] != res(cardamom_ext)[2]) {
 
                 # Create raster with the target resolution
@@ -130,7 +130,7 @@ load_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source,cardam
                 bot_clay = resample(bot_clay, target, method="bilinear") ; gc() ; removeTmpFiles()
 
             } # Aggrgeate to resolution
-        } # spatial_type == "grid"
+        #} # spatial_type == "grid"
 
         # Extract dimension information for the grid.
         # Note 1) the axis switching between raster and actual array

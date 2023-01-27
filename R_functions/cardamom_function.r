@@ -8,7 +8,7 @@
 # Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
 cardamom <-function (projname,model,method,stage) {
-#stage = 4 ; repair = 1 ; use_parallel = TRUE
+stage = 2 ; repair = 1 ; use_parallel = TRUE
   ## load needed functions into R environment
   paths = load_paths()
 
@@ -306,7 +306,7 @@ cardamom <-function (projname,model,method,stage) {
           write_bin_files<-function(n) {
 
               # create the file name for the met/obs binary
-              filename=paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep="")
+              filename = paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep="")
 
               # All CARDAMOM read gridded datasets now map onto the same projection, extent and resolution.
               # This means that we can extract the location of the current site within any grid just the
@@ -415,11 +415,11 @@ cardamom <-function (projname,model,method,stage) {
                   system(paste("rm ",PROJECT$datapath,"cardamom_inputs.zip", sep=""))
               }
               # Compress all input files into zip directory
-              system(paste("zip -j -r -qq ",PROJECT$datapath,"cardamom_inputs.zip ",PROJECT$datapath," -i '*.bin'",sep=""))
+              system(paste("zip -j -r -q ",PROJECT$datapath,"cardamom_inputs.zip ",PROJECT$datapath," -i '*.bin'",sep=""))
               # Copy the zip directory to the remote server
-              command = paste("scp -r ",username,"@",home_computer,":",PROJECT$datapath,"cardamom_inputs.zip ",PROJECT$edatapath,sep="")
+              command = paste("scp -r -q ",username,"@",home_computer,":",PROJECT$datapath,"cardamom_inputs.zip ",PROJECT$edatapath,sep="")
               # Unzip on remote server
-              command = c(command,paste("unzip -o ",PROJECT$edatapath,"cardamom_inputs.zip -d ",PROJECT$edatapath, sep=""))
+              command = c(command,paste("unzip -o -qq ",PROJECT$edatapath,"cardamom_inputs.zip -d ",PROJECT$edatapath, sep=""))
               # Remove the zip directory on remote server
               command = c(command,paste("rm ",PROJECT$edatapath,"cardamom_inputs.zip" ,sep=""))
               #command = paste("scp -r ",username,"@",home_computer,":",PROJECT$datapath,"* ",PROJECT$edatapath,sep="")
@@ -484,9 +484,9 @@ cardamom <-function (projname,model,method,stage) {
               # There is a limit on how many files (based on the command length) that can be added at once using zip alone.
               # However, we can get around this by listing all files using find and then piping these into zip
               for (i in seq(1,PROJECT$nochains)) {
-                   command = c(command,paste("zip -j -r -qq ",PROJECT$eresultspath,"cardamom_outputs_",i,".zip ",PROJECT$eresultspath," -i '*_",i,"_PARS'",sep=""))
+                   command = c(command,paste("zip -j -r -q ",PROJECT$eresultspath,"cardamom_outputs_",i,".zip ",PROJECT$eresultspath," -i '*_",i,"_PARS'",sep=""))
               }
-              command = c(command,paste("scp -r ",PROJECT$eresultspath,"cardamom_outputs*.zip ",username,"@",home_computer,":",PROJECT$resultspath,sep=""))
+              command = c(command,paste("scp -r -q ",PROJECT$eresultspath,"cardamom_outputs*.zip ",username,"@",home_computer,":",PROJECT$resultspath,sep=""))
               #command = c(command,paste("rm ",PROJECT$eresultspath,"cardamom_outputs.zip",sep=""))
               #command = paste("scp -r ",PROJECT$eresultspath,"* ",username,"@",home_computer,":",PROJECT$resultspath,sep="")
               # Execute on remote server

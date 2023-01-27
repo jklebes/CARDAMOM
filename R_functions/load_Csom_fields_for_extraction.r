@@ -30,7 +30,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         Csom = crop(Csom,cardamom_ext) ; Csom_unc = crop(Csom_unc,cardamom_ext)
         # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
         # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-        if (spatial_type == "grid") {
+        #if (spatial_type == "grid") {
             if (res(Csom)[1] != res(cardamom_ext)[1] | res(Csom)[2] != res(cardamom_ext)[2]) {
 
                 # Create raster with the target resolution
@@ -41,7 +41,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
                 Csom_unc = resample(Csom_unc, target, method="bilinear") ; gc() ; removeTmpFiles()
 
             } # Aggrgeate to resolution
-        } # spatial_type == "grid"
+        #} # spatial_type == "grid"
 
         # extract dimension information for the grid, note the axis switching between raster and actual array
         xdim = dim(Csom)[2] ; ydim = dim(Csom)[1]
@@ -82,7 +82,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         Csom = crop(Csom,cardamom_ext) ; Csom_unc = crop(Csom_unc,cardamom_ext)
         # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
         # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-        if (spatial_type == "grid") {
+        #if (spatial_type == "grid") {
             if (res(Csom)[1] != res(cardamom_ext)[1] | res(Csom)[2] != res(cardamom_ext)[2]) {
 
                 # Create raster with the target resolution
@@ -93,7 +93,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
                 Csom_unc = resample(Csom_unc, target, method="bilinear") ; gc() ; removeTmpFiles()
 
             } # Aggrgeate to resolution
-        } # spatial_type == "grid"
+        #} # spatial_type == "grid"
 
         # extract dimension information for the grid, note the axis switching between raster and actual array
         xdim = dim(Csom)[2] ; ydim = dim(Csom)[1]
@@ -142,7 +142,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         Csom = crop(Csom,cardamom_ext)
         # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
         # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-        if (spatial_type == "grid") {
+        #if (spatial_type == "grid") {
             if (res(Csom)[1] != res(cardamom_ext)[1] | res(Csom)[2] != res(cardamom_ext)[2]) {
 
                 # Create raster with the target resolution
@@ -151,7 +151,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
                 Csom = resample(Csom, target, method="bilinear") ; gc() ; removeTmpFiles()
 
             } # Aggrgeate to resolution
-        } # spatial_type == "grid"
+        #} # spatial_type == "grid"
 
         # extract dimension information for the grid, note the axis switching between raster and actual array
         xdim = dim(Csom)[2] ; ydim = dim(Csom)[1]
@@ -211,7 +211,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         Csom = crop(Csom,cardamom_ext)
         # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
         # Despite creation of a cardamom_ext for a site run do not allow aggragation here as this will damage the fine resolution datasets
-        if (spatial_type == "grid") {
+        #if (spatial_type == "grid") {
             if (res(Csom)[1] != res(cardamom_ext)[1] | res(Csom)[2] != res(cardamom_ext)[2]) {
 
                 # Create raster with the target resolution
@@ -220,7 +220,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
                 Csom = resample(Csom, target, method="bilinear") ; gc() ; removeTmpFiles()
 
             } # Aggrgeate to resolution
-        } # spatial_type == "grid"
+        #} # spatial_type == "grid"
 
         # extract dimension information for the grid, note the axis switching between raster and actual array
         xdim = dim(Csom)[2] ; ydim = dim(Csom)[1]
@@ -280,7 +280,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         Csom = crop(Csom,cardamom_ext)
         # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
         # Despite creation of a cardamom_ext for a site run do not allow aggragation here as this will damage the fine resolution datasets
-        if (spatial_type == "grid") {
+        #if (spatial_type == "grid") {
             if (res(Csom)[1] != res(cardamom_ext)[1] | res(Csom)[2] != res(cardamom_ext)[2]) {
 
                 # Create raster with the target resolution
@@ -289,7 +289,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
                 Csom = resample(Csom, target, method="bilinear") ; gc() ; removeTmpFiles()
 
             } # Aggrgeate to resolution
-        } # spatial_type == "grid"
+        #} # spatial_type == "grid"
 
         # extract dimension information for the grid, note the axis switching between raster and actual array
         xdim = dim(Csom)[2] ; ydim = dim(Csom)[1]

@@ -91,7 +91,7 @@ load_wood_mortality_maps_for_extraction<-function(Cwood_mortality_source,cardamo
                  Cwood_mortality_uncertainty[which(as.vector(Cwood_mortality_uncertainty) < 0)] = NA
                  # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
                  # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-                 if (spatial_type == "grid") {
+                 #if (spatial_type == "grid") {
                      if (res(Cwood_mortality)[1] != res(cardamom_ext)[1] | res(Cwood_mortality)[2] != res(cardamom_ext)[2]) {
 
                          # Create raster with the target resolution
@@ -102,7 +102,7 @@ load_wood_mortality_maps_for_extraction<-function(Cwood_mortality_source,cardamo
                          Cwood_mortality_uncertainty = resample(Cwood_mortality_uncertainty, target, method="bilinear") ; gc() ; removeTmpFiles()
 
                      } # Aggrgeate to resolution
-                 } # spatial_type == "grid"
+                 #} # spatial_type == "grid"
 
                  # If the first file to be read extract the lat / long information
                  if (done_lat == FALSE) {

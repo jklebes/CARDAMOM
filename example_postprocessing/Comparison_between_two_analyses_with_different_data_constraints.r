@@ -81,9 +81,86 @@ source("./R_functions/read_src_model_priors.r")
 source("./R_functions/nos_days_in_year.r")
 source("./R_functions/plotconfidence.r")
 
+# Define local function
+regrid_func<-function(var1_in, lat_in, long_in, cardamom_ext, landmask) {
+
+   # Set flags
+   lat_done = FALSE
+
+   # Loop through each timestep in the year
+   for (t in seq(1, dim(var1_in)[3])) {
+        # Convert to a raster, assuming standad WGS84 grid
+        var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1_in[,,t]))
+        if (length(unique(diff(input_long[,1]))) > 1 | length(unique(diff(input_lat[1,]))) > 1) {
+            var1 = griddify(var1, dim(var1_in)[1], dim(var1_in)[2])
+        } else {
+            var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326"))
+        }
+
+        # Create raster with the target crs (technically this bit is not required)
+        target = raster(crs = ("+init=epsg:4326"), ext = extent(var1), resolution = res(var1))
+        # Check whether the target and actual analyses have the same CRS
+        if (compareCRS(var1,target) == FALSE) {
+            # Resample to correct grid
+            var1 = resample(var1, target, method="ngb") ; gc() ; removeTmpFiles()
+        }
+        # Extend the extent of the overall grid to the analysis domain
+        var1 = extend(var1,cardamom_ext) 
+        # Trim the extent of the overall grid to the analysis domain
+        var1 = crop(var1,cardamom_ext)
+
+        # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
+        # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+        if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
+
+            # Create raster with the target resolution
+            target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+            # Resample to correct grid
+            var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
+
+        } # Aggrgeate to resolution
+
+        # If a land mask is present then also restrict to this target domain
+        if (exists("landmask")) {var1 = crop(var1,landmask)}
+
+        if (lat_done == FALSE) {
+            # extract dimension information for the grid, note the axis switching between raster and actual array
+            xdim = dim(var1)[2] ; ydim = dim(var1)[1]
+            # extract the lat / long information needed
+            long = coordinates(var1)[,1] ; lat = coordinates(var1)[,2]
+            # restructure into correct orientation
+            long = array(long, dim=c(xdim,ydim))
+            lat = array(lat, dim=c(xdim,ydim))
+        }
+        # break out from the rasters into arrays which we can manipulate
+        var1 = array(as.vector(unlist(var1)), dim=c(xdim,ydim))
+
+        # vectorise at this time
+        if (lat_done == FALSE) {
+            var_out = as.vector(var1)
+        } else {
+            var_out = append(var_out,as.vector(var1))
+        }
+
+        # update flag for lat / long load
+        if (lat_done == FALSE) {lat_done = TRUE}
+
+   } # Within variable time loop
+
+   # restructure
+   var_out = array(var_out, dim=c(xdim,ydim,dim(var1_in)[3]))
+
+   # Return to user
+   return(list(var = var_out, lat = lat, long = long))
+   
+} # end function regrid_func
+
 # Set quantiles we want to consider for uncertainty 
 # Here assuming a total of 7 quantiles (2.5 %, 5 %, 25 %, 50 %, 75 %, 95 %, 97.5 %)
+# Specify the position within the stored ensemble for the median estimate and the desired uncertainty bands
 mid_quant = 4 ; low_quant = 2 ; high_quant = 6
+wanted_quant = c(low_quant,3,mid_quant,5,high_quant)
+
 # Set output directory
 out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/InternationalScience/figures_africa_one_vs_all/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/figures_africa_nbe_vs_plusRaGPPhighConf/"
@@ -148,9 +225,22 @@ landmask = subset(landmask, CONTINENT == "Africa") # Change continent to target 
 # Clip to the extent of the CARDAMOM analysis
 landmask = crop(landmask, cardamom_ext)
 
-#add_biomes = " "
+# Create an updated area object for the landmask region only
+tmp = coordinates(crop(cardamom_ext,landmask))
+tmp_lon = tmp[,1] ; tmp_lat = tmp[,2] ; tmp_lat = tmp_lat[length(tmp_lat):1]
+tmp = dim(crop(cardamom_ext,landmask))[c(2,1)]
+tmp_lat = array(tmp_lat, dim=c(tmp[1],tmp[2]))
+tmp_lon = array(tmp_lon,dim=c(tmp[1],tmp[2]))
+# then generate the area estimates for each pixel (m)
+landmask_area = calc_pixel_area(tmp_lat,tmp_lon,orig_PROJECT$resolution)
+# this output is in vector form and we need matching array shapes so...
+landmask_area = array(landmask_area, dim=tmp) 
+rm(tmp)
+
+add_biomes = " "
 #add_biomes = "ssa_wwf"
 add_biomes = "wwf_ecoregions"
+#add_biomes = "reccap2_permafrost"
 if (add_biomes == "ssa_wwf") {
     # Read in shape file for boundaries
     biomes = shapefile("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/SECO/analysis/ssa_wwf_dissolve/ssa_wwf_dissolve.shp")
@@ -159,7 +249,7 @@ if (add_biomes == "ssa_wwf") {
     # Clip to the extent of the CARDAMOM analysis
     biomes = crop(biomes, cardamom_ext)
     # Clip to the area covered bythe landmask in case of geographic restriction
-    biomes = crop(biomes, landmask)    
+    biomes = crop(biomes, landmask)
     # Overwrite the existing landmask
     landmask = biomes
     # Extract the current biome names for raster code
@@ -173,7 +263,7 @@ if (add_biomes == "ssa_wwf") {
     biomes = spTransform(biomes, crs(cardamom_ext))
     # Clip to the extent of the CARDAMOM analysis
     biomes = crop(biomes, cardamom_ext)
-    # Clip to the area covered bythe landmask in case of geographic restriction
+    # Clip to the area covered by the landmask in case of geographic restriction
     biomes = crop(biomes, landmask)
     # Aggregate to the biome regions rather than the more complex ecoregions
     biomes <- aggregate(biomes, by='BIOME_NAME', dissolve = TRUE)
@@ -185,11 +275,66 @@ if (add_biomes == "ssa_wwf") {
     biome_names = levels(factor(biomes$BIOME_NAME))
     # Turn the Biomes object into a raster now
     biomes = rasterize(biomes,cardamom_ext, factor(biomes$BIOME_NAME), fun="last")
+} else if (add_biomes == "reccap2_permafrost") {
+
+    # open reccap2-permafrost region mask
+    input_file_1=paste("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/RECCAP2_regions/RECCAP2_permafrost_regions_isimip3.nc",sep="")
+    data1=nc_open(input_file_1)
+
+    # extract location variables
+    biomes_lat=ncvar_get(data1, "latitude") ; biomes_long=ncvar_get(data1, "longitude")
+    # Create lat / long grid from vectors
+    idim = length(biomes_long) ; jdim = length(biomes_lat)
+    biomes_lat = array(biomes_lat, dim=c(jdim,idim)) ; biomes_lat = t(biomes_lat)
+    biomes_long = array(biomes_long, dim=c(idim,jdim))
+    # read the mask
+    biomes=ncvar_get(data1, "permafrost_region_mask") 
+    # For the moment convert each different sub-region into 1 and the missing number flag into NA
+    biomes[biomes > 0 & biomes < 115] = 1 ; biomes[biomes > 1] = NA
+    biome_names = NA
+    # tidy up
+    nc_close(data1)
+
+    # Convert to a raster, assuming standad WGS84 grid
+    biomes = data.frame(x = as.vector(biomes_long), y = as.vector(biomes_lat), z = as.vector(biomes))
+    biomes = rasterFromXYZ(biomes, crs = ("+init=epsg:4326"))
+
+    # Create raster with the target crs
+    target = raster(crs = ("+init=epsg:4326"), ext = extent(biomes), resolution = res(biomes))
+    # Check whether the target and actual analyses have the same CRS
+    if (compareCRS(biomes,target) == FALSE) {
+        # Resample to correct grid
+        biomes = resample(biomes, target, method="ngb") ; gc() ; removeTmpFiles()
+    }
+    # Trim the extent of the overall grid to the analysis domain
+    biomes = crop(biomes,cardamom_ext) 
+    # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
+    # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+    spatial_type = "grid"
+    if (spatial_type == "grid") {
+        if (res(biomes)[1] < res(cardamom_ext)[1] | res(biomes)[2] < res(cardamom_ext)[2]) {
+
+            # Create raster with the target resolution
+            target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+            # Resample to correct grid
+            biomes = resample(biomes, target, method="bilinear") ; gc() ; removeTmpFiles()
+        } # Aggrgeate to resolution
+    } # spatial_type == "grid"
+
+    # Convert to polygons
+    biomes = rasterToPolygons(biomes, n=16, na.rm=TRUE, digits=12, dissolve=TRUE)
+
+    # Overwrite the existing landmask
+    landmask = biomes
+
 } else {
     # DO NOTHING
-    biomes = NA
+    biomes = NA ; biome_names = NA
 } 
 
+# Write biome names to a file
+write.table(data.frame(BiomeCode = c(1:length(biome_names)),BiomeNames = biome_names), 
+            file = paste(out_dir,"/",orig_PROJECT$name,"_biome_names.csv",sep=""), row.names=FALSE, sep=",",append=FALSE)
 
 # This will be used to filter the analysis to include specific locations only
 use_filter = TRUE
@@ -1233,8 +1378,7 @@ cte_nee_gCm2yr = array(NA, dim=c(dim(orig_grid_output$mean_lai_m2m2)[1:2],length
 cte_fire_gCm2yr = array(NA, dim=c(dim(orig_grid_output$mean_lai_m2m2)[1:2],length(overlap_cte)))
 cte_m2 = array(NA, dim=dim(orig_grid_output$mean_lai_m2m2)[1:2])
 for (n in seq(1,orig_PROJECT$nosites)) {
-     if (is.na(orig_grid_output$i_location[n]) == FALSE & is.na(orig_grid_output$j_location[n]) == FALSE & 
-         is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
+     if (is.na(orig_grid_output$i_location[n]) == FALSE & is.na(orig_grid_output$j_location[n]) == FALSE & is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
          output = closest2d_3(1,cte_lat,cte_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          cte_nbe_gCm2yr[orig_grid_output$i_location[n],orig_grid_output$j_location[n],] = cte_nbe[i1,j1,overlap_start:overlap_end]
@@ -1269,7 +1413,7 @@ if (length(tmp) != length(run_years)) {
 
 # Calculate domain wide mean net sink for overlap period
 cte_domain_nbe_gCm2yr = mean(apply(cte_nbe_gCm2yr,c(1,2),mean, na.rm=TRUE), na.rm=TRUE) # gC/m2/yr
-cte_domain_nbe_TgCyr =   sum(apply(cte_nbe_gCm2yr,c(1,2),mean, na.rm=TRUE) * cte_m2 * 1e-12, na.rm=TRUE) # TgC/yr
+cte_domain_mean_nbe_TgCyr =   sum(apply(cte_nbe_gCm2yr,c(1,2),mean, na.rm=TRUE) * cte_m2 * 1e-12, na.rm=TRUE) # TgC/yr
 
 # Estimate the long term trend
 func_lm <-function(var_in) { 
@@ -1344,7 +1488,7 @@ for (i in seq(1, length(flask_date))) {
 # Determine where we will clip the datasets in time
 flask_years = floor(flask_date) ; flask_years_keep = 0
 for (i in seq(1, length(unique(flask_years)))) {
-     if (length(which(flask_years == unique(flask_years)[i])) > 48) {
+     if (length(which(flask_years == unique(flask_years)[i])) > 48 & length(which(unique(flask_years)[i] == run_years)) > 0) {
          flask_years_keep = append(flask_years_keep, which(flask_years == unique(flask_years)[i]))
      } 
 }
@@ -1404,8 +1548,7 @@ flask_cardamom_nee_gCm2yr = array(NA, dim=c(dim(orig_grid_output$mean_lai_m2m2)[
 flask_cardamom_nbe_gCm2yr = array(NA, dim=c(dim(orig_grid_output$mean_lai_m2m2)[1:2],length(flask_years),dim(flask_fire_gCm2yr)[4]))
 flask_cardamom_fire_gCm2yr = array(NA, dim=c(dim(orig_grid_output$mean_lai_m2m2)[1:2],length(flask_years),dim(flask_fire_gCm2yr)[4]))
 for (n in seq(1,orig_PROJECT$nosites)) {
-     if (is.na(orig_grid_output$i_location[n]) == FALSE & is.na(orig_grid_output$j_location[n]) == FALSE & 
-         is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
+     if (is.na(orig_grid_output$i_location[n]) == FALSE & is.na(orig_grid_output$j_location[n]) == FALSE & is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
          output = closest2d_3(1,flask_lat,flask_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          flask_cardamom_nee_gCm2yr[orig_grid_output$i_location[n],orig_grid_output$j_location[n],,] = flask_nee_gCm2yr[i1,j1,,]
@@ -1526,8 +1669,7 @@ oco2_cardamom_nee_gCm2yr = array(NA, dim=c(dim(orig_grid_output$mean_lai_m2m2)[1
 oco2_cardamom_nbe_gCm2yr = array(NA, dim=c(dim(orig_grid_output$mean_lai_m2m2)[1:2],length(oco2_years),dim(oco2_fire_gCm2yr)[4]))
 oco2_cardamom_fire_gCm2yr = array(NA, dim=c(dim(orig_grid_output$mean_lai_m2m2)[1:2],length(oco2_years),dim(oco2_fire_gCm2yr)[4]))
 for (n in seq(1,orig_PROJECT$nosites)) {
-     if (is.na(orig_grid_output$i_location[n]) == FALSE & is.na(orig_grid_output$j_location[n]) == FALSE & 
-         is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
+     if (is.na(orig_grid_output$i_location[n]) == FALSE & is.na(orig_grid_output$j_location[n]) == FALSE & is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
          output = closest2d_3(1,oco2_lat,oco2_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          oco2_cardamom_nee_gCm2yr[orig_grid_output$i_location[n],orig_grid_output$j_location[n],,] = oco2_nee_gCm2yr[i1,j1,,]
@@ -1544,7 +1686,7 @@ obs_nbe_years = unique(c(flask_years,oco2_years))
 # Define the combined timeseries datasets
 obs_nbe_gCm2yr = array(NA, dim = c(dim(orig_grid_output$mean_lai_m2m2)[1:2],length(obs_nbe_years),sum(c(dim(oco2_cardamom_nbe_gCm2yr)[4],dim(flask_cardamom_nbe_gCm2yr)[4]))))
 obs_nee_gCm2yr = array(NA, dim = c(dim(orig_grid_output$mean_lai_m2m2)[1:2],length(obs_nbe_years),sum(c(dim(oco2_cardamom_nbe_gCm2yr)[4],dim(flask_cardamom_nbe_gCm2yr)[4]))))
-obs_fire_gCm2yr = array(NA, dim = c(dim(orig_grid_output$mean_lai_m2m2)[1:2],length(obs_nbe_years),sum(c(dim(oco2_cardamom_nbe_gCm2yr)[4],dim(flask_cardamom_nbe_gCm2yr)[4]))))
+#obs_fire_gCm2yr = array(NA, dim = c(dim(grid_output$mean_lai_m2m2)[1:2],length(obs_nbe_years),sum(c(dim(oco2_cardamom_nbe_gCm2yr)[4],dim(flask_cardamom_nbe_gCm2yr)[4]))))
 for (i in seq(1,length(obs_nbe_years))) {
      # determine whether the flask dataset has any values for this year
      tmp = which(flask_years == obs_nbe_years[i])
@@ -1553,7 +1695,7 @@ for (i in seq(1,length(obs_nbe_years))) {
          i_s = 1 ; i_e = dim(flask_cardamom_nee_gCm2yr)[4]
          obs_nbe_gCm2yr[,,i,i_s:i_e] = flask_cardamom_nbe_gCm2yr[,,tmp,]
          obs_nee_gCm2yr[,,i,i_s:i_e] = flask_cardamom_nee_gCm2yr[,,tmp,]
-         obs_fire_gCm2yr[,,i,i_s:i_e] = flask_cardamom_fire_gCm2yr[,,tmp,]
+#         obs_fire_gCm2yr[,,i,i_s:i_e] = flask_cardamom_fire_gCm2yr[,,tmp,]
      }
      # determine whether the oco2 dataset has any values for this year
      tmp = which(oco2_years == obs_nbe_years[i])
@@ -1562,7 +1704,7 @@ for (i in seq(1,length(obs_nbe_years))) {
          i_s = 1+dim(flask_cardamom_nee_gCm2yr)[4] ; i_e = i_s - 1 + dim(oco2_cardamom_nee_gCm2yr)[4]
          obs_nbe_gCm2yr[,,i,i_s:i_e] = oco2_cardamom_nbe_gCm2yr[,,tmp,]
          obs_nee_gCm2yr[,,i,i_s:i_e] = oco2_cardamom_nee_gCm2yr[,,tmp,]
-         obs_fire_gCm2yr[,,i,i_s:i_e] = oco2_cardamom_fire_gCm2yr[,,tmp,]
+#         obs_fire_gCm2yr[,,i,i_s:i_e] = oco2_cardamom_fire_gCm2yr[,,tmp,]
      }
 } # loop years
 
@@ -1573,16 +1715,16 @@ obs_nbe_max_gCm2yr = apply(obs_nbe_gCm2yr,c(1,2,3),max, na.rm=TRUE)
 obs_nee_mean_gCm2yr = apply(obs_nee_gCm2yr,c(1,2,3),mean, na.rm=TRUE)
 obs_nee_min_gCm2yr = apply(obs_nee_gCm2yr,c(1,2,3),min, na.rm=TRUE)
 obs_nee_max_gCm2yr = apply(obs_nee_gCm2yr,c(1,2,3),max, na.rm=TRUE)
-obs_fire_mean_gCm2yr = apply(obs_fire_gCm2yr,c(1,2,3),mean, na.rm=TRUE)
-obs_fire_min_gCm2yr = apply(obs_fire_gCm2yr,c(1,2,3),min, na.rm=TRUE)
-obs_fire_max_gCm2yr = apply(obs_fire_gCm2yr,c(1,2,3),max, na.rm=TRUE)
+#obs_fire_mean_gCm2yr = apply(obs_fire_gCm2yr,c(1,2,3),mean, na.rm=TRUE)
+#obs_fire_min_gCm2yr = apply(obs_fire_gCm2yr,c(1,2,3),min, na.rm=TRUE)
+#obs_fire_max_gCm2yr = apply(obs_fire_gCm2yr,c(1,2,3),max, na.rm=TRUE)
 # Filter out the Inf values to NaN
 obs_nbe_min_gCm2yr[is.infinite(obs_nbe_min_gCm2yr) == TRUE] = NA
 obs_nbe_max_gCm2yr[is.infinite(obs_nbe_max_gCm2yr) == TRUE] = NA
 obs_nee_min_gCm2yr[is.infinite(obs_nee_min_gCm2yr) == TRUE] = NA
 obs_nee_max_gCm2yr[is.infinite(obs_nee_max_gCm2yr) == TRUE] = NA
-obs_fire_min_gCm2yr[is.infinite(obs_fire_min_gCm2yr) == TRUE] = NA
-obs_fire_max_gCm2yr[is.infinite(obs_fire_max_gCm2yr) == TRUE] = NA
+#obs_fire_min_gCm2yr[is.infinite(obs_fire_min_gCm2yr) == TRUE] = NA
+#obs_fire_max_gCm2yr[is.infinite(obs_fire_max_gCm2yr) == TRUE] = NA
 
 # Ensure that the timeseries length is consistent between the observed variable and the model analysis
 # This assumes that only the timesteps that overlap the model period have been read in the first place,
@@ -1597,15 +1739,15 @@ if (length(tmp) != length(run_years)) {
         # Convert these into arrays of the correct shape but empty
         add_beginning = array(NA, dim=c(dim(obs_nbe_min_gCm2yr)[1:2],add_beginning))
         # Add the extra years 
-        obs_nbe_mean_gCm2yr  = abind(add_beginning,obs_nbe_mean_gCm2yr, along=3)
-        obs_nbe_min_gCm2yr   = abind(add_beginning,obs_nbe_min_gCm2yr, along=3)
-        obs_nbe_max_gCm2yr   = abind(add_beginning,obs_nbe_max_gCm2yr, along=3)
-        obs_nee_mean_gCm2yr  = abind(add_beginning,obs_nbe_mean_gCm2yr, along=3)
-        obs_nee_min_gCm2yr   = abind(add_beginning,obs_nbe_min_gCm2yr, along=3)
-        obs_nee_max_gCm2yr   = abind(add_beginning,obs_nbe_max_gCm2yr, along=3)
-        obs_fire_mean_gCm2yr = abind(add_beginning,obs_nbe_mean_gCm2yr, along=3)
-        obs_fire_min_gCm2yr  = abind(add_beginning,obs_nbe_min_gCm2yr, along=3)
-        obs_fire_max_gCm2yr  = abind(add_beginning,obs_nbe_max_gCm2yr, along=3)
+        obs_nbe_mean_gCm2yr = abind(add_beginning,obs_nbe_mean_gCm2yr, along=3)
+        obs_nbe_min_gCm2yr = abind(add_beginning,obs_nbe_min_gCm2yr, along=3)
+        obs_nbe_max_gCm2yr = abind(add_beginning,obs_nbe_max_gCm2yr, along=3)
+        obs_nee_mean_gCm2yr = abind(add_beginning,obs_nbe_mean_gCm2yr, along=3)
+        obs_nee_min_gCm2yr = abind(add_beginning,obs_nbe_min_gCm2yr, along=3)
+        obs_nee_max_gCm2yr = abind(add_beginning,obs_nbe_max_gCm2yr, along=3)
+#        obs_fire_mean_gCm2yr = abind(add_beginning,obs_nbe_mean_gCm2yr, along=3)
+#        obs_fire_min_gCm2yr = abind(add_beginning,obs_nbe_min_gCm2yr, along=3)
+#        obs_fire_max_gCm2yr = abind(add_beginning,obs_nbe_max_gCm2yr, along=3)
     } 
     if (add_afterward > 0) {
         # Convert these into arrays of the correct shape but empty
@@ -1617,9 +1759,9 @@ if (length(tmp) != length(run_years)) {
         obs_nee_mean_gCm2yr = abind(obs_nbe_mean_gCm2yr,add_afterward, along=3)
         obs_nee_min_gCm2yr = abind(obs_nbe_min_gCm2yr,add_afterward, along=3)
         obs_nee_max_gCm2yr = abind(obs_nbe_max_gCm2yr, along=3)
-        obs_fire_mean_gCm2yr = abind(obs_nbe_mean_gCm2yr,add_afterward, along=3)
-        obs_fire_min_gCm2yr = abind(obs_nbe_min_gCm2yr,add_afterward, along=3)
-        obs_fire_max_gCm2yr = abind(obs_nbe_max_gCm2yr,add_afterward, along=3)
+#        obs_fire_mean_gCm2yr = abind(obs_nbe_mean_gCm2yr,add_afterward, along=3)
+#        obs_fire_min_gCm2yr = abind(obs_nbe_min_gCm2yr,add_afterward, along=3)
+#        obs_fire_max_gCm2yr = abind(obs_nbe_max_gCm2yr,add_afterward, along=3)
     }
 } # extra years needed
 
@@ -1634,386 +1776,159 @@ rm(oco2_lat,oco2_long,flask_years,oco2_years,obs_nbe_years,
    flask_cardamom_nbe_gCm2yr,flask_cardamom_nee_gCm2yr,flask_cardamom_fire_gCm2yr)
 
 ###
-## Extract GPP estimates from Copernicus, FLUXCOM & MODIS
+## Extract GPP estimates from Copernicus, FLUXCOM, FLUXSATv2 & MODIS
 
-## Extract FLUXCOM GPP CRUJRA (2000-2017)
+## Read from already prepared combined maps
 
 # Read first file to get additional information
-fc_years = c(2000:2017)
-fc_years = intersect(fc_years,run_years)
+gpp_years = c(2000:2021)
+gpp_years = intersect(gpp_years,run_years)
 
-# Read in the first file to extract spatial and temporal information
-FC = nc_open(paste("/exports/csce/datastore/geos/groups/gcel/GPP_ESTIMATES/FLUXCOM/CRUJRA/GPP.RS_METEO.FP-ALL.MLM-ALL.METEO-CRUJRA_v1.720_360.monthly.",fc_years[1],".nc",sep=""))
-fc_gpp = ncvar_get(FC,"GPP")  # gC/m2/d (long,lat,date) Fire not included
-fc_lat = ncvar_get(FC,"lat")
-fc_long = ncvar_get(FC,"lon")
-nc_close(FC)
+for (t in seq(1, length(gpp_years))) {
+     input = nc_open(paste("/exports/csce/datastore/geos/groups/gcel/GPP_ESTIMATES/combined_gpp/global_1deg_monthly/Combined_GPP_OBS_",gpp_years[t],".nc",sep=""))
+     #input_time = ncvar_get(input, "time") # days since 1700-12-31, 365 day years
+     input_data = ncvar_get(input, "GPP_annual")
+     # Unit convertion (gC/m2/d -> gC/m2/yr)
+     input_data = input_data * 365.25
+     # Must go in as a 3D array, so check that is the case
+     if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}
+     # Extract latitude / longitude information   
+     input_lat = ncvar_get(input,"lat_axis") ; input_long = ncvar_get(input, "long_axis")
+     # Turn lat_in / long_in from vectors to arrays
+     input_lat = t(array(input_lat, dim=c(dim(input_data)[2],dim(input_data)[1])))
+     input_long = array(input_long, dim=c(dim(input_data)[1],dim(input_data)[2]))
+     # Check for lat / long in -90 / 90, -180 / 180 repectively
+     check_long = which(input_long > 180) 
+     if (length(check_long) > 0) {input_long[check_long] = input_long[check_long] - 360}
+     # Begin regridding
+     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext,landmask)
+     # If this is the first year, define the output object
+     if (t == 1) {
+         obs_gpp_mean_gCm2yr = array(NA, dim=c(dim(input_data$var)[1:2],length(gpp_years)))
+         obs_gpp_min_gCm2yr = array(NA, dim=c(dim(input_data$var)[1:2],length(gpp_years)))
+         obs_gpp_max_gCm2yr = array(NA, dim=c(dim(input_data$var)[1:2],length(gpp_years)))
+     }
+     # Assign to output variable
+     obs_gpp_mean_gCm2yr[,,t] = input_data$var
 
-# Calculate mean annual from the monthly data
-fc_gpp = apply(fc_gpp,c(1,2),mean)
+     # GPP min
+     input_data = ncvar_get(input, "GPP_annual_min")    
+     # Unit convertion (gC/m2/d -> gC/m2/yr)
+     input_data = input_data * 365.25
+     # Must go in as a 3D array, so check that is the case
+     if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}      
+     # Begin regridding
+     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext,landmask)
+     # Assign to output variable
+     obs_gpp_min_gCm2yr[,,t] = input_data$var
 
-# Update dimensions to accomodate all years about to be read in
-fc_gpp = array(fc_gpp, dim=c(dim(fc_gpp)[1:2],length(fc_years)))
+     # GPP max
+     input_data = ncvar_get(input, "GPP_annual_max")
+     # Unit convertion (gC/m2/d -> gC/m2/yr)
+     input_data = input_data * 365.25
+     # Must go in as a 3D array, so check that is the case
+     if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}     
+     # Begin regridding
+     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext,landmask)
+     # Assign to output variable
+     obs_gpp_max_gCm2yr[,,t] = input_data$var
 
-# Loop years now reading in each file in turn and adding to the output variable
-for (t in seq(2,length(fc_years))) {
-     # Read file
-     FC = nc_open(paste("/exports/csce/datastore/geos/groups/gcel/GPP_ESTIMATES/FLUXCOM/CRUJRA/GPP.RS_METEO.FP-ALL.MLM-ALL.METEO-CRUJRA_v1.720_360.monthly.",fc_years[t],".nc",sep=""))
-     tmp = ncvar_get(FC,"GPP") 
-     # Monthly to annual
-     fc_gpp[,,t] = apply(tmp,c(1,2),mean)
-     # tidy
-     nc_close(FC) ; rm(tmp)
+     # Tidy
+     nc_close(input) ; rm(input_data) ; gc()
 }
 
-# Adjust units
-fc_gpp = fc_gpp * 365.25 # gC/m2/yr
-
-# Aggregate from 0.5 x 0.5 deg to 1x1
-#fc_gpp_tmp = array(NA,dim=c(360,180,length(fc_years)))
-#fc_gpp_mad_tmp = array(NA,dim=c(360,180,length(fc_years)))
-## Adjust lat / long vectors
-#fc_lat = rollapply(fc_lat,by = 2, width = 2, mean)
-#fc_long = rollapply(fc_long,by = 2, width = 2, mean)
-#x = 1 ; y = 1
-#for (i in seq(1,dim(fc_gpp)[1],2)){
-#    for (j in seq(1,dim(fc_gpp)[2],2)){
-#         fc_gpp_tmp[x,y,] = apply(fc_gpp[i:(i+1),j:(j+1),],3,mean)
-#         fc_gpp_mad_tmp[x,y,] = apply(fc_gpp_mad[i:(i+1),j:(j+1),],3,mean)
-#         y = y + 1
-#    }
-#    x = x + 1 ; y = 1
-#}
-## Once aggregation done replace the original variables and tidy up
-#fc_gpp = fc_gpp_tmp ; fc_gpp_mad = fc_gpp_mad_tmp 
-#rm(fc_gpp_tmp,fc_gpp_mad_tmp)
-
-# Loop through and extract the correct pixels for the target domain
-# At this stage keep the ensemble specific information
-# Loop through each year to estimate the annual means
-fc_cardamom_gpp_gCm2yr = array(NA, dim=c(dim(orig_grid_output$mean_lai_m2m2)[1:2],length(fc_years)))
-for (n in seq(1,orig_PROJECT$nosites)) {
-     if (is.na(orig_grid_output$i_location[n]) == FALSE & is.na(orig_grid_output$j_location[n]) == FALSE & 
-         is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
-         output = closest2d_3(1,fc_lat,fc_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]])
-         i1 = unlist(output)[1] ; j1 = unlist(output)[2]
-         fc_cardamom_gpp_gCm2yr[orig_grid_output$i_location[n],orig_grid_output$j_location[n],] = fc_gpp[i1,j1,]
-     } # valid value exists
-} # loop sites
-
-## Extract Copernicus GPP (2000-2019)
-
-# "PointsOfChange"
-
-# Read first file to get additional information
-copernicus_years = c(2000:2019)
-copernicus_years = intersect(copernicus_years,run_years)
-
-# Make a list of all available files
-copernicus_files = list.files("/exports/csce/datastore/geos/groups/gcel/GPP_ESTIMATES/copernius/global_1deg/", full.names = TRUE)
-
-# Loop years now reading in each file in turn and adding to the output variable
-for (y in seq(1,length(copernicus_years))) {
-     # Make a list of all files for this year
-     infiles = copernicus_files[which(grepl(paste("c_gls_GDMP_",copernicus_years[y],sep=""),copernicus_files) == TRUE)]
-     # Loop through all files in the year to store these too
-     for (t in seq(1, length(infiles))) {
-          # Open file
-          copernicus = nc_open(infiles[t])
-          # If this is the first year extract some spatial information
-          if (y == 1 & t == 1) {
-              # Read lat / long
-              copernicus_lat = ncvar_get(copernicus,"lat")
-              copernicus_long = ncvar_get(copernicus,"lon")         
-              # Create output variable we will accumulate into 
-              copernicus_gpp = array(NA, dim=c(length(copernicus_long),length(copernicus_lat),length(copernicus_years)))
-          } # first year actions only
-          # For first step of the year create the new years loading variable
-          if (t == 1) { tmp = array(NA, dim=c(length(copernicus_long),length(copernicus_lat),length(infiles))) }
-          # Read in variable
-          tmp[,,t] = ncvar_get(copernicus, "GDMP")
-          # Remove any missing data flags
-          tmp[,,t][which(tmp[,,t] == -9999)] = NA
-          # Tidy up
-          nc_close(copernicus)
-     } # loop time step in year
-     # Monthly to annual
-     copernicus_gpp[,,y] = apply(tmp,c(1,2),mean)
-     # Tidy
-     rm(tmp)
-} # Loop copernicus years
-
-# Adjust units
-copernicus_gpp = copernicus_gpp * 365.25 #gC/m2/day -> gC/m2/yr
-
-# Loop through and extract the correct pixels for the target domain
-# At this stage keep the ensemble specific information
-# Loop through each year to estimate the annual means
-copernicus_cardamom_gpp_gCm2yr = array(NA, dim=c(dim(orig_grid_output$mean_lai_m2m2)[1:2],length(copernicus_years)))
-for (n in seq(1,orig_PROJECT$nosites)) {
-     if (is.na(orig_grid_output$i_location[n]) == FALSE & is.na(orig_grid_output$j_location[n]) == FALSE & 
-         is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
-         output = closest2d_3(1,copernicus_lat,copernicus_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]])
-         i1 = unlist(output)[1] ; j1 = unlist(output)[2]
-         copernicus_cardamom_gpp_gCm2yr[orig_grid_output$i_location[n],orig_grid_output$j_location[n],] = copernicus_gpp[i1,j1,]
-     } # valid value exists
-} # loop sites
-
-
-## Extract FluxSat v2 GPP (2000-2019)
-
-# "PointsOfChange"
-
-# Read first file to get additional information
-fluxsat_years = c(2000:2019)
-fluxsat_years = intersect(fluxsat_years,run_years)
-
-# Make a list of all available files
-fluxsat_files = list.files("/exports/csce/datastore/geos/groups/gcel/GPP_ESTIMATES/FluxSat/global_1deg_monthly/", full.names = TRUE)
-
-# Loop years now reading in each file in turn and adding to the output variable
-for (y in seq(1,length(fluxsat_years))) {
-     # Make a list of all files for this year
-     infiles = fluxsat_files[which(grepl(paste("GPP_FluxSat_daily_v2_",fluxsat_years[y],sep=""),fluxsat_files) == TRUE)]
-     # Loop through all files in the year to store these too
-     for (t in seq(1, length(infiles))) {
-          # Open file
-          copernicus = nc_open(infiles[t])
-          # If this is the first year extract some spatial information
-          if (y == 1 & t == 1) {
-              # Read lat / long
-              fluxsat_lat = ncvar_get(copernicus,"lat")
-              fluxsat_long = ncvar_get(copernicus,"lon")         
-              # Create output variable we will accumulate into 
-              fluxsat_gpp = array(NA, dim=c(length(fluxsat_long),length(fluxsat_lat),length(fluxsat_years)))
-          } # first year actions only
-          # For first step of the year create the new years loading variable
-          if (t == 1) { tmp = array(NA, dim=c(length(fluxsat_long),length(fluxsat_lat),length(infiles))) }
-          # Read in variable
-          tmp[,,t] = ncvar_get(copernicus, "GPP")
-          # Remove any missing data flags
-          tmp[,,t][which(tmp[,,t] == -9999)] = NA
-          # Tidy up
-          nc_close(copernicus)
-     } # loop time step in year
-     # Monthly to annual
-     fluxsat_gpp[,,y] = apply(tmp,c(1,2),mean)
-     # Tidy
-     rm(tmp)
-} # Loop copernicus years
-
-# Adjust units
-fluxsat_gpp = fluxsat_gpp * 365.25 #gC/m2/day -> gC/m2/yr
-
-# Loop through and extract the correct pixels for the target domain
-# At this stage keep the ensemble specific information
-# Loop through each year to estimate the annual means
-fluxsat_cardamom_gpp_gCm2yr = array(NA, dim=c(dim(orig_grid_output$mean_lai_m2m2)[1:2],length(fluxsat_years)))
-fluxsat_cardamom_gpp_gCm2yr_trend = array(NA, dim=c(dim(orig_grid_output$mean_lai_m2m2)[1:2]))
-for (n in seq(1,orig_PROJECT$nosites)) {
-     if (is.na(orig_grid_output$i_location[n]) == FALSE & is.na(orig_grid_output$j_location[n]) == FALSE &
-         is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
-         output = closest2d_3(1,fluxsat_lat,fluxsat_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]])
-         i1 = unlist(output)[1] ; j1 = unlist(output)[2]
-         fluxsat_cardamom_gpp_gCm2yr[orig_grid_output$i_location[n],orig_grid_output$j_location[n],] = fluxsat_gpp[i1,j1,]
-         # Estimate the GPP trend at this time too
-         if (length(which(is.na(fluxsat_gpp[i1,j1,]) == FALSE)) > 1) {
-             fluxsat_cardamom_gpp_gCm2yr_trend[orig_grid_output$i_location[n],orig_grid_output$j_location[n]] = coef(lm(fluxsat_gpp[i1,j1,]~fluxsat_years))[2]
-         } 
-     } # valid value exists
-} # loop sites
-
-## Combine the GPP estimates from our datasets
-
-# How many unique years in total
-obs_gpp_years = unique(c(fc_years,copernicus_years,fluxsat_years))
-
-# Define the combined timeseries datasets
-nos_gpp_databases = 3
-obs_gpp_gCm2yr = array(NA, dim = c(dim(orig_grid_output$mean_lai_m2m2)[1:2],length(obs_gpp_years),nos_gpp_databases))
-for (i in seq(1,length(obs_gpp_years))) {
-     # determine whether the fluxcom dataset has any values for this year
-     tmp = which(fc_years == obs_gpp_years[i])
-     if (length(tmp) > 0) {
-         # If there is we shall load this into the output object
-         i_s = 1 ; i_e = 1
-         obs_gpp_gCm2yr[,,i,i_s:i_e] = fc_cardamom_gpp_gCm2yr[,,tmp]
-     }
-     # determine whether the copernicus dataset has any values for this year
-     tmp = which(copernicus_years == obs_gpp_years[i])
-     if (length(tmp) > 0) {
-         # If there is we shall load this into the output object
-         i_s = 1+1 ; i_e = i_s - 1 + 1
-         obs_gpp_gCm2yr[,,i,i_s:i_e] = copernicus_cardamom_gpp_gCm2yr[,,tmp]
-     }
-     # determine whether the fluxsatv2 dataset has any values for this year
-     tmp = which(fluxsat_years == obs_gpp_years[i])
-     if (length(tmp) > 0) {
-         # If there is we shall load this into the output object
-         i_s = 1+1+1 ; i_e = i_s - 1 + 1
-         obs_gpp_gCm2yr[,,i,i_s:i_e] = fluxsat_cardamom_gpp_gCm2yr[,,tmp]
-     }
-} # loop years
-
-# Extract the time step mean / min / max for each of these fluxes now
-obs_gpp_mean_gCm2yr = apply(obs_gpp_gCm2yr,c(1,2,3),mean, na.rm=TRUE)
-obs_gpp_min_gCm2yr = apply(obs_gpp_gCm2yr,c(1,2,3),min, na.rm=TRUE)
-obs_gpp_max_gCm2yr = apply(obs_gpp_gCm2yr,c(1,2,3),max, na.rm=TRUE)
-# Filter out the Inf values to NaN
-obs_gpp_min_gCm2yr[is.infinite(obs_gpp_min_gCm2yr) == TRUE] = NA
-obs_gpp_max_gCm2yr[is.infinite(obs_gpp_max_gCm2yr) == TRUE] = NA
-
-# Ensure that the timeseries length is consistent between the observed variable and the model analysis
-# This assumes that only the timesteps that overlap the model period have been read in the first place,
-# so we should only be needing to add extra empty variable space.
-tmp = intersect(run_years,obs_gpp_years)
-if (length(tmp) != length(run_years)) {
-    # How many years before the observations need to be added?
-    add_beginning = obs_gpp_years[1]-run_years[1]
-    # How many years after the observations
-    add_afterward = run_years[length(run_years)] - obs_gpp_years[length(obs_gpp_years)]
-    if (add_beginning > 0) {
-        # Convert these into arrays of the correct shape but empty
-        add_beginning = array(NA, dim=c(dim(obs_gpp_min_gCm2yr)[1:2],add_beginning))
-        # Add the extra years 
-        obs_gpp_mean_gCm2yr = abind(add_beginning,obs_gpp_mean_gCm2yr, along=3)
-        obs_gpp_min_gCm2yr  = abind(add_beginning,obs_gpp_min_gCm2yr, along=3)
-        obs_gpp_max_gCm2yr  = abind(add_beginning,obs_gpp_max_gCm2yr, along=3)
-    } 
-    if (add_afterward > 0) {
-        # Convert these into arrays of the correct shape but empty
-        add_afterward = array(NA, dim=c(dim(obs_gpp_min_gCm2yr)[1:2],add_afterward))
-        # Add the extra years 
-        obs_gpp_mean_gCm2yr = abind(obs_gpp_mean_gCm2yr,add_afterward, along=3)
-        obs_gpp_min_gCm2yr  = abind(obs_gpp_min_gCm2yr,add_afterward, along=3)
-        obs_gpp_max_gCm2yr  = abind(obs_gpp_max_gCm2yr,add_afterward, along=3)
-    }
-} # extra years needed
-
-apply(copernicus_cardamom_gpp_gCm2yr*array(area, dim=c(dim(area)[1:2],dim(copernicus_cardamom_gpp_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
+# Ensure the spatial orientation of the processed variable matches that of CARDAMOM
+obs_gpp_mean_gCm2yr = obs_gpp_mean_gCm2yr[,dim(obs_gpp_mean_gCm2yr)[2]:1,]
+obs_gpp_min_gCm2yr = obs_gpp_min_gCm2yr[,dim(obs_gpp_min_gCm2yr)[2]:1,]
+obs_gpp_max_gCm2yr = obs_gpp_max_gCm2yr[,dim(obs_gpp_max_gCm2yr)[2]:1,]
 
 # Generate aggregate values at the domain level
-obs_gpp_mean_domain_TgCyr = apply(obs_gpp_mean_gCm2yr*array(area, dim=c(dim(area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
-obs_gpp_min_domain_TgCyr = apply(obs_gpp_min_gCm2yr*array(area, dim=c(dim(area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
-obs_gpp_max_domain_TgCyr = apply(obs_gpp_max_gCm2yr*array(area, dim=c(dim(area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
+obs_gpp_mean_domain_TgCyr = apply(obs_gpp_mean_gCm2yr*array(landmask_area, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
+obs_gpp_min_domain_TgCyr = apply(obs_gpp_min_gCm2yr*array(landmask_area, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
+obs_gpp_max_domain_TgCyr = apply(obs_gpp_max_gCm2yr*array(landmask_area, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
+# where the whole grid is zero can lead to zero being introduced - remove these
+obs_gpp_mean_domain_TgCyr[which(obs_gpp_mean_domain_TgCyr == 0)] = NA 
+obs_gpp_min_domain_TgCyr[which(obs_gpp_min_domain_TgCyr == 0)] = NA
+obs_gpp_max_domain_TgCyr[which(obs_gpp_max_domain_TgCyr == 0)] = NA
 
 ###
 ## Independent fire emissions estimate
 ## Two estimates available, gfed and gfas
 ###
 
-## Extract GFEDv4.1s (2001-2016)
+## Read from already prepared combined maps
 
 # Read first file to get additional information
-gfed_years = c(2001:2016)
-gfed_years = intersect(gfed_years,run_years)
+fire_years = c(2004:2016)
+fire_years = intersect(fire_years,run_years)
 
-gfed = nc_open(paste("/exports/csce/datastore/geos/groups/gcel/GFED4/1.0deg/monthly_emissions/GFED4.1s_",gfed_years[1],".nc",sep=""))
-gfed_fire = ncvar_get(gfed,"emissions")  # gC/m2/month (long,lat,date) 
-gfed_lat = ncvar_get(gfed,"lat")
-gfed_long = ncvar_get(gfed,"lon")
-nc_close(gfed)
-
-# Aggregate to annual flux
-gfed_fire = apply(gfed_fire,c(1,2),sum,na.rm=TRUE)
-# correct dimension
-gfed_fire = array(gfed_fire, dim=c(dim(gfed_fire)[1:2],length(gfed_years)))
-for (t in seq(2,length(gfed_years))) {
-     gfed = nc_open(paste("/exports/csce/datastore/geos/groups/gcel/GFED4/1.0deg/monthly_emissions/GFED4.1s_",gfed_years[t],".nc",sep=""))
-     tmp = ncvar_get(gfed,"emissions")  # gC/m2/month (long,lat,date) 
-     tmp = apply(tmp,c(1,2),sum,na.rm=TRUE)
-     gfed_fire[,,t] = tmp
-     nc_close(gfed)
-}
-# Search for africa locations and slot into africa only grid for matching
-# Make into CARDAMOM paired masks.
-gfed_cardamom_fire_gCm2yr = array(NA, dim=c(dim(orig_grid_output$mean_lai_m2m2)[1:2],length(gfed_years)))
-gfed_m2 = array(NA, dim=dim(orig_grid_output$mean_lai_m2m2)[1:2])
-for (n in seq(1,orig_PROJECT$nosites)) {
-     if (is.na(orig_grid_output$i_location[n]) == FALSE & is.na(orig_grid_output$j_location[n]) == FALSE & 
-         is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
-         output = closest2d_3(1,gfed_lat,gfed_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]])
-         i1 = unlist(output)[1] ; j1 = unlist(output)[2]
-         gfed_cardamom_fire_gCm2yr[orig_grid_output$i_location[n],orig_grid_output$j_location[n],] = gfed_fire[i1,j1,]
+for (t in seq(1, length(fire_years))) {
+     input = nc_open(paste("/exports/csce/datastore/geos/groups/gcel/FIRE_ESTIMATES/combined_fire/global_1deg_monthly/Combined_FIRE_OBS_",fire_years[t],".nc",sep=""))
+     #input_time = ncvar_get(input, "time") # days since 1700-12-31, 365 day years
+     input_data = ncvar_get(input, "Fire_annual")
+     # Unit convertion (gC/m2/d -> gC/m2/yr)
+     input_data = input_data * 365.25
+     # Must go in as a 3D array, so check that is the case
+     if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}
+     # Extract latitude / longitude information   
+     input_lat = ncvar_get(input,"lat_axis") ; input_long = ncvar_get(input, "long_axis")
+     # Turn lat_in / long_in from vectors to arrays
+     input_lat = t(array(input_lat, dim=c(dim(input_data)[2],dim(input_data)[1])))
+     input_long = array(input_long, dim=c(dim(input_data)[1],dim(input_data)[2]))
+     # Check for lat / long in -90 / 90, -180 / 180 repectively
+     check_long = which(input_long > 180) 
+     if (length(check_long) > 0) {input_long[check_long] = input_long[check_long] - 360}
+     # Begin regridding
+     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext,landmask)
+     # If this is the first year, define the output object
+     if (t == 1) {
+         obs_fire_mean_gCm2yr = array(NA, dim=c(dim(input_data$var)[1:2],length(fire_years)))
+         obs_fire_min_gCm2yr = array(NA, dim=c(dim(input_data$var)[1:2],length(fire_years)))
+         obs_fire_max_gCm2yr = array(NA, dim=c(dim(input_data$var)[1:2],length(fire_years)))
      }
-}
+     # Assign to output variable
+     obs_fire_mean_gCm2yr[,,t] = input_data$var
 
-## Annual Emissions: (units: Teragrams (Tg) carbon)
-# 2004-2017. GFAS
-# Based on MODIS radiative energy emissions and converted to biomass based on PFT conversion factors
+     # GPP min
+     input_data = ncvar_get(input, "Fire_annual_min")    
+     # Unit convertion (gC/m2/d -> gC/m2/yr)
+     input_data = input_data * 365.25
+     # Must go in as a 3D array, so check that is the case
+     if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}      
+     # Begin regridding
+     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext,landmask)
+     # Assign to output variable
+     obs_fire_min_gCm2yr[,,t] = input_data$var
 
-# Time period
-gfas_years = c(2004:2017)
-gfas_years = intersect(gfas_years,run_years)
-gfas = nc_open(paste("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/cssp_brazil/GFAS_annual/cams_gfas_co2fire_",gfas_years[1],".nc",sep=""))
-gfas_fire = ncvar_get(gfas, "AnnualFire")
-gfas_lat = ncvar_get(gfas,"latitude")
-gfas_long = ncvar_get(gfas,"longitude")
+     # GPP max
+     input_data = ncvar_get(input, "Fire_annual_max")
+     # Unit convertion (gC/m2/d -> gC/m2/yr)
+     input_data = input_data * 365.25
+     # Must go in as a 3D array, so check that is the case
+     if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}     
+     # Begin regridding
+     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext,landmask)
+     # Assign to output variable
+     obs_fire_max_gCm2yr[,,t] = input_data$var
 
-# Make space for all years
-gfas_fire = array(gfas_fire, dim=c(dim(gfas_fire)[1:2],length(gfas_years)))
-# Read in all the files and collect into single array
-for (t in seq(2, length(gfas_years))) {
-     gfas = nc_open(paste("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/cssp_brazil/GFAS_annual/cams_gfas_co2fire_",gfas_years[t],".nc",sep=""))
-     tmp = ncvar_get(gfas, "AnnualFire")
-     gfas_fire[,,t] = tmp
-}
-# Tidy
-nc_close(gfas)
-
-# Search for africa locations and slot into africa only grid for matching onto CARDAMOM
-gfas_cardamom_fire_gCm2yr = array(NA, dim=c(dim(orig_grid_output$mean_lai_m2m2)[1:2],length(gfas_years)))
-for (n in seq(1,orig_PROJECT$nosites)) {
-     if (is.na(orig_grid_output$i_location[n]) == FALSE & is.na(orig_grid_output$j_location[n]) == FALSE & 
-         is.na(landfilter[orig_grid_output$i_location[n],orig_grid_output$j_location[n]]) == FALSE) {
-         output = closest2d_3(1,gfas_lat,gfas_long,grid_lat[orig_grid_output$i_location[n],orig_grid_output$j_location[n]],grid_long[orig_grid_output$i_location[n],orig_grid_output$j_location[n]])
-         i1 = unlist(output)[1] ; j1 = unlist(output)[2]
-         gfas_cardamom_fire_gCm2yr[orig_grid_output$i_location[n],orig_grid_output$j_location[n],] = gfas_fire[i1,j1,]
-     }
+     # Tidy
+     nc_close(input) ; rm(input_data) ; gc()
 }
 
-## Combine the Fire estimates from our datasets
-
-# How many unique years in total
-obs_fire_years = unique(c(gfed_years,gfas_years))
-
-# Define the combined timeseries datasets
-nos_fire_databases = 2
-obs_fire_gCm2yr = array(NA, dim = c(dim(orig_grid_output$mean_lai_m2m2)[1:2],length(obs_fire_years),nos_fire_databases))
-for (i in seq(1,length(obs_fire_years))) {
-     # determine whether the flask dataset has any values for this year
-     tmp = which(gfed_years == obs_fire_years[i])
-     if (length(tmp) > 0) {
-         # If there is we shall load this into the output object
-         i_s = 1 ; i_e = 1
-         obs_fire_gCm2yr[,,i,i_s:i_e] = gfed_cardamom_fire_gCm2yr[,,tmp]
-     }
-     # determine whether the oco2 dataset has any values for this year
-     tmp = which(gfas_years == obs_fire_years[i])
-     if (length(tmp) > 0) {
-         # If there is we shall load this into the output object
-         i_s = 1+1 ; i_e = i_s - 1 + 1
-         obs_fire_gCm2yr[,,i,i_s:i_e] = gfas_cardamom_fire_gCm2yr[,,tmp]
-     }
-} # loop years
-
-# Extract the time step mean / min / max for each of these fluxes now
-obs_fire_mean_gCm2yr = apply(obs_fire_gCm2yr,c(1,2,3),mean, na.rm=TRUE)
-obs_fire_min_gCm2yr = apply(obs_fire_gCm2yr,c(1,2,3),min, na.rm=TRUE)
-obs_fire_max_gCm2yr = apply(obs_fire_gCm2yr,c(1,2,3),max, na.rm=TRUE)
-# Filter out the Inf values to NaN
-obs_fire_min_gCm2yr[is.infinite(obs_fire_min_gCm2yr) == TRUE] = NA
-obs_fire_max_gCm2yr[is.infinite(obs_fire_max_gCm2yr) == TRUE] = NA
+# Ensure the spatial orientation of the processed variable matches that of CARDAMOM
+obs_fire_mean_gCm2yr = obs_fire_mean_gCm2yr[,dim(obs_fire_mean_gCm2yr)[2]:1,]
+obs_fire_min_gCm2yr = obs_fire_min_gCm2yr[,dim(obs_fire_min_gCm2yr)[2]:1,]
+obs_fire_max_gCm2yr = obs_fire_max_gCm2yr[,dim(obs_fire_max_gCm2yr)[2]:1,]
 
 # Ensure that the timeseries length is consistent between the observed variable and the model analysis
 # This assumes that only the timesteps that overlap the model period have been read in the first place,
 # so we should only be needing to add extra empty variable space.
-tmp = intersect(run_years,obs_fire_years)
+tmp = intersect(run_years,fire_years)
 if (length(tmp) != length(run_years)) {
     # How many years before the observations need to be added?
-    add_beginning = obs_fire_years[1]-run_years[1]
+    add_beginning = fire_years[1]-run_years[1]
     # How many years after the observations
-    add_afterward = run_years[length(run_years)] - obs_fire_years[length(obs_fire_years)]
+    add_afterward = run_years[length(run_years)] - fire_years[length(fire_years)]
     if (add_beginning > 0) {
         # Convert these into arrays of the correct shape but empty
         add_beginning = array(NA, dim=c(dim(obs_fire_min_gCm2yr)[1:2],add_beginning))
@@ -2033,13 +1948,13 @@ if (length(tmp) != length(run_years)) {
 } # extra years needed
 
 # Generate aggregate values at the domain level
-obs_fire_mean_domain_TgCyr = apply(obs_fire_mean_gCm2yr*array(area, dim=c(dim(area)[1:2],dim(obs_fire_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
-obs_fire_min_domain_TgCyr = apply(obs_fire_min_gCm2yr*array(area, dim=c(dim(area)[1:2],dim(obs_fire_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
-obs_fire_max_domain_TgCyr = apply(obs_fire_max_gCm2yr*array(area, dim=c(dim(area)[1:2],dim(obs_fire_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
-
-# Tidy
-rm(gfas_cardamom_fire_gCm2yr,gfas_long,gfas_lat,gfas_years,gfas_fire,
-   gfed_cardamom_fire_gCm2yr,gfed_long,gfed_lat,gfed_years,gfed_fire)
+obs_fire_mean_domain_TgCyr = apply(obs_fire_mean_gCm2yr*array(landmask_area, dim=c(dim(landmask_area)[1:2],dim(obs_fire_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
+obs_fire_min_domain_TgCyr = apply(obs_fire_min_gCm2yr*array(landmask_area, dim=c(dim(landmask_area)[1:2],dim(obs_fire_min_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
+obs_fire_max_domain_TgCyr = apply(obs_fire_max_gCm2yr*array(landmask_area, dim=c(dim(landmask_area)[1:2],dim(obs_fire_max_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
+# where the whole grid is zero can lead to zero being introduced - remove these
+obs_fire_mean_domain_TgCyr[which(obs_fire_mean_domain_TgCyr == 0)] = NA 
+obs_fire_min_domain_TgCyr[which(obs_fire_min_domain_TgCyr == 0)] = NA
+obs_fire_max_domain_TgCyr[which(obs_fire_max_domain_TgCyr == 0)] = NA
 
 ###
 ## Plot Observations

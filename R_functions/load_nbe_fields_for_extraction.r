@@ -86,7 +86,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
 
                        # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
                        # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-                       if (spatial_type == "grid") {
+                       #if (spatial_type == "grid") {
                            if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
 
                                # Create raster with the target resolution
@@ -96,7 +96,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
                                var2 = resample(var2, target, method="bilinear") ; gc() ; removeTmpFiles()
 
                           } # Aggrgeate to resolution
-                       } # spatial_type == "grid"
+                       #} # spatial_type == "grid"
 
                        if (lat_done == FALSE) {
                            # extract dimension information for the grid, note the axis switching between raster and actual array
@@ -246,7 +246,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
                     var1[which(as.vector(var1) == -9999)] = NA ; var2[which(as.vector(var2) == -9999)] = NA
                     # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
                     # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-                    if (spatial_type == "grid") {
+                    #if (spatial_type == "grid") {
                         if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
 
                             # Create raster with the target resolution
@@ -256,7 +256,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
                             var2 = resample(var2, target, method="bilinear") ; gc() ; removeTmpFiles()
 
                        } # Aggrgeate to resolution
-                    } # spatial_type == "grid"
+                    #} # spatial_type == "grid"
 
                     if (lat_done == FALSE) {
                         # extract dimension information for the grid, note the axis switching between raster and actual array

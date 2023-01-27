@@ -61,7 +61,7 @@ load_initial_biomass_maps_for_extraction<-function(latlon_in,Cwood_initial_sourc
 
           # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
           # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-          if (spatial_type == "grid") {
+          #if (spatial_type == "grid") {
               if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
 
                   # Create raster with the target resolution
@@ -71,7 +71,7 @@ load_initial_biomass_maps_for_extraction<-function(latlon_in,Cwood_initial_sourc
                   biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
 
               } # Aggrgeate to resolution
-          } # spatial_type == "grid"
+          #} # spatial_type == "grid"
 
           # extract dimension information for the grid, note the axis switching between raster and actual array
           xdim = dim(biomass_gCm2)[2] ; ydim = dim(biomass_gCm2)[1]
@@ -139,7 +139,7 @@ load_initial_biomass_maps_for_extraction<-function(latlon_in,Cwood_initial_sourc
 
           # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
           # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-          if (spatial_type == "grid") {
+          #if (spatial_type == "grid") {
               if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
 
                   # Create raster with the target resolution
@@ -149,7 +149,7 @@ load_initial_biomass_maps_for_extraction<-function(latlon_in,Cwood_initial_sourc
                   biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
 
               } # Aggrgeate to resolution
-          } # spatial_type == "grid"
+          #} # spatial_type == "grid"
 
           # extract dimension information for the grid, note the axis switching between raster and actual array
           xdim = dim(biomass_gCm2)[2] ; ydim = dim(biomass_gCm2)[1]
@@ -209,7 +209,7 @@ load_initial_biomass_maps_for_extraction<-function(latlon_in,Cwood_initial_sourc
         biomass_uncertainty_gCm2[which(as.vector(biomass_uncertainty_gCm2) < 0)] = NA
         # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
         # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-        if (spatial_type == "grid") {
+        #if (spatial_type == "grid") {
             if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
 
                 # Create raster with the target resolution
@@ -220,7 +220,7 @@ load_initial_biomass_maps_for_extraction<-function(latlon_in,Cwood_initial_sourc
                 biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
 
             } # Aggrgeate to resolution
-        } # spatial_type == "grid"
+        #} # spatial_type == "grid"
 
         # extract dimension information for the grid, note the axis switching between raster and actual array
         xdim = dim(biomass_gCm2)[2] ; ydim = dim(biomass_gCm2)[1]
@@ -276,7 +276,7 @@ load_initial_biomass_maps_for_extraction<-function(latlon_in,Cwood_initial_sourc
         biomass_uncertainty_gCm2[which(as.vector(biomass_uncertainty_gCm2) < 0)] = NA
         # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
         # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-        if (spatial_type == "grid") {
+        #if (spatial_type == "grid") {
             if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
 
                 # Create raster with the target resolution
@@ -287,7 +287,7 @@ load_initial_biomass_maps_for_extraction<-function(latlon_in,Cwood_initial_sourc
                 biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
 
             } # Aggrgeate to resolution
-        } # spatial_type == "grid"
+        #} # spatial_type == "grid"
 
         # extract dimension information for the grid, note the axis switching between raster and actual array
         xdim = dim(biomass_gCm2)[2] ; ydim = dim(biomass_gCm2)[1]
@@ -343,7 +343,7 @@ load_initial_biomass_maps_for_extraction<-function(latlon_in,Cwood_initial_sourc
         biomass_uncertainty_gCm2[which(as.vector(biomass_uncertainty_gCm2) < 0)] = NA
         # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
         # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-        if (spatial_type == "grid") {
+        #if (spatial_type == "grid") {
             if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
 
                 # Create raster with the target resolution
@@ -354,7 +354,7 @@ load_initial_biomass_maps_for_extraction<-function(latlon_in,Cwood_initial_sourc
                 biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
 
             } # Aggrgeate to resolution
-        } # spatial_type == "grid"
+        #} # spatial_type == "grid"
 
         # extract dimension information for the grid, note the axis switching between raster and actual array
         xdim = dim(biomass_gCm2)[2] ; ydim = dim(biomass_gCm2)[1]
