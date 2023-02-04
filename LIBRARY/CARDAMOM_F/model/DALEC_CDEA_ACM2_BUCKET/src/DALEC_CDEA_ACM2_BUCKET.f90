@@ -102,7 +102,7 @@ module CARBON_MODEL_MOD
                       canopy_height = 9d0,          & ! canopy height assumed to be 9 m
                        tower_height = canopy_height + 2d0, & ! tower (observation) height assumed to be 2 m above canopy
                            min_wind = 0.2d0,        & ! minimum wind speed at canopy top
-                       min_drythick = 0.01d0,       & ! minimum dry thickness depth (m)
+                       min_drythick = 0.005d0,      & ! minimum dry thickness depth (m)
                           min_layer = 0.03d0,       & ! minimum thickness of the third rooting layer (m)
                         soil_roughl = 0.05d0,       & ! soil roughness length (m)
                      top_soil_depth = 0.30d0,       & ! thickness of the top soil layer (m)

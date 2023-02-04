@@ -102,7 +102,7 @@ module CARBON_MODEL_MOD
                       canopy_height = 9d0,          & ! canopy height assumed to be 9 m
                        tower_height = canopy_height + 2d0, & ! tower (observation) height assumed to be 2 m above canopy
                            min_wind = 0.2d0,        & ! minimum wind speed at canopy top
-                       min_drythick = 0.01d0,       & ! minimum dry thickness depth (m)
+                       min_drythick = 0.005d0,      & ! minimum dry thickness depth (m)
                           min_layer = 0.03d0,       & ! minimum thickness of the third rooting layer (m)
                         soil_roughl = 0.05d0,       & ! soil roughness length (m)
                      top_soil_depth = 0.30d0,       & ! thickness of the top soil layer (m)
@@ -1215,6 +1215,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Estimate the total canopy N, then scale to the "top leaf" and multiple by NUE
     !Vcmax = (((avN * lai) / leaf_canopy_light_scaling) * NUE) * airt_adj * leaf_canopy_light_scaling
 
+    ! Also from Walker et al., 2017
+    ! avN = 10**(rnorm(1000,0.2764618,0.2014871)) ; hist(exp(3.712)*avN**0.650)
+    !  2.5%       50%     97.5%
+    !35.67461  61.41695 115.58487
+
     !
     ! Light limited photosynthesis - leaf to canopy scale
     !
@@ -1226,6 +1231,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! e0 = the quantum yield at light compensation
     ! Jmax calculation in umolE/umolPAR, a key requirement for aggregating to
     ! the daily time scale is to scale by day light fraction.
+    ! Jmax ~ Vcmax (Walker et al., 2017, doi: 10.1111/nph.14623, equ. 1)
     Jmax = dayl_hours_fraction*2.787095d0*(Vcmax_ref**0.890d0) * leaf_canopy_light_scaling &
          * opt_max_scaling(pl_max_temp,pl_min_temp,pl_opt_temp,pl_kurtosis,leafT)
     ! Determine the mean per ground (i.e. canopy) area PAR absorption in umolPAR/m2/s
