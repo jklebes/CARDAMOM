@@ -7,7 +7,13 @@ Sub-model specific information in summaries in subsequent tables.
 
 | Model Name                       | Old Name            | Short Description                                   | Details (POC)                   | Status                          |
 |----------------------------------|---------------------|-----------------------------------------------------|---------------------------------|---------------------------------|
-|:---                              |         :----:      | :---                                                | :---                            | :---
-| ...                              | DALEC_CDEA_LU_FIRES        | 3-pool DALEC                                        |                                 | Published (Famiglietti et al., 2021)                   |
-| DALEC C only                     | ...                 |                                                     | Bloom et al., 2016              | Published                       |       |                                 |
-|                                  | ...        | Boese et al, 2017 (uWUE + rad)                      | Paul Levine, Yan Yang           |    Yang et al., in prep.        |
+| DALEC_C1H0P1A1                   | DALEC_CDEA_LU_FIRES |                                                     |                                 | Published (Bloom & Williams et al., 2015)  |
+| ...                              | ...                 |                                                     | Bloom et al., 2016              | Published                       |       |                                 |
+
+#### TABLE 2. Phenology model
+
+| Model Name                       | Short Description                                                    | Details                          |
+|----------------------------------|---------------------|----------------------------------------------------------------------------------|
+| P1                               | Combined Deciduous Evergreen Analytical model. Used a day of year based approach to canopy growth and loss| Published (Bloom & Williams et al., 2015)  |
+
+
