@@ -15,16 +15,27 @@ M = Managed Grassland / arable crops (Table 10)
 
 #### TABLE 1. CARDAMOM models.
 
-|Ref| Model (Code) Name          | Alternate Names     | Short Description                                   | Details (POC)                 | Status    |
-|---|----------------------------|---------------------|-----------------------------------------------------|-------------------------------|-----------|
-| 1 | DALEC.D1.F2.               | DALEC_CDEA_LU_FIRES, C1, M1              | Fire model updated from F1 to F2| Bloom & Williams et al., 2015| Published |
-| 2 | DALEC.A1.D2.F2.H1          | DALEC_CDEA_ACM2, C6, M2                  | Fire model updated from F1 to F2| Smallman et al., 2021        | Published |
-| 3 | DALEC.A1.D2.F2.H2          | DALEC_CDEA_ACM2_BUCKET, C7, M3           | Fire model updated from F1 to F2| Smallman et al., 2021        | Published |
-| 4 | DALEC.A1.D2.F2.H2.R1       | DALEC_CDEA_ACM2_BUCKET_RmRg, C10, M4     | Fire model updated from F1 to F2| Smallman et al., 2021        | Published |
-| 5 | DALEC.A1.C1.D2.F2.H2.R1    | DALEC_CDEA_ACM2_BUCKET_RmRg_CWD, C11, M5 | Fire model updated from F1 to F2| Smallman et al., 2021        | Published |
-| 6 | DALEC.A1.C1.D2.F2.H2.P1.R1 | DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT, C12| Fire model updated from F1 to F2| Smallman et al., 2021        | Published |
-| 7 | DALEC.A1.C1.D2.F2.H1.P2.   | DALEC_GSI_DFOL_CWD_FR, G1                | Fire model updated from F1 to F2| Smallman et al., 2017        | Published |
-| 8 | DALEC.A1.C1.D2.F2.H2.P2.   | DALEC_GSI_BUCKET, G2                     | Fire model updated from F1 to F2| Smallman et al., 2017        | Published |
+|Ref | Model (Code) Name          | Alternate Names     | Short Description                                   | Details (POC)                 | Status      |
+|----|----------------------------|---------------------|-----------------------------------------------------|-------------------------------|-------------|
+|  1 | DALEC.D1.F2.               | DALEC_EVERGREEN, E1 | Fire model updated from F1 to F2                    | Williams et al., 2005         | Published   | 
+|  2 | DALEC.C1.D1.F2.P1.         | DALEC_CDEA_LU_FIRES, C1, M1              | Fire model updated from F1 to F2| Bloom & Williams et al., 2015| Published   |
+|  3 | DALEC.A1.C1.D2.F2.H1.P1.   | DALEC_CDEA_ACM2, C6, M2                  | Fire model updated from F1 to F2| Smallman et al., 2021        | Published   |
+|  4 | DALEC.A1.C1.D2.F2.H2.P1.   | DALEC_CDEA_ACM2_BUCKET, C7, M3           | Fire model updated from F1 to F2| Smallman et al., 2021        | Published   |
+|  5 | DALEC.A1.C1.D2.F2.H2.P1.R1.| DALEC_CDEA_ACM2_BUCKET_RmRg, C10, M4     | Fire model updated from F1 to F2| Smallman et al., 2021        | Published   |
+|  6 | DALEC.A1.C2.D2.F2.H2.P1.R1 | DALEC_CDEA_ACM2_BUCKET_RmRg_CWD, C11, M5 | Fire model updated from F1 to F2| Smallman et al., 2021        | Published   |
+|  7 | DALEC.A1.C2.D2.F2.H2.P2.R1.| DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT, C12| Fire model updated from F1 to F2| Smallman et al., 2021        | Published   |
+|  8 | DALEC.A1.C2.D2.F2.H1.P3.R1.| DALEC_GSI_DFOL_CWD_FR, G1                | Fire model updated from F1 to F2| Smallman et al., 2017        | Published   |
+|  9 | DALEC.A1.C2.D2.F2.H2.P3.R1.| DALEC_GSI_BUCKET, G2                     | Fire model updated from F1 to F2| Smallman et al., 2017        | Published   |
+| 10 | DALEC.A1.C2.D2.F2.H1.P4.R2.| DALEC, G3           | Fire model updated from F1 to F2                     | Famiglietti et al., 2021     | Published   |
+| 11 | DALEC.A1.C2.D2.F2.H2.P4.R2.| DALEC_BUCKET, G4    | Fire model updated from F1 to F2                     | Famiglietti et al., 2021     | Published   |
+| 12 | DALEC.C4.D1.F2.            | DALEC_EVERGREEN_no_lit_root, S1            | Fire model updated from F1 to F2| Famiglietti et al., 2021 | Published   |
+| 13 | DALEC.C5.D1.F2.P1.         | DALEC_CDEA_no_lit_root, S4              | Fire model updated from F1 to F2| Famiglietti et al., 2021 | Published   |
+| 14 | DALEC.C3.M1.               | DALEC_CROP          | Developmental arable crop model                      | Sus et al., 2010             | Published   |
+| 15 | DALEC.A1.C3.H2.M1.         | DALEC_CROP_BUCKET   | Developmental arable crop model                      | Sus et al., 2010             | Published   |
+| 16 | DALEC.M2.                  | DALEC_GRASS         | Managed grassland                                    | Myrgiotis et al., 2020       | Published   |
+| 17 | DALEC.A1.H2.M2.            | DALEC_GRASS_BUCKET  | Managed grassland                                    | Myrgiotis et al., 2020       | Unpublished |
+
+| 18 | DALEC.A1.C1.D2.F2.H2.P2.      | DALEC_CDEA_ACM2_BUCKET_wMRT              | Fire model updated from F1 to F2|                              | Unpublished |
 
 
 #### TABLE 2. Assimilation due to photosynthic activity sub-models
@@ -39,8 +50,13 @@ M = Managed Grassland / arable crops (Table 10)
 
 | Model Name | Short Description                                                          | Details                   |
 |------------|----------------------------------------------------------------------------|---------------------------|
-| C0         | 6-pool representation (labile, foliage, fine root, wood, litter, som) where labile supplies foliage only | Published (Bloom & Williams 2015)  |
-| C1         | 7-pool representation (labile, foliage, fine root, wood, fol+root litter, wood litter, som) where labile supplies foliage only | Published (Smallman et al., 2021)  |
+| C0         | 5-pool representation (foliage, fine root, wood, litter, som) | Published (Williams et al., 2005)  |
+| C1         | 6-pool representation (labile, foliage, fine root, wood, litter, som) where labile supplies foliage only | Published (Bloom & Williams 2015)  |
+| C2         | 7-pool representation (labile, foliage, fine root, wood, fol+root litter, wood litter, som) where labile supplies foliage only | Published (Smallman et al., 2021)  |
+| C3         | 7-pool representation (labile, foliage, fine root, wood, fol+root litter, som, crop yield) where labile supplies NPP | Published (Sus et al., 2010)  |
+| C4         | 3-pool representation (foliage, non-photosynthetic biomass, dead organic matter) | Published (Famiglietti et al., 2021)  |
+| C5         | 4-pool representation (labile, foliage, non-photosynthetic biomass, dead organic matter) where labile supplies foliage | Published (Famiglietti et al., 2021)  |
+
 
 #### TABLE 4. Disturbance due to direct human mechanical intervention sub-models
 
@@ -77,9 +93,11 @@ M = Managed Grassland / arable crops (Table 10)
 
 | Model Name | Short Description                                                          | Details                   |
 |------------|----------------------------------------------------------------------------|---------------------------|
-| P0         | Combined Deciduous Evergreen Analytical model. Uses a day of year based approach to canopy growth and loss. Fixed fraction for NPP allocation. 1st order kinetic for non-foliage turnovers. | Published (Bloom & Williams et al., 2015) |
-| P1         | As P0 except 1st order kinetics modified by a Michaelis-Menten function on wood turnover. | Published (Famiglietti et al., 2021) |
-| P2         | As P0 except CDEA replaced by Growing Season Index (GSI) Canopy growth and mortality a linear function of daylength, temperature and vapour pressure deficit. | Published (Smallman et al., 2017) |
+| P0         | Direct allocation based on constant fractions                              | Published (Williams et al., 2005) |
+| P1         | Combined Deciduous Evergreen Analytical model. Uses a day of year based approach to canopy growth and loss. Fixed fraction for NPP allocation. 1st order kinetic for non-foliage turnovers. | Published (Bloom & Williams et al., 2015) |
+| P2         | As P0 except 1st order kinetics modified by a Michaelis-Menten function on wood turnover. | Published (Famiglietti et al., 2021) |
+| P3         | As P0 except CDEA replaced by Growing Season Index (GSI) Canopy growth and mortality a linear function of daylength, temperature and vapour pressure deficit. | Published (Smallman et al., 2017) |
+| P4         | As P3 but with canopy growth dependent on a positive net canopy carbon export being estimated on the new leaf area. | Published (Famiglietti et al., 2021) |
 
 #### TABLE 9. Respiration (either autotrophic or heterotrophic) sub-models
 
@@ -87,5 +105,13 @@ M = Managed Grassland / arable crops (Table 10)
 |------------|----------------------------------------------------------------------------|---------------------------|
 | R0         | Autotrophic respiration estimated as a parameterisable fixed fraction of photosynthesis, while heterotrophic respiration follows 1st order kinetics with exponential temperature modification | Published (Bloom & Williams et al., 2015)  |
 | R1         | Maintenance respiration estimated as a parameterisable fixed fraction of photosynthesis, growth respiration is a hardcoded fraction of NPP. Heterotrophic respiration follows 1st order kinetics with exponential temperature modification | Published (Bloom & Williams et al., 2015)  |
+| R2         | Leaf maintenance respiration estimated by the Reich et al., 2008 model. Wood and fine root maintenance respiration estimated as a parameterisable fixed fraction of photosynthesis, growth respiration is a hardcoded fraction of NPP. Heterotrophic respiration follows 1st order kinetics with exponential temperature modification | Published (Famiglietti et al., 2021)  |
 
+#### TABLE 10. Managed agricultural ecosystem sub-models
+
+| Model Name | Short Description                                                          | Details                   |
+|------------|----------------------------------------------------------------------------|---------------------------|
+| M0         | No managed agricultural ecosystem sub-model                                | - |
+| M1         | Arable crop model based on dynamic allocation and mortality as a function of crop developmental stage | Published (Sus et al., 2010)  |
+| M2         | Managed grassland sub-model for grazed and cut grasslands | Published (Myrgiotis et al., 2020)  |
 
