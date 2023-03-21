@@ -19,7 +19,6 @@ subroutine rdalecbucketcanage(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
                               fire_residue_to_litwood,fire_residue_to_som,       &
                               gs_demand_supply_ratio, cica_time, &
                               gs_total_canopy, gb_total_canopy, canopy_par_MJday_time
-  use CARBON_MODEL_CROP_MOD, only: CARBON_MODEL_CROP
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -31,32 +30,6 @@ subroutine rdalecbucketcanage(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
   ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
   ! See function / subroutine specific comments for exceptions and contributors
   !!!!!!!!!!!
-
-  implicit none
-  interface
-    subroutine crop_development_parameters(stock_seed_labile,DS_shoot,DS_root,fol_frac &
-                                          ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT &
-                                          ,exepath,pathlength)
-      implicit none
-      ! declare inputs
-      ! crop specific variables
-      integer, intent(in) :: pathlength
-      character(pathlength),intent(in) :: exepath
-      double precision :: stock_seed_labile
-      double precision, allocatable, dimension(:) :: DS_shoot, & !
-                                                      DS_root, & !
-                                                     fol_frac, & !
-                                                    stem_frac, & !
-                                                    root_frac, & !
-                                                      DS_LRLV, & !
-                                                         LRLV, & !
-                                                      DS_LRRT, & !
-                                                         LRRT
-      ! local variables..
-      integer :: columns, i, rows, input_crops_unit, ios
-      character(225) :: variables,filename
-    end subroutine crop_development_parameters
-  end interface
 
   ! declare input variables
   integer, intent(in) :: pathlength
@@ -148,26 +121,13 @@ subroutine rdalecbucketcanage(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
   ! number of time steps per year
   steps_per_year = nodays/nos_years
 
-  ! when crop model in use should load crop development parameters here
-  ! modifications neede....
-  if (pft == 1) call crop_development_parameters(stock_seed_labile,DS_shoot,DS_root,fol_frac &
-                                                ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT &
-                                                ,exepath,pathlength)
-
   ! begin iterations
   do i = 1, nos_iter
-     ! call the models
-     if (pft == 1) then
-         ! crop pft and we want pft specific model
-         call CARBON_MODEL_CROP(1,nodays,met,pars(1:nopars,i),deltat,nodays,lat &
-                          ,lai,NEE,FLUXES,POOLS,pft,nopars,nomet,nopools,nofluxes &
-                          ,GPP,stock_seed_labile,DS_shoot,DS_root,fol_frac &
-                          ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT)
-     else
-         call CARBON_MODEL(1,nodays,met,pars(1:nopars,i),deltat,nodays &
-                          ,lat,lai,NEE,FLUXES,POOLS &
-                          ,nopars,nomet,nopools,nofluxes,GPP)
-     endif
+     ! call the model
+     call CARBON_MODEL(1,nodays,met,pars(1:nopars,i),deltat,nodays &
+                      ,lat,lai,NEE,FLUXES,POOLS &
+                      ,nopars,nomet,nopools,nofluxes,GPP)
+
 !if (i == 1) then
 !    open(unit=666,file="/home/lsmallma/out.csv", &
 !         status='replace',action='readwrite' )
@@ -186,39 +146,20 @@ subroutine rdalecbucketcanage(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
      out_var(i,1:nodays,7)  = POOLS(1:nodays,6) ! som
      out_var(i,1:nodays,8)  = POOLS(1:nodays,1) + POOLS(1:nodays,2) + POOLS(1:nodays,3) & ! common pools
                             + POOLS(1:nodays,4) !+ POOLS(1:nodays,5) + POOLS(1:nodays,6) + POOLS(1:nodays,7)
-     if (pft == 1) out_var(i,1:nodays,8) = out_var(i,1:nodays,8) + POOLS(1:nodays,9) ! crop specific
      out_var(i,1:nodays,9)  = POOLS(1:nodays,3) ! root
      out_var(i,1:nodays,10) = POOLS(1:nodays,5) ! litter
      out_var(i,1:nodays,11) = POOLS(1:nodays,1) ! labile
      out_var(i,1:nodays,12) = POOLS(1:nodays,2) ! foliage
-     if (pft /= 1) then
-         out_var(i,1:nodays,13) = FLUXES(1:nodays,21) ! harvested material
-     else
-         out_var(i,1:nodays,13) = FLUXES(1:nodays,21) !POOLS(1:nodays,8)! replace with crop model yield
-     endif
-     if (pft == 1) then
-        out_var(i,1:nodays,14) = 0d0
-        out_var(i,1:nodays,15) = 0d0 ! GSI temp component
-        out_var(i,1:nodays,16) = 0d0 ! GSI photoperiod component
-        out_var(i,1:nodays,17) = 0d0 ! GSI vpd component
-     else
-        out_var(i,1:nodays,14) = FLUXES(1:nodays,18) ! GSI value
-        out_var(i,1:nodays,15) = itemp(1:nodays)     ! GSI temp component
-        out_var(i,1:nodays,16) = iphoto(1:nodays)    ! GSI photoperiod component
-        out_var(i,1:nodays,17) = ivpd(1:nodays)      ! GSI vpd component
-     endif
+     out_var(i,1:nodays,13) = FLUXES(1:nodays,21) ! harvested material
+     out_var(i,1:nodays,14) = FLUXES(1:nodays,18) ! GSI value
+     out_var(i,1:nodays,15) = itemp(1:nodays)     ! GSI temp component
+     out_var(i,1:nodays,16) = iphoto(1:nodays)    ! GSI photoperiod component
+     out_var(i,1:nodays,17) = ivpd(1:nodays)      ! GSI vpd component
      out_var(i,1:nodays,18) = FLUXES(1:nodays,19) ! Evapotranspiration (kgH2O.m-2.day-1)
      out_var(i,1:nodays,19) = POOLS(1:nodays,8)   ! rootwater (kgH2O.m-2.10cmdepth)
      out_var(i,1:nodays,20) = wSWP_time(1:nodays) ! Weighted Soil Water Potential (MPa)
-     if (pft == 1) then
-        ! crop so...
-        out_var(i,1:nodays,21) = 0d0               ! ...no CWD
-        out_var(i,1:nodays,22) = POOLS(1:nodays,7) ! ...Cauto pool present
-     else
-        ! not a crop...excellent
-        out_var(i,1:nodays,21) = POOLS(1:nodays,7) ! ...CWD
-        out_var(i,1:nodays,22) = 0d0 ! no Cauto pool present
-     endif
+     out_var(i,1:nodays,21) = POOLS(1:nodays,7) ! ...CWD
+     out_var(i,1:nodays,22) = 0d0 ! no Cauto pool present
      out_var(i,1:nodays,23) = FLUXES(1:nodays,17)    ! output fire (gC/m2/day)
      out_var(i,1:nodays,24) = gs_demand_supply_ratio ! ratio of evaporative demand over supply
      out_var(i,1:nodays,25) = gs_total_canopy(1:nodays)
@@ -241,192 +182,125 @@ subroutine rdalecbucketcanage(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
      ! Estimate residence time information
      !!!
 
-     ! Different calculations are needed depending on whether this is a crop pixel or a generic site
-     if (pft == 1) then
 
-         !
-         ! Crop model
-         !
+     !
+     ! Generic model
+     !
 
-         ! Determine locations of zeros in pools to correct turnover calculation
-         ! Foliage
-         fol_hak = 0 ; fol_filter(1:nodays) = 1d0
-         where (POOLS(1:nodays,2) == 0) ! protection against NaN from division by zero
-               fol_hak = 1 ; fol_filter(1:nodays) = 0d0
-         end where
-         ! Fine roots
-         root_hak = 0 ; root_filter(1:nodays) = 1d0
-         where (POOLS(1:nodays,3) == 0) ! protection against NaN from division by zero
-               root_hak = 1 ; root_filter(1:nodays) = 0d0
-         end where
-         ! Wood
-         wood_hak = 0 ; wood_filter(1:nodays) = 1d0
-         where (POOLS(1:nodays,4) == 0) ! protection against NaN from division by zero
-                wood_hak = 1 ; wood_filter(1:nodays) = 0d0
-         end where
-         ! Fol+root litter
-         lit_hak = 0 ; lit_filter(1:nodays) = 1d0
-         where (POOLS(1:nodays,5) == 0) ! protection against NaN from division by zero
-                lit_hak = 1 ; lit_filter(1:nodays) = 0d0
-         end where
-         ! Soil
-         som_hak = 0 ; som_filter(1:nodays) = 1d0
-         where (POOLS(1:nodays,6) == 0) ! protection against NaN from division by zero
-               som_hak = 1 ; som_filter(1:nodays) = 0d0
-         end where
+     ! Determine locations of zeros in pools to correct turnover calculation
+     ! Foliage
+     fol_hak = 0 ; fol_filter(1:nodays) = 1d0
+     where (POOLS(1:nodays,2) == 0) ! protection against NaN from division by zero
+            fol_hak = 1 ; fol_filter(1:nodays) = 0d0
+     end where
+     ! Fine roots
+     root_hak = 0 ; root_filter(1:nodays) = 1d0
+     where (POOLS(1:nodays,3) == 0) ! protection against NaN from division by zero
+           root_hak = 1 ; root_filter(1:nodays) = 0d0
+     end where
+     ! Wood
+     wood_hak = 0 ; wood_filter(1:nodays) = 1d0
+     where (POOLS(1:nodays,4) == 0) ! protection against NaN from division by zero
+            wood_hak = 1 ; wood_filter(1:nodays) = 0d0
+     end where
+     ! Fol+root litter
+     lit_hak = 0 ; lit_filter(1:nodays) = 1d0
+     where (POOLS(1:nodays,5)+POOLS(1:nodays,7) == 0) ! protection against NaN from division by zero
+            lit_hak = 1 ; lit_filter(1:nodays) = 0d0
+     end where
+     ! Soil
+     som_hak = 0 ; som_filter(1:nodays) = 1d0
+     where (POOLS(1:nodays,6) == 0) ! protection against NaN from division by zero
+            som_hak = 1 ; som_filter(1:nodays) = 0d0
+     end where
 
-         ! foliage crop system residence time is due to managment < 1 year
-         out_var3(i,1) = 1/365.25
-         ! roots crop system residence time is due to managment < 1 year
-         out_var3(i,2) = 1/365.25
-         ! wood crop system residence time is due to managment < 1 year
-         out_var3(i,3) = 1/365.25
-         ! Lit+litwood
-         out_var3(i,4) = sum( ((FLUXES(1:nodays,13)+FLUXES(1:nodays,15)) &
-                              / POOLS(1:nodays,5)) * lit_filter) / dble(nodays-sum(lit_hak))
-         ! Soil
-         out_var3(i,5) = sum( ((FLUXES(1:nodays,14)+fire_loss_som + harvest_loss_som) &
-                              / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
+     ! Estimate MRT (years)
+     ! Foliage
+     out_var3(i,1) = sum( ((FLUXES(1:nodays,10)+fire_loss_foliar + harvest_loss_foliar) &
+                          / POOLS(1:nodays,2)) * fol_filter) / dble(nodays-sum(fol_hak))
+     ! Fine roots
+     out_var3(i,2) = sum( ((FLUXES(1:nodays,12)+fire_loss_roots + harvest_loss_roots) &
+                          / POOLS(1:nodays,3)) * root_filter) / dble(nodays-sum(root_hak))
+     ! Wood
+     out_var3(i,3) = sum( ((FLUXES(1:nodays,11)+fire_loss_wood + harvest_loss_wood) &
+                          / POOLS(1:nodays,4)) * wood_filter) / dble(nodays-sum(wood_hak))
+     ! Lit+litwood
+     out_var3(i,4) = sum( ((FLUXES(1:nodays,13)+FLUXES(1:nodays,15)+FLUXES(1:nodays,20)+FLUXES(1:nodays,4) &
+                           +fire_loss_litter + harvest_loss_litter + fire_loss_litwood + harvest_loss_litwood) &
+                          / (POOLS(1:nodays,5)+POOLS(1:nodays,7))) * lit_filter) / dble(nodays-sum(lit_hak))
+     ! Soil
+     out_var3(i,5) = sum( ((FLUXES(1:nodays,14)+fire_loss_som + harvest_loss_som) &
+                          / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
 
-         ! Assume constant residence times for crops at the moment
-         out_var5(i,1,:) = out_var3(i,1)
-         out_var5(i,2,:) = out_var3(i,2)
-         out_var5(i,3,:) = out_var3(i,3)
-         out_var5(i,4,:) = out_var3(i,4)
-         out_var5(i,5,:) = out_var3(i,5)
+     ! Estimate natural only MRT (years)
+     ! Foliage
+     out_var6(i,1) = sum( (FLUXES(1:nodays,10) &
+                          / POOLS(1:nodays,2)) * fol_filter) / dble(nodays-sum(fol_hak))
+     ! Fine roots
+     out_var6(i,2) = sum( (FLUXES(1:nodays,12) &
+                          / POOLS(1:nodays,3)) * root_filter) / dble(nodays-sum(root_hak))
+     ! Wood
+     out_var6(i,3) = sum( (FLUXES(1:nodays,11) &
+                          / POOLS(1:nodays,4)) * wood_filter) / dble(nodays-sum(wood_hak))
+     ! Lit+litwood
+     out_var6(i,4) = sum( ((FLUXES(1:nodays,13)+FLUXES(1:nodays,15)+FLUXES(1:nodays,20)+FLUXES(1:nodays,4)) &
+                          / (POOLS(1:nodays,5)+POOLS(1:nodays,7))) * lit_filter) / dble(nodays-sum(lit_hak))
+     ! Soil
+     out_var6(i,5) = sum( (FLUXES(1:nodays,14) &
+                          / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
 
-         !
-         ! Estimate pool inputs needed for steady state calculation
-         !
+     ! Keep track of the fraction of wood litter transfer to som, this value is needed for the steady state estimation
+     litwood_to_som_frac(i) = sum( (FLUXES(1:nodays,20) / POOLS(1:nodays,7)) * lit_filter) / dble(nodays-sum(lit_hak))
 
-         out_var4(i,1) = 0d0 ! fol
-         out_var4(i,2) = 0d0 ! root
-         out_var4(i,3) = 0d0 ! wood
-         out_var4(i,4) = 0d0 ! lit
-         out_var4(i,5) = sum(FLUXES(:,15)+FLUXES(:,20)+fire_residue_to_som+harvest_residue_to_som) ! som
+     !
+     ! Annual residence times
+     !
 
-     else
+     ! Now loop through each year to estimate the annual residence time
+     do y = 1, nos_years
+        ! Estimate time steps covered by this year
+        y_s = 1 + (steps_per_year * (y-1)) ; y_e = steps_per_year * y
+        ! Foliage
+        out_var5(i,1,y) = sum( ((FLUXES(y_s:y_e,10) + fire_loss_foliar(y_s:y_e) + harvest_loss_foliar(y_s:y_e)) &
+                               / POOLS(y_s:y_e,2)) * fol_filter(y_s:y_e)) / dble(steps_per_year-sum(fol_hak(y_s:y_e)))
+        ! Fine roots
+        out_var5(i,2,y) = sum( ((FLUXES(y_s:y_e,12) + fire_loss_roots(y_s:y_e) + harvest_loss_roots(y_s:y_e)) &
+                               / POOLS(y_s:y_e,3)) * root_filter(y_s:y_e)) / dble(steps_per_year-sum(root_hak(y_s:y_e)))
+        ! Wood
+        out_var5(i,3,y) = sum( ((FLUXES(y_s:y_e,11) + fire_loss_wood(y_s:y_e) + harvest_loss_wood(y_s:y_e)) &
+                               / POOLS(y_s:y_e,4)) * wood_filter(y_s:y_e)) / dble(steps_per_year-sum(wood_hak(y_s:y_e)))
+        ! Litter (fol+fine root)
+        out_var5(i,4,y) = sum( ((FLUXES(y_s:y_e,13)+FLUXES(y_s:y_e,15)+FLUXES(y_s:y_e,20)+FLUXES(y_s:y_e,4) &
+                                +fire_loss_litter(y_s:y_e)+harvest_loss_litter(y_s:y_e) &
+                                +fire_loss_litwood(y_s:y_e)+harvest_loss_litwood(y_s:y_e)) &
+                               / (POOLS(y_s:y_e,5)+POOLS(y_s:y_e,7))) * lit_filter(y_s:y_e)) &
+                        / dble(steps_per_year-sum(lit_hak(y_s:y_e)))
+        ! Soil
+        out_var5(i,5,y) = sum( ((FLUXES(y_s:y_e,14)+fire_loss_som(y_s:y_e)+harvest_loss_som(y_s:y_e)) &
+                                / POOLS(y_s:y_e,6)) * som_filter(y_s:y_e)) / dble(steps_per_year-sum(som_hak(y_s:y_e)))
+     end do
 
-         !
-         ! Generic model
-         !
+     !
+     ! Estimate pool inputs needed for steady state calculation
+     !
 
-         ! Determine locations of zeros in pools to correct turnover calculation
-         ! Foliage
-         fol_hak = 0 ; fol_filter(1:nodays) = 1d0
-         where (POOLS(1:nodays,2) == 0) ! protection against NaN from division by zero
-               fol_hak = 1 ; fol_filter(1:nodays) = 0d0
-         end where
-         ! Fine roots
-         root_hak = 0 ; root_filter(1:nodays) = 1d0
-         where (POOLS(1:nodays,3) == 0) ! protection against NaN from division by zero
-               root_hak = 1 ; root_filter(1:nodays) = 0d0
-         end where
-         ! Wood
-         wood_hak = 0 ; wood_filter(1:nodays) = 1d0
-         where (POOLS(1:nodays,4) == 0) ! protection against NaN from division by zero
-                wood_hak = 1 ; wood_filter(1:nodays) = 0d0
-         end where
-         ! Fol+root litter
-         lit_hak = 0 ; lit_filter(1:nodays) = 1d0
-         where (POOLS(1:nodays,5)+POOLS(1:nodays,7) == 0) ! protection against NaN from division by zero
-                lit_hak = 1 ; lit_filter(1:nodays) = 0d0
-         end where
-         ! Soil
-         som_hak = 0 ; som_filter(1:nodays) = 1d0
-         where (POOLS(1:nodays,6) == 0) ! protection against NaN from division by zero
-               som_hak = 1 ; som_filter(1:nodays) = 0d0
-         end where
-
-         ! Estimate MRT (years)
-         ! Foliage
-         out_var3(i,1) = sum( ((FLUXES(1:nodays,10)+fire_loss_foliar + harvest_loss_foliar) &
-                              / POOLS(1:nodays,2)) * fol_filter) / dble(nodays-sum(fol_hak))
-         ! Fine roots
-         out_var3(i,2) = sum( ((FLUXES(1:nodays,12)+fire_loss_roots + harvest_loss_roots) &
-                              / POOLS(1:nodays,3)) * root_filter) / dble(nodays-sum(root_hak))
-         ! Wood
-         out_var3(i,3) = sum( ((FLUXES(1:nodays,11)+fire_loss_wood + harvest_loss_wood) &
-                              / POOLS(1:nodays,4)) * wood_filter) / dble(nodays-sum(wood_hak))
-         ! Lit+litwood
-         out_var3(i,4) = sum( ((FLUXES(1:nodays,13)+FLUXES(1:nodays,15)+FLUXES(1:nodays,20)+FLUXES(1:nodays,4) &
-                               +fire_loss_litter + harvest_loss_litter + fire_loss_litwood + harvest_loss_litwood) &
-                              / (POOLS(1:nodays,5)+POOLS(1:nodays,7))) * lit_filter) / dble(nodays-sum(lit_hak))
-         ! Soil
-         out_var3(i,5) = sum( ((FLUXES(1:nodays,14)+fire_loss_som + harvest_loss_som) &
-                              / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
-
-         ! Estimate natural only MRT (years)
-         ! Foliage
-         out_var6(i,1) = sum( (FLUXES(1:nodays,10) &
-                              / POOLS(1:nodays,2)) * fol_filter) / dble(nodays-sum(fol_hak))
-         ! Fine roots
-         out_var6(i,2) = sum( (FLUXES(1:nodays,12) &
-                              / POOLS(1:nodays,3)) * root_filter) / dble(nodays-sum(root_hak))
-         ! Wood
-         out_var6(i,3) = sum( (FLUXES(1:nodays,11) &
-                              / POOLS(1:nodays,4)) * wood_filter) / dble(nodays-sum(wood_hak))
-         ! Lit+litwood
-         out_var6(i,4) = sum( ((FLUXES(1:nodays,13)+FLUXES(1:nodays,15)+FLUXES(1:nodays,20)+FLUXES(1:nodays,4)) &
-                              / (POOLS(1:nodays,5)+POOLS(1:nodays,7))) * lit_filter) / dble(nodays-sum(lit_hak))
-         ! Soil
-         out_var6(i,5) = sum( (FLUXES(1:nodays,14) &
-                              / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
-
-         ! Keep track of the fraction of wood litter transfer to som, this value is needed for the steady state estimation
-         litwood_to_som_frac(i) = sum( (FLUXES(1:nodays,20) / POOLS(1:nodays,7)) * lit_filter) / dble(nodays-sum(lit_hak))
-
-         !
-         ! Annual residence times
-         !
-
-         ! Now loop through each year to estimate the annual residence time
-         do y = 1, nos_years
-            ! Estimate time steps covered by this year
-            y_s = 1 + (steps_per_year * (y-1)) ; y_e = steps_per_year * y
-            ! Foliage
-            out_var5(i,1,y) = sum( ((FLUXES(y_s:y_e,10) + fire_loss_foliar(y_s:y_e) + harvest_loss_foliar(y_s:y_e)) &
-                                   / POOLS(y_s:y_e,2)) * fol_filter(y_s:y_e)) / dble(steps_per_year-sum(fol_hak(y_s:y_e)))
-            ! Fine roots
-            out_var5(i,2,y) = sum( ((FLUXES(y_s:y_e,12) + fire_loss_roots(y_s:y_e) + harvest_loss_roots(y_s:y_e)) &
-                                   / POOLS(y_s:y_e,3)) * root_filter(y_s:y_e)) / dble(steps_per_year-sum(root_hak(y_s:y_e)))
-            ! Wood
-            out_var5(i,3,y) = sum( ((FLUXES(y_s:y_e,11) + fire_loss_wood(y_s:y_e) + harvest_loss_wood(y_s:y_e)) &
-                                   / POOLS(y_s:y_e,4)) * wood_filter(y_s:y_e)) / dble(steps_per_year-sum(wood_hak(y_s:y_e)))
-            ! Litter (fol+fine root)
-            out_var5(i,4,y) = sum( ((FLUXES(y_s:y_e,13)+FLUXES(y_s:y_e,15)+FLUXES(y_s:y_e,20)+FLUXES(y_s:y_e,4) &
-                                    +fire_loss_litter(y_s:y_e)+harvest_loss_litter(y_s:y_e) &
-                                    +fire_loss_litwood(y_s:y_e)+harvest_loss_litwood(y_s:y_e)) &
-                                   / (POOLS(y_s:y_e,5)+POOLS(y_s:y_e,7))) * lit_filter(y_s:y_e)) &
-                            / dble(steps_per_year-sum(lit_hak(y_s:y_e)))
-            ! Soil
-            out_var5(i,5,y) = sum( ((FLUXES(y_s:y_e,14)+fire_loss_som(y_s:y_e)+harvest_loss_som(y_s:y_e)) &
-                                    / POOLS(y_s:y_e,6)) * som_filter(y_s:y_e)) / dble(steps_per_year-sum(som_hak(y_s:y_e)))
-         end do
-
-         !
-         ! Estimate pool inputs needed for steady state calculation
-         !
-
-         ! Once the canopy has closes the inputs to the live biomass are stable
-         ! and can thus be estimated from the simulated inputs
-         out_var4(i,1) = sum(FLUXES(:,8)) ! Foliage
-         out_var4(i,2) = sum(FLUXES(:,6)) ! Fine root
-         out_var4(i,3) = sum(FLUXES(:,7)) ! Wood
-         ! Foliar and fine root litter can likewise be estimated directly,
-         ! however wood litter and soil C inputs are still changing as the wood pool is not in steady state.
-         ! Therefore, at this point we can account for the fol, fine root, and disturbance inputs but NOT wood.
-         ! The wood input is estimated later based on the steady state its steady state estimate
-         out_var4(i,4) = sum(FLUXES(:,10)+FLUXES(:,12)+ &
-                             fire_residue_to_litter+fire_residue_to_litwood + &
-                             harvest_residue_to_litter+harvest_residue_to_litwood) ! lit + litwood
-         out_var4(i,5) = sum(FLUXES(:,15)+fire_residue_to_som+harvest_residue_to_som) ! som
-!         out_var4(i,4) = sum(FLUXES(:,10)+FLUXES(:,11)+FLUXES(:,12)+ &
-!                             fire_residue_to_litter+fire_residue_to_litwood + &
-!                             harvest_residue_to_litter+harvest_residue_to_litwood) ! lit + litwood
-!         out_var4(i,5) = sum(FLUXES(:,15)+FLUXES(:,20)+fire_residue_to_som+harvest_residue_to_som) ! som
-
-     endif ! crop / default model split
+     ! Once the canopy has closes the inputs to the live biomass are stable
+     ! and can thus be estimated from the simulated inputs
+     out_var4(i,1) = sum(FLUXES(:,8)) ! Foliage
+     out_var4(i,2) = sum(FLUXES(:,6)) ! Fine root
+     out_var4(i,3) = sum(FLUXES(:,7)) ! Wood
+     ! Foliar and fine root litter can likewise be estimated directly,
+     ! however wood litter and soil C inputs are still changing as the wood pool is not in steady state.
+     ! Therefore, at this point we can account for the fol, fine root, and disturbance inputs but NOT wood.
+     ! The wood input is estimated later based on the steady state its steady state estimate
+     out_var4(i,4) = sum(FLUXES(:,10)+FLUXES(:,12)+ &
+                         fire_residue_to_litter+fire_residue_to_litwood + &
+                         harvest_residue_to_litter+harvest_residue_to_litwood) ! lit + litwood
+     out_var4(i,5) = sum(FLUXES(:,15)+fire_residue_to_som+harvest_residue_to_som) ! som
+!     out_var4(i,4) = sum(FLUXES(:,10)+FLUXES(:,11)+FLUXES(:,12)+ &
+!                         fire_residue_to_litter+fire_residue_to_litwood + &
+!                         harvest_residue_to_litter+harvest_residue_to_litwood) ! lit + litwood
+!     out_var4(i,5) = sum(FLUXES(:,15)+FLUXES(:,20)+fire_residue_to_som+harvest_residue_to_som) ! som
 
   end do ! nos_iter loop
 

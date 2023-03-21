@@ -237,7 +237,7 @@ contains
     ! if either of our disturbance drivers indicate disturbance will occur then
     ! set up these components
     if (maxval(met(8,:)) > 0d0 .or. maxval(met(9,:)) > 0d0) then
-print*,"ever disturbed"
+
         ! now load the hardcoded forest management parameters into their scenario locations
 
         ! Deforestation process functions in a sequenctial way.

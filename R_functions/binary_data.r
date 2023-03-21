@@ -191,12 +191,15 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   OBSMAT[,34] = OBS$SWE_unc               # Snow water equivalent variance
   OBSMAT[,35] = OBS$nbe                   # Net Biome Exchange (Reco + Fire - GPP) of CO2 (gC/m2/day)
   OBSMAT[,36] = OBS$nbe_unc               # Net Biome Exchange variance
-  OBSMAT[,37] = OBS$Cwood_inc             # Mean woody productivity / increment over lag period (gC/m2/day)
-  OBSMAT[,38] = OBS$Cwood_inc_unc         # Mean woody productivity / increment varince
+  OBSMAT[,37] = OBS$Cwood_inc             # Mean woody productivity over lag period (gC/m2/day)
+  OBSMAT[,38] = OBS$Cwood_inc_unc         # Mean woody productivity varince
   OBSMAT[,39] = OBS$Cwood_inc_lag         # Lag period over which to average  (steps)
   OBSMAT[,40] = OBS$Cwood_mortality       # Mean woody natural mortality over lag period (gC/m2/day)
   OBSMAT[,41] = OBS$Cwood_mortality_unc   # Mean woody natural mortality varince
   OBSMAT[,42] = OBS$Cwood_mortality_lag   # Lag period over which to average  (steps)
+  #OBSMAT[,43] = OBS$Cwood_net_inc         # Mean woody net increment over lag period (gC/m2/day)
+  #OBSMAT[,44] = OBS$Cwood_net_inc_unc     # Mean woody net increment varince
+  #OBSMAT[,45] = OBS$Cwood_net_inc_lag     # Lag period over which to average  (steps)
   DATA_TEMP = t(cbind(MET,OBSMAT))
 
   # STATIC DATA (1-50)
@@ -338,7 +341,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
                                                                            # These observational constraints are not the same and would lead to
                                                                            # overestimation of GPP (SPA = 34, ACM2 = 15), but here multiple by avN (1.89) to get Ceff
 #      PARPRIORS[11] = 65.0               ; PARPRIORUNC[11] = 30.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax (gC/m2/day): Wullscheller (1993)
-      PARPRIORS[11]=21.1491                ; PARPRIORUNC[11]=8.534234 #; PARPRIORWEIGHT[11] = 1 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+#      PARPRIORS[11]=21.1491                ; PARPRIORUNC[11]=8.534234 #; PARPRIORWEIGHT[11] = 1 # Ceff: derived from multiple trait values from Kattge et al., (2011)
                                                                       # Note that this prior is difference from DALEC_CDEA_LU_FIRES
                                                                       # due to the different temperature response functions used in ACM2 vs ACM 1
       PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc #; PARPRIORWEIGHT[17] = noyears
@@ -363,9 +366,12 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
                                                                            # These observational constraints are not the same and would lead to
                                                                            # overestimation of GPP (SPA = 34, ACM2 = 15), but here multiple by avN (1.89) to get Ceff
 #      PARPRIORS[11] = 65.0               ; PARPRIORUNC[11] = 30.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax (gC/m2/day): Wullscheller (1993)
-      PARPRIORS[11] = 60.0                  ; PARPRIORUNC[11]= 20.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax: derived from multiple trait values from Kattge et al., (2011)
+#      PARPRIORS[11] = 60.0                  ; PARPRIORUNC[11]= 20.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax: derived from multiple trait values from Kattge et al., (2011)
                                                                       # Note that this prior is difference from DALEC_CDEA_LU_FIRES
                                                                       # due to the different temperature response functions used in ACM2 vs ACM 1
+#      PARPRIORS[11] = 54.165                  ; PARPRIORUNC[11]= 20.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax: Mean of reported PFT values from Oliver et al., (2022)
+#                                                                      # Note that this prior is difference from DALEC_CDEA_LU_FIRES
+#                                                                      # due to the different temperature response functions used in ACM2 vs ACM 1
       PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc #; PARPRIORWEIGHT[17] = noyears
       PARPRIORS[19]=OBS$Cfol_initial       ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
       PARPRIORS[20]=OBS$Croots_initial     ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior

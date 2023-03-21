@@ -3273,15 +3273,23 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Initialise..
     resp_cost_foliage_to_labile = 0d0 ; yield = 0d0 ; BM_EX = 0d0
 
-    ! respiratory cost of C transfer from labile pool to short-term pool (NPP) (gC.m-2.t-1)
-    resp_cost_labile_to_foliage = turnover_rate_labile * resp_cost_labile_trans * resp_rate &
-                                * ts_length * dble(turnover_labile_switch)
-    resp_cost_labile_to_foliage = stock_labile * min(1d0,resp_cost_labile_to_foliage)
+    ! Determine total allocation of labile C to NPP or Ra (gC.m-2.t-1)
+    alloc_from_labile = turnover_rate_labile * resp_rate * dble(turnover_labile_switch)
+    alloc_from_labile = stock_labile * (1d0-(1d0-alloc_from_labile) ** ts_length)
+    ! Determine the respiratory cost of C transfer from labile pool to NPP (gC.m-2.t-1)
+    resp_cost_labile_to_foliage = alloc_from_labile * resp_cost_labile_trans
+    ! Determine the remaining allocation of labile C to NPP (gC.m-2.t-1)
+    alloc_from_labile = alloc_from_labile - resp_cost_labile_to_foliage
 
-    ! allocation flux from labile C pool to NPP (gC.m-2.t-1)
-    alloc_from_labile = turnover_rate_labile * ( 1d0 - resp_cost_labile_trans ) * resp_rate &
-                      * ts_length * dble(turnover_labile_switch)
-    alloc_from_labile = stock_labile * min(1d0,alloc_from_labile)
+!    ! respiratory cost of C transfer from labile pool to short-term pool (NPP) (gC.m-2.t-1)
+!    resp_cost_labile_to_foliage = turnover_rate_labile * resp_cost_labile_trans * resp_rate &
+!                                * ts_length * dble(turnover_labile_switch)
+!    resp_cost_labile_to_foliage = stock_labile * min(1d0,resp_cost_labile_to_foliage)
+!
+!    ! allocation flux from labile C pool to NPP (gC.m-2.t-1)
+!   alloc_from_labile = turnover_rate_labile * ( 1d0 - resp_cost_labile_trans ) * resp_rate &
+!                      * ts_length * dble(turnover_labile_switch)
+!   alloc_from_labile = stock_labile * min(1d0,alloc_from_labile)
 
     ! When GPP is higher than seed C content, remaining seed carbon enters litter
     ! C pool, as seedlings do not fully exhaust their seed (P. de Vries p 48)
@@ -3356,9 +3364,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     RDR = max( RDRSH , RDRDV )
 
     ! remobilization of foliar C and allocation to dead leaves pool (gC.m-2.t-1)
-    litterfall_foliage = stock_foliage * min(1d0,ts_length * RDR)
-    litterfall_stem    = stock_stem    * min(1d0,ts_length * DR * turnover_rate_stem * dble(stmob)) ! remobstem
-    litterfall_roots   = stock_roots   * min(1d0,ts_length * turnover_rate_roots)
+    litterfall_foliage = stock_foliage * (1d0-(1d0-RDR) ** ts_length)
+    litterfall_stem    = stock_stem    * (1d0-(1d0-(DR*turnover_rate_stem*dble(stmob))) ** ts_length) ! remobstem
+    litterfall_roots   = stock_roots   * (1d0-(1d0-turnover_rate_roots) ** ts_length)
+!    litterfall_foliage = stock_foliage * min(1d0,ts_length * RDR)
+!    litterfall_stem    = stock_stem    * min(1d0,ts_length * DR * turnover_rate_stem * dble(stmob)) ! remobstem
+!    litterfall_roots   = stock_roots   * min(1d0,ts_length * turnover_rate_roots)
 
     ! remobilized C to NPP (from both leaves and stems) (gC.m-2.t-1)
     remob   = ( litterfall_foliage * 0.5d0 + litterfall_stem ) * ( 1d0 - resp_cost_labile_trans )
@@ -3370,12 +3381,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                      / (decomposition_rate+mineralisation_rate_litter)
 
     ! total litter decomposition
-    decomposition = stock_litter * (decomposition_rate+mineralisation_rate_litter) * resp_rate * ts_length
+    decomposition = stock_litter * (1d0-(1d0-((decomposition_rate+mineralisation_rate_litter)*resp_rate)) ** ts_length)
+    !decomposition = stock_litter * (decomposition_rate+mineralisation_rate_litter) * resp_rate * ts_length
 
     ! heterotrophic respiration component 1: mineralisation of litter C pool (gC.m-2.t-1)
     resp_h_litter = decomposition * (1d0 - decomp_efficency)
     ! heterotrophic respiration component 2:  mineralisation of organic matter C pool (gC.m-2.t-1)
-    resp_h_soilOrgMatter = stock_soilOrgMatter * min(1d0,mineralisation_rate_soilOrgMatter * resp_rate * ts_length)
+    resp_h_soilOrgMatter = stock_soilOrgMatter * (1d0-(1d0-(mineralisation_rate_soilOrgMatter * resp_rate)) ** ts_length)  
+    !resp_h_soilOrgMatter = stock_soilOrgMatter * min(1d0,mineralisation_rate_soilOrgMatter * resp_rate * ts_length)
 
     ! decomposition of litter to soil organic matter (gC.m-2.t-1)
     decomposition = decomposition - resp_h_litter
@@ -3392,9 +3405,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     stock_labile        = max(0d0, stock_labile + alloc_to_labile  - alloc_from_labile - resp_cost_labile_to_foliage + remob)
 
     ! respiratory pool: new photosynthates are added (gC.m-2.t-1)
-    stock_resp_auto = stock_resp_auto + frac_GPP_resp_auto * gpp_acm
+    stock_resp_auto = stock_resp_auto + (frac_GPP_resp_auto * gpp_acm)
     ! autotrophic respiration; Ra (typically ~7% of respiratory pool) (gC.m-2.t-1)
-    resp_auto = stock_resp_auto * min(1d0,turnover_rate_resp_auto * ts_length)
+    resp_auto = stock_resp_auto * (1d0-(1d0-turnover_rate_resp_auto) ** ts_length)
+    !resp_auto = stock_resp_auto * min(1d0,turnover_rate_resp_auto * ts_length)
     ! respiratory pool reduced by Ra (amount of C respired by plant)
     stock_resp_auto = max(0d0, stock_resp_auto - resp_auto)
     ! respiratory cost of C transfer from labile pool to short-term pool added

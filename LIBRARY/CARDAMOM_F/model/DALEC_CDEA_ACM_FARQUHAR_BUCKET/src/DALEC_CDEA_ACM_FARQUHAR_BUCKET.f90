@@ -118,22 +118,19 @@ module CARBON_MODEL_MOD
 
   ! ACM-GPP-ET parameters
   double precision, parameter :: &
-!ACM cal                   pn_max_temp = 6.842942d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
-!                   pn_min_temp = -1d+06      ,  & ! Minimum daily max temperature for photosynthesis (oC)
-!                   pn_opt_temp = 3.155960d+01,  & ! Optimum daily max temperature for photosynthesis (oC)
-!                   pn_kurtosis = 1.889026d-01,  & ! Kurtosis of photosynthesis temperature response
-!bespoke                   pn_max_temp = 59d0,          & ! Maximum daily max temperature for photosynthesis (oC)
-!                   pn_min_temp = -4d0,          & ! Minimum daily max temperature for photosynthesis (oC)
-!                   pn_opt_temp = 30d0,          & ! Optimum daily max temperature for photosynthesis (oC)
-!                   pn_kurtosis = 0.07d0,        & ! Kurtosis of photosynthesis temperature response
-                   pn_max_temp = 65.35d0,      & ! Maximum daily max temperature for photosynthesis (oC)
-                   pn_min_temp = -2139.30793d0,& ! Minimum daily max temperature for photosynthesis (oC)
-                   pn_opt_temp = 29.945805d0,  & ! Optimum daily max temperature for photosynthesis (oC)
-                   pn_kurtosis = 0.1435142d0,  & ! Kurtosis of carboxylation temperature response
-                   pl_max_temp = 51.9013658d0, & ! Maximum daily max temperature for photosynthesis (oC)
-                   pl_min_temp = -4566.13933d0,& ! Minimum daily max temperature for photosynthesis (oC)
-                   pl_opt_temp = 29.6600113d0, & ! Optimum daily max temperature for photosynthesis (oC)
-                   pl_kurtosis = 0.1556619d0,  & ! Kurtosis of Jmax temperature response
+                      Ha_Vcmax = 64287.5d0,    & ! Activation energy for Vcmax (J mol-1)
+                      dS_Vcmax = 646.875d0,    & ! Entropy term for Vcmax (J mol-1)
+                       Ha_Jmax = 50075.0d0,    & ! Activation energy for Jmax (J mol-1)
+                       dS_Jmax = 649.250d0,    & ! Entropy term for Jmax (J mol-1)
+                 Hd_Vcmax_Jmax = 200000d0,     & ! Deactivation energy for Vcmax and Jmax (J mol-1)
+!                   pn_max_temp = 65.03d0,      & ! Maximum daily max temperature for photosynthesis (oC)
+!                   pn_min_temp = -1d6,         & ! Minimum daily max temperature for photosynthesis (oC)
+!                   pn_opt_temp = 30d0,         & ! Optimum daily max temperature for photosynthesis (oC)
+!                   pn_kurtosis = 0.143d0,      & ! Kurtosis of carboxylation temperature response
+!                  pl_max_temp = 57.05d0,      & ! Maximum daily max temperature for photosynthesis (oC)
+!                   pl_min_temp = -1d6,         & ! Minimum daily max temperature for photosynthesis (oC)
+!                   pl_opt_temp = 30d0,         & ! Optimum daily max temperature for photosynthesis (oC)
+!                   pl_kurtosis = 0.172d0,      & ! Kurtosis of Jmax temperature response
                ko_half_sat_25C = 157.46892d0,  & ! photorespiration O2 half sat(mmolO2/mol), achieved at 25oC
           ko_half_sat_gradient = 14.93643d0,   & ! photorespiration O2 half sat gradient
                kc_half_sat_25C = 319.58548d0,  & ! carboxylation CO2 half sat (umolCO2/mol), achieved at 25oC
@@ -1198,18 +1195,20 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Metabolic limited photosynthesis - leaf to canopy scale
     !
 
-    ! Calculate the temperature adjustment on Vcmax, Rd using a skewed Gaussian
-    ! distribution. Exploration of the scaling challenges between day time mean
-    ! and instantaneous Vc suggest that this arrangement provides high quality
+    ! Exploration of the scaling challenges between day time mean and
+    ! instantaneous Vc suggest that this arrangement provides high quality
     ! fit (R2 > 0.97), estimated as leafT = meant+maxt. Used in calculation of
     ! kc, ko, tau and airt_adj.
-    airt_adj = opt_max_scaling(pn_max_temp,pn_min_temp,pn_opt_temp,pn_kurtosis,leafT)
+    ! Calculate temperature adjustment on Vcmax (and Jmax below) using a modified Arrhenious
+    ! function. See Oliver et al., (2022) doi: 10.5194/gmd-15-5567-2022 and Medlyn et al., (2002)
     ! Determine Vcmax at current temperature (umolC/m2/s). Included is a scaling
     ! factor from 'top leaf' to the effective canopy.
-    metabolic_limited_photosynthesis = Vcmax_ref * airt_adj * leaf_canopy_light_scaling
+    metabolic_limited_photosynthesis = Vcmax_ref * leaf_canopy_light_scaling &
+                                     * modified_arrhenious(Ha_Vcmax,Hd_Vcmax_Jmax,dS_Vcmax,leafT+freeze)
     ! Determine dark respiration (i.e. maintenance) at the current temperature
     ! as a fraction of Vcmax_ref. Most likely will be replaced by Heskel or Reich approaches.
-    dark_respiration = 0.002d0 * Vcmax_ref * airt_adj * leaf_canopy_light_scaling
+    !dark_respiration = 0.002d0 * Vcmax_ref * airt_adj * leaf_canopy_light_scaling
+    dark_respiration = 0.01d0 * Vcmax_ref * (2d0**((leafT - 25d0)*0.1d0)) * leaf_canopy_light_scaling
 
     ! Possible approach to linking with canopy nitrogen
     ! Estimate the total canopy N, then scale to the "top leaf" and multiple by NUE
@@ -1233,7 +1232,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! the daily time scale is to scale by day light fraction.
     ! Jmax ~ Vcmax (Walker et al., 2017, doi: 10.1111/nph.14623, equ. 1)
     Jmax = dayl_hours_fraction*2.787095d0*(Vcmax_ref**0.890d0) * leaf_canopy_light_scaling &
-         * opt_max_scaling(pl_max_temp,pl_min_temp,pl_opt_temp,pl_kurtosis,leafT)
+          * modified_arrhenious(Ha_Jmax,Hd_Vcmax_Jmax,dS_Jmax,leafT+freeze)
+!         * opt_max_scaling(pl_max_temp,pl_min_temp,pl_opt_temp,pl_kurtosis,leafT)
     ! Determine the mean per ground (i.e. canopy) area PAR absorption in umolPAR/m2/s
     PAR_m2 = seconds_per_day_1 * canopy_par_MJday * ppfd_to_par * 1d6
     ! Instantaneous approach uses a non-rectangular hyperbola solved by quadratic formula.
@@ -3336,6 +3336,37 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     arrhenious = a * exp( b * (t - 25d0) / (t + freeze) )
 
   end function arrhenious
+  !
+  !----------------------------------------------------------------------
+  !
+  double precision function modified_arrhenious(activation_energy,deactivation_energy,entropy_term,T_current)
+
+    ! Estimate the temperature response modifier relative to a reference value
+    ! set to 298.15 K (25C).
+
+    implicit none
+
+    ! Arguments
+    double precision :: activation_energy, & ! Activation energy (J mol-1)
+                      deactivation_energy, & ! Deactivation energy (J mol-1)
+                             entropy_term, & ! Entropy term (J mol-1 K-1)
+                                T_current    ! current temperature (K)
+
+    ! Local variables
+    double precision, parameter :: Tref = 298.15d0
+    double precision :: increasing_term, decreasing_term
+
+    ! Determine the exponential increase below Topt
+    increasing_term = exp(activation_energy * ((T_current-Tref)/(Tref * Rcon * T_current)))
+    ! Determine the decreaing term above Topt
+    decreasing_term = (1d0 + exp((Tref*entropy_term-deactivation_energy)/(Tref*Rcon))) &
+                    / (1d0 + exp((T_current*entropy_term-deactivation_energy)/(T_current*Rcon)))
+    ! Combine and return
+    modified_arrhenious = increasing_term * decreasing_term
+
+    return
+
+  end function modified_arrhenious
   !
   !----------------------------------------------------------------------
   !

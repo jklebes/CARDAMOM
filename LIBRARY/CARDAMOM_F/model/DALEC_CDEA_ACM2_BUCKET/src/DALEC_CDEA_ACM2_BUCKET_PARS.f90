@@ -91,7 +91,7 @@ module MODEL_PARAMETERS
     ! Thus CUE = NUE * avN -> 1.64 / 42.0
     ! TLS: 27/10/2021 restricted again based now on 95 %CI (12.61 / 29.68) from TRY
     PI%parmin(11) = 10d0 !5d0
-    PI%parmax(11) = 150d0 !42d0 !50d0
+    PI%parmax(11) = 100d0 !42d0 !50d0
 
     ! max bud burst day
     PI%parmin(12) = 365.25d0

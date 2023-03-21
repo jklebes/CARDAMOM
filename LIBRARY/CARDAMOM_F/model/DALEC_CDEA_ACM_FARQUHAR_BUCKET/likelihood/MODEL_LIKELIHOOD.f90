@@ -507,7 +507,7 @@ module model_likelihood_module
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                    etol = 0.10d0 ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                    etol = 0.050d0 ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
 
 !    ! Debugging print statements
 !    print*,"assess_EDC2: "
@@ -590,43 +590,43 @@ module model_likelihood_module
     Fout(1) = FT(8)+FT(18)+FT(24)+FT(31)+FT(37)
     Fin_yr1(1)  = FT_yr1(5)
     Fout_yr1(1) = FT_yr1(8)+FT_yr1(18)+FT_yr1(24)+FT_yr1(31)+FT_yr1(37)
-    Fin_yr2(1)  = FT_yr2(5)
-    Fout_yr2(1) = FT_yr2(8)+FT_yr2(18)+FT_yr2(24)+FT_yr2(31)+FT_yr2(37)
+!    Fin_yr2(1)  = FT_yr2(5)
+!    Fout_yr2(1) = FT_yr2(8)+FT_yr2(18)+FT_yr2(24)+FT_yr2(31)+FT_yr2(37)
     ! foliar
     Fin(2)  = FT(4)+FT(8)
     Fout(2) = FT(10)+FT(19)+FT(25)+FT(32)+FT(38)
     Fin_yr1(2)  = FT_yr1(4)+FT_yr1(8)
     Fout_yr1(2) = FT_yr1(10)+FT_yr1(19)+FT_yr1(25)+FT_yr1(32)+FT_yr1(38)
-    Fin_yr2(2)  = FT_yr2(4)+FT_yr2(8)
-    Fout_yr2(2) = FT_yr2(10)+FT_yr2(19)+FT_yr2(25)+FT_yr2(32)+FT_yr2(38)
+!    Fin_yr2(2)  = FT_yr2(4)+FT_yr2(8)
+!    Fout_yr2(2) = FT_yr2(10)+FT_yr2(19)+FT_yr2(25)+FT_yr2(32)+FT_yr2(38)
     ! root
     Fin(3)  = FT(6)
     Fout(3) = FT(12)+FT(20)+FT(26)+FT(33)+FT(39)
     Fin_yr1(3)  = FT_yr1(6)
     Fout_yr1(3) = FT_yr1(12)+FT_yr1(20)+FT_yr1(26)+FT_yr1(33)+FT_yr1(39)
-    Fin_yr2(3)  = FT_yr2(6)
-    Fout_yr2(3) = FT_yr2(12)+FT_yr2(20)+FT_yr2(26)+FT_yr2(33)+FT_yr2(39)
+!    Fin_yr2(3)  = FT_yr2(6)
+!    Fout_yr2(3) = FT_yr2(12)+FT_yr2(20)+FT_yr2(26)+FT_yr2(33)+FT_yr2(39)
     ! wood
     Fin(4)  = FT(7)
     Fout(4) = FT(11)+FT(21)+FT(27)+FT(34)+FT(40)
     Fin_yr1(4)  = FT_yr1(7)
     Fout_yr1(4) = FT_yr1(11)+FT_yr1(21)+FT_yr1(27)+FT_yr1(34)+FT_yr1(40)
-    Fin_yr2(4)  = FT_yr2(7)
-    Fout_yr2(4) = FT_yr2(11)+FT_yr2(21)+FT_yr2(27)+FT_yr2(34)+FT_yr2(40)
+!    Fin_yr2(4)  = FT_yr2(7)
+!    Fout_yr2(4) = FT_yr2(11)+FT_yr2(21)+FT_yr2(27)+FT_yr2(34)+FT_yr2(40)
     ! litter
     Fin(5)  = FT(10)+FT(12)+FT(24)+FT(25)+FT(26)
     Fout(5) = FT(13)+FT(15)+FT(22)+FT(28)+FT(35)
     Fin_yr1(5)  = FT_yr1(10)+FT_yr1(12)+FT_yr1(24)+FT_yr1(25)+FT_yr1(26)
     Fout_yr1(5) = FT_yr1(13)+FT_yr1(15)+FT_yr1(22)+FT_yr1(28)+FT_yr1(35)
-    Fin_yr2(5)  = FT_yr2(10)+FT_yr2(12)+FT_yr2(24)+FT_yr2(25)+FT_yr2(26)
-    Fout_yr2(5) = FT_yr2(13)+FT_yr2(15)+FT_yr2(22)+FT_yr2(28)+FT_yr2(35)
+!    Fin_yr2(5)  = FT_yr2(10)+FT_yr2(12)+FT_yr2(24)+FT_yr2(25)+FT_yr2(26)
+!    Fout_yr2(5) = FT_yr2(13)+FT_yr2(15)+FT_yr2(22)+FT_yr2(28)+FT_yr2(35)
     ! som
     Fin(6)  = FT(11)+FT(15)+FT(27)+FT(28)
     Fout(6) = FT(14)+FT(23)+(36)
     Fin_yr1(6)  = FT_yr1(11)+FT_yr1(15)+FT_yr1(27)+FT_yr1(28)
     Fout_yr1(6) = FT_yr1(14)+FT_yr1(23)+FT_yr1(36)
-    Fin_yr2(6)  = FT_yr2(11)+FT_yr2(15)+FT_yr2(27)+FT_yr2(28)
-    Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)+FT_yr2(36)
+!    Fin_yr2(6)  = FT_yr2(11)+FT_yr2(15)+FT_yr2(27)+FT_yr2(28)
+!    Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)+FT_yr2(36)
 
     ! Iterate through C pools to determine whether they have their ratio of
     ! input and outputs are outside of steady state approximation.
@@ -655,38 +655,50 @@ module model_likelihood_module
                EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
            end if
            ! Restrict rates from deviating unrealistically from the mean
-           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
-                    abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-           end if
-!           ! Restrict exponential behaviour at initialisation
-!           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
+!           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
+!                    abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
 !               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !           end if
+           if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+                     abs(log(Fin(n)/Fout(n))) ) > etol ) then
+               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+           end if
+           ! Restrict exponential behaviour at initialisation
+           !if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
+           !    EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+           !end if
         end do
         ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
         n = 4
         if (abs(log(Fin(n)/Fout(n))) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
         end if
-        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
-                 abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-        end if
+!        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
+!                 abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
+         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+                   abs(log(Fin(n)/Fout(n))) ) > etol ) then
+             EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+         end if
 !        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !        end if
         ! Dead pools
         do n = 5, 6
            ! Restrict rates of increase
-           if (abs(log(Fin(n)/Fout(n))) > EQF1_5) then
+           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
            end if
            ! Restrict rates from deviating unrealistically from the mean
-           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
-                    abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
+!           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
+!                    abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
+!               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!           end if
+           if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+                     abs(log(Fin(n)/Fout(n))) ) > etol ) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-            end if
+           end if
 !           ! Restrict exponential behaviour at initialisation
 !           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
 !               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0

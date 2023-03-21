@@ -87,7 +87,7 @@ module MODEL_PARAMETERS
     ! Vcmax, the maximum rate of carboxylation at the canopy top
     ! umolC/m2/s
     PI%parmin(11) = 10d0
-    PI%parmax(11) = 150d0
+    PI%parmax(11) = 100d0
 
     ! max bud burst day
     PI%parmin(12) = 365.25d0
