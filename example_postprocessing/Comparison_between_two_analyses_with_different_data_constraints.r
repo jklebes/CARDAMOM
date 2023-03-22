@@ -181,8 +181,8 @@ orig_name = "-GPP" # used in labelling figures
 load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_2_2.5deg_C7_GCP_AGB_GPP/infofile.RData")
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
 alt_PROJECT = PROJECT ; alt_grid_output = grid_output 
-alt_name = "Repeat" # used in labelling figures
-#alt_name = "+GPP" # used in labelling figures
+#alt_name = "Repeat" # used in labelling figures
+alt_name = "+GPP" # used in labelling figures
 
 # Tidy
 rm(PROJECT,grid_output)
@@ -217,9 +217,10 @@ landmask = shapefile("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/R_functions
 landmask = spTransform(landmask,crs(cardamom_ext))
 # subset by continent (could also do by country)
 #landmask = subset(landmask, CONTINENT == "South America") # Change continent to target area or comment out if spanning zones
-landmask = subset(landmask, CONTINENT == "Africa") # Change continent to target area or comment out if spanning zones
-# Clip to the extent of the CARDAMOM analysis
-landmask = crop(landmask, cardamom_ext)
+#landmask = subset(landmask, CONTINENT == "Africa") # Change continent to target area or comment out if spanning zones
+# Clip and/or extend to the extent of the CARDAMOM analysis
+landmask@bbox = as.matrix(extent(cardamom_ext)) # polygon workaround
+#landmask = crop(landmask, cardamom_ext)
 
 # Create an updated area object for the landmask region only
 tmp = coordinates(crop(cardamom_ext,landmask))
@@ -228,14 +229,14 @@ tmp = dim(crop(cardamom_ext,landmask))[c(2,1)]
 tmp_lat = array(tmp_lat, dim=c(tmp[1],tmp[2]))
 tmp_lon = array(tmp_lon,dim=c(tmp[1],tmp[2]))
 # then generate the area estimates for each pixel (m)
-landmask_area = calc_pixel_area(tmp_lat,tmp_lon,orig_PROJECT$resolution)
+landmask_area = calc_pixel_area(as.vector(tmp_lat),as.vector(tmp_lon),orig_PROJECT$resolution)
 # this output is in vector form and we need matching array shapes so...
 landmask_area = array(landmask_area, dim=tmp) 
 rm(tmp)
 
 add_biomes = " "
 #add_biomes = "ssa_wwf"
-add_biomes = "wwf_ecoregions"
+#add_biomes = "wwf_ecoregions"
 #add_biomes = "reccap2_permafrost"
 if (add_biomes == "ssa_wwf") {
     # Read in shape file for boundaries
@@ -2049,11 +2050,11 @@ dev.off()
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_compare_observation",outsuffix,".png",sep=""), height = 4000, width = 4500, res = 300)
 par(mfrow=c(2,2), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Plot LAI mean annual
-var1 = as.vector(LAIobs) ; var1 = var1[which(is.na(var1) == FALSE)]
-var2 = as.vector(orig_lai_grid) ; var2 = var2[which(is.na(var2) == FALSE)] 
+var1 = as.vector(LAIobs) #; var1 = var1[which(is.na(var1) == FALSE)]
+var2 = as.vector(orig_lai_grid) #; var2 = var2[which(is.na(var2) == FALSE)] 
 plot(var2 , var1, col=model_colours[1],
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.0, ylab="", xlab="", main="")
-var2 = as.vector(alt_lai_grid) ; var2 = var2[which(is.na(var2) == FALSE)] 
+var2 = as.vector(alt_lai_grid) #; var2 = var2[which(is.na(var2) == FALSE)] 
 points(var2 , var1, pch=1, col=model_colours[2], cex = 1.6)
 mtext(expression(paste('CARDAMOM',sep="")), side = 1, cex = 2.4, padj = 1.85)
 mtext(expression(paste('Annual LAI (',m^2,'/',m^2,')',sep="")), side = 2, cex = 2.4, padj = -1.05)
