@@ -87,9 +87,14 @@ regrid_func<-function(var1_in, lat_in, long_in, cardamom_ext, landmask) {
    # Set flags
    lat_done = FALSE
 
+   # Check dimensions of the input variable
+   if (length(dim(var1_in)) == 2) {
+       var1_in = array(var1_in, dim=c(dim(var1_in),1))
+   }
+
    # Loop through each timestep in the year
    for (t in seq(1, dim(var1_in)[3])) {
-        # Convert to a raster, assuming standad WGS84 grid
+        # Convert to a raster, assuming standard WGS84 grid
         var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1_in[,,t]))
         if (length(unique(diff(input_long[,1]))) > 1 | length(unique(diff(input_lat[1,]))) > 1) {
             var1 = griddify(var1, dim(var1_in)[1], dim(var1_in)[2])
@@ -105,12 +110,12 @@ regrid_func<-function(var1_in, lat_in, long_in, cardamom_ext, landmask) {
             var1 = resample(var1, target, method="ngb") ; gc() ; removeTmpFiles()
         }
         # Extend the extent of the overall grid to the analysis domain
-        var1 = extend(var1,cardamom_ext) 
+        var1 = extend(var1,cardamom_ext, snap="near", value = NA) 
         # Trim the extent of the overall grid to the analysis domain
         var1 = crop(var1,cardamom_ext)
 
         # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
-        # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+        # Despite creation of a cardamom_ext for a site run do not allow aggregation here as this will damage the fine resolution datasets
         if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
 
             # Create raster with the target resolution
@@ -118,10 +123,10 @@ regrid_func<-function(var1_in, lat_in, long_in, cardamom_ext, landmask) {
             # Resample to correct grid
             var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
 
-        } # Aggrgeate to resolution
+        } # Aggregate to resolution
 
         # If a land mask is present then also restrict to this target domain
-        if (exists("landmask")) {var1 = crop(var1,landmask)}
+        if (missing("landmask") == FALSE) {var1 = crop(var1,landmask)}
 
         if (lat_done == FALSE) {
             # extract dimension information for the grid, note the axis switching between raster and actual array
@@ -132,7 +137,7 @@ regrid_func<-function(var1_in, lat_in, long_in, cardamom_ext, landmask) {
             long = array(long, dim=c(xdim,ydim))
             lat = array(lat, dim=c(xdim,ydim))
         }
-        # break out from the rasters into arrays which we can manipulate
+        # break out from the raster into arrays which we can manipulate
         var1 = array(as.vector(unlist(var1)), dim=c(xdim,ydim))
 
         # vectorise at this time
@@ -154,6 +159,106 @@ regrid_func<-function(var1_in, lat_in, long_in, cardamom_ext, landmask) {
    return(list(var = var_out, lat = lat, long = long))
    
 } # end function regrid_func
+
+
+# Function to use gdal libraries to aggregate to target spatial resolution 
+regrid_gdal_func<-function(tmp_dir, var1_in, lat_in, long_in, cardamom_ext, landmask) {
+
+   # Load libraries needed
+   require(gdalUtils) 
+   # Help avoid build up of raster tmp files
+   rasterOptions(overwrite = TRUE)
+
+   # Set flags
+   lat_done = FALSE
+
+   # Check dimensions of the input variable
+   if (length(dim(var1_in)) == 2) {
+       var1_in = array(var1_in, dim=c(dim(var1_in),1))
+   }
+
+   # Store current working directory
+   current_wd = getwd()
+   # Change to tmp working directory
+   setwd(tmp_dir)
+   # Create file names for intermediate files
+   outfile_tmp = paste(tmp_dir,"/tmp.tif",sep="") 
+   outfile_agg = paste(tmp_dir,"/tmp_agg.tif",sep="")
+
+   # Loop through each timestep in the year
+   for (t in seq(1, dim(var1_in)[3])) {
+        # Convert to a raster, assuming standard WGS84 grid
+        var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1_in[,,t]))
+        if (length(unique(diff(input_long[,1]))) > 1 | length(unique(diff(input_lat[1,]))) > 1) {
+            var1 = griddify(var1, dim(var1_in)[1], dim(var1_in)[2])
+        } else {
+            var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326"))
+        }
+
+        # Create raster with the target crs (technically this bit is not required)
+        target = raster(crs = ("+init=epsg:4326"), ext = extent(var1), resolution = res(var1))
+        # Check whether the target and actual analyses have the same CRS
+        if (compareCRS(var1,target) == FALSE) {
+            # Resample to correct grid
+            var1 = resample(var1, target, method="ngb") ; gc() ; removeTmpFiles()
+        }
+        # Extend the extent of the overall grid to the analysis domain
+        var1 = extend(var1,cardamom_ext, snap="near", value = NA) 
+        # Trim the extent of the overall grid to the analysis domain
+        var1 = crop(var1,cardamom_ext)
+
+        # Aggregate to coarser spatial resolution using gdal libraries as these are faster
+        if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
+            # Write out file to temporary raster file
+            writeRaster(var1, outfile_tmp, format = "GTiff", overwrite=TRUE)
+            # Carry out aggregation using gdal libraries
+            gdal_translate(src_dataset = outfile_tmp, dst_dataset = outfile_agg, a_srs = "EPSG:4326", of = "GTiff", tr = res(cardamom_ext), r = "average")
+            # Load back aggregated variable into memory
+            var1 = raster(outfile_agg)
+            # Tidy away the intermediate files
+            file.remove(outfile_tmp)                                                   
+        }
+
+        # If a land mask is present then also restrict to this target domain
+        if (missing("landmask") == FALSE) {var1 = crop(var1,landmask)}
+
+        if (lat_done == FALSE) {
+            # extract dimension information for the grid, note the axis switching between raster and actual array
+            xdim = dim(var1)[2] ; ydim = dim(var1)[1]
+            # extract the lat / long information needed
+            long = coordinates(var1)[,1] ; lat = coordinates(var1)[,2]
+            # restructure into correct orientation
+            long = array(long, dim=c(xdim,ydim))
+            lat = array(lat, dim=c(xdim,ydim))
+        }
+        # break out from the raster into arrays which we can manipulate
+        var1 = array(as.vector(unlist(var1)), dim=c(xdim,ydim))
+
+        # vectorise at this time
+        if (lat_done == FALSE) {
+            var_out = as.vector(var1)
+        } else {
+            var_out = append(var_out,as.vector(var1))
+        }
+
+        # Ensure var1 and assocated tmp files have been removed
+        rm(var1) ; if (file.exists(outfile_agg)) {file.remove(outfile_agg)}
+
+        # update flag for lat / long load
+        if (lat_done == FALSE) {lat_done = TRUE}
+
+   } # Within variable time loop
+
+   # restructure
+   var_out = array(var_out, dim=c(xdim,ydim,dim(var1_in)[3]))
+
+   # Return to original working directory 
+   setwd(current_wd)
+
+   # Return to user
+   return(list(var = var_out, lat = lat, long = long))
+
+} # end function regrid_gdal_func
 
 # Set quantiles we want to consider for uncertainty 
 # Here assuming a total of 7 quantiles (2.5 %, 5 %, 25 %, 50 %, 75 %, 95 %, 97.5 %)
@@ -1782,14 +1887,14 @@ gpp_years = c(2000:2021)
 gpp_years = intersect(gpp_years,run_years)
 
 for (t in seq(1, length(gpp_years))) {
-     input = nc_open(paste("/exports/csce/datastore/geos/groups/gcel/GPP_ESTIMATES/combined_gpp/global_1deg_monthly/Combined_GPP_OBS_",gpp_years[t],".nc",sep=""))
+     input = nc_open(paste("/exports/csce/datastore/geos/groups/gcel/GPP_ESTIMATES/combined_gpp/global_0.5deg_monthly/Combined_GPP_OBS_",gpp_years[t],".nc",sep=""))
      #input_time = ncvar_get(input, "time") # days since 1700-12-31, 365 day years
      input_data = ncvar_get(input, "GPP_annual")
-     # Unit convertion (gC/m2/d -> gC/m2/yr)
-     input_data = input_data * 365.25
      # Must go in as a 3D array, so check that is the case
      if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}
-     # Extract latitude / longitude information   
+     # Extract data source information
+     input_source = ncvar_get(input,"DataSource")
+     # Extract latitude / longitude information
      input_lat = ncvar_get(input,"lat_axis") ; input_long = ncvar_get(input, "long_axis")
      # Turn lat_in / long_in from vectors to arrays
      input_lat = t(array(input_lat, dim=c(dim(input_data)[2],dim(input_data)[1])))
@@ -1798,55 +1903,79 @@ for (t in seq(1, length(gpp_years))) {
      check_long = which(input_long > 180) 
      if (length(check_long) > 0) {input_long[check_long] = input_long[check_long] - 360}
      # Begin regridding
-     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext,landmask)
+     input_data = regrid_gdal_func(out_dir, input_data,input_lat,input_long,cardamom_ext,landmask)
+#     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext,landmask)
      # If this is the first year, define the output object
      if (t == 1) {
+         obs_gpp_ensemble_gCm2yr = array(NA, dim=c(dim(input_data$var)[1:2],length(gpp_years),length(input_source)))
          obs_gpp_mean_gCm2yr = array(NA, dim=c(dim(input_data$var)[1:2],length(gpp_years)))
          obs_gpp_min_gCm2yr = array(NA, dim=c(dim(input_data$var)[1:2],length(gpp_years)))
          obs_gpp_max_gCm2yr = array(NA, dim=c(dim(input_data$var)[1:2],length(gpp_years)))
      }
      # Assign to output variable
-     obs_gpp_mean_gCm2yr[,,t] = input_data$var
-
-     # GPP min
-     input_data = ncvar_get(input, "GPP_annual_min")    
      # Unit convertion (gC/m2/d -> gC/m2/yr)
-     input_data = input_data * 365.25
-     # Must go in as a 3D array, so check that is the case
-     if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}      
-     # Begin regridding
-     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext,landmask)
-     # Assign to output variable
-     obs_gpp_min_gCm2yr[,,t] = input_data$var
+     obs_gpp_mean_gCm2yr[,,t] = input_data$var * 365.25
 
-     # GPP max
-     input_data = ncvar_get(input, "GPP_annual_max")
-     # Unit convertion (gC/m2/d -> gC/m2/yr)
-     input_data = input_data * 365.25
+#     # GPP min
+#     input_data = ncvar_get(input, "GPP_annual_min")    
+#     # Must go in as a 3D array, so check that is the case
+#     if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}      
+#     # Begin regridding
+#     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext,landmask)
+#     # Assign to output variable
+#     # Unit convertion (gC/m2/d -> gC/m2/yr)
+#     obs_gpp_min_gCm2yr[,,t] = input_data$var * 365.25
+
+#     # GPP max
+#     input_data = ncvar_get(input, "GPP_annual_max")
+#     # Must go in as a 3D array, so check that is the case
+#     if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}     
+#     # Begin regridding
+#     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext,landmask)
+#     # Assign to output variable
+#     # Unit convertion (gC/m2/d -> gC/m2/yr)
+#     obs_gpp_max_gCm2yr[,,t] = input_data$var * 365.25
+
+     # GPP ensemble
+     input_data = ncvar_get(input, "GPP_annual_ensemble")
      # Must go in as a 3D array, so check that is the case
      if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}     
      # Begin regridding
-     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext,landmask)
+     input_data = regrid_gdal_func(out_dir, input_data,input_lat,input_long,cardamom_ext,landmask)
+#     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext,landmask)
      # Assign to output variable
-     obs_gpp_max_gCm2yr[,,t] = input_data$var
-
+     # Unit convertion (gC/m2/d -> gC/m2/yr)
+     obs_gpp_ensemble_gCm2yr[,,t,] = input_data$var * 365.25
+     
      # Tidy
      nc_close(input) ; rm(input_data) ; gc()
 }
 
 # Ensure the spatial orientation of the processed variable matches that of CARDAMOM
+obs_gpp_ensemble_gCm2yr = obs_gpp_ensemble_gCm2yr[,dim(obs_gpp_ensemble_gCm2yr)[2]:1,,]
 obs_gpp_mean_gCm2yr = obs_gpp_mean_gCm2yr[,dim(obs_gpp_mean_gCm2yr)[2]:1,]
-obs_gpp_min_gCm2yr = obs_gpp_min_gCm2yr[,dim(obs_gpp_min_gCm2yr)[2]:1,]
-obs_gpp_max_gCm2yr = obs_gpp_max_gCm2yr[,dim(obs_gpp_max_gCm2yr)[2]:1,]
+#obs_gpp_min_gCm2yr = obs_gpp_min_gCm2yr[,dim(obs_gpp_min_gCm2yr)[2]:1,]
+#obs_gpp_max_gCm2yr = obs_gpp_max_gCm2yr[,dim(obs_gpp_max_gCm2yr)[2]:1,]
 
-# Generate aggregate values at the domain level
-obs_gpp_mean_domain_TgCyr = apply(obs_gpp_mean_gCm2yr*array(landmask_area, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
-obs_gpp_min_domain_TgCyr = apply(obs_gpp_min_gCm2yr*array(landmask_area, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
-obs_gpp_max_domain_TgCyr = apply(obs_gpp_max_gCm2yr*array(landmask_area, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
+# Create domain averaged values for each year and data source, note that aggregation MUST happen within product type before across products
+obs_gpp_ensemble_gCm2yr = apply(obs_gpp_ensemble_gCm2yr*array(landmask_area, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_ensemble_gCm2yr)[3],dim(obs_gpp_ensemble_gCm2yr)[4]))*1e-12,c(3,4),sum, na.rm=TRUE)
+# Generate aggregate values at the domain level - these must come from the raw product specific variables
+obs_gpp_mean_domain_TgCyr = apply(obs_gpp_ensemble_gCm2yr,1,mean, na.rm=TRUE)
+obs_gpp_min_domain_TgCyr = apply(obs_gpp_ensemble_gCm2yr,1,min, na.rm=TRUE)
+obs_gpp_max_domain_TgCyr = apply(obs_gpp_ensemble_gCm2yr,1,max, na.rm=TRUE)
 # where the whole grid is zero can lead to zero being introduced - remove these
 obs_gpp_mean_domain_TgCyr[which(obs_gpp_mean_domain_TgCyr == 0)] = NA 
 obs_gpp_min_domain_TgCyr[which(obs_gpp_min_domain_TgCyr == 0)] = NA
 obs_gpp_max_domain_TgCyr[which(obs_gpp_max_domain_TgCyr == 0)] = NA
+
+## Generate aggregate values at the domain level - these must come from the raw product specific variables
+#obs_gpp_mean_domain_TgCyr = apply(obs_gpp_mean_gCm2yr*array(landmask_area, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
+#obs_gpp_min_domain_TgCyr = apply(obs_gpp_min_gCm2yr*array(landmask_area, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
+#obs_gpp_max_domain_TgCyr = apply(obs_gpp_max_gCm2yr*array(landmask_area, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
+## where the whole grid is zero can lead to zero being introduced - remove these
+#obs_gpp_mean_domain_TgCyr[which(obs_gpp_mean_domain_TgCyr == 0)] = NA 
+#obs_gpp_min_domain_TgCyr[which(obs_gpp_min_domain_TgCyr == 0)] = NA
+#obs_gpp_max_domain_TgCyr[which(obs_gpp_max_domain_TgCyr == 0)] = NA
 
 ###
 ## Independent fire emissions estimate

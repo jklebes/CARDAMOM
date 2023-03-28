@@ -117,6 +117,12 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
            #contour(landmask, add = TRUE, lwd = 1.0, nlevels = 1,axes = FALSE,drawlabels = FALSE,col = "black")
            dev.off()
 
+           # Histrograms of fluxes
+           jpeg(file=paste("grid_mean_hist_median_",par_names[p],"_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+           par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
+           hist(grid_output[[pp]][,,median_loc], main=info, cex.main=0.9, cex=1.5, cex.axis=1.8)
+           dev.off()
+
            # create maps
            jpeg(file=paste("grid_95CI_map_",par_names[p],"_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
            par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.8), omi=c(0.2, 0.2, 0.2, 0.40))
@@ -139,9 +145,9 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
            dev.off()
 
            # Histrograms of fluxes
-           jpeg(file=paste("grid_mean_hist_median_",par_names[p],"_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
+           jpeg(file=paste("grid_95CI_hist_median_",par_names[p],"_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
            par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-           hist(grid_output[[pp]][,,median_loc], main=info, cex.main=0.9, cex=1.5, cex.axis=1.8)
+           hist(var2, main=info, cex.main=0.9, cex=1.5, cex.axis=1.8)
            dev.off()
 
        } # dimension check

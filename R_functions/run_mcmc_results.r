@@ -44,6 +44,8 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
       # otherwise load the existing but incomplete version from file
       if (file.exists(outfile_grid) == FALSE | repair == 1) {
 
+          print("Creating new grid_output object")
+
           #
           # Generate the summary information
           # Time invariant but contain uncertainty, shaped into the full spatial grid

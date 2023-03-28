@@ -16,6 +16,10 @@ calc_pixel_area<-function(latitude,longitude,resolution) {
     # latitude (-90,90) degrees
     # longitude (-180,180) degrees
 
+    # Ensure that resolution has two dimensions.
+    # If only 1 provided assume equal size lat / long
+    if (length(resolution) == 1) {resolution = rep(resolution,2)}
+
     # mean earth radius (m)
     R = 6371e3
 

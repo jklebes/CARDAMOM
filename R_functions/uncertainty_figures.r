@@ -826,6 +826,78 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 
    }  # biomass_gCm2
 
+   # Canopy growth index (CGI; 0-1)
+   if (exists(x = "ncce_gCm2day", where = states_all)) {
+
+       # structure needed by function is dim=c(time,iter)
+       # flip it to get the right shape
+       var=t(states_all$ncce_gCm2day)
+
+       jpeg(file=paste(PROJECT$figpath,"timeseries_NCCE_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+            width=7200, height=4000, res=280, quality=100)
+       # now create the plotting area
+       par(mfrow=c(1,1), mar=c(5,5,3,1))
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE)),
+            cex=0.8,ylab="NCCE (gC/m2/day)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
+            main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       axis(1, at=time_vector[seq(1,length(time_vector),interval)],
+            labels=round(year_vector[seq(1,length(time_vector),interval)], digits=1),tck=-0.02, padj=+0.15, cex.axis=1.9)
+       # add the confidence intervals
+       plotconfidence(var)
+       # calculate and draw the median values, could be mean instead or other
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
+       dev.off()
+
+   } # ncce_gCm2day
+
+   # Canopy growth index (CGI; 0-1)
+   if (exists(x = "cgi", where = states_all)) {
+
+       # structure needed by function is dim=c(time,iter)
+       # flip it to get the right shape
+       var=t(states_all$cgi)
+
+       jpeg(file=paste(PROJECT$figpath,"timeseries_CGI_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+            width=7200, height=4000, res=280, quality=100)
+       # now create the plotting area
+       par(mfrow=c(1,1), mar=c(5,5,3,1))
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE)),
+            cex=0.8,ylab="CGI",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
+            main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       axis(1, at=time_vector[seq(1,length(time_vector),interval)],
+            labels=round(year_vector[seq(1,length(time_vector),interval)], digits=1),tck=-0.02, padj=+0.15, cex.axis=1.9)
+       # add the confidence intervals
+       plotconfidence(var)
+       # calculate and draw the median values, could be mean instead or other
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
+       dev.off()
+
+   } # cgi
+
+   # Canopy mortality index (CMI; 0-1)
+   if (exists(x = "cmi", where = states_all)) {
+
+       # structure needed by function is dim=c(time,iter)
+       # flip it to get the right shape
+       var=t(states_all$cmi)
+
+       jpeg(file=paste(PROJECT$figpath,"timeseries_CMI_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+            width=7200, height=4000, res=280, quality=100)
+       # now create the plotting area
+       par(mfrow=c(1,1), mar=c(5,5,3,1))
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE)),
+            cex=0.8,ylab="CMI",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
+            main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       axis(1, at=time_vector[seq(1,length(time_vector),interval)],
+            labels=round(year_vector[seq(1,length(time_vector),interval)], digits=1),tck=-0.02, padj=+0.15, cex.axis=1.9)
+       # add the confidence intervals
+       plotconfidence(var)
+       # calculate and draw the median values, could be mean instead or other
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
+       dev.off()
+
+   } # cmi
+
    # Growing season index (GSI; 0-1)
    if (exists(x = "gsi", where = states_all)) {
 
