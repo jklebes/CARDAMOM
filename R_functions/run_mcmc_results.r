@@ -725,9 +725,9 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
           grid_output$long = array(output$long,dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 
           # Determine grid area (m2)
-          grid_output$area_m2 = calc_pixel_area(grid_output$lat,grid_output$long,PROJECT$resolution)
+          grid_output$area_m2 = calc_pixel_area(grid_output$long,grid_output$lat)
           # this output is in vector form and we need matching array shapes so...
-          grid_output$area_m2 = array(grid_output$area_m2, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+#          grid_output$area_m2 = array(grid_output$area_m2, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 
           # Load the land mask and land fraction, assuming it exists
           grid_output$landmask=array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))

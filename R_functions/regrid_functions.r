@@ -110,6 +110,7 @@ regrid_gdal_func<-function(tmp_dir, var1_in, lat_in, long_in, cardamom_ext, land
 
    # Loop through each timestep in the year
    for (t in seq(1, dim(var1_in)[3])) {
+
         # Convert to a raster, assuming standard WGS84 grid
         var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1_in[,,t]))
         if (length(unique(diff(input_long[,1]))) > 1 | length(unique(diff(input_lat[1,]))) > 1) {
@@ -135,7 +136,12 @@ regrid_gdal_func<-function(tmp_dir, var1_in, lat_in, long_in, cardamom_ext, land
             # Write out file to temporary raster file
             writeRaster(var1, outfile_tmp, format = "GTiff", overwrite=TRUE)
             # Carry out aggregation using gdal libraries
-            gdal_translate(src_dataset = outfile_tmp, dst_dataset = outfile_agg, a_srs = "EPSG:4326", of = "GTiff", tr = res(cardamom_ext), r = "average")
+#            gdal_translate(src_dataset = outfile_tmp, dst_dataset = outfile_agg,
+#                           a_srs = "EPSG:4326", of = "GTiff", tr = res(cardamom_ext),
+#                           r = "average")
+            gdalwarp(srcfile = outfile_tmp, dstfile = outfile_agg,
+                     a_srs = "EPSG:4326", of = "GTiff", tr = res(cardamom_ext),
+                     r = "average")
             # Load back aggregated variable into memory
             var1 = raster(outfile_agg)
             # Tidy away the intermediate files

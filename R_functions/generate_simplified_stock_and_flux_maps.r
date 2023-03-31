@@ -33,8 +33,8 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
       grid_lat = array(output$lat, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
       grid_long = array(output$long,dim=c(PROJECT$long_dim,PROJECT$lat_dim))
       # then generate the area estimates for each pixel
-      area_with_g_Tg = calc_pixel_area(output$lat,output$long,PROJECT$resolution)*1e-12
-      area = calc_pixel_area(output$lat,output$long,PROJECT$resolution)
+      area_with_g_Tg = calc_pixel_area(grid_long,grid_lat)*1e-12
+      area = calc_pixel_area(grid_long,grid_lat)
       # this output is in vector form and we need matching array shapes so...
       area = array(area, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
       area_with_g_Tg = array(area_with_g_Tg, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
