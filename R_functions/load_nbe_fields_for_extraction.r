@@ -212,11 +212,11 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
                     }
 
                     # extract location variables
-                    lat_in = ncvar_get(data1, "lat") ; long_in = ncvar_get(data1, "lon")
+                    lat_in = ncvar_get(data1, "latitude") ; long_in = ncvar_get(data1, "longitude")
                     # read the NBE observations
                     var1 = ncvar_get(data1, "NBE") # net biome exchange of CO2 (gC/m2/day)
                     # check for error variable
-                    var2 = ncvar_get(data1, "NBE_unc") # NBE error  estimate(gC/m2/day)
+                    var2 = ncvar_get(data1, "NBE_unc") # NBE error estimate(gC/m2/day)
 
                     # close files after use
                     nc_close(data1)

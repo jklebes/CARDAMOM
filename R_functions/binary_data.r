@@ -24,85 +24,85 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   # set model ID
   if (modelname == "ACM") {
     modelid = 0
-#  } else if (modelname == " ") {
-#    modelid = 1
-  } else if (modelname == "DALEC_GSI_BUCKET"){
-    modelid = 2
-  } else if (modelname == "DALEC_CROP"){
-    modelid = 3
-  } else if (modelname == "DALEC_CROP_BUCKET"){
-    modelid = 4
-  } else if (modelname == "DALEC_CDEA_ACM_FARQUHAR_BUCKET") {
-    modelid = 5
-#  } else if (modelname == " ") {
-#    modelid = 6
-#  } else if (modelname == " ") {
-#    modelid = 7
-#  } else if (modelname == " ") {
-#    modelid = 8
-#  } else if (modelname == " ") {
-#    modelid = 9
-#  } else if (modelname == " ") {
-#    modelid = 10
-#  } else if (modelname == " ") {
-#    modelid = 11
-#  } else if (modelname == " ") {
-#    modelid = 12
-#  } else if (modelname == " ") {
-#    modelid = 13
-#  } else if (modelname == " ") {
-#    modelid = 14
-#  } else if (modelname == " ") {
-#    modelid = 15
-  } else if (modelname == "DALEC_GSI_DFOL_CWD_FR") {
-    modelid = 16
-#  } else if (modelname == " "){
-#    modelid = 17
-#  } else if (modelname == " "){
-#    modelid = 18
-#  } else if (modelname == " "){
-#    modelid = 19
-  } else if (modelname == "DALEC_BUCKET"){
-    modelid = 20
-  } else if (modelname == "DALEC_CDEA_LU_FIRES") {
-    modelid = 21
   } else if (modelname == "DALEC_EVERGREEN") {
-    modelid = 22
-  } else if (modelname == "DALEC_CDEA_no_lit_root") {
-    modelid = 23
-  } else if (modelname == "DALEC_EVERGREEN_no_lit_root") {
-    modelid = 24
-  } else if (modelname == "DALEC_CDEA_ACM2") {
-    modelid = 25
-  } else if (modelname == "DALEC") {
-    modelid = 26
-  } else if (modelname == "DALEC_CDEA_ACM2_BUCKET") {
-    modelid = 27
+    modelid = 1
+  } else if (modelname == "DALEC_CDEA_LU_FIRES"){
+    modelid = 2
+  } else if (modelname == "DALEC_CDEA_ACM2"){
+    modelid = 3
+  } else if (modelname == "DALEC_CDEA_ACM2_BUCKET"){
+    modelid = 4
   } else if (modelname == "DALEC_CDEA_ACM2_BUCKET_RmRg") {
-    modelid = 28
+    modelid = 5
   } else if (modelname == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD") {
-    modelid = 29
+    modelid = 6
   } else if (modelname == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT") {
-    modelid = 30
-  } else if (modelname == "DALEC_BUCKET_CanAGE"){
-    modelid = 31
-  } else if (modelname == "DALEC_G5"){
-    modelid = 32
-  } else if (modelname == "DALEC_G6"){
-    modelid = 33
-  } else if (modelname == "DALEC_1005"){
-    modelid = 34
-  } else if (modelname == "DALEC_1005a"){
-    modelid = 35
-  } else if (modelname == "DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT") {
-    modelid = 36
-  } else if (modelname == "DALEC_CDEA_ACM2_BUCKET_wMRT") {
-    modelid = 37
+    modelid = 7
+  } else if (modelname == "DALEC_GSI_DFOL_CWD_FR") {
+    modelid = 8
+  } else if (modelname == "DALEC_GSI_BUCKET") {
+    modelid = 9
+  } else if (modelname == "DALEC") {
+    modelid = 10
+  } else if (modelname == "DALEC_BUCKET") {
+    modelid = 11
+  } else if (modelname == "DALEC_EVERGREEN_no_lit_root") {
+    modelid = 12
+  } else if (modelname == "DALEC_CDEA_no_lit_root") {
+    modelid = 13
+  } else if (modelname == "DALEC_CROP") {
+    modelid = 14
+  } else if (modelname == "DALEC_CROP_BUCKET") {
+    modelid = 15
+  } else if (modelname == "DALEC_GRASS") {
+    modelid = 16
+  } else if (modelname == "DALEC_GRASS_BUCKET"){
+    modelid = 17
+  } else if (modelname == "DALEC_CDEA_ACM2_BUCKET_wMRT"){
+    modelid = 18
+  } else if (modelname == "DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT"){
+    modelid = 19
+  } else if (modelname == "DALEC_CDEA_ACM_FARQUHAR_BUCKET"){
+    modelid = 20
   } else if (modelname == "DALEC_CDEA_ACM2_BUCKET_LAB") {
-    modelid = 38
+    modelid = 21
   } else if (modelname == "DALEC_CDEA_ACM2_BUCKET_LAB_wMRT") {
+    modelid = 22
+  } else if (modelname == "DALEC_G5") {
+    modelid = 23
+  } else if (modelname == "DALEC_G6") {
+    modelid = 24
+  } else if (modelname == "DALEC_G7") {
+    modelid = 25
+  } else if (modelname == "DALEC_BUCKET_CanAGE") {
+    modelid = 26
+  } else if (modelname == "DALEC_1005") {
+    modelid = 27
+  } else if (modelname == "DALEC_1005a") {
+    modelid = 28
+  } else if (modelname == "") {
+    modelid = 29
+  } else if (modelname == "") {
+    modelid = 30
+  } else if (modelname == ""){
+    modelid = 31
+  } else if (modelname == ""){
+    modelid = 32
+  } else if (modelname == ""){
+    modelid = 33
+  } else if (modelname == ""){
+    modelid = 34
+  } else if (modelname == ""){
+    modelid = 35
+  } else if (modelname == "") {
+    modelid = 36
+  } else if (modelname == "") {
+    modelid = 37
+  } else if (modelname == "") {
+    modelid = 38
+  } else if (modelname == "") {
     modelid = 39
-  }
+  } # model ID assignment
 
   # some drivers may be passed as single values assuming this will apply across the whole time series
   # if this is so we need to now adjust that
@@ -539,9 +539,9 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
                                                                     # Note despite having the same name as ecosystem property of Amax per gN or SPA's kappaC
                                                                     # These observational constraints are not the same and would lead to
                                                                     # overestimation of GPP (SPA = 34, ACM2 = 15), but here multiple by avN (1.89) to get Ceff
-      PARPRIORS[11]=21.1491                ; PARPRIORUNC[11]=8.534234 # Ceff: derived from multiple trait values from Kattge et al., (2011)
-                                                                      # Note that this prior is difference from DALEC_CDEA_LU_FIRES
-                                                                      # due to the different temperature response functions used in ACM2 vs ACM 1
+#      PARPRIORS[11]=21.1491                ; PARPRIORUNC[11]=8.534234 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+#                                                                      # Note that this prior is difference from DALEC_CDEA_LU_FIRES
+#                                                                      # due to the different temperature response functions used in ACM2 vs ACM 1
       PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc
       PARPRIORS[19]=OBS$Cfol_initial       ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
       PARPRIORS[20]=OBS$Croots_initial     ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -699,7 +699,31 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       OTHERPRIORS[4] = 0.66                ; OTHERPRIORUNC[4] = 0.12 # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
       OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
       OTHERPRIORS[6] = 0.5                 ; OTHERPRIORUNC[6] = 0.05 # Rleaf:Rauto ratio See Atkin et al., various for approximate ratio
-
+  } else if (modelname == "DALEC_G7") {
+      PARPRIORS[1]=0.5                     ; PARPRIORUNC[1]=0.125 # fraction of litter decomposition to Csom
+      PARPRIORS[11]=0.2764618              ; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
+      PARPRIORS[14]=0                      ; PARPRIORUNC[14]=5  # minimum CGI temperature
+      PARPRIORS[15]=30                     ; PARPRIORUNC[15]=5 # optimum CMI and CGI temperatures
+      PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc
+      PARPRIORS[19]=OBS$Cfol_initial       ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
+      PARPRIORS[20]=OBS$Croots_initial     ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
+      PARPRIORS[21]=OBS$Cwood_initial      ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+      PARPRIORS[22]=OBS$Clit_initial       ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+      PARPRIORS[23]=OBS$Csom_initial       ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
+      PARPRIORS[32]=-1.8                   ; PARPRIORUNC[32]=1 # minLWP (MPa)
+      PARPRIORS[42]=11.197440              ; PARPRIORUNC[42]=9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
+#      PARPRIORS[42]=14.77735               ; PARPRIORUNC[42]=0.4696238 # Derived from ACM2 recalibration.
+                                                                # Note despite having the same name as ecosystem property of Amax per gN or SPA's kappaC
+                                                                # These observational constraints are not the same and would lead to
+                                                                # overestimation of GPP (SPA = 34, ACM2 = 15)
+#      PARPRIORS[43]=275.1452               ; PARPRIORUNC[43]=296.2767 # Leaf lifespan prior form Kattge et al., 2011, based on log10 gauusian distribution
+      # other priors
+      OTHERPRIORS[1] = 0.46                ; OTHERPRIORUNC[1] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+      OTHERPRIORS[2] = OBS$soilwater       ; OTHERPRIORUNC[2] = OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
+#      OTHERPRIORS[3] = 27.295              ; OTHERPRIORUNC[3] = 11.03755 # Foliar C:N (gC/gN) prior derived from Kattge et al., (2011)
+      OTHERPRIORS[4] = 0.66                ; OTHERPRIORUNC[4] = 0.12 # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
+      OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
+      OTHERPRIORS[6] = 0.5                 ; OTHERPRIORUNC[6] = 0.05 # Rleaf:Rauto ratio See Atkin et al., various for approximate ratio
   } else if (modelname == "DALEC_BUCKET_CanAGE") {
       PARPRIORS[1]=0.5                     ; PARPRIORUNC[1]=0.125 # fraction of litter decomposition to Csom
       PARPRIORS[11]=0.2764618              ; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)

@@ -822,16 +822,16 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         Crootcr_part = pars(29)
 
         ! Assign proposed resilience factor for biomass
-        rfac(1:4) = pars(43)
+        rfac(1:4) = pars(44)
         ! Resilience factor for non-combusted tissue (lit, som, wood litter)
         rfac(5) = 0.1d0 ; rfac(6) = 0d0 ; rfac(7) = 0.1d0
         ! Assign combustion completeness to foliage
-        cf(2) = pars(44) ! foliage
+        cf(2) = pars(45) ! foliage
         ! Assign combustion completeness to non-photosynthetic
-        cf(1) = pars(45) ; cf(3) = pars(45) ; cf(4) = pars(45)
-        cf(6) = pars(46) ! soil
+        cf(1) = pars(46) ; cf(3) = pars(46) ; cf(4) = pars(46)
+        cf(6) = pars(47) ! soil
         ! values for litter and wood litter
-        cf(5) = pars(47) ; cf(7) = pars(48)
+        cf(5) = pars(48) ; cf(7) = pars(49)
 
     end if ! disturbance ?
 
