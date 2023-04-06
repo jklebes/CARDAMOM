@@ -5,7 +5,6 @@
 
 "DALEC_CDEA_ACM2_BUCKET_LAB"
 "DALEC_CDEA_ACM2_BUCKET_LAB_wMRT"
-"DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT"
 
 "DALEC_G5"
 "DALEC_G6"
@@ -42,15 +41,14 @@ M = Managed Grassland / arable crops (Table 10)
 |  9 | DALEC.A1.C2.D2.F2.H2.P3.R1.| DALEC_GSI_BUCKET, G2                     | Fire model updated from F1 to F2| Smallman et al., 2017        | Published   |
 | 10 | DALEC.A1.C2.D2.F2.H1.P4.R2.| DALEC, G3           | Fire model updated from F1 to F2                     | Famiglietti et al., 2021     | Published   |
 | 11 | DALEC.A1.C2.D2.F2.H2.P4.R2.| DALEC_BUCKET, G4    | Fire model updated from F1 to F2                     | Famiglietti et al., 2021     | Published   |
-| 12 | DALEC.C4.D1.F2.            | DALEC_EVERGREEN_no_lit_root, S1            | Fire model updated from F1 to F2| Famiglietti et al., 2021 | Published   |
-| 13 | DALEC.C5.D1.F2.P1.         | DALEC_CDEA_no_lit_root, S4              | Fire model updated from F1 to F2| Famiglietti et al., 2021 | Published   |
+| 12 | DALEC.C4.D1.F2.            | DALEC_EVERGREEN_no_lit_root, S1          | Fire model updated from F1 to F2| Famiglietti et al., 2021     | Published   |
+| 13 | DALEC.C5.D1.F2.P1.         | DALEC_CDEA_no_lit_root, S4               | Fire model updated from F1 to F2| Famiglietti et al., 2021     | Published   |
 | 14 | DALEC.C3.M1.               | DALEC_CROP          | Developmental arable crop model                      | Sus et al., 2010             | Published   |
 | 15 | DALEC.A1.C3.H2.M1.         | DALEC_CROP_BUCKET   | Developmental arable crop model                      | Sus et al., 2010             | Published   |
 | 16 | DALEC.M2.                  | DALEC_GRASS         | Managed grassland                                    | Myrgiotis et al., 2020       | Published   |
 | 17 | DALEC.A1.H2.M2.            | DALEC_GRASS_BUCKET  | Managed grassland                                    | Myrgiotis et al., 2020       | Unpublished |
-
-| 18 | DALEC.A1.C1.D2.F2.H2.P2.      | DALEC_CDEA_ACM2_BUCKET_wMRT              | Fire model updated from F1 to F2|                              | Unpublished |
-
+| 18 | DALEC.A1.C1.D2.F2.H2.P2.   | DALEC_CDEA_ACM2_BUCKET_wMRT              |                                 |                              | Unpublished |
+| 19 | DALEC.A1.C2.D2.F2.H2.P2.R3.| DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT |                              |                              | Unpublished |
 
 #### TABLE 2. Assimilation due to photosynthic activity sub-models
 
@@ -120,6 +118,7 @@ M = Managed Grassland / arable crops (Table 10)
 | R0         | Autotrophic respiration estimated as a parameterisable fixed fraction of photosynthesis, while heterotrophic respiration follows 1st order kinetics with exponential temperature modification | Published (Bloom & Williams et al., 2015)  |
 | R1         | Maintenance respiration estimated as a parameterisable fixed fraction of photosynthesis, growth respiration is a hardcoded fraction of NPP. Heterotrophic respiration follows 1st order kinetics with exponential temperature modification | Published (Bloom & Williams et al., 2015)  |
 | R2         | Leaf maintenance respiration estimated by the Reich et al., 2008 model. Wood and fine root maintenance respiration estimated as a parameterisable fixed fraction of photosynthesis, growth respiration is a hardcoded fraction of NPP. Heterotrophic respiration follows 1st order kinetics with exponential temperature modification | Published (Famiglietti et al., 2021)  |
+| R3         | Leaf maintenance respiration estimated by the Heskel et al., 2016 model. Wood and fine root maintenance respiration estimated as a parameterisable fixed fraction of photosynthesis, growth respiration is a hardcoded fraction of NPP. Heterotrophic respiration follows 1st order kinetics with exponential temperature modification | Unpublished |
 
 #### TABLE 10. Managed agricultural ecosystem sub-models
 
