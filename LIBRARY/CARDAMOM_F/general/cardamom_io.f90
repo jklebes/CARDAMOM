@@ -68,131 +68,131 @@ module cardamom_io
         DATAin%nopars = 20
         DATAin%nofluxes = 4
     else if (DATAin%ID == 1) then
-        ! ID = 1 - DALEC_EVERGREEN
+        ! ID = 1 - DALEC.D1.F2.
         DATAin%nopools = 5
         DATAin%nopars = 22
         DATAin%nofluxes = 35
     else if (DATAin%ID == 2) then
-        ! ID = 2 - DALEC_CDEA_LU_FIRES
+        ! ID = 2 - DALEC.C1.D1.F2.P1.
         DATAin%nopools = 6
         DATAin%nopars = 28
         DATAin%nofluxes = 39
     else if (DATAin%ID == 3 ) then
-        ! ID = 3 - DALEC_CDEA_ACM2
+        ! ID = 3 - DALEC.A1.C1.D2.F2.H1.P1.
         DATAin%nopools = 6
         DATAin%nopars = 28
         DATAin%nofluxes = 39
     else if (DATAin%ID == 4) then
-        ! ID = 4 - DALEC_CDEA_ACM2_BUCKET
+        ! ID = 4 - DALEC.A1.C1.D2.F2.H2.P1.
         DATAin%nopools = 7
         DATAin%nopars = 32
         DATAin%nofluxes = 45
     else if (DATAin%ID == 5) then
-        ! ID = 5 - DALEC_CDEA_ACM2_BUCKET_RmRg
+        ! ID = 5 - DALEC.A1.C1.D2.F2.H2.P1.R1.
         DATAin%nopools = 7
         DATAin%nopars = 32
         DATAin%nofluxes = 40
     else if (DATAin%ID == 6) then
-        ! ID = 6 - DALEC_CDEA_ACM2_BUCKET_RmRg_CWD
+        ! ID = 6 - DALEC.A1.C2.D2.F2.H2.P1.R1.
         DATAin%nopools = 8
         DATAin%nopars = 35
         DATAin%nofluxes = 45
     else if (DATAin%ID == 7) then
-        ! ID = 7 - DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT
+        ! ID = 7 - DALEC.A1.C2.D2.F2.H2.P2.R1.
         DATAin%nopools = 8
         DATAin%nopars = 36
         DATAin%nofluxes = 45
     else if (DATAin%ID == 8) then
-        ! ID = 8 - DALEC_GSI_DFOL_CWD_FR
+        ! ID = 8 - DALEC.A1.C2.D2.F2.H1.P3.R1.
         DATAin%nopools = 7
         DATAin%nopars = 43
         DATAin%nofluxes = 25
     else if (DATAin%ID == 9) then
-        ! ID = 9 - DALEC_GSI_BUCKET
+        ! ID = 9 - DALEC.A1.C2.D2.F2.H2.P3.R1.
         DATAin%nopools = 8
         DATAin%nopars = 46
         DATAin%nofluxes = 25
     else if (DATAin%ID == 10) then
-        ! ID = 10 - DALEC
+        ! ID = 10 - DALEC.A1.C2.D2.F2.H1.P4.R2.
         DATAin%nopools = 7
         DATAin%nopars = 48
         DATAin%nofluxes = 25
     else if (DATAin%ID == 11) then
-        ! ID = 11 - DALEC_BUCKET
+        ! ID = 11 - DALEC.A1.C2.D2.F2.H2.P4.R2.
         DATAin%nopools = 8
         DATAin%nopars = 49
         DATAin%nofluxes = 25
         stop
     else if (DATAin%ID == 12) then
-        ! ID = 12 - DALEC_EVERGREEN_no_lit_root
+        ! ID = 12 - DALEC.C4.D1.F2.
         DATAin%nopools = 3
         DATAin%nopars = 15
         DATAin%nofluxes = 28
     else if (DATAin%ID == 13) then
-        ! ID = 13 - DALEC_CDEA_no_lit_root
+        ! ID = 13 - DALEC.C5.D1.F2.P1.
         DATAin%nopools = 4
         DATAin%nopars = 21
         DATAin%nofluxes = 32
     else if (DATAin%ID == 14) then
-        ! ID = 14 - DALEC_CROP
+        ! ID = 14 - DALEC.C3.M1.
         DATAin%nopools = 6
         DATAin%nopars = 22
         DATAin%nofluxes = 16
     else if (DATAin%ID == 15) then
-        ! ID = 15 - DALEC_CROP_BUCKET
+        ! ID = 15 - DALEC.A1.C3.H2.M1.
         DATAin%nopools = 9
         DATAin%nopars = 38
         DATAin%nofluxes = 21
     else if (DATAin%ID == 16) then
-        ! ID = 16 - DALEC_GRASS
-        write(*,*) "Oh dear... DALEC_GRASS ID not valid = ",DATAin%ID
+        ! ID = 16 - DALEC.M2.
+        write(*,*) "Oh dear... DALEC.M2. ID not valid = ",DATAin%ID
         stop
     else if (DATAin%ID == 17) then
-        ! ID = 17 - DALEC_GRASS_BUCKET
-        write(*,*) "Oh dear... DALEC_GRASS_BUCKET ID not valid = ",DATAin%ID
+        ! ID = 17 - DALEC.A1.H2.M2.
+        write(*,*) "Oh dear... DALEC.A1.H2.M2. ID not valid = ",DATAin%ID
         stop
     else if (DATAin%ID == 18) then
-        ! ID = 18 - DALEC_CDEA_ACM2_BUCKET_wMRT
+        ! ID = 18 - DALEC.A1.C1.D2.F2.H2.P2.
         DATAin%nopools = 7
         DATAin%nopars = 33
         DATAin%nofluxes = 40
     else if (DATAin%ID == 19) then
-        ! ID = 19 - DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT
+        ! ID = 19 - DALEC.A1.C2.D2.F2.H2.P2.R3.
         DATAin%nopools = 8
         DATAin%nopars = 38
         DATAin%nofluxes = 45
     else if (DATAin%ID == 20) then
-        ! ID = 20 - DALEC_CDEA_ACM_FARQUHAR_BUCKET
+        ! ID = 20 - DALEC.A2.C1.D2.F2.H2.P1.
         DATAin%nopools = 7
         DATAin%nopars = 32
         DATAin%nofluxes = 45
     else if (DATAin%ID == 21) then
-        ! ID = 21 - DALEC_CDEA_ACM2_BUCKET_LAB
+        ! ID = 21 - DALEC.A1.C1.D2.F2.H2.P5.
         DATAin%nopools = 7
         DATAin%nopars = 33
         DATAin%nofluxes = 40
     else if (DATAin%ID == 22) then
-        ! ID = 22 - DALEC_CDEA_ACM2_BUCKET_LAB_wMRT
+        ! ID = 22 - DALEC.A1.C1.D2.F2.H2.P6.
         DATAin%nopools = 7
         DATAin%nopars = 34
         DATAin%nofluxes = 40
     else if (DATAin%ID == 23) then
-        ! ID = 23 - DALEC_G5
+        ! ID = 23 - DALEC.A1.C2.D2.F2.H2.P7.R2.
         DATAin%nopools = 8
         DATAin%nopars = 48
         DATAin%nofluxes = 45
     else if (DATAin%ID == 24) then
-        ! ID = 24 - DALEC_G6
+        ! ID = 24 - DALEC.A1.C2.D2.F2.H2.P8.R2.
         DATAin%nopools = 8
         DATAin%nopars = 51
         DATAin%nofluxes = 45
     else if (DATAin%ID == 25) then
-        ! ID = 25 - DALEC_G7
+        ! ID = 25 - DALEC.A1.C2.D2.F2.H2.P9.R2.
         DATAin%nopools = 8
         DATAin%nopars = 49
         DATAin%nofluxes = 45
     else if (DATAin%ID == 26) then
-        ! ID = 26 - DALEC_BUCKET_CanAGE
+        ! ID = 26 - DALEC.A1.C2.D2.F2.H2.P10.R2.
         DATAin%nopools = 8
         DATAin%nopars = 48
         DATAin%nofluxes = 25
