@@ -22,7 +22,7 @@ M = Managed Grassland / arable crops (Table 10)
 |  3 | DALEC.A1.C1.D2.F2.H1.P1.    | DALEC_CDEA_ACM2, C6, M2                     | Fire model updated from F1 to F2| Smallman et al., 2021     | Published   |
 |  4 | DALEC.A1.C1.D2.F2.H2.P1.    | DALEC_CDEA_ACM2_BUCKET, C7, M3              | Fire model updated from F1 to F2| Smallman et al., 2021     | Published   |
 |  5 | DALEC.A1.C1.D2.F2.H2.P1.R1. | DALEC_CDEA_ACM2_BUCKET_RmRg, C10, M4        | Fire model updated from F1 to F2| Smallman et al., 2021     | Published   |
-|  6 | DALEC.A1.C2.D2.F2.H2.P1.R1  | DALEC_CDEA_ACM2_BUCKET_RmRg_CWD, C11, M5    | Fire model updated from F1 to F2| Smallman et al., 2021     | Published   |
+|  6 | DALEC.A1.C2.D2.F2.H2.P1.R1. | DALEC_CDEA_ACM2_BUCKET_RmRg_CWD, C11, M5    | Fire model updated from F1 to F2| Smallman et al., 2021     | Published   |
 |  7 | DALEC.A1.C2.D2.F2.H2.P2.R1. | DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT, C12   | Fire model updated from F1 to F2| Smallman et al., 2021     | Published   |
 |  8 | DALEC.A1.C2.D2.F2.H1.P3.R1. | DALEC_GSI_DFOL_CWD_FR, G1                   | Fire model updated from F1 to F2| Smallman et al., 2017     | Published   |
 |  9 | DALEC.A1.C2.D2.F2.H2.P3.R1. | DALEC_GSI_BUCKET, G2                        | Fire model updated from F1 to F2| Smallman et al., 2017     | Published   |
