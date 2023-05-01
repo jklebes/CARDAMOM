@@ -1,8 +1,8 @@
 ## CARDAMOM Coupled Models
 
-This files provides information on the currently coupled models within CARDAMOM. Table 1 provides a summary of the model name, alternate names used in publications and / or source code, publication containing the first or most complete description and status (e.g. published, under development, abandoned). The model name is the combination of the nominal model family (e.g. DALEC) and classifiers indicating the specific sub-models used. If an available classifier is not used in a given models name, please assume that option "0" is implicit. Sub-model specific information in summaries in subsequent tables. Both the model code name and a short code name contructed from the nominal model family and the reference code, e.g. "DALEC.D1.F2." == "DALEC.1.".
+This files provides information on the currently coupled models within CARDAMOM. Table 1 provides a summary of the model name, alternate names used in publications and / or source code, publication containing the first or most complete description and status (e.g. published, under development, abandoned). The model name is the combination of the nominal model family (e.g. DALEC) and classifiers indicating the specific sub-models used. If an available classifier is not used in a given models name, please assume that option "0" is implicit. Sub-model specific information in summaries in subsequent tables. Both the model code name and a short code name constructed from the nominal model family and the reference code, e.g. "DALEC.D1.F2." == "DALEC.1.".
 
-The current classifiers used are: 
+The current classifiers used are:
 A = Assimilation (Table 2)
 C = C-cycle (Table 3)
 D = Manual disturbance (Table 4)
@@ -17,7 +17,7 @@ M = Managed Grassland / arable crops (Table 10)
 
 |Ref | Model (Code) Name           | Alternate Names     | Short Description                                   | Details (POC)                 | Status      |
 |----|-----------------------------|---------------------|-----------------------------------------------------|-------------------------------|-------------|
-|  1 | DALEC.D1.F2.                | DALEC_EVERGREEN, E1 | Fire model updated from F1 to F2                    | Williams et al., 2005         | Published   | 
+|  1 | DALEC.D1.F2.                | DALEC_EVERGREEN, E1 | Fire model updated from F1 to F2                    | Williams et al., 2005         | Published   |
 |  2 | DALEC.C1.D1.F2.P1.          | DALEC_CDEA_LU_FIRES, C1, M1                 | Fire model updated from F1 to F2| Bloom & Williams et al., 2015| Published   |
 |  3 | DALEC.A1.C1.D2.F2.H1.P1.    | DALEC_CDEA_ACM2, C6, M2                     | Fire model updated from F1 to F2| Smallman et al., 2021     | Published   |
 |  4 | DALEC.A1.C1.D2.F2.H2.P1.    | DALEC_CDEA_ACM2_BUCKET, C7, M3              | Fire model updated from F1 to F2| Smallman et al., 2021     | Published   |
@@ -130,4 +130,3 @@ M = Managed Grassland / arable crops (Table 10)
 | M0         | No managed agricultural ecosystem sub-model                                | - |
 | M1         | Arable crop model based on dynamic allocation and mortality as a function of crop developmental stage | Published (Sus et al., 2010)  |
 | M2         | Managed grassland sub-model for grazed and cut grasslands | Published (Myrgiotis et al., 2020)  |
-

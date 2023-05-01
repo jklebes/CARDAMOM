@@ -136,12 +136,12 @@ regrid_gdal_func<-function(tmp_dir, var1_in, lat_in, long_in, cardamom_ext, land
             # Write out file to temporary raster file
             writeRaster(var1, outfile_tmp, format = "GTiff", overwrite=TRUE)
             # Carry out aggregation using gdal libraries
-#            gdal_translate(src_dataset = outfile_tmp, dst_dataset = outfile_agg,
-#                           a_srs = "EPSG:4326", of = "GTiff", tr = res(cardamom_ext),
-#                           r = "average")
-            gdalwarp(srcfile = outfile_tmp, dstfile = outfile_agg,
-                     a_srs = "EPSG:4326", of = "GTiff", tr = res(cardamom_ext),
-                     r = "average")
+            gdal_translate(src_dataset = outfile_tmp, dst_dataset = outfile_agg,
+                           a_srs = "EPSG:4326", of = "GTiff", tr = res(cardamom_ext),
+                           r = "average")
+#            gdalwarp(srcfile = outfile_tmp, dstfile = outfile_agg,
+#                     a_srs = "EPSG:4326", of = "GTiff", tr = res(cardamom_ext),
+#                     r = "average")
             # Load back aggregated variable into memory
             var1 = raster(outfile_agg)
             # Tidy away the intermediate files
