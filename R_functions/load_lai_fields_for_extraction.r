@@ -15,8 +15,10 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
       # check which file prefix we are using today
       # list all available files which we will then search
       avail_files = list.files(path_to_lai,full.names=TRUE)
-      prefix = "MCD15A2H_LAI_(.)*" # (.)* wildcard characters for unix standard MCD15A2H_LAI_*
-      sd_prefix = "MCD15A2H_LAI_SD_(.)*" # (.)* wildcard characters for unix standard MCD15A2H_LAI_*
+      #prefix = "MCD15A2H_LAI_(.)*" # (.)* wildcard characters for unix standard MCD15A2H_LAI_*
+      #sd_prefix = "MCD15A2H_LAI_SD_(.)*" # (.)* wildcard characters for unix standard MCD15A2H_LAI_SD_*
+      prefix = "MCD15A2H_LAI_"
+      sd_prefix = "MCD15A2H_LAI_SD_"
 
       # timing information on the number of day in a month
       month_days = rep(31,length.out=12)
@@ -42,10 +44,10 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                     # then check whether this pattern is found in the available files
                     this_year = grepl(input_file_1, avail_files) ; this_year = which(this_year == TRUE)
                     this_year_sd = grepl(input_file_2, avail_files) ; this_year_sd = which(this_year_sd == TRUE)
-                    # Ensure we have the same number of observation and standard deviation files
-                    if (length(this_year) != this_year_sd) {stop("The number of LAI and LAI_SD files do not match...")}
                     # If we have at least one timestep for this year then we have some information otherwise it is missing!
                     if (length(this_year) > 0) {
+                        # Ensure we have the same number of observation and standard deviation files
+                        if (length(this_year) != length(this_year_sd)) {stop("The number of LAI and LAI_SD files do not match...")}
                         keepers = keepers+1 ; nsteps = max(nsteps,length(this_year))
                     } else {
                         missing_years = append(missing_years,years_to_load[yrr])
@@ -60,13 +62,13 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
            input_file_1=paste(prefix,years_to_load[yr],sep="")
            input_file_2=paste(sd_prefix,years_to_load[yr],sep="")
 
-           # then check whether this pattern is found in the available files
+           # Then check whether this pattern is found in the available files
            this_year = avail_files[grepl(input_file_1, avail_files)]
            this_year_sd = avail_files[grepl(input_file_2, avail_files)]
            if (length(this_year) > 0) {
 
                # The files should be in order due to the YYYYDOY format used
-               this_year = this_year[order(tmp)]
+               this_year = this_year[order(this_year)]
 
                # Loop through the available files for the current year
                for (t in seq(1, length(this_year))) {

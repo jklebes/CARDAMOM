@@ -53,7 +53,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       gs_demand_supply = output[,,7], gs_total_canopy = output[,,8],
                       APAR_MJm2day = output[,,9], gb_total_canopy = output[,,10],
                       CiCa = output[,,11])
-  } else if (model_name == "DALEC.C3.M1.") {
+  } else if (model_name == "DALEC.C3.M1.#") {
 # THIS CODE AND THE R INTERFACE NEED UPDATING TO MAKE OPTIMAL USE OF THE VARIABLES HERE
       output_dim=28
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
@@ -113,7 +113,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
       # Final tidy
       rm(output,MTT_gCm2,SS_gCm2)
-  } else if (model_name == "DALEC.A1.C3.H2.M1.") {
+  } else if (model_name == "DALEC.A1.C3.H2.M1.#") {
 # THIS CODE AND THE R INTERFACE NEED UPDATING TO MAKE OPTIMAL USE OF THE VARIABLES HERE
       output_dim=28
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
@@ -173,7 +173,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
       # Final tidy
       rm(output,MTT_gCm2,SS_gCm2)
-  } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P4.R2.") {
+  } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P4.R2.#") {
     output_dim = 62 ; MTT_dim = 7 ; SS_dim = 7
     # Load the required dalec shared object
     dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
@@ -307,7 +307,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
     states_all$NPP_wood_fraction = NPP_fraction[,3]
     # Tidy up variables
     rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P7.R2.") {
+  } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P7.R2.#") {
       output_dim = 59 ; MTT_dim = 7 ; SS_dim = 7
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec23",output_dim=as.integer(output_dim)
@@ -428,7 +428,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$NPP_wood_fraction = NPP_fraction[,3]
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P8.R2.") {
+  } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P8.R2.#") {
       output_dim = 60 ; MTT_dim = 7 ; SS_dim = 7
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec24",output_dim=as.integer(output_dim)
@@ -550,7 +550,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$NPP_wood_fraction = NPP_fraction[,3]
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P9.R2.") {
+  } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P9.R2.#") {
       output_dim = 60 ; MTT_dim = 7 ; SS_dim = 7
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec25",output_dim=as.integer(output_dim)
@@ -672,7 +672,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$NPP_wood_fraction = NPP_fraction[,3]
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P10.R2.") {
+  } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P10.R2.#") {
       output_dim=28
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       crop_file_location=paste(PROJECT$exepath,"winter_wheat_development.csv", sep="")
@@ -723,7 +723,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
       # Final tidy
       rm(output,MTT_gCm2,SS_gCm2)
-  } else if (model_name == "DALEC.A1.C2.D2.F2.H1.P4.R2.") {
+  } else if (model_name == "DALEC.A1.C2.D2.F2.H1.P4.R2.#") {
     output_dim = 59 ; MTT_dim = 7 ; SS_dim = 7
     # Load the required dalec shared object
     dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
@@ -851,7 +851,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
     states_all$NPP_wood_fraction = NPP_fraction[,3]
     # Tidy up variables
     rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P3.R1.") {
+  } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P3.R1.#") {
       output_dim = 62 ; MTT_dim = 7 ; SS_dim = 7
       # Load the required dalec shared object
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
@@ -978,7 +978,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$NPP_wood_fraction = NPP_fraction[,3]
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.C1.D1.F2.P1.") {
+  } else if (model_name == "DALEC.C1.D1.F2.P1.#") {
       output_dim = 44 ; MTT_dim = 6 ; SS_dim = 6
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec2",output_dim=as.integer(output_dim)
@@ -1294,7 +1294,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$NPP_wood_fraction = NPP_fraction[,3]
       # Final tidy
       rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.A1.C1.D2.F2.H1.P1.") {
+  } else if (model_name == "DALEC.A1.C1.D2.F2.H1.P1.#") {
       output_dim = 48 ; MTT_dim = 6 ; SS_dim = 6
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec3",output_dim=as.integer(output_dim)
@@ -1402,7 +1402,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$NPP_wood_fraction = NPP_fraction[,3]
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.A1.C1.D2.F2.H2.P1.") {
+  } else if (model_name == "DALEC.A1.C1.D2.F2.H2.P1.#") {
       output_dim = 58 ; MTT_dim = 6 ; SS_dim = 6
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec4",output_dim=as.integer(output_dim)
@@ -1521,7 +1521,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$NPP_wood_fraction = NPP_fraction[,3]
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.A2.C1.D2.F2.H2.P1.") {
+  } else if (model_name == "DALEC.A2.C1.D2.F2.H2.P1.#") {
       output_dim = 58 ; MTT_dim = 6 ; SS_dim = 6
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec20",output_dim=as.integer(output_dim)
@@ -1640,7 +1640,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$NPP_wood_fraction = NPP_fraction[,3]
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.A1.C1.D2.F2.H2.P2.") {
+  } else if (model_name == "DALEC.A1.C1.D2.F2.H2.P2.#") {
       output_dim = 51 ; MTT_dim = 6 ; SS_dim = 6
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec18",output_dim=as.integer(output_dim)
@@ -1752,7 +1752,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$NPP_wood_fraction = NPP_fraction[,3]
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.A1.C1.D2.F2.H2.P5.") {
+  } else if (model_name == "DALEC.A1.C1.D2.F2.H2.P5.#") {
       output_dim = 52 ; MTT_dim = 6 ; SS_dim = 6
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec21",output_dim=as.integer(output_dim)
@@ -1864,7 +1864,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$NPP_wood_fraction = NPP_fraction[,3]
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.A1.C1.D2.F2.H2.P6.") {
+  } else if (model_name == "DALEC.A1.C1.D2.F2.H2.P6.#") {
       output_dim = 51 ; MTT_dim = 6 ; SS_dim = 6
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec22",output_dim=as.integer(output_dim)
@@ -1976,7 +1976,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$NPP_wood_fraction = NPP_fraction[,3]
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.A1.C1.D2.F2.H2.P1.R1.") {
+  } else if (model_name == "DALEC.A1.C1.D2.F2.H2.P1.R1.#") {
       output_dim = 51 ; MTT_dim = 6 ; SS_dim = 6
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec5",output_dim=as.integer(output_dim)
@@ -2088,7 +2088,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$NPP_wood_fraction = NPP_fraction[,3]
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P1.R1.") {
+  } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P1.R1.#") {
       output_dim = 57 ; MTT_dim = 7 ; SS_dim = 7
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec6",output_dim=as.integer(output_dim)
@@ -2207,7 +2207,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$NPP_wood_fraction = NPP_fraction[,3]
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P2.R1.") {
+  } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P2.R1.#") {
       output_dim = 57 ; MTT_dim = 7 ; SS_dim = 7
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec7",output_dim=as.integer(output_dim)
@@ -2326,7 +2326,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$NPP_wood_fraction = NPP_fraction[,3]
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P2.R3.") {
+  } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P2.R3.#") {
       output_dim = 57 ; MTT_dim = 7 ; SS_dim = 7
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec19",output_dim=as.integer(output_dim)
@@ -2445,7 +2445,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$NPP_wood_fraction = NPP_fraction[,3]
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.C5.D1.F2.P1.") {
+  } else if (model_name == "DALEC.C5.D1.F2.P1.#") {
     output_dim = 22 ; MTT_dim = 4 ; SS_dim = 4
     dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
     tmp=.Fortran( "rdalec13",output_dim=as.integer(output_dim)
@@ -2521,7 +2521,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
     states_all$NPP_roots_wood_fraction = NPP_fraction[,2]
     # Tidy up variables
     rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.D1.F2.") {
+  } else if (model_name == "DALEC.D1.F2.#") {
       output_dim = 36 ; MTT_dim = 5 ; SS_dim = 5
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec1",output_dim=as.integer(output_dim)
@@ -2611,7 +2611,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$NPP_wood_fraction = NPP_fraction[,3]
       # Final tidy
       rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.C4.D1.F2.") {
+  } else if (model_name == "DALEC.C4.D1.F2.#") {
     output_dim = 23 ; MTT_dim = 3 ; SS_dim = 3
     dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
     tmp=.Fortran( "rdalec12",output_dim=as.integer(output_dim)
@@ -2685,7 +2685,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
     states_all$NPP_roots_wood_fraction = NPP_fraction[,2]
     # Tidy up variables
     rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.A1.C2.D2.F2.H1.P3.R1.") {
+  } else if (model_name == "DALEC.A1.C2.D2.F2.H1.P3.R1.#") {
     output_dim = 59 ; MTT_dim = 7 ; SS_dim = 7
     # Load the required dalec shared object
     dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))

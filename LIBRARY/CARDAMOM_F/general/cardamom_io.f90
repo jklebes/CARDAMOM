@@ -145,11 +145,11 @@ module cardamom_io
         DATAin%nofluxes = 21
     else if (DATAin%ID == 16) then
         ! ID = 16 - DALEC.M2.
-        write(*,*) "Oh dear... DALEC.M2. ID not valid = ",DATAin%ID
+        write(*,*) "Oh dear... DALEC.M2.# ID not valid = ",DATAin%ID
         stop
     else if (DATAin%ID == 17) then
         ! ID = 17 - DALEC.A1.H2.M2.
-        write(*,*) "Oh dear... DALEC.A1.H2.M2. ID not valid = ",DATAin%ID
+        write(*,*) "Oh dear... DALEC.A1.H2.M2.# ID not valid = ",DATAin%ID
         stop
     else if (DATAin%ID == 18) then
         ! ID = 18 - DALEC.A1.C1.D2.F2.H2.P2.

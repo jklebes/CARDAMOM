@@ -24,57 +24,57 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   # set model ID
   if (modelname == "ACM") {
     modelid = 0
-  } else if (modelname == "DALEC.D1.F2.") {
+  } else if (modelname == "DALEC.D1.F2.#") {
     modelid = 1
-  } else if (modelname == "DALEC.C1.D1.F2.P1."){
+  } else if (modelname == "DALEC.C1.D1.F2.P1.#"){
     modelid = 2
-  } else if (modelname == "DALEC.A1.C1.D2.F2.H1.P1."){
+  } else if (modelname == "DALEC.A1.C1.D2.F2.H1.P1.#"){
     modelid = 3
-  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P1."){
+  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P1.#"){
     modelid = 4
-  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P1.R1.") {
+  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P1.R1.#") {
     modelid = 5
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P1.R1.") {
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P1.R1.#") {
     modelid = 6
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P2.R1.") {
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P2.R1.#") {
     modelid = 7
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H1.P3.R1.") {
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H1.P3.R1.#") {
     modelid = 8
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P3.R1.") {
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P3.R1.#") {
     modelid = 9
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H1.P4.R2.") {
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H1.P4.R2.#") {
     modelid = 10
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P4.R2.") {
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P4.R2.#") {
     modelid = 11
-  } else if (modelname == "DALEC.C4.D1.F2.") {
+  } else if (modelname == "DALEC.C4.D1.F2.#") {
     modelid = 12
-  } else if (modelname == "DALEC.C5.D1.F2.P1.") {
+  } else if (modelname == "DALEC.C5.D1.F2.P1.#") {
     modelid = 13
-  } else if (modelname == "DALEC.C3.M1.") {
+  } else if (modelname == "DALEC.C3.M1.#") {
     modelid = 14
-  } else if (modelname == "DALEC.A1.C3.H2.M1.") {
+  } else if (modelname == "DALEC.A1.C3.H2.M1.#") {
     modelid = 15
-  } else if (modelname == "DALEC.M2.") {
+  } else if (modelname == "DALEC.M2.#") {
     modelid = 16
-  } else if (modelname == "DALEC.A1.H2.M2."){
+  } else if (modelname == "DALEC.A1.H2.M2.#"){
     modelid = 17
-  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P2."){
+  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P2.#"){
     modelid = 18
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P2.R3."){
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P2.R3.#"){
     modelid = 19
-  } else if (modelname == "DALEC.A2.C1.D2.F2.H2.P1."){
+  } else if (modelname == "DALEC.A2.C1.D2.F2.H2.P1.#"){
     modelid = 20
-  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P5.") {
+  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P5.#") {
     modelid = 21
-  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P6.") {
+  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P6.#") {
     modelid = 22
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P7.R2.") {
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P7.R2.#") {
     modelid = 23
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P8.R2.") {
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P8.R2.#") {
     modelid = 24
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P9.R2.") {
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P9.R2.#") {
     modelid = 25
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P10.R2.") {
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P10.R2.#") {
     modelid = 26
   } else if (modelname == "DALEC_1005") {
     modelid = 27
