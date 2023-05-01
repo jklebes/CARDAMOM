@@ -229,11 +229,9 @@ module cardamom_io
     else if (DATAin%ID == 39) then
         ! ID = 39 -
     else
-       write(*,*) "Oh dear... model ID cannot be found"
-       stop
-    endif
         write(*,*) "Oh dear... model ID not valid = ",DATAin%ID
         stop
+    endif
 
   end subroutine cardamom_model_library
   !
