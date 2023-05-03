@@ -516,9 +516,9 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         input_file = input_file[grepl("saatchi_wood_MgCha",input_file) == TRUE]
 
         # Determine the number of years found
-        years_with_obs = gsub("saatchi_wood_MgCha","",input_file)
+        years_with_obs = gsub("saatchi_wood_MgCha_","",input_file)
         years_with_obs = as.numeric(gsub("\\.tif$","",years_with_obs))
-
+print(years_with_obs)
         # Loop through each year and extract if appropriate
         done_lat = FALSE
         for (t in seq(1, length(years_with_obs))) {
