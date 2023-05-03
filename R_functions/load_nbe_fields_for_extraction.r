@@ -346,18 +346,19 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
       # Open both files
       data_est = nc_open(est_file)
       data_unc = nc_open(unc_file)
-      # Extracte latitude and longitude
-      lat_in = ncvar_get(data_est, "latitude")
-      long_in = ncvar_get(data_est, "longitude")
-      # Turn lat_in / long_in from vectors to arrays
-      lat_in = t(array(lat_in, dim=c(dim(data_est)[2],dim(data_est)[1])))
-      long_in = array(long_in, dim=c(dim(data_est)[1],dim(data_est)[2]))
-
       # Extract datetime information
       time_in = ncvar_get(data_est, "start_date")
       # Extract estimate and uncertainty information
       nbe_in = ncvar_get(data_est, "land") # gC/m2/year
       nbe_unc_in = ncvar_get(data_unc, "land") # gC/m2/year
+
+      # Extract latitude and longitude
+      lat_in = ncvar_get(data_est, "latitude")
+      long_in = ncvar_get(data_est, "longitude")
+      # Turn lat_in / long_in from vectors to arrays
+      lat_in = t(array(lat_in, dim=c(dim(nbe_in)[2],dim(nbe_in)[1])))
+      long_in = array(long_in, dim=c(dim(nbe_in)[1],dim(nbe_in)[2]))
+
       # Close both files
       nc_close(data_est) ; nc_close(data_unc)
 
@@ -386,21 +387,29 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
            } # first year?
 
            # Check where the start point and end points are for the desired year
-           year_start = which(time_in[1,] == years_to_load[yrr] & time_in[2,] == 1)
-           year_end = which(time_in[1,] == years_to_load[yrr] & time_in[2,] == 12)
-           # Ensure these are the first and final values to cover all time steps
-           year_start = year_start[1] ; year_end = year_end[length(year_end)]
+           year_start = which(as.numeric(time_in[1,]) == years_to_load[yr] & as.numeric(time_in[2,]) == 1)
+           year_end = which(as.numeric(time_in[1,]) == years_to_load[yr] & as.numeric(time_in[2,]) == 12)
 
            # Assuming we have right year, begin running
            if (length(year_start) > 0) {
 
+               # Ensure these are the first and final values to cover all time steps
+               year_start = year_start[1] ; year_end = year_end[length(year_end)]
+
                # Now loop through the available time steps
                for (t in seq(year_start, year_end)) {
 
+                    # Determine the day of year variable for each time step
+                    month = time_in[2,t] ; doy_in = time_in[3,t]
+                    # January is correct already, so only adjust if month is >= February
+                    if (month > 1) {
+                        doy_in = doy_in + sum(month_days[1:(month-1)])
+                    }
+
                     # read the NBE observations
-                    var1 = data_est[,,t] # Land based net biome exchange of CO2 (gC/m2/yr)
+                    var1 = nbe_in[,,t] # Land based net biome exchange of CO2 (gC/m2/yr)
                     # check for error variable
-                    var2 = data_unc[,,t] # NBE error estimate(gC/m2/yr)
+                    var2 = nbe_unc_in[,,t] # NBE error estimate(gC/m2/yr)
                     # Convert units into gC/m2/day
                     var1 = var1 / 365.25 ; var2 = var2 / 365.25
 
