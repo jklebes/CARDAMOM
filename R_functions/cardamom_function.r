@@ -8,7 +8,7 @@
 # Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
 cardamom <-function (projname,model,method,stage) {
-#stage = 2 ; repair = 1 ; use_parallel = TRUE
+#stage = 3 ; repair = 1 ; use_parallel = TRUE
   ## load needed functions into R environment
   paths = load_paths()
 
@@ -18,6 +18,7 @@ cardamom <-function (projname,model,method,stage) {
   if (exists("request_compile_local") == FALSE) {request_compile_local <<- FALSE}
   if (exists("path_to_co2") == FALSE) {path_to_co2 <<- "./R_functions/"}
   if (exists("request_extended_mcmc") == FALSE) {request_extended_mcmc <<- FALSE}
+  if (exists("request_cost_function_scaling") == FALSE) {request_cost_function_scaling <<- 0} # set as default approach
 
   # Use this function to ensure that if the short model name has been provided that we translate
   # this into the full internal code version
@@ -48,7 +49,11 @@ cardamom <-function (projname,model,method,stage) {
   if (file.exists(PROJECTfile) == FALSE | stage == -1){
 
       # load data for passing to list
-      PROJECT=list(name=projname,type=PROJECTtype,source=language,paths=paths)
+      PROJECT=list(name=projname,
+                   type=PROJECTtype,
+                   source=language,
+                   paths=paths,
+                   request_cost_function_scaling = request_cost_function_scaling)
 
       # create sites names file name
       if (cardamom_type == "site") {

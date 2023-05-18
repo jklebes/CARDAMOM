@@ -89,27 +89,27 @@ mid_quant = 4 ; low_quant = 2 ; high_quant = 6
 wanted_quant = c(low_quant,3,mid_quant,5,high_quant)
 
 # Set output directory
-#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/InternationalScience/figures_africa_one_vs_all/"
-out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures/"
+out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/InternationalScience/figures_africa_one_vs_all/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures/"
 outsuffix = "_original_vs_alternate"
 
 # Assign the baseline analysis - the original
-# Original AGB assimilated (2007)
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_agb/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_2_2.5deg_C7_GCP_AGB/infofile.RData")
+# Original AGB assimilated (2003)
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/ODA_extension_Africa_one_agb/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB/infofile.RData")
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
 orig_PROJECT = PROJECT ; orig_grid_output = grid_output
 #orig_name = "Baseline"
-#orig_name = "Single" # used in labelling figures
-orig_name = "-GPP" # used in labelling figures
+orig_name = "Single" # used in labelling figures
+#orig_name = "-GPP" # used in labelling figures
 # Assign the alternate analysis - the new data constraint
-# Repeat AGB assimilated (2007-2010)
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_agb/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_2_2.5deg_C7_GCP_AGB_GPP/infofile.RData")
+# Repeat AGB assimilated (2003-2019)
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/ODA_extension_Africa_agb/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB_GPP/infofile.RData")
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
 alt_PROJECT = PROJECT ; alt_grid_output = grid_output 
-#alt_name = "Repeat" # used in labelling figures
-alt_name = "+GPP" # used in labelling figures
+alt_name = "Repeat" # used in labelling figures
+#alt_name = "+GPP" # used in labelling figures
 
 # Tidy
 rm(PROJECT,grid_output)
@@ -142,7 +142,7 @@ landmask = shapefile("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/R_functions
 landmask = spTransform(landmask,crs(cardamom_ext))
 # subset by continent (could also do by country)
 #landmask = subset(landmask, CONTINENT == "South America") # Change continent to target area or comment out if spanning zones
-#landmask = subset(landmask, CONTINENT == "Africa") # Change continent to target area or comment out if spanning zones
+landmask = subset(landmask, CONTINENT == "Africa") # Change continent to target area or comment out if spanning zones
 # Clip and/or extend to the extent of the CARDAMOM analysis
 landmask@bbox = as.matrix(extent(cardamom_ext)) # polygon workaround
 #landmask = crop(landmask, cardamom_ext)
