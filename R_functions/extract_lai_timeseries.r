@@ -29,6 +29,7 @@ extract_lai_timeseries<- function(i1,j1,timestep_days,spatial_type,resolution,
       # if we are in a year which is missing then we do not allow consideration of DOY
       if (start_year != lai_all$missing_years[a]) {
           if (doy_obs[i] == lai_all$doy_obs[b]) {
+          print("loading into file")
               lai_out[i] = lai[b] ; lai_unc_out[i] = lai_unc[b] ; b = b + 1
           } # end if doy matches
       } # end if missing year

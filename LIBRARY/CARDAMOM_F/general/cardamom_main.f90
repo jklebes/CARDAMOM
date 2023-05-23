@@ -80,12 +80,12 @@ program cardamom_framework
  read(freq_print_char,'(I10)') freq_print
  read(freq_write_char,'(I10)') freq_write
  read(do_inflate_char,'(I10)') do_inflate_dble
- read(cost_func_scaling,'(I10)') cost_func_scaling_dble
+ read(cost_func_scaling_char,'(I10)') cost_func_scaling_dble
 
  ! Assign inflate logical condition
  if (do_inflate_dble == 1) do_inflate = .true.
  ! Sanity check of the cost_function_scaling_char
- if (cost_func_scaling_dble > -1 .and. cost_function_scaling_dble < 4) then
+ if (cost_func_scaling_dble > -1 .and. cost_func_scaling_dble < 4) then
      ! All is well
  else
      ! All is not well - complain
@@ -95,7 +95,7 @@ program cardamom_framework
      print*, "1) input file path."
      print*, "2) output file path - note that PARS, STEP, COV, COVINFO will be appended to this name path outfile."
      print*, "3) No. of parameter proposals to make."
-     print*, "4) Iteration freq. for printing to screen (main MCMC phase only).
+     print*, "4) Iteration freq. for printing to screen (main MCMC phase only)."
      print*, "5) Iteration freq. for writing results to files."
      print*, "6) do sample size normalisation phase - "
      print*, "  0 = FALSE"

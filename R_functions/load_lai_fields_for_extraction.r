@@ -73,8 +73,12 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                # Loop through the available files for the current year
                for (t in seq(1, length(this_year))) {
 
+                    # Inform user
+                    #print(paste("...reading the following data file = ",this_year[t],sep=""))
                     # open the file
                     data1 = nc_open(this_year[t])
+                    # Inform user
+                    #print(paste("...reading the following uncertainty file = ",this_year_sd[t],sep=""))
                     # open the file
                     data2 = nc_open(this_year_sd[t])
 
@@ -215,7 +219,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
       # return spatial structure to data
       lai_out = array(as.vector(lai_hold)[not_na], dim=c(xdim,ydim,length(doy_out)))
       lai_unc_out = array(as.vector(lai_unc_hold)[not_na], dim=c(xdim,ydim,length(doy_out)))
-
+print(lai_out)
       # output variables
       lai_all = list(lai_all = lai_out, lai_unc_all = lai_unc_out,
                      doy_obs = doy_out, lat = lat, long = long, missing_years=missing_years)
@@ -314,7 +318,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                     lat_in = t(array(lat_in, dim=c(dim(var1)[2],dim(var1)[1])))
                     long_in = array(long_in, dim=c(dim(var1)[1],dim(var1)[2]))
 
-                   # Convert to a raster, assuming standad WGS84 grid
+                    # Convert to a raster, assuming standad WGS84 grid
                     var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1))
                     var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326")) ; f1 = filename(var1)
                     var2 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var2))
@@ -437,7 +441,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
       # return spatial structure to data
       lai_out = array(as.vector(lai_hold)[not_na], dim=c(xdim,ydim,length(doy_out)))
       lai_unc_out = array(as.vector(lai_unc_hold)[not_na], dim=c(xdim,ydim,length(doy_out)))
-
+print(lai_out) ; print(doy_out) ; print(missing_years)
       # output variables
       lai_all = list(lai_all = lai_out, lai_unc_all = lai_unc_out,
                      doy_obs = doy_out, lat = lat, long = long, missing_years=missing_years)
