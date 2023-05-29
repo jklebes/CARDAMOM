@@ -38,46 +38,31 @@ dump_binary_files <-function(infile) {
 
 } # end function
 
-read_parameter_chains<- function(PROJECT_in,n,ndim) {
+read_parameter_chains<- function(PROJECT_in,n) {
 
   # Determine the intended name for the parmeter files
   pfile=paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_",c(1:PROJECT_in$nochains),"_PARS",sep="")
-#  # search for all output files
-#  pfile = list.files(paste(PROJECT_in$resultspath,sep=""), full.names=TRUE)
-#  # select the correct project
-#  is_it = grepl(PROJECT_in$name,pfile) ; pfile = pfile[is_it]
-#  # select the PARS files only
-#  is_it = grepl("PARS",pfile) ; pfile = pfile[is_it]
-#  # need to duplicate the list at this point to ensure that we can be certain we do not confuse the chain number and site numbers
-#  pfile_tmp = gsub(c("_PARS"),"",pfile)
-#  # select the correct site
-#  is_it = grepl(paste(PROJECT_in$name,"_",PROJECT_in$sites[n],"_",sep=""),pfile_tmp) ; pfile = pfile[is_it] ; rm(pfile_tmp)
   # Find and remove any files which have no data in them
   is_it = file.size(pfile) ; is_it = which(is_it > 0) ; pfile = pfile[is_it]
 
   # just in case
   if (length(pfile) < 1) {return(-9999)}
 
-  # Determine the intended name for the parmeter files
+  # Determine the intended name for the STEP files
   sfile=paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_",c(1:PROJECT_in$nochains),"_STEP",sep="")
-#  # search for all output files
-#  sfile = list.files(paste(PROJECT_in$resultspath,sep=""), full.names=TRUE)
-#  # select the correct project
-#  is_it = grepl(PROJECT_in$name,pfile) ; pfile = pfile[is_it]
-#  # select the correct site
-#  is_it = grepl(PROJECT_in$sites[n],pfile) ; pfile = pfile[is_it]
   # select the STEP files only
   sfiles = paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_*_STEP",sep="")
 
   # calculate the number of chains
   chains = seq(1,length(pfile))
-  # load the fraction of samples to lose
-  frac = as.numeric(PROJECT_in$latter_sample_frac)
-  # calculate the number of parameter vectors this is
+  # How many parameter sets to take from the end of the available
   par_vector_length = 100
   # which site are we on now
-  print("Beginning parameter extraction and chain merge")
-  print(paste("Site = ",PROJECT_in$sites[n]," ",n," of ",PROJECT_in$nosites," ",Sys.time(),sep=""))
+  if (use_parallel == FALSE) {
+      print("Beginning parameter extraction and chain merge")
+      print(paste("Site = ",PROJECT_in$sites[n]," ",n," of ",PROJECT_in$nosites," ",Sys.time(),sep=""))
+  }
+
   # create error flag, initial value zero
   status = array(0,dim=c(length(chains)))
 
@@ -85,7 +70,7 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
   param_sets_out = array(NA,dim=c((PROJECT_in$model$nopars[n]+1),par_vector_length,length(chains)))
   # loop through each chain
   for (c in seq(1,length(chains))) {
-       print(paste("...chain ",c," of ",length(chains),sep=""))
+       if (use_parallel == FALSE) {print(paste("...chain ",c," of ",length(chains),sep=""))}
        # open this chains binary file into R, instructing 'r' to read and 'b' for binary
        bob = file(paste(pfile[c],sep=""),'rb') ; nos_var = 1e6
        set1 = readBin(bob, double(),nos_var) ; temp = 0
@@ -101,8 +86,10 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
        param_sets = array(set1,dim=c((PROJECT_in$model$nopars[n]+1),(length(set1)/(PROJECT_in$model$nopars[n]+1))))
        set1 = 0 ; rm(set1)
 
-       # check for inconsistencies
+       # check for inconsistencies, is there a different number of parameter sets
+       # stored than expected - regardless or of more or less
        if (abs(dim(param_sets)[2] - PROJECT_in$nsubsamples) > 1) {
+           # Check if more parameter sets are more...
            if (dim(param_sets)[2] > PROJECT_in$nsubsamples ) {
                print('*************************************************************')
                print(paste('Warning! Too many parameter vectors in ',pfile[c],sep=""))
@@ -112,6 +99,7 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
                # keep only the end of the parameter sets
                param_sets = param_sets[,((dim(param_sets)[2]-PROJECT_in$nsubsamples):dim(param_sets)[2])]
                status[c] = 2
+           # ...or fewer parameter sets than expected
            } else if (dim(param_sets)[2] < PROJECT_in$nsubsamples) {
                print('*************************************************************')
                print(paste('Warning! Missing parameter vectors in ',pfile[c],sep=""))
@@ -121,9 +109,8 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
                print('inconsistency between requested number of samples vs PROJECT$nsubsamples')
                print('CONSIDER DELETING (or re-running) THIS CHAIN!!')
                print('Likely error will occur next!')
-               status[c] = 1
-               # just in case
-               if (dim(param_sets)[2] < par_vector_length) {return(-9999)}
+               if (dim(param_sets)[2] < par_vector_length) {status[c] = 1}
+               # just in case, below we will need to remove this chain from the output
            } else {
                status[c] = 0
            }
@@ -138,13 +125,31 @@ read_parameter_chains<- function(PROJECT_in,n,ndim) {
 
   } # end of chains loop
 
-  if (PROJECT_in$model$name == "DALEC_CDEA" || PROJECT_in$model$name == "DALEC_CDEA_LU_FIRES" ||
-      PROJECT_in$model$name == "DALEC_CDEA_ACM2" || PROJECT_in$model$name == "DALEC_CDEA_ACM2_BUCKET" ||
-      PROJECT_in$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg" || PROJECT_in$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg" ||
-      PROJECT_in$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT") {
+  # Check status of each chain that has been read in
+  filter = which(status == 1)
+  if (length(filter) > 0) {
+      if (length(filter) == length(chains)) {
+          # All chains are being removed as too small, therefore we must return
+          # empty vector
+          return(-9999)
+      }
+      # Assuming we have spare chains to work with we can proceed
+      param_sets_out = param_sets_out[,,-filter]
+      status = status[-filter]
+      chains = chains[-filter]
+      # Ensure that the shape of the output array is still correct
+      param_sets_out = array(param_sets_out, dim=c(dim(param_sets_out)[1:2],length(chains)))
+  }
+
+  if (PROJECT_in$model$name == "DALEC_1005" || PROJECT_in$model$name == "DALEC_1005a" ||
+      PROJECT_in$model$name == "DALEC.C1.D1.F2.P1.#" || PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R3.#" ||
+      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H1.P1.#" || PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P1.#" ||
+      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P1.R1.#" || PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P1.R1.#" ||
+      PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R1.#" || PROJECT_in$model$name == "DALEC.A2.C1.D2.F2.H2.P1.#" ||
+      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P2.#" || PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P5.#") {
       param_sets_out[c(12,15),,] = ((param_sets_out[c(12,15),,]-1)%%365.25)+1
   }
-  if (PROJECT_in$model$name == "DALEC_CDEA_no_lit_root") {
+  if (PROJECT_in$model$name == "DALEC.C5.D1.F2.P1.#") {
       param_sets_out[c(8,11),,] = ((param_sets_out[c(8,11),,]-1)%%365.25)+1
   }
 

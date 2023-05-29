@@ -57,7 +57,7 @@ module MODEL_PARAMETERS
     ! Leaf Lifespan (yr)
     ! Wright et al. 2004
     PI%parmin(5) = 1.001d0
-    PI%parmax(5) = 8d0
+    PI%parmax(5) = 6d0 !8d0
 
     ! TOR wood* - 1% loss per year value
     !PI%parmin(6) = 0.000009d0 ! 304  years
@@ -174,6 +174,10 @@ module MODEL_PARAMETERS
     ! Boese et al., (2017)
     PI%parmin(37) = 0.01d0
     PI%parmax(37) = 0.3d0
+
+    ! Combustion completeness factor for foliage + fine root litter
+    PI%parmin(38)= 0.01d0
+    PI%parmax(38) = 0.99d0
 
     !
     ! INITIAL VALUES DECLARED HERE

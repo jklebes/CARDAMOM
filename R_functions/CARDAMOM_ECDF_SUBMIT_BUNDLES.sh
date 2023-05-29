@@ -7,6 +7,7 @@
 # ecdf-systems-team@lists.ed.ac.uk     #
 # Specific modifications made by       #
 # A. A. Bloom (UoE, now at JPL)        #
+# T. L. Smallman (UoE)
 #                                      #
 ########################################
 

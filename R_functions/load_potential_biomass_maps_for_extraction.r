@@ -5,7 +5,7 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
-load_potential_biomass_maps_for_extraction<-function(latlon_in,Cwood_potential_source,start,finish,timestep_days) {
+load_potential_biomass_maps_for_extraction<-function(latlon_in,Cwood_potential_source,start,finish,timestep_days,cardamom_ext,spatial_type) {
 
    if (Cwood_potential_source == "UoE_potAGB") {
 
@@ -22,6 +22,53 @@ load_potential_biomass_maps_for_extraction<-function(latlon_in,Cwood_potential_s
        idim = length(long) ; jdim = length(lat)
        lat = array(lat, dim=c(jdim,idim)) ; lat = t(lat)
        long = array(long, dim=c(idim,jdim))
+
+       # Convert to a raster, assuming standad WGS84 grid
+       biomass_gCm2 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(biomass_gCm2))
+       biomass_gCm2 = rasterFromXYZ(biomass_gCm2, crs = ("+init=epsg:4326"))
+       biomass_uncertainty_gCm2 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(biomass_uncertainty_gCm2))
+       biomass_uncertainty_gCm2 = rasterFromXYZ(biomass_uncertainty_gCm2, crs = ("+init=epsg:4326"))
+
+       # Create raster with the target crs (technically this bit is not required)
+       target = raster(crs = ("+init=epsg:4326"), ext = extent(biomass_gCm2), resolution = res(biomass_gCm2))
+       # Check whether the target and actual analyses have the same CRS
+       if (compareCRS(biomass_gCm2,target) == FALSE) {
+           # Resample to correct grid
+           biomass_gCm2 = resample(biomass_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
+           biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
+       }
+       # Extend the extent of the overall grid to the analysis domain
+       biomass_gCm2 = extend(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = extend(biomass_uncertainty_gCm2,cardamom_ext)
+       # Trim the extent of the overall grid to the analysis domain
+       biomass_gCm2 = crop(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = crop(biomass_uncertainty_gCm2,cardamom_ext)
+       # Remove any missing or un-realistic data points
+       biomass_gCm2[which(as.vector(biomass_gCm2) < 0)] = NA
+       biomass_uncertainty_gCm2[which(as.vector(biomass_uncertainty_gCm2) < 0)] = NA
+
+       # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
+       # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+       #if (spatial_type == "grid") {
+           if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
+
+               # Create raster with the target resolution
+               target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+               # Resample to correct grid
+               biomass_gCm2 = resample(biomass_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
+               biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
+
+           } # Aggrgeate to resolution
+       #} # spatial_type == "grid"
+
+       # extract dimension information for the grid, note the axis switching between raster and actual array
+       xdim = dim(biomass_gCm2)[2] ; ydim = dim(biomass_gCm2)[1]
+       # extract the lat / long information needed
+       long = coordinates(biomass_gCm2)[,1] ; lat = coordinates(biomass_gCm2)[,2]
+       # restructure into correct orientation
+       long = array(long, dim=c(xdim,ydim))
+       lat = array(lat, dim=c(xdim,ydim))
+       # break out from the rasters into arrays which we can manipulate
+       biomass_gCm2 = array(as.vector(unlist(biomass_gCm2)), dim=c(xdim,ydim))
+       biomass_uncertainty_gCm2 = array(as.vector(unlist(biomass_uncertainty_gCm2)), dim=c(xdim,ydim))
 
        # Use allometry to estimate below ground biomass stock and
        # combined with the above ground (Mg/ha) to give a total woody biomass estimate

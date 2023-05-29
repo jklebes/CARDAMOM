@@ -156,7 +156,7 @@ contains
 
     ! Determine how long we will continue to adapt our proposal covariance
     ! matrix and use of Delayed Rejection
-    burn_in_period = MCO%fADAPT*dble(MCO%nOUT)
+    burn_in_period = MCO%fADAPT * dble(MCO%nOUT)
     N_before_mv_target = N_before_mv * dble(PI%npars)
 
     ! See step() for relevant references.
@@ -183,12 +183,12 @@ contains
        if (MCO%fixedpars .and. PI%parini(i) /= -9999d0) PI%parfix(i) = 1d0
        ! only assign random parameters if (a) randparini == .true. or (b) PI$parini(n) == -9999)
        if (MCO%randparini .and. PI%parfix(i) == 0d0 .and. .not.restart_flag) then
-           call nor2par(1,uniform_random_vector(uniform),PI%parmin(i),PI%parmax(i),PI%parini(i))
-!           call log_nor2par(1,uniform_random_vector(uniform),PI%parmin(i),PI%parmax(i),PI%paradj(i),PI%parini(i))
+!           call nor2par(1,uniform_random_vector(uniform),PI%parmin(i),PI%parmax(i),PI%parini(i))
+           call log_nor2par(1,uniform_random_vector(uniform),PI%parmin(i),PI%parmax(i),PI%paradj(i),PI%parini(i))
            uniform = uniform + 1
        end if
        ! write(*,*) parameter values to screen
-       write(*,*) "p",i,"=",PI%parini(i)
+       if (MCO%print_pars) write(*,*) "p",i,"=",PI%parini(i)
     end do ! for PI%npar loop
 
     ! Inform the user
@@ -230,7 +230,6 @@ contains
 
            ! calculate the model likelihood
            call model_likelihood_option(PARS, P, Pprior)
-
            ! accept or reject, draw uniform distribution (0,1)
            crit1 = log(uniform_random_vector(uniform))
            uniform = uniform + 1
@@ -254,7 +253,7 @@ contains
 
        end if ! in bound
 
-       if ( AM_likelihood > crit1) then
+       if (AM_likelihood > crit1) then
 
            ! Store accepted parameter proposals
            ! keep record of all parameters accepted since step adaption
@@ -279,6 +278,9 @@ contains
 
        if (MCO%nWRITE > 0 .and. mod(nint(N%ITER),MCO%nWRITE) == 0) then
 
+!           ! Debugging print statements
+!           print*,"mcmc: write_mcmc_output done"
+
            ! calculate the likelhood for the actual uncertainties - this avoid
            ! issues with different phases of the MCMC which may use sub-samples
            ! of observations or inflated uncertainties to aid parameter
@@ -289,11 +291,13 @@ contains
                                   PI%covariance, &
                                   PI%mean_par,PI%Nparvar, &
                                   PARS0,(outputP0+outputP0prior),PI%npars,N%ITER == MCO%nOUT)
-
        end if ! write or not to write
 
        ! time to adapt?
        if (mod(nint(N%ITER),MCO%nADAPT) == 0) then
+
+!           ! Debugging print statements
+!           print*,"mcmc: time to adapt"
 
            ! Total accepted values
            N%ACC = N%ACC + N%ACCLOC

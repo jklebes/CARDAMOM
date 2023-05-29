@@ -14,8 +14,18 @@ plotconfidence <- function(y,x,nos_confint=20,col_start="red",low_confint=0.025,
     # Load library if needed
     require(colorspace)
 
-    colour_choices=colorRampPalette(c(lighten(col_start, amount = 0.7, space = "HLS", method = "relative"), col_start))
-    colour_choices=colour_choices(nos_confint)
+    # Ensure minimum value
+    nos_confint = max(nos_confint,2)
+    # Create the colour scheme
+    if (nos_confint > 2) {
+        # If we have more than an upper and lower quantile then we need to create
+        # multiple colours progressively lighter towards the edge
+        colour_choices=colorRampPalette(c(lighten(col_start, amount = 0.7, space = "HLS", method = "relative"), col_start))
+        colour_choices=colour_choices(nos_confint)
+    } else {
+        # If only 2 quantiles, then we will use the start colour itself
+        colour_choices = col_start
+    }
     # confidence ranges
     ci_wanted=seq(low_confint,high_confint,length.out=nos_confint)
     # split between the upper and lower values needed
@@ -40,15 +50,40 @@ plotconfidence <- function(y,x,nos_confint=20,col_start="red",low_confint=0.025,
              }
              CI.U <- apply(t(tmp_var),1,quantile,prob=upper_ci_wanted[z],na.rm=TRUE)
              CI.L <- apply(t(tmp_var),1,quantile,prob=lower_ci_wanted[z],na.rm=TRUE)
+             # Check for missing values across time, so we can restrict the plotting period
+             filter = which(is.na(CI.U))
+             if (length(filter) > 0) {
+                 # We will have to update the information to ensure we get the
+                 # correct visualisation at the right time. This code is limited
+                 # to removing sections from the beginning and end, but will with
+                 # missing values in the middle
+                 CI.U = CI.U[-filter]
+                 CI.L = CI.L[-filter]
+                 x = x[-filter]
+                 rm(filter)
+             } # length(filter) > 0
         } else {
              # default
              CI.U <- apply(y,1,quantile,prob=upper_ci_wanted[z],na.rm=TRUE)
              CI.L <- apply(y,1,quantile,prob=lower_ci_wanted[z],na.rm=TRUE)
+             # Check for missing values across time, so we can restrict the plotting period
+             filter = which(is.na(CI.U))
+             if (length(filter) > 0) {
+                 # We will have to update the information to ensure we get the
+                 # correct visualisation at the right time. This code is limited
+                 # to removing sections from the beginning and end, but will with
+                 # missing values in the middle
+                 CI.U = CI.U[-filter]
+                 CI.L = CI.L[-filter]
+                 x = x[-filter]
+                 rm(filter)
+             } # length(filter) > 0
         }
         # Create a 'loop' around the x values. Add values to 'close' the loop
         X.Vec <- c(x, tail(x, 1), rev(x), x[1])
         # Same for y values
         Y.Vec <- c(CI.L, tail(CI.U, 1), rev(CI.U), CI.L[1])
+
         # Use polygon() to create the enclosed shading area
         # We are 'tracing' around the perimeter as created above
         polygon(X.Vec, Y.Vec, col = colour_choices[z], border = NA)

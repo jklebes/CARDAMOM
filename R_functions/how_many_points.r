@@ -6,6 +6,23 @@
 
 # This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
+## available_countries, a function to provide a list of the countries which can be specified in the site_name
+## to define the CARDAMOM analysis area
+available_countries <-function() {
+
+   # Load the shapefile CARDAMOM uses as default to define its land sea mask
+   landmask = shapefile("./R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx")
+   # Extract the list of country names used in the mask
+   country_match = factor(landmask$SOVEREIGNT) ; country_match = levels(country_match)
+   # For consistency / allowability of using the country name in a file path,
+   # remove the spaces
+   country_match = gsub(" ","",country_match,fixed=TRUE)
+
+   # return to the user
+   return(country_match)
+
+} # end function
+
 ## lcm2007_to_ctessel, a function which matches the dominant classifications of the lcm2007 to the appropriate C/D-TESSEL PFT
 
 lcm2007_to_ctessel<- function(input_pft) {
@@ -115,8 +132,13 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
     # generate UK or WGS-84 lat long grid
     if (grid_type == "UK") {
         output = generate_uk_grid(lat,long,resolution)
+        area = array(PROJECT$resolution**2, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
     } else if (grid_type=="wgs84") {
         output = generate_wgs84_grid(lat,long,resolution)
+        grid_lat = array(output$lat, dim=c(output$long_dim,output$lat_dim))
+        grid_long = array(output$long,dim=c(output$long_dim,output$lat_dim))
+        # then generate the area estimates for each pixel
+        area = calc_pixel_area(grid_long,grid_lat)
     } else {
         stop('have selected invalid grid type, the valid options are "UK" and "wgs84"')
     }
@@ -160,81 +182,6 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
     } else if (use_lcm == "CORINE2006_1km") {
         data2=nc_open("/home/lsmallma/WORK/GREENHOUSE/Corine_lcm/Corine2006_at1km_with_lat_long.nc")
         lcm=ncvar_get(data2,"Corine2006")
-    } else if (use_lcm == "forestry_commission") {
-        data2=nc_open("/home/lsmallma/data_store/UK_forest_information/UK_forestry_planting_public.nc")
-        # read pft information
-        primary_pft=ncvar_get(data2, "primary_pft")
-        secondary_pft=ncvar_get(data2, "secondary_pft")
-        tertiary_pft=ncvar_get(data2, "tertiary_pft")
-        dims=dim(primary_pft) ; planting_pft=array(-9999, dim=dims)
-        # read cover to determine the max cover
-        primary_cover=ncvar_get(data2, "primary_cover")
-        secondary_cover=ncvar_get(data2, "secondary_cover")
-        tertiary_cover=ncvar_get(data2, "tertiary_cover")
-        # first make areas with no pft information lost to the analysis
-        primary_cover[which(is.na(as.vector(primary_pft)))]=-9999
-        secondary_cover[which(is.na(as.vector(secondary_pft)))]=-9999
-        tertiary_cover[which(is.na(as.vector(tertiary_pft)))]=-9999
-        # might not be the most efficient way of doing things but here we go
-        keep_primary=which(as.vector(primary_cover) > 0 & as.vector(primary_cover) > as.vector(secondary_cover) & as.vector(primary_cover) > as.vector(tertiary_cover))
-        keep_secondary=which(as.vector(secondary_cover) > 0 & as.vector(secondary_cover) > as.vector(primary_cover) & as.vector(secondary_cover) > as.vector(tertiary_cover))
-        keep_tertiary=which(as.vector(tertiary_cover) > 0 & as.vector(tertiary_cover) > as.vector(primary_cover) & as.vector(tertiary_cover) > as.vector(secondary_cover))
-        planting_pft[keep_primary]=as.vector(primary_pft)[keep_primary]
-        planting_pft[keep_secondary]=as.vector(secondary_pft)[keep_secondary]
-        planting_pft[keep_tertiary]=as.vector(tertiary_pft)[keep_tertiary]
-        # reconstruct the data
-        lcm=array(planting_pft, dim=dims)
-        rm(primary_cover,secondary_cover,tertiary_cover,dims,planting_pft,keep_primary,keep_secondary,keep_tertiary)
-    } else if (use_lcm == "forestry_commission_LCM2007") {
-        data2=nc_open("/home/lsmallma/data_store/UK_forest_information/UK_forestry_planting_public_and_private.nc")
-        # read pft information
-        primary_pft=ncvar_get(data2, "primary_pft")
-        secondary_pft=ncvar_get(data2, "secondary_pft")
-        tertiary_pft=ncvar_get(data2, "tertiary_pft")
-        dims=dim(primary_pft) ; planting_pft=array(-9999, dim=dims)
-        # read cover to determine the max cover
-        primary_cover=ncvar_get(data2, "primary_cover")
-        secondary_cover=ncvar_get(data2, "secondary_cover")
-        tertiary_cover=ncvar_get(data2, "tertiary_cover")
-        # first make areas with no pft information lost to the analysis
-        primary_cover[which(is.na(as.vector(primary_pft)))]=-9999
-        secondary_cover[which(is.na(as.vector(secondary_pft)))]=-9999
-        tertiary_cover[which(is.na(as.vector(tertiary_pft)))]=-9999
-        # might not be the most efficient way of doing things but here we go
-        keep_primary=which(as.vector(primary_cover) > 0 & as.vector(primary_cover) > as.vector(secondary_cover) & as.vector(primary_cover) > as.vector(tertiary_cover))
-        keep_secondary=which(as.vector(secondary_cover) > 0 & as.vector(secondary_cover) > as.vector(primary_cover) & as.vector(secondary_cover) > as.vector(tertiary_cover))
-        keep_tertiary=which(as.vector(tertiary_cover) > 0 & as.vector(tertiary_cover) > as.vector(primary_cover) & as.vector(tertiary_cover) > as.vector(secondary_cover))
-        planting_pft[keep_primary]=as.vector(primary_pft)[keep_primary]
-        planting_pft[keep_secondary]=as.vector(secondary_pft)[keep_secondary]
-        planting_pft[keep_tertiary]=as.vector(tertiary_pft)[keep_tertiary]
-        # reconstruct the data
-        lcm=array(planting_pft, dim=dims)
-        rm(primary_cover,secondary_cover,tertiary_cover,dims,planting_pft,keep_primary,keep_secondary,keep_tertiary)
-    } else if (use_lcm == "forestry_commission_public_private") {
-        data2=nc_open("/home/lsmallma/data_store/UK_forest_information/UK_forestry_planting_FC_public_and_private.nc")
-        # read pft information
-        primary_pft=ncvar_get(data2, "primary_pft")
-        secondary_pft=ncvar_get(data2, "secondary_pft")
-        tertiary_pft=ncvar_get(data2, "tertiary_pft")
-        dims=dim(primary_pft) ; planting_pft=array(-9999, dim=dims)
-        # read cover to determine the max cover
-        primary_cover=ncvar_get(data2, "primary_cover")
-        secondary_cover=ncvar_get(data2, "secondary_cover")
-        tertiary_cover=ncvar_get(data2, "tertiary_cover")
-        # first make areas with no pft information lost to the analysis
-        primary_cover[which(is.na(as.vector(primary_pft)))]=-9999
-        secondary_cover[which(is.na(as.vector(secondary_pft)))]=-9999
-        tertiary_cover[which(is.na(as.vector(tertiary_pft)))]=-9999
-        # might not be the most efficient way of doing things but here we go
-        keep_primary=which(as.vector(primary_cover) > 0 & as.vector(primary_cover) > as.vector(secondary_cover) & as.vector(primary_cover) > as.vector(tertiary_cover))
-        keep_secondary=which(as.vector(secondary_cover) > 0 & as.vector(secondary_cover) > as.vector(primary_cover) & as.vector(secondary_cover) > as.vector(tertiary_cover))
-        keep_tertiary=which(as.vector(tertiary_cover) > 0 & as.vector(tertiary_cover) > as.vector(primary_cover) & as.vector(tertiary_cover) > as.vector(secondary_cover))
-        planting_pft[keep_primary]=as.vector(primary_pft)[keep_primary]
-        planting_pft[keep_secondary]=as.vector(secondary_pft)[keep_secondary]
-        planting_pft[keep_tertiary]=as.vector(tertiary_pft)[keep_tertiary]
-        # reconstruct the data
-        lcm=array(planting_pft, dim=dims)
-        rm(primary_cover,secondary_cover,tertiary_cover,dims,planting_pft,keep_primary,keep_secondary,keep_tertiary)
     } else if (use_lcm == "ECMWF") {
         # load global surfclim file and info file for surfclim
         data2=nc_open("./R_functions/global_map/ECMWF/surfclim_all.nc")
@@ -256,8 +203,9 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
         lat_lcm = array(rep(lat_lcm, each = long_tmp), dim=c(long_tmp,lat_tmp))
         long_lcm = array(long_lcm, dim=c(long_tmp,lat_tmp))
         long_lcm[which(long_lcm > 180)] = long_lcm[which(long_lcm > 180)]-360
+        lcm = array(lcm, dim=c(dim(lat_lcm)[1],dim(lat_lcm)[2]))
     } else {
-        stop("bugger no land cover option found / set")
+        stop("no land cover option found / set")
     }
     # download location data
     if (use_lcm != "ECMWF" & use_lcm != "LCM2007") {
@@ -275,31 +223,17 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
         cl <- makeCluster(numWorkers, type = "PSOCK")
         # load R libraries in cluster
         clusterExport(cl,"load_r_libraries") ; clusterEvalQ(cl, load_r_libraries())
-        if (use_lcm == "ECMWF") {
-            output=parLapply(cl,1:length(lat),fun=closest2d,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long,nos_dim=1)
-            stopCluster(cl)
-            # extract the i,j values seperately
-            output_i=unlist(output, use.names = FALSE)
-        } else {
-            output=parLapply(cl,1:length(lat),fun=closest2d,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long,nos_dim=2)
-            stopCluster(cl)
-            # extract the i,j values seperately
-            output_i=unlist(output,use.names=FALSE)[which((1:length(unlist(output, use.names = FALSE))*0.5) != floor(1:length(unlist(output, use.names=FALSE))*0.5))]
-            output_j=unlist(output,use.names=FALSE)[which((1:length(unlist(output, use.names = FALSE))*0.5) == floor(1:length(unlist(output, use.names=FALSE))*0.5))]
-        } # ECMWF or not
-
+        output=parLapply(cl,1:length(lat),fun=closest2d_2,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long)
+        stopCluster(cl)
+        # extract the i,j values seperately
+        output_i=unlist(output,use.names=FALSE)[which((1:length(unlist(output, use.names = FALSE))*0.5) != floor(1:length(unlist(output, use.names=FALSE))*0.5))]
+        output_j=unlist(output,use.names=FALSE)[which((1:length(unlist(output, use.names = FALSE))*0.5) == floor(1:length(unlist(output, use.names=FALSE))*0.5))]
      } else {
-       if (use_lcm == "ECMWF") {
-            output=lapply(1:length(lat),FUN=closest2d,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long,nos_dim=1)
-            # extract the i,j values seperately
-            output_i=unlist(output, use.names=FALSE)
-        } else {
-            output=lapply(1:length(lat),FUN=closest2d,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long,nos_dim=2)
-            # extract the i,j values seperately
-            output_i=unlist(output, use.names=FALSE)[which((1:length(unlist(output, use.names=FALSE))*0.5) != floor(1:length(unlist(output, use.names=FALSE))*0.5))]
-            output_j=unlist(output, use.names=FALSE)[which((1:length(unlist(output, use.names=FALSE))*0.5) == floor(1:length(unlist(output, use.names=FALSE))*0.5))]
-        } # ECMWF or not
-    }
+        output=lapply(1:length(lat),FUN=closest2d_2,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long)
+        # extract the i,j values seperately
+        output_i=unlist(output, use.names=FALSE)[which((1:length(unlist(output, use.names=FALSE))*0.5) != floor(1:length(unlist(output, use.names=FALSE))*0.5))]
+        output_j=unlist(output, use.names=FALSE)[which((1:length(unlist(output, use.names=FALSE))*0.5) == floor(1:length(unlist(output, use.names=FALSE))*0.5))]
+    } # parallel or not
 
     # Inform the user
     print("Generating land sea mask")
@@ -315,7 +249,7 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
         # create raster, passing the raster values corresponding to the sovereign state
         # NOTE: the actual value assigned is linked the factor levels
         landsea = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), fun = "last")
-        landsea_frac = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), getCover=TRUE)
+        landsea_frac = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), fun = "last", getCover=TRUE)
 
         # Sometimes we want to simulate a particular country, which we will check now...
         country_match = factor(landmask$SOVEREIGNT) ; country_match = levels(country_match)
@@ -338,13 +272,13 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
         # Set non country areas to NA, and all other to 1
         landsea[keep == 0] = NA
         # Add a buffer based on the land sea fraction to avoid missing land area we want
-        landsea_frac = (boundaries(landsea, type="outer")*landsea_frac)
+        landsea_frac_buffer = boundaries(landsea, type="outer")*landsea_frac
         # Set all actual data to 1
         landsea[as.vector(landsea) > 0] = 1
         # set missing data to 0
         landsea[is.na(as.vector(landsea))] = 0
-        # Now combine the maps
-        landsea = landsea + landsea_frac
+        # Now combine the maps, giving a complete landsea fractional map
+        landsea = (landsea*landsea_frac) + landsea_frac_buffer
         # Reset any newly created NaN from the merge
         landsea[is.na(as.vector(landsea))] = 0
 
@@ -379,12 +313,12 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
         cl <- makeCluster(numWorkers, type = "PSOCK")
         # load R libraries in cluster
         clusterExport(cl,"load_r_libraries") ; clusterEvalQ(cl, load_r_libraries())
-        output = parLapply(cl,1:length(lat),fun=closest2d,lat=landsea_lat,long=landsea_long,lat_in=lat,long_in=long,nos_dim=1)
+        output = parLapply(cl,1:length(lat),fun=closest2d_1,lat=landsea_lat,long=landsea_long,lat_in=lat,long_in=long)
         stopCluster(cl)
         # extract the i,j values seperately
         output_k = unlist(output, use.names=FALSE)
      } else {
-        output = lapply(1:length(lat),FUN=closest2d,lat=landsea_lat,long=landsea_long,lat_in=lat,long_in=long,nos_dim=1)
+        output = lapply(1:length(lat),FUN=closest2d_1,lat=landsea_lat,long=landsea_long,lat_in=lat,long_in=long)
         # extract the i,j values seperately
         output_k = unlist(output, use.names=FALSE)
     }
@@ -410,7 +344,7 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
              new_pft = lcm[output_i[pft],output_j[pft]]
              if (new_pft < 0 | length(new_pft) == 0) {new_pft = 0}
          } else if (use_lcm == "ECMWF") {
-             new_pft = lcm[output_i[pft]]
+             new_pft = lcm[output_i[pft],output_j[pft]]
          }
          # now exclude if not a land site
          if (new_pft == 0 | new_pft == 14 | new_pft == 15 | landsea[output_k[pft]] < 0.5) {
@@ -439,12 +373,18 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
     # re-arrange landsea mask so that it matches with the actual grid
     landsea = as.vector(array(landsea, dim=c(long_dim,lat_dim))[,lat_dim:1])
 
-    # product is the number of points
-    return(list(nosites=length(lat),waterpixels=remove,landsea=landsea,ctessel_pft=pft_keep,lat_dim=lat_dim,long_dim=long_dim,sites=sites))
+    # Combine outputs
+    output = list(nosites=length(lat),waterpixels=remove,landsea=landsea,ctessel_pft=pft_keep,lat_dim=lat_dim,long_dim=long_dim,sites=sites)
+    # If the grid area has been calculated we will keep this too
+    if (exists("area")) {
+        output$area_m2 = area
+    }
+
     # clean up
     gc(reset=TRUE, verbose=FALSE)
-
-}
+    # Return back to user
+    return(output)
+} # end function how_many_points
 
 ## Use byte compile
 how_many_points<-cmpfun(how_many_points)

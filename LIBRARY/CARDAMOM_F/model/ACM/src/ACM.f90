@@ -584,7 +584,7 @@ contains
       !!!!!!!!!!
 
       ! estimate drythick for the current step
-      drythick = max(min_drythick, top_soil_depth * (dble_one - (soil_waterfrac(1) / porosity(1))))
+      drythick = max(min_drythick, top_soil_depth * max(0d0,(1d0 - (soil_waterfrac(1) / field_capacity(1)))))
       ! Soil surface (kgH2O.m-2.day-1)
       call calculate_soil_evaporation(soilevaporation)
       ! If snow present assume that soilevaporation is sublimation of soil first
@@ -784,6 +784,10 @@ contains
 
     implicit none
 
+    ! Declare local variables
+    double precision :: a, b, c, Pl_max
+    double precision, parameter :: theta = 0.7 ! curvature parameter of light response
+
     !
     ! Metabolic limited photosynthesis
     !
@@ -797,7 +801,12 @@ contains
     !
 
     ! calculate light limted rate of photosynthesis (gC.m-2.day-1)
-    light_limited_photosynthesis = e0 * canopy_par_MJday
+    !light_limited_photosynthesis = e0 * canopy_par_MJday
+    Pl_max = lai * exp((log(avN*NUE)*0.750)+1.668d0)
+    a = theta ; b = -(e0*canopy_par_MJday+Pl_max) ; c = e0*canopy_par_MJday*Pl_max
+    light_limitied_photosynthesis = (-b - sqrt(b**2 - (4*a*c))) / (2*a)
+!ep = 5.313 ! Quantium yield at ligth compenesation point (gC/MJ)
+!pl_max = exp(log(avN*NUE)*0.750 + 1.668) ! Linear approximation of light limited photosynthesis?
 
     !
     ! Stomatal conductance independent variables for diffusion limited

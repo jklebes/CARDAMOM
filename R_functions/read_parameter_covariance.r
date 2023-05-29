@@ -26,8 +26,8 @@ read_parameter_covariance<- function(PROJECT_in,n) {
   # calculate the number of chains
   chains = seq(1,length(cfile))
   # which site are we on now
-  print("Beginning parameter covariance extraction")
-  print(paste("Site = ",PROJECT_in$sites[n]," ",n," of ",PROJECT_in$nosites," ",Sys.time(),sep=""))
+  if (use_parallel == FALSE) {print("Beginning parameter covariance extraction")}
+  if (use_parallel == FALSE) {print(paste("Site = ",PROJECT_in$sites[n]," ",n," of ",PROJECT_in$nosites," ",Sys.time(),sep=""))}
   # create error flag, initial value zero
   status = array(0,dim=c(length(chains)))
 
@@ -38,7 +38,7 @@ read_parameter_covariance<- function(PROJECT_in,n) {
   parameter_covariance = array(-9999,dim=c(PROJECT_in$model$nopars[n],PROJECT_in$model$nopars[n],length(chains),2))
   # loop through each chain
   for (c in seq(1,length(chains))) {
-       print(paste("...chain ",c," of ",length(chains),sep=""))
+       if (use_parallel == FALSE) {print(paste("...chain ",c," of ",length(chains),sep=""))}
        # open this chains binary file into R, instructing 'r' to read and 'b' for binary
        bob = file(paste(cfile[c],sep=""),'rb') ; nos_var = 1e6
        set1 = readBin(bob, double(),nos_var) ; temp = 0

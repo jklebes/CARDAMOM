@@ -8,13 +8,22 @@
 # Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
 cardamom <-function (projname,model,method,stage) {
-#stage = 0 ; repair = 1 ; use_parallel = TRUE
+stage = 1 ; repair = 1 ; use_parallel = FALSE
   ## load needed functions into R environment
   paths = load_paths()
 
-  # Set default incase missing
-  if (exists("select_country") == FALSE) {select_country = FALSE}
-  if (exists("path_to_landsea") == FALSE) {path_to_landsea = "default"}
+  # Set defaults incase missing, NOTE: <<- to assign global
+  if (exists("select_country") == FALSE) {select_country <<- FALSE}
+  if (exists("path_to_landsea") == FALSE) {path_to_landsea <<- "default"}
+  if (exists("request_compile_local") == FALSE) {request_compile_local <<- FALSE}
+  if (exists("path_to_co2") == FALSE) {path_to_co2 <<- "./R_functions/"}
+  if (exists("request_extended_mcmc") == FALSE) {request_extended_mcmc <<- FALSE}
+  if (exists("request_cost_function_scaling") == FALSE) {request_cost_function_scaling <<- 0} # set as default approach
+
+  # Use this function to ensure that if the short model name has been provided that we translate
+  # this into the full internal code version
+  tmp = cardamom_model_details(model,"global",1)
+  model = tmp$name
 
   # define file name for PROJECT file
   # this file will contain all information relating the the PROJECT
@@ -40,7 +49,11 @@ cardamom <-function (projname,model,method,stage) {
   if (file.exists(PROJECTfile) == FALSE | stage == -1){
 
       # load data for passing to list
-      PROJECT=list(name=projname,type=PROJECTtype,source=language,paths=paths)
+      PROJECT=list(name=projname,
+                   type=PROJECTtype,
+                   source=language,
+                   paths=paths,
+                   request_cost_function_scaling = request_cost_function_scaling)
 
       # create sites names file name
       if (cardamom_type == "site") {
@@ -68,6 +81,12 @@ cardamom <-function (projname,model,method,stage) {
           } # pft_wanted
           PROJECT$lat_dim = site_info$lat_dim
           PROJECT$long_dim = site_info$long_dim
+          if (exists(x = "landsea_frac", where = site_info)) {
+              PROJECT$landsea_frac = site_info$landsea_frac
+          }
+          if (exists(x = "area_m2", where = site_info)) {
+              PROJECT$area_m2 = site_info$area_m2
+          }
       } # if (cardamom_type == "site")
 
       # whether we use PFT specific or global parameter ranges
@@ -192,6 +211,9 @@ cardamom <-function (projname,model,method,stage) {
 
   } else {
 
+      # Inform the user
+      print(paste("Loading the infofile = ",PROJECTfile,sep=""))
+
       # load PROJECT file from binary file
       load(PROJECTfile)
       if (cardamom_type == "site") {print(PROJECT)}
@@ -214,77 +236,179 @@ cardamom <-function (projname,model,method,stage) {
 
   if (stage == 1) {
 
+      # Check for existing binary input files
+      print("Check for existance of binary input files")
+
+      # Check whether there are any files which still need creating
+      if (repair == 0) {
+          n = 0 ; check = TRUE
+          while (n < PROJECT$nosites & check) {
+               # Increment
+               n = n + 1
+               # Check whether the current file exists
+               if (exists(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep="")) == FALSE) {
+                   # Escape loop now we know some sites need making
+                   check = FALSE
+               }
+          }
+          # If all files are present we can stop the current proess
+          if (check) {return(paste("CARDAMOM Report: ",stage," completed", sep=""))}
+      } # repair == 0
+
       # Update the user
       print("Beginning creation of binary input files")
 
       # flag for met drivers load
-      loaded_all = FALSE ; met_all = 0 ; lai_all = 0 ; Csom_all = 0 ; forest_all = 0 ; Cwood_all = 0
+      met_all = 0 ; lai_all = 0 ; Csom_all = 0 ; forest_all = 0 ; Cwood_all = 0
       # load from PROJECT time step information
       timestep_days = PROJECT$model$timestep_days
-      # start looping through sites to create site specific files of obs and met
-      for (n in seq(1, PROJECT$nosites)) {
-           if (n == 1 & cardamom_type == "grid") {
-               print("Determining number / locations of grid points for this run ...")
-               output = determine_lat_long_needed(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution,PROJECT$grid_type,PROJECT$waterpixels)
-               print("Have now determined grid point locations")
-               latlon = cbind(output$lat,output$long) ; cardamom_ext = output$cardamom_ext ; rm(output) ; gc(reset=TRUE,verbose=FALSE)
-           } else if (n == 1 & cardamom_type != "grid") {
-               print("Determining number / locations of grid points for this run ...")
-               latlon = cbind(PROJECT$latitude,PROJECT$longitude) ; cardamom_ext = NULL
-               print("Have now determined grid point locations")
-           }
-           print(paste("Site ",n," of ",PROJECT$nosites," ",Sys.time(),sep=""))
-           # create the file name for the met/obs binary
-           filename=paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep="")
+      noyears = length(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year))
+      # Determine location information
+      if (cardamom_type == "grid") {
+          print("Determining number / locations of grid points for this run ...")
+          output = determine_lat_long_needed(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution,PROJECT$grid_type,PROJECT$waterpixels)
+          print("Have now determined grid point locations")
+          # Bind together the latitude / longitudes for the grid, extract grid information needed to aid further processing (cardamom_ext)
+          latlon = cbind(output$lat,output$long) ; cardamom_ext = output$cardamom_ext
+          # Extract the lat / long grids designed for determining the extraction locations for the gridded observation datasets
+          obs_long_grid = output$obs_long_grid ; obs_lat_grid = output$obs_lat_grid
+          # Tidy up
+          rm(output) ; gc(reset=TRUE,verbose=FALSE)
+      } else if (cardamom_type != "grid") {
+          print("Determining number / locations of grid points for this run ...")
+          # Combine the latitude / longitude from the site list
+          latlon = cbind(PROJECT$latitude,PROJECT$longitude)
+          # However we still need a reduced area domain for extracting the site level analyses. +c(-0.5,0.5) allows buffer
+          output = determine_lat_long_needed(lat = range(PROJECT$latitude)+c(-0.5,0.5), long = range(PROJECT$longitude)+c(-0.5,0.5)
+                                            ,resolution = 0.125*0.5, grid_type = "wgs84", remove = 0)
+          cardamom_ext = output$cardamom_ext ; gc(reset=TRUE,verbose=FALSE)
+          # Extract the lat / long grids designed for determining the extraction locations for the gridded observation datasets
+          obs_long_grid = output$obs_long_grid ; obs_lat_grid = output$obs_lat_grid
+          # Tidy up
+          rm(output) ; gc(reset=TRUE,verbose=FALSE)
+          print("Have now determined grid point locations")
+      }
 
-           # load met drivers and obs from CTESSEL and convert to daily if needed
-           # these data are site specific so
-           if (file.exists(filename) == FALSE | repair == 1){
-               if (PROJECT$model$name != "ACM") {
-                   # if this is the first time of all creating new met files this time round load the whole dataset for rapid access
-                   if (loaded_all == FALSE) {
-                       met_all = load_met_fields_for_extraction(latlon,met_source,PROJECT$model$name,PROJECT$start_year,PROJECT$end_year)
-                       lai_all = load_lai_fields_for_extraction(latlon,lai_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
-                       nbe_all = load_nbe_fields_for_extraction(latlon,nbe_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
-                       gpp_all = load_gpp_fields_for_extraction(latlon,GPP_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year))
-                       fire_all = load_fire_emission_fields_for_extraction(latlon,fire_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year))
-                       Csom_all = load_Csom_fields_for_extraction(latlon,Csom_source)
-                       crop_man_all = load_sacks_calendar_fields_for_extraction(latlon,crop_management_source)
-                       sand_clay_all = load_sand_clay_fields_for_extraction(latlon,sand_clay_source)
-                       forest_all = load_forestry_fields_for_extraction(latlon,deforestation_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
-                       Cwood_initial_all = load_initial_biomass_maps_for_extraction(latlon,Cwood_initial_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
-                       Cwood_stock_all = load_biomass_stocks_maps_for_extraction(latlon,Cwood_stock_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
-                       Cwood_potential_all = load_potential_biomass_maps_for_extraction(latlon,Cwood_potential_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
-                       burnt_all = load_burnt_area_fields_for_extraction(latlon,burnt_area_source,path_to_burnt_area,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year))
-                       soilwater_all = load_soilwater_fields_for_extraction(latlon,soilwater_initial_source)
-                       lca_all = load_lca_maps_for_extraction(latlon, lca_source)
-                       Cwood_inc_all = load_wood_productivity_maps_for_extraction(Cwood_inc_source,cardamom_ext,PROJECT$spatial_type,latlon,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
-                       Cwood_mortality_all = load_wood_mortality_maps_for_extraction(Cwood_mortality_source,cardamom_ext,PROJECT$spatial_type,latlon,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
-                       # set flag
-                       loaded_all = TRUE
-                   } # if loaded_all == FALSE
-                   met = extract_met_drivers(n,timestep_days,PROJECT$start_year,PROJECT$end_year,latlon[n,],met_all,met_source,PROJECT$sites[n])
-               } else { # if (PROJECT$model$name != "ACM")
-                   # assume ACM special case
-                   met = extract_acm_met_drivers(PROJECT,latlon[n,],PROJECT$sites[n])
-               } # # if (PROJECT$model$name != "ACM")
-               obs=extract_obs(latlon[n,],lai_all,Csom_all,forest_all
-                              ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
-                              ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
-                              ,nbe_all, lca_all, gpp_all,Cwood_inc_all,Cwood_mortality_all, fire_all
-                              ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
-                              ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
+      # Load available data from gridded datasets?
+      if (PROJECT$model$name != "ACM") {
+          # if this is the first time of all creating new met files this time round load the whole dataset for rapid access
+          met_all = load_met_fields_for_extraction(latlon,met_source,PROJECT$model$name,PROJECT$start_year,PROJECT$end_year,PROJECT$spatial_type,cardamom_ext)
+          lai_all = load_lai_fields_for_extraction(latlon,lai_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),cardamom_ext,PROJECT$spatial_type)
+          nbe_all = load_nbe_fields_for_extraction(latlon,nbe_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),cardamom_ext,PROJECT$spatial_type)
+          gpp_all = load_gpp_fields_for_extraction(latlon,GPP_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),cardamom_ext,PROJECT$spatial_type)
+          fire_all = load_fire_emission_fields_for_extraction(latlon,fire_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),cardamom_ext,PROJECT$spatial_type)
+          Csom_all = load_Csom_fields_for_extraction(latlon,Csom_source,cardamom_ext,PROJECT$spatial_type)
+          crop_man_all = load_sacks_calendar_fields_for_extraction(latlon,crop_management_source)
+          sand_clay_all = load_sand_clay_fields_for_extraction(latlon,sand_clay_source,cardamom_ext,PROJECT$spatial_type)
+          forest_all = load_forestry_fields_for_extraction(latlon,deforestation_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),cardamom_ext,PROJECT$spatial_type)
+          Cwood_initial_all = load_initial_biomass_maps_for_extraction(latlon,Cwood_initial_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days,cardamom_ext,PROJECT$spatial_type)
+          Cwood_stock_all = load_biomass_stocks_maps_for_extraction(latlon,Cwood_stock_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days,cardamom_ext,PROJECT$spatial_type)
+          Cwood_potential_all = load_potential_biomass_maps_for_extraction(latlon,Cwood_potential_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days,cardamom_ext,PROJECT$spatial_type)
+          burnt_all = load_burnt_area_fields_for_extraction(latlon,burnt_area_source,path_to_burnt_area,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),cardamom_ext,PROJECT$spatial_type)
+          soilwater_all = load_soilwater_fields_for_extraction(latlon,soilwater_initial_source)
+          lca_all = load_lca_maps_for_extraction(latlon,lca_source,cardamom_ext,PROJECT$spatial_type)
+          Cwood_inc_all = load_wood_productivity_maps_for_extraction(Cwood_inc_source,cardamom_ext,PROJECT$spatial_type,latlon,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
+          Cwood_mortality_all = load_wood_mortality_maps_for_extraction(Cwood_mortality_source,cardamom_ext,PROJECT$spatial_type,latlon,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),timestep_days)
+      } # # if (PROJECT$model$name != "ACM")
 
-               # update ctessel pft in the project and potentially the model information
-               PROJECT$ctessel_pft[n] = obs$ctessel_pft
-               # Load additional model information
-               PROJECT$model = cardamom_model_details(PROJECT$model$name,pft_specific_parameters,PROJECT$ctessel_pft)
-               # write out the relevant binary files
-#if (max(obs$Cwood_stock) > 0) {
-               binary_data(met,obs,filename,PROJECT$edc,latlon[n,],PROJECT$ctessel_pft[n],PROJECT$model$name,PROJECT$parameter_type,PROJECT$model$nopars[n])
-#}
-           } # if (file.exists(filename) == FALSE | repair == 1)
-      } # site loop
+      # Update user
+      print("Loading completed, beginning writing out file write out")
+
+      if (use_parallel) {
+          # Create function needed to process the site specific creation
+          write_bin_files<-function(n) {
+
+              # create the file name for the met/obs binary
+              filename = paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep="")
+
+              # All CARDAMOM read gridded datasets now map onto the same projection, extent and resolution.
+              # This means that we can extract the location of the current site within any grid just the
+              # once and pass around the solution to all the extraction functions.
+              # NOTE: that met_all is an exception to this as the for the analysis to work we must always have
+              # meteorology driving the model, so we assume a nearest neighbour approach of valid
+              # locations, rather than accepting data gaps as done in observations / disturbance drivers.
+              output = closest2d_2(1,obs_lat_grid,obs_long_grid,latlon[n,1],latlon[n,2])
+              grid_long_loc = unlist(output, use.names=FALSE)[1] ; grid_lat_loc = unlist(output, use.names=FALSE)[2]
+              rm(output)
+
+              # load met drivers and obs from CTESSEL and convert to daily if needed
+              # these data are site specific so
+              if (file.exists(filename) == FALSE | repair == 1){
+                  # Load met drivers for ACM or other models
+                  if (PROJECT$model$name != "ACM") {
+                      met = extract_met_drivers(n,timestep_days,PROJECT$start_year,PROJECT$end_year,latlon[n,],met_all,met_source,PROJECT$sites[n])
+                  } else { # if (PROJECT$model$name != "ACM")
+                      # assume ACM special case
+                      met = extract_acm_met_drivers(PROJECT,latlon[n,],PROJECT$sites[n])
+                  }
+                  # Load observations
+                  obs = extract_obs(grid_long_loc,grid_lat_loc,latlon[n,],lai_all,Csom_all,forest_all
+                                   ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
+                                   ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
+                                   ,nbe_all, lca_all, gpp_all,Cwood_inc_all,Cwood_mortality_all, fire_all
+                                   ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
+                                   ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
+
+                  # update ctessel pft in the project and potentially the model information
+                  PROJECT$ctessel_pft[n] = obs$ctessel_pft
+                  # Load additional model information
+                  PROJECT$model = cardamom_model_details(PROJECT$model$name,pft_specific_parameters,PROJECT$ctessel_pft)
+                  # write out the relevant binary files
+                  binary_data(met,obs,filename,PROJECT$edc,latlon[n,],PROJECT$ctessel_pft[n],
+                              PROJECT$model$name,PROJECT$parameter_type,PROJECT$model$nopars[n],noyears)
+              } # if (file.exists(filename) == FALSE | repair == 1)
+          } # end function
+
+          # NOTE: that the use of mclapply() is due to reported improved efficiency over creating a virtual cluster.
+          # However, mclapply does not (at the time of typing) work on Windows, i.e. Linux and Mac only
+          cl <- min(PROJECT$nosites,numWorkers)
+          dummy = mclapply(c(1:PROJECT$nosites), FUN = write_bin_files, mc.cores = cl)
+      } else { # use parallel
+          # start looping through sites to create site specific files of obs and met
+          for (n in seq(1, PROJECT$nosites)) {
+
+               print(paste("Site ",n," of ",PROJECT$nosites," ",Sys.time(),sep=""))
+               # create the file name for the met/obs binary
+               filename=paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep="")
+
+               # All CARDAMOM read gridded datasets now map onto the same projection, extent and resolution.
+               # This means that we can extract the location of the current site within any grid just the
+               # once and pass around the solution to all the extraction functions.
+               # NOTE: that met_all is an exception to this as the for the analysis to work we must always have
+               # meteorology driving the model, so we assume a nearest neighbour approach of valid
+               # locations, rather than accepting data gaps as done in observations / disturbance drivers.
+               output = closest2d_2(1,obs_lat_grid,obs_long_grid,latlon[n,1],latlon[n,2])
+               grid_long_loc = unlist(output, use.names=FALSE)[1] ; grid_lat_loc = unlist(output, use.names=FALSE)[2]
+               rm(output)
+
+               # load met drivers and obs from CTESSEL and convert to daily if needed
+               # these data are site specific so
+               if (file.exists(filename) == FALSE | repair == 1){
+                   # Load met drivers for ACM or other models
+                   if (PROJECT$model$name != "ACM") {
+                       met = extract_met_drivers(n,timestep_days,PROJECT$start_year,PROJECT$end_year,latlon[n,],met_all,met_source,PROJECT$sites[n])
+                   } else { # if (PROJECT$model$name != "ACM")
+                       # assume ACM special case
+                       met = extract_acm_met_drivers(PROJECT,latlon[n,],PROJECT$sites[n])
+                   }
+                   # Load observations
+                   obs = extract_obs(grid_long_loc,grid_lat_loc,latlon[n,],lai_all,Csom_all,forest_all
+                                    ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
+                                    ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
+                                    ,nbe_all, lca_all, gpp_all,Cwood_inc_all,Cwood_mortality_all, fire_all
+                                    ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
+                                    ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
+
+                   # update ctessel pft in the project and potentially the model information
+                   PROJECT$ctessel_pft[n] = obs$ctessel_pft
+                   # Load additional model information
+                   PROJECT$model = cardamom_model_details(PROJECT$model$name,pft_specific_parameters,PROJECT$ctessel_pft)
+                   # write out the relevant binary files
+                   binary_data(met,obs,filename,PROJECT$edc,latlon[n,],PROJECT$ctessel_pft[n],
+                               PROJECT$model$name,PROJECT$parameter_type,PROJECT$model$nopars[n],noyears)
+               } # if (file.exists(filename) == FALSE | repair == 1)
+          } # site loop
+      } # use_parallel
 
       # clean up to remove large drains on computer memeory
       rm(met_all,lai_all) ; gc(reset=TRUE,verbose=FALSE)
@@ -298,9 +422,25 @@ cardamom <-function (projname,model,method,stage) {
           }
           if (copy_to == "y") {
              #home_computer=Sys.info()["nodename"]
-              command=paste("scp -r ",username,"@",home_computer,":",PROJECT$datapath,"* ",PROJECT$edatapath,sep="")
+              # Check whether an existing cardamom_inputs.zip exists
+              if (file.exists(paste(PROJECT$datapath,"cardamom_inputs.zip",sep=""))) {
+                  # Delete this file before creating a new one of the latest input files
+                  system(paste("rm ",PROJECT$datapath,"cardamom_inputs.zip", sep=""))
+              }
+              # Compress all input files into zip directory
+              system(paste("zip -j -r -q ",PROJECT$datapath,"cardamom_inputs.zip ",PROJECT$datapath," -i '*.bin'",sep=""))
+              # Copy the zip directory to the remote server
+              command = paste("scp -r -q ",username,"@",home_computer,":",PROJECT$datapath,"cardamom_inputs.zip ",PROJECT$edatapath,sep="")
+              # Unzip on remote server
+              command = c(command,paste("unzip -o -qq ",PROJECT$edatapath,"cardamom_inputs.zip -d ",PROJECT$edatapath, sep=""))
+              # Remove the zip directory on remote server
+              command = c(command,paste("rm ",PROJECT$edatapath,"cardamom_inputs.zip" ,sep=""))
+              #command = paste("scp -r ",username,"@",home_computer,":",PROJECT$datapath,"* ",PROJECT$edatapath,sep="")
               print(command)
+              # Execute command on remote server
               ecdf_execute(command,PROJECT$paths$cardamom_cluster)
+              # Delete local copy of the zip directory
+              system(paste("rm ",PROJECT$datapath,"cardamom_inputs.zip", sep=""))
           }
       } # copy to Eddie
 
@@ -341,20 +481,40 @@ cardamom <-function (projname,model,method,stage) {
           while(failed) {
              # do we copy back the files?
              copy_back = readline("Copy results back from cluster? (y/n)")
-             if (copy_back != "y" & copy_back != "n") {failed=TRUE}else{failed=FALSE}
+             if (copy_back != "y" & copy_back != "n") { failed=TRUE } else { failed=FALSE }
           }
           # Are we copying back the files
           if (copy_back == "y") {
               #home_computer=Sys.info()["nodename"]
               # If yes, then we mist delete the existing files to ensure we do not mix analysis versions
-              if (length(list.files(paste(PROJECT$resultspath,"/*",sep=""))) > 0) {
-                  system(paste("rm ",PROJECT$resultspath,"/*",sep=""))
+              if (length(list.files(paste(PROJECT$resultspath,"/",sep=""))) > 0) {
+                  system(paste("find ",PROJECT$resultspath," -type f -name '*' -delete",sep=""))
               }
+              # Ensure any existing zip directory has been deleted before creating a new one.
+              command = paste("rm ",PROJECT$eresultspath,"cardamom_outputs*.zip",sep="")
               # Prepare copy back command
-              command = paste("scp -r ",PROJECT$eresultspath,"* ",username,"@",home_computer,":",PROJECT$resultspath,sep="")
+              # Compress all existing files into zip directory
+              # There is a limit on how many files (based on the command length) that can be added at once using zip alone.
+              # However, we can get around this by listing all files using find and then piping these into zip
+              for (i in seq(1,PROJECT$nochains)) {
+                   command = c(command,paste("zip -j -r -q ",PROJECT$eresultspath,"cardamom_outputs_",i,".zip ",PROJECT$eresultspath," -i '*_",i,"_PARS'",sep=""))
+              }
+              command = c(command,paste("scp -r -q ",PROJECT$eresultspath,"cardamom_outputs*.zip ",username,"@",home_computer,":",PROJECT$resultspath,sep=""))
+              #command = c(command,paste("rm ",PROJECT$eresultspath,"cardamom_outputs.zip",sep=""))
+              #command = paste("scp -r ",PROJECT$eresultspath,"* ",username,"@",home_computer,":",PROJECT$resultspath,sep="")
               # Execute on remote server
               ecdf_execute(command,PROJECT$paths$cardamom_cluster)
           } # copy back
+          # Locally check that we have the cardamom_outputs.zip copied back from remote server.
+          # Assuming they are present unzip and delete the zip directory
+          for (i in seq(1,PROJECT$nochains)) {
+               if (file.exists(paste(PROJECT$resultspath,"cardamom_outputs_",i,".zip",sep=""))) {
+                   # Unzip
+                   system(paste("unzip -qq -o ",PROJECT$resultspath,"cardamom_outputs_",i,".zip -d ",PROJECT$resultspath, sep=""))
+                   # Delete file now
+                   system(paste("rm ",PROJECT$resultspath,"cardamom_outputs_",i,".zip", sep=""))
+               }
+          }
       } # ecdf condition
       # do we run the parameters yet for analysis
       # Changed to a hardcoded run of the analysis
@@ -388,30 +548,12 @@ cardamom <-function (projname,model,method,stage) {
 
       print("Beginning stage 4: generating stardard outputs")
 
-      # assume default latter half of analysis to be kept
-      # Deprecated code, can probably be safely removed
-      if (PROJECT$latter_sample_frac == 0 | PROJECT$latter_sample_frac == 1) {
-          PROJECT$latter_sample_frac = 0.75 #readline("What (latter) fraction of accepted parameters to use (e.g. 0.5)?")
-          save(PROJECT,file=PROJECTfile)
-      }
-
       # Generating site level plots or gridded
       if (PROJECT$spatial_type == "site" | grid_override) {
 
-          # will generate site specific information
-          for (n in seq(1,PROJECT$nosites)) {
-               # find relevant parameter information first
-               # output is order dimensions(npar+1,iter,chain)
-               parameters = read_parameter_chains(PROJECT,n,3)
-               # If an analysis has been carried out for this location (parameters[1] != -9999)
-               if (parameters[1] != -9999) {
-                   # Determine whether chains have converged (true/false)
-                   converged = have_chains_converged(parameters)
-                   plot_parameters(PROJECT,parameters,converged,n)
-                   # uncertainty simulations
-                   generate_uncertainty_figures(PROJECT,n)
-               } # parameters[1] != -9999
-          } # end of site loop
+          # Generate figures of parameters and model values including
+          # uncertainty information
+          generate_uncertainty_figures(PROJECT)
 
       } else if (PROJECT$spatial_type == "grid") {
 
@@ -437,39 +579,10 @@ cardamom <-function (projname,model,method,stage) {
   ###
   ## Begin Stage 5
 
-  # This stage was created as a demonstration for Forests2020,
-  # should probably be removed and replaced with code for converting RData outputs into netCDF which can be more easily shared.
+  # Currently empty
   if (stage == 5) {
 
-      print("Stage 5 will re-process PROJECT but allowing modifications to exisiting drivers based on control*.r desires.")
-      # Stage 5 will overwrite existing outputs, repair needs to be set to once to achieve this
-      repair_remember = repair ; repair = 1
-      # do we run the parameters yet for analysis
-      run_all = readline("Do you want to run the currently selected scenario (y) or just generate figures (n)?")
-      failed = TRUE
-      while(failed) {
-         if (run_all != "y" & run_all != "n") {
-             # non-viable answer supplied, ask again
-             run_all = readline("Do you want to run the currently selected scenario (y) or just generate figures (n)?")
-             failed = TRUE
-         } else {
-            # viable answer supplied
-            failed = FALSE
-         }
-      } # while (failed)
-      if (run_all == "y") {
-          PROJECT$latter_sample_frac = 0.75 #0.5 # 0.75
-          run_mcmc_results(PROJECT,stage,repair,grid_override)
-      }
-      # ...but just in case we remember and set the rapair value back to its original user defined value
-      repair = repair_remember
-
-      # conduct simple comparison between median values between estimates
-      print("Beginning generation of standard comparison graphs...")
-      scenario_comparison(PROJECT)
-
-      # now save the project
-      save(PROJECT,file=PROJECTfile)
+      print("Stage 5 current uncoded and open for new uses")
 
       # report to the user
       return(paste("CARDAMOM Report: ",stage," completed", sep=""))

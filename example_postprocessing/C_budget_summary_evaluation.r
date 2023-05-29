@@ -9,10 +9,8 @@
 ## "PointsOfChange"
 
 #### TO DO
-# Add code to read in MODIS GPP products
-# Add code to automatically aggregate each observation dataset to the resolution of the analysis where possible?
+# Replace existing independent obs code with the merged files used in CARDAMOM, include updated resolution adjustment
 # What happens to SS in the other pools
-# Parameter specific plots of the 1-posterior:prior values. Are the zeros actually zero or just balances in space
 # What is the overlap for the Csom prior
 # Does concistency between variables show an association i.e. is the consistency with LAI correlated with consistency with Cwood etc.
 # Comparison between CARDAMOM and EO soil moisture
@@ -94,15 +92,21 @@ fudgeit <- function(){
 ## Load analysis
 
 # PointsOfChange
-
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_isimip3a_lca_gpp_nbe/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_isimip3a_lca_gpp/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT_MHMCMC/Miombo_0.25deg_allWood/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_AGB/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_actualCI_agb/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_trendy_lca_agb_gpp_fire/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_CsomPriorNCSCD/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_nbe/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_GSI_BUCKET_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Trendyv9_historical/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_agb/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_agb/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_agb/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_gpp/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_nbe/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_nbe_fire/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_nbe_fire/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_nbe_RaGPPhighConf/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_agb_nbe_gpp/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_agb_nbe/infofile.RData")
@@ -110,14 +114,22 @@ load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/ODA_extension_Africa_one_agb_nbe_gpp/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/NoRainfor_woody_productivity_mortality/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Rainfor_woody_productivity_mortality/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Mexico_1deg_C7_agb_lca_gpp_fire_nbe/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Mexico_1deg_C7_agb_lca_gpp_fire_nbe_partitioned/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Mexico_1deg_C7_agb_lca_gpp_fire_nbe_allpartitioned/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Mexico_1deg_C7_agb_lca_gpp_fire_nbe_allpartitionedannual/infofile.RData")
 
+# Load the CARDAMOM files
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
-load(paste(PROJECT$results_processedpath,PROJECT$name,"_parameter_maps.RData",sep=""))
 
 # Set output path for figures and tables
-#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_1deg_C7_isimip/"
-out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/figures_africa/"
+out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_reccap2_permafrost_1deg_C7_isimip/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/InternationalScience/figures_africa/"
 #out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/trendy/figures/"
+#out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/dalec_gsi_bucket/"
+#out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/mexico/gridded_figures/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/cssp_brazil_2/figures_productivity_without_vs_with/"
 
 # Specify the position within the stored ensemble for the median estimate and the desired uncertainty bands
@@ -142,6 +154,42 @@ area = calc_pixel_area(output$lat,output$long,PROJECT$resolution)
 # this output is in vector form and we need matching array shapes so...
 area = array(area, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 
+###
+## Allow for optional replacement or creation of alternate clustering analyses
+## CARDAMOM default is affinity propogation but the most commonly used is k-means
+
+# PointsOfChange
+
+# Now generate cluster map using all parameters including the initial conditions
+par_array_median_normalised = grid_output$parameters[,,,mid_quant]
+# now normalise the parameter values
+for (i in seq(1,dim(par_array_median_normalised)[3])) {
+     min_par_val=min(par_array_median_normalised[,,i],na.rm=TRUE)
+     max_par_val=max(par_array_median_normalised[,,i],na.rm=TRUE)
+     par_array_median_normalised[,,i]=((par_array_median_normalised[,,i]-min_par_val)/(max_par_val-min_par_val))
+}
+# Create temporary arrays needed to allow removing of NAs and convert array into (space,par)
+par_array_tmp=array(NA,dim=c(prod(dim(grid_output$parameters)[1:2]),dim(par_array_median_normalised)[3]))
+par_array_tmp[1:prod(dim(par_array_median_normalised)[1:2]),1:dim(par_array_median_normalised)[3]]=par_array_median_normalised
+actual_forests=which(is.na(par_array_tmp[,1]) == FALSE)
+par_array_tmp=par_array_tmp[actual_forests,]
+par_array_tmp=array(par_array_tmp,dim=c((length(par_array_tmp)/dim(par_array_median_normalised)[3]),dim(par_array_median_normalised)[3]))
+
+# K-means
+nos_desired_clusters = 3 # specify the number of clusters wanted
+cluster = kmeans(par_array_tmp, centers = nos_desired_clusters, iter.max = 10, nstart = 50)
+
+# Extract the cluster information which we can then use in maps / aggregation
+grid_output$nos_pars_clusters_kmeans=dim(cluster$centers)[1] ; grid_output$clusters_exemplars_kmeans=cluster$centers
+grid_output$pars_clusters_kmeans=array(NA,dim=c(dim(par_array_median_normalised)[1:2]))
+for (i in seq(1, grid_output$nos_pars_clusters_kmeans)) {
+     grid_output$clusters_kmeans[actual_forests[which(cluster$cluster == i)]] = i
+}
+grid_output$clusters_kmeans=array(grid_output$clusters_kmeans,dim=c(dim(par_array_median_normalised)[1:2]))
+
+#par(mfrow=c(2,2)) ; image.plot(grid_output$pars_clusters) ; image.plot(grid_output$pars_clusters_kmeans)
+image.plot(grid_output$clusters_kmeans, main=3)
+
 ### 
 ## Create land mask / boundary overlays needed
 
@@ -157,13 +205,14 @@ landmask = shapefile("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/R_functions
 landmask = spTransform(landmask,crs(cardamom_ext))
 # subset by continent (could also do by country)
 #landmask = subset(landmask, CONTINENT == "South America") # Change continent to target area or comment out if spanning zones
-landmask = subset(landmask, CONTINENT == "Africa") # Change continent to target area or comment out if spanning zones
+#landmask = subset(landmask, CONTINENT == "Africa") # Change continent to target area or comment out if spanning zones
 # Clip to the extent of the CARDAMOM analysis
 landmask = crop(landmask, cardamom_ext)
 
-#add_biomes = " "
+add_biomes = " "
 #add_biomes = "ssa_wwf"
-add_biomes = "wwf_ecoregions"
+#add_biomes = "wwf_ecoregions"
+#add_biomes = "reccap2_permafrost"
 if (add_biomes == "ssa_wwf") {
     # Read in shape file for boundaries
     biomes = shapefile("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/SECO/analysis/ssa_wwf_dissolve/ssa_wwf_dissolve.shp")
@@ -191,18 +240,6 @@ if (add_biomes == "ssa_wwf") {
     # Aggregate to the biome regions rather than the more complex ecoregions
     biomes <- aggregate(biomes, by='BIOME_NAME', dissolve = TRUE)
 
-#    # Create target raster for high resolution mask
-#    target = raster(xmn = extent(cardamom_ext)[1], xmx = extent(cardamom_ext)[2],
-#                    ymn = extent(cardamom_ext)[3], ymx = extent(cardamom_ext)[4],
-#                    crs = crs(cardamom_ext), resolution = c(0.125,0.125))
-#                    
-#    # Extract the current biome names for raster code
-#    biome_names = levels(factor(biomes$BIOME_NAME))
-#    # Turn the Biomes object into a raster now
-#    biomes = rasterize(biomes,target, factor(biomes$BIOME_NAME), fun="last")
-#
-#    tmp = rasterToPolygons(biomes, n=16, na.rm=TRUE, digits=12, dissolve=TRUE)
-#
     # Overwrite the existing landmask
     landmask = biomes
 
@@ -210,6 +247,58 @@ if (add_biomes == "ssa_wwf") {
     biome_names = levels(factor(biomes$BIOME_NAME))
     # Turn the Biomes object into a raster now
     biomes = rasterize(biomes,cardamom_ext, factor(biomes$BIOME_NAME), fun="last")
+} else if (add_biomes == "reccap2_permafrost") {
+
+    # open reccap2-permafrost region mask
+    input_file_1=paste("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/RECCAP2_regions/RECCAP2_permafrost_regions_isimip3.nc",sep="")
+    data1=nc_open(input_file_1)
+
+    # extract location variables
+    biomes_lat=ncvar_get(data1, "latitude") ; biomes_long=ncvar_get(data1, "longitude")
+    # Create lat / long grid from vectors
+    idim = length(biomes_long) ; jdim = length(biomes_lat)
+    biomes_lat = array(biomes_lat, dim=c(jdim,idim)) ; biomes_lat = t(biomes_lat)
+    biomes_long = array(biomes_long, dim=c(idim,jdim))
+    # read the mask
+    biomes=ncvar_get(data1, "permafrost_region_mask") 
+    # For the moment convert each different sub-region into 1 and the missing number flag into NA
+    biomes[biomes > 0 & biomes < 115] = 1 ; biomes[biomes > 1] = NA
+    biome_names = NA
+    # tidy up
+    nc_close(data1)
+
+    # Convert to a raster, assuming standad WGS84 grid
+    biomes = data.frame(x = as.vector(biomes_long), y = as.vector(biomes_lat), z = as.vector(biomes))
+    biomes = rasterFromXYZ(biomes, crs = ("+init=epsg:4326"))
+
+    # Create raster with the target crs
+    target = raster(crs = ("+init=epsg:4326"), ext = extent(biomes), resolution = res(biomes))
+    # Check whether the target and actual analyses have the same CRS
+    if (compareCRS(biomes,target) == FALSE) {
+        # Resample to correct grid
+        biomes = resample(biomes, target, method="ngb") ; gc() ; removeTmpFiles()
+    }
+    # Trim the extent of the overall grid to the analysis domain
+    biomes = crop(biomes,cardamom_ext) 
+    # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
+    # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+    spatial_type = "grid"
+    if (spatial_type == "grid") {
+        if (res(biomes)[1] < res(cardamom_ext)[1] | res(biomes)[2] < res(cardamom_ext)[2]) {
+
+            # Create raster with the target resolution
+            target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+            # Resample to correct grid
+            biomes = resample(biomes, target, method="bilinear") ; gc() ; removeTmpFiles()
+        } # Aggrgeate to resolution
+    } # spatial_type == "grid"
+
+    # Convert to polygons
+    biomes = rasterToPolygons(biomes, n=16, na.rm=TRUE, digits=12, dissolve=TRUE)
+
+    # Overwrite the existing landmask
+    landmask = biomes
+
 } else {
     # DO NOTHING
     biomes = NA ; biome_names = NA
@@ -225,29 +314,31 @@ write.table(data.frame(BiomeCode = c(1:length(biome_names)),BiomeNames = biome_n
 use_filter = TRUE
 if (use_filter) {
     #  Design a user created / loaded filter 
-    landfilter = array(NA,dim=dim(grid_parameters$obs_wood_gCm2))
-    landfilter[which(grid_parameters$obs_wood_gCm2 > 0)] = 1
+    landfilter = array(NA,dim=dim(grid_output$assimilated_wood_mean_gCm2))
+    landfilter[which(grid_output$assimilated_wood_mean_gCm2 > 0)] = 1
 } else { 
     # Use this option if you don't want to filter
-    landfilter = array(1,dim=dim(grid_parameters$obs_wood_gCm2)) 
+    landfilter = array(1,dim=dim(grid_output$assimilated_wood_mean_gCm2)) 
 }
 
 # Update the land filter with the mask information
 landfilter = raster(vals = t(landfilter[,dim(landfilter)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 landfilter = mask(landfilter, landmask, updatevalue = NA)
 # Reconstruct back into an array
-landfilter = (array(as.vector(landfilter), dim=c(dim(grid_parameters$obs_wood_gCm2)[1],dim(grid_parameters$obs_wood_gCm2)[2])))
+landfilter = (array(as.vector(landfilter), dim=c(dim(grid_output$assimilated_wood_mean_gCm2)[1],dim(grid_output$assimilated_wood_mean_gCm2)[2])))
 landfilter = landfilter[,dim(landfilter)[2]:1]
+# As a final process remove anywhere which is NaN in the actual analysis
+landfilter[which(is.na(grid_output$mean_gpp_gCm2day[,,mid_quant]))] = NA
 
 # Some variables which need masking by landmask right now
 if (is.na(max(biome_names))) {
-    grid_parameters$clusters[which(is.na(landfilter))] = NA
+    grid_output$clusters[which(is.na(landfilter))] = NA
 } else {
-    tmp = dim(grid_parameters$clusters)
+    tmp = dim(grid_output$clusters)
     tmp = array(values(biomes), dim=tmp)[,tmp[2]:1]
-#    tmp[which(is.na(grid_parameters$clusters))] = NA
-    grid_parameters$clusters = tmp
-    grid_parameters$nos_clusters = length(biome_names)  
+#    tmp[which(is.na(grid_output$clusters))] = NA
+    grid_output$clusters = tmp
+    grid_output$nos_clusters = length(biome_names)  
 
 }
 
@@ -307,17 +398,21 @@ mean_wood = rep(NA, PROJECT$nosites)
 cumarea = 0
 lai_grid = array(NA,dim=c(dim(grid_output$mean_nee_gCm2day)[1],dim(grid_output$mean_nee_gCm2day)[2],nos_years))
 lai_m2m2 = rep(0,nos_years) ; lai_lower_m2m2 = rep(0,nos_years) ; lai_upper_m2m2 = rep(0,nos_years)
-gpp_TgCyr = rep(0,nos_years) ; gpp_lower_TgCyr = rep(0,nos_years) ; gpp_upper_TgCyr = rep(0,nos_years)
-rauto_TgCyr = rep(0,nos_years) ; rauto_lower_TgCyr = rep(0,nos_years) ; rauto_upper_TgCyr = rep(0,nos_years)
-rhet_TgCyr = rep(0,nos_years) ; rhet_lower_TgCyr = rep(0,nos_years) ; rhet_upper_TgCyr = rep(0,nos_years)
-nee_TgCyr = rep(0,nos_years) ; nee_lower_TgCyr = rep(0,nos_years) ; nee_upper_TgCyr = rep(0,nos_years)
-nbe_TgCyr = rep(0,nos_years) ; nbe_lower_TgCyr = rep(0,nos_years) ; nbe_upper_TgCyr = rep(0,nos_years)
-fire_TgCyr = rep(0,nos_years) ; fire_lower_TgCyr = rep(0,nos_years) ; fire_upper_TgCyr = rep(0,nos_years)
-harvest_TgCyr = rep(0,nos_years) ; harvest_lower_TgCyr = rep(0,nos_years) ; harvest_upper_TgCyr = rep(0,nos_years)
+cica_ratio = rep(0, nos_years) ; cica_lower_ratio = rep(0, nos_years) ; cica_upper_ratio = rep(0, nos_years)  
+SurfWater_mm = rep(0, nos_years) ; SurfWater_lower_mm = rep(0, nos_years) ; SurfWater_upper_mm = rep(0, nos_years)  
+wSWP_MPa = rep(0, nos_years) ; wSWP_lower_MPa = rep(0, nos_years) ; wSWP_upper_MPa = rep(0, nos_years)  
+mean_gpp_TgCyr = rep(0,nos_years) ; gpp_lower_TgCyr = rep(0,nos_years) ; gpp_upper_TgCyr = rep(0,nos_years)
+mean_npp_TgCyr = rep(0,nos_years) ; npp_lower_TgCyr = rep(0,nos_years) ; npp_upper_TgCyr = rep(0,nos_years)
+mean_rauto_TgCyr = rep(0,nos_years) ; rauto_lower_TgCyr = rep(0,nos_years) ; rauto_upper_TgCyr = rep(0,nos_years)
+mean_rhet_TgCyr = rep(0,nos_years) ; rhet_lower_TgCyr = rep(0,nos_years) ; rhet_upper_TgCyr = rep(0,nos_years)
+mean_nee_TgCyr = rep(0,nos_years) ; nee_lower_TgCyr = rep(0,nos_years) ; nee_upper_TgCyr = rep(0,nos_years)
+mean_nbe_TgCyr = rep(0,nos_years) ; nbe_lower_TgCyr = rep(0,nos_years) ; nbe_upper_TgCyr = rep(0,nos_years)
+mean_fire_TgCyr = rep(0,nos_years) ; fire_lower_TgCyr = rep(0,nos_years) ; fire_upper_TgCyr = rep(0,nos_years)
+mean_harvest_TgCyr = rep(0,nos_years) ; harvest_lower_TgCyr = rep(0,nos_years) ; harvest_upper_TgCyr = rep(0,nos_years)
 # Pool totals
 wood_TgC = rep(0,nos_years) ; wood_lower_TgC = rep(0,nos_years) ; wood_upper_TgC = rep(0,nos_years)
-lit_TgC = rep(0,nos_years) ; lit_lower_TgC = rep(0,nos_years) ; lit_upper_TgC = rep(0,nos_years)
-litwood_TgC = rep(0,nos_years) ; litwood_lower_TgC = rep(0,nos_years) ; litwood_upper_TgC = rep(0,nos_years)
+litter_TgC = rep(0,nos_years) ; litter_lower_TgC = rep(0,nos_years) ; litter_upper_TgC = rep(0,nos_years)
+woodlitter_TgC = rep(0,nos_years) ; woodlitter_lower_TgC = rep(0,nos_years) ; woodlitter_upper_TgC = rep(0,nos_years)
 soil_TgC = rep(0,nos_years) ; soil_lower_TgC = rep(0,nos_years) ; soil_upper_TgC = rep(0,nos_years)
 # Flux trends
 gpp_trend = array(NA, dim=c(dim(grid_output$mean_nee_gCm2day)[1],dim(grid_output$mean_nee_gCm2day)[2]))
@@ -334,7 +429,7 @@ time_vector = seq(0,nos_years, length.out = dim(grid_output$nee_gCm2day)[3])
 
 # Loop through all sites
 nos_sites_inc = 0
-# Loop through every site
+# Loop through every site to generate TIME VARYING estimates
 for (n in seq(1, PROJECT$nosites)) {
 
      # Extract each sites location within the grid
@@ -371,41 +466,54 @@ for (n in seq(1, PROJECT$nosites)) {
          lai_m2m2               = lai_m2m2       + lai_grid[i_loc,j_loc,]
          lai_lower_m2m2         = lai_lower_m2m2 + rollapply(grid_output$lai_m2m2[n,low_quant,], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)         
          lai_upper_m2m2         = lai_upper_m2m2 + rollapply(grid_output$lai_m2m2[n,high_quant,], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)         
+         # Area averaged states
+         cica_ratio             = cica_ratio         + rollapply(grid_output$CiCa[n,mid_quant,], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)         
+         cica_lower_ratio       = cica_lower_ratio   + rollapply(grid_output$CiCa[n,low_quant,], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)         
+         cica_upper_ratio       = cica_upper_ratio   + rollapply(grid_output$CiCa[n,high_quant,], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)         
+         SurfWater_mm           = SurfWater_mm       + rollapply(grid_output$SurfWater_kgH2Om2[n,mid_quant,], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)         
+         SurfWater_lower_mm     = SurfWater_lower_mm + rollapply(grid_output$SurfWater_kgH2Om2[n,low_quant,], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)         
+         SurfWater_upper_mm     = SurfWater_upper_mm + rollapply(grid_output$SurfWater_kgH2Om2[n,high_quant,], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)         
+         wSWP_MPa               = wSWP_MPa           + rollapply(grid_output$wSWP_MPa[n,mid_quant,], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)         
+         wSWP_lower_MPa         = wSWP_lower_MPa     + rollapply(grid_output$wSWP_MPa[n,low_quant,], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)         
+         wSWP_upper_MPa         = wSWP_upper_MPa     + rollapply(grid_output$wSWP_MPa[n,high_quant,], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)         
          # Stocks
          wood_TgC               = wood_TgC          + rollapply(grid_output$wood_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
          wood_lower_TgC         = wood_lower_TgC    + rollapply(grid_output$wood_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
          wood_upper_TgC         = wood_upper_TgC    + rollapply(grid_output$wood_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
-         lit_TgC                = lit_TgC           + rollapply(grid_output$lit_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
-         lit_lower_TgC          = lit_lower_TgC     + rollapply(grid_output$lit_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
-         lit_upper_TgC          = lit_upper_TgC     + rollapply(grid_output$lit_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
-         if (length(which(names(grid_output) == "litwood_gCm2")) > 0) {
-             litwood_TgC        = litwood_TgC       + rollapply(grid_output$litwood_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
-             litwood_lower_TgC  = litwood_lower_TgC + rollapply(grid_output$litwood_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
-             litwood_upper_TgC  = litwood_upper_TgC + rollapply(grid_output$litwood_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+         litter_TgC             = litter_TgC        + rollapply(grid_output$litter_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+         litter_lower_TgC       = litter_lower_TgC  + rollapply(grid_output$litter_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+         litter_upper_TgC       = litter_upper_TgC  + rollapply(grid_output$litter_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+         if (length(which(names(grid_output) == "woodlitter_gCm2")) > 0) {
+             woodlitter_TgC        = woodlitter_TgC       + rollapply(grid_output$woodlitter_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             woodlitter_lower_TgC  = woodlitter_lower_TgC + rollapply(grid_output$woodlitter_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+             woodlitter_upper_TgC  = woodlitter_upper_TgC + rollapply(grid_output$woodlitter_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
          }
          soil_TgC               = soil_TgC          + rollapply(grid_output$som_gCm2[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
          soil_lower_TgC         = soil_lower_TgC    + rollapply(grid_output$som_gCm2[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
          soil_upper_TgC         = soil_upper_TgC    + rollapply(grid_output$som_gCm2[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
          # Fluxes
-         gpp_TgCyr              = gpp_TgCyr           + (rollapply(grid_output$gpp_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         mean_gpp_TgCyr         = mean_gpp_TgCyr      + (rollapply(grid_output$gpp_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          gpp_lower_TgCyr        = gpp_lower_TgCyr     + (rollapply(grid_output$gpp_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          gpp_upper_TgCyr        = gpp_upper_TgCyr     + (rollapply(grid_output$gpp_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
-         rauto_TgCyr            = rauto_TgCyr         + (rollapply(grid_output$rauto_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         mean_npp_TgCyr         = mean_npp_TgCyr      + (rollapply(grid_output$npp_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         npp_lower_TgCyr        = npp_lower_TgCyr     + (rollapply(grid_output$npp_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         npp_upper_TgCyr        = npp_upper_TgCyr     + (rollapply(grid_output$npp_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         mean_rauto_TgCyr       = mean_rauto_TgCyr    + (rollapply(grid_output$rauto_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          rauto_lower_TgCyr      = rauto_lower_TgCyr   + (rollapply(grid_output$rauto_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          rauto_upper_TgCyr      = rauto_upper_TgCyr   + (rollapply(grid_output$rauto_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)         
-         rhet_TgCyr             = rhet_TgCyr          + (rollapply(grid_output$rhet_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         mean_rhet_TgCyr        = mean_rhet_TgCyr     + (rollapply(grid_output$rhet_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          rhet_lower_TgCyr       = rhet_lower_TgCyr    + (rollapply(grid_output$rhet_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          rhet_upper_TgCyr       = rhet_upper_TgCyr    + (rollapply(grid_output$rhet_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
-         nee_TgCyr              = nee_TgCyr           + (rollapply(grid_output$nee_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         mean_nee_TgCyr         = mean_nee_TgCyr      + (rollapply(grid_output$nee_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          nee_lower_TgCyr        = nee_lower_TgCyr     + (rollapply(grid_output$nee_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          nee_upper_TgCyr        = nee_upper_TgCyr     + (rollapply(grid_output$nee_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
-         nbe_TgCyr              = nbe_TgCyr           + (rollapply(grid_output$nbe_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         mean_nbe_TgCyr         = mean_nbe_TgCyr      + (rollapply(grid_output$nbe_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          nbe_lower_TgCyr        = nbe_lower_TgCyr     + (rollapply(grid_output$nbe_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          nbe_upper_TgCyr        = nbe_upper_TgCyr     + (rollapply(grid_output$nbe_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
-         fire_TgCyr             = fire_TgCyr          + (rollapply(grid_output$fire_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         mean_fire_TgCyr        = mean_fire_TgCyr     + (rollapply(grid_output$fire_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          fire_lower_TgCyr       = fire_lower_TgCyr    + (rollapply(grid_output$fire_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          fire_upper_TgCyr       = fire_upper_TgCyr    + (rollapply(grid_output$fire_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
-         harvest_TgCyr          = harvest_TgCyr       + (rollapply(grid_output$harvest_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+         mean_harvest_TgCyr     = mean_harvest_TgCyr  + (rollapply(grid_output$harvest_gCm2day[n,mid_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          harvest_lower_TgCyr    = harvest_lower_TgCyr + (rollapply(grid_output$harvest_gCm2day[n,low_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          harvest_upper_TgCyr    = harvest_upper_TgCyr + (rollapply(grid_output$harvest_gCm2day[n,high_quant,]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          
@@ -420,7 +528,7 @@ for (n in seq(1, PROJECT$nosites)) {
          BurnedFraction[i_loc,j_loc] = sum(drivers$met[,9]) / nos_years
          FireFreq[i_loc,j_loc] = length(which(drivers$met[,9] > 0)) / nos_years
          # Load any priors
-         SoilCPrior[i_loc,j_loc] = drivers$parpriors[23]
+         SoilCPrior[i_loc,j_loc] = drivers$parpriors[23] ; if (SoilCPrior[i_loc,j_loc] == -9999) {SoilCPrior[i_loc,j_loc] = NA}
          # Clear missing data from and extract observed LAI
          drivers$obs[which(drivers$obs[,3] == -9999),3] = NA
          LAIobs[i_loc,j_loc,] = rollapply(drivers$obs[,3], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)
@@ -453,43 +561,56 @@ for (n in seq(1, PROJECT$nosites)) {
 lai_m2m2 = lai_m2m2 / nos_sites_inc
 lai_lower_m2m2 = lai_lower_m2m2 / nos_sites_inc
 lai_upper_m2m2 = lai_upper_m2m2 / nos_sites_inc
+# Area averaging
+cica_ratio = cica_ratio / nos_sites_inc
+cica_lower_ratio = cica_lower_ratio / nos_sites_inc
+cica_upper_ratio = cica_upper_ratio / nos_sites_inc
+SurfWater_mm = SurfWater_mm / nos_sites_inc
+SurfWater_lower_mm = SurfWater_lower_mm / nos_sites_inc
+SurfWater_upper_mm = SurfWater_upper_mm / nos_sites_inc
+wSWP_MPa = wSWP_MPa / nos_sites_inc
+wSWP_lower_MPa = wSWP_lower_MPa  / nos_sites_inc
+wSWP_upper_MPa = wSWP_upper_MPa / nos_sites_inc
 # Now adjust units gC/yr -> TgC/yr
 # All AGB
-gpp_TgCyr     = gpp_TgCyr * 1e-12
-rauto_TgCyr   = rauto_TgCyr * 1e-12
-rhet_TgCyr    = rhet_TgCyr * 1e-12
-nee_TgCyr     = nee_TgCyr * 1e-12
-nbe_TgCyr     = nbe_TgCyr * 1e-12
-fire_TgCyr    = fire_TgCyr * 1e-12
-harvest_TgCyr = harvest_TgCyr * 1e-12
-lit_TgC       = lit_TgC * 1e-12
-litwood_TgC   = litwood_TgC * 1e-12
-wood_TgC      = wood_TgC * 1e-12
-soil_TgC      = soil_TgC * 1e-12
+mean_gpp_TgCyr      = mean_gpp_TgCyr * 1e-12
+mean_npp_TgCyr      = mean_npp_TgCyr * 1e-12
+mean_rauto_TgCyr    = mean_rauto_TgCyr * 1e-12
+mean_rhet_TgCyr     = mean_rhet_TgCyr * 1e-12
+mean_nee_TgCyr      = mean_nee_TgCyr * 1e-12
+mean_nbe_TgCyr      = mean_nbe_TgCyr * 1e-12
+mean_fire_TgCyr     = mean_fire_TgCyr * 1e-12
+mean_harvest_TgCyr  = mean_harvest_TgCyr * 1e-12
+litter_TgC          = litter_TgC * 1e-12
+woodlitter_TgC      = woodlitter_TgC * 1e-12
+wood_TgC            = wood_TgC * 1e-12
+soil_TgC            = soil_TgC * 1e-12
 # lower
-gpp_lower_TgCyr     = gpp_lower_TgCyr * 1e-12
-rauto_lower_TgCyr   = rauto_lower_TgCyr * 1e-12
-rhet_lower_TgCyr    = rhet_lower_TgCyr * 1e-12
-nee_lower_TgCyr     = nee_lower_TgCyr * 1e-12
-nbe_lower_TgCyr     = nbe_lower_TgCyr * 1e-12
-fire_lower_TgCyr    = fire_lower_TgCyr * 1e-12
-harvest_lower_TgCyr = harvest_lower_TgCyr * 1e-12
-lit_lower_TgC       = lit_lower_TgC * 1e-12
-litwood_lower_TgC   = litwood_lower_TgC * 1e-12
-wood_lower_TgC      = wood_lower_TgC * 1e-12
-soil_lower_TgC      = soil_lower_TgC * 1e-12
+gpp_lower_TgCyr      = gpp_lower_TgCyr * 1e-12
+npp_lower_TgCyr      = npp_lower_TgCyr * 1e-12
+rauto_lower_TgCyr    = rauto_lower_TgCyr * 1e-12
+rhet_lower_TgCyr     = rhet_lower_TgCyr * 1e-12
+nee_lower_TgCyr      = nee_lower_TgCyr * 1e-12
+nbe_lower_TgCyr      = nbe_lower_TgCyr * 1e-12
+fire_lower_TgCyr     = fire_lower_TgCyr * 1e-12
+harvest_lower_TgCyr  = harvest_lower_TgCyr * 1e-12
+litter_lower_TgC     = litter_lower_TgC * 1e-12
+woodlitter_lower_TgC = woodlitter_lower_TgC * 1e-12
+wood_lower_TgC       = wood_lower_TgC * 1e-12
+soil_lower_TgC       = soil_lower_TgC * 1e-12
 # upper
-gpp_upper_TgCyr     = gpp_upper_TgCyr * 1e-12
-rauto_upper_TgCyr   = rauto_upper_TgCyr * 1e-12
-rhet_upper_TgCyr    = rhet_upper_TgCyr * 1e-12
-nee_upper_TgCyr     = nee_upper_TgCyr * 1e-12
-nbe_upper_TgCyr     = nbe_upper_TgCyr * 1e-12
-fire_upper_TgCyr    = fire_upper_TgCyr * 1e-12
-harvest_upper_TgCyr = harvest_upper_TgCyr * 1e-12
-lit_upper_TgC       = lit_upper_TgC * 1e-12
-litwood_upper_TgC   = litwood_upper_TgC * 1e-12
-wood_upper_TgC      = wood_upper_TgC * 1e-12
-soil_upper_TgC      = soil_upper_TgC * 1e-12
+gpp_upper_TgCyr      = gpp_upper_TgCyr * 1e-12
+npp_upper_TgCyr      = npp_upper_TgCyr * 1e-12
+rauto_upper_TgCyr    = rauto_upper_TgCyr * 1e-12
+rhet_upper_TgCyr     = rhet_upper_TgCyr * 1e-12
+nee_upper_TgCyr      = nee_upper_TgCyr * 1e-12
+nbe_upper_TgCyr      = nbe_upper_TgCyr * 1e-12
+fire_upper_TgCyr     = fire_upper_TgCyr * 1e-12
+harvest_upper_TgCyr  = harvest_upper_TgCyr * 1e-12
+litter_upper_TgC     = litter_upper_TgC * 1e-12
+woodlitter_upper_TgC = woodlitter_upper_TgC * 1e-12
+wood_upper_TgC       = wood_upper_TgC * 1e-12
+soil_upper_TgC       = soil_upper_TgC * 1e-12
 
 # Return some information to user
 SignalNoise = length(which(abs(WoodCobs_trend*length(run_years)) > as.vector(WoodCobs_mean_CI) & abs(WoodCobs_trend*length(run_years)) > 1)) 
@@ -503,199 +624,254 @@ print(paste("Percentage of locations where observed change is greater than CI = 
 
 # Store original land filter 
 landfilter_keep = landfilter
-for (c in seq(1, grid_parameters$nos_clusters)) {
+for (c in seq(1, grid_output$nos_clusters)) {
     # Add further filtering based on the cluster
-    landfilter[which(grid_parameters$clusters > 0 & grid_parameters$clusters != c)] = 0
+    landfilter[which(is.na(grid_output$clusters) | grid_output$clusters != c)] = 0
     # Summary C budgets for output to table, NOTE the use of landfilter removes areas outside of the target area
     dims = dim(grid_output$mean_gpp_gCm2day)
     cluster_area = sum(area * landfilter, na.rm=TRUE) * 1e-4
-    grid_output$gpp_TgCyr          = apply(grid_output$mean_gpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$rauto_TgCyr        = apply(grid_output$mean_rauto_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$rhet_TgCyr         = apply(grid_output$mean_rhet_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$npp_TgCyr          = apply(grid_output$mean_npp_gCm2day*array(landfilter*area,dim = dims)*1e-2*365.25,3,sum, na.rm=TRUE)
-    grid_output$nbe_TgCyr          = apply(grid_output$mean_nbe_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$nee_TgCyr          = apply(grid_output$mean_nee_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$fire_TgCyr         = apply(grid_output$mean_fire_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$harvest_TgCyr      = apply(grid_output$mean_harvest_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$labile_TgC         = apply(grid_output$mean_labile_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$foliage_TgC        = apply(grid_output$mean_foliage_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$roots_TgC          = apply(grid_output$mean_roots_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$wood_TgC           = apply(grid_output$mean_wood_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$lit_TgC            = apply(grid_output$mean_lit_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$som_TgC            = apply(grid_output$mean_som_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$fnpp_TgCyr         = apply(grid_output$mean_fnpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$rnpp_TgCyr         = apply(grid_output$mean_rnpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$wnpp_TgCyr         = apply(grid_output$mean_wnpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    grid_output$fFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$rFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_root_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$wFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$fFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$rFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_root_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$wFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$fNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$rNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_root_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$wNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_parameters$fNPP           = apply(array(landfilter,dim = dims)*grid_parameters$NPP_foliar_fraction,3,mean, na.rm=TRUE)
-    grid_parameters$rNPP           = apply(array(landfilter,dim = dims)*grid_parameters$NPP_root_fraction,3,mean, na.rm=TRUE)
-    grid_parameters$wNPP           = apply(array(landfilter,dim = dims)*grid_parameters$NPP_wood_fraction,3,mean, na.rm=TRUE)
-    grid_parameters$foliage_MTT_yr = apply(array(landfilter,dim = dims)*grid_parameters$MTT_foliar_years,3,mean, na.rm=TRUE)
-    grid_parameters$roots_MTT_yr   = apply(array(landfilter,dim = dims)*grid_parameters$MTT_root_years,3,mean, na.rm=TRUE)
-    grid_parameters$wood_MTT_yr    = apply(array(landfilter,dim = dims)*grid_parameters$MTT_wood_years,3,mean, na.rm=TRUE)
-    grid_parameters$lit_MTT_yr     = apply(array(landfilter,dim = dims)*grid_parameters$MTT_DeadOrg_years,3,mean, na.rm=TRUE)
-    grid_parameters$som_MTT_yr     = apply(array(landfilter,dim = dims)*grid_parameters$MTT_som_years,3,mean, na.rm=TRUE)
-    grid_output$dCfoliage_gCm2yr   = apply(array(landfilter,dim = dims)*(grid_output$final_dCfoliage_gCm2/nos_years),3,mean, na.rm=TRUE)
-    grid_output$dCroots_gCm2yr     = apply(array(landfilter,dim = dims)*(grid_output$final_dCroots_gCm2/nos_years),3,mean, na.rm=TRUE)
-    grid_output$dCwood_gCm2yr      = apply(array(landfilter,dim = dims)*(grid_output$final_dCwood_gCm2/nos_years),3,mean, na.rm=TRUE)
-    grid_output$dClit_gCm2yr       = apply(array(landfilter,dim = dims)*(grid_output$final_dClit_gCm2/nos_years),3,mean, na.rm=TRUE)
-    grid_output$dCsom_gCm2yr       = apply(array(landfilter,dim = dims)*(grid_output$final_dCsom_gCm2/nos_years),3,mean, na.rm=TRUE)
     # Combine output into dataframe
-    output = data.frame(Quantile = grid_output$num_quantiles, area_ha = rep(cluster_area, length(grid_output$num_quantiles)), 
-                        GPP_TgCyr = grid_output$gpp_TgCyr, Ra_TgCyr = grid_output$rauto_TgCyr, Rhet_TgCyr = grid_output$rhet_TgCyr, 
-                        NEE_TgCyr = grid_output$nee_TgCyr, NBE_TgCyr = grid_output$nbe_TgCyr, 
-                        Fire_TgCyr = grid_output$fire_TgCyr, Harvest_TgCyr = grid_output$harvest_TgCyr,
-                        labile_TgC = grid_output$labile_TgC, foliage_TgC = grid_output$foliage_TgC, 
-                        fine_root_TgC = grid_output$roots_TgC, wood_TgC = grid_output$wood_TgC, 
-                        litter_TgC = grid_output$lit_TgC, som_TgC = grid_output$som_TgC, 
-                        fNPP_TgCyr = grid_output$fnpp_TgCyr, rNPP_TgCyr = grid_output$rnpp_TgCyr, wNPP_TgCyr = grid_output$wnpp_TgCyr,
-                        fFireLit_TgCyr = grid_output$fFIRElitter_TgCyr, rFireLit_TgCyr = grid_output$rFIRElitter_TgCyr, wFireLit_TgCyr = grid_output$wFIRElitter_TgCyr,
-                        fFireEmis_TgCyr = grid_output$fFIREemiss_TgCyr, rFireEmis_TgCyr = grid_output$rFIREemiss_TgCyr, wFireEmis_TgCyr = grid_output$wFIREemiss_TgCyr,
-                        fNAToutflux_TgCyr = grid_output$fNAToutflux_TgCyr, rNAToutflux_TgCyr = grid_output$rNAToutflux_TgCyr, wNAToutflux_TgCyr = grid_output$wNAToutflux_TgCyr,
-                        fNPP_fraction = grid_parameters$fNPP, rNPP_fraction = grid_parameters$rNPP, wNPP_fraction = grid_parameters$wNPP,
-                        foliage_MTT_yr = grid_parameters$foliage_MTT_yr, fine_roots_MTT_yr = grid_parameters$roots_MTT_yr, 
-                        wood_MTT_yr = grid_parameters$wood_MTT_yr,
-                        lit_MTT_yr = grid_parameters$lit_MTT_yr, som_MTT_yr = grid_parameters$som_MTT_yr,
-                        dCfoliage_gCm2yr = grid_output$dCfoliage_gCm2yr, dCroots_gCm2yr = grid_output$dCroots_gCm2yr,
-                        dCwood_gCm2yr = grid_output$dCwood_gCm2yr,
-                        dClit_gCm2yr = grid_output$dClit_gCm2yr, dCsom_gCm2yr = grid_output$dCsom_gCm2yr)
-    # Add any additional variables based on conditional statements
-    if (length(which(names(grid_output) == "mean_litwood_gCm2")) > 0) {
-        # Create variables
-        grid_output$litwood_TgC = apply(grid_output$mean_litwood_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-        grid_output$dClitwood_gCm2yr = apply(array(landfilter,dim = dims)*(grid_output$final_dClitwood_gCm2/nos_years),3,mean, na.rm=TRUE)
-        # Assign to data.frame
-        output$wood_litter_TgC = grid_output$litwood_TgC
-        output$dClitwood_gCm2yr = grid_output$dClitwood_gCm2yr
-    } # wood litter is simulated
-    if (length(which(names(grid_output) == "mean_rhet_litter_gCm2")) > 0) {
-        # Create variables
-        grid_output$rhet_litter_TgCyr = apply(grid_output$mean_rhet_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-        # Assign to data.frame
-        output$Rhet_litter_TgCyr = grid_output$rhet_litter_TgCyr
-    } # litter respiration is output
-    if (length(which(names(grid_output) == "mean_rhet_som_gCm2")) > 0) {
-        # Create variables
-        grid_output$rhet_som_TgCyr = apply(grid_output$mean_rhet_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-        # Assign to data.frame
-        output$Rhet_som_TgCyr = grid_output$rhet_som_TgCyr
-    } # som respiration is output
-    if (length(which(names(grid_output) == "mean_rhet_som_gCm2")) > 0) {
-        # Create variables
-        grid_output$decomp_som_TgCyr = apply(grid_output$mean_decomp_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-        # Assign to data.frame
-        output$Decomp_litter_TgCyr = grid_output$decomp_litter_TgCyr
-    } # litter decomposition to som is output          
+    output = data.frame(Quantile = grid_output$num_quantiles, area_ha = rep(cluster_area, length(grid_output$num_quantiles)))
+    # Ecosystem gross fluxes
+    output$mean_gpp_TgCyr                      = apply(grid_output$mean_gpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_npp_TgCyr                      = apply(grid_output$mean_npp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_rauto_TgCyr                    = apply(grid_output$mean_rauto_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_rhet_TgCyr                     = apply(grid_output$mean_rhet_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    if (exists("mean_rhet_litter_gCm2day", where = grid_output)) {output$mean_rhet_litter_TgCyr = apply(grid_output$mean_rhet_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+    if (exists("mean_rhet_woodlitter_gCm2day", where = grid_output)) {output$mean_rhet_woodlitter_TgCyr = apply(grid_output$mean_rhet_woodlitter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+    if (exists("mean_rhet_som_gCm2day", where = grid_output)) {output$mean_rhet_som_TgCyr = apply(grid_output$mean_rhet_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}    
+    output$mean_nbp_TgCyr                      = apply(grid_output$mean_nbp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_nbe_TgCyr                      = apply(grid_output$mean_nbe_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_nee_TgCyr                      = apply(grid_output$mean_nee_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_fire_TgCyr                     = apply(grid_output$mean_fire_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_harvest_TgCyr                  = apply(grid_output$mean_harvest_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    # Ecosystem pools
+    output$mean_biomass_TgC                    = apply(grid_output$mean_biomass_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    output$mean_dom_TgC                        = apply(grid_output$mean_dom_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    output$mean_labile_TgC                     = apply(grid_output$mean_labile_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    output$mean_foliage_TgC                    = apply(grid_output$mean_foliage_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    output$mean_roots_TgC                      = apply(grid_output$mean_roots_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    output$mean_wood_TgC                       = apply(grid_output$mean_wood_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    output$mean_litter_TgC                     = apply(grid_output$mean_litter_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    if (exists(x = "mean_woodlitter_gCm2", where = grid_output)) {output$mean_woodlitter_TgC = apply(grid_output$mean_woodlitter_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)}
+    output$mean_som_TgC                        = apply(grid_output$mean_som_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+    # Natural C internal allocation fluxes
+    output$mean_alloc_labile_TgCyr             = apply(grid_output$mean_alloc_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_combined_alloc_foliage_TgCyr   = apply(grid_output$mean_combined_alloc_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_alloc_foliage_TgCyr            = apply(grid_output$mean_alloc_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_alloc_roots_TgCyr              = apply(grid_output$mean_alloc_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_alloc_wood_TgCyr               = apply(grid_output$mean_alloc_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)   
+    output$mean_foliage_to_litter_TgCyr        = apply(grid_output$mean_foliage_to_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_roots_to_litter_TgCyr          = apply(grid_output$mean_roots_to_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_wood_to_litter_TgCyr           = apply(grid_output$mean_wood_to_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_litter_to_som_TgCyr            = apply(grid_output$mean_litter_to_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    if (exists(x = "mean_woodlitter_to_som_gCm2day", where = grid_output)) {output$mean_woodlitter_to_som_gCm2day = apply(grid_output$mean_woodlitter_to_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+    # Fire fluxes
+    output$mean_FIRElitter_labile_TgCyr        = apply(grid_output$mean_FIRElitter_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_FIRElitter_foliage_TgCyr       = apply(grid_output$mean_FIRElitter_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_FIRElitter_roots_TgCyr         = apply(grid_output$mean_FIRElitter_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_FIRElitter_wood_TgCyr          = apply(grid_output$mean_FIRElitter_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_FIRElitter_litter_TgCyr        = apply(grid_output$mean_FIRElitter_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    if (exists(x = "mean_FIRElitter_woodlitter_gCm2day", where = grid_output)) {agg_output$mean_FIRElitter_woodlitter_TgCyr = apply(grid_output$mean_FIRElitter_woodlitter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+    output$mean_FIREemiss_labile_TgCyr         = apply(grid_output$mean_FIREemiss_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_FIREemiss_foliage_TgCyr        = apply(grid_output$mean_FIREemiss_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_FIREemiss_roots_TgCyr          = apply(grid_output$mean_FIREemiss_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_FIREemiss_wood_TgCyr           = apply(grid_output$mean_FIREemiss_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_FIREemiss_litter_TgCyr         = apply(grid_output$mean_FIREemiss_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    if (exists(x = "mean_FIREemiss_woodlitter_gCm2day", where = grid_output)) {agg_output$mean_FIREemiss_woodlitter_TgCyr = apply(grid_output$mean_FIREemiss_woodlitter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+    output$mean_FIREemiss_som_TgCyr            = apply(grid_output$mean_FIREemiss_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    # Harvest fluxes
+    output$mean_HARVESTlitter_labile_TgCyr     = apply(grid_output$mean_HARVESTlitter_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_HARVESTlitter_foliage_TgCyr    = apply(grid_output$mean_HARVESTlitter_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_HARVESTlitter_roots_TgCyr      = apply(grid_output$mean_HARVESTlitter_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_HARVESTlitter_wood_TgCyr       = apply(grid_output$mean_HARVESTlitter_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_HARVESTextracted_labile_TgCyr  = apply(grid_output$mean_HARVESTextracted_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_HARVESTextracted_foliage_TgCyr = apply(grid_output$mean_HARVESTextracted_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_HARVESTextracted_roots_TgCyr   = apply(grid_output$mean_HARVESTextracted_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_HARVESTextracted_wood_TgCyr    = apply(grid_output$mean_HARVESTextracted_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    output$mean_HARVESTextracted_litter_TgCyr  = apply(grid_output$mean_HARVESTextracted_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    if (exists(x = "mean_HARVESTextracted_woodlitter_gCm2day", where = grid_output)) {grid_output$mean_HARVESTextracted_woodlitter_TgCyr = apply(grid_output$mean_HARVESTextracted_woodlitter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+    output$mean_HARVESTextracted_som_TgCyr     = apply(grid_output$mean_HARVESTextracted_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+    # Mean transist / residence times
+    output$labile_MTT_yr  = apply(array(landfilter,dim = dims)*grid_output$MTT_labile_years, 3, mean, na.rm=TRUE)
+    output$foliage_MTT_yr = apply(array(landfilter,dim = dims)*grid_output$MTT_foliage_years, 3, mean, na.rm=TRUE)
+    output$roots_MTT_yr   = apply(array(landfilter,dim = dims)*grid_output$MTT_roots_years, 3, mean, na.rm=TRUE)
+    output$wood_MTT_yr    = apply(array(landfilter,dim = dims)*grid_output$MTT_wood_years, 3, mean, na.rm=TRUE)
+    output$litter_MTT_yr  = apply(array(landfilter,dim = dims)*grid_output$MTT_litter_years, 3, mean, na.rm=TRUE)
+    if (exists(x = "MTT_annual_woodlitter_years", where = grid_output)) {output$woodlitter_MTT_yr = apply(array(landfilter,dim = dims)*grid_output$MTT_woodlitter_years, 3, mean, na.rm=TRUE)}
+    output$som_MTT_yr     = apply(array(landfilter,dim = dims)*grid_output$MTT_som_years,3,mean, na.rm=TRUE)
+    # Mean stock changes per year
+    output$dCbiomass_gCm2yr  = apply(array(landfilter,dim = dims)*(grid_output$final_dCbiomass_gCm2/nos_years),3,mean, na.rm=TRUE)
+    output$dCdom_gCm2yr      = apply(array(landfilter,dim = dims)*(grid_output$final_dCdom_gCm2/nos_years),3,mean, na.rm=TRUE)
+    output$dClabile_gCm2yr   = apply(array(landfilter,dim = dims)*(grid_output$final_dClabile_gCm2/nos_years),3,mean, na.rm=TRUE)
+    output$dCfoliage_gCm2yr  = apply(array(landfilter,dim = dims)*(grid_output$final_dCfoliage_gCm2/nos_years),3,mean, na.rm=TRUE)
+    output$dCroots_gCm2yr    = apply(array(landfilter,dim = dims)*(grid_output$final_dCroots_gCm2/nos_years),3,mean, na.rm=TRUE)
+    output$dCwood_gCm2yr     = apply(array(landfilter,dim = dims)*(grid_output$final_dCwood_gCm2/nos_years),3,mean, na.rm=TRUE)
+    output$dClitter_gCm2yr   = apply(array(landfilter,dim = dims)*(grid_output$final_dClitter_gCm2/nos_years),3,mean, na.rm=TRUE)
+    if (exists(x = "final_dCwoodlitter_gCm2", where = grid_output)) {output$dCwoodlitter_gCm2yr = apply(array(landfilter,dim = dims)*(grid_output$final_dCwoodlitter_gCm2/nos_years),3,mean, na.rm=TRUE)}
+    output$dCsom_gCm2yr = apply(array(landfilter,dim = dims)*(grid_output$final_dCsom_gCm2/nos_years),3,mean, na.rm=TRUE)
+
+    # Fractional partitioning of tunover to different drivers - should they exist
+    output$NaturalFractionOfTurnover_biomass = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_biomass,3,mean, na.rm=TRUE)
+    output$FireFractionOfTurnover_biomass = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_biomass,3,mean, na.rm=TRUE)
+    output$HarvestFractionOfTurnover_biomass = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_biomass,3,mean, na.rm=TRUE)
+    output$NaturalFractionOfTurnover_dom = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_dom,3,mean, na.rm=TRUE)
+    output$FireFractionOfTurnover_dom = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_dom,3,mean, na.rm=TRUE)
+    output$HarvestFractionOfTurnover_dom = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_dom,3,mean, na.rm=TRUE)    
+    output$NaturalFractionOfTurnover_labile = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_labile,3,mean, na.rm=TRUE)
+    output$FireFractionOfTurnover_labile = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_labile,3,mean, na.rm=TRUE)
+    output$HarvestFractionOfTurnover_labile = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_labile,3,mean, na.rm=TRUE)    
+    output$NaturalFractionOfTurnover_foliage = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_foliage,3,mean, na.rm=TRUE)
+    output$FireFractionOfTurnover_foliage = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_foliage,3,mean, na.rm=TRUE)
+    output$HarvestFractionOfTurnover_foliage = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_foliage,3,mean, na.rm=TRUE)
+    output$NaturalFractionOfTurnover_roots = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_roots,3,mean, na.rm=TRUE)
+    output$FireFractionOfTurnover_roots = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_roots,3,mean, na.rm=TRUE)
+    output$HarvestFractionOfTurnover_roots = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_roots,3,mean, na.rm=TRUE)
+    output$NaturalFractionOfTurnover_wood = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_wood,3,mean, na.rm=TRUE)
+    output$FireFractionOfTurnover_wood = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_wood,3,mean, na.rm=TRUE)
+    output$HarvestFractionOfTurnover_wood = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_wood,3,mean, na.rm=TRUE)
+    output$NaturalFractionOfTurnover_litter = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_litter,3,mean, na.rm=TRUE)
+    output$FireFractionOfTurnover_litter = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_litter,3,mean, na.rm=TRUE)
+    output$HarvestFractionOfTurnover_litter = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_litter,3,mean, na.rm=TRUE)
+    if (exists(x = "NaturalFractionOfTurnover_woodlitter", where = grid_output)) {
+        output$NaturalFractionOfTurnover_woodlitter = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_woodlitter,3,mean, na.rm=TRUE)
+        output$FireFractionOfTurnover_woodlitter = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_woodlitter,3,mean, na.rm=TRUE)
+        output$HarvestFractionOfTurnover_woodlitter = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_woodlitter,3,mean, na.rm=TRUE)
+    } 
+    output$NaturalFractionOfTurnover_som = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_som,3,mean, na.rm=TRUE)
+    output$FireFractionOfTurnover_som = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_som,3,mean, na.rm=TRUE)
+    output$HarvestFractionOfTurnover_som = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_som,3,mean, na.rm=TRUE)
 
     # Write out C budget
     write.table(output, file = paste(out_dir,"/",PROJECT$name,"_cluster_",c,"_C_budget.csv",sep=""), row.names=FALSE, sep=",",append=FALSE)
     
-    # Reset land filter after each cluster to return back to the correc map
+    # Reset land filter after each cluster to return back to the correct map
     landfilter = landfilter_keep
 
 } # cluster loop
 
+# Reset land filter after each cluster to return back to the correct map
+landfilter = landfilter_keep
 
 ###
 ## C - Budget (TgC/yr)
 
 # Summary C budgets for output to table, NOTE the use of landfilter removes areas outside of the target area
+# These are not time varying (unlike the loop a few sections above)
 dims = dim(grid_output$mean_gpp_gCm2day)
-grid_output$gpp_TgCyr          = apply(grid_output$mean_gpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$rauto_TgCyr        = apply(grid_output$mean_rauto_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$rhet_TgCyr         = apply(grid_output$mean_rhet_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$nbe_TgCyr          = apply(grid_output$mean_nbe_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$nee_TgCyr          = apply(grid_output$mean_nee_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$fire_TgCyr         = apply(grid_output$mean_fire_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$harvest_TgCyr      = apply(grid_output$mean_harvest_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$labile_TgC         = apply(grid_output$mean_labile_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$foliage_TgC        = apply(grid_output$mean_foliage_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$roots_TgC          = apply(grid_output$mean_roots_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$wood_TgC           = apply(grid_output$mean_wood_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$lit_TgC            = apply(grid_output$mean_lit_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$som_TgC            = apply(grid_output$mean_som_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$fnpp_TgCyr         = apply(grid_output$mean_fnpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$rnpp_TgCyr         = apply(grid_output$mean_rnpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$wnpp_TgCyr         = apply(grid_output$mean_wnpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-grid_output$fFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$rFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_root_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$wFIRElitter_TgCyr  = apply(grid_output$mean_FIRElitter_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$fFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$rFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_root_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$wFIREemiss_TgCyr   = apply(grid_output$mean_FIREemiss_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$fNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_foliar_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$rNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_root_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_output$wNAToutflux_TgCyr  = apply(grid_output$mean_NAToutflux_wood_gCm2yr*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-grid_parameters$fNPP           = apply(array(landfilter,dim = dims)*grid_parameters$NPP_foliar_fraction,3,mean, na.rm=TRUE)
-grid_parameters$rNPP           = apply(array(landfilter,dim = dims)*grid_parameters$NPP_root_fraction,3,mean, na.rm=TRUE)
-grid_parameters$wNPP           = apply(array(landfilter,dim = dims)*grid_parameters$NPP_wood_fraction,3,mean, na.rm=TRUE)
-grid_parameters$foliage_MTT_yr = apply(array(landfilter,dim = dims)*grid_parameters$MTT_foliar_years,3,mean, na.rm=TRUE)
-grid_parameters$roots_MTT_yr   = apply(array(landfilter,dim = dims)*grid_parameters$MTT_root_years,3,mean, na.rm=TRUE)
-grid_parameters$wood_MTT_yr    = apply(array(landfilter,dim = dims)*grid_parameters$MTT_wood_years,3,mean, na.rm=TRUE)
-grid_parameters$lit_MTT_yr     = apply(array(landfilter,dim = dims)*grid_parameters$MTT_DeadOrg_years,3,mean, na.rm=TRUE)
-grid_parameters$som_MTT_yr     = apply(array(landfilter,dim = dims)*grid_parameters$MTT_som_years,3,mean, na.rm=TRUE)
-grid_output$dCfoliage_gCm2yr   = apply(array(landfilter,dim = dims)*(grid_output$final_dCfoliage_gCm2/nos_years),3,mean, na.rm=TRUE)
-grid_output$dCroots_gCm2yr     = apply(array(landfilter,dim = dims)*(grid_output$final_dCroots_gCm2/nos_years),3,mean, na.rm=TRUE)
-grid_output$dCwood_gCm2yr      = apply(array(landfilter,dim = dims)*(grid_output$final_dCwood_gCm2/nos_years),3,mean, na.rm=TRUE)
-grid_output$dClit_gCm2yr       = apply(array(landfilter,dim = dims)*(grid_output$final_dClit_gCm2/nos_years),3,mean, na.rm=TRUE)
-grid_output$dCsom_gCm2yr       = apply(array(landfilter,dim = dims)*(grid_output$final_dCsom_gCm2/nos_years),3,mean, na.rm=TRUE)
-# Combine output into dataframe
-output = data.frame(Quantile = grid_output$num_quantiles, 
-                    GPP_TgCyr = grid_output$gpp_TgCyr, Ra_TgCyr = grid_output$rauto_TgCyr, Rhet_TgCyr = grid_output$rhet_TgCyr, 
-                    NEE_TgCyr = grid_output$nee_TgCyr, NBE_TgCyr = grid_output$nbe_TgCyr, 
-                    Fire_TgCyr = grid_output$fire_TgCyr, Harvest_TgCyr = grid_output$harvest_TgCyr,
-                    labile_TgC = grid_output$labile_TgC, foliage_TgC = grid_output$foliage_TgC, 
-                    fine_root_TgC = grid_output$roots_TgC, wood_TgC = grid_output$wood_TgC, 
-                    litter_TgC = grid_output$lit_TgC, som_TgC = grid_output$som_TgC, 
-                    fNPP_TgCyr = grid_output$fnpp_TgCyr, rNPP_TgCyr = grid_output$rnpp_TgCyr, wNPP_TgCyr = grid_output$wnpp_TgCyr,
-                    fFireLit_TgCyr = grid_output$fFIRElitter_TgCyr, rFireLit_TgCyr = grid_output$rFIRElitter_TgCyr, wFireLit_TgCyr = grid_output$wFIRElitter_TgCyr,
-                    fFireEmis_TgCyr = grid_output$fFIREemiss_TgCyr, rFireEmis_TgCyr = grid_output$rFIREemiss_TgCyr, wFireEmis_TgCyr = grid_output$wFIREemiss_TgCyr,
-                    fNAToutflux_TgCyr = grid_output$fNAToutflux_TgCyr, rNAToutflux_TgCyr = grid_output$rNAToutflux_TgCyr, wNAToutflux_TgCyr = grid_output$wNAToutflux_TgCyr,
-                    fNPP_fraction = grid_parameters$fNPP, rNPP_fraction = grid_parameters$rNPP, wNPP_fraction = grid_parameters$wNPP,
-                    foliage_MTT_yr = grid_parameters$foliage_MTT_yr, fine_roots_MTT_yr = grid_parameters$roots_MTT_yr, 
-                    wood_MTT_yr = grid_parameters$wood_MTT_yr,
-                    lit_MTT_yr = grid_parameters$lit_MTT_yr, som_MTT_yr = grid_parameters$som_MTT_yr,
-                    dCfoliage_gCm2yr = grid_output$dCfoliage_gCm2yr, dCroots_gCm2yr = grid_output$dCroots_gCm2yr,
-                    dCwood_gCm2yr = grid_output$dCwood_gCm2yr,
-                    dClit_gCm2yr = grid_output$dClit_gCm2yr, dCsom_gCm2yr = grid_output$dCsom_gCm2yr)
-# Add any additional variables based on conditional statements
-if (length(which(names(grid_output) == "mean_litwood_gCm2")) > 0) {
-    # Create variables
-    grid_output$litwood_TgC = apply(grid_output$mean_litwood_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
-    grid_output$dClitwood_gCm2yr = apply(array(landfilter,dim = dims)*(grid_output$final_dClitwood_gCm2/nos_years),3,mean, na.rm=TRUE)
-    # Assign to data.frame
-    output$wood_litter_TgC = grid_output$litwood_TgC
-    output$dClitwood_gCm2yr = grid_output$dClitwood_gCm2yr
-} # wood litter is simulated
-if (length(which(names(grid_output) == "mean_rhet_litter_gCm2")) > 0) {
-    # Create variables
-    grid_output$rhet_litter_TgCyr = apply(grid_output$mean_rhet_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    # Assign to data.frame
-    output$Rhet_litter_TgCyr = grid_output$rhet_litter_TgCyr
-} # litter respiration is output
-if (length(which(names(grid_output) == "mean_rhet_som_gCm2")) > 0) {
-    # Create variables
-    grid_output$rhet_som_TgCyr = apply(grid_output$mean_rhet_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    # Assign to data.frame
-    output$Rhet_som_TgCyr = grid_output$rhet_som_TgCyr
-} # som respiration is output
-if (length(which(names(grid_output) == "mean_rhet_som_gCm2")) > 0) {
-    # Create variables
-    grid_output$decomp_som_TgCyr = apply(grid_output$mean_decomp_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
-    # Assign to data.frame
-    output$Decomp_litter_TgCyr = grid_output$decomp_litter_TgCyr
-} # litter decomposition to som is output          
+agg_output = data.frame(area_ha = rep(sum(area * landfilter, na.rm=TRUE) * 1e-4,length(grid_output$num_quantiles))) # convertion m2->ha
+# Ecosystem gross fluxes
+agg_output$mean_gpp_TgCyr  = apply(grid_output$mean_gpp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_npp_TgCyr  = apply(grid_output$mean_npp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_rauto_TgCyr= apply(grid_output$mean_rauto_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_rhet_TgCyr = apply(grid_output$mean_rhet_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+if (exists("mean_rhet_litter_gCm2day", where = grid_output)) {agg_output$mean_rhet_litter_TgCyr = apply(grid_output$mean_rhet_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+if (exists("mean_rhet_woodlitter_gCm2day", where = grid_output)) {agg_output$mean_rhet_woodlitter_TgCyr = apply(grid_output$mean_rhet_woodlitter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+if (exists("mean_rhet_som_gCm2day", where = grid_output)) {agg_output$mean_rhet_som_TgCyr = apply(grid_output$mean_rhet_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+agg_output$mean_nbp_TgCyr  = apply(grid_output$mean_nbp_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_nbe_TgCyr  = apply(grid_output$mean_nbe_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_nee_TgCyr  = apply(grid_output$mean_nee_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_fire_TgCyr = apply(grid_output$mean_fire_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_harvest_TgCyr  = apply(grid_output$mean_harvest_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+# Ecosystem pools
+agg_output$mean_biomass_TgC= apply(grid_output$mean_biomass_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+agg_output$mean_dom_TgC= apply(grid_output$mean_dom_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+agg_output$mean_labile_TgC = apply(grid_output$mean_labile_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+agg_output$mean_foliage_TgC= apply(grid_output$mean_foliage_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+agg_output$mean_roots_TgC  = apply(grid_output$mean_roots_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+agg_output$mean_wood_TgC   = apply(grid_output$mean_wood_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+agg_output$mean_litter_TgC = apply(grid_output$mean_litter_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+if (exists(x = "mean_woodlitter_gCm2", where = grid_output)) {agg_output$mean_woodlitter_TgC = apply(grid_output$mean_woodlitter_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)}
+agg_output$mean_som_TgC= apply(grid_output$mean_som_gCm2*array(landfilter*area,dim = dims)*1e-12,3,sum, na.rm=TRUE)
+# Natural C internal allocation fluxes
+agg_output$mean_alloc_labile_TgCyr = apply(grid_output$mean_alloc_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_combined_alloc_foliage_TgCyr   = apply(grid_output$mean_combined_alloc_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_alloc_foliage_TgCyr= apply(grid_output$mean_alloc_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_alloc_roots_TgCyr  = apply(grid_output$mean_alloc_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_alloc_wood_TgCyr   = apply(grid_output$mean_alloc_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)   
+agg_output$mean_foliage_to_litter_TgCyr= apply(grid_output$mean_foliage_to_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_roots_to_litter_TgCyr  = apply(grid_output$mean_roots_to_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_wood_to_litter_TgCyr   = apply(grid_output$mean_wood_to_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_litter_to_som_TgCyr= apply(grid_output$mean_litter_to_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+if (exists(x = "mean_woodlitter_to_som_gCm2day", where = grid_output)) {agg_output$mean_woodlitter_to_som_gCm2day = apply(grid_output$mean_woodlitter_to_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+# Fire fluxes
+agg_output$mean_FIRElitter_labile_TgCyr= apply(grid_output$mean_FIRElitter_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_FIRElitter_foliage_TgCyr   = apply(grid_output$mean_FIRElitter_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_FIRElitter_roots_TgCyr = apply(grid_output$mean_FIRElitter_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_FIRElitter_wood_TgCyr  = apply(grid_output$mean_FIRElitter_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_FIRElitter_litter_TgCyr= apply(grid_output$mean_FIRElitter_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+if (exists(x = "mean_FIRElitter_woodlitter_gCm2day", where = grid_output)) {agg_output$mean_FIRElitter_woodlitter_TgCyr = apply(grid_output$mean_FIRElitter_woodlitter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+agg_output$mean_FIREemiss_labile_TgCyr = apply(grid_output$mean_FIREemiss_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_FIREemiss_foliage_TgCyr= apply(grid_output$mean_FIREemiss_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_FIREemiss_roots_TgCyr  = apply(grid_output$mean_FIREemiss_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_FIREemiss_wood_TgCyr   = apply(grid_output$mean_FIREemiss_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_FIREemiss_litter_TgCyr = apply(grid_output$mean_FIREemiss_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+if (exists(x = "mean_FIREemiss_woodlitter_gCm2day", where = grid_output)) {agg_output$mean_FIREemiss_woodlitter_TgCyr = apply(grid_output$mean_FIREemiss_woodlitter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+agg_output$mean_FIREemiss_som_TgCyr= apply(grid_output$mean_FIREemiss_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+# Harvest fluxes
+agg_output$mean_HARVESTlitter_labile_TgCyr = apply(grid_output$mean_HARVESTlitter_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_HARVESTlitter_foliage_TgCyr= apply(grid_output$mean_HARVESTlitter_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_HARVESTlitter_roots_TgCyr  = apply(grid_output$mean_HARVESTlitter_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_HARVESTlitter_wood_TgCyr   = apply(grid_output$mean_HARVESTlitter_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_HARVESTextracted_labile_TgCyr  = apply(grid_output$mean_HARVESTextracted_labile_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_HARVESTextracted_foliage_TgCyr = apply(grid_output$mean_HARVESTextracted_foliage_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_HARVESTextracted_roots_TgCyr   = apply(grid_output$mean_HARVESTextracted_roots_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_HARVESTextracted_wood_TgCyr= apply(grid_output$mean_HARVESTextracted_wood_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+agg_output$mean_HARVESTextracted_litter_TgCyr  = apply(grid_output$mean_HARVESTextracted_litter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+if (exists(x = "mean_HARVESTextracted_woodlitter_gCm2day", where = grid_output)) {agg_output$mean_HARVESTextracted_woodlitter_TgCyr = apply(grid_output$mean_HARVESTextracted_woodlitter_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)}
+agg_output$mean_HARVESTextracted_som_TgCyr = apply(grid_output$mean_HARVESTextracted_som_gCm2day*array(landfilter*area,dim = dims)*1e-12*365.25,3,sum, na.rm=TRUE)
+# Mean transist / residence times
+agg_output$labile_MTT_yr  = apply(array(landfilter,dim = dims)*grid_output$MTT_labile_years, 3, mean, na.rm=TRUE)
+agg_output$foliage_MTT_yr = apply(array(landfilter,dim = dims)*grid_output$MTT_foliage_years, 3, mean, na.rm=TRUE)
+agg_output$roots_MTT_yr   = apply(array(landfilter,dim = dims)*grid_output$MTT_roots_years, 3, mean, na.rm=TRUE)
+agg_output$wood_MTT_yr    = apply(array(landfilter,dim = dims)*grid_output$MTT_wood_years, 3, mean, na.rm=TRUE)
+agg_output$litter_MTT_yr  = apply(array(landfilter,dim = dims)*grid_output$MTT_litter_years, 3, mean, na.rm=TRUE)
+if (exists(x = "MTT_annual_woodlitter_years", where = grid_output)) {agg_output$woodlitter_MTT_yr = apply(array(landfilter,dim = dims)*grid_output$MTT_woodlitter_years, 3, mean, na.rm=TRUE)}
+agg_output$som_MTT_yr     = apply(array(landfilter,dim = dims)*grid_output$MTT_som_years,3,mean, na.rm=TRUE)
+# Mean stock changes per year
+agg_output$dCbiomass_gCm2yr  = apply(array(landfilter,dim = dims)*(grid_output$final_dCbiomass_gCm2/nos_years),3,mean, na.rm=TRUE)
+agg_output$dCdom_gCm2yr  = apply(array(landfilter,dim = dims)*(grid_output$final_dCdom_gCm2/nos_years),3,mean, na.rm=TRUE)
+agg_output$dClabile_gCm2yr   = apply(array(landfilter,dim = dims)*(grid_output$final_dClabile_gCm2/nos_years),3,mean, na.rm=TRUE)
+agg_output$dCfoliage_gCm2yr  = apply(array(landfilter,dim = dims)*(grid_output$final_dCfoliage_gCm2/nos_years),3,mean, na.rm=TRUE)
+agg_output$dCroots_gCm2yr= apply(array(landfilter,dim = dims)*(grid_output$final_dCroots_gCm2/nos_years),3,mean, na.rm=TRUE)
+agg_output$dCwood_gCm2yr = apply(array(landfilter,dim = dims)*(grid_output$final_dCwood_gCm2/nos_years),3,mean, na.rm=TRUE)
+agg_output$dClitter_gCm2yr   = apply(array(landfilter,dim = dims)*(grid_output$final_dClitter_gCm2/nos_years),3,mean, na.rm=TRUE)
+if (exists(x = "final_dCwoodlitter_gCm2", where = grid_output)) {agg_output$dCwoodlitter_gCm2yr = apply(array(landfilter,dim = dims)*(grid_output$final_dCwoodlitter_gCm2/nos_years),3,mean, na.rm=TRUE)}
+agg_output$dCsom_gCm2yr = apply(array(landfilter,dim = dims)*(grid_output$final_dCsom_gCm2/nos_years),3,mean, na.rm=TRUE)
+
+# Fractional partitioning of tunover to different drivers - should they exist
+agg_output$NaturalFractionOfTurnover_biomass = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_biomass,3,mean, na.rm=TRUE)
+agg_output$FireFractionOfTurnover_biomass = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_biomass,3,mean, na.rm=TRUE)
+agg_output$HarvestFractionOfTurnover_biomass = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_biomass,3,mean, na.rm=TRUE)
+agg_output$NaturalFractionOfTurnover_dom = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_dom,3,mean, na.rm=TRUE)
+agg_output$FireFractionOfTurnover_dom = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_dom,3,mean, na.rm=TRUE)
+agg_output$HarvestFractionOfTurnover_dom = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_dom,3,mean, na.rm=TRUE)
+agg_output$NaturalFractionOfTurnover_labile = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_labile,3,mean, na.rm=TRUE)
+agg_output$FireFractionOfTurnover_labile = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_labile,3,mean, na.rm=TRUE)
+agg_output$HarvestFractionOfTurnover_labile = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_labile,3,mean, na.rm=TRUE)
+agg_output$NaturalFractionOfTurnover_foliage = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_foliage,3,mean, na.rm=TRUE)
+agg_output$FireFractionOfTurnover_foliage = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_foliage,3,mean, na.rm=TRUE)
+agg_output$HarvestFractionOfTurnover_foliage = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_foliage,3,mean, na.rm=TRUE)
+agg_output$NaturalFractionOfTurnover_roots = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_roots,3,mean, na.rm=TRUE)
+agg_output$FireFractionOfTurnover_roots = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_roots,3,mean, na.rm=TRUE)
+agg_output$HarvestFractionOfTurnover_roots = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_roots,3,mean, na.rm=TRUE)
+agg_output$NaturalFractionOfTurnover_wood = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_wood,3,mean, na.rm=TRUE)
+agg_output$FireFractionOfTurnover_wood = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_wood,3,mean, na.rm=TRUE)
+agg_output$HarvestFractionOfTurnover_wood = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_wood,3,mean, na.rm=TRUE)
+agg_output$NaturalFractionOfTurnover_litter = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_litter,3,mean, na.rm=TRUE)
+agg_output$FireFractionOfTurnover_litter = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_litter,3,mean, na.rm=TRUE)
+agg_output$HarvestFractionOfTurnover_litter = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_litter,3,mean, na.rm=TRUE)
+if (exists(x = "NaturalFractionOfTurnover_woodlitter", where = grid_output)) {
+    agg_output$NaturalFractionOfTurnover_woodlitter = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_woodlitter,3,mean, na.rm=TRUE)
+    agg_output$FireFractionOfTurnover_woodlitter = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_woodlitter,3,mean, na.rm=TRUE)
+    agg_output$HarvestFractionOfTurnover_woodlitter = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_woodlitter,3,mean, na.rm=TRUE)
+} 
+agg_output$NaturalFractionOfTurnover_som = apply(array(landfilter,dim = dims)*grid_output$NaturalFractionOfTurnover_som,3,mean, na.rm=TRUE)
+agg_output$FireFractionOfTurnover_som = apply(array(landfilter,dim = dims)*grid_output$FireFractionOfTurnover_som,3,mean, na.rm=TRUE)
+agg_output$HarvestFractionOfTurnover_som = apply(array(landfilter,dim = dims)*grid_output$HarvestFractionOfTurnover_som,3,mean, na.rm=TRUE)
     
 # Write out C budget
-write.table(output, file = paste(out_dir,"/",PROJECT$name,"_C_budget.csv",sep=""), row.names=FALSE, sep=",",append=FALSE)
+write.table(agg_output, file = paste(out_dir,"/",PROJECT$name,"_C_budget.csv",sep=""), row.names=FALSE, sep=",",append=FALSE)
 
 ###
 ## Plot overlayed PDFs for cluster specific and grid varying parameters and trait maps
@@ -707,15 +883,18 @@ write.table(output, file = paste(out_dir,"/",PROJECT$name,"_C_budget.csv",sep=""
 # Then create new colours with high 'alpha', i.e. transparency
 #c_colours = colorRampPalette(brewer.pal(9,"Set1"))
 c_colours = colorRampPalette(brewer.pal(8,"Accent"))
-c_colours = c_colours(grid_parameters$nos_clusters)
+c_colours = c_colours(grid_output$nos_clusters)
 nbins = 30 # desired number of catagories, you might not get this many
+
+skip_clusters = FALSE
+if (skip_clusters == FALSE) {
 
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_parameter_PDFs_by_cluster.png",sep=""), height = 2000, width = 3000, res = 300)
 par(mfrow=c(6,6), mar = c(2,2,2,1))
 # Loop parameters
-for (p in seq(1, dim(grid_parameters$parameters)[3]-1)) {
+for (p in seq(1, dim(grid_output$parameters)[3]-1)) {
      # Set to local variables
-     tmp = as.vector(grid_parameters$parameters[,,p,mid_quant])
+     tmp = as.vector(grid_output$parameters[,,p,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -724,11 +903,11 @@ for (p in seq(1, dim(grid_parameters$parameters)[3]-1)) {
      # Reset ymax for update across clusters
      ymax = 0
      # Create fresh cluster array
-     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
      # Loop through clusters
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               tmp1 = tmp[filter]
               # Plot the seperate histograms and store them in an object, do not save them yet
@@ -740,10 +919,425 @@ for (p in seq(1, dim(grid_parameters$parameters)[3]-1)) {
      } # loop clusters first time
      # Now plot each of them
      plot(cluster_var[1,]~x_axis, type="l", lwd=2, col = c_colours[1], main=paste("Parameter = ",p,sep=""), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax)) # Start with first cluster
-     for (c in seq(2,grid_parameters$nos_clusters)) {
+     for (c in seq(2,grid_output$nos_clusters)) {
           lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) # Add next cluster
      } # loop clusters again
 } # loop parameters
+dev.off()
+
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_C_budget_PDFs_by_cluster.png",sep=""), width = 3000, height = 1800, res = 300)
+par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
+
+     ## GPP
+
+     # Set to local variables
+     tmp = as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*365.25*1e-2)
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("GPP (MgC h",a^-1,y^-1,")",sep="")), 
+                       xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+
+     ## Rauto
+
+     # Set to local variables
+     tmp = as.vector(grid_output$mean_rauto_gCm2day[,,mid_quant]*365.25*1e-2)
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste(R[auto]," (MgC h",a^-1,y^-1,")",sep="")), 
+                       xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+
+     ## Rhet
+
+     # Set to local variables
+     tmp = as.vector(grid_output$mean_rhet_gCm2day[,,mid_quant]*365.25*1e-2)
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste(R[het]," (MgC h",a^-1,y^-1,")",sep="")), 
+                       xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+     
+     ## Fire
+
+     # Set to local variables
+     tmp = as.vector(grid_output$mean_fire_gCm2day[,,mid_quant]*365.25*1e-2)
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("Fire (MgC h",a^-1,y^-1,")",sep="")), 
+                       xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+
+     ## labile C stocks
+
+     # Set to local variables
+     tmp = as.vector(grid_output$mean_labile_gCm2[,,mid_quant]*1e-2)
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("Mean labile (MgC h",a^-1,")",sep="")), 
+                       xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+
+     ## Foliage C stocks
+
+     # Set to local variables
+     tmp = as.vector(grid_output$mean_foliage_gCm2[,,mid_quant]*1e-2)
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("Mean foliage (MgC h",a^-1,")",sep="")), 
+                       xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+
+     ## Fine roots C stocks
+
+     # Set to local variables
+     tmp = as.vector(grid_output$mean_roots_gCm2[,,mid_quant]*1e-2)
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("Mean roots (MgC h",a^-1,")",sep="")), 
+                       xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+     
+     ## Wood stock
+
+     # Set to local variables
+     tmp = as.vector(grid_output$mean_wood_gCm2[,,mid_quant]*1e-2)
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("Mean wood (MgC h",a^-1,")",sep="")), 
+                       xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+
+     ## Litter C stocks
+
+     # Set to local variables
+     tmp = as.vector(grid_output$mean_litter_gCm2[,,mid_quant]*1e-2)
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("Mean litter (MgC h",a^-1,")",sep="")), 
+                       xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+     
+     ## Soil C stocks
+
+     # Set to local variables
+     tmp = as.vector(grid_output$mean_som_gCm2[,,mid_quant]*1e-2)
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("Mean soil (MgC h",a^-1,")",sep="")), 
+                       xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+     
 dev.off()
 
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_trait_PDFs_by_cluster.png",sep=""), width = 3000, height = 1800, res = 300)
@@ -761,11 +1355,11 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      # Reset ymax for update across clusters
      ymax = 0
      # Create fresh cluster array
-     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
      # Loop through clusters
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               tmp1 = tmp[filter]
               # Plot the seperate histograms and store them in an object, do not save them yet
@@ -776,9 +1370,9 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
           } # CARDAMOM analysis exists for this cluster / biome?
      } # loop clusters first time
      create_plot = TRUE
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               if (create_plot) {
                   plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("CUE (0-1)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
@@ -792,7 +1386,7 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## NPP fraction to foliage
 
      # Set to local variables
-     tmp = as.vector(grid_parameters$NPP_foliar_fraction[,,mid_quant])
+     tmp = as.vector(grid_output$NPP_foliage_fraction[,,mid_quant])
      tmp[which(tmp > 1)] = NA # prevents against precision error in codes not picking up on very small fl allocations but turn into large fractional ones
      # Determine the x axis range and breakpoints
      b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
@@ -802,11 +1396,11 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      # Reset ymax for update across clusters
      ymax = 0
      # Create fresh cluster array
-     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
      # Loop through clusters
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               tmp1 = tmp[filter]
               # Plot the seperate histograms and store them in an object, do not save them yet
@@ -817,9 +1411,9 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
           } # CARDAMOM analysis exists for this cluster / biome?
      } # loop clusters first time
      create_plot = TRUE
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               if (create_plot) {
                   plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("NP",P[foliar]," (0-1)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
@@ -833,7 +1427,7 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## NPP fraction to fine roots
 
      # Set to local variables
-     tmp = as.vector(grid_parameters$NPP_root_fraction[,,mid_quant])
+     tmp = as.vector(grid_output$NPP_roots_fraction[,,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -842,11 +1436,11 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      # Reset ymax for update across clusters
      ymax = 0
      # Create fresh cluster array
-     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
      # Loop through clusters
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               tmp1 = tmp[filter]
               # Plot the seperate histograms and store them in an object, do not save them yet
@@ -857,9 +1451,9 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
           } # CARDAMOM analysis exists for this cluster / biome?
      } # loop clusters first time
      create_plot = TRUE
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               if (create_plot) {
                   plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("NP",P[root]," (0-1)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
@@ -873,7 +1467,7 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## NPP fraction to wood
 
      # Set to local variables
-     tmp = as.vector(grid_parameters$NPP_wood_fraction[,,mid_quant])
+     tmp = as.vector(grid_output$NPP_wood_fraction[,,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -882,11 +1476,11 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      # Reset ymax for update across clusters
      ymax = 0
      # Create fresh cluster array
-     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
      # Loop through clusters
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               tmp1 = tmp[filter]
               # Plot the seperate histograms and store them in an object, do not save them yet
@@ -897,9 +1491,9 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
           } # CARDAMOM analysis exists for this cluster / biome?
      } # loop clusters first time
      create_plot = TRUE
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               if (create_plot) {
                   plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("NP",P[wood]," (0-1)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
@@ -913,7 +1507,7 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## MRT foliage (years)
 
      # Set to local variables
-     tmp = as.vector(grid_parameters$MTT_foliar_years[,,mid_quant])
+     tmp = as.vector(grid_output$MTT_foliage_years[,,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -922,11 +1516,11 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      # Reset ymax for update across clusters
      ymax = 0
      # Create fresh cluster array
-     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
      # Loop through clusters
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               tmp1 = tmp[filter]
               # Plot the seperate histograms and store them in an object, do not save them yet
@@ -937,9 +1531,9 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
           } # CARDAMOM analysis exists for this cluster / biome?
      } # loop clusters first time
      create_plot = TRUE
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               if (create_plot) {
                   plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("MR",T[foliar]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
@@ -953,7 +1547,7 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## MRT fine root (years)
 
      # Set to local variables
-     tmp = as.vector(grid_parameters$MTT_root_years[,,mid_quant])
+     tmp = as.vector(grid_output$MTT_roots_years[,,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -962,11 +1556,11 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      # Reset ymax for update across clusters
      ymax = 0
      # Create fresh cluster array
-     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
      # Loop through clusters
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               tmp1 = tmp[filter]
               # Plot the seperate histograms and store them in an object, do not save them yet
@@ -977,9 +1571,9 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
           } # CARDAMOM analysis exists for this cluster / biome?
      } # loop clusters first time
      create_plot = TRUE
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               if (create_plot) {
                   plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("MR",T[root]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
@@ -993,7 +1587,7 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## MRT wood (years)
 
      # Set to local variables
-     tmp = as.vector(grid_parameters$MTT_wood_years[,,mid_quant])
+     tmp = as.vector(grid_output$MTT_wood_years[,,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -1002,11 +1596,11 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      # Reset ymax for update across clusters
      ymax = 0
      # Create fresh cluster array
-     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
      # Loop through clusters
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               tmp1 = tmp[filter]
               # Plot the seperate histograms and store them in an object, do not save them yet
@@ -1017,9 +1611,9 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
           } # CARDAMOM analysis exists for this cluster / biome?
      } # loop clusters first time
      create_plot = TRUE
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               if (create_plot) {
                   plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("MR",T[wood]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
@@ -1030,10 +1624,10 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
           } # does information for this plot exist
      } # cluster loop
      
-     ## MRT DeadOrg (litter + CWD; if applicable)
+     ## MRT litter (foliage + fine root)
 
      # Set to local variables
-     tmp = as.vector(grid_parameters$MTT_DeadOrg_years[,,mid_quant])
+     tmp = as.vector(grid_output$MTT_litter_years[,,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -1042,11 +1636,11 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      # Reset ymax for update across clusters
      ymax = 0
      # Create fresh cluster array
-     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
      # Loop through clusters
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               tmp1 = tmp[filter]
               # Plot the seperate histograms and store them in an object, do not save them yet
@@ -1057,12 +1651,12 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
           } # CARDAMOM analysis exists for this cluster / biome?
      } # loop clusters first time
      create_plot = TRUE
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               if (create_plot) {
-                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("MR",T[DeadOrg]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("MR",T[litter]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
                   create_plot = FALSE
               } else {
                   lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
@@ -1073,7 +1667,7 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## MRT soil
 
      # Set to local variables
-     tmp = as.vector(grid_parameters$MTT_som_years[,,mid_quant])
+     tmp = as.vector(grid_output$MTT_som_years[,,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -1082,11 +1676,11 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      # Reset ymax for update across clusters
      ymax = 0
      # Create fresh cluster array
-     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
      # Loop through clusters
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               tmp1 = tmp[filter]
               # Plot the seperate histograms and store them in an object, do not save them yet
@@ -1097,9 +1691,9 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
           } # CARDAMOM analysis exists for this cluster / biome?
      } # loop clusters first time
      create_plot = TRUE
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               if (create_plot) {
                   plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("MR",T[som]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
@@ -1113,7 +1707,7 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## Leaf Carbon per unit leaf Area (gC/m2)
 
      # Set to local variables
-     tmp = as.vector(grid_parameters$parameters[,,17,mid_quant])
+     tmp = as.vector(grid_output$parameters[,,17,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -1122,11 +1716,11 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      # Reset ymax for update across clusters
      ymax = 0
      # Create fresh cluster array
-     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
      # Loop through clusters
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               tmp1 = tmp[filter]
               # Plot the seperate histograms and store them in an object, do not save them yet
@@ -1137,9 +1731,9 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
           } # CARDAMOM analysis exists for this cluster / biome?
      } # loop clusters first time
      create_plot = TRUE
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               if (create_plot) {
                   plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("LCA (gC",m^-2,")",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
@@ -1153,7 +1747,7 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      ## Canopy Photosynthetic Efficiency (gC/m2/day)
 
      # Set to local variables
-     tmp = as.vector(grid_parameters$parameters[,,11,mid_quant])
+     tmp = as.vector(grid_output$parameters[,,11,mid_quant])
      # Determine the x axis range and breakpoints
      b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
@@ -1162,11 +1756,11 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      # Reset ymax for update across clusters
      ymax = 0
      # Create fresh cluster array
-     cluster_var = array(NA, dim=c(grid_parameters$nos_clusters,length(ax)-1))
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
      # Loop through clusters
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               tmp1 = tmp[filter]
               # Plot the seperate histograms and store them in an object, do not save them yet
@@ -1177,9 +1771,9 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
           } # CARDAMOM analysis exists for this cluster / biome?
      } # loop clusters first time
      create_plot = TRUE
-     for (c in seq(1, grid_parameters$nos_clusters)) {
+     for (c in seq(1, grid_output$nos_clusters)) {
           # Extact specific cluster
-          filter = which(grid_parameters$clusters == c)
+          filter = which(grid_output$clusters == c)
           if (length(filter) > 0) {
               if (create_plot) {
                   plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("Ceff (gC",m^-2,d^-1,")",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
@@ -1191,9 +1785,705 @@ par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
      } # cluster loop
 dev.off()
 
+
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_trait_PDFs_by_cluster_alt.png",sep=""), width = 3000, height = 1800, res = 300)
+par(mfrow=c(3,4), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
+
+     ## CUE
+
+     # Set to local variables
+     tmp = 1-as.vector(grid_output$mean_rauto_gCm2day[,,mid_quant] / grid_output$mean_gpp_gCm2day[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("CUE (0-1)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+
+     ## NPP (gCm2day) to foliage
+
+     # Set to local variables
+     tmp = as.vector(grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("NP",P[foliar]," (gC",m^-2,d^-1,")",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+
+     ## NPP fraction to fine roots
+
+     # Set to local variables
+     tmp = as.vector(grid_output$mean_alloc_roots_gCm2day[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("NP",P[root]," (gC",m^-2,d^-1,")",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+     
+     ## NPP fraction to wood
+
+     # Set to local variables
+     tmp = as.vector(grid_output$mean_alloc_wood_gCm2day[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("NP",P[wood]," (gC",m^-2,d^-1,")",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+     
+     ## MRT foliage (years)
+
+     # Set to local variables
+     tmp = as.vector(grid_output$MTT_foliage_years[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("MR",T[foliar]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+
+     ## MRT fine root (years)
+
+     # Set to local variables
+     tmp = as.vector(grid_output$MTT_roots_years[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("MR",T[root]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+     
+     ## MRT wood (years)
+
+     # Set to local variables
+     tmp = as.vector(grid_output$MTT_wood_years[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("MR",T[wood]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+     
+     ## MRT litter (foliage + fine roots)
+
+     # Set to local variables
+     tmp = as.vector(grid_output$MTT_litter_years[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("MR",T[litter]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+     
+     ## MRT soil
+
+     # Set to local variables
+     tmp = as.vector(grid_output$MTT_som_years[,,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("MR",T[som]," (y)",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+     
+     ## Leaf Carbon per unit leaf Area (gC/m2)
+
+     # Set to local variables
+     tmp = as.vector(grid_output$parameters[,,17,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("LCA (gC",m^-2,")",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+
+     ## Canopy Photosynthetic Efficiency (gC/m2/day)
+
+     # Set to local variables
+     tmp = as.vector(grid_output$parameters[,,11,mid_quant])
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE) # must do this before plotting to get the correct ymax
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("Ceff (gC",m^-2,d^-1,")",sep="")), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+dev.off()
+
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_abiotic_PDFs_by_cluster.png",sep=""), width = 3000, height = 1800, res = 300)
+par(mfrow=c(2,3), mar=c(2,2,2,1), omi=c(0.1,0.1,0.14,0.1))
+
+     ## Mean air temperature (C)
+
+     # Set to local variables
+     tmp = as.vector(grid_output$mean_temperature_C)
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("Air temperature (C)",sep="")), 
+                       xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+
+     ## Annual precipitation (kg/m2/yr)
+
+     # Set to local variables
+     tmp = as.vector(grid_output$mean_precipitation_kgH2Om2yr)
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("Precipitation (mm ",y^-1,")",sep="")), 
+                       xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+
+     ## Vapour pressure deficit
+
+     # Set to local variables
+     tmp = as.vector(grid_output$mean_vpd_Pa)
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("VPD (Pa)",sep="")), 
+                       xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+     
+     ## Annual fire Frequency
+
+     # Set to local variables
+     tmp = as.vector(FireFreq)
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("Fire Frequency (",y^-1,")",sep="")), 
+                       xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+     
+     ## Annual burnt fraction
+
+     # Set to local variables
+     tmp = as.vector(BurnedFraction)
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("Burnt Fraction (",y^-1,")",sep="")), 
+                       xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+
+     ## Harvest Fraction
+
+     # Set to local variables
+     tmp = as.vector(HarvestFraction)
+     # Determine the x axis range and breakpoints
+     b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
+     e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
+     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
+     # Reset ymax for update across clusters
+     ymax = 0
+     # Create fresh cluster array
+     cluster_var = array(NA, dim=c(grid_output$nos_clusters,length(ax)-1))
+     # Loop through clusters
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              tmp1 = tmp[filter]
+              # Plot the seperate histograms and store them in an object, do not save them yet
+              tmp1 <- hist(tmp1, breaks = ax, plot = FALSE) # Save first histogram data
+              cluster_var[c,] <- tmp1$counts / length(filter) ; x_axis = tmp1$mids
+              # Now plot them together
+              ymax = max(c(ymax,cluster_var[c,]), na.rm=TRUE)
+          } # CARDAMOM analysis exists for this cluster / biome?
+     } # loop clusters first time
+     create_plot = TRUE
+     for (c in seq(1, grid_output$nos_clusters)) {
+          # Extact specific cluster
+          filter = which(grid_output$clusters == c)
+          if (length(filter) > 0) {
+              if (create_plot) {
+                  plot(cluster_var[c,]~x_axis, type="l", lwd=2, col = c_colours[c], main=expression(paste("Harvest Fraction (",y^-1,")",sep="")), 
+                       xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax))
+                  create_plot = FALSE
+              } else {
+                  lines(cluster_var[c,]~x_axis, col = c_colours[c], lwd=2) 
+              }
+          } # does information for this plot exist
+     } # cluster loop
+     
+dev.off()
+
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_cluster_map.png",sep=""), height = 2000, width = 3000, res = 300)
 par(mfrow=c(1,1), mar=c(0.01,1.5,0.3,7),omi=c(0.01,0.1,0.01,0.1))
-var1 = grid_parameters$clusters 
+var1 = grid_output$clusters 
 var1 = raster(vals = t(var1[,dim(var1)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 plot(var1, main="", col=c_colours, xaxt = "n", yaxt = "n", box = FALSE, bty = "n",
      cex.lab=2, cex.main=2.0, cex.axis = 2, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1))
@@ -1209,11 +2499,11 @@ dev.off()
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_LCA_CUE_wNPP_wMRT_clusters.png",sep=""), height = 2700, width = 4900, res = 300)
 # Plot differences
 par(mfrow=c(2,3), mar=c(0.6,0.4,2.9,7),omi=c(0.1,0.4,0.18,0.2))
-var1 = grid_parameters$parameters[,,17,mid_quant]*landfilter
+var1 = grid_output$parameters[,,17,mid_quant]*landfilter
 var2 = (1-(grid_output$mean_rauto_gCm2day[,,mid_quant] / grid_output$mean_gpp_gCm2day[,,mid_quant]))*landfilter
-var3 = grid_parameters$clusters*landfilter
-var4 = (grid_output$mean_wnpp_gCm2day[,,mid_quant])*landfilter*365.25*1e-2
-var5 = grid_parameters$MTT_wood_years[,,mid_quant]*landfilter
+var3 = grid_output$clusters*landfilter
+var4 = (grid_output$mean_alloc_wood_gCm2day[,,mid_quant])*landfilter*365.25*1e-2
+var5 = grid_output$MTT_wood_years[,,mid_quant]*landfilter
 var5[which(var5 > 60)] = 60 ; print("Not that MRT in plot *LCA_CUE_wNPP_wMRT_clusters is capped at 60 years")
 var6 = (grid_output$mean_SurfWater_kgH2Om2[,,mid_quant])*landfilter
 var1 = raster(vals = t(var1[,dim(var1)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -1266,15 +2556,15 @@ dev.off()
 prior_ranges = read_src_model_priors(PROJECT)
 
 # Create ratio array
-posterior_prior = array(NA, dim=c(dim(grid_parameters$parameters)[1:2],length(prior_ranges$parmin)))
+posterior_prior = array(NA, dim=c(dim(grid_output$parameters)[1:2],length(prior_ranges$parmin)))
 for (n in seq(1, PROJECT$nosites)) {
 
      # Check that location has run
      if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE &
          is.na(landfilter[grid_output$i_location[n],grid_output$j_location[n]]) == FALSE) {
          for (p in seq(1,length(prior_ranges$parmin))) {
-              tmp = grid_parameters$parameters[grid_output$i_location[n],grid_output$j_location[n],p,high_quant] 
-              tmp = tmp - grid_parameters$parameters[grid_output$i_location[n],grid_output$j_location[n],p,low_quant] 
+              tmp = grid_output$parameters[grid_output$i_location[n],grid_output$j_location[n],p,high_quant] 
+              tmp = tmp - grid_output$parameters[grid_output$i_location[n],grid_output$j_location[n],p,low_quant] 
               posterior_prior[grid_output$i_location[n],grid_output$j_location[n],p] = tmp / (prior_ranges$parmax[p]-prior_ranges$parmin[p])
          } # Loop parameters
      } # Does site exist
@@ -1285,15 +2575,82 @@ for (n in seq(1, PROJECT$nosites)) {
 print("===All parameters===")
 print(summary(apply(1-posterior_prior, 3, mean, na.rm=TRUE)))
 # Print posterior parameter reductions per cluster / biome
-for (c in seq(1, grid_parameters$nos_clusters)) {
+for (c in seq(1, grid_output$nos_clusters)) {
      # Extact specific cluster
-     filter = which(grid_parameters$clusters == c)
+     filter = which(grid_output$clusters == c)
      if (length(filter) > 0) {
          print(paste("===All parameters, cluster = ",c,"===",sep=""))
          tmp = apply(1-posterior_prior, c(1,2), mean, na.rm=TRUE)
          print(summary(tmp[filter]))
      } # 
 } # current cluster
+
+# Write table of parameter specific values
+write(c("Parameter No.","1-posterior:prior"), file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_posterior_prior_reductions.csv",sep=""),
+      ncolumns = 2, append = FALSE, sep = ",")
+for (p in seq(1, dim(posterior_prior)[3])) {
+write(c(p,1-mean(posterior_prior[,,p],na.rm=TRUE)), file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_posterior_prior_reductions.csv",sep=""),
+      ncolumns = 2, append = TRUE, sep = ",")
+}
+# Then write the same table but for each cluster
+# Write table of parameter specific values
+for (c in seq(1, grid_output$nos_clusters)) {
+     # Write file header
+     write(c("Parameter No.","1-posterior:prior"), file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_cluster_",c,"_posterior_prior_reductions.csv",sep=""),
+           ncolumns = 2, append = FALSE, sep = ",")
+     for (p in seq(1, dim(posterior_prior)[3])) {
+     write(c(p,1-mean(posterior_prior[,,p][which(grid_output$clusters == c)],na.rm=TRUE)), file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_cluster_",c,"_posterior_prior_reductions.csv",sep=""),
+           ncolumns = 2, append = TRUE, sep = ",")
+     } # parameter loop
+} # cluster loop
+
+## Write table of parameter group specific values
+## groups appropriate for C7, aka DALEC_CDEA_ACM2_BUCKET
+#write(c("ParameterGroup","1-posterior:prior"), file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_grouped_posterior_prior_reductions.csv",sep=""),
+#      ncolumns = 2, append = FALSE, sep = ",")
+#p=c(2,3,4,11,13) # GPP allocation and generation
+#write(c(1,1-mean(posterior_prior[,,p],na.rm=TRUE)), file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_grouped_posterior_prior_reductions.csv",sep=""),
+#      ncolumns = 2, append = TRUE, sep = ",")
+#p=c(5,12,14,15,16) # canopy phenology
+#write(c(2,1-mean(posterior_prior[,,p],na.rm=TRUE)), file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_grouped_posterior_prior_reductions.csv",sep=""),
+#      ncolumns = 2, append = TRUE, sep = ",")
+#p=c(6,7,17,25,26,27) # wood and root turnover + rooting depth, coarse root allocation
+#write(c(3,1-mean(posterior_prior[,,p],na.rm=TRUE)), file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_grouped_posterior_prior_reductions.csv",sep=""),
+#      ncolumns = 2, append = TRUE, sep = ",")
+#p=c(1,7,8,9,10) # decomposition of dead organic matter
+#write(c(4,1-mean(posterior_prior[,,p],na.rm=TRUE)), file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_grouped_posterior_prior_reductions.csv",sep=""),
+#      ncolumns = 2, append = TRUE, sep = ",")
+#p=c(18:24) # Initial conditions
+#write(c(5,1-mean(posterior_prior[,,p],na.rm=TRUE)), file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_grouped_posterior_prior_reductions.csv",sep=""),
+#      ncolumns = 2, append = TRUE, sep = ",")
+#p=c(28:32) # Fire
+#write(c(6,1-mean(posterior_prior[,,p],na.rm=TRUE)), file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_grouped_posterior_prior_reductions.csv",sep=""),
+#      ncolumns = 2, append = TRUE, sep = ",")
+
+## Write table of parameter group specific values, divided by cluster
+## groups appropriate for C7, aka DALEC_CDEA_ACM2_BUCKET
+#for (c in seq(1, grid_output$nos_clusters)) {
+#write(c("ParameterGroup","1-posterior:prior"), file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_cluster_",c,"_grouped_posterior_prior_reductions.csv",sep=""),
+#      ncolumns = 2, append = FALSE, sep = ",")
+#p=c(2,3,4,11,13) # GPP allocation and generation
+#write(c(1,1-mean(posterior_prior[,,p][which(grid_output$clusters == c)],na.rm=TRUE)), file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_cluster_",c,"_grouped_posterior_prior_reductions.csv",sep=""),
+#      ncolumns = 2, append = TRUE, sep = ",")
+#p=c(5,12,14,15,16) # canopy phenology
+#write(c(2,1-mean(posterior_prior[,,p][which(grid_output$clusters == c)],na.rm=TRUE)), file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_cluster_",c,"_grouped_posterior_prior_reductions.csv",sep=""),
+#      ncolumns = 2, append = TRUE, sep = ",")
+#p=c(6,7,17,25,26,27) # wood and root turnover + rooting depth, coarse root allocation
+#write(c(3,1-mean(posterior_prior[,,p][which(grid_output$clusters == c)],na.rm=TRUE)), file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_cluster_",c,"_grouped_posterior_prior_reductions.csv",sep=""),
+#      ncolumns = 2, append = TRUE, sep = ",")
+#p=c(1,7,8,9,10) # decomposition of dead organic matter
+#write(c(4,1-mean(posterior_prior[,,p][which(grid_output$clusters == c)],na.rm=TRUE)), file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_cluster_",c,"_grouped_posterior_prior_reductions.csv",sep=""),
+#      ncolumns = 2, append = TRUE, sep = ",")
+#p=c(18:24) # Initial conditions
+#write(c(5,1-mean(posterior_prior[,,p][which(grid_output$clusters == c)],na.rm=TRUE)), file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_cluster_",c,"_grouped_posterior_prior_reductions.csv",sep=""),
+#      ncolumns = 2, append = TRUE, sep = ",")
+#p=c(28:32) # Fire
+#write(c(6,1-mean(posterior_prior[,,p][which(grid_output$clusters == c)],na.rm=TRUE)), file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_cluster_",c,"_grouped_posterior_prior_reductions.csv",sep=""),
+#      ncolumns = 2, append = TRUE, sep = ",")
+#} # cluster loop
 
 # Generate some plots
 
@@ -1307,7 +2664,7 @@ plot(var1, main="", zlim=c(0,1), col=colour_choices_default, xaxt = "n", yaxt = 
 plot(landmask, add=TRUE)
 mtext(expression('Mean posterior reduction (0-1)'), side = 2, cex = 1.6, padj = -0.25, adj = 0.5)
 dev.off()
-
+}
 ###
 ## Compare fraction of model ensemble members consistent with the assimilated observations
 
@@ -1323,21 +2680,24 @@ print(summary(as.vector(landfilter*grid_output$nbe_assim_data_overlap_fraction))
 print("===Assimilated NEE overlap (0-1)===")
 print(summary(as.vector(landfilter*grid_output$nee_assim_data_overlap_fraction)))
 print("===Assimilated ET overlap (0-1)===")
-print(summary(as.vector(landfilter*grid_output$evap_assim_data_overlap_fraction)))
+print(summary(as.vector(landfilter*grid_output$et_assim_data_overlap_fraction)))
+print("===Assimilate fire overlap (0-1)===")
+print(summary(as.vector(landfilter*grid_output$fire_assim_data_overlap_fraction)))
 # Are CARDAMOM models consistent with their assimilated observations
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_assimilated_observations_fraction_overlap.png",sep=""), height = 2700, width = 4900, res = 300)
 # Plot differences
-par(mfrow=c(2,3), mar=c(0.6,0.4,2.9,7),omi=c(0.1,0.4,0.18,0.2))
+par(mfrow=c(3,3), mar=c(0.6,0.4,2.9,7),omi=c(0.1,0.4,0.18,0.2))
 # Convert to raster
 var1 = raster(vals = t(landfilter[,dim(area)[2]:1]*grid_output$lai_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var2 = raster(vals = t(landfilter[,dim(area)[2]:1]*grid_output$gpp_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var3 = raster(vals = t(landfilter[,dim(area)[2]:1]*grid_output$wood_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var4 = raster(vals = t(landfilter[,dim(area)[2]:1]*grid_output$nbe_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var5 = raster(vals = t(landfilter[,dim(area)[2]:1]*grid_output$nee_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
-var6 = raster(vals = t(landfilter[,dim(area)[2]:1]*grid_output$evap_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var6 = raster(vals = t(landfilter[,dim(area)[2]:1]*grid_output$et_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var7 = raster(vals = t(landfilter[,dim(area)[2]:1]*grid_output$fire_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 # Correct spatial area and mask
-var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask) ; var4 = crop(var4, landmask) ; var5 = crop(var5, landmask) ; var6 = crop(var6, landmask)
-var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask) ; var4 = mask(var4, landmask) ; var5 = mask(var5, landmask) ; var6 = mask(var6, landmask)
+var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask) ; var4 = crop(var4, landmask) ; var5 = crop(var5, landmask) ; var6 = crop(var6, landmask) ; var7 = crop(var7, landmask)
+var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask) ; var4 = mask(var4, landmask) ; var5 = mask(var5, landmask) ; var6 = mask(var6, landmask) ; var7 = mask(var7, landmask)
 # create axis
 zrange1 = c(0,1)
 zrange2 = c(0,1)
@@ -1345,6 +2705,7 @@ zrange3 = c(0,1)
 zrange4 = c(0,1)
 zrange5 = c(0,1)
 zrange6 = c(0,1)
+zrange7 = c(0,1)
 # Begin plotting
 plot(var1, main="",col = colour_choices_gain, zlim=zrange1, xaxt = "n", yaxt = "n", box = FALSE, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, legend.width = 2.3, axes = FALSE, axis.args=list(cex.axis=2.6,hadj=0.1))
@@ -1369,6 +2730,10 @@ plot(landmask, add=TRUE)
 plot(var6, main="",col = (colour_choices_gain), zlim=zrange6, xaxt = "n", yaxt = "n",  box = FALSE, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, legend.width = 2.3, axes = FALSE, axis.args=list(cex.axis=2.6,hadj=0.1))
 mtext(expression(paste("Assimilated ET overlap (0-1)",sep="")), side = 3, cex = 1.8, padj = +0.05, adj = 0.5)
+plot(landmask, add=TRUE)
+plot(var7, main="",col = (colour_choices_gain), zlim=zrange7, xaxt = "n", yaxt = "n",  box = FALSE, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, legend.width = 2.3, axes = FALSE, axis.args=list(cex.axis=2.6,hadj=0.1))
+mtext(expression(paste("Assimilated Fire overlap (0-1)",sep="")), side = 3, cex = 1.8, padj = +0.05, adj = 0.5)
 plot(landmask, add=TRUE)
 dev.off()
 
@@ -1414,7 +2779,7 @@ cte_fire_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],length(ove
 cte_m2 = array(NA, dim=dim(grid_output$mean_lai_m2m2)[1:2])
 for (n in seq(1,PROJECT$nosites)) {
      if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE & is.na(landfilter[grid_output$i_location[n],grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,cte_lat,cte_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]],3)
+         output = closest2d_3(1,cte_lat,cte_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          cte_nbe_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],] = cte_nbe[i1,j1,overlap_start:overlap_end]
          cte_nee_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],] = cte_nee[i1,j1,overlap_start:overlap_end]
@@ -1448,7 +2813,7 @@ if (length(tmp) != length(run_years)) {
 
 # Calculate domain wide mean net sink for overlap period
 cte_domain_nbe_gCm2yr = mean(apply(cte_nbe_gCm2yr,c(1,2),mean, na.rm=TRUE), na.rm=TRUE) # gC/m2/yr
-cte_domain_nbe_TgCyr =   sum(apply(cte_nbe_gCm2yr,c(1,2),mean, na.rm=TRUE) * cte_m2 * 1e-12, na.rm=TRUE) # TgC/yr
+cte_domain_mean_nbe_TgCyr =   sum(apply(cte_nbe_gCm2yr,c(1,2),mean, na.rm=TRUE) * cte_m2 * 1e-12, na.rm=TRUE) # TgC/yr
 
 # Estimate the long term trend
 func_lm <-function(var_in) { 
@@ -1523,7 +2888,7 @@ for (i in seq(1, length(flask_date))) {
 # Determine where we will clip the datasets in time
 flask_years = floor(flask_date) ; flask_years_keep = 0
 for (i in seq(1, length(unique(flask_years)))) {
-     if (length(which(flask_years == unique(flask_years)[i])) > 48) {
+     if (length(which(flask_years == unique(flask_years)[i])) > 48 & length(which(unique(flask_years)[i] == run_years)) > 0) {
          flask_years_keep = append(flask_years_keep, which(flask_years == unique(flask_years)[i]))
      } 
 }
@@ -1584,7 +2949,7 @@ flask_cardamom_nbe_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],
 flask_cardamom_fire_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],length(flask_years),dim(flask_fire_gCm2yr)[4]))
 for (n in seq(1,PROJECT$nosites)) {
      if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE & is.na(landfilter[grid_output$i_location[n],grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,flask_lat,flask_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]],3)
+         output = closest2d_3(1,flask_lat,flask_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          flask_cardamom_nee_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],,] = flask_nee_gCm2yr[i1,j1,,]
          flask_cardamom_nbe_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],,] = flask_nbe_gCm2yr[i1,j1,,]
@@ -1705,7 +3070,7 @@ oco2_cardamom_nbe_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],l
 oco2_cardamom_fire_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],length(oco2_years),dim(oco2_fire_gCm2yr)[4]))
 for (n in seq(1,PROJECT$nosites)) {
      if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE & is.na(landfilter[grid_output$i_location[n],grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,oco2_lat,oco2_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]],3)
+         output = closest2d_3(1,oco2_lat,oco2_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          oco2_cardamom_nee_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],,] = oco2_nee_gCm2yr[i1,j1,,]
          oco2_cardamom_nbe_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],,] = oco2_nbe_gCm2yr[i1,j1,,]
@@ -1721,7 +3086,7 @@ obs_nbe_years = unique(c(flask_years,oco2_years))
 # Define the combined timeseries datasets
 obs_nbe_gCm2yr = array(NA, dim = c(dim(grid_output$mean_lai_m2m2)[1:2],length(obs_nbe_years),sum(c(dim(oco2_cardamom_nbe_gCm2yr)[4],dim(flask_cardamom_nbe_gCm2yr)[4]))))
 obs_nee_gCm2yr = array(NA, dim = c(dim(grid_output$mean_lai_m2m2)[1:2],length(obs_nbe_years),sum(c(dim(oco2_cardamom_nbe_gCm2yr)[4],dim(flask_cardamom_nbe_gCm2yr)[4]))))
-obs_fire_gCm2yr = array(NA, dim = c(dim(grid_output$mean_lai_m2m2)[1:2],length(obs_nbe_years),sum(c(dim(oco2_cardamom_nbe_gCm2yr)[4],dim(flask_cardamom_nbe_gCm2yr)[4]))))
+#obs_fire_gCm2yr = array(NA, dim = c(dim(grid_output$mean_lai_m2m2)[1:2],length(obs_nbe_years),sum(c(dim(oco2_cardamom_nbe_gCm2yr)[4],dim(flask_cardamom_nbe_gCm2yr)[4]))))
 for (i in seq(1,length(obs_nbe_years))) {
      # determine whether the flask dataset has any values for this year
      tmp = which(flask_years == obs_nbe_years[i])
@@ -1730,7 +3095,7 @@ for (i in seq(1,length(obs_nbe_years))) {
          i_s = 1 ; i_e = dim(flask_cardamom_nee_gCm2yr)[4]
          obs_nbe_gCm2yr[,,i,i_s:i_e] = flask_cardamom_nbe_gCm2yr[,,tmp,]
          obs_nee_gCm2yr[,,i,i_s:i_e] = flask_cardamom_nee_gCm2yr[,,tmp,]
-         obs_fire_gCm2yr[,,i,i_s:i_e] = flask_cardamom_fire_gCm2yr[,,tmp,]
+#         obs_fire_gCm2yr[,,i,i_s:i_e] = flask_cardamom_fire_gCm2yr[,,tmp,]
      }
      # determine whether the oco2 dataset has any values for this year
      tmp = which(oco2_years == obs_nbe_years[i])
@@ -1739,7 +3104,7 @@ for (i in seq(1,length(obs_nbe_years))) {
          i_s = 1+dim(flask_cardamom_nee_gCm2yr)[4] ; i_e = i_s - 1 + dim(oco2_cardamom_nee_gCm2yr)[4]
          obs_nbe_gCm2yr[,,i,i_s:i_e] = oco2_cardamom_nbe_gCm2yr[,,tmp,]
          obs_nee_gCm2yr[,,i,i_s:i_e] = oco2_cardamom_nee_gCm2yr[,,tmp,]
-         obs_fire_gCm2yr[,,i,i_s:i_e] = oco2_cardamom_fire_gCm2yr[,,tmp,]
+#         obs_fire_gCm2yr[,,i,i_s:i_e] = oco2_cardamom_fire_gCm2yr[,,tmp,]
      }
 } # loop years
 
@@ -1750,16 +3115,16 @@ obs_nbe_max_gCm2yr = apply(obs_nbe_gCm2yr,c(1,2,3),max, na.rm=TRUE)
 obs_nee_mean_gCm2yr = apply(obs_nee_gCm2yr,c(1,2,3),mean, na.rm=TRUE)
 obs_nee_min_gCm2yr = apply(obs_nee_gCm2yr,c(1,2,3),min, na.rm=TRUE)
 obs_nee_max_gCm2yr = apply(obs_nee_gCm2yr,c(1,2,3),max, na.rm=TRUE)
-obs_fire_mean_gCm2yr = apply(obs_fire_gCm2yr,c(1,2,3),mean, na.rm=TRUE)
-obs_fire_min_gCm2yr = apply(obs_fire_gCm2yr,c(1,2,3),min, na.rm=TRUE)
-obs_fire_max_gCm2yr = apply(obs_fire_gCm2yr,c(1,2,3),max, na.rm=TRUE)
+#obs_fire_mean_gCm2yr = apply(obs_fire_gCm2yr,c(1,2,3),mean, na.rm=TRUE)
+#obs_fire_min_gCm2yr = apply(obs_fire_gCm2yr,c(1,2,3),min, na.rm=TRUE)
+#obs_fire_max_gCm2yr = apply(obs_fire_gCm2yr,c(1,2,3),max, na.rm=TRUE)
 # Filter out the Inf values to NaN
 obs_nbe_min_gCm2yr[is.infinite(obs_nbe_min_gCm2yr) == TRUE] = NA
 obs_nbe_max_gCm2yr[is.infinite(obs_nbe_max_gCm2yr) == TRUE] = NA
 obs_nee_min_gCm2yr[is.infinite(obs_nee_min_gCm2yr) == TRUE] = NA
 obs_nee_max_gCm2yr[is.infinite(obs_nee_max_gCm2yr) == TRUE] = NA
-obs_fire_min_gCm2yr[is.infinite(obs_fire_min_gCm2yr) == TRUE] = NA
-obs_fire_max_gCm2yr[is.infinite(obs_fire_max_gCm2yr) == TRUE] = NA
+#obs_fire_min_gCm2yr[is.infinite(obs_fire_min_gCm2yr) == TRUE] = NA
+#obs_fire_max_gCm2yr[is.infinite(obs_fire_max_gCm2yr) == TRUE] = NA
 
 # Ensure that the timeseries length is consistent between the observed variable and the model analysis
 # This assumes that only the timesteps that overlap the model period have been read in the first place,
@@ -1780,9 +3145,9 @@ if (length(tmp) != length(run_years)) {
         obs_nee_mean_gCm2yr = abind(add_beginning,obs_nbe_mean_gCm2yr, along=3)
         obs_nee_min_gCm2yr = abind(add_beginning,obs_nbe_min_gCm2yr, along=3)
         obs_nee_max_gCm2yr = abind(add_beginning,obs_nbe_max_gCm2yr, along=3)
-        obs_fire_mean_gCm2yr = abind(add_beginning,obs_nbe_mean_gCm2yr, along=3)
-        obs_fire_min_gCm2yr = abind(add_beginning,obs_nbe_min_gCm2yr, along=3)
-        obs_fire_max_gCm2yr = abind(add_beginning,obs_nbe_max_gCm2yr, along=3)
+#        obs_fire_mean_gCm2yr = abind(add_beginning,obs_nbe_mean_gCm2yr, along=3)
+#        obs_fire_min_gCm2yr = abind(add_beginning,obs_nbe_min_gCm2yr, along=3)
+#        obs_fire_max_gCm2yr = abind(add_beginning,obs_nbe_max_gCm2yr, along=3)
     } 
     if (add_afterward > 0) {
         # Convert these into arrays of the correct shape but empty
@@ -1794,9 +3159,9 @@ if (length(tmp) != length(run_years)) {
         obs_nee_mean_gCm2yr = abind(obs_nbe_mean_gCm2yr,add_afterward, along=3)
         obs_nee_min_gCm2yr = abind(obs_nbe_min_gCm2yr,add_afterward, along=3)
         obs_nee_max_gCm2yr = abind(obs_nbe_max_gCm2yr, along=3)
-        obs_fire_mean_gCm2yr = abind(obs_nbe_mean_gCm2yr,add_afterward, along=3)
-        obs_fire_min_gCm2yr = abind(obs_nbe_min_gCm2yr,add_afterward, along=3)
-        obs_fire_max_gCm2yr = abind(obs_nbe_max_gCm2yr,add_afterward, along=3)
+#        obs_fire_mean_gCm2yr = abind(obs_nbe_mean_gCm2yr,add_afterward, along=3)
+#        obs_fire_min_gCm2yr = abind(obs_nbe_min_gCm2yr,add_afterward, along=3)
+#        obs_fire_max_gCm2yr = abind(obs_nbe_max_gCm2yr,add_afterward, along=3)
     }
 } # extra years needed
 
@@ -1871,7 +3236,7 @@ fc_gpp = fc_gpp * 365.25 # gC/m2/yr
 fc_cardamom_gpp_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],length(fc_years)))
 for (n in seq(1,PROJECT$nosites)) {
      if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE & is.na(landfilter[grid_output$i_location[n],grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,fc_lat,fc_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]],3)
+         output = closest2d_3(1,fc_lat,fc_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          fc_cardamom_gpp_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],] = fc_gpp[i1,j1,]
      } # valid value exists
@@ -1928,19 +3293,19 @@ copernicus_gpp = copernicus_gpp * 365.25 #gC/m2/day -> gC/m2/yr
 copernicus_cardamom_gpp_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],length(copernicus_years)))
 for (n in seq(1,PROJECT$nosites)) {
      if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE & is.na(landfilter[grid_output$i_location[n],grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,copernicus_lat,copernicus_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]],3)
+         output = closest2d_3(1,copernicus_lat,copernicus_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          copernicus_cardamom_gpp_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],] = copernicus_gpp[i1,j1,]
      } # valid value exists
 } # loop sites
 
 
-## Extract FluxSat v2 GPP (2000-2019)
+## Extract FluxSat v2 GPP (2001-2019)
 
 # "PointsOfChange"
 
 # Read first file to get additional information
-fluxsat_years = c(2000:2019)
+fluxsat_years = c(2001:2019)
 fluxsat_years = intersect(fluxsat_years,run_years)
 
 # Make a list of all available files
@@ -1987,7 +3352,7 @@ fluxsat_cardamom_gpp_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2
 fluxsat_cardamom_gpp_gCm2yr_trend = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2]))
 for (n in seq(1,PROJECT$nosites)) {
      if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE & is.na(landfilter[grid_output$i_location[n],grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,fluxsat_lat,fluxsat_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]],3)
+         output = closest2d_3(1,fluxsat_lat,fluxsat_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          fluxsat_cardamom_gpp_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],] = fluxsat_gpp[i1,j1,]
          # Estimate the GPP trend at this time too
@@ -2070,6 +3435,10 @@ apply(copernicus_cardamom_gpp_gCm2yr*array(area, dim=c(dim(area)[1:2],dim(copern
 obs_gpp_mean_domain_TgCyr = apply(obs_gpp_mean_gCm2yr*array(area, dim=c(dim(area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
 obs_gpp_min_domain_TgCyr = apply(obs_gpp_min_gCm2yr*array(area, dim=c(dim(area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
 obs_gpp_max_domain_TgCyr = apply(obs_gpp_max_gCm2yr*array(area, dim=c(dim(area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))*1e-12,c(3),sum, na.rm=TRUE)
+# where the whole grid is zero can lead to zero being introduced - remove these
+obs_gpp_mean_domain_TgCyr[which(obs_gpp_mean_domain_TgCyr == 0)] = NA 
+obs_gpp_min_domain_TgCyr[which(obs_gpp_min_domain_TgCyr == 0)] = NA
+obs_gpp_max_domain_TgCyr[which(obs_gpp_max_domain_TgCyr == 0)] = NA
 
 ###
 ## Independent fire emissions estimate
@@ -2105,7 +3474,7 @@ gfed_cardamom_fire_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],
 gfed_m2 = array(NA, dim=dim(grid_output$mean_lai_m2m2)[1:2])
 for (n in seq(1,PROJECT$nosites)) {
      if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE & is.na(landfilter[grid_output$i_location[n],grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,gfed_lat,gfed_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]],3)
+         output = closest2d_3(1,gfed_lat,gfed_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          gfed_cardamom_fire_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],] = gfed_fire[i1,j1,]
      }
@@ -2130,15 +3499,15 @@ for (t in seq(2, length(gfas_years))) {
      gfas = nc_open(paste("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/cssp_brazil/GFAS_annual/cams_gfas_co2fire_",gfas_years[t],".nc",sep=""))
      tmp = ncvar_get(gfas, "AnnualFire")
      gfas_fire[,,t] = tmp
+     # Tidy
+     nc_close(gfas)
 }
-# Tidy
-nc_close(gfas)
 
 # Search for africa locations and slot into africa only grid for matching onto CARDAMOM
 gfas_cardamom_fire_gCm2yr = array(NA, dim=c(dim(grid_output$mean_lai_m2m2)[1:2],length(gfas_years)))
 for (n in seq(1,PROJECT$nosites)) {
      if (is.na(grid_output$i_location[n]) == FALSE & is.na(grid_output$j_location[n]) == FALSE & is.na(landfilter[grid_output$i_location[n],grid_output$j_location[n]]) == FALSE) {
-         output = closest2d(1,gfas_lat,gfas_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]],3)
+         output = closest2d_3(1,gfas_lat,gfas_long,grid_lat[grid_output$i_location[n],grid_output$j_location[n]],grid_long[grid_output$i_location[n],grid_output$j_location[n]])
          i1 = unlist(output)[1] ; j1 = unlist(output)[2]
          gfas_cardamom_fire_gCm2yr[grid_output$i_location[n],grid_output$j_location[n],] = gfas_fire[i1,j1,]
      }
@@ -2373,14 +3742,14 @@ for (i in seq(1, PROJECT$long_dim)) {
                   nbp_sig_longitude = append(nbp_sig_longitude,i-0.5)
               }
               # Is wood chance confidently a source or sink?
-              if ((grid_output$mean_dCwood_gCm2[i,j,high_quant] > 0 & grid_output$mean_dCwood_gCm2[i,j,low_quant] > 0) | 
-                  (grid_output$mean_dCwood_gCm2[i,j,high_quant] < 0 & grid_output$mean_dCwood_gCm2[i,j,low_quant] < 0)) {
+              if ((grid_output$final_dCwood_gCm2[i,j,high_quant] > 0 & grid_output$final_dCwood_gCm2[i,j,low_quant] > 0) | 
+                  (grid_output$final_dCwood_gCm2[i,j,high_quant] < 0 & grid_output$final_dCwood_gCm2[i,j,low_quant] < 0)) {
                   dCwood_sig_latitude = append(dCwood_sig_latitude,j-0.5)
                   dCwood_sig_longitude = append(dCwood_sig_longitude,i-0.5)
               }
               # Is soil confidently a source or sink?
-              if ((grid_output$mean_dCsom_gCm2[i,j,high_quant] > 0 & grid_output$mean_dCsom_gCm2[i,j,low_quant] > 0) | 
-                  (grid_output$mean_dCsom_gCm2[i,j,high_quant] < 0 & grid_output$mean_dCsom_gCm2[i,j,low_quant] < 0)) {
+              if ((grid_output$final_dCsom_gCm2[i,j,high_quant] > 0 & grid_output$final_dCsom_gCm2[i,j,low_quant] > 0) | 
+                  (grid_output$final_dCsom_gCm2[i,j,high_quant] < 0 & grid_output$final_dCsom_gCm2[i,j,low_quant] < 0)) {
                   dCsom_sig_latitude = append(dCsom_sig_latitude,j-0.5)
                   dCsom_sig_longitude = append(dCsom_sig_longitude,i-0.5)
               }
@@ -2404,12 +3773,56 @@ print(paste("dCwood sig  = ",round((length(dCwood_sig_latitude) / nos_site_inc)*
 print(paste("dCsom sig  = ",round((length(dCsom_sig_latitude) / nos_site_inc)*100, digits=3)," %",sep=""))
 
 # Statisical correlation between NBP and wood change
-print(paste("NBP ~ dCwood R2 = ",round(summary(lm(as.vector(-grid_output$mean_nbe_gCm2[,,mid_quant]) ~ as.vector(grid_output$mean_dCwood_gCm2[,,mid_quant])))$adj.r.squared,digits=3),sep=""))
+print(paste("NBP ~ dCwood R2 = ",round(summary(lm(as.vector(-grid_output$mean_nbe_gCm2[,,mid_quant]) ~ as.vector(grid_output$final_dCwood_gCm2[,,mid_quant])))$adj.r.squared,digits=3),sep=""))
 # Statisical correlation between NBE and som change
-print(paste("NBP ~ dCsom R2  = ",round(summary(lm(as.vector(-grid_output$mean_nbe_gCm2[,,mid_quant]) ~ as.vector(grid_output$mean_dCsom_gCm2[,,mid_quant])))$adj.r.squared,digits=3),sep=""))
+print(paste("NBP ~ dCsom R2  = ",round(summary(lm(as.vector(-grid_output$mean_nbe_gCm2[,,mid_quant]) ~ as.vector(grid_output$final_dCsom_gCm2[,,mid_quant])))$adj.r.squared,digits=3),sep=""))
 
 ###
 ## Plot Observations
+
+# Climate variables
+# Assign variables
+var1 = grid_output$mean_temperature_C
+var2 = grid_output$mean_precipitation_kgH2Om2yr
+var3 = grid_output$mean_vpd_Pa*1e-3
+var4 = grid_output$mean_radiation_MJm2day
+# Apply filter
+var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var2[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var3[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var4[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+# Convert to raster
+var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Trim to data area
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3) ; var4 = trim(var4) 
+# Determine ranges
+zrange1 = c(-1,1)*max(abs(range(values(var1),na.rm=TRUE)))
+zrange2 = c(0,1)*max(abs(range(values(var2),na.rm=TRUE)))
+zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
+zrange4 = c(0,1)*max(abs(range(values(var4),na.rm=TRUE)))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_mean_meteorology.png",sep=""), height = 2100, width = 5000*0.55, res = 300)
+par(mfrow=c(2,2), mar=c(0.5,0.5,2.8,7),omi=c(0.1,0.4,0.12,0.2))
+# Mean annual median estimates
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=1.9, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste('Air temperature (C)',sep="")), col=(colour_choices_loss))
+plot(landmask, add=TRUE)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=1.9, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste('Precipitation (mm ',y^-1,')',sep="")), col=colour_choices_gain)
+plot(landmask, add=TRUE)
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=1.9, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste('VPD (kPa)',sep="")), col=colour_choices_loss)
+plot(landmask, add=TRUE)
+plot(var4, zlim=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=1.9, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste('SW Radiation (MJ ',m^-2,d^-1,')',sep="")), col=colour_choices_loss)
+plot(landmask, add=TRUE)
+dev.off()
 
 # Compare analyses against the observational constraints (LAI, Soil C prior, Cwood stock, potAGB)
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_compare_observation.png",sep=""), height = 4000, width = 4500, res = 300)
@@ -2439,7 +3852,7 @@ mtext(expression(paste('Year',sep="")), side = 1, cex = 2.4, padj = 1.85)
 mtext(expression(paste('Analysis-wide LAI (',m^2,'/',m^2,')',sep="")), side = 2, cex = 2.4, padj = -1.05)
 abline(0,1, col="grey", lwd=3)
 # Now plot initial soil
-plot(as.vector(1e-2*grid_parameters$parameters[,,23,mid_quant]) ~ as.vector(1e-2*SoilCPrior), pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.0, ylab="", xlab="", main="", col=model_colours[1])
+plot(as.vector(1e-2*grid_output$parameters[,,23,mid_quant]) ~ as.vector(1e-2*SoilCPrior), pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.0, ylab="", xlab="", main="", col=model_colours[1])
 mtext(expression(paste('CARDAMOM',sep="")), side = 1, cex = 2.4, padj = 1.85)
 mtext(expression(paste('Initial soil C (MgC/ha)',sep="")), side = 2, cex = 2.4, padj = -1.00)
 abline(0,1, col="grey", lwd=3)
@@ -2471,6 +3884,44 @@ legend("topleft", legend = c("Obs","CARDAMOM"), col = c("black",model_colours[1]
 dev.off()
 
 # Domain wide NBE (yaxis) model (xaxis), include independent estimates
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_CiCa_soilwater_wSWP_timeseries_comparison_plusCI.png",sep=""), height=3800, width=2500, res=300)
+par(mfrow=c(3,1),mai=c(0.3,0.65,0.3,0.2),omi=c(0.2,0.2,0.3,0.005))
+# CiCa ratio
+var1 = cica_ratio ; var2 = cica_lower_ratio ; var3 = cica_upper_ratio
+zrange = range(c(var1,var2,var3), na.rm=TRUE)
+plot(var1~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
+      col=model_colours[1], type="l", lwd=4, ylab="", xlab="", lty=1)
+#plotconfidence(var2,run_years,2,obs_colours[1])
+lines(var1~run_years, col=model_colours[1], lwd=3, lty = 1) ; points(var1~run_years, col=model_colours[1], pch=16)
+lines(var2~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var2~run_years, col=model_colours[1], pch=16)
+lines(var3~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var3~run_years, col=model_colours[1], pch=16)
+mtext(expression(paste("CiCa (0-1)",sep="")), side=2, padj=-2.05,cex=1.5)
+
+# Surface water content (0-30cm; KgH2O/m2)
+var1 = SurfWater_mm ; var2 = SurfWater_lower_mm ; var3 = SurfWater_upper_mm
+zrange = range(c(var1,var2,var3), na.rm=TRUE)
+plot(var1~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
+      col=model_colours[1], type="l", lwd=4, ylab="", xlab="", lty=1)
+#plotconfidence(var2,run_years,2,obs_colours[1])
+lines(var1~run_years, col=model_colours[1], lwd=3, lty = 1) ; points(var1~run_years, col=model_colours[1], pch=16)
+lines(var2~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var2~run_years, col=model_colours[1], pch=16)
+lines(var3~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var3~run_years, col=model_colours[1], pch=16)
+mtext(expression(paste("Surface Water (0-30cm; mm)",sep="")), side=2, padj=-2.05, cex=1.5)
+
+# Plant access weighted soil water potential (MPa)
+var1 = wSWP_MPa ; var2 = wSWP_lower_MPa ; var3 = wSWP_upper_MPa
+zrange = range(c(var1,var2,var3), na.rm=TRUE)
+plot(var1~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
+      col=model_colours[1], type="l", lwd=4, ylab="", xlab="", lty=1)
+#plotconfidence(var2,run_years,2,obs_colours[1])
+lines(var1~run_years, col=model_colours[1], lwd=3, lty = 1) ; points(var1~run_years, col=model_colours[1], pch=16)
+lines(var2~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var2~run_years, col=model_colours[1], pch=16)
+lines(var3~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var3~run_years, col=model_colours[1], pch=16)
+mtext("Year", side=1, padj=2.0,cex=1.6)
+mtext(expression(paste("wSWP (MPa)",sep="")), side=2, padj=-2.05,cex=1.5)
+dev.off()
+
+# Domain wide NBE (yaxis) model (xaxis), include independent estimates
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_wood_litter_soil_timeseries_comparison_plusCI.png",sep=""), height=3800, width=2500, res=300)
 par(mfrow=c(3,1),mai=c(0.3,0.65,0.3,0.2),omi=c(0.2,0.2,0.3,0.005))
 # Now plot wood stocks
@@ -2485,7 +3936,7 @@ lines(var3~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var3~run_ye
 mtext(expression(paste("Wood (TgC)",sep="")), side=2, padj=-2.05,cex=1.5)
 
 # Now plot foliar and fine root litter stocks
-var1 = lit_TgC ; var2 = lit_lower_TgC ; var3 = lit_upper_TgC
+var1 = litter_TgC ; var2 = litter_lower_TgC ; var3 = litter_upper_TgC
 zrange = range(c(var1,var2,var3), na.rm=TRUE)
 plot(var1~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
       col=model_colours[1], type="l", lwd=4, ylab="", xlab="", lty=1)
@@ -2632,6 +4083,35 @@ if (length(which(is.na(WoodCobs_trend) == FALSE)) > 0) {
 ## Independent evaluation plots
 
 # Are CARDAMOM models consistent with the range described by CTE NBE ensemble, FC GPP ensemble and GFED / GFAS Fire products
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_FIRE_no_stippling.png",sep=""), height = 1000, width = 4000, res = 300)
+# Plot differences
+par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
+var1 = raster(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_nbe_gCm2day[,dim(area)[2]:1,mid_quant]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var2 = raster(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_gpp_gCm2day[,dim(area)[2]:1,mid_quant]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_fire_gCm2day[,dim(area)[2]:1,mid_quant]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Correct spatial area and mask
+var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask)
+var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask)
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3)
+# create axis
+zrange1 = c(-1,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
+zrange2 = c(0,max(values(var2), na.rm=TRUE))
+zrange3 = c(0,max(values(var3), na.rm=TRUE))
+plot(var1, main="",col = rev(colour_choices_default), zlim=zrange1, xaxt = "n", yaxt = "n", box = FALSE, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, legend.width = 2.3, axes = FALSE, axis.args=list(cex.axis=2.6,hadj=0.1))
+mtext(expression(paste("NBE (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+plot(landmask, add=TRUE)
+plot(var2, main="",col = colour_choices_gain, zlim=zrange2, xaxt = "n", yaxt = "n",  box = FALSE, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, legend.width = 2.3, axes = FALSE, axis.args=list(cex.axis=2.6,hadj=0.1))
+mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+plot(landmask, add=TRUE)
+plot(var3, main="",col = (colour_choices_loss), zlim=zrange3, xaxt = "n", yaxt = "n",  box = FALSE, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, legend.width = 2.3, axes = FALSE, axis.args=list(cex.axis=2.6,hadj=0.1))
+mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+plot(landmask, add=TRUE)
+dev.off()
+
+# Are CARDAMOM models consistent with the range described by CTE NBE ensemble, FC GPP ensemble and GFED / GFAS Fire products
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_FIRE_evaluation_stippling.png",sep=""), height = 1000, width = 4000, res = 300)
 # Plot differences
 par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
@@ -2641,6 +4121,7 @@ var3 = raster(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_
 # Correct spatial area and mask
 var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask)
 var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask)
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3)
 # create axis
 zrange1 = c(-1,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
 zrange2 = c(0,max(values(var2), na.rm=TRUE))
@@ -2675,6 +4156,7 @@ var3 = raster(vals = t(landfilter[,dim(area)[2]:1]*1e-2*var3[,dim(area)[2]:1]), 
 # Correct spatial area and mask
 var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask)
 var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask)
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3)
 # create axis
 zrange1 = c(-1,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
 zrange2 = c(-1,1) * max(abs(range(values(var2),na.rm=TRUE)), na.rm=TRUE)
@@ -2707,6 +4189,7 @@ var3 = raster(vals = t(landfilter[,dim(area)[2]:1]*grid_output$fire_obs_overlap_
 # Correct spatial area and mask
 var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask)
 var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask)
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3)
 # create axis
 zrange1 = c(0,1)
 zrange2 = c(0,1)
@@ -2728,61 +4211,13 @@ dev.off()
 # Domain wide NBE (yaxis) model (xaxis), include independent estimates
 model_flags=c("CARDAMOM")
 obs_flags=c("CTE","FC/Copernicus/FluxSatv2","GFEDv4.1s / GFAS")
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_Fire_timeseries_comparison.png",sep=""), height=3800, width=2500, res=300)
-par(mfrow=c(3,1),mai=c(0.3,0.65,0.3,0.2),omi=c(0.2,0.2,0.3,0.005))
-# Now plot NBE, annual time series TgC/yr
-dims = dim(cte_nbe_gCm2yr)
-var1  = c(apply(cte_nbe_gCm2yr * array(cte_m2, dim=dims),c(3),sum, na.rm=TRUE) * 1e-12)
-var2  = cbind(cbind(c(obs_nbe_mean_domain_TgCyr),c(obs_nbe_min_domain_TgCyr)),c(obs_nbe_max_domain_TgCyr))
-var3  = nbe_TgCyr
-zrange = range(c(var1,var2,var3), na.rm=TRUE)
-zrange[2] = zrange[2] + 500
-plot(var1~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
-      col=obs_colours[1], type="l", lwd=4, ylab="", xlab="")
-plotconfidence(var2,run_years,2,obs_colours[1])
-lines(var1~run_years, col=obs_colours[1], lwd=4)
-lines(var3~run_years, col=model_colours[1], lwd=3, lty = 1) ; points(var3~run_years, col=model_colours[1], pch=16)
-abline(0,0,col="grey", lwd=2)
-legend("topleft", legend = c(obs_flags,model_flags), col = c(obs_colours[1:3],model_colours), 
-       lty = c(rep(1,length(obs_flags)),rep(1,length(model_flags))), pch=rep(NA,length(c(obs_flags,model_flags))), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
-mtext(expression(paste("Net Biome Exchange (TgC y",r^-1,")",sep="")), side=2, padj=-2.65,cex=1.5)
-#mtext("Year", side=1, padj=2.0,cex=1.6)
-
-# Now plot GPP
-var3  = cbind(cbind(c(obs_gpp_mean_domain_TgCyr),c(obs_gpp_min_domain_TgCyr)),c(obs_gpp_max_domain_TgCyr))
-var4  = gpp_TgCyr   
-zrange = range(c(var3,var4), na.rm=TRUE)*c(0.9,1.0)
-plot(var4~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
-      col=model_colours[1], type="l", lwd = 4, ylab="", xlab="", lty = 2)
-plotconfidence(var3,run_years,2,obs_colours[2])
-lines(var4~run_years, col=model_colours[1], lwd = 4, lty = 1) ; points(var4~run_years, col=model_colours[1], pch=16)
-#legend("bottomright", legend = c(obs_flags[-5],model_flags), col = c(obs_colours[1:4],model_colours), 
-#       lty = c(rep(1,length(obs_flags[-5])),rep(2,length(model_flags))), pch=rep(NA,length(c(obs_flags[-5],model_flags))), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
-#mtext("Year", side=1, padj=2.0,cex=1.6)
-mtext(expression(paste("Gross Primary Productivity (TgC y",r^-1,")",sep="")), side=2, padj=-2.65, cex=1.5)
-
-# Now plot fire
-var3  = cbind(cbind(c(obs_fire_mean_domain_TgCyr),c(obs_fire_min_domain_TgCyr)),c(obs_fire_max_domain_TgCyr))
-var4  = fire_TgCyr 
-zrange = range(c(var3,var4), na.rm=TRUE)*c(0.9,1.1)
-plot(var4~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
-      col=model_colours[1], type="l", lwd=4, lty=2, ylab="", xlab="")
-plotconfidence(var3,run_years,2,obs_colours[3])
-lines(var4~run_years, col=model_colours[1], lwd=4, lty = 1) ; points(var4~run_years, col=model_colours[1], pch=16)
-mtext("Year", side=1, padj=2.0,cex=1.6)
-mtext(expression(paste("Fire Emissions (TgC y",r^-1,")",sep="")), side=2, padj=-2.65,cex=1.5)
-dev.off()
-
-# Domain wide NBE (yaxis) model (xaxis), include independent estimates
-model_flags=c("CARDAMOM")
-obs_flags=c("CTE","FC/Copernicus/FluxSatv2","GFEDv4.1s / GFAS")
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_Fire_timeseries_comparison_plusCI.png",sep=""), height=3800, width=2500, res=300)
 par(mfrow=c(3,1),mai=c(0.3,0.65,0.3,0.2),omi=c(0.2,0.2,0.3,0.005))
 # Now plot NBE, annual time series TgC/yr
 dims = dim(cte_nbe_gCm2yr)
 var1  = c(apply(cte_nbe_gCm2yr * array(cte_m2, dim=dims),c(3),sum, na.rm=TRUE) * 1e-12)
 var2  = cbind(cbind(c(obs_nbe_mean_domain_TgCyr),c(obs_nbe_min_domain_TgCyr)),c(obs_nbe_max_domain_TgCyr))
-var3  = nbe_TgCyr ; var4  = nbe_lower_TgCyr ; var5  = nbe_upper_TgCyr
+var3  = mean_nbe_TgCyr ; var4  = nbe_lower_TgCyr ; var5  = nbe_upper_TgCyr
 zrange = range(c(var1,var2,var3,var4,var5), na.rm=TRUE)
 zrange[2] = zrange[2] + 500
 plot(var3~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
@@ -2799,7 +4234,7 @@ mtext(expression(paste("Net Biome Exchange (TgC y",r^-1,")",sep="")), side=2, pa
 
 # Now plot GPP
 var3  = cbind(cbind(c(obs_gpp_mean_domain_TgCyr),c(obs_gpp_min_domain_TgCyr)),c(obs_gpp_max_domain_TgCyr))
-var4  = gpp_TgCyr ; var5  = gpp_lower_TgCyr ; var6  = gpp_upper_TgCyr   
+var4  = mean_gpp_TgCyr ; var5  = gpp_lower_TgCyr ; var6  = gpp_upper_TgCyr   
 zrange = range(c(var3,var4,var5,var6), na.rm=TRUE)*c(0.9,1.0)
 plot(var4~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
       col=model_colours[1], type="l", lwd = 4, ylab="", xlab="", lty = 2)
@@ -2814,7 +4249,7 @@ mtext(expression(paste("Gross Primary Productivity (TgC y",r^-1,")",sep="")), si
 
 # Now plot fire
 var3  = cbind(cbind(c(obs_fire_mean_domain_TgCyr),c(obs_fire_min_domain_TgCyr)),c(obs_fire_max_domain_TgCyr))
-var4  = fire_TgCyr  ; var5  = fire_lower_TgCyr ; var6  = fire_upper_TgCyr
+var4  = mean_fire_TgCyr  ; var5  = fire_lower_TgCyr ; var6  = fire_upper_TgCyr
 zrange = range(c(var3,var4,var5,var6), na.rm=TRUE)*c(0.9,1.1)
 plot(var4~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
       col=model_colours[1], type="l", lwd=4, lty=2, ylab="", xlab="")
@@ -2840,6 +4275,7 @@ var3 = raster(vals = t((1/nos_years)*grid_output$final_dCsom_gCm2[,dim(area)[2]:
 # Crop to size
 var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask)
 var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask)
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3)
 ## Restrict parameter range to +/- 800 gC/m2/yr
 #var1[var1 > 800] = 800 ; var1[var1 < -800] = -800
 #var2[var2 > 800] = 800 ; var2[var2 < -800] = -800
@@ -2885,6 +4321,7 @@ var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, la
 var16 = crop(var16, landmask)
 var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask)
 var16 = mask(var16, landmask) 
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3) ; var16 = trim(var16)
 # Determine gradients
 zrange = max(abs(quantile(c(values(var1),values(var2),values(var3)), prob = c(0.001,0.999), na.rm=TRUE))) * c(-1,1)
 zrange1 = max(abs(quantile(values(var16), prob = c(0.001,0.999), na.rm=TRUE))) * c(-1,1)
@@ -2960,6 +4397,19 @@ dev.off()
 #dev.off()
 
 ###
+## Relative growth rate
+
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_biomass_ratio.png",sep=""), height = 2000, width = 3000, res = 300)
+par(mfrow=c(1,1), mar=c(0.01,1.5,0.3,7),omi=c(0.01,0.1,0.01,0.1))
+var1 = (grid_output$mean_npp_gCm2day[,,mid_quant]*365.25) / grid_output$mean_biomass_gCm2[,,mid_quant]
+var1 = raster(vals = t(var1[,dim(var1)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+plot(var1, main="", zlim = c(0,max(values(var1), na.rm=TRUE)), col=colour_choices_loss, xaxt = "n", yaxt = "n", box = FALSE, bty = "n",
+     cex.lab=2, cex.main=2.0, cex.axis = 2, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1))
+plot(landmask, add=TRUE)
+mtext(expression('Annual NPP:Biomass'), side = 2, cex = 1.6, padj = -0.25, adj = 0.5)
+dev.off()
+
+###
 ## Plot carbon fluxes / uncertainty
 
 # C fluxes
@@ -2990,6 +4440,9 @@ var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs
 var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var7 = raster(vals = t((var7)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var8 = raster(vals = t((var8)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Trim to data area
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3) ; var4 = trim(var4) 
+var5 = trim(var5) ; var6 = trim(var6) ; var7 = trim(var7) ; var8 = trim(var8) 
 # Determine ranges
 zrange1 = c(-1,1)*max(abs(range(values(var1),na.rm=TRUE)))
 zrange2 = c(0,1)*max(abs(range(values(var2),na.rm=TRUE)))
@@ -3053,6 +4506,79 @@ var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs
 var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Trim to data area
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3) ; var4 = trim(var4) 
+# Determine ranges
+zrange1 = c(-1,1)*max(abs(range(values(var1),na.rm=TRUE)))
+zrange2 = c(0,1)*max(abs(range(c(values(var2),values(var3)),na.rm=TRUE)))
+zrange3 = zrange2 #c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
+zrange4 = c(0,1)*max(abs(range(values(var4),na.rm=TRUE)))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_C_fluxes_median_v2.png",sep=""), height = 2100, width = 5000*0.55, res = 300)
+par(mfrow=c(2,2), mar=c(0.5,0.5,2.8,7),omi=c(0.1,0.4,0.12,0.2))
+# Mean annual median estimates
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste('NBE (MgC h',a^-1,' y',r^-1,')',sep="")), col=rev(colour_choices_default))
+plot(landmask, add=TRUE)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")), col=colour_choices_gain)
+plot(landmask, add=TRUE)
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste('Reco (MgC h',a^-1,' y',r^-1,')',sep="")), col=colour_choices_loss)
+plot(landmask, add=TRUE)
+plot(var4, zlim=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")), col=colour_choices_loss)
+plot(landmask, add=TRUE)
+dev.off()
+
+# Correlation between:
+# GPP~Biomass, GPP~Fire, Biomass~Fire
+var1 = as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]) * 365.25 * 1e-2
+var2 = as.vector(grid_output$mean_biomass_gCm2[,,mid_quant]) * 1e-2
+var3 = as.vector(grid_output$mean_fire_gCm2day[,,mid_quant]) * 365.25 * 1e-2
+gppbiomass = lm(var2~var1)
+gppfire = lm(var3~var1)
+firebiomass = lm(var2~var3)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_GPP_Biomass_Fire_correlation.png",sep=""), height = 2700, width = 4900, res = 300)
+par(mfrow=c(2,3), mar=c(4.0,5.0,2.5,2.5),omi=c(0.2,0.2,0.18,0.1))
+plot(var1,var2, pch=16, xlab = expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")), ylab = expression(paste('Biomass (MgC h',a^-1,')',sep="")),
+     cex.axis = 1.8, cex.lab = 1.8, cex.main=1.8, main=paste('R2 = ',round(summary(gppbiomass)$adj.r.squared,digits = 2),sep=""), cex = 1.2)
+abline(gppbiomass, col="red", lwd=2)
+plot(var1,var3, pch=16, xlab = expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")), ylab = expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")),
+     cex.axis = 1.8, cex.lab = 1.8, cex.main=1.8, main=paste('R2 = ',round(summary(gppfire)$adj.r.squared,digits = 2),sep=""), cex = 1.2)
+abline(gppfire, col="red", lwd=2)
+plot(var3,var2, pch=16, xlab = expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")), ylab = expression(paste('Biomass (MgC h',a^-1,')',sep="")),
+     cex.axis = 1.8, cex.lab = 1.8, cex.main=1.8, main=paste('R2 = ',round(summary(firebiomass)$adj.r.squared,digits = 2),sep=""), cex = 1.2)
+abline(firebiomass, col="red", lwd=2)
+hist(var1, main="", ylab="No. pixels", xlab=expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")),
+     cex.lab=1.8, cex.axis = 1.8)
+hist(var2, main="", ylab=" ", xlab=expression(paste('Biomass (MgC h',a^-1,')',sep="")),
+     cex.lab=1.8, cex.axis = 1.8)
+hist(var3, main="", ylab="", xlab=expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")),
+     cex.lab=1.8, cex.axis = 1.8)
+dev.off()
+
+# C fluxes
+# Assign variables
+var1 = grid_output$mean_nbe_gCm2day[,,mid_quant]*1e-2*365.25
+var2 = grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25
+var3 = grid_output$mean_reco_gCm2day[,,mid_quant]*1e-2*365.25 
+var4 = grid_output$mean_fire_gCm2day[,,mid_quant]*1e-2*365.25 
+# Apply filter
+var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var2[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var3[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var4[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+# Convert to raster
+var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Trim to data area
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3) ; var4 = trim(var4) 
 # Determine ranges
 zrange1 = c(-1,1)*max(abs(range(values(var1),na.rm=TRUE)))
 zrange2 = c(0,1)*max(abs(range(values(var2),na.rm=TRUE)))
@@ -3107,6 +4633,9 @@ var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs
 var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var7 = raster(vals = t((var7)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var8 = raster(vals = t((var8)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Trim to data area
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3) ; var4 = trim(var4) 
+var5 = trim(var5) ; var6 = trim(var6) ; var7 = trim(var7) ; var8 = trim(var8) 
 # Determine ranges
 zrange1 = c(-1,1)*max(abs(range(values(var1),na.rm=TRUE)))
 zrange2 = c(0,1)*max(abs(range(values(var2),na.rm=TRUE)))
@@ -3159,10 +4688,10 @@ dev.off()
 
 # Final stocks
 # Assign variables
-var1 = grid_output$final_totalC_gCm2[,,mid_quant]*1e-2
+var1 = grid_output$final_Ctotal_gCm2[,,mid_quant]*1e-2
 var2 = grid_output$final_biomass_gCm2[,,mid_quant]*1e-2 
 var3 = grid_output$final_dom_gCm2[,,mid_quant]*1e-2 
-var4 = (grid_output$final_totalC_gCm2[,,high_quant]-grid_output$final_totalC_gCm2[,,low_quant])*1e-2 
+var4 = (grid_output$final_Ctotal_gCm2[,,high_quant]-grid_output$final_Ctotal_gCm2[,,low_quant])*1e-2 
 var5 = (grid_output$final_biomass_gCm2[,,high_quant]-grid_output$final_biomass_gCm2[,,low_quant])*1e-2  
 var6 = (grid_output$final_dom_gCm2[,,high_quant]-grid_output$final_dom_gCm2[,,low_quant])*1e-2  
 # Apply filter
@@ -3179,6 +4708,9 @@ var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs
 var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Trim to data area
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3) ; var4 = trim(var4) 
+var5 = trim(var5) ; var6 = trim(var6) 
 # ranges
 zrange1 = c(0,1)*max(abs(range(values(var1),na.rm=TRUE)))
 zrange2 = c(0,1)*max(abs(range(values(var2),na.rm=TRUE)))
@@ -3218,7 +4750,7 @@ dev.off()
 
 # Final stocks
 # Assign variables
-var1 = grid_output$final_totalC_gCm2[,,mid_quant]*1e-2
+var1 = grid_output$final_Ctotal_gCm2[,,mid_quant]*1e-2
 var2 = grid_output$final_biomass_gCm2[,,mid_quant]*1e-2 
 var3 = grid_output$final_dom_gCm2[,,mid_quant]*1e-2 
 # Apply filter
@@ -3229,6 +4761,8 @@ var3[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
 var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
 var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Trim to data area
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3) 
 # ranges
 zrange1 = c(0,1)*max(abs(range(values(var1),na.rm=TRUE)))
 zrange2 = c(0,1)*max(abs(range(values(var2),na.rm=TRUE)))
@@ -3250,13 +4784,66 @@ plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = 
 plot(landmask, add=TRUE)
 dev.off()
 
+# Final stocks wood & DOM, wood MRT ~ burnt fraction, DOM ~ burnt fraction
+# Assign variables
+var1 = grid_output$mean_wood_gCm2[,,mid_quant]*1e-2 
+var2 = grid_output$mean_som_gCm2[,,mid_quant]*1e-2 
+var3 = grid_output$MTT_wood_years[,,mid_quant]
+var4 = grid_output$MTT_som_years[,,mid_quant]
+# Apply filter
+var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var2[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var3[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var4[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+# Convert to raster
+var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Trim to data area
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3) ; var4 = trim(var4)
+# ranges
+zrange1 = c(0,1)*max(abs(range(values(var1),na.rm=TRUE)))
+zrange2 = c(0,1)*max(abs(range(values(var2),na.rm=TRUE)))
+zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
+zrange4 = c(0,1)*max(abs(range(values(var4),na.rm=TRUE)))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_mean_wood_som_stock_woodMRT_somMRT_fire_correlation_median.png",sep=""), height = 1600, width = 3000, res = 300)
+par(mfrow=c(2,3), mar=c(4.0,3.0,2.9,1.0),omi=c(0.01,0.10,0.10,0.35))
+# Correlation between Wood MRT and fire
+plot(as.vector(grid_output$MTT_wood_years[,,mid_quant]) ~ as.vector(BurnedFraction), pch=16,
+     cex.axis = 1.5, cex.lab = 1.5, cex = 1.2, xlab="", ylab="")
+mtext(side = 2, text = "Wood MRT (years)", cex = 1.0, padj = -2.50)
+# Mean C stocks, median estimate
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Wood (MgC h",a^-1,")",sep="")), col=colour_choices_gain)
+plot(landmask, add=TRUE)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Soil (MgC h",a^-1,")",sep="")), col=colour_choices_gain)
+plot(landmask, add=TRUE)
+# Correlation between Soil MRT and fire
+plot(as.vector(grid_output$MTT_som_years[,,mid_quant]) ~ as.vector(BurnedFraction), pch=16,
+     cex.axis = 1.5, cex.lab = 1.5, cex = 1.2, xlab="Annual burnt Fraction", ylab="")
+mtext(side = 2, text = "Soil MRT (years)", cex = 1.0, padj = -2.50)
+# MRTs for wood and soil
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Wood MRT(years)",sep="")), col=colour_choices_gain)
+plot(landmask, add=TRUE)
+plot(var4, zlim=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Soil MRT (years)",sep="")), col=colour_choices_gain)
+plot(landmask, add=TRUE)
+dev.off()
+
 # Change stocks
 # Assign variables
-var1 = grid_output$final_dCtotalC_gCm2[,,mid_quant]*1e-2*(1/nos_years)
-var2 = grid_output$final_dCbio_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var1 = grid_output$final_dCtotal_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var2 = grid_output$final_dCbiomass_gCm2[,,mid_quant]*1e-2*(1/nos_years)
 var3 = grid_output$final_dCdom_gCm2[,,mid_quant]*1e-2*(1/nos_years)
-var4 = (grid_output$final_dCtotalC_gCm2[,,high_quant]-grid_output$final_dCtotalC_gCm2[,,low_quant])*1e-2*(1/nos_years)
-var5 = (grid_output$final_dCbio_gCm2[,,high_quant]-grid_output$final_dCbio_gCm2[,,low_quant])*1e-2*(1/nos_years)
+var4 = (grid_output$final_dCtotal_gCm2[,,high_quant]-grid_output$final_dCtotal_gCm2[,,low_quant])*1e-2*(1/nos_years)
+var5 = (grid_output$final_dCbiomass_gCm2[,,high_quant]-grid_output$final_dCbiomass_gCm2[,,low_quant])*1e-2*(1/nos_years)
 var6 = (grid_output$final_dCdom_gCm2[,,high_quant]-grid_output$final_dCdom_gCm2[,,low_quant])*1e-2*(1/nos_years)
 # Apply filter
 var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
@@ -3272,6 +4859,9 @@ var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs
 var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Trim to data area
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3) ; var4 = trim(var4) 
+var5 = trim(var5) ; var6 = trim(var6) 
 # ranges
 zrange1 = c(-1,1)*max(abs(range(values(var1),na.rm=TRUE)))
 zrange2 = c(-1,1)*max(abs(range(values(var2),na.rm=TRUE)))
@@ -3311,12 +4901,12 @@ dev.off()
 
 # NPP and litter fluxes from plant tissues
 # Assign variables
-var1 = grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25
-var2 = grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25
-var3 = grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25
-var4 = grid_output$mean_foliage_gCm2[,,mid_quant]*1e-2*(1/grid_parameters$MTT_foliar_years[,,mid_quant])
-var5 = grid_output$mean_roots_gCm2[,,mid_quant]*1e-2*(1/grid_parameters$MTT_root_years[,,mid_quant])
-var6 = grid_output$mean_wood_gCm2[,,mid_quant]*1e-2*(1/grid_parameters$MTT_wood_years[,,mid_quant])
+var1 = grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*1e-2*365.25
+var2 = grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*1e-2*365.25
+var3 = grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25
+var4 = grid_output$mean_foliage_gCm2[,,mid_quant]*1e-2*(1/grid_output$MTT_foliage_years[,,mid_quant])
+var5 = grid_output$mean_roots_gCm2[,,mid_quant]*1e-2*(1/grid_output$MTT_roots_years[,,mid_quant])
+var6 = grid_output$mean_wood_gCm2[,,mid_quant]*1e-2*(1/grid_output$MTT_wood_years[,,mid_quant])
 # Apply filter
 var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
 var2[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
@@ -3331,6 +4921,9 @@ var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs
 var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Trim to data area
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3) ; var4 = trim(var4) 
+var5 = trim(var5) ; var6 = trim(var6) 
 # ranges
 zrange1 = c(0,1)*max(abs(range(c(values(var1),values(var2),values(var3),values(var4),values(var5),values(var6)),na.rm=TRUE)))
 zrange2 = zrange1
@@ -3370,12 +4963,12 @@ dev.off()
 
 # Fire emission and litter fluxes from plant tissues
 # Assign variables
-var1 = grid_output$mean_FIREemiss_foliar_gCm2yr[,,mid_quant]*1e-2
-var2 = grid_output$mean_FIREemiss_root_gCm2yr[,,mid_quant]*1e-2
-var3 = grid_output$mean_FIREemiss_wood_gCm2yr[,,mid_quant]*1e-2
-var4 = grid_output$mean_FIRElitter_foliar_gCm2yr[,,mid_quant]*1e-2
-var5 = grid_output$mean_FIRElitter_root_gCm2yr[,,mid_quant]*1e-2
-var6 = grid_output$mean_FIRElitter_wood_gCm2yr[,,mid_quant]*1e-2
+var1 = grid_output$mean_FIREemiss_foliage_gCm2day[,,mid_quant]*1e-2*365.25
+var2 = grid_output$mean_FIREemiss_roots_gCm2day[,,mid_quant]*1e-2*365.25
+var3 = grid_output$mean_FIREemiss_wood_gCm2day[,,mid_quant]*1e-2*365.25
+var4 = grid_output$mean_FIRElitter_foliage_gCm2day[,,mid_quant]*1e-2*365.25
+var5 = grid_output$mean_FIRElitter_roots_gCm2day[,,mid_quant]*1e-2*365.25
+var6 = grid_output$mean_FIRElitter_wood_gCm2day[,,mid_quant]*1e-2*365.25
 # Apply filter
 var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
 var2[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
@@ -3390,6 +4983,9 @@ var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs
 var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Trim to data area
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3) ; var4 = trim(var4) 
+var5 = trim(var5) ; var6 = trim(var6)
 # ranges
 zrange1 = c(0,1)*sum(c(max(values(var1), na.rm=TRUE),max(values(var2), na.rm=TRUE),max(values(var3),na.rm=TRUE)))
 zrange2 = zrange1
@@ -3429,8 +5025,8 @@ dev.off()
 
 # Change stocks
 # Assign variables
-var1 = grid_output$final_dCtotalC_gCm2[,,mid_quant]*1e-2*(1/nos_years)
-var2 = grid_output$final_dCbio_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var1 = grid_output$final_dCtotal_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+var2 = grid_output$final_dCbiomass_gCm2[,,mid_quant]*1e-2*(1/nos_years)
 var3 = grid_output$final_dCdom_gCm2[,,mid_quant]*1e-2*(1/nos_years)
 # Apply filter
 var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
@@ -3440,6 +5036,8 @@ var3[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
 var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
 var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Trim to data area
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3) 
 # ranges
 zrange1 = c(-1,1)*max(abs(range(values(var1),na.rm=TRUE)))
 zrange2 = c(-1,1)*max(abs(range(values(var2),na.rm=TRUE)))
@@ -3468,14 +5066,14 @@ dev.off()
 # Assign variables
 wood_mrt_limit = 60
 print(paste("Wood MRT plotting range has been limited to ",wood_mrt_limit," years",sep=""))
-var1 = pmin(wood_mrt_limit,grid_parameters$MTT_wood_years[,,mid_quant])
-var1 = array(var1, dim = dim(grid_parameters$MTT_wood_years)[1:2])
-var2 = grid_parameters$NPP_wood_fraction[,,mid_quant]
-var3 = grid_parameters$SS_wood_gCm2[,,mid_quant]*1e-2
-var4 = pmin(wood_mrt_limit*2,grid_parameters$MTT_wood_years[,,high_quant]) - pmin(wood_mrt_limit*2,grid_parameters$MTT_wood_years[,,low_quant])
-var4 = array(var4, dim = dim(grid_parameters$MTT_wood_years)[1:2])
-var5 = grid_parameters$NPP_wood_fraction[,,high_quant] - grid_parameters$NPP_wood_fraction[,,low_quant]
-var6 = (grid_parameters$SS_wood_gCm2[,,high_quant]*1e-2) - (grid_parameters$SS_wood_gCm2[,,low_quant]*1e-2)
+var1 = pmin(wood_mrt_limit,grid_output$MTT_wood_years[,,mid_quant])
+var1 = array(var1, dim = dim(grid_output$MTT_wood_years)[1:2])
+var2 = grid_output$NPP_wood_fraction[,,mid_quant]
+var3 = grid_output$SS_wood_gCm2[,,mid_quant]*1e-2
+var4 = pmin(wood_mrt_limit*2,grid_output$MTT_wood_years[,,high_quant]) - pmin(wood_mrt_limit*2,grid_output$MTT_wood_years[,,low_quant])
+var4 = array(var4, dim = dim(grid_output$MTT_wood_years)[1:2])
+var5 = grid_output$NPP_wood_fraction[,,high_quant] - grid_output$NPP_wood_fraction[,,low_quant]
+var6 = (grid_output$SS_wood_gCm2[,,high_quant]*1e-2) - (grid_output$SS_wood_gCm2[,,low_quant]*1e-2)
 # Apply filter
 var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
 var2[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
@@ -3490,6 +5088,9 @@ var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs
 var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Trim to data area
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3) ; var4 = trim(var4) 
+var5 = trim(var5) ; var6 = trim(var6) 
 # ranges
 zrange1 = c(0,1)*max(abs(range(values(var1),na.rm=TRUE)))
 zrange2 = c(0,1)
@@ -3531,11 +5132,11 @@ dev.off()
 # Assign variables
 wood_mrt_limit = 60
 print(paste("Wood MRT plotting range has been limited to ",wood_mrt_limit," years",sep=""))
-var1 = pmin(wood_mrt_limit,grid_parameters$MTT_wood_years[,,mid_quant])
-var1 = array(var1, dim = dim(grid_parameters$MTT_wood_years)[1:2])
-var2 = grid_parameters$NPP_wood_fraction[,,mid_quant]
-var3 = grid_parameters$SS_wood_gCm2[,,mid_quant]*1e-2
-var4 = pmin(wood_mrt_limit*2,grid_parameters$MTT_wood_years[,,high_quant]) - pmin(wood_mrt_limit*2,grid_parameters$MTT_wood_years[,,low_quant])
+var1 = pmin(wood_mrt_limit,grid_output$MTT_wood_years[,,mid_quant])
+var1 = array(var1, dim = dim(grid_output$MTT_wood_years)[1:2])
+var2 = grid_output$NPP_wood_fraction[,,mid_quant]
+var3 = grid_output$SS_wood_gCm2[,,mid_quant]*1e-2
+var4 = pmin(wood_mrt_limit*2,grid_output$MTT_wood_years[,,high_quant]) - pmin(wood_mrt_limit*2,grid_output$MTT_wood_years[,,low_quant])
 # Apply filter
 var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
 var2[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
@@ -3544,6 +5145,8 @@ var3[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
 var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
 var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Trim to data area
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3) 
 # ranges
 zrange1 = c(0,1)*max(abs(range(values(var1),na.rm=TRUE)))
 zrange2 = c(0,1)
@@ -3568,13 +5171,10 @@ dev.off()
 ###
 ## Partition the importance of disturbance on residence times
 
-# Estimate the proportion of turnover determined by natural
-wood_turn = (grid_parameters$MTT_wood_years[,,mid_quant]**-1)
-var1 = grid_parameters$MTTnatural_wood_years[,,mid_quant]**-1 
-var2 = grid_parameters$MTTfire_wood_years[,,mid_quant]**-1
-var3 = grid_parameters$MTTharvest_wood_years[,,mid_quant]**-1
-# Now make proportional
-var1 = var1 / wood_turn ; var2 = var2 / wood_turn ; var3 = var3 / wood_turn
+# Extract the proportions         
+var1 = grid_output$NaturalFractionOfTurnover_wood[,,mid_quant]
+var2 = grid_output$FireFractionOfTurnover_wood[,,mid_quant]
+var3 = grid_output$HarvestFractionOfTurnover_wood[,,mid_quant]
 # Filter for the miombo AGB map locations
 var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
 var2[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
@@ -3587,6 +5187,8 @@ var3[which(landfilter == 1 & is.na(var3) == TRUE)] = 0
 var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
 var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Trim to data area
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3)
 # specify ranges
 zrange1 = c(0,1)
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Wood_turnover_contribution.png",sep=""), height = 1300, width = 4900, res = 300)
@@ -3627,154 +5229,163 @@ plot(var3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "
 plot(landmask, add=TRUE)
 dev.off()
 
-# Estimate the proportion of turnover determined by natural
-wood_turn = (grid_parameters$MTT_wood_years[,,mid_quant]**-1)
-var1 = grid_parameters$MTTnatural_wood_years[,,mid_quant]**-1 
-var2 = grid_parameters$MTTfire_wood_years[,,mid_quant]**-1
-var3 = grid_parameters$MTTharvest_wood_years[,,mid_quant]**-1
-var4 = grid_parameters$MTTnatural_wood_years[,,mid_quant]**-1
-var5 = grid_parameters$MTTfire_wood_years[,,mid_quant]**-1
-var6 = grid_parameters$MTTharvest_wood_years[,,mid_quant]**-1
-# Now make proportional
-var1 = var1 / wood_turn ; var2 = var2 / wood_turn ; var3 = var3 / wood_turn
-# Filter for the miombo AGB map locations
-var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
-var2[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
-var3[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
-var4[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
-var5[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
-var6[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
-# Filter for the miombo AGB map locations
-var1[which(landfilter == 1 & is.na(var1) == TRUE)] = 0
-var2[which(landfilter == 1 & is.na(var2) == TRUE)] = 0
-var3[which(landfilter == 1 & is.na(var3) == TRUE)] = 0
-var4[which(landfilter == 1 & is.na(var4) == TRUE)] = 0
-var5[which(landfilter == 1 & is.na(var5) == TRUE)] = 0
-var6[which(landfilter == 1 & is.na(var6) == TRUE)] = 0
-# Convert to raster
-var1 = raster(vals = t((var1)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
-var2 = raster(vals = t((var2)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
-var3 = raster(vals = t((var3)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
-var4 = raster(vals = t((var4)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
-var5 = raster(vals = t((var5)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
-var6 = raster(vals = t((var6)[,dim(area)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
-# specify ranges
-zrange1 = c(0,1)
-zrange4 = c(0,1) * max(abs(range(c(values(var4),values(var5),values(var6)), na.rm=TRUE)))
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Wood_turnover_contribution_turnover.png",sep=""), height = 2500, width = 4900, res = 300)
-par(mfrow=c(2,3), mar=c(0.5,0.4,3.0,7),omi=c(0.1,0.3,0.1,0.2))
-# Partitioning of wood turnover, median estimate
-plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Natural MRT comp (0-1)",sep="")), col=colour_choices_loss)
-plot(landmask, add=TRUE)
-plot(var2, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Fire MRT comp (0-1)",sep="")), col=colour_choices_loss)
-plot(landmask, add=TRUE)
-plot(var3, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Biomass removal MRT comp (0-1)",sep="")), col=colour_choices_loss)
-plot(landmask, add=TRUE)
-plot(var4, zlim=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Natural turnover (",y^-1,")",sep="")), col=colour_choices_loss)
-plot(landmask, add=TRUE)
-plot(var5, zlim=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Fire turnover (",y^-1,")",sep="")), col=colour_choices_loss)
-plot(landmask, add=TRUE)
-plot(var6, zlim=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Biomass removal turnover (",y^-1,")",sep="")), col=colour_choices_loss)
-plot(landmask, add=TRUE)
-dev.off()
-
 # Plot Foliage, fine root, wood, litter(foliar+fine root+wood?), soil mean residence times against main meteorology
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_MRT_meteorology_association.png",sep=""), height = 2200, width = 4500, res = 300)
 par(mfrow=c(3,5), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.12,0.1))
 # Temperature
-plot(grid_parameters$MTT_foliar_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_foliage_years[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 mtext(expression(paste("Foliar MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
 #mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
-plot(grid_parameters$MTT_root_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_roots_years[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 mtext(expression(paste("Root MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
-plot(grid_parameters$MTT_wood_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="", ylab="", xlab="Mean Temperature (C)", 
+plot(grid_output$MTT_wood_years[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", xlab="Mean Temperature (C)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
 mtext(expression(paste("Wood MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
-plot(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_litter_years[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 mtext(expression(paste("Litter MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
-plot(grid_parameters$MTT_som_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_som_years[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 mtext(expression(paste("Soil MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
 # Precipitation
-plot(grid_parameters$MTT_foliar_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_foliage_years[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$MTT_root_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_roots_years[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$MTT_wood_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="Mean precipitation (mm/yr)", 
+plot(grid_output$MTT_wood_years[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab="Mean precipitation (mm/yr)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
-plot(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_litter_years[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$MTT_som_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_som_years[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 # Vapour pressure deficit
-plot(grid_parameters$MTT_foliar_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_foliage_years[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$MTT_root_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_roots_years[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$MTT_wood_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
+plot(grid_output$MTT_wood_years[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
-plot(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_litter_years[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$MTT_som_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_som_years[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 dev.off()
+
+# Temperature
+summary(lm(as.vector(grid_output$MTT_foliage_years[,,mid_quant])~as.vector(grid_output$mean_temperature_C)))$adj.r.squared
+summary(lm(as.vector(grid_output$MTT_roots_years[,,mid_quant])~as.vector(grid_output$mean_temperature_C)))$adj.r.squared
+summary(lm(as.vector(grid_output$MTT_wood_years[,,mid_quant])~as.vector(grid_output$mean_temperature_C)))$adj.r.squared
+summary(lm(as.vector(grid_output$MTT_litter_years[,,mid_quant])~as.vector(grid_output$mean_temperature_C)))$adj.r.squared
+summary(lm(as.vector(grid_output$MTT_som_years[,,mid_quant])~as.vector(grid_output$mean_temperature_C)))$adj.r.squared
+# Precipitation
+summary(lm(as.vector(grid_output$MTT_foliage_years[,,mid_quant])~as.vector(grid_output$mean_precipitation_kgH2Om2yr)))$adj.r.squared
+summary(lm(as.vector(grid_output$MTT_roots_years[,,mid_quant])~as.vector(grid_output$mean_precipitation_kgH2Om2yr)))$adj.r.squared
+summary(lm(as.vector(grid_output$MTT_wood_years[,,mid_quant])~as.vector(grid_output$mean_precipitation_kgH2Om2yr)))$adj.r.squared
+summary(lm(as.vector(grid_output$MTT_litter_years[,,mid_quant])~as.vector(grid_output$mean_precipitation_kgH2Om2yr)))$adj.r.squared
+summary(lm(as.vector(grid_output$MTT_som_years[,,mid_quant])~as.vector(grid_output$mean_precipitation_kgH2Om2yr)))$adj.r.squared
+# Vapour pressure deficit
+summary(lm(as.vector(grid_output$MTT_foliage_years[,,mid_quant])~as.vector(grid_output$mean_vpd_Pa)))$adj.r.squared
+summary(lm(as.vector(grid_output$MTT_roots_years[,,mid_quant])~as.vector(grid_output$mean_vpd_Pa)))$adj.r.squared
+summary(lm(as.vector(grid_output$MTT_wood_years[,,mid_quant])~as.vector(grid_output$mean_vpd_Pa)))$adj.r.squared
+summary(lm(as.vector(grid_output$MTT_litter_years[,,mid_quant])~as.vector(grid_output$mean_vpd_Pa)))$adj.r.squared
+summary(lm(as.vector(grid_output$MTT_som_years[,,mid_quant])~as.vector(grid_output$mean_vpd_Pa)))$adj.r.squared
+# Temperature, precipitation, VPD, harvest fraction, burnt fraction and annual number of fires
+lm_fMTT = lm(as.vector(grid_output$MTT_foliage_years[,,mid_quant]) ~ 
+           as.vector(grid_output$mean_temperature_C) + 
+           as.vector(grid_output$mean_precipitation_kgH2Om2yr) + 
+           as.vector(grid_output$mean_vpd_Pa) + 
+           as.vector(HarvestFraction) + 
+           as.vector(BurnedFraction) + 
+           as.vector(FireFreq))
+lm_rMTT = lm(as.vector(grid_output$MTT_roots_years[,,mid_quant]) ~ 
+           as.vector(grid_output$mean_temperature_C) + 
+           as.vector(grid_output$mean_precipitation_kgH2Om2yr) + 
+           as.vector(grid_output$mean_vpd_Pa) + 
+           as.vector(HarvestFraction) + 
+           as.vector(BurnedFraction) + 
+           as.vector(FireFreq))
+lm_wMTT = lm(as.vector(grid_output$MTT_wood_years[,,mid_quant]) ~ 
+           as.vector(grid_output$mean_temperature_C) + 
+           as.vector(grid_output$mean_precipitation_kgH2Om2yr) + 
+           as.vector(grid_output$mean_vpd_Pa) + 
+           as.vector(HarvestFraction) + 
+           as.vector(BurnedFraction) + 
+           as.vector(FireFreq))
+lm_lMTT = lm(as.vector(grid_output$MTT_litter_years[,,mid_quant]) ~ 
+           as.vector(grid_output$mean_temperature_C) + 
+           as.vector(grid_output$mean_precipitation_kgH2Om2yr) + 
+           as.vector(grid_output$mean_vpd_Pa) + 
+           as.vector(HarvestFraction) + 
+           as.vector(BurnedFraction) + 
+           as.vector(FireFreq))
+lm_sMTT = lm(as.vector(grid_output$MTT_som_years[,,mid_quant]) ~ 
+           as.vector(grid_output$mean_temperature_C) + 
+           as.vector(grid_output$mean_precipitation_kgH2Om2yr) + 
+           as.vector(grid_output$mean_vpd_Pa) + 
+           as.vector(HarvestFraction) + 
+           as.vector(BurnedFraction) + 
+           as.vector(FireFreq))
+summary(lm_fMTT) ; summary(lm_rMTT) ; summary(lm_wMTT) ; summary(lm_lMTT) ; summary(lm_sMTT)
+slm_fMTT = step(lm_fMTT, direction = "both") 
+slm_rMTT = step(lm_rMTT, direction = "both") 
+slm_wMTT = step(lm_wMTT, direction = "both")
+slm_lMTT = step(lm_lMTT, direction = "both") 
+slm_sMTT = step(lm_sMTT, direction = "both")
+summary(slm_fMTT) ; summary(slm_rMTT) ; summary(slm_wMTT) ; summary(slm_lMTT) ; summary(slm_sMTT)
+r2_fMTT = summary(slm_fMTT)$adj.r.squared 
+r2_rMTT = summary(slm_rMTT)$adj.r.squared 
+r2_wMTT = summary(slm_wMTT)$adj.r.squared 
+r2_lMTT = summary(slm_lMTT)$adj.r.squared
+r2_sMTT = summary(slm_sMTT)$adj.r.squared
+
+# Write out to a simple file
+write.table(data.frame(r2_fMTT,r2_rMTT,r2_wMTT,r2_lMTT,r2_sMTT), 
+            file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_best_lm_r2_MRTs.csv",sep=""), sep=",",
+            row.names=FALSE)
 
 # Plot Foliage, fine root, wood, litter(foliar+fine root+wood?), soil mean residence times against main disturbance
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_MRT_disturbance_association.png",sep=""), height = 2200, width = 4500, res = 300)
 par(mfrow=c(3,5), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.12,0.1))
 # Mean annual number of fires
-plot(grid_parameters$MTT_foliar_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_foliage_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 mtext(expression(paste("Foliar MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
 #mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
-plot(grid_parameters$MTT_root_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_roots_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 mtext(expression(paste("Root MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
-plot(grid_parameters$MTT_wood_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab="No. annual fires", 
+plot(grid_output$MTT_wood_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab="No. annual fires", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
 mtext(expression(paste("Wood MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
-plot(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_litter_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 mtext(expression(paste("Litter MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
-plot(grid_parameters$MTT_som_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_som_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 mtext(expression(paste("Soil MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
 # Mean annual burned fraction
-plot(grid_parameters$MTT_foliar_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_foliage_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$MTT_root_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_roots_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$MTT_wood_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
+plot(grid_output$MTT_wood_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
-plot(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_litter_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$MTT_som_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_som_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 # Mean annual forest harvest fraction
-plot(grid_parameters$MTT_foliar_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_foliage_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$MTT_root_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_roots_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$MTT_wood_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
+plot(grid_output$MTT_wood_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
-plot(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_litter_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$MTT_som_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+plot(grid_output$MTT_som_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 dev.off()
 
@@ -3782,29 +5393,29 @@ dev.off()
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_meteorology_association.png",sep=""), height = 2200, width = 2800, res = 300)
 par(mfrow=c(3,3), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.12,0.1))
 # Temperature
-plot(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(grid_parameters$mean_temperature_C), main="", ylab="", xlab=" ", 
+plot(grid_output$NPP_foliage_fraction[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 mtext(expression("Foliar NPP (0-1)"), cex = 1.3, padj = 0, side = 3)
 #mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
-plot(grid_parameters$NPP_root_fraction[,,mid_quant]~(grid_parameters$mean_temperature_C), main="", ylab="", xlab="Mean Temperature (C)", 
+plot(grid_output$NPP_roots_fraction[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", xlab="Mean Temperature (C)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 mtext(expression("Root NPP (0-1)"), cex = 1.3, padj = 0, side = 3)
-plot(grid_parameters$NPP_wood_fraction[,,mid_quant]~(grid_parameters$mean_temperature_C), main="", ylab="", xlab="", 
+plot(grid_output$NPP_wood_fraction[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
 mtext(expression("Wood NPP (0-1)"), cex = 1.3, padj = 0, side = 3)
 # Precipitation
-plot(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+plot(grid_output$NPP_foliage_fraction[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$NPP_root_fraction[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="Mean precipitation (mm/yr)", 
+plot(grid_output$NPP_roots_fraction[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab="Mean precipitation (mm/yr)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$NPP_wood_fraction[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="", 
+plot(grid_output$NPP_wood_fraction[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
 # Vapour pressure deficit
-plot(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+plot(grid_output$NPP_foliage_fraction[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$NPP_root_fraction[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
+plot(grid_output$NPP_roots_fraction[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$NPP_wood_fraction[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="", 
+plot(grid_output$NPP_wood_fraction[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
 dev.off()
 
@@ -3812,29 +5423,29 @@ dev.off()
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_disturbance_association.png",sep=""), height = 2200, width = 2800, res = 300)
 par(mfrow=c(3,3), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.12,0.1))
 # Temperature
-plot(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
+plot(grid_output$NPP_foliage_fraction[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 mtext(expression("Foliar NPP (0-1)"), cex = 1.3, padj = 0, side = 3)
 #mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
-plot(grid_parameters$NPP_root_fraction[,,mid_quant]~(FireFreq), main="", ylab="", xlab="No. annual fires", 
+plot(grid_output$NPP_roots_fraction[,,mid_quant]~(FireFreq), main="", ylab="", xlab="No. annual fires", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
      mtext(expression("Root NPP (0-1)"), cex = 1.3, padj = 0, side = 3)
-plot(grid_parameters$NPP_wood_fraction[,,mid_quant]~(FireFreq), main="", ylab="", xlab="", 
+plot(grid_output$NPP_wood_fraction[,,mid_quant]~(FireFreq), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
      mtext(expression("Wood NPP (0-1)"), cex = 1.3, padj = 0, side = 3)
 # Precipitation
-plot(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+plot(grid_output$NPP_foliage_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$NPP_root_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
+plot(grid_output$NPP_roots_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$NPP_wood_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="", 
+plot(grid_output$NPP_wood_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
 # Vapour pressure deficit
-plot(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+plot(grid_output$NPP_foliage_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$NPP_root_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
+plot(grid_output$NPP_roots_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(grid_parameters$NPP_wood_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="", 
+plot(grid_output$NPP_wood_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
 dev.off()
 
@@ -3842,29 +5453,29 @@ dev.off()
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_flux_meteorology_association.png",sep=""), height = 2200, width = 2800, res = 300)
 par(mfrow=c(3,3), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.12,0.1))
 # Temperature
-plot(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_temperature_C), main="", ylab="", xlab=" ", 
+plot(as.vector(grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_temperature_C), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 mtext(expression(paste("Foliar NPP (MgC h",a^-1,y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
 #mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
-plot(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_temperature_C), main="", ylab="", xlab="Mean Temperature (C)", 
+plot(as.vector(grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_temperature_C), main="", ylab="", xlab="Mean Temperature (C)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 mtext(expression(paste("Root NPP (MgC h",a^-1,y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
-plot(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_temperature_C), main="", ylab="", xlab="", 
+plot(as.vector(grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_temperature_C), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
 mtext(expression(paste("Wood NPP (MgC h",a^-1,y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
 # Precipitation
-plot(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+plot(as.vector(grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="Mean precipitation (mm/yr)", 
+plot(as.vector(grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab="Mean precipitation (mm/yr)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="", 
+plot(as.vector(grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
 # Vapour pressure deficit
-plot(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+plot(as.vector(grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_vpd_Pa), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
+plot(as.vector(grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="", 
+plot(as.vector(grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_vpd_Pa), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
 dev.off()
 
@@ -3872,29 +5483,29 @@ dev.off()
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_flux_disturbance_association.png",sep=""), height = 2200, width = 2800, res = 300)
 par(mfrow=c(3,3), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.12,0.1))
 # Temperature
-plot(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main="", ylab="", xlab="", 
+plot(as.vector(grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
      mtext(expression(paste("Foliar NPP (MgC h",a^-1,y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
 #mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
-plot(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main="", ylab="", xlab="No. annual fires", 
+plot(as.vector(grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main="", ylab="", xlab="No. annual fires", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
      mtext(expression(paste("Root NPP (MgC h",a^-1,y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
-plot(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main="", ylab="", xlab="", 
+plot(as.vector(grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
      mtext(expression(paste("Wood NPP (MgC h",a^-1,y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
 # Precipitation
-plot(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab=" ", 
+plot(as.vector(grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
+plot(as.vector(grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab="", 
+plot(as.vector(grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
 # Vapour pressure deficit
-plot(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab=" ", 
+plot(as.vector(grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
+plot(as.vector(grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
-plot(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab="", 
+plot(as.vector(grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
 dev.off()
 
@@ -3903,54 +5514,54 @@ png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_flux_meteorology_a
 par(mfrow=c(3,3), mar=c(4,2,1.4,3.8), omi = c(0.1,0.2,0.12,0.1))
 fudgeit.leg.lab=""
 # Temperature
-smoothScatter(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_temperature_C), main="", ylab="", xlab=" ", 
+smoothScatter(as.vector(grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_temperature_C), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
-     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_temperature_C, na.rm=TRUE)))
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(min(grid_output$mean_temperature_C, na.rm=TRUE),max(grid_output$mean_temperature_C, na.rm=TRUE)))
 mtext(expression(paste("Foliar NPP (MgC h",a^-1,y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
-smoothScatter(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_temperature_C), main="", 
+smoothScatter(as.vector(grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_temperature_C), main="", 
      ylab="", xlab="Mean Temperature (C)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
-     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_temperature_C, na.rm=TRUE)))
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(min(grid_output$mean_temperature_C, na.rm=TRUE),max(grid_output$mean_temperature_C, na.rm=TRUE)))
 mtext(expression(paste("Root NPP (MgC h",a^-1,y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
 fudgeit.leg.lab="Relative Density"
-smoothScatter(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_temperature_C), main="", ylab="", xlab="", 
+smoothScatter(as.vector(grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_temperature_C), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
-     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_temperature_C, na.rm=TRUE)))
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(min(grid_output$mean_temperature_C, na.rm=TRUE),max(grid_output$mean_temperature_C, na.rm=TRUE)))
 mtext(expression(paste("Wood NPP (MgC h",a^-1,y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)     
 # Precipitation
 fudgeit.leg.lab=""
-smoothScatter(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+smoothScatter(as.vector(grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
-     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_precipitation_kgm2yr, na.rm=TRUE)))
-smoothScatter(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_precipitation_kgm2yr), main="", 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_precipitation_kgH2Om2yr, na.rm=TRUE)))
+smoothScatter(as.vector(grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_precipitation_kgH2Om2yr), main="", 
      ylab="", xlab="Mean precipitation (mm/yr)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
-     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_precipitation_kgm2yr, na.rm=TRUE)))
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_precipitation_kgH2Om2yr, na.rm=TRUE)))
 fudgeit.leg.lab="Relative Density"
-smoothScatter(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="", 
+smoothScatter(as.vector(grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
-     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_precipitation_kgm2yr, na.rm=TRUE)))
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_precipitation_kgH2Om2yr, na.rm=TRUE)))
 # Vapour pressure deficit
 fudgeit.leg.lab=""
-smoothScatter(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+smoothScatter(as.vector(grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_vpd_Pa), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
-     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_vpd_Pa, na.rm=TRUE)))
-smoothScatter(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_vpd_Pa, na.rm=TRUE)))
+smoothScatter(as.vector(grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
-     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_vpd_Pa, na.rm=TRUE)))
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_vpd_Pa, na.rm=TRUE)))
 fudgeit.leg.lab="Relative Density"
-smoothScatter(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="", 
+smoothScatter(as.vector(grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_vpd_Pa), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
-     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_vpd_Pa, na.rm=TRUE)))
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_vpd_Pa, na.rm=TRUE)))
 dev.off()
 
 # Plot Foliage, fine root, wood NPP allocation fractions against main disturbance
@@ -3958,132 +5569,131 @@ png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_flux_disturbance_a
 par(mfrow=c(3,3), mar=c(4,2,1.4,3.8), omi = c(0.1,0.2,0.12,0.1))
 fudgeit.leg.lab=""
 # Temperature
-smoothScatter(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main="", ylab="", xlab=" ", 
+smoothScatter(as.vector(grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(FireFreq, na.rm=TRUE)*1.0))
 mtext(expression(paste("Foliar NPP (MgC h",a^-1,y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
-smoothScatter(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main="", ylab="", xlab="No. annual fires", 
+smoothScatter(as.vector(grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main="", ylab="", xlab="No. annual fires", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(FireFreq, na.rm=TRUE)*1.0))
 mtext(expression(paste("Root NPP (MgC h",a^-1,y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
 fudgeit.leg.lab="Relative Density"
-smoothScatter(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main="", ylab="", xlab="", 
+smoothScatter(as.vector(grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(FireFreq), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(FireFreq, na.rm=TRUE)*1.0))
 mtext(expression(paste("Wood NPP (MgC h",a^-1,y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
 # Precipitation
 fudgeit.leg.lab=""
-smoothScatter(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab=" ", 
+smoothScatter(as.vector(grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(BurnedFraction, na.rm=TRUE)*1.0))
-smoothScatter(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
+smoothScatter(as.vector(grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(BurnedFraction, na.rm=TRUE)*1.0))
 fudgeit.leg.lab="Relative Density"
-smoothScatter(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab="", 
+smoothScatter(as.vector(grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(BurnedFraction), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(BurnedFraction, na.rm=TRUE)*1.0))
 # Vapour pressure deficit
 fudgeit.leg.lab=""
-smoothScatter(as.vector(grid_output$mean_fnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab=" ", 
+smoothScatter(as.vector(grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(HarvestFraction, na.rm=TRUE)*1.0))
-smoothScatter(as.vector(grid_output$mean_rnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
+smoothScatter(as.vector(grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(HarvestFraction, na.rm=TRUE)*1.0))
 fudgeit.leg.lab="Relative Density"
-smoothScatter(as.vector(grid_output$mean_wnpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab="", 
+smoothScatter(as.vector(grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(HarvestFraction), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(HarvestFraction, na.rm=TRUE)*1.0))
 dev.off()
-
 
 # Plot Foliage, fine root, wood, litter(foliar+fine root+wood?), soil mean residence times against main meteorology
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_MRT_meteorology_association_heatmap.png",sep=""), height = 2200, width = 4500, res = 300)
 par(mfrow=c(3,5), mar=c(4,2,1.4,3.8), omi = c(0.1,0.2,0.12,0.1))
 fudgeit.leg.lab=""
 # Temperature
-smoothScatter(grid_parameters$MTT_foliar_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_foliage_years[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500)
 mtext(expression(paste("Foliar MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
 #mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
-smoothScatter(grid_parameters$MTT_root_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_roots_years[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500)
 mtext(expression(paste("Root MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
-smoothScatter(grid_parameters$MTT_wood_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="", ylab="", 
+smoothScatter(grid_output$MTT_wood_years[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", 
      xlab="Mean Temperature (C)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours,   
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500)
 mtext(expression(paste("Wood MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
-smoothScatter(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_litter_years[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500)
 mtext(expression(paste("Litter MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
 fudgeit.leg.lab="Relative Density"
-smoothScatter(grid_parameters$MTT_som_years[,,mid_quant]~(grid_parameters$mean_temperature_C), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_som_years[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500)
 mtext(expression(paste("Soil MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
 # Precipitation
 fudgeit.leg.lab=""
-smoothScatter(grid_parameters$MTT_foliar_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_foliage_years[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500)
-smoothScatter(grid_parameters$MTT_root_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_roots_years[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500)
-smoothScatter(grid_parameters$MTT_wood_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", 
+smoothScatter(grid_output$MTT_wood_years[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", 
      xlab="Mean precipitation (mm/yr)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500)
-smoothScatter(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_litter_years[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500)
 fudgeit.leg.lab="Relative Density"
-smoothScatter(grid_parameters$MTT_som_years[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_som_years[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500)
 # Vapour pressure deficit
 fudgeit.leg.lab=""
-smoothScatter(grid_parameters$MTT_foliar_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_foliage_years[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500)
-smoothScatter(grid_parameters$MTT_root_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_roots_years[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500)
-smoothScatter(grid_parameters$MTT_wood_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
+smoothScatter(grid_output$MTT_wood_years[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500)
-smoothScatter(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_litter_years[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500)
 fudgeit.leg.lab="Relative Density"
-smoothScatter(grid_parameters$MTT_som_years[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_som_years[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500)
@@ -4094,76 +5704,76 @@ png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_MRT_disturbance_associ
 par(mfrow=c(3,5), mar=c(4,2,1.4,3.8), omi = c(0.1,0.2,0.12,0.1))
 # Mean annual number of fires
 fudgeit.leg.lab=""
-smoothScatter(grid_parameters$MTT_foliar_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_foliage_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500)
 mtext(expression(paste("Foliar MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
 #mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
-smoothScatter(grid_parameters$MTT_root_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_roots_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(FireFreq, na.rm=TRUE)*1.0))
 mtext(expression(paste("Root MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
-smoothScatter(grid_parameters$MTT_wood_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab="No. annual fires", 
+smoothScatter(grid_output$MTT_wood_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab="No. annual fires", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(FireFreq, na.rm=TRUE)*1.0))
 mtext(expression(paste("Wood MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
-smoothScatter(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_litter_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(FireFreq, na.rm=TRUE)*1.0))
 mtext(expression(paste("Litter MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
 fudgeit.leg.lab="Relative Density"
-smoothScatter(grid_parameters$MTT_som_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_som_years[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(FireFreq, na.rm=TRUE)*1.0))
 mtext(expression(paste("Soil MRT (",y^-1,")",sep="")), cex = 1.3, padj = 0, side = 3)
 # Mean annual burned fraction
 fudgeit.leg.lab=""
-smoothScatter(grid_parameters$MTT_foliar_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_foliage_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(BurnedFraction, na.rm=TRUE)*1.0))
-smoothScatter(grid_parameters$MTT_root_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_roots_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(BurnedFraction, na.rm=TRUE)*1.0))
-smoothScatter(grid_parameters$MTT_wood_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
+smoothScatter(grid_output$MTT_wood_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(BurnedFraction, na.rm=TRUE)*1.0))
-smoothScatter(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_litter_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(BurnedFraction, na.rm=TRUE)*1.0))
 fudgeit.leg.lab="Relative Density"
-smoothScatter(grid_parameters$MTT_som_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_som_years[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(BurnedFraction, na.rm=TRUE)*1.0))
 # Mean annual forest harvest fraction
 fudgeit.leg.lab=""
-smoothScatter(grid_parameters$MTT_foliar_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_foliage_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(HarvestFraction, na.rm=TRUE)*1.0))
-smoothScatter(grid_parameters$MTT_root_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_roots_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(HarvestFraction, na.rm=TRUE)*1.0))
-smoothScatter(grid_parameters$MTT_wood_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
+smoothScatter(grid_output$MTT_wood_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(HarvestFraction, na.rm=TRUE)*1.0))
-smoothScatter(grid_parameters$MTT_DeadOrg_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_litter_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(HarvestFraction, na.rm=TRUE)*1.0))
 fudgeit.leg.lab="Relative Density"
-smoothScatter(grid_parameters$MTT_som_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$MTT_som_years[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(HarvestFraction, na.rm=TRUE)*1.0))
@@ -4174,54 +5784,54 @@ png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_meteorology_associ
 par(mfrow=c(3,3), mar=c(4,2,1.4,3.8), omi = c(0.1,0.2,0.12,0.1))
 fudgeit.leg.lab=""
 # Temperature
-smoothScatter(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(grid_parameters$mean_temperature_C), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$NPP_foliage_fraction[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
-     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_temperature_C, na.rm=TRUE)))
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_temperature_C, na.rm=TRUE)))
 mtext(expression(paste("Foliar NPP (0-1)",sep="")), cex = 1.3, padj = 0, side = 3)
-smoothScatter(grid_parameters$NPP_root_fraction[,,mid_quant]~(grid_parameters$mean_temperature_C), main="", 
+smoothScatter(grid_output$NPP_roots_fraction[,,mid_quant]~(grid_output$mean_temperature_C), main="", 
      ylab="", xlab="Mean Temperature (C)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
-     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_temperature_C, na.rm=TRUE)))
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_temperature_C, na.rm=TRUE)))
 mtext(expression(paste("Root NPP (0-1)",sep="")), cex = 1.3, padj = 0, side = 3)
 fudgeit.leg.lab="Relative Density"
-smoothScatter(grid_parameters$NPP_wood_fraction[,,mid_quant]~(grid_parameters$mean_temperature_C), main="", ylab="", xlab="", 
+smoothScatter(grid_output$NPP_wood_fraction[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
-     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_temperature_C, na.rm=TRUE)))
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_temperature_C, na.rm=TRUE)))
 mtext(expression(paste("Wood NPP (0-1)",sep="")), cex = 1.3, padj = 0, side = 3)
 # Precipitation
 fudgeit.leg.lab=""
-smoothScatter(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$NPP_foliage_fraction[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
-     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_precipitation_kgm2yr, na.rm=TRUE)))
-smoothScatter(grid_parameters$NPP_root_fraction[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_precipitation_kgH2Om2yr, na.rm=TRUE)))
+smoothScatter(grid_output$NPP_roots_fraction[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", 
      ylab="", xlab="Mean precipitation (mm/yr)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
-     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_precipitation_kgm2yr, na.rm=TRUE)))
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_precipitation_kgH2Om2yr, na.rm=TRUE)))
 fudgeit.leg.lab="Relative Density"
-smoothScatter(grid_parameters$NPP_wood_fraction[,,mid_quant]~(grid_parameters$mean_precipitation_kgm2yr), main="", ylab="", xlab="", 
+smoothScatter(grid_output$NPP_wood_fraction[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
-     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_precipitation_kgm2yr, na.rm=TRUE)))
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_precipitation_kgH2Om2yr, na.rm=TRUE)))
 # Vapour pressure deficit
 fudgeit.leg.lab=""
-smoothScatter(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$NPP_foliage_fraction[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
-     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_vpd_Pa, na.rm=TRUE)))
-smoothScatter(grid_parameters$NPP_root_fraction[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_vpd_Pa, na.rm=TRUE)))
+smoothScatter(grid_output$NPP_roots_fraction[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
-     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_vpd_Pa, na.rm=TRUE)))
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_vpd_Pa, na.rm=TRUE)))
 fudgeit.leg.lab="Relative Density"
-smoothScatter(grid_parameters$NPP_wood_fraction[,,mid_quant]~(grid_parameters$mean_vpd_Pa), main="", ylab="", xlab="", 
+smoothScatter(grid_output$NPP_wood_fraction[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
-     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_parameters$mean_vpd_Pa, na.rm=TRUE)))
+     nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_vpd_Pa, na.rm=TRUE)))
 dev.off()
 
 # Plot Foliage, fine root, wood NPP allocation fractions against main disturbance
@@ -4229,49 +5839,49 @@ png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_disturbance_associ
 par(mfrow=c(3,3), mar=c(4,2,1.4,3.8), omi = c(0.1,0.2,0.1,0.1))
 fudgeit.leg.lab=""
 # Temperature
-smoothScatter(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$NPP_foliage_fraction[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(FireFreq, na.rm=TRUE)*1.0))
 mtext(expression(paste("Foliar NPP (0-1)",sep="")), cex = 1.3, padj = 0, side = 3)
-smoothScatter(grid_parameters$NPP_root_fraction[,,mid_quant]~(FireFreq), main="", ylab="", xlab="No. annual fires", 
+smoothScatter(grid_output$NPP_roots_fraction[,,mid_quant]~(FireFreq), main="", ylab="", xlab="No. annual fires", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(FireFreq, na.rm=TRUE)*1.0))
 fudgeit.leg.lab="Relative Density"
 mtext(expression(paste("Root NPP (0-1)",sep="")), cex = 1.3, padj = 0, side = 3)
-smoothScatter(grid_parameters$NPP_wood_fraction[,,mid_quant]~(FireFreq), main="", ylab="", xlab="", 
+smoothScatter(grid_output$NPP_wood_fraction[,,mid_quant]~(FireFreq), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(FireFreq, na.rm=TRUE)*1.0))
 mtext(expression(paste("Wood NPP (0-1)",sep="")), cex = 1.3, padj = 0, side = 3)
 # Precipitation
 fudgeit.leg.lab=""
-smoothScatter(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$NPP_foliage_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(BurnedFraction, na.rm=TRUE)*1.0))
-smoothScatter(grid_parameters$NPP_root_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
+smoothScatter(grid_output$NPP_roots_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(BurnedFraction, na.rm=TRUE)*1.0))
 fudgeit.leg.lab="Relative Density"
-smoothScatter(grid_parameters$NPP_wood_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="", 
+smoothScatter(grid_output$NPP_wood_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(BurnedFraction, na.rm=TRUE)*1.0))
 # Vapour pressure deficit
 fudgeit.leg.lab=""
-smoothScatter(grid_parameters$NPP_foliar_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
+smoothScatter(grid_output$NPP_foliage_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(HarvestFraction, na.rm=TRUE)*1.0))
-smoothScatter(grid_parameters$NPP_root_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
+smoothScatter(grid_output$NPP_roots_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(HarvestFraction, na.rm=TRUE)*1.0))
 fudgeit.leg.lab="Relative Density"
-smoothScatter(grid_parameters$NPP_wood_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="", 
+smoothScatter(grid_output$NPP_wood_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
      colramp=smoothScatter_colours, 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(HarvestFraction, na.rm=TRUE)*1.0))

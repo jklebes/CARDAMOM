@@ -68,264 +68,169 @@ module cardamom_io
         DATAin%nopars = 20
         DATAin%nofluxes = 4
     else if (DATAin%ID == 1) then
-        ! ID = 1 - DALEC_CDEA
-        DATAin%nopools = 6
-        DATAin%nopars = 23
-        DATAin%nofluxes = 16
+        ! ID = 1 - DALEC.D1.F2.
+        DATAin%nopools = 5
+        DATAin%nopars = 22
+        DATAin%nofluxes = 35
     else if (DATAin%ID == 2) then
-        ! ID = 2 - DALEC_GSI_BUCKET
-        DATAin%nopools = 8
-        DATAin%nopars = 40
-        DATAin%nofluxes = 25
-        if (DATAin%PFT == 1) then
-           ! then actually this is a crop pixel
-           DATAin%nopools = 9
-           DATAin%nopars = 38
-           DATAin%nofluxes = 21
-        endif
+        ! ID = 2 - DALEC.C1.D1.F2.P1.
+        DATAin%nopools = 6
+        DATAin%nopars = 28
+        DATAin%nofluxes = 39
     else if (DATAin%ID == 3 ) then
-        ! ID = 3 - AT-DALEC
+        ! ID = 3 - DALEC.A1.C1.D2.F2.H1.P1.
+        DATAin%nopools = 6
+        DATAin%nopars = 28
+        DATAin%nofluxes = 39
+    else if (DATAin%ID == 4) then
+        ! ID = 4 - DALEC.A1.C1.D2.F2.H2.P1.
+        DATAin%nopools = 7
+        DATAin%nopars = 32
+        DATAin%nofluxes = 45
+    else if (DATAin%ID == 5) then
+        ! ID = 5 - DALEC.A1.C1.D2.F2.H2.P1.R1.
+        DATAin%nopools = 7
+        DATAin%nopars = 32
+        DATAin%nofluxes = 40
+    else if (DATAin%ID == 6) then
+        ! ID = 6 - DALEC.A1.C2.D2.F2.H2.P1.R1.
+        DATAin%nopools = 8
+        DATAin%nopars = 35
+        DATAin%nofluxes = 45
+    else if (DATAin%ID == 7) then
+        ! ID = 7 - DALEC.A1.C2.D2.F2.H2.P2.R1.
+        DATAin%nopools = 8
+        DATAin%nopars = 36
+        DATAin%nofluxes = 45
+    else if (DATAin%ID == 8) then
+        ! ID = 8 - DALEC.A1.C2.D2.F2.H1.P3.R1.
+        DATAin%nopools = 7
+        DATAin%nopars = 43
+        DATAin%nofluxes = 25
+    else if (DATAin%ID == 9) then
+        ! ID = 9 - DALEC.A1.C2.D2.F2.H2.P3.R1.
+        DATAin%nopools = 8
+        DATAin%nopars = 46
+        DATAin%nofluxes = 25
+    else if (DATAin%ID == 10) then
+        ! ID = 10 - DALEC.A1.C2.D2.F2.H1.P4.R2.
+        DATAin%nopools = 7
+        DATAin%nopars = 48
+        DATAin%nofluxes = 25
+    else if (DATAin%ID == 11) then
+        ! ID = 11 - DALEC.A1.C2.D2.F2.H2.P4.R2.
+        DATAin%nopools = 8
+        DATAin%nopars = 49
+        DATAin%nofluxes = 25
+        stop
+    else if (DATAin%ID == 12) then
+        ! ID = 12 - DALEC.C4.D1.F2.
+        DATAin%nopools = 3
+        DATAin%nopars = 15
+        DATAin%nofluxes = 28
+    else if (DATAin%ID == 13) then
+        ! ID = 13 - DALEC.C5.D1.F2.P1.
+        DATAin%nopools = 4
+        DATAin%nopars = 21
+        DATAin%nofluxes = 32
+    else if (DATAin%ID == 14) then
+        ! ID = 14 - DALEC.C3.M1.
         DATAin%nopools = 6
         DATAin%nopars = 22
         DATAin%nofluxes = 16
-    else if (DATAin%ID == 4) then
-        ! AT_DALEC_CROP
-        DATAin%nopools = 8
-        DATAin%nopars = 34
-        DATAin%nofluxes = 16
-    else if (DATAin%ID == 5) then
-        ! DALEC_CDEA_FR
-        DATAin%nopools = 6
-        DATAin%nopars = 23
-        DATAin%nofluxes = 18
-    else if (DATAin%ID == 6) then
-        ! DALEC_GSI_FR
-        DATAin%nopools = 6
-        DATAin%nopars = 33
-        DATAin%nofluxes = 18
-    else if (DATAin%ID == 7) then
-        ! DALEC_GSI_FR_DBio
-        DATAin%nopools = 10
-        DATAin%nopars = 53
-        DATAin%nofluxes = 28
-    else if (DATAin%ID == 8) then
-        ! DALEC_GSI_MFOL_FR
-        DATAin%nopools = 7
-        DATAin%nopars = 36
-        DATAin%nofluxes = 18
-    else if (DATAin%ID == 9) then
-        ! DALEC_GSI_FR_LABILE
-        DATAin%nopools = 7
-        DATAin%nopars = 37
-        DATAin%nofluxes = 20
-    else if (DATAin%ID == 10) then
-        ! DALECN_GSI_FR
-        DATAin%nopools = 10
-        DATAin%nopars = 49
-        DATAin%nofluxes = 21
-    else if (DATAin%ID == 11) then
-        ! DALEC_GSI_DFOL_FR
-        DATAin%nopools = 6
-        DATAin%nopars = 36
-        DATAin%nofluxes = 18
-        if (DATAin%PFT == 1) then
-           ! then actually this is a crop pixel
-           DATAin%nopools = 8
-           DATAin%nopars = 35
-           DATAin%nofluxes = 16
-        endif
-    else if (DATAin%ID == 12) then
-        ! DALEC_GSI_DFOL_FROOT_FR
-        DATAin%nopools = 9
-        DATAin%nopars = 46
-        DATAin%nofluxes = 19
-    else if (DATAin%ID == 13) then
-        ! DALEC_GSI_DFOL_LABILE_FR
-        DATAin%nopools = 9
-        DATAin%nopars = 44
-        DATAin%nofluxes = 19
-    else if (DATAin%ID == 14) then
-        ! DALECN_GSI_DFOL_LABILE_FR
-        DATAin%nopools = 12
-        DATAin%nopars = 57
-        DATAin%nofluxes = 21
     else if (DATAin%ID == 15) then
-        ! DALECN_GSI_DFOL_LABILE_FROOT_FR
-        DATAin%nopools = 12
-        DATAin%nopars = 61
+        ! ID = 15 - DALEC.A1.C3.H2.M1.
+        DATAin%nopools = 9
+        DATAin%nopars = 38
         DATAin%nofluxes = 21
     else if (DATAin%ID == 16) then
-        ! DALEC_GSI_DFOL_CWD_FR
-        DATAin%nopools = 7
-        DATAin%nopars = 37
-        DATAin%nofluxes = 25
-        if (DATAin%PFT == 1) then
-           ! then actually this is a crop pixel
-           DATAin%nopools = 8
-           DATAin%nopars = 35
-           DATAin%nofluxes = 21
-        endif
+        ! ID = 16 - DALEC.M2.
+        write(*,*) "Oh dear... DALEC.M2.# ID not valid = ",DATAin%ID
+        stop
     else if (DATAin%ID == 17) then
-        ! DALECN_GSI_BUCKET - 8 pools currently
-        DATAin%nopools = 8
-        DATAin%nopars = 45
-        DATAin%nofluxes = 25
-        if (DATAin%PFT == 1) then
-           ! then actually this is a crop pixel
-           DATAin%nopools = 9
-           DATAin%nopars = 38
-           DATAin%nofluxes = 21
-        endif
+        ! ID = 17 - DALEC.A1.H2.M2.
+        write(*,*) "Oh dear... DALEC.A1.H2.M2.# ID not valid = ",DATAin%ID
+        stop
     else if (DATAin%ID == 18) then
-        ! DALEC_CDEA_LU_FIRES_ET - added 03/05/2018 JFE
-        DATAin%nopools = 6
-        DATAin%nopars = 28
-        DATAin%nofluxes = 28
-        !change ID code below to resolve conflict when merging with jeff = 23/10/18
+        ! ID = 18 - DALEC.A1.C1.D2.F2.H2.P2.
+        DATAin%nopools = 7
+        DATAin%nopars = 33
+        DATAin%nofluxes = 40
     else if (DATAin%ID == 19) then
-        ! ID = 19 - DALECN_BUCKET
+        ! ID = 19 - DALEC.A1.C2.D2.F2.H2.P2.R3.
         DATAin%nopools = 8
-        DATAin%nopars = 49!45
-        DATAin%nofluxes = 25
-        if (DATAin%PFT == 1) then
-           ! then actually this is a crop pixel
-           DATAin%nopools = 9
-           DATAin%nopars = 38
-           DATAin%nofluxes = 21
-        endif
+        DATAin%nopars = 38
+        DATAin%nofluxes = 45
     else if (DATAin%ID == 20) then
-        ! ID = 20 - DALEC_BUCKET
-        DATAin%nopools = 8
-        DATAin%nopars = 43
-        DATAin%nofluxes = 25
-        if (DATAin%PFT == 1) then
-           ! then actually this is a crop pixel
-           DATAin%nopools = 9
-           DATAin%nopars = 38
-           DATAin%nofluxes = 21
-        endif
+        ! ID = 20 - DALEC.A2.C1.D2.F2.H2.P1.
+        DATAin%nopools = 7
+        DATAin%nopars = 32
+        DATAin%nofluxes = 45
     else if (DATAin%ID == 21) then
-        ! ID = 21 - DALEC_CDEA_LU_FIRES
-        DATAin%nopools = 6
-        DATAin%nopars = 28
-        DATAin%nofluxes = 28
+        ! ID = 21 - DALEC.A1.C1.D2.F2.H2.P5.
+        DATAin%nopools = 7
+        DATAin%nopars = 33
+        DATAin%nofluxes = 40
     else if (DATAin%ID == 22) then
-        ! ID = 22 - DALEC_EVERGREEN
-        DATAin%nopools = 5
-        DATAin%nopars = 17
-        DATAin%nofluxes = 28
+        ! ID = 22 - DALEC.A1.C1.D2.F2.H2.P6.
+        DATAin%nopools = 7
+        DATAin%nopars = 34
+        DATAin%nofluxes = 40
     else if (DATAin%ID == 23) then
-        ! ID = 23 - DALEC_CDEA_no_lit_root
-        DATAin%nopools = 4
-        DATAin%nopars = 17
-        DATAin%nofluxes = 28
+        ! ID = 23 - DALEC.A1.C2.D2.F2.H2.P7.R2.
+        DATAin%nopools = 8
+        DATAin%nopars = 48
+        DATAin%nofluxes = 45
     else if (DATAin%ID == 24) then
-        ! ID = 24 - DALEC_EVERGREEN_no_lit_root
-        DATAin%nopools = 3
-        DATAin%nopars = 11
-        DATAin%nofluxes = 28
+        ! ID = 24 - DALEC.A1.C2.D2.F2.H2.P8.R2.
+        DATAin%nopools = 8
+        DATAin%nopars = 51
+        DATAin%nofluxes = 45
     else if (DATAin%ID == 25) then
-        ! ID = 25 - DALEC_CDEA_ACM2
-        DATAin%nopools = 6
-        DATAin%nopars = 28
-        DATAin%nofluxes = 28
+        ! ID = 25 - DALEC.A1.C2.D2.F2.H2.P9.R2.
+        DATAin%nopools = 8
+        DATAin%nopars = 49
+        DATAin%nofluxes = 45
     else if (DATAin%ID == 26) then
-        ! ID = 26 - DALEC
-        DATAin%nopools = 7
-        DATAin%nopars = 43
-        DATAin%nofluxes = 25
-        if (DATAin%PFT == 1) then
-           ! then actually this is a crop pixel
-           DATAin%nopools = 8
-           DATAin%nopars = 37
-           DATAin%nofluxes = 21
-        endif
-    else if (DATAin%ID == 27) then
-        ! ID = 27 - DALEC_CDEA_ACM2_BUCKET
-        DATAin%nopools = 7
-        DATAin%nopars = 32
-        DATAin%nofluxes = 29
-    else if (DATAin%ID == 28) then
-        ! ID = 28 - DALEC_CDEA_ACM2_BUCKET_RmRg
-        DATAin%nopools = 7
-        DATAin%nopars = 32
-        DATAin%nofluxes = 31
-    else if (DATAin%ID == 29) then
-        ! ID = 29 - DALEC_CDEA_ACM2_BUCKET_RmRg_CWD
-        DATAin%nopools = 8
-        DATAin%nopars = 35
-        DATAin%nofluxes = 33
-    else if (DATAin%ID == 30) then
-        ! ID = 30 - DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT
-        DATAin%nopools = 8
-        DATAin%nopars = 36
-        DATAin%nofluxes = 33
-    else if (DATAin%ID == 31) then
-        ! ID = 31 - DALEC_BUCKET_CanAGE
+        ! ID = 26 - DALEC.A1.C2.D2.F2.H2.P10.R2.
         DATAin%nopools = 8
         DATAin%nopars = 48
         DATAin%nofluxes = 25
-        if (DATAin%PFT == 1) then
-           ! then actually this is a crop pixel
-           DATAin%nopools = 9
-           DATAin%nopars = 38
-           DATAin%nofluxes = 21
-        endif
-    else if (DATAin%ID == 32) then
-        ! ID = 32 - DALEC_G5
-        DATAin%nopools = 8
-        DATAin%nopars = 46
-        DATAin%nofluxes = 25
-        if (DATAin%PFT == 1) then
-           ! then actually this is a crop pixel
-           DATAin%nopools = 9
-           DATAin%nopars = 38
-           DATAin%nofluxes = 21
-        endif
-    else if (DATAin%ID == 33) then
-        ! ID = 33 - DALEC_G6
-        DATAin%nopools = 8
-        DATAin%nopars = 46
-        DATAin%nofluxes = 25
-        if (DATAin%PFT == 1) then
-           ! then actually this is a crop pixel
-           DATAin%nopools = 9
-           DATAin%nopars = 38
-           DATAin%nofluxes = 21
-        endif
-    else if (DATAin%ID == 34) then
-        ! ID = 34 - DALEC-1005
-        DATAin%nopools = 8
-        DATAin%nopars = 37
-        DATAin%nofluxes = 32
-    else if (DATAin%ID == 35) then
-        ! ID = 35 - DALEC-1005a
-        DATAin%nopools = 8
-        DATAin%nopars = 37
-        DATAin%nofluxes = 32
-    else if (DATAin%ID == 36) then
-        ! ID = 36 - DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT
+    else if (DATAin%ID == 27) then
+        ! ID = 27 - DALEC_1005
         DATAin%nopools = 8
         DATAin%nopars = 38
-        DATAin%nofluxes = 33
+        DATAin%nofluxes = 43
+    else if (DATAin%ID == 28) then
+        ! ID = 28 - DALEC_1005a
+        DATAin%nopools = 8
+        DATAin%nopars = 38
+        DATAin%nofluxes = 43
+    else if (DATAin%ID == 29) then
+        ! ID = 29 -
+    else if (DATAin%ID == 30) then
+        ! ID = 30 -
+    else if (DATAin%ID == 31) then
+        ! ID = 31 -
+    else if (DATAin%ID == 32) then
+        ! ID = 32 -
+    else if (DATAin%ID == 33) then
+        ! ID = 33 -
+    else if (DATAin%ID == 34) then
+        ! ID = 34 -
+    else if (DATAin%ID == 35) then
+        ! ID = 35 -
+    else if (DATAin%ID == 36) then
+        ! ID = 36 -
     else if (DATAin%ID == 37) then
-        ! ID = 37 - DALEC_CDEA_ACM2_BUCKET_wMRT
-        DATAin%nopools = 7
-        DATAin%nopars = 33
-        DATAin%nofluxes = 29
+        ! ID = 37 -
     else if (DATAin%ID == 38) then
-        ! ID = 38 - DALEC_CDEA_ACM2_BUCKET_LAB
-        DATAin%nopools = 7
-        DATAin%nopars = 33
-        DATAin%nofluxes = 29
+        ! ID = 38 -
     else if (DATAin%ID == 39) then
-        ! ID = 39 - DALEC_CDEA_ACM2_BUCKET_LAB_wMRT
-        DATAin%nopools = 7
-        DATAin%nopars = 34
-        DATAin%nofluxes = 29
+        ! ID = 39 -
     else
-       write(*,*) "Oh dear... model ID cannot be found"
-       stop
+        write(*,*) "Oh dear... model ID not valid = ",DATAin%ID
+        stop
     endif
 
   end subroutine cardamom_model_library
@@ -618,7 +523,7 @@ module cardamom_io
     if (ios /= 0) print*,"error ",ios," opening file",trim(covinfoname)
     ! for the covariance matrix we have a fixed size containing two matrices,
     ! the initial and the current output - therefore we use
-    inquire(iolength = reclen) a ; print*,reclen
+    inquire(iolength = reclen) a !; print*,reclen
     open(cfile_unit,file=trim(covname),form="UNFORMATTED",access="direct",recl=reclen,iostat=ios)
     if (ios /= 0) print*,"error ",ios," opening file",trim(covname)
 
@@ -668,10 +573,10 @@ module cardamom_io
     rewind(ifile_unit)
 
     ! allocate memory
-    allocate(statdat(100))
+    allocate(statdat(50))
 
-    ! now read the static elements (1-100)
-    do i = 1, 100 ! number of static elements
+    ! now read the static elements (1-50)
+    do i = 1, 50 ! number of static elements
        read(ifile_unit) statdat(i)
     end do
 
@@ -686,19 +591,12 @@ module cardamom_io
     DATAin%yield = -9999 !int(statdat(8))
     DATAin%age = int(statdat(9))
     nopars_dummy = int(statdat(10)) ! needed for next dev stage
-    if (nos_soil_layers == 3) then
-        ! Assume only top soil layer is assigned the top soil condition
-        soil_frac_sand(1) = statdat(12) ! top soil sand percentage
-        soil_frac_sand(2:nos_soil_layers) = statdat(13) ! bot
-        soil_frac_clay(1) = statdat(14) ! top soil clay percentage
-        soil_frac_clay(2:nos_soil_layers) = statdat(15) ! bot
-    else
-        ! Assume that it is greater than 3 layers and thus the top two are considered top
-        soil_frac_sand(1:2) = statdat(12) ! top soil sand percentage
-        soil_frac_sand(3:nos_soil_layers) = statdat(13) ! bot
-        soil_frac_clay(1:2) = statdat(14) ! top soil clay percentage
-        soil_frac_clay(3:nos_soil_layers) = statdat(15) ! bot
-    end if
+    ! Assume 3 soil layers only and that the
+    ! top soil layer is assigned the top soil condition
+    soil_frac_sand(1) = statdat(12) ! top soil sand percentage
+    soil_frac_sand(2:nos_soil_layers) = statdat(13) ! bot
+    soil_frac_clay(1) = statdat(14) ! top soil clay percentage
+    soil_frac_clay(2:nos_soil_layers) = statdat(15) ! bot
     ! call for model specific values
     call cardamom_model_library
 
@@ -708,33 +606,51 @@ module cardamom_io
     ! clean up
     deallocate(statdat)
 
-    ! read in parameter information
+    ! read in parameter information (100 elements)
     a = 1
-    do i = 101, 200
+    do i = 51, 150
        read(ifile_unit) DATAin%parpriors(a)
        a = a + 1
     end do
 
-    ! read in parameter uncertainty
+    ! read in parameter uncertainty (100 elements)
     a = 1
-    do i = 201, 300
+    do i = 151, 250
        read(ifile_unit) DATAin%parpriorunc(a)
        a = a + 1
     end do
 
-    ! read in 'other' parameter priors
+    ! read in parameter effect period (100 elements)
     a = 1
-    do i = 301, 400
+    do i = 251, 350
+       read(ifile_unit) DATAin%parpriorweight(a)
+       a = a + 1
+    end do
+
+    ! read in 'other' parameter priors (50 elements)
+    a = 1
+    do i = 351, 400
        read(ifile_unit) DATAin%otherpriors(a)
        a = a + 1
     end do
 
-    ! read in 'other' parameter priors uncertainties
+    ! read in 'other' parameter priors uncertainties (50 elements)
     a = 1
-    do i = 401, 500
+    do i = 401, 450
        read(ifile_unit) DATAin%otherpriorunc(a)
        a = a + 1
     end do
+
+    ! read in 'other' parameter priors weighting (50 elements)
+    a = 1
+    do i = 451, 500
+       read(ifile_unit) DATAin%otherpriorweight(a)
+       a = a + 1
+    end do
+
+    ! Add a sensible limit on the weighting value
+    where(DATAin%parpriorweight < 1) DATAin%parpriorweight = 1
+    where(DATAin%otherpriorweight < 1) DATAin%otherpriorweight = 1
 
     ! now we know specific information about the dimensions in the file lets use
     ! it to allocate to the module variables
@@ -955,6 +871,12 @@ module cardamom_io
     do i = 2, DATAin%nodays
        DATAin%deltat(i) = DATAin%met(1,i)-DATAin%met(1,(i-1))
     end do
+    ! Calculate the number of years being simulated
+    DATAin%nos_years = nint(sum(DATAin%deltat)/365.25d0)
+    ! Calculate the number of steps per year
+    ! NOTE: this should be doable as integer as there should be an exact division
+    ! as all simulations are conducted in whole years
+    DATAin%steps_per_year = DATAin%nodays/DATAin%nos_years
 
     ! close open binary
     close(ifile_unit)
@@ -985,7 +907,7 @@ module cardamom_io
     ! out where they are in the data sets
     x = 1 ; y = 1 ; z = 1 ; b = 1 ; c = 1 ; d = 1 ; e = 1
     f = 1 ; g = 1 ; h = 1 ; i = 1 ; j = 1 ; k = 1 ; l = 1
-    m = 1 ; o = 1 ; s = 1 ; t = 1 ; v = 1
+    m = 1 ; o = 1 ; s = 1 ; t = 1 ; v = 1 ; w = 1
     do day = 1, DATAin%nodays
        if (DATAin%GPP(day) > -9998d0) then
           DATAin%gpppts(b) = day ; b = b+1
@@ -1534,6 +1456,9 @@ module cardamom_io
     ! Local variables
     integer :: i
 
+!    ! Debugging print statements
+!    print*,"write_mcmc_output:"
+
     ! Increment buffer
     io_space%io_buffer_count = io_space%io_buffer_count + 1
 
@@ -1549,7 +1474,6 @@ module cardamom_io
     if (io_space%io_buffer_count == io_space%io_buffer .or. dump_now) then
 
         ! Then we are writing out to file
-
         ! Only write the most current covariance matrix as this would be an overwrite anyway
         call write_covariance_matrix(covariance,npars,.false.)
         ! Everything else loop through the buffered output to write out
@@ -1563,6 +1487,9 @@ module cardamom_io
         io_space%io_buffer_count = 0
 
     endif
+
+!    ! Debugging print statements
+!    print*,"write_mcmc_output:done"
 
   end subroutine write_mcmc_output
   !

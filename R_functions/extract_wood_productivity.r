@@ -8,14 +8,15 @@
 # Created: 08/12/2021
 # Last modified: 08/12/2021 (T. L. Smallman)
 
-extract_wood_productivity<- function(timestep_days,spatial_type,resolution,grid_type,latlon_in,Cwood_inc_all) {
+extract_wood_productivity<- function(i1,j1,timestep_days,spatial_type,resolution,
+                                     grid_type,latlon_in,Cwood_inc_all) {
 
    # Update the user
-   print(paste("Cwood productivity / increment extracted for current location ",Sys.time(),sep=""))
+   if (use_parallel == FALSE) {print(paste("Cwood productivity / increment extracted for current location ",Sys.time(),sep=""))}
 
-   # find the nearest location
-   output = closest2d(1,Cwood_inc_all$lat,Cwood_inc_all$long,latlon_in[1],latlon_in[2],2)
-   i1 = unlist(output)[1] ; j1 = unlist(output)[2]
+#   # find the nearest location
+#   output = closest2d_2(1,Cwood_inc_all$lat,Cwood_inc_all$long,latlon_in[1],latlon_in[2])
+#   i1 = unlist(output, use.names=FALSE)[1] ; j1 = unlist(output, use.names=FALSE)[2]
 
    # Create time series output variables
    Cwood_inc = rep(-9999, length(timestep_days))
