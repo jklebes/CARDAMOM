@@ -43,7 +43,7 @@ vpd_to_rh<-function(vpd_in,air_temperature) {
    vpsat = (0.061375*exp((17.502*air_temperature)/(240.97+air_temperature)))*1.0e4
    # Difference between the vapour pressure of saturation and air, i.e. the
    # VPD (Pa)
-   rh = vpd_in/vpsat
+   rh = 1-vpd_in/vpsat
    rh[rh > 1] <- 1
    rh[rh < 0] <- 0
    # clean up
