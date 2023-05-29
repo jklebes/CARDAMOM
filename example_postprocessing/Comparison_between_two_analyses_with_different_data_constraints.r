@@ -1258,6 +1258,31 @@ plot(landmask, add=TRUE)
 mtext(paste("Difference",sep=""), side = 3, cex = 1.2, padj = 1.3)
 dev.off()
 
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_MTTwood_years_to_NPPwood_gCm2day_correlation",outsuffix,".png",sep=""), height = 700, width = 3000, res = 300)
+par(mfrow=c(1,3), mar=c(0.01,1.5,0.3,7),omi=c(0.01,0.1,0.01,0.1))
+var1 = orig_grid_output$MTT_wood_years_to_NPP_wood_gCm2day_correlation
+var1 = raster(vals = t(var1[,dim(var1)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var2 = alt_grid_output$MTT_wood_years_to_NPP_wood_gCm2day_correlation
+var2 = raster(vals = t(var2[,dim(var2)[2]:1]), ext = extent(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = var2-var1
+plot(var1, zlim=c(-1,1), col=colour_choices_sign, xaxt = "n", yaxt = "n", box = FALSE, bty = "n",
+     cex.lab=2, cex.main=2.0, cex.axis = 2, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main="")
+mtext(orig_name, side = 3, cex = 1.2, padj = 1.0)
+plot(landmask, add=TRUE)
+mtext(expression(paste("Corr(MTTwood,NPPwood)",sep="")), side = 2, cex = 0.9, padj = 0.0, adj = 0.5)
+plot(var2, zlim=c(-1,1), col=colour_choices_sign, xaxt = "n", yaxt = "n", box = FALSE, bty = "n",
+     cex.lab=2, cex.main=2.0, cex.axis = 2, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main="")
+mtext(alt_name, side = 3, cex = 1.2, padj = 1.0)
+plot(landmask, add=TRUE)
+xrange = c(-1,1) * max(abs(range(values(var3), na.rm=TRUE)), na.rm=TRUE)
+plot(var3, main="", zlim=xrange, col=colour_choices_sign, xaxt = "n", yaxt = "n", box = FALSE, bty = "n",
+     cex.lab=2, cex.main=2.0, cex.axis = 2, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1))
+plot(landmask, add=TRUE)
+mtext(paste("Difference",sep=""), side = 3, cex = 1.2, padj = 1.0)
+dev.off()
+
 ###
 ## Loading and processing of independent observations
 ###
@@ -2023,7 +2048,7 @@ plot(var3~run_years, main="", cex.lab=2.4, cex.main=2, cex.axis=2.4, ylim=zrange
       col="black", type="l", lwd=4, ylab="", xlab="")
 lines(var4~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var4~run_years, col=model_colours[1], pch=16)
 lines(var5~run_years, col=model_colours[2], lwd=3, lty = 2) ; points(var5~run_years, col=model_colours[2], pch=16)
-legend("topleft", legend = "Copernicus", col = "black", lty = 1, pch=NA, horiz = FALSE, bty = "n", cex=2.1, lwd=3, ncol = 2)
+legend("topleft", legend = "LAI Constraint", col = "black", lty = 1, pch=NA, horiz = FALSE, bty = "n", cex=2.1, lwd=3, ncol = 2)
 mtext(expression(paste('Year',sep="")), side = 1, cex = 2.4, padj = 1.85)
 mtext(expression(paste('Analysis-wide LAI (',m^2,'/',m^2,')',sep="")), side = 2, cex = 2.4, padj = -1.05)
 abline(0,1, col="grey", lwd=3)
@@ -2556,6 +2581,73 @@ zrange6 = zrange5
 zrange7 = zrange5
 zrange8 = zrange5
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_C_fluxes_CI",outsuffix,".png",sep=""), height = 3000, width = 4900, res = 300)
+par(mfrow=c(3,4), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
+# Original
+plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("NBE CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(orig_name, side=2, cex=1.8, padj = -0.5)
+plot(var2, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("GPP CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var3, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Reco CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var4, zlim=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = expression(paste("Fire CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Alternate
+plot(var5, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+mtext(alt_name, side=2,cex=1.8, padj = -0.5)
+plot(var6, zlim=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var7, zlim=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+plot(var8, zlim=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=colour_choices_CI)
+plot(landmask, add=TRUE)
+# Difference
+plot(var9, zlim = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+mtext(paste("Difference",sep=""), side=2, cex=1.8, padj = -0.5)
+plot(var10, zlim = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+plot(var11, zlim = zrange7, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+plot(var12, zlim = zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
+     cex.axis = 2.5, legend.width = 2.2, axes = FALSE, axis.args=list(cex.axis=2.0,hadj=0.1),
+     main = "", col=rev(colour_choices_sign))
+plot(landmask, add=TRUE)
+dev.off()
+
+# ranges
+zrange1 = c(0,1)*max(abs(range(c(values(var1),values(var5)),na.rm=TRUE)))
+zrange2 = c(0,1)*max(abs(range(c(values(var2),values(var6)),na.rm=TRUE)))
+zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var7)),na.rm=TRUE)))
+zrange4 = c(0,1)*max(abs(range(c(values(var4),values(var8)),na.rm=TRUE)))
+zrange5 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+zrange6 = c(-1,1)*max(abs(range(c(values(var10)),na.rm=TRUE)))
+zrange7 = c(-1,1)*max(abs(range(c(values(var11)),na.rm=TRUE)))
+zrange8 = c(-1,1)*max(abs(range(c(values(var12)),na.rm=TRUE)))
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_C_fluxes_CI_nonstd_zlim",outsuffix,".png",sep=""), height = 3000, width = 4900, res = 300)
 par(mfrow=c(3,4), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
 plot(var1, zlim=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",

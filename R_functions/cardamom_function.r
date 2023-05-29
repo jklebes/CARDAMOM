@@ -8,7 +8,7 @@
 # Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 
 cardamom <-function (projname,model,method,stage) {
-stage = -1 ; repair = 1 ; use_parallel = TRUE
+stage = 1 ; repair = 1 ; use_parallel = FALSE
   ## load needed functions into R environment
   paths = load_paths()
 
@@ -280,7 +280,7 @@ stage = -1 ; repair = 1 ; use_parallel = TRUE
           latlon = cbind(PROJECT$latitude,PROJECT$longitude)
           # However we still need a reduced area domain for extracting the site level analyses. +c(-0.5,0.5) allows buffer
           output = determine_lat_long_needed(lat = range(PROJECT$latitude)+c(-0.5,0.5), long = range(PROJECT$longitude)+c(-0.5,0.5)
-                                            ,resolution = 0.125, grid_type = "wgs84", remove = 0)
+                                            ,resolution = 0.125*0.5, grid_type = "wgs84", remove = 0)
           cardamom_ext = output$cardamom_ext ; gc(reset=TRUE,verbose=FALSE)
           # Extract the lat / long grids designed for determining the extraction locations for the gridded observation datasets
           obs_long_grid = output$obs_long_grid ; obs_lat_grid = output$obs_lat_grid

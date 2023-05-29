@@ -90,18 +90,26 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                     var1 = ncvar_get(data1, "LAI") # leaf area index (m2/m2)
                     # read error variable
                     var2 = ncvar_get(data2, "LAI_SD") # standard deviation (m2/m2)
-
+### Hack            # Extract spatial information
+                    lat_in_sd = ncvar_get(data2, "lat") ; long_in_sd = ncvar_get(data2, "lon")
+###                    
                     # Close the current file
                     nc_close(data1) ; nc_close(data2)
 
                     # Convert to a raster, assuming standad WGS84 grid
                     var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1))
                     var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326")) ; f1 = filename(var1)
-                    var2 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var2))
+### Original
+#                    var2 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var2))
+#                    var2 = rasterFromXYZ(var2, crs = ("+init=epsg:4326")) ; f2 = filename(var2)
+#                    # Remove the input lat / long information
+#                    rm(lat_in,long_in)
+### Hack
+                    var2 = data.frame(x = as.vector(long_in_sd), y = as.vector(lat_in_sd), z = as.vector(var2))
                     var2 = rasterFromXYZ(var2, crs = ("+init=epsg:4326")) ; f2 = filename(var2)
                     # Remove the input lat / long information
-                    rm(lat_in,long_in)
-
+                    rm(lat_in,long_in,lat_in_sd,long_in_sd)
+###
                     # Extend the extent of the overall grid to the analysis domain
                     var1 = extend(var1,cardamom_ext) ; var2 = extend(var2,cardamom_ext)
                     ff1 = filename(var1) ; ff2 = filename(var2)
@@ -219,7 +227,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
       # return spatial structure to data
       lai_out = array(as.vector(lai_hold)[not_na], dim=c(xdim,ydim,length(doy_out)))
       lai_unc_out = array(as.vector(lai_unc_hold)[not_na], dim=c(xdim,ydim,length(doy_out)))
-print(lai_out)
+
       # output variables
       lai_all = list(lai_all = lai_out, lai_unc_all = lai_unc_out,
                      doy_obs = doy_out, lat = lat, long = long, missing_years=missing_years)
@@ -441,7 +449,7 @@ print(lai_out)
       # return spatial structure to data
       lai_out = array(as.vector(lai_hold)[not_na], dim=c(xdim,ydim,length(doy_out)))
       lai_unc_out = array(as.vector(lai_unc_hold)[not_na], dim=c(xdim,ydim,length(doy_out)))
-print(lai_out) ; print(doy_out) ; print(missing_years)
+
       # output variables
       lai_all = list(lai_all = lai_out, lai_unc_all = lai_unc_out,
                      doy_obs = doy_out, lat = lat, long = long, missing_years=missing_years)
