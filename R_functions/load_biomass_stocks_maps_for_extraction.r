@@ -77,8 +77,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
             biomass_gCm2[which(as.vector(biomass_gCm2) < 0)] = NA
             biomass_uncertainty_gCm2[which(as.vector(biomass_uncertainty_gCm2) < 0)] = NA
 
-            # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
-            # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+            # Adjust spatial resolution of the datasets, this occurs in all cases
             if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
 
                 # Create raster with the target resolution
@@ -182,8 +181,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
             biomass_gCm2[which(as.vector(biomass_gCm2) < 0)] = NA
             biomass_uncertainty_gCm2[which(as.vector(biomass_uncertainty_gCm2) < 0)] = NA
 
-            # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
-            # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+            # Adjust spatial resolution of the datasets, this occurs in all cases
             if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
 
                 # Create raster with the target resolution
@@ -282,8 +280,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                  # now remove the ones that are actual missing data
                  biomass[which(as.vector(biomass) < 0)] = NA
                  biomass_uncertainty[which(as.vector(biomass_uncertainty) < 0)] = NA
-                 # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-                 # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+                 # Adjust spatial resolution of the datasets, this occurs in all cases
                  if (res(biomass)[1] != res(cardamom_ext)[1] | res(biomass)[2] != res(cardamom_ext)[2]) {
 
                      # Create raster with the target resolution
@@ -413,8 +410,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                  # now remove the ones that are actual missing data
                  biomass[which(as.vector(biomass) < 0)] = NA
                  biomass_uncertainty[which(as.vector(biomass_uncertainty) < 0)] = NA
-                 # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-                 # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+                 # Adjust spatial resolution of the datasets, this occurs in all cases
                  if (res(biomass)[1] != res(cardamom_ext)[1] | res(biomass)[2] != res(cardamom_ext)[2]) {
 
                      # Create raster with the target resolution
@@ -534,8 +530,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                  biomass = crop(biomass,cardamom_ext)
                  # now remove the ones that are actual missing data
                  biomass[which(as.vector(biomass) < 0)] = NA
-                 # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-                 # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+                 # Adjust spatial resolution of the datasets, this occurs in all cases
                  if (res(biomass)[1] != res(cardamom_ext)[1] | res(biomass)[2] != res(cardamom_ext)[2]) {
 
                      # Create raster with the target resolution
@@ -633,8 +628,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
             # now remove the ones that are actual missing data
             biomass_gCm2[which(as.vector(biomass_gCm2) < 0)] = NA
             biomass_uncertainty_gCm2[which(as.vector(biomass_uncertainty_gCm2) < 0)] = NA
-            # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-            # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+            # Adjust spatial resolution of the datasets, this occurs in all cases
             if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
 
                 # Create raster with the target resolution
@@ -723,8 +717,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
             # now remove the ones that are actual missing data
             biomass_gCm2[which(as.vector(biomass_gCm2) < 0)] = NA
             biomass_uncertainty_gCm2[which(as.vector(biomass_uncertainty_gCm2) < 0)] = NA
-            # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-            # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+            # Adjust spatial resolution of the datasets, this occurs in all cases
             if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
 
                  # Create raster with the target resolution
@@ -815,8 +808,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         # now remove the ones that are actual missing data
         biomass_gCm2[which(as.vector(biomass_gCm2) < 0)] = NA
         biomass_uncertainty_gCm2[which(as.vector(biomass_uncertainty_gCm2) < 0)] = NA
-        # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-        # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+        # Adjust spatial resolution of the datasets, this occurs in all cases
         if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
 
             # Create raster with the target resolution
@@ -922,8 +914,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
             biomass[which(as.vector(biomass) < 0)] = NA
             biomass_uncertainty[which(as.vector(biomass_uncertainty) < 0)] = NA
 
-            # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-            # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+            # Adjust spatial resolution of the datasets, this occurs in all cases
             if (res(biomass)[1] != res(cardamom_ext)[1] | res(biomass)[2] != res(cardamom_ext)[2]) {
                 # Create raster with the target resolution
                 target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
@@ -1033,8 +1024,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                  # now remove the ones that are actual missing data
                  biomass[which(as.vector(biomass) < 0)] = NA
                  biomass_uncertainty[which(as.vector(biomass_uncertainty) < 0)] = NA
-                 # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-                 # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+                 # Adjust spatial resolution of the datasets, this occurs in all cases
                  if (res(biomass)[1] != res(cardamom_ext)[1] | res(biomass)[2] != res(cardamom_ext)[2]) {
 
                      # Create raster with the target resolution
@@ -1157,8 +1147,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                  biomass = crop(biomass,cardamom_ext)
                  # now remove the ones that are actual missing data
                  biomass[which(as.vector(biomass) < 0)] = NA
-                 # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-                 # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+                 # Adjust spatial resolution of the datasets, this occurs in all cases
                  if (res(biomass)[1] != res(cardamom_ext)[1] | res(biomass)[2] != res(cardamom_ext)[2]) {
                      # Create raster with the target resolution
                      target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))

@@ -92,7 +92,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                     var2 = ncvar_get(data2, "LAI_SD") # standard deviation (m2/m2)
 ### Hack            # Extract spatial information
                     lat_in_sd = ncvar_get(data2, "lat") ; long_in_sd = ncvar_get(data2, "lon")
-###                    
+###
                     # Close the current file
                     nc_close(data1) ; nc_close(data2)
 
@@ -136,29 +136,26 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                         if (file.exists(f2)) { file.remove(f2) }
                         if (file.exists(gsub(".grd",".gri",f2))) { file.remove(gsub(".grd",".gri",f2)) }
                     } ; f2 = filename(var2)
-                    # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-                    # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-                    #if (spatial_type == "grid") {
-                        if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
-                            # Create raster with the target resolution
-                            target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
-                            # Resample to correct grid.
-                            # Probably should be done via aggregate function to allow for correct error propogation
-                            var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
-                            var2 = resample(var2, target, method="bilinear") ; gc() ; removeTmpFiles()
-                            ff1 = filename(var1) ; ff2 = filename(var2)
-                            # Check and remove unwanted tmp files
-                            if (f1 != ff1 & f1 != "") {
-                                if (file.exists(f1)) { file.remove(f1) }
-                                if (file.exists(gsub(".grd",".gri",f1))) { file.remove(gsub(".grd",".gri",f1)) }
-                            } ; f1 = filename(var1)
-                            if (f2 != ff2 & f2 != "") {
-                                if (file.exists(f2)) { file.remove(f2) }
-                                if (file.exists(gsub(".grd",".gri",f2))) { file.remove(gsub(".grd",".gri",f2)) }
-                            } ; f2 = filename(var2)
+                    # Adjust spatial resolution of the datasets, this occurs in all cases
+                    if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
+                        # Create raster with the target resolution
+                        target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+                        # Resample to correct grid.
+                        # Probably should be done via aggregate function to allow for correct error propogation
+                        var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
+                        var2 = resample(var2, target, method="bilinear") ; gc() ; removeTmpFiles()
+                        ff1 = filename(var1) ; ff2 = filename(var2)
+                        # Check and remove unwanted tmp files
+                        if (f1 != ff1 & f1 != "") {
+                            if (file.exists(f1)) { file.remove(f1) }
+                            if (file.exists(gsub(".grd",".gri",f1))) { file.remove(gsub(".grd",".gri",f1)) }
+                        } ; f1 = filename(var1)
+                        if (f2 != ff2 & f2 != "") {
+                            if (file.exists(f2)) { file.remove(f2) }
+                            if (file.exists(gsub(".grd",".gri",f2))) { file.remove(gsub(".grd",".gri",f2)) }
+                        } ; f2 = filename(var2)
 
-                        } # Aggrgeate to resolution
-                    #} # spatial_type == "grid"
+                    } # Aggrgeate to resolution
 
                     # Extract spatial information just the once
                     if (lat_done == FALSE) {
