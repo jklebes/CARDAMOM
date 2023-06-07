@@ -436,7 +436,7 @@ module model_likelihood_module
 !    ! Debugging print statements
 !    print*,"log_model_likelihood: done"
 
-  end subroutine log_model_likelihood  
+  end subroutine log_model_likelihood
   !
   !------------------------------------------------------------------
   !
@@ -511,7 +511,7 @@ module model_likelihood_module
   subroutine assess_EDC1(PARS, npars, meantemp, meanrad, EDC1)
 
     ! subroutine assessed the current parameter sets for passing ecological and
-    ! steady state contraints (Bloom et al., 2014).
+    ! steady state contraints (Bloom et al., 2015).
 
     implicit none
 
@@ -2678,7 +2678,7 @@ module model_likelihood_module
     ! don't forget to return
     return
 
-  end function log_scale_likelihood    
+  end function log_scale_likelihood
   !
   !------------------------------------------------------------------
   !
