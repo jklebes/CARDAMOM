@@ -21,14 +21,14 @@ print("Starting steady_state")
 ### 
 
 # Load libraries and CARDAMOM R code
-setwd("~/WORK/GREENHOUSE/models/CARDAMOM/")
+setwd("<file path here>")
 source("./R_functions/load_all_cardamom_functions.r")
 library(RcppRoll)
 
 # Set the location of cardamom outputs
-cardamom_output_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/"
+cardamom_output_dir = "<file_path_here>"
 # Specify the infofile for the project to be used
-infofile = "~/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.C1.D1.F2.P1.#_MHMCMC/FI-Hyy_example/infofile.RData"
+infofile = paste(cardamom_output_dir,"/DALEC.C1.D1.F2.P1.#_MHMCMC/FI-Hyy_example/infofile.RData",sep="")
 # Choose the site name for the parameters and climate to be drawn from. 
 # These are selected in loop, so if you want to the parameters and climate 
 # to come from the same site then the below two lists should be the same.
@@ -43,7 +43,7 @@ ssp_scenarios = c("ssp119","ssp126","ssp434","ssp245","ssp370","ssp585")
 # Suffix for the output files
 output_suffix = "_steadystate" # must include "_" at the beginning
 # Location to place the outputs of this script
-outdir = "~/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.C1.D1.F2.P1.#_MHMCMC/FI-Hyy_example/RESULTS_PROCESSED/"
+outdir = "<file_path_here>"
 
 # Which ESM to extract climate change from?
 # Currently available are: "MOHC" 
