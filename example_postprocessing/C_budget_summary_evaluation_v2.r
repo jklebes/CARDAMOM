@@ -194,7 +194,7 @@ rm(tmp)
 
 add_biomes = " "
 #add_biomes = "ssa_wwf"
-add_biomes = "wwf_ecoregions"
+#add_biomes = "wwf_ecoregions"
 #add_biomes = "reccap2_permafrost"
 if (add_biomes == "ssa_wwf") {
     # Read in shape file for boundaries
@@ -3200,27 +3200,25 @@ for (t in seq(1, length(gpp_years))) {
      # Unit convertion (gC/m2/d -> gC/m2/yr)
      obs_gpp_mean_gCm2yr[,,t] = input_data$var * 365.25
 
-     # GPP min
-     input_data = ncvar_get(input, "GPP_annual_min")    
-     # Must go in as a 3D array, so check that is the case
-     if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}      
-     # Begin regridding
+#     # GPP min
+#     input_data = ncvar_get(input, "GPP_annual_min")    
+#     # Must go in as a 3D array, so check that is the case
+#     if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}      
+#     # Begin regridding
 #     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext,landmask)
-     input_data = regrid_gdal_func(out_dir,input_data,input_lat,input_long,cardamom_ext,landmask)
-     # Assign to output variable
-     # Unit convertion (gC/m2/d -> gC/m2/yr)
-     obs_gpp_min_gCm2yr[,,t] = input_data$var * 365.25
+#     # Assign to output variable
+#     # Unit convertion (gC/m2/d -> gC/m2/yr)
+#     obs_gpp_min_gCm2yr[,,t] = input_data$var * 365.25
 
-     # GPP max
-     input_data = ncvar_get(input, "GPP_annual_max")
-     # Must go in as a 3D array, so check that is the case
-     if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}     
-     # Begin regridding
+#     # GPP max
+#     input_data = ncvar_get(input, "GPP_annual_max")
+#     # Must go in as a 3D array, so check that is the case
+#     if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}     
+#     # Begin regridding
 #     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext,landmask)
-     input_data = regrid_gdal_func(out_dir,input_data,input_lat,input_long,cardamom_ext,landmask)
-     # Assign to output variable
-     # Unit convertion (gC/m2/d -> gC/m2/yr)
-     obs_gpp_max_gCm2yr[,,t] = input_data$var * 365.25
+#     # Assign to output variable
+#     # Unit convertion (gC/m2/d -> gC/m2/yr)
+#     obs_gpp_max_gCm2yr[,,t] = input_data$var * 365.25
 
      # GPP ensemble
      input_data = ncvar_get(input, "GPP_annual_ensemble")
@@ -3240,19 +3238,17 @@ for (t in seq(1, length(gpp_years))) {
 # Ensure the spatial orientation of the processed variable matches that of CARDAMOM
 obs_gpp_ensemble_gCm2yr = obs_gpp_ensemble_gCm2yr[,dim(obs_gpp_ensemble_gCm2yr)[2]:1,,]
 obs_gpp_mean_gCm2yr = obs_gpp_mean_gCm2yr[,dim(obs_gpp_mean_gCm2yr)[2]:1,]
-obs_gpp_min_gCm2yr = obs_gpp_min_gCm2yr[,dim(obs_gpp_min_gCm2yr)[2]:1,]
-obs_gpp_max_gCm2yr = obs_gpp_max_gCm2yr[,dim(obs_gpp_max_gCm2yr)[2]:1,]
+obs_gpp_min_gCm2yr = apply(obs_gpp_ensemble_gCm2yr,c(1,2,3),min, na.rm=TRUE)
+obs_gpp_max_gCm2yr = apply(obs_gpp_ensemble_gCm2yr,c(1,2,3),max, na.rm=TRUE)
 
 # Create domain averaged values for each year and data source, note that aggregation MUST happen within product type before across products
-obs_gpp_ensemble_gCm2yr = apply(obs_gpp_ensemble_gCm2yr*array(landmask_area*grid_output$land_fraction, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_ensemble_gCm2yr)[3],dim(obs_gpp_ensemble_gCm2yr)[4]))*1e-12,c(3,4),sum, na.rm=TRUE)
-# Generate aggregate values at the domain level - these must come from the raw product specific variables
-obs_gpp_mean_domain_TgCyr = apply(obs_gpp_ensemble_gCm2yr,1,mean, na.rm=TRUE)
-obs_gpp_min_domain_TgCyr = apply(obs_gpp_ensemble_gCm2yr,1,min, na.rm=TRUE)
-obs_gpp_max_domain_TgCyr = apply(obs_gpp_ensemble_gCm2yr,1,max, na.rm=TRUE)
+tmp = apply(obs_gpp_ensemble_gCm2yr*array(landmask_area*grid_output$land_fraction, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_ensemble_gCm2yr)[3],dim(obs_gpp_ensemble_gCm2yr)[4]))*1e-12,c(3,4),sum, na.rm=TRUE)
 # where the whole grid is zero can lead to zero being introduced - remove these
-obs_gpp_mean_domain_TgCyr[which(obs_gpp_mean_domain_TgCyr == 0)] = NA 
-obs_gpp_min_domain_TgCyr[which(obs_gpp_min_domain_TgCyr == 0)] = NA
-obs_gpp_max_domain_TgCyr[which(obs_gpp_max_domain_TgCyr == 0)] = NA
+tmp[which(tmp == 0)] = NA 
+# Generate aggregate values at the domain level - these must come from the raw product specific variables
+obs_gpp_mean_domain_TgCyr = apply(tmp,1,mean, na.rm=TRUE)
+obs_gpp_min_domain_TgCyr = apply(tmp,1,min, na.rm=TRUE)
+obs_gpp_max_domain_TgCyr = apply(tmp,1,max, na.rm=TRUE)
 
 ###
 ## Independent fire emissions estimate
