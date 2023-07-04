@@ -506,7 +506,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         input_file = input_file[grepl("saatchi_wood_MgCha",input_file) == TRUE]
 
         # Sense check
-        if (length(input_unc_file) != length(input_files)) {stop("number of uncertainty and data files differ for Cwood_stock_source = Saatchi_2021")}
+        if (length(input_unc_file) != length(input_file)) {stop("number of uncertainty and data files differ for Cwood_stock_source = Saatchi_2021")}
 
         # Determine the number of years found
         years_with_obs = gsub("saatchi_wood_MgCha_","",input_file)
