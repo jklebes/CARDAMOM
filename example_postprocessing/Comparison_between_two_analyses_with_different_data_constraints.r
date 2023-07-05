@@ -1796,13 +1796,13 @@ for (t in seq(1, length(gpp_years))) {
 }
 
 # Ensure the spatial orientation of the processed variable matches that of CARDAMOM
-obs_gpp_ensemble_gCm2yr = obs_gpp_ensemble_gCm2yr[,dim(obs_gpp_ensemble_gCm2yr)[2]:1,,]
-obs_gpp_mean_gCm2yr = obs_gpp_mean_gCm2yr[,dim(obs_gpp_mean_gCm2yr)[2]:1,]
-#obs_gpp_min_gCm2yr = obs_gpp_min_gCm2yr[,dim(obs_gpp_min_gCm2yr)[2]:1,]
-#obs_gpp_max_gCm2yr = obs_gpp_max_gCm2yr[,dim(obs_gpp_max_gCm2yr)[2]:1,]
+obs_gpp_ensemble_gCm2yr = obs_gpp_ensemble_gCm2yr[,dim(obs_gpp_ensemble_gCm2yr)[2]:1,,]*array(landfilter, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_ensemble_gCm2yr)[3],dim(obs_gpp_ensemble_gCm2yr)[4]))
+obs_gpp_mean_gCm2yr = obs_gpp_mean_gCm2yr[,dim(obs_gpp_mean_gCm2yr)[2]:1,]*array(landfilter, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_mean_gCm2yr)[3]))
+obs_gpp_min_gCm2yr = apply(obs_gpp_ensemble_gCm2yr,c(1,2,3),min, na.rm=TRUE)*array(landfilter, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_ensemble_gCm2yr)[3]))
+obs_gpp_max_gCm2yr = apply(obs_gpp_ensemble_gCm2yr,c(1,2,3),max, na.rm=TRUE)*array(landfilter, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_ensemble_gCm2yr)[3]))
 
 # Create domain averaged values for each year and data source, note that aggregation MUST happen within product type before across products
-tmp = apply(obs_gpp_ensemble_gCm2yr*array(landmask_area*orig_grid_output$land_fraction, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_ensemble_gCm2yr)[3],dim(obs_gpp_ensemble_gCm2yr)[4]))*1e-12,c(3,4),sum, na.rm=TRUE)
+tmp = apply(obs_gpp_ensemble_gCm2yr*array(landmask_area*orig_grid_output$land_fraction*landfilter, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_ensemble_gCm2yr)[3],dim(obs_gpp_ensemble_gCm2yr)[4]))*1e-12,c(3,4),sum, na.rm=TRUE)
 # where the whole grid is zero can lead to zero being introduced - remove these
 tmp[which(tmp == 0)] = NA 
 # Generate aggregate values at the domain level - these must come from the raw product specific variables
@@ -1843,12 +1843,12 @@ for (t in seq(1, length(fire_years))) {
      if (t == 1) {
          obs_fire_mean_gCm2yr = array(NA, dim=c(dim(input_data$var)[1:2],length(fire_years)))
          obs_fire_min_gCm2yr = array(NA, dim=c(dim(input_data$var)[1:2],length(fire_years)))
-         obs_fire_max_gCm2yr = array(NA, dim=c(dim(input_data$var)[1:2],length(fire_years)))
+         obs_fire_max_gCm2yr = array(NA, dim=c(dim(input_data$var)[1:2],length(fire_years)))                
      }
      # Assign to output variable
      obs_fire_mean_gCm2yr[,,t] = input_data$var
 
-     # GPP min
+     # Fire min
      input_data = ncvar_get(input, "Fire_annual_min")    
      # Unit convertion (gC/m2/d -> gC/m2/yr)
      input_data = input_data * 365.25
@@ -1859,7 +1859,7 @@ for (t in seq(1, length(fire_years))) {
      # Assign to output variable
      obs_fire_min_gCm2yr[,,t] = input_data$var
 
-     # GPP max
+     # Fire max
      input_data = ncvar_get(input, "Fire_annual_max")
      # Unit convertion (gC/m2/d -> gC/m2/yr)
      input_data = input_data * 365.25
@@ -1875,9 +1875,9 @@ for (t in seq(1, length(fire_years))) {
 }
 
 # Ensure the spatial orientation of the processed variable matches that of CARDAMOM
-obs_fire_mean_gCm2yr = obs_fire_mean_gCm2yr[,dim(obs_fire_mean_gCm2yr)[2]:1,]
-obs_fire_min_gCm2yr = obs_fire_min_gCm2yr[,dim(obs_fire_min_gCm2yr)[2]:1,]
-obs_fire_max_gCm2yr = obs_fire_max_gCm2yr[,dim(obs_fire_max_gCm2yr)[2]:1,]
+obs_fire_mean_gCm2yr = obs_fire_mean_gCm2yr[,dim(obs_fire_mean_gCm2yr)[2]:1,]*array(landfilter, dim=c(dim(landmask_area)[1:2],dim(obs_fire_mean_gCm2yr)[3]))
+obs_fire_min_gCm2yr = obs_fire_min_gCm2yr[,dim(obs_fire_min_gCm2yr)[2]:1,]*array(landfilter, dim=c(dim(landmask_area)[1:2],dim(obs_fire_mean_gCm2yr)[3]))
+obs_fire_max_gCm2yr = obs_fire_max_gCm2yr[,dim(obs_fire_max_gCm2yr)[2]:1,]*array(landfilter, dim=c(dim(landmask_area)[1:2],dim(obs_fire_mean_gCm2yr)[3]))
 
 # Ensure that the timeseries length is consistent between the observed variable and the model analysis
 # This assumes that only the timesteps that overlap the model period have been read in the first place,
@@ -1914,15 +1914,6 @@ obs_fire_max_domain_TgCyr = apply(obs_fire_max_gCm2yr*array(orig_grid_output$lan
 obs_fire_mean_domain_TgCyr[which(obs_fire_mean_domain_TgCyr == 0)] = NA 
 obs_fire_min_domain_TgCyr[which(obs_fire_min_domain_TgCyr == 0)] = NA
 obs_fire_max_domain_TgCyr[which(obs_fire_max_domain_TgCyr == 0)] = NA
-
-# Create domain averaged values for each year and data source, note that aggregation MUST happen within product type before across products
-tmp = apply(obs_gpp_ensemble_gCm2yr*array(landmask_area*orig_grid_output$land_fraction, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_ensemble_gCm2yr)[3],dim(obs_gpp_ensemble_gCm2yr)[4]))*1e-12,c(3,4),sum, na.rm=TRUE)
-# where the whole grid is zero can lead to zero being introduced - remove these
-tmp[which(tmp == 0)] = NA 
-# Generate aggregate values at the domain level - these must come from the raw product specific variables
-obs_gpp_mean_domain_TgCyr = apply(tmp,1,mean, na.rm=TRUE)
-obs_gpp_min_domain_TgCyr = apply(tmp,1,min, na.rm=TRUE)
-obs_gpp_max_domain_TgCyr = apply(tmp,1,max, na.rm=TRUE)
 
 ###
 ## Plot Observations

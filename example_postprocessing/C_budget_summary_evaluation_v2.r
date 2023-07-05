@@ -16,6 +16,36 @@
 # Comparison between CARDAMOM and EO soil moisture
 
 ###
+## Analysis specific information and generic creation
+###
+
+###
+## Load analysis
+
+# PointsOfChange
+load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
+
+# Set output path for figures and tables
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures/"
+out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/RECCAP2/figures/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/InternationalScience/figures_africa/"
+#out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
+
+#
+# Load the CARDAMOM files
+load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
+
+# Specify the position within the stored ensemble for the median estimate and the desired uncertainty bands
+mid_quant = 4 ; low_quant = 2 ; high_quant = 6
+wanted_quant = c(low_quant,3,mid_quant,5,high_quant)
+
+# Extract timing information
+run_years = as.numeric(PROJECT$start_year) : as.numeric(PROJECT$end_year)
+nos_years = length(as.numeric(PROJECT$start_year) : as.numeric(PROJECT$end_year))
+steps_per_year = length(PROJECT$model$timestep_days) / nos_years
+
+###
 ## Load needed libraries and framework functions
 ###
 
@@ -84,36 +114,6 @@ fudgeit <- function(){
 #                     smallplot = c(.78,.81,0.28,0.85))
                      smallplot = c(0.97-0.12,1.0-0.12,0.28,0.85))
 } # end function fudgeit
-
-###
-## Analysis specific information and generic creation
-###
-
-###
-## Load analysis
-
-# PointsOfChange
-load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
-
-# Set output path for figures and tables
-#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures/"
-out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/RECCAP2/figures/"
-#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/InternationalScience/figures_africa/"
-#out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
-
-#
-# Load the CARDAMOM files
-load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
-
-# Specify the position within the stored ensemble for the median estimate and the desired uncertainty bands
-mid_quant = 4 ; low_quant = 2 ; high_quant = 6
-wanted_quant = c(low_quant,3,mid_quant,5,high_quant)
-
-# Extract timing information
-run_years = as.numeric(PROJECT$start_year) : as.numeric(PROJECT$end_year)
-nos_years = length(as.numeric(PROJECT$start_year) : as.numeric(PROJECT$end_year))
-steps_per_year = length(PROJECT$model$timestep_days) / nos_years
 
 ###
 ## Determine needed spatial information
@@ -3622,7 +3622,7 @@ plotCI(y = var3, x = run_years, uiw = var3_unc, main="", cex.lab=2.4, cex.main=2
       col="black", pch=16, cex=0.5, lwd=4, ylab="", xlab="")
 lines(var3~run_years, col="black", lwd=3, lty = 2) 
 lines(var4~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var4~run_years, col=model_colours[1], pch=16)
-legend("topleft", legend = c("Copernicus","CARDAMOM"), col = c("black",model_colours[1]), lty = c(1,2), pch=c(NA,NA), horiz = FALSE, bty = "n", cex=2.1, lwd=3, ncol = 2)
+legend("topleft", legend = c("EO","CARDAMOM"), col = c("black",model_colours[1]), lty = c(1,2), pch=c(NA,NA), horiz = FALSE, bty = "n", cex=2.1, lwd=3, ncol = 2)
 mtext(expression(paste('Year',sep="")), side = 1, cex = 2.4, padj = 1.85)
 mtext(expression(paste('Analysis-wide LAI (',m^2,'/',m^2,')',sep="")), side = 2, cex = 2.4, padj = -1.05)
 abline(0,1, col="grey", lwd=3)
