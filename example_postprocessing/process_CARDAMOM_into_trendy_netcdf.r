@@ -21,8 +21,8 @@ print("Begin creation of Trendy v11 compatible grouped netcdf files...")
 setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 
 # set input and output directories
-input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m"
+input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood"
 
 # Specify any extra information for the filename
 output_prefix = "CARDAMOM_S3_" # follow with "_"
@@ -68,8 +68,10 @@ rm(output) ; gc(reset=TRUE,verbose=FALSE)
 quantiles_wanted = grid_output$num_quantiles
 nos_quantiles = length(quantiles_wanted)
 # Check that the quantiles we want to use are available
-if (length(which(quantiles_wanted == 0.025)) == 1) {
-    low_quant = which(quantiles_wanted == 0.025)
+if (length(which(quantiles_wanted == 0.05)) == 1) {
+    low_quant = which(quantiles_wanted == 0.05)
+    low_quant_lab = "5pc"
+    low_quant_longlab = "5 % quantile"
 } else {
     stop("Desired low quantile cannot be found")
 }
@@ -78,8 +80,10 @@ if (length(which(quantiles_wanted == 0.5)) == 1) {
 } else {
     stop("Median quantile cannot be found")
 }
-if (length(which(quantiles_wanted == 0.975)) == 1) {
-    high_quant = which(quantiles_wanted == 0.975)
+if (length(which(quantiles_wanted == 0.95)) == 1) {
+    high_quant = which(quantiles_wanted == 0.95)
+    high_quant_lab = "95pc"
+    high_quant_longlab = "95 % quantile"
 } else {
     stop("Desired high quantile cannot be found")
 }
@@ -363,11 +367,11 @@ if(exists("LAI")) {
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  LAI[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("lai_2.5pc", unit="m2.m-2", longname = "Leaf Area Index - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("lai_",low_quant_lab,sep=""), unit="m2.m-2", longname = paste("Leaf Area Index - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  LAI[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("lai_97.5pc", unit="m2.m-2", longname = "Leaf Area Index - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("lai_",high_quant_lab,sep=""), unit="m2.m-2", longname = paste("Leaf Area Index - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  LAI[,,high_quant,])
 }
@@ -378,11 +382,11 @@ if(exists("LAB")) {
    new_file <- ncvar_add( new_file, var_new )	
    ncvar_put(new_file, var_new,  LAB[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("cLabile_2.5pc", unit="kg.m-2", longname = "Carbon in labile - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cLabile_",low_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in labile - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  LAB[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("cLabile_97.5pc", unit="kg.m-2", longname = "Carbon in labile - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cLabile_",high_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in labile - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  LAB[,,high_quant,])
 }
@@ -393,11 +397,11 @@ if(exists("FOL")) {
    new_file <- ncvar_add( new_file, var_new )	
    ncvar_put(new_file, var_new,  FOL[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("cLeaf_2.5pc", unit="kg.m-2", longname = "Carbon in leaves - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cLeaf_",low_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in leaves - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  FOL[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("cLeaf_97.5pc", unit="kg.m-2", longname = "Carbon in leaves - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cLeaf_",high_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in leaves - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  FOL[,,high_quant,])
 }
@@ -408,11 +412,11 @@ if(exists("ROOT")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new,  ROOT[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("cFineRoot_2.5pc", unit="kg.m-2", longname = "Carbon in fine root - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cFineRoot_",low_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in fine root - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  ROOT[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("cFineRoot_97.5pc", unit="kg.m-2", longname = "Carbon in fine root - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cFineRoot_",high_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in fine root - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  ROOT[,,high_quant,])
 }
@@ -423,11 +427,11 @@ if(exists("WOOD")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new,  WOOD[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("cWoodTotal_2.5pc", unit="kg.m-2", longname = "Carbon in (AGB + BGB) wood - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cWoodTotal_",low_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in (AGB + BGB) wood - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  WOOD[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("cWoodTotal_97.5pc", unit="kg.m-2", longname = "Carbon in (AGB + BGB) wood - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cWoodTotal_",high_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in (AGB + BGB) wood - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  WOOD[,,high_quant,])
 }
@@ -438,11 +442,11 @@ if(exists("LIT")) {
    new_file <- ncvar_add( new_file, var_new )	
    ncvar_put(new_file, var_new,  LIT[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("cLitter_2.5pc", unit="kg.m-2", longname = "Carbon in (Foliar + fine root) litter - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cLitter_",low_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in (Foliar + fine root) litter - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  LIT[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("cLitter_97.5pc", unit="kg.m-2", longname = "Carbon in (Foliar + fine root) litter - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cLitter_",high_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in (Foliar + fine root) litter - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  LIT[,,high_quant,])
 }
@@ -453,11 +457,11 @@ if(exists("WLIT")) {
    new_file <- ncvar_add( new_file, var_new )	
    ncvar_put(new_file, var_new,  WLIT[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("cCwd_2.5pc", unit="kg.m-2", longname = "Carbon in (wood) litter - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cCwd_",low_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in (wood) litter - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  WLIT[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("cCwd_97.5pc", unit="kg.m-2", longname = "Carbon in (wood) litter - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cCwd_",high_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in (wood) litter - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  WLIT[,,high_quant,])
 }
@@ -468,11 +472,11 @@ if(exists("SOIL")) {
    new_file <- ncvar_add( new_file, var_new )	
    ncvar_put(new_file, var_new,  SOIL[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("cSOM_2.5pc", unit="kg.m-2", longname = "Carbon in soil organic matter (0-1m) - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cSOM_",low_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in soil organic matter (0-1m) - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  SOIL[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("cSOM_97.5pc", unit="kg.m-2", longname = "Carbon in soil organic matter (0-1m) - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cSOM_",high_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in soil organic matter (0-1m) - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  SOIL[,,high_quant,])
 }
@@ -483,11 +487,11 @@ if(exists("DOM")) {
    new_file <- ncvar_add( new_file, var_new )	
    ncvar_put(new_file, var_new,  DOM[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("cDOM_2.5pc", unit="kg.m-2", longname = "Carbon in leaf, fine root, wood litter, and soil organic matter - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cDOM_",low_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in leaf, fine root, wood litter, and soil organic matter - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  DOM[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("cDOM_97.5pc", unit="kg.m-2", longname = "Carbon in leaf, fine root, wood litter, and soil organic matter - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cDOM_",high_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in leaf, fine root, wood litter, and soil organic matter - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  DOM[,,high_quant,])
 }
@@ -498,11 +502,11 @@ if(exists("BIO")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, BIO[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("cVeg_2.5pc", unit="kg.m-2", longname = "Carbon in live biomass - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cVeg_",low_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in live biomass - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  BIO[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("cVeg_97.5pc", unit="kg.m-2", longname = "Carbon in live biomass - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cVeg_",high_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in live biomass - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  BIO[,,high_quant,])
 }
@@ -513,11 +517,11 @@ if(exists("TOT")) {
    new_file <- ncvar_add( new_file, var_new )	
    ncvar_put(new_file, var_new, TOT[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("cTotal_2.5pc", unit="kg.m-2", longname = "Carbon in live and dead organic matter - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cTotal_",low_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in live and dead organic matter - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  TOT[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("cTotal_97.5pc", unit="kg.m-2", longname = "Carbon in live and dead organic matter - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("cTotal_",high_quant_lab,sep=""), unit="kg.m-2", longname = paste("Carbon in live and dead organic matter - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  TOT[,,high_quant,])
 }
@@ -567,11 +571,11 @@ if(exists("GPP")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, GPP[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("gpp_2.5pc", unit="kg.m-2.s-1", longname = "Gross Primary Productivity - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("gpp_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Gross Primary Productivity - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  GPP[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("gpp_97.5pc", unit="kg.m-2.s-1", longname = "Gross Primary Productivity - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("gpp_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Gross Primary Productivity - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  GPP[,,high_quant,])
 }
@@ -582,11 +586,11 @@ if(exists("RAU")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, RAU[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("ra_2.5pc", unit="kg.m-2.s-1", longname = "Autotrophic (Plant) Respiration - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("ra_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Autotrophic (Plant) Respiration - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  RAU[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("ra_97.5pc", unit="kg.m-2.s-1", longname = "Autotrophic (Plant) Respiration - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("ra_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Autotrophic (Plant) Respiration - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  RAU[,,high_quant,])
 }
@@ -597,11 +601,11 @@ if(exists("RHE")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, RHE[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("rh_2.5pc", unit="kg.m-2.s-1", longname = "Heterotrophic Respiration - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("rh_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Heterotrophic Respiration - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  RHE[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("rh_97.5pc", unit="kg.m-2.s-1", longname = "Heterotrophic Respiration - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("rh_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Heterotrophic Respiration - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  RHE[,,high_quant,])
 }
@@ -612,11 +616,11 @@ if(exists("RECO")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, RECO[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("reco_2.5pc", unit="kg.m-2.s-1", longname = "Ecosystem (Ra + Rh) Respiration - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("reco_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Ecosystem (Ra + Rh) Respiration - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  RECO[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("reco_97.5pc", unit="kg.m-2.s-1", longname = "Ecosystem (Ra + Rh) Respiration - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("reco_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Ecosystem (Ra + Rh) Respiration - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  RECO[,,high_quant,])
 }
@@ -627,11 +631,11 @@ if(exists("NPP")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, NPP[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("npp_2.5pc", unit="kg.m-2.s-1", longname = "Net Primary Productivity - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("npp_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Net Primary Productivity - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  NPP[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("npp_97.5pc", unit="kg.m-2.s-1", longname = "Net Primary Productivity - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("npp_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Net Primary Productivity - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  NPP[,,high_quant,])
 }
@@ -642,11 +646,11 @@ if(exists("NEE")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, NEE[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("nee_2.5pc", unit="kg.m-2.s-1", longname = "Net Ecosystem Exchange - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("nee_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Net Ecosystem Exchange - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  NEE[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("nee_97.5pc", unit="kg.m-2.s-1", longname = "Net Ecosystem Exchange - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("nee_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Net Ecosystem Exchange - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  NEE[,,high_quant,])
 }
@@ -657,11 +661,11 @@ if(exists("NBE")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, NBE[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("nbe_2.5pc", unit="kg.m-2.s-1", longname = "Net Biome Exchange (NEE + Fire) - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("nbe_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Net Biome Exchange (NEE + Fire) - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  NBE[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("nbe_97.5pc", unit="kg.m-2.s-1", longname = "Net Biome Exchange (NEE + Fire) - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("nbe_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Net Biome Exchange (NEE + Fire) - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  NBE[,,high_quant,])
 }
@@ -672,11 +676,11 @@ if(exists("NBP")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, NBP[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("nbp_2.5pc", unit="kg.m-2.s-1", longname = "Net Biome Productivity (-NEE - Fire - fLuc) - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("nbp_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Net Biome Productivity (-NEE - Fire - fLuc) - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  NBE[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("nbp_97.5pc", unit="kg.m-2.s-1", longname = "Net Biome Productivity (-NEE - Fire - fLuc) - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("nbp_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Net Biome Productivity (-NEE - Fire - fLuc) - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  NBE[,,high_quant,])
 }
@@ -687,11 +691,11 @@ if(exists("FIR")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIR[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("fFire_2.5pc", unit="kg.m-2.s-1", longname = "Fire C emission - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fFire_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Fire C emission - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  FIR[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("fFire_97.5pc", unit="kg.m-2.s-1", longname = "Fire C emission - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fFire_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Fire C emission - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  FIR[,,high_quant,])
 }
@@ -702,11 +706,11 @@ if(exists("HARV")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, HARV[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("fLuc_2.5pc", unit="kg.m-2.s-1", longname = "C extracted due to forest harvest - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fLuc_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("C extracted due to forest harvest - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  HARV[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("fLuc_97.5pc", unit="kg.m-2.s-1", longname = "C extracted due to forest harvest - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fLuc_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("C extracted due to forest harvest - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  HARV[,,high_quant,])
 }
@@ -717,11 +721,11 @@ if(exists("Combined_bio_litter_FLX")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, Combined_bio_litter_FLX[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("fVegLitter_2.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from biomass - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fVegLitter_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Combined natural, fire and harvest driven litter creation from biomass - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Combined_bio_litter_FLX[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("fVegLitter_97.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from biomass - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fVegLitter_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Combined natural, fire and harvest driven litter creation from biomass - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Combined_bio_litter_FLX[,,high_quant,])
 }
@@ -732,11 +736,11 @@ if(exists("Combined_labile_litter_FLX")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, Combined_labile_litter_FLX[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("fLabileLitter_2.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from labile - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fLabileLitter_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Combined natural, fire and harvest driven litter creation from labile - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Combined_labile_litter_FLX[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("fLabileLitter_97.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from labile - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fLabileLitter_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Combined natural, fire and harvest driven litter creation from labile - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Combined_labile_litter_FLX[,,high_quant,])
 }
@@ -747,11 +751,11 @@ if(exists("Combined_foliage_litter_FLX")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, Combined_foliage_litter_FLX[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("fLeafLitter_2.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from foliage - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fLeafLitter_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Combined natural, fire and harvest driven litter creation from foliage - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Combined_foliage_litter_FLX[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("fLeafLitter_97.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from foliage - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fLeafLitter_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Combined natural, fire and harvest driven litter creation from foliage - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Combined_foliage_litter_FLX[,,high_quant,])
 }
@@ -762,11 +766,11 @@ if(exists("Combined_roots_litter_FLX")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, Combined_roots_litter_FLX[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("fRootLitter_2.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from fine root - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fRootLitter_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Combined natural, fire and harvest driven litter creation from fine root - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Combined_roots_litter_FLX[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("fRootLitter_97.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from fine root - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fRootLitter_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Combined natural, fire and harvest driven litter creation from fine root - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Combined_roots_litter_FLX[,,high_quant,])
 }
@@ -778,11 +782,11 @@ if(exists("Combined_wood_litter_FLX")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, Combined_wood_litter_FLX[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("fVegSoil_2.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from wood, which is allocated to som - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fVegSoil_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Combined natural, fire and harvest driven litter creation from wood, which is allocated to som - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Combined_wood_litter_FLX[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("fVegSoil_97.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven litter creation from wood, which is allocaed to som - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fVegSoil_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Combined natural, fire and harvest driven litter creation from wood, which is allocaed to som - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Combined_wood_litter_FLX[,,high_quant,])
 }
@@ -793,11 +797,11 @@ if(exists("Combined_litter_som_FLX")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, Combined_litter_som_FLX[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("fLitterSoil_2.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest allocation of litter to soil - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fLitterSoil_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Combined natural, fire and harvest allocation of litter to soil - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Combined_litter_som_FLX[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("fLitterSoil_97.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven allocation of litter to soil - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fLitterSoil_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Combined natural, fire and harvest driven allocation of litter to soil - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Combined_litter_som_FLX[,,high_quant,])
 }
@@ -808,11 +812,11 @@ if(exists("Combined_woodlitter_som_FLX")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, Combined_woodlitter_som_FLX[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("fCwdSoil_2.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest allocation of wood litter to soil - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fCwdSoil_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Combined natural, fire and harvest allocation of wood litter to soil - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Combined_woodlitter_som_FLX[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("fCwdSoil_97.5pc", unit="kg.m-2.s-1", longname = "Combined natural, fire and harvest driven allocation of wood litter to soil - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fCwdSoil_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Combined natural, fire and harvest driven allocation of wood litter to soil - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Combined_woodlitter_som_FLX[,,high_quant,])
 }
@@ -823,11 +827,11 @@ if(exists("FIREemiss_litter")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIREemiss_litter[,,mid_quant,]*(44/12)) # NOTE: unit change from C -> CO2
    # low CI
-   var_new  = ncvar_def("fFireLitter_2.5pc", unit="kg.m-2.s-1", longname = "Fire combusted CO2 output flux from foliar and fine root litter - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fFireLitter_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Fire combusted CO2 output flux from foliar and fine root litter - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  FIREemiss_litter[,,low_quant,]*(44/12)) # NOTE: unit change from C -> CO2
    # High CI
-   var_new  = ncvar_def("fFireLitter_97.5pc", unit="kg.m-2.s-1", longname = "Fire combusted CO2 output flux from foliar and fine root litter - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fFireLitter_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Fire combusted CO2 output flux from foliar and fine root litter - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  FIREemiss_litter[,,high_quant,]*(44/12)) # NOTE: unit change from C -> CO2
 }
@@ -838,11 +842,11 @@ if(exists("FIREemiss_woodlitter")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIREemiss_woodlitter[,,mid_quant,]*(44/12)) # NOTE: unit change from C -> CO2
    # low CI
-   var_new  = ncvar_def("fFireCcwd_2.5pc", unit="kg.m-2.s-1", longname = "Fire combusted CO2 output flux from wood litter - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fFireCcwd_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Fire combusted CO2 output flux from wood litter - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  FIREemiss_woodlitter[,,low_quant,]*(44/12)) # NOTE: unit change from C -> CO2
    # High CI
-   var_new  = ncvar_def("fFireCcwd_97.5pc", unit="kg.m-2.s-1", longname = "Fire combusted CO2 output flux from wood litter - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fFireCcwd_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Fire combusted CO2 output flux from wood litter - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  FIREemiss_woodlitter[,,high_quant,]*(44/12)) # NOTE: unit change from C -> CO2
 }
@@ -853,11 +857,11 @@ if(exists("FIREemiss_som")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIREemiss_som[,,mid_quant,]*(44/12)) # NOTE: unit change from C -> CO2
    # low CI
-   var_new  = ncvar_def("fFireCsoil_2.5pc", unit="kg.m-2.s-1", longname = "Fire combusted CO2 output flux from soil organic matter - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fFireCsoil_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Fire combusted CO2 output flux from soil organic matter - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  FIREemiss_som[,,low_quant,]*(44/12)) # NOTE: unit change from C -> CO2
    # High CI
-   var_new  = ncvar_def("fFireCsoil_97.5pc", unit="kg.m-2.s-1", longname = "Fire combusted CO2 output flux from soil organic matter - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fFireCsoil_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Fire combusted CO2 output flux from soil organic matter - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  FIREemiss_som[,,high_quant,]*(44/12)) # NOTE: unit change from C -> CO2
 }
@@ -868,11 +872,11 @@ if(exists("FIREemiss_bio")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, FIREemiss_bio[,,mid_quant,]*(44/12)) # NOTE: unit change from C -> CO2
    # low CI
-   var_new  = ncvar_def("fFireCveg_2.5pc", unit="kg.m-2.s-1", longname = "Fire combusted CO2 output flux from vegetation - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fFireCveg_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Fire combusted CO2 output flux from vegetation - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  FIREemiss_bio[,,low_quant,]*(44/12)) # NOTE: unit change from C -> CO2
    # High CI
-   var_new  = ncvar_def("fFireCveg_97.5pc", unit="kg.m-2.s-1", longname = "Fire combusted CO2 output flux from vegetation - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fFireCveg_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Fire combusted CO2 output flux from vegetation - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  FIREemiss_bio[,,high_quant,]*(44/12)) # NOTE: unit change from C -> CO2
 }
@@ -885,11 +889,11 @@ if(exists("AGPP")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, AGPP[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("annual_gpp_2.5pc", unit="kg.m-2.s-1", longname = "Mean Annual Gross Primary Productivity - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_gpp_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual Gross Primary Productivity - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  AGPP[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("annual_gpp_97.5pc", unit="kg.m-2.s-1", longname = "Mean Annual Gross Primary Productivity - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_gpp_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual Gross Primary Productivity - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  AGPP[,,high_quant,])
 }
@@ -900,11 +904,11 @@ if(exists("ARAU")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, ARAU[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("annual_ra_2.5pc", unit="kg.m-2.s-1", longname = "Mean Annual Autotrophic (Plant) Respiration - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_ra_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual Autotrophic (Plant) Respiration - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  ARAU[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("annual_ra_97.5pc", unit="kg.m-2.s-1", longname = "Mean Annual Autotrophic (Plant) Respiration - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_ra_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual Autotrophic (Plant) Respiration - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  ARAU[,,high_quant,])
 }
@@ -915,11 +919,11 @@ if(exists("ARHE")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, ARHE[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("annual_rh_2.5pc", unit="kg.m-2.s-1", longname = "Mean Annual Heterotrophic Respiration - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_rh_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual Heterotrophic Respiration - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  ARHE[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("annual_rh_97.5pc", unit="kg.m-2.s-1", longname = "Mean Annual Heterotrophic Respiration - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_rh_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual Heterotrophic Respiration - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  ARHE[,,high_quant,])
 }
@@ -930,11 +934,11 @@ if(exists("ARECO")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, ARECO[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("annual_reco_2.5pc", unit="kg.m-2.s-1", longname = "Mean Annual Ecosystem (Ra + Rh) Respiration - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_reco_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual Ecosystem (Ra + Rh) Respiration - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  ARECO[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("annual_reco_97.5pc", unit="kg.m-2.s-1", longname = "Mean Annual Ecosystem (Ra + Rh) Respiration - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_reco_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual Ecosystem (Ra + Rh) Respiration - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  ARECO[,,high_quant,])
 }
@@ -945,11 +949,11 @@ if(exists("ANPP")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, ANPP[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("annual_npp_2.5pc", unit="kg.m-2.s-1", longname = "Mean Annual Net Primary Productivity - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_npp_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual Net Primary Productivity - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  ANPP[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("annual_npp_97.5pc", unit="kg.m-2.s-1", longname = "Mean Annual Net Primary Productivity - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_npp_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual Net Primary Productivity - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  ANPP[,,high_quant,])
 }
@@ -960,11 +964,11 @@ if(exists("ANEE")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, ANEE[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("annual_nee_2.5pc", unit="kg.m-2.s-1", longname = "Mean Annual Net Ecosystem Exchange - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_nee_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual Net Ecosystem Exchange - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  ANEE[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("annual_nee_97.5pc", unit="kg.m-2.s-1", longname = "Mean Annual Net Ecosystem Exchange - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_nee_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual Net Ecosystem Exchange - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  ANEE[,,high_quant,])
 }
@@ -975,11 +979,11 @@ if(exists("ANBE")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, ANBE[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("annual_nbe_2.5pc", unit="kg.m-2.s-1", longname = "Mean Annual Net Biome Exchange (NEE + Fire) - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_nbe_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual Net Biome Exchange (NEE + Fire) - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  ANBE[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("annual_nbe_97.5pc", unit="kg.m-2.s-1", longname = "Mean Annual Net Biome Exchange (NEE + Fire) - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_nbe_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual Net Biome Exchange (NEE + Fire) - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  ANBE[,,high_quant,])
 }
@@ -990,11 +994,11 @@ if(exists("ANBP")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, ANBP[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("annual_nbp_2.5pc", unit="kg.m-2.s-1", longname = "Mean Annual Net Biome Productivity (-NEE - Fire - fLuc) - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_nbp_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual Net Biome Productivity (-NEE - Fire - fLuc) - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  ANBP[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("annual_nbp_97.5pc", unit="kg.m-2.s-1", longname = "Mean Annual Net Biome Productivity (-NEE - Fire - fLuc) - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_nbp_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual Net Biome Productivity (-NEE - Fire - fLuc) - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  ANBP[,,high_quant,])
 }
@@ -1005,11 +1009,11 @@ if(exists("AFIR")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, AFIR[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("annual_fFire_2.5pc", unit="kg.m-2.s-1", longname = "Mean Annual Fire C emission - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_fFire_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual Fire C emission - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  AFIR[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("annual_fFire_97.5pc", unit="kg.m-2.s-1", longname = "Mean Annual Fire C emission - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_fFire_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual Fire C emission - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  AFIR[,,high_quant,])
 }
@@ -1020,11 +1024,11 @@ if(exists("AHARV")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, AHARV[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("annual_fLuc_2.5pc", unit="kg.m-2.s-1", longname = "Mean Annual C extracted due to forest harvest - 2.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_fLuc_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual C extracted due to forest harvest - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  AHARV[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("annual_fLuc_97.5pc", unit="kg.m-2.s-1", longname = "Mean Annual C extracted due to forest harvest - 97.5% quantile", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("annual_fLuc_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Mean Annual C extracted due to forest harvest - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  AHARV[,,high_quant,])
 }
@@ -1074,11 +1078,11 @@ if(exists("NPP_combinedfoliage_FLX")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, NPP_combinedfoliage_FLX[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("fAllocLeaf_2.5pc", unit="kg.m-2.s-1", longname = "Both direct and via labile Net Primary Productivity to foliage - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fAllocLeaf_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Both direct and via labile Net Primary Productivity to foliage - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  NPP_combinedfoliage_FLX[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("fAllocLeaf_97.5pc", unit="kg.m-2.s-1", longname = "Both direct and via labile Net Primary Productivity to foliage - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fAllocLeaf_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Both direct and via labile Net Primary Productivity to foliage - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  NPP_combinedfoliage_FLX[,,high_quant,])
 }
@@ -1089,11 +1093,11 @@ if(exists("NPP_root_FLX")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, NPP_root_FLX[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("fAllocRoot_2.5pc", unit="kg.m-2.s-1", longname = "Net Primary Productivity to fine root - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fAllocRoot_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Net Primary Productivity to fine root - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  NPP_root_FLX[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("fAllocRoot_97.5pc", unit="kg.m-2.s-1", longname = "Net Primary Productivity to fine root - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fAllocRoot_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Net Primary Productivity to fine root - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  NPP_root_FLX[,,high_quant,])
 }
@@ -1104,11 +1108,11 @@ if(exists("NPP_wood_FLX")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, NPP_wood_FLX[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("fAllocWood_2.5pc", unit="kg.m-2.s-1", longname = "Net Primary Productivity to wood - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fAllocWood_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Net Primary Productivity to wood - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  NPP_wood_FLX[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("fAllocWood_97.5pc", unit="kg.m-2.s-1", longname = "Net Primary Productivity to wood - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("fAllocWood_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Net Primary Productivity to wood - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  NPP_wood_FLX[,,high_quant,])
 }
@@ -1355,11 +1359,11 @@ if(exists("ET")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, ET[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("evapotrans_2.5pc", unit="kg.m-2.s-1", longname = "Evapotranspiration - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("evapotrans_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Evapotranspiration - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  ET[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("evapotrans_97.5pc", unit="kg.m-2.s-1", longname = "Evapotranspiration - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("evapotrans_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Evapotranspiration - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  ET[,,high_quant,])
 }
@@ -1370,11 +1374,11 @@ if(exists("Etrans")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, Etrans[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("tran_2.5pc", unit="kg.m-2.s-1", longname = "Transpiration - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("tran_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Transpiration - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Etrans[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("tran_97.5pc", unit="kg.m-2.s-1", longname = "Transpiration - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("tran_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Transpiration - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Etrans[,,high_quant,])
 }
@@ -1385,11 +1389,11 @@ if(exists("Esoil")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, Esoil[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("evspsblsoi_2.5pc", unit="kg.m-2.s-1", longname = "Soil evaporation - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("evspsblsoi_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Soil evaporation - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Esoil[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("evspsblsoi_97.5pc", unit="kg.m-2.s-1", longname = "Soil evaporation - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("evspsblsoi_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Soil evaporation - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Esoil[,,high_quant,])
 }
@@ -1400,11 +1404,11 @@ if(exists("Ewetevap")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, Ewetcanopy[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("evspsblveg_2.5pc", unit="kg.m-2.s-1", longname = "Canopy intercepted rainfall evaporation - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("evspsblveg_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Canopy intercepted rainfall evaporation - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Ewetcanopy[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("evspsblveg_97.5pc", unit="kg.m-2.s-1", longname = "Canopy intercepted rainfall evaporation - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("evspsblveg_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Canopy intercepted rainfall evaporation - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  Ewetcanopy[,,high_quant,])   
 }
@@ -1415,11 +1419,11 @@ if(exists("total_drainage")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, total_drainage[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("mrro_2.5pc", unit="kg.m-2.s-1", longname = "Total drainage from soil surface and bottom of soil column - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("mrro_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Total drainage from soil surface and bottom of soil column - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  total_drainage[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("mrro_97.5pc", unit="kg.m-2.s-1", longname = "Total drainage from soil surface and bottom of soil column - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("mrro_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Total drainage from soil surface and bottom of soil column - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  total_drainage[,,high_quant,])   
 }
@@ -1430,11 +1434,11 @@ if(exists("runoff")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, runoff[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("runoff_2.5pc", unit="kg.m-2.s-1", longname = "Soil surface water runoff - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("runoff_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Soil surface water runoff - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  runoff[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("runoff_97.5pc", unit="kg.m-2.s-1", longname = "Soil surface water runoff - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("runoff_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Soil surface water runoff - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  runoff[,,high_quant,])   
 }
@@ -1445,11 +1449,11 @@ if(exists("underflow")) {
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, underflow[,,mid_quant,])
    # low CI
-   var_new  = ncvar_def("underflow_2.5pc", unit="kg.m-2.s-1", longname = "Water drainage from the bottom of the soil column - 2.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("underflow_",low_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Water drainage from the bottom of the soil column - ",low_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  underflow[,,low_quant,])
    # High CI
-   var_new  = ncvar_def("underflow_97.5pc", unit="kg.m-2.s-1", longname = "Water drainage from the bottom of the soil column - 97.5% quantile", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   var_new  = ncvar_def(paste("underflow_",high_quant_lab,sep=""), unit="kg.m-2.s-1", longname = paste("Water drainage from the bottom of the soil column - ",high_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
    new_file <- ncvar_add( new_file, var_new )	# NOTE this returns a modified netcdf file handle
    ncvar_put(new_file, var_new,  underflow[,,high_quant,])   
 }

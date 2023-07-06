@@ -23,12 +23,13 @@
 ## Load analysis
 
 # PointsOfChange
-load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
+#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
+load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB_GPP_NBE/infofile.RData")
 
 # Set output path for figures and tables
-#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures/"
-out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/RECCAP2/figures/"
+out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/RECCAP2/figures/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/InternationalScience/figures_africa/"
 #out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
 
@@ -263,11 +264,10 @@ if (add_biomes == "ssa_wwf") {
     }
     # Trim the extent of the overall grid to the analysis domain
     biomes = crop(biomes,cardamom_ext) 
-    # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-    # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
+    # Match resolutions if they differ
     spatial_type = "grid"
     if (spatial_type == "grid") {
-        if (res(biomes)[1] < res(cardamom_ext)[1] | res(biomes)[2] < res(cardamom_ext)[2]) {
+        if (res(biomes)[1] != res(cardamom_ext)[1] | res(biomes)[2] != res(cardamom_ext)[2]) {
 
             # Create raster with the target resolution
             target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
@@ -360,6 +360,7 @@ SoilCPrior = array(NA, dim=c(dims[1], dims[2]))
 # Mean annual LAI obs
 LAIobs = array(NA, dim=c(dims[1],dims[2],nos_years))
 LAIobs_unc = array(NA, dim=c(dims[1],dims[2],nos_years))
+LAIcount = array(NA, dim=c(dims[1],dims[2],nos_years))
 # Disturbance
 HarvestFraction = array(NA, dim=c(dims[1], dims[2]))
 BurnedFraction = array(NA, dim=c(dims[1], dims[2]))
@@ -410,6 +411,9 @@ lai_trend = array(NA, dim=c(dim(grid_output$mean_nee_gCm2day)[1],dim(grid_output
 #lai_trend_normalised = array(NA, dim=c(dim(grid_output$mean_nee_gCm2day)[1],dim(grid_output$mean_nee_gCm2day)[2]))
 # Timing variable needed
 time_vector = seq(0,nos_years, length.out = dim(grid_output$nee_gCm2day)[3])
+
+# Define counting function
+counting<-function(var) {return(length(which(is.na(var) == FALSE)))}
 
 # Loop through all sites
 nos_sites_inc = 0
@@ -515,6 +519,7 @@ for (n in seq(1, PROJECT$nosites)) {
          SoilCPrior[i_loc,j_loc] = drivers$parpriors[23] ; if (SoilCPrior[i_loc,j_loc] == -9999) {SoilCPrior[i_loc,j_loc] = NA}
          # Clear missing data from and extract observed LAI
          drivers$obs[which(drivers$obs[,3] == -9999),3] = NA ; drivers$obs[which(drivers$obs[,4] == -9999),4] = NA
+         LAIcount[i_loc,j_loc,] = rollapply(drivers$obs[,3], width = steps_per_year, by = steps_per_year, counting)
          LAIobs[i_loc,j_loc,] = rollapply(drivers$obs[,3], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)
          LAIobs_unc[i_loc,j_loc,] = rollapply(drivers$obs[,4], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)
          # If wood stock estimate available get that too
