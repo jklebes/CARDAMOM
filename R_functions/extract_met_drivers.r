@@ -38,10 +38,20 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
               steps_in_day = 1/mean(timestep_days)
               input_step_size = 24 / steps_in_day # hours
           } # deltaDay > 1
+          # If, not a daily time step analysis, check whether the expected number
+          # of timesteps matches the provided number. A check of the daily case
+          # can also be achieved if the number of days of year for the expected
+          # have already been calculated (currently this happens below)
+          if (length(timestep_days) > 1) {
+              if (length(timestep_days != length(doy))) {
+                  stop("mis-match in meteorology drivers between expected number of time step and actual...")
+              }
+          }
       } else {
           # currently assumed defaults
           steps_in_day = 24   # steps per day
           input_step_size = 1 # hours
+          print("No day of year (doy) variable provided in the *_timeseries_met.csv files. The default assumptions used are 24 steps per day, steps lasting 1 hour.")
       } # doy[1] != -9999
 
       # Max, min and average timestep air temperatures (oC)

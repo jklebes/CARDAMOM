@@ -16,16 +16,9 @@
 setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 
 # set input and output directories
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_gpp_fire/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_CsomPriorNCSCD/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Trendyv9_historical/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_gpp_fire_nbe/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Mexico_1deg_C7_agb_lca_gpp_fire_nbe/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Miombo_0.5deg_allWood/"
-input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_GPP_FIRE/"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_gpp_CsomPriorNCSDC3m"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_GCP_LCA_AGB_GPP"
 
 # Specify any extra information for the filename
 output_prefix = "" # follow with "_"
@@ -69,22 +62,6 @@ rm(output) ; gc(reset=TRUE,verbose=FALSE)
 # Extract the available quantiles 
 quantiles_wanted = grid_output$num_quantiles
 nos_quantiles = length(quantiles_wanted)
-# Check that the quantiles we want to use are available
-if (length(which(quantiles_wanted == 0.025)) == 1) {
-    low_quant = which(quantiles_wanted == 0.025)
-} else {
-    stop("Desired low quantile cannot be found")
-}
-if (length(which(quantiles_wanted == 0.5)) == 1) {
-    mid_quant = which(quantiles_wanted == 0.5)
-} else {
-    stop("Median quantile cannot be found")
-}
-if (length(which(quantiles_wanted == 0.975)) == 1) {
-    high_quant = which(quantiles_wanted == 0.975)
-} else {
-    stop("Desired high quantile cannot be found")
-}
 
 ###
 ## Begin defining variables
@@ -137,6 +114,9 @@ if (exists(x = "som_gCm2", where = grid_output)) {SOIL = array(NA, dim=c(PROJECT
 if (exists(x = "woodlitter_gCm2", where = grid_output)) {WLIT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "dom_gCm2", where = grid_output)) {DOM = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "biomass_gCm2", where = grid_output)) {BIO = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+# C STATE CHANGE ESTIMATES
+if (exists(x = "dCbiomass_gCm2", where = grid_output)) {dBIO = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+if (exists(x = "dCdom_gCm2", where = grid_output)) {dDOM = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 # C FLUXES
 if (exists(x = "gpp_gCm2day", where = grid_output)) {GPP = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "rauto_gCm2day", where = grid_output)) {RAU = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
@@ -148,6 +128,17 @@ if (exists(x = "reco_gCm2day", where = grid_output)) {RECO = array(NA, dim=c(PRO
 if (exists(x = "nee_gCm2day", where = grid_output)) {NEE = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "nbe_gCm2day", where = grid_output)) {NBE = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "nbp_gCm2day", where = grid_output)) {NBP = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+# C FLUXES - ANNUAL
+if (exists(x = "mean_annual_gpp_gCm2day", where = grid_output)) {AGPP = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "mean_annual_rauto_gCm2day", where = grid_output)) {ARAU = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "mean_annual_rhet_gCm2day", where = grid_output)) {ARHE = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "mean_annual_npp_gCm2day", where = grid_output)) {ANPP = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "mean_annual_fire_gCm2day", where = grid_output)) {AFIR = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "mean_annual_harvest_gCm2day", where = grid_output)) {AHARV = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "mean_annual_reco_gCm2day", where = grid_output)) {ARECO = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "mean_annual_nee_gCm2day", where = grid_output)) {ANEE = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "mean_annual_nbe_gCm2day", where = grid_output)) {ANBE = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "mean_annual_nbp_gCm2day", where = grid_output)) {ANBP = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
 # H2O FLUXES
 if (exists(x = "ET_kgH2Om2day", where = grid_output)) {ET = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "Etrans_kgH2Om2day", where = grid_output)) {Etrans = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
@@ -189,7 +180,6 @@ if (exists(x = "MTT_annual_woodlitter_years", where = grid_output)) {wlitMRT = a
 if (exists(x = "MTT_annual_som_years", where = grid_output)) {somMRT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "MTT_annual_biomass_years", where = grid_output)) {bioMRT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "MTT_annual_dom_years", where = grid_output)) {domMRT = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
-
 # Total outflux from these pools (labile, foliar, wood, fine root, litter, soil, biomass, dead organic matter; gC/m2/day)
 if (exists(x = "outflux_labile_gCm2day", where = grid_output)) {outflux_labile = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "outflux_foliage_gCm2day", where = grid_output)) {outflux_foliage = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
@@ -296,6 +286,9 @@ for (n in seq(1, length(PROJECT$sites))) {
          if (exists("WLIT")) {WLIT[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$woodlitter_gCm2[n,,]*1e-3}
          if (exists("DOM")) {DOM[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$dom_gCm2[n,,]*1e-3}
          if (exists("BIO")) {BIO[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$biomass_gCm2[n,,]*1e-3}
+         # Change in stocks
+         if (exists("dBIO")) {dBIO[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$dCbiomass_gCm2[n,,]*1e-3}
+         if (exists("dDOM")) {dDOM[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$dCdom_gCm2[n,,]*1e-3}
          # FLUXES (NOTE; unit conversion gC/m2/day -> kgC/m2/s)
          if (exists("GPP")) {GPP[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$gpp_gCm2day[n,,]* 1e-3 * (1/86400)}
          if (exists("RAU")) {RAU[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$rauto_gCm2day[n,,]* 1e-3 * (1/86400)}
@@ -307,13 +300,24 @@ for (n in seq(1, length(PROJECT$sites))) {
          if (exists("NEE")) {NEE[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$nee_gCm2day[n,,]* 1e-3 * (1/86400)}
          if (exists("NBE")) {NBE[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$nbe_gCm2day[n,,]* 1e-3 * (1/86400)}
          if (exists("NBP")) {NBP[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$nbp_gCm2day[n,,]* 1e-3 * (1/86400)}
+         # FLUXES - ANNUAL (NOTE; unit conversion gC/m2/day -> kgC/m2/s)
+         if (exists("AGPP")) {AGPP[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_gpp_gCm2day[n,,]* 1e-3 * (1/86400)}
+         if (exists("ARAU")) {ARAU[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_rauto_gCm2day[n,,]* 1e-3 * (1/86400)}
+         if (exists("ARHE")) {ARHE[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_rhet_gCm2day[n,,]* 1e-3 * (1/86400)}
+         if (exists("ANPP")) {ANPP[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_npp_gCm2day[n,,]* 1e-3 * (1/86400)}
+         if (exists("AFIR")) {AFIR[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_fire_gCm2day[n,,]* 1e-3 * (1/86400)}
+         if (exists("AHARV")) {AHARV[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_harvest_gCm2day[n,,]* 1e-3 * (1/86400)}
+         if (exists("ARECO")) {ARECO[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_reco_gCm2day[n,,]* 1e-3 * (1/86400)}
+         if (exists("ANEE")) {ANEE[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_nee_gCm2day[n,,]* 1e-3 * (1/86400)}
+         if (exists("ANBE")) {ANBE[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_nbe_gCm2day[n,,]* 1e-3 * (1/86400)}
+         if (exists("ANBP")) {ANBP[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_nbp_gCm2day[n,,]* 1e-3 * (1/86400)}
          # H2O FLUXES
          if (exists("ET")) {ET[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$ET_kgH2Om2day[n,,] * (1/86400)}
          if (exists("Etrans")) {Etrans[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$Etrans_kgH2Om2day[n,,] * (1/86400)}
          if (exists("Esoil")) {Esoil[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$Esoil_kgH2Om2day[n,,] * (1/86400)}
          if (exists("Ewetcanopy")) {Ewetcanopy[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$Ewetcanopy_kgH2Om2day[n,,] * (1/86400)}
          if (exists("runoff")) {runoff[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$runoff_kgH2Om2day[n,,] * (1/86400)}
-         if (exists("underflow")) {unerflow[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$underflow_kgH2Om2day[n,,] * (1/86400)}
+         if (exists("underflow")) {underflow[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$underflow_kgH2Om2day[n,,] * (1/86400)}
          if (exists("total_drainage")) {total_drainage[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$total_drainage_kgH2Om2day[n,,] * (1/86400)}         
          # H2O STATES
          if (exists("SurfWater")) {SurfWater[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$SurfWater_kgH2Om2[n,,]}
@@ -527,6 +531,20 @@ if(exists("BIO")) {
    ncvar_put(new_file, var_new, BIO)
 }
 
+# Change in Biomass
+if(exists("dBIO")) {
+   var_new = ncvar_def("dcVeg_ensemble", unit="kg.m-2", longname = "Change in Carbon in live biomass since t=1 - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, dBIO)
+}
+
+# Change in Biomass
+if(exists("dDOM")) {
+   var_new = ncvar_def("dcDOM_ensemble", unit="kg.m-2", longname = "Change in Carbon in leaf, fine root, wood litter, and soil organic matter since t=1 - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, dDOM)
+}
+
 # TotalC
 if(exists("TOT")) {
    var_new = ncvar_def("cTotal_ensemble", unit="kg.m-2", longname = "Carbon in live and dead organic matter - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
@@ -568,7 +586,7 @@ nc_close(new_file)
 new_file <- nc_open( output_name, write=TRUE )
 
 ###
-## FLUXES
+## FLUXES - at time step
 ###
 
 # GPP
@@ -639,6 +657,80 @@ if(exists("HARV")) {
    var_new = ncvar_def("fLuc_ensemble", unit="kg.m-2.s-1", longname = "Forest harvest - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    new_file <- ncvar_add( new_file, var_new )
    ncvar_put(new_file, var_new, HARV)
+}
+
+###
+## FLUXES - at time step
+###
+
+# Annual GPP
+if(exists("AGPP")) {
+   var_new  = ncvar_def("annual_gpp_ensemble", unit="kg.m-2.s-1", longname = "Mean Annual Gross Primary Productivity - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, AGPP)
+}
+
+# Annual Autotrophic respiration
+if(exists("ARAU")) {
+   var_new  = ncvar_def("annual_ra_ensemble", unit="kg.m-2.s-1", longname = "Mean Annual Autotrophic (Plant) Respiration - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, ARAU)
+}
+
+# Annual Heterotrophic respiration
+if(exists("ARHE")) {
+   var_new  = ncvar_def("annual_rh_ensemble", unit="kg.m-2.s-1", longname = "Mean Annual Heterotrophic Respiration - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, ARHE)
+}
+
+# Annual Ecosystem respiration
+if(exists("ARECO")) {
+   var_new  = ncvar_def("annual_reco_ensemble", unit="kg.m-2.s-1", longname = "Mean Annual Ecosystem (Ra + Rh) Respiration - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, ARECO)
+}
+
+# Annual Net Primary Productivity
+if(exists("ANPP")) {
+   var_new  = ncvar_def("annual_npp_ensemble", unit="kg.m-2.s-1", longname = "Mean Annual Net Primary Productivity - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, ANPP)
+}
+
+# Annual Net Ecosystem Exchange
+if(exists("ANEE")) {
+   var_new  = ncvar_def("annual_nee_ensemble", unit="kg.m-2.s-1", longname = "Mean Annual Net Ecosystem Exchange - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, ANEE)
+}
+
+# Annual Net Biome Exchange
+if(exists("ANBE")) {
+   var_new  = ncvar_def("annual_nbe_ensemble", unit="kg.m-2.s-1", longname = "Mean Annual Net Biome Exchange (NEE + Fire) - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, ANBE)
+}
+
+# Net Biome Productivity
+if(exists("ANBP")) {
+   var_new  = ncvar_def("annual_nbp_ensemble", unit="kg.m-2.s-1", longname = "Mean Annual Net Biome Productivity (-NEE - Fire - fLuc) - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, ANBP)
+}
+
+# Annual Fire emissions
+if(exists("AFIR")) {
+   var_new  = ncvar_def("annual_fFire_ensemble", unit="kg.m-2.s-1", longname = "Mean Annual Fire - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, AFIR)
+}
+
+# Annual Flux from forest loss
+if(exists("AHARV")) {
+   var_new = ncvar_def("annual_fLuc_ensemble", unit="kg.m-2.s-1", longname = "Mean Annual Forest harvest - Ensemble", dim=list(long_dimen,lat_dimen,quantile_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+   new_file <- ncvar_add( new_file, var_new )
+   ncvar_put(new_file, var_new, AHARV)
 }
 
 # Total outflux from labile

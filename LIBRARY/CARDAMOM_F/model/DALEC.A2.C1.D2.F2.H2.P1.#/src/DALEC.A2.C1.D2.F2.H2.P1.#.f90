@@ -1209,6 +1209,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! as a fraction of Vcmax_ref. Most likely will be replaced by Heskel or Reich approaches.
     !dark_respiration = 0.002d0 * Vcmax_ref * airt_adj * leaf_canopy_light_scaling
     dark_respiration = 0.01d0 * Vcmax_ref * (2d0**((leafT - 25d0)*0.1d0)) * leaf_canopy_light_scaling
+    ! Ratio of RL25:Vcmax25 (Kumarathunge et al., 2019, doi: https://doi.org/10.1111/nph.15668, Table 1)
+    ! R2 of fit 0.22
+    !RLVratio = 0.036d0 + (-0.001d0 * AvgTemp30d)
 
     ! Possible approach to linking with canopy nitrogen
     ! Estimate the total canopy N, then scale to the "top leaf" and multiple by NUE
@@ -1233,7 +1236,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Jmax ~ Vcmax (Walker et al., 2017, doi: 10.1111/nph.14623, equ. 1)
     Jmax = dayl_hours_fraction*2.787095d0*(Vcmax_ref**0.890d0) * leaf_canopy_light_scaling &
           * modified_arrhenious(Ha_Jmax,Hd_Vcmax_Jmax,dS_Jmax,leafT+freeze)
-!         * opt_max_scaling(pl_max_temp,pl_min_temp,pl_opt_temp,pl_kurtosis,leafT)
+    ! Ratio of Jmax25:Vcmax25 (Kumarathunge et al., 2019, doi: https://doi.org/10.1111/nph.15668, Table 1)
+    ! R2 of fit 0.66
+    !JVratio = 2.9d0 + (-0.06d0 * AvgTemp30d)
+    !Jmax = JVratio * Vcmax_ref * leaf_canopy_light_scaling * dayl_hours_fraction &
+    !      * modified_arrhenious(Ha_Jmax,Hd_Vcmax_Jmax,dS_Jmax,leafT+freeze)
     ! Determine the mean per ground (i.e. canopy) area PAR absorption in umolPAR/m2/s
     PAR_m2 = seconds_per_day_1 * canopy_par_MJday * ppfd_to_par * 1d6
     ! Instantaneous approach uses a non-rectangular hyperbola solved by quadratic formula.

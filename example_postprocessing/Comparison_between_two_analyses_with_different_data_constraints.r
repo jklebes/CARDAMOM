@@ -11,8 +11,8 @@
 # 3) Compare correlations between pixels, how have they changed to improve constraint on wood
 # Ensure all relative plots are restricted +/- 1 
 # Include parameter correlations check
-#orig_mean_parameter_correlation = array(NA, dim=dim(grid_output$mean_lai_m2m2)[1:2])
-#alt_mean_parameter_correlation = array(NA, dim=dim(grid_output$mean_lai_m2m2)[1:2])
+#orig_mean_parameter_correlation = array(NA, dim=dim(orig_grid_output$mean_lai_m2m2)[1:2])
+#alt_mean_parameter_correlation = array(NA, dim=dim(alt_grid_output$mean_lai_m2m2)[1:2])
 ## This time run through and find the parameter files
 #for (n in seq(1, orig_PROJECT$nosites)) {
 #
@@ -91,12 +91,15 @@ wanted_quant = c(low_quant,3,mid_quant,5,high_quant)
 # Set output directory
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/InternationalScience/figures_africa_one_vs_all/"
 out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/RECCAP2/figures/"
 outsuffix = "_singleAGB_vs_repeatAGB"
+#outsuffix = "_noGPP_vs_withGPP"
 
 # Assign the baseline analysis - the original
 # Original AGB assimilated (2003)
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/ODA_extension_Africa_one_agb/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_one_AGB/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_oneAGB/infofile.RData")
+#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
 orig_PROJECT = PROJECT ; orig_grid_output = grid_output
 #orig_name = "Baseline"
@@ -106,6 +109,7 @@ orig_name = "Single" # used in labelling figures
 # Repeat AGB assimilated (2003-2019)
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/ODA_extension_Africa_agb/infofile.RData")
 load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB/infofile.RData")
+#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_gpp_CsomPriorNCSDC3m/infofile.RData")
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
 alt_PROJECT = PROJECT ; alt_grid_output = grid_output 
 alt_name = "Repeat" # used in labelling figures
@@ -1632,7 +1636,7 @@ obs_nbe_years = unique(c(flask_years,oco2_years))
 # Define the combined timeseries datasets
 obs_nbe_gCm2yr = array(NA, dim = c(dim(orig_grid_output$mean_lai_m2m2)[1:2],length(obs_nbe_years),sum(c(dim(oco2_cardamom_nbe_gCm2yr)[4],dim(flask_cardamom_nbe_gCm2yr)[4]))))
 obs_nee_gCm2yr = array(NA, dim = c(dim(orig_grid_output$mean_lai_m2m2)[1:2],length(obs_nbe_years),sum(c(dim(oco2_cardamom_nbe_gCm2yr)[4],dim(flask_cardamom_nbe_gCm2yr)[4]))))
-#obs_fire_gCm2yr = array(NA, dim = c(dim(grid_output$mean_lai_m2m2)[1:2],length(obs_nbe_years),sum(c(dim(oco2_cardamom_nbe_gCm2yr)[4],dim(flask_cardamom_nbe_gCm2yr)[4]))))
+#obs_fire_gCm2yr = array(NA, dim = c(dim(orig_grid_output$mean_lai_m2m2)[1:2],length(obs_nbe_years),sum(c(dim(oco2_cardamom_nbe_gCm2yr)[4],dim(flask_cardamom_nbe_gCm2yr)[4]))))
 for (i in seq(1,length(obs_nbe_years))) {
      # determine whether the flask dataset has any values for this year
      tmp = which(flask_years == obs_nbe_years[i])
@@ -6955,174 +6959,4 @@ print(paste("Mean relative (-1-1) difference in fireMRT comp (",alt_name,"-",ori
 print(paste("Mean relative (-1-1) difference in harvestMRT comp (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
-###
-## Extract pixels constaining the 200 sites
 
-skip = FALSE
-if (skip == FALSE) {
-tmp = read.csv("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/SECO/miombo_site_information/extract_points2.csv", header=TRUE)
-sites_cardamom=paste(names(tmp)[1],tmp$ID,sep="")
-# lat/long of sites, if type = "grid"then these these are bottom left and top right corners
-sites_cardamom_lat=tmp$lat
-sites_cardamom_long=tmp$long
-
-# Loop all 200 sites and find their locations
-WoodCobs_trend = rep(NA, dim(tmp)[1])
-orig_wood_trend = rep(NA, dim(tmp)[1])
-alt_wood_trend = rep(NA, dim(tmp)[1])
-orig_obs_wood_stock = rep(NA, dim(tmp)[1])
-alt_obs_wood_stock = rep(NA, dim(tmp)[1])
-orig_wood_natural_mrt = rep(NA, dim(tmp)[1])
-alt_wood_natural_mrt = rep(NA, dim(tmp)[1])
-orig_wood_mrt = rep(NA, dim(tmp)[1]) # years
-alt_wood_mrt = rep(NA, dim(tmp)[1]) # years
-orig_wood_npp = rep(NA, dim(tmp)[1]) # fraction
-alt_wood_npp = rep(NA, dim(tmp)[1]) # fraction
-obs_period_end = 5*12 ; obs_period_years = 5
-for (n in seq(1, dim(tmp)[1])) {
-     ij = unlist(closest2d_2(n,grid_lat,grid_long,tmp$lat,tmp$long))
-     nn = which(as.numeric(alt_PROJECT$sites) == ((ij[2]-1) * alt_PROJECT$long_dim) + ij[1])
-     ## Trends
-     if (length(which(is.na(WoodCobs[ij[1],ij[2],]) == FALSE)) > 0) {
-         WoodCobs_trend[n] = (coef(lm(WoodCobs[ij[1],ij[2],] ~ c(1:dim(WoodCobs)[3])))[2] * 12) # *12 is month to yr adjustment
-         orig_wood_trend[n] = (coef(lm(orig_grid_output$wood_gCm2[nn,mid_quant,1:obs_period_end] ~ c(1:obs_period_end)))[2] * 12)
-         alt_wood_trend[n] = (coef(lm(alt_grid_output$wood_gCm2[nn,mid_quant,1:obs_period_end] ~ c(1:obs_period_end)))[2] * 12)
-         orig_obs_wood_stock[n] = (WoodCobs[ij[1],ij[2],which(WoodCobs[ij[1],ij[2],] > 0)[1]])
-         alt_obs_wood_stock[n] = mean(WoodCobs[ij[1],ij[2],], na.rm=TRUE)
-     }
-     ## Static
-     orig_wood_natural_mrt[n] = as.vector(orig_grid_output$parameters[ij[1],ij[2],6,mid_quant]*365.25)**-1
-     alt_wood_natural_mrt[n] = as.vector(alt_grid_output$parameters[ij[1],ij[2],6,mid_quant]*365.25)**-1
-     orig_wood_mrt[n] = as.vector(orig_grid_output$MTT_wood_years[ij[1],ij[2],mid_quant])
-     alt_wood_mrt[n] = as.vector(alt_grid_output$MTT_wood_years[ij[1],ij[2],mid_quant])
-     orig_wood_npp[n] = as.vector(orig_grid_output$NPP_wood_fraction[ij[1],ij[2],mid_quant])
-     alt_wood_npp[n] = as.vector(alt_grid_output$NPP_wood_fraction[ij[1],ij[2],mid_quant])
-}
-
-png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"wood_trend_199pixels",outsuffix,".png",sep=""), 
-    height = 3500, width = 4000, res = 300)
-xrange = range(c(orig_wood_trend,alt_wood_trend), na.rm=TRUE)
-par(mfrow=c(2,2), mar=c(4.2,5.2,3.0,2),omi=c(0.01,0.01,0.01,0.01))
-plot(WoodCobs_trend ~ orig_wood_trend, ylab = expression(paste("Obs wood trend (gC ",m^-2,"y",r^-1,")",sep="")), 
-     main = paste(orig_name,sep=""), xlab = expression(paste("Model wood trend (gC ",m^-2,"y",r^-1,")",sep="")), 
-     pch=16, cex = 2, cex.main=2, cex.axis = 2.2, cex.lab=2.2, xlim=xrange)
-abline(0,1,col="red", lwd=3) ; abline(0,0,col="grey", lwd=2) ; abline(v = 0,col="grey", lwd=2)
-plot(WoodCobs_trend ~ alt_wood_trend, main=paste(alt_name,sep=""), ylab = "", 
-     xlab = expression(paste("Model wood trend (gC ",m^-2,"y",r^-1,")",sep="")), 
-     pch=16, cex = 2, cex.main=2, cex.axis = 2.2, cex.lab=2.2, xlim=xrange)
-abline(0,1,col="red", lwd=3) ; abline(0,0,col="grey", lwd=2) ; abline(v = 0,col="grey", lwd=2)
-yrange = range(c((orig_wood_trend - WoodCobs_trend),(alt_wood_trend - WoodCobs_trend)), na.rm=TRUE)
-plot((orig_wood_trend - WoodCobs_trend)  ~ orig_obs_wood_stock, 
-     ylab = expression(paste("Model - Obs trend bias",sep="")), 
-     xlab = expression(paste("Mean assimilated wood stock (gC ",m^-2,")",sep="")), 
-     pch = 16, cex = 2, cex.main=2, cex.axis = 2.2, cex.lab=2.2, ylim=yrange)
-abline(0,0,col="grey", lwd=2)
-plot((alt_wood_trend - WoodCobs_trend)  ~ alt_obs_wood_stock, ylab=expression(paste("Model - Obs trend bias",sep="")), 
-     xlab = expression(paste("Mean assimilated wood stock (gC ",m^-2,")",sep="")), pch = 16, cex = 2, 
-     cex.main=2, cex.axis = 2.2, cex.lab=2.2, ylim=yrange)
-abline(0,0,col="grey", lwd=2)
-dev.off()
-
-png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_wood_MRT_199pixels",outsuffix,".png",sep=""), height = 4000, width = 2500, res = 300)
-par(mfrow=c(4,2), mar=c(5.0,5.0,5.0,2),omi=c(0.1,0.1,0.1,0.1))
-plot(orig_wood_natural_mrt ~ orig_wood_trend, main=orig_name, ylab="Wood natural MRT (years)", xlab="", pch=16, cex = 2, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
-abline(v = 0, col="red", lwd=3)
-plot(alt_wood_natural_mrt ~ alt_wood_trend, main=alt_name, ylab="", xlab="", pch=16, cex = 2, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
-abline(v = 0, col="red", lwd=3)
-plot(orig_wood_mrt ~ orig_wood_trend, main="", ylab="Wood MRT (years)", xlab="Model wood trend", pch=16, cex = 2, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
-abline(v = 0, col="red", lwd=3)
-plot(alt_wood_mrt ~ alt_wood_trend, main="", ylab="", xlab="Model wood trend", pch=16, cex = 2, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
-abline(v = 0, col="red", lwd=3)
-
-plot(orig_wood_natural_mrt ~ WoodCobs_trend, main="", ylab="Wood natural MRT (years)", xlab="", pch=16, cex = 2, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
-abline(v = 0, col="red", lwd=3)
-plot(alt_wood_natural_mrt ~ WoodCobs_trend, main="", ylab="", xlab="", pch=16, cex = 2, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
-abline(v = 0, col="red", lwd=3)
-plot(orig_wood_mrt ~ WoodCobs_trend, main="", ylab="Wood MRT (years)", xlab="Obs wood trend", pch=16, cex = 2, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
-abline(v = 0, col="red", lwd=3)
-plot(alt_wood_mrt ~ WoodCobs_trend, main="", ylab="", xlab="Obs wood trend", pch=16, cex = 2, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
-abline(v = 0, col="red", lwd=3)
-dev.off()
-
-png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_wood_NPP_199pixels",outsuffix,".png",sep=""), height = 2500, width = 2500, res = 300)
-par(mfrow=c(2,2), mar=c(5.0,5.0,5.0,2),omi=c(0.1,0.1,0.1,0.1))
-plot(orig_wood_npp ~ orig_wood_trend, main=orig_name, ylab="Wood NPP (0-1)", xlab="Model wood trend", pch=16, cex = 2, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
-abline(v = 0, col="red", lwd=3)
-plot(alt_wood_npp ~ alt_wood_trend, main=alt_name, ylab="", xlab="Model wood trend", pch=16, cex = 2, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
-abline(v = 0, col="red", lwd=3)
-plot(orig_wood_npp ~ WoodCobs_trend, main="", ylab="Wood NPP (0-1)", xlab="Obs wood trend", pch=16, cex = 2, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
-abline(v = 0, col="red", lwd=3)
-plot(alt_wood_npp ~ WoodCobs_trend, main="", ylab="", xlab="Obs wood trend", pch=16, cex = 2, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
-abline(v = 0, col="red", lwd=3)
-dev.off()
-
-###
-## Compare against site level observations
-
-###
-## Read available site observations
-
-# ID2
-bob = read.csv("/home/lsmallma/gcel/miombo/CARDAMOM/FLX_ZA-Kru_FLUXNET2015_SUBSET_MM_2000-2010_1-3.csv", header=TRUE)
-# Define obs
-kru_gpp = rep(NA,12)
-kru_reco = rep(NA,12)
-kru_nee = rep(NA,12)
-kru_nee_unc = rep(NA,12)
-
-# Average to monthly means as the time periods do not overlap
-for (i in seq(1,12)) {
-     # Obs
-     get = seq(i,dim(bob)[1],12)
-     kru_gpp[i] = mean(bob$GPP_NT_VUT_REF[get])
-     kru_reco[i] = mean(bob$RECO_NT_VUT_REF[get])
-     kru_nee[i] = mean(bob$NEE_VUT_REF[get])
-     kru_nee_unc[i] = mean(bob$NEE_VUT_REF_RANDUNC[get])
-
-}
-# Define function to estimate the average month
-avg_month <-function(var) {
-   out_var = rep(NA, 12) 
-    for (n in seq(1,12)) {
-         out_var[n] = mean(var[seq(n,length(var),12)], na.rm=TRUE)
-    } 
-    return(out_var) 
-}
-
-png(file=paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_Comparison_of_gpp_nee_lai_ID2",outsuffix,".png",sep=""), width = 2100, height = 2000, res = 300)
-par(mfrow=c(2,2))
-# find location in grid for this site
-n = 2
-ij = unlist(closest2d_2(n,grid_lat,grid_long,tmp$lat,tmp$long))
-nn = which(as.numeric(alt_PROJECT$sites) == ((ij[2]-1) * alt_PROJECT$long_dim) + ij[1])
-# read assimilated observations
-drivers = read_binary_file_format(paste(alt_PROJECT$datapath,alt_PROJECT$name,"_",alt_PROJECT$sites[nn],".bin",sep=""))
-# GPP
-yrange = range(c(orig_grid_output$gpp_gCm2day[nn,mid_quant,],alt_grid_output$gpp_gCm2day[nn,mid_quant,],kru_gpp))
-plot(avg_month(orig_grid_output$gpp_gCm2day[nn,mid_quant,]), main="ID2", 
-     ylab=expression(paste("Mean GPP (gC ",m^-2,d^-1,")",sep="")), xlab="Mean Month", type="l", col="red", lwd=3, ylim=yrange)
-lines(avg_month(alt_grid_output$gpp_gCm2day[nn,mid_quant,]), lwd=3, col="blue")
-points(kru_gpp, pch=16)
-# NEE
-yrange = range(c(orig_grid_output$nee_gCm2day[nn,mid_quant,],alt_grid_output$nee_gCm2day[nn,mid_quant,],kru_nee))
-plot(avg_month(orig_grid_output$nee_gCm2day[nn,mid_quant,]), main="ID2", 
-     ylab=expression(paste("Mean NEE (gC ",m^-2,d^-1,")",sep="")), 
-     xlab="Mean Month", type="l", col="red", lwd=3, ylim=yrange)
-lines(avg_month(alt_grid_output$nee_gCm2day[nn,mid_quant,]), lwd=3, col="blue")
-points(kru_nee, pch=16)
-legend("topleft", col=c("red","blue"), legend = c("One","All"), pch = c(NA,NA), lty = c(1,1))
-# LAI
-yrange = range(c(orig_grid_output$lai_m2m2[nn,mid_quant,],alt_grid_output$lai_m2m2[nn,mid_quant,],drivers$obs[which(drivers$obs[,3] > 0),3]))
-plot(orig_grid_output$lai_m2m2[nn,mid_quant,], main="ID2", ylab=expression(paste("LAI (",m^2,m^-2,")",sep="")), 
-     xlab="Simulation Month", type="l", col="red", lwd=3, ylim=yrange)
-lines(alt_grid_output$lai_m2m2[nn,mid_quant,], lwd=3, col="blue")
-points(drivers$obs[,3], pch=16)
-# Wood
-yrange = range(c(orig_grid_output$wood_gCm2[nn,mid_quant,],alt_grid_output$wood_gCm2[nn,mid_quant,],drivers$obs[which(drivers$obs[,13] > 0),13]))
-plot(orig_grid_output$wood_gCm2[nn,mid_quant,], main="ID2", ylab=expression(paste("Wood (gC ",m^-2,")",sep="")), 
-     xlab="Simulation Month", type="l", col="red", lwd=3, ylim=yrange)
-lines(alt_grid_output$wood_gCm2[nn,mid_quant,], lwd=3, col="blue")
-points(drivers$obs[,13], pch=16)
-dev.off()
-
-}

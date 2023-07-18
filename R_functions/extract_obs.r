@@ -424,7 +424,8 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         Reco = -9999 ; Reco_unc = -9999
     }
     # apply lower bound in all cases to the uncertainty
-    Reco_unc[Reco_unc >= 0] = sqrt(Reco_unc[Reco_unc >= 0]**2 + 0.50**2)
+    #Reco_unc[Reco_unc >= 0] = sqrt(Reco_unc[Reco_unc >= 0]**2 + 0.50**2)
+    Reco_unc[Reco_unc >= 0] = pmax(1.0,sqrt(Reco_unc[Reco_unc >= 0]**2 + (0.1*mean(Reco[Reco >= 0]))**2))
 
     ###
     ## Get some NEE information (time series; gC/m2/day)
