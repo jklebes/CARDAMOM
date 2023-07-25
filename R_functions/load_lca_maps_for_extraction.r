@@ -68,6 +68,8 @@ load_lca_maps_for_extraction<-function(latlon_in,lca_source,cardamom_ext,spatial
         # break out from the rasters into arrays which we can manipulate
         lca_gCm2 = array(as.vector(unlist(lca_gCm2)), dim=c(xdim,ydim))
         lca_uncertainty_gCm2 = array(as.vector(unlist(lca_uncertainty_gCm2)), dim=c(xdim,ydim))
+        # TLS: Hack to reduce uncertainty associated with this dataset
+        lca_uncertainty_gCm2 = lca_uncertainty_gCm2*0.5
 
         # Output variables
         return(list(lat = lat, long = long, lca_gCm2 = lca_gCm2, lca_uncertainty_gCm2 = lca_uncertainty_gCm2))

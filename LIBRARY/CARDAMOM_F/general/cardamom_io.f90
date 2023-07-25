@@ -68,91 +68,91 @@ module cardamom_io
         DATAin%nopars = 20
         DATAin%nofluxes = 4
     else if (DATAin%ID == 1) then
-        ! ID = 1 - DALEC.D1.F2.
+        ! ID = 1 - DALEC.D1.F2.#
         DATAin%nopools = 5
         DATAin%nopars = 22
         DATAin%nofluxes = 35
     else if (DATAin%ID == 2) then
-        ! ID = 2 - DALEC.C1.D1.F2.P1.
+        ! ID = 2 - DALEC.C1.D1.F2.P1.#
         DATAin%nopools = 6
         DATAin%nopars = 28
         DATAin%nofluxes = 39
     else if (DATAin%ID == 3 ) then
-        ! ID = 3 - DALEC.A1.C1.D2.F2.H1.P1.
+        ! ID = 3 - DALEC.A1.C1.D2.F2.H1.P1.#
         DATAin%nopools = 6
         DATAin%nopars = 28
         DATAin%nofluxes = 39
     else if (DATAin%ID == 4) then
-        ! ID = 4 - DALEC.A1.C1.D2.F2.H2.P1.
+        ! ID = 4 - DALEC.A1.C1.D2.F2.H2.P1.#
         DATAin%nopools = 7
         DATAin%nopars = 32
         DATAin%nofluxes = 45
     else if (DATAin%ID == 5) then
-        ! ID = 5 - DALEC.A1.C1.D2.F2.H2.P1.R1.
+        ! ID = 5 - DALEC.A1.C1.D2.F2.H2.P1.R1.#
         DATAin%nopools = 7
         DATAin%nopars = 32
         DATAin%nofluxes = 40
     else if (DATAin%ID == 6) then
-        ! ID = 6 - DALEC.A1.C2.D2.F2.H2.P1.R1.
+        ! ID = 6 - DALEC.A1.C2.D2.F2.H2.P1.R1.#
         DATAin%nopools = 8
         DATAin%nopars = 35
         DATAin%nofluxes = 45
     else if (DATAin%ID == 7) then
-        ! ID = 7 - DALEC.A1.C2.D2.F2.H2.P2.R1.
+        ! ID = 7 - DALEC.A1.C2.D2.F2.H2.P2.R1.#
         DATAin%nopools = 8
         DATAin%nopars = 36
         DATAin%nofluxes = 45
     else if (DATAin%ID == 8) then
-        ! ID = 8 - DALEC.A1.C2.D2.F2.H1.P3.R1.
+        ! ID = 8 - DALEC.A1.C2.D2.F2.H1.P3.R1.#
         DATAin%nopools = 7
         DATAin%nopars = 43
         DATAin%nofluxes = 25
     else if (DATAin%ID == 9) then
-        ! ID = 9 - DALEC.A1.C2.D2.F2.H2.P3.R1.
+        ! ID = 9 - DALEC.A1.C2.D2.F2.H2.P3.R1.#
         DATAin%nopools = 8
         DATAin%nopars = 46
         DATAin%nofluxes = 25
     else if (DATAin%ID == 10) then
-        ! ID = 10 - DALEC.A1.C2.D2.F2.H1.P4.R2.
+        ! ID = 10 - DALEC.A1.C2.D2.F2.H1.P4.R2.#
         DATAin%nopools = 7
         DATAin%nopars = 48
         DATAin%nofluxes = 25
     else if (DATAin%ID == 11) then
-        ! ID = 11 - DALEC.A1.C2.D2.F2.H2.P4.R2.
+        ! ID = 11 - DALEC.A1.C2.D2.F2.H2.P4.R2.#
         DATAin%nopools = 8
         DATAin%nopars = 49
         DATAin%nofluxes = 25
         stop
     else if (DATAin%ID == 12) then
-        ! ID = 12 - DALEC.C4.D1.F2.
+        ! ID = 12 - DALEC.C4.D1.F2.#
         DATAin%nopools = 3
         DATAin%nopars = 15
         DATAin%nofluxes = 28
     else if (DATAin%ID == 13) then
-        ! ID = 13 - DALEC.C5.D1.F2.P1.
+        ! ID = 13 - DALEC.C5.D1.F2.P1.#
         DATAin%nopools = 4
         DATAin%nopars = 21
         DATAin%nofluxes = 32
     else if (DATAin%ID == 14) then
-        ! ID = 14 - DALEC.C3.M1.
+        ! ID = 14 - DALEC.C3.M1.#
         DATAin%nopools = 6
         DATAin%nopars = 22
         DATAin%nofluxes = 16
     else if (DATAin%ID == 15) then
-        ! ID = 15 - DALEC.A1.C3.H2.M1.
+        ! ID = 15 - DALEC.A1.C3.H2.M1.#
         DATAin%nopools = 9
         DATAin%nopars = 38
         DATAin%nofluxes = 21
     else if (DATAin%ID == 16) then
-        ! ID = 16 - DALEC.M2.
+        ! ID = 16 - DALEC.M2.#
         write(*,*) "Oh dear... DALEC.M2.# ID not valid = ",DATAin%ID
         stop
     else if (DATAin%ID == 17) then
-        ! ID = 17 - DALEC.A1.H2.M2.
+        ! ID = 17 - DALEC.A1.H2.M2.#
         write(*,*) "Oh dear... DALEC.A1.H2.M2.# ID not valid = ",DATAin%ID
         stop
     else if (DATAin%ID == 18) then
-        ! ID = 18 - DALEC.A1.C1.D2.F2.H2.P2.
+        ! ID = 18 - DALEC.A1.C1.D2.F2.H2.P2.#
         DATAin%nopools = 7
         DATAin%nopars = 33
         DATAin%nofluxes = 40
@@ -162,37 +162,37 @@ module cardamom_io
         DATAin%nopars = 38
         DATAin%nofluxes = 45
     else if (DATAin%ID == 20) then
-        ! ID = 20 - DALEC.A2.C1.D2.F2.H2.P1.
+        ! ID = 20 - DALEC.A2.C1.D2.F2.H2.P1.#
         DATAin%nopools = 7
         DATAin%nopars = 32
         DATAin%nofluxes = 45
     else if (DATAin%ID == 21) then
-        ! ID = 21 - DALEC.A1.C1.D2.F2.H2.P5.
+        ! ID = 21 - DALEC.A1.C1.D2.F2.H2.P5.#
         DATAin%nopools = 7
         DATAin%nopars = 33
         DATAin%nofluxes = 40
     else if (DATAin%ID == 22) then
-        ! ID = 22 - DALEC.A1.C1.D2.F2.H2.P6.
+        ! ID = 22 - DALEC.A1.C1.D2.F2.H2.P6.#
         DATAin%nopools = 7
         DATAin%nopars = 34
         DATAin%nofluxes = 40
     else if (DATAin%ID == 23) then
-        ! ID = 23 - DALEC.A1.C2.D2.F2.H2.P7.R2.
+        ! ID = 23 - DALEC.A1.C2.D2.F2.H2.P7.R2.#
         DATAin%nopools = 8
         DATAin%nopars = 48
         DATAin%nofluxes = 45
     else if (DATAin%ID == 24) then
-        ! ID = 24 - DALEC.A1.C2.D2.F2.H2.P8.R2.
+        ! ID = 24 - DALEC.A1.C2.D2.F2.H2.P8.R2.#
         DATAin%nopools = 8
         DATAin%nopars = 51
         DATAin%nofluxes = 45
     else if (DATAin%ID == 25) then
-        ! ID = 25 - DALEC.A1.C2.D2.F2.H2.P9.R2.
+        ! ID = 25 - DALEC.A1.C2.D2.F2.H2.P9.R2.#
         DATAin%nopools = 8
         DATAin%nopars = 49
         DATAin%nofluxes = 45
     else if (DATAin%ID == 26) then
-        ! ID = 26 - DALEC.A1.C2.D2.F2.H2.P10.R2.
+        ! ID = 26 - DALEC.A1.C2.D2.F2.H2.P10.R2.#
         DATAin%nopools = 8
         DATAin%nopars = 48
         DATAin%nofluxes = 25
@@ -207,7 +207,10 @@ module cardamom_io
         DATAin%nopars = 38
         DATAin%nofluxes = 43
     else if (DATAin%ID == 29) then
-        ! ID = 29 -
+        ! ID = 29 - DALEC.A3.C1.D2.F2.H2.P1.#
+        DATAin%nopools = 7
+        DATAin%nopars = 32
+        DATAin%nofluxes = 45
     else if (DATAin%ID == 30) then
         ! ID = 30 -
     else if (DATAin%ID == 31) then

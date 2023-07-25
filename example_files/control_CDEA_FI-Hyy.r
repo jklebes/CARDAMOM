@@ -4,7 +4,7 @@
 ###
 
 # Set working directory in which the CARDAMOM code base can be found
-setwd("<enter your cardamom directory here>")
+setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 
 ###
 ## Options
@@ -25,7 +25,7 @@ timing=FALSE
 debug=FALSE
 
 ## about you (only valid if working on UoE remote server)
-username="<username here>" # put your Edinburgh uun here
+username="lsmallma" # put your Edinburgh uun here
 home_computer="ssh.geos.ed.ac.uk"
 
 ## use parallel functions?
@@ -34,7 +34,7 @@ numWorkers = 6 # number of cores to assign to parallel job
 
 ## Model - which DALEC 
 # see "MODEL_DESCRIPTIONS.md" for available models
-model="DALEC.2."
+model="DALEC.29."
 pft_specific_parameters=FALSE # impacts crop model only
 
 ## MDF method
@@ -142,9 +142,9 @@ request_use_EDCs = TRUE       # Use EDCs
 request_extended_mcmc = FALSE # Extend the current MCMC by adding a further request_nos_extended_samples + request_nos_samples
 request_nos_extended_samples = 90e6 # If request_extened_mcmc == TRUE then this is the number of additional proposals to be made
 request_cost_function_scaling = 0 # 0 = Default, no normaliation of the likelihood score
-                                  # 1 = Normaliation of the likelihood score by sample size
-                                  # 2 = Normaliation of the likelihood score by sqrt(sample size)
-                                  # 3 = Normaliation of the likelihood score by log(sample size) 
+                                  # 1 = Normalisation of the likelihood score by sample size
+                                  # 2 = Normalisation of the likelihood score by sqrt(sample size)
+                                  # 3 = Normalisation of the likelihood score by log(sample size) 
 
 ## Stage
 # stage -1 : Create project first time (load source to eddie)
@@ -153,7 +153,7 @@ request_cost_function_scaling = 0 # 0 = Default, no normaliation of the likeliho
 # stage  2 : Submit the project to eddie
 # stage  3 : Copy back results and process vectors
 # stage  4 : Do some standard figure creation (and further processing for gridded analysis)
-stage=-1
+stage=1
 repair=0 # to force (=1) re-run processed results or driver files if they already exist
 grid_override=FALSE # force site specific files to be saved and figures to be generated when in "grid" operation
 

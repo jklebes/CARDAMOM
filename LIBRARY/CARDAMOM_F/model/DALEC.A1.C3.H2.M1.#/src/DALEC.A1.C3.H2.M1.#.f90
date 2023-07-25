@@ -878,7 +878,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
           ! Also melt some of the snow
           snow_melt = airt_zero_fraction
           ! otherwise we assume snow is melting at 10 % per day light hour
-          snow_melt = min(snow_storage, snow_melt * snow_storage * dayl_hours * 0.1d0 * deltat(n))
+          snow_melt = min(snow_storage, snow_melt * snow_storage * 24d0 * 0.1d0 * deltat(n))
           snow_storage = snow_storage - snow_melt
       elseif (maxt < 0d0) then
           ! if whole day is below freezing then we should assume that all
@@ -888,7 +888,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
           snow_storage = snow_storage + (snowfall*seconds_per_step)
       else if (mint > 0d0) then
           ! otherwise we assume snow is melting at 10 % per day light hour
-          snow_melt = min(snow_storage, snow_storage * dayl_hours * 0.1d0 * deltat(n))
+          snow_melt = min(snow_storage, snow_storage * 24d0 * 0.1d0 * deltat(n))
           snow_storage = snow_storage - snow_melt
       end if
 
@@ -3387,7 +3387,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! heterotrophic respiration component 1: mineralisation of litter C pool (gC.m-2.t-1)
     resp_h_litter = decomposition * (1d0 - decomp_efficency)
     ! heterotrophic respiration component 2:  mineralisation of organic matter C pool (gC.m-2.t-1)
-    resp_h_soilOrgMatter = stock_soilOrgMatter * (1d0-(1d0-(mineralisation_rate_soilOrgMatter * resp_rate)) ** ts_length)  
+    resp_h_soilOrgMatter = stock_soilOrgMatter * (1d0-(1d0-(mineralisation_rate_soilOrgMatter * resp_rate)) ** ts_length)
     !resp_h_soilOrgMatter = stock_soilOrgMatter * min(1d0,mineralisation_rate_soilOrgMatter * resp_rate * ts_length)
 
     ! decomposition of litter to soil organic matter (gC.m-2.t-1)

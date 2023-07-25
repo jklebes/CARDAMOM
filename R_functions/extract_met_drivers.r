@@ -27,13 +27,6 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
           deltaDay = doy[(steps_in_day+1)] - doy[1]
           if (deltaDay > 1) {
               # each time step it actually greater than a day,
-              # we must now check that this aligns with our expectations
-              # and make suitable correction
-              if ((deltaDay - timestep_days[1]) > 1) {
-                  # mis-match between expected time stpe and actual...
-                  stop("mis-match in meteorology drivers between expected time step and actual...")
-              }
-              # if we have made it to this point then we must be ok,
               # now apply correction to determine the correct timing variables
               steps_in_day = 1/mean(timestep_days)
               input_step_size = 24 / steps_in_day # hours
@@ -43,7 +36,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
           # can also be achieved if the number of days of year for the expected
           # have already been calculated (currently this happens below)
           if (length(timestep_days) > 1) {
-              if (length(timestep_days != length(doy))) {
+              if (length(timestep_days) != length(doy)) {
                   stop("mis-match in meteorology drivers between expected number of time step and actual...")
               }
           }

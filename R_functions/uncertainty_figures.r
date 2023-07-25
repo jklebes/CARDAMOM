@@ -62,6 +62,13 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
+   }  else if (PROJECT$model$name == "DALEC.A3.C1.D2.F2.H2.P1.#"){
+       # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
+       tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
+       var = t(states_all$roots_gCm2) + tmp
+       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
+       plot_root_depth = TRUE
    }  else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P1.R1.#"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
@@ -119,7 +126,33 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        dev.off()
    } # plot_root_depth
 
-   # Soil surface snow cover
+   # Internal to ambient CO2 concentration ratio
+   if (exists(x = "gs_demand_supply_ratio", where = states_all)) {
+
+       # incoming data from states_all is dim=c(iter, chain, time)
+       # structure needed by function is dim=c(time,iter)
+
+       # flip it to get the right shape
+       var = t(states_all$CiCa)
+
+       jpeg(file=paste(PROJECT$figpath,"timeseries_gs_demand_supply_ratio_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+            width=7200, height=4000, res=280, quality=100)
+       # now create the plotting area
+       par(mfrow=c(1,1), mar=c(5,5,3,1))
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,1),
+            cex=0.8,ylab="gs demand:supply (0-1)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
+            main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       axis(1, at=time_vector[seq(1,length(time_vector),interval)],labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),
+            tck=-0.02, padj=+0.15, cex.axis=1.9)
+       # add the confidence intervals
+       plotconfidence(var)
+       # calculate and draw the median values, could be mean instead or other
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
+       dev.off()
+
+   } # gs_demand_supply_ratio
+
+   # Internal to ambient CO2 concentration ratio
    if (exists(x = "CiCa", where = states_all)) {
 
        # incoming data from states_all is dim=c(iter, chain, time)
