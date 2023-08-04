@@ -19,6 +19,9 @@
 ## Analysis specific information and generic creation
 ###
 
+# Set the working directory for your CARDAMOM code base
+setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM")
+
 ###
 ## Load analysis
 
@@ -62,12 +65,12 @@ library(ncdf4)
 library(abind)
 
 # Load any CARDAMOM functions which might be useful
-source("~/WORK/GREENHOUSE/models/CARDAMOM/R_functions/generate_wgs_grid.r")
-source("~/WORK/GREENHOUSE/models/CARDAMOM/R_functions/calc_pixel_area.r")
-source("~/WORK/GREENHOUSE/models/CARDAMOM/R_functions/read_binary_file_format.r")
-source("~/WORK/GREENHOUSE/models/CARDAMOM/R_functions/function_closest2d.r")
-source("~/WORK/GREENHOUSE/models/CARDAMOM/R_functions/plotconfidence.r")
-source("~/WORK/GREENHOUSE/models/CARDAMOM/R_functions/read_src_model_priors.r")
+source("./R_functions/generate_wgs_grid.r")
+source("./R_functions/calc_pixel_area.r")
+source("./R_functions/read_binary_file_format.r")
+source("./R_functions/function_closest2d.r")
+source("./R_functions/plotconfidence.r")
+source("./R_functions/read_src_model_priors.r")
 source("./R_functions/regrid_functions.r")
 
 # Function to determine the number of days in any given year
@@ -2753,9 +2756,9 @@ nc_close(CTE)
 cte_nbe = cte_nee + cte_fire
 
 # Adjust units
-cte_nee = cte_nee * 12 * 86400 * 365.25 # gC/m2/yr
+cte_nee  = cte_nee  * 12 * 86400 * 365.25 # gC/m2/yr
 cte_fire = cte_fire * 12 * 86400 * 365.25 # gC/m2/yr
-cte_nbe = cte_nbe * 12 * 86400 * 365.25 # gC/m2/yr
+cte_nbe  = cte_nbe  * 12 * 86400 * 365.25 # gC/m2/yr
 
 # Search for africa locations and slot into africa only grid for matching
 # Make into CARDAMOM paired masks.
@@ -2994,7 +2997,7 @@ nc_close(oco2)
 # Estimate step size
 oco2_step = abs(oco2_date[1]-oco2_date[2])
 # Estimate the number of days in each year since 2000 (the reference point for )
-create_years = c(0,2000:2020)
+create_years = c(0,2000:2030)
 nos_days = 0 ; for (i in seq(2,length(create_years))) { nos_days = append(nos_days,nos_days_in_year(create_years[i]))}
 # Convert all into decimal year
 for (i in seq(1, length(oco2_date))) {
@@ -3034,9 +3037,9 @@ for (i in seq(2, length(oco2_files_nee))) {
 }
 
 # Now apply units correction (mol/m2/s) to gC/m2/day
-oco2_nee = oco2_nee * 12 * 86400
+oco2_nee  = oco2_nee  * 12 * 86400
 oco2_fire = oco2_fire * 12 * 86400
-oco2_nbe = oco2_nee + oco2_fire
+oco2_nbe  = oco2_nee + oco2_fire
 
 # Loop through each year to estimate the annual means
 oco2_nee_gCm2yr = array(NA, dim=c(dim(oco2_nee)[1:2],length(unique(oco2_years)),dim(oco2_nee)[4]))
@@ -3247,6 +3250,41 @@ obs_gpp_mean_gCm2yr = obs_gpp_mean_gCm2yr[,dim(obs_gpp_mean_gCm2yr)[2]:1,]*array
 obs_gpp_min_gCm2yr = apply(obs_gpp_ensemble_gCm2yr,c(1,2,3),min, na.rm=TRUE)*array(landfilter, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_ensemble_gCm2yr)[3]))
 obs_gpp_max_gCm2yr = apply(obs_gpp_ensemble_gCm2yr,c(1,2,3),max, na.rm=TRUE)*array(landfilter, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_ensemble_gCm2yr)[3]))
 
+# Ensure that the timeseries length is consistent between the observed variable and the model analysis
+# This assumes that only the timesteps that overlap the model period have been read in the first place,
+# so we should only be needing to add extra empty variable space.
+tmp = intersect(run_years,gpp_years)
+if (length(tmp) != length(run_years)) {
+    # How many years before the observations need to be added?
+    nos_add_beginning = gpp_years[1]-run_years[1]
+    # How many years after the observations
+    nos_add_afterward = run_years[length(run_years)] - gpp_years[length(gpp_years)]
+    if (nos_add_beginning > 0) {
+        # Convert these into arrays of the correct shape but empty
+        add_beginning = array(NA, dim=c(dim(obs_gpp_min_gCm2yr)[1:2],nos_add_beginning))
+        # Add the extra years 
+        obs_gpp_mean_gCm2yr = abind(add_beginning,obs_gpp_mean_gCm2yr, along=3)
+        obs_gpp_min_gCm2yr = abind(add_beginning,obs_gpp_min_gCm2yr, along=3)
+        obs_gpp_max_gCm2yr = abind(add_beginning,obs_gpp_max_gCm2yr, along=3)
+        # Convert these into arrays of the correct shape but empty
+        add_beginning = array(NA, dim=c(dim(obs_gpp_ensemble_gCm2yr)[1:2],nos_add_beginning,dim(obs_gpp_ensemble_gCm2yr)[4]))
+        # Add the extra years 
+        obs_gpp_ensemble_gCm2yr = abind(add_beginning,obs_gpp_ensemble_gCm2yr, along=3)
+    } 
+    if (nos_add_afterward > 0) {
+        # Convert these into arrays of the correct shape but empty
+        add_afterward = array(NA, dim=c(dim(obs_gpp_min_gCm2yr)[1:2],nos_add_afterward))
+        # Add the extra years 
+        obs_gpp_mean_gCm2yr = abind(obs_gpp_mean_gCm2yr,add_afterward, along=3)
+        obs_gpp_min_gCm2yr = abind(obs_gpp_min_gCm2yr,add_afterward, along=3)
+        obs_gpp_max_gCm2yr = abind(obs_gpp_max_gCm2yr,add_afterward, along=3)
+        # Convert these into arrays of the correct shape but empty
+        add_afterward = array(NA, dim=c(dim(obs_gpp_ensemble_gCm2yr)[1:2],nos_add_afterward,dim(obs_gpp_ensemble_gCm2yr)[4]))
+        # Add the extra years 
+        obs_gpp_ensemble_gCm2yr = abind(obs_gpp_ensemble_gCm2yr,add_afterward, along=3)
+    }
+} # extra years needed
+
 # Create domain averaged values for each year and data source, note that aggregation MUST happen within product type before across products
 tmp = apply(obs_gpp_ensemble_gCm2yr*array(landmask_area*grid_output$land_fraction*landfilter, dim=c(dim(landmask_area)[1:2],dim(obs_gpp_ensemble_gCm2yr)[3],dim(obs_gpp_ensemble_gCm2yr)[4]))*1e-12,c(3,4),sum, na.rm=TRUE)
 # where the whole grid is zero can lead to zero being introduced - remove these
@@ -3255,6 +3293,9 @@ tmp[which(tmp == 0)] = NA
 obs_gpp_mean_domain_TgCyr = apply(tmp,1,mean, na.rm=TRUE)
 obs_gpp_min_domain_TgCyr = apply(tmp,1,min, na.rm=TRUE)
 obs_gpp_max_domain_TgCyr = apply(tmp,1,max, na.rm=TRUE)
+# Check for introduced Inf values
+obs_gpp_min_domain_TgCyr[which(is.infinite(obs_gpp_min_domain_TgCyr))] = NA
+obs_gpp_max_domain_TgCyr[which(is.infinite(obs_gpp_max_domain_TgCyr))] = NA
 
 ###
 ## Independent fire emissions estimate

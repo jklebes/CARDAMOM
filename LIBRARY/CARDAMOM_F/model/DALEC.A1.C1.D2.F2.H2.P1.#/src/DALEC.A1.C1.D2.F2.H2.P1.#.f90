@@ -102,7 +102,7 @@ module CARBON_MODEL_MOD
                       canopy_height = 9d0,          & ! canopy height assumed to be 9 m
                        tower_height = canopy_height + 2d0, & ! tower (observation) height assumed to be 2 m above canopy
                            min_wind = 0.2d0,        & ! minimum wind speed at canopy top
-                       min_drythick = 0.005d0,      & ! minimum dry thickness depth (m)
+                       min_drythick = 0.001d0,      & ! minimum dry thickness depth (m)
                           min_layer = 0.03d0,       & ! minimum thickness of the third rooting layer (m)
                         soil_roughl = 0.05d0,       & ! soil roughness length (m)
                      top_soil_depth = 0.30d0,       & ! thickness of the top soil layer (m)
@@ -245,7 +245,9 @@ module CARBON_MODEL_MOD
                                          slope, & ! Rate of change of saturation vapour pressure with temperature (kPa.K-1)
                         water_vapour_diffusion, & ! Water vapour diffusion coefficient in (m2/s)
                            kinematic_viscosity, & ! kinematic viscosity (m2.s-1)
-                                  snow_storage, & ! snow storage (kgH2O/m2)
+                                  snow_storage, & ! snow storage on soil surface (kgH2O/m2)
+                             !soil_snow_storage, & ! snow storage on soil surface (kgH2O/m2)
+                           !canopy_snow_storage, & ! snow storage on soil surface (kgH2O/m2)
                                 canopy_storage, & ! water storage on canopy (kgH2O.m-2)
                           intercepted_rainfall    ! intercepted rainfall rate equivalent (kgH2O.m-2.s-1)
 
@@ -299,7 +301,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                             rainfall_time, &
                                                 cica_time, & ! Internal vs ambient CO2 concentrations
                                           root_depth_time, &
-                                        snow_storage_time, &
+                                        snow_storage_time, & ! Total ecosystem snow storage
                                                 rSWP_time, & ! Soil water potential weighted by access water
                                                 wSWP_time    ! Soil water potential weighted by supply of water
 
@@ -586,14 +588,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     wl = pars(14)*sqrt(2d0) * 0.5d0
     ! magnitude coefficient
     ff = (log(pars(5))-log(pars(5)-1d0)) * 0.5d0
-    fl = (log(1.001d0)-log(0.001d0)) * 0.5d0
+    fl = 3.45437738965761021d0!(log(1.001d0)-log(0.001d0)) * 0.5d0
     ! set minium labile life span to one year
     ml = 1.001d0
     ! offset for labile and leaf turnovers
     osf = ospolynomial(pars(5),wf)
     osl = ospolynomial(ml,wl)
     ! scaling to biyearly sine curve
-    sf = 365.25d0/pi
+    sf = 116.262685928629551d0 !365.25d0/pi
 
     ! now load the hardcoded forest management parameters into their scenario locations
 
@@ -827,9 +829,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! Also melt some of the snow based on airt_zero_fraction
            ! default assumption is that snow is melting at 10 % per day hour above freezing
            snow_melt = min(snow_storage, airt_zero_fraction * snow_storage * 24d0 * 0.1d0 * deltat(n))
+          snow_storage = snow_storage - snow_melt
            ! adjust to rate for later addition to rainfall
            snow_melt = snow_melt / seconds_per_step
-           snow_storage = snow_storage - snow_melt
        elseif (maxt < 0d0) then
            ! if whole day is below freezing then we should assume that all
            ! precipitation is snowfall
@@ -846,7 +848,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        else
            snowfall = 0d0 ; snow_melt = 0d0
        end if
-       snow_storage_time(n) = snow_storage
+      snow_storage_time(n) = snow_storage
 
        !!!!!!!!!!
        ! Calculate surface exchange coefficients

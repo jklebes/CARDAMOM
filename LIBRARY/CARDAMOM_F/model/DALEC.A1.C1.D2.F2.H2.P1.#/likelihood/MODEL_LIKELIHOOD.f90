@@ -801,6 +801,8 @@ module model_likelihood_module
 
         ! Living pools
         do n = 1, 3
+!        do n = 1, 3, 2 ! labile + fine root
+        !do n = 3, 3 ! fine root only
            ! Restrict mean rates of increase
            if (abs(log(Fin(n)/Fout(n))) > EQF2) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
@@ -836,7 +838,8 @@ module model_likelihood_module
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !        end if
         ! Dead pools
-        do n = 5, 6
+        do n = 5, 6  ! Litter + som
+!        do n = 6, 6   ! som only
            ! Restrict rates of increase
            if (abs(log(Fin(n)/Fout(n))) > EQF2) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0

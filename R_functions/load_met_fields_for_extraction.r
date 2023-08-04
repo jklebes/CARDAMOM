@@ -113,7 +113,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         # This dependes on the lat / long / tmp1 spatially matching each other AND
         # latitude ranging -90/90 and longitude ranging -180/180 degrees
         tmp1 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(tmp1))
-        tmp1 = rasterFromXYZ(tmp1, crs = ("+init=epsg:4326"))
+        tmp1 = rast(tmp1, crs = ("+init=epsg:4326"), type="xyz")
 
         # Extend the extent of the overall grid to the analysis domain
         tmp1 = extend(tmp1,cardamom_ext)
@@ -128,7 +128,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
             if (res(tmp1)[1] < res(cardamom_ext)[1] | res(tmp1)[2] < res(cardamom_ext)[2]) {
 
                 # Create raster with the target resolution
-                target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+                target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
                 # Resample to correct grid
                 tmp1 = resample(tmp1, target, method="bilinear") ; gc() ; removeTmpFiles()
 
@@ -139,7 +139,8 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         # NOTE the axis switching between raster and actual array
         long_dim = dim(tmp1)[2] ; lat_dim = dim(tmp1)[1]
         # extract the lat / long information needed
-        long = coordinates(tmp1)[,1] ; lat = coordinates(tmp1)[,2]
+        long = crds(tmp1,df=TRUE, na.rm=FALSE)
+        lat  = long$y ; long = long$x
         # restructure into correct orientation
         long = array(long, dim=c(long_dim,lat_dim))
         lat = array(lat, dim=c(long_dim,lat_dim))

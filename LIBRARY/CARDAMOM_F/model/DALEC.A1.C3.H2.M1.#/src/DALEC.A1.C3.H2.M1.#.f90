@@ -875,11 +875,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
           ! Add rainfall to the snowpack and clear rainfall variable
           snow_storage = snow_storage + (snowfall*seconds_per_step)
 
-          ! Also melt some of the snow
-          snow_melt = airt_zero_fraction
-          ! otherwise we assume snow is melting at 10 % per day light hour
-          snow_melt = min(snow_storage, snow_melt * snow_storage * 24d0 * 0.1d0 * deltat(n))
-          snow_storage = snow_storage - snow_melt
+           ! Also melt some of the snow based on airt_zero_fraction
+           ! default assumption is that snow is melting at 10 % per day hour above freezing
+           snow_melt = min(snow_storage, airt_zero_fraction * snow_storage * 24d0 * 0.1d0 * deltat(n))
+           snow_storage = snow_storage - snow_melt
+           ! adjust to rate for later addition to rainfall
+           snow_melt = snow_melt / seconds_per_step
       elseif (maxt < 0d0) then
           ! if whole day is below freezing then we should assume that all
           ! precipitation is snowfall

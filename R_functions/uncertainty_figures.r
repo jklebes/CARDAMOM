@@ -117,7 +117,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        jpeg(file=paste(PROJECT$figpath,"timeseries_RootDepth_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""), width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var)[which(var != Inf)], prob=c(0.75), na.rm=TRUE)), cex=0.8,ylab="Rooting Depth (m)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8, main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var)[which(var != Inf)], prob=c(0.90), na.rm=TRUE)), cex=0.8,ylab="Rooting Depth (m)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8, main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
        # add the confidence intervals
        plotconfidence(var)
@@ -126,6 +126,32 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        dev.off()
    } # plot_root_depth
 
+   # Absorbed photosyntheticaly active radiation (MJ/m2/d)
+   if (exists(x = "APAR_MJm2day", where = states_all)) {
+
+       # incoming data from states_all is dim=c(iter, chain, time)
+       # structure needed by function is dim=c(time,iter)
+
+       # flip it to get the right shape
+       var = t(states_all$APAR_MJm2day)
+
+       jpeg(file=paste(PROJECT$figpath,"timeseries_APAR_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+            width=7200, height=4000, res=280, quality=100)
+       # now create the plotting area
+       par(mfrow=c(1,1), mar=c(5,5,3,1))
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(quantile(as.vector(var)[which(var != Inf)], prob=c(0.001,0.999), na.rm=TRUE)),
+            cex=0.8,ylab="APAR (MJ.m-2.d-1)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
+            main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       axis(1, at=time_vector[seq(1,length(time_vector),interval)],labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),
+            tck=-0.02, padj=+0.15, cex.axis=1.9)
+       # add the confidence intervals
+       plotconfidence(var)
+       # calculate and draw the median values, could be mean instead or other
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
+       dev.off()
+
+   } # APAR_MJm2day
+
    # Internal to ambient CO2 concentration ratio
    if (exists(x = "gs_demand_supply_ratio", where = states_all)) {
 
@@ -133,7 +159,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # structure needed by function is dim=c(time,iter)
 
        # flip it to get the right shape
-       var = t(states_all$CiCa)
+       var = t(states_all$gs_demand_supply_ratio)
 
        jpeg(file=paste(PROJECT$figpath,"timeseries_gs_demand_supply_ratio_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
             width=7200, height=4000, res=280, quality=100)
@@ -165,7 +191,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(quantile(as.vector(var)[which(var != Inf)], prob=c(0.001,0.999), na.rm=TRUE)),
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,1),
             cex=0.8,ylab="Ci:Ca (0-1)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
             main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),
@@ -471,7 +497,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 		   # add the data on top if there is any
    		 if (length(which(is.na(obs))) != length(obs) ) {
 		     	 points(obs, pch=16, cex=0.8)
-			     plotCI(obs,gap=0,uiw=Cfol_obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
+			     plotCI(obs,gap=0,uiw=obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
 		   }
 		   dev.off()
 
@@ -482,13 +508,15 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 
         # flip it to get the right shape
 		    var = t(states_all$lai_m2m2)
-		    obs = drivers$obs[,3]
+		    obs = drivers$obs[,3] ; obs_unc = drivers$obs[,4]
+        # filter -9999 to NA
+ 	 	    filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
 
   		  jpeg(file=paste(PROJECT$figpath,"timeseries_lai_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
              width=7200, height=4000, res=280, quality=100)
 		    # now create the plotting area
 		    par(mfrow=c(1,1), mar=c(5,5,3,1))
-	   	  plot(obs, pch=16,xaxt="n", ylim=c(0,max(max(obs),quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))),
+	   	  plot(obs, pch=16,xaxt="n", ylim=c(0,max(max(obs, na.rm=TRUE),quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))),
              cex=0.8,ylab="LAI (m2/m2)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
              main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
 		    axis(1, at=time_vector[seq(1,length(time_vector),interval)],
@@ -497,8 +525,12 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 		    plotconfidence(var)
 		    # calculate and draw the median values, could be mean instead or other
 		    lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), pch=1, col="red")
-		    # add the data on top
-		    points(obs, pch=16, cex=0.8)
+        # add the data on top if there is any
+        if (length(which(is.na(obs))) != length(obs) ) {
+	 	        points(obs, pch=16, cex=0.8)
+			      plotCI(obs,gap=0,uiw=obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
+		    }
+
     		dev.off()
 
    } # lai_m2m2

@@ -11,7 +11,7 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
     # Create target grid for aggregation if needed
     if (spatial_type == "grid") {
        # Create raster with the target resolution
-       target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+       target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
     }
 
     if (met_source == "ERA" | met_source == "isimip3a") {
@@ -50,7 +50,7 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
                   # This dependes on the lat / long / tmp1 spatially matching each other AND
                   # latitude ranging -90/90 and longitude ranging -180/180 degrees
                   var1 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(var_in[,,t]))
-                  var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326"))
+                  var1 = rast(var1, crs = ("+init=epsg:4326"), type="xyz")
 
                   # Extend the extent of the overall grid to the analysis domain
                   var1 = extend(var1,cardamom_ext)
@@ -111,7 +111,7 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
              # This dependes on the lat / long / tmp1 spatially matching each other AND
              # latitude ranging -90/90 and longitude ranging -180/180 degrees
              var1 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(var_in[,,t]))
-             var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326"))
+             var1 = rast(var1, crs = ("+init=epsg:4326"), type="xyz")
 
              # Extend the extent of the overall grid to the analysis domain
              var1 = extend(var1,cardamom_ext)

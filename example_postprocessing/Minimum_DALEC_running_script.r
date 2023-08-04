@@ -11,11 +11,11 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 source("./R_functions/load_all_cardamom_functions.r")
 
 # Load the info file for the project you will be calling from
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.C1.D1.F2.P1.#_MHMCMC/wetland_test_site/infofile.RData")
-# Load the already processed DALEC outputs - this has the parameters and drivers but also the existing DALEC output against which you can compare any modifications
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.C1.D1.F2.P1.#_MHMCMC/wetland_test_site/RESULTS_PROCESSED/wetland_test.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/CZO_noGPP_lai_EDCs/infofile.RData")
 # If the project has more than one site within set "n" to the correct value, otherwise leave as 1
 n = 1
+# Load the already processed DALEC outputs - this has the parameters and drivers but also the existing DALEC output against which you can compare any modifications
+load(paste(PROJECT$results_processedpath,"/",PROJECT$sites[n],".RData", sep=""))
 
 # Set missing observation values to NA as this will be easier for plotting, -9999 needed for for CARDAMOM itself
 drivers$obs[which(drivers$obs == -9999)] = NA
@@ -28,7 +28,7 @@ drivers$obs[which(drivers$obs == -9999)] = NA
 # Copy original drivers into a new object that we will manipulate
 new_drivers = drivers
 
-nos_loops = 0
+nos_loops = 1
 if (nos_loops > 0) {
     # Loop drivers to allow simulation to steady state
     for (r in seq(1,nos_loops)) {
@@ -61,11 +61,9 @@ new_drivers$met[,16] = new_drivers$met[,16] + 0 # mean vapour pressure deficit (
 
 ## You can manipulate disturbance drivers
 
-new_drivers$met[,8] = new_drivers$met[,8] + 0 # harvested fraction (0-1)
+new_drivers$met[56,8] = new_drivers$met[56,8] + 0.8 # harvested fraction (0-1)
 new_drivers$met[,9] = new_drivers$met[,9] + 0 # burnt fraction (0-1)
-
-# GSI models only
-#new_drivers$met[,13] = new_drivers$met[,13] + 0 # forest management type (catagorical)
+new_drivers$met[56,13] = 4 # forest management type (catagorical)
 
 ## Update timing information if needed  
 
@@ -83,17 +81,32 @@ if (analysis_years != nos_years) {
 ##
 # Now run the actual model
 
-parameters[11,,] = parameters[11,,] * 2
-
 # run subsample of parameters for full results / propogation
 soil_info = c(drivers$top_sand,drivers$bot_sand,drivers$top_clay,drivers$bot_clay)
 C_cycle = simulate_all(n,new_PROJECT,PROJECT$model$name,new_drivers$met,parameters[1:PROJECT$model$nopars[n],,],
-                          drivers$lat,PROJECT$ctessel_pft[n],PROJECT$parameter_type,
-                          PROJECT$exepath,soil_info)
+                       drivers$lat,PROJECT$ctessel_pft[n],PROJECT$parameter_type,
+                       PROJECT$exepath,soil_info)
 
+# Read in the overall observations file
+czo = read.csv("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/SENSE_REP_2023/CZO_lai_obs/CZO_timeseries_obs.csv")
 # Then compare original states_all with C_cycle
 
-#plot(apply(C_cycle$gpp_gCm2day,2,median), type="l", lwd=3)
+par(mfrow=c(2,3))
+plot(apply(states_all$gpp_gCm2day,2,median), type="l", lwd=3, ylim=c(0,9))
 lines(apply(C_cycle$gpp_gCm2day,2,median), col="green", lwd=3)
+plotCI(czo$GPP_gCm2day, uiw = czo$GPP_unc_gCm2day, add=TRUE, ylim=c(0,9))
+plot(apply(states_all$ET_kgH2Om2day,2,median), type="l", lwd=3)
+lines(apply(C_cycle$ET_kgH2Om2day,2,median), col="green", lwd=3)
+plotCI(czo$Evap_kgH2Om2day, uiw = czo$Evap_unc_kgH2Om2day, add=TRUE)
+plot(apply(states_all$SurfWater_kgH2Om2,2,median), type="l", lwd=3, ylim=c(0,100))
+lines(apply(C_cycle$SurfWater_kgH2Om2,2,median), col="green", lwd=3)
+plot(apply(states_all$lai_m2m2,2,median), type="l", lwd=3, ylim=c(0,10))
+lines(apply(C_cycle$lai_m2m2,2,median), col="green", lwd=3)
+plotCI(czo$LAI_m2m2, uiw = czo$LAI_unc_m2m2, add=TRUE, ylim=c(0,10))
+plot(apply(states_all$rauto_gCm2day+states_all$rhet_litter_gCm2day+states_all$rhet_som_gCm2day,2,median), type="l", lwd=3, ylim=c(0,16))
+lines(apply(C_cycle$rauto_gCm2day+C_cycle$rhet_litter_gCm2day+C_cycle$rhet_som_gCm2day,2,median), col="green", lwd=3)
+plotCI(czo$Reco_gCm2day, uiw = czo$Reco_unc_gCm2day, add=TRUE, ylim=c(0,10))
+plot(apply(states_all$RootDepth_m,2,median), type="l", lwd=3, ylim=c(0,3))
+lines(apply(C_cycle$RootDepth_m,2,median), col="green", lwd=3)
 
 

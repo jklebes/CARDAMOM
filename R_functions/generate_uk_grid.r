@@ -40,3 +40,4 @@ generate_uk_grid<-function(lat,long,resolution) {
 
 ## Use byte compile
 generate_uk_grid<-cmpfun(generate_uk_grid)
+ext(

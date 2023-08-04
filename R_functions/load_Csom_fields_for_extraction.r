@@ -13,13 +13,13 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         print("Loading processed SoilGrids Csom fields for subsequent sub-setting ...")
 
         # This is a very bespoke modification so leave it here to avoid getting lost
-        Csom = raster(paste(path_to_Csom,"Csom_gCm2_mean_0to1m.tif", sep=""))
-        Csom_unc = raster(paste(path_to_Csom,"Csom_gCm2_sd_0to1m.tif", sep=""))
+        Csom = rast(paste(path_to_Csom,"Csom_gCm2_mean_0to1m.tif", sep=""))
+        Csom_unc = rast(paste(path_to_Csom,"Csom_gCm2_sd_0to1m.tif", sep=""))
 
         # Create raster with the target crs
-        target = raster(crs = ("+init=epsg:4326"), ext = extent(Csom), resolution = res(Csom))
+        target = rast(crs = ("+init=epsg:4326"), ext = ext(Csom), resolution = res(Csom))
         # Check whether the target and actual analyses have the same CRS
-        if (compareCRS(Csom,target) == FALSE) {
+        if (compareGeom(Csom,target) == FALSE) {
             # Resample to correct grid
             Csom = resample(Csom, target, method="ngb") ; gc() ; removeTmpFiles()
             Csom_unc = resample(Csom_unc, target, method="ngb") ; gc() ; removeTmpFiles()
@@ -32,7 +32,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         if (res(Csom)[1] != res(cardamom_ext)[1] | res(Csom)[2] != res(cardamom_ext)[2]) {
 
             # Create raster with the target resolution
-            target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+            target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
 
             # Resample to correct grid
             Csom = resample(Csom, target, method="bilinear") ; gc() ; removeTmpFiles()
@@ -43,7 +43,8 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         # extract dimension information for the grid, note the axis switching between raster and actual array
         xdim = dim(Csom)[2] ; ydim = dim(Csom)[1]
         # extract the lat / long information needed
-        long = coordinates(Csom)[,1] ; lat = coordinates(Csom)[,2]
+        long = crds(Csom,df=TRUE, na.rm=FALSE)
+        lat  = long$y ; long = long$x
         # restructure into correct orientation
         long = array(long, dim=c(xdim,ydim))
         lat = array(lat, dim=c(xdim,ydim))
@@ -62,13 +63,13 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         print("Loading processed SoilGrids_v2 Csom fields for subsequent sub-setting ...")
 
         # This is a very bespoke modification so leave it here to avoid getting lost
-        Csom = raster(paste(path_to_Csom,"Csom_gCm2_mean_0to100cm.tif", sep=""))
-        Csom_unc = raster(paste(path_to_Csom,"Csom_gCm2_uncertainty_0to100cm.tif", sep=""))
+        Csom = rast(paste(path_to_Csom,"Csom_gCm2_mean_0to100cm.tif", sep=""))
+        Csom_unc = rast(paste(path_to_Csom,"Csom_gCm2_uncertainty_0to100cm.tif", sep=""))
 
         # Create raster with the target crs
-        target = raster(crs = ("+init=epsg:4326"), ext = extent(Csom), resolution = res(Csom))
+        target = rast(crs = ("+init=epsg:4326"), ext = ext(Csom), resolution = res(Csom))
         # Check whether the target and actual analyses have the same CRS
-        if (compareCRS(Csom,target) == FALSE) {
+        if (compareGeom(Csom,target) == FALSE) {
             # Resample to correct grid
             Csom = resample(Csom, target, method="ngb") ; gc() ; removeTmpFiles()
             Csom_unc = resample(Csom_unc, target, method="ngb") ; gc() ; removeTmpFiles()
@@ -81,7 +82,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         if (res(Csom)[1] != res(cardamom_ext)[1] | res(Csom)[2] != res(cardamom_ext)[2]) {
 
             # Create raster with the target resolution
-            target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+            target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
 
             # Resample to correct grid
             Csom = resample(Csom, target, method="bilinear") ; gc() ; removeTmpFiles()
@@ -92,7 +93,8 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         # extract dimension information for the grid, note the axis switching between raster and actual array
         xdim = dim(Csom)[2] ; ydim = dim(Csom)[1]
         # extract the lat / long information needed
-        long = coordinates(Csom)[,1] ; lat = coordinates(Csom)[,2]
+        long = crds(Csom,df=TRUE, na.rm=FALSE)
+        lat  = long$y ; long = long$x
         # restructure into correct orientation
         long = array(long, dim=c(xdim,ydim))
         lat = array(lat, dim=c(xdim,ydim))
@@ -121,12 +123,12 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
 
         # Convert to a raster, assuming standad WGS84 grid
         Csom = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(Csom))
-        Csom = rasterFromXYZ(Csom, crs = ("+init=epsg:4326"))
+        Csom = rast(Csom, crs = ("+init=epsg:4326"), type="xyz")
 
         # Create raster with the target crs (technically this bit is not required)
-        target = raster(crs = ("+init=epsg:4326"), ext = extent(Csom), resolution = res(Csom))
+        target = rast(crs = ("+init=epsg:4326"), ext = ext(Csom), resolution = res(Csom))
         # Check whether the target and actual analyses have the same CRS
-        if (compareCRS(Csom,target) == FALSE) {
+        if (compareGeom(Csom,target) == FALSE) {
             # Resample to correct grid
             Csom = resample(Csom, target, method="ngb") ; gc() ; removeTmpFiles()
         }
@@ -138,7 +140,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         if (res(Csom)[1] != res(cardamom_ext)[1] | res(Csom)[2] != res(cardamom_ext)[2]) {
 
             # Create raster with the target resolution
-            target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+            target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
             # Resample to correct grid
             Csom = resample(Csom, target, method="bilinear") ; gc() ; removeTmpFiles()
 
@@ -147,7 +149,8 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         # extract dimension information for the grid, note the axis switching between raster and actual array
         xdim = dim(Csom)[2] ; ydim = dim(Csom)[1]
         # extract the lat / long information needed
-        long = coordinates(Csom)[,1] ; lat = coordinates(Csom)[,2]
+        long = crds(Csom,df=TRUE, na.rm=FALSE)
+        lat  = long$y ; long = long$x
         # restructure into correct orientation
         long = array(long, dim=c(xdim,ydim))
         lat = array(lat, dim=c(xdim,ydim))
@@ -187,12 +190,12 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
 
         # Convert to a raster, assuming standad WGS84 grid
         Csom = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(Csom))
-        Csom = rasterFromXYZ(Csom, crs = ("+init=epsg:4326"))
+        Csom = rast(Csom, crs = ("+init=epsg:4326"), type="xyz")
 
         # Create raster with the target crs (technically this bit is not required)
-        target = raster(crs = ("+init=epsg:4326"), ext = extent(Csom), resolution = res(Csom))
+        target = rast(crs = ("+init=epsg:4326"), ext = ext(Csom), resolution = res(Csom))
         # Check whether the target and actual analyses have the same CRS
-        if (compareCRS(Csom,target) == FALSE) {
+        if (compareGeom(Csom,target) == FALSE) {
             # Resample to correct grid
             Csom = resample(Csom, target, method="ngb") ; gc() ; removeTmpFiles()
         }
@@ -204,7 +207,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         if (res(Csom)[1] != res(cardamom_ext)[1] | res(Csom)[2] != res(cardamom_ext)[2]) {
 
             # Create raster with the target resolution
-            target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+            target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
             # Resample to correct grid
             Csom = resample(Csom, target, method="bilinear") ; gc() ; removeTmpFiles()
 
@@ -213,7 +216,8 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         # extract dimension information for the grid, note the axis switching between raster and actual array
         xdim = dim(Csom)[2] ; ydim = dim(Csom)[1]
         # extract the lat / long information needed
-        long = coordinates(Csom)[,1] ; lat = coordinates(Csom)[,2]
+        long = crds(Csom,df=TRUE, na.rm=FALSE)
+        lat  = long$y ; long = long$x
         # restructure into correct orientation
         long = array(long, dim=c(xdim,ydim))
         lat = array(lat, dim=c(xdim,ydim))
@@ -253,12 +257,12 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
 
         # Convert to a raster, assuming standad WGS84 grid
         Csom = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(Csom))
-        Csom = rasterFromXYZ(Csom, crs = ("+init=epsg:4326"))
+        Csom = rast(Csom, crs = ("+init=epsg:4326"), type="xyz")
 
         # Create raster with the target crs (technically this bit is not required)
-        target = raster(crs = ("+init=epsg:4326"), ext = extent(Csom), resolution = res(Csom))
+        target = rast(crs = ("+init=epsg:4326"), ext = ext(Csom), resolution = res(Csom))
         # Check whether the target and actual analyses have the same CRS
-        if (compareCRS(Csom,target) == FALSE) {
+        if (compareGeom(Csom,target) == FALSE) {
             # Resample to correct grid
             Csom = resample(Csom, target, method="ngb") ; gc() ; removeTmpFiles()
         }
@@ -270,7 +274,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         if (res(Csom)[1] != res(cardamom_ext)[1] | res(Csom)[2] != res(cardamom_ext)[2]) {
 
             # Create raster with the target resolution
-            target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+            target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
             # Resample to correct grid
             Csom = resample(Csom, target, method="bilinear") ; gc() ; removeTmpFiles()
 
@@ -279,7 +283,8 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         # extract dimension information for the grid, note the axis switching between raster and actual array
         xdim = dim(Csom)[2] ; ydim = dim(Csom)[1]
         # extract the lat / long information needed
-        long = coordinates(Csom)[,1] ; lat = coordinates(Csom)[,2]
+        long = crds(Csom,df=TRUE, na.rm=FALSE)
+        lat  = long$y ; long = long$x
         # restructure into correct orientation
         long = array(long, dim=c(xdim,ydim))
         lat = array(lat, dim=c(xdim,ydim))
