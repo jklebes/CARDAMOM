@@ -10,6 +10,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
                      ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                      ,sand_clay_all,crop_man_all,burnt_all,soilwater_all,nbe_all
                      ,lca_all,gpp_all,Cwood_inc_all,Cwood_mortality_all,fire_all
+                     ,fapar_all
                      ,ctessel_pft,site_name,start_year,end_year
                      ,timestep_days,spatial_type,resolution,grid_type,modelname) {
 
@@ -107,6 +108,42 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     # NOTE minimum uncertainty bound irrespective of the dataset estimates
     if (length(which(lai_unc >= 0)) > 0) {
         lai_unc[lai_unc >= 0] = pmax(0.25,sqrt(lai_unc[lai_unc >= 0]**2 + (0.1*mean(lai[lai >= 0]))**2))
+    }
+
+    ###
+    ## Get some fAPAR information (0-1)
+    ###
+
+    if (fapar_source == "MODIS") {
+
+        # Extract fAPAR and uncertainty information
+        # NOTE: assume default uncertainty (+/- scale)
+        output = extract_fapar_timeseries(grid_long_loc,grid_lat_loc,timestep_days,
+                                          spatial_type,resolution,grid_type,
+                                          latlon_wanted,fapar_all,years_to_load,doy_obs)
+        fapar = output$fapar ; fapar_unc = output$fapar_unc
+
+    } else if (fapar_source == "site_specific") {
+
+        # read from .csv or netcdf
+        infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
+        fapar = read_site_specific_obs("fAPAR_fraction",infile) ; fapar_unc = read_site_specific_obs("fAPAR_unc_fraction",infile)
+        if (max(fapar_unc) == -9999) {
+            fapar_unc = rep(-9999,times = length(fapar))
+            # apply default uncertainty
+            fapar_unc[which(fapar != -9999)] = 0.05
+        }
+
+    } else {
+
+        fapar = -9999
+        fapar_unc = -9999
+
+    }
+    # Assume minimum uncertainty to reflect model structural uncertainty
+    # NOTE minimum uncertainty bound irrespective of the dataset estimates
+    if (length(which(fapar_unc >= 0)) > 0) {
+        fapar_unc[fapar_unc >= 0] = pmax(0.05,sqrt(fapar_unc[fapar_unc >= 0]**2 + (0.1*mean(fapar[fapar >= 0]))**2))
     }
 
     ###
@@ -828,6 +865,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     # return output now
     return(list(LAT = latlon_wanted[1], LAI = lai, LAI_unc = lai_unc, GPP = GPP, GPP_unc = GPP_unc, Fire = Fire, Fire_unc = Fire_unc
                ,Evap = Evap, Evap_unc = Evap_unc, NEE = NEE, NEE_unc = NEE_unc, Reco = Reco, Reco_unc = Reco_unc
+               ,fAPAR = fapar, fAPAR_unc = fapar_unc
                ,Cfol_stock = Cfol_stock, Cfol_stock_unc = Cfol_stock_unc
                ,Cwood_stock = Cwood_stock, Cwood_stock_unc = Cwood_stock_unc, Cagb_stock=Cagb_stock, Cagb_stock_unc = Cagb_stock_unc
                ,Croots_stock = Croots_stock, Croots_stock_unc = Croots_stock_unc, Clit_stock = Clit_stock, Clit_stock_unc = Clit_stock_unc

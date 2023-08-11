@@ -47,7 +47,7 @@ M = Managed Grassland / arable crops (Table 10)
 | 28 | DALEC_1005a                  | DALEC_1005a         | As DALEC 1005 but with code error corrections       | Famiglietti et al., 2021     | Published   |
 | 29 | DALEC.A3.C1.D2.F2.H2.P1.#    | NA                  | As dalec.4. plus Sellers (1985) RTM                 | T. L. Smallman               | Unpublished   |
 
-#### TABLE 2. Assimilation due to photosynthic activity sub-models
+#### TABLE 2. Assimilation due to photosynthetic activity sub-models
 
 | Model Name | Short Description                                                          | Details                   |
 |------------|----------------------------------------------------------------------------|---------------------------|

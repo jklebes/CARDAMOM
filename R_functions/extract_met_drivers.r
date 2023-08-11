@@ -164,10 +164,10 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       vpd_lagged_out = rep(vpd_out, times = timestep_days)
 
       # rolling averaged for GSI
-      avg_days = 21 # assume that the first 21 days are just the actual values, We expect this should result in a small error only
-      # create photoperiod information; add 21 days to the output
+      avg_days = 30 # assume that the first 30 days are just the actual values, We expect this should result in a small error only
+      # create photoperiod information; add 30 days to the output
       photoperiod_out = calc_photoperiod_sec(latlon_wanted[1],c(seq(365,(365-(avg_days-2)),-1),doy))
-      # now take the daily values and turn them into rolling 21 day averages
+      # now take the daily values and turn them into rolling 30 day averages
       photoperiod_out = rollapply(photoperiod_out,avg_days,mean,na.rm=FALSE)
       avgTmax_out = rollapply(avgTmax_out,avg_days,mean,na.rm=FALSE)
       vpd_lagged_out = rollapply(vpd_lagged_out,avg_days,mean,na.rm=FALSE)
@@ -200,11 +200,11 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       # user update
       if (use_parallel == FALSE) {print(paste("Met data extracted for current location ",Sys.time(),sep=""))}
 
-      avg_days = 21 # assume that the first 21 days are just the actual values
-      # create photoperiod information; add 21 days to the output
+      avg_days = 30 # assume that the first 30 days are just the actual values
+      # create photoperiod information; add 30 days to the output
       photoperiod_out = calc_photoperiod_sec(latlon_wanted[1],c(seq(365,(365-(avg_days-2)),-1),met_in$doy))
 
-      # now take the daily values and turn them into rolling 21 day averages
+      # now take the daily values and turn them into rolling 30 day averages
       photoperiod_out = rollapply(photoperiod_out,avg_days,mean,na.rm=FALSE)
       avgTmax_out = rollapply(avgTmax_out,avg_days,mean,na.rm=FALSE)
       vpd_lagged_out = rollapply(vpd_out,avg_days,mean,na.rm=FALSE)
@@ -228,7 +228,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
 
       } else {
 
-          # if we do not have all the needed for simplisity we will assume that the first 21 days are repeated
+          # if we do not have all the needed for simplisity we will assume that the first 30 days are repeated
           avgTmax_out = append(avgTmax_out[1:(avg_days-1)],avgTmax_out)
           vpd_lagged_out = append(vpd_lagged_out[1:(avg_days-1)],vpd_lagged_out)
 

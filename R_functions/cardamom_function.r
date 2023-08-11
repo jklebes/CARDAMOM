@@ -285,6 +285,7 @@ cardamom <-function (projname,model,method,stage) {
           # if this is the first time of all creating new met files this time round load the whole dataset for rapid access
           met_all = load_met_fields_for_extraction(latlon,met_source,PROJECT$model$name,PROJECT$start_year,PROJECT$end_year,PROJECT$spatial_type,cardamom_ext)
           lai_all = load_lai_fields_for_extraction(latlon,lai_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),cardamom_ext,PROJECT$spatial_type)
+          fapar_all = load_fapar_fields_for_extraction(latlon,fapar_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),cardamom_ext,PROJECT$spatial_type)
           nbe_all = load_nbe_fields_for_extraction(latlon,nbe_source,as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),cardamom_ext,PROJECT$spatial_type)
           gpp_all = load_gpp_fields_for_extraction(latlon,GPP_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),cardamom_ext,PROJECT$spatial_type)
           fire_all = load_fire_emission_fields_for_extraction(latlon,fire_source,as.numeric(PROJECT$start_year),as.numeric(PROJECT$end_year),cardamom_ext,PROJECT$spatial_type)
@@ -337,6 +338,7 @@ cardamom <-function (projname,model,method,stage) {
                                    ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                                    ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
                                    ,nbe_all, lca_all, gpp_all,Cwood_inc_all,Cwood_mortality_all, fire_all
+                                   ,fapar_all
                                    ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
                                    ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
 
@@ -387,6 +389,7 @@ cardamom <-function (projname,model,method,stage) {
                                     ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                                     ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
                                     ,nbe_all, lca_all, gpp_all,Cwood_inc_all,Cwood_mortality_all, fire_all
+                                    ,fapar_all
                                     ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
                                     ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
 

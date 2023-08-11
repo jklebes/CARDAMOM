@@ -11,7 +11,8 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 source("./R_functions/load_all_cardamom_functions.r")
 
 # Load the info file for the project you will be calling from
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/CZO_noGPP_lai_EDCs/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/CZO_lai_EDC_TendyMet_longterm/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A3.C1.D2.F2.H2.P1.#_MHMCMC/CZO_lai_EDC_TendyMet_longterm/infofile.RData")
 # If the project has more than one site within set "n" to the correct value, otherwise leave as 1
 n = 1
 # Load the already processed DALEC outputs - this has the parameters and drivers but also the existing DALEC output against which you can compare any modifications
@@ -61,9 +62,9 @@ new_drivers$met[,16] = new_drivers$met[,16] + 0 # mean vapour pressure deficit (
 
 ## You can manipulate disturbance drivers
 
-new_drivers$met[56,8] = new_drivers$met[56,8] + 0.8 # harvested fraction (0-1)
-new_drivers$met[,9] = new_drivers$met[,9] + 0 # burnt fraction (0-1)
-new_drivers$met[56,13] = 4 # forest management type (catagorical)
+#new_drivers$met[56,8] = new_drivers$met[56,8] + 0.8 # harvested fraction (0-1)
+#new_drivers$met[,9] = new_drivers$met[,9] + 0 # burnt fraction (0-1)
+#new_drivers$met[56,13] = 4 # forest management type (catagorical)
 
 ## Update timing information if needed  
 
@@ -89,24 +90,30 @@ C_cycle = simulate_all(n,new_PROJECT,PROJECT$model$name,new_drivers$met,paramete
 
 # Read in the overall observations file
 czo = read.csv("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/SENSE_REP_2023/CZO_lai_obs/CZO_timeseries_obs.csv")
+#czo = read.csv("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/SENSE_REP_2023/CZO_lai_obs/soaprootRawHalfHourly.csv", header=FALSE)
+#czo_par_in = rollapply(czo$V11, by = 48, width=48, FUN=sum) ; czo_par_out = rollapply(czo$V12, by = 48, width=48, FUN=sum)
 # Then compare original states_all with C_cycle
 
 par(mfrow=c(2,3))
 plot(apply(states_all$gpp_gCm2day,2,median), type="l", lwd=3, ylim=c(0,9))
 lines(apply(C_cycle$gpp_gCm2day,2,median), col="green", lwd=3)
-plotCI(czo$GPP_gCm2day, uiw = czo$GPP_unc_gCm2day, add=TRUE, ylim=c(0,9))
-plot(apply(states_all$ET_kgH2Om2day,2,median), type="l", lwd=3)
+#plotCI(czo$GPP_gCm2day, uiw = czo$GPP_unc_gCm2day, add=TRUE, ylim=c(0,9))
+plot(apply(states_all$ET_kgH2Om2day,2,median), type="l", lwd=3, ylim=c(0,8))
 lines(apply(C_cycle$ET_kgH2Om2day,2,median), col="green", lwd=3)
-plotCI(czo$Evap_kgH2Om2day, uiw = czo$Evap_unc_kgH2Om2day, add=TRUE)
+#plotCI(czo$Evap_kgH2Om2day, uiw = czo$Evap_unc_kgH2Om2day, add=TRUE)
 plot(apply(states_all$SurfWater_kgH2Om2,2,median), type="l", lwd=3, ylim=c(0,100))
 lines(apply(C_cycle$SurfWater_kgH2Om2,2,median), col="green", lwd=3)
 plot(apply(states_all$lai_m2m2,2,median), type="l", lwd=3, ylim=c(0,10))
 lines(apply(C_cycle$lai_m2m2,2,median), col="green", lwd=3)
-plotCI(czo$LAI_m2m2, uiw = czo$LAI_unc_m2m2, add=TRUE, ylim=c(0,10))
+plotCI(drivers$obs[,3], uiw = drivers$obs[,4], add=TRUE)
+#plotCI(czo$LAI_m2m2, uiw = czo$LAI_unc_m2m2, add=TRUE)
 plot(apply(states_all$rauto_gCm2day+states_all$rhet_litter_gCm2day+states_all$rhet_som_gCm2day,2,median), type="l", lwd=3, ylim=c(0,16))
 lines(apply(C_cycle$rauto_gCm2day+C_cycle$rhet_litter_gCm2day+C_cycle$rhet_som_gCm2day,2,median), col="green", lwd=3)
 plotCI(czo$Reco_gCm2day, uiw = czo$Reco_unc_gCm2day, add=TRUE, ylim=c(0,10))
-plot(apply(states_all$RootDepth_m,2,median), type="l", lwd=3, ylim=c(0,3))
-lines(apply(C_cycle$RootDepth_m,2,median), col="green", lwd=3)
+#plot(apply(states_all$RootDepth_m,2,median), type="l", lwd=3, ylim=c(0,3))
+#lines(apply(C_cycle$RootDepth_m,2,median), col="green", lwd=3)
+plot(apply(states_all$APAR_MJm2day,2,median)/(drivers$met[,4]*0.5), type="l", lwd=3, ylim=c(0,1))
+lines(apply(C_cycle$APAR_MJm2day,2,median)/(drivers$met[,4]*0.5), col="green", lwd=3)
+plotCI(drivers$obs[,23], uiw = drivers$obs[,24], add=TRUE)
 
 

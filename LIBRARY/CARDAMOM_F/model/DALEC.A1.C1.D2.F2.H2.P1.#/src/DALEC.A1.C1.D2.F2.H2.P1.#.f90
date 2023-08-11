@@ -32,6 +32,7 @@ module CARBON_MODEL_MOD
            ,gs_total_canopy        &
            ,gb_total_canopy        &
            ,canopy_par_MJday_time  &
+           ,soil_par_MJday_time &
            ,snow_storage_time&
            ,soil_frac_clay   &
            ,soil_frac_sand   &
@@ -170,6 +171,7 @@ module CARBON_MODEL_MOD
   double precision, allocatable, dimension(:) :: gs_demand_supply_ratio, & ! actual:potential stomatal conductance
                                                         gs_total_canopy, & ! stomatal conductance (mmolH2O/m2ground/s)
                                                         gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/s)
+                                                    soil_par_MJday_time, & ! Absorbed PAR by soil (MJ/m2ground/day)
                                                   canopy_par_MJday_time    ! Absorbed PAR by canopy (MJ/m2ground/day)
 
   ! arrays for the emulator, just so we load them once and that is it cos they be
@@ -228,6 +230,7 @@ module CARBON_MODEL_MOD
                                          leafT, & ! canopy day time temperature temperature (oC)
                             canopy_swrad_MJday, & ! canopy_absorbed shortwave radiation (MJ.m-2.day-1)
                               canopy_par_MJday, & ! canopy_absorbed PAR radiation (MJ.m-2.day-1)
+                                soil_par_MJday, & ! soil absorbed PAR radiation (MJ.m-2.day-1)
                               soil_swrad_MJday, & ! soil absorbed shortwave radiation (MJ.m-2.day-1)
                               canopy_lwrad_Wm2, & ! canopy absorbed longwave radiation (W.m-2)
                                 soil_lwrad_Wm2, & ! soil absorbed longwave radiation (W.m-2)
@@ -515,6 +518,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! allocate variables dimension which are fixed per site only the once
         allocate(deltat_1(nodays),wSWP_time(nodays),rSWP_time(nodays),gs_demand_supply_ratio(nodays), &
                  gs_total_canopy(nodays),gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
+                 soil_par_MJday_time(nodays), &
                  daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
                  rainfall_time(nodays),cica_time(nodays),root_depth_time(nodays),snow_storage_time(nodays))
 
@@ -818,37 +822,39 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !!!!!!!!!!
 
        ! snowing or not...?
-       if (mint < 0d0 .and. maxt > 0d0) then
-           ! if minimum temperature is below freezing point then we weight the
-           ! rainfall into snow or rain based on proportion of temperature below
-           ! freezing
+       if (((mint + maxt) * 0.5d0) > 0d0) then
+           ! on average above freezing so no snow
+           snowfall = 0d0
+       else
+           ! on average below freezing, so some snow based on proportion of temperture
+           ! below freezing
            snowfall = rainfall * (1d0 - airt_zero_fraction) ; rainfall = rainfall - snowfall
            ! Add rainfall to the snowpack and clear rainfall variable
            snow_storage = snow_storage + (snowfall*seconds_per_step)
+       end if
 
+       ! melting or not...?
+       if (mint < 0d0 .and. maxt > 0d0) then
            ! Also melt some of the snow based on airt_zero_fraction
            ! default assumption is that snow is melting at 10 % per day hour above freezing
-           snow_melt = min(snow_storage, airt_zero_fraction * snow_storage * 24d0 * 0.1d0 * deltat(n))
-          snow_storage = snow_storage - snow_melt
+           snow_melt = min(snow_storage, airt_zero_fraction * snow_storage * 0.1d0 * deltat(n))
+           snow_storage = snow_storage - snow_melt
            ! adjust to rate for later addition to rainfall
            snow_melt = snow_melt / seconds_per_step
        elseif (maxt < 0d0) then
-           ! if whole day is below freezing then we should assume that all
-           ! precipitation is snowfall
-           snowfall = rainfall ; rainfall = 0d0 ; snow_melt = 0d0
+           snow_melt = 0d0
            ! Add rainfall to the snowpack and clear rainfall variable
            snow_storage = snow_storage + (snowfall*seconds_per_step)
        else if (mint > 0d0 .and. snow_storage > 0d0) then
            ! otherwise we assume snow is melting at 10 % per day above hour
-           snow_melt = min(snow_storage, snow_storage * 24d0 * 0.1d0 * deltat(n))
+           snow_melt = min(snow_storage, snow_storage * 0.1d0 * deltat(n))
            snow_storage = snow_storage - snow_melt
            ! adjust to rate for later addition to rainfall
            snow_melt = snow_melt / seconds_per_step
-           snowfall = 0d0
        else
-           snowfall = 0d0 ; snow_melt = 0d0
+           snow_melt = 0d0
        end if
-      snow_storage_time(n) = snow_storage
+       snow_storage_time(n) = snow_storage
 
        !!!!!!!!!!
        ! Calculate surface exchange coefficients
@@ -870,6 +876,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        call calculate_radiation_balance
        canopy_par_MJday_time(n) = canopy_par_MJday
+       soil_par_MJday_time(n) = soil_par_MJday
 
        !!!!!!!!!!
        ! Calculate physically constrained evaporation and
@@ -2023,7 +2030,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                        ,absorbed_nir_fraction_soil  &
                        ,absorbed_par_fraction_soil  &
                        ,fsnow,par,nir               &
-                       ,soil_par_MJday              &
                        ,soil_nir_MJday              &
                        ,trans_nir_MJday             &
                        ,trans_par_MJday             &
@@ -2147,9 +2153,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Combine to estimate total shortwave canopy absorbed radiation
     canopy_swrad_MJday = canopy_par_MJday + canopy_nir_MJday
 
-    ! check energy balance
+!    ! check energy balance
 !    balance = swrad - canopy_par_MJday - canopy_nir_MJday - refl_par_MJday - refl_nir_MJday - soil_swrad_MJday
-!    if ((balance - swrad) / swrad > 0.01) then
+!    if (((balance - swrad) / swrad) > 0.01) then
 !        print*,"SW residual frac = ",(balance - swrad) / swrad,"SW residual = ",balance,"SW in = ",swrad
 !    endif
 

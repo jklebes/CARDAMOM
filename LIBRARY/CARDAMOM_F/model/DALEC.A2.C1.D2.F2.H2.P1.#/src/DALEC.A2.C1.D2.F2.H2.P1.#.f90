@@ -807,35 +807,37 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !!!!!!!!!!
 
        ! snowing or not...?
-       if (mint < 0d0 .and. maxt > 0d0) then
-           ! if minimum temperature is below freezing point then we weight the
-           ! rainfall into snow or rain based on proportion of temperature below
-           ! freezing
+       if (((mint + maxt) * 0.5d0) > 0d0) then
+           ! on average above freezing so no snow
+           snowfall = 0d0
+       else
+           ! on average below freezing, so some snow based on proportion of temperture
+           ! below freezing
            snowfall = rainfall * (1d0 - airt_zero_fraction) ; rainfall = rainfall - snowfall
            ! Add rainfall to the snowpack and clear rainfall variable
            snow_storage = snow_storage + (snowfall*seconds_per_step)
+       end if
 
+       ! melting or not...?
+       if (mint < 0d0 .and. maxt > 0d0) then
            ! Also melt some of the snow based on airt_zero_fraction
            ! default assumption is that snow is melting at 10 % per day hour above freezing
-           snow_melt = min(snow_storage, airt_zero_fraction * snow_storage * 24d0 * 0.1d0 * deltat(n))
+           snow_melt = min(snow_storage, airt_zero_fraction * snow_storage * 0.1d0 * deltat(n))
            snow_storage = snow_storage - snow_melt
            ! adjust to rate for later addition to rainfall
            snow_melt = snow_melt / seconds_per_step
        elseif (maxt < 0d0) then
-           ! if whole day is below freezing then we should assume that all
-           ! precipitation is snowfall
-           snowfall = rainfall ; rainfall = 0d0 ; snow_melt = 0d0
+           snow_melt = 0d0
            ! Add rainfall to the snowpack and clear rainfall variable
            snow_storage = snow_storage + (snowfall*seconds_per_step)
        else if (mint > 0d0 .and. snow_storage > 0d0) then
            ! otherwise we assume snow is melting at 10 % per day above hour
-           snow_melt = min(snow_storage, snow_storage * 24d0 * 0.1d0 * deltat(n))
+           snow_melt = min(snow_storage, snow_storage * 0.1d0 * deltat(n))
            snow_storage = snow_storage - snow_melt
            ! adjust to rate for later addition to rainfall
            snow_melt = snow_melt / seconds_per_step
-           snowfall = 0d0
        else
-           snowfall = 0d0 ; snow_melt = 0d0
+           snow_melt = 0d0
        end if
        snow_storage_time(n) = snow_storage
 
@@ -1189,7 +1191,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     implicit none
 
     ! Declare local variables
-    double precision :: a, b, c, Jmax, PAR_m2, airt_adj
+    double precision :: a, b, c, Jmax, PAR_m2, airt_adj, JVratio, RLVratio
 
     !
     ! Metabolic limited photosynthesis - leaf to canopy scale
@@ -1208,10 +1210,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Determine dark respiration (i.e. maintenance) at the current temperature
     ! as a fraction of Vcmax_ref. Most likely will be replaced by Heskel or Reich approaches.
     !dark_respiration = 0.002d0 * Vcmax_ref * airt_adj * leaf_canopy_light_scaling
-    dark_respiration = 0.01d0 * Vcmax_ref * (2d0**((leafT - 25d0)*0.1d0)) * leaf_canopy_light_scaling
+    !dark_respiration = 0.01d0 * Vcmax_ref * (2d0**((leafT - 25d0)*0.1d0)) * leaf_canopy_light_scaling
     ! Ratio of RL25:Vcmax25 (Kumarathunge et al., 2019, doi: https://doi.org/10.1111/nph.15668, Table 1)
     ! R2 of fit 0.22
-    !RLVratio = 0.036d0 + (-0.001d0 * AvgTemp30d)
+    RLVratio = 0.036d0 + (-0.001d0 * meant)
+    dark_respiration = RLVratio * Vcmax_ref * airt_adj * leaf_canopy_light_scaling
 
     ! Possible approach to linking with canopy nitrogen
     ! Estimate the total canopy N, then scale to the "top leaf" and multiple by NUE
@@ -1234,13 +1237,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Jmax calculation in umolE/umolPAR, a key requirement for aggregating to
     ! the daily time scale is to scale by day light fraction.
     ! Jmax ~ Vcmax (Walker et al., 2017, doi: 10.1111/nph.14623, equ. 1)
-    Jmax = dayl_hours_fraction*2.787095d0*(Vcmax_ref**0.890d0) * leaf_canopy_light_scaling &
-          * modified_arrhenious(Ha_Jmax,Hd_Vcmax_Jmax,dS_Jmax,leafT+freeze)
+    !Jmax = dayl_hours_fraction*2.787095d0*(Vcmax_ref**0.890d0) * leaf_canopy_light_scaling &
+    !      * modified_arrhenious(Ha_Jmax,Hd_Vcmax_Jmax,dS_Jmax,leafT+freeze)
     ! Ratio of Jmax25:Vcmax25 (Kumarathunge et al., 2019, doi: https://doi.org/10.1111/nph.15668, Table 1)
     ! R2 of fit 0.66
-    !JVratio = 2.9d0 + (-0.06d0 * AvgTemp30d)
-    !Jmax = JVratio * Vcmax_ref * leaf_canopy_light_scaling * dayl_hours_fraction &
-    !      * modified_arrhenious(Ha_Jmax,Hd_Vcmax_Jmax,dS_Jmax,leafT+freeze)
+    JVratio = 2.9d0 + (-0.06d0 * meant)
+    Jmax = JVratio * Vcmax_ref * leaf_canopy_light_scaling * dayl_hours_fraction &
+          * modified_arrhenious(Ha_Jmax,Hd_Vcmax_Jmax,dS_Jmax,leafT+freeze)
     ! Determine the mean per ground (i.e. canopy) area PAR absorption in umolPAR/m2/s
     PAR_m2 = seconds_per_day_1 * canopy_par_MJday * ppfd_to_par * 1d6
     ! Instantaneous approach uses a non-rectangular hyperbola solved by quadratic formula.

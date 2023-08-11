@@ -676,6 +676,7 @@ module cardamom_io
             ,DATAin%SWE(DATAin%nodays),DATAin%SWE_unc(DATAin%nodays)                             &
             ,DATAin%NBE(DATAin%nodays),DATAin%NBE_unc(DATAin%nodays)                             &
             ,DATAin%Fire(DATAin%nodays),DATAin%Fire_unc(DATAin%nodays)                           &
+            ,DATAin%fAPAR(DATAin%nodays),DATAin%fAPAR_unc(DATAin%nodays)                         &
             ,DATAin%Cwood_mortality_unc(DATAin%nodays)                                           &
             ,DATAin%Cwood_inc_lag(DATAin%nodays),DATAin%Cwood_mortality_lag(DATAin%nodays)       &
             ,mettemp(DATAin%nomet),obstemp(DATAin%noobs))
@@ -700,6 +701,7 @@ module cardamom_io
     DATAin%SWE = 0d0               ; DATAin%SWE_unc = 0d0
     DATAin%NBE = 0d0               ; DATAin%NBE_unc = 0d0
     DATAin%Fire = 0d0              ; DATAin%Fire_unc = 0d0
+    DATAin%fAPAR = 0d0             ; DATAin%fAPAR_unc = 0d0
     ! Observations which have an explicit lag, i.e. they represent the average of a to be specified period
     DATAin%Cwood_inc = 0d0 ; DATAin%Cwood_inc_unc = 0d0 ; DATAin%Cwood_inc_lag = 0
     DATAin%Cwood_mortality = 0d0 ; DATAin%Cwood_mortality_unc = 0d0 ; DATAin%Cwood_mortality_lag = 0
@@ -726,6 +728,7 @@ module cardamom_io
     DATAin%nSWE = 0
     DATAin%nNBE = 0
     DATAin%nFire = 0
+    DATAin%nfAPAR = 0
 
     ! work out some key variables
     ! DATAin%noobs corresponds to observations and uncertainties
@@ -807,12 +810,14 @@ module cardamom_io
        if (obstemp(21) > -9998d0) DATAin%nCagb_stock = DATAin%nCagb_stock+1
        DATAin%Cagb_stock_unc(day) = obstemp(22)
 
-! POSITION 23-26 no longer have matching points in code.
+       ! Fraction of absorbed photosynthetically active radiation
+       ! by green vegetation (0-1)
+       DATAin%fAPAR(day) = obstemp(23)
+       if (obstemp(23) > -9998d0) DATAin%nfAPAR = DATAin%nfAPAR+1
+       DATAin%fAPAR_unc(day) = obstemp(24)
+! POSITION 25-26 no longer have matching points in code.
 ! These can be re-allocated at a future point
 ! TLS: 27/11/2019
-!       DATAin%Cstem_stock(day) = obstemp(23)
-!       if (obstemp(23) > -9998d0) DATAin%nCstem_stock = DATAin%nCstem_stock+1
-!       DATAin%Cstem_stock_unc(day) = obstemp(24)
 !       DATAin%Cbranch_stock(day) = obstemp(25)
 !       if (obstemp(25) > -9998d0) DATAin%nCbranch_stock = DATAin%nCbranch_stock+1
 !       DATAin%Cbranch_stock_unc(day) = obstemp(26)
@@ -865,7 +870,7 @@ module cardamom_io
                      + DATAin%nCwood_stock + DATAin%nCroots_stock + DATAin%nCsom_stock &
                      + DATAin%nClit_stock + DATAin%nCagb_stock + DATAin%nCcoarseroot_stock &
                      + DATAin%nCfolmax_stock + DATAin%nEvap + DATAin%nSWE + DATAin%nNBE &
-                     + DATAin%nCwood_mortality + DATAin%nFire
+                     + DATAin%nCwood_mortality + DATAin%nFire + DATAin%nfAPAR
 
     ! allocate to time step
     allocate(DATAin%deltat(DATAin%nodays)) ; DATAin%deltat = 0d0
@@ -906,11 +911,12 @@ module cardamom_io
     if (DATAin%nCwood_inc > 0) allocate(DATAin%Cwood_incpts(DATAin%nCwood_inc))
     if (DATAin%nCwood_mortality > 0) allocate(DATAin%Cwood_mortalitypts(DATAin%nCwood_mortality))
     if (DATAin%nFire > 0) allocate(DATAin%Firepts(DATAin%nFire))
+    if (DATAin%nfAPAR > 0) allocate(DATAin%fAPARpts(DATAin%nfAPAR))
     ! we know how many observations we have and what they are, but now lets work
     ! out where they are in the data sets
     x = 1 ; y = 1 ; z = 1 ; b = 1 ; c = 1 ; d = 1 ; e = 1
     f = 1 ; g = 1 ; h = 1 ; i = 1 ; j = 1 ; k = 1 ; l = 1
-    m = 1 ; o = 1 ; s = 1 ; t = 1 ; v = 1 ; w = 1
+    m = 1 ; o = 1 ; s = 1 ; t = 1 ; u = 1 ; v = 1 ; w = 1
     do day = 1, DATAin%nodays
        if (DATAin%GPP(day) > -9998d0) then
           DATAin%gpppts(b) = day ; b = b+1
@@ -965,6 +971,9 @@ module cardamom_io
        endif
        if (DATAin%Fire(day) > -9998d0) then
            DATAin%Firepts(v) = day ; v = v+1
+       endif ! data present condition
+       if (DATAin%fAPAR(day) > -9998d0) then
+           DATAin%fAPARpts(u) = day ; u = u+1
        endif ! data present condition
     end do ! day loop
 

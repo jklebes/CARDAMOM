@@ -200,11 +200,10 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
                       var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1))
                       var1 = rast(var1, crs = ("+init=epsg:4326"), type="xyz")
                       # Remove the input lat / long information
-                      rm(lat_in,long_in,lat_in_sd)
+                      rm(lat_in,long_in)
 
                       # Extend the extent of the overall grid to the analysis domain
                       var1 = extend(var1,cardamom_ext)
-
                       # Trim the extent of the overall grid to the analysis domain
                       var1 = crop(var1,cardamom_ext)
 
@@ -235,11 +234,6 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
                       # break out from the rasters into arrays which we can manipulate
                       var1 = array(as.vector(unlist(var1)), dim=c(xdim,ydim))
 
-                      # Check and remove unwanted tmp files
-                      if (f1 != "") {
-                          if (file.exists(f1)) { file.remove(f1) }
-                          if (file.exists(gsub(".grd",".gri",f1))) { file.remove(gsub(".grd",".gri",f1)) }
-                      } # no longer using rasters at this point, so no file name to track
                       # set actual missing data to -9999
                       var1[which(is.na(as.vector(var1)))] = -9999
 
@@ -282,7 +276,7 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
                              doy_obs = doy_out,
                              lat = lat, long = long, missing_years=missing_years)
         # clean up variables
-        rm(doy_in,burnt_area_hold,not_na,lai_out,doy_out,lat,long,missing_years)
+        rm(doy_in,burnt_area_hold,not_na,burnt_area_out,doy_out,lat,long,missing_years)
         gc(reset=TRUE,verbose=FALSE)
         return(burn_area_all)
 

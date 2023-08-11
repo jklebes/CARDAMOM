@@ -318,7 +318,11 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        } else {
             # now create the plotting area
             par(mfrow=c(1,1), mar=c(5,5,3,1))
-            plot(obs, pch=16,xaxt="n", ylim=c(0,quantile(as.vector(var), prob=c(0.999),na.rm=TRUE)), cex=0.8,
+            yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
+            if (length(which(is.na(obs) == FALSE)) > 0) {
+                yrange[2] = max(max(obs+obs_unc, na.rm=TRUE),yrange[2])
+            }
+            plot(obs, pch=16,xaxt="n", ylim=yrange, cex=0.8,
                  ylab="Evap (kgH2O.m-2.day-1)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
                  main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
             axis(1, at=time_vector[seq(1,length(time_vector),interval)],
@@ -511,12 +515,16 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 		    obs = drivers$obs[,3] ; obs_unc = drivers$obs[,4]
         # filter -9999 to NA
  	 	    filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
+        yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
+        if (length(which(is.na(obs) == FALSE)) > 0) {
+            yrange[2] = max(max(obs+obs_unc, na.rm=TRUE),yrange[2])
+        }
 
   		  jpeg(file=paste(PROJECT$figpath,"timeseries_lai_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
              width=7200, height=4000, res=280, quality=100)
 		    # now create the plotting area
 		    par(mfrow=c(1,1), mar=c(5,5,3,1))
-	   	  plot(obs, pch=16,xaxt="n", ylim=c(0,max(max(obs, na.rm=TRUE),quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))),
+	   	  plot(obs, pch=16,xaxt="n", ylim=yrange,
              cex=0.8,ylab="LAI (m2/m2)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
              main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
 		    axis(1, at=time_vector[seq(1,length(time_vector),interval)],
@@ -567,7 +575,11 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        } else {
            # create the plotting area
            par(mfrow=c(1,1), mar=c(5,5,3,1))
-           plot(obs, pch=16,xaxt="n", ylim=c(0,quantile(as.vector(var), prob=c(0.999),na.rm=TRUE)),
+           yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
+           if (length(which(is.na(obs) == FALSE)) > 0) {
+               yrange[2] = max(max(obs+obs_unc, na.rm=TRUE),yrange[2])
+           }
+           plot(obs, pch=16,xaxt="n", ylim=yrange,
                 cex=0.8,ylab="GPP (gC/m2/day)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
                 main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
            axis(1, at=time_vector[seq(1,length(time_vector),interval)],
@@ -596,11 +608,16 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
 
+       yrange = quantile(as.vector(var), prob=c(0.001,0.999))
+       if (length(which(is.na(obs) == FALSE)) > 0 ) {
+           yrange = c(min(obs-obs_unc, na.rm=TRUE),max(obs+obs_unc, na.rm=TRUE),yrange)
+           yrange = range(yrange, na.rm=TRUE)
+       }
        jpeg(file=paste(PROJECT$figpath,"timeseries_nee_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(obs, pch=16,xaxt="n", ylim=c(quantile(as.vector(var),prob=c(0.001),na.rm=TRUE),quantile(as.vector(var),prob=c(0.999),na.rm=TRUE)),
+       plot(obs, pch=16,xaxt="n", ylim=yrange,
             cex=0.8,ylab="NEE (gC/m2/day)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
             main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],
@@ -630,12 +647,15 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        obs=drivers$obs[,9] ; obs_unc=drivers$obs[,10]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
-
+       yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
+       if (length(which(is.na(obs) == FALSE)) > 0) {
+           yrange[2] = max(max(obs+obs_unc, na.rm=TRUE),yrange[2])
+       }
        jpeg(file=paste(PROJECT$figpath,"timeseries_eco_resp_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var), prob=c(0.999),na.rm=TRUE)),
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=yrange,
             cex=0.8,ylab="Ecosystem respiration (gC/m2/day)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
             main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],
@@ -710,13 +730,17 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        obs = drivers$obs[,17] ; obs_unc = drivers$obs[,18]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
+       yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
+       if (length(which(is.na(obs) == FALSE)) > 0) {
+           yrange[2] = max(max(obs+obs_unc, na.rm=TRUE),yrange[2])
+       }
 
        jpeg(file=paste(PROJECT$figpath,"timeseries_litter_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
             width=7200, height=4000, res=280, quality=100)
 
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var[1:(dim(var)[1]-1),]), prob=c(0.999), na.rm=TRUE)),
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=yrange,
             cex=0.8,ylab="litter (gC/m2)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
             main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],
@@ -778,12 +802,16 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        obs=drivers$obs[,15] ; obs_unc=drivers$obs[,16]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
+       yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
+       if (length(which(is.na(obs) == FALSE)) > 0) {
+           yrange[2] = max(max(obs+obs_unc, na.rm=TRUE),yrange[2])
+       }
 
        jpeg(file=paste(PROJECT$figpath,"timeseries_roots_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE)),
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=yrange,
             cex=0.8,ylab="Roots (gC/m2)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
             main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],
@@ -811,12 +839,16 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        obs=drivers$obs[,13] ; obs_unc=drivers$obs[,14]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
+       yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
+       if (length(which(is.na(obs) == FALSE)) > 0) {
+           yrange[2] = max(max(obs+obs_unc, na.rm=TRUE),yrange[2])
+       }
 
        jpeg(file=paste(PROJECT$figpath,"timeseries_wood_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE)),
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=yrange,
             cex=0.8,ylab="Wood (gC/m2)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
             main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
@@ -843,12 +875,16 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        obs = drivers$obs[,19] ; obs_unc = drivers$obs[,20]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
+       yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
+       if (length(which(is.na(obs) == FALSE)) > 0) {
+           yrange[2] = max(max(obs+obs_unc, na.rm=TRUE),yrange[2])
+       }
 
        jpeg(file=paste(PROJECT$figpath,"timeseries_som_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE)),
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=yrange,
             cex=0.8,ylab="som (gC/m2)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
             main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],
@@ -927,7 +963,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE)),
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,1),
             cex=0.8,ylab="CGI",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
             main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],
@@ -951,7 +987,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE)),
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,1),
             cex=0.8,ylab="CMI",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
             main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],
@@ -975,7 +1011,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE)),
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,1),
             cex=0.8,ylab="GSI",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
             main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],
@@ -999,7 +1035,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE)),
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,1),
             cex=0.8,ylab="GSI-iphoto",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
             main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],
@@ -1023,7 +1059,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE)),
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,1),
             cex=0.8,ylab="GSI-itemp",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
             main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],
@@ -1047,7 +1083,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE)),
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,1),
             cex=0.8,ylab="GSI-ivpd",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
             main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],
@@ -1071,7 +1107,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE)),
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,1),
             cex=0.8,ylab="GSI-iwSWP",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
             main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],
