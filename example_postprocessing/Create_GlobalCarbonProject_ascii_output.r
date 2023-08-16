@@ -30,7 +30,7 @@ input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DAL
 
 # Specify any extra information for the filename
 output_prefix = "CARDAMOM_S3_" # follow with "_"
-#output_prefix = "CARDAMOM_S2_" # follow with "_"
+output_prefix = "CARDAMOM_S2_" # follow with "_"
 output_suffix = "" # begin with "_"
 
 ###

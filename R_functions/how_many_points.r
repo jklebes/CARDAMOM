@@ -244,10 +244,12 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
     print("Generating land sea mask")
 
     if (path_to_landsea == "default") {
+
         # load global shape file for land sea mask
-        landmask = shapefile("./R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx")
+        landmask = vect("./R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx")
         # just to be sure enforce the projection to WGS-84
-        landmask = spTransform(landmask,CRS("+init=epsg:4326"))
+        #landmask = spTransform(landmask,CRS("+init=epsg:4326"))
+        landmask = project(landmask,"EPSG:4326")
         # Clip to the extent of the CARDAMOM analysis
         landmask = crop(landmask, cardamom_ext)
 
@@ -277,7 +279,7 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
         # Set non country areas to NA, and all other to 1
         landsea[keep == 0] = NA
         # Add a buffer based on the land sea fraction to avoid missing land area we want
-        landsea_frac_buffer = boundaries(landsea, type="outer")*landsea_frac
+        landsea_frac_buffer = boundaries(landsea, inner=FALSE)*landsea_frac
         # Set all actual data to 1
         landsea[as.vector(landsea) > 0] = 1
         # set missing data to 0
@@ -310,8 +312,8 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
     #landsea = trim(landsea, padding = 3)
     # extract lat/long information for the raster version
     # extract the lat / long information needed
-    landsea_long = crds(var1,df=TRUE, na.rm=FALSE)
-    landsea_lat  = long$y ; landsea_long = long$x
+    landsea_long = crds(landsea,df=TRUE, na.rm=FALSE)
+    landsea_lat  = landsea_long$y ; landsea_long = landsea_long$x
     # arrange them into the correct lat / long orientations
     landsea_dim = dim(landsea) ; landsea = as.vector(landsea)
 

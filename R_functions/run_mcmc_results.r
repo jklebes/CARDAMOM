@@ -740,12 +740,11 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
 
           # Determine grid area (m2)
           grid_output$area_m2 = calc_pixel_area(grid_output$long,grid_output$lat)
-          # this output is in vector form and we need matching array shapes so...
-#          grid_output$area_m2 = array(grid_output$area_m2, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 
           # Load the land mask...
-          grid_output$landmask=array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-          grid_output$landmask[grid_output$landmask > 0] = 1
+#          grid_output$landmask=array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+#          grid_output$landmask[grid_output$landmask > 0] = 1
+          grid_output$landmask=array(0, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
           # ...and land fraction
           grid_output$land_fraction=array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 
@@ -863,7 +862,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
       drivers = read_binary_file_format(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep=""))
 ## HACK to remove CO2 effect
 #drivers$met[,5] = drivers$met[1,5]
-## HACK to create S2 simulations for GCP / Trendy v11
+## HACK to create S2 simulations for GCP / Trendy v12
 #drivers$met[,8] = 0
       # run parameters for full results / propogation
       soil_info = c(drivers$top_sand,drivers$bot_sand,drivers$top_clay,drivers$bot_clay)
@@ -2584,7 +2583,6 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           }
           # Check if the loop has finished with error
           if (n == length(site_output_all) & class(site_output_all[[n]]) != "character") {
-#          if (n == length(site_output_all) & class(site_output_all[[n]]) != "list") {
               # Difficult to say what will come out of here, so dump it all!
               print(site_output_all)
               print("Above error from run_mcmc_results.r L2462, problem with site_output_all")
@@ -2625,6 +2623,8 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                if(slot_i == 0) {slot_i = PROJECT$long_dim} ; slot_j = ceiling(slot_j)
                # save for later
                grid_output$i_location[n] = slot_i ; grid_output$j_location[n] = slot_j
+               # Update the landmask to specify locations with actual anlysis
+               grid_output$landmask[slot_i,slot_j] = 1
 
                # loop through parameters + likelihood
                grid_output$parameters[slot_i,slot_j,,] = site_output$parameters

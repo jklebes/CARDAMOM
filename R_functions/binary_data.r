@@ -409,6 +409,12 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       #PARPRIORS[30] = 0.1                  ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
       PARPRIORS[31] = 0.01                 ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
       #PARPRIORS[32] = 0.25                 ; PARPRIORUNC[32] = 0.25 # Foliage + root litter combustion completeness
+      PARPRIORS[33] = 0.43                 ; PARPRIORUNC[33] = 0.05 # Canopy NIR reflectance
+      PARPRIORS[34] = 0.16                 ; PARPRIORUNC[34] = 0.05 # Canopy PAR reflectance
+      PARPRIORS[35] = 0.26                 ; PARPRIORUNC[35] = 0.05 # Canopy NIR transmittance
+      PARPRIORS[36] = 0.16                 ; PARPRIORUNC[36] = 0.05 # Canopy PAR transmittance
+      PARPRIORS[37] = 0.023                ; PARPRIORUNC[37] = 0.05 # Soil reflectance to near infrared radiation
+      PARPRIORS[38] = 0.033                ; PARPRIORUNC[38] = 0.05 # Foliage + root litter combustion completeness
       # Other priors
       OTHERPRIORS[1] = OBS$soilwater       ; OTHERPRIORUNC[1] = OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
       OTHERPRIORS[4] = 0.66                ; OTHERPRIORUNC[4] = 0.12 ; OTHERPRIORWEIGHT[4] = noyears # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018

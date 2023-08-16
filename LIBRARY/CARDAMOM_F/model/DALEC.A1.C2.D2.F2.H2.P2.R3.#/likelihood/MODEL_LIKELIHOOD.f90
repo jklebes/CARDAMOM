@@ -970,10 +970,10 @@ module model_likelihood_module
         EDC2 = 0d0 ; EDCD%PASSFAIL(36) = 0
     end if
 
-    ! Prevent NPP -> foliage (FLX4,8) > NPP (GPP-Ra, FLX1-FLX3)
-    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(:,4)+M_FLUXES(:,8)) / sum(M_FLUXES(:,1)-M_FLUXES(:,3)) > 1d0 ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(37) = 0
-    end if
+!    ! Prevent NPP -> foliage (FLX4,8) > NPP (GPP-Ra, FLX1-FLX3)
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(:,4)+M_FLUXES(:,8)) / sum(M_FLUXES(:,1)-M_FLUXES(:,3)) > 1d0 ) then
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(37) = 0
+!    end if
 
     ! Finally we would not expect that the mean labile stock is greater than
     ! 8 % of the total ecosystem carbon stock, as we need structure to store
@@ -2805,7 +2805,7 @@ module model_likelihood_module
     ! don't forget to return
     return
 
-  end function log_scale_likelihood  
+  end function log_scale_likelihood
   !
   !------------------------------------------------------------------
   !

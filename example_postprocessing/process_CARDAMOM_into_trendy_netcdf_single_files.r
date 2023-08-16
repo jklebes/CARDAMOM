@@ -20,8 +20,8 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB"
 
 # Specify any extra information for the filename
-output_prefix = "CARDAMOM_S3_" # follow with "_"
-#output_prefix = "CARDAMOM_S2_" # follow with "_"
+#output_prefix = "CARDAMOM_S3_" # follow with "_"
+output_prefix = "CARDAMOM_S2_" # follow with "_"
 output_suffix = "" # begin with "_"
 
 ###
