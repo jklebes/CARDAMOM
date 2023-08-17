@@ -576,7 +576,17 @@ cardamom <-function (projname,model,method,stage) {
   # Currently empty
   if (stage == 5) {
 
-      print("Stage 5 current uncoded and open for new uses")
+      # Inform the user
+      print("Stage 5 write a netcdf dump of the CARDAMOM output")
+
+      if (PROJECT$spatial_type == "grid") {
+          # Create the netcdf file
+          create_grid_output_nc(PROJECT)
+      } else if (PROJECT$spatial_type == "site") {
+          create_states_all_nc(PROJECT)
+      } else {
+          print("PROJECT$spatial_type does not have valid value")
+      }
 
       # report to the user
       return(paste("CARDAMOM Report: ",stage," completed", sep=""))

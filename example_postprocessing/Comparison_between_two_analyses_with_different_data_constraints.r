@@ -2027,14 +2027,16 @@ par(mfrow=c(2,2), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Plot LAI mean annual
 var1 = as.vector(LAIobs) #; var1 = var1[which(is.na(var1) == FALSE)]
 var2 = as.vector(orig_lai_grid) #; var2 = var2[which(is.na(var2) == FALSE)] 
-plot(var2 , var1, col=model_colours[1],
-     pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.0, ylab="", xlab="", main="")
-var2 = as.vector(alt_lai_grid) #; var2 = var2[which(is.na(var2) == FALSE)] 
-points(var2 , var1, pch=1, col=model_colours[2], cex = 1.6)
-mtext(expression(paste('CARDAMOM',sep="")), side = 1, cex = 2.4, padj = 1.85)
-mtext(expression(paste('Annual LAI (',m^2,'/',m^2,')',sep="")), side = 2, cex = 2.4, padj = -1.05)
-legend("topleft", legend = c(orig_name,alt_name), col = model_colours[1:2], lty = 2, pch=rep(16,2), horiz = FALSE, bty = "n", cex=2.1, lwd=3, ncol = 2)
-abline(0,1, col="grey", lwd=3)
+if (length(which(is.na(var1) == FALSE)) > 0) {
+    plot(var2 , var1, col=model_colours[1],
+         pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.0, ylab="", xlab="", main="")
+    var2 = as.vector(alt_lai_grid) #; var2 = var2[which(is.na(var2) == FALSE)] 
+    points(var2 , var1, pch=1, col=model_colours[2], cex = 1.6)
+    mtext(expression(paste('CARDAMOM',sep="")), side = 1, cex = 2.4, padj = 1.85)
+    mtext(expression(paste('Annual LAI (',m^2,'/',m^2,')',sep="")), side = 2, cex = 2.4, padj = -1.05)
+    legend("topleft", legend = c(orig_name,alt_name), col = model_colours[1:2], lty = 2, pch=rep(16,2), horiz = FALSE, bty = "n", cex=2.1, lwd=3, ncol = 2)
+    abline(0,1, col="grey", lwd=3)
+}
 # Plot wood
 plot(as.vector(1e-2*WoodCobs) ~ as.vector(1e-2*orig_WoodC), pch=1, cex = 1.6, cex.lab=2.0, cex.axis = 2.3, cex.main=2.0, ylab="", xlab="", main="", col=model_colours[1])
 points(as.vector(1e-2*WoodCobs) ~ as.vector(1e-2*alt_WoodC), pch=1, cex = 1.6, col=model_colours[2])
@@ -2191,7 +2193,9 @@ lines(var9~run_years, col=model_colours[2], lwd=4, lty = 2) ; points(var9~run_ye
 mtext("Year", side=1, padj=2.0,cex=1.6)
 mtext(expression(paste("Fire Emissions (PgC y",r^-1,")",sep="")), side=2, padj=-1.60,cex=1.5)
 dev.off()
-
+####################
+# terra conversions issues here##########
+################
 # Assimilated observations overlap
 # Assign variables
 var1  = orig_grid_output$lai_assim_data_overlap_fraction
