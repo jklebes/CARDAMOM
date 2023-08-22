@@ -13,8 +13,9 @@ source("./R_functions/load_all_cardamom_functions.r")
 # Load the info file for the project you will be calling from
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/CZO_lai_EDC_TendyMet_longterm/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A3.C1.D2.F2.H2.P1.#_MHMCMC/CZO_lai_EDC_TendyMet_longterm/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A3.C1.D2.F2.H2.P1.#_MHMCMC/CZO_fapar_EDC_TendyMet_longterm/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A3.C1.D2.F2.H2.P1.#_MHMCMC/CZO_fapar_EDC_TendyMet_longterm/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A3.C1.D2.F2.H2.P1.#_MHMCMC/CZO_lai_fapar_EDC_TendyMet_longterm/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A3.C1.D2.F2.H2.P1.#_MHMCMC/FI-Hyy_example/infofile.RData")
 # If the project has more than one site within set "n" to the correct value, otherwise leave as 1
 n = 1
 # Load the already processed DALEC outputs - this has the parameters and drivers but also the existing DALEC output against which you can compare any modifications
@@ -31,7 +32,7 @@ drivers$obs[which(drivers$obs == -9999)] = NA
 # Copy original drivers into a new object that we will manipulate
 new_drivers = drivers
 
-nos_loops = 1
+nos_loops = 0
 if (nos_loops > 0) {
     # Loop drivers to allow simulation to steady state
     for (r in seq(1,nos_loops)) {
@@ -91,7 +92,7 @@ C_cycle = simulate_all(n,new_PROJECT,PROJECT$model$name,new_drivers$met,paramete
                        PROJECT$exepath,soil_info)
 
 # Read in the overall observations file
-czo = read.csv("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/SENSE_REP_2023/CZO_lai_obs/CZO_timeseries_obs.csv")
+#czo = read.csv("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/SENSE_REP_2023/CZO_lai_obs/CZO_timeseries_obs.csv")
 #czo = read.csv("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/SENSE_REP_2023/CZO_lai_obs/soaprootRawHalfHourly.csv", header=FALSE)
 #czo_par_in = rollapply(czo$V11, by = 48, width=48, FUN=sum) ; czo_par_out = rollapply(czo$V12, by = 48, width=48, FUN=sum)
 # Then compare original states_all with C_cycle
@@ -99,25 +100,25 @@ czo = read.csv("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/SENSE_REP_2023/CZ
 par(mfrow=c(2,4))
 plot(apply(states_all$gpp_gCm2day,2,median), type="l", lwd=3, ylim=c(0,9))
 lines(apply(C_cycle$gpp_gCm2day,2,median), col="green", lwd=3)
-plotCI(czo$GPP_gCm2day, uiw = czo$GPP_unc_gCm2day, add=TRUE, ylim=c(0,9), col="red")
+#plotCI(czo$GPP_gCm2day, uiw = czo$GPP_unc_gCm2day, add=TRUE, ylim=c(0,9), col="red")
 plot(apply(states_all$ET_kgH2Om2day,2,median), type="l", lwd=3, ylim=c(0,8))
 lines(apply(C_cycle$ET_kgH2Om2day,2,median), col="green", lwd=3)
-plotCI(czo$Evap_kgH2Om2day, uiw = czo$Evap_unc_kgH2Om2day, add=TRUE, col="red")
+#plotCI(czo$Evap_kgH2Om2day, uiw = czo$Evap_unc_kgH2Om2day, add=TRUE, col="red")
 plot(apply(states_all$SurfWater_kgH2Om2,2,median), type="l", lwd=3, ylim=c(0,100))
 lines(apply(C_cycle$SurfWater_kgH2Om2,2,median), col="green", lwd=3)
 plot(apply(states_all$lai_m2m2,2,median), type="l", lwd=3, ylim=c(0,10))
 lines(apply(C_cycle$lai_m2m2,2,median), col="green", lwd=3)
 plotCI(drivers$obs[,3], uiw = drivers$obs[,4], add=TRUE)
-plotCI(czo$LAI_m2m2, uiw = czo$LAI_unc_m2m2, add=TRUE, col="red")
+#plotCI(czo$LAI_m2m2, uiw = czo$LAI_unc_m2m2, add=TRUE, col="red")
 plot(apply(states_all$rauto_gCm2day+states_all$rhet_litter_gCm2day+states_all$rhet_som_gCm2day,2,median), type="l", lwd=3, ylim=c(0,16))
 lines(apply(C_cycle$rauto_gCm2day+C_cycle$rhet_litter_gCm2day+C_cycle$rhet_som_gCm2day,2,median), col="green", lwd=3)
-plotCI(czo$Reco_gCm2day, uiw = czo$Reco_unc_gCm2day, add=TRUE, ylim=c(0,10), col="red")
+#plotCI(czo$Reco_gCm2day, uiw = czo$Reco_unc_gCm2day, add=TRUE, ylim=c(0,10), col="red")
 plot(apply(states_all$RootDepth_m,2,median), type="l", lwd=3, ylim=c(0,max(states_all$RootDepth_m, na.rm=TRUE)))
 lines(apply(C_cycle$RootDepth_m,2,median), col="green", lwd=3)
 plot(apply(states_all$snow_kgH2Om2,2,median), type="l", lwd=3)
 lines(apply(C_cycle$snow_kgH2Om2,2,median), col="green", lwd=3)
 plot(apply(states_all$APAR_MJm2day,2,median)/(drivers$met[,4]*0.5), type="l", lwd=3, ylim=c(0,1))
 lines(apply(C_cycle$APAR_MJm2day,2,median)/(new_drivers$met[,4]*0.5), col="green", lwd=3)
-plotCI(drivers$obs[,23], uiw = drivers$obs[,24], add=TRUE)
+#plotCI(drivers$obs[,23], uiw = drivers$obs[,24], add=TRUE)
 
 

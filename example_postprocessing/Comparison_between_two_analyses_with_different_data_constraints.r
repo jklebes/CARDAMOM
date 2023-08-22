@@ -1277,14 +1277,17 @@ var1 = rast(vals = t(var1[,dim(var1)[2]:1]), ext = ext(cardamom_ext), crs = crs(
 var2 = apply(1-alt_posterior_prior,c(1,2),mean,na.rm=TRUE)
 var2 = rast(vals = t(var2[,dim(var2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var3 = var2-var1
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 plot(var1, range=c(0,1), col=colour_choices_gain,  bty = "n",
-     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main="", plg = list(size = -1))
+     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main="")
 mtext(orig_name, side = 3, cex = 1.2, padj = 1.3)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(expression('Mean posterior reduction (0-1)'), side = 2, cex = 0.9, padj = 0.0, adj = 0.5)
 plot(var2, range=c(0,1), col=colour_choices_gain,  bty = "n",
-     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main="")
 mtext(alt_name, side = 3, cex = 1.2, padj = 1.3)
 plot(landmask, add=TRUE, lwd=0.5)
@@ -1302,14 +1305,17 @@ var1 = rast(vals = t(var1[,dim(var1)[2]:1]), ext = ext(cardamom_ext), crs = crs(
 var2 = alt_grid_output$MTT_wood_years_to_NPP_wood_gCm2day_correlation
 var2 = rast(vals = t(var2[,dim(var2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var3 = var2-var1
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 plot(var1, range=c(-1,1), col=colour_choices_sign,  bty = "n",
-     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main="")
 mtext(orig_name, side = 3, cex = 1.2, padj = 1.0)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(expression(paste("Corr(MTTwood,NPPwood)",sep="")), side = 2, cex = 0.9, padj = 0.0, adj = 0.5)
 plot(var2, range=c(-1,1), col=colour_choices_sign,  bty = "n",
-     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main="")
 mtext(alt_name, side = 3, cex = 1.2, padj = 1.0)
 plot(landmask, add=TRUE, lwd=0.5)
@@ -2193,9 +2199,7 @@ lines(var9~run_years, col=model_colours[2], lwd=4, lty = 2) ; points(var9~run_ye
 mtext("Year", side=1, padj=2.0,cex=1.6)
 mtext(expression(paste("Fire Emissions (PgC y",r^-1,")",sep="")), side=2, padj=-1.60,cex=1.5)
 dev.off()
-####################
-# terra conversions issues here##########
-################
+
 # Assimilated observations overlap
 # Assign variables
 var1  = orig_grid_output$lai_assim_data_overlap_fraction
@@ -2261,72 +2265,81 @@ zrange12 = c(-1,1)
 zrange13 = c(-1,1)
 zrange14 = c(-1,1)
 zrange15 = c(-1,1)
-png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_LAI_GPP_NBE_wood_soil_assimilated_observations_fraction_overlap_change",outsuffix,".png",sep=""), height = 3800, width = 5000, res = 300)
-par(mfrow=c(3,5), mar=c(0.5,0.4,2.8,7),omi=c(0.1,0.4,0.2,0.2))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_LAI_GPP_NBE_wood_soil_assimilated_observations_fraction_overlap_change",outsuffix,".png",sep=""), height = 2500, width = 5000, res = 300)
+par(mfrow=c(3,5), mar=c(0.0,0.01,0,3.5),omi=c(0.1,0.45,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("LAI (0-1)", sep="")), col=colour_choices_gain)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main="", col=colour_choices_gain)
+mtext(expression(paste("LAI (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex = 2.0, padj = -0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("GPP (0-1)", sep="")), col=colour_choices_gain)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("GPP (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NBE (0-1)", sep="")), col=colour_choices_gain)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("NBE (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Wood (0-1)", sep="")), col=colour_choices_gain)
+plot(var4, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("Wood (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var5, range=zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Soil (0-1)", sep="")), col=colour_choices_gain)
+plot(var5, range=zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("Soil (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var6, range=zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=colour_choices_gain)
+plot(var6, range=zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain, ylim=c(-90,90), xlim=c(-180,180))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2, cex = 2.0, padj = -0.5)
-plot(var7, range=zrange7, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range=zrange7, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain, ylim=c(-90,90), xlim=c(-180,180))
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var8, range=zrange8, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain, ylim=c(-90,90), xlim=c(-180,180))
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var9, range=zrange9, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var8, range=zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=colour_choices_gain)
-plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range=zrange9, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = "", col=colour_choices_gain)
-plot(landmask, add=TRUE, lwd=0.5)
-plot(var10, range=zrange10, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var10, range=zrange10, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var11, range = zrange11, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var11, range = zrange11, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference (-1-1)",sep=""), side=2, cex = 2.0, padj = -0.5)
-plot(var12, range = zrange12, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var12, range = zrange12, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var13, range = zrange13, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var13, range = zrange13, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var14, range = zrange14, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var14, range = zrange14, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var15, range = zrange15, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var15, range = zrange15, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -2376,54 +2389,60 @@ zrange3 = c(0,1)
 zrange4 = c(-1,1)
 zrange5 = c(-1,1)
 zrange6 = c(-1,1)
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_LAI_wood_soil_assimilated_observations_fraction_overlap_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
-par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.1,0.4,0.2,0.2))
+par(mfrow=c(3,3), mar=c(0.25,0.2,2.8,7),omi=c(0.1,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("LAI (0-1)", sep="")), col=colour_choices_gain)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext = e, cex=.8), col=colour_choices_gain)
+mtext(expression(paste("LAI (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex = 2.0, padj = -0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Wood (0-1)", sep="")), col=colour_choices_gain)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("Wood (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Soil (0-1)", sep="")), col=colour_choices_gain)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("Soil (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2, cex = 2.0, padj = -0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference (-1-1)",sep=""), side=2, cex = 2.0, padj = -0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
-print(paste("Mean (-1-1) relative difference in assimilated LAI overlap (",alt_name,"-",orig_name,")   = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) relative difference in assimilated LAI overlap (",alt_name,"-",orig_name,")  = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
 print(paste("Mean (-1-1) relative difference in assimilated wood overlap (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean (-1-1) relative difference in assimilated soil overlap (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) relative difference in assimilated soil overlap (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
 ###
@@ -2478,60 +2497,68 @@ zrange5 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var10)),na.rm=TRUE)))
 zrange7 = c(-1,1)*max(abs(range(c(values(var11)),na.rm=TRUE)))
 zrange8 = c(-1,1)*max(abs(range(c(values(var12)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_H2O_fluxes",outsuffix,".png",sep=""), height = 3000, width = 4900, res = 300)
 par(mfrow=c(3,4), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("ET (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=rev(colour_choices_gain))
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=rev(colour_choices_gain))
+mtext(expression(paste("ET (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=1.8, padj = -0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Etrans (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=colour_choices_gain)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("Etrans (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Esoil (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=colour_choices_gain)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("Esoil (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Ewetcanopy (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=colour_choices_gain)
+plot(var4, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("Ewetcanopy (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var5, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_default))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2, cex=1.8, padj = -0.5)
-plot(var6, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var7, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var8, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var9, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=1.8, padj = -0.5)
-plot(var10, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var10, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var11, range = zrange7, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var11, range = zrange7, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var12, range = zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var12, range = zrange8, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -2540,39 +2567,43 @@ dev.off()
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_H2O_fluxes_rel_change",outsuffix,".png",sep=""), height = 3000, width = 4900, res = 300)
 par(mfrow=c(3,4), mar=c(0.5,0.5,2.8,7),omi=c(0.13,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("ET (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=rev(colour_choices_gain))
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=rev(colour_choices_gain))
+mtext(expression(paste("ET (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=1.8, padj = -0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Etrans (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=colour_choices_gain)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("Etrans (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Esoil (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=colour_choices_gain)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("Esoil (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Ewetcanopy (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=colour_choices_gain)
+plot(var4, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("Ewetcanopy (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var5, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_default))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2, cex=1.8, padj = -0.5)
-plot(var6, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var7, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var8, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
@@ -2581,21 +2612,21 @@ var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 ; var10[var10 > 1] = 1 ; var10[var10 <
 var11[var11 > 1] = 1 ; var11[var11 < -1] = -1 ; var12[var12 > 1] = 1 ; var12[var12 < -1] = -1
 zrange5 = c(-1,1) * max(abs(range(c(values(var9),values(var10),values(var11),values(var12)), na.rm=TRUE)))
 zrange6 = zrange5 ; zrange7 = zrange5 ; zrange8 = zrange5
-plot(var9, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=1.8, padj = -0.5)
-plot(var10, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var10, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var11, range = zrange7, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var11, range = zrange7, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var12, range = zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var12, range = zrange8, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -2649,60 +2680,68 @@ zrange5 = c(-1,1)*max(abs(range(c(values(var9),values(var10),values(var11),value
 zrange6 = zrange5
 zrange7 = zrange5
 zrange8 = zrange5
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_H2O_fluxes_CI",outsuffix,".png",sep=""), height = 3000, width = 4900, res = 300)
 par(mfrow=c(3,4), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("ET CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("ET CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=1.8, padj = -0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Etrans CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Etrans CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Esoil CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Esoil CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Ewetcanopy CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var4, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Ewetcanopy CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var5, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=1.8, padj = -0.5)
-plot(var6, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var7, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var8, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var9, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=1.8, padj = -0.5)
-plot(var10, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var10, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var11, range = zrange7, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var11, range = zrange7, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var12, range = zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var12, range = zrange8, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -2719,57 +2758,61 @@ zrange8 = c(-1,1)*max(abs(range(c(values(var12)),na.rm=TRUE)))
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_H2O_fluxes_CI_nonstd_range",outsuffix,".png",sep=""), height = 3000, width = 4900, res = 300)
 par(mfrow=c(3,4), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("ET CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("ET CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=1.8, padj = -0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Etrans CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Etrans CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Esoil CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Esoil CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Ewetcanopy CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var4, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Ewetcanopy CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var5, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=1.8, padj = -0.5)
-plot(var6, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var7, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var8, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var9, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=1.8, padj = -0.5)
-plot(var10, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var10, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var11, range = zrange7, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var11, range = zrange7, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var12, range = zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var12, range = zrange8, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -2778,39 +2821,43 @@ dev.off()
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_H2O_fluxes_CI_rel_change",outsuffix,".png",sep=""), height = 3000, width = 4900, res = 300)
 par(mfrow=c(3,4), mar=c(0.5,0.5,2.8,7),omi=c(0.13,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("ET CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("ET CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=1.8, padj = -0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Etrans CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Etrans CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Esoil CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Esoil CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Ewetcanopy CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var4, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Ewetcanopy CI (kgH2O ",m^-2,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var5, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=1.8, padj = -0.5)
-plot(var6, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var7, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var8, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 var9 = var9 / abs(var1) ; var10 = var10 / abs(var2) ; var11 = var11 / abs(var3) ; var12 = var12 / abs(var4)
@@ -2819,21 +2866,21 @@ var11[var11 > 1] = 1 ; var11[var11 < -1] = -1 ; var12[var12 > 1] = 1 ; var12[var
 zrange5 = c(-1,1)*max(abs(range(c(values(var9),values(var10),values(var11),values(var12)),na.rm=TRUE)))
 zrange6 = zrange5 ; zrange7 = zrange5 ; zrange8 = zrange5 ; 
 # Difference
-plot(var9, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=1.8, padj = -0.5)
-plot(var10, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var10, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var11, range = zrange7, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var11, range = zrange7, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var12, range = zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var12, range = zrange8, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -2919,60 +2966,68 @@ zrange5 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE))) #c(-1,1)*max(abs(r
 zrange6 = c(-1,1)*max(abs(range(c(values(var10)),na.rm=TRUE)))#zrange5
 zrange7 = c(-1,1)*max(abs(range(c(values(var11)),na.rm=TRUE)))#zrange5
 zrange8 = c(-1,1)*max(abs(range(c(values(var12)),na.rm=TRUE)))#zrange5
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_H2O_fluxes_CI_rel_of_median",outsuffix,".png",sep=""), height = 3000, width = 4900, res = 300)
 par(mfrow=c(3,4), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("ET CI:Median", sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("ET CI:Median", sep="")), side=3, cex = 2.5, padj = 1.5)     
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=1.8, padj = -0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Etrans CI:Median", sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Etrans CI:Median", sep="")), side=3, cex = 2.5, padj = 1.5)     
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Esoil CI:Median", sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Esoil CI:Median", sep="")), side=3, cex = 2.5, padj = 1.5)     
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Ewetcanopy CI:Median", sep="")), col=colour_choices_CI)
+plot(var4, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Ewetcanopy CI:Median", sep="")), side=3, cex = 2.5, padj = 1.5)     
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var5, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=1.8, padj = -0.5)
-plot(var6, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var7, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var8, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var9, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=1.8, padj = -0.5)
-plot(var10, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var10, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var11, range = zrange7, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var11, range = zrange7, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var12, range = zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var12, range = zrange8, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -3029,60 +3084,68 @@ zrange5 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var10)),na.rm=TRUE)))
 zrange7 = c(-1,1)*max(abs(range(c(values(var11)),na.rm=TRUE)))
 zrange8 = c(-1,1)*max(abs(range(c(values(var12)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_C_fluxes",outsuffix,".png",sep=""), height = 3000, width = 4900, res = 300)
 par(mfrow=c(3,4), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NBE (MgC h",a^-1,"y",r^-1,")", sep="")), col=rev(colour_choices_default))
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=rev(colour_choices_default))
+mtext(expression(paste("NBE (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=1.8, padj = -0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("GPP (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_gain)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("GPP (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Reco (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_loss)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Reco (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)        
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Fire (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_loss)
+plot(var4, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Fire (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var5, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_default))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2, cex=1.8, padj = -0.5)
-plot(var6, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var7, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var8, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var9, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=1.8, padj = -0.5)
-plot(var10, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var10, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var11, range = zrange7, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var11, range = zrange7, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var12, range = zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var12, range = zrange8, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -3091,39 +3154,43 @@ dev.off()
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_C_fluxes_rel_change",outsuffix,".png",sep=""), height = 3000, width = 4900, res = 300)
 par(mfrow=c(3,4), mar=c(0.5,0.5,2.8,7),omi=c(0.13,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NBE (MgC h",a^-1,"y",r^-1,")", sep="")), col=rev(colour_choices_default))
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=rev(colour_choices_default))
+mtext(expression(paste("NBE (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)        
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=1.8, padj = -0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("GPP (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_gain)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("GPP (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Reco (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_loss)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Reco (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Fire (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_loss)
+plot(var4, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Fire (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var5, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_default))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2, cex=1.8, padj = -0.5)
-plot(var6, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var7, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var8, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
@@ -3132,21 +3199,21 @@ var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 ; var10[var10 > 1] = 1 ; var10[var10 <
 var11[var11 > 1] = 1 ; var11[var11 < -1] = -1 ; var12[var12 > 1] = 1 ; var12[var12 < -1] = -1
 zrange5 = c(-1,1) * max(abs(range(c(values(var9),values(var10),values(var11),values(var12)), na.rm=TRUE)))
 zrange6 = zrange5 ; zrange7 = zrange5 ; zrange8 = zrange5
-plot(var9, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=1.8, padj = -0.5)
-plot(var10, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var10, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var11, range = zrange7, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var11, range = zrange7, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var12, range = zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var12, range = zrange8, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -3200,60 +3267,68 @@ zrange5 = c(-1,1)*max(abs(range(c(values(var9),values(var10),values(var11),value
 zrange6 = zrange5
 zrange7 = zrange5
 zrange8 = zrange5
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_C_fluxes_CI",outsuffix,".png",sep=""), height = 3000, width = 4900, res = 300)
 par(mfrow=c(3,4), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NBE CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NBE CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=1.8, padj = -0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("GPP CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("GPP CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Reco CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Reco CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Fire CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var4, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Fire CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var5, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=1.8, padj = -0.5)
-plot(var6, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var7, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var8, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var9, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=1.8, padj = -0.5)
-plot(var10, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var10, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var11, range = zrange7, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var11, range = zrange7, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var12, range = zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var12, range = zrange8, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -3267,60 +3342,68 @@ zrange5 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var10)),na.rm=TRUE)))
 zrange7 = c(-1,1)*max(abs(range(c(values(var11)),na.rm=TRUE)))
 zrange8 = c(-1,1)*max(abs(range(c(values(var12)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_C_fluxes_CI_nonstd_range",outsuffix,".png",sep=""), height = 3000, width = 4900, res = 300)
 par(mfrow=c(3,4), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NBE CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NBE CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=1.8, padj = -0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("GPP CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("GPP CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Reco CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Reco CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Fire CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var4, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Fire CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var5, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=1.8, padj = -0.5)
-plot(var6, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var7, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var8, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var9, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=1.8, padj = -0.5)
-plot(var10, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var10, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var11, range = zrange7, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var11, range = zrange7, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var12, range = zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var12, range = zrange8, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -3329,39 +3412,43 @@ dev.off()
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_C_fluxes_CI_rel_change",outsuffix,".png",sep=""), height = 3000, width = 4900, res = 300)
 par(mfrow=c(3,4), mar=c(0.5,0.5,2.8,7),omi=c(0.13,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NBE CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NBE CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=1.8, padj = -0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("GPP CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("GPP CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Reco CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Reco CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Fire CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var4, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Fire CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var5, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=1.8, padj = -0.5)
-plot(var6, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var7, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var8, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 var9 = var9 / abs(var1) ; var10 = var10 / abs(var2) ; var11 = var11 / abs(var3) ; var12 = var12 / abs(var4)
@@ -3370,21 +3457,21 @@ var11[var11 > 1] = 1 ; var11[var11 < -1] = -1 ; var12[var12 > 1] = 1 ; var12[var
 zrange5 = c(-1,1)*max(abs(range(c(values(var9),values(var10),values(var11),values(var12)),na.rm=TRUE)))
 zrange6 = zrange5 ; zrange7 = zrange5 ; zrange8 = zrange5 ; 
 # Difference
-plot(var9, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=1.8, padj = -0.5)
-plot(var10, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var10, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var11, range = zrange7, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var11, range = zrange7, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var12, range = zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var12, range = zrange8, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -3470,60 +3557,68 @@ zrange5 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE))) #c(-1,1)*max(abs(r
 zrange6 = c(-1,1)*max(abs(range(c(values(var10)),na.rm=TRUE)))#zrange5
 zrange7 = c(-1,1)*max(abs(range(c(values(var11)),na.rm=TRUE)))#zrange5
 zrange8 = c(-1,1)*max(abs(range(c(values(var12)),na.rm=TRUE)))#zrange5
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_C_fluxes_CI_rel_of_median",outsuffix,".png",sep=""), height = 3000, width = 4900, res = 300)
 par(mfrow=c(3,4), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NBE CI:Median", sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NBE CI:Median)", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=1.8, padj = -0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("GPP CI:Median", sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("GPP CI:Median)", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Reco CI:Median", sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Reco CI:Median)", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Fire CI:Median", sep="")), col=colour_choices_CI)
+plot(var4, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Fire CI:Median)", sep="")), side=3, cex = 2.5, padj = 1.5)   
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var5, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=1.8, padj = -0.5)
-plot(var6, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var7, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var8, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var9, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=1.8, padj = -0.5)
-plot(var10, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var10, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var11, range = zrange7, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var11, range = zrange7, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var12, range = zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var12, range = zrange8, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -3563,12 +3658,17 @@ var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
 var16[which(is.na(landfilter))] = NA
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_C_fluxes_CI_xy",outsuffix,".png",sep=""), height = 4000, width = 4500, res = 300)
 par(mfrow=c(2,2), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # NBE 
 plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("NBE (MgC h",a^-1,"y",r^-1,")", sep="")))
+     main="")
+mtext(expression(paste("NBE (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)        
 points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
 mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
@@ -3579,7 +3679,8 @@ abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
 # GPP 
 plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("GPP (MgC h",a^-1,"y",r^-1,")", sep="")))
+     main="")
+mtext(expression(paste("GPP (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)        
 points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
@@ -3589,7 +3690,8 @@ abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
 # Reco
 plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Reco (MgC h",a^-1,"y",r^-1,")", sep="")))
+     main="")
+mtext(expression(paste("Reco (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)        
 points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
 mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
 mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
@@ -3599,7 +3701,8 @@ abline(lm(as.vector(var7) ~ as.vector(var15)), lwd=3, col=model_colours[2])
 # Fire
 plot(var4 ~ var12, col=model_colours[1], ylim=range(c(var4,var8), na.rm=TRUE), xlim=range(c(var12,var16), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Fire (MgC h",a^-1,"y",r^-1,")", sep="")))
+     main="")
+mtext(expression(paste("Fire (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)        
 points(var8 ~ var16, pch=1, col=model_colours[2], cex = 1.6)
 mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
@@ -3652,48 +3755,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.1,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Total (MgC h",a^-1,")", sep="")), col=colour_choices_gain)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("Total (MgC h",a^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)        
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex = 2.0, padj = -0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Biomass (MgC h",a^-1,")", sep="")), col=colour_choices_gain)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("Biomass (MgC h",a^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)        
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("DOM (MgC h",a^-1,")", sep="")), col=colour_choices_gain)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("DOM (MgC h",a^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)             
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2, cex = 2.0, padj = -0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 2.0, padj = -0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -3743,48 +3853,55 @@ zrange3 = c(-1,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks_change_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste(Delta,"Total (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_default)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_default)
+mtext(expression(paste(Delta,"Total (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)             
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste(Delta,"Biomass (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_default)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_default)
+mtext(expression(paste(Delta,"Biomass (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)             
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste(Delta,"DOM (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_default)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_default)
+mtext(expression(paste(Delta,"DOM (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)             
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_default)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_default)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_default)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -3837,48 +3954,55 @@ zrange3 = zrange1
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks_CI_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.8,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Total CI (MgC h",a^-1,")",sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Total CI (MgC h",a^-1,")",sep="")), side=3, cex = 2.5, padj = 1.5)             
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Biomass CI (MgC h",a^-1,")",sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Biomass CI (MgC h",a^-1,")",sep="")), side=3, cex = 2.5, padj = 1.5)             
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("DOM CI (MgC h",a^-1,")",sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("DOM CI (MgC h",a^-1,")",sep="")), side=3, cex = 2.5, padj = 1.5)             
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -3931,48 +4055,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks_change_CI_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.9,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste(Delta,"Total CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste(Delta,"Total CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste(Delta,"Biomass CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste(Delta,"Biomass CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste(Delta,"DOM CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste(Delta,"DOM CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -4016,12 +4147,17 @@ var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
 var16[which(is.na(landfilter))] = NA
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks_CI_xy",outsuffix,".png",sep=""), height = 4000, width = 4500, res = 300)
 par(mfrow=c(2,2), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Total 
 plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Total (MgC h",a^-1,")", sep="")))
+     main="")
+mtext(expression(paste("Total (MgC h",a^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
 mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
@@ -4032,7 +4168,8 @@ abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
 # Biomass
 plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Biomass (MgC h",a^-1,")", sep="")))
+     main="")
+mtext(expression(paste("Biomass (MgC h",a^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
@@ -4042,7 +4179,8 @@ abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
 # Litter
 plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Litter (MgC h",a^-1,")", sep="")))
+     main="")
+mtext(expression(paste("Litter (MgC h",a^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
 mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
 mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
@@ -4052,7 +4190,8 @@ abline(lm(as.vector(var7) ~ as.vector(var15)), lwd=3, col=model_colours[2])
 # SOM
 plot(var4 ~ var12, col=model_colours[1], ylim=range(c(var4,var8), na.rm=TRUE), xlim=range(c(var12,var16), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Soil (MgC h",a^-1,")", sep="")))
+     main="")
+mtext(expression(paste("Soil (MgC h",a^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 points(var8 ~ var16, pch=1, col=model_colours[2], cex = 1.6)
 mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
@@ -4099,49 +4238,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
-
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Total (MgC h",a^-1,")", sep="")), col=colour_choices_gain)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("Total (MgC h",a^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex = 2.0, padj = -0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Biomass (MgC h",a^-1,")", sep="")), col=colour_choices_gain)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("Biomass (MgC h",a^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("DOM (MgC h",a^-1,")", sep="")), col=colour_choices_gain)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("DOM (MgC h",a^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2, cex = 2.0, padj = -0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex = 2.0, padj = -0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -4188,48 +4333,55 @@ zrange3 = c(-1,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste(Delta,"Total (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_default)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_default)
+mtext(expression(paste(Delta,"Total (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste(Delta,"Biomass (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_default)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_default)
+mtext(expression(paste(Delta,"Biomass (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste(Delta,"DOM (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_default)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_default)
+mtext(expression(paste(Delta,"DOM (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_default)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_default)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_default)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -4273,12 +4425,17 @@ var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
 var16[which(is.na(landfilter))] = NA
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks_change_CI_xy",outsuffix,".png",sep=""), height = 4000, width = 4500, res = 300)
 par(mfrow=c(2,2), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Total 
 plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste(Delta,"Total (MgC h",a^-1,y^-1,")", sep="")))
+     main="")
+mtext(expression(paste(Delta,"Total (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
 mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
@@ -4289,7 +4446,8 @@ abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
 # Biomass
 plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste(Delta,"Biomass (MgC h",a^-1,y^-1,")", sep="")))
+     main="")
+mtext(expression(paste(Delta,"Biomass (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
@@ -4299,7 +4457,8 @@ abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
 # Litter
 plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste(Delta,"Litter (MgC h",a^-1,y^-1,")", sep="")))
+     main="")
+mtext(expression(paste(Delta,"Litter (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
 mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
 mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
@@ -4309,7 +4468,8 @@ abline(lm(as.vector(var7) ~ as.vector(var15)), lwd=3, col=model_colours[2])
 # SOM
 plot(var4 ~ var12, col=model_colours[1], ylim=range(c(var4,var8), na.rm=TRUE), xlim=range(c(var12,var16), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste(Delta,"Soil (MgC h",a^-1,y^-1,")", sep="")))
+     main="")
+mtext(expression(paste(Delta,"Soil (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 points(var8 ~ var16, pch=1, col=model_colours[2], cex = 1.6)
 mtext(expression(paste('Median',sep="")), side = 1, cex = 2.4, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.4, padj = -1.65)
@@ -4359,48 +4519,55 @@ zrange3 = zrange1
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks_CI",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.8,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Total CI (MgC h",a^-1,")",sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Total CI (MgC h",a^-1,")",sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Biomass CI (MgC h",a^-1,")",sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Biomass CI (MgC h",a^-1,")",sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("DOM CI (MgC h",a^-1,")",sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("DOM CI (MgC h",a^-1,")",sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -4462,48 +4629,55 @@ zrange3 = zrange1
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks_CI_rel_of_median",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.8,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Total CI:Median",sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Total CI:Median",sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Biomass CI:Median",sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Biomass CI:Median",sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("DOM CI:Median",sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("DOM CI:Median",sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -4553,48 +4727,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks_change_CI",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.9,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste(Delta,"Total CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste(Delta,"Total CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = expression(paste(Delta,"Biomass CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+mtext(expression(paste(Delta,"Biomass CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = expression(paste(Delta,"DOM CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+mtext(expression(paste(Delta,"DOM CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -4656,48 +4837,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks_change_CI_rel_of_median",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.9,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste(Delta,"Total CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste(Delta,"Total CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste(Delta,"Biomass CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste(Delta,"Biomass CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste(Delta,"DOM CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste(Delta,"DOM CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -4752,48 +4940,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPP_MRT_SS",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT wood (years)",sep="")), col=colour_choices_gain)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("MRT wood (years)",sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = expression(paste("NPP wood (0-1)",sep="")), col=colour_choices_gain)
+mtext(expression(paste("NPP wood (0-1)",sep="")), side=3, cex = 2.5, padj = 1.5)        
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("SS wood (MgC h",a^-1,")",sep="")), col=colour_choices_gain)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("SS wood (MgC h",a^-1,")",sep="")), side=3, cex = 2.5, padj = 1.5)        
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -4802,31 +4997,34 @@ zrange4 = c(-1,1) ; zrange5 = zrange4 ; zrange6 = zrange4
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPP_MRT_SS_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT wood (years)",sep="")), col=colour_choices_gain)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("MRT wood (years)",sep="")), side=3, cex = 2.5, padj = 1.5)        
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = expression(paste("NPP wood (0-1)",sep="")), col=colour_choices_gain)
+mtext(expression(paste("NPP wood (0-1)",sep="")), side=3, cex = 2.5, padj = 1.5)        
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("SS wood (MgC h",a^-1,")",sep="")), col=colour_choices_gain)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("SS wood (MgC h",a^-1,")",sep="")), side=3, cex = 2.5, padj = 1.5)             
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 # Relative Difference
@@ -4838,17 +5036,17 @@ print(paste("Mean relative (-1-1) difference in wNPP (",alt_name,"-",orig_name,"
 print(paste("Mean relative (-1-1) difference in wSS (",alt_name,"-",orig_name,")  = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
 zrange5 = zrange4 ; zrange6 = zrange5
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -4895,48 +5093,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPPflx_MRT_SS",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT wood (years)",sep="")), col=colour_choices_gain)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("MRT wood (years)",sep="")), side=3, cex = 2.5, padj = 1.5)             
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP wood (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_gain)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("NPP wood (MgC h",a^-1,y^-1,")",sep="")), side=3, cex = 2.5, padj = 1.5)             
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("SS wood (MgC h",a^-1,")",sep="")), col=colour_choices_gain)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("SS wood (MgC h",a^-1,")",sep="")), side=3, cex = 2.5, padj = 1.5)             
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -4945,31 +5150,34 @@ zrange4 = c(-1,1) ; zrange5 = zrange4 ; zrange6 = zrange4
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPPflx_MRT_SS_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT wood (years)",sep="")), col=colour_choices_gain)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("MRT wood (years)",sep="")), side=3, cex = 2.5, padj = 1.5)             
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = expression(paste("NPP wood (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_gain)
+mtext(expression(paste("NPP wood (MgC h",a^-1,y^-1,")",sep="")), side=3, cex = 2.5, padj = 1.5)             
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = expression(paste("SS wood (MgC h",a^-1,")",sep="")), col=colour_choices_gain)
+mtext(expression(paste("SS wood (MgC h",a^-1,")",sep="")), side=3, cex = 2.5, padj = 1.5)             
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 # Relative Difference
@@ -4977,17 +5185,17 @@ var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
 zrange5 = zrange4 ; zrange6 = zrange5
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -5034,48 +5242,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPP_MRT_SS_CI",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT wood CI (years)",sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("MRT wood CI (years)",sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP wood CI (0-1)",sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NPP wood CI (0-1)",sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("SS wood CI (MgC h",a^-1,")",sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("SS wood CI (MgC h",a^-1,")",sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -5088,31 +5303,34 @@ zrange4 = c(-1,1) ; zrange5 = zrange4 ; zrange6 = zrange4
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPP_MRT_SS_CI_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT wood CI (years)",sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("MRT wood CI (years)",sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP wood CI (0-1)",sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NPP wood CI (0-1)",sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("SS wood CI (MgC h",a^-1,")",sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("SS wood CI (MgC h",a^-1,")",sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Relative Difference
@@ -5120,17 +5338,17 @@ var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
 zrange5 = zrange4 ; zrange6 = zrange5
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -5192,48 +5410,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPP_MRT_SS_CI_rel_of_median",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT wood CI:Median",sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("MRT wood CI:Median",sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP wood CI:Median",sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NPP wood CI:Median",sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("SS wood CI:Median",sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("SS wood CI:Median",sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -5269,12 +5494,17 @@ var11[which(is.na(landfilter))] = NA
 var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPP_MRT_SS_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
 par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Wood MRT
 plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Wood MRT (years)", sep="")))
+     main="")
+mtext(expression(paste("Wood MRT (years)",sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
@@ -5285,7 +5515,8 @@ abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
 # Wood NPP (fraction)
 plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Wood NPP (0-1)", sep="")))
+     main="")
+mtext(expression(paste("Wood NPP (0-1)",sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
 mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
@@ -5295,7 +5526,8 @@ abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
 # Wood Steady state
 plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Wood Steady State (MgC h",a^-1,")", sep="")))
+     main="")
+mtext(expression(paste("Wood Steady State (MgC h",a^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
@@ -5342,48 +5574,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPPflx_MRT_SS_CI",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT wood CI (years)",sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("MRT wood CI (years)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP wood CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NPP wood CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = expression(paste("SS wood CI (MgC h",a^-1,")",sep="")), col=colour_choices_CI)
+mtext(expression(paste("SS wood CI (MgC h",a^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -5396,31 +5635,34 @@ zrange4 = c(-1,1) ; zrange5 = zrange4 ; zrange6 = zrange4
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPPflx_MRT_SS_CI_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT wood CI (years)",sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("MRT wood CI (years)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP wood CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NPP wood CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("SS wood CI (MgC h",a^-1,")",sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("SS wood CI (MgC h",a^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Relative Difference
@@ -5428,17 +5670,17 @@ var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
 zrange5 = zrange4 ; zrange6 = zrange5
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -5500,48 +5742,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPPflx_MRT_SS_CI_rel_of_median",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT wood CI (years)",sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("MRT wood CI (years)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP wood CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NPP wood CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = expression(paste("SS wood CI (MgC h",a^-1,")",sep="")), col=colour_choices_CI)
+mtext(expression(paste("SS wood CI (MgC h",a^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -5577,12 +5826,17 @@ var11[which(is.na(landfilter))] = NA
 var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPPflx_MRT_SS_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
 par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Wood MRT
 plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Wood MRT (years)", sep="")))
+     main="")
+mtext(expression(paste("Wood MRT (years)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
@@ -5593,7 +5847,8 @@ abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
 # Wood NPP (fraction)
 plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Wood NPP (MgC h",a^-1,y^-1,")", sep="")))
+     main="")
+mtext(expression(paste("Wood NPP (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
 mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
@@ -5603,7 +5858,8 @@ abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
 # Wood Steady state
 plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Wood Steady State (MgC h",a^-1,")", sep="")))
+     main="")
+mtext(expression(paste("Wood Steady State (MgC h",a^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
@@ -5657,48 +5913,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_NPP",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP foliar (0-1)",sep="")), col=colour_choices_gain)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("NPP foliar (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP root (0-1)",sep="")), col=colour_choices_gain)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("NPP root (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP wood (0-1)",sep="")), col=colour_choices_gain)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("NPP wood (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -5707,31 +5970,34 @@ zrange4 = c(-1,1) ; zrange5 = zrange4 ; zrange6 = zrange4
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_NPP_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP foliar (0-1)",sep="")), col=colour_choices_gain)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("NPP foliar (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP root (0-1)",sep="")), col=colour_choices_gain)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("NPP root (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP wood (0-1)",sep="")), col=colour_choices_gain)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("NPP wood (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 # Relative Difference
@@ -5743,17 +6009,17 @@ print(paste("Mean relative (-1-1) difference in rNPP (",alt_name,"-",orig_name,"
 print(paste("Mean relative (-1-1) difference in wNPP (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
 zrange5 = zrange4 ; zrange6 = zrange5
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -5800,48 +6066,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_NPPflx",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP foliar (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_gain)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("NPP foliar (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP root (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_gain)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("NPP root (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP wood (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_gain)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("NPP wood (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -5850,31 +6123,34 @@ zrange4 = c(-1,1) ; zrange5 = zrange4 ; zrange6 = zrange4
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_NPPflx_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP foliar (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_gain)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("NPP foliar (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP root (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_gain)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("NPP root (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP wood (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_gain)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("NPP wood (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 # Relative Difference
@@ -5882,17 +6158,17 @@ var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
 zrange5 = zrange4 ; zrange6 = zrange5
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -5939,48 +6215,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_NPP_CI",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP foliar CI (0-1)",sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NPP foliar CI (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP root CI (0-1)",sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NPP root CI (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP wood CI (0-1)",sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NPP wood CI (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -5993,31 +6276,34 @@ zrange4 = c(-1,1) ; zrange5 = zrange4 ; zrange6 = zrange4
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_NPP_CI_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP foliar CI (0-1)",sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NPP foliar CI (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP root CI (0-1)",sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NPP root CI (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP wood CI (0-1)",sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NPP wood CI (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Relative Difference
@@ -6025,17 +6311,17 @@ var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
 zrange5 = zrange4 ; zrange6 = zrange5
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -6071,12 +6357,17 @@ var11[which(is.na(landfilter))] = NA
 var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_NPP_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
 par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
-# Wood MRT
+# Foliar NPP
 plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Foliage NPP (0-1)", sep="")))
+     main="")
+mtext(expression(paste("NPP foliar (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
@@ -6084,20 +6375,22 @@ legend("topleft", legend = c(orig_name,alt_name), col = model_colours[1:2], lty 
 abline(0,1, col="grey", lwd=3)
 abline(lm(as.vector(var1) ~ as.vector(var9)), lwd=3, col=model_colours[1])
 abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
-# Wood NPP (fraction)
+# Root NPP (fraction)
 plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Root NPP (0-1)", sep="")))
+     main="")
+mtext(expression(paste("NPP root (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
 mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
 abline(0,1, col="grey", lwd=3)
 abline(lm(as.vector(var2) ~ as.vector(var10)), lwd=3, col=model_colours[1])
 abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
-# Wood Steady state
+# Wood NPP (fraction)
 plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Wood NPP (0-1)", sep="")))
+     main="")
+mtext(expression(paste("NPP wood (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
@@ -6144,48 +6437,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_NPPflx_CI",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP foliar CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NPP foliar CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP root CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NPP root CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP wood CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NPP wood CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -6198,31 +6498,34 @@ zrange4 = c(-1,1) ; zrange5 = zrange4 ; zrange6 = zrange4
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_NPPflx_CI_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP foliar CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NPP foliar CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP root CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NPP root CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("NPP wood CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("NPP wood CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Relative Difference
@@ -6230,17 +6533,17 @@ var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
 zrange5 = zrange4 ; zrange6 = zrange5
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -6276,12 +6579,17 @@ var11[which(is.na(landfilter))] = NA
 var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_NPPflx_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
 par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
-# Wood MRT
+# Foliage NPP
 plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Foliage NPP (MgC h",a^-1,y^-1,")", sep="")))
+     main="")
+mtext(expression(paste("NPP foliar (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
@@ -6289,20 +6597,22 @@ legend("topleft", legend = c(orig_name,alt_name), col = model_colours[1:2], lty 
 abline(0,1, col="grey", lwd=3)
 abline(lm(as.vector(var1) ~ as.vector(var9)), lwd=3, col=model_colours[1])
 abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
-# Wood NPP (fraction)
+# Root NPP (fraction)
 plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Root NPP (MgC h",a^-1,y^-1,")", sep="")))
+     main="")
+mtext(expression(paste("NPP root (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
 mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
 abline(0,1, col="grey", lwd=3)
 abline(lm(as.vector(var2) ~ as.vector(var10)), lwd=3, col=model_colours[1])
 abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
-# Wood Steady state
+# Wood NPP
 plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Wood NPP (MgC h",a^-1,y^-1,")", sep="")))
+     main="")
+mtext(expression(paste("NPP wood (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
@@ -6356,48 +6666,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_MRT",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.1,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT foliar (years)",sep="")), col=colour_choices_gain)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("MRT foliar (years)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT root (years)",sep="")), col=colour_choices_gain)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("MRT root (years)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT wood (years)",sep="")), col=colour_choices_gain)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("MRT wood (years)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -6406,31 +6723,34 @@ zrange4 = c(-1,1) ; zrange5 = zrange4 ; zrange6 = zrange4
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_MRT_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.1,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT foliar (years)",sep="")), col=colour_choices_gain)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("MRT foliar (years)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT root (years)",sep="")), col=colour_choices_gain)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("MRT root (years)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT wood (years)",sep="")), col=colour_choices_gain)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("MRT wood (years)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
 # Relative Difference
@@ -6442,17 +6762,17 @@ print(paste("Mean relative (-1-1) difference in rMRT (",alt_name,"-",orig_name,"
 print(paste("Mean relative (-1-1) difference in wMRT (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
 zrange5 = zrange4 ; zrange6 = zrange5
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -6495,48 +6815,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_MRT_CI",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.1,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT foliar CI (years)",sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("MRT foliar CI (years)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT root CI (years)",sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("MRT root CI (years)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT wood CI (years)",sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("MRT wood CI (years)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -6549,31 +6876,34 @@ zrange4 = c(-1,1) ; zrange5 = zrange4 ; zrange6 = zrange4
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_MRT_CI_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.1,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT foliar CI (years)",sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("MRT foliar CI (years)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT root CI (years)",sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("MRT root CI (years)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("MRT wood CI (years)",sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("MRT wood CI (years)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Relative Difference
@@ -6581,17 +6911,17 @@ var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
 zrange5 = zrange4 ; zrange6 = zrange5
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -6627,12 +6957,17 @@ var11[which(is.na(landfilter))] = NA
 var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_MRT_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
 par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Wood MRT
 plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Foliage MRT (years)", sep="")))
+     main="")
+mtext(expression(paste("MRT foliar (years)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
@@ -6643,7 +6978,8 @@ abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
 # Wood NPP (fraction)
 plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Root MRT (years)", sep="")))
+     main="")
+mtext(expression(paste("MRT root (years)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
 mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
@@ -6653,7 +6989,8 @@ abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
 # Wood Steady state
 plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Wood MRT (years)", sep="")))
+     main="")
+mtext(expression(paste("MRT wood (years)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
@@ -6702,34 +7039,41 @@ var5 = rast(vals = t((var5)[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = cr
 var6 = rast(vals = t((var6)[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 # specify ranges
 zrange1 = c(0,1)
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_wood_turnover_contribution",outsuffix,".png",sep=""), height = 2500, width = 4900, res = 300)
 par(mfrow=c(2,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Natural MRT comp (0-1)",sep="")), col=colour_choices_loss)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Natural MRT comp (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj = -0.5)
-plot(var2, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Fire MRT comp (0-1)",sep="")), col=colour_choices_loss)
+plot(var2, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Fire MRT comp (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Biomass removal MRT comp (0-1)",sep="")), col=colour_choices_loss)
+plot(var3, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Biomass removal MRT comp (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj = -0.5)
-plot(var5, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -6772,48 +7116,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_FireEmiss",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Combusted foliage (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_loss)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Combusted foliage (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Combusted root (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_loss)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Combusted root (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Combusted wood (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_loss)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Combusted wood (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -6826,31 +7177,34 @@ zrange4 = c(-1,1) ; zrange5 = zrange4 ; zrange6 = zrange4
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_FireEmiss_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Combusted foliage (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_loss)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Combusted foliage (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Combusted root (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_loss)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Combusted root (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Combusted wood (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_loss)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Combusted wood (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
 # Relative Difference
@@ -6858,17 +7212,17 @@ var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
 zrange5 = zrange4 ; zrange6 = zrange5
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -6915,48 +7269,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_FireLitter",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Foliage fire mortality (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_loss)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Foliage fire mortality (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Root fire mortality (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_loss)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Root fire mortality (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Wood fire mortality (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_loss)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Wood fire mortality (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -6969,31 +7330,34 @@ zrange4 = c(-1,1) ; zrange5 = zrange4 ; zrange6 = zrange4
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_FireLitter_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Foliage fire mortality (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_loss)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Foliage fire mortality (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Root fire mortality (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_loss)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Root fire mortality (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Wood fire mortality (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_loss)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Wood fire mortality (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
 # Relative Difference
@@ -7001,17 +7365,17 @@ var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
 zrange5 = zrange4 ; zrange6 = zrange5
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -7058,48 +7422,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_FireEmiss_CI",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Combusted foliage CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Combusted foliage CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Combusted root CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Combusted root CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Combusted wood CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Combusted wood CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -7112,31 +7483,34 @@ zrange4 = c(-1,1) ; zrange5 = zrange4 ; zrange6 = zrange4
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_FireEmiss_CI_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Combusted foliage CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Combusted foliage CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Combusted root CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Combusted root CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Combusted wood CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Combusted wood CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Relative Difference
@@ -7144,17 +7518,17 @@ var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
 zrange5 = zrange4 ; zrange6 = zrange5
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -7189,12 +7563,17 @@ var11[which(is.na(landfilter))] = NA
 var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_FireEmiss_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
 par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Wood MRT
 plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Combusted foliage CI (MgC h",a^-1,y^-1,")", sep="")))
+     main="")
+mtext(expression(paste("Combusted foliage CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
@@ -7205,7 +7584,8 @@ abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
 # Wood NPP (fraction)
 plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Combusted root CI (MgC h",a^-1,y^-1,")", sep="")))
+     main="")
+mtext(expression(paste("Combusted root CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
 mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
@@ -7215,7 +7595,8 @@ abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
 # Wood Steady state
 plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Combusted wood CI (MgC h",a^-1,y^-1,")", sep="")))
+     main="")
+mtext(expression(paste("Combusted wood CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
@@ -7262,48 +7643,55 @@ zrange3 = c(0,1)*max(abs(range(c(values(var3),values(var6)),na.rm=TRUE)))
 zrange4 = c(-1,1)*max(abs(range(c(values(var7)),na.rm=TRUE)))
 zrange5 = c(-1,1)*max(abs(range(c(values(var8)),na.rm=TRUE)))
 zrange6 = c(-1,1)*max(abs(range(c(values(var9)),na.rm=TRUE)))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_FireLitter_CI",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Foliage fire mortality CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Foliage fire mortality CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Root fire mortality CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Root fire mortality CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Wood fire mortality CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Wood fire mortality CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -7316,31 +7704,33 @@ zrange4 = c(-1,1) ; zrange5 = zrange4 ; zrange6 = zrange4
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_FireLitter_CI_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = expression(paste("Foliage fire mortality CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Root fire mortality CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Root fire mortality CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Wood fire mortality CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Wood fire mortality CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
 # Relative Difference
@@ -7348,17 +7738,17 @@ var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
 zrange5 = zrange4 ; zrange6 = zrange5
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -7393,12 +7783,17 @@ var11[which(is.na(landfilter))] = NA
 var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_Firelitter_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
 par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Wood MRT
 plot(var1 ~ var9, col=model_colours[1], ylim=range(c(var1,var5), na.rm=TRUE), xlim=range(c(var9,var13), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Foliage fire mortality CI (MgC h",a^-1,y^-1,")", sep="")))
+     main="")
+mtext(expression(paste("Foliage fire mortality CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var5 ~ var13, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
@@ -7409,7 +7804,8 @@ abline(lm(as.vector(var5) ~ as.vector(var13)), lwd=3, col=model_colours[2])
 # Wood NPP (fraction)
 plot(var2 ~ var10, col=model_colours[1], ylim=range(c(var2,var6), na.rm=TRUE), xlim=range(c(var10,var14), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Root fire mortality CI (MgC h",a^-1,y^-1,")", sep="")))
+     main="")
+mtext(expression(paste("Root fire mortality CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var6 ~ var14, pch=1, col=model_colours[2], cex = 1.6)
 mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
@@ -7419,7 +7815,8 @@ abline(lm(as.vector(var6) ~ as.vector(var14)), lwd=3, col=model_colours[2])
 # Wood Steady state
 plot(var3 ~ var11, col=model_colours[1], ylim=range(c(var3,var7), na.rm=TRUE), xlim=range(c(var11,var15), na.rm=TRUE),
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.2, ylab="", xlab="", 
-     main=expression(paste("Wood fire mortality CI (MgC h",a^-1,y^-1,")", sep="")))
+     main="")
+mtext(expression(paste("Wood fire mortality CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 points(var7 ~ var15, pch=1, col=model_colours[2], cex = 1.6)
 #mtext(expression(paste('Median',sep="")), side = 1, cex = 2.2, padj = 1.85)
 #mtext(expression(paste('95% CI',sep="")), side = 2, cex = 2.2, padj = -1.65)
@@ -7482,47 +7879,50 @@ zrange1 = c(0,1)
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_wood_turnover_contribution_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.1,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Natural MRT comp (0-1)",sep="")), col=colour_choices_loss)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Natural MRT comp (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2,cex=2.0, padj=-0.5)
-plot(var2, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Fire MRT comp (0-1)",sep="")), col=colour_choices_loss)
+plot(var2, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Fire MRT comp (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)            
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Biomass removal MRT comp (0-1)",sep="")), col=colour_choices_loss)
+plot(var3, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Biomass removal MRT comp (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
 # Difference
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
 zrange5 = zrange4 ; zrange6 = zrange5
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
@@ -7535,31 +7935,34 @@ dev.off()
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_wood_turnover_contribution_rel_change",outsuffix,".png",sep=""), height = 4000, width = 4900, res = 300)
 par(mfrow=c(3,3), mar=c(0.5,0.4,2.8,7),omi=c(0.1,0.4,0.2,0.2))
 # Original
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Natural MRT comp (0-1)",sep="")), col=colour_choices_loss)
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Natural MRT comp (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2,cex=2.0, padj=-0.5)
-plot(var2, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Fire MRT comp (0-1)",sep="")), col=colour_choices_loss)
+plot(var2, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Fire MRT comp (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
-     main = expression(paste("Biomass removal MRT comp (0-1)",sep="")), col=colour_choices_loss)
+plot(var3, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     main = "", col=colour_choices_loss)
+mtext(expression(paste("Biomass removal MRT comp (0-1)", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
-plot(var4, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(alt_name, side=2,cex=2.0, padj=-0.5)
-plot(var5, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var6, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
 # Relative Difference
@@ -7567,17 +7970,17 @@ var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
 zrange5 = zrange4 ; zrange6 = zrange5
-plot(var7, range = zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex=2.0, padj=-0.5)
-plot(var8, range = zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var9, range = zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, box = FALSE, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1),
+plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user

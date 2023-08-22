@@ -52,6 +52,7 @@ path_to_met_source=" "
 #path_to_met_source="/exports/csce/datastore/geos/groups/gcel/Trendy_v11_met/monthly/"
 #path_to_met_source="/exports/csce/datastore/geos/groups/gcel/ECMWF/ERA5/0.125deg_global/"
 path_to_lai=" " #"/exports/csce/datastore/geos/groups/gcel/LAI_ESTIMATES/MCD15A2H.061/global_0.0625deg/"
+path_to_fapar = " "
 path_to_crop_management=" "
 path_to_sand_clay=" " #"/exports/csce/datastore/geos/groups/gcel/SoilGrids/version2/processed/global_5km/"
 path_to_Csom=" " #"/exports/csce/datastore/geos/groups/gcel/SoilGrids/version2/processed/global_5km/"
@@ -75,6 +76,7 @@ met_interp=TRUE
 ## Data streams - The currently coded data streams which can be used to drive or constrain the models
 met_source="site_specific" # "trendy_v9" or "trendy_v11" or "ERA" or "isimip3a" or "site_specific"
 lai_source="site_specific" # "COPERNICUS" or "MODIS" or "site_specific"
+fapar_source=" " # "COPERNICUS" or "MODIS" or "site_specific"
 Csom_source="site_specific" # "SoilGrids" or "SoilGrids_v2" or "HWSD" or "site_specific
 sand_clay_source="site_specific" # "SoilGrids" or "SoilGrids_v2" or "HWSD" or "site_specific
 soilwater_initial_source = " " # initial soil water fraction (m3/m3)
@@ -153,7 +155,7 @@ request_cost_function_scaling = 0 # 0 = Default, no normaliation of the likeliho
 # stage  2 : Submit the project to eddie
 # stage  3 : Copy back results and process vectors
 # stage  4 : Do some standard figure creation (and further processing for gridded analysis)
-stage=4
+stage=0
 repair=1 # to force (=1) re-run processed results or driver files if they already exist
 grid_override=FALSE # force site specific files to be saved and figures to be generated when in "grid" operation
 
