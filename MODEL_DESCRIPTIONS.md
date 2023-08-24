@@ -45,7 +45,8 @@ M = Managed Grassland / arable crops (Table 10)
 | 26 | DALEC.A1.C2.D2.F2.H2.P10.R2.#| DALEC_BUCKET_CanAGE |                                                     | T. L. Smallman               | Unpublished |
 | 27 | DALEC_1005                   | DALEC_1005          | JPL-CARDAMOM DALEC 1005                             | Famiglietti et al., 2021     | Published   |
 | 28 | DALEC_1005a                  | DALEC_1005a         | As DALEC 1005 but with code error corrections       | Famiglietti et al., 2021     | Published   |
-| 29 | DALEC.A3.C1.D2.F2.H2.P1.#    | NA                  | As dalec.4. plus Sellers (1985) RTM                 | T. L. Smallman               | Unpublished   |
+| 29 | <PLACE HOLDER FOR DAVID>     | NA                  | PLACE HOLDER FOR DAVID                              | D. T. Milodowski             | Unpublished   |
+| 30 | DALEC.A3.C1.D2.F2.H2.P1.#    | NA                  | As dalec.4. plus Sellers (1985) RTM                 | T. L. Smallman               | Unpublished   |
 
 #### TABLE 2. Assimilation due to photosynthetic activity sub-models
 

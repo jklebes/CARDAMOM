@@ -1660,7 +1660,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
   } else if (model_name == "DALEC.A3.C1.D2.F2.H2.P1.#") {
       output_dim = 58 ; MTT_dim = 6 ; SS_dim = 6
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
-      tmp=.Fortran( "rdalec29",output_dim=as.integer(output_dim)
+      tmp=.Fortran( "rdalec30",output_dim=as.integer(output_dim)
                              ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
                              ,met=as.double(t(met))
                              ,pars=as.double(pars_in)

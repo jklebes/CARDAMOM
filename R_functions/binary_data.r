@@ -80,9 +80,9 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     modelid = 27
   } else if (modelname == "DALEC_1005a") {
     modelid = 28
-  } else if (modelname == "DALEC.A3.C1.D2.F2.H2.P1.#") {
-    modelid = 29
   } else if (modelname == "") {
+    modelid = 29
+  } else if (modelname == "DALEC.A3.C1.D2.F2.H2.P1.#") {
     modelid = 30
   } else if (modelname == ""){
     modelid = 31

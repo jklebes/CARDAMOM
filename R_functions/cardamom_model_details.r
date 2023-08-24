@@ -253,7 +253,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopars=array(38,dim=c(length(ctessel_pft)))
     nofluxes=array(43,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC_1005a",shortname="DALEC.28.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A3.C1.D2.F2.H2.P1.#" | modelname == "DALEC.29.") {
+  } else if (modelname == "DALEC.A3.C1.D2.F2.H2.P1.#" | modelname == "DALEC.30.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -261,7 +261,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(7,dim=c(length(ctessel_pft)))
     nopars=array(32+6,dim=c(length(ctessel_pft)))
     nofluxes=array(45,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A3.C1.D2.F2.H2.P1.#",shortname="DALEC.29.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+    cardamom_model_details=list(name="DALEC.A3.C1.D2.F2.H2.P1.#",shortname="DALEC.30.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } else {
     # No model name was matched
     stop(paste("the inputed model name ('",modelname,"') could not be matched in the available library"))

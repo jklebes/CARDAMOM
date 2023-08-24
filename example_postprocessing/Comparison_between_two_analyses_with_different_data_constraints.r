@@ -109,7 +109,7 @@ load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""
 orig_PROJECT = PROJECT ; orig_grid_output = grid_output
 #orig_name = "Baseline"
 orig_name = "withLAI" # used in labelling figures
-orig_name = "Single" # used in labelling figures
+#orig_name = "Single" # used in labelling figures
 #orig_name = "-GPP" # used in labelling figures
 #orig_name = "-NBE" # used in labelling figures
 # Assign the alternate analysis - the new data constraint
@@ -1257,6 +1257,8 @@ for (n in seq(1, orig_PROJECT$nosites)) {
 } # Loop sites
 
 # Generate some summary statistics
+print("=== 1-posterior:prior ===")
+print("=i.e. a bigger is better=")
 print("===Original all parameters===")
 print(summary(apply(1-orig_posterior_prior, 3, mean, na.rm=TRUE)))
 print("===Alternate all parameters===")
@@ -1293,7 +1295,7 @@ mtext(alt_name, side = 3, cex = 1.2, padj = 1.3)
 plot(landmask, add=TRUE, lwd=0.5)
 xrange = c(-1,1) * max(abs(range(values(var3), na.rm=TRUE)), na.rm=TRUE)
 plot(var3, main="", range=xrange, col=colour_choices_sign,  bty = "n",
-     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1))
+     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side = 3, cex = 1.2, padj = 1.3)
 dev.off()
@@ -1321,7 +1323,7 @@ mtext(alt_name, side = 3, cex = 1.2, padj = 1.0)
 plot(landmask, add=TRUE, lwd=0.5)
 xrange = c(-1,1) * max(abs(range(values(var3), na.rm=TRUE)), na.rm=TRUE)
 plot(var3, main="", range=xrange, col=colour_choices_sign,  bty = "n",
-     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1))
+     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), side = 3, cex = 1.2, padj = 1.0)
 dev.off()
@@ -2146,7 +2148,7 @@ var2  = cbind(cbind(c(obs_et_mean_domain_PgH2Oyr),c(obs_et_min_domain_PgH2Oyr)),
 var3  = orig_et_PgH2Oyr ; var4  = orig_et_lower_PgH2Oyr ; var5  = orig_et_upper_PgH2Oyr
 var6  = alt_et_PgH2Oyr ; var7  = alt_et_lower_PgH2Oyr ; var8  = alt_et_upper_PgH2Oyr
 zrange = range(c(var1,var2,var3,var4,var5,var6,var7,var8), na.rm=TRUE)
-zrange[2] = zrange[2] + 0.5
+zrange[2] = zrange[2] + (0.1*diff(zrange, an.rm=TRUE))
 plot(var3~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
       col=model_colours[1], type="l", lwd=4, ylab="", xlab="", lty=1)
 plotconfidence(var2,run_years,2,obs_colours[1])
@@ -3658,10 +3660,6 @@ var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
 var16[which(is.na(landfilter))] = NA
-# legend position
-ee = ext(var1) ; e = rep(NA, 4)
-e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
-e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_C_fluxes_CI_xy",outsuffix,".png",sep=""), height = 4000, width = 4500, res = 300)
 par(mfrow=c(2,2), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # NBE 
@@ -4147,10 +4145,6 @@ var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
 var16[which(is.na(landfilter))] = NA
-# legend position
-ee = ext(var1) ; e = rep(NA, 4)
-e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
-e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks_CI_xy",outsuffix,".png",sep=""), height = 4000, width = 4500, res = 300)
 par(mfrow=c(2,2), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Total 
@@ -4425,10 +4419,6 @@ var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
 var16[which(is.na(landfilter))] = NA
-# legend position
-ee = ext(var1) ; e = rep(NA, 4)
-e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
-e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_final_stocks_change_CI_xy",outsuffix,".png",sep=""), height = 4000, width = 4500, res = 300)
 par(mfrow=c(2,2), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Total 
@@ -4742,12 +4732,12 @@ plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
-     main = expression(paste(Delta,"Biomass CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+     main = "", col=colour_choices_CI)
 mtext(expression(paste(Delta,"Biomass CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
-     main = expression(paste(Delta,"DOM CI (MgC h",a^-1,"y",r^-1,")", sep="")), col=colour_choices_CI)
+     main = "", col=colour_choices_CI)
 mtext(expression(paste(Delta,"DOM CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)                  
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
@@ -4955,7 +4945,7 @@ plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
-     main = expression(paste("NPP wood (0-1)",sep="")), col=colour_choices_gain)
+     main = "", col=colour_choices_gain)
 mtext(expression(paste("NPP wood (0-1)",sep="")), side=3, cex = 2.5, padj = 1.5)        
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
@@ -5005,7 +4995,7 @@ plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
-     main = expression(paste("NPP wood (0-1)",sep="")), col=colour_choices_gain)
+     main = "", col=colour_choices_gain)
 mtext(expression(paste("NPP wood (0-1)",sep="")), side=3, cex = 2.5, padj = 1.5)        
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
@@ -5158,12 +5148,12 @@ plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
-     main = expression(paste("NPP wood (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_gain)
+     main = "", col=colour_choices_gain)
 mtext(expression(paste("NPP wood (MgC h",a^-1,y^-1,")",sep="")), side=3, cex = 2.5, padj = 1.5)             
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
-     main = expression(paste("SS wood (MgC h",a^-1,")",sep="")), col=colour_choices_gain)
+     main = "", col=colour_choices_gain)
 mtext(expression(paste("SS wood (MgC h",a^-1,")",sep="")), side=3, cex = 2.5, padj = 1.5)             
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
@@ -5494,10 +5484,6 @@ var11[which(is.na(landfilter))] = NA
 var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
-# legend position
-ee = ext(var1) ; e = rep(NA, 4)
-e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
-e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPP_MRT_SS_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
 par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Wood MRT
@@ -5594,7 +5580,7 @@ mtext(expression(paste("NPP wood CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
-     main = expression(paste("SS wood CI (MgC h",a^-1,")",sep="")), col=colour_choices_CI)
+     main = "", col=colour_choices_CI)
 mtext(expression(paste("SS wood CI (MgC h",a^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
@@ -5762,7 +5748,7 @@ mtext(expression(paste("NPP wood CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
-     main = expression(paste("SS wood CI (MgC h",a^-1,")",sep="")), col=colour_choices_CI)
+     main = "", col=colour_choices_CI)
 mtext(expression(paste("SS wood CI (MgC h",a^-1,")", sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
@@ -5826,10 +5812,6 @@ var11[which(is.na(landfilter))] = NA
 var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
-# legend position
-ee = ext(var1) ; e = rep(NA, 4)
-e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
-e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPPflx_MRT_SS_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
 par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Wood MRT
@@ -6357,10 +6339,6 @@ var11[which(is.na(landfilter))] = NA
 var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
-# legend position
-ee = ext(var1) ; e = rep(NA, 4)
-e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
-e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_NPP_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
 par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Foliar NPP
@@ -6579,10 +6557,6 @@ var11[which(is.na(landfilter))] = NA
 var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
-# legend position
-ee = ext(var1) ; e = rep(NA, 4)
-e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
-e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_NPPflx_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
 par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Foliage NPP
@@ -6957,10 +6931,6 @@ var11[which(is.na(landfilter))] = NA
 var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
-# legend position
-ee = ext(var1) ; e = rep(NA, 4)
-e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
-e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_fol_root_wood_MRT_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
 par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Wood MRT
@@ -7563,10 +7533,6 @@ var11[which(is.na(landfilter))] = NA
 var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
-# legend position
-ee = ext(var1) ; e = rep(NA, 4)
-e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
-e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_FireEmiss_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
 par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Wood MRT
@@ -7706,7 +7672,8 @@ par(mfrow=c(3,3), mar=c(0.5,0.5,2.8,7),omi=c(0.11,0.4,0.2,0.2))
 # Original
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
-     main = expression(paste("Foliage fire mortality CI (MgC h",a^-1,y^-1,")",sep="")), col=colour_choices_CI)
+     main = "", col=colour_choices_CI)
+mtext(expression(paste("Foliage fire mortality CI (MgC h",a^-1,y^-1,")",sep="")), side=3, cex = 2.5, padj = 1.5)       
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=2.0, padj=-0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
@@ -7783,10 +7750,6 @@ var11[which(is.na(landfilter))] = NA
 var13[which(is.na(landfilter))] = NA
 var14[which(is.na(landfilter))] = NA
 var15[which(is.na(landfilter))] = NA
-# legend position
-ee = ext(var1) ; e = rep(NA, 4)
-e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
-e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_Firelitter_CI_xy",outsuffix,".png",sep=""), height = 1400, width = 4500, res = 300)
 par(mfrow=c(1,3), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Wood MRT

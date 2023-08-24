@@ -479,7 +479,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                  fP,fT,fV, & !
                                     remob, & !
                          root_frac_intpol, & !
-                        shoot_frac_intpol, & !
                                    avtemp, & !
                    alloc_to_storage_organ, & !
                        litterfall_foliage, & !
@@ -509,7 +508,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   ! residue fraction of stem left post harvest
   double precision, parameter :: st_res = 0.1d0
   ! LAI above which self shading turnover occurs
-  double precision, parameter :: LAICR = 4d0
+  !double precision, parameter :: LAICR = 4d0
+  double precision, parameter :: LAICR = 5d0
   ! allocation to storage organ relative to GPP
   double precision, parameter :: rel_gso_max = 0.35d0
 
@@ -729,7 +729,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         vernal_calcs    = .true.
         ploughed        = .false.
         sown            = .false.
-        use_seed_labile = .false.
+        use_seed_labile = .true.
         emerged         = .false.
 
         ! pair incoming variables to local module levels
@@ -3299,7 +3299,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! When GPP is higher than seed C content, remaining seed carbon enters litter
     ! C pool, as seedlings do not fully exhaust their seed (P. de Vries p 48)
-    if ( ( gpp_acm .gt. alloc_from_labile ) .and. ( use_seed_labile ) ) then
+    if ( ( gpp_acm > alloc_from_labile ) .and. ( use_seed_labile ) ) then
         stock_litter = stock_litter + stock_labile
         stock_labile = 0d0
         use_seed_labile = .false.
@@ -3311,15 +3311,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     root_frac_intpol  = max(0d0,min(1d0,root_frac_intpol))
     alloc_to_roots    = root_frac_intpol * npp         !
-    shoot_frac_intpol = 1d0 - root_frac_intpol         !
     npp_shoot         = npp - alloc_to_roots           ! NPP remaining after root growth==SHOOT fraction
     alloc_to_foliage  = fol_frac_intpol  * npp_shoot   !
     alloc_to_stem     = stem_frac_intpol * npp_shoot   !
     alloc_to_storage_organ = max(0d0,npp_shoot - alloc_to_foliage - alloc_to_stem)
+
     if ( alloc_to_storage_organ > 0d0 ) then  ! allocation flux to storage organ limited by maximum growth rate
         gso_max  = ( stock_storage_organ + 0.5d0 ) * rel_gso_max / steps_in_day
         alloc_to_storage_organ = min( alloc_to_storage_organ , gso_max )
-        if ( sown ) then
+        if ( sown .and. emerged) then
            alloc_to_labile = ( npp_shoot - alloc_to_foliage - alloc_to_stem - alloc_to_storage_organ ) &
                            * ( 1d0 - resp_cost_labile_trans )
            resp_cost_foliage_to_labile =  ( npp_shoot - alloc_to_foliage - alloc_to_stem - alloc_to_storage_organ ) &
@@ -3378,6 +3378,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !    litterfall_roots   = stock_roots   * min(1d0,ts_length * turnover_rate_roots)
 
     ! remobilized C to NPP (from both leaves and stems) (gC.m-2.t-1)
+    ! Assume that half the litter C is available for remobilisation
     remob   = ( litterfall_foliage * 0.5d0 + litterfall_stem ) * ( 1d0 - resp_cost_labile_trans )
     ! respiratory cost of C transfer (conversion from starch to photosynthates) (gC.m-2.t-1)
     Raremob = ( litterfall_foliage * 0.5d0 + litterfall_stem ) * resp_cost_labile_trans
@@ -3459,10 +3460,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! interpolate between PdV allocation values with reference to
        ! developmental stage (DS)..
        fol_frac_intpol = interpolate( DS , DS_shoot , fol_frac , size(DS_shoot) )
-
        ! stem DS and fracs..
        stem_frac_intpol = interpolate( DS , DS_shoot , stem_frac , size(DS_shoot) )
-
        ! root DS and fracs..
        root_frac_intpol = interpolate( DS , DS_root , root_frac , size(DS_root) )
 
@@ -3512,8 +3511,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     endif
 
     ! Only calculate temperature coefficient if avtemp lies within (tmin,tmax)
-    ! range.
-    ! NOTE: (doptmin+1d0) < dmaxmin added to allow for EDC search period when "not
+    ! range. NOTE: (doptmin+1d0) < dmaxmin added to allow for EDC search period when "not
     ! allowed" parameter sets will be tried anyway
     if ( avtemp > tmin .and. avtemp < tmax .and. (doptmin+1d0) < dmaxmin ) then
         fT = temperature_impact( doptmin , dmaxmin , dttmin )
@@ -3529,15 +3527,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        if ( DS < 1d0 ) then  ! in the vegetative phase (before flowering):
 
           DR = DR_pre * fT * fP   ! DR is affected by temperature, photoperiod...
-
           if ( vernal_calcs ) DR = DR * fV ! ...and vernalization (for winter cereals)
-
           DS = DS + (DR * days_in_step)    ! developmental stage (DS), calculated as the sum of daily developmental rates
 
        else    ! in the reproductive phase (after flowering):
 
           DR = DR_post * fT   ! DR is affected only by temperature
-
           DS = DS + (DR * days_in_step)
 
        endif ! vegetative or reproductive phase
