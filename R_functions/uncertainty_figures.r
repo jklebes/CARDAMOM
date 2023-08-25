@@ -55,6 +55,13 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
+   }  else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H3.P1.#"){
+       # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
+       tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
+       var = t(states_all$roots_gCm2) + tmp
+       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
+       plot_root_depth = TRUE
    }  else if (PROJECT$model$name == "DALEC.A2.C1.D2.F2.H2.P1.#"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
