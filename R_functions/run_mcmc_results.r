@@ -636,6 +636,11 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
                   grid_output$mean_total_drainage_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
                   grid_output$total_drainage_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               }
+              if (exists(x = 'LWP_MPa', where = site_output)){
+                  # Leaf water potential
+                  grid_output$LWP_MPa = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_LWP_MPa = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
           }
           # Snow specific
           if (exists(x = "snow_kgH2Om2", where = site_output)) {
@@ -2320,6 +2325,10 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
                   site_output$mean_total_drainage_kgH2Om2day = quantile(rowMeans(site_output$total_drainage_kgH2Om2day, na.rm = na_flag), prob=num_quantiles)
                   site_output$mean_annual_total_drainage_kgH2Om2day = apply(t(apply(site_output$total_drainage_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
               }
+              if (exists(x = "LWP_MPa", where = site_output)){
+                  site_output$LWP_MPa = apply(states_all$LWP_MPa,2,quantile,prob=num_quantiles,na.rm = na_flag)
+                  site_output$LWP_MPa = quantile(rowMeans(states_all$LWP_MPa, na.rm = na_flag), prob=num_quantiles)
+              }
           }
 
           # Snow related
@@ -3195,6 +3204,11 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
                       grid_output$mean_annual_total_drainage_kgH2Om2day[n,,] = site_output$mean_annual_total_drainage_kgH2Om2day
                       grid_output$mean_total_drainage_kgH2Om2day[slot_i,slot_j,] = site_output$mean_total_drainage_kgH2Om2day
                       grid_output$total_drainage_kgH2Om2day[n,,] = site_output$total_drainage_kgH2Om2day
+                   }
+                   if (exists(x = "LWP_MPa", where = site_output)){
+                      # Leaf water potential
+                      grid_output$mean_LWP_MPa[slot_i,slot_j,] = site_output$mean_LWP_MPa
+                      grid_output$LWP_MPa[n,,] = site_output$LWP_MPa
                    }
                } # ET_kgH2Om2day exists
                # Snow specific
