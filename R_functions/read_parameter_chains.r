@@ -144,6 +144,7 @@ read_parameter_chains<- function(PROJECT_in,n) {
   if (PROJECT_in$model$name == "DALEC_1005" || PROJECT_in$model$name == "DALEC_1005a" ||
       PROJECT_in$model$name == "DALEC.C1.D1.F2.P1.#" || PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R3.#" ||
       PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H1.P1.#" || PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P1.#" ||
+      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H3.P1" ||
       PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P1.R1.#" || PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P1.R1.#" ||
       PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R1.#" || PROJECT_in$model$name == "DALEC.A2.C1.D2.F2.H2.P1.#" ||
       PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P2.#" || PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P5.#") {
