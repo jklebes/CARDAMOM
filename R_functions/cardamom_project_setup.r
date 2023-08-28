@@ -250,9 +250,10 @@ cardamom_project_setup <- function (paths,PROJECT) {
                      "../model/",modelname,"/src/",modelname,"_R_interface.f90 ","-o dalec.so -fPIC",sep=""))
         system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/executable/dalec.so ",exepath,"/dalec.so",sep=""))
         # Copy crop development file into position
-        if (modelname == "DALEC.A1.C3.H2.M1." | modelname == "DALEC.C3.M1.") {
+        if (modelname == "DALEC.A3.C3.H2.M1.#" | modelname == "DALEC.C3.M1.#") {
              system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/",modelname,"/src/winter_wheat_development.csv ",exepath,"/",sep=""))
         } #
+
         # return to original working directory
         setwd(cwd)
 
