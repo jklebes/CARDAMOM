@@ -52,7 +52,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     modelid = 13
   } else if (modelname == "DALEC.C3.M1.#") {
     modelid = 14
-  } else if (modelname == "DALEC.A1.C3.H2.M1.#") {
+  } else if (modelname == "DALEC.A3.C3.H2.M1.#") {
     modelid = 15
   } else if (modelname == "DALEC.M2.#") {
     modelid = 16
@@ -280,7 +280,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[21]=OBS$Cwood_initial      ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
       PARPRIORS[22]=OBS$Clit_initial       ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
       PARPRIORS[23]=OBS$Csom_initial       ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
-  } else if (modelname == "DALEC.A1.C3.H2.M1.#") {
+  } else if (modelname == "DALEC.A3.C3.H2.M1.#") {
       PARPRIORS[2] =0.46                   ; PARPRIORUNC[2]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       PARPRIORS[11]=0.2764618              ; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
       PARPRIORS[12]=OBS$plant              ; PARPRIORUNC[12]=OBS$plant_range

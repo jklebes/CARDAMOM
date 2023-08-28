@@ -125,6 +125,25 @@ module MODEL_PARAMETERS
     PI%parmin(37)=0.35d0
     PI%parmax(37)=5d0 !20.0
 
+!    ! Canopy NIR reflectance
+!    PI%parmin(39) = 0.05d0
+!    PI%parmax(39) = 0.60d0
+!    ! Canopy PAR reflectance
+!    PI%parmin(40) = 0.05d0
+!    PI%parmax(40) = 0.60d0
+!    ! Canopy NIR transmittance
+!    PI%parmin(41) = 0.05d0
+!    PI%parmax(41) = 0.60d0
+!    ! Canopy PAR transmittance
+!    PI%parmin(42) = 0.05d0
+!    PI%parmax(42) = 0.60d0
+!    ! Soil reflectance to near infrared radiation
+!    PI%parmin(43) = 0.01d0
+!    PI%parmax(43) = 0.20d0
+!    ! Soil reflectance to photosynthetically active radiation
+!    PI%parmin(44) = 0.01d0
+!    PI%parmax(44) = 0.20d0
+
     !
     ! INITIAL VALUES (gC.m-2) DECLARED HERE
     !

@@ -179,7 +179,7 @@ module model_likelihood_module
     ! next need to run the model itself
     call CARBON_MODEL(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft   &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS              &
                      ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
                      ,DATAin%nofluxes,DATAin%M_GPP                &
                      ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
@@ -249,7 +249,7 @@ module model_likelihood_module
     ! run the dalec model
     call CARBON_MODEL(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft   &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS              &
                      ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
                      ,DATAin%nofluxes,DATAin%M_GPP                &
                      ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
@@ -317,7 +317,7 @@ module model_likelihood_module
     ! run the dalec model
     call CARBON_MODEL(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft   &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS              &
                      ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
                      ,DATAin%nofluxes,DATAin%M_GPP                &
                      ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
@@ -385,7 +385,7 @@ module model_likelihood_module
     ! run the dalec model
     call CARBON_MODEL(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft   &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS              &
                      ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
                      ,DATAin%nofluxes,DATAin%M_GPP                &
                      ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
@@ -441,7 +441,7 @@ module model_likelihood_module
     ! next need to run the model itself
     call CARBON_MODEL(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft   &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS              &
                      ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
                      ,DATAin%nofluxes,DATAin%M_GPP                &
                      ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
@@ -450,7 +450,7 @@ module model_likelihood_module
 
     call CARBON_MODEL(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                     ,local_fluxes,local_pools,DATAin%pft   &
+                     ,local_fluxes,local_pools                    &
                      ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
                      ,DATAin%nofluxes,DATAin%M_GPP                &
                      ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
@@ -604,7 +604,7 @@ module model_likelihood_module
                         ,meantemp,EDC2)
 
     use cardamom_structures, only: DATAin
-    use CARBON_MODEL_MOD, only: resp_rate_temp_coeff,ts_length,linear_model_gradient
+    use CARBON_MODEL_MOD, only: resp_rate_temp_coeff,linear_model_gradient
 
     ! the second of two subroutines for assessing current parameters for passing
     ! realism tests for crop ecosystems
@@ -650,8 +650,7 @@ module model_likelihood_module
     fwood = sum(M_FLUXES(:,7)) / (sum(M_FLUXES(:,1))*fauto)
     fsom = fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(10))
     flit = (froot+flab+ffol)
-    ! length of time step in hours..
-    ts_length = 24d0
+
     ! initial value
     infi = 0d0
     ! update initial values
@@ -931,7 +930,7 @@ module model_likelihood_module
     ! run the dalec model
     call CARBON_MODEL(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%pft   &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS              &
                      ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
                      ,DATAin%nofluxes,DATAin%M_GPP                &
                      ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &

@@ -920,7 +920,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        gs_demand_supply_ratio(n) = (stomatal_conductance  - minimum_conductance) &
                                  / (potential_conductance - minimum_conductance)
        ! Store the canopy level stomatal conductance (mmolH2O/m2ground/s)
-       !gs_total_canopy(n) = stomatal_conductance * dayl_seconds_1
        gs_total_canopy(n) = stomatal_conductance
 
        ! Note that soil mass balance will be calculated after phenology
@@ -1022,8 +1021,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,41) =  transpiration   ! transpiration
        FLUXES(n,42) =  soilevaporation ! soil evaporation
        FLUXES(n,43) =  wetcanopy_evap  ! wet canopy evaporation
-       FLUXES(n,44) =  runoff
-       FLUXES(n,45) =  underflow
+       FLUXES(n,44) =  runoff          ! soil surface runoff
+       FLUXES(n,45) =  underflow       ! drainage from bottom of soil column
 
        !!!!!!!!!!
        ! Extract biomass - e.g. deforestation / degradation
@@ -1305,6 +1304,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! calculate combined light and CO2 limited photosynthesis (umolC/m2/s)
     acm_gpp_stage_2 = light_limited_photosynthesis*pd/(light_limited_photosynthesis+pd)
 
+    ! Estimate ci as a function of the final combined GPP estimate
     !pp = acm_gpp_stage_2*rc ; mult = co2+qq-pp
     !! calculate internal CO2 concentration (ppm or umol/mol)
     !ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
