@@ -43,87 +43,117 @@ module MODEL_PARAMETERS
     !
 
     ! Decomposition rate (frac/day)
-    PI%parmin(1)=0.000001d0*24d0 ; PI%parmax(1)=0.0001d0*24d0
+    PI%parmin(1) = 0.00001d0
+    PI%parmax(1) = 0.01d0
 
     ! Fraction of GPP to autotrophic pool
-    PI%parmin(2)=0.2d0 ; PI%parmax(2)=0.7d0
+    PI%parmin(2) = 0.2d0
+    PI%parmax(2) = 0.8d0
 
     ! max development rate (day-1) DS (0->1)
-    PI%parmin(3)=0.020d0 ; PI%parmax(3)=0.050d0
+    PI%parmin(3) = 0.020d0 
+    PI%parmax(3) = 0.050d0
+
     ! max development rate (day-1) DS (1->2)
-    PI%parmin(4)=0.010d0 ; PI%parmax(4)=0.050d0
+    PI%parmin(4) = 0.010d0 
+    PI%parmax(4) = 0.050d0
 
     ! turnover rate foliage (frac/day)
-    PI%parmin(5)=1.0d-4*24d0 ; PI%parmax(5)=0.02d0*24d0
+    PI%parmin(5) = 0.0024d0 
+    PI%parmax(5) = 0.48d0
 
     ! TOR wood* - 1% loss per year value (day-1)
-    PI%parmin(6)=1d-4*24d0 ; PI%parmax(6)=0.01d0*24d0
-    ! maximum rate of foliar turnover (hr-1) due to self-shading
-    PI%parmin(7)=1d-5*24d0 ; PI%parmax(7)=0.01d0*24d0
+    PI%parmin(6) = 0.0024d0 
+    PI%parmax(6) = 0.24d0
+    ! maximum rate of foliar turnover (day-1) due to self-shading
+    PI%parmin(7) = 0.00024d0 
+    PI%parmax(7) = 0.24d0
 
     ! effective vernalisation days when plants are 50 % vernalised
-    PI%parmin(8)=12d0 ; PI%parmax(8)=32d0
+    PI%parmin(8) = 12d0 
+    PI%parmax(8) = 32d0
 
-    ! mineralisation rate of litter (hr-1)
-    PI%parmin(9)=1d-5*24d0 ; PI%parmax(9)=1d-2*24d0
-    ! mineralisation rate of SOM (hr-1)
-    PI%parmin(10)=1d-8*24d0 ; PI%parmax(10)=1d-3*24d0
+    ! Turnover of litter (fraction; temperature adjusted)
+    PI%parmin(9) = 0.0001141d0 ! 24   years at 0oC
+    PI%parmax(9) = 0.02d0      ! 0.13 years at 0oC
+
+    ! Turnover of som to Rhet (fraction; temperature adjusted)
+    PI%parmin(10) = 1.368925d-06   ! 2000 years at 0oC
+    PI%parmax(10) = 9.126169d-05   !   30 years at 0oC !0.0001368926d0 !   20 years at 0oC
 
     ! log10 avg foliar N (gN.m-2)
-    PI%parmin(11) = -0.2218487d0 ; PI%parmax(11) = 0.6382028d0
+    PI%parmin(11) = -0.2218487d0 
+    PI%parmax(11) = 0.6382028d0
 
     ! sow day
-    PI%parmin(12)=115d0 ; PI%parmax(12)=350d0
+    PI%parmin(12) = 115d0 
+    PI%parmax(12) = 350d0
 
     ! respiratory cost of labile transfer (per gC.m-2 labile)
-    PI%parmin(13)=0.05d0 ; PI%parmax(13)=0.4d0
+    PI%parmin(13) = 0.05d0 
+    PI%parmax(13) = 0.4d0
 
     ! phenological heat units required for emergence
-    PI%parmin(14)=100d0 ; PI%parmax(14)=150d0
+    PI%parmin(14) = 100d0 
+    PI%parmax(14) = 150d0
 
     ! harvest day
-    PI%parmin(15)=15d0 ; PI%parmax(15)=350d0
+    PI%parmin(15) = 15d0 
+    PI%parmax(15) = 350d0
+
     ! plough day
-    PI%parmin(16)=365.25d0 ; PI%parmax(16)=365.25d0*4d0
+    PI%parmin(16) = 365.25d0 
+    PI%parmax(16) = 365.25d0*4d0
 
     ! LMA
-    PI%parmin(17)=10d0 ; PI%parmax(17)=100d0
+    PI%parmin(17) = 10d0 
+    PI%parmax(17) = 100d0
 
     !
     ! NOTE number order not consistent
     !
 
     ! minimum temperature for development (oC)
-    PI%parmin(26)=(-1d0+273.15d0) ; PI%parmax(26)=(10d0+273.15d0)  ! -10,10
+    PI%parmin(26) = (-1d0+273.15d0) 
+    PI%parmax(26) = (10d0+273.15d0)  ! -10,10
     ! maximum temperature for development (oC)
-    PI%parmin(27)=(10d0+273.15d0) ; PI%parmax(27)=(36d0+273.15d0)   ! 20,42
+    PI%parmin(27) = (10d0+273.15d0) 
+    PI%parmax(27) = (36d0+273.15d0)   ! 20,42
     ! optimum temperature for development (oC)
-    PI%parmin(28)=(10d0+273.15d0) ; PI%parmax(28)=(30d0+273.15d0)   ! 10,35
+    PI%parmin(28) = (10d0+273.15d0) 
+    PI%parmax(28) = (30d0+273.15d0)   ! 10,35
 
     ! minimum temperature for vernalisation (oC)
-    PI%parmin(29)=(-5.3d0+273.15d0) ; PI%parmax(29)=(-0.3d0+273.15d0)   ! -15,10
+    PI%parmin(29) = (-5.3d0+273.15d0)
+    PI%parmax(29) = (-0.3d0+273.15d0)   ! -15,10
     ! maximum temperature for vernalisation (oC)
-    PI%parmin(30)=(12.7d0+273.15d0) ; PI%parmax(30)=(18.7d0+273.15d0)    ! 5,30
+    PI%parmin(30) = (12.7d0+273.15d0) 
+    PI%parmax(30) = (18.7d0+273.15d0)    ! 5,30
     ! optimum temperature for vernalisation (oC)
-    PI%parmin(31)=(2.9d0+273.15d0) ; PI%parmax(31)=(6.9d0+273.15d0)   ! -5,15
+    PI%parmin(31) = (2.9d0+273.15d0) 
+    PI%parmax(31) = (6.9d0+273.15d0)   ! -5,15
 
     ! critical photoperiod for development (hrs)
-    PI%parmin(32)=6d0 ; PI%parmax(32)=13d0
+    PI%parmin(32) = 6d0 
+    PI%parmax(32) = 13d0
     ! photoperiod sensitivity
-    PI%parmin(33)=0.10d0 ; PI%parmax(33)=0.35d0
+    PI%parmin(33) = 0.10d0 
+    PI%parmax(33) = 0.35d0
 
     ! turnover rate of labile
-    PI%parmin(34)=1d-5*24d0  ; PI%parmax(34)=0.00625d0*24d0
+    PI%parmin(34) = 1d-5
+    PI%parmax(34) = 0.15d0
     ! turnover rate of autotrophic pool
-    PI%parmin(35)=0.001d0*24d0 ; PI%parmax(35)=0.07d0*24d0
+    PI%parmin(35) = 0.001d0 
+    PI%parmax(35) = 0.99d0
 
     ! BUCKET - root biomass needed to reach 50 % of max depth
-    PI%parmin(36)=10d0
-    PI%parmax(36)=500d0
+    PI%parmin(36) = 10d0
+    PI%parmax(36) = 500d0
 
     ! BUCKET - maximum rooting depth
-    PI%parmin(37)=0.35d0
-    PI%parmax(37)=5d0 !20.0
+    PI%parmin(37) = 0.35d0
+    PI%parmax(37) = 5d0 !20.0
 
 !    ! Canopy NIR reflectance
 !    PI%parmin(39) = 0.05d0
@@ -145,33 +175,44 @@ module MODEL_PARAMETERS
 !    PI%parmax(44) = 0.20d0
 
     !
-    ! INITIAL VALUES (gC.m-2) DECLARED HERE
+    ! INITIAL VALUES DECLARED HERE
     !
 
-    ! C labile
-    PI%parmin(18)=1d0 ; PI%parmax(18)=10d0
-    ! C foliar
-    PI%parmin(19)=1d0 ; PI%parmax(19)=5d0
-    ! C roots
-    PI%parmin(20)=1d0 ; PI%parmax(20)=5d0
-    ! C_wood
-    PI%parmin(21)=1d0 ; PI%parmax(21)=5d0
-    ! C litter
-    PI%parmin(22)=1d0 ; PI%parmax(22)=10d0
-    ! C_som
-    PI%parmin(23)=100d0 ; PI%parmax(23)=200000d0
-    ! C autotrophic pool
-    PI%parmin(24)=0.1d0 ; PI%parmax(24)=5d0
-    ! C storage organ
-    PI%parmin(25)=0.1d0 ; PI%parmax(25)=1d0
+    ! C labile (gC.m-2)
+    PI%parmin(18) = 1d0 
+    PI%parmax(18) = 10d0
+    ! C foliar (gC.m-2)
+    PI%parmin(19) = 1d0 
+    PI%parmax(19) = 5d0
+    ! C roots (gC.m-2)
+    PI%parmin(20) = 1d0 
+    PI%parmax(20) = 5d0
+    ! C_wood (gC.m-2)
+    PI%parmin(21) = 1d0 
+    PI%parmax(21) = 5d0
+    ! C litter (gC.m-2)
+    PI%parmin(22) = 1d0 
+    PI%parmax(22) = 10d0
+    ! C_som (gC.m-2)
+    PI%parmin(23) = 100d0 
+    PI%parmax(23) = 200000d0
+    ! C autotrophic pool (gC.m-2)
+    PI%parmin(24) = 0.1d0 
+    PI%parmax(24) = 5d0
+    ! C storage organ (gC.m-2)
+    PI%parmin(25) = 0.1d0 
+    PI%parmax(25) = 1d0
+
     ! Soil water fraction (m3/m3)
-    PI%parmin(38)=0.1d0 ; PI%parmax(38)=0.9d0
+    PI%parmin(38) = 0.1d0 
+    PI%parmax(38) = 0.9d0
 
     ! Read in the crop type specific development file
     call crop_development_parameters(PI%stock_seed_labile,PI%DS_shoot &
                                     ,PI%DS_root,PI%fol_frac,PI%stem_frac &
                                     ,PI%root_frac,PI%DS_LRLV,PI%LRLV &
                                     ,PI%DS_LRRT,PI%LRRT)
+
   end subroutine pars_info
   !
   !------------------------------------------------------------------

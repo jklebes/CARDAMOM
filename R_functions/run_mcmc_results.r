@@ -944,10 +944,12 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
           states_all$rauto_parameter_correlation = cor(tmp,rowMeans(states_all$rauto_gCm2day))
           states_all$rhet_parameter_correlation = cor(tmp,rowMeans(states_all$rhet_gCm2day))
           # Avoid error flag when no fire
-          if (max(as.vector(states_all$fire_gCm2day)) > 0) {
-              states_all$fire_parameter_correlation = cor(tmp,rowMeans(states_all$fire_gCm2day))
-          } else {
-              states_all$fire_parameter_correlation = array(0, dim = c(PROJECT$model$nopars[n],1))
+          if (exists(x = "fire_gCm2day", where = states_all)) {
+              if (max(as.vector(states_all$fire_gCm2day)) > 0) {
+                  states_all$fire_parameter_correlation = cor(tmp,rowMeans(states_all$fire_gCm2day))
+              } else {
+                  states_all$fire_parameter_correlation = array(0, dim = c(PROJECT$model$nopars[n],1))
+              }
           }
           # Determine whether have have both mean transit time and allocation to wood
           if (exists(x = "MTT_wood_years", where = states_all) & exists(x = "alloc_wood_gCm2day", where = states_all)) {
@@ -1168,7 +1170,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
           } # was the obs assimilated?
 
           ## NBE (gC/m2/day)
-          obs_id = 35 ; unc_id = obs_id+1 ; states_all$nbe_gCm2day = states_all$nee_gCm2day + states_all$fire_gCm2day
+          obs_id = 35 ; unc_id = obs_id+1 
           if (length(which(drivers$obs[,obs_id] != -9999)) > 0) {
               # Loop through time to assess model overlap with observations
               nobs = 0 ; states_all$nbe_assim_data_overlap_fraction = 0

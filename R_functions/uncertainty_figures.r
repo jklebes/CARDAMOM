@@ -21,18 +21,21 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
    # Load the current file
    load(load_file)
 
-	 # Calculate some timing information
-	 timestep = 1
-	 if (PROJECT$model$timestep == "monthly") {timestep = mean(PROJECT$model$timestep_days)}
-	 if (PROJECT$model$timestep == "weekly") {timestep = mean(PROJECT$model$timestep_days)}
-	 time_vector = 1:dim(states_all$gpp_gCm2day)[2]
-	 year_vector = time_vector/(365.25/timestep)
-	 year_vector = year_vector+as.numeric(PROJECT$start_year)
-	 interval = floor(length(year_vector)/10)
+   # Calculate some timing information
+   timestep = 1
+   if (PROJECT$model$timestep == "monthly") {timestep = mean(PROJECT$model$timestep_days)}
+   if (PROJECT$model$timestep == "weekly") {timestep = mean(PROJECT$model$timestep_days)}
+   time_vector = 1:dim(states_all$gpp_gCm2day)[2]
+   year_vector = time_vector/(365.25/timestep)
+   year_vector = year_vector+as.numeric(PROJECT$start_year)
+   interval = floor(length(year_vector)/10)
 
    # Plot rooting depth information
    plot_root_depth = FALSE
-   if (PROJECT$model$name == "DALEC.A1.C3.H2.M1.#") {
+   if (exists(x = "RootDepth_m", where = states_all)) {
+       var = t(states_all$RootDepth_m)
+       plot_root_depth = TRUE
+   } else if (PROJECT$model$name == "DALEC.A1.C3.H2.M1.#") {
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        var = t(states_all$roots_gCm2)
        # parameter numbers adjusted for crop model
@@ -530,10 +533,10 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
     if (exists(x = "lai_m2m2", where = states_all)) {
 
         # flip it to get the right shape
-		    var = t(states_all$lai_m2m2)
-		    obs = drivers$obs[,3] ; obs_unc = drivers$obs[,4]
+        var = t(states_all$lai_m2m2)
+        obs = drivers$obs[,3] ; obs_unc = drivers$obs[,4]
         # filter -9999 to NA
- 	 	    filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
+        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
         yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
         if (length(which(is.na(obs) == FALSE)) > 0) {
             yrange[2] = max(max(obs+obs_unc, na.rm=TRUE),yrange[2])
@@ -616,6 +619,103 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        dev.off()
 
    } # gpp_gCm2day
+
+   # Net Primary Production (gC/m2day)
+   if (exists(x = "npp_gCm2day", where = states_all)) {
+
+   	   # flip it to get the right shape
+       var = t(states_all$npp_gCm2day)
+
+       yrange = quantile(as.vector(var), prob=c(0.001,0.999))
+       jpeg(file=paste(PROJECT$figpath,"timeseries_npp_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+            width=7200, height=4000, res=280, quality=100)
+       # now create the plotting area
+       par(mfrow=c(1,1), mar=c(5,5,3,1))
+       plot(obs, pch=16,xaxt="n", ylim=yrange,
+            cex=0.8,ylab="NPP (gC/m2/day)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
+            main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       axis(1, at=time_vector[seq(1,length(time_vector),interval)],
+            labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
+       # add the confidence intervals
+       plotconfidence(var)
+       # add source sink line
+       abline(0,0,col="grey", lwd=1)
+       # calculate and draw the median values, could be mean instead or other
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), lwd=1, col="red")
+
+       dev.off()
+
+   } # npp_gCm2day
+
+   # Net Biome Exchange of CO2 (gC/m2day)
+   if (exists(x = "nbe_gCm2day", where = states_all)) {
+
+   	   # flip it to get the right shape
+       var = t(states_all$nbe_gCm2day)
+       # pass observations driver
+       obs = drivers$obs[,35] ; obs_unc = drivers$obs[,36]
+       # filter -9999 to NA
+       filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
+
+       yrange = quantile(as.vector(var), prob=c(0.001,0.999))
+       if (length(which(is.na(obs) == FALSE)) > 0 ) {
+           yrange = c(min(obs-obs_unc, na.rm=TRUE),max(obs+obs_unc, na.rm=TRUE),yrange)
+           yrange = range(yrange, na.rm=TRUE)
+       }
+       jpeg(file=paste(PROJECT$figpath,"timeseries_nbe_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+            width=7200, height=4000, res=280, quality=100)
+       # now create the plotting area
+       par(mfrow=c(1,1), mar=c(5,5,3,1))
+       plot(obs, pch=16,xaxt="n", ylim=yrange,
+            cex=0.8,ylab="NBE (gC/m2/day)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
+            main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       axis(1, at=time_vector[seq(1,length(time_vector),interval)],
+            labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
+       # add the confidence intervals
+       plotconfidence(var)
+       # add source sink line
+       abline(0,0,col="grey", lwd=1)
+       # calculate and draw the median values, could be mean instead or other
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), lwd=1, col="red")
+       # add the data on top if there is any
+       if (length(which(is.na(obs))) != length(obs) ) {
+           points(obs, pch=16, cex=0.8)
+           if (length(which(is.na(obs)))/length(obs) > 0.01) {
+               plotCI(obs,gap=0,uiw=obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
+           }
+       }
+
+       dev.off()
+
+   } # nbe_gCm2day
+
+   # Net Biome Production of CO2 (gC/m2day)
+   if (exists(x = "nbp_gCm2day", where = states_all)) {
+
+   	   # flip it to get the right shape
+       var = t(states_all$nbp_gCm2day)
+
+       yrange = quantile(as.vector(var), prob=c(0.001,0.999))
+
+       jpeg(file=paste(PROJECT$figpath,"timeseries_nbp_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+            width=7200, height=4000, res=280, quality=100)
+       # now create the plotting area
+       par(mfrow=c(1,1), mar=c(5,5,3,1))
+       plot(obs, pch=16,xaxt="n", ylim=yrange,
+            cex=0.8,ylab="NBP (gC/m2/day)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
+            main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       axis(1, at=time_vector[seq(1,length(time_vector),interval)],
+            labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
+       # add the confidence intervals
+       plotconfidence(var)
+       # add source sink line
+       abline(0,0,col="grey", lwd=1)
+       # calculate and draw the median values, could be mean instead or other
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), lwd=1, col="red")
+
+       dev.off()
+
+   } # nbp_gCm2day
 
    # Net Ecosystem Exchange of CO2 (gC/m2day)
    if (exists(x = "nee_gCm2day", where = states_all)) {
@@ -717,6 +817,78 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        dev.off()
 
    } # rhet_gCm2day
+
+   # Heterotrophic respiration from litter
+   if (exists(x = "rhet_litter_gCm2day", where = states_all)) {
+
+       # flip it to get the right shape
+       var = t(states_all$rhet_litter_gCm2day)
+
+       jpeg(file=paste(PROJECT$figpath,"timeseries_heterotrophic_litter_respiration_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+            width=7200, height=4000, res=280, quality=100)
+       # now create the plotting area
+       par(mfrow=c(1,1), mar=c(5,5,3,1))
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var), prob=c(0.999),na.rm=TRUE)),
+            cex=0.8,ylab="Heterotrophic litter respiration (gC/m2/day)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8,
+            cex.main=1.8, main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       axis(1, at=time_vector[seq(1,length(time_vector),interval)],labels=round(year_vector[seq(1,length(time_vector),interval)],
+            digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
+       # add the confidence intervals
+       plotconfidence(var)
+       # calculate and draw the median values, could be mean instead or other
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), lwd=1, col="red")
+
+       dev.off()
+
+   } # rhet_litter_gCm2day
+
+   # Heterotrophic respiration from litter
+   if (exists(x = "rhet_som_gCm2day", where = states_all)) {
+
+       # flip it to get the right shape
+       var = t(states_all$rhet_som_gCm2day)
+
+       jpeg(file=paste(PROJECT$figpath,"timeseries_heterotrophic_som_respiration_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+            width=7200, height=4000, res=280, quality=100)
+       # now create the plotting area
+       par(mfrow=c(1,1), mar=c(5,5,3,1))
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var), prob=c(0.999),na.rm=TRUE)),
+            cex=0.8,ylab="Heterotrophic som respiration (gC/m2/day)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8,
+            cex.main=1.8, main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       axis(1, at=time_vector[seq(1,length(time_vector),interval)],labels=round(year_vector[seq(1,length(time_vector),interval)],
+            digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
+       # add the confidence intervals
+       plotconfidence(var)
+       # calculate and draw the median values, could be mean instead or other
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), lwd=1, col="red")
+
+       dev.off()
+
+   } # rhet_som_gCm2day
+
+   # Total autotrophic respiration
+   if (exists(x = "rauto_gCm2day", where = states_all)) {
+
+       # flip it to get the right shape
+       var = t(states_all$rauto_gCm2day)
+
+       jpeg(file=paste(PROJECT$figpath,"timeseries_autotrophic_respiration_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+            width=7200, height=4000, res=280, quality=100)
+       # now create the plotting area
+       par(mfrow=c(1,1), mar=c(5,5,3,1))
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,quantile(as.vector(var), prob=c(0.999),na.rm=TRUE)),
+            cex=0.8,ylab="Autotrophic respiration (gC/m2/day)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8,
+            cex.main=1.8, main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+       axis(1, at=time_vector[seq(1,length(time_vector),interval)],labels=round(year_vector[seq(1,length(time_vector),interval)],
+            digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
+       # add the confidence intervals
+       plotconfidence(var)
+       # calculate and draw the median values, could be mean instead or other
+       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), lwd=1, col="red")
+
+       dev.off()
+
+   } # rauto_gCm2day
 
    # labile (gC/m2)
    if (exists(x = "labile_gCm2", where = states_all)) {
@@ -1153,7 +1325,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,ymax), cex=0.8,ylab="Harvested C",xlab="Time (Year)",
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,ymax), cex=0.8,ylab="Harvested C (gC/m2/day)",xlab="Time (Year)",
        cex.lab=1.8, cex.axis=1.8, cex.main=1.8, main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],
             labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
@@ -1166,8 +1338,8 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 
    } # harvest
 
-   # Total ecosystem harvested C (gC/m2/day)
-   if (exists(x = "grid_output", where = states_all)) {
+   # Mean canopy age information (gC/m2/day)
+   if (exists(x = "canopyage_days", where = states_all)) {
 
        # structure needed by function is dim=c(time,iter)
        # flip it to get the right shape
@@ -1215,6 +1387,47 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        dev.off()
 
    } # fire_gCm2day
+
+   # Lazy coding for generic plotting of a list of variables we know will not come with observations
+   list_variables = c("extracted_residue_gCm2day","alloc_foliage_gCm2day","alloc_labile_gCm2day",
+                      "alloc_roots_gCm2day","alloc_wood_gCm2day","labile_to_foliage_gCm2day",
+                      "alloc_autotrophic_gCm2day","alloc_StorageOrgan_gCm2day","foliage_to_litter_gCm2day",
+                      "roots_to_litter_gCm2day","wood_to_litter_gCm2day","litter_to_som_gCm2day",
+                      "rauto_maintenance_gCm2day","rauto_labile_to_foliage_gCm2day","rauto_npp_to_labile_gCm2day",
+                      "rauto_foliage_to_litter_gCm2day","rauto_wood_to_litter_gCm2day","HARVESTextracted_foliage_gCm2day", 
+                      "HARVESTextracted_wood_gCm2day","HARVESTextracted_DeadFoliage_gCm2day",
+                      "HARVESTextracted_labile_gCm2day","HARVESTlitter_foliage_gCm2day",
+                      "HARVESTlitter_wood_gCm2day","HARVESTlitter_DeadFoliage_gCm2day","HARVESTlitter_autotrophic_gCm2day",
+                      "PLOUGHlitter_roots_gCm2day","autotrophic_gCm2","StorageOrgan_gCm2","DeadFoliage_gCm2")
+   for (p in seq(1, length(list_variables))) {
+        # Check whether current variable exists
+        if (exists(x = list_variables[p], where = states_all)) {
+
+   	       # flip it to get the right shape
+            var = t(get(list_variables[p], pos = states_all))
+            # Determine a reasonable y-axis range
+            yrange = quantile(as.vector(var), prob=c(0.001,0.999))
+            # Begin plotting
+            jpeg(file=paste(PROJECT$figpath,"timeseries_",list_variables[p],"_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
+                 width=7200, height=4000, res=280, quality=100)
+            # now create the plotting area
+            par(mfrow=c(1,1), mar=c(5,5,3,1))
+            plot(obs, pch=16,xaxt="n", ylim=yrange,
+                 cex=0.8,ylab=list_variables[p], xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
+                 main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
+            axis(1, at=time_vector[seq(1,length(time_vector),interval)],
+                 labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
+            # add the confidence intervals
+            plotconfidence(var)
+            # add source sink line
+            abline(0,0,col="grey", lwd=1)
+            # calculate and draw the median values, could be mean instead or other
+            lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), lwd=1, col="red")
+
+            dev.off()
+
+        } # exists
+   } # generic plotting loop
 
    # tidy before leaving
    gc(reset=TRUE, verbose=FALSE)

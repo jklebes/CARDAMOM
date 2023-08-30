@@ -322,7 +322,7 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
   out_var3 = (out_var3 / dble(nodays)) * 365.25d0 ! convert to annual mean input
   ! Then estimate the labile, foliar, fine root, wood, litter and soil,
   ! autotrophic and dead standing foliage steady states.
-  out_var3(1:nos_iter,1:5) = out_var3(1:nos_iter,1:8) * out_var2(1:nos_iter,1:8) ! multiply by residence time in years
+  out_var3(1:nos_iter,1:8) = out_var3(1:nos_iter,1:8) * out_var2(1:nos_iter,1:8) ! multiply by residence time in years
 
   ! return back to the subroutine then
   return

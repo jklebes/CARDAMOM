@@ -370,9 +370,12 @@ module CARBON_MODEL_MOD
                                 mu_obar, & ! The average inverse diffuse optical depth per unit leaf area.
                                  O1,O2    ! Empirical coefficients related to the leaf angle distribution
   double precision, dimension(no_wavelength) :: &
-                     canopy_reflectance, & ! = (/canopy_nir_reflectance,canopy_par_reflectance/), & !
-                   canopy_transmittance, & ! = (/canopy_nir_transmittance,canopy_par_transmittance/), & !
-                       soil_reflectance, & ! = (/soil_nir_reflectance,soil_par_reflectance/), & !
+                     canopy_reflectance = (/canopy_nir_reflectance,canopy_par_reflectance/), & !
+                   canopy_transmittance = (/canopy_nir_transmittance,canopy_par_transmittance/), & !
+                       soil_reflectance = (/soil_nir_reflectance,soil_par_reflectance/), & !
+!                   canopy_reflectance, & ! = (/canopy_nir_reflectance,canopy_par_reflectance/), & !
+!                   canopy_transmittance, & ! = (/canopy_nir_transmittance,canopy_par_transmittance/), & !
+!                   soil_reflectance, & ! = (/soil_nir_reflectance,soil_par_reflectance/), & !
                       canopy_scattering, & ! Canopy scattering of incident light, varied by wavelength
                                      bb, & ! Downward scatting of diffuse radiation
                                      cc, & ! Upward scattering as diffuse radiation, a function of canopy_transmittance, canopy_reflectance and leaf angle.
@@ -863,7 +866,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     gs_demand_supply_ratio = 0d0
     ! store soil water content of the rooting zone (mm)
     POOLS(1,8) = 1d3*soil_waterfrac(1)*layer_thickness(1)
-print*,POOLS(1,8)
+
     ! reset values
     intercepted_rainfall = 0d0 ; canopy_storage = 0d0 ; snow_storage = 0d0
 
@@ -975,7 +978,7 @@ print*,POOLS(1,8)
       drythick = max(min_drythick, top_soil_depth * max(0d0,(1d0 - (soil_waterfrac(1) / field_capacity(1)))))
       ! Soil surface (kgH2O.m-2.day-1)
       call calculate_soil_evaporation(soilevaporation)
-print*,"Esoil",soilevaporation
+
       ! If snow present assume that soilevaporation is sublimation of soil first
       if (snow_storage > 0d0) then
           snow_sublimation = soilevaporation
@@ -1010,6 +1013,7 @@ print*,"Esoil",soilevaporation
       ! close are we to maxing out supply (note 0.01 taken from min_gs)
       gs_demand_supply_ratio(n) = (stomatal_conductance  - minimum_conductance) &
                                 / (potential_conductance - minimum_conductance)
+
       ! Store the canopy level stomatal conductance (mmolH2O/m2ground/s)
       gs_total_canopy(n) = stomatal_conductance
 
@@ -1031,7 +1035,7 @@ print*,"Esoil",soilevaporation
           FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; cica_time(n) = 0d0
       endif
       ! Pass GPP estimate to module variable for use in crop development model
-      gpp_acm = FLUXES(n,1)
+      gpp_acm = FLUXES(n,1) ; GPP_out = FLUXES(n,1)
 
       ! pass relevant variables into crop module memory
       avtemp = met(14,n) !meant
@@ -1067,7 +1071,7 @@ print*,"Esoil",soilevaporation
       NEE_out(n) = nee_dalec
 
       ! GPP (gC.m-2.d-1)
-      FLUXES(n,1) = GPP_out(n)
+      !FLUXES(n,1) = GPP_out(n) ! Assigned above
       ! temprate (i.e. temperature modified rate of metabolic activity)
       FLUXES(n,2) = resp_rate
       ! autotrophic respiration (gC.m-2.d-1)
@@ -1143,7 +1147,6 @@ print*,"Esoil",soilevaporation
       FLUXES(n,19) = FLUXES(n,19) + wetcanopy_evap
       ! store soil water content of surface (mm)
       POOLS(n,8) = 1d3*soil_waterfrac(1)*layer_thickness(1)
-print*,"water balance",POOLS(1,8),transpiration,soilevaporation,wetcanopy_evap,runoff,underflow
       ! Assign all water variables to output variables (kgH2O/m2/day)
       FLUXES(n,37) =  transpiration   ! transpiration
       FLUXES(n,38) =  soilevaporation ! soil evaporation
@@ -1173,19 +1176,19 @@ print*,"water balance",POOLS(1,8),transpiration,soilevaporation,wetcanopy_evap,r
 
       do nxp = 1, nopools
          if (POOLS(n+1,nxp) /= POOLS(n+1,nxp) .or. POOLS(n+1,nxp) < 0d0) then
-             print*,"step",n,"FLUXES",nxp
+             print*,"step",n,"POOL",nxp
              print*,"met",met(:,n)
              print*,"POOLS",POOLS(n,:)
              print*,"FLUXES",FLUXES(n,:)
              print*,"POOLS+1",POOLS(n+1,:)
              print*,"wSWP",wSWP
              print*,"waterfrac",soil_waterfrac
-             print*,stock_labile, stock_foliage
-             print*,stock_stem,stock_roots
-             print*,stock_litter,stock_soilOrgMatter
-             print*,stock_storage_organ,stock_resp_auto
-             print*,gpp_acm,nee_dalec
-             print*,resp_auto,resp_h_soilOrgMatter,resp_h_litter
+             print*,"labile, foliage",stock_labile, stock_foliage
+             print*,"stem, roots",stock_stem,stock_roots
+             print*,"litter, som",stock_litter,stock_soilOrgMatter
+             print*,"storageOrgan, auto",stock_storage_organ,stock_resp_auto
+             print*,"gpp, nee",gpp_acm,nee_dalec
+             print*,"Ra, Rh_som, Rh_lit",resp_auto,resp_h_soilOrgMatter,resp_h_litter
              print*,"pars",pars
              print*,"DR",DR
              print*,"DR stuff",fT,fV,fP
@@ -1196,12 +1199,12 @@ print*,"water balance",POOLS(1,8),transpiration,soilevaporation,wetcanopy_evap,r
              print*,"root_frac_intpol",root_frac_intpol
              print*,"npp_shoot",npp_shoot,"npp",npp
              print*,"RDR",RDR
-             stop
+             !stop
          endif
       enddo
 
       do nxp = 1, nofluxes
-         if (nxp /= 19) then
+         if (nxp /= 19 .and. nxp /= 38 .and. nxp /= 39 .and. nxp /= 40 .and. nxp /= 41) then
             if (FLUXES(n,nxp) /= FLUXES(n,nxp) .or. FLUXES(n,nxp) < 0d0) then
                  print*,"Special: step",n,"FLUXES",nxp
                  print*,"met",met(:,n)
@@ -1210,12 +1213,12 @@ print*,"water balance",POOLS(1,8),transpiration,soilevaporation,wetcanopy_evap,r
                  print*,"POOLS+1",POOLS(n+1,:)
                  print*,"wSWP",wSWP
                  print*,"waterfrac",soil_waterfrac
-                 print*,stock_labile, stock_foliage
-                 print*,stock_stem,stock_roots
-                 print*,stock_litter,stock_soilOrgMatter
-                 print*,stock_storage_organ,stock_resp_auto
-                 print*,gpp_acm,nee_dalec
-                 print*,resp_auto,resp_h_soilOrgMatter,resp_h_litter
+                 print*,"labile, foliage",stock_labile, stock_foliage
+                 print*,"stem, roots",stock_stem,stock_roots
+                 print*,"litter, som",stock_litter,stock_soilOrgMatter
+                 print*,"storageOrgan, auto",stock_storage_organ,stock_resp_auto
+                 print*,"gpp, nee",gpp_acm,nee_dalec
+                 print*,"Ra, Rh_som, Rh_lit",resp_auto,resp_h_soilOrgMatter,resp_h_litter
                  print*,"pars",pars
                  print*,"DR",DR
                  print*,"DR stuff",fT,fV,fP
@@ -1226,7 +1229,7 @@ print*,"water balance",POOLS(1,8),transpiration,soilevaporation,wetcanopy_evap,r
                  print*,"root_frac_intpol",root_frac_intpol
                  print*,"npp_shoot",npp_shoot,"npp",npp
                  print*,"RDR",RDR
-                 stop
+                 !stop
             end if
          else
              if (FLUXES(n,nxp) /= FLUXES(n,nxp)) then
@@ -1237,12 +1240,12 @@ print*,"water balance",POOLS(1,8),transpiration,soilevaporation,wetcanopy_evap,r
                  print*,"POOLS+1",POOLS(n+1,:)
                  print*,"wSWP",wSWP
                  print*,"waterfrac",soil_waterfrac
-                 print*,stock_labile, stock_foliage
-                 print*,stock_stem,stock_roots
-                 print*,stock_litter,stock_soilOrgMatter
-                 print*,stock_storage_organ,stock_resp_auto
-                 print*,gpp_acm,nee_dalec
-                 print*,resp_auto,resp_h_soilOrgMatter,resp_h_litter
+                 print*,"labile, foliage",stock_labile, stock_foliage
+                 print*,"stem, roots",stock_stem,stock_roots
+                 print*,"litter, som",stock_litter,stock_soilOrgMatter
+                 print*,"storageOrgan, auto",stock_storage_organ,stock_resp_auto
+                 print*,"gpp, nee",gpp_acm,nee_dalec
+                 print*,"Ra, Rh_som, Rh_lit",resp_auto,resp_h_soilOrgMatter,resp_h_litter
                  print*,"pars",pars
                  print*,"DR",DR
                  print*,"DR stuff",fT,fV,fP
@@ -1253,7 +1256,7 @@ print*,"water balance",POOLS(1,8),transpiration,soilevaporation,wetcanopy_evap,r
                  print*,"root_frac_intpol",root_frac_intpol
                  print*,"npp_shoot",npp_shoot,"npp",npp
                  print*,"RDR",RDR
-                 stop
+                 !stop
              endif
          end if
       enddo
@@ -1290,7 +1293,7 @@ print*,"water balance",POOLS(1,8),transpiration,soilevaporation,wetcanopy_evap,r
           print*,"root_frac_intpol",root_frac_intpol
           print*,"npp_shoot",npp_shoot,"npp",npp
           print*,"RDR",RDR
-          stop
+          !stop
       endif
 
     end do ! no days loop
@@ -1459,7 +1462,7 @@ print*,"water balance",POOLS(1,8),transpiration,soilevaporation,wetcanopy_evap,r
     ! Calculate stomatal conductance under H2O and CO2 limitations
     !!!!!!!!!!
 
-    if (aerodynamic_conductance > vsmall .and. total_water_flux > vsmall) then
+    if (leaf_canopy_light_scaling > vsmall .and. total_water_flux > vsmall) then
 
         ! Determine potential water flow rate (mmolH2O.m-2.s-1)
         max_supply = total_water_flux
@@ -1733,9 +1736,6 @@ print*,"water balance",POOLS(1,8),transpiration,soilevaporation,wetcanopy_evap,r
     ! Estimate potential soil evaporation flux (kgH2O.m-2.day-1)
     soilevap = ( ((slope*soil_radiation) + (air_density_kg*cpair*esurf*soil_conductance)) &
                / (lambda*(slope+(psych*(soil_conductance/gws)))) ) * dayl_seconds
-print*,"In Esoil",maxt,local_temp,freeze,soil_radiation,soil_lwrad_Wm2,soil_swrad_MJday
-print*,"        ",dayl_seconds_1,esat,air_vapour_pressure,vpd_kPa,gws,porosity(1),water_vapour_diffusion
-print*,"        ",tortuosity,drythick,partial_molar_vol_water,Rcon,air_vapour_pressure,SWP(1)
 
     return
 
@@ -2036,15 +2036,10 @@ print*,"        ",tortuosity,drythick,partial_molar_vol_water,Rcon,air_vapour_pr
     swrad_diffuse(2) = sw_par_fraction * swrad * diffuse_fraction              ! PAR
     swrad_direct(1) = (1d0 - sw_par_fraction) * swrad * (1d0-diffuse_fraction) ! NIR
     swrad_direct(2) = sw_par_fraction * swrad * (1d0-diffuse_fraction)         ! PAR
-print*,"swrad", swrad
-print*,"diffuse_fraction",diffuse_fraction
-print*,"sw_par_fraction",sw_par_fraction
-print*,"swrad diffuse", swrad_diffuse
-print*,"swrad direct", swrad_direct
+
     ! Assign cosine_solar_zenith_angle to a local variable for easier readability
     mu = cosine_solar_zenith_angle
-print*,"mu",mu
-print*,"lai",lai
+
     ! Relative projected area of leaf elements in direction of the cosine_solar_zenith_angle (mu).
     ! This variable is determined as the result of two empirical functions related to the leaf_distribution_deviance
     ! Note the notation used here Gu is varied, for clarity, from the actual used in Sellers (1985) which is G(mu).
@@ -2115,7 +2110,6 @@ print*,"lai",lai
     ! Fraction of direct radiation absorbed by the soil
     soil_absorption_fraction_direct = ((1d0-Vc)*(1d0-soil_albedo)) &
                                     + (Vc*((Idown*(1d0-soil_albedo)) + (exp(-K*lai/Vc)*(1d0-soil_albedo))))
-print*,"direct ",Vc,K,Iup,Idown,soil_albedo
 
     !
     ! Diffuse radiation specific components
@@ -2136,15 +2130,10 @@ print*,"direct ",Vc,K,Iup,Idown,soil_albedo
     ! Fraction of diffuse radiation absorbed by the soil
     soil_absorption_fraction_diffuse = ((1d0-Vc)*(1d0-soil_albedo)) + (Vc*((Idown*(1d0-soil_albedo))))
 
-print*,"diffuse ",Vc  ,Iup      ,Idown    ,soil_albedo
-
-print*,"hh->",hh,h1,h2,h3,h4,h5,h6,h7,h8,h9,h10
-print*,"<-h10"
     !
     ! Combine direct and diffuse, convert into actual units of energy (MJ/m2/d)
     !
-print*,"Soil fraction  ",soil_absorption_fraction_diffuse,soil_absorption_fraction_direct
-print*,"Canopy fraction",canopy_absorption_fraction_diffuse,canopy_absorption_fraction_direct
+
     ! Determine the combined direct and diffuse absorptions across wavelength
     soil_nir_par_MJday = (soil_absorption_fraction_diffuse * swrad_diffuse) &
                        + (soil_absorption_fraction_direct * swrad_direct)
@@ -3429,7 +3418,7 @@ print*,"Canopy fraction",canopy_absorption_fraction_diffuse,canopy_absorption_fr
     npp = gpp_acm + alloc_from_labile - alloc_to_resp_auto
 
     ! Dertermine partitioning of NPP to biomass pools
-    root_frac_intpol  = max(0d0,min(1d0,root_frac_intpol))
+    root_frac_intpol  = root_frac_intpol
     alloc_to_roots    = root_frac_intpol * npp
     ! Calculate how much NPP is left after allocation to roots
     npp_shoot         = npp - alloc_to_roots
@@ -3442,6 +3431,7 @@ print*,"Canopy fraction",canopy_absorption_fraction_diffuse,canopy_absorption_fr
     ! Assuming allocatio to storage organ is > 0 ensure flux is limited by
     ! maximum growth rate potential, i.e. growth potential increases with size
     ! existing yield
+    alloc_to_labile = 0d0 ; resp_cost_npp_to_labile = 0d0
     if ( alloc_to_storage_organ > 0d0 ) then
         gso_max  = ( stock_storage_organ + 0.5d0 ) * rel_gso_max
         ! Restrict allocation to storage organ based on available C and potential
@@ -3454,10 +3444,6 @@ print*,"Canopy fraction",canopy_absorption_fraction_diffuse,canopy_absorption_fr
             ! Having worked out the total available C, update based on cost of respiratory transfer
             resp_cost_npp_to_labile =  alloc_to_labile * resp_cost_labile_trans
             alloc_to_labile = alloc_to_labile - resp_cost_npp_to_labile
-        else
-! Where does C go when not emerged of there is any left over?
-          alloc_to_labile         = 0d0
-          resp_cost_npp_to_labile = 0d0
         endif
     endif
 
@@ -3525,7 +3511,7 @@ print*,"Canopy fraction",canopy_absorption_fraction_diffuse,canopy_absorption_fr
     resp_h_soilOrgMatter = stock_soilOrgMatter &
                          * (1d0-(1d0-(mineralisation_rate_soilOrgMatter * resp_rate)) ** days_per_step) &
                          * days_per_step_1
-
+                  
     ! Autotrophic respiration allocated pool is a special case, where the total
     ! available for the time step is accumulated first then losses are determined.
     ! Add photosynthate allocated to autotrophic respiration (gC.m-2.d-1)
@@ -3601,11 +3587,11 @@ print*,"Canopy fraction",canopy_absorption_fraction_diffuse,canopy_absorption_fr
 
        ! interpolate between PdV allocation values with reference to
        ! developmental stage (DS)..
-       fol_frac_intpol = interpolate( DS , DS_shoot , fol_frac , size(DS_shoot) )
+       fol_frac_intpol = min(1d0,max(0d0,interpolate( DS , DS_shoot , fol_frac , size(DS_shoot) )))
        ! stem DS and fracs..
-       stem_frac_intpol = interpolate( DS , DS_shoot , stem_frac , size(DS_shoot) )
+       stem_frac_intpol = min(1d0,max(0d0,interpolate( DS , DS_shoot , stem_frac , size(DS_shoot) )))
        ! root DS and fracs..
-       root_frac_intpol = interpolate( DS , DS_root , root_frac , size(DS_root) )
+       root_frac_intpol = min(1d0,max(0d0,interpolate( DS , DS_root , root_frac , size(DS_root) )))
 
     endif ! after crop has been sown
 
@@ -3868,6 +3854,7 @@ print*,"Canopy fraction",canopy_absorption_fraction_diffuse,canopy_absorption_fr
                           + stock_foliage + stock_labile    &
                            + stock_roots + stock_stem       &
                             + stock_storage_organ
+
     stock_dead_foliage  = 0d0
     stock_foliage       = 0d0
     stock_labile        = 0d0
