@@ -679,7 +679,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), lwd=1, col="red")
        # add the data on top if there is any
        if (length(which(is.na(obs))) != length(obs) ) {
-           points(obs, pch=16, cex=0.8)
+           points(obs, pDevelopmentStagech=16, cex=0.8)
            if (length(which(is.na(obs)))/length(obs) > 0.01) {
                plotCI(obs,gap=0,uiw=obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
            }
@@ -1398,7 +1398,8 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
                       "HARVESTextracted_wood_gCm2day","HARVESTextracted_DeadFoliage_gCm2day",
                       "HARVESTextracted_labile_gCm2day","HARVESTlitter_foliage_gCm2day",
                       "HARVESTlitter_wood_gCm2day","HARVESTlitter_DeadFoliage_gCm2day","HARVESTlitter_autotrophic_gCm2day",
-                      "PLOUGHlitter_roots_gCm2day","autotrophic_gCm2","StorageOrgan_gCm2","DeadFoliage_gCm2")
+                      "PLOUGHlitter_roots_gCm2day","autotrophic_gCm2","StorageOrgan_gCm2","DeadFoliage_gCm2",
+                      "DevelopmentStage")
    for (p in seq(1, length(list_variables))) {
         # Check whether current variable exists
         if (exists(x = list_variables[p], where = states_all)) {

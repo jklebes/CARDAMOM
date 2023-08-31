@@ -84,6 +84,7 @@ module CARBON_MODEL_MOD
            ,wSWP_time                     &
            ,rSWP_time                     &
            ,root_depth_time               &
+           ,SD_time                       &
            ,gs_demand_supply_ratio        &
            ,gs_total_canopy               &
            ,gb_total_canopy               &
@@ -446,6 +447,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                     canopy_par_MJday_time, & ! Absorbed PAR by canopy (MJ/m2ground/day)
                                                 cica_time, & ! Internal vs ambient CO2 concentrations
                                           root_depth_time, & ! Rooting depth (m)
+                                                  DS_time, & ! Development Stage
                                         snow_storage_time, &
                                                 rSWP_time, & ! Soil water potential weighted by root mass distribution
                                                 wSWP_time    ! Soil water potential weighted by root supply of water
@@ -813,7 +815,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         allocate(deltat_1(nodays),rSWP_time(nodays),wSWP_time(nodays), &
                  gs_demand_supply_ratio(nodays),gs_total_canopy(nodays), &
                  gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
-                 cica_time(nodays),root_depth_time(nodays),snow_storage_time(nodays))
+                 cica_time(nodays),root_depth_time(nodays),snow_storage_time(nodays), &
+                 DS_time(nodays))
         deltat_1 = deltat**(-1d0)
         ! zero variables not done elsewhere
         water_flux_mmolH2Om2s = 0d0
@@ -1059,7 +1062,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       ! crop development model
       doy = met(6,n)
       ! determine development stage (DS)
-      call development_stage(deltat(n))
+      call development_stage(deltat(n)) DS_time(n) = DS
       ! determine the carbon partitioning based on development stage
       call carbon_alloc_fractions(DS_shoot,DS_root,fol_frac,stem_frac,root_frac)
       ! begin carbon allocation for crops

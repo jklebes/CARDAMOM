@@ -131,7 +131,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # Final tidy
       rm(output,MTT_gCm2,SS_gCm2)
   } else if (model_name == "DALEC.A3.C3.H2.M1.#") {
-      output_dim = 56 ; MTT_dim = 8 ; SS_dim = 8
+      output_dim = 57 ; MTT_dim = 8 ; SS_dim = 8
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       crop_file_location=paste(PROJECT$exepath,"winter_wheat_development.csv", sep="")
       tmp=.Fortran( "rdalec15",output_dim=as.integer(output_dim)
@@ -219,6 +219,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       CiCa = output[,,55],
                       # Misc
                       RootDepth_m = output[,,56],
+                      DevelopmentStage = output[,,57],
                       ## Aggregated variables
                       # Mean Transit times
                       MTT_labile_years = MTT_years[,1],

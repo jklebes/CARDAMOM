@@ -13,7 +13,7 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
                               gs_demand_supply_ratio, cica_time, &
                               gs_total_canopy, gb_total_canopy, &
                               canopy_par_MJday_time, root_depth_time, &
-                              snow_storage_time
+                              snow_storage_time, DS_time
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -216,6 +216,7 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,55) = cica_time                   ! ratio of leaf internal to external CO2
      ! misc
      out_var1(i,1:nodays,56) = root_depth_time             ! rooting depth (m)
+     out_var1(i,1:nodays,57) = DS_time                     ! Development stage (0-2)
 
      !!!
      ! Estimate residence time information
