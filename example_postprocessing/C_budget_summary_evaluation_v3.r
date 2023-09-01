@@ -9,7 +9,7 @@
 ## "PointsOfChange"
 
 #### TO DO
-# Replace existing independent obs code with the merged files used in CARDAMOM, include updated resolution adjustment
+# Add extractions for specific domains (recaap2)- this should be based on a loop - this should also have time sometime series information
 # What happens to SS in the other pools
 # What is the overlap for the Csom prior
 # Does concistency between variables show an association i.e. is the consistency with LAI correlated with consistency with Cwood etc.
@@ -29,7 +29,8 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/infofile.RData")
+load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_oneAGB/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/infofile.RData")
 
 # Set output path for figures and tables
 out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures/"
@@ -5428,8 +5429,9 @@ plot(var2, range=zrange1, xaxt = "n", yaxt = "n", type="continuous", cex.lab=2, 
      main = "", col=colour_choices_loss)
 mtext("Fire MRT comp (0-1)", side=3, cex = 1.8, padj = 0.9)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange1, xaxt = "n", yaxt = "n", type="continuous", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+legend_args = list(ext=e, cex=1.0) ; if (length(unlist(unique(var3))) == 1) {legend_args = list(cex=1.0)}
+plot(var3, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = legend_args,
      main = "", col=colour_choices_loss)
 mtext("Biomass removal MRT comp (0-1)", side=3, cex = 1.8, padj = 0.9)
 plot(landmask, add=TRUE, lwd=0.5)
@@ -5464,7 +5466,7 @@ plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
 # Create a mask of pixels which contain minimum disturbance
-threshold = 0.95 ; loess_span = 0.25 ; n_interp = 50 ; se_ci_scalar = 1.98
+threshold = 0.99 ; loess_span = 0.25 ; n_interp = 50 ; se_ci_scalar = 1.98
 natural_dom = grid_output$NaturalFractionOfTurnover_wood[,,mid_quant]
 natural_dom[which(natural_dom >= threshold)] = 1 ; natural_dom[which(natural_dom < threshold)] = NA
 # Plot Foliage, fine root, wood, litter(foliar+fine root+wood?), soil mean residence times against main meteorology

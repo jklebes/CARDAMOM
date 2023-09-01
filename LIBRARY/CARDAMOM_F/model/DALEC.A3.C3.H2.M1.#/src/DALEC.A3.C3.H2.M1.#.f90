@@ -84,7 +84,7 @@ module CARBON_MODEL_MOD
            ,wSWP_time                     &
            ,rSWP_time                     &
            ,root_depth_time               &
-           ,SD_time                       &
+           ,DS_time                       &
            ,gs_demand_supply_ratio        &
            ,gs_total_canopy               &
            ,gb_total_canopy               &
@@ -1062,7 +1062,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       ! crop development model
       doy = met(6,n)
       ! determine development stage (DS)
-      call development_stage(deltat(n)) DS_time(n) = DS
+      call development_stage(deltat(n)) ; DS_time(n) = DS
       ! determine the carbon partitioning based on development stage
       call carbon_alloc_fractions(DS_shoot,DS_root,fol_frac,stem_frac,root_frac)
       ! begin carbon allocation for crops
