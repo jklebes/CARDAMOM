@@ -46,7 +46,7 @@ generate_parameter_maps<-function(PROJECT) {
 
    # Convert avgN log10-normal to gN/m2, in models which use foliar N in gN/m2
    if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P3.R1.#"| PROJECT$model$name == "DALEC.A1.C2.D2.F2.H1.P3.R1.#" |
-       PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P4.R2.#" |
+       PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P4.R2.#" | PROJECT$model$name ==  "DALEC.A3.C3.H2.M1.#" |
        PROJECT$model$name == "DALEC.A1.C2.D2.F2.H1.P4.R2.#" | PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P7.R2.#" |
        PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P8.R2.#" | PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P10.R2.#") {
        grid_output$parameters[,,11,] = 10**grid_output$parameters[,,11,]

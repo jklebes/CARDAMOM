@@ -130,6 +130,9 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
   steps_per_year = nodays/nos_years
 
   ! Load crop development parameters here
+  ! TLS: should the exepath and pathlength be made hardcoded in the assumption that 
+  ! the needed file always has the same name (i.e. copy and rename to EXE to match specific crop types)
+  ! and that the file is in the working directory of the PROJECT
   call crop_development_parameters(stock_seed_labile,DS_shoot,DS_root,fol_frac &
                                   ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT &
                                   ,exepath,pathlength)

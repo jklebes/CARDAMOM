@@ -3524,7 +3524,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! NOTE: that autotrophic respiration from other sources added below
     resp_auto = stock_resp_auto * (1d0-(1d0-turnover_rate_resp_auto) ** days_per_step) * days_per_step_1
     ! Update stock
-    stock_resp_auto = stock_resp_auto - (resp_auto * days_per_step)
+    stock_resp_auto = max(0d0, stock_resp_auto - (resp_auto * days_per_step))
 
     ! nee (gC.m-2.d-1)
     nee_dalec = (resp_auto + resp_cost_labile_to_npp + resp_cost_npp_to_labile + &
@@ -3532,16 +3532,18 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                  resp_h_litter + resp_h_soilOrgMatter) - gpp_acm
 
     ! Recalculate Physical Carbon Pools...
-    stock_foliage       = stock_foliage       + ((alloc_to_foliage - litterfall_foliage) * days_per_step)
-    stock_stem          = stock_stem          + ((alloc_to_stem - litterfall_stem) * days_per_step)
-    stock_storage_organ = stock_storage_organ + ((alloc_to_storage_organ) * days_per_step)
-    stock_roots         = stock_roots         + ((alloc_to_roots   - litterfall_roots) * days_per_step)
-    stock_litter        = stock_litter        + ((litterfall_roots - resp_h_litter - decomposition) * days_per_step)
-    stock_soilOrgMatter = stock_soilOrgMatter + ((decomposition    - resp_h_soilOrgMatter) * days_per_step)
-    stock_dead_foliage  = stock_dead_foliage  + ((litterfall_foliage * 0.5d0) * days_per_step)
-    stock_labile        = stock_labile        + ((alloc_to_labile  - alloc_from_labile - &
-                                                  resp_cost_labile_to_npp + foliage_to_labile + &
-                                                  stem_to_labile) * days_per_step)
+    ! TLS: Note that while max(0d0,... conditions have been applied to all pools, I hypothese that the critical
+    ! restriction is applied to stock_resp_auto
+    stock_foliage       = max(0d0, stock_foliage       + ((alloc_to_foliage - litterfall_foliage) * days_per_step))
+    stock_stem          = max(0d0, stock_stem          + ((alloc_to_stem - litterfall_stem) * days_per_step))
+    stock_storage_organ = max(0d0, stock_storage_organ + ((alloc_to_storage_organ) * days_per_step))
+    stock_roots         = max(0d0, stock_roots         + ((alloc_to_roots   - litterfall_roots) * days_per_step))
+    stock_litter        = max(0d0, stock_litter        + ((litterfall_roots - resp_h_litter - decomposition) * days_per_step))
+    stock_soilOrgMatter = max(0d0, stock_soilOrgMatter + ((decomposition    - resp_h_soilOrgMatter) * days_per_step))
+    stock_dead_foliage  = max(0d0, stock_dead_foliage  + ((litterfall_foliage * 0.5d0) * days_per_step))
+    stock_labile        = max(0d0, stock_labile        + ((alloc_to_labile  - alloc_from_labile - &
+                                                           resp_cost_labile_to_npp + foliage_to_labile + &
+                                                           stem_to_labile) * days_per_step) )
 
     ! When GPP is higher than seed C content, remaining seed carbon enters litter
     ! C pool, as seedlings do not fully exhaust their seed (P. de Vries p 48)
