@@ -36,8 +36,8 @@ load_lca_maps_for_extraction<-function(latlon_in,lca_source,cardamom_ext,spatial
         # Check whether the target and actual analyses have the same CRS
         if (compareGeom(lca_gCm2,target) == FALSE) {
             # Resample to correct grid
-            lca_gCm2 = resample(lca_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
-            lca_uncertainty_gCm2 = resample(lca_uncertainty_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
+            lca_gCm2 = resample(lca_gCm2, target, method="ngb") ; gc()
+            lca_uncertainty_gCm2 = resample(lca_uncertainty_gCm2, target, method="ngb") ; gc()
         }
         # Extend the extent of the overall grid to the analysis domain
         lca_gCm2 = extend(lca_gCm2,cardamom_ext) ; lca_uncertainty_gCm2 = extend(lca_uncertainty_gCm2,cardamom_ext)
@@ -53,8 +53,8 @@ load_lca_maps_for_extraction<-function(latlon_in,lca_source,cardamom_ext,spatial
             target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
 
             # Resample to correct grid
-            lca_gCm2 = resample(lca_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
-            lca_uncertainty_gCm2 = resample(lca_uncertainty_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
+            lca_gCm2 = resample(lca_gCm2, target, method="bilinear") ; gc() 
+            lca_uncertainty_gCm2 = resample(lca_uncertainty_gCm2, target, method="bilinear") ; gc()
 
         } # Aggrgeate to resolution
 

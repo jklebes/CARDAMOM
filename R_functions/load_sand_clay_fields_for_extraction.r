@@ -24,10 +24,10 @@ load_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source,cardam
         # Check whether the target and actual analyses have the same CRS
         if (compareGeom(top_sand,target) == FALSE) {
             # Resample to correct grid
-            top_sand = resample(top_sand, target, method="ngb") ; gc() ; removeTmpFiles()
-            bot_sand = resample(bot_sand, target, method="ngb") ; gc() ; removeTmpFiles()
-            top_clay = resample(top_clay, target, method="ngb") ; gc() ; removeTmpFiles()
-            bot_clay = resample(bot_clay, target, method="ngb") ; gc() ; removeTmpFiles()
+            top_sand = resample(top_sand, target, method="ngb") ; gc() 
+            bot_sand = resample(bot_sand, target, method="ngb") ; gc()
+            top_clay = resample(top_clay, target, method="ngb") ; gc()
+            bot_clay = resample(bot_clay, target, method="ngb") ; gc()
         }
         # Extend the extent of the overall grid to the analysis domain
         top_sand = extend(top_sand,cardamom_ext) ; bot_sand = extend(bot_sand,cardamom_ext)
@@ -42,10 +42,10 @@ load_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source,cardam
             target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
 
             # Resample to correct grid
-            top_sand = resample(top_sand, target, method="bilinear") ; gc() ; removeTmpFiles()
-            bot_sand = resample(bot_sand, target, method="bilinear") ; gc() ; removeTmpFiles()
-            top_clay = resample(top_clay, target, method="bilinear") ; gc() ; removeTmpFiles()
-            bot_clay = resample(bot_clay, target, method="bilinear") ; gc() ; removeTmpFiles()
+            top_sand = resample(top_sand, target, method="bilinear") ; gc() 
+            bot_sand = resample(bot_sand, target, method="bilinear") ; gc() 
+            top_clay = resample(top_clay, target, method="bilinear") ; gc() 
+            bot_clay = resample(bot_clay, target, method="bilinear") ; gc() 
 
         } # Aggrgeate to resolution
 
@@ -101,10 +101,10 @@ load_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source,cardam
         # Check whether the target and actual analyses have the same CRS
         if (compareGeom(top_sand,target) == FALSE) {
             # Resample to correct grid
-            top_sand = resample(top_sand, target, method="ngb") ; gc() ; removeTmpFiles()
-            bot_sand = resample(bot_sand, target, method="ngb") ; gc() ; removeTmpFiles()
-            top_clay = resample(top_clay, target, method="ngb") ; gc() ; removeTmpFiles()
-            bot_clay = resample(bot_clay, target, method="ngb") ; gc() ; removeTmpFiles()
+            top_sand = resample(top_sand, target, method="ngb") ; gc() 
+            bot_sand = resample(bot_sand, target, method="ngb") ; gc() 
+            top_clay = resample(top_clay, target, method="ngb") ; gc() 
+            bot_clay = resample(bot_clay, target, method="ngb") ; gc() 
         }
         # Extend the extent of the overall grid to the analysis domain
         top_sand = extend(top_sand,cardamom_ext) ; bot_sand = extend(bot_sand,cardamom_ext)
@@ -120,10 +120,10 @@ load_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source,cardam
             target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
 
             # Resample to correct grid
-            top_sand = resample(top_sand, target, method="bilinear") ; gc() ; removeTmpFiles()
-            bot_sand = resample(bot_sand, target, method="bilinear") ; gc() ; removeTmpFiles()
-            top_clay = resample(top_clay, target, method="bilinear") ; gc() ; removeTmpFiles()
-            bot_clay = resample(bot_clay, target, method="bilinear") ; gc() ; removeTmpFiles()
+            top_sand = resample(top_sand, target, method="bilinear") ; gc() 
+            bot_sand = resample(bot_sand, target, method="bilinear") ; gc()
+            top_clay = resample(top_clay, target, method="bilinear") ; gc()
+            bot_clay = resample(bot_clay, target, method="bilinear") ; gc()
 
         } # Aggrgeate to resolution
 

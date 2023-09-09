@@ -21,8 +21,8 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         # Check whether the target and actual analyses have the same CRS
         if (compareGeom(Csom,target) == FALSE) {
             # Resample to correct grid
-            Csom = resample(Csom, target, method="ngb") ; gc() ; removeTmpFiles()
-            Csom_unc = resample(Csom_unc, target, method="ngb") ; gc() ; removeTmpFiles()
+            Csom = resample(Csom, target, method="ngb") ; gc() 
+            Csom_unc = resample(Csom_unc, target, method="ngb") ; gc() 
         }
         # Extend the extent of the overall grid to the analysis domain
         Csom = extend(Csom,cardamom_ext) ; Csom_unc = extend(Csom_unc,cardamom_ext)
@@ -35,8 +35,8 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
             target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
 
             # Resample to correct grid
-            Csom = resample(Csom, target, method="bilinear") ; gc() ; removeTmpFiles()
-            Csom_unc = resample(Csom_unc, target, method="bilinear") ; gc() ; removeTmpFiles()
+            Csom = resample(Csom, target, method="bilinear") ; gc() 
+            Csom_unc = resample(Csom_unc, target, method="bilinear") ; gc() 
 
         } # Aggrgeate to resolution
 
@@ -71,8 +71,8 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         # Check whether the target and actual analyses have the same CRS
         if (compareGeom(Csom,target) == FALSE) {
             # Resample to correct grid
-            Csom = resample(Csom, target, method="ngb") ; gc() ; removeTmpFiles()
-            Csom_unc = resample(Csom_unc, target, method="ngb") ; gc() ; removeTmpFiles()
+            Csom = resample(Csom, target, method="ngb") ; gc() 
+            Csom_unc = resample(Csom_unc, target, method="ngb") ; gc() 
         }
         # Extend the extent of the overall grid to the analysis domain
         Csom = extend(Csom,cardamom_ext) ; Csom_unc = extend(Csom_unc,cardamom_ext)
@@ -85,8 +85,8 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
             target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
 
             # Resample to correct grid
-            Csom = resample(Csom, target, method="bilinear") ; gc() ; removeTmpFiles()
-            Csom_unc = resample(Csom_unc, target, method="bilinear") ; gc() ; removeTmpFiles()
+            Csom = resample(Csom, target, method="bilinear") ; gc() 
+            Csom_unc = resample(Csom_unc, target, method="bilinear") ; gc() 
 
         } # Aggrgeate to resolution
 
@@ -130,7 +130,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         # Check whether the target and actual analyses have the same CRS
         if (compareGeom(Csom,target) == FALSE) {
             # Resample to correct grid
-            Csom = resample(Csom, target, method="ngb") ; gc() ; removeTmpFiles()
+            Csom = resample(Csom, target, method="ngb") ; gc() 
         }
         # Extend the extent of the overall grid to the analysis domain
         Csom = extend(Csom,cardamom_ext)
@@ -142,7 +142,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
             # Create raster with the target resolution
             target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
             # Resample to correct grid
-            Csom = resample(Csom, target, method="bilinear") ; gc() ; removeTmpFiles()
+            Csom = resample(Csom, target, method="bilinear") ; gc() 
 
         } # Aggrgeate to resolution
 
@@ -197,7 +197,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         # Check whether the target and actual analyses have the same CRS
         if (compareGeom(Csom,target) == FALSE) {
             # Resample to correct grid
-            Csom = resample(Csom, target, method="ngb") ; gc() ; removeTmpFiles()
+            Csom = resample(Csom, target, method="ngb") ; gc() 
         }
         # Extend the extent of the overall grid to the analysis domain
         Csom = extend(Csom,cardamom_ext)
@@ -209,7 +209,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
             # Create raster with the target resolution
             target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
             # Resample to correct grid
-            Csom = resample(Csom, target, method="bilinear") ; gc() ; removeTmpFiles()
+            Csom = resample(Csom, target, method="bilinear") ; gc() 
 
         } # Aggrgeate to resolution
 
@@ -264,7 +264,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         # Check whether the target and actual analyses have the same CRS
         if (compareGeom(Csom,target) == FALSE) {
             # Resample to correct grid
-            Csom = resample(Csom, target, method="ngb") ; gc() ; removeTmpFiles()
+            Csom = resample(Csom, target, method="ngb") ; gc() 
         }
         # Extend the extent of the overall grid to the analysis domain
         Csom = extend(Csom,cardamom_ext)
@@ -276,7 +276,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
             # Create raster with the target resolution
             target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
             # Resample to correct grid
-            Csom = resample(Csom, target, method="bilinear") ; gc() ; removeTmpFiles()
+            Csom = resample(Csom, target, method="bilinear") ; gc() 
 
         } # Aggrgeate to resolution
 

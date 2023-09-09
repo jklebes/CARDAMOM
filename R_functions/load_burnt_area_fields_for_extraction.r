@@ -80,7 +80,7 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
                        target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
                        # Resample to correct grid.
                        # Probably should be done via aggregate function to allow for correct error propogation
-                       var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
+                       var1 = resample(var1, target, method="bilinear") ; gc()
                    } # Aggrgeate to resolution
 
                   # Extract spatial information just the once
@@ -213,7 +213,7 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
                           target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
                           # Resample to correct grid.
                           # Probably should be done via aggregate function to allow for correct error propogation
-                          var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
+                          var1 = resample(var1, target, method="bilinear") ; gc() 
                       } # Aggrgeate to resolution
 
                       # Extract spatial information just the once

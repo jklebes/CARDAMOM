@@ -34,8 +34,8 @@ load_potential_biomass_maps_for_extraction<-function(latlon_in,Cwood_potential_s
        # Check whether the target and actual analyses have the same CRS
        if (compareGeom(biomass_gCm2,target) == FALSE) {
            # Resample to correct grid
-           biomass_gCm2 = resample(biomass_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
-           biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
+           biomass_gCm2 = resample(biomass_gCm2, target, method="ngb") ; gc() 
+           biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="ngb") ; gc() 
        }
        # Extend the extent of the overall grid to the analysis domain
        biomass_gCm2 = extend(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = extend(biomass_uncertainty_gCm2,cardamom_ext)
@@ -51,8 +51,8 @@ load_potential_biomass_maps_for_extraction<-function(latlon_in,Cwood_potential_s
            # Create raster with the target resolution
            target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
            # Resample to correct grid
-           biomass_gCm2 = resample(biomass_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
-           biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
+           biomass_gCm2 = resample(biomass_gCm2, target, method="bilinear") ; gc() 
+           biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="bilinear") ; gc()
 
        } # Aggrgeate to resolution
 

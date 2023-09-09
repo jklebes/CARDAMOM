@@ -79,8 +79,8 @@ load_wood_mortality_maps_for_extraction<-function(Cwood_mortality_source,cardamo
                  # Check whether the target and actual analyses have the same CRS
                  if (compareGeom(Cwood_mortality,target) == FALSE) {
                      # Resample to correct grid
-                     Cwood_mortality = resample(Cwood_mortality, target, method="ngb") ; gc() ; removeTmpFiles()
-                     Cwood_mortality_uncertainty = resample(Cwood_mortality_uncertainty, target, method="ngb") ; gc() ; removeTmpFiles()
+                     Cwood_mortality = resample(Cwood_mortality, target, method="ngb") ; gc()
+                     Cwood_mortality_uncertainty = resample(Cwood_mortality_uncertainty, target, method="ngb") ; gc() 
                  }
                  # Extend the extent of the overall grid to the analysis domain
                  Cwood_mortality = extend(Cwood_mortality,cardamom_ext) ; Cwood_mortality_uncertainty = extend(Cwood_mortality_uncertainty,cardamom_ext)
@@ -97,8 +97,8 @@ load_wood_mortality_maps_for_extraction<-function(Cwood_mortality_source,cardamo
                      target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
 
                      # Resample to correct grid
-                     Cwood_mortality = resample(Cwood_mortality, target, method="bilinear") ; gc() ; removeTmpFiles()
-                     Cwood_mortality_uncertainty = resample(Cwood_mortality_uncertainty, target, method="bilinear") ; gc() ; removeTmpFiles()
+                     Cwood_mortality = resample(Cwood_mortality, target, method="bilinear") ; gc()
+                     Cwood_mortality_uncertainty = resample(Cwood_mortality_uncertainty, target, method="bilinear") ; gc()
 
                  } # Aggrgeate to resolution
 
