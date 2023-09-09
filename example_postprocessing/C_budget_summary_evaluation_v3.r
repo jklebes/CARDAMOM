@@ -28,8 +28,8 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM")
 # PointsOfChange
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
-#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB/infofile.RData")
-load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_oneAGB/infofile.RData")
+load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB/infofile.RData")
+#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_oneAGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/infofile.RData")
 
 # Set output path for figures and tables
@@ -3395,7 +3395,8 @@ grid_output$gpp_obs_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$
 grid_output$nbe_obs_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 grid_output$fire_obs_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 grid_output$et_obs_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-# Currently coded to find consistency at the 95 % CI level
+# Specify the overlap threshold required for consistency
+sig_threshold = 0.50
 nos_site_inc = 0
 for (i in seq(1, PROJECT$long_dim)) {
      for (j in seq(1,PROJECT$lat_dim)) {
@@ -3436,7 +3437,7 @@ for (i in seq(1, PROJECT$long_dim)) {
                   grid_output$et_obs_overlap_fraction[i,j] = 0
               }
               # Where are we consistent with independent estimates
-              if (npdf > 0.90) {
+              if (npdf > sig_threshold) {
                   et_sig_latitude = append(et_sig_latitude,j-0.5)
                   et_sig_longitude = append(et_sig_longitude,i-0.5)
               } # ET
@@ -3472,7 +3473,7 @@ for (i in seq(1, PROJECT$long_dim)) {
                   grid_output$gpp_obs_overlap_fraction[i,j] = 0
               }
               # Where are we consistent with independent estimates
-              if (npdf > 0.90) {
+              if (npdf > sig_threshold) {
                   gpp_sig_latitude = append(gpp_sig_latitude,j-0.5)
                   gpp_sig_longitude = append(gpp_sig_longitude,i-0.5)
               } # GPP
@@ -3505,7 +3506,7 @@ for (i in seq(1, PROJECT$long_dim)) {
                   grid_output$nbe_obs_overlap_fraction[i,j] = 0
               }
               # Where are we consistent with independent estimates
-              if (npdf > 0.90) {
+              if (npdf > sig_threshold) {
                   nbe_sig_latitude = append(nbe_sig_latitude,j-0.5)
                   nbe_sig_longitude = append(nbe_sig_longitude,i-0.5)
               } # NEE
@@ -3540,7 +3541,7 @@ for (i in seq(1, PROJECT$long_dim)) {
                   grid_output$fire_obs_overlap_fraction[i,j] = 0
               }
               # Where are we consistent with independent estimates
-              if (npdf > 0.90) {
+              if (npdf > sig_threshold) {
                   fire_sig_latitude = append(fire_sig_latitude,j-0.5)
                   fire_sig_longitude = append(fire_sig_longitude,i-0.5)
               } # fire obs
@@ -3934,6 +3935,42 @@ if (length(which(is.na(WoodCobs_trend) == FALSE)) > 0) {
 
 } # multiple wood stocks available for trend analysis?
 
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Csom_prior.png",sep=""), height = 2000, width = 3000, res = 300)
+par(mfrow=c(1,1), mar=c(0.01,1.5,0.3,7),omi=c(0.01,0.1,0.01,0.1))
+tmp = area
+var1 = rast(vals = t(SoilCPrior[,dim(SoilCPrior)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var1 = var1 * 1e-2 # Convert gC/m2 to MgC/ha
+zrange = c(0,quantile(as.vector(var1), prob=c(0.975), na.rm=TRUE))
+#zrange = c(quantile(as.vector(var1), prob=c(0,0.99), na.rm=TRUE))
+var1 = clamp(var1, upper = zrange[2], values = TRUE)
+print(paste("SoilCPrior in ",gsub("%","_",PROJECT$name),"_Csom_prior.png restricted to max value = ",zrange[2],sep=""))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+plot(var1, main="", range=zrange, col=colour_choices_gain, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
+     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(expression('Soil C prior (MgC ha)'), side = 2, cex = 1.6, padj = -0.25, adj = 0.5)
+dev.off()
+
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_mean_wSWP.png",sep=""), height = 2000, width = 3000, res = 300)
+par(mfrow=c(1,1), mar=c(0.01,1.5,0.3,7),omi=c(0.01,0.1,0.01,0.1))
+tmp = area
+var1 = rast(vals = t(grid_output$mean_wSWP_MPa[,dim(grid_output$mean_wSWP_MPa)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+zrange = c(quantile(as.vector(var1), prob=c(0.01), na.rm=TRUE),0)
+var1 = clamp(var1, lower = zrange[1], values = TRUE)
+print(paste("mean_wSWP_MPa in ",gsub("%","_",PROJECT$name),"_mean_wSWP.png restricted to min value = ",zrange[1],sep=""))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+plot(var1, main="", range=zrange, col=colour_choices_gain, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
+     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(expression('Mean wSWP (MPa)'), side = 2, cex = 1.6, padj = -0.25, adj = 0.5)
+dev.off()
+
 ###
 ## Independent evaluation plots
 
@@ -4030,7 +4067,7 @@ zrange2 = c(-1,1) * max(abs(range(values(var2),na.rm=TRUE)), na.rm=TRUE)
 zrange3 = c(-1,1) * max(abs(range(values(var3),na.rm=TRUE)), na.rm=TRUE)
 plot(var1, main="",col = colour_choices_sign, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("ET (KgH2O ",m^-2," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("ET (kgH2O ",m^-2," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
 points(grid_long[et_sig_longitude+0.5,1],grid_lat[1,et_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_sign, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
@@ -4137,7 +4174,7 @@ e[3] = ee[3] ; e[4] = ee[4]
 zrange1 = c(0,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
 zrange2 = c(0,max(values(var2), na.rm=TRUE))
 zrange3 = c(0,max(values(var3), na.rm=TRUE))
-plot(var1, main="",col = rev(colour_choices_gain), range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
+plot(var1, main="",col = colour_choices_gain, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
 mtext(expression(paste("ET (kgH2O ",m^-2," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
 plot(landmask, add=TRUE, lwd=0.5)
@@ -5986,6 +6023,47 @@ lines(y = tmp_lm$fit, x = newvarx, lwd=1, col="cyan")
 legend("topright", legend=c("Highly disturbed", "Minimal disturbed"), col=c("red","cyan"), pch=c(NA,NA), lty=c(1,1), lwd=1.4, bty = "n", cex=1.2)
 dev.off()
 
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_wood_soil_MRT_ratio_map.png",sep=""), height = 2000, width = 3500, res = 300)
+par(mfrow=c(2,2), mar=c(0.01,1.5,0.3,6),omi=c(0.01,0.1,0.01,0.15))
+var1 = grid_output$MTT_wood_years[,,mid_quant] / grid_output$MTT_som_years[,,mid_quant]
+var1 = rast(vals = t(var1[,dim(var1)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+zrange = c(0,max(as.vector(var1), na.rm=TRUE))
+#zbreaks = c(zrange[1],(1-zrange[1])*0.25,(1-zrange[1])*0.5,(1-zrange[1])*0.75,1,(zrange[2]-1)*0.25,(zrange[2]-1)*0.5,(zrange[2]-1)*0.75,zrange[2])
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+plot(var1, main="", col=colour_choices_loss,mar=NA, range = zrange, xaxt = "n", yaxt = "n", bty = "n",
+     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, type="continuous", pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(expression('MTTwood : MTTsom'), side = 3, cex = 1.6, padj = 1.35, adj = 0.5)
+var1 = grid_output$mean_wood_gCm2[,,mid_quant] / grid_output$mean_som_gCm2[,,mid_quant]
+var1 = rast(vals = t(var1[,dim(var1)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+zrange = c(0,max(as.vector(var1), na.rm=TRUE))
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+plot(var1, main="", col=colour_choices_loss,mar=NA, range = zrange, xaxt = "n", yaxt = "n", bty = "n",
+     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, type="continuous", pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(expression('Wood : SOM'), side = 3, cex = 1.6, padj = 1.35, adj = 0.5)
+
+par(mar=c(4,4.5,0.3,3.0))
+vary = as.vector(grid_output$MTT_wood_years[,,mid_quant] / grid_output$MTT_som_years[,,mid_quant])
+varx = as.vector(grid_output$mean_wood_gCm2[,,mid_quant])
+plot(vary ~ varx, main="", ylab="", xlab=expression(paste("Wood (gC",m^{-2},")",sep="")), 
+     pch=16, cex=1.0, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+mtext(expression('MTTwood : MTTsom'), side = 2, cex = 1.6, padj = -2.10, adj = 0.5)
+abline(1,0,col="grey", lwd=1.5)
+vary = as.vector(grid_output$mean_wood_gCm2[,,mid_quant] / grid_output$mean_som_gCm2[,,mid_quant])
+varx = as.vector(grid_output$mean_wood_gCm2[,,mid_quant])
+plot(vary ~ varx, main="", ylab="", xlab=expression(paste("Wood (gC",m^{-2},")",sep="")), 
+     pch=16, cex=1.0, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+mtext(expression('Wood : SOM'), side = 2, cex = 1.6, padj = -2.10, adj = 0.5)
+abline(1,0,col="grey", lwd=1.5)
+dev.off()
+
 # Temperature
 summary(lm(as.vector(grid_output$MTT_foliage_years[,,mid_quant])~as.vector(grid_output$mean_temperature_C)))$adj.r.squared
 summary(lm(as.vector(grid_output$MTT_roots_years[,,mid_quant])~as.vector(grid_output$mean_temperature_C)))$adj.r.squared
@@ -6601,3 +6679,24 @@ smoothScatter(grid_output$NPP_wood_fraction[,,mid_quant]~(HarvestFraction), main
 dev.off()
 
 
+
+
+
+#> # PointsOfChange
+#> # Load the map object 
+#> datain = nc_open("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/useful_landmasks/RECCAP_AfricaSplit_MASK11_Mask.nc")
+#> class_longitude = ncvar_get(datain, "longitude")
+#> class_latitude = ncvar_get(datain,"latitude")
+#> class_map = ncvar_get(datain, "Region_Map")
+#> class_names = ncvar_get(datain, "Region_Names")
+#> class_values = unique(as.vector(class_map))
+#> class_values
+# [1] 12  2  4 11  5 10  9  1  7  8  3  6
+#> class_names
+# [1] "1:North_America"    "2:South_America"    "3:Europe"          
+# [4] "4:Northern_Africa"  "5:Southern_Africa"  "6:North_Asia"      
+# [7] "7:Central_Asia"     "8:East_Asia"        "9:South_Asia"      
+#[10] "10:South_East_Asia" "11:Oceania"         "12:Oceans"         
+#> strsplit(class_names,":")
+
+## Write loop of what should be plotted...

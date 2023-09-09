@@ -91,7 +91,7 @@ wanted_quant = c(low_quant,3,mid_quant,5,high_quant)
 
 # Set output directory
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/InternationalScience/figures_africa_one_vs_all/"
-out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures/"
+out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_single_repeat/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/RECCAP2/figures/"
 outsuffix = "_singleAGB_vs_repeatAGB"
 #outsuffix = "_LAI_vs_fAPAR"

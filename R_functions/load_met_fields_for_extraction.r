@@ -130,7 +130,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
                 # Create raster with the target resolution
                 target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
                 # Resample to correct grid
-                tmp1 = resample(tmp1, target, method="bilinear") ; gc() ; removeTmpFiles()
+                tmp1 = resample(tmp1, target, method="bilinear") ; gc() 
 
             } # Aggrgeate to resolution
         } # spatial_type == "grid"

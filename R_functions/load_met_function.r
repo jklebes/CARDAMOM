@@ -64,7 +64,7 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
                   if (spatial_type == "grid") {
                       if (res(var1)[1] < res(cardamom_ext)[1] | res(var1)[2] < res(cardamom_ext)[2]) {
                           # Resample to correct grid
-                          var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
+                          var1 = resample(var1, target, method="bilinear") ; gc() 
                       } # Aggrgeate to resolution
                   } # spatial_type == "grid"
 
@@ -125,7 +125,7 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
              if (spatial_type == "grid") {
                  if (res(var1)[1] < res(cardamom_ext)[1] | res(var1)[2] < res(cardamom_ext)[2]) {
                      # Resample to correct grid
-                     var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
+                     var1 = resample(var1, target, method="bilinear") ; gc() 
                  } # Aggrgeate to resolution
              } # spatial_type == "grid"
 
