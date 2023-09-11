@@ -207,7 +207,10 @@ module cardamom_io
         DATAin%nopars = 38
         DATAin%nofluxes = 43
     else if (DATAin%ID == 29) then
-        ! ID = 29 - 
+        ! ID = 29 -DALEC.A1.C1.D2.F2.H3.P1.#
+        DATAin%nopools = 7
+        DATAin%nopars = 33
+        DATAin%nofluxes = 46
     else if (DATAin%ID == 30) then
         ! ID = 30 - DALEC.A3.C1.D2.F2.H2.P1.#
         DATAin%nopools = 7
@@ -558,7 +561,7 @@ module cardamom_io
 
     ! declare local variables
     integer :: nopars_dummy,subsample
-    integer :: a,b,c,d,e,f,g,h,i,j,k,l,m,o,p,q,r,u,v,w,x,y,z,day,s,t &
+    integer :: a,b,c,d,e,f,g,h,i,j,k,l,m,o,p,q,r,u,v,w,x,y,z,day,s,t,aa &
               ,start      &
               ,finish     &
               ,totcol     & ! total number of columns (met + obs)
@@ -679,6 +682,8 @@ module cardamom_io
             ,DATAin%fAPAR(DATAin%nodays),DATAin%fAPAR_unc(DATAin%nodays)                         &
             ,DATAin%Cwood_mortality_unc(DATAin%nodays)                                           &
             ,DATAin%Cwood_inc_lag(DATAin%nodays),DATAin%Cwood_mortality_lag(DATAin%nodays)       &
+            ,DATAin%foliage_to_litter(DATAin%nodays),DATAin%foliage_to_litter_unc(DATAin%nodays)       &
+            ,DATAin%foliage_to_litter_lag(DATAin%nodays)       &
             ,mettemp(DATAin%nomet),obstemp(DATAin%noobs))
 
     !! Zero all variables
@@ -705,6 +710,7 @@ module cardamom_io
     ! Observations which have an explicit lag, i.e. they represent the average of a to be specified period
     DATAin%Cwood_inc = 0d0 ; DATAin%Cwood_inc_unc = 0d0 ; DATAin%Cwood_inc_lag = 0
     DATAin%Cwood_mortality = 0d0 ; DATAin%Cwood_mortality_unc = 0d0 ; DATAin%Cwood_mortality_lag = 0
+    DATAin%foliage_to_litter = 0d0 ; DATAin%foliage_to_litter_unc = 0d0 ; DATAin%foliage_to_litter_lag = 0
     ! Temorary arrays
     mettemp = 0d0 ; obstemp = 0d0
 
@@ -715,6 +721,7 @@ module cardamom_io
     DATAin%nnee = 0
     DATAin%nCwood_inc = 0
     DATAin%nCwood_mortality = 0
+    DATAin%nfoliage_to_litter = 0
     DATAin%nreco = 0
     DATAin%nCfol_stock = 0
     DATAin%nCwood_stock = 0
@@ -861,6 +868,14 @@ module cardamom_io
        if (obstemp(40) > -9998d0) DATAin%nCwood_mortality = DATAin%nCwood_mortality+1
        DATAin%Cwood_mortality_unc(day) = obstemp(41)
        DATAin%Cwood_mortality_lag(day) = obstemp(42)
+
+       ! Flux from foliage to litter (gC/m2/day)
+       ! Represents the average across the lagged period
+       DATAin%foliage_to_litter(day) = obstemp(43)
+       if (obstemp(43) > -9998d0) DATAin%nfoliage_to_litter = DATAin%nfoliage_to_litter+1
+       DATAin%foliage_to_litter_unc(day) = obstemp(44)
+       DATAin%foliage_to_litter_lag(day) = obstemp(45)
+
     end do ! day loop
 
     ! Count the total number of observations which are to be used.
@@ -870,7 +885,8 @@ module cardamom_io
                      + DATAin%nCwood_stock + DATAin%nCroots_stock + DATAin%nCsom_stock &
                      + DATAin%nClit_stock + DATAin%nCagb_stock + DATAin%nCcoarseroot_stock &
                      + DATAin%nCfolmax_stock + DATAin%nEvap + DATAin%nSWE + DATAin%nNBE &
-                     + DATAin%nCwood_mortality + DATAin%nFire + DATAin%nfAPAR
+                     + DATAin%nCwood_mortality + DATAin%nfoliage_to_litter + DATAin%nFire &
+                     + DATAin%nfAPAR
 
     ! allocate to time step
     allocate(DATAin%deltat(DATAin%nodays)) ; DATAin%deltat = 0d0
@@ -917,6 +933,7 @@ module cardamom_io
     x = 1 ; y = 1 ; z = 1 ; b = 1 ; c = 1 ; d = 1 ; e = 1
     f = 1 ; g = 1 ; h = 1 ; i = 1 ; j = 1 ; k = 1 ; l = 1
     m = 1 ; o = 1 ; s = 1 ; t = 1 ; u = 1 ; v = 1 ; w = 1
+    aa = 1
     do day = 1, DATAin%nodays
        if (DATAin%GPP(day) > -9998d0) then
           DATAin%gpppts(b) = day ; b = b+1
@@ -932,6 +949,9 @@ module cardamom_io
        endif ! data present condition
        if (DATAin%Cwood_mortality(day) > -9998d0) then
            DATAin%Cwood_mortalitypts(w) = day ; w = w+1
+       endif ! data present condition
+       if (DATAin%foliage_to_litter(day) > -9998d0) then
+           DATAin%foliage_to_litterpts(aa) = day ; aa = aa+1
        endif ! data present condition
        if (DATAin%Reco(day) > -9998d0) then
            DATAin%recopts(c) = day ; c = c+1
