@@ -1392,6 +1392,19 @@ module model_likelihood_module
        likelihood = likelihood-tot_exp
     endif
 
+    ! Leaf litter log-likelihood
+    if (DATAin%nfoliage_to_litter > 0) then
+        tot_exp = 0d0
+        do n = 1, DATAin%nfoliage_to_litter
+            dn = DATAin%foliage_to_litterpts(n)
+            s = max(0,dn-nint(DATAin%foliage_to_litter_lag(dn)))+1
+            ! Estimate the mean allocation to wood over the lag period
+            tmp_var = sum(DATAin%M_FLUXES(s:dn,10)) / DATAin%foliage_to_litter_lag(dn)
+            tot_exp = tot_exp+((tmp_var-DATAin%foliage_to_litter(dn)) / DATAin%foliage_to_litter_unc(dn))**2
+        end do
+        likelihood = likelihood-tot_exp
+    endif
+
     ! Cfoliage log-likelihood
     if (DATAin%nCfol_stock > 0) then
        ! Create vector of (FOL_t0 + FOL_t1) * 0.5
@@ -1774,6 +1787,19 @@ module model_likelihood_module
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCwood_mortality))
     endif
 
+    ! Leaf litter log-likelihood
+    if (DATAin%nfoliage_to_litter > 0) then
+        tot_exp = 0d0
+        do n = 1, DATAin%nfoliage_to_litter
+            dn = DATAin%foliage_to_litterpts(n)
+            s = max(0,dn-nint(DATAin%foliage_to_litter_lag(dn)))+1
+            ! Estimate the mean allocation to wood over the lag period
+            tmp_var = sum(DATAin%M_FLUXES(s:dn,10)) / DATAin%foliage_to_litter_lag(dn)
+            tot_exp = tot_exp+((tmp_var-DATAin%foliage_to_litter(dn)) / DATAin%foliage_to_litter_unc(dn))**2
+        end do
+        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nfoliage_to_litter))
+     endif
+
     ! Cfoliage log-likelihood
     if (DATAin%nCfol_stock > 0) then
        ! Create vector of (FOL_t0 + FOL_t1) * 0.5
@@ -2155,6 +2181,19 @@ module model_likelihood_module
        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nCwood_mortality)))
     endif
 
+    ! Leaf litter log-likelihood
+    if (DATAin%nfoliage_to_litter > 0) then
+        tot_exp = 0d0
+        do n = 1, DATAin%nfoliage_to_litter
+            dn = DATAin%foliage_to_litterpts(n)
+            s = max(0,dn-nint(DATAin%foliage_to_litter_lag(dn)))+1
+            ! Estimate the mean allocation to wood over the lag period
+            tmp_var = sum(DATAin%M_FLUXES(s:dn,10)) / DATAin%foliage_to_litter_lag(dn)
+            tot_exp = tot_exp+((tmp_var-DATAin%foliage_to_litter(dn)) / DATAin%foliage_to_litter_unc(dn))**2
+        end do
+        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nfoliage_to_litter)))
+     endif
+
     ! Cfoliage log-likelihood
     if (DATAin%nCfol_stock > 0) then
        ! Create vector of (FOL_t0 + FOL_t1) * 0.5
@@ -2534,6 +2573,19 @@ module model_likelihood_module
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_mortality(dn)) / DATAin%Cwood_mortality_unc(dn))**2
        end do
        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nCwood_mortality))))
+    endif
+
+    ! Leaf litter log-likelihood
+    if (DATAin%nfoliage_to_litter > 0) then
+        tot_exp = 0d0
+        do n = 1, DATAin%nfoliage_to_litter
+            dn = DATAin%foliage_to_litterpts(n)
+            s = max(0,dn-nint(DATAin%foliage_to_litter_lag(dn)))+1
+            ! Estimate the mean allocation to wood over the lag period
+            tmp_var = sum(DATAin%M_FLUXES(s:dn,10)) / DATAin%foliage_to_litter_lag(dn)
+            tot_exp = tot_exp+((tmp_var-DATAin%foliage_to_litter(dn)) / DATAin%foliage_to_litter_unc(dn))**2
+        end do
+        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nfoliage_to_litter))))
     endif
 
     ! Cfoliage log-likelihood
