@@ -32,6 +32,7 @@ module CARBON_MODEL_MOD
            ,gs_total_canopy        &
            ,gb_total_canopy        &
            ,canopy_par_MJday_time  &
+           ,soil_par_MJday_time &
            ,snow_storage_time&
            ,soil_frac_clay   &
            ,soil_frac_sand   &
@@ -170,10 +171,10 @@ module CARBON_MODEL_MOD
   !double precision :: minlwp = minlwp_default ! Now a retrieved parameter
 
   ! Photosynthetic Metrics
-  double precision, allocatable, dimension(:) ::  gs_demand_supply_ratio, & ! actual:potential stomatal conductance
-                                                  gs_total_canopy, & ! stomatal conductance (mmolH2O/m2ground/s)
-                                                  gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/s)
-                                                  soil_par_MJday_time, & ! Absorbed PAR by soil (MJ/m2ground/day)
+  double precision, allocatable, dimension(:) :: gs_demand_supply_ratio, & ! actual:potential stomatal conductance
+                                                        gs_total_canopy, & ! stomatal conductance (mmolH2O/m2ground/s)
+                                                        gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/s)
+                                                    soil_par_MJday_time, & ! Absorbed PAR by soil (MJ/m2ground/day)
                                                   canopy_par_MJday_time    ! Absorbed PAR by canopy (MJ/m2ground/day)
 
   ! arrays for the emulator, just so we load them once and that is it cos they be
@@ -527,7 +528,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        POOLS(1,5) = pars(22) ! litter
        POOLS(1,6) = pars(23) ! som
        !POOLS(1,7) = assigned later ! soil water (0-10cm)
-       !POOLS(1,8) = assigned later ! mLWP
       endif
 
     ! Some time consuming variables we only want to set once
@@ -962,7 +962,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! estimate average leaf water potential based on effective hydraulic resistance, wSWP and transpiration!
        ! Debugging print statements
        !print*,"Estimate LWP"
-       LWP = SWP(1:nos_root_layers) - head*canopy_height - transpiration*uptake_fraction(1:nos_root_layers)*daylength_seconds_1/mmol_to_kg_water/Rcond_layer(1:nos_root_layers)
+       LWP = SWP(1:nos_root_layers) - head*canopy_height - transpiration*uptake_fraction(1:nos_root_layers)*daylength_seconds_1 &
+                /mmol_to_kg_water/Rcond_layer(1:nos_root_layers)
        mLWP =  wSWP - transpiration * Reff
        LWP_time(n) = mLWP
        ! Store in POOLS object
