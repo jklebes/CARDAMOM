@@ -119,7 +119,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   }
 
   MET[,1] = met$run_day
-  MET[,2] = met$mint  ; if (min(met$mint) < -200) {stop('mint error in binary_data') ; print(summary(met$mint))} # Celcius
+  MET[,2] = met$mint  ; if (min(met$mint) < -200) {print(summary(met$mint)) ; stop('mint error in binary_data')} # Celcius
   MET[,3] = met$maxt  ; if (min(met$maxt) < -200) {stop('maxt error in binary_data')} # Celcius
   MET[,4] = met$swrad ; if (min(met$swrad) < 0) {stop('RAD error in binary_data')} # MJ/m2/day
   MET[,5] = met$co2#+200 # ppm

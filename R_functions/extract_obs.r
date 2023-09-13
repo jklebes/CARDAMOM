@@ -23,8 +23,6 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
          nos_days = nos_days_in_year(years_to_load[i])
          # count up days needed
          doy_obs = append(doy_obs,1:nos_days)
-         # Days per time step if not already provided
-         if (length(timestep_days) == 1) {timestep_days = rep(timestep_days, nos_days, by = timestep_days)}
     }
     doy_obs = doy_obs[-1]
 
