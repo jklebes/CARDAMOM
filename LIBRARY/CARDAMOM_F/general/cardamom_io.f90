@@ -1089,7 +1089,6 @@ module cardamom_io
     PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false. ; PI%use_multivariate = .false.
     do i = 1, PI%npars
        PI%covariance(i,i) = 1d0
-       write(*,*)i
     end do
     ! report back to user
     write(*,*) "Created field for parameter and covariances"
