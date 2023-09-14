@@ -111,7 +111,7 @@ program cardamom_framework
 
  ! user update
  write(*,*)"Command line options read, moving on now"
-
+ 
  ! seed the random number generator
  ! determine unique (sort of) seed value; based on system time
  call system_clock(time1,time2,time3)
@@ -127,7 +127,6 @@ program cardamom_framework
      ! read input data (DATAin located in module)
      call read_pari_data(infile)
  end if
-
  ! load module variables needed for restart check
  ! NOTE: THIS MUST HAPPEN BEFORE CHECKING FOR RESTART
  call read_options(solution_wanted,freq_print,freq_write,outfile)

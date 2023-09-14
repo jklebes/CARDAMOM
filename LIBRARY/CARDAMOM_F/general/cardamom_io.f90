@@ -618,7 +618,7 @@ module cardamom_io
        read(ifile_unit) DATAin%parpriors(a)
        a = a + 1
     end do
-
+    
     ! read in parameter uncertainty (100 elements)
     a = 1
     do i = 151, 250
@@ -926,8 +926,10 @@ module cardamom_io
     if (DATAin%nNBE > 0) allocate(DATAin%NBEpts(DATAin%nNBE))
     if (DATAin%nCwood_inc > 0) allocate(DATAin%Cwood_incpts(DATAin%nCwood_inc))
     if (DATAin%nCwood_mortality > 0) allocate(DATAin%Cwood_mortalitypts(DATAin%nCwood_mortality))
+    if (DATAin%nfoliage_to_litter > 0) allocate(DATAin%foliage_to_litterpts(DATAin%nfoliage_to_litter))
     if (DATAin%nFire > 0) allocate(DATAin%Firepts(DATAin%nFire))
     if (DATAin%nfAPAR > 0) allocate(DATAin%fAPARpts(DATAin%nfAPAR))
+
     ! we know how many observations we have and what they are, but now lets work
     ! out where they are in the data sets
     x = 1 ; y = 1 ; z = 1 ; b = 1 ; c = 1 ; d = 1 ; e = 1
@@ -1087,8 +1089,8 @@ module cardamom_io
     PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false. ; PI%use_multivariate = .false.
     do i = 1, PI%npars
        PI%covariance(i,i) = 1d0
+       write(*,*)i
     end do
-
     ! report back to user
     write(*,*) "Created field for parameter and covariances"
 
