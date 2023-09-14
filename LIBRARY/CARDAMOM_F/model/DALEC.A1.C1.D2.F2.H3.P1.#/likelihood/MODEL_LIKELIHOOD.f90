@@ -2940,7 +2940,7 @@ subroutine log_model_likelihood_dtm(PARS,ML_obs_out,ML_prior_out)
     ML_obs_out = ML_obs_out + log_scale_likelihood_dtm(PI%npars,PARS)
 
 !    ! Debugging print statements
-!    print*,"sub_model_likelihood: done"
+!    print*,"log_model_likelihood_dtm: done"
 
   end subroutine log_model_likelihood_dtm  
   !
