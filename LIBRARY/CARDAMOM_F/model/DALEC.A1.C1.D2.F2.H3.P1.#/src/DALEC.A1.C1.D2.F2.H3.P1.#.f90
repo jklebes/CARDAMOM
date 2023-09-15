@@ -211,8 +211,10 @@ module CARBON_MODEL_MOD
                                         layer_thickness, & ! thickness of soil layers (m)
                         cond1, cond2, cond3, potA, potB    ! Saxton equation values
 
-  double precision, dimension(nos_root_layers) :: LWP, &      ! Leaf Water Potential (MPa) -> one value per soil layer, but should be equal across layers (within precision)
-                                                  Rcond_layer ! Root conductivity (mmolH2O.MPa-1.m-2.s-1)
+  double precision, dimension(nos_root_layers) :: Rcond_layer ! Root conductivity (mmolH2O.MPa-1.m-2.s-1)
+                                                  !LWP        ! Leaf Water Potential (MPa) 
+                                                              !-> one value per soil layer, but should be equal across layers (within precision)
+                                                  
   double precision :: root_reach, root_biomass, &
                              fine_root_biomass, & ! root depth, coarse+fine, and fine root biomass
                               total_water_flux, & ! potential transpiration flux (kgH2O.m-2.day-1)
@@ -318,7 +320,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                                 rSWP_time, & ! Soil water potential weighted by access water
                                                 wSWP_time, & ! Soil water potential weighted by supply of water
                                                 Reff_time, & ! Effective hydraulic resistance Mpa.s.m2.mmol-1 H20
-                                                LWP_time     ! mean LWP in Mpa
+                                                LWP_time     ! mean Leaf Water Potential (MPa)
 
   contains
   !
@@ -424,7 +426,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! 5 = litter (p22)
     ! 6 = som    (p23)
     ! 7 = 0-10 cm soil water content (mm) (p24)
-    ! 8 = mLWP (MPa)
 
     ! FLUXES are:
     ! 1 = GPP
@@ -962,8 +963,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! estimate average leaf water potential based on effective hydraulic resistance, wSWP and transpiration!
        ! Debugging print statements
        !print*,"Estimate LWP"
-       LWP = SWP(1:nos_root_layers) - head*canopy_height - transpiration*uptake_fraction(1:nos_root_layers)*daylength_seconds_1 &
-                /mmol_to_kg_water/Rcond_layer(1:nos_root_layers)
+       !LWP = SWP(1:nos_root_layers) - head*canopy_height &
+       !     - transpiration*uptake_fraction(1:nos_root_layers) &
+       !     * (dayl_seconds_1/mmol_to_kg_water)/Rcond_layer(1:nos_root_layers)
        mLWP =  wSWP - transpiration * Reff
        LWP_time(n) = mLWP
        ! Store in POOLS object
@@ -1039,8 +1041,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! add any snow melt to the rainfall now that we have already dealt with the canopy interception
        rainfall = rainfall + snow_melt
        ! do mass balance (i.e. is there enough water to support ET)
-       call calculate_update_soil_water(transpiration,soilevaporation,((rainfall-intercepted_rainfall)*seconds_per_day) &
-                                       ,FLUXES(n,29))
+       call calculate_update_soil_water(transpiration,soilevaporation &
+                                      ,((rainfall-intercepted_rainfall)*seconds_per_day) &
+                                      ,FLUXES(n,29))
        ! now that soil mass balance has been updated we can add the wet canopy
        ! evaporation (kgH2O.m-2.day-1)
        FLUXES(n,29) = FLUXES(n,29) + wetcanopy_evap
