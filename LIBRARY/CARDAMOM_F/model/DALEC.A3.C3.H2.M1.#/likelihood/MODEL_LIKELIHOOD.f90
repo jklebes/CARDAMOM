@@ -571,28 +571,12 @@ module model_likelihood_module
         EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
     endif
 
-!    ! plough must be before sow and after harvest: WINTER ONLY
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(16) > pars(12) ) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
+!    ! CN ratio of leaf should also be between 95CI of trait database values
+!    ! Kattge et al (2011)
+!    tmp = (pars(17)/(10d0**pars(11)))
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 43.76895d0 .or. tmp < 10.82105d0)) then
+!       EDC1=0 ; EDCD%PASSFAIL(13) = 0
 !    endif
-!
-!    ! harvest cannot be more than 345 after harvest
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(15) < pars(12)+345.25d0) ) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
-!    endif
-!
-!    ! plough must be before sow and after harvest: WINTER ONLY
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(16) < pars(15) .or. &
-!        pars(16) > pars(12)) ) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
-!    endif
-
-    ! CN ratio of leaf should also be between 95CI of trait database values
-    ! Kattge et al (2011)
-    tmp = (pars(17)/(10d0**pars(11)))
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 43.76895d0 .or. tmp < 10.82105d0)) then
-       EDC1=0 ; EDCD%PASSFAIL(13) = 0
-    endif
 
     ! could and probably should add some more
   end subroutine assess_EDC1

@@ -31,7 +31,7 @@ M = Managed Grassland / arable crops (Table 10)
 | 12 | DALEC.C4.D1.F2.#             | DALEC_EVERGREEN_no_lit_root, S1            | Fire model updated from F1 to F2| Famiglietti et al., 2021  | Published   |
 | 13 | DALEC.C5.D1.F2.P1.#          | DALEC_CDEA_no_lit_root, S4                 | Fire model updated from F1 to F2| Famiglietti et al., 2021  | Published   |
 | 14 | DALEC.C3.M1.#                | DALEC_CROP          | Developmental arable crop model                     | Sus et al., 2010             | Published   |
-| 15 | DALEC.A3.C3.H2.M1.#          | DALEC_CROP_BUCKET   | Developmental arable crop model                     | Sus et al., 2010             | Published   |
+| 15 | DALEC.A3.C3.H2.M1.#          | DALEC_CROP_BUCKET   | Developmental arable crop model                     | Sus et al., 2010, T. L. Smallman             | Unpublished   |
 | 16 | DALEC.M2.#                   | DALEC_GRASS         | Managed grassland                                   | Myrgiotis et al., 2020       | Published   |
 | 17 | DALEC.A1.H2.M2.#             | DALEC_GRASS_BUCKET  | Managed grassland                                   | Myrgiotis et al., 2020       | Unpublished |
 | 18 | DALEC.A1.C1.D2.F2.H2.P2.#    | DALEC_CDEA_ACM2_BUCKET_wMRT                |                              | T. L. Smallman                | Unpublished |

@@ -734,7 +734,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     frac_GPP_resp_auto                = pars(2)  ! fraction of GPP allocated to autotrophic carbon pool
     DR_pre                            = pars(3)  ! development rate coefficient DS (0->1)
     DR_post                           = pars(4)  ! development rate coefficient DS (1->2)
-    turnover_rate_foliage             = pars(6)  ! pars(5)  ! turnover_rate of foliage (day)
+    turnover_rate_foliage             = pars(5)  ! turnover_rate of foliage (day)
     turnover_rate_stem                = pars(6)  ! turnover rate of stem (day)
     RDRSHMAX                          = pars(7)  ! maximum rate of foliar turnover due to self shading (day)
     VDh                               = pars(8)  ! effective vernalisation days when plants are 50 % vernalised
@@ -1089,7 +1089,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       FLUXES(n,6) = alloc_to_roots
       ! stem production (gC.m-2.d-1)
       FLUXES(n,7) = alloc_to_stem
-      ! labile to NPP (gC.m-2.d-1)
+      ! labile from NPP (gC.m-2.d-1)
       FLUXES(n,8) = alloc_from_labile
       ! alloc to storage organ (gC.m-2.d-1)
       FLUXES(n,9) = alloc_to_storage_organ
@@ -3479,7 +3479,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !!$      RDRDV = DR /( max( 0.1 , 2. - DS ) )
 !!$      RDRDV = RDRDV / 24. ! to get hourly senescence rate
        ! TLS: think the source of this equation needs to be found
-       RDRDV = turnover_rate_foliage * ( 1d0 / ( ( max( 2d0 - DS , 0.1d0 ) ) * 8d0 ) ) ** 2
+       RDRDV = turnover_rate_foliage * max(1d0, ( 1d0 / ( ( max( 2d0 - DS , 0.1d0 ) ) * 8d0 ) ) ** 2)
     ENDIF
 
     ! Relative leaf death rate is the maximum value of the arguments RDRSH and

@@ -89,9 +89,11 @@ module MODEL_PARAMETERS
     PI%parmin(12) = 115d0 
     PI%parmax(12) = 350d0
 
-    ! respiratory cost of labile transfer (per gC.m-2 labile)
-    PI%parmin(13) = 0.05d0 
-    PI%parmax(13) = 0.4d0
+    ! Respiratory cost of labile transfer (per gC.m-2 labile)
+    ! Nominal assumption here is 21 %, i.e. this is otherwise 
+    ! referred to as the growth respiration
+    PI%parmin(13) = 0.15d0 
+    PI%parmax(13) = 0.25d0
 
     ! phenological heat units required for emergence
     PI%parmin(14) = 100d0 
@@ -102,6 +104,7 @@ module MODEL_PARAMETERS
     PI%parmax(15) = 350d0
 
     ! plough day
+    ! NOT CURRENTLY IN USE
     PI%parmin(16) = 365.25d0 
     PI%parmax(16) = 365.25d0*4d0
 
@@ -144,8 +147,8 @@ module MODEL_PARAMETERS
     PI%parmin(34) = 1d-5
     PI%parmax(34) = 0.15d0
     ! turnover rate of autotrophic pool
-    PI%parmin(35) = 0.001d0 
-    PI%parmax(35) = 0.99d0
+    PI%parmin(35) = 0.032d0 ! 31.25 days 
+    PI%parmax(35) = 0.99d0  ! ~ 1 day
 
     ! BUCKET - root biomass needed to reach 50 % of max depth
     PI%parmin(36) = 10d0

@@ -197,9 +197,12 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   OBSMAT[,40] = OBS$Cwood_mortality       # Mean woody natural mortality over lag period (gC/m2/day)
   OBSMAT[,41] = OBS$Cwood_mortality_unc   # Mean woody natural mortality varince
   OBSMAT[,42] = OBS$Cwood_mortality_lag   # Lag period over which to average  (steps)
-  #OBSMAT[,43] = OBS$Cwood_net_inc         # Mean woody net increment over lag period (gC/m2/day)
-  #OBSMAT[,44] = OBS$Cwood_net_inc_unc     # Mean woody net increment varince
-  #OBSMAT[,45] = OBS$Cwood_net_inc_lag     # Lag period over which to average  (steps)
+  #OBSMAT[,43] =          # Mean woody net increment over lag period (gC/m2/day)
+  #OBSMAT[,44] =      # Mean woody net increment varince
+  #OBSMAT[,45] =      # Lag period over which to average  (steps) 
+  #OBSMAT[,46] = OBS$Cwood_net_inc         # Mean woody net increment over lag period (gC/m2/day)
+  #OBSMAT[,47] = OBS$Cwood_net_inc_unc     # Mean woody net increment varince
+  #OBSMAT[,48] = OBS$Cwood_net_inc_lag     # Lag period over which to average  (steps)
   DATA_TEMP = t(cbind(MET,OBSMAT))
 
   # STATIC DATA (1-50)
@@ -270,8 +273,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       # Other priors
       OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
   } else if (modelname == "DALEC.C3.M1.#") {
-      PARPRIORS[2] =0.46                   ; PARPRIORUNC[2]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       PARPRIORS[11]=16.9                   ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+      PARPRIORS[13]=0.2133                 ; PARPRIORUNC[13]=0.01 # Respiratory costs of labile transfer
       PARPRIORS[12]=OBS$plant              ; PARPRIORUNC[12]=OBS$plant_range
       PARPRIORS[15]=OBS$harvest            ; PARPRIORUNC[15]=OBS$harvest_range
       PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc
@@ -280,9 +283,12 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[21]=OBS$Cwood_initial      ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
       PARPRIORS[22]=OBS$Clit_initial       ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
       PARPRIORS[23]=OBS$Csom_initial       ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
+      PARPRIORS[35]=0.99                   ; PARPRIORUNC[35]=0.1 # labile turnover rate (/day)
+      # Other priors
+      OTHERPRIORS[2] = 0.46                ; OTHERPRIORUNC[2]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
   } else if (modelname == "DALEC.A3.C3.H2.M1.#") {
-      PARPRIORS[2] =0.46                   ; PARPRIORUNC[2]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       PARPRIORS[11]=0.2764618              ; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
+      PARPRIORS[13]=0.2133                 ; PARPRIORUNC[13]=0.01 # Respiratory costs of labile transfer
       PARPRIORS[12]=OBS$plant              ; PARPRIORUNC[12]=OBS$plant_range
       PARPRIORS[15]=OBS$harvest            ; PARPRIORUNC[15]=OBS$harvest_range
       PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc
@@ -291,6 +297,9 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[21]=OBS$Cwood_initial      ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
       PARPRIORS[22]=OBS$Clit_initial       ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
       PARPRIORS[23]=OBS$Csom_initial       ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
+      PARPRIORS[35]=0.99                   ; PARPRIORUNC[35]=0.1 # labile turnover rate (/day)
+      # Other priors
+      OTHERPRIORS[1] = 0.46                ; OTHERPRIORUNC[1]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
   } else if (modelname == "DALEC_1005") {
       PARPRIORS[2] =0.46                   ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       PARPRIORS[11]=16.9                   ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)

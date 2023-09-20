@@ -54,11 +54,12 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       if (mint[1] == -9999) {stop("No min temperature provided: mint in C must be provided")}
       airt = read_site_specific_obs("airt_C",infile)       # if no mean air temperature available assume mean of max / min
       if (airt[1] == -9999) {airt = (maxt + mint) * 0.5}
-
+      if (length(which(maxt-mint == 0)) > 0) {stop("Maximum and minimum temperatures cannot be exactly the same in the same time step")}
+      
       swrad = read_site_specific_obs("swrad_Wm2",infile) # W.m-2
       if (swrad[1] == -9999) {
           # try and look for shortwave in MJ/m2/day
-          swrad=read_site_specific_obs("swrad_MJm2day",infile) # MJ/m2/day
+          swrad = read_site_specific_obs("swrad_MJm2day",infile) # MJ/m2/day
           if (swrad[1] == -9999) {stop("No short wave radiation found: either swrad_Wm2 (in W/m2) or swrad_MJm2day must be provided")}
       } else {
           # assume we have got the W/m2, which we need to conver to MJ/m2/day
@@ -166,8 +167,8 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       # rolling averaged for GSI
       avg_days = 30 # assume that the first 30 days are just the actual values, We expect this should result in a small error only
       # create photoperiod information; add 30 days to the output
-      #photoperiod_out = calc_photoperiod_sec(latlon_wanted[1],c(seq(365,(365-(avg_days-2)),-1),doy))
-      photoperiod_out = calc_photoperiod_sec(latlon_wanted[1],c(seq((365-(avg_days-2)),365,1),met_in$doy))
+      photoperiod_out = calc_photoperiod_sec(latlon_wanted[1],c(seq(365-(avg_days+1),365,1),doy))
+
       # now take the daily values and turn them into rolling 30 day averages
       photoperiod_out = rollapply(photoperiod_out,avg_days,mean,na.rm=FALSE)
       avgTmax_out = rollapply(avgTmax_out,avg_days,mean,na.rm=FALSE)

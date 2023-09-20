@@ -168,7 +168,7 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,8)  = FLUXES(1:nodays,5)          ! allocation to labile (gC/m2/day)
      out_var1(i,1:nodays,9)  = FLUXES(1:nodays,6)          ! allocation to fine roots (gC/m2/day)
      out_var1(i,1:nodays,10) = FLUXES(1:nodays,7)          ! allocation to stem (gC/m2/day)
-     out_var1(i,1:nodays,11) = FLUXES(1:nodays,8)          ! labile to foliage (gC/m2/day)
+     out_var1(i,1:nodays,11) = FLUXES(1:nodays,8)          ! labile from foliage (gC/m2/day)
      out_var1(i,1:nodays,12) = FLUXES(1:nodays,16)         ! alloc to autotrophic (gC/m2/day)
      out_var1(i,1:nodays,13) = FLUXES(1:nodays,9)          ! alloc to storage organ (gC/m2/day)
      out_var1(i,1:nodays,14) = FLUXES(1:nodays,10)         ! foliage scenesence (gC/m2/day)
