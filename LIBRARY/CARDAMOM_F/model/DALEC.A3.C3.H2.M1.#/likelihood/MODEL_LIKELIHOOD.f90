@@ -525,11 +525,10 @@ module model_likelihood_module
         EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
     endif
 
-    ! turnover of foliage faster than turnover of wood
-! TLS: turnover off because foliage and stem turnovers are made same
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(6) > pars(5)) then
-!       EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
-!    end if
+    ! potential turnover of foliage due to aging should be paster than self-shading
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(7) > pars(5)) then
+       EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
+    end if
 
     ! pre_DR should be greater than post_DR
 !    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(4) > pars(3))) then

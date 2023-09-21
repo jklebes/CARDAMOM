@@ -6,7 +6,7 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
                    ,lat,nopars,nomet &
                    ,nofluxes,nopools,nodays,deltat &
                    ,nos_iter,soil_frac_clay_in,soil_frac_sand_in &
-                   ,exepath,pathlength)
+                   ,pathlength)
 
   use CARBON_MODEL_MOD, only: CARBON_MODEL, wSWP_time, soil_frac_clay, &
                               soil_frac_sand, nos_soil_layers, &
@@ -30,12 +30,11 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
   interface
     subroutine crop_development_parameters(stock_seed_labile,DS_shoot,DS_root,fol_frac &
                                           ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT &
-                                          ,exepath,pathlength)
+                                          ,exepath)
       implicit none
       ! declare inputs
       ! crop specific variables
-      integer, intent(in) :: pathlength
-      character(pathlength),intent(in) :: exepath
+      character(350),intent(in) :: exepath
       double precision :: stock_seed_labile
       double precision, allocatable, dimension(:) :: DS_shoot, & !
                                                       DS_root, & !
@@ -54,7 +53,7 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
 
   ! declare input variables
   integer, intent(in) :: pathlength
-  character(pathlength), intent(in) :: exepath
+  !character(pathlength), intent(in) :: exepath
   integer, intent(in) :: nopars         & ! number of paremeters in vector
                         ,output_dim     & !
                         ,MTT_dim        & ! number of pools mean transit time estimates
@@ -79,6 +78,7 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
 
   ! local variables
   ! vector of ecosystem pools
+  character(350) :: exepath
   integer :: i, nos_years, steps_per_year
   integer, dimension(nodays) :: auto_hak,lab_hak, fol_hak, root_hak, wood_hak, &
                                 lit_hak, som_hak, deadfol_hak
@@ -129,13 +129,22 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
   ! number of time steps per year
   steps_per_year = nodays/nos_years
 
+  ! Determine which crop development file are we looking for
+  if (pathlength == 1) then
+      exepath = "winter_wheat_development.csv"
+  else 
+      ! Not currently defined
+      print*,"No valid crop type has been specified"
+      stop
+  end if 
+
   ! Load crop development parameters here
   ! TLS: should the exepath and pathlength be made hardcoded in the assumption that 
   ! the needed file always has the same name (i.e. copy and rename to EXE to match specific crop types)
   ! and that the file is in the working directory of the PROJECT
   call crop_development_parameters(stock_seed_labile,DS_shoot,DS_root,fol_frac &
                                   ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT &
-                                  ,exepath,pathlength)
+                                  ,exepath)
 
   ! begin iterations
   do i = 1, nos_iter
@@ -337,18 +346,19 @@ end subroutine rdalec15
 !
   subroutine crop_development_parameters(stock_seed_labile,DS_shoot,DS_root,fol_frac &
                                         ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT &
-                                        ,exepath,pathlength)
+                                        ,exepath)
 
     ! subroutine reads in the fixed crop development files which are linked the
     ! the development state of the crops. The development model varies between
     ! which species. e.g. winter wheat and barley, spring wheat and barley
+    ! NOTE: duplicate function in the *_PARS.f90
 
     implicit none
 
     ! declare inputs
     ! crop specific variables
-    integer,intent(in) :: pathlength
-    character(pathlength),intent(in) :: exepath
+    !integer,intent(in) :: pathlength
+    character(350),intent(in) :: exepath
     double precision :: stock_seed_labile
     double precision, allocatable, dimension(:) :: DS_shoot, & !
                                                     DS_root, & !

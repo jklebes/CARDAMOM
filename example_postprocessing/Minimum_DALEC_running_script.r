@@ -84,7 +84,7 @@ if (analysis_years != nos_years) {
 
 ##
 # Now run the actual model
-#parameters[11,,] = parameters[11,,]+0.75
+parameters[11,,] = parameters[11,,]*2
 #parameters[13,,] = 0.21
 #parameters[35,,] = 0.99
 # run subsample of parameters for full results / propogation
@@ -100,28 +100,28 @@ C_cycle = simulate_all(n,new_PROJECT,PROJECT$model$name,new_drivers$met,paramete
 # Then compare original states_all with C_cycle
 
 par(mfrow=c(2,4))
-plot(apply(states_all$gpp_gCm2day,2,median), type="l", lwd=3, ylim=c(0,15))
+plot(apply(states_all$gpp_gCm2day,2,median), type="l", lwd=3, ylim=c(0,15), main="GPP")
 lines(apply(C_cycle$gpp_gCm2day,2,median), col="green", lwd=3)
 #plotCI(czo$GPP_gCm2day, uiw = czo$GPP_unc_gCm2day, add=TRUE, ylim=c(0,9), col="red")
-plot(apply(states_all$ET_kgH2Om2day,2,median), type="l", lwd=3, ylim=c(0,8))
+plot(apply(states_all$ET_kgH2Om2day,2,median), type="l", lwd=3, ylim=c(0,8), main="ET")
 lines(apply(C_cycle$ET_kgH2Om2day,2,median), col="green", lwd=3)
 #plotCI(czo$Evap_kgH2Om2day, uiw = czo$Evap_unc_kgH2Om2day, add=TRUE, col="red")
-plot(apply(states_all$SurfWater_kgH2Om2,2,median), type="l", lwd=3, ylim=c(0,150))
+plot(apply(states_all$SurfWater_kgH2Om2,2,median), type="l", lwd=3, ylim=c(0,150), main="SurfWater")
 lines(apply(C_cycle$SurfWater_kgH2Om2,2,median), col="green", lwd=3)
-plot(apply(states_all$lai_m2m2,2,median), type="l", lwd=3, ylim=c(0,10))
+plot(apply(states_all$lai_m2m2,2,median), type="l", lwd=3, ylim=c(0,10), main="LAI")
 lines(apply(C_cycle$lai_m2m2,2,median), col="green", lwd=3)
 plotCI(drivers$obs[,3], uiw = drivers$obs[,4], add=TRUE)
 #plotCI(czo$LAI_m2m2, uiw = czo$LAI_unc_m2m2, add=TRUE, col="red")
 #plot(apply(states_all$rauto_gCm2day+states_all$rhet_litter_gCm2day+states_all$rhet_som_gCm2day,2,median), type="l", lwd=3, ylim=c(0,16))
 #lines(apply(C_cycle$rauto_gCm2day+C_cycle$rhet_litter_gCm2day+C_cycle$rhet_som_gCm2day,2,median), col="green", lwd=3)
 #plotCI(czo$Reco_gCm2day, uiw = czo$Reco_unc_gCm2day, add=TRUE, ylim=c(0,10), col="red")
-plot(apply(states_all$RootDepth_m,2,median), type="l", lwd=3, ylim=c(0,max(states_all$RootDepth_m, na.rm=TRUE)))
+plot(apply(states_all$RootDepth_m,2,median), type="l", lwd=3, ylim=c(0,max(states_all$RootDepth_m, na.rm=TRUE)), main="RootDepth")
 lines(apply(C_cycle$RootDepth_m,2,median), col="green", lwd=3)
-plot(apply(states_all$harvest_gCm2day,2,median), type="l", lwd=3, ylim=c(0,350))
+plot(apply(states_all$harvest_gCm2day,2,median), type="l", lwd=3, ylim=c(0,350), main="Harvest")
 lines(apply(C_cycle$harvest_gCm2day,2,median), col="green", lwd=3)
-plot(apply(states_all$StorageOrgan_gCm2,2,median), type="l", lwd=3, ylim=c(0,350))
+plot(apply(states_all$StorageOrgan_gCm2,2,median), type="l", lwd=3, ylim=c(0,350), main="StorageOrgan")
 lines(apply(C_cycle$StorageOrgan_gCm2,2,median), col="green", lwd=3)
-plot(apply(states_all$som_gCm2,2,median), type="l", lwd=3)
+plot(apply(states_all$som_gCm2,2,median), type="l", lwd=3, main="Soil C")
 lines(apply(C_cycle$som_gCm2,2,median), col="green", lwd=3)
 
 for (i in seq(1, 300)) { if (i == 1) {plot(states_all$harvest_gCm2day[i,], ylim=c(0,250)) } else {lines(states_all$harvest_gCm2day[i,])} ; print(states_all$harvest_gCm2day[i,which(states_all$harvest_gCm2day[i,] > 0)]) }

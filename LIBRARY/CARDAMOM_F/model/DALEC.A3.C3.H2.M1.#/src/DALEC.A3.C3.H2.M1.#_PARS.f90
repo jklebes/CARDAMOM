@@ -59,15 +59,15 @@ module MODEL_PARAMETERS
     PI%parmax(4) = 0.050d0
 
     ! turnover rate foliage (frac/day)
-    PI%parmin(5) = 0.0024d0 
-    PI%parmax(5) = 0.48d0
+    PI%parmin(5) = 0.002737851d0 ! 365.25 days
+    PI%parmax(5) = 0.1428571d0   ! 7 days 
 
     ! TOR wood* - 1% loss per year value (day-1)
-    PI%parmin(6) = 0.0024d0 
-    PI%parmax(6) = 0.24d0
+    PI%parmin(6) = 0.002737851d0 ! 365.25 days
+    PI%parmax(6) = 0.1428571d0   ! 7 days 0.24d0
     ! maximum rate of foliar turnover (day-1) due to self-shading
-    PI%parmin(7) = 0.00024d0 
-    PI%parmax(7) = 0.24d0
+    PI%parmin(7) = 0.02380952d0  ! 42 days
+    PI%parmax(7) = 0.07142857d0  ! 17 days
 
     ! effective vernalisation days when plants are 50 % vernalised
     PI%parmin(8) = 12d0 
@@ -86,8 +86,8 @@ module MODEL_PARAMETERS
     PI%parmax(11) = 0.6382028d0
 
     ! sow day
-    PI%parmin(12) = 115d0 
-    PI%parmax(12) = 350d0
+    PI%parmin(12) = 100d0 
+    PI%parmax(12) = 3650d0
 
     ! Respiratory cost of labile transfer (per gC.m-2 labile)
     ! Nominal assumption here is 21 %, i.e. this is otherwise 
@@ -101,7 +101,7 @@ module MODEL_PARAMETERS
 
     ! harvest day
     PI%parmin(15) = 15d0 
-    PI%parmax(15) = 350d0
+    PI%parmax(15) = 365d0
 
     ! plough day
     ! NOT CURRENTLY IN USE
@@ -226,6 +226,7 @@ module MODEL_PARAMETERS
     ! subroutine reads in the fixed crop development files which are linked the
     ! the development state of the crops. The development model varies between
     ! which species. e.g. winter wheat and barley, spring wheat and barley
+    ! NOTE: duplicate function in the R_interface.f90
 
     implicit none
 
@@ -243,7 +244,7 @@ module MODEL_PARAMETERS
                                                                       LRRT
 
     ! local variables..
-    integer                 :: columns, i, rows, input_crops_unit, ios
+    integer        :: columns, i, rows, input_crops_unit, ios
     character(100) :: variables,filename
 
     ! for the moment hard code the file name

@@ -354,12 +354,14 @@ module CARBON_MODEL_MOD
                                                  ! He et al., (2012) http://dx.doi.org/10.1016/j.rse.2011.12.008
                soil_nir_reflectance = 0.023d0, & ! Soil reflectance to near infrared radiation
                soil_par_reflectance = 0.033d0, & ! Soil reflectance to photosynthetically active radiation
-             canopy_nir_reflectance = 0.43d0,  & ! Canopy NIR reflectance
-             canopy_par_reflectance = 0.16d0,  & ! Canopty PAR reflectance
-           canopy_nir_transmittance = 0.26d0,  & ! Canopy NIR reflectance
-           canopy_par_transmittance = 0.16d0,  & ! Canopty PAR reflectance
+             canopy_nir_reflectance = 0.38d0,  & ! Canopy NIR reflectance (Default 0.43, Sitka Spruce 0.16, grass/crop ~ 0.38)
+             canopy_par_reflectance = 0.11d0,  & ! Canopty PAR reflectance (Default 0.16, Sitka Spruce 0.07, grass/crop ~ 0.11)
+           canopy_nir_transmittance = 0.26d0,  & ! Canopy NIR transmittance
+           canopy_par_transmittance = 0.16d0,  & ! Canopty PAR transmittance
                     newsnow_nir_abs = 0.27d0,  & ! NIR absorption fraction
                     newsnow_par_abs = 0.05d0,  & ! PAR absorption fraction
+                      !nirrefl_crop = 0.50d0,  & ! NIR reflectance for dead crop (Nagler et al., 2003)
+                      !parrefl_crop = 0.30d0,  & ! PAR reflectance for dead crop (Nagler et al., 2003)
          leaf_distribution_deviance = 0.01d0     ! Deviation from spherical, min absolute value (0.01) required for numerical security.
                                                  ! Leaf angle distribution, quantified as the deviation from a spherical distribution.
                                                  ! The default assumption in many models, including SPA, is that leaves have a spherical distribution (=0).
@@ -374,9 +376,6 @@ module CARBON_MODEL_MOD
                      canopy_reflectance = (/canopy_nir_reflectance,canopy_par_reflectance/), & !
                    canopy_transmittance = (/canopy_nir_transmittance,canopy_par_transmittance/), & !
                        soil_reflectance = (/soil_nir_reflectance,soil_par_reflectance/), & !
-!                   canopy_reflectance, & ! = (/canopy_nir_reflectance,canopy_par_reflectance/), & !
-!                   canopy_transmittance, & ! = (/canopy_nir_transmittance,canopy_par_transmittance/), & !
-!                   soil_reflectance, & ! = (/soil_nir_reflectance,soil_par_reflectance/), & !
                       canopy_scattering, & ! Canopy scattering of incident light, varied by wavelength
                                      bb, & ! Downward scatting of diffuse radiation
                                      cc, & ! Upward scattering as diffuse radiation, a function of canopy_transmittance, canopy_reflectance and leaf angle.
@@ -567,10 +566,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   ! residue fraction of stem left post harvest
   double precision, parameter :: st_res = 0.1d0
   ! LAI above which self shading turnover occurs
-  !double precision, parameter :: LAICR = 4d0
-  double precision, parameter :: LAICR = 5d0
+  double precision, parameter :: LAICR = 4d0
+  !double precision, parameter :: LAICR = 5d0
   ! allocation to storage organ relative to GPP
   double precision, parameter :: rel_gso_max = 0.35d0
+  !double precision, parameter :: rel_gso_max = 0.45d0
 
   save
 
@@ -592,8 +592,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! soil water balance (4 layers).
     !
     ! This version was coded by T. Luke Smallman (t.l.smallman@ed.ac.uk)
-    ! Version 1: 15/07/2014
-    ! Version 2: 15/11/2018 - Addition of the BUCKET model via ACM2 to include the water cycle
+    ! Version 1.0: 15/07/2014
+    ! Version 2.0: 15/11/2018 - Addition of the BUCKET model via ACM2 to include the water cycle
+    ! Version 2.1: 21/09/2023 - BUCKET updated to current DALEC.4. standard plus the addition of the Sellers RTM
 
     implicit none
 
@@ -3421,7 +3422,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     npp = gpp_acm + alloc_from_labile - alloc_to_resp_auto
 
     ! Dertermine partitioning of NPP to biomass pools
-    root_frac_intpol  = root_frac_intpol
     alloc_to_roots    = root_frac_intpol * npp
     ! Calculate how much NPP is left after allocation to roots
     npp_shoot         = npp - alloc_to_roots

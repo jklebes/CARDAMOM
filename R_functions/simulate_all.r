@@ -133,7 +133,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
   } else if (model_name == "DALEC.A3.C3.H2.M1.#") {
       output_dim = 57 ; MTT_dim = 8 ; SS_dim = 8
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
-      crop_file_location=paste(PROJECT$exepath,"winter_wheat_development.csv", sep="")
+      #crop_file_location=paste(PROJECT$exepath,"winter_wheat_development.csv", sep="")
+      crop_type = 1 # Winter Wheat
+      wd_old = getwd() ; setwd(PROJECT$exepath)
       tmp=.Fortran( "rdalec15",output_dim=as.integer(output_dim)
                              ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
                              ,met=as.double(t(met))
@@ -148,13 +150,14 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                              ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
                              ,soil_frac_clay_in=as.double(c(soil_info[3],soil_info[4],soil_info[4]))
                              ,soil_frac_sand_in=as.double(c(soil_info[1],soil_info[2],soil_info[2]))
-                             ,exepath=as.character(crop_file_location),pathlength=as.integer(nchar(crop_file_location)))
+                             ,pathlength=as.integer(crop_type))
+                             #,exepath=as.character(crop_file_location),pathlength=as.integer(nchar(crop_file_location)))
       output = tmp$out_var1    ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
       MTT_years = tmp$out_var2 ; MTT_years = array(MTT_years, dim=c(nos_iter,MTT_dim))
       SS_gCm2 = tmp$out_var3   ; SS_gCm2 = array(SS_gCm2, dim=c(nos_iter,SS_dim))
       # Unload the current dalec shared object
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
-      rm(tmp) ; gc()
+      rm(tmp) ; gc() ; setwd(wd_old)
       # create output object
       states_all=list(# Ecosystem fluxes
                       gpp_gCm2day = output[,,1],
