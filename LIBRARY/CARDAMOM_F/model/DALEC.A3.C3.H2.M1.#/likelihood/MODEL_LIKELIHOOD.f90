@@ -525,56 +525,52 @@ module model_likelihood_module
         EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
     endif
 
-    ! potential turnover of foliage due to aging should be paster than self-shading
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(7) > pars(5)) then
-       EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
-    end if
-
-    ! pre_DR should be greater than post_DR
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(4) > pars(3))) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
-!    endif
+    ! pre_DR should be greater than post_DR, this is consistent across currently
+    ! available SPA crop parameter files
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(4) > pars(3))) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
+    endif
 
     ! for development: Tmin should be < topt and topt should be < tmax
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(26) > pars(28) &
                                      .or. pars(28) > pars(27) &
                                      .or. pars(26) > pars(27))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
     endif
 
     ! for development: the difference between each Tmin,Topt,Tmax > 1.
     if ((EDC1 == 1 .or. DIAG == 1) .and. (abs(pars(26)-pars(28)) < 1d0 &
                                      .or. abs(pars(28)-pars(27)) < 1d0  &
                                      .or. abs(pars(26)-pars(27)) < 1d0)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     endif
 
-   ! for vernalisation: Tmin < Topt < Tmax
+    ! for vernalisation: Tmin < Topt < Tmax
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(29) > pars(31) &
                                      .or. pars(31) > pars(30) &
                                      .or. pars(29) > pars(30))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
     endif
 
    ! for vernalisation: the difference between each Tmin, Topt, Tmax
     if ((EDC1 == 1 .or. DIAG == 1) .and. ( abs(pars(29)-pars(31)) < 1d0 &
                                       .or. abs(pars(31)-pars(30)) < 1d0 &
                                       .or. abs(pars(29)-pars(30)) < 1d0 ) ) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
     endif
 
    ! development temperature value should be larger corresponding vernalisation
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(29) > pars(26) &
                                      .or. pars(31) > pars(28) &
                                      .or. pars(30) > pars(27))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
     endif
 
 !    ! CN ratio of leaf should also be between 95CI of trait database values
 !    ! Kattge et al (2011)
 !    tmp = (pars(17)/(10d0**pars(11)))
 !    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 43.76895d0 .or. tmp < 10.82105d0)) then
-!       EDC1=0 ; EDCD%PASSFAIL(13) = 0
+!       EDC1=0 ; EDCD%PASSFAIL(9) = 0
 !    endif
 
     ! could and probably should add some more
@@ -646,7 +642,7 @@ module model_likelihood_module
     EQF = 10d0
 
     ! initialise and then calculate mean gpp values
-    meangpp = sum(M_GPP(1:nodays))/dble(nodays)
+    meangpp = sum(M_GPP(1:nodays))/dble(nodays)!        
 
     ! EDC 11 - SOM steady state within order magnitude of initial conditions
     if ((EDC2 == 1 .or. DIAG == 1) .and. &
@@ -704,17 +700,6 @@ module model_likelihood_module
     if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(1:nodays,21)) < (1d0*dble(no_years)) ) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
     endif
-
-    ! LAI time series linear model must retrieve gradient which is at least
-    ! positive (or some other reasonable critical threshold)
-    ! if ((EDC2 == 1 .or. DIAG == 1) .and. &
-    !     linear_model_gradient(DATAin%M_LAI(DATAin%laipts),DATAin%LAI(DATAin%laipts),DATAin%nlai) < 0d0 ) then
-    !     EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
-    ! endif
-
-    ! Function to calculate the gradient of a linear model for a given depentent
-    ! variable (y) based on predictive variable (x). The typical use of this
-    ! function will in fact be to assume that x is time.
 
     !
     ! EDCs done, below are additional fault detection conditions

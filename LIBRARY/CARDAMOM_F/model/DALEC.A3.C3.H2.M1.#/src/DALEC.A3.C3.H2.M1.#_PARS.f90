@@ -51,12 +51,11 @@ module MODEL_PARAMETERS
     PI%parmax(2) = 0.8d0
 
     ! max development rate (day-1) DS (0->1)
-    PI%parmin(3) = 0.020d0 
-    PI%parmax(3) = 0.050d0
-
+    PI%parmin(3) = 0.01d0 
+    PI%parmax(3) = 0.05d0
     ! max development rate (day-1) DS (1->2)
-    PI%parmin(4) = 0.010d0 
-    PI%parmax(4) = 0.050d0
+    PI%parmin(4) = 0.01d0 
+    PI%parmax(4) = 0.05d0
 
     ! turnover rate foliage (frac/day)
     PI%parmin(5) = 0.002737851d0 ! 365.25 days
@@ -152,7 +151,7 @@ module MODEL_PARAMETERS
 
     ! BUCKET - root biomass needed to reach 50 % of max depth
     PI%parmin(36) = 10d0
-    PI%parmax(36) = 500d0
+    PI%parmax(36) = 150d0
 
     ! BUCKET - maximum rooting depth
     PI%parmin(37) = 0.35d0
