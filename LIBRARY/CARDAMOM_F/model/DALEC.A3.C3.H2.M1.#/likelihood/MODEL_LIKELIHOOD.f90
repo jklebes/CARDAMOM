@@ -583,7 +583,7 @@ module model_likelihood_module
                         ,meantemp,EDC2)
 
     use cardamom_structures, only: DATAin
-    use CARBON_MODEL_MOD, only: resp_rate_temp_coeff,linear_model_gradient
+    use CARBON_MODEL_MOD, only: resp_rate_temp_coeff,linear_model_gradient, DS_time
 
     ! the second of two subroutines for assessing current parameters for passing
     ! realism tests for crop ecosystems
@@ -699,6 +699,11 @@ module model_likelihood_module
     ! reject parameter sets which generate no yield ever!
     if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(1:nodays,21)) < (1d0*dble(no_years)) ) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
+    endif
+
+    ! We should assume all crops get somewhere close to maturity (2.0)
+    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(DS_time) < 1.9) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
     endif
 
     !
