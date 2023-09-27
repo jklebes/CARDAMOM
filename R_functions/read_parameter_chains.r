@@ -93,7 +93,7 @@ determine_parameter_chains_to_run<-function(PROJECT,n) {
   } # if more than 2 chains
 
   # Return parameters to user
-  return(parameters)
+  return(list(parameters = parameters,converged = converged))
 
 } # end function determine_parameter_chains_to_run
 ## Use byte compile

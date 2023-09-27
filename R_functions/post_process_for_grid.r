@@ -5,7 +5,7 @@
 
 # This function was created by T. L Smallman (t.l.smallman@ed.ac.uk, UoE)
 
-post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_flag,states_all) {
+post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_flag,converged,states_all) {
 
   # Determine some useful information for the analysis below
   nos_years = PROJECT$nos_years
@@ -1175,9 +1175,6 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   if (exists(x = "MTT_wood_years_to_NPP_wood_gCm2day_correlation", where = states_all)) {
       site_output$MTT_wood_years_to_NPP_wood_gCm2day_correlation = states_all$MTT_wood_years_to_NPP_wood_gCm2day_correlation
   }
-
-  # Tidy local environment
-  rm(states_all,drivers) ; gc()
 
   # save to pixel specific file for the moment... in "run_mcmc_results" these will be combined into a single grid
   save(site_output,file=outfile_stock_fluxes, compress = "gzip", compression_level = 6)

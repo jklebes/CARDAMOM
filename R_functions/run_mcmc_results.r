@@ -781,7 +781,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
   if (file.exists(outfile_parameters) == FALSE | repair == 1) {
 
       # Determine which parameter chains we will be using
-      parameters = determine_parameter_chains_to_run(PROJECT,n)
+      output = determine_parameter_chains_to_run(PROJECT,n)
+      parameters = output$parameters ; converged = output$converged ; rm(output)
       # Check if we likely have an error flag
       if (length(as.vector(parameters)) == 1) {
           # Return the flag and allow the job to move on
@@ -812,6 +813,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
 
           # Post-process the DALEC model output for both site and gridded analyses
           states_all = post_process_dalec(states_all,parameters,drivers,PROJECT,n)
+          # Determine how many ensemble members are within the observational uncertainties
+          # of the calibration datasets
+          states_all = assess_ensemble_fit_to_calibration_data(states_all,drivers,PROJECT)
 
       } # DALEC model or not?
 
@@ -859,7 +863,9 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
           na_flag = TRUE
 
           # Run post-processing for gridded analysis
-          dummy = post_process_for_grid(outfile_stock_fluxes,PROJECT,num_quantiles,na_flag,states_all)
+          dummy = post_process_for_grid(outfile_stock_fluxes,PROJECT,num_quantiles,na_flag,converged,states_all)
+          # Tidy local environment
+          rm(states_all,drivers) ; gc()
           # Return the site_output list object for subsequent slotting into the wider grid
           if (dummy == 0) { return(outfile_stock_fluxes) }
 

@@ -100,6 +100,21 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
           }
   } # Both MTT wood and alloc_wood present?
 
+  # Return back to user
+  return(states_all)
+          
+} # end function post_process_dalec
+## Use byte compile
+post_process_dalec<-cmpfun(post_process_dalec)
+
+###
+# Quantify the proportion of ensemble members within the uncertainty bounds of the calibration datasets
+###
+
+# This function was created by T. L Smallman (t.l.smallman@ed.ac.uk, UoE)
+
+assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
+
   ###
   ## Comparison with assimilated observation - to what extent does the ensemble overlap?
 
@@ -352,10 +367,8 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
 
   # Return back to user
   return(states_all)
-          
-} # end function post_process_dalec
+
+} # end function assess_ensemble_fit_to_calibration_data
 ## Use byte compile
-post_process_dalec<-cmpfun(post_process_dalec)
-
-
+assess_ensemble_fit_to_calibration_data<-cmpfun(assess_ensemble_fit_to_calibration_data)
 
