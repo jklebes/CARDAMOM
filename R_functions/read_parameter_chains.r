@@ -96,6 +96,8 @@ determine_parameter_chains_to_run<-function(PROJECT,n) {
   return(parameters)
 
 } # end function determine_parameter_chains_to_run
+## Use byte compile
+determine_parameter_chains_to_run<-cmpfun(determine_parameter_chains_to_run)
 
 ###
 ## Function to read parameter chains info

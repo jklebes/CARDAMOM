@@ -811,7 +811,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
           ###
 
           # Post-process the DALEC model output for both site and gridded analyses
-          states_all = post_process_dalec(states_all,drivers,PROJECT)
+          states_all = post_process_dalec(states_all,parameters,drivers,PROJECT,n)
 
       } # DALEC model or not?
 
@@ -879,7 +879,6 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
   } # *parameters.RData already exists
 
 } # end of run_each_site
-
 ## Use byte compile
 run_each_site<-cmpfun(run_each_site)
 

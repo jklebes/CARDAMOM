@@ -7,7 +7,7 @@
 
 # This function was created by T. L Smallman (t.l.smallman@ed.ac.uk, UoE)
 
-post_process_dalec<-function(states_all,drivers,PROJECT) {
+post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
 
   # Determine some useful information for the analysis below
   nos_years = PROJECT$nos_years
@@ -88,7 +88,6 @@ post_process_dalec<-function(states_all,drivers,PROJECT) {
       # ...and with each other
       states_all$MTT_wood_years_to_NPP_wood_gCm2day_correlation = cor(states_all$MTT_wood_years,rowMeans(states_all$alloc_wood_gCm2day))
   } else {
-
       # Both are not present, so we will determine whether we can generate one of the correlation estimates
 
       # If Mean transit time for wood is provided generate a correlation estimate
@@ -99,7 +98,6 @@ post_process_dalec<-function(states_all,drivers,PROJECT) {
       if (exists(x = "alloc_wood_gCm2day", where = states_all)) {
           states_all$NPP_wood_gCm2day_parameter_correlation = cor(tmp,rowMeans(states_all$alloc_wood_gCm2day))
           }
-
   } # Both MTT wood and alloc_wood present?
 
   ###
@@ -351,5 +349,13 @@ post_process_dalec<-function(states_all,drivers,PROJECT) {
           states_all$fire_assim_data_overlap_fraction = 0
       }
   } # was the obs assimilated?
+
+  # Return back to user
+  return(states_all)
           
 } # end function post_process_dalec
+## Use byte compile
+post_process_dalec<-cmpfun(post_process_dalec)
+
+
+

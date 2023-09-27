@@ -1186,3 +1186,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   dummy = 0 ; return(dummy)
 
 } # end function post_process_for_grid
+## Use byte compile
+post_process_for_grid<-cmpfun(post_process_for_grid)
+
+
