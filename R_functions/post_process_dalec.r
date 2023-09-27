@@ -13,21 +13,24 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
   nos_years = PROJECT$nos_years
   steps_per_year = floor(dim(drivers$met)[1] / nos_years)
 
+  # Check the list variables in states_all which we will be searching
+  check_list = names(states_all)
+
   # If a combined ecosystem heterotrophic respiration flux does not
   # exist we shall calculate it
-  if (exists(x = "rhet_gCm2day", where = states_all) == FALSE) {
-      if (exists(x = "rhet_dom_gCm2day", where = states_all)) {
+  if (any(check_list == "rhet_gCm2day") == FALSE) {
+      if (any(check_list == "rhet_dom_gCm2day")) {
           states_all$rhet_gCm2day = states_all$rhet_dom_gCm2day
       } else {
           # Calculate the combined ecosystem heterotrophic respiration.
           # All models have a som pool, so start with that
           states_all$rhet_gCm2day = states_all$rhet_som_gCm2day
           # If the model has a litter pool (foliar + fine root) add this
-          if (exists(x = "rhet_litter_gCm2day", where = states_all)) {
+          if (any(check_list == "rhet_litter_gCm2day")) {
               states_all$rhet_gCm2day = states_all$rhet_gCm2day + states_all$rhet_litter_gCm2day
           }
           # If the model has a wood litter pool add this
-          if (exists(x = "rhet_woodlitter_gCm2day", where = states_all)) {
+          if (any(check_list == "rhet_woodlitter_gCm2day")) {
               states_all$rhet_gCm2day = states_all$rhet_gCm2day + states_all$rhet_woodlitter_gCm2day
           }
       } # does rhet_dom_gCm2day exist?
@@ -42,14 +45,14 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
   states_all$nbe_gCm2day = states_all$nee_gCm2day  # negative = sink
   states_all$nbp_gCm2day = -states_all$nee_gCm2day # positive = sink
   # If fire exists then update the NBE and NBP accordingly
-  if (exists(x = "fire_gCm2day", where = states_all)) {
+  if (any(check_list == "fire_gCm2day")) {
       states_all$nbe_gCm2day = states_all$nbe_gCm2day + states_all$fire_gCm2day
       states_all$nbp_gCm2day = states_all$nbp_gCm2day - states_all$fire_gCm2day
   }
   # If a harvest flux exists update the NBP. NOTE: that this harvest flux
   # specifically accouts for C removed, there may be mortality due to harvest
   # but remains in system as residues.
-  if (exists(x = "harvest_gCm2day", where = states_all)) {
+  if (any(check_list == "harvest_gCm2day")) {
       states_all$nbp_gCm2day = states_all$nbp_gCm2day - states_all$harvest_gCm2day
   }
   # Now calculate the mean annual carbon use efficiency (NPP:GPP) as some models do now have a parameter for this
@@ -73,7 +76,7 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
   states_all$rauto_parameter_correlation = cor(tmp,rowMeans(states_all$rauto_gCm2day))
   states_all$rhet_parameter_correlation = cor(tmp,rowMeans(states_all$rhet_gCm2day))
   # Avoid error flag when no fire
-  if (exists(x = "fire_gCm2day", where = states_all)) {
+  if (any(check_list == "fire_gCm2day")) {
       if (max(as.vector(states_all$fire_gCm2day)) > 0) {
           states_all$fire_parameter_correlation = cor(tmp,rowMeans(states_all$fire_gCm2day))
       } else {
@@ -81,7 +84,7 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
       }
   }
   # Determine whether have have both mean transit time and allocation to wood
-  if (exists(x = "MTT_wood_years", where = states_all) & exists(x = "alloc_wood_gCm2day", where = states_all)) {
+  if (any(check_list == "MTT_wood_years") & any(check_list == "alloc_wood_gCm2day")) {
       # As both exist determine their correlations with parameters...
       states_all$MTT_wood_years_parameter_correlation = cor(tmp,states_all$MTT_wood_years)
       states_all$NPP_wood_gCm2day_parameter_correlation = cor(tmp,rowMeans(states_all$alloc_wood_gCm2day))
@@ -91,11 +94,11 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
       # Both are not present, so we will determine whether we can generate one of the correlation estimates
 
       # If Mean transit time for wood is provided generate a correlation estimate
-      if (exists(x = "MTT_wood_years", where = states_all)) {
+      if (any(check_list == "MTT_wood_years")) {
           states_all$MTT_wood_years_parameter_correlation = cor(tmp,states_all$MTT_wood_years)
       }
       # If Mean mean allocation to wood is provided generate a correlation estimate
-      if (exists(x = "alloc_wood_gCm2day", where = states_all)) {
+      if (any(check_list == "alloc_wood_gCm2day")) {
           states_all$NPP_wood_gCm2day_parameter_correlation = cor(tmp,rowMeans(states_all$alloc_wood_gCm2day))
           }
   } # Both MTT wood and alloc_wood present?

@@ -20,6 +20,9 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            # Load the file
            load(site_output)
 
+           # Update the list variables in states_all which we will be searching
+           check_list = names(site_output)
+
            # determine the lat / long location within the grid
            slot_j = as.numeric(PROJECT$sites[n])/PROJECT$long_dim
            slot_i = as.numeric(PROJECT$sites[n])-(floor(slot_j)*PROJECT$long_dim)
@@ -51,25 +54,25 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            grid_output$assimilated_som_mean_unc_gCm2[slot_i,slot_j] = site_output$assimilated_som_mean_unc_gCm2
 
            # Net primary production allocation fractions
-           if (exists(x = "NPP_foliage_fraction", where = site_output)) {grid_output$NPP_foliage_fraction[slot_i,slot_j,] = site_output$NPP_foliage_fraction}
-           if (exists(x = "NPP_roots_fraction", where = site_output)) {grid_output$NPP_roots_fraction[slot_i,slot_j,] = site_output$NPP_roots_fraction}
-           if (exists(x = "NPP_wood_fraction", where = site_output)) {grid_output$NPP_wood_fraction[slot_i,slot_j,] = site_output$NPP_wood_fraction}
+           if (any(check_list == "NPP_foliage_fraction")) {grid_output$NPP_foliage_fraction[slot_i,slot_j,] = site_output$NPP_foliage_fraction}
+           if (any(check_list == "NPP_roots_fraction")) {grid_output$NPP_roots_fraction[slot_i,slot_j,] = site_output$NPP_roots_fraction}
+           if (any(check_list == "NPP_wood_fraction")) {grid_output$NPP_wood_fraction[slot_i,slot_j,] = site_output$NPP_wood_fraction}
            # Analysis mean transit (residence) times (years)
-           if (exists(x = "MTT_labile_years", where = site_output)) {grid_output$MTT_labile_years[slot_i,slot_j,] = site_output$MTT_labile_years}
-           if (exists(x = "MTT_foliage_years", where = site_output)) {grid_output$MTT_foliage_years[slot_i,slot_j,] = site_output$MTT_foliage_years}
-           if (exists(x = "MTT_roots_years", where = site_output)) {grid_output$MTT_roots_years[slot_i,slot_j,] = site_output$MTT_roots_years}
-           if (exists(x = "MTT_wood_years", where = site_output)) {grid_output$MTT_wood_years[slot_i,slot_j,] = site_output$MTT_wood_years}
-           if (exists(x = "MTT_litter_years", where = site_output)) {grid_output$MTT_litter_years[slot_i,slot_j,] = site_output$MTT_litter_years}
-           if (exists(x = "MTT_woodlitter_years", where = site_output)) {grid_output$MTT_woodlitter_years[slot_i,slot_j,] = site_output$MTT_woodlitter_years}
-           if (exists(x = "MTT_som_years", where = site_output)) {grid_output$MTT_som_years[slot_i,slot_j,] = site_output$MTT_som_years}
+           if (any(check_list == "MTT_labile_years")) {grid_output$MTT_labile_years[slot_i,slot_j,] = site_output$MTT_labile_years}
+           if (any(check_list == "MTT_foliage_years")) {grid_output$MTT_foliage_years[slot_i,slot_j,] = site_output$MTT_foliage_years}
+           if (any(check_list == "MTT_roots_years")) {grid_output$MTT_roots_years[slot_i,slot_j,] = site_output$MTT_roots_years}
+           if (any(check_list == "MTT_wood_years")) {grid_output$MTT_wood_years[slot_i,slot_j,] = site_output$MTT_wood_years}
+           if (any(check_list == "MTT_litter_years")) {grid_output$MTT_litter_years[slot_i,slot_j,] = site_output$MTT_litter_years}
+           if (any(check_list == "MTT_woodlitter_years")) {grid_output$MTT_woodlitter_years[slot_i,slot_j,] = site_output$MTT_woodlitter_years}
+           if (any(check_list == "MTT_som_years")) {grid_output$MTT_som_years[slot_i,slot_j,] = site_output$MTT_som_years}
            # Steady state C stock estimates (gC/m2)
-           if (exists(x = "SS_labile_gCm2", where = site_output)) {grid_output$SS_labile_gCm2[slot_i,slot_j,] = site_output$SS_labile_gCm2}
-           if (exists(x = "SS_foliage_gCm2", where = site_output)) {grid_output$SS_foliage_gCm2[slot_i,slot_j,] = site_output$SS_foliage_gCm2}
-           if (exists(x = "SS_roots_gCm2", where = site_output)) {grid_output$SS_roots_gCm2[slot_i,slot_j,] = site_output$SS_roots_gCm2}
-           if (exists(x = "SS_wood_gCm2", where = site_output)) {grid_output$SS_wood_gCm2[slot_i,slot_j,] = site_output$SS_wood_gCm2}
-           if (exists(x = "SS_litter_gCm2", where = site_output)) {grid_output$SS_litter_gCm2[slot_i,slot_j,] = site_output$SS_litter_gCm2}
-           if (exists(x = "SS_woodlitter_gCm2", where = site_output)) {grid_output$SS_woodlitter_gCm2[slot_i,slot_j,] = site_output$SS_woodlitter_gCm2}
-           if (exists(x = "SS_som_gCm2", where = site_output)) {grid_output$SS_som_gCm2[slot_i,slot_j,] = site_output$SS_som_gCm2}
+           if (any(check_list == "SS_labile_gCm2")) {grid_output$SS_labile_gCm2[slot_i,slot_j,] = site_output$SS_labile_gCm2}
+           if (any(check_list == "SS_foliage_gCm2")) {grid_output$SS_foliage_gCm2[slot_i,slot_j,] = site_output$SS_foliage_gCm2}
+           if (any(check_list == "SS_roots_gCm2")) {grid_output$SS_roots_gCm2[slot_i,slot_j,] = site_output$SS_roots_gCm2}
+           if (any(check_list == "SS_wood_gCm2")) {grid_output$SS_wood_gCm2[slot_i,slot_j,] = site_output$SS_wood_gCm2}
+           if (any(check_list == "SS_litter_gCm2")) {grid_output$SS_litter_gCm2[slot_i,slot_j,] = site_output$SS_litter_gCm2}
+           if (any(check_list == "SS_woodlitter_gCm2")) {grid_output$SS_woodlitter_gCm2[slot_i,slot_j,] = site_output$SS_woodlitter_gCm2}
+           if (any(check_list == "SS_som_gCm2")) {grid_output$SS_som_gCm2[slot_i,slot_j,] = site_output$SS_som_gCm2}
 
            # Total ecosystem C is always present
            grid_output$mean_Ctotal_gCm2[slot_i,slot_j,] = site_output$mean_Ctotal_gCm2
@@ -125,7 +128,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            # Also, create the time varying but quantile based values and time
 
            # Gridded biomass information
-           if (exists(x = "biomass_gCm2", where = site_output)) {
+           if (any(check_list == "biomass_gCm2")) {
                # Grid mean / finals for globally available variables
                grid_output$mean_biomass_gCm2[slot_i,slot_j,] = site_output$mean_biomass_gCm2
                grid_output$final_biomass_gCm2[slot_i,slot_j,] = site_output$biomass_gCm2[,grid_output$time_dim]
@@ -150,17 +153,17 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$FireFractionOfTurnover_biomass[slot_i,slot_j,] = site_output$FireFractionOfTurnover_biomass
                grid_output$HarvestFractionOfTurnover_biomass[slot_i,slot_j,] = site_output$HarvestFractionOfTurnover_biomass
                # Conditional variables
-               if (exists(x = "FIREemiss_biomass_gCm2day", where = site_output)) {
+               if (any(check_list == "FIREemiss_biomass_gCm2day")) {
                    grid_output$FIREemiss_biomass_gCm2day[n,,] = site_output$FIREemiss_biomass_gCm2day
                    grid_output$mean_FIREemiss_biomass_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_biomass_gCm2day
                    grid_output$mean_annual_FIREemiss_biomass_gCm2day[n,,] = site_output$mean_annual_FIREemiss_biomass_gCm2day
                }
-               if (exists(x = "FIRElitter_biomass_gCm2day", where = site_output)) {
+               if (any(check_list == "FIRElitter_biomass_gCm2day")) {
                    grid_output$FIRElitter_biomass_gCm2day[n,,] = site_output$FIRElitter_biomass_gCm2day
                    grid_output$mean_FIRElitter_biomass_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_biomass_gCm2day
                    grid_output$mean_annual_FIRElitter_biomass_gCm2day[n,,] = site_output$mean_annual_FIRElitter_biomass_gCm2day
                }
-               if (exists(x = "HARVESTextracted_biomass_gCm2day", where = site_output)) {
+               if (any(check_list == "HARVESTextracted_biomass_gCm2day")) {
                    grid_output$HARVESTextracted_biomass_gCm2day[n,,] = site_output$HARVESTextracted_biomass_gCm2day
                    grid_output$mean_HARVESTextracted_biomass_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_biomass_gCm2day
                    grid_output$mean_annual_HARVESTextracted_biomass_gCm2day[n,,] = site_output$mean_annual_HARVESTextracted_biomass_gCm2day
@@ -170,7 +173,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                }
            }
            # Gridded labile information
-           if (exists(x = "labile_gCm2", where = site_output)) {
+           if (any(check_list == "labile_gCm2")) {
                # Grid averages
                grid_output$mean_labile_gCm2[slot_i,slot_j,] = site_output$mean_labile_gCm2
                grid_output$final_labile_gCm2[slot_i,slot_j,] = site_output$labile_gCm2[,grid_output$time_dim]
@@ -198,17 +201,17 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$FireFractionOfTurnover_labile[slot_i,slot_j,] = site_output$FireFractionOfTurnover_labile
                grid_output$HarvestFractionOfTurnover_labile[slot_i,slot_j,] = site_output$HarvestFractionOfTurnover_labile
                # Conditional variables
-               if (exists(x = "FIREemiss_labile_gCm2day", where = site_output)) {
+               if (any(check_list == "FIREemiss_labile_gCm2day")) {
                    grid_output$FIREemiss_labile_gCm2day[n,,] = site_output$FIREemiss_labile_gCm2day
                    grid_output$mean_FIREemiss_labile_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_labile_gCm2day
                    grid_output$mean_annual_FIREemiss_labile_gCm2day[n,,] = site_output$mean_annual_FIREemiss_labile_gCm2day
                }
-               if (exists(x = "FIRElitter_labile_gCm2day", where = site_output)) {
+               if (any(check_list == "FIRElitter_labile_gCm2day")) {
                    grid_output$FIRElitter_labile_gCm2day[n,,] = site_output$FIRElitter_labile_gCm2day
                    grid_output$mean_FIRElitter_labile_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_labile_gCm2day
                    grid_output$mean_annual_FIRElitter_labile_gCm2day[n,,] = site_output$mean_annual_FIRElitter_labile_gCm2day
                }
-               if (exists(x = "HARVESTextracted_labile_gCm2day", where = site_output)) {
+               if (any(check_list == "HARVESTextracted_labile_gCm2day")) {
                    grid_output$HARVESTextracted_labile_gCm2day[n,,] = site_output$HARVESTextracted_labile_gCm2day
                    grid_output$mean_HARVESTextracted_labile_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_labile_gCm2day
                    grid_output$mean_annual_HARVESTextracted_labile_gCm2day[n,,] = site_output$mean_annual_HARVESTextracted_labile_gCm2day
@@ -218,7 +221,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                }
            }
            # Gridded foliage information
-           if (exists(x = "foliage_gCm2", where = site_output)) {
+           if (any(check_list == "foliage_gCm2")) {
                # Grided mean / final
                grid_output$mean_foliage_gCm2[slot_i,slot_j,] = site_output$mean_foliage_gCm2
                grid_output$final_foliage_gCm2[slot_i,slot_j,] = site_output$foliage_gCm2[,grid_output$time_dim]
@@ -246,22 +249,22 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$FireFractionOfTurnover_foliage[slot_i,slot_j,] = site_output$FireFractionOfTurnover_foliage
                grid_output$HarvestFractionOfTurnover_foliage[slot_i,slot_j,] = site_output$HarvestFractionOfTurnover_foliage
                # Conditional variables
-               if (exists(x = "alloc_foliage_gCm2day", where = site_output)) {
+               if (any(check_list == "alloc_foliage_gCm2day")) {
                    grid_output$alloc_foliage_gCm2day[n,,] = site_output$alloc_foliage_gCm2day
                    grid_output$mean_alloc_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_alloc_foliage_gCm2day
                    grid_output$mean_annual_alloc_foliage_gCm2day[n,,] = site_output$mean_annual_alloc_foliage_gCm2day
                }
-               if (exists(x = "FIREemiss_foliage_gCm2day", where = site_output)) {
+               if (any(check_list == "FIREemiss_foliage_gCm2day")) {
                    grid_output$FIREemiss_foliage_gCm2day[n,,] = site_output$FIREemiss_foliage_gCm2day
                    grid_output$mean_FIREemiss_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_foliage_gCm2day
                    grid_output$mean_annual_FIREemiss_foliage_gCm2day[n,,] = site_output$mean_annual_FIREemiss_foliage_gCm2day
                }
-               if (exists(x = "FIRElitter_foliage_gCm2day", where = site_output)) {
+               if (any(check_list == "FIRElitter_foliage_gCm2day")) {
                    grid_output$FIRElitter_foliage_gCm2day[n,,] = site_output$FIRElitter_foliage_gCm2day
                    grid_output$mean_FIRElitter_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_foliage_gCm2day
                    grid_output$mean_annual_FIRElitter_foliage_gCm2day[n,,] = site_output$mean_annual_FIRElitter_foliage_gCm2day
                }
-               if (exists(x = "HARVESTextracted_foliage_gCm2day", where = site_output)) {
+               if (any(check_list == "HARVESTextracted_foliage_gCm2day")) {
                    grid_output$HARVESTextracted_foliage_gCm2day[n,,] = site_output$HARVESTextracted_foliage_gCm2day
                    grid_output$mean_HARVESTextracted_foliage_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_foliage_gCm2day
                    grid_output$mean_annual_HARVESTextracted_foliage_gCm2day[n,,] = site_output$mean_annual_HARVESTextracted_foliage_gCm2day
@@ -271,7 +274,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                }
            }
            #  Gridded roots information
-           if (exists(x = "roots_gCm2", where = site_output)) {
+           if (any(check_list == "roots_gCm2")) {
                # Gridded mean / final
                grid_output$mean_roots_gCm2[slot_i,slot_j,] = site_output$mean_roots_gCm2
                grid_output$final_roots_gCm2[slot_i,slot_j,] = site_output$roots_gCm2[,grid_output$time_dim]
@@ -300,7 +303,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$FireFractionOfTurnover_roots[slot_i,slot_j,] = site_output$FireFractionOfTurnover_roots
                grid_output$HarvestFractionOfTurnover_roots[slot_i,slot_j,] = site_output$HarvestFractionOfTurnover_roots
                # Is rooting depth calculate (m) by this model?
-               if (exists(x = "RootDepth_m", where = site_output)) {
+               if (any(check_list == "RootDepth_m")) {
                    grid_output$RootDepth_m[n,,] = site_output$RootDepth_m
                    grid_output$dRootDepth_m[n,,] = site_output$dRootDepth_m
                    grid_output$mean_RootDepth_m[slot_i,slot_j,] = site_output$mean_RootDepth_m
@@ -308,17 +311,17 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                    grid_output$mean_annual_RootDepth_m[n,,] = site_output$mean_annual_RootDepth_m
                }
                # Conditional variables
-               if (exists(x = "FIREemiss_roots_gCm2day", where = site_output)) {
+               if (any(check_list == "FIREemiss_roots_gCm2day")) {
                    grid_output$FIREemiss_roots_gCm2day[n,,] = site_output$FIREemiss_roots_gCm2day
                    grid_output$mean_FIREemiss_roots_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_roots_gCm2day
                    grid_output$mean_annual_FIREemiss_roots_gCm2day[n,,] = site_output$mean_annual_FIREemiss_roots_gCm2day
                }
-               if (exists(x = "FIRElitter_roots_gCm2day", where = site_output)) {
+               if (any(check_list == "FIRElitter_roots_gCm2day")) {
                    grid_output$FIRElitter_roots_gCm2day[n,,] = site_output$FIRElitter_roots_gCm2day
                    grid_output$mean_FIRElitter_roots_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_roots_gCm2day
                    grid_output$mean_annual_FIRElitter_roots_gCm2day[n,,] = site_output$mean_annual_FIRElitter_roots_gCm2day
                }
-               if (exists(x = "HARVESTextracted_roots_gCm2day", where = site_output)) {
+               if (any(check_list == "HARVESTextracted_roots_gCm2day")) {
                    grid_output$HARVESTextracted_roots_gCm2day[n,,] = site_output$HARVESTextracted_roots_gCm2day
                    grid_output$mean_HARVESTextracted_roots_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_roots_gCm2day
                    grid_output$mean_annual_HARVESTextracted_roots_gCm2day[n,,] = site_output$mean_annual_HARVESTextracted_roots_gCm2day
@@ -328,7 +331,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                }
            }
            # Gridded wood information
-           if (exists(x = "wood_gCm2", where = site_output)) {
+           if (any(check_list == "wood_gCm2")) {
                # Gridded mean / final variables
                grid_output$mean_wood_gCm2[slot_i,slot_j,] = site_output$mean_wood_gCm2
                grid_output$final_wood_gCm2[slot_i,slot_j,] = site_output$wood_gCm2[,grid_output$time_dim]
@@ -357,17 +360,17 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$FireFractionOfTurnover_wood[slot_i,slot_j,] = site_output$FireFractionOfTurnover_wood
                grid_output$HarvestFractionOfTurnover_wood[slot_i,slot_j,] = site_output$HarvestFractionOfTurnover_wood
                # Conditional variables
-               if (exists(x = "FIREemiss_wood_gCm2day", where = site_output)) {
+               if (any(check_list == "FIREemiss_wood_gCm2day")) {
                    grid_output$FIREemiss_wood_gCm2day[n,,] = site_output$FIREemiss_wood_gCm2day
                    grid_output$mean_FIREemiss_wood_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_wood_gCm2day
                    grid_output$mean_annual_FIREemiss_wood_gCm2day[n,,] = site_output$mean_annual_FIREemiss_wood_gCm2day
                }
-               if (exists(x = "FIRElitter_wood_gCm2day", where = site_output)) {
+               if (any(check_list == "FIRElitter_wood_gCm2day")) {
                    grid_output$FIRElitter_wood_gCm2day[n,,] = site_output$FIRElitter_wood_gCm2day
                    grid_output$mean_FIRElitter_wood_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_wood_gCm2day
                    grid_output$mean_annual_FIRElitter_wood_gCm2day[n,,] = site_output$mean_annual_FIRElitter_wood_gCm2day
                }
-               if (exists(x = "HARVESTextracted_wood_gCm2day", where = site_output)) {
+               if (any(check_list == "HARVESTextracted_wood_gCm2day")) {
                    grid_output$HARVESTextracted_wood_gCm2day[n,,] = site_output$HARVESTextracted_wood_gCm2day
                    grid_output$mean_HARVESTextracted_wood_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_wood_gCm2day
                    grid_output$mean_annual_HARVESTextracted_wood_gCm2day[n,,] = site_output$mean_annual_HARVESTextracted_wood_gCm2day
@@ -377,7 +380,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                }
            }
            # Gridded litter information
-           if (exists(x = "litter_gCm2", where = site_output)) {
+           if (any(check_list == "litter_gCm2")) {
                # Gridded mean / final
                grid_output$mean_litter_gCm2[slot_i,slot_j,] = site_output$mean_litter_gCm2
                grid_output$final_litter_gCm2[slot_i,slot_j,] = site_output$litter_gCm2[,grid_output$time_dim]
@@ -405,24 +408,24 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$FireFractionOfTurnover_litter[slot_i,slot_j,] = site_output$FireFractionOfTurnover_litter
                grid_output$HarvestFractionOfTurnover_litter[slot_i,slot_j,] = site_output$HarvestFractionOfTurnover_litter
                # Conditional variables
-               if (exists(x = "FIREemiss_litter_gCm2day", where = site_output)) {
+               if (any(check_list == "FIREemiss_litter_gCm2day")) {
                    grid_output$FIREemiss_litter_gCm2day[n,,] = site_output$FIREemiss_litter_gCm2day
                    grid_output$mean_FIREemiss_litter_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_litter_gCm2day
                    grid_output$mean_annual_FIREemiss_litter_gCm2day[n,,] = site_output$mean_annual_FIREemiss_litter_gCm2day
                }
-               if (exists(x = "FIRElitter_litter_gCm2day", where = site_output)) {
+               if (any(check_list == "FIRElitter_litter_gCm2day")) {
                    grid_output$FIRElitter_litter_gCm2day[n,,] = site_output$FIRElitter_litter_gCm2day
                    grid_output$mean_FIRElitter_litter_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_litter_gCm2day
                    grid_output$mean_annual_FIRElitter_litter_gCm2day[n,,] = site_output$mean_annual_FIRElitter_litter_gCm2day
                }
-               if (exists(x = "HARVESTextracted_litter_gCm2day", where = site_output)) {
+               if (any(check_list == "HARVESTextracted_litter_gCm2day")) {
                    grid_output$HARVESTextracted_litter_gCm2day[n,,] = site_output$HARVESTextracted_litter_gCm2day
                    grid_output$mean_HARVESTextracted_litter_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_litter_gCm2day
                    grid_output$mean_annual_HARVESTextracted_litter_gCm2day[n,,] = site_output$mean_annual_HARVESTextracted_litter_gCm2day
                }
            }
            # Gridded wood litter information
-           if (exists(x = "woodlitter_gCm2", where = site_output)) {
+           if (any(check_list == "woodlitter_gCm2")) {
                # Gridded mean / final
                grid_output$mean_woodlitter_gCm2[slot_i,slot_j,] = site_output$mean_woodlitter_gCm2
                grid_output$final_woodlitter_gCm2[slot_i,slot_j,] = site_output$woodlitter_gCm2[,grid_output$time_dim]
@@ -450,24 +453,24 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$FireFractionOfTurnover_woodlitter[slot_i,slot_j,] = site_output$FireFractionOfTurnover_woodlitter
                grid_output$HarvestFractionOfTurnover_woodlitter[slot_i,slot_j,] = site_output$HarvestFractionOfTurnover_woodlitter
                # Conditional variables
-               if (exists(x = "FIREemiss_woodlitter_gCm2day", where = site_output)) {
+               if (any(check_list == "FIREemiss_woodlitter_gCm2day")) {
                    grid_output$FIREemiss_woodlitter_gCm2day[n,,] = site_output$FIREemiss_woodlitter_gCm2day
                    grid_output$mean_FIREemiss_woodlitter_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_woodlitter_gCm2day
                    grid_output$mean_annual_FIREemiss_woodlitter_gCm2day[n,,] = site_output$mean_annual_FIREemiss_woodlitter_gCm2day
                }
-               if (exists(x = "FIRElitter_woodlitter_gCm2day", where = site_output)) {
+               if (any(check_list == "FIRElitter_woodlitter_gCm2day")) {
                    grid_output$FIRElitter_woodlitter_gCm2day[n,,] = site_output$FIRElitter_woodlitter_gCm2day
                    grid_output$mean_FIRElitter_woodlitter_gCm2day[slot_i,slot_j,] = site_output$mean_FIRElitter_woodlitter_gCm2day
                    grid_output$mean_annual_FIRElitter_woodlitter_gCm2day[n,,] = site_output$mean_annual_FIRElitter_woodlitter_gCm2day
                }
-               if (exists(x = "HARVESTextracted_woodlitter_gCm2day", where = site_output)) {
+               if (any(check_list == "HARVESTextracted_woodlitter_gCm2day")) {
                    grid_output$HARVESTextracted_woodlitter_gCm2day[n,,] = site_output$HARVESTextracted_woodlitter_gCm2day
                    grid_output$mean_HARVESTextracted_woodlitter_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_woodlitter_gCm2day
                    grid_output$mean_annual_HARVESTextracted_woodlitter_gCm2day[n,,] = site_output$mean_annual_HARVESTextracted_woodlitter_gCm2day
                }
            }
            # Gridded som information
-           if (exists(x = "som_gCm2", where = site_output)) {
+           if (any(check_list == "som_gCm2")) {
                # Gridded mean / finals
                grid_output$mean_som_gCm2[slot_i,slot_j,] = site_output$mean_som_gCm2
                grid_output$final_som_gCm2[slot_i,slot_j,] = site_output$som_gCm2[,grid_output$time_dim]
@@ -489,19 +492,19 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$FireFractionOfTurnover_som[slot_i,slot_j,] = site_output$FireFractionOfTurnover_som
                grid_output$HarvestFractionOfTurnover_som[slot_i,slot_j,] = site_output$HarvestFractionOfTurnover_som
                # Time varying
-               if (exists(x = "FIREemiss_som_gCm2day", where = site_output)) {
+               if (any(check_list == "FIREemiss_som_gCm2day")) {
                    grid_output$FIREemiss_som_gCm2day[n,,] = site_output$FIREemiss_som_gCm2day
                    grid_output$mean_FIREemiss_som_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_som_gCm2day
                    grid_output$mean_annual_FIREemiss_som_gCm2day[n,,] = site_output$mean_annual_FIREemiss_som_gCm2day
                }
-               if (exists(x = "HARVESTextracted_som_gCm2day", where = site_output)) {
+               if (any(check_list == "HARVESTextracted_som_gCm2day")) {
                    grid_output$HARVESTextracted_som_gCm2day[n,,] = site_output$HARVESTextracted_som_gCm2day
                    grid_output$mean_HARVESTextracted_som_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_som_gCm2day
                    grid_output$mean_annual_HARVESTextracted_som_gCm2day[n,,] = site_output$mean_annual_HARVESTextracted_som_gCm2day
                }
            }
            # Gridded dom information
-           if (exists(x = "dom_gCm2", where = site_output)) {
+           if (any(check_list == "dom_gCm2")) {
                # Gridded mean / finals
                grid_output$mean_dom_gCm2[slot_i,slot_j,] = site_output$mean_dom_gCm2
                grid_output$final_dom_gCm2[slot_i,slot_j,] = site_output$dom_gCm2[,grid_output$time_dim]
@@ -523,12 +526,12 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$FireFractionOfTurnover_dom[slot_i,slot_j,] = site_output$FireFractionOfTurnover_dom
                grid_output$HarvestFractionOfTurnover_dom[slot_i,slot_j,] = site_output$HarvestFractionOfTurnover_dom
                # Conditional
-               if (exists(x = "FIREemiss_dom_gCm2day", where = site_output)) {
+               if (any(check_list == "FIREemiss_dom_gCm2day")) {
                    grid_output$FIREemiss_dom_gCm2day[n,,] = site_output$FIREemiss_dom_gCm2day
                    grid_output$mean_FIREemiss_dom_gCm2day[slot_i,slot_j,] = site_output$mean_FIREemiss_dom_gCm2day
                    grid_output$mean_annual_FIREemiss_dom_gCm2day[n,,] = site_output$mean_annual_FIREemiss_dom_gCm2day
                }
-               if (exists(x = "HARVESTextracted_dom_gCm2day", where = site_output)) {
+               if (any(check_list == "HARVESTextracted_dom_gCm2day")) {
                    grid_output$HARVESTextracted_dom_gCm2day[n,,] = site_output$HARVESTextracted_dom_gCm2day
                    grid_output$mean_HARVESTextracted_dom_gCm2day[slot_i,slot_j,] = site_output$mean_HARVESTextracted_dom_gCm2day
                    grid_output$mean_annual_HARVESTextracted_dom_gCm2day[n,,] = site_output$mean_annual_HARVESTextracted_dom_gCm2day
@@ -536,7 +539,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            }
 
            # Water cycle specific variables
-           if (exists(x = "ET_kgH2Om2day", where = site_output)) {
+           if (any(check_list == "ET_kgH2Om2day")) {
                # currently water in the soil surface layer (0-30 cm)
                grid_output$mean_SurfWater_kgH2Om2[slot_i,slot_j,] = site_output$mean_SurfWater_kgH2Om2
                grid_output$mean_annual_SurfWater_kgH2Om2[n,,] = site_output$mean_annual_SurfWater_kgH2Om2
@@ -559,7 +562,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$mean_wue_eco_gCkgH2O[slot_i,slot_j,] = site_output$mean_wue_eco_gCkgH2O
                grid_output$wue_eco_gCkgH2O[n,,] = site_output$wue_eco_gCkgH2O
                # Check whether the evaporation components exist
-               if (exists(x = "Etrans_kgH2Om2day", where = site_output)) {
+               if (any(check_list == "Etrans_kgH2Om2day")) {
                    # Transpiration
                    grid_output$mean_annual_Etrans_kgH2Om2day[n,,] = site_output$mean_annual_Etrans_kgH2Om2day
                    grid_output$mean_Etrans_kgH2Om2day[slot_i,slot_j,] = site_output$mean_Etrans_kgH2Om2day
@@ -569,31 +572,31 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                    grid_output$mean_wue_plant_gCkgH2O[slot_i,slot_j,] = site_output$mean_wue_plant_gCkgH2O
                    grid_output$wue_plant_gCkgH2O[n,,] = site_output$wue_plant_gCkgH2O
                }
-               if (exists(x = "Esoil_kgH2Om2day", where = site_output)) {
+               if (any(check_list == "Esoil_kgH2Om2day")) {
                    # Soil evaporation
                    grid_output$mean_annual_Esoil_kgH2Om2day[n,,] = site_output$mean_annual_Esoil_kgH2Om2day
                    grid_output$mean_Esoil_kgH2Om2day[slot_i,slot_j,] = site_output$mean_Esoil_kgH2Om2day
                    grid_output$Esoil_kgH2Om2day[n,,] = site_output$Esoil_kgH2Om2day
                }
-               if (exists(x = "Ewetcanopy_kgH2Om2day", where = site_output)) {
+               if (any(check_list == "Ewetcanopy_kgH2Om2day")) {
                    # Wet canopy evaporation
                    grid_output$mean_annual_Ewetcanopy_kgH2Om2day[n,,] = site_output$mean_annual_Ewetcanopy_kgH2Om2day
                    grid_output$mean_Ewetcanopy_kgH2Om2day[slot_i,slot_j,] = site_output$mean_Ewetcanopy_kgH2Om2day
                    grid_output$Ewetcanopy_kgH2Om2day[n,,] = site_output$Ewetcanopy_kgH2Om2day
                }
-               if (exists(x = "runoff_kgH2Om2day", where = site_output)) {
+               if (any(check_list == "runoff_kgH2Om2day")) {
                    # Surface water runoff
                    grid_output$mean_annual_runoff_kgH2Om2day[n,,] = site_output$mean_annual_runoff_kgH2Om2day
                    grid_output$mean_runoff_kgH2Om2day[slot_i,slot_j,] = site_output$mean_runoff_kgH2Om2day
                    grid_output$runoff_kgH2Om2day[n,,] = site_output$runoff_kgH2Om2day
                }
-               if (exists(x = "underflow_kgH2Om2day", where = site_output)) {
+               if (any(check_list == "underflow_kgH2Om2day")) {
                    # Underflow from bottom of soil column
                    grid_output$mean_annual_underflow_kgH2Om2day[n,,] = site_output$mean_annual_underflow_kgH2Om2day
                    grid_output$mean_underflow_kgH2Om2day[slot_i,slot_j,] = site_output$mean_underflow_kgH2Om2day
                    grid_output$underflow_kgH2Om2day[n,,] = site_output$underflow_kgH2Om2day
                }
-               if (exists(x = "total_drainage_kgH2Om2day", where = site_output)) {
+               if (any(check_list == "total_drainage_kgH2Om2day")) {
                    # Total drainage from soil surface and bottom of soil column
                    grid_output$mean_annual_total_drainage_kgH2Om2day[n,,] = site_output$mean_annual_total_drainage_kgH2Om2day
                    grid_output$mean_total_drainage_kgH2Om2day[slot_i,slot_j,] = site_output$mean_total_drainage_kgH2Om2day
@@ -601,39 +604,39 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                }
            } # ET_kgH2Om2day exists
            # Snow specific
-           if (exists(x = "snow_kgH2Om2", where = site_output)) {
+           if (any(check_list == "snow_kgH2Om2")) {
                ## snow on soil surface
                grid_output$mean_annual_snow_kgH2Om2[n,,] = site_output$mean_annual_snow_kgH2Om2
                grid_output$mean_snow_kgH2Om2[slot_i,slot_j,] = site_output$mean_snow_kgH2Om2
                grid_output$snow_kgH2Om2[n,,] = site_output$snow_kgH2Om2
            }
            # Canopy process variables
-           if (exists(x = "APAR_MJm2day", where = site_output)) {
+           if (any(check_list == "APAR_MJm2day")) {
                # Absorbed photosynthetically active radation
                grid_output$mean_annual_APAR_MJm2day[n,,] = site_output$mean_annual_APAR_MJm2day
                grid_output$mean_APAR_MJm2day[slot_i,slot_j,] = site_output$mean_APAR_MJm2day
                grid_output$APAR_MJm2day[n,,] = site_output$APAR_MJm2day
            }
-           if (exists(x = "CiCa", where = site_output)) {
+           if (any(check_list == "CiCa")) {
                # Canopy Ci:Ca
                grid_output$mean_annual_CiCa[n,,] = site_output$mean_annual_CiCa
                grid_output$mean_CiCa[slot_i,slot_j,] = site_output$mean_CiCa
                grid_output$CiCa[n,,] = site_output$CiCa
            }
-           if (exists(x = "gs_demand_supply_ratio", where = site_output)) {
+           if (any(check_list == "gs_demand_supply_ratio")) {
                # Ratio of stomatal conductance relative to its maximum value,
                # this metric provides information on the demand vs supply constrains on stomatal conductance
                grid_output$mean_annual_gs_demand_supply_ratio[n,,] = site_output$mean_annual_gs_demand_supply_ratio
                grid_output$mean_gs_demand_supply_ratio[slot_i,slot_j,] = site_output$mean_gs_demand_supply_ratio
                grid_output$gs_demand_supply_ratio[n,,] = site_output$gs_demand_supply_ratio
            }
-           if (exists(x = "gs_mmolH2Om2s", where = site_output)) {
+           if (any(check_list == "gs_mmolH2Om2s")) {
                # Canopy stomatal conductance
                grid_output$mean_annual_gs_mmolH2Om2s[n,,] = site_output$mean_annual_gs_mmolH2Om2s
                grid_output$mean_gs_mmolH2Om2s[slot_i,slot_j,] = site_output$mean_gs_mmolH2Om2s
                grid_output$gs_mmolH2Om2s[n,,] = site_output$gs_mmolH2Om2s
            }
-           if (exists(x = "gb_mmolH2Om2s", where = site_output)) {
+           if (any(check_list == "gb_mmolH2Om2s")) {
                # Canopy boundary layer conductance
                grid_output$mean_annual_gb_mmolH2Om2s[n,,] = site_output$mean_annual_gb_mmolH2Om2s
                grid_output$mean_gb_mmolH2Om2s[slot_i,slot_j,] = site_output$mean_gb_mmolH2Om2s
@@ -641,28 +644,28 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            }
 
            # Any time series assimilated data overlaps?
-           if (exists(x = "gpp_assim_data_overlap_fraction", where = site_output)) {
+           if (any(check_list == "gpp_assim_data_overlap_fraction")) {
                grid_output$gpp_assim_data_overlap_fraction[slot_i,slot_j] = site_output$gpp_assim_data_overlap_fraction
            }
-           if (exists(x = "lai_assim_data_overlap_fraction", where = site_output)) {
+           if (any(check_list == "lai_assim_data_overlap_fraction")) {
                grid_output$lai_assim_data_overlap_fraction[slot_i,slot_j] = site_output$lai_assim_data_overlap_fraction
            }
-           if (exists(x = "nee_assim_data_overlap_fraction", where = site_output)) {
+           if (any(check_list == "nee_assim_data_overlap_fraction")) {
                grid_output$nee_assim_data_overlap_fraction[slot_i,slot_j] = statsite_outputes_all$nee_assim_data_overlap_fraction
            }
-           if (exists(x = "wood_assim_data_overlap_fraction", where = site_output)) {
+           if (any(check_list == "wood_assim_data_overlap_fraction")) {
                grid_output$wood_assim_data_overlap_fraction[slot_i,slot_j] = site_output$wood_assim_data_overlap_fraction
            }
-           if (exists(x = "soil_assim_data_overlap_fraction", where = site_output)) {
+           if (any(check_list == "soil_assim_data_overlap_fraction")) {
                grid_output$soil_assim_data_overlap_fraction[slot_i,slot_j] = site_output$soil_assim_data_overlap_fraction
            }
-           if (exists(x = "et_assim_data_overlap_fraction", where = site_output)) {
+           if (any(check_list == "et_assim_data_overlap_fraction")) {
                grid_output$et_assim_data_overlap_fraction[slot_i,slot_j] = site_output$et_assim_data_overlap_fraction
            }
-           if (exists(x = "nbe_assim_data_overlap_fraction", where = site_output)) {
+           if (any(check_list == "nbe_assim_data_overlap_fraction")) {
                grid_output$nbe_assim_data_overlap_fraction[slot_i,slot_j] = site_output$nbe_assim_data_overlap_fraction
            }
-           if (exists(x = "fire_assim_data_overlap_fraction", where = site_output)) {
+           if (any(check_list == "fire_assim_data_overlap_fraction")) {
                grid_output$fire_assim_data_overlap_fraction[slot_i,slot_j] = site_output$fire_assim_data_overlap_fraction
            }
 
@@ -675,15 +678,15 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            grid_output$rhet_parameter_correlation[slot_i,slot_j,] = site_output$rhet_parameter_correlation
            grid_output$fire_parameter_correlation[slot_i,slot_j,] = site_output$fire_parameter_correlation
            # If Mean transit time for wood correlation exists, ensure we store it for the gridded run too
-           if (exists(x = "MTT_wood_years_parameter_correlation", where = site_output)) {
+           if (any(check_list == "MTT_wood_years_parameter_correlation")) {
                grid_output$MTT_wood_years_parameter_correlation[slot_i,slot_j,] = site_output$MTT_wood_years_parameter_correlation
            }
            # If Mean mean allocation to wood correlation exists, ensure we store it for the gridded run too
-           if (exists(x = "NPP_wood_gCm2day_parameter_correlation", where = site_output)) {
+           if (any(check_list == "NPP_wood_gCm2day_parameter_correlation")) {
                grid_output$NPP_wood_gCm2day_parameter_correlation[slot_i,slot_j,] = site_output$NPP_wood_gCm2day_parameter_correlation
            }
            # If the correlation between wood MTT and wood allocation have been determined
-           if (exists(x = "MTT_wood_years_to_NPP_wood_gCm2day_correlation", where = site_output)) {
+           if (any(check_list == "MTT_wood_years_to_NPP_wood_gCm2day_correlation")) {
                grid_output$MTT_wood_years_to_NPP_wood_gCm2day_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_NPP_wood_gCm2day_correlation
            }
 

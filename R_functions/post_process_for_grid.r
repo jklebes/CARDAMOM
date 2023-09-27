@@ -14,6 +14,9 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   # Declare the site level output list object
   site_output = list(num_quantiles = num_quantiles, steps_per_year = steps_per_year, nos_years = nos_years)
 
+  # Check the list variables in states_all which we will be searching
+  check_list = names(states_all)
+
   ###
   # Derive stocks and fluxes used in the calculation of gridded aggregates
   # These are variables which for a site analysis would be easy to calcuate
@@ -23,18 +26,21 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   # The total allocation of C to the foliage pool can, depending on model,
   # be the combined total of direct allocation and that via a labile pool.
   # For many comparison we will need their combined total.
-  if (exists(x = "alloc_foliage_gCm2day", where = states_all) &
-      exists(x = "labile_to_foliage_gCm2day", where = states_all)) {
+  if (any(check_list == "alloc_foliage_gCm2day") &
+      any(check_list == "labile_to_foliage_gCm2day")) {
       states_all$combined_alloc_foliage_gCm2day = states_all$alloc_foliage_gCm2day + states_all$labile_to_foliage_gCm2day
   } else {
-      if (exists(x = "labile_to_foliage_gCm2day", where = states_all)) {
+      if (any(check_list == "labile_to_foliage_gCm2day")) {
           states_all$combined_alloc_foliage_gCm2day = states_all$labile_to_foliage_gCm2day
-      } else if (exists(x = "alloc_foliage_gCm2day", where = states_all)) {
+      } else if (any(check_list == "alloc_foliage_gCm2day")) {
           states_all$combined_alloc_foliage_gCm2day = states_all$alloc_foliage_gCm2day
       } else {
           stop("Error, CARDAMOM cannnot determine where C allocation foliage has come from")
       }
   }
+  # Update the list variables in states_all which we will be searching
+  check_list = names(states_all)
+
 
   # Determine pool specific
 
@@ -44,96 +50,98 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   states_all$biomass_gCm2 = states_all$foliage_gCm2
   states_all$biomass_to_litter_gCm2day = states_all$foliage_to_litter_gCm2day
   # Now look for accumulating optional disturbance drivers
-  if (exists(x = "FIREemiss_foliage_gCm2day", where = states_all)) {
+  if (any(check_list == "FIREemiss_foliage_gCm2day")) {
       states_all$FIREemiss_biomass_gCm2day = states_all$FIREemiss_foliage_gCm2day
   }
-  if (exists(x = "FIRElitter_foliage_gCm2day", where = states_all)) {
+  if (any(check_list == "FIRElitter_foliage_gCm2day")) {
       states_all$FIRElitter_biomass_gCm2day = states_all$FIRElitter_foliage_gCm2day
   }
-  if (exists(x = "HARVESTextracted_foliage_gCm2day", where = states_all)) {
+  if (any(check_list == "HARVESTextracted_foliage_gCm2day")) {
       states_all$HARVESTextracted_biomass_gCm2day = states_all$HARVESTextracted_foliage_gCm2day
       states_all$HARVESTlitter_biomass_gCm2day = states_all$HARVESTlitter_foliage_gCm2day
   }
-  if (exists(x = "labile_gCm2", where = states_all)) {
+  if (any(check_list == "labile_gCm2")) {
       states_all$biomass_gCm2 = states_all$biomass_gCm2 + states_all$labile_gCm2
       # Now look for accumulating optional disturbance drivers
-      if (exists(x = "FIREemiss_labile_gCm2day", where = states_all)) {
+      if (any(check_list == "FIREemiss_labile_gCm2day")) {
           states_all$FIREemiss_biomass_gCm2day = states_all$FIREemiss_biomass_gCm2day + states_all$FIREemiss_labile_gCm2day
       }
-      if (exists(x = "FIRElitter_labile_gCm2day", where = states_all)) {
+      if (any(check_list == "FIRElitter_labile_gCm2day")) {
           states_all$FIRElitter_biomass_gCm2day = states_all$FIRElitter_biomass_gCm2day + states_all$FIRElitter_labile_gCm2day
       }
-      if (exists(x = "HARVESTextracted_labile_gCm2day", where = states_all)) {
+      if (any(check_list == "HARVESTextracted_labile_gCm2day")) {
           states_all$HARVESTextracted_biomass_gCm2day = states_all$HARVESTextracted_biomass_gCm2day + states_all$HARVESTextracted_labile_gCm2day
           states_all$HARVESTlitter_biomass_gCm2day = states_all$HARVESTlitter_biomass_gCm2day + states_all$HARVESTlitter_labile_gCm2day
       }
   }
-  if (exists(x = "roots_gCm2", where = states_all)) {
+  if (any(check_list == "roots_gCm2")) {
       states_all$biomass_gCm2 = states_all$biomass_gCm2 + states_all$roots_gCm2
       states_all$biomass_to_litter_gCm2day = states_all$biomass_to_litter_gCm2day + states_all$roots_to_litter_gCm2day
       # Now look for accumulating optional disturbance drivers
-      if (exists(x = "FIREemiss_roots_gCm2day", where = states_all)) {
+      if (any(check_list == "FIREemiss_roots_gCm2day")) {
           states_all$FIREemiss_biomass_gCm2day = states_all$FIREemiss_biomass_gCm2day + states_all$FIREemiss_roots_gCm2day
       }
-      if (exists(x = "FIRElitter_roots_gCm2day", where = states_all)) {
+      if (any(check_list == "FIRElitter_roots_gCm2day")) {
           states_all$FIRElitter_biomass_gCm2day = states_all$FIRElitter_biomass_gCm2day + states_all$FIRElitter_roots_gCm2day
       }
-      if (exists(x = "HARVESTextracted_roots_gCm2day", where = states_all)) {
+      if (any(check_list == "HARVESTextracted_roots_gCm2day")) {
           states_all$HARVESTextracted_biomass_gCm2day = states_all$HARVESTextracted_biomass_gCm2day + states_all$HARVESTextracted_roots_gCm2day
           states_all$HARVESTlitter_biomass_gCm2day = states_all$HARVESTlitter_biomass_gCm2day + states_all$HARVESTlitter_roots_gCm2day
       }
   }
-  if (exists(x = "wood_gCm2", where = states_all)) {
+  if (any(check_list == "wood_gCm2")) {
       states_all$biomass_gCm2 = states_all$biomass_gCm2 + states_all$wood_gCm2
       states_all$biomass_to_litter_gCm2day = states_all$biomass_to_litter_gCm2day + states_all$wood_to_litter_gCm2day
       # Account for wood lost as emission due to fire
-      if (exists(x = "FIREemiss_wood_gCm2day", where = states_all)) {
+      if (any(check_list == "FIREemiss_wood_gCm2day")) {
           states_all$FIREemiss_biomass_gCm2day = states_all$FIREemiss_biomass_gCm2day + states_all$FIREemiss_wood_gCm2day
       }
       # Account for wood lost as mortality induced litter / non-combusted residues due to fire
-      if (exists(x = "FIRElitter_wood_gCm2day", where = states_all)) {
+      if (any(check_list == "FIRElitter_wood_gCm2day")) {
           states_all$FIRElitter_biomass_gCm2day = states_all$FIRElitter_biomass_gCm2day + states_all$FIRElitter_wood_gCm2day
       }
       # Account for wood extracted by harvest activities
-      if (exists(x = "HARVESTextracted_wood_gCm2day", where = states_all)) {
+      if (any(check_list == "HARVESTextracted_wood_gCm2day")) {
           states_all$HARVESTextracted_biomass_gCm2day = states_all$HARVESTextracted_biomass_gCm2day + states_all$HARVESTextracted_wood_gCm2day
           states_all$HARVESTlitter_biomass_gCm2day = states_all$HARVESTlitter_biomass_gCm2day + states_all$HARVESTlitter_wood_gCm2day
       }
   } # wood
+  # Update the list variables in states_all which we will be searching
+  check_list = names(states_all)
 
   # Determine the total dead organic matter within the system
   # plus their associated loss terms.
   # All models have a som pool so start there
-  if (exists(x = "dom_gCm2", where = states_all) == FALSE) {
+  if (any(check_list == "dom_gCm2") == FALSE) {
       states_all$dom_gCm2 = states_all$som_gCm2
       states_all$rhet_dom_gCm2day = states_all$rhet_som_gCm2day
       # Create corresponding variables for the disturbance drivers.
       # NOTE: that we do not need to account for disturbance induced
       # litter fluxes as these always remain within the DOM pool
-      if (exists(x = "FIREemiss_som_gCm2day", where = states_all)) {
+      if (any(check_list == "FIREemiss_som_gCm2day")) {
           states_all$FIREemiss_dom_gCm2day = states_all$FIREemiss_som_gCm2day
       }
-      if (exists(x = "HARVESTextracted_som_gCm2day", where = states_all)) {
+      if (any(check_list == "HARVESTextracted_som_gCm2day")) {
           states_all$HARVESTextracted_dom_gCm2day = states_all$HARVESTextracted_som_gCm2day
       }
       # Check for presence of litter or wood litter pools
-      if (exists(x = "litter_gCm2", where = states_all)) {
+      if (any(check_list == "litter_gCm2")) {
           states_all$dom_gCm2 = states_all$dom_gCm2 + states_all$litter_gCm2
           states_all$rhet_dom_gCm2day = states_all$rhet_dom_gCm2day + states_all$rhet_litter_gCm2day
-          if (exists(x = "FIREemiss_litter_gCm2day", where = states_all)) {
+          if (any(check_list == "FIREemiss_litter_gCm2day")) {
               states_all$FIREemiss_dom_gCm2day = states_all$FIREemiss_dom_gCm2day + states_all$FIREemiss_litter_gCm2day
           }
-          if (exists(x = "HARVESTextracted_litter_gCm2day", where = states_all)) {
+          if (any(check_list == "HARVESTextracted_litter_gCm2day")) {
               states_all$HARVESTextracted_dom_gCm2day = states_all$HARVESTextracted_dom_gCm2day + states_all$HARVESTextracted_litter_gCm2day
           }
       } # litter
-      if (exists(x = "woodlitter_gCm2", where = states_all)) {
+      if (any(check_list == "woodlitter_gCm2")) {
           states_all$dom_gCm2 = states_all$dom_gCm2 + states_all$woodlitter_gCm2
           states_all$rhet_dom_gCm2day = states_all$rhet_dom_gCm2day + states_all$rhet_woodlitter_gCm2day
-          if (exists(x = "FIREemiss_woodlitter_gCm2day", where = states_all)) {
+          if (any(check_list == "FIREemiss_woodlitter_gCm2day")) {
               states_all$FIREemiss_dom_gCm2day = states_all$FIREemiss_dom_gCm2day + states_all$FIREemiss_woodlitter_gCm2day
           }
-          if (exists(x = "HARVESTextracted_woodlitter_gCm2day", where = states_all)) {
+          if (any(check_list == "HARVESTextracted_woodlitter_gCm2day")) {
               states_all$HARVESTextracted_dom_gCm2day = states_all$HARVESTextracted_dom_gCm2day + states_all$HARVESTextracted_woodlitter_gCm2day
           }
       } # wood litter
@@ -143,6 +151,8 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   # Biomass and dead organic matter have already been determined,
   # so combine.
   states_all$Ctotal_gCm2 = states_all$biomass_gCm2 + states_all$dom_gCm2
+  # Update the list variables in states_all which we will be searching
+  check_list = names(states_all)
 
   ###
   # Extract likelihood / parameter / driver information
@@ -242,25 +252,25 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   ###
 
   # Net primary production allocation fractions
-  if (exists(x = "NPP_foliage_fraction", where = states_all)) {site_output$NPP_foliage_fraction = quantile(states_all$NPP_foliage_fraction, prob=num_quantiles, na.rm = na_flag)}
-  if (exists(x = "NPP_roots_fraction", where = states_all)) {site_output$NPP_roots_fraction = quantile(states_all$NPP_roots_fraction, prob=num_quantiles, na.rm = na_flag)}
-  if (exists(x = "NPP_wood_fraction", where = states_all)) {site_output$NPP_wood_fraction = quantile(states_all$NPP_wood_fraction, prob=num_quantiles, na.rm = na_flag)}
+  if (any(check_list == "NPP_foliage_fraction")) {site_output$NPP_foliage_fraction = quantile(states_all$NPP_foliage_fraction, prob=num_quantiles, na.rm = na_flag)}
+  if (any(check_list == "NPP_roots_fraction")) {site_output$NPP_roots_fraction = quantile(states_all$NPP_roots_fraction, prob=num_quantiles, na.rm = na_flag)}
+  if (any(check_list == "NPP_wood_fraction")) {site_output$NPP_wood_fraction = quantile(states_all$NPP_wood_fraction, prob=num_quantiles, na.rm = na_flag)}
   # Analysis mean transit (residence) times (years)
-  if (exists(x = "MTT_labile_years", where = states_all)) {site_output$MTT_labile_years = quantile(states_all$MTT_labile_years, prob=num_quantiles, na.rm = na_flag)}
-  if (exists(x = "MTT_foliage_years", where = states_all)) {site_output$MTT_foliage_years = quantile(states_all$MTT_foliage_years, prob=num_quantiles, na.rm = na_flag)}
-  if (exists(x = "MTT_roots_years", where = states_all)) {site_output$MTT_roots_years = quantile(states_all$MTT_roots_years, prob=num_quantiles, na.rm = na_flag)}
-  if (exists(x = "MTT_wood_years", where = states_all)) {site_output$MTT_wood_years = quantile(states_all$MTT_wood_years, prob=num_quantiles, na.rm = na_flag)}
-  if (exists(x = "MTT_litter_years", where = states_all)) {site_output$MTT_litter_years = quantile(states_all$MTT_litter_years, prob=num_quantiles, na.rm = na_flag)}
-  if (exists(x = "MTT_woodlitter_years", where = states_all)) {site_output$MTT_woodlitter_years = quantile(states_all$MTT_woodlitter_years, prob=num_quantiles, na.rm = na_flag)}
-  if (exists(x = "MTT_som_years", where = states_all)) {site_output$MTT_som_years = quantile(states_all$MTT_som_years, prob=num_quantiles, na.rm = na_flag)}
+  if (any(check_list == "MTT_labile_years")) {site_output$MTT_labile_years = quantile(states_all$MTT_labile_years, prob=num_quantiles, na.rm = na_flag)}
+  if (any(check_list == "MTT_foliage_years")) {site_output$MTT_foliage_years = quantile(states_all$MTT_foliage_years, prob=num_quantiles, na.rm = na_flag)}
+  if (any(check_list == "MTT_roots_years")) {site_output$MTT_roots_years = quantile(states_all$MTT_roots_years, prob=num_quantiles, na.rm = na_flag)}
+  if (any(check_list == "MTT_wood_years")) {site_output$MTT_wood_years = quantile(states_all$MTT_wood_years, prob=num_quantiles, na.rm = na_flag)}
+  if (any(check_list == "MTT_litter_years")) {site_output$MTT_litter_years = quantile(states_all$MTT_litter_years, prob=num_quantiles, na.rm = na_flag)}
+  if (any(check_list == "MTT_woodlitter_years")) {site_output$MTT_woodlitter_years = quantile(states_all$MTT_woodlitter_years, prob=num_quantiles, na.rm = na_flag)}
+  if (any(check_list == "MTT_som_years")) {site_output$MTT_som_years = quantile(states_all$MTT_som_years, prob=num_quantiles, na.rm = na_flag)}
   # Steady state C stock estimates (gC/m2)
-  if (exists(x = "SS_labile_gCm2", where = states_all)) {site_output$SS_labile_gCm2 = quantile(states_all$SS_labile_gCm2, prob=num_quantiles, na.rm = na_flag)}
-  if (exists(x = "SS_foliage_gCm2", where = states_all)) {site_output$SS_foliage_gCm2 = quantile(states_all$SS_foliage_gCm2, prob=num_quantiles, na.rm = na_flag)}
-  if (exists(x = "SS_roots_gCm2", where = states_all)) {site_output$SS_roots_gCm2 = quantile(states_all$SS_roots_gCm2, prob=num_quantiles, na.rm = na_flag)}
-  if (exists(x = "SS_wood_gCm2", where = states_all)) {site_output$SS_wood_gCm2 = quantile(states_all$SS_wood_gCm2, prob=num_quantiles, na.rm = na_flag)}
-  if (exists(x = "SS_litter_gCm2", where = states_all)) {site_output$SS_litter_gCm2 = quantile(states_all$SS_litter_gCm2, prob=num_quantiles, na.rm = na_flag)}
-  if (exists(x = "SS_woodlitter_gCm2", where = states_all)) {site_output$SS_woodlitter_gCm2 = quantile(states_all$SS_woodlitter_gCm2, prob=num_quantiles, na.rm = na_flag)}
-  if (exists(x = "SS_som_gCm2", where = states_all)) {site_output$SS_som_gCm2 = quantile(states_all$SS_som_gCm2, prob=num_quantiles, na.rm = na_flag)}
+  if (any(check_list == "SS_labile_gCm2")) {site_output$SS_labile_gCm2 = quantile(states_all$SS_labile_gCm2, prob=num_quantiles, na.rm = na_flag)}
+  if (any(check_list == "SS_foliage_gCm2")) {site_output$SS_foliage_gCm2 = quantile(states_all$SS_foliage_gCm2, prob=num_quantiles, na.rm = na_flag)}
+  if (any(check_list == "SS_roots_gCm2")) {site_output$SS_roots_gCm2 = quantile(states_all$SS_roots_gCm2, prob=num_quantiles, na.rm = na_flag)}
+  if (any(check_list == "SS_wood_gCm2")) {site_output$SS_wood_gCm2 = quantile(states_all$SS_wood_gCm2, prob=num_quantiles, na.rm = na_flag)}
+  if (any(check_list == "SS_litter_gCm2")) {site_output$SS_litter_gCm2 = quantile(states_all$SS_litter_gCm2, prob=num_quantiles, na.rm = na_flag)}
+  if (any(check_list == "SS_woodlitter_gCm2")) {site_output$SS_woodlitter_gCm2 = quantile(states_all$SS_woodlitter_gCm2, prob=num_quantiles, na.rm = na_flag)}
+  if (any(check_list == "SS_som_gCm2")) {site_output$SS_som_gCm2 = quantile(states_all$SS_som_gCm2, prob=num_quantiles, na.rm = na_flag)}
 
   # State variables - NOTE: extraction of pixel specific means done here to account for different ensemble trajectories, i.e. correlation in time.
   site_output$lai_m2m2                = apply(states_all$lai_m2m2,2,quantile,prob=num_quantiles,na.rm = na_flag)
@@ -320,7 +330,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   # and its output flow(s).
 
   # Labile related pool, change, input and output variables
-  if (exists(x = "labile_gCm2", where = states_all)) {
+  if (any(check_list == "labile_gCm2")) {
       # Assign pool to site_output
       site_output$labile_gCm2 = apply(states_all$labile_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_labile_gCm2 = quantile(rowMeans(states_all$labile_gCm2, na.rm = na_flag), prob=num_quantiles)
@@ -335,7 +345,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
       # Declare combined natural, fire and harvest driven creation of litter
       site_output$combined_labile_to_litter_gCm2day = array(0, dim=dim(states_all$labile_gCm2))
       # Check for the possible loss pathways
-      if (exists(x = "labile_to_foliage_gCm2day", where = states_all)) {
+      if (any(check_list == "labile_to_foliage_gCm2day")) {
           site_output$labile_to_foliage_gCm2day = apply(states_all$labile_to_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_labile_to_foliage_gCm2day = quantile(rowMeans(states_all$labile_to_foliage_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_labile_to_foliage_gCm2day = apply(t(apply(states_all$labile_to_foliage_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -344,14 +354,14 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
           site_output$outflux_labile_gCm2day = states_all$labile_to_foliage_gCm2day
       }
       # Other natural flux pathways should really go here before disturbance related
-      if (exists(x = "FIREemiss_labile_gCm2day", where = states_all)) {
+      if (any(check_list == "FIREemiss_labile_gCm2day")) {
           site_output$FIREemiss_labile_gCm2day = apply(states_all$FIREemiss_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_FIREemiss_labile_gCm2day = quantile(rowMeans(states_all$FIREemiss_labile_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_FIREemiss_labile_gCm2day = apply(t(apply(states_all$FIREemiss_labile_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
           site_output$FireFractionOfTurnover_labile = states_all$FIREemiss_labile_gCm2day
           site_output$outflux_labile_gCm2day = site_output$outflux_labile_gCm2day + states_all$FIREemiss_labile_gCm2day
       }
-      if (exists(x = "FIRElitter_labile_gCm2day", where = states_all)) {
+      if (any(check_list == "FIRElitter_labile_gCm2day")) {
           site_output$FIRElitter_labile_gCm2day = apply(states_all$FIRElitter_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_FIRElitter_labile_gCm2day = quantile(rowMeans(states_all$FIRElitter_labile_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_FIRElitter_labile_gCm2day = apply(t(apply(states_all$FIRElitter_labile_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -361,7 +371,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
           # NOTE depending on DALEC version may go to either a litter pool or som
           site_output$combined_labile_to_litter_gCm2day = site_output$combined_labile_to_litter_gCm2day + states_all$FIRElitter_labile_gCm2day
       }
-      if (exists(x = "HARVESTextracted_labile_gCm2day", where = states_all)) {
+      if (any(check_list == "HARVESTextracted_labile_gCm2day")) {
           site_output$HARVESTextracted_labile_gCm2day = apply(states_all$HARVESTextracted_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_HARVESTextracted_labile_gCm2day = quantile(rowMeans(states_all$HARVESTextracted_labile_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_HARVESTextracted_labile_gCm2day = apply(t(apply(states_all$HARVESTextracted_labile_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -399,7 +409,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   } # exists("labile")
 
   # Foliage related pool, change, input and output variables
-  if (exists(x = "foliage_gCm2", where = states_all)) {
+  if (any(check_list == "foliage_gCm2")) {
       # A combined total of C to foliage must always exist
       site_output$combined_alloc_foliage_gCm2day = apply(states_all$combined_alloc_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_combined_alloc_foliage_gCm2day = quantile(rowMeans(states_all$combined_alloc_foliage_gCm2day, na.rm = na_flag), prob=num_quantiles)
@@ -412,12 +422,12 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
       dCbio = states_all$foliage_gCm2 - states_all$foliage_gCm2[,1] # difference in root from initial
       site_output$dCfoliage_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
       # Check for the possible pathways
-      if (exists(x = "alloc_foliage_gCm2day", where = states_all)) {
+      if (any(check_list == "alloc_foliage_gCm2day")) {
           site_output$alloc_foliage_gCm2day = apply(states_all$alloc_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_alloc_foliage_gCm2day = quantile(rowMeans(states_all$alloc_foliage_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_alloc_foliage_gCm2day = apply(t(apply(states_all$alloc_foliage_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
       }
-      if (exists(x = "foliage_to_litter_gCm2day", where = states_all)) {
+      if (any(check_list == "foliage_to_litter_gCm2day")) {
           site_output$foliage_to_litter_gCm2day = apply(states_all$foliage_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_foliage_to_litter_gCm2day = quantile(rowMeans(states_all$foliage_to_litter_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_foliage_to_litter_gCm2day = apply(t(apply(states_all$foliage_to_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -428,14 +438,14 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
           # NOTE depending on DALEC version may go to either a litter pool or som
           site_output$combined_foliage_to_litter_gCm2day = states_all$foliage_to_litter_gCm2day
       }
-      if (exists(x = "FIREemiss_foliage_gCm2day", where = states_all)) {
+      if (any(check_list == "FIREemiss_foliage_gCm2day")) {
           site_output$FIREemiss_foliage_gCm2day = apply(states_all$FIREemiss_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_FIREemiss_foliage_gCm2day = quantile(rowMeans(states_all$FIREemiss_foliage_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_FIREemiss_foliage_gCm2day = apply(t(apply(states_all$FIREemiss_foliage_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
           site_output$FireFractionOfTurnover_foliage = states_all$FIREemiss_foliage_gCm2day
           site_output$outflux_foliage_gCm2day = site_output$outflux_foliage_gCm2day + states_all$FIREemiss_foliage_gCm2day
       }
-      if (exists(x = "FIRElitter_foliage_gCm2day", where = states_all)) {
+      if (any(check_list == "FIRElitter_foliage_gCm2day")) {
           site_output$FIRElitter_foliage_gCm2day = apply(states_all$FIRElitter_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_FIRElitter_foliage_gCm2day = quantile(rowMeans(states_all$FIRElitter_foliage_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_FIRElitter_foliage_gCm2day = apply(t(apply(states_all$FIRElitter_foliage_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -445,7 +455,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
           # NOTE depending on DALEC version may go to either a litter pool or som
           site_output$combined_foliage_to_litter_gCm2day = site_output$combined_foliage_to_litter_gCm2day + states_all$FIRElitter_foliage_gCm2day
       }
-      if (exists(x = "HARVESTextracted_foliage_gCm2day", where = states_all)) {
+      if (any(check_list == "HARVESTextracted_foliage_gCm2day")) {
           site_output$HARVESTextracted_foliage_gCm2day = apply(states_all$HARVESTextracted_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_HARVESTextracted_foliage_gCm2day = quantile(rowMeans(states_all$HARVESTextracted_foliage_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_HARVESTextracted_foliage_gCm2day = apply(t(apply(states_all$HARVESTextracted_foliage_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -483,7 +493,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   } # exists("foliage")
 
   # Fine roots related pool, change, input and output variables
-  if (exists(x = "roots_gCm2", where = states_all)) {
+  if (any(check_list == "roots_gCm2")) {
       # Assign pool to site_output
       site_output$roots_gCm2 = apply(states_all$roots_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_roots_gCm2 = quantile(rowMeans(states_all$roots_gCm2, na.rm = na_flag), prob=num_quantiles)
@@ -497,7 +507,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
       # Declare combined natural, fire and harvest driven creation of litter
       site_output$combined_roots_to_litter_gCm2day = array(NA, dim=dim(states_all$roots_gCm2))
       # Is rooting depth calculate (m) by this model?
-      if (exists(x = "RootDepth_m", where = states_all)) {
+      if (any(check_list == "RootDepth_m")) {
           site_output$RootDepth_m = apply(states_all$RootDepth_m,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_RootDepth_m = quantile(rowMeans(states_all$RootDepth_m, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_RootDepth_m = apply(t(apply(states_all$RootDepth_m,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -505,12 +515,12 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
           site_output$dRootDepth_m = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
       }
       # Check for the possible pathways
-      if (exists(x = "alloc_roots_gCm2day", where = states_all)) {
+      if (any(check_list == "alloc_roots_gCm2day")) {
           site_output$alloc_roots_gCm2day = apply(states_all$alloc_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_alloc_roots_gCm2day = quantile(rowMeans(states_all$alloc_roots_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_alloc_roots_gCm2day = apply(t(apply(states_all$alloc_roots_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
       }
-      if (exists(x = "roots_to_litter_gCm2day", where = states_all)) {
+      if (any(check_list == "roots_to_litter_gCm2day")) {
           site_output$roots_to_litter_gCm2day = apply(states_all$roots_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_roots_to_litter_gCm2day = quantile(rowMeans(states_all$roots_to_litter_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_roots_to_litter_gCm2day = apply(t(apply(states_all$roots_to_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -522,14 +532,14 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
           site_output$combined_roots_to_litter_gCm2day = states_all$roots_to_litter_gCm2day
       }
       # If this one exists then maybe some other fluxes do
-      if (exists(x = "FIREemiss_roots_gCm2day", where = states_all)) {
+      if (any(check_list == "FIREemiss_roots_gCm2day")) {
           site_output$FIREemiss_roots_gCm2day = apply(states_all$FIREemiss_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_FIREemiss_roots_gCm2day = quantile(rowMeans(states_all$FIREemiss_roots_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_FIREemiss_roots_gCm2day = apply(t(apply(states_all$FIREemiss_roots_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
           site_output$FireFractionOfTurnover_roots = states_all$FIREemiss_roots_gCm2day
           site_output$outflux_roots_gCm2day = site_output$outflux_roots_gCm2day + states_all$FIREemiss_roots_gCm2day
       }
-      if (exists(x = "FIRElitter_roots_gCm2day", where = states_all)) {
+      if (any(check_list == "FIRElitter_roots_gCm2day")) {
           site_output$FIRElitter_roots_gCm2day = apply(states_all$FIRElitter_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_FIRElitter_roots_gCm2day = quantile(rowMeans(states_all$FIRElitter_roots_gCm2day,1, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_FIRElitter_roots_gCm2day = apply(t(apply(states_all$FIRElitter_roots_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -539,7 +549,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
           # NOTE depending on DALEC version may go to either a litter pool or som
           site_output$combined_roots_to_litter_gCm2day = site_output$combined_roots_to_litter_gCm2day + states_all$FIRElitter_roots_gCm2day
       }
-      if (exists(x = "HARVESTextracted_roots_gCm2day", where = states_all)) {
+      if (any(check_list == "HARVESTextracted_roots_gCm2day")) {
           site_output$HARVESTextracted_roots_gCm2day = apply(states_all$HARVESTextracted_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_HARVESTextracted_roots_gCm2day = quantile(rowMeans(states_all$HARVESTextracted_roots_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_HARVESTextracted_roots_gCm2day = apply(t(apply(states_all$HARVESTextracted_roots_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -577,7 +587,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   } # exists("roots")
 
   # Wood related pool, change, input and output variables
-  if (exists(x = "wood_gCm2", where = states_all)) {
+  if (any(check_list == "wood_gCm2")) {
       # Assign pool to site_output
       site_output$wood_gCm2 = apply(states_all$wood_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_wood_gCm2 = quantile(rowMeans(states_all$wood_gCm2, na.rm = na_flag), prob=num_quantiles)
@@ -591,12 +601,12 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
       # Declare combined natural, fire and harvest driven creation of litter
       site_output$combined_wood_to_litter_gCm2day = array(NA, dim=dim(states_all$wood_gCm2))
       # Check for the possible pathways
-      if (exists(x = "alloc_wood_gCm2day", where = states_all)) {
+      if (any(check_list == "alloc_wood_gCm2day")) {
           site_output$alloc_wood_gCm2day = apply(states_all$alloc_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_alloc_wood_gCm2day = quantile(rowMeans(states_all$alloc_wood_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_alloc_wood_gCm2day = apply(t(apply(states_all$alloc_wood_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
       }
-      if (exists(x = "wood_to_litter_gCm2day", where = states_all)) {
+      if (any(check_list == "wood_to_litter_gCm2day")) {
           site_output$wood_to_litter_gCm2day = apply(states_all$wood_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_wood_to_litter_gCm2day = quantile(rowMeans(states_all$wood_to_litter_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_wood_to_litter_gCm2day = apply(t(apply(states_all$wood_to_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -608,14 +618,14 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
           site_output$combined_wood_to_litter_gCm2day = states_all$wood_to_litter_gCm2day
       }
       # If this one exists then maybe some other fluxes do
-      if (exists(x = "FIREemiss_wood_gCm2day", where = states_all)) {
+      if (any(check_list == "FIREemiss_wood_gCm2day")) {
           site_output$FIREemiss_wood_gCm2day = apply(states_all$FIREemiss_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_FIREemiss_wood_gCm2day = quantile(rowMeans(states_all$FIREemiss_wood_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_FIREemiss_wood_gCm2day = apply(t(apply(states_all$FIREemiss_wood_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
           site_output$FireFractionOfTurnover_wood = states_all$FIREemiss_wood_gCm2day
           site_output$outflux_wood_gCm2day = site_output$outflux_wood_gCm2day + states_all$FIREemiss_wood_gCm2day
       }
-      if (exists(x = "FIRElitter_wood_gCm2day", where = states_all)) {
+      if (any(check_list == "FIRElitter_wood_gCm2day")) {
           site_output$FIRElitter_wood_gCm2day = apply(states_all$FIRElitter_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_FIRElitter_wood_gCm2day = quantile(rowMeans(states_all$FIRElitter_wood_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_FIRElitter_wood_gCm2day = apply(t(apply(states_all$FIRElitter_wood_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -625,7 +635,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
           # NOTE depending on DALEC version may go to either a litter pool or som
           site_output$combined_wood_to_litter_gCm2day = site_output$combined_wood_to_litter_gCm2day + states_all$FIRElitter_wood_gCm2day
       }
-      if (exists(x = "HARVESTextracted_wood_gCm2day", where = states_all)) {
+      if (any(check_list == "HARVESTextracted_wood_gCm2day")) {
           site_output$HARVESTextracted_wood_gCm2day = apply(states_all$HARVESTextracted_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_HARVESTextracted_wood_gCm2day = quantile(rowMeans(states_all$HARVESTextracted_wood_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_HARVESTextracted_wood_gCm2day = apply(t(apply(states_all$HARVESTextracted_wood_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -663,7 +673,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   } # exists("wood")
 
   # Fine litter pool, change and output variables
-  if (exists(x = "litter_gCm2", where = states_all)) {
+  if (any(check_list == "litter_gCm2")) {
       # Assign pool to site_output
       site_output$litter_gCm2 = apply(states_all$litter_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_litter_gCm2 = quantile(rowMeans(states_all$litter_gCm2, na.rm = na_flag), prob=num_quantiles)
@@ -685,14 +695,14 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
       # Accumulate combined natural, fire and harvest related fluxes to som
       site_output$combined_litter_to_som_gCm2day = states_all$litter_to_som_gCm2day
       # If this one exists then maybe some other fluxes do
-      if (exists(x = "FIREemiss_litter_gCm2day", where = states_all)) {
+      if (any(check_list == "FIREemiss_litter_gCm2day")) {
           site_output$FIREemiss_litter_gCm2day = apply(states_all$FIREemiss_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_FIREemiss_litter_gCm2day = quantile(rowMeans(states_all$FIREemiss_litter_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_FIREemiss_litter_gCm2day = apply(t(apply(states_all$FIREemiss_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
           site_output$FireFractionOfTurnover_litter = states_all$FIREemiss_litter_gCm2day
           site_output$outflux_litter_gCm2day = site_output$outflux_litter_gCm2day + states_all$FIREemiss_litter_gCm2day
       }
-      if (exists(x = "FIRElitter_litter_gCm2day", where = states_all)) {
+      if (any(check_list == "FIRElitter_litter_gCm2day")) {
           site_output$FIRElitter_litter_gCm2day = apply(states_all$FIRElitter_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_FIRElitter_litter_gCm2day = quantile(rowMeans(states_all$FIRElitter_litter_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_FIRElitter_litter_gCm2day = apply(t(apply(states_all$FIRElitter_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -701,7 +711,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
           # Accumulate combined natural, fire and harvest related fluxes to som
           site_output$combined_litter_to_som_gCm2day = site_output$combined_litter_to_som_gCm2day + states_all$FIRElitter_litter_gCm2day
       }
-      if (exists(x = "HARVESTextracted_litter_gCm2day", where = states_all)) {
+      if (any(check_list == "HARVESTextracted_litter_gCm2day")) {
           site_output$HARVESTextracted_litter_gCm2day = apply(states_all$HARVESTextracted_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_HARVESTextracted_litter_gCm2day = quantile(rowMeans(states_all$HARVESTextracted_litter_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_HARVESTextracted_litter_gCm2day = apply(t(apply(states_all$HARVESTextracted_litter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -733,7 +743,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   } # exists("litter")
 
   # Wood litter pool, change and output variables
-  if (exists(x = "woodlitter_gCm2", where = states_all)) {
+  if (any(check_list == "woodlitter_gCm2")) {
       # Assign pool to site_output
       site_output$woodlitter_gCm2 = apply(states_all$woodlitter_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_woodlitter_gCm2 = quantile(rowMeans(states_all$woodlitter_gCm2, na.rm = na_flag), prob=num_quantiles)
@@ -755,14 +765,14 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
       # Accumulate combined natural, fire and harvest related fluxes to som
       site_output$combined_woodlitter_to_som_gCm2day = states_all$woodlitter_to_som_gCm2day
       # If this one exists then maybe some other fluxes do
-      if (exists(x = "FIREemiss_woodlitter_gCm2day", where = states_all)) {
+      if (any(check_list == "FIREemiss_woodlitter_gCm2day")) {
           site_output$FIREemiss_woodlitter_gCm2day = apply(states_all$FIREemiss_woodlitter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_FIREemiss_woodlitter_gCm2day = quantile(rowMeans(states_all$FIREemiss_woodlitter_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_FIREemiss_woodlitter_gCm2day = apply(t(apply(states_all$FIREemiss_woodlitter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
           site_output$FireFractionOfTurnover_woodlitter = states_all$FIREemiss_woodlitter_gCm2day
           site_output$outflux_woodlitter_gCm2day = site_output$outflux_woodlitter_gCm2day + states_all$FIREemiss_woodlitter_gCm2day
       }
-      if (exists(x = "FIRElitter_woodlitter_gCm2day", where = states_all)) {
+      if (any(check_list == "FIRElitter_woodlitter_gCm2day")) {
           site_output$FIRElitter_woodlitter_gCm2day = apply(states_all$FIRElitter_woodlitter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_FIRElitter_woodlitter_gCm2day = quantile(rowMeans(states_all$FIRElitter_woodlitter_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_FIRElitter_woodlitter_gCm2day = apply(t(apply(states_all$FIRElitter_woodlitter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -771,7 +781,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
           # Accumulate combined natural, fire and harvest related fluxes to som
           site_output$combined_woodlitter_to_som_gCm2day = site_output$combined_woodlitter_to_som_gCm2day + states_all$FIRElitter_woodlitter_gCm2day
       }
-      if (exists(x = "HARVESTextracted_woodlitter_gCm2day", where = states_all)) {
+      if (any(check_list == "HARVESTextracted_woodlitter_gCm2day")) {
           site_output$HARVESTextracted_woodlitter_gCm2day = apply(states_all$HARVESTextracted_woodlitter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_HARVESTextracted_woodlitter_gCm2day = quantile(rowMeans(states_all$HARVESTextracted_woodlitter_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_HARVESTextracted_woodlitter_gCm2day = apply(t(apply(states_all$HARVESTextracted_woodlitter_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -803,7 +813,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   } # exists("woodlitter")
 
   # Soil organic matter pool, change and output variables
-  if (exists(x = "som_gCm2", where = states_all)) {
+  if (any(check_list == "som_gCm2")) {
       # Assign pool to site_output
       site_output$som_gCm2 = apply(states_all$som_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_som_gCm2 = quantile(rowMeans(states_all$som_gCm2, na.rm = na_flag), prob=num_quantiles)
@@ -819,7 +829,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
       site_output$mean_rhet_som_gCm2day = quantile(rowMeans(states_all$rhet_som_gCm2day, na.rm = na_flag), prob=num_quantiles)
       site_output$mean_annual_rhet_som_gCm2day = apply(t(apply(states_all$rhet_som_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
       # If this one exists then maybe some other fluxes do
-      if (exists(x = "FIREemiss_som_gCm2day", where = states_all)) {
+      if (any(check_list == "FIREemiss_som_gCm2day")) {
           site_output$FIREemiss_som_gCm2day = apply(states_all$FIREemiss_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_FIREemiss_som_gCm2day = quantile(rowMeans(states_all$FIREemiss_som_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_FIREemiss_som_gCm2day = apply(t(apply(states_all$FIREemiss_som_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -827,7 +837,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
           site_output$outflux_som_gCm2day = site_output$outflux_som_gCm2day + states_all$FIREemiss_som_gCm2day
       }
       # NOTE: FIRElitter does not exist as there is not litter which leaves the som pool
-      if (exists(x = "HARVESTextracted_som_gCm2day", where = states_all)) {
+      if (any(check_list == "HARVESTextracted_som_gCm2day")) {
           site_output$HARVESTextracted_som_gCm2day = apply(states_all$HARVESTextracted_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_HARVESTextracted_som_gCm2day = quantile(rowMeans(states_all$HARVESTextracted_som_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_HARVESTextracted_som_gCm2day = apply(t(apply(states_all$HARVESTextracted_som_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -856,7 +866,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   } # exists("som")
 
   # Biomass related pool, change and output variables
-  if (exists(x = "biomass_gCm2", where = states_all)) {
+  if (any(check_list == "biomass_gCm2")) {
       # Assign pool to site_output
       site_output$biomass_gCm2 = apply(states_all$biomass_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_biomass_gCm2 = quantile(rowMeans(states_all$biomass_gCm2, na.rm = na_flag), prob=num_quantiles)
@@ -874,14 +884,14 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
       # Begin accumulating the combined natural, fire and harvest litter creation
       site_output$combined_biomass_to_litter_gCm2day = states_all$biomass_to_litter_gCm2day
       # Other natural flux pathways should really go here before disturbance related
-      if (exists(x = "FIREemiss_biomass_gCm2day", where = states_all)) {
+      if (any(check_list == "FIREemiss_biomass_gCm2day")) {
           site_output$FIREemiss_biomass_gCm2day = apply(states_all$FIREemiss_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_FIREemiss_biomass_gCm2day = quantile(rowMeans(states_all$FIREemiss_biomass_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_FIREemiss_biomass_gCm2day = apply(t(apply(states_all$FIREemiss_biomass_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
           site_output$outflux_biomass_gCm2day = site_output$outflux_biomass_gCm2day + states_all$FIREemiss_biomass_gCm2day
           site_output$FireFractionOfTurnover_biomass = states_all$FIREemiss_biomass_gCm2day
       }
-      if (exists(x = "FIRElitter_biomass_gCm2day", where = states_all)) {
+      if (any(check_list == "FIRElitter_biomass_gCm2day")) {
           site_output$FIRElitter_biomass_gCm2day = apply(states_all$FIRElitter_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_FIRElitter_biomass_gCm2day = quantile(rowMeans(states_all$FIRElitter_biomass_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_FIRElitter_biomass_gCm2day = apply(t(apply(states_all$FIRElitter_biomass_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -890,7 +900,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
           # Accumulte the combined fire, harvest and natural biomass flux to litter
           site_output$combined_biomass_to_litter_gCm2day = site_output$combined_biomass_to_litter_gCm2day + states_all$FIRElitter_biomass_gCm2day
       }
-      if (exists(x = "HARVESTextracted_biomass_gCm2day", where = states_all)) {
+      if (any(check_list == "HARVESTextracted_biomass_gCm2day")) {
           site_output$HARVESTextracted_biomass_gCm2day = apply(states_all$HARVESTextracted_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_HARVESTextracted_biomass_gCm2day = quantile(rowMeans(states_all$HARVESTextracted_biomass_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_HARVESTextracted_biomass_gCm2day = apply(t(apply(states_all$HARVESTextracted_biomass_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -926,7 +936,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
 
   # Dead organic matter pool, change and output variables
   # NOTE: this is potentially the combination of som, litter and wood litter
-  if (exists(x = "dom_gCm2", where = states_all)) {
+  if (any(check_list == "dom_gCm2")) {
       # Assign pool to site_output
       site_output$dom_gCm2 = apply(states_all$dom_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_dom_gCm2 = quantile(rowMeans(states_all$dom_gCm2, na.rm = na_flag), prob=num_quantiles)
@@ -942,7 +952,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
       site_output$mean_rhet_dom_gCm2day = quantile(rowMeans(states_all$rhet_dom_gCm2day, na.rm = na_flag), prob=num_quantiles)
       site_output$mean_annual_rhet_dom_gCm2day = apply(t(apply(states_all$rhet_dom_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
       # If this one exists then maybe some other fluxes do
-      if (exists(x = "FIREemiss_dom_gCm2day", where = states_all)) {
+      if (any(check_list == "FIREemiss_dom_gCm2day")) {
           site_output$FIREemiss_dom_gCm2day = apply(states_all$FIREemiss_dom_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_FIREemiss_dom_gCm2day = quantile(rowMeans(states_all$FIREemiss_dom_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_FIREemiss_dom_gCm2day = apply(t(apply(states_all$FIREemiss_dom_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
@@ -950,7 +960,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
           site_output$outflux_dom_gCm2day = site_output$outflux_dom_gCm2day + states_all$FIREemiss_dom_gCm2day
       }
       # NOTE: FIRElitter does not exist as there is not litter which leaves the dom pool
-      if (exists(x = "HARVESTextracted_dom_gCm2day", where = states_all)) {
+      if (any(check_list == "HARVESTextracted_dom_gCm2day")) {
           site_output$HARVESTextracted_dom_gCm2day = apply(states_all$HARVESTextracted_dom_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_HARVESTextracted_dom_gCm2day = quantile(rowMeans(states_all$HARVESTextracted_dom_gCm2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_HARVESTextracted_dom_gCm2day = apply(t(apply(states_all$HARVESTextracted_dom_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2, quantile, prob=num_quantiles, na.rm = TRUE)
@@ -983,7 +993,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   ###
 
   # Water cycle specific if available
-  if (exists(x = "ET_kgH2Om2day", where = states_all)) {
+  if (any(check_list == "ET_kgH2Om2day")) {
       ## current water in the soil surface layer (0-30 cm)
       site_output$SurfWater_kgH2Om2 = apply(states_all$SurfWater_kgH2Om2,2,quantile,prob=num_quantiles,na.rm = na_flag)
       site_output$mean_SurfWater_kgH2Om2 = quantile(rowMeans(states_all$SurfWater_kgH2Om2, na.rm = na_flag), prob=num_quantiles)
@@ -1013,7 +1023,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
                                                       2, quantile, prob=num_quantiles, na.rm = TRUE)
 
       # Check whether the evaporation components exist
-      if (exists(x = "Etrans_kgH2Om2day", where = states_all)) {
+      if (any(check_list == "Etrans_kgH2Om2day")) {
           # Transpiration
           site_output$Etrans_kgH2Om2day = apply(states_all$Etrans_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
           site_output$mean_Etrans_kgH2Om2day = quantile(rowMeans(states_all$Etrans_kgH2Om2day, na.rm = na_flag), prob=num_quantiles)
@@ -1025,20 +1035,20 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
                                                               apply(states_all$Etrans_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)),
                                                             2, quantile, prob=num_quantiles, na.rm = TRUE)
       }
-      if (exists(x = "Esoil_kgH2Om2day", where = states_all)) {
+      if (any(check_list == "Esoil_kgH2Om2day")) {
           # Soil evaporation
           site_output$Esoil_kgH2Om2day = apply(states_all$Esoil_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
           site_output$mean_Esoil_kgH2Om2day = quantile(rowMeans(states_all$Esoil_kgH2Om2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_Esoil_kgH2Om2day = apply(t(apply(states_all$Esoil_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
       }
-      if (exists(x = "Ewetcanopy_kgH2Om2day", where = states_all)) {
+      if (any(check_list == "Ewetcanopy_kgH2Om2day")) {
           # Wet canopy evaporation
           site_output$Ewetcanopy_kgH2Om2day = apply(states_all$Ewetcanopy_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
           site_output$mean_Ewetcanopy_kgH2Om2day = quantile(rowMeans(states_all$Ewetcanopy_kgH2Om2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_Ewetcanopy_kgH2Om2day = apply(t(apply(states_all$Ewetcanopy_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
       }
       # Check whether surface runoff exists?
-      if (exists(x = "runoff_kgH2Om2day", where = states_all)) {
+      if (any(check_list == "runoff_kgH2Om2day")) {
           # Surface water drainage
           site_output$runoff_kgH2Om2day = apply(states_all$runoff_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
           site_output$mean_runoff_kgH2Om2day = quantile(rowMeans(states_all$runoff_kgH2Om2day, na.rm = na_flag), prob=num_quantiles)
@@ -1047,7 +1057,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
           site_output$total_drainage_kgH2Om2day = states_all$runoff_kgH2Om2day
       }
       # Check whether underflow exists, i.e. drainage out of the bottom of the soil water column?
-      if (exists(x = "underflow_kgH2Om2day", where = states_all)) {
+      if (any(check_list == "underflow_kgH2Om2day")) {
           # Drainage from bottom of soil column
           site_output$underflow_kgH2Om2day = apply(states_all$underflow_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
           site_output$mean_underflow_kgH2Om2day = quantile(rowMeans(states_all$underflow_kgH2Om2day, na.rm = na_flag), prob=num_quantiles)
@@ -1056,7 +1066,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
           site_output$total_drainage_kgH2Om2day = site_output$total_drainage_kgH2Om2day + states_all$underflow_kgH2Om2day
       }
       # Update the total drainage variable
-      if (exists(x = "total_drainage_kgH2Om2day", where = site_output)) {
+      if (any(names(site_output) == "total_drainage_kgH2Om2day")) {
           # Total drainage from surface and soil bottom
           site_output$total_drainage_kgH2Om2day = apply(site_output$total_drainage_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
           site_output$mean_total_drainage_kgH2Om2day = quantile(rowMeans(site_output$total_drainage_kgH2Om2day, na.rm = na_flag), prob=num_quantiles)
@@ -1065,7 +1075,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   } # water cycle variables
 
   # Snow related
-  if (exists(x = "snow_kgH2Om2", where = states_all)) {
+  if (any(check_list == "snow_kgH2Om2")) {
       ## Snow on soil surface
       site_output$snow_kgH2Om2 = apply(states_all$snow_kgH2Om2,2,quantile,prob=num_quantiles,na.rm = na_flag)
       site_output$mean_snow_kgH2Om2 = quantile(rowMeans(states_all$snow_kgH2Om2, na.rm = na_flag), prob=num_quantiles)
@@ -1077,7 +1087,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   ###
 
   # Canopy process information if available
-  if (exists(x = "APAR_MJm2day", where = states_all)) {
+  if (any(check_list == "APAR_MJm2day")) {
       # Extract the absorbed photosynthetically active radiation by the canopy
       site_output$APAR_MJm2day = apply(states_all$APAR_MJm2day,2,quantile, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_APAR_MJm2day = quantile(rowMeans(states_all$APAR_MJm2day, na.rm = na_flag), prob=num_quantiles)
@@ -1086,7 +1096,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
       dCbio = states_all$APAR_MJm2day - states_all$APAR_MJm2day[,1] # difference in dom from initial
       site_output$dAPAR_MJm2day = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
   }
-  if (exists(x = "CiCa", where = states_all)) {
+  if (any(check_list == "CiCa")) {
       # Extract the internal vs ambient CO2 ratio
       site_output$CiCa = apply(states_all$CiCa,2,quantile, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_CiCa = quantile(rowMeans(states_all$CiCa, na.rm = na_flag), prob=num_quantiles)
@@ -1095,7 +1105,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
       dCbio = states_all$CiCa - states_all$CiCa[,1] # difference in dom from initial
       site_output$dCiCa = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
   }
-  if (exists(x = "gs_demand_supply_ratio", where = states_all)) {
+  if (any(check_list == "gs_demand_supply_ratio")) {
       # Extract the ratio of stomatal conductance relative to its maximum value,
       # this metric provides information on the demand vs supply constrains on stomatal conductance
       site_output$gs_demand_supply_ratio = apply(states_all$gs_demand_supply_ratio,2,quantile, prob=num_quantiles, na.rm = na_flag)
@@ -1105,7 +1115,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
       dCbio = states_all$gs_demand_supply_ratio - states_all$gs_demand_supply_ratio[,1] # difference in dom from initial
       site_output$dgs_demand_supply_ratio = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
   }
-  if (exists(x = "gs_mmolH2Om2s", where = states_all)) {
+  if (any(check_list == "gs_mmolH2Om2s")) {
       # Extract the canopy stomatal conductance
       site_output$gs_mmolH2Om2s = apply(states_all$gs_mmolH2Om2s,2,quantile, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_gs_mmolH2Om2s = quantile(rowMeans(states_all$gs_mmolH2Om2s, na.rm = na_flag), prob=num_quantiles)
@@ -1114,7 +1124,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
       dCbio = states_all$gs_mmolH2Om2s - states_all$gs_mmolH2Om2s[,1] # difference in dom from initial
       site_output$dgs_mmolH2Om2s = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
   }
-  if (exists(x = "gb_mmolH2Om2s", where = states_all)) {
+  if (any(check_list == "gb_mmolH2Om2s")) {
       # Extract the canopy boundary layer conductance
       site_output$gb_mmolH2Om2s = apply(states_all$gb_mmolH2Om2s,2,quantile, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_gb_mmolH2Om2s = quantile(rowMeans(states_all$gb_mmolH2Om2s, na.rm = na_flag), prob=num_quantiles)
@@ -1130,28 +1140,28 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   ###
 
   # Any time series assimilated data overlaps?
-  if (exists(x = "gpp_assim_data_overlap_fraction", where = states_all)) {
+  if (any(check_list == "gpp_assim_data_overlap_fraction")) {
       site_output$gpp_assim_data_overlap_fraction = states_all$gpp_assim_data_overlap_fraction
   }
-  if (exists(x = "lai_assim_data_overlap_fraction", where = states_all)) {
+  if (any(check_list == "lai_assim_data_overlap_fraction")) {
       site_output$lai_assim_data_overlap_fraction = states_all$lai_assim_data_overlap_fraction
   }
-  if (exists(x = "nee_assim_data_overlap_fraction", where = states_all)) {
+  if (any(check_list == "nee_assim_data_overlap_fraction")) {
       site_output$nee_assim_data_overlap_fraction = states_all$nee_assim_data_overlap_fraction
   }
-  if (exists(x = "wood_assim_data_overlap_fraction", where = states_all)) {
+  if (any(check_list == "wood_assim_data_overlap_fraction")) {
       site_output$wood_assim_data_overlap_fraction = states_all$wood_assim_data_overlap_fraction
   }
-  if (exists(x = "soil_assim_data_overlap_fraction", where = states_all)) {
+  if (any(check_list == "soil_assim_data_overlap_fraction")) {
       site_output$soil_assim_data_overlap_fraction = states_all$soil_assim_data_overlap_fraction
   }
-  if (exists(x = "et_assim_data_overlap_fraction", where = states_all)) {
+  if (any(check_list == "et_assim_data_overlap_fraction")) {
       site_output$et_assim_data_overlap_fraction = states_all$et_assim_data_overlap_fraction
   }
-  if (exists(x = "nbe_assim_data_overlap_fraction", where = states_all)) {
+  if (any(check_list == "nbe_assim_data_overlap_fraction")) {
       site_output$nbe_assim_data_overlap_fraction = states_all$nbe_assim_data_overlap_fraction
   }
-  if (exists(x = "fire_assim_data_overlap_fraction", where = states_all)) {
+  if (any(check_list == "fire_assim_data_overlap_fraction")) {
       site_output$fire_assim_data_overlap_fraction = states_all$fire_assim_data_overlap_fraction
   }
 
@@ -1164,15 +1174,15 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   site_output$rhet_parameter_correlation = states_all$rhet_parameter_correlation
   site_output$fire_parameter_correlation = states_all$fire_parameter_correlation
   # If Mean transit time for wood correlation exists, ensure we store it for the gridded run too
-  if (exists(x = "MTT_wood_years_parameter_correlation", where = states_all)) {
+  if (any(check_list == "MTT_wood_years_parameter_correlation")) {
       site_output$MTT_wood_years_parameter_correlation = states_all$MTT_wood_years_parameter_correlation
   }
   # If Mean mean allocation to wood correlation exists, ensure we store it for the gridded run too
-  if (exists(x = "NPP_wood_gCm2day_parameter_correlation", where = states_all)) {
+  if (any(check_list == "NPP_wood_gCm2day_parameter_correlation")) {
       site_output$NPP_wood_gCm2day_parameter_correlation = states_all$NPP_wood_gCm2day_parameter_correlation
   }
   # If the correlation between wood MTT and wood allocation have been determined
-  if (exists(x = "MTT_wood_years_to_NPP_wood_gCm2day_correlation", where = states_all)) {
+  if (any(check_list == "MTT_wood_years_to_NPP_wood_gCm2day_correlation")) {
       site_output$MTT_wood_years_to_NPP_wood_gCm2day_correlation = states_all$MTT_wood_years_to_NPP_wood_gCm2day_correlation
   }
 
