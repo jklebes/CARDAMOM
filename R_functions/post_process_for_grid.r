@@ -5,7 +5,7 @@
 
 # This function was created by T. L Smallman (t.l.smallman@ed.ac.uk, UoE)
 
-post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_flag,converged,states_all) {
+post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,num_quantiles,na_flag,converged,states_all) {
 
   # Determine some useful information for the analysis below
   nos_years = PROJECT$nos_years
@@ -313,7 +313,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,num_quantiles,na_fl
   # C-cycle diagnostics which are mean annuals apply vs rowMeans
   site_output$mean_annual_cue      = apply(states_all$mean_annual_cue, 2, quantile, prob = num_quantiles, na.rm=TRUE)
   site_output$mean_cue             = quantile(rowMeans(states_all$mean_annual_cue, na.rm=na_flag), prob = num_quantiles, na.rm=TRUE)
-
+print(dim(site_output$mean_annual_cue))
   ###
   # Track net pool change over time
   ###

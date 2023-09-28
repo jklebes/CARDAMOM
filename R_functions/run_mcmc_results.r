@@ -863,7 +863,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
           na_flag = TRUE
 
           # Run post-processing for gridded analysis
-          dummy = post_process_for_grid(outfile_stock_fluxes,PROJECT,num_quantiles,na_flag,converged,states_all)
+          dummy = post_process_for_grid(outfile_stock_fluxes,PROJECT,drivers,parameters,num_quantiles,na_flag,converged,states_all)
           # Tidy local environment
           rm(states_all,drivers) ; gc()
           # Return the site_output list object for subsequent slotting into the wider grid

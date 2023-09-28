@@ -3692,16 +3692,17 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     logical :: plough_sanity,sow_sanity,harvest_sanity
 
     ! reset
-    plough_sanity = .false. ; sow_sanity = .false. ; harvest_sanity = .false.
+    !plough_sanity = .false. ; sow_sanity = .false. ; harvest_sanity = .false.
+    plough_sanity = .true. ; sow_sanity = .true. ; harvest_sanity = .true.
 
-    ! spring crop
-    if (sow_day < harvest_day .and. nint(doy) < harvest_day) sow_sanity = .true.
-    if (plough_day < harvest_day .and. nint(doy) < harvest_day) plough_sanity = .true.
-    if (harvest_day > sow_day) harvest_sanity = .true.
-    ! winter crops
-    if (sow_day > harvest_day) sow_sanity = .true.
-    if (plough_day > harvest_day) plough_sanity = .true.
-    if (harvest_day < plough_day .and. nint(doy) < plough_day) harvest_sanity = .true.
+    !! spring crop
+    !if (sow_day < harvest_day .and. nint(doy) < harvest_day) sow_sanity = .true.
+    !if (plough_day < harvest_day .and. nint(doy) < harvest_day) plough_sanity = .true.
+    !if (harvest_day > sow_day) harvest_sanity = .true.
+    !! winter crops
+    !if (sow_day > harvest_day) sow_sanity = .true.
+    !if (plough_day > harvest_day) plough_sanity = .true.
+    !if (harvest_day < plough_day .and. nint(doy) < plough_day) harvest_sanity = .true.
 
     if ( .not. sown ) then
 
