@@ -722,7 +722,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     call calculate_radiation_commons(lat)
 
     ! load ACM-GPP-ET parameters
-    NUE = 14d0           ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
+    NUE = 16d0           ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
                          ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
     avN = 10d0**pars(11) ! foliar N
     ceff = avN*NUE
@@ -3692,17 +3692,17 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     logical :: plough_sanity,sow_sanity,harvest_sanity
 
     ! reset
-    !plough_sanity = .false. ; sow_sanity = .false. ; harvest_sanity = .false.
-    plough_sanity = .true. ; sow_sanity = .true. ; harvest_sanity = .true.
+    plough_sanity = .false. ; sow_sanity = .false. ; harvest_sanity = .false.
+    !plough_sanity = .true. ; sow_sanity = .true. ; harvest_sanity = .true.
 
-    !! spring crop
-    !if (sow_day < harvest_day .and. nint(doy) < harvest_day) sow_sanity = .true.
-    !if (plough_day < harvest_day .and. nint(doy) < harvest_day) plough_sanity = .true.
-    !if (harvest_day > sow_day) harvest_sanity = .true.
-    !! winter crops
-    !if (sow_day > harvest_day) sow_sanity = .true.
-    !if (plough_day > harvest_day) plough_sanity = .true.
-    !if (harvest_day < plough_day .and. nint(doy) < plough_day) harvest_sanity = .true.
+    ! spring crop
+    if (sow_day < harvest_day .and. nint(doy) < harvest_day) sow_sanity = .true.
+    if (plough_day < harvest_day .and. nint(doy) < harvest_day) plough_sanity = .true.
+    if (harvest_day > sow_day) harvest_sanity = .true.
+    ! winter crops
+    if (sow_day > harvest_day) sow_sanity = .true.
+    if (plough_day > harvest_day) plough_sanity = .true.
+    if (harvest_day < plough_day .and. nint(doy) < plough_day) harvest_sanity = .true.
 
     if ( .not. sown ) then
 

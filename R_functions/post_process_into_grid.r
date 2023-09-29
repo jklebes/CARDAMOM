@@ -697,6 +697,9 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
 
   } # loop sites to load into grid_output
 
+  # Return back to user
+  return(grid_output)
+  
 } # end function post_process_into_grid
 
 ## Use byte compile
