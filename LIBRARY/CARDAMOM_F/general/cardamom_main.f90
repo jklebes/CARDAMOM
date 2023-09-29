@@ -354,4 +354,11 @@ program cardamom_framework
  ! tidy up by closing all files
  call close_output_files
 
+ ! Final message to the user
+ write(*,*)"==========================================================="
+ write(*,*)"==== CARDAMOM analysis for the current chain completed ===="
+ write(*,*)"==========================================================="
+ write(*,*)"=========================Honestly=========================="
+
+
 end program cardamom_framework
