@@ -54,11 +54,12 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       if (mint[1] == -9999) {stop("No min temperature provided: mint in C must be provided")}
       airt = read_site_specific_obs("airt_C",infile)       # if no mean air temperature available assume mean of max / min
       if (airt[1] == -9999) {airt = (maxt + mint) * 0.5}
+      if (length(which(maxt-mint == 0)) > 0) {stop("Maximum and minimum temperatures cannot be exactly the same in the same time step")}
 
       swrad = read_site_specific_obs("swrad_Wm2",infile) # W.m-2
       if (swrad[1] == -9999) {
           # try and look for shortwave in MJ/m2/day
-          swrad=read_site_specific_obs("swrad_MJm2day",infile) # MJ/m2/day
+          swrad = read_site_specific_obs("swrad_MJm2day",infile) # MJ/m2/day
           if (swrad[1] == -9999) {stop("No short wave radiation found: either swrad_Wm2 (in W/m2) or swrad_MJm2day must be provided")}
       } else {
           # assume we have got the W/m2, which we need to conver to MJ/m2/day
@@ -91,14 +92,14 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       } # vpd or not?
 
       # Wind speed (m/s)
-      wind_spd=read_site_specific_obs("wind_spd_ms",infile)
+      wind_spd = read_site_specific_obs("wind_spd_ms",infile)
       # if now wind speed data use global mean
-      if (wind_spd[1] == -9999) {wind_spd=rep(3.23,length.out=length(doy))} # CRU global mean wind speed (m.s-1)
+      if (wind_spd[1] == -9999) {wind_spd = rep(3.23,length.out=length(doy))} # CRU global mean wind speed (m.s-1)
 
       # Construct day of year time series
-      years_to_load=as.numeric(start_year):as.numeric(end_year)
+      years_to_load = as.numeric(start_year):as.numeric(end_year)
       for (yr in seq(1,length(years_to_load))) {
-           if (yr  == 1) {
+           if (yr == 1) {
                doy = 1:nos_days_in_year(years_to_load[yr])
            } else {
                doy = append(doy,1:nos_days_in_year(years_to_load[yr]))
@@ -117,34 +118,34 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
           # lagged variables for GSI calculated afterwards
           for (daily in seq(1,length(swrad),steps_in_day)) {
                if (maxt[1] != -9999 & mint[1] != -9999) {
-                   maxt_out=append(maxt_out,max(maxt[daily:(daily+steps_in_day-1)]))
-                   mint_out=append(mint_out,min(mint[daily:(daily+steps_in_day-1)]))
-                   avgTemp_out=append(avgTemp_out,(mint[daily:(daily+steps_in_day-1)]+maxt[daily:(daily+steps_in_day-1)])*0.5)
-                   avgTmax_out=append(avgTmax_out,max(maxt[daily:(daily+steps_in_day-1)]))
+                   maxt_out = append(maxt_out,max(maxt[daily:(daily+steps_in_day-1)]))
+                   mint_out = append(mint_out,min(mint[daily:(daily+steps_in_day-1)]))
+                   avgTemp_out = append(avgTemp_out,(mint[daily:(daily+steps_in_day-1)]+maxt[daily:(daily+steps_in_day-1)])*0.5)
+                   avgTmax_out = append(avgTmax_out,max(maxt[daily:(daily+steps_in_day-1)]))
                } else {
-                   maxt_out=append(maxt_out,max(airt[daily:(daily+steps_in_day-1)]))
-                   mint_out=append(mint_out,min(airt[daily:(daily+steps_in_day-1)]))
-                   avgTemp_out=append(avgTemp_out,mean(airt[daily:(daily+steps_in_day-1)]))
-                   avgTmax_out=append(avgTmax_out,max(airt[daily:(daily+steps_in_day-1)]))
+                   maxt_out = append(maxt_out,max(airt[daily:(daily+steps_in_day-1)]))
+                   mint_out = append(mint_out,min(airt[daily:(daily+steps_in_day-1)]))
+                   avgTemp_out = append(avgTemp_out,mean(airt[daily:(daily+steps_in_day-1)]))
+                   avgTmax_out = append(avgTmax_out,max(airt[daily:(daily+steps_in_day-1)]))
                }
                # Short wave radiation (W.m-2)
-               swrad_out=append(swrad_out,sum(swrad[daily:(daily+steps_in_day-1)]))
+               swrad_out = append(swrad_out,sum(swrad[daily:(daily+steps_in_day-1)]))
                # precipitation mean over time period (kgH2O.m-2.s-1)
-               precip_out=append(precip_out,mean(precip[daily:(daily+steps_in_day-1)]))
+               precip_out = append(precip_out,mean(precip[daily:(daily+steps_in_day-1)]))
                # wind speed mean over time period (m/s)
-               wind_spd_out=append(wind_spd_out,mean(wind_spd[daily:(daily+steps_in_day-1)]))
+               wind_spd_out = append(wind_spd_out,mean(wind_spd[daily:(daily+steps_in_day-1)]))
                # cumulative precip lagged over a given number of days, in this case 42
-               co2_out=append(co2_out,mean(co2[daily:(daily+steps_in_day-1)]))
-               vpd_out=append(vpd_out,mean(vpd[daily:(daily+steps_in_day-1)]))
+               co2_out = append(co2_out,mean(co2[daily:(daily+steps_in_day-1)]))
+               vpd_out = append(vpd_out,mean(vpd[daily:(daily+steps_in_day-1)]))
          } # looping within days
 
          # remove initial values from datasets
-         swrad_out=swrad_out[-1] ; maxt_out=maxt_out[-1]
-         mint_out=mint_out[-1]   ; co2_out=co2_out[-1]
-         precip_out=precip_out[-1]
-         avgTemp_out=avgTemp_out[-1]
-         avgTmax_out=avgTmax_out[-1]
-         vpd_out=vpd_out[-1] ; wind_spd_out=wind_spd_out[-1]
+         swrad_out = swrad_out[-1] ; maxt_out = maxt_out[-1]
+         mint_out = mint_out[-1]   ; co2_out = co2_out[-1]
+         precip_out = precip_out[-1]
+         avgTemp_out = avgTemp_out[-1]
+         avgTmax_out = avgTmax_out[-1]
+         vpd_out = vpd_out[-1] ; wind_spd_out = wind_spd_out[-1]
 
       } else {
 
@@ -166,7 +167,8 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       # rolling averaged for GSI
       avg_days = 30 # assume that the first 30 days are just the actual values, We expect this should result in a small error only
       # create photoperiod information; add 30 days to the output
-      photoperiod_out = calc_photoperiod_sec(latlon_wanted[1],c(seq(365,(365-(avg_days-2)),-1),doy))
+      photoperiod_out = calc_photoperiod_sec(latlon_wanted[1],c(seq(365-(avg_days+1),365,1),doy))
+      
       # now take the daily values and turn them into rolling 30 day averages
       photoperiod_out = rollapply(photoperiod_out,avg_days,mean,na.rm=FALSE)
       avgTmax_out = rollapply(avgTmax_out,avg_days,mean,na.rm=FALSE)
@@ -202,12 +204,12 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
 
       avg_days = 30 # assume that the first 30 days are just the actual values
       # create photoperiod information; add 30 days to the output
-      photoperiod_out = calc_photoperiod_sec(latlon_wanted[1],c(seq(365,(365-(avg_days-2)),-1),met_in$doy))
+      photoperiod_out = calc_photoperiod_sec(latlon_wanted[1],c(seq((365-(avg_days-2)),365,1),met_in$doy))
 
       # now take the daily values and turn them into rolling 30 day averages
-      photoperiod_out = rollapply(photoperiod_out,avg_days,mean,na.rm=FALSE)
-      avgTmax_out = rollapply(avgTmax_out,avg_days,mean,na.rm=FALSE)
-      vpd_lagged_out = rollapply(vpd_out,avg_days,mean,na.rm=FALSE)
+      photoperiod_out = rollapply(photoperiod_out, avg_days, mean, na.rm=FALSE)
+      avgTmax_out = rollapply(avgTmax_out, avg_days, mean, na.rm=FALSE)
+      vpd_lagged_out = rollapply(vpd_out, avg_days, mean, na.rm=FALSE)
 
       # make adjustments to the time series should we have read in an extra year for GSI calculation
       if (met_in$extra_year) {
@@ -237,7 +239,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       if (length(timestep_days) == 1 & timestep_days[1] == 1) {
 
           # well actually we do nothing
-          run_day_selector=seq(1,length(met_in$run_day),timestep_days)
+          run_day_selector = seq(1,length(met_in$run_day),timestep_days)
 
       } else {
 

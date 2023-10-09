@@ -52,7 +52,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
     modelid = 13
   } else if (modelname == "DALEC.C3.M1.#") {
     modelid = 14
-  } else if (modelname == "DALEC.A1.C3.H2.M1.#") {
+  } else if (modelname == "DALEC.A3.C3.H2.M1.#") {
     modelid = 15
   } else if (modelname == "DALEC.M2.#") {
     modelid = 16
@@ -119,9 +119,9 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   }
 
   MET[,1] = met$run_day
-  MET[,2] = met$mint  ; if (min(met$mint) < -200) {stop('mint error in binary_data') ; print(summary(met$mint))} # Celcius
-  MET[,3] = met$maxt  ; if (min(met$maxt) < -200) {stop('maxt error in binary_data')} # Celcius
-  MET[,4] = met$swrad ; if (min(met$swrad) < 0) {stop('RAD error in binary_data')} # MJ/m2/day
+  MET[,2] = met$mint  ; if (min(met$mint) < -200) {print(summary(met$mint)) ; stop('mint error in binary_data')} # Celcius
+  MET[,3] = met$maxt  ; if (min(met$maxt) < -200) {print(summary(met$maxt)) ; stop('maxt error in binary_data')} # Celcius
+  MET[,4] = met$swrad ; if (min(met$swrad) < 0) {print(summary(met$swrad)) ; stop('RAD error in binary_data')} # MJ/m2/day
   MET[,5] = met$co2#+200 # ppm
   MET[,6] = met$doy
   MET[,7] = pmax(0,met$precip) # kgH2O/m2/s
@@ -273,19 +273,23 @@ DATA_TEMP = t(cbind(MET,OBSMAT))
       # Other priors
       OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
   } else if (modelname == "DALEC.C3.M1.#") {
-      PARPRIORS[2] =0.46                   ; PARPRIORUNC[2]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       PARPRIORS[11]=16.9                   ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+      PARPRIORS[13]=0.21875                ; PARPRIORUNC[13]=0.01 # Respiratory costs of labile transfe
       PARPRIORS[12]=OBS$plant              ; PARPRIORUNC[12]=OBS$plant_range
       PARPRIORS[15]=OBS$harvest            ; PARPRIORUNC[15]=OBS$harvest_range
+      #PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc
       PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc
       PARPRIORS[19]=OBS$Cfol_initial       ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
       PARPRIORS[20]=OBS$Croots_initial     ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
       PARPRIORS[21]=OBS$Cwood_initial      ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
       PARPRIORS[22]=OBS$Clit_initial       ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
       PARPRIORS[23]=OBS$Csom_initial       ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
-  } else if (modelname == "DALEC.A1.C3.H2.M1.#") {
-      PARPRIORS[2] =0.46                   ; PARPRIORUNC[2]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+      PARPRIORS[35]=0.99                   ; PARPRIORUNC[35]=0.1 # labile turnover rate (/day)
+      # Other priors
+      OTHERPRIORS[2] = 0.46                ; OTHERPRIORUNC[2]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+   } else if (modelname == "DALEC.A3.C3.H2.M1.#") {
       PARPRIORS[11]=0.2764618              ; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
+      PARPRIORS[13]=0.21875                ; PARPRIORUNC[13]=0.01 # Respiratory costs of labile transfer
       PARPRIORS[12]=OBS$plant              ; PARPRIORUNC[12]=OBS$plant_range
       PARPRIORS[15]=OBS$harvest            ; PARPRIORUNC[15]=OBS$harvest_range
       PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc
@@ -294,6 +298,9 @@ DATA_TEMP = t(cbind(MET,OBSMAT))
       PARPRIORS[21]=OBS$Cwood_initial      ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
       PARPRIORS[22]=OBS$Clit_initial       ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
       PARPRIORS[23]=OBS$Csom_initial       ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
+      PARPRIORS[35]=0.99                   ; PARPRIORUNC[35]=0.1 # labile turnover rate (/day)
+      # Other priors
+      OTHERPRIORS[1] = 0.46                ; OTHERPRIORUNC[1]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
   } else if (modelname == "DALEC_1005") {
       PARPRIORS[2] =0.46                   ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       PARPRIORS[11]=16.9                   ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)

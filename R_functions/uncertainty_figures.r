@@ -1173,31 +1173,6 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 
    } # harvest
 
-   # Total ecosystem harvested C (gC/m2/day)
-   if (exists(x = "grid_output", where = states_all)) {
-
-       # structure needed by function is dim=c(time,iter)
-       # flip it to get the right shape
-       var=t(states_all$canopyage_days)
-
-       ymax=quantile(as.vector(var), prob=c(0.999), na.rm=TRUE)
-       jpeg(file=paste(PROJECT$figpath,"timeseries_CanopyAge_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
-            width=7200, height=4000, res=280, quality=100)
-       # now create the plotting area
-       par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,ymax), cex=0.8,
-            ylab="Mean Canopy Age (days)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
-            main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
-       axis(1, at=time_vector[seq(1,length(time_vector),interval)],labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
-       # add the confidence intervals
-       plotconfidence(var)
-       # calculate and draw the median values, could be mean instead or other
-       lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), lwd=1, col="red")
-
-       dev.off()
-
-   } # canopy age
-
    # Ecosystem fire C emissions (gC/m2/day)
    if (exists(x = "fire_gCm2day", where = states_all)) {
 
