@@ -275,7 +275,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     }
     # Assumed uncertainty structure as agreed with Anthony Bloom
     # NOTE minimum uncertainty bound irrespective of the dataset estimates
-    Cwood_inc_unc[Cwood_inc_unc >= 0] = pmax(0.1,sqrt(Cwood_inc_unc[Cwood_inc_unc >= 0]**2 + (0.1*mean(Cwood_inc_unc[Cwood_inc_unc >= 0]))**2))
+    Cwood_inc_unc[Cwood_inc_unc >= 0] = pmax(0.1,sqrt(Cwood_inc_unc[Cwood_inc_unc >= 0]**2 + (0.1*mean(Cwood_inc[Cwood_inc_unc >= 0]))**2))
 
     ###
     ## Get some Wood natural mortality information (gC/m2/day; time series)
@@ -320,7 +320,37 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     }
     # Assumed uncertainty structure as agreed with Anthony Bloom
     # NOTE minimum uncertainty bound irrespective of the dataset estimates
-    Cwood_mortality_unc[Cwood_mortality_unc >= 0] = pmax(0.1,sqrt(Cwood_mortality_unc[Cwood_mortality_unc >= 0]**2 + (0.1*mean(Cwood_mortality_unc[Cwood_mortality_unc >= 0]))**2))
+    Cwood_mortality_unc[Cwood_mortality_unc >= 0] = pmax(0.1,sqrt(Cwood_mortality_unc[Cwood_mortality_unc >= 0]**2 + (0.1*mean(Cwood_mortality[Cwood_mortality_unc >= 0]))**2))
+
+    ###
+    ## Get some foliage to litter flux information (gC/m2/day; time series)
+    ###
+
+    if (foliage_to_litter_source == "site_specific") {
+        infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
+        foliage_to_litter=read_site_specific_obs("foliage_to_litter_gCm2day",infile)
+        foliage_to_litter_unc=read_site_specific_obs("foliage_to_litter_unc_gCm2day",infile)
+        foliage_to_litter_lag=read_site_specific_obs("foliage_to_litter_lag_tstep",infile) # in model time steps
+        # Has uncertainty information been provided?
+        if (length(foliage_to_litter_unc) == 1) {
+            # on the other hand if not then we have no uncertainty info, so use default
+            foliage_to_litter_unc = rep(-9999,times = length(foliage_to_litter))
+            foliage_to_litter_unc[which(foliage_to_litter > 0)] = 0.25 * foliage_to_litter[which(foliage_to_litter > 0)]
+        }
+        # Has lag information been provided
+        if (length(foliage_to_litter_lag) == 1) {
+            # on the other hand if not then we have no uncertainty info, so use default
+            foliage_to_litter_lag = rep(-9999,times = length(foliage_to_litter))
+            foliage_to_litter_lag[which(foliage_to_litter > 0)] = 1 # assume applies to current time step only
+        }
+    } else {
+        # assume no data available
+        foliage_to_litter = -9999 ; foliage_to_litter_unc = -9999 ; foliage_to_litter_lag = -9999
+    }
+    # Assumed uncertainty structure as agreed with Anthony Bloom
+    # NOTE minimum uncertainty bound irrespective of the dataset estimates
+    foliage_to_litter_unc[foliage_to_litter_unc >= 0] = pmax(0.1,sqrt(foliage_to_litter_unc[foliage_to_litter_unc >= 0]**2 + (0.1*mean(foliage_to_litter[foliage_to_litter_unc >= 0]))**2))
+
 
     ###
     ## Get some GPP information (time series; gC/m2/day)
@@ -860,6 +890,34 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     # NOTE minimum uncertainty bound irrespective of the dataset estimates
     #lca_unc[lca_unc >= 0] = pmax(10,sqrt(lca_unc[lca_unc >= 0]**2 + (0.1*mean(lca[lca > 0]))**2))
 
+
+    ###
+    ## Get some prior info on fraction of Cwood belowground as course roots (fraction) 
+    ###
+
+    if (frac_Cwood_coarse_root_source == "site_specific") {
+        infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
+        frac_Cwood_coarse_root_prior=read_site_specific_obs("frac_Cwood_coarse_root_prior",infile)
+        frac_Cwood_coarse_root_prior_unc=read_site_specific_obs("frac_Cwood_coarse_root_prior_unc",infile)
+    } else {
+        # assume no data available
+        frac_Cwood_coarse_root_prior = -9999 ; frac_Cwood_coarse_root_prior_unc = -9999
+    }
+
+
+    ###
+    ## Get minimum LWP (MPa) information 
+    ###
+
+    if (minLWP_source == "site_specific") {
+        infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
+        minLWP=read_site_specific_obs("minLWP_MPa",infile)
+        minLWP_unc=read_site_specific_obs("minLWP_unc_MPa",infile)
+    } else {
+        # assume no data available
+        minLWP = -9999 ; minLWP_unc = -9999
+    }
+
     # return output now
     return(list(LAT = latlon_wanted[1], LAI = lai, LAI_unc = lai_unc, GPP = GPP, GPP_unc = GPP_unc, Fire = Fire, Fire_unc = Fire_unc
                ,Evap = Evap, Evap_unc = Evap_unc, NEE = NEE, NEE_unc = NEE_unc, Reco = Reco, Reco_unc = Reco_unc
@@ -878,7 +936,10 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
                ,SWE = SWE, SWE_unc = SWE_unc, soilwater = soilwater, soilwater_unc = soilwater_unc, nbe = nbe, nbe_unc = nbe_unc
                ,Cwood_potential = Cwood_potential, Cwood_potential_unc = Cwood_potential_unc, lca = lca, lca_unc = lca_unc
                ,Cwood_inc = Cwood_inc, Cwood_inc_unc = Cwood_inc_unc, Cwood_inc_lag = Cwood_inc_lag
-               ,Cwood_mortality = Cwood_mortality, Cwood_mortality_unc = Cwood_mortality_unc, Cwood_mortality_lag = Cwood_mortality_lag))
+               ,Cwood_mortality = Cwood_mortality, Cwood_mortality_unc = Cwood_mortality_unc, Cwood_mortality_lag = Cwood_mortality_lag
+               ,foliage_to_litter = foliage_to_litter, foliage_to_litter_unc = foliage_to_litter_unc, foliage_to_litter_lag = foliage_to_litter_lag
+               ,frac_Cwood_coarse_root_prior = frac_Cwood_coarse_root_prior, frac_Cwood_coarse_root_prior_unc = frac_Cwood_coarse_root_prior_unc
+               ,minLWP = minLWP, minLWP_unc = minLWP_unc))
 
 
 } # end function extract_obs

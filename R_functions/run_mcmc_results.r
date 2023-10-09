@@ -638,6 +638,11 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
                   grid_output$mean_total_drainage_kgH2Om2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
                   grid_output$total_drainage_kgH2Om2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               }
+              if (exists(x = 'LWP_MPa', where = site_output)){
+                  # Leaf water potential
+                  grid_output$LWP_MPa = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+                  grid_output$mean_LWP_MPa = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              }
           }
           # Snow specific
           if (exists(x = "snow_kgH2Om2", where = site_output)) {
@@ -1031,7 +1036,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 
       # Load into the grid_output object
       grid_output = post_process_into_grid(grid_output,site_output_all,PROJECT)
-      
+
       # update the user
       print("...writing combined grid_output to file")
 
