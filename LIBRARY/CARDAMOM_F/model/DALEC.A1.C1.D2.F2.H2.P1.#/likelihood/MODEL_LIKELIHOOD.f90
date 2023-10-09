@@ -2734,7 +2734,8 @@ module model_likelihood_module
     return
 
   end function log_scale_likelihood
-  !
-  !------------------------------------------------------------------
-  !
+
+!
+!------------------------------------------------------------------
+!
 end module model_likelihood_module

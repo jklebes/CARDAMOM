@@ -969,7 +969,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        mLWP =  wSWP - transpiration * Reff
        LWP_time(n) = mLWP
        ! Store in POOLS object
-       FLUXES(n,46) = mLWP
+       !FLUXES(n,46) = mLWP
        !print*,"C cycle update"
        ! temprate (i.e. temperature modified rate of metabolic activity))
        FLUXES(n,2) = exp(pars(10)*0.5d0*(met(3,n)+met(2,n)))
