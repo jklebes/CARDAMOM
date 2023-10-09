@@ -793,7 +793,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
           # Return the flag and allow the job to move on
           return(parameters)
       }
-
+      
       # load the met data for each site
       drivers = read_binary_file_format(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep=""))
 ## HACK to remove CO2 effect
@@ -821,7 +821,7 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
           # Determine how many ensemble members are within the observational uncertainties
           # of the calibration datasets
           states_all = assess_ensemble_fit_to_calibration_data(states_all,drivers,PROJECT)
-          
+
       } # DALEC model or not?
 
       # pass to local variable for saving

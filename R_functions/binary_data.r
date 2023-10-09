@@ -203,7 +203,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   OBSMAT[,43] = OBS$foliage_to_litter        # Mean litter flux over lag period (gC/m2/day)
   OBSMAT[,44] = OBS$foliage_to_litter_unc    # Mean litter flux varince
   OBSMAT[,45] = OBS$foliage_to_litter_lag    # Lag period over which to average (steps)
-DATA_TEMP = t(cbind(MET,OBSMAT))
+  DATA_TEMP = t(cbind(MET,OBSMAT))
 
   # STATIC DATA (1-50)
   # Model ID      = static_data[1]; DALEC_CDEA, DALEC.A1.C2.D2.F2.H2.P4.R2. etc
@@ -287,7 +287,7 @@ DATA_TEMP = t(cbind(MET,OBSMAT))
       PARPRIORS[35]=0.99                   ; PARPRIORUNC[35]=0.1 # labile turnover rate (/day)
       # Other priors
       OTHERPRIORS[2] = 0.46                ; OTHERPRIORUNC[2]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
-   } else if (modelname == "DALEC.A3.C3.H2.M1.#") {
+  } else if (modelname == "DALEC.A3.C3.H2.M1.#") {
       PARPRIORS[11]=0.2764618              ; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
       PARPRIORS[13]=0.21875                ; PARPRIORUNC[13]=0.01 # Respiratory costs of labile transfer
       PARPRIORS[12]=OBS$plant              ; PARPRIORUNC[12]=OBS$plant_range

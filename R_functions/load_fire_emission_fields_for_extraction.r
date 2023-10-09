@@ -79,8 +79,8 @@ load_fire_emission_fields_for_extraction<-function(latlon_in,fire_source,start_y
                        # Check whether the target and actual analyses have the same CRS
                        if (compareGeom(var1,target) == FALSE) {
                            # Resample to correct grid
-                           var1 = resample(var1, target, method="ngb") ; gc() ; removeTmpFiles()
-                           var2 = resample(var2, target, method="ngb") ; gc() ; removeTmpFiles()
+                           var1 = resample(var1, target, method="ngb") ; gc() 
+                           var2 = resample(var2, target, method="ngb") ; gc()
                        }
                        # Extend the extent of the overall grid to the analysis domain
                        var1 = extend(var1,cardamom_ext) ; var2 = extend(var2,cardamom_ext)
@@ -93,8 +93,8 @@ load_fire_emission_fields_for_extraction<-function(latlon_in,fire_source,start_y
                            # Create raster with the target resolution
                            target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
                            # Resample to correct grid
-                           var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
-                           var2 = resample(var2, target, method="bilinear") ; gc() ; removeTmpFiles()
+                           var1 = resample(var1, target, method="bilinear") ; gc() 
+                           var2 = resample(var2, target, method="bilinear") ; gc()
                        } # Aggrgeate to resolution
 
                        if (lat_done == FALSE) {

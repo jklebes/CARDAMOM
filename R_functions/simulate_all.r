@@ -262,7 +262,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$NPP_StorageOrgan_fraction = NPP_fraction[,5]
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
-    } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P4.R2.#") {
+  } else if (model_name == "DALEC.A1.C2.D2.F2.H2.P4.R2.#") {
     output_dim = 62 ; MTT_dim = 7 ; SS_dim = 7
     # Load the required dalec shared object
     dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))

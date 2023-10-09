@@ -79,8 +79,8 @@ load_wood_productivity_maps_for_extraction<-function(Cwood_inc_source,cardamom_e
                  # Check whether the target and actual analyses have the same CRS
                  if (compareGeom(Cwood_increment,target) == FALSE) {
                      # Resample to correct grid
-                     Cwood_increment = resample(Cwood_increment, target, method="ngb") ; gc() ; removeTmpFiles()
-                     Cwood_increment_uncertainty = resample(Cwood_increment_uncertainty, target, method="ngb") ; gc() ; removeTmpFiles()
+                     Cwood_increment = resample(Cwood_increment, target, method="ngb") ; gc() 
+                     Cwood_increment_uncertainty = resample(Cwood_increment_uncertainty, target, method="ngb") ; gc() 
                  }
                  # Extend the extent of the overall grid to the analysis domain
                  Cwood_increment = extend(Cwood_increment,cardamom_ext) ; Cwood_increment_uncertainty = extend(Cwood_increment_uncertainty,cardamom_ext)
@@ -96,8 +96,8 @@ load_wood_productivity_maps_for_extraction<-function(Cwood_inc_source,cardamom_e
                       target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
 
                       # Resample to correct grid
-                      Cwood_increment = resample(Cwood_increment, target, method="bilinear") ; gc() ; removeTmpFiles()
-                      Cwood_increment_uncertainty = resample(Cwood_increment_uncertainty, target, method="bilinear") ; gc() ; removeTmpFiles()
+                      Cwood_increment = resample(Cwood_increment, target, method="bilinear") ; gc() 
+                      Cwood_increment_uncertainty = resample(Cwood_increment_uncertainty, target, method="bilinear") ; gc() 
 
                  } # Aggrgeate to resolution
 

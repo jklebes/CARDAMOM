@@ -115,8 +115,8 @@ load_fapar_fields_for_extraction<-function(latlon_in,fapar_source,years_to_load,
                         target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
                         # Resample to correct grid.
                         # Probably should be done via aggregate function to allow for correct error propogation
-                        var1 = resample(var1, target, method="bilinear") ; gc() ; removeTmpFiles()
-                        var2 = resample(var2, target, method="bilinear") ; gc() ; removeTmpFiles()
+                        var1 = resample(var1, target, method="bilinear") ; gc() 
+                        var2 = resample(var2, target, method="bilinear") ; gc()
 
                     } # Aggrgeate to resolution
 
