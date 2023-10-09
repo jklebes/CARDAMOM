@@ -210,7 +210,7 @@ module cardamom_io
         ! ID = 29 -DALEC.A1.C1.D2.F2.H3.P1.#
         DATAin%nopools = 7
         DATAin%nopars = 33
-        DATAin%nofluxes = 46
+        DATAin%nofluxes = 45
     else if (DATAin%ID == 30) then
         ! ID = 30 - DALEC.A3.C1.D2.F2.H2.P1.#
         DATAin%nopools = 7

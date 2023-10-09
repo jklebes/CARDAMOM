@@ -12,7 +12,7 @@ program cardamom_framework
  use MHMCMC_StressTests, only: StressTest_likelihood, StressTest_sublikelihood, prepare_for_stress_test
  use model_likelihood_module, only: model_likelihood, &
                                     find_edc_initial_values, &
-                                    sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood, log_model_likelihood_dtm
+                                    sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood!, log_model_likelihood_dtm
 
  !!!!!!!!!!!
  ! Authorship contributions
@@ -127,6 +127,7 @@ program cardamom_framework
      ! read input data (DATAin located in module)
      call read_pari_data(infile)
  end if
+
  ! load module variables needed for restart check
  ! NOTE: THIS MUST HAPPEN BEFORE CHECKING FOR RESTART
  call read_options(solution_wanted,freq_print,freq_write,outfile)
@@ -344,8 +345,8 @@ program cardamom_framework
          call MHMCMC(1d0,model_likelihood,sqrt_model_likelihood)
      else if (cost_func_scaling_dble == 3) then
          call MHMCMC(1d0,model_likelihood,log_model_likelihood)
-     else if (cost_func_scaling_dble == 4) then
-         call MHMCMC(1d0,model_likelihood,log_model_likelihood_dtm)
+     !else if (cost_func_scaling_dble == 4) then
+     !    call MHMCMC(1d0,model_likelihood,log_model_likelihood_dtm)
      end if ! cost_func_scaling_dble == 
      
      ! Let the user know we are done
@@ -355,5 +356,12 @@ program cardamom_framework
 
  ! tidy up by closing all files
  call close_output_files
+
+ ! Final message to the user
+ write(*,*)"==========================================================="
+ write(*,*)"==== CARDAMOM analysis for the current chain completed ===="
+ write(*,*)"==========================================================="
+ write(*,*)"=========================Honestly=========================="
+
 
 end program cardamom_framework
