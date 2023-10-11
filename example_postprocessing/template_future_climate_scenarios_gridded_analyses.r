@@ -39,6 +39,7 @@ outdir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.
 # Currently available in GCEL are: "ssp119","ssp126","ssp434","ssp245","ssp370","ssp585"
 ssp_scenarios = c("ssp119","ssp126","ssp434","ssp245","ssp370","ssp585")
 
+
 # Which ESM to extract climate change from?
 # Currently available are: "MOHC" 
 ESM = "MOHC"
@@ -242,8 +243,8 @@ run_each_site_local<-function(site,ssp,PROJECT,outdir,original_end,cardamom_lat,
       states_all = post_process_dalec(states_all,parameters,drivers,PROJECT,site)
                                       
       # we want straight forward reduced dataset of common stocks and fluxes
-      #num_quantiles = c(0.025,0.05,0.25,0.5,0.75,0.95,0.975)
-      num_quantiles = c(0.025,0.5,0.975)
+      num_quantiles = c(0.025,0.05,0.25,0.5,0.75,0.95,0.975)
+      #num_quantiles = c(0.025,0.5,0.975)
       na_flag = TRUE
 
       # Run post-processing for gridded analysis

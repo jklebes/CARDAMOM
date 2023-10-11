@@ -296,7 +296,7 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
         # just to be sure enforce the projection to WGS-84
         target = rast(crs = crs(cardamom_ext), ext = ext(landsea), resolution = res(cardamom_ext))
         # Resample to correct grid
-        landsea = resample(landsea, target, method="ngb", na.rm=TRUE)
+        landsea = resample(landsea, target, method="near", na.rm=TRUE)
         # Clip to the extent of the CARDAMOM analysis
         landsea = crop(landsea, cardamom_ext)
 

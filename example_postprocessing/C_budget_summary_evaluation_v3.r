@@ -317,8 +317,8 @@ if (add_biomes == "ssa_wwf") {
 
     # Convert to a raster, assuming standad WGS84 grid
     biomes = data.frame(x = as.vector(biomes_long), y = as.vector(biomes_lat), z = as.vector(biomes))
-    biomes = rasterFromXYZ(biomes, crs = ("+init=epsg:4326"))
-
+    biomes = rast(biomes, crs = ("+init=epsg:4326"), type="xyz")
+              
     # Create raster with the target crs
     target = rast(crs = ("+init=epsg:4326"), ext = ext(biomes), resolution = res(biomes))
     # Check whether the target and actual analyses have the same CRS
