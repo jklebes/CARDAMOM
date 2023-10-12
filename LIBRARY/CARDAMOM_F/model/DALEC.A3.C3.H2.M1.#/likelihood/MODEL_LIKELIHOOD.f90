@@ -700,10 +700,10 @@ module model_likelihood_module
     if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(1:nodays,21)) < (1d0*dble(no_years)) ) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
     endif
-    ! Total hack to enforce a massive yield and find out what the parameters do
-    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,21)) < 300d0 ) then
-      EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
-    endif
+    !! Total hack to enforce a massive yield and find out what the parameters do
+    !if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,21)) < 300d0 ) then
+    !  EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
+    !endif
 
     ! We should assume all crops get somewhere close to maturity (2.0)
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(DS_time) < 1.9) then

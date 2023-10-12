@@ -47,8 +47,10 @@ module MODEL_PARAMETERS
     PI%parmax(1) = 0.01d0
 
     ! Fraction of GPP to autotrophic pool
+    ! NOTE: this does not include Ra due to C transfers 
+    ! after initial fixation
     PI%parmin(2) = 0.2d0
-    PI%parmax(2) = 0.8d0
+    PI%parmax(2) = 0.6d0
 
     ! max development rate (day-1) DS (0->1)
     PI%parmin(3) = 0.01d0 
@@ -56,12 +58,12 @@ module MODEL_PARAMETERS
     ! max development rate (day-1) DS (1->2)
     PI%parmin(4) = 0.01d0 
     PI%parmax(4) = 0.05d0
-
+ 
     ! turnover rate foliage (frac/day)
     PI%parmin(5) = 0.002737851d0 ! 365.25 days
-    PI%parmax(5) = 0.1428571d0   ! 7 days 
-
-    ! TOR wood* - 1% loss per year value (day-1)
+    PI%parmax(5) = 0.03571429d0  ! 28 days 
+    
+    ! TOR stem* - 1% loss per year value (day-1)
     PI%parmin(6) = 0.002737851d0 ! 365.25 days
     PI%parmax(6) = 0.1428571d0   ! 7 days 0.24d0
     ! maximum rate of foliar turnover (day-1) due to self-shading
@@ -81,7 +83,7 @@ module MODEL_PARAMETERS
     PI%parmax(10) = 9.126169d-05   !   30 years at 0oC !0.0001368926d0 !   20 years at 0oC
 
     ! log10 avg foliar N (gN.m-2)
-    PI%parmin(11) = -0.2218487d0 
+    PI%parmin(11) = -0.0001d0 !-0.2218487d0 
     PI%parmax(11) = 0.6382028d0
 
     ! sow day
@@ -110,7 +112,7 @@ module MODEL_PARAMETERS
     ! LMA
     PI%parmin(17) = 10d0 
     PI%parmax(17) = 100d0
-
+  
     !
     ! NOTE number order not consistent
     !
@@ -119,12 +121,12 @@ module MODEL_PARAMETERS
     PI%parmin(26) = (-1d0+273.15d0) 
     PI%parmax(26) = (10d0+273.15d0)  ! -10,10
     ! maximum temperature for development (oC)
-    PI%parmin(27) = (10d0+273.15d0) 
+    PI%parmin(27) = (15d0+273.15d0) 
     PI%parmax(27) = (36d0+273.15d0)   ! 20,42
     ! optimum temperature for development (oC)
     PI%parmin(28) = (10d0+273.15d0) 
-    PI%parmax(28) = (30d0+273.15d0)   ! 10,35
-
+    PI%parmax(28) = (25d0+273.15d0)   ! 10,35
+ 
     ! minimum temperature for vernalisation (oC)
     PI%parmin(29) = (-5.3d0+273.15d0)
     PI%parmax(29) = (-0.3d0+273.15d0)   ! -15,10
@@ -141,12 +143,12 @@ module MODEL_PARAMETERS
     ! photoperiod sensitivity
     PI%parmin(33) = 0.10d0 
     PI%parmax(33) = 0.35d0
-
+ 
     ! turnover rate of labile
     PI%parmin(34) = 1d-5
     PI%parmax(34) = 0.15d0
     ! turnover rate of autotrophic pool
-    PI%parmin(35) = 0.032d0 ! 31.25 days 
+    PI%parmin(35) = 0.50d0 !   2 days 
     PI%parmax(35) = 0.99d0  ! ~ 1 day
 
     ! BUCKET - root biomass needed to reach 50 % of max depth

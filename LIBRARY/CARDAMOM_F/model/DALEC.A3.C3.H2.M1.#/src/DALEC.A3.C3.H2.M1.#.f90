@@ -3479,7 +3479,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !!$      RDRDV = DR /( max( 0.1 , 2. - DS ) )
 !!$      RDRDV = RDRDV / 24. ! to get hourly senescence rate
        ! TLS: think the source of this equation needs to be found
-       RDRDV = turnover_rate_foliage * max(1d0, ( 1d0 / ( ( max( 2d0 - DS , 0.1d0 ) ) * 8d0 ) ) ** 2)
+       RDRDV = turnover_rate_foliage * min(1d0, ( 1d0 / ( ( max( 2d0 - DS , 0.1d0 ) ) * 8d0 ) ) ** 2)
     ENDIF
 
     ! Relative leaf death rate is the maximum value of the arguments RDRSH and
