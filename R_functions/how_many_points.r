@@ -258,8 +258,8 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
 
         # create raster, passing the raster values corresponding to the sovereign state
         # NOTE: the actual value assigned is linked the factor levels
-        landsea = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), fun = "last")
-        landsea_frac = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), fun = "last", cover=TRUE)
+        landsea = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), fun = "max")
+        landsea_frac = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), fun = "max", cover=TRUE)
 
         # Sometimes we want to simulate a particular country, which we will check now...
         country_match = factor(landmask$SOVEREIGNT) ; country_match = levels(country_match)
