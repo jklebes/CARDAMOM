@@ -558,7 +558,8 @@ module cardamom_io
 
     ! declare local variables
     integer :: nopars_dummy,subsample
-    integer :: a,b,c,d,e,f,g,h,i,j,k,l,m,o,p,q,r,u,v,w,x,y,z,day,s,t &
+    integer :: a,b,c,d,e,f,g,h,i,j,k,l,m,o,p,q,r,s,t,u,v,w,x,y,z,day &
+              ,aa, bb, cc &
               ,start      &
               ,finish     &
               ,totcol     & ! total number of columns (met + obs)
@@ -659,14 +660,13 @@ module cardamom_io
     ! it to allocate to the module variables
     allocate(DATAin%met(DATAin%nomet,DATAin%nodays),DATAin%GPP(DATAin%nodays)                    &
             ,DATAin%NEE(DATAin%nodays),DATAin%LAI(DATAin%nodays)                                 &
-            ,DATAin%Cwood_inc(DATAin%nodays),DATAin%Reco(DATAin%nodays)                          &
+            ,DATAin%Reco(DATAin%nodays)                                                          &
             ,DATAin%Cfol_stock(DATAin%nodays),DATAin%Cwood_stock(DATAin%nodays)                  &
             ,DATAin%Croots_stock(DATAin%nodays),DATAin%Clit_stock(DATAin%nodays)                 &
             ,DATAin%Csom_stock(DATAin%nodays),DATAin%Cagb_stock(DATAin%nodays)                   &
             ,DATAin%GPP_unc(DATAin%nodays)                                                       &
             ,DATAin%NEE_unc(DATAin%nodays),DATAin%LAI_unc(DATAin%nodays)                         &
-            ,DATAin%Cwood_mortality(DATAin%nodays)                                               &
-            ,DATAin%Cwood_inc_unc(DATAin%nodays),DATAin%Reco_unc(DATAin%nodays)                  &
+            ,DATAin%Reco_unc(DATAin%nodays)                                                      &
             ,DATAin%Cfol_stock_unc(DATAin%nodays),DATAin%Cwood_stock_unc(DATAin%nodays)          &
             ,DATAin%Croots_stock_unc(DATAin%nodays),DATAin%Clit_stock_unc(DATAin%nodays)         &
             ,DATAin%Csom_stock_unc(DATAin%nodays),DATAin%Cagb_stock_unc(DATAin%nodays)           &
@@ -677,8 +677,10 @@ module cardamom_io
             ,DATAin%NBE(DATAin%nodays),DATAin%NBE_unc(DATAin%nodays)                             &
             ,DATAin%Fire(DATAin%nodays),DATAin%Fire_unc(DATAin%nodays)                           &
             ,DATAin%fAPAR(DATAin%nodays),DATAin%fAPAR_unc(DATAin%nodays)                         &
-            ,DATAin%Cwood_mortality_unc(DATAin%nodays)                                           &
+            ,DATAin%Cwood_inc(DATAin%nodays),DATAin%Cwood_mortality(DATAin%nodays)               &
+            ,DATAin%Cwood_inc_unc(DATAin%nodays),DATAin%Cwood_mortality_unc(DATAin%nodays)       &
             ,DATAin%Cwood_inc_lag(DATAin%nodays),DATAin%Cwood_mortality_lag(DATAin%nodays)       &
+            ,DATAin%harvest(DATAin%nodays),DATAin%harvest_unc(DATAin%nodays),DATAin%harvest_lag(DATAin%nodays) &
             ,mettemp(DATAin%nomet),obstemp(DATAin%noobs))
 
     !! Zero all variables
@@ -705,6 +707,7 @@ module cardamom_io
     ! Observations which have an explicit lag, i.e. they represent the average of a to be specified period
     DATAin%Cwood_inc = 0d0 ; DATAin%Cwood_inc_unc = 0d0 ; DATAin%Cwood_inc_lag = 0
     DATAin%Cwood_mortality = 0d0 ; DATAin%Cwood_mortality_unc = 0d0 ; DATAin%Cwood_mortality_lag = 0
+    DATAin%harvest = 0d0 ; DATAin%harvest_unc = 0d0 ; DATAin%harvest_lag = 0
     ! Temorary arrays
     mettemp = 0d0 ; obstemp = 0d0
 
@@ -729,6 +732,7 @@ module cardamom_io
     DATAin%nNBE = 0
     DATAin%nFire = 0
     DATAin%nfAPAR = 0
+    DATAin%nharvest = 0
 
     ! work out some key variables
     ! DATAin%noobs corresponds to observations and uncertainties
@@ -861,7 +865,18 @@ module cardamom_io
        if (obstemp(40) > -9998d0) DATAin%nCwood_mortality = DATAin%nCwood_mortality+1
        DATAin%Cwood_mortality_unc(day) = obstemp(41)
        DATAin%Cwood_mortality_lag(day) = obstemp(42)
+
+       !! Other data are reserved for 43-50
+
+       ! C extracted due to harvest (gC/m2/day)
+       ! Represents the average across the lagged period
+       DATAin%harvest(day) = obstemp(49)
+       if (obstemp(49) > -9998d0) DATAin%nharvest = DATAin%nharvest+1
+       DATAin%harvest_unc(day) = obstemp(50)
+       DATAin%harvest_lag(day) = obstemp(51)
+
     end do ! day loop
+
 
     ! Count the total number of observations which are to be used.
     ! This total in some models may be used to inform on a dynamic weighting of the EDCs
@@ -870,7 +885,7 @@ module cardamom_io
                      + DATAin%nCwood_stock + DATAin%nCroots_stock + DATAin%nCsom_stock &
                      + DATAin%nClit_stock + DATAin%nCagb_stock + DATAin%nCcoarseroot_stock &
                      + DATAin%nCfolmax_stock + DATAin%nEvap + DATAin%nSWE + DATAin%nNBE &
-                     + DATAin%nCwood_mortality + DATAin%nFire + DATAin%nfAPAR
+                     + DATAin%nCwood_mortality + DATAin%nFire + DATAin%nfAPAR + DATAin%nharvest
 
     ! allocate to time step
     allocate(DATAin%deltat(DATAin%nodays)) ; DATAin%deltat = 0d0
@@ -912,11 +927,13 @@ module cardamom_io
     if (DATAin%nCwood_mortality > 0) allocate(DATAin%Cwood_mortalitypts(DATAin%nCwood_mortality))
     if (DATAin%nFire > 0) allocate(DATAin%Firepts(DATAin%nFire))
     if (DATAin%nfAPAR > 0) allocate(DATAin%fAPARpts(DATAin%nfAPAR))
+    if (DATAin%nharvest > 0) allocate(DATAin%harvestpts(DATAin%nharvest))
     ! we know how many observations we have and what they are, but now lets work
     ! out where they are in the data sets
     x = 1 ; y = 1 ; z = 1 ; b = 1 ; c = 1 ; d = 1 ; e = 1
     f = 1 ; g = 1 ; h = 1 ; i = 1 ; j = 1 ; k = 1 ; l = 1
-    m = 1 ; o = 1 ; s = 1 ; t = 1 ; u = 1 ; v = 1 ; w = 1
+    m = 1 ; o = 1 ; q = 1 ; s = 1 ; t = 1 ; u = 1 ; v = 1 
+    w = 1
     do day = 1, DATAin%nodays
        if (DATAin%GPP(day) > -9998d0) then
           DATAin%gpppts(b) = day ; b = b+1
@@ -974,6 +991,9 @@ module cardamom_io
        endif ! data present condition
        if (DATAin%fAPAR(day) > -9998d0) then
            DATAin%fAPARpts(u) = day ; u = u+1
+       endif ! data present condition
+       if (DATAin%harvest(day) > -9998d0) then
+        DATAin%harvestpts(q) = day ; q = q+1
        endif ! data present condition
     end do ! day loop
 

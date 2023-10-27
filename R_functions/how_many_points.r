@@ -8,10 +8,15 @@
 
 ## available_countries, a function to provide a list of the countries which can be specified in the site_name
 ## to define the CARDAMOM analysis area
-available_countries <-function() {
+available_countries <-function(cardamom_dir) {
 
-   # Load the shapefile CARDAMOM uses as default to define its land sea mask
-   landmask = shapefile("./R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx")
+   if (missing(cardamom_dir)) { 
+       # Load the shapefile CARDAMOM uses as default to define its land sea mask
+       landmask = shapefile("./R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx")
+   } else {
+       # Load the shapefile CARDAMOM uses as default to define its land sea mask
+       landmask = shapefile(paste(cardamom_dir,"/R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx",sep=""))
+   }
    # Extract the list of country names used in the mask
    country_match = factor(landmask$SOVEREIGNT) ; country_match = levels(country_match)
    # For consistency / allowability of using the country name in a file path,
@@ -153,27 +158,26 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
 #        data2=nc_open("/home/lsmallma/WORK/GREENHOUSE/LCM2007/LCM2007_with_lat_long.nc")
 #        lcm=ncvar_get(data2,"LCM2007")
         lcm = rast("/home/lsmallma/WORK/GREENHOUSE/LCM2007/Download_lcm2007_143707/lcm-2007-1km_397874/dominant_target_class/LCM2007_GB_1K_Dominant_TargetClass.tif")
-        # Create raster with the target crs (technically this bit is not required)
-        target = rast(crs = ("+init=epsg:4326"), ext = ext(var1), resolution = res(var1))
-        # Check whether the target and actual analyses have the same CRS
-        if (compareGeom(lcm,target) == FALSE) {
-            # Resample to correct grid
-            lcm = resample(lcm, target, method="ngb") ; gc()
-        }
+        # Reproject the crs from British National Grid to WGS-84
+        lcm = project(lcm, ("+init=epsg:4326"), method="near", align = FALSE) ; gc()
+        # Create target grid in the correct resolution for the analysis
+        target = rast(crs = ("+init=epsg:4326"), res = res(cardamom_ext), ext=ext(lcm))
         # Aggregate to approximately the right resolution
-        if (grid_type == "UK") {
-            target_ratio = max(0.1666667,(0.001*(resolution/111))) / res(lcm)
-        } else {
-            target_ratio = max(0.1666667,resolution) / res(lcm)
-        }
-        agg_fun = function(pixels, na.rm) {
-           if ((length(which(pixels > 0))/length(pixels)) > 0.2) {
-               return(modal(pixels[pixels > 0], na.rm=na.rm))
-           } else {
-               return(0)
-           }
-        }
-        lcm = aggregate(lcm, fact = floor(target_ratio), fun = agg_fun)
+#        if (grid_type == "UK") {
+#            target_ratio = max(0.1666667,(0.001*(resolution/111))) / res(lcm)
+#        } else {
+            target_ratio = res(cardamom_ext) / res(lcm)
+#        }
+#        # We need to aggregate assuming domiant or modal value
+#        # Define function for aggregation
+#        agg_fun = function(pixels, na.rm) {
+#           if ((length(which(pixels > 0))/length(pixels)) > 0.2) {
+#               return(modal(pixels[pixels > 0], na.rm=na.rm))
+#           } else {
+#               return(0)
+#           }
+#        }
+        lcm = terra::aggregate(lcm, fact = target_ratio, fun = "modal")
         # Extract lat / long
         lat_lcm = crds(lcm,df=TRUE, na.rm=FALSE)
         # Convert into arrays
@@ -248,7 +252,6 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
         # load global shape file for land sea mask
         landmask = vect("./R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx")
         # just to be sure enforce the projection to WGS-84
-        #landmask = spTransform(landmask,CRS("+init=epsg:4326"))
         landmask = project(landmask,"EPSG:4326")
         # Clip to the extent of the CARDAMOM analysis
         landmask = crop(landmask, cardamom_ext)
@@ -256,7 +259,7 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
         # create raster, passing the raster values corresponding to the sovereign state
         # NOTE: the actual value assigned is linked the factor levels
         landsea = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), fun = "last")
-        landsea_frac = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), fun = "last", getCover=TRUE)
+        landsea_frac = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), fun = "last", cover=TRUE)
 
         # Sometimes we want to simulate a particular country, which we will check now...
         country_match = factor(landmask$SOVEREIGNT) ; country_match = levels(country_match)

@@ -44,7 +44,9 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                                           ,Evap              & ! Evapotranspiration (kg.m-2.day-1)
                                           ,SWE               & ! Snow Water Equivalent (mm.day-1)
                                           ,NBE               & ! Net Biome Exchange (gC/m2/day)
-                                          ,fAPAR               ! Fraction of absorbed PAR by green vegetation
+                                          ,fAPAR             & ! Fraction of absorbed PAR by green vegetation
+                                          ,harvest             ! C extracted due to harvest activities (gC/m2/day)
+
 
       ! OBS uncertainties: obv these must be paired with OBS above
       double precision, allocatable, dimension(:) :: GPP_unc     & ! (gC/m2/day)
@@ -65,10 +67,11 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                                           ,Evap_unc              & ! (kg.m-2.day-1)
                                           ,SWE_unc               & ! (mm.day-1)
                                           ,NBE_unc               & ! gC/m2/day
-                                          ,fAPAR_unc               ! (0-1)
+                                          ,fAPAR_unc             & ! (0-1)
+                                          ,harvest_unc             ! gC/m2/day
 
-      ! OBS lagged period: obs these must be paired with OBS and their uncertainties above
-      double precision, allocatable, dimension(:) :: Cwood_inc_lag, Cwood_mortality_lag
+      ! OBS lagged period (model timestep): obs these must be paired with OBS and their uncertainties above
+      double precision, allocatable, dimension(:) :: Cwood_inc_lag, Cwood_mortality_lag, harvest_lag
 
       ! location of observations in the data stream
       integer, allocatable, dimension(:) :: gpppts                   & ! gpppts vector used in deriving ngpp
@@ -89,7 +92,8 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                                            ,Evappts                  & ! same for ecosystem evaportion
                                            ,SWEpts                   & ! same for snow water equivalent
                                            ,NBEpts                   & ! same for net biome exchange of CO2
-                                           ,fAPARpts                   ! same for fraction absorbed PAR
+                                           ,fAPARpts                 & ! same for fraction absorbed PAR
+                                           ,harvestpts                 ! same for C extracted due to harvest
 
       double precision :: nobs_scaler
 
@@ -113,7 +117,8 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                 ,nEvap                  & ! number of ecosystem evaporation observations
                 ,nSWE                   & ! number of snow water equivalent
                 ,nNBE                   & ! number of net biome exchange of CO2
-                ,nfAPAR                   ! number of fAPAR by green vegetation
+                ,nfAPAR                 & ! number of fAPAR by green vegetation
+                ,nharvest                 ! number of harvest observations
 
       ! saving computational speed by allocating memory to model output
       double precision, allocatable, dimension(:) :: M_GPP    & !

@@ -640,6 +640,7 @@ module model_likelihood_module
     integer :: n, nn, nnn, DIAG, y, PEDC, steps_per_month, nd, fl, &
                io_start, io_finish
     double precision :: infi !, EQF, etol
+    !double precision, dimension(nodays) :: tmp1, tmp2
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
                                             mean_pools, Fin, Fout, Rm, Rs, &
                                             Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
@@ -711,6 +712,26 @@ module model_likelihood_module
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_LAI) > 10d0 ) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
     end if
+
+!    ! Specific for dealing with needleleaf forests in the northern hemisphere.
+!    ! Assesses whether the mean LAI in the summer months (June, July, August)
+!    ! is greater than the mean outwith. This ensures the peak LAI in the season
+!    ! is summer time.
+!    if ((EDC2 == 1 .or. DIAG == 1)) then
+!        ! Set values for vectors used to select summer vs non-summer time points.
+!        tmp1 = 0d0 ; tmp2 = 1d0
+!        ! Where condition sets tmp1 == 1 for days of year for JJA
+!        where (met(6,:) > 150d0 .and. met(6,:) < 245d0) tmp1 = 1d0
+!        ! As tmp2 initially == 1, by subtracting tmp1 that means tmp2 will have value 0
+!        ! during summer but 1 elsewhere
+!        tmp2 = tmp2 - tmp1
+!        ! Which means we can filter the LAI timeseries by multiplying by tmp1 and tmp2.
+!        ! The sum of each of these variables is also conveniently the number of values to 
+!        ! be averaged over.
+!        if (sum(M_LAI * tmp1) / sum(tmp1) < sum(M_LAI * tmp2) / sum(tmp2)) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+!        end if 
+!    end if
 
     ! Equilibrium factor (in comparison with initial conditions)
 !    EQF = 10d0 ! TLS 06/11/2019 !10d0 ! JFE replaced 10 by 2 - 27/06/2018

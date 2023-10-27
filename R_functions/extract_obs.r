@@ -217,21 +217,57 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ## Get some crop management information (day)
     ###
 
-    if (ctessel_pft == 1 & crop_management_source == "sacks_crop_calendar") {
+    if (crop_management_source == "sacks_crop_calendar") {
         # could add other variables such as SOM (gC.m-2)
         crop_dates=extract_sacks_crop_info(spatial_type,resolution,grid_type,latlon_wanted,crop_man_all)
-        plant = crop_dates$plant ; plant_range = crop_dates$plant_range
-        harvest = crop_dates$harvest ; harvest_range = crop_dates$harvest_range
+        planting_doy = crop_dates$plant ; planting_doy_unc = crop_dates$plant_range
+        harvest_doy = crop_dates$harvest ; harvest_doy_unc = crop_dates$harvest_range
     } else if (crop_management_source == "site_specific") {
         infile=paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
-        plant = read_site_specific_obs("plant_initial",infile)
-        plant_range = read_site_specific_obs("plant_range_initial",infile)
-        harvest = read_site_specific_obs("harvest_initial",infile)
-        harvest_range = read_site_specific_obs("harvest_range_initial",infile)
+        planting_doy = read_site_specific_obs("planting_doy_initial",infile)
+        planting_doy_unc = read_site_specific_obs("planting_doy_unc_initial",infile)
+        harvest_doy = read_site_specific_obs("harvest_doy_initial",infile)
+        harvest_doy_unc = read_site_specific_obs("harvest_doy_unc_initial",infile)
     } else {
         # assume no data available
-        plant = 304 ; plant_range = 15 # days
-        harvest = 208 ; harvest_range = 15 # days
+        #planting_doy = 304 ; planting_doy_unc = 15 # days
+        #harvest_doy = 208 ; harvest_doy_unc = 15 # days
+        planting_doy = -9999 ; planting_doy_unc = -9999 # days
+        harvest_doy = -9999  ; harvest_doy_unc = -9999 # days
+    }
+
+    ###
+    ## Get some information on C extracted due to harvest
+    ## This can be either crop yield, grassland cutting or forest loss
+    ## Specificially related to C removed from the site (horizontal transfer), 
+    ## not that which remains as litter.
+    ## (gC/m2/day; time series)
+    ###
+
+    if (harvest_source == "site_specific") {
+        infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
+        harvest = read_site_specific_obs("harvest_gCm2day",infile)
+        harvest_unc = read_site_specific_obs("harvest_uncertainty_gCm2day",infile)
+        harvest_lag = read_site_specific_obs("harvest_lag_step",infile) # in model time steps
+        if (length(harvest) == 1) {
+            stop("Timeseries of harvest information was expected (harvest_source == 'site_specific') but not provided")
+        }
+        # Has uncertainty information been provided?
+        if (length(harvest_unc) == 1) {
+            # on the other hand if not then we have no uncertainty info, so use default
+            harvest_unc = rep(-9999,times = length(harvest))
+            harvest_unc[which(harvest > 0)] = 0.25 * harvest[which(harvest > 0)]
+        }
+        # Has lag information been provided
+        if (length(harvest_lag) == 1) {
+            # on the other hand if not then we have no uncertainty info, so use default
+            harvest_lag = rep(-9999,times = length(harvest))
+            harvest_lag[which(harvest > 0)] = 1 # assume applies to current time step only
+        }
+    } else {
+        harvest = -9999              # Extracted C due to harvest over lag period (gC/m2/day)
+        harvest_unc = -9999          # Extracted C due to harvest varince
+        harvest_lag = -9999          # Lag period over which to average (steps)
     }
 
     ###
@@ -874,11 +910,12 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
                ,Croots_initial_unc = Croots_initial_unc, Clit_initial = Clit_initial, Clit_initial_unc = Clit_initial_unc
                ,deforestation = deforestation, burnt_area = burnt_area, ctessel_pft = ctessel_pft, yield_class = yield_class
                ,age = age, forest_management = forest_management, top_sand = top_sand, bot_sand = bot_sand, top_clay = top_clay
-               ,bot_clay = bot_clay, plant = plant, plant_range = plant_range, harvest = harvest, harvest_range = harvest_range
+               ,bot_clay = bot_clay, planting_doy = planting_doy, planting_doy_unc = planting_doy, harvest_doy = harvest_doy, harvest_doy_unc = harvest_doy_unc
                ,SWE = SWE, SWE_unc = SWE_unc, soilwater = soilwater, soilwater_unc = soilwater_unc, nbe = nbe, nbe_unc = nbe_unc
                ,Cwood_potential = Cwood_potential, Cwood_potential_unc = Cwood_potential_unc, lca = lca, lca_unc = lca_unc
                ,Cwood_inc = Cwood_inc, Cwood_inc_unc = Cwood_inc_unc, Cwood_inc_lag = Cwood_inc_lag
-               ,Cwood_mortality = Cwood_mortality, Cwood_mortality_unc = Cwood_mortality_unc, Cwood_mortality_lag = Cwood_mortality_lag))
+               ,Cwood_mortality = Cwood_mortality, Cwood_mortality_unc = Cwood_mortality_unc, Cwood_mortality_lag = Cwood_mortality_lag
+               ,harvest = harvest, harvest_unc = harvest_unc, harvest_lag = harvest_lag))
 
 
 } # end function extract_obs

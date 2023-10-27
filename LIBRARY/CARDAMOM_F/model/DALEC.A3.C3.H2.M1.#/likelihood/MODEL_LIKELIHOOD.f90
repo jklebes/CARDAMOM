@@ -971,7 +971,7 @@ module model_likelihood_module
   !
   double precision function likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness
+    use carbon_model_mod, only: layer_thickness, DS_time
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -1214,6 +1214,19 @@ module model_likelihood_module
        likelihood = likelihood-tot_exp
     endif
 
+    ! C extracted due to harvest log-likelihood
+    if (DATAin%nharvest > 0) then
+      tot_exp = 0d0
+      do n = 1, DATAin%nharvest
+        dn = DATAin%harvestpts(n)
+        s = max(0,dn-nint(DATAin%harvest_lag(dn)))+1
+        ! Estimate the mean allocation to wood over the lag period
+        tmp_var = sum(DATAin%M_FLUXES(s:dn,21)) / DATAin%harvest_lag(dn)
+        tot_exp = tot_exp+((tmp_var-DATAin%harvest(dn)) / DATAin%harvest_unc(dn))**2
+      end do
+      likelihood = likelihood-tot_exp
+    endif
+
     !
     ! Curiously we will assess 'other' priors here, as the tend to have to do with model state derived values
     !
@@ -1248,6 +1261,17 @@ module model_likelihood_module
         likelihood = likelihood-tot_exp
     end if
 
+    ! Yield:GPP fraction is in this model a derived property
+    if (DATAin%otherpriors(8) > -9998) then
+        ! Accumulate yield and GPP over the growing period, based on DS >= 0.
+        ! This code assumes that the DS_time = DS occurs after DS is incremented and 
+        ! not after the management activities had reset DS to -1. If so this code will not work.
+        mid_state = 0d0 ; where (DS_time >= 0d0) mid_state = 1d0
+        tot_exp = sum(DATAin%M_FLUXES(:,21)*mid_state) / sum(DATAin%M_FLUXES(:,1)*mid_state)
+        tot_exp =  DATAin%otherpriorweight(8) * ((tot_exp-DATAin%otherpriors(8))/DATAin%otherpriorunc(8))**2
+        likelihood = likelihood-tot_exp
+    end if
+
     ! the likelihood scores for each observation are subject to multiplication
     ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
     ! multiple datastreams we apply this multiplication to the bulk likelihood
@@ -1267,7 +1291,7 @@ module model_likelihood_module
   !
   double precision function scale_likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness
+    use carbon_model_mod, only: layer_thickness, DS_time
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -1281,10 +1305,11 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, dn, no_years, y, s
     double precision :: tot_exp, tmp_var, infini, input, output
+    double precision, dimension(DATAin%nodays) :: mid_state
     double precision, allocatable :: mean_annual_pools(:)
 
     ! initial value
-    scale_likelihood = 0d0 ; infini = 0d0
+    scale_likelihood = 0d0 ; infini = 0d0 ; mid_state = 0d0
 
 ! Currently no distinction between NEE and NBE as fire is not simulated
 !    ! NBE Log-likelihood
@@ -1480,6 +1505,19 @@ module model_likelihood_module
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCsom_stock))
     endif
 
+    ! C extracted due to harvest log-likelihood
+    if (DATAin%nharvest > 0) then
+        tot_exp = 0d0
+        do n = 1, DATAin%nharvest
+           dn = DATAin%harvestpts(n)
+           s = max(0,dn-nint(DATAin%harvest_lag(dn)))+1
+           ! Estimate the mean allocation to wood over the lag period
+           tmp_var = sum(DATAin%M_FLUXES(s:dn,21)) / DATAin%harvest_lag(dn)
+           tot_exp = tot_exp+((tmp_var-DATAin%harvest(dn)) / DATAin%harvest_unc(dn))**2
+        end do
+        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nharvest))
+    endif
+
     !
     ! Curiously we will assess 'other' priors here, as the tend to have to do with model state derived values
     !
@@ -1514,6 +1552,17 @@ module model_likelihood_module
         scale_likelihood = scale_likelihood-tot_exp
     end if
 
+    ! Yield:GPP fraction is in this model a derived property
+    if (DATAin%otherpriors(8) > -9998) then
+        ! Accumulate yield and GPP over the growing period, based on DS >= 0.
+        ! This code assumes that the DS_time = DS occurs after DS is incremented and 
+        ! not after the management activities had reset DS to -1. If so this code will not work.
+        mid_state = 0d0 ; where (DS_time >= 0d0) mid_state = 1d0
+        tot_exp = sum(DATAin%M_FLUXES(:,21)*mid_state) / sum(DATAin%M_FLUXES(:,1)*mid_state)
+        tot_exp =  DATAin%otherpriorweight(8) * ((tot_exp-DATAin%otherpriors(8))/DATAin%otherpriorunc(8))**2
+        scale_likelihood = scale_likelihood-tot_exp
+    end if
+
     ! the likelihood scores for each observation are subject to multiplication
     ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
     ! multiple datastreams we apply this multiplication to the bulk likelihood
@@ -1533,7 +1582,7 @@ module model_likelihood_module
   !
   double precision function sqrt_scale_likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness
+    use carbon_model_mod, only: layer_thickness, DS_time
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -1547,10 +1596,11 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, dn, no_years, y, s
     double precision :: tot_exp, tmp_var, infini, input, output
+    double precision, dimension(DATAin%nodays) :: mid_state
     double precision, allocatable :: mean_annual_pools(:)
 
     ! initial value
-    sqrt_scale_likelihood = 0d0 ; infini = 0d0
+    sqrt_scale_likelihood = 0d0 ; infini = 0d0 ; mid_state = 0d0
 
 ! Currently no distinction between NEE and NBE as fire is not simulated
 !    ! NBE Log-likelihood
@@ -1746,6 +1796,19 @@ module model_likelihood_module
        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nCsom_stock)))
     endif
 
+    ! C extracted due to harvest log-likelihood
+    if (DATAin%nharvest > 0) then
+        tot_exp = 0d0
+        do n = 1, DATAin%nharvest
+           dn = DATAin%harvestpts(n)
+           s = max(0,dn-nint(DATAin%harvest_lag(dn)))+1
+           ! Estimate the mean allocation to wood over the lag period
+           tmp_var = sum(DATAin%M_FLUXES(s:dn,21)) / DATAin%harvest_lag(dn)
+           tot_exp = tot_exp+((tmp_var-DATAin%harvest(dn)) / DATAin%harvest_unc(dn))**2
+        end do
+        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nharvest))) 
+    endif
+
     !
     ! Curiously we will assess 'other' priors here, as the tend to have to do with model state derived values
     !
@@ -1780,6 +1843,17 @@ module model_likelihood_module
         sqrt_scale_likelihood = sqrt_scale_likelihood-tot_exp
     end if
 
+    ! Yield:GPP fraction is in this model a derived property
+    if (DATAin%otherpriors(8) > -9998) then
+        ! Accumulate yield and GPP over the growing period, based on DS >= 0.
+        ! This code assumes that the DS_time = DS occurs after DS is incremented and 
+        ! not after the management activities had reset DS to -1. If so this code will not work.
+        mid_state = 0d0 ; where (DS_time >= 0d0) mid_state = 1d0
+        tot_exp = sum(DATAin%M_FLUXES(:,21)*mid_state) / sum(DATAin%M_FLUXES(:,1)*mid_state)
+        tot_exp =  DATAin%otherpriorweight(8) * ((tot_exp-DATAin%otherpriors(8))/DATAin%otherpriorunc(8))**2
+        sqrt_scale_likelihood = sqrt_scale_likelihood-tot_exp
+    end if
+
     ! the likelihood scores for each observation are subject to multiplication
     ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
     ! multiple datastreams we apply this multiplication to the bulk likelihood
@@ -1799,7 +1873,7 @@ module model_likelihood_module
   !
   double precision function log_scale_likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness
+    use carbon_model_mod, only: layer_thickness, DS_time
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -1813,10 +1887,11 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, dn, no_years, y, s
     double precision :: tot_exp, tmp_var, infini, input, output
+    double precision, dimension(DATAin%nodays) :: mid_state
     double precision, allocatable :: mean_annual_pools(:)
 
     ! initial value
-    log_scale_likelihood = 0d0 ; infini = 0d0
+    log_scale_likelihood = 0d0 ; infini = 0d0 ; mid_state = 0d0
 
 ! Currently no distinction between NEE and NBE as fire is not simulated
 !    ! NBE Log-likelihood
@@ -1991,7 +2066,7 @@ module model_likelihood_module
     ! WARNING WARNING WARNING hack in place to estimate fraction of litter pool
     ! originating from surface pools
     if (DATAin%nClit_stock > 0) then
-       tot_exp = 0d0
+       tot_exp = 0d0   
        do n = 1, DATAin%nClit_stock
          dn = DATAin%Clit_stockpts(n)
          ! note that division is the uncertainty
@@ -2010,6 +2085,19 @@ module model_likelihood_module
          tot_exp = tot_exp+((DATAin%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2
        end do
        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nCsom_stock))))
+    endif
+
+    ! C extracted due to harvest log-likelihood
+    if (DATAin%nharvest > 0) then
+        tot_exp = 0d0
+        do n = 1, DATAin%nharvest
+           dn = DATAin%harvestpts(n)
+           s = max(0,dn-nint(DATAin%harvest_lag(dn)))+1
+           ! Estimate the mean allocation to wood over the lag period
+           tmp_var = sum(DATAin%M_FLUXES(s:dn,21)) / DATAin%harvest_lag(dn)
+           tot_exp = tot_exp+((tmp_var-DATAin%harvest(dn)) / DATAin%harvest_unc(dn))**2
+        end do
+        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nharvest)))) 
     endif
 
     !
@@ -2043,6 +2131,17 @@ module model_likelihood_module
     if (DATAin%otherpriors(4) > -9998) then
         tot_exp = sum(DATAin%M_FLUXES(:,19)) / sum(DATAin%MET(7,:) * 86400d0)
         tot_exp =  DATAin%otherpriorweight(4) * ((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
+        log_scale_likelihood = log_scale_likelihood-tot_exp
+    end if
+
+    ! Yield:GPP fraction is in this model a derived property
+    if (DATAin%otherpriors(8) > -9998) then
+        ! Accumulate yield and GPP over the growing period, based on DS >= 0.
+        ! This code assumes that the DS_time = DS occurs after DS is incremented and 
+        ! not after the management activities had reset DS to -1. If so this code will not work.
+        mid_state = 0d0 ; where (DS_time >= 0d0) mid_state = 1d0
+        tot_exp = sum(DATAin%M_FLUXES(:,21)*mid_state) / sum(DATAin%M_FLUXES(:,1)*mid_state)
+        tot_exp =  DATAin%otherpriorweight(8) * ((tot_exp-DATAin%otherpriors(8))/DATAin%otherpriorunc(8))**2
         log_scale_likelihood = log_scale_likelihood-tot_exp
     end if
 

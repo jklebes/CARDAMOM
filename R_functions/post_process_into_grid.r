@@ -97,6 +97,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            # Time varying pixel based (i.e. not within the grid) values with quantile based uncertainty for...
            # States
            grid_output$Ctotal_gCm2[n,,] = site_output$Ctotal_gCm2
+           grid_output$dCtotal_gCm2[n,,] = site_output$dCtotal_gCm2
            grid_output$lai_m2m2[n,,]    = site_output$lai_m2m2
            # Fluxes
            grid_output$nee_gCm2day[n,,]     = site_output$nee_gCm2day

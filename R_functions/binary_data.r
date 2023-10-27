@@ -152,7 +152,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   # Currently space for 18 time series of observation and its uncertainty.
   # Uncertainty is assumed to be the Gaussian variance in same units as the observation itself.
   # NOTE: that not all models are currently coded to be compatible with all observation streams.
-  OBSMAT = array(-9999.0,dim=c(length(met$run_day),42))
+  OBSMAT = array(-9999.0,dim=c(length(met$run_day),51))
   # Line makes the correct array size but with -9999 in place of all
   OBSMAT[,1] = OBS$GPP                    # GPP (gC/m2/day)
   OBSMAT[,2] = OBS$GPP_unc                # GPP variance (gC/m2/day)
@@ -203,6 +203,9 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   #OBSMAT[,46] = OBS$Cwood_net_inc         # Mean woody net increment over lag period (gC/m2/day)
   #OBSMAT[,47] = OBS$Cwood_net_inc_unc     # Mean woody net increment varince
   #OBSMAT[,48] = OBS$Cwood_net_inc_lag     # Lag period over which to average  (steps)
+  OBSMAT[,49] = OBS$harvest               # Extracted C due to harvest over lag period (gC/m2/day)
+  OBSMAT[,50] = OBS$harvest_unc           # Extracted C due to harvest varince
+  OBSMAT[,51] = OBS$harvest_lag           # Lag period over which to average  (steps)
   DATA_TEMP = t(cbind(MET,OBSMAT))
 
   # STATIC DATA (1-50)
@@ -275,8 +278,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   } else if (modelname == "DALEC.C3.M1.#") {
       PARPRIORS[11]=16.9                   ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
       PARPRIORS[13]=0.21875                ; PARPRIORUNC[13]=0.01 # Respiratory costs of labile transfe
-      PARPRIORS[12]=OBS$plant              ; PARPRIORUNC[12]=OBS$plant_range
-      PARPRIORS[15]=OBS$harvest            ; PARPRIORUNC[15]=OBS$harvest_range
+      PARPRIORS[12]=OBS$planting_doy       ; PARPRIORUNC[12]=OBS$planting_doy_unc
+      PARPRIORS[15]=OBS$harvest_doy        ; PARPRIORUNC[15]=OBS$harvest_doy_unc
       #PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc
       PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc
       PARPRIORS[19]=OBS$Cfol_initial       ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
@@ -286,12 +289,14 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[23]=OBS$Csom_initial       ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
       PARPRIORS[35]=0.99                   ; PARPRIORUNC[35]=0.1 # labile turnover rate (/day)
       # Other priors
-      OTHERPRIORS[2] = 0.46                ; OTHERPRIORUNC[2]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+      OTHERPRIORS[1] = 0.46                ; OTHERPRIORUNC[1]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+      OTHERPRIORS[8] = 0.38                ; OTHERPRIORUNC[8]=0.087 # Yield:GPP Winter Wheat ATEC experiment plus He et al., (2018), doi: 10.3390/rs10030372
+                                                                    # Values from He et al., Spring Wheat 0.24, Barley 0.42, Duram Wheat 0.22, Alfalfa 0.55, Pea 0.28, Maize 0.44
   } else if (modelname == "DALEC.A3.C3.H2.M1.#") {
       PARPRIORS[11]=0.2764618              ; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
       PARPRIORS[13]=0.21875                ; PARPRIORUNC[13]=0.01 # Respiratory costs of labile transfer
-      PARPRIORS[12]=OBS$plant              ; PARPRIORUNC[12]=OBS$plant_range
-      PARPRIORS[15]=OBS$harvest            ; PARPRIORUNC[15]=OBS$harvest_range
+      PARPRIORS[12]=OBS$planting_doy       ; PARPRIORUNC[12]=OBS$planting_doy_unc
+      PARPRIORS[15]=OBS$harvest_doy        ; PARPRIORUNC[15]=OBS$harvest_doy_unc
       PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc
       PARPRIORS[19]=OBS$Cfol_initial       ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
       PARPRIORS[20]=OBS$Croots_initial     ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -301,6 +306,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[35]=0.99                   ; PARPRIORUNC[35]=0.1 # labile turnover rate (/day)
       # Other priors
       OTHERPRIORS[1] = 0.46                ; OTHERPRIORUNC[1]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+      OTHERPRIORS[8] = 0.38                ; OTHERPRIORUNC[8]=0.087 # Yield:GPP Winter Wheat ATEC experiment plus He et al., (2018), doi: 10.3390/rs10030372
+                                                                    # Values from He et al., Spring Wheat 0.24, Barley 0.42, Duram Wheat 0.22, Alfalfa 0.55, Pea 0.28, Maize 0.44
   } else if (modelname == "DALEC_1005") {
       PARPRIORS[2] =0.46                   ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       PARPRIORS[11]=16.9                   ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)

@@ -1319,13 +1319,24 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # structure needed by function is dim=c(time,iter)
        # flip it to get the right shape
        var=t(states_all$harvest_gCm2day)
+       # pass observations driver
+       obs = drivers$obs[,49] ; obs_unc = drivers$obs[,50]
+       # filter -9999 to NA
+       filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
+       # Plotting code below does not allow for lags != 1,
+       # therefore we need to treat these as missing data for the purpose of plotting
+       obs[which(drivers$obs[,51] != 1)] = NA
+       obs_unc[which(drivers$obs[,51] != 1)] = NA
+       yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
+       if (length(which(is.na(obs) == FALSE)) > 0) {
+           yrange[2] = max(max(obs+obs_unc, na.rm=TRUE),yrange[2])
+       }
 
-       ymax=quantile(as.vector(var), prob=c(0.999), na.rm=TRUE)
        jpeg(file=paste(PROJECT$figpath,"timeseries_harvestedC_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=c(0,ymax), cex=0.8,ylab="Harvested C (gC/m2/day)",xlab="Time (Year)",
+       plot(rep(-9999,dim(var)[1]),xaxt="n", pch=16, ylim=yrange, cex=0.8,ylab="Harvested C (gC/m2/day)",xlab="Time (Year)",
        cex.lab=1.8, cex.axis=1.8, cex.main=1.8, main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],
             labels=round(year_vector[seq(1,length(time_vector),interval)], digits=0),tck=-0.02, padj=+0.15, cex.axis=1.9)
@@ -1333,6 +1344,12 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        plotconfidence(var)
        # calculate and draw the median values, could be mean instead or other
        lines(apply(var[1:(dim(var)[1]-1),],1,median,na.rm=TRUE), lwd=1, col="red")
+       # add the data if there is any which is not missing
+       if (length(which(is.na(obs))) != length(obs) ) {
+           # add the data on top
+           points(obs, pch=16, cex=0.8)
+           plotCI(obs,gap=0,uiw=obs_unc, col="black", add=TRUE, cex=1,lwd=2,sfrac=0.01,lty=1,pch=16)
+       }
 
        dev.off()
 
@@ -1406,6 +1423,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 
    	       # flip it to get the right shape
             var = t(get(list_variables[p], pos = states_all))
+            obs = rep(-9999, dim(var)[1])
             # Determine a reasonable y-axis range
             yrange = quantile(as.vector(var), prob=c(0.001,0.999))
             # Begin plotting

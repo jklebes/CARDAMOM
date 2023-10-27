@@ -85,6 +85,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                     # Get timing variable
                     doy_in = ncvar_get(data1, "doy")
                     # Extract spatial information
+# CONDITIONAL STATMENT TO DECIDE ON THE LAT LONG NAMES BEING LOOKED FOR...                    
                     lat_in = ncvar_get(data1, "lat") ; long_in = ncvar_get(data1, "lon")
                     # read the LAI observations
                     var1 = ncvar_get(data1, "LAI") # leaf area index (m2/m2)

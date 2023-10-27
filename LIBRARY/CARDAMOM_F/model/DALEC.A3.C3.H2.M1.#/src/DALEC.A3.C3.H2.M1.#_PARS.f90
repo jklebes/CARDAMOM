@@ -62,10 +62,10 @@ module MODEL_PARAMETERS
     ! turnover rate foliage (frac/day)
     PI%parmin(5) = 0.002737851d0 ! 365.25 days
     PI%parmax(5) = 0.03571429d0  ! 28 days 
-    
+
     ! TOR stem* - 1% loss per year value (day-1)
     PI%parmin(6) = 0.002737851d0 ! 365.25 days
-    PI%parmax(6) = 0.1428571d0   ! 7 days 0.24d0
+    PI%parmax(6) = 0.03571429d0  ! 28 days
     ! maximum rate of foliar turnover (day-1) due to self-shading
     PI%parmin(7) = 0.02380952d0  ! 42 days
     PI%parmax(7) = 0.07142857d0  ! 17 days
@@ -87,13 +87,13 @@ module MODEL_PARAMETERS
     PI%parmax(11) = 0.6382028d0
 
     ! sow day
-    PI%parmin(12) = 100d0 
-    PI%parmax(12) = 3650d0
+    PI%parmin(12) = 365.25d0 !100d0 
+    PI%parmax(12) = 4d0*365.25d0
 
     ! Respiratory cost of labile transfer (per gC.m-2 labile)
     ! Nominal assumption here is 21 %, i.e. this is otherwise 
     ! referred to as the growth respiration
-    PI%parmin(13) = 0.15d0 
+    PI%parmin(13) = 0.18d0 
     PI%parmax(13) = 0.25d0
 
     ! phenological heat units required for emergence
@@ -101,8 +101,8 @@ module MODEL_PARAMETERS
     PI%parmax(14) = 150d0
 
     ! harvest day
-    PI%parmin(15) = 15d0 
-    PI%parmax(15) = 365d0
+    PI%parmin(15) = 365.25d0     !15d0 
+    PI%parmax(15) = 4d0*365.25d0 !365d0
 
     ! plough day
     ! NOT CURRENTLY IN USE
@@ -119,44 +119,45 @@ module MODEL_PARAMETERS
 
     ! minimum temperature for development (oC)
     PI%parmin(26) = (-1d0+273.15d0) 
-    PI%parmax(26) = (10d0+273.15d0)  ! -10,10
+    PI%parmax(26) = ( 8d0+273.15d0)  ! -1,8
     ! maximum temperature for development (oC)
-    PI%parmin(27) = (15d0+273.15d0) 
-    PI%parmax(27) = (36d0+273.15d0)   ! 20,42
+    PI%parmin(27) = (18d0+273.15d0) 
+    PI%parmax(27) = (36d0+273.15d0)   ! 18,36
     ! optimum temperature for development (oC)
-    PI%parmin(28) = (10d0+273.15d0) 
-    PI%parmax(28) = (25d0+273.15d0)   ! 10,35
- 
+    PI%parmin(28) = ( 8d0+273.15d0) 
+    PI%parmax(28) = (22d0+273.15d0)   ! 8,22
+   
     ! minimum temperature for vernalisation (oC)
     PI%parmin(29) = (-5.3d0+273.15d0)
-    PI%parmax(29) = (-0.3d0+273.15d0)   ! -15,10
+    PI%parmax(29) = (-0.3d0+273.15d0)   ! -5,0
     ! maximum temperature for vernalisation (oC)
-    PI%parmin(30) = (12.7d0+273.15d0) 
-    PI%parmax(30) = (18.7d0+273.15d0)    ! 5,30
+    PI%parmin(30) = (12.0d0+273.15d0) 
+    PI%parmax(30) = (19.0d0+273.15d0)    ! 12,19
     ! optimum temperature for vernalisation (oC)
-    PI%parmin(31) = (2.9d0+273.15d0) 
-    PI%parmax(31) = (6.9d0+273.15d0)   ! -5,15
+    PI%parmin(31) = (2.0d0+273.15d0) 
+    PI%parmax(31) = (7.0d0+273.15d0)   ! 2,7
+   
 
     ! critical photoperiod for development (hrs)
     PI%parmin(32) = 6d0 
-    PI%parmax(32) = 13d0
+    PI%parmax(32) = 12d0
     ! photoperiod sensitivity
     PI%parmin(33) = 0.10d0 
     PI%parmax(33) = 0.35d0
  
     ! turnover rate of labile
     PI%parmin(34) = 1d-5
-    PI%parmax(34) = 0.15d0
+    PI%parmax(34) = 0.1d0
     ! turnover rate of autotrophic pool
-    PI%parmin(35) = 0.50d0 !   2 days 
-    PI%parmax(35) = 0.99d0  ! ~ 1 day
+    PI%parmin(35) = 0.65d0 !    1.5 days 
+    PI%parmax(35) = 0.99d0  ! ~ 1.0 day
 
     ! BUCKET - root biomass needed to reach 50 % of max depth
     PI%parmin(36) = 10d0
-    PI%parmax(36) = 150d0
+    PI%parmax(36) = 100d0
 
     ! BUCKET - maximum rooting depth
-    PI%parmin(37) = 0.35d0
+    PI%parmin(37) = 0.5d0
     PI%parmax(37) = 5d0 !20.0
 
 !    ! Canopy NIR reflectance
