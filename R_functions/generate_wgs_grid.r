@@ -25,7 +25,7 @@ generate_wgs84_grid<-function(lat,long,resolution) {
     lat = lat[length(lat):1]
 
     # combine into output object
-    output = list(cardamom_exts = pt, lat = lat, long = long, lat_dim = lat_dim, long_dim = long_dim)
+    output = list(cardamom_ext = pt, lat = lat, long = long, lat_dim = lat_dim, long_dim = long_dim)
     # tidy up
     rm(lat,long,lat_dim,long_dim,pt) ; gc(reset=TRUE,verbose=FALSE)
 
