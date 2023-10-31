@@ -12,10 +12,10 @@ available_countries <-function(cardamom_dir) {
 
    if (missing(cardamom_dir)) { 
        # Load the shapefile CARDAMOM uses as default to define its land sea mask
-       landmask = shapefile("./R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx")
+       landmask = vect("./R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx")
    } else {
        # Load the shapefile CARDAMOM uses as default to define its land sea mask
-       landmask = shapefile(paste(cardamom_dir,"/R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx",sep=""))
+       landmask = vect(paste(cardamom_dir,"/R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx",sep=""))
    }
    # Extract the list of country names used in the mask
    country_match = factor(landmask$SOVEREIGNT) ; country_match = levels(country_match)
