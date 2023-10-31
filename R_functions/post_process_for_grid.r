@@ -1072,6 +1072,11 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
           site_output$mean_total_drainage_kgH2Om2day = quantile(rowMeans(site_output$total_drainage_kgH2Om2day, na.rm = na_flag), prob=num_quantiles)
           site_output$mean_annual_total_drainage_kgH2Om2day = apply(t(apply(site_output$total_drainage_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
       }
+      # Update the mean Leaf Water Potential
+      if (any(check_list == "LWP_MPa")){ # if (exists(x = "LWP_MPa", where = site_output)){
+          site_output$LWP_MPa = apply(states_all$LWP_MPa,2,quantile,prob=num_quantiles,na.rm = na_flag)
+          site_output$LWP_MPa = quantile(rowMeans(states_all$LWP_MPa, na.rm = na_flag), prob=num_quantiles)
+      }
   } # water cycle variables
 
   # Snow related

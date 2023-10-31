@@ -55,7 +55,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       airt = read_site_specific_obs("airt_C",infile)       # if no mean air temperature available assume mean of max / min
       if (airt[1] == -9999) {airt = (maxt + mint) * 0.5}
       if (length(which(maxt-mint == 0)) > 0) {stop("Maximum and minimum temperatures cannot be exactly the same in the same time step")}
-      
+
       swrad = read_site_specific_obs("swrad_Wm2",infile) # W.m-2
       if (swrad[1] == -9999) {
           # try and look for shortwave in MJ/m2/day

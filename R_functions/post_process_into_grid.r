@@ -603,6 +603,11 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                    grid_output$mean_total_drainage_kgH2Om2day[slot_i,slot_j,] = site_output$mean_total_drainage_kgH2Om2day
                    grid_output$total_drainage_kgH2Om2day[n,,] = site_output$total_drainage_kgH2Om2day
                }
+               if (any(check_list == "LWP_MPa")){ # if (exists(x = "LWP_MPa", where = site_output)){
+                   # Leaf water potential
+                   grid_output$mean_LWP_MPa[slot_i,slot_j,] = site_output$mean_LWP_MPa
+                   grid_output$LWP_MPa[n,,] = site_output$LWP_MPa
+               }
            } # ET_kgH2Om2day exists
            # Snow specific
            if (any(check_list == "snow_kgH2Om2")) {
