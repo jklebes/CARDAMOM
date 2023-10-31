@@ -38,30 +38,31 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ## Get some NBE information (gC/m2/day); negative is sink
     ###
 
-    if (nbe_source == "GEOSCHEM" | nbe_source == "Global_Combined" | nbe_source == "OCO2MIP") {
+    if (nbe_source == "GEOSCHEM_GCP" | nbe_source == "GEOSCHEM" | 
+        nbe_source == "Global_Combined" | nbe_source == "OCO2MIP") {
 
-      # Extract NBE and uncertainty information
-      # NOTE: assume default uncertainty (+/- scale)
-      output = extract_nbe(grid_long_loc,grid_lat_loc,timestep_days,
-                           spatial_type,resolution,grid_type,latlon_wanted,
-                           nbe_all,years_to_load,doy_obs)
-      nbe = output$nbe ; nbe_unc = output$nbe_unc
+        # Extract NBE and uncertainty information
+        # NOTE: assume default uncertainty (+/- scale)
+        output = extract_nbe(grid_long_loc,grid_lat_loc,timestep_days,
+                             spatial_type,resolution,grid_type,latlon_wanted,
+                             nbe_all,years_to_load,doy_obs)
+        nbe = output$nbe ; nbe_unc = output$nbe_unc
 
     } else if (nbe_source == "site_specific") {
 
-      # read from .csv or netcdf
-      infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-      nbe = read_site_specific_obs("NBE_gCm2day",infile) ; nbe_unc = read_site_specific_obs("NBE_unc_gCm2day",infile)
-      if (max(nbe_unc) == -9999) {
-          nbe_unc = rep(-9999,times = length(nbe))
-          # apply default uncertainty consistent with Eddy covariance estimates
-          nbe_unc[which(nbe != -9999)] = 1.0
-      }
+        # read from .csv or netcdf
+        infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
+        nbe = read_site_specific_obs("NBE_gCm2day",infile) ; nbe_unc = read_site_specific_obs("NBE_unc_gCm2day",infile)
+        if (max(nbe_unc) == -9999) {
+            nbe_unc = rep(-9999,times = length(nbe))
+            # apply default uncertainty consistent with Eddy covariance estimates
+            nbe_unc[which(nbe != -9999)] = 1.0
+        }
 
     } else {
 
-      nbe = -9999
-      nbe_unc = -9999
+        nbe = -9999
+        nbe_unc = -9999
 
     }
     # Add model structural uncertainty to the uncertainty estimate if present

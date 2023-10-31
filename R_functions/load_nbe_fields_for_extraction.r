@@ -141,8 +141,125 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
         nbe_unc_gCm2day = array(nbe_unc_gCm2day, dim=c(xdim,ydim,length(doy_obs)))
 
         # output variables
-        return(list(nbe_gCm2day = nbe_gCm2day, nbe_unc_gCm2day = nbe_unc_gCm2day,
+        return(list(retrieval_valid = TRUE, nbe_gCm2day = nbe_gCm2day, nbe_unc_gCm2day = nbe_unc_gCm2day,
                     doy_obs = doy_obs, lat = lat, long = long, missing_years = missing_years))
+
+  } else if (nbe_source == "GEOSCHEM_GCP")) {
+
+      # let the user know this might take some time
+      print("Loading processed GEOCHEM_GCP NBE fields for subsequent sub-setting ...")
+
+      # check which file prefix we are using today
+      # list all available files which we will then search
+      avail_files = list.files(path_to_nbe,full.names=TRUE, pattern = "gcp2023_v3_uoe_1x1_2001b")
+      #prefix = "gcp2023_v3_uoe_1x1_2001b" # (.)* wildcard characters for unix standard c_gls*_
+      # How many files do we have to work with? Hopefully just the one
+      if (length(avail_files) != 1) {stop("We do not have a single GEOSCHEM_GCP NBE estimate. Correct and re-run.")}
+      
+      # Open link to the file
+      data1 = nc_open(avail_files)
+      # Load the time variable from the file
+      # This should come in format [YYYY,MM,DD]
+      # NOTE the script assumes that the file is at a monthly timestep and that only completed years are provided
+      time = ncvar_get(data1, "start_date")
+      # Check that the file has whole years matching our monthly assumption
+      if (dim(time)[2]/12 != floor(dim(time)[2]/12)) {
+          stop("The number of time steps in GEOSCHEM_GCP file is not consistent with our assumptions of monthly timesteps and whole years only")
+      }
+
+      # Determimine which years of the analysis are included in the file
+      obs_years = unique(time[1,])
+      # Determine the common years
+      common_years = intersect(obs_years,years_to_load)
+      
+      # If there is no overlap then we will just move on from this dataset
+      if (length(common_years) == 0) {
+          return(retrieval_valid = FALSE)
+      }
+      
+      # Do all required years have observations?
+      if (length(common_years) != length(years_to_load)) {
+          # No, so we will work out which are missing
+          missing_years = 0
+          for (yr in seq(1, length(years_to_load))) {
+               if (length(which(common_years == years_to_load[yr])) > 0) {
+                   # For the moment do nothing!               
+               } else { 
+                   # Track which year is missing
+                   missing_years = append(missing_years,years_to_load[yr])
+               }
+          }
+      } else {
+          # Yes, so update appropriate variables
+          missing_years = 0
+      }
+      # remove initial value
+      missing_years = missing_years[-1]
+
+      # Based on the common years create a filter for the timesteps we will be keeping
+      keeper_steps = 0 
+      for (yr in seq(1, length(common_years))) {
+           keeper_steps = append(keeper_steps,which(time[1,] == common_years[yr]))
+      }
+      keeper_steps = keeper_steps[-1]
+
+      # timing information on the number of day in a month
+      month_days = rep(31,length.out=12)
+      month_days[2] = 28 ; month_days[c(4,6,9,11)] = 30
+      # get timing variable
+      doy_obs = time[3,]
+      for (d in seq(1,length(time[3,]))) {
+           # January is correct already, so only adjust if month is >= February
+           if (time[2,d] > 1) { # Month counter
+               doy_obs[d] = doy_obs[d] + sum(month_days[1:(time[2,d]-1)])
+           }
+      }
+      # Apply keeper filer
+      doy_obs = doy_obs[keeper_steps]
+      
+      # Extract latitude and longitude information
+      lat_in = ncvar_get(data1, "lat") ; long_in = ncvar_get(data1, "lon")
+      # Store their dimensions
+      lat_dim = length(lat_in) ; long_dim = length(long_in)
+      # Turn lat_in / long_in from vectors to arrays
+      lat_in = t(array(lat_in, dim=c(lat_dim,long_dim)))
+      long_in = array(long_in, dim=c(long_dim,lat_dim))
+
+      # Read in biospheric flux NBE
+      var1 = ncvar_get(data1, "bio") # net biome exchange of CO2 (kgC/m2/s)
+      # Read in biospheric flux NBE uncertainty
+      var2 = ncvar_get(data1, "post_flux_uncert") # NBE error estimate (kgC/m2/s)
+      # Close file connection
+      nc_close(data1)
+      
+      # Filter based on the keeper_steps
+      var1 = var1[,,keeper_steps] ; var2 = var2[,,keeper_steps]
+      # Reset missing data to NA
+      # NOTE these get converted to -9999 in extract_obe.r
+      var1[which(var1 == -999)] = NA ; var2[which(var2 == -999)] = NA
+      # Apply unit correction kgC/m2/s -> gC/m2/day
+      var1 = var1 * 86400 * 1e3
+      var2 = var2 * 86400 * 1e3
+
+      # Aggregate to target resolution and extent
+      output = regrid_func(var1, lat_in, long_in, cardamom_ext)
+      nbe_out = output$var_out ; lat = output$lat ; long = output$long ; rm(output,var1)
+      output = regrid_func(var2, lat_in, long_in, cardamom_ext)
+      nbe_unc_out = output$var_out ; rm(output,var2)
+
+      # enforce minimum uncertainty value )
+      nbe_unc_out[abs(nbe_unc_out) < 0.01] = 0.01 # (gC/m2/day)
+
+      # output variables
+      nbe_all = list(retrieval_valid = TRUE, nbe_gCm2day = nbe_out, nbe_unc_gCm2day = nbe_unc_out,
+                     doy_obs = doy_obs, lat = lat, long = long, missing_years=missing_years)
+
+      # Tidy up
+      rm(lat_in,long_in,time,nbe_out,nbe_unc_out,lat,long,doy_obs,missing_years,lat_in,long_in)
+      gc(reset=TRUE,verbose=FALSE)
+
+      # Return to function
+      return(nbe_all)
 
   } else if (nbe_source == "GEOSCHEM") {
 
@@ -310,13 +427,13 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
       nbe_unc_out = array(as.vector(nbe_unc_hold), dim=c(xdim,ydim,length(doy_obs)))
 
       # output variables
-      nbe_all = list(nbe_gCm2day = nbe_out, nbe_unc_gCm2day = nbe_unc_out,
+      nbe_all = list(retrieval_valid = TRUE, nbe_gCm2day = nbe_out, nbe_unc_gCm2day = nbe_unc_out,
                      doy_obs = doy_obs, lat = lat, long = long, missing_years=missing_years)
       # clean up variables
       rm(doy_in,nbe_hold,nbe_unc_hold,nbe_out,doy_obs,lat,long,missing_years) ; gc(reset=TRUE,verbose=FALSE)
       return(nbe_all)
 
-  } else if (nbe_source == "OCO2MIP") {# if GEOSCHEM
+  } else if (nbe_source == "OCO2MIP") {# if GEOSCHEM or other
 
       # let the user know this might take some time
       print("Loading processed NBE fields for subsequent sub-setting ...")
@@ -497,7 +614,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
       nbe_unc_out = array(as.vector(nbe_unc_hold), dim=c(xdim,ydim,length(doy_obs)))
 
       # output variables
-      nbe_all = list(nbe_gCm2day = nbe_out, nbe_unc_gCm2day = nbe_unc_out,
+      nbe_all = list(retrieval_valid = TRUE, nbe_gCm2day = nbe_out, nbe_unc_gCm2day = nbe_unc_out,
                      doy_obs = doy_obs, lat = lat, long = long, missing_years=missing_years)
       # clean up variables
       rm(doy_in,nbe_hold,nbe_unc_hold,nbe_out,doy_obs,lat,long,missing_years) ; gc(reset=TRUE,verbose=FALSE)
