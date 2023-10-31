@@ -144,7 +144,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
         return(list(retrieval_valid = TRUE, nbe_gCm2day = nbe_gCm2day, nbe_unc_gCm2day = nbe_unc_gCm2day,
                     doy_obs = doy_obs, lat = lat, long = long, missing_years = missing_years))
 
-  } else if (nbe_source == "GEOSCHEM_GCP")) {
+  } else if (nbe_source == "GEOSCHEM_GCP") {
 
       # let the user know this might take some time
       print("Loading processed GEOCHEM_GCP NBE fields for subsequent sub-setting ...")
