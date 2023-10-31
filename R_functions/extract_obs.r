@@ -222,18 +222,26 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         crop_dates=extract_sacks_crop_info(spatial_type,resolution,grid_type,latlon_wanted,crop_man_all)
         planting_doy = crop_dates$plant ; planting_doy_unc = crop_dates$plant_range
         harvest_doy = crop_dates$harvest ; harvest_doy_unc = crop_dates$harvest_range
+        # Prior parameter ranges span 365.25-> but rescale to 1-365.25 by taking the modulus.
+        # This means that we must put these priors into the parameter prior range space
+        harvest_doy = harvest_doy + 365.25
+        planting_doy = planting_doy + 365.25
     } else if (crop_management_source == "site_specific") {
         infile=paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
         planting_doy = read_site_specific_obs("planting_doy_initial",infile)
         planting_doy_unc = read_site_specific_obs("planting_doy_unc_initial",infile)
         harvest_doy = read_site_specific_obs("harvest_doy_initial",infile)
         harvest_doy_unc = read_site_specific_obs("harvest_doy_unc_initial",infile)
+        # Prior parameter ranges span 365.25-> but rescale to 1-365.25 by taking the modulus.
+        # This means that we must put these priors into the parameter prior range space
+        harvest_doy = harvest_doy + 365.25
+        planting_doy = planting_doy + 365.25
     } else {
         # assume no data available
         #planting_doy = 304 ; planting_doy_unc = 15 # days
         #harvest_doy = 208 ; harvest_doy_unc = 15 # days
         planting_doy = -9999 ; planting_doy_unc = -9999 # days
-        harvest_doy = -9999  ; harvest_doy_unc = -9999 # days
+        harvest_doy = 244+365.25  ; harvest_doy_unc = 10 # days # note +365.25 to account for the parameter range
     }
 
     ###

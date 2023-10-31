@@ -162,6 +162,10 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
         lcm = project(lcm, ("+init=epsg:4326"), method="near", align = FALSE) ; gc()
         # Create target grid in the correct resolution for the analysis
         target = rast(crs = ("+init=epsg:4326"), res = res(cardamom_ext), ext=ext(lcm))
+        # Extend the extent of the overall grid to the analysis domain
+        lcm = extend(lcm,cardamom_ext)
+        # Trim the extent of the overall grid to the analysis domain
+        lcm = crop(lcm,cardamom_ext) 
         # Aggregate to approximately the right resolution
 #        if (grid_type == "UK") {
 #            target_ratio = max(0.1666667,(0.001*(resolution/111))) / res(lcm)

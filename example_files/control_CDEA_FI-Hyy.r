@@ -34,7 +34,7 @@ numWorkers = 6 # number of cores to assign to parallel job
 
 ## Model - which DALEC 
 # see "MODEL_DESCRIPTIONS.md" for available models
-model="DALEC.29."
+model="DALEC.4."
 pft_specific_parameters=FALSE # impacts crop model only
 
 ## MDF method
@@ -88,6 +88,7 @@ GPP_source=" " 	# " " or "site_specific" or "Global_Combined"
 Reco_source=" " 	# " " or "site_specific"
 NEE_source="site_specific" # " " or "site_specific"
 nbe_source = " " # " " or "site_specific" or "Global_Combined" or "GEOSCHEM" or "OCO2MIP"
+harvest_source = ""
 # i.e. single value valid for beginning of simulation
 Cfol_initial_source=" " #"site_specific" 	# " " or "site_specific"
 Cwood_initial_source=" " #"site_specific" 	# " " or "site_specific"
@@ -136,9 +137,9 @@ select_country = FALSE # If gridded run and path_to_landsea = "default",
 request_nos_chains = 3        # Number of chains CARDAMOM should run for each location
 request_nos_samples = 100e6   # Total number of parameter samples / iterations to be explored
 request_nos_subsamples = 1e3  # Number of parameter sets to be sub-sampled from the chain
-request_use_server = FALSE    # Use remote server? Currently coded for UoE Eddie.
+request_use_server = TRUE    # Use remote server? Currently coded for UoE Eddie.
 request_runtime = 48          # How many hours of compute to request per job. Only applied for running on remote server
-request_compile_server = FALSE# Copy and compile current source code on remote server
+request_compile_server = TRUE# Copy and compile current source code on remote server
 request_compile_local = TRUE  # Compile local copy of the source code 
 request_use_EDCs = TRUE       # Use EDCs
 request_extended_mcmc = FALSE # Extend the current MCMC by adding a further request_nos_extended_samples + request_nos_samples
@@ -155,7 +156,7 @@ request_cost_function_scaling = 0 # 0 = Default, no normaliation of the likeliho
 # stage  2 : Submit the project to eddie
 # stage  3 : Copy back results and process vectors
 # stage  4 : Do some standard figure creation (and further processing for gridded analysis)
-stage=0
+stage=2
 repair=1 # to force (=1) re-run processed results or driver files if they already exist
 grid_override=FALSE # force site specific files to be saved and figures to be generated when in "grid" operation
 
