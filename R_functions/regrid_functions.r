@@ -35,7 +35,7 @@ regrid_func<-function(var1_in, lat_in, long_in, cardamom_ext, landmask=NULL) {
    for (t in seq(1, dim(var1_in)[3])) {
         # Convert to a raster, assuming standard WGS84 grid
         var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1_in[,,t]))
-        if (length(unique(diff(input_long[,1]))) > 1 | length(unique(diff(input_lat[1,]))) > 1) {
+        if (length(unique(diff(long_in[,1]))) > 1 | length(unique(diff(lat_in[1,]))) > 1) {
             var1 = griddify(var1, dim(var1_in)[1], dim(var1_in)[2])
         } else {
             var1 = rast(var1, crs = ("+init=epsg:4326"), type="xyz")

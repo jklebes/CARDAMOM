@@ -273,28 +273,24 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
         # given in the land mask we are using...?
         if (length(which(grepl(sitename,country_match) == TRUE)) > 0 & select_country) {
             # if so then loop through the land areas which fall within the correct country
-            country_match = which(grepl(sitename,country_match) == TRUE)
-            keep = rep(0,length(as.vector(landsea)))
-            for (i in seq(1, length(country_match))) {
-                 keep[which(as.vector(landsea) == country_match[i])] = 1
+            country_match_loc = which(grepl(sitename,country_match) == TRUE)
+            for (i in seq(1, length(country_match_loc))) {
+                 keep[which(as.vector(landsea) == country_match_loc[i])] = 1
             }
         } else {
             # otherwise just assume we are interested in all land areas...
-            keep = rep(0,length(as.vector(landsea)))
-            keep[is.na(as.vector(landsea)) == FALSE] = 1
+            landsea[landsea > 0] = 1
         } # country or all land area filter?
-        # Set non country areas to NA, and all other to 1
-        landsea[keep == 0] = NA
         # Add a buffer based on the land sea fraction to avoid missing land area we want
         landsea_frac_buffer = boundaries(landsea, inner=FALSE)*landsea_frac
         # Set all actual data to 1
-        landsea[as.vector(landsea) > 0] = 1
+        landsea[landsea > 0] = 1
         # set missing data to 0
-        landsea[is.na(as.vector(landsea))] = 0
+        landsea[is.na(landsea)] = 0
         # Now combine the maps, giving a complete landsea fractional map
         landsea = (landsea*landsea_frac) + landsea_frac_buffer
         # Reset any newly created NaN from the merge
-        landsea[is.na(as.vector(landsea))] = 0
+        landsea[is.na(landsea)] = 0
 
     } else {
 
