@@ -274,13 +274,13 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
         if (length(which(grepl(sitename,country_match) == TRUE)) > 0 & select_country) {
             # if so then loop through the land areas which fall within the correct country
             country_match = which(grepl(sitename,country_match) == TRUE)
-            keep = rep(0,length(landsea))
+            keep = rep(0,length(as.vector(landsea)))
             for (i in seq(1, length(country_match))) {
-                 keep[as.vector(landsea) == country_match[i]] = 1
+                 keep[which(as.vector(landsea) == country_match[i])] = 1
             }
         } else {
             # otherwise just assume we are interested in all land areas...
-            keep = rep(0,length(landsea))
+            keep = rep(0,length(as.vector(landsea)))
             keep[is.na(as.vector(landsea)) == FALSE] = 1
         } # country or all land area filter?
         # Set non country areas to NA, and all other to 1
