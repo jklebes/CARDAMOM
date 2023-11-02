@@ -243,12 +243,12 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
 
       # Aggregate to target resolution and extent
       output = regrid_func(var1, lat_in, long_in, cardamom_ext)
-      nbe_out = output$var_out ; lat = output$lat ; long = output$long ; rm(output,var1)
+      nbe_out = output$var ; lat = output$lat ; long = output$long ; rm(output,var1)
       output = regrid_func(var2, lat_in, long_in, cardamom_ext)
-      nbe_unc_out = output$var_out ; rm(output,var2)
+      nbe_unc_out = output$var ; rm(output,var2)
 
-      # enforce minimum uncertainty value )
-      nbe_unc_out[abs(nbe_unc_out) < 0.01] = 0.01 # (gC/m2/day)
+      # enforce minimum uncertainty value
+      nbe_unc_out[nbe_unc_out < 0.01] = 0.01 # (gC/m2/day)
 
       # output variables
       nbe_all = list(retrieval_valid = TRUE, nbe_gCm2day = nbe_out, nbe_unc_gCm2day = nbe_unc_out,

@@ -18,7 +18,7 @@ extract_nbe<- function(i1,j1,timestep_days,spatial_type,resolution,grid_type,lat
   nbe = nbe_all$nbe_gCm2day[i1,j1,]
   nbe_unc = nbe_all$nbe_unc_gCm2day[i1,j1,]
 
-  # just incase there is no missing data we best make sure there is a value which can be assessed
+  # Just incase there is no missing data we best make sure there is a value which can be assessed
   if (length(nbe_all$missing_years) == 0) { nbe_all$missing_years=1066 }
 
   # declare output variable

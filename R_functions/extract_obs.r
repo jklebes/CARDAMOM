@@ -41,13 +41,19 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     if (nbe_source == "GEOSCHEM_GCP" | nbe_source == "GEOSCHEM" | 
         nbe_source == "Global_Combined" | nbe_source == "OCO2MIP") {
 
-        # Extract NBE and uncertainty information
-        # NOTE: assume default uncertainty (+/- scale)
-        output = extract_nbe(grid_long_loc,grid_lat_loc,timestep_days,
-                             spatial_type,resolution,grid_type,latlon_wanted,
-                             nbe_all,years_to_load,doy_obs)
-        nbe = output$nbe ; nbe_unc = output$nbe_unc
-
+        # Check valid nbe_all object
+        if (nbe_all$retrieval_valid) {
+            # Extract NBE and uncertainty information
+            # NOTE: assume default uncertainty (+/- scale)
+            output = extract_nbe(grid_long_loc,grid_lat_loc,timestep_days,
+                                 spatial_type,resolution,grid_type,latlon_wanted,
+                                 nbe_all,years_to_load,doy_obs)
+            nbe = output$nbe ; nbe_unc = output$nbe_unc
+        } else {
+            nbe = -9999
+            nbe_unc = -9999
+        }
+        
     } else if (nbe_source == "site_specific") {
 
         # read from .csv or netcdf
