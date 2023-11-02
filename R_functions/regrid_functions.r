@@ -90,7 +90,7 @@ regrid_func<-function(var1_in, lat_in, long_in, cardamom_ext) {
         }
         # break out from the raster into arrays which we can manipulate
         var1 = array(as.vector(unlist(var1)), dim=c(xdim,ydim))
-image.plot(var1)
+
         # vectorise at this time
         if (lat_done == FALSE) {
             var_out = as.vector(var1)
