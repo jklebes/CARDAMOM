@@ -1,4 +1,3 @@
-
 ###
 ## Function to read parameter chains and determine which will be ran, based on their convergence criterion
 ###

@@ -114,18 +114,28 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   # extract information from list to array
   if (modelname == "ACM") {
       MET = array(NA,dim=c(length(met$run_day),(length(met)+2)))
+      met_names = rep("NA", dim(MET)[2])
   } else {
       MET = array(NA,dim=c(length(met$run_day),(length(met)+3)))
+      met_names = rep("NA", dim(MET)[2])
   }
 
   MET[,1] = met$run_day
+  met_names[1] = "Total number of days ran (starts = 31 for January if monthly)"
   MET[,2] = met$mint  ; if (min(met$mint) < -200) {print(summary(met$mint)) ; stop('mint error in binary_data')} # Celcius
+  met_names[2] = "Average daily minimum temperatures (C)"
   MET[,3] = met$maxt  ; if (min(met$maxt) < -200) {print(summary(met$maxt)) ; stop('maxt error in binary_data')} # Celcius
+  met_names[3] = "Average daily maximum temperatures (C)"
   MET[,4] = met$swrad ; if (min(met$swrad) < 0) {print(summary(met$swrad)) ; stop('RAD error in binary_data')} # MJ/m2/day
+  met_names[4] = "Average incoming daily shortwave radiation (MJ/m2/d)"
   MET[,5] = met$co2#+200 # ppm
+  met_names[5] = "Average atmospheric CO2 concentration (ppm)"
   MET[,6] = met$doy
+  met_names[6] = "Julian day of year for the middle of the timestep"
   MET[,7] = pmax(0,met$precip) # kgH2O/m2/s
+  met_names[7] = "Average precipitation (kgH2O/m2/s)"
   MET[,8] = OBS$deforestation  # fraction
+  met_names[7] = "Average precipitation (kgH2O/m2/s)"
   MET[,9] = OBS$burnt_area     # fraction
   MET[,10] = met$avgTmax       # C
   MET[,11] = met$photoperiod   # Seconds

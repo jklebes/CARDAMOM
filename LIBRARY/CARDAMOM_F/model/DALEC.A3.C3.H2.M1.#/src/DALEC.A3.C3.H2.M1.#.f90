@@ -517,6 +517,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                        HARVESTlitter_stem, & ! Stem converted to litter by harvest
                HARVESTlitter_dead_foliage, & ! Dead standing foliage converted to litter by harvest
                   HARVESTlitter_resp_auto, & ! Autotrophic pool converted to litter by harvest
+                     HARVESTlitter_labile, & ! Labile converted to litter by harvest
                        PLOUGHlitter_roots, & ! Plough induced litter generation from roots
                                        HI, & ! Harvest index, the ratio of yield to shoot C
                                     yield, & ! crop yield (gC.m-2)
@@ -1140,8 +1141,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       FLUXES(n,34) = HARVESTlitter_dead_foliage
       ! Autotrophic pool added to litter due to harvest (gC.m-2.d-1)
       FLUXES(n,35) = HARVESTlitter_resp_auto
+      ! Labile added to litter due to harvest (gC.m-2.d-1)
+      FLUXES(n,36) = HARVESTlitter_labile
       ! Roots pool added to litter due to plough (gC.m-2.d-1)
-      FLUXES(n,36) = PLOUGHlitter_roots
+      FLUXES(n,37) = PLOUGHlitter_roots
 
       ! add any snow melt to the rainfall now that we have already dealt with the canopy interception
       rainfall = rainfall + snow_melt
@@ -1154,11 +1157,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       ! store soil water content of surface (mm)
       POOLS(n,8) = 1d3*soil_waterfrac(1)*layer_thickness(1)
       ! Assign all water variables to output variables (kgH2O/m2/day)
-      FLUXES(n,37) =  transpiration   ! transpiration
-      FLUXES(n,38) =  soilevaporation ! soil evaporation
-      FLUXES(n,39) =  wetcanopy_evap  ! wet canopy evaporation
-      FLUXES(n,40) =  runoff          ! soil surface runoff
-      FLUXES(n,41) =  underflow       ! drainage from bottom of soil column
+      FLUXES(n,38) =  transpiration   ! transpiration
+      FLUXES(n,39) =  soilevaporation ! soil evaporation
+      FLUXES(n,40) =  wetcanopy_evap  ! wet canopy evaporation
+      FLUXES(n,41) =  runoff          ! soil surface runoff
+      FLUXES(n,42) =  underflow       ! drainage from bottom of soil column
 
       ! labile pool
       POOLS(n+1,1) = stock_labile
@@ -3773,8 +3776,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
+    ! Declare some local variables
+    double precision :: tmp, Ctotal
+
     ! shoot biomass..
     Cshoot = stock_foliage + stock_stem + stock_storage_organ + stock_labile
+    ! Total biomass not including the storage organ
+    Ctotal = stock_foliage + stock_stem + stock_roots
 
     ! determine harvest index..
     HI = stock_storage_organ / Cshoot
@@ -3786,12 +3794,20 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     HARVESTextracted_foliage      = stock_foliage * ( 1d0 - lv_res ) * days_per_step_1
     HARVESTextracted_stem         = stock_stem * ( 1d0 - st_res ) * days_per_step_1
     HARVESTextracted_dead_foliage = stock_dead_foliage * ( 1d0 - lv_res ) * days_per_step_1
-    HARVESTextracted_labile       = stock_labile * days_per_step_1
     ! How much of each pool remains as litter after harvest
     HARVESTlitter_foliage      = stock_foliage * lv_res * days_per_step_1
     HARVESTlitter_stem         = stock_stem * st_res * days_per_step_1
     HARVESTlitter_dead_foliage = stock_dead_foliage * lv_res * days_per_step_1
     HARVESTlitter_resp_auto    = stock_resp_auto * days_per_step_1
+
+    ! Labile is a special case due to being distributed within various tissues.
+    ! NOTE that extracted is calculated then the litter component is estimates as residual.
+    ! The time scale adjustment is applied last, rather than inline (as above)
+    HARVESTextracted_labile = (stock_labile * (stock_foliage / Ctotal) *  (1d0 - lv_res )) & 
+                            + (stock_labile * (stock_stem / Ctotal) *  (1d0 - st_res )) 
+    HARVESTlitter_labile    =  stock_labile - HARVESTextracted_labile
+    HARVESTextracted_labile = HARVESTextracted_labile * days_per_step_1
+    HARVESTlitter_labile    = HARVESTlitter_labile * days_per_step_1
 
     ! the biomass that is harvested in addition to the storage-organ..
     BM_EX  = HARVESTextracted_foliage      &
@@ -3804,7 +3820,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                   + HARVESTlitter_foliage      &
                   + HARVESTlitter_stem         &
                   + HARVESTlitter_dead_foliage &
-                  + HARVESTlitter_resp_auto
+                  + HARVESTlitter_resp_auto    & 
+                  + HARVESTlitter_labile
 
     ! empty the plant stocks..
     stock_storage_organ = 0d0

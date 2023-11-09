@@ -80,22 +80,15 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
   ! vector of ecosystem pools
   character(350) :: exepath
   integer :: i, nos_years, steps_per_year
-  integer, dimension(nodays) :: auto_hak,lab_hak, fol_hak, root_hak, wood_hak, &
-                                lit_hak, som_hak, deadfol_hak
+  integer, dimension(nodays) :: pool_hak
   double precision, dimension((nodays+1),nopools) :: POOLS
   ! vector of ecosystem fluxes
   double precision, dimension(nodays,nofluxes) :: FLUXES
-  double precision, dimension(nodays) :: lai & ! leaf area index
+  double precision, dimension(nodays) :: tmp &
+                                        ,lai & ! leaf area index
                                         ,GPP & ! Gross primary productivity
-                                        ,NEE & ! net ecosystem exchange of CO2
-                             ,deadfol_filter &
-                                ,auto_filter &
-                                 ,lab_filter &
-                                 ,fol_filter &
-                                ,root_filter &
-                                ,wood_filter &
-                                 ,lit_filter &
-                                 ,som_filter
+                                        ,NEE   ! net ecosystem exchange of CO2
+
 
   ! crop development parameters declared here. These are also found in
   ! MHMCMC_STRUCTURES PI%
@@ -197,112 +190,116 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,28) = FLUXES(1:nodays,33)         ! Stem added to litter due to harvest (gC.m-2.d-1)
      out_var1(i,1:nodays,29) = FLUXES(1:nodays,34)         ! Dead still standing foliage added to litter due to harvest (gC.m-2.d-1)
      out_var1(i,1:nodays,30) = FLUXES(1:nodays,35)         ! Autotrophic pool added to litter due to harvest (gC.m-2.d-1)
-     out_var1(i,1:nodays,31) = FLUXES(1:nodays,36)         ! Root added to litter due to plough (gC.m-2.d-1)
+     out_var1(i,1:nodays,31) = FLUXES(1:nodays,36)         ! Labile added to litter due to harvest (gC.m-2.d-1)
+     out_var1(i,1:nodays,32) = FLUXES(1:nodays,37)         ! Root added to litter due to plough (gC.m-2.d-1)
      ! C pools (gC/m2)
-     out_var1(i,1:nodays,32) = POOLS(1:nodays,1)           ! labile (gC/m2)
-     out_var1(i,1:nodays,33) = POOLS(1:nodays,2)           ! foliage (gC/m2)
-     out_var1(i,1:nodays,34) = POOLS(1:nodays,3)           ! fine root (gC/m2)
-     out_var1(i,1:nodays,35) = POOLS(1:nodays,4)           ! wood (gC/m2)
-     out_var1(i,1:nodays,36) = POOLS(1:nodays,5)           ! litter (gC/m2)
-     out_var1(i,1:nodays,37) = POOLS(1:nodays,6)           ! som (gC/m2)
-     out_var1(i,1:nodays,38) = POOLS(1:nodays,7)           ! autotrophic (gC/m2)
-     out_var1(i,1:nodays,39) = POOLS(1:nodays,9)           ! storage organ (gC/m2)
-     out_var1(i,1:nodays,40) = POOLS(1:nodays,10)          ! dead but still standing foliage (gC/m2)
+     out_var1(i,1:nodays,33) = POOLS(1:nodays,1)           ! labile (gC/m2)
+     out_var1(i,1:nodays,34) = POOLS(1:nodays,2)           ! foliage (gC/m2)
+     out_var1(i,1:nodays,35) = POOLS(1:nodays,3)           ! fine root (gC/m2)
+     out_var1(i,1:nodays,36) = POOLS(1:nodays,4)           ! wood (gC/m2)
+     out_var1(i,1:nodays,37) = POOLS(1:nodays,5)           ! litter (gC/m2)
+     out_var1(i,1:nodays,38) = POOLS(1:nodays,6)           ! som (gC/m2)
+     out_var1(i,1:nodays,39) = POOLS(1:nodays,7)           ! autotrophic (gC/m2)
+     out_var1(i,1:nodays,40) = POOLS(1:nodays,9)           ! storage organ (gC/m2)
+     out_var1(i,1:nodays,41) = POOLS(1:nodays,10)          ! dead but still standing foliage (gC/m2)
      ! Water cycle related
-     out_var1(i,1:nodays,41) = FLUXES(1:nodays,19)         ! Evapotranspiration (kgH2O.m-2.day-1)
-     out_var1(i,1:nodays,42) = FLUXES(1:nodays,37)         ! transpiration (kgH2O.m-2.day-1)
-     out_var1(i,1:nodays,43) = FLUXES(1:nodays,38)         ! soil evaporation (kgH2O.m-2.day-1)
-     out_var1(i,1:nodays,44) = FLUXES(1:nodays,39)         ! wet canopy evaporation (kgH2O.m-2.day-1)
-     out_var1(i,1:nodays,45) = FLUXES(1:nodays,40)         ! runoff (kgH2O.m-2.day-1)
-     out_var1(i,1:nodays,46) = FLUXES(1:nodays,41)         ! underflow (kgH2O.m-2.day-1)
-     out_var1(i,1:nodays,47) = POOLS(1:nodays,8)           ! surface water (kgH2O.m-2.30cmdepth)
-     out_var1(i,1:nodays,48) = wSWP_time(1:nodays)         ! Weighted Soil Water Potential (MPa)
-     out_var1(i,1:nodays,49) = snow_storage_time(1:nodays) ! Snow storage (kgH2O/m2)
+     out_var1(i,1:nodays,42) = FLUXES(1:nodays,19)         ! Evapotranspiration (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,43) = FLUXES(1:nodays,38)         ! transpiration (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,44) = FLUXES(1:nodays,39)         ! soil evaporation (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,45) = FLUXES(1:nodays,40)         ! wet canopy evaporation (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,46) = FLUXES(1:nodays,41)         ! runoff (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,47) = FLUXES(1:nodays,42)         ! underflow (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,48) = POOLS(1:nodays,8)           ! surface water (kgH2O.m-2.30cmdepth)
+     out_var1(i,1:nodays,49) = wSWP_time(1:nodays)         ! Weighted Soil Water Potential (MPa)
+     out_var1(i,1:nodays,50) = snow_storage_time(1:nodays) ! Snow storage (kgH2O/m2)
      ! Canopy (phenology) properties
-     out_var1(i,1:nodays,50) = lai                         ! LAI (m2/m2)
+     out_var1(i,1:nodays,51) = lai                         ! LAI (m2/m2)
      ! Photosynthesis / C~water coupling related
-     out_var1(i,1:nodays,51) = gs_demand_supply_ratio      ! ratio of evaporative demand over supply
-     out_var1(i,1:nodays,52) = gs_total_canopy             ! Canopy scale stomatal conductance during day light (mmolH2O/m2ground/s)
-     out_var1(i,1:nodays,53) = canopy_par_MJday_time       ! Canopy absorbed PAR (MJ/m2ground/day)
-     out_var1(i,1:nodays,54) = gb_total_canopy             ! Canopy scale aerodynamic conductance (mmolH2O/m2ground/s)
-     out_var1(i,1:nodays,55) = cica_time                   ! ratio of leaf internal to external CO2
+     out_var1(i,1:nodays,52) = gs_demand_supply_ratio      ! ratio of evaporative demand over supply
+     out_var1(i,1:nodays,53) = gs_total_canopy             ! Canopy scale stomatal conductance during day light (mmolH2O/m2ground/s)
+     out_var1(i,1:nodays,54) = canopy_par_MJday_time       ! Canopy absorbed PAR (MJ/m2ground/day)
+     out_var1(i,1:nodays,55) = gb_total_canopy             ! Canopy scale aerodynamic conductance (mmolH2O/m2ground/s)
+     out_var1(i,1:nodays,56) = cica_time                   ! ratio of leaf internal to external CO2
      ! misc
-     out_var1(i,1:nodays,56) = root_depth_time             ! rooting depth (m)
-     out_var1(i,1:nodays,57) = DS_time                     ! Development stage (0-2)
+     out_var1(i,1:nodays,57) = root_depth_time             ! rooting depth (m)
+     out_var1(i,1:nodays,58) = DS_time                     ! Development stage (0-2)
 
      !!!
      ! Estimate residence time information
      !!!
 
-     ! Determine locations of zeros in pools to correct turnover calculation
      ! Labile
-     lab_hak = 0 ; lab_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,1) == 0) ! protection against NaN from division by zero
-           lab_hak = 1 ; lab_filter(1:nodays) = 0d0
-     end where
-     ! Foliage
-     fol_hak = 0 ; fol_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,2) == 0) ! protection against NaN from division by zero
-           fol_hak = 1 ; fol_filter(1:nodays) = 0d0
-     end where
-     ! Fine roots
-     root_hak = 0 ; root_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,3) == 0) ! protection against NaN from division by zero
-           root_hak = 1 ; root_filter(1:nodays) = 0d0
-     end where
-     ! Wood
-     wood_hak = 0 ; wood_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,4) == 0) ! protection against NaN from division by zero
-            wood_hak = 1 ; wood_filter(1:nodays) = 0d0
-     end where
-     ! Foliage + fine root litter
-     lit_hak = 0 ; lit_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,5) == 0) ! protection against NaN from division by zero
-            lit_hak = 1 ; lit_filter(1:nodays) = 0d0
-     end where
-     ! Soil
-     som_hak = 0 ; som_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,6) == 0) ! protection against NaN from division by zero
-           som_hak = 1 ; som_filter(1:nodays) = 0d0
-     end where
-     ! Autotrophic
-     auto_hak = 0 ; auto_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,7) == 0) ! protection against NaN from division by zero
-           auto_hak = 1 ; auto_filter(1:nodays) = 0d0
-     end where
-     ! Dead still standing foliage
-     deadfol_hak = 0 ; deadfol_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,10) == 0) ! protection against NaN from division by zero
-           deadfol_hak = 1 ; deadfol_filter(1:nodays) = 0d0
-     end where
-
      ! Estimate MRT (years)
-     ! Labile
-     out_var2(i,1) = sum( ((FLUXES(1:nodays,8) + FLUXES(1:nodays,31)) &
-                          / POOLS(1:nodays,1)) * lab_filter) / dble(nodays-sum(lab_hak))
+     pool_hak = 1 ; tmp = 0d0
+     where (POOLS(1:nodays,1) > 0d0) ! protection against NaN from division by zero
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,8) + FLUXES(1:nodays,31) + FLUXES(1:nodays,36)) &
+                  / POOLS(1:nodays,1))
+     end where
+     out_var2(i,1) = sum(tmp) / dble(nodays-sum(pool_hak))
      ! Foliage
-     out_var2(i,2) = sum( ((FLUXES(1:nodays,10) + &
-                            FLUXES(1:nodays,28) + FLUXES(1:nodays,32)) &
-                          / POOLS(1:nodays,2)) * fol_filter) / dble(nodays-sum(fol_hak))
+     ! Estimate MRT (years)
+     pool_hak = 1 ; tmp = 0d0
+     where (POOLS(1:nodays,2) > 0d0) ! protection against NaN from division by zero
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,10) + FLUXES(1:nodays,28) + FLUXES(1:nodays,32)) &
+                  / POOLS(1:nodays,2))
+     end where
+     out_var2(i,2) = sum(tmp) / dble(nodays-sum(pool_hak))
      ! Fine roots
-     out_var2(i,3) = sum( ((FLUXES(1:nodays,12) + FLUXES(1:nodays,36))&
-                          / POOLS(1:nodays,3)) * root_filter) / dble(nodays-sum(root_hak))
+     ! Estimate MRT (years)
+     pool_hak = 1 ; tmp = 0d0
+     where (POOLS(1:nodays,3) > 0d0) ! protection against NaN from division by zero
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,12) + FLUXES(1:nodays,36)) &
+                  / POOLS(1:nodays,3))
+     end where
+     out_var2(i,3) = sum(tmp) / dble(nodays-sum(pool_hak))
      ! Wood
-     out_var2(i,4) = sum( ((FLUXES(1:nodays,11)+ &
-                            FLUXES(1:nodays,29) + FLUXES(1:nodays,33)) &
-                          / POOLS(1:nodays,4)) * wood_filter) / dble(nodays-sum(wood_hak))
-     ! Litter (fine roots mostly)
-     out_var2(i,5) = sum( ((FLUXES(1:nodays,13) + FLUXES(1:nodays,15)) &
-                          / POOLS(1:nodays,5)) * lit_filter) / dble(nodays-sum(lit_hak))
+     ! Estimate MRT (years)
+     pool_hak = 1 ; tmp = 0d0
+     where (POOLS(1:nodays,4) > 0d0) ! protection against NaN from division by zero
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,11) + FLUXES(1:nodays,29) + FLUXES(1:nodays,33)) &
+                  / POOLS(1:nodays,4))
+     end where
+     out_var2(i,4) = sum(tmp) / dble(nodays-sum(pool_hak))
+     ! Foliage + fine root litter
+     ! Estimate MRT (years)
+     pool_hak = 1 ; tmp = 0d0
+     where (POOLS(1:nodays,5) > 0d0) ! protection against NaN from division by zero
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,13) + FLUXES(1:nodays,15)) &
+                  / POOLS(1:nodays,5))
+     end where
+     out_var2(i,5) = sum(tmp) / dble(nodays-sum(pool_hak))
      ! Soil
-     out_var2(i,6) = sum( (FLUXES(1:nodays,14) &
-                          / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
+     ! Estimate MRT (years)
+     pool_hak = 1 ; tmp = 0d0
+     where (POOLS(1:nodays,6) > 0d0) ! protection against NaN from division by zero
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,14)) &
+                  / POOLS(1:nodays,6))
+     end where
+     out_var2(i,6) = sum(tmp) / dble(nodays-sum(pool_hak))
      ! Autotrophic
-     out_var2(i,7) = sum( ((FLUXES(1:nodays,23) + FLUXES(1:nodays,35)) &
-                          / POOLS(1:nodays,7)) * auto_filter) / dble(nodays-sum(auto_hak))
+     ! Estimate MRT (years)
+     pool_hak = 1 ; tmp = 0d0
+     where (POOLS(1:nodays,7) > 0d0) ! protection against NaN from division by zero
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,23) + FLUXES(1:nodays,35)) &
+                  / POOLS(1:nodays,7))
+     end where
+     out_var2(i,7) = sum(tmp) / dble(nodays-sum(pool_hak))
      ! Dead still standing foliage
-     out_var2(i,8) = sum( ((FLUXES(1:nodays,30) + FLUXES(1:nodays,34)) &
-                          / POOLS(1:nodays,10)) * deadfol_filter) / dble(nodays/sum(deadfol_hak))
+     ! Estimate MRT (years)
+     pool_hak = 1 ; tmp = 0d0
+     where (POOLS(1:nodays,10) > 0d0) ! protection against NaN from division by zero
+            pool_hak = 0
+            tmp = ((FLUXES(1:nodays,30) + FLUXES(1:nodays,34)) &
+                  / POOLS(1:nodays,10))
+     end where
+     out_var2(i,8) = sum(tmp) / dble(nodays-sum(pool_hak))
 
      !
      ! Estimate pool inputs needed for steady state calculation
@@ -315,7 +312,7 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
      out_var3(i,3) = sum(FLUXES(:,6)) ! Fine root
      out_var3(i,4) = sum(FLUXES(:,7)) ! Wood
      out_var3(i,5) = sum(FLUXES(:,12) + FLUXES(:,32) + FLUXES(:,33) + &
-                         FLUXES(:,34) + FLUXES(:,35) + FLUXES(:,36)) ! litter (foliage + roots)
+                         FLUXES(:,34) + FLUXES(:,35) + FLUXES(:,36) + FLUXES(:,37)) ! litter (foliage + roots)
      ! In the normal DALEC models where wood can be a major input to the soil pool,
      ! at this point we would account for disturbance inputs (including wood)
      ! but NOT natural wood. However, as crops are inherently annual in their time

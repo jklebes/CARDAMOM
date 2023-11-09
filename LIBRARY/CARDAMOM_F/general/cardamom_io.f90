@@ -142,7 +142,7 @@ module cardamom_io
         ! ID = 15 - DALEC.A3.C3.H2.M1.# i.e. the CROP model
         DATAin%nopools = 10
         DATAin%nopars = 38
-        DATAin%nofluxes = 41
+        DATAin%nofluxes = 42
     else if (DATAin%ID == 16) then
         ! ID = 16 - DALEC.M2.#
         write(*,*) "Oh dear... DALEC.M2.# ID not valid = ",DATAin%ID

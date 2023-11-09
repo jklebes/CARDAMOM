@@ -55,6 +55,11 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
   if (any(check_list == "harvest_gCm2day")) {
       states_all$nbp_gCm2day = states_all$nbp_gCm2day - states_all$harvest_gCm2day
   }
+  # In some cases, e.g. crop models, the harvest variable includes just the harvested yield. But the NBP requires
+  # tracking of extracted non-yield C
+  if (any(check_list == "extracted_residue_gCm2day")) {
+      states_all$nbp_gCm2day = states_all$nbp_gCm2day - states_all$extracted_residue_gCm2day
+  }
   # Now calculate the mean annual carbon use efficiency (NPP:GPP) as some models do now have a parameter for this
   # NOTE: rollapply inverts the dimensions from that wanted, hence t()
   states_all$mean_annual_cue = t( apply(states_all$npp_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
@@ -100,7 +105,7 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
       # If Mean mean allocation to wood is provided generate a correlation estimate
       if (any(check_list == "alloc_wood_gCm2day")) {
           states_all$NPP_wood_gCm2day_parameter_correlation = cor(tmp,rowMeans(states_all$alloc_wood_gCm2day))
-          }
+      }
   } # Both MTT wood and alloc_wood present?
 
   # Return back to user

@@ -788,12 +788,13 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
 
       # Determine which parameter chains we will be using
       output = determine_parameter_chains_to_run(PROJECT,n)
-      parameters = output$parameters ; converged = output$converged ; rm(output)
       # Check if we likely have an error flag
-      if (length(as.vector(parameters)) == 1) {
+      if (length(as.vector(output)) == 1) {
           # Return the flag and allow the job to move on
-          return(parameters)
+          return(output)
       }
+      # Otherwise we should assume these variables exist
+      parameters = output$parameters ; converged = output$converged ; rm(output)      
       
       # load the met data for each site
       drivers = read_binary_file_format(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep=""))
@@ -870,6 +871,8 @@ run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
 
           # Run post-processing for gridded analysis
           dummy = post_process_for_grid(outfile_stock_fluxes,PROJECT,drivers,parameters,num_quantiles,na_flag,converged,states_all)
+          # Optionally update the user
+          if (use_parallel == FALSE) {print("Postprocessing for grid done, return completed filename to run_each_site")}
           # Tidy local environment
           rm(states_all,drivers) ; gc()
           # Return the site_output list object for subsequent slotting into the wider grid
@@ -985,7 +988,6 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
 
   # Check whether we have some existing files...
   if (length(existing_list) > 0) {
-      #if (existing_list[1] > 0 | length(existing_list) > 1) {
       if (existing_list[1] > 0) {
           # ...then insert them into the overall output file list
           for (n in seq(1, length(existing_list))) {
@@ -1015,8 +1017,8 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
           # Check if the loop has finished with error
           if (n == length(site_output_all) & class(site_output_all[[n]]) != "character") {
               # Difficult to say what will come out of here, so dump it all!
-              print(site_output_all)
-              print("Above error from run_mcmc_results.r L2462, problem with site_output_all")
+              print(unlist(site_output_all))
+              print("Above error from run_mcmc_results.r L1018, problem with site_output_all")
               return(c(-1))
           }
           # Now assuming this has worked correctly, we can create the grid_output

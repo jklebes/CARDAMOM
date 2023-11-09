@@ -131,7 +131,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # Final tidy
       rm(output,MTT_gCm2,SS_gCm2)
   } else if (model_name == "DALEC.A3.C3.H2.M1.#") {
-      output_dim = 57 ; MTT_dim = 8 ; SS_dim = 8
+      output_dim = 58 ; MTT_dim = 8 ; SS_dim = 8
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       #crop_file_location=paste(PROJECT$exepath,"winter_wheat_development.csv", sep="")
       crop_type = 1 # Winter Wheat
@@ -166,6 +166,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       rhet_som_gCm2day = output[,,4],
                       harvest_gCm2day = output[,,5],
                       extracted_residue_gCm2day = output[,,6],
+                      fire_gCm2day = array(0, dim(output)[1:2]), # kept because fire is a common management routine outside of europe
                       # Internal fluxes
                       alloc_foliage_gCm2day = output[,,7],
                       alloc_labile_gCm2day = output[,,8],
@@ -191,38 +192,39 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       HARVESTlitter_wood_gCm2day = output[,,28],
                       HARVESTlitter_DeadFoliage_gCm2day = output[,,29],
                       HARVESTlitter_autotrophic_gCm2day = output[,,30],
-                      PLOUGHlitter_roots_gCm2day = output[,,31],
+                      HARVESTlitter_labile_gCm2day = output[,,31],
+                      PLOUGHlitter_roots_gCm2day = output[,,32],
                       # C pools (gC/m2)
-                      labile_gCm2 = output[,,32],
-                      foliage_gCm2 = output[,,33],
-                      roots_gCm2 = output[,,34],
-                      wood_gCm2 = output[,,35],
-                      litter_gCm2 = output[,,36],
-                      som_gCm2 = output[,,37],
-                      autotrophic_gCm2 = output[,,38],
-                      StorageOrgan_gCm2 = output[,,39],
-                      DeadFoliage_gCm2 = output[,,40],
+                      labile_gCm2 = output[,,33],
+                      foliage_gCm2 = output[,,34],
+                      roots_gCm2 = output[,,35],
+                      wood_gCm2 = output[,,36],
+                      litter_gCm2 = output[,,37],
+                      som_gCm2 = output[,,38],
+                      autotrophic_gCm2 = output[,,39],
+                      StorageOrgan_gCm2 = output[,,40],
+                      DeadFoliage_gCm2 = output[,,41],
                       # Water cycle related
-                      ET_kgH2Om2day = output[,,41],
-                      Etrans_kgH2Om2day = output[,,42],
-                      Esoil_kgH2Om2day = output[,,43],
-                      Ewetcanopy_kgH2Om2day = output[,,44],
-                      runoff_kgH2Om2day = output[,,45],
-                      underflow_kgH2Om2day = output[,,46],
-                      SurfWater_kgH2Om2 = output[,,47],
-                      wSWP_MPa = output[,,48],
-                      snow_kgH2Om2 = output[,,49],
+                      ET_kgH2Om2day = output[,,42],
+                      Etrans_kgH2Om2day = output[,,43],
+                      Esoil_kgH2Om2day = output[,,44],
+                      Ewetcanopy_kgH2Om2day = output[,,45],
+                      runoff_kgH2Om2day = output[,,46],
+                      underflow_kgH2Om2day = output[,,47],
+                      SurfWater_kgH2Om2 = output[,,48],
+                      wSWP_MPa = output[,,49],
+                      snow_kgH2Om2 = output[,,50],
                       # Canopy (phenology) properties
-                      lai_m2m2 = output[,,50],
+                      lai_m2m2 = output[,,51],
                       # Photosynthesis / C~water coupling related
-                      gs_demand_supply_ratio = output[,,51],
-                      gs_mmolH2Om2s = output[,,52],
-                      APAR_MJm2day = output[,,53],
-                      gb_mmolH2Om2s = output[,,54],
-                      CiCa = output[,,55],
+                      gs_demand_supply_ratio = output[,,52],
+                      gs_mmolH2Om2s = output[,,53],
+                      APAR_MJm2day = output[,,54],
+                      gb_mmolH2Om2s = output[,,55],
+                      CiCa = output[,,56],
                       # Misc
-                      RootDepth_m = output[,,56],
-                      DevelopmentStage = output[,,57],
+                      RootDepth_m = output[,,57],
+                      DevelopmentStage = output[,,58],
                       ## Aggregated variables
                       # Mean Transit times
                       MTT_labile_years = MTT_years[,1],

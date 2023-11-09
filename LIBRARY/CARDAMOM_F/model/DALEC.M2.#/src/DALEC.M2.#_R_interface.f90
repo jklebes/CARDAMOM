@@ -66,8 +66,7 @@ subroutine rdalec16(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
 
   ! local variables
   integer :: i, y, y_s, y_e, nos_years, steps_per_year
-  integer, dimension(nodays) :: lab_hak, fol_hak, root_hak, wood_hak, lit_hak, &
-                                woodlit_hak, som_hak
+  integer, dimension(nodays) :: pool_hak
   double precision, dimension(nos_iter) :: woodlitter_to_som_frac
   ! vector of ecosystem pools
   double precision, dimension((nodays+1),nopools) :: POOLS

@@ -1,6 +1,6 @@
 ## CARDAMOM Coupled Models
 
-This files provides information on the currently coupled models within CARDAMOM. Table 1 provides a summary of the model name, alternate names used in publications and / or source code, publication containing the first or most complete description and status (e.g. published, under development, abandoned). The model name is the combination of the nominal model family (e.g. DALEC) and classifiers indicating the specific sub-models used. If an available classifier is not used in a given models name, please assume that option "0" is implicit. Sub-model specific information in summaries in subsequent tables. Both the model code name and a short code name constructed from the nominal model family and the reference code, e.g. "DALEC.D1.F2." == "DALEC.1.".
+This files provides information on the currently coupled models within CARDAMOM. Table 1 provides a summary of the model name, alternate names used in publications and / or source code, publication containing the first or most complete description and status (e.g. published, under development, abandoned). The model name is the combination of the nominal model family (e.g. DALEC) and classifiers indicating the specific sub-models used. If an available classifier is not used in a given models name, please assume that option "0" is implicit. Sub-model specific information in summaries in subsequent tables. Both the model code name and a short code name constructed from the nominal model family and the reference code, e.g. "DALEC.D1.F2.#" == "DALEC.1.".
 
 The current classifiers used are:
 A = Assimilation (Table 2)
@@ -46,7 +46,7 @@ M = Managed Grassland / arable crops (Table 10)
 | 27 | DALEC_1005                   | DALEC_1005          | JPL-CARDAMOM DALEC 1005                             | Famiglietti et al., 2021     | Published   |
 | 28 | DALEC_1005a                  | DALEC_1005a         | As DALEC 1005 but with code error corrections       | Famiglietti et al., 2021     | Published   |
 | 29 | <PLACE HOLDER FOR DAVID>     | NA                  | PLACE HOLDER FOR DAVID                              | D. T. Milodowski             | Unpublished   |
-| 30 | DALEC.A3.C1.D2.F2.H2.P1.#    | NA                  | As dalec.4. plus Sellers (1985) RTM                 | T. L. Smallman               | Unpublished   |
+| 30 | DALEC.A3.C1.D2.F2.H2.P1.#    | NA                  | As DALEC.4. plus Sellers (1985) RTM                 | T. L. Smallman               | Unpublished   |
 
 #### TABLE 2. Assimilation due to photosynthetic activity sub-models
 

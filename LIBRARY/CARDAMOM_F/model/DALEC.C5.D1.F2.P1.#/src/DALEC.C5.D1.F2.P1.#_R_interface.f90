@@ -45,17 +45,14 @@ subroutine rdalec13(output_dim,MTT_dim,SS_dim &
   ! local variables
   ! vector of ecosystem pools
   integer :: i, y, y_s, y_e, nos_years, steps_per_year
-  integer, dimension(nodays) :: lab_hak, fol_hak, root_wood_hak, dom_hak
+  integer, dimension(nodays) :: pool_hak
   double precision, dimension((nodays+1),nopools) :: POOLS
   ! vector of ecosystem fluxes
   double precision, dimension(nodays,nofluxes) :: FLUXES
-  double precision, dimension(nodays) :: lai & ! leaf area index
+  double precision, dimension(nodays) :: tmp &
+                                        ,lai & ! leaf area index
                                         ,GPP & ! Gross primary productivity
-                                        ,NEE & ! net ecosystem exchange of CO2
-                                 ,lab_filter &
-                                 ,fol_filter &
-                                 ,root_wood_filter &
-                                 ,dom_filter
+                                        ,NEE   ! net ecosystem exchange of CO2
 
   ! zero initial conditions
   lai = 0d0 ; GPP = 0d0 ; NEE = 0d0 ; POOLS = 0d0 ; FLUXES = 0d0
@@ -121,47 +118,45 @@ subroutine rdalec13(output_dim,MTT_dim,SS_dim &
      ! Estimate residence time information
      !!!
 
-     ! Determine locations of zeros in pools to correct turnover calculation
      ! Labile
-     lab_hak = 0 ; lab_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,1) == 0) ! protection against NaN from division by zero
-           lab_hak = 1 ; lab_filter(1:nodays) = 0d0
-     end where
-     ! Foliage
-     fol_hak = 0 ; fol_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,2) == 0) ! protection against NaN from division by zero
-           fol_hak = 1 ; fol_filter(1:nodays) = 0d0
-     end where
-     ! Fine roots and wood
-     root_wood_hak = 0 ; root_wood_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,3) == 0) ! protection against NaN from division by zero
-           root_wood_hak = 1 ; root_wood_filter(1:nodays) = 0d0
-     end where
-     ! Litter and som (dom)
-     dom_hak = 0 ; dom_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,4) == 0) ! protection against NaN from division by zero
-            dom_hak = 1 ; dom_filter(1:nodays) = 0d0
-     end where
-
      ! Estimate MRT (years)
-     ! Labile
-     out_var2(i,1) = sum( ((FLUXES(1:nodays,8) + & ! Natural losses
-                            FLUXES(1:nodays,18) + FLUXES(1:nodays,22) + &
-                            FLUXES(1:nodays,26) + FLUXES(1:nodays,30) ) & ! Fire losses
-                          / POOLS(1:nodays,1)) * lab_filter) / dble(nodays-sum(lab_hak))
+     pool_hak = 1 ; tmp = 0d0
+     where (POOLS(1:nodays,1) > 0d0) ! protection against NaN from division by zero
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,8) + &
+                    FLUXES(1:nodays,18) + FLUXES(1:nodays,22) + &
+                    FLUXES(1:nodays,26) + FLUXES(1:nodays,30)) / POOLS(1:nodays,1))
+     end where
+     out_var2(i,1) = sum(tmp) / dble(nodays-sum(pool_hak))
      ! Foliage
-     out_var2(i,2) = sum( ((FLUXES(1:nodays,10) + &
-                            FLUXES(1:nodays,19) + FLUXES(1:nodays,23) + &
-                            FLUXES(1:nodays,27) + FLUXES(1:nodays,31) ) &
-                          / POOLS(1:nodays,2)) * fol_filter) / dble(nodays-sum(fol_hak))
+     ! Estimate MRT (years)
+     pool_hak = 1 ; tmp = 0d0
+     where (POOLS(1:nodays,2) > 0d0) ! protection against NaN from division by zero
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,10) + &
+                    FLUXES(1:nodays,19) + FLUXES(1:nodays,23) + &
+                    FLUXES(1:nodays,27) + FLUXES(1:nodays,31)) / POOLS(1:nodays,2))
+     end where
+     out_var2(i,2) = sum(tmp) / dble(nodays-sum(pool_hak))
      ! Fine roots + wood
-     out_var2(i,3) = sum( ((FLUXES(1:nodays,20) + FLUXES(1:nodays,24) + &
-                            FLUXES(1:nodays,11) + FLUXES(1:nodays,28) + &
-                            FLUXES(1:nodays,32) ) &
-                          / POOLS(1:nodays,3)) * root_wood_filter) / dble(nodays-sum(root_wood_hak))
-     ! Litter (foliage+fine roots)
-     out_var2(i,4) = sum( ((FLUXES(1:nodays,13) + FLUXES(1:nodays,21) + FLUXES(1:nodays,29)) &
-                          / POOLS(1:nodays,4)) * dom_filter) / dble(nodays-sum(dom_hak))
+     ! Estimate MRT (years)
+     pool_hak = 1 ; tmp = 0d0
+     where (POOLS(1:nodays,3) > 0d0) ! protection against NaN from division by zero
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,11) + &
+                    FLUXES(1:nodays,20) + FLUXES(1:nodays,24) + &
+                    FLUXES(1:nodays,28) + FLUXES(1:nodays,32)) / POOLS(1:nodays,3))
+     end where
+     out_var2(i,3) = sum(tmp) / dble(nodays-sum(pool_hak))
+     ! Foliage + fine root litter + som
+     ! Estimate MRT (years)
+     pool_hak = 1 ; tmp = 0d0
+     where (POOLS(1:nodays,4) > 0d0) ! protection against NaN from division by zero
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,13) + FLUXES(1:nodays,21) + &
+                    FLUXES(1:nodays,29)) / POOLS(1:nodays,4))
+     end where
+     out_var2(i,4) = sum(tmp) / dble(nodays-sum(pool_hak))
 
      !
      ! Estimate pool inputs needed for steady state calculation

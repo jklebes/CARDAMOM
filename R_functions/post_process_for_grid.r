@@ -344,6 +344,8 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$mean_annual_alloc_labile_gCm2day = apply(t(apply(states_all$alloc_labile_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
       # Declare combined natural, fire and harvest driven creation of litter
       site_output$combined_labile_to_litter_gCm2day = array(0, dim=dim(states_all$labile_gCm2))
+      site_output$FireFractionOfTurnover_labile = array(0, dim=dim(states_all$labile_gCm2))
+      site_output$HarvestFractionOfTurnover_labile = array(0, dim=dim(states_all$labile_gCm2))
       # Check for the possible loss pathways
       if (any(check_list == "labile_to_foliage_gCm2day")) {
           site_output$labile_to_foliage_gCm2day = apply(states_all$labile_to_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -421,6 +423,9 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       # Determine net pool change over time
       dCbio = states_all$foliage_gCm2 - states_all$foliage_gCm2[,1] # difference in root from initial
       site_output$dCfoliage_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      # Declare combined natural, fire and harvest driven creation of litter
+      site_output$FireFractionOfTurnover_foliage = array(0, dim=dim(states_all$foliage_gCm2))
+      site_output$HarvestFractionOfTurnover_foliage = array(0, dim=dim(states_all$foliage_gCm2))
       # Check for the possible pathways
       if (any(check_list == "alloc_foliage_gCm2day")) {
           site_output$alloc_foliage_gCm2day = apply(states_all$alloc_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -506,6 +511,8 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$annual_max_roots_gCm2 = quantile(dCbio, prob=num_quantiles, na.rm = na_flag)
       # Declare combined natural, fire and harvest driven creation of litter
       site_output$combined_roots_to_litter_gCm2day = array(NA, dim=dim(states_all$roots_gCm2))
+      site_output$FireFractionOfTurnover_roots = array(0, dim=dim(states_all$roots_gCm2))
+      site_output$HarvestFractionOfTurnover_roots = array(0, dim=dim(states_all$roots_gCm2))
       # Is rooting depth calculate (m) by this model?
       if (any(check_list == "RootDepth_m")) {
           site_output$RootDepth_m = apply(states_all$RootDepth_m,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -600,6 +607,8 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$annual_max_wood_gCm2 = quantile(dCbio, prob=num_quantiles, na.rm = na_flag)
       # Declare combined natural, fire and harvest driven creation of litter
       site_output$combined_wood_to_litter_gCm2day = array(NA, dim=dim(states_all$wood_gCm2))
+      site_output$FireFractionOfTurnover_wood = array(0, dim=dim(states_all$wood_gCm2))
+      site_output$HarvestFractionOfTurnover_wood = array(0, dim=dim(states_all$wood_gCm2))
       # Check for the possible pathways
       if (any(check_list == "alloc_wood_gCm2day")) {
           site_output$alloc_wood_gCm2day = apply(states_all$alloc_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -694,6 +703,8 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$mean_annual_litter_to_som_gCm2day = apply(t(apply(states_all$litter_to_som_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
       # Accumulate combined natural, fire and harvest related fluxes to som
       site_output$combined_litter_to_som_gCm2day = states_all$litter_to_som_gCm2day
+      site_output$FireFractionOfTurnover_litter = array(0, dim=dim(states_all$litter_gCm2))
+      site_output$HarvestFractionOfTurnover_litter = array(0, dim=dim(states_all$litter_gCm2))      
       # If this one exists then maybe some other fluxes do
       if (any(check_list == "FIREemiss_litter_gCm2day")) {
           site_output$FIREemiss_litter_gCm2day = apply(states_all$FIREemiss_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -763,7 +774,9 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$mean_woodlitter_to_som_gCm2day = quantile(rowMeans(states_all$woodlitter_to_som_gCm2day, na.rm = na_flag), prob=num_quantiles)
       site_output$mean_annual_woodlitter_to_som_gCm2day = apply(t(apply(states_all$woodlitter_to_som_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
       # Accumulate combined natural, fire and harvest related fluxes to som
-      site_output$combined_woodlitter_to_som_gCm2day = states_all$woodlitter_to_som_gCm2day
+      site_output$combined_woodlitter_to_som_gCm2day = states_all$woodlitter_to_som_gCm2da
+      site_output$FireFractionOfTurnover_woodlitter = array(0, dim=dim(states_all$woodlitter_gCm2))
+      site_output$HarvestFractionOfTurnover_woodlitter = array(0, dim=dim(states_all$woodlitter_gCm2))      
       # If this one exists then maybe some other fluxes do
       if (any(check_list == "FIREemiss_woodlitter_gCm2day")) {
           site_output$FIREemiss_woodlitter_gCm2day = apply(states_all$FIREemiss_woodlitter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -828,6 +841,9 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$rhet_som_gCm2day = apply(states_all$rhet_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_rhet_som_gCm2day = quantile(rowMeans(states_all$rhet_som_gCm2day, na.rm = na_flag), prob=num_quantiles)
       site_output$mean_annual_rhet_som_gCm2day = apply(t(apply(states_all$rhet_som_gCm2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = TRUE)
+      # Declare combined natural, fire and harvest driven creation of litter
+      site_output$FireFractionOfTurnover_som = array(0, dim=dim(states_all$som_gCm2))
+      site_output$HarvestFractionOfTurnover_som = array(0, dim=dim(states_all$som_gCm2))      
       # If this one exists then maybe some other fluxes do
       if (any(check_list == "FIREemiss_som_gCm2day")) {
           site_output$FIREemiss_som_gCm2day = apply(states_all$FIREemiss_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -883,6 +899,8 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$NaturalFractionOfTurnover_biomass = states_all$biomass_to_litter_gCm2day
       # Begin accumulating the combined natural, fire and harvest litter creation
       site_output$combined_biomass_to_litter_gCm2day = states_all$biomass_to_litter_gCm2day
+      site_output$FireFractionOfTurnover_biomass = array(0, dim=dim(states_all$biomass_gCm2))
+      site_output$HarvestFractionOfTurnover_biomass = array(0, dim=dim(states_all$biomass_gCm2))      
       # Other natural flux pathways should really go here before disturbance related
       if (any(check_list == "FIREemiss_biomass_gCm2day")) {
           site_output$FIREemiss_biomass_gCm2day = apply(states_all$FIREemiss_biomass_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -947,6 +965,8 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       # Accumulating output fluxes from dead organic matter
       site_output$outflux_dom_gCm2day = states_all$rhet_dom_gCm2day
       site_output$NaturalFractionOfTurnover_dom = site_output$outflux_dom_gCm2day
+      site_output$FireFractionOfTurnover_dom = array(0, dim=dim(states_all$dom_gCm2))
+      site_output$HarvestFractionOfTurnover_dom = array(0, dim=dim(states_all$dom_gCm2))      
       # Heterotrophic respiration
       site_output$rhet_dom_gCm2day = apply(states_all$rhet_dom_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_rhet_dom_gCm2day = quantile(rowMeans(states_all$rhet_dom_gCm2day, na.rm = na_flag), prob=num_quantiles)
