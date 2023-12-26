@@ -93,41 +93,41 @@ wanted_quant = c(low_quant,3,mid_quant,5,high_quant)
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/InternationalScience/figures_africa_one_vs_all/"
 out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_single_repeat/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/RECCAP2/figures/"
-#outsuffix = "_singleAGB_vs_repeatAGB"
+outsuffix = "_singleTWB_vs_repeatTWB"
 #outsuffix = "_LAI_vs_fAPAR"
 #outsuffix = "_noGPP_vs_withGPP"
-outsuffix = "_noNBE_vs_withNBE"
+#outsuffix = "_noNBE_vs_withNBE"
 
 # Assign the baseline analysis - the original
 # Original AGB assimilated (2003)
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/ODA_extension_Africa_one_agb/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_oneAGB/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_oneAGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB/infofile.RData")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB_NBE/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB_NBE/infofile.RData")
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
 orig_PROJECT = PROJECT ; orig_grid_output = grid_output
 #orig_name = "Baseline"
 #orig_name = "withLAI" # used in labelling figures
-#orig_name = "Single" # used in labelling figures
+orig_name = "Single" # used in labelling figures
 #orig_name = "-GPP" # used in labelling figures
-orig_name = "-NBE" # used in labelling figures
+#orig_name = "-NBE" # used in labelling figures
 # Assign the alternate analysis - the new data constraint
 # Repeat AGB assimilated (2003-2019)
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/ODA_extension_Africa_agb/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A3.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_GCP_AGB_fAPAR/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_AGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB_GPP/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB_NBE/infofile.RData")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_gpp_CsomPriorNCSDC3m/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB_NBE/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB_NBE/infofile.RData")
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
 alt_PROJECT = PROJECT ; alt_grid_output = grid_output 
 #alt_name = "withfPAR" # used in labelling figures
-#alt_name = "Repeat" # used in labelling figures
+alt_name = "Repeat" # used in labelling figures
 #alt_name = "+GPP" # used in labelling figures
-alt_name = "+NBE" # used in labelling figures
+#alt_name = "+NBE" # used in labelling figures
 
 # Tidy
 rm(PROJECT,grid_output)
@@ -2067,8 +2067,8 @@ mtext(expression(paste('Year',sep="")), side = 1, cex = 2.4, padj = 1.85)
 mtext(expression(paste('Analysis-wide LAI (',m^2,'/',m^2,')',sep="")), side = 2, cex = 2.4, padj = -1.05)
 abline(0,1, col="grey", lwd=3)
 # Now plot initial soil
-plot(as.vector(1e-2*orig_grid_output$parameters[,,23,mid_quant]) ~ as.vector(1e-2*SoilCPrior), pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.0, ylab="", xlab="", main="", col=model_colours[1])
-points(as.vector(1e-2*alt_grid_output$parameters[,,23,mid_quant]) ~ as.vector(1e-2*SoilCPrior), pch=1, cex = 1.6, col=model_colours[2])
+plot(as.vector(1e-2*SoilCPrior) ~ as.vector(1e-2*orig_grid_output$parameters[,,23,mid_quant]) , pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.0, ylab="", xlab="", main="", col=model_colours[1])
+points(as.vector(1e-2*SoilCPrior) ~ as.vector(1e-2*alt_grid_output$parameters[,,23,mid_quant]), pch=1, cex = 1.6, col=model_colours[2])
 mtext(expression(paste('CARDAMOM',sep="")), side = 1, cex = 2.4, padj = 1.85)
 mtext(expression(paste('Initial soil C (MgC h',a^-1,')',sep="")), side = 2, cex = 2.4, padj = -1.00)
 abline(0,1, col="grey", lwd=3)
@@ -2137,6 +2137,92 @@ lines(var8~run_years, col=model_colours[2], lwd=4, lty = 2) ; points(var8~run_ye
 lines(var9~run_years, col=model_colours[2], lwd=4, lty = 2) ; points(var9~run_years, col=model_colours[2], pch=16)
 mtext("Year", side=1, padj=2.0,cex=1.6)
 mtext(expression(paste("Fire Emissions (PgC y",r^-1,")",sep="")), side=2, padj=-1.60,cex=1.5)
+dev.off()
+
+# Domain wide ET (yaxis) model (xaxis), include independent estimates
+model_flags=c(orig_name,alt_name)
+obs_flags=c("OCO2-MIPv10","FC/GLEAMv3.7b/MODIS","FC/MODIS/Copernicus/FluxSatv2","GFEDv4.1s / GFAS")
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NBE_ET_GPP_Fire_timeseries_comparison_plusCI.png",sep=""), height=4800, width=2500, res=300)
+par(mfrow=c(4,1),mai=c(0.3,0.65,0.3,0.2),omi=c(0.2,0.2,0.3,0.005))
+# Now plot NBE, annual time series TgC/yr
+var1  = obs_nbe_mean_domain_TgCyr
+var2  = cbind(cbind(c(obs_nbe_mean_domain_TgCyr),c(obs_nbe_min_domain_TgCyr)),c(obs_nbe_max_domain_TgCyr))
+var3  = orig_nbe_TgCyr ; var4  = orig_nbe_lower_TgCyr ; var5  = orig_nbe_upper_TgCyr
+var6  = alt_nbe_TgCyr ; var7  = alt_nbe_lower_TgCyr ; var8  = alt_nbe_upper_TgCyr
+zrange = range(c(var1,var2,var3,var4,var5,var6,var7,var8), na.rm=TRUE)
+zrange[2] = zrange[2] + 500
+plot(var3~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
+      col=model_colours[1], type="l", lwd=4, ylab="", xlab="", lty=1)
+plotconfidence(var2,run_years,2,obs_colours[1])
+lines(var3~run_years, col=model_colours[1], lwd=3, lty = 1) ; points(var3~run_years, col=model_colours[1], pch=16)
+lines(var4~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var4~run_years, col=model_colours[1], pch=16)
+lines(var5~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var5~run_years, col=model_colours[1], pch=16)
+lines(var6~run_years, col=model_colours[2], lwd=3, lty = 1) ; points(var6~run_years, col=model_colours[2], pch=16)
+lines(var7~run_years, col=model_colours[2], lwd=3, lty = 2) ; points(var7~run_years, col=model_colours[2], pch=16)
+lines(var8~run_years, col=model_colours[2], lwd=3, lty = 2) ; points(var8~run_years, col=model_colours[2], pch=16)
+abline(0,0,col="grey", lwd=2)
+legend("topleft", legend = c(obs_flags,model_flags), col = c(obs_colours[1:4],model_colours), 
+       lty = c(rep(1,length(obs_flags)),rep(1,length(model_flags))), pch=rep(NA,length(c(obs_flags,model_flags))), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+mtext(expression(paste("Net Biome Exchange (TgC y",r^-1,")",sep="")), side=2, padj=-1.6,cex=1.4)
+#mtext("Year", side=1, padj=2.0,cex=1.6)
+
+# Now plot ET, annual time series PgH2O/yr
+var1  = obs_et_mean_domain_PgH2Oyr
+var2  = cbind(cbind(c(obs_et_mean_domain_PgH2Oyr),c(obs_et_min_domain_PgH2Oyr)),c(obs_et_max_domain_PgH2Oyr))
+var3  = orig_et_PgH2Oyr ; var4  = orig_et_lower_PgH2Oyr ; var5  = orig_et_upper_PgH2Oyr
+var6  = alt_et_PgH2Oyr ; var7  = alt_et_lower_PgH2Oyr ; var8  = alt_et_upper_PgH2Oyr
+zrange = range(c(var1,var2,var3,var4,var5,var6,var7,var8), na.rm=TRUE)
+zrange[2] = zrange[2] + 50
+plot(var3~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
+      col=model_colours[1], type="l", lwd=4, ylab="", xlab="", lty=1)
+plotconfidence(var2,run_years,2,obs_colours[2])
+lines(var3~run_years, col=model_colours[1], lwd=3, lty = 1) 
+lines(var4~run_years, col=model_colours[1], lwd=3, lty = 2) 
+lines(var5~run_years, col=model_colours[1], lwd=3, lty = 2) 
+lines(var6~run_years, col=model_colours[2], lwd=3, lty = 1) 
+lines(var7~run_years, col=model_colours[2], lwd=3, lty = 2) 
+lines(var8~run_years, col=model_colours[2], lwd=3, lty = 2) 
+abline(0,0,col="grey", lwd=2)
+#legend("topleft", legend = c(obs_flags,model_flags), col = c(obs_colours[1:3],model_colours), 
+#       lty = c(rep(1,length(obs_flags)),rep(1,length(model_flags))), pch=rep(NA,length(c(obs_flags,model_flags))), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+mtext(expression(paste("Evapotranspiration (PgH2O y",r^-1,")",sep="")), side=2, padj=-1.6,cex=1.4)
+#mtext("Year", side=1, padj=2.0,cex=1.6)
+
+# Now plot GPP
+var3  = cbind(cbind(c(obs_gpp_mean_domain_TgCyr),c(obs_gpp_min_domain_TgCyr)),c(obs_gpp_max_domain_TgCyr))
+var4  = orig_gpp_TgCyr ; var5  = orig_gpp_lower_TgCyr ; var6  = orig_gpp_upper_TgCyr
+var7  = alt_gpp_TgCyr ; var8  = alt_gpp_lower_TgCyr ; var9  = alt_gpp_upper_TgCyr
+zrange = range(c(var3,var4,var5,var6,var7,var8,var9), na.rm=TRUE)*c(0.9,1.0)
+plot(var4~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
+      col=model_colours[1], type="l", lwd = 4, ylab="", xlab="", lty = 2)
+plotconfidence(var3,run_years,2,obs_colours[3])
+lines(var4~run_years, col=model_colours[1], lwd = 4, lty = 1)
+lines(var5~run_years, col=model_colours[1], lwd = 4, lty = 2)
+lines(var6~run_years, col=model_colours[1], lwd = 4, lty = 2)
+lines(var7~run_years, col=model_colours[2], lwd = 4, lty = 1)
+lines(var8~run_years, col=model_colours[2], lwd = 4, lty = 2)
+lines(var9~run_years, col=model_colours[2], lwd = 4, lty = 2)
+#legend("bottomright", legend = c(obs_flags[-5],model_flags), col = c(obs_colours[1:4],model_colours), 
+#       lty = c(rep(1,length(obs_flags[-5])),rep(2,length(model_flags))), pch=rep(NA,length(c(obs_flags[-5],model_flags))), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+#mtext("Year", side=1, padj=2.0,cex=1.6)
+mtext(expression(paste("Gross Primary Productivity (TgC y",r^-1,")",sep="")), side=2, padj=-1.6, cex=1.4)
+
+# Now plot fire
+var3  = cbind(cbind(c(obs_fire_mean_domain_TgCyr),c(obs_fire_min_domain_TgCyr)),c(obs_fire_max_domain_TgCyr))
+var4  = orig_fire_TgCyr ; var5  = orig_fire_lower_TgCyr ; var6  = orig_fire_upper_TgCyr
+var7  = alt_fire_TgCyr ; var8  = alt_fire_lower_TgCyr ; var9  = alt_fire_upper_TgCyr
+zrange = range(c(var3,var4,var5,var6,var7,var8,var9), na.rm=TRUE)*c(0.9,1.1)
+plot(var4~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
+      col=model_colours[1], type="l", lwd=4, lty=2, ylab="", xlab="")
+plotconfidence(var3,run_years,2,obs_colours[4])
+lines(var4~run_years, col=model_colours[1], lwd = 4, lty = 1)
+lines(var5~run_years, col=model_colours[1], lwd = 4, lty = 2)
+lines(var6~run_years, col=model_colours[1], lwd = 4, lty = 2)
+lines(var7~run_years, col=model_colours[2], lwd = 4, lty = 1)
+lines(var8~run_years, col=model_colours[2], lwd = 4, lty = 2)
+lines(var9~run_years, col=model_colours[2], lwd = 4, lty = 2)
+mtext("Year", side=1, padj=2.0,cex=1.5)
+mtext(expression(paste("Fire Emissions (TgC y",r^-1,")",sep="")), side=2, padj=-1.6,cex=1.4)
 dev.off()
 
 # Domain wide ET (yaxis) model (xaxis), include independent estimates

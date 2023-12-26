@@ -9,7 +9,7 @@
 ## "PointsOfChange"
 
 #### TO DO
-# Add extractions for specific domains (recaap2)- this should be based on a loop - this should also have time sometime series information
+# Add extractions for specific domains (reccap2)- this should be based on a loop - this should also have time sometime series information
 # What happens to SS in the other pools
 # What is the overlap for the Csom prior
 # Does concistency between variables show an association i.e. is the consistency with LAI correlated with consistency with Cwood etc.
@@ -28,9 +28,9 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM")
 # PointsOfChange
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
-#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB/infofile.RData")
-#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_oneAGB/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB_NBE/infofile.RData")
+#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_AGB/infofile.RData")
+load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_oneAGB/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB_NBE/infofile.RData")
 
 # Set output path for figures and tables
 out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures/"
@@ -4366,7 +4366,7 @@ dev.off()
 model_flags=c("CARDAMOM")
 obs_flags=c("OCO2-MIPv10","FC/GLEAMv3.7b/MODIS","FC/MODIS/Copernicus/FluxSatv2","GFEDv4.1s / GFAS")
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_ET_GPP_Fire_timeseries_comparison_plusCI.png",sep=""), height=3800, width=2500, res=300)
-par(mfrow=c(3,1),mai=c(0.3,0.65,0.3,0.2),omi=c(0.2,0.2,0.3,0.005))
+par(mfrow=c(4,1),mai=c(0.3,0.65,0.3,0.2),omi=c(0.2,0.2,0.3,0.005))
 # Now plot NBE, annual time series TgC/yr
 var1  = obs_nbe_mean_domain_TgCyr
 var2  = cbind(cbind(c(obs_nbe_mean_domain_TgCyr),c(obs_nbe_min_domain_TgCyr)),c(obs_nbe_max_domain_TgCyr))

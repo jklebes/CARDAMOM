@@ -217,7 +217,10 @@ module cardamom_io
         DATAin%nopars = 38
         DATAin%nofluxes = 45
     else if (DATAin%ID == 31) then
-        ! ID = 31 -
+        ! ID = 31 - DALEC.A4.C6.D2.F2.H2.P11.#
+        DATAin%nopools = 7
+        DATAin%nopars = 40
+        DATAin%nofluxes = 46
     else if (DATAin%ID == 32) then
         ! ID = 32 -
     else if (DATAin%ID == 33) then
