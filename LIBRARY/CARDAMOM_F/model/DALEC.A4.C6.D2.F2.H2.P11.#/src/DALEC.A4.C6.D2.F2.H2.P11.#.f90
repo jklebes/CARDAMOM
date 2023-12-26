@@ -183,7 +183,7 @@ module CARBON_MODEL_MOD
 
   double precision :: root_reach, root_biomass, &
                              fine_root_biomass, & ! root depth, coarse+fine, and fine root biomass
-                              total_water_flux, & ! potential transpiration flux (kgH2O.m-2.day-1)
+                              total_water_flux, & ! potential transpiration flux (mmolH2O.m-2.s-1)
                                       drythick, & ! estimate of the thickness of the dry layer at soil surface (m)
                                           wSWP, & ! soil water potential weighted by canopy supply (MPa)
                                           rSWP, & ! soil water potential weighted by root presence (MPa)
@@ -380,6 +380,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                    ,fT_limit_root & 
                     ,fT_limit_fol &
                    ,fT_limit_wood &
+                   ,fW_limit_wood &
                    ,transpiration & ! kgH2O/m2/day
                  ,soilevaporation & ! kgH2O/m2/day
                   ,wetcanopy_evap & ! kgH2O/m2/day
@@ -974,6 +975,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! temprate (i.e. temperature modified rate of metabolic activity))
        FLUXES(n,2) = exp(pars(10)*0.5d0*(met(3,n)+met(2,n)))
+       ! Seasonal canopy growth and leaffall factors
+       FLUXES(n,9) = (2d0/sqrt(pi))*(ff/wf)*exp(-(sin((doy-pars(15)+osf)/sf)*sf/wf)**2)
+       !FLUXES(n,16) = (2d0/sqrt(pi))*(fl/wl)*exp(-(sin((doy-pars(12)+osl)/sf)*sf/wl)**2)
+       FLUXES(n,16) = exp(-(sin((doy-pars(12)+osl)/sf)*sf/wl)**2) ! modified to scale 0-1
 
        ! Autotrophic respiration (gC.m-2.day-1)
        FLUXES(n,3) = pars(2)*FLUXES(n,1)
@@ -982,39 +987,66 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,5) = (FLUXES(n,1)-FLUXES(n,3))
        available_labile = POOLS(n,1) + (FLUXES(n,5) * deltat(n))
 
-       ! Estimate the labile:biomass ratio.
-       ! Limits / restricts labile use when supply is low
-       FLUXES(n,46) = (available_labile / (available_labile + sum(POOLS(n,2:4)))) 
-       FLUXES(n,46) = FLUXES(n,46) / (FLUXES(n,46) + pars(33))
+       if (available_labile > 0d0) then
+           ! Estimate the labile:biomass ratio.
+           ! Limits / restricts labile use when supply is low
+           FLUXES(n,46) = (available_labile / (available_labile + sum(POOLS(n,2:4)))) 
+           FLUXES(n,46) = FLUXES(n,46) / (FLUXES(n,46) + pars(33))
 
-       ! Estimate the temperature limitation on foliage, fine root and wood growth
-       if (leafT > pars(36)) then
-           fT_limit_root = (leafT-pars(36)) / ((leafT-pars(36)) + pars(34))
-           fT_limit_fol = fT_limit_root
-           if (leafT > pars(37)) fT_limit_wood = (leafT-pars(37)) / ((leafT-pars(37)) + pars(35))
-       else 
-           fT_limit_root = 0d0
-           fT_limit_fol  = 0d0
-           fT_limit_wood = 0d0
-       end if
-        
-       !
-       ! Labile allocation to plant tissues (gC/m2/day)
-       !
+           ! Estimate the temperature limitation on foliage, fine root and wood growth
+           if (leafT > pars(36)) then
+               fT_limit_root = (leafT-pars(36)) / ((leafT-pars(36)) + pars(34))
+               fT_limit_fol = fT_limit_root
+               ! Specific limitation of temperature on wood - note that p37 is assumed to be larger than p36
+               if (leafT > pars(37)) then
+                   fT_limit_wood = (leafT-pars(37)) / ((leafT-pars(37)) + pars(35))
+                   ! Specific limitation of water supply on wood
+                   if (total_water_flux > pars(40)) then
+                       fW_limit_wood = (total_water_flux - pars(40)) / ((total_water_flux - pars(40)) + pars(39))
+                   else 
+                       fW_limit_wood = 0d0
+                   end if
+               else 
+                   fT_limit_wood = 0d0 ; fW_limit_wood = 0d0
+               end if
+           else 
+               fT_limit_root = 0d0
+               fT_limit_fol  = 0d0
+               fT_limit_wood = 0d0
+               fW_limit_wood = 0d0
+           end if
 
-       ! Aseasonal leaf to foliage rate (gC.m-2.day-1)
-       FLUXES(n,4) = available_labile*pars(3)*fT_limit_fol*FLUXES(n,46)
-       ! root production (gC.m-2.day-1)
-       FLUXES(n,6) = (FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,4)-FLUXES(n,5))*pars(4)
-       ! wood production
-       FLUXES(n,7) = FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,4)-FLUXES(n,5)-FLUXES(n,6)
+           !
+           ! Labile allocation to plant tissues (gC/m2/day)
+           !
 
-       ! Labile release and leaffall factors
-       FLUXES(n,9) = (2d0/sqrt(pi))*(ff/wf)*exp(-(sin((doy-pars(15)+osf)/sf)*sf/wf)**2d0)
-       FLUXES(n,16) = (2d0/sqrt(pi))*(fl/wl)*exp(-(sin((doy-pars(12)+osl)/sf)*sf/wl)**2d0)
+           ! Aseasonal labile to foliage rate (gC.m-2.day-1)
+           ! Function of potential growth, temperature limitation and lab:bio
+           FLUXES(n,4) = FLUXES(n,46)*pars(3)*fT_limit_fol
+           ! Labile to root rate (gC.m-2.day-1)
+           FLUXES(n,6) = FLUXES(n,46)*pars(4)*fT_limit_root
+           ! Labile to wood rate
+           FLUXES(n,7) = FLUXES(n,46)*pars(38)*fT_limit_wood
+           ! Seasonal labile to foliage rate 
+           FLUXES(n,8) = FLUXES(n,46)*FLUXES(n,16)*pars(13)
 
-       ! total labile release
-       FLUXES(n,8) = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
+           ! Check their combined daily draw is not greater than available stocks
+           if (FLUXES(n,4) + FLUXES(n,6) + FLUXES(n,7) + FLUXES(n,8) > available_labile) then
+               ! Rescale to be within the limits of available labile
+               tmp = available_labile / (FLUXES(n,4) + FLUXES(n,6) + FLUXES(n,7) + FLUXES(n,8)) 
+               FLUXES(n,4) = FLUXES(n,4)*tmp
+               FLUXES(n,6) = FLUXES(n,6)*tmp
+               FLUXES(n,7) = FLUXES(n,7)*tmp
+               FLUXES(n,8) = FLUXES(n,8)*tmp
+           end if 
+           ! (i) convert each into their fractional equivalents, 
+           ! (ii) determine compound interest temporal integral
+           FLUXES(n,4) = available_labile * (1d0-(1d0-(FLUXES(n,4) / available_labile))**deltat(n))/deltat(n)
+           FLUXES(n,6) = available_labile * (1d0-(1d0-(FLUXES(n,6) / available_labile))**deltat(n))/deltat(n)
+           FLUXES(n,7) = available_labile * (1d0-(1d0-(FLUXES(n,7) / available_labile))**deltat(n))/deltat(n)
+           FLUXES(n,8) = available_labile * (1d0-(1d0-(FLUXES(n,8) / available_labile))**deltat(n))/deltat(n)
+
+       end if ! available_labile > 0
 
        !
        ! Biomass turnovers (gC/m2/day)
@@ -1048,13 +1080,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !
 
        ! labile pool
-       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8))*deltat(n)
+       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,4)-FLUXES(n,6)-FLUXES(n,7)-FLUXES(n,8))*deltat(n)
        ! foliar pool
-       POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,4)-FLUXES(n,10) + FLUXES(n,8))*deltat(n)
+       POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,4)+FLUXES(n,8)-FLUXES(n,10))*deltat(n)
        ! wood pool
        POOLS(n+1,4) = POOLS(n,4) + (FLUXES(n,7)-FLUXES(n,11))*deltat(n)
        ! root pool
-       POOLS(n+1,3) = POOLS(n,3) + (FLUXES(n,6) - FLUXES(n,12))*deltat(n)
+       POOLS(n+1,3) = POOLS(n,3) + (FLUXES(n,6)-FLUXES(n,12))*deltat(n)
        ! litter pool
        POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
        ! som pool

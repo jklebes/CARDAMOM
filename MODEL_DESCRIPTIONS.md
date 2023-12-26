@@ -47,6 +47,7 @@ M = Managed Grassland / arable crops (Table 10)
 | 28 | DALEC_1005a                  | DALEC_1005a         | As DALEC 1005 but with code error corrections       | Famiglietti et al., 2021     | Published   |
 | 29 | <PLACE HOLDER FOR DAVID>     | NA                  | PLACE HOLDER FOR DAVID                              | D. T. Milodowski             | Unpublished   |
 | 30 | DALEC.A3.C1.D2.F2.H2.P1.#    | NA                  | As DALEC.4. plus Sellers (1985) RTM                 | T. L. Smallman               | Unpublished   |
+| 31 | DALEC.A4.C6.D2.F2.H2.P11.#   | NA                  | As DALEC.20. plus Sellers (1985) RTM, phenology changes | T. L. Smallman               | Unpublished   |
 
 #### TABLE 2. Assimilation due to photosynthetic activity sub-models
 
@@ -54,8 +55,9 @@ M = Managed Grassland / arable crops (Table 10)
 |------------|----------------------------------------------------------------------------|---------------------------|
 | A0         | Aggregated canopy model for canopy scale photosynthetic activity           | Published (Williams et al., 1997)  |
 | A1         | Aggregated canopy model for canopy scale photosynthesis and plant ~ soil water cycle | Published (Smallman & Williams 2019)  |
-| A2         | As A2 but with Farquhar equations                                          | Unpublished |
+| A2         | As A1 but with Farquhar equations                                          | Unpublished |
 | A3         | As A1 but with Sellers (1985) radiative transfer scheme                    | Unpublished |
+| A4         | As A2 but with Sellers (1985) radiative transfer scheme                    | Unpublished |
 
 #### TABLE 3. Carbon pools represented and connected structure sub-models
 
@@ -67,7 +69,7 @@ M = Managed Grassland / arable crops (Table 10)
 | C3         | 7-pool representation (labile, foliage, fine root, wood, fol+root litter, som, crop yield) where labile supplies NPP | Published (Sus et al., 2010)  |
 | C4         | 3-pool representation (foliage, non-photosynthetic biomass, dead organic matter) | Published (Famiglietti et al., 2021)  |
 | C5         | 4-pool representation (labile, foliage, non-photosynthetic biomass, dead organic matter) where labile supplies foliage | Published (Famiglietti et al., 2021)  |
-
+| C6         | 6-pool representation (labile, foliage, fine root, wood, litter, som) where labile supplies foliage, root and wood | Published (Bloom & Williams 2015)  |
 
 #### TABLE 4. Disturbance due to direct human mechanical intervention sub-models
 
@@ -91,7 +93,7 @@ M = Managed Grassland / arable crops (Table 10)
 |------------|----------------------------------------------------------------------------|---------------------------|
 | H0         | No water cycle representation                                        |                                  |
 | H1         | 3-pool water cycle, 30cm top layer, variable rooting depth layer and remainder of soil. Soil coupled to C-cycle via fine root biomass and supply ~ demand model of stomatal conductance (A2). NOTE: that this model version assumes soil water content remains at field capacity but allows supply demand mechanisms. | Published (Smallman & Williams, 2019)  |
-| H2         | 3-pool water cycle, 30cm top layer, variable rooting depth layer and remainder of soil. Soil coupled to C-cycle via fine root biomass and supply ~ demand model of stomatal conductance (A2) | Published (Smallman & Williams, 2019)  |
+| H2         | 3-pool water cycle, 30cm top layer, variable rooting depth layer and remainder of soil. Soil coupled to C-cycle via fine root biomass and supply ~ demand model of stomatal conductance (A2,3,4) | Published (Smallman & Williams, 2019)  |
 
 #### TABLE 7. Nitrogen pools represented and connected structure sub-models
 
@@ -115,6 +117,7 @@ M = Managed Grassland / arable crops (Table 10)
 | P8         | As P7 but CMI a non-linear function of temperature and Michaelis-Menten function of available labile C | Unpublished |
 | P9         | As P7 but CMI is now 1-CGI. The rolling average NCCE is used to co-determine canopy mortality via a Michaelis-Menten function. | Unpublished |
 | P10        | As P4 but GSI is now a non-linear function of temperature alone. Canopy age is explicitly tracked from point of growth. The canopy photosynthetic efficiency declines on a per-age-class basis as a function of temperature, soil water potential and time. Canopy loss occures when an age class no-longer has a positive NCCE. | Unpublished |
+| P11        | As P1 but allocation to tissues from labile are based on potential growth rates modeified by temperature, water and available labile. | Unpublished |
 
 #### TABLE 9. Respiration (either autotrophic or heterotrophic) sub-models
 
