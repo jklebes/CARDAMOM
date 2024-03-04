@@ -573,23 +573,13 @@ module model_likelihood_module
         EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     endif
 
-    ! Temperature minimum for root growth must be smaller than 50 % restriction
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(36) > pars(34)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
-    endif
-
-    ! Temperature minimum for wood growth must be smaller than 50 % restriction
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(37) > pars(35)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
-    endif
-
     ! Water supply minimum for wood growth must be smaller than 50 % restriction
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(40) > pars(39)) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
     endif
   
     ! Temperature threshold values for wood should be greater than their corresponding fine root value
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(36) > pars(37) .or. pars(34) > pars(35))) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(36) > pars(37)) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
     endif
 
@@ -651,6 +641,7 @@ module model_likelihood_module
     integer :: n, nn, nnn, DIAG, y, PEDC, steps_per_month, nd, fl, &
                io_start, io_finish
     double precision :: infi !, EQF, etol
+    double precision, dimension(nodays) :: lab_ratio
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
                                             mean_pools, Fin, Fout, Rm, Rs, &
                                             Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
@@ -870,6 +861,22 @@ module model_likelihood_module
 !    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(:,4)+M_FLUXES(:,8)) / sum(M_FLUXES(:,1)-M_FLUXES(:,3)) > 1d0 ) then
 !        EDC2 = 0d0 ; EDCD%PASSFAIL(36) = 0
 !    end if
+
+    ! Finally we would not expect that the mean labile stock is greater than
+    ! 8 % of the total ecosystem carbon stock, as we need structure to store
+    ! labile.
+    ! Gough et al (2009) Agricultural and Forest Meteorology. Avg 11, 12.5, 3 %
+    ! (Max across species for branch, bole and coarse roots). Provides evidence that
+    ! branches accumulate labile C prior to bud burst from other areas.
+    ! Wurth et al (2005) Oecologia, Clab 8 % of living biomass (DM) in tropical forest
+    ! Richardson et al (2013), New Phytologist, Clab 2.24 +/- 0.44 % in temperate (max = 4.2 %)
+    ! Estimate the labile ratio, also used below
+    lab_ratio = M_POOLS(:,1) / (M_POOLS(:,1) + M_POOLS(:,2) + M_POOLS(:,3) + M_POOLS(:,4))
+    if (EDC2 == 1 .or. DIAG == 1) then
+        if (maxval(lab_ratio) > 0.125d0) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(39) = 0
+        endif
+    endif ! EDC2 == 1 .or. DIAG == 1
 
     !
     ! EDCs done, below are additional fault detection conditions

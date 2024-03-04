@@ -41,7 +41,6 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   # Update the list variables in states_all which we will be searching
   check_list = names(states_all)
 
-
   # Determine pool specific
 
   # Determine the total biomass within the system
@@ -166,6 +165,13 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   # track which parameters have converged + likelihood
   site_output$parameters_converged = rep(0, dim(parameters)[1])
   site_output$parameters_converged[which(converged == "PASS")] = 1
+
+  # Generic dump of the whole driver$met and drivers$obs arrays
+  site_output$met_array_averages = apply(drivers$met,2,mean,na.rm=TRUE) 
+  filter = which(drivers$obs == -9999) ; drivers$obs[filter] = NA
+  site_output$obs_array_averages = apply(drivers$obs,2,mean,na.rm=TRUE) 
+  drivers$obs[filter] = -9999
+
   # Mean meteorological conditions
   site_output$mean_temperature_C = mean((drivers$met[,3]+drivers$met[,2])*0.5)
   site_output$mean_radiation_MJm2day = mean(drivers$met[,4])

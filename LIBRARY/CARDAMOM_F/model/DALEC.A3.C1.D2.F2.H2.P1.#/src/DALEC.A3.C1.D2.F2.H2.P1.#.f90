@@ -550,7 +550,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! check positive values only for rainfall input
            rainfall_time(n) = max(0d0,met(7,n))
            ! Calculate declination for the day of year
-           ! Calculate declination
            declination = calculate_declination((met(6,n)-(deltat(n)*0.5d0)))
            ! calculate daylength in hours and seconds
            call calculate_daylength

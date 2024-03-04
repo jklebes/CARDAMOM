@@ -16,6 +16,76 @@
 # Other prior weights: 451-500
 # TEMPORAL DRIVERS & DATA: 501-end
 
+# Define global variables to contain the variable names for the 'met' and 'obs' arrays
+met_array_names <<- c("Total number of days ran (starts = 31 for January if monthly)",
+                       "Daily minimum temperatures (C)",
+                       "Daily maximum temperatures (C)",
+                       "Incoming daily shortwave radiation (MJ/m2/d)",
+                       "Atmospheric CO2 concentration (ppm)",
+                       "Julian day of year for the middle of the timestep",
+                       "Precipitation (kgH2O/m2/s)",
+                       "Biomass removal (fraction)",
+                       "Burned area (fraction)",
+                       "21 day rolling mean of daily max temperature (C)",
+                       "21 day rolling mean of daily photoperiod (s)",
+                       "21 day rolling mean of daily VPD (Pa)",
+                       "Biomass removal - management type",
+                       "Daily mean temperature (C)",
+                       "Wind speed (m/2)",
+                       "Daily vapour pressure deficit (Pa)")
+
+obs_array_names <<- c("GPP (gC/m2/day)",
+                      "GPP variance (gC/m2/day)",
+                      "Leaf area index (m2/m2)",
+                      "Leaf area index variance",
+                      "Net Ecosystem Exchange of CO2 (gC/m2/day)",
+                      "Net Ecosystem Exchange of CO2 variance",
+                      "Fire C emission (gC/m2day)",
+                      "Fire C emission variance",
+                      "Ecosystem respiration (Ra + Rh; gC/m2/day)",
+                      "Ecosystem respiration (Ra + Rh) variance",
+                      "Foliar stock (gC/m2)",
+                      "Foliar stock variance",
+                      "Wood stock (above + below; gC/m2)",
+                      "Wood stock (above + below) variance",
+                      "Fine root stock (gC/m2)",
+                      "Fine root stock variance",
+                      "Foliar + fine root litter stock (gC/m2)",
+                      "Foliar + fine root litter stock variance",
+                      "Soil organic matter stock (gC/m2)",
+                      "Soil organic matter stock variance",
+                      "Above ground biomass stock (gC/m2)",
+                      "Above ground biomass stock variance",
+                      "Fraction absorbed PAR",
+                      "Fraction absorbed PAR variance",
+                      "Empty",
+                      "Empty",
+                      "Coarse root stock (gC/m2)",
+                      "Coarse root stock variance",
+                      "Annual foliar maximum (gC/m2)",
+                      "Annual foliar maximum variance",
+                      "Evapotranspiration (kgH2O/m2/day)",
+                      "Evapotranspiration variance",
+                      "Snow water equivalent (kgH2O/m2)",
+                      "Snow water equivalent variance",
+                      "Net Biome Exchange (Reco + Fire - GPP) of CO2 (gC/m2/day)",
+                      "Net Biome Exchange variance",
+                      "Mean woody productivity over lag period (gC/m2/day)",
+                      "Mean woody productivity varince",
+                      "Lag period over which to average (steps)",
+                      "Mean woody natural mortality over lag period (gC/m2/day)",
+                      "Mean woody natural mortality varince",
+                      "Lag period over which to average (steps)",
+                      "Mean litter flux over lag period (gC/m2/day)",
+                      "Mean litter flux varince",
+                      "Lag period over which to average (steps)",
+                      "Mean woody net increment over lag period (gC/m2/day)",
+                      "Mean woody net increment varince",
+                      "Lag period over which to average (steps)",
+                      "Extracted C due to harvest over lag period (gC/m2/day)",
+                      "Extracted C due to harvest varince",
+                      "Lag period over which to average (steps)")
+
 binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter_type,nopars,noyears) {
 
   # Inform the user
@@ -114,28 +184,18 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   # extract information from list to array
   if (modelname == "ACM") {
       MET = array(NA,dim=c(length(met$run_day),(length(met)+2)))
-      met_names = rep("NA", dim(MET)[2])
   } else {
       MET = array(NA,dim=c(length(met$run_day),(length(met)+3)))
-      met_names = rep("NA", dim(MET)[2])
   }
 
   MET[,1] = met$run_day
-  met_names[1] = "Total number of days ran (starts = 31 for January if monthly)"
   MET[,2] = met$mint  ; if (min(met$mint) < -200) {print(summary(met$mint)) ; stop('mint error in binary_data')} # Celcius
-  met_names[2] = "Average daily minimum temperatures (C)"
   MET[,3] = met$maxt  ; if (min(met$maxt) < -200) {print(summary(met$maxt)) ; stop('maxt error in binary_data')} # Celcius
-  met_names[3] = "Average daily maximum temperatures (C)"
   MET[,4] = met$swrad ; if (min(met$swrad) < 0) {print(summary(met$swrad)) ; stop('RAD error in binary_data')} # MJ/m2/day
-  met_names[4] = "Average incoming daily shortwave radiation (MJ/m2/d)"
   MET[,5] = met$co2#+200 # ppm
-  met_names[5] = "Average atmospheric CO2 concentration (ppm)"
   MET[,6] = met$doy
-  met_names[6] = "Julian day of year for the middle of the timestep"
   MET[,7] = pmax(0,met$precip) # kgH2O/m2/s
-  met_names[7] = "Average precipitation (kgH2O/m2/s)"
   MET[,8] = OBS$deforestation  # fraction
-  met_names[7] = "Average precipitation (kgH2O/m2/s)"
   MET[,9] = OBS$burnt_area     # fraction
   MET[,10] = met$avgTmax       # C
   MET[,11] = met$photoperiod   # Seconds
@@ -287,7 +347,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
   } else if (modelname == "DALEC.C3.M1.#") {
       PARPRIORS[11]=16.9                   ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
-      PARPRIORS[13]=0.21875                ; PARPRIORUNC[13]=0.01 # Respiratory costs of labile transfe
+      PARPRIORS[13]=0.21875                ; PARPRIORUNC[13]=0.01 # Respiratory costs of labile transfer
       PARPRIORS[12]=OBS$planting_doy       ; PARPRIORUNC[12]=OBS$planting_doy_unc
       PARPRIORS[15]=OBS$harvest_doy        ; PARPRIORUNC[15]=OBS$harvest_doy_unc
       #PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc
@@ -300,8 +360,9 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[35]=0.99                   ; PARPRIORUNC[35]=0.1 # labile turnover rate (/day)
       # Other priors
       OTHERPRIORS[1] = 0.54                ; OTHERPRIORUNC[1]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
-      OTHERPRIORS[8] = 0.38                ; OTHERPRIORUNC[8]=0.087 # Yield:GPP Winter Wheat ATEC experiment plus He et al., (2018), doi: 10.3390/rs10030372
-                                                                    # Values from He et al., Spring Wheat 0.24, Barley 0.42, Duram Wheat 0.22, Alfalfa 0.55, Pea 0.28, Maize 0.44
+      # Yield:GPP Winter Wheat ATEC experiment plus He et al., (2018), doi: 10.3390/rs10030372
+      # Values from He et al., Spring Wheat 0.24, Barley 0.42, Duram Wheat 0.22, Alfalfa 0.55, Pea 0.28, Maize 0.44
+      OTHERPRIORS[8] = 0.38                ; OTHERPRIORUNC[8]=0.087 ; OTHERPRIORWEIGHT[8] = noyears 
   } else if (modelname == "DALEC.A3.C3.H2.M1.#") {
       PARPRIORS[11]=0.2764618              ; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
       PARPRIORS[13]=0.21875                ; PARPRIORUNC[13]=0.01 # Respiratory costs of labile transfer
@@ -316,8 +377,9 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[35]=0.99                   ; PARPRIORUNC[35]=0.1 # labile turnover rate (/day)
       # Other priors
       OTHERPRIORS[1] = 0.54                ; OTHERPRIORUNC[1]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
-      OTHERPRIORS[8] = 0.38                ; OTHERPRIORUNC[8]=0.087 # Yield:GPP Winter Wheat ATEC experiment plus He et al., (2018), doi: 10.3390/rs10030372
-                                                                    # Values from He et al., Spring Wheat 0.24, Barley 0.42, Duram Wheat 0.22, Alfalfa 0.55, Pea 0.28, Maize 0.44
+      # Yield:GPP Winter Wheat ATEC experiment plus He et al., (2018), doi: 10.3390/rs10030372
+      # Values from He et al., Spring Wheat 0.24, Barley 0.42, Duram Wheat 0.22, Alfalfa 0.55, Pea 0.28, Maize 0.44
+      OTHERPRIORS[8] = 0.38                ; OTHERPRIORUNC[8]=0.087 ; OTHERPRIORWEIGHT[8] = noyears 
   } else if (modelname == "DALEC_1005") {
       PARPRIORS[2] =0.54                   ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       PARPRIORS[11]=16.9                   ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
@@ -466,7 +528,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[31] = 0.01                 ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
       #PARPRIORS[32] = 0.25                 ; PARPRIORUNC[32] = 0.25 # Foliage + root litter combustion completeness
       PARPRIORS[33] = 0.05                 ; PARPRIORUNC[33] = 0.05 # labile:biomass at which growth limited by 50 %
-      PARPRIORS[36] = 0.0                 ; PARPRIORUNC[36] = 5 # temperature at which root growth totally suppressed (oC)
+      PARPRIORS[36] = 1.0                 ; PARPRIORUNC[36] = 5 # temperature at which root growth totally suppressed (oC)
       PARPRIORS[37] = 5.0                 ; PARPRIORUNC[37] = 5 # temperature at which wood growth totally suppressed (oC)
       # Other priors
       OTHERPRIORS[1] = OBS$soilwater       ; OTHERPRIORUNC[1] = OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)

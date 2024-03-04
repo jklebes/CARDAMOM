@@ -518,7 +518,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     # A mean rmse of ~1 kgH2O/m2/day was estimated when evaluating ACM-GPP-ET (ACM2)
     # ET against fluxnet observations (Smallman & Williams 2019)
     # NOTE minimum uncertainty bound irrespective of the dataset estimates
-    Evap_unc[Evap_unc >= 0] = pmax(0.1,sqrt(Evap_unc[Evap_unc >= 0]**2 + (0.1*mean(Evap[Evap >= 0]))**2))
+    Evap_unc[Evap_unc >= 0] = pmax(1,sqrt(Evap_unc[Evap_unc >= 0]**2 + (0.1*mean(Evap[Evap >= 0]))**2))
 
     ###
     ## Get some Reco information (time series; gC/m2/day)
@@ -696,7 +696,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     #Cwood_stock_unc[Cwood_stock_unc >= 0] = sqrt(Cwood_stock_unc[Cwood_stock_unc >= 0]**2 + 100**2)
     # Assumed uncertainty structure as agreed with Anthony Bloom
     # NOTE minimum uncertainty bound irrespective of the dataset estimates
-    Cwood_stock_unc[Cwood_stock_unc >= 0] = pmax(100,sqrt(Cwood_stock_unc[Cwood_stock_unc >= 0]**2 + (0.1*mean(Cwood_stock[Cwood_stock >= 0]))**2))
+    Cwood_stock_unc[Cwood_stock_unc >= 0] = pmax(100,sqrt(Cwood_stock_unc[Cwood_stock_unc >= 0]**2 + (0.1*mean(Cwood_stock[Cwood_stock >= 0]))**2),na.rm=TRUE)
 
     ###
     ## Get some Cagb information (stock)

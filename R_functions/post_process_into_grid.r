@@ -36,6 +36,9 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            grid_output$parameters[slot_i,slot_j,,] = site_output$parameters
            # track which parameters have converged + likelihood
            grid_output$parameters_converged[slot_i,slot_j,] = site_output$parameters_converged
+           # Generic dump of the whole driver$met and drivers$obs arrays
+           grid_output$met_array_averages[slot_i,slot_j,] = site_output$met_array_averages
+           grid_output$obs_array_averages[slot_i,slot_j,] = site_output$obs_array_averages
            # Mean meteorological conditions
            grid_output$mean_temperature_C[slot_i,slot_j] = site_output$mean_temperature_C
            grid_output$mean_radiation_MJm2day[slot_i,slot_j] = site_output$mean_radiation_MJm2day

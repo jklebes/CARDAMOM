@@ -132,14 +132,13 @@ module CARBON_MODEL_MOD
                                                  ! Each of these are temperature sensitivty
                            e0 = 0.385d0,       & ! Quantum yield at light compensation (umolE/J PAR)
                minlwp_default =-1.808224d+00,  & ! minimum leaf water potential (MPa). NOTE: actual SPA = -2 MPa
-                minlwp_default =-1.808224d+00, & ! minimum leaf water potential (MPa). NOTE: actual SPA = -2 MPa
-      soil_iso_to_net_coef_LAI =-2.717467d+00, & ! Coefficient relating soil isothermal net radiation to net.
-       soil_iso_to_net_coef_SW =-3.500964d-02, & ! Coefficient relating soil isothermal net radiation to net.
-         soil_iso_to_net_const = 3.455772d+00, & ! Constant relating soil isothermal net radiation to net
-     canopy_iso_to_net_coef_SW = 1.480105d-02, & ! Coefficient relating SW to the adjustment between isothermal and net LW
-       canopy_iso_to_net_const = 3.753067d-03, & ! Constant relating canopy isothermal net radiation to net
-    canopy_iso_to_net_coef_LAI = 2.455582d+00, & ! Coefficient relating LAI to the adjustment between isothermal and net LW
-                         iWUE = 1.5d-2,          ! Intrinsic water use efficiency (umolC/mmolH2O-1/m2leaf/s-1)
+     soil_iso_to_net_coef_LAI =-2.717467d+00,  & ! Coefficient relating soil isothermal net radiation to net.
+      soil_iso_to_net_coef_SW =-3.500964d-02,  & ! Coefficient relating soil isothermal net radiation to net.
+        soil_iso_to_net_const = 3.455772d+00,  & ! Constant relating soil isothermal net radiation to net
+    canopy_iso_to_net_coef_SW = 1.480105d-02,  & ! Coefficient relating SW to the adjustment between isothermal and net LW
+      canopy_iso_to_net_const = 3.753067d-03,  & ! Constant relating canopy isothermal net radiation to net
+   canopy_iso_to_net_coef_LAI = 2.455582d+00,  & ! Coefficient relating LAI to the adjustment between isothermal and net LW
+                         iWUE = 1.5d-2           ! Intrinsic water use efficiency (umolC/mmolH2O-1/m2leaf/s-1)
 
   double precision :: minlwp = minlwp_default
   ! Photosynthetic Metrics
@@ -375,7 +374,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, dimension(nodays,nofluxes), intent(inout) :: FLUXES ! vector of ecosystem fluxes
 
     ! declare local variables
-    double precision ::      infi &
+    double precision ::  tmp,infi &
                 ,available_labile & ! available labile for allocation (gC/m2)
                    ,fT_limit_root & 
                     ,fT_limit_fol &
@@ -568,8 +567,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         do n = 1, nodays
            ! check positive values only for rainfall input
            rainfall_time(n) = max(0d0,met(7,n))
+           ! Calculate declination for the day of year
+           declination = calculate_declination((met(6,n)-(deltat(n)*0.5d0)))           
            ! calculate daylength in hours and seconds
-           call calculate_daylength((met(6,n)-(deltat(n)*0.5d0)),lat)
+           call calculate_daylength
            daylength_hours(n) = dayl_hours ; daylength_seconds(n) = dayl_seconds
         end do
 
@@ -1015,20 +1016,23 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                fT_limit_wood = 0d0
                fW_limit_wood = 0d0
            end if
-
+!if (fT_limit_root > 1d0 .or. fT_limit_root < 0d0 .or. fT_limit_root /= fT_limit_root) then
+!    print*,"fT_limit_root",fT_limit_root
+!end if
            !
            ! Labile allocation to plant tissues (gC/m2/day)
            !
 
            ! Aseasonal labile to foliage rate (gC.m-2.day-1)
-           ! Function of potential growth, temperature limitation and lab:bio
-           FLUXES(n,4) = FLUXES(n,46)*pars(3)*fT_limit_fol
+           ! Function of potential growth, available labile supply (lab:bio) and temperature limitation
+           ! In the case of wood, there is also a water supply limitation
+           FLUXES(n,4) = pars(3)*FLUXES(n,46)*fT_limit_fol
            ! Labile to root rate (gC.m-2.day-1)
-           FLUXES(n,6) = FLUXES(n,46)*pars(4)*fT_limit_root
+           FLUXES(n,6) = pars(4)*FLUXES(n,46)*fT_limit_root
            ! Labile to wood rate
-           FLUXES(n,7) = FLUXES(n,46)*pars(38)*fT_limit_wood
+           FLUXES(n,7) = pars(38)*FLUXES(n,46)*fT_limit_wood*fW_limit_wood
            ! Seasonal labile to foliage rate 
-           FLUXES(n,8) = FLUXES(n,46)*FLUXES(n,16)*pars(13)
+           FLUXES(n,8) = pars(13)*FLUXES(n,46)*FLUXES(n,16) ! should this also have *fT_limit_fol ?
 
            ! Check their combined daily draw is not greater than available stocks
            if (FLUXES(n,4) + FLUXES(n,6) + FLUXES(n,7) + FLUXES(n,8) > available_labile) then
@@ -3553,6 +3557,26 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     return
 
   end function modified_arrhenious
+  !
+  !----------------------------------------------------------------------
+  !
+  double precision function calculate_declination(doy)
+
+    implicit none
+
+     ! Declare arguments
+     double precision, intent(in) :: doy
+
+     ! Declination calculation
+     ! NOTE: 0.002739726d0 = 1/365
+     !    dec = - asin( sin( 23.45d0 * deg_to_rad ) * cos( 2d0 * pi * ( doy + 10d0 ) / 365d0 ) )
+     !    dec = - asin( sin_dayl_deg_to_rad * cos( two_pi * ( doy + 10d0 ) / 365d0 ) )
+     calculate_declination = - asin( sin_dayl_deg_to_rad * cos( two_pi * ( doy + 10d0 ) * 0.002739726d0 ) )
+
+     ! return to user
+     return
+
+  end function calculate_declination  
   !
   !----------------------------------------------------------------------
   !

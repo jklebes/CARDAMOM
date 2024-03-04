@@ -152,6 +152,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
       # check which file prefix we are using today
       # list all available files which we will then search
       avail_files = list.files(path_to_nbe,full.names=TRUE, pattern = "gcp2023_v3_uoe_1x1_2001b")
+      if (length(avail_files) != 1) {avail_files = list.files(path_to_nbe,full.names=TRUE, pattern = "merra2_oco2_insitu_v10r_odiac_uoe")}
       #prefix = "gcp2023_v3_uoe_1x1_2001b" # (.)* wildcard characters for unix standard c_gls*_
       # How many files do we have to work with? Hopefully just the one
       if (length(avail_files) != 1) {stop("We do not have a single GEOSCHEM_GCP NBE estimate. Correct and re-run.")}
@@ -228,7 +229,13 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
       # Read in biospheric flux NBE
       var1 = ncvar_get(data1, "bio") # net biome exchange of CO2 (kgC/m2/s)
       # Read in biospheric flux NBE uncertainty
-      var2 = ncvar_get(data1, "post_flux_uncert") # NBE error estimate (kgC/m2/s)
+      if (length(which(grepl("post_flux_uncert",names(data1$var)) == TRUE)) > 0) {
+          var2 = ncvar_get(data1, "post_flux_uncert") # NBE error estimate (kgC/m2/s)
+      } else if (length(which(grepl("uncertainty",names(data1$var)) == TRUE)) > 0) {
+          var2 = ncvar_get(data1, "uncertainty") # NBE error estimate (kgC/m2/s)
+      } else {
+          
+      }
       # Close file connection
       nc_close(data1)
       
@@ -252,7 +259,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
 
       # output variables
       nbe_all = list(retrieval_valid = TRUE, nbe_gCm2day = nbe_out, nbe_unc_gCm2day = nbe_unc_out,
-                     doy_obs = doy_obs, lat = lat, long = long, missing_years=missing_years)
+                     doy_obs = doy_obs, lat = lat, long = long, missing_years = missing_years)
 
       # Tidy up
       rm(lat_in,long_in,time,nbe_out,nbe_unc_out,lat,long,doy_obs,missing_years,lat_in,long_in)

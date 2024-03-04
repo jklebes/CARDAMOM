@@ -34,7 +34,7 @@ numWorkers = 6 # number of cores to assign to parallel job
 
 ## Model - which DALEC 
 # see "MODEL_DESCRIPTIONS.md" for available models
-model="DALEC.4."
+model="DALEC.31."
 pft_specific_parameters=FALSE # impacts crop model only
 
 ## MDF method
@@ -80,7 +80,7 @@ fapar_source=" " # "COPERNICUS" or "MODIS" or "site_specific"
 Csom_source="site_specific" # "SoilGrids" or "SoilGrids_v2" or "HWSD" or "site_specific
 sand_clay_source="site_specific" # "SoilGrids" or "SoilGrids_v2" or "HWSD" or "site_specific
 soilwater_initial_source = " " # initial soil water fraction (m3/m3)
-Evap_source=" "        # " " or "site_specific"
+Evap_source="site_specific"        # " " or "site_specific"
 Cwood_inc_source = " " # "site_specific" or " " or "Rainfor"
 Cwood_mortality_source = " " # "site_specific" or " " or "Rainfor"
 fire_source=" " # " " or "site_specific" or "Global_Combined"
@@ -89,6 +89,7 @@ Reco_source=" " 	# " " or "site_specific"
 NEE_source="site_specific" # " " or "site_specific"
 nbe_source = " " # " " or "site_specific" or "Global_Combined" or "GEOSCHEM" or "OCO2MIP"
 harvest_source = ""
+foliage_to_litter_source = " " # " " or "site_specific"
 # i.e. single value valid for beginning of simulation
 Cfol_initial_source=" " #"site_specific" 	# " " or "site_specific"
 Cwood_initial_source=" " #"site_specific" 	# " " or "site_specific"
@@ -104,7 +105,10 @@ Ccoarseroot_stock_source=" " 	# " " or "site_specific"
 Croots_stock_source=" " 	# " " or "site_specific"
 Clit_stock_source=" "  	# " " or "site_specific"
 Csom_stock_source=" "  	# " " or "site_specific"
+# Parameter priors
 lca_source = " " # "Butler" or " " or "site_specific"
+frac_Cwood_coarse_root_source = "" # " " or "site_specific"
+minLWP_source = "" # " " or "site_specific"
 # Steady state attractor
 Cwood_potential_source = " " # "site_specific" or ""
 # Management drivers
@@ -137,14 +141,14 @@ select_country = FALSE # If gridded run and path_to_landsea = "default",
 request_nos_chains = 3        # Number of chains CARDAMOM should run for each location
 request_nos_samples = 100e6   # Total number of parameter samples / iterations to be explored
 request_nos_subsamples = 1e3  # Number of parameter sets to be sub-sampled from the chain
-request_use_server = TRUE    # Use remote server? Currently coded for UoE Eddie.
+request_use_server = FALSE    # Use remote server? Currently coded for UoE Eddie.
 request_runtime = 48          # How many hours of compute to request per job. Only applied for running on remote server
-request_compile_server = TRUE# Copy and compile current source code on remote server
+request_compile_server = FALSE# Copy and compile current source code on remote server
 request_compile_local = TRUE  # Compile local copy of the source code 
 request_use_EDCs = TRUE       # Use EDCs
 request_extended_mcmc = FALSE # Extend the current MCMC by adding a further request_nos_extended_samples + request_nos_samples
 request_nos_extended_samples = 90e6 # If request_extened_mcmc == TRUE then this is the number of additional proposals to be made
-request_cost_function_scaling = 0 # 0 = Default, no normaliation of the likelihood score
+request_cost_function_scaling = 2 # 0 = Default, no normaliation of the likelihood score
                                   # 1 = Normalisation of the likelihood score by sample size
                                   # 2 = Normalisation of the likelihood score by sqrt(sample size)
                                   # 3 = Normalisation of the likelihood score by log(sample size) 
@@ -156,7 +160,7 @@ request_cost_function_scaling = 0 # 0 = Default, no normaliation of the likeliho
 # stage  2 : Submit the project to eddie
 # stage  3 : Copy back results and process vectors
 # stage  4 : Do some standard figure creation (and further processing for gridded analysis)
-stage=2
+stage=4
 repair=1 # to force (=1) re-run processed results or driver files if they already exist
 grid_override=FALSE # force site specific files to be saved and figures to be generated when in "grid" operation
 

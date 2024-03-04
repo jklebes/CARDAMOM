@@ -89,6 +89,9 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
           # Assimilated som stock / prior information
           grid_output$assimilated_som_mean_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
           grid_output$assimilated_som_mean_unc_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          # Generic dump of the whole driver$met and drivers$obs arrays
+          grid_output$met_array_averages = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(met_array_names)))
+          grid_output$obs_array_averages = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(obs_array_names)))
 
           # Net primary production allocation fractions
           if (exists(x = "NPP_foliage_fraction", where = site_output)) {grid_output$NPP_foliage_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}

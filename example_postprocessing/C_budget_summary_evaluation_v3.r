@@ -27,13 +27,17 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM")
 
 # PointsOfChange
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_AGB/infofile.RData")
-load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_oneAGB/infofile.RData")
+#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_oneAGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB_NBE/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/infofile.RData")
+#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_GEOSCHEM_NBE/infofile.RData")
 
 # Set output path for figures and tables
-out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures/"
+out_dir = "/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/FIGURES/"
+#out_dir = "/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/FIGURES/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/RECCAP2/figures/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/InternationalScience/figures_africa/"
 #out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
@@ -4207,7 +4211,7 @@ e[3] = ee[3] ; e[4] = ee[4]
 zrange1 = c(0,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
 zrange2 = c(0,max(values(var2), na.rm=TRUE))
 zrange3 = c(0,max(values(var3), na.rm=TRUE))
-plot(var1, main="",col = rev(colour_choices_gain), range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
+plot(var1, main="",col = colour_choices_gain, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
 mtext(expression(paste("ET (kgH2O ",m^-2," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
 points(grid_long[et_sig_longitude+0.5,1],grid_lat[1,et_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")

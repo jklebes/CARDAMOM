@@ -50,12 +50,12 @@ module MODEL_PARAMETERS
     PI%parmax(2) = 0.8d0
 
     ! Potential rate of direct labile to foliage (gC/m2/day)
-    PI%parmin(3) = 0.1d0
-    PI%parmax(3) = 10d0
+    PI%parmin(3) = 0.001d0
+    PI%parmax(3) = 8d0
 
     ! Potential rate of direct labile to fine root (gC/m2/day)
     PI%parmin(4) = 0.1d0
-    PI%parmax(4) = 10d0
+    PI%parmax(4) = 8d0
 
     ! Leaf Lifespan (yr)
     ! Wright et al. 2004
@@ -94,7 +94,7 @@ module MODEL_PARAMETERS
     PI%parmax(12) = 365.25d0*4d0
 
     ! Potential rate of seasonal labile to foliage (gC/m2/day)
-    PI%parmin(13) = 0.1d0
+    PI%parmin(13) = 0.001d0
     PI%parmax(13) = 10d0
 
     ! Clab Release period
@@ -144,32 +144,32 @@ module MODEL_PARAMETERS
     PI%parmax(32) = 0.99d0
 
     ! labile:biomass at which growth is limited by 50 %
-    PI%parmin(33) = 0.01d0
-    PI%parmax(33) = 0.1d0
+    PI%parmin(33) = 0.005d0 ! 0.5 %
+    PI%parmax(33) = 0.1d0   ! 10 %
 
-    ! Temperature (oC) at which fine root growth is limited by 50 %
+    ! Temperature (oC) above p36 at which fine root growth is limited by 50 %
     PI%parmin(34) = 1d0
-    PI%parmax(34) = 20d0
-    ! Temperature (oC) at which wood growth is limited by 50 %
-    PI%parmin(35) = 6d0
-    PI%parmax(35) = 20d0
+    PI%parmax(34) = 10d0
+    ! Temperature (oC) above p37 at which wood growth is limited by 50 %
+    PI%parmin(35) = 1d0
+    PI%parmax(35) = 10d0
     ! Temperature (oC) at which fine root growth is prevented
-    PI%parmin(36) = -5d0
-    PI%parmax(36) =  5d0
+    PI%parmin(36) =  0.01d0 !-8d0
+    PI%parmax(36) =  8d0
     ! Temperature (oC) at which wood growth is prevented
     PI%parmin(37) = 1d0
-    PI%parmax(37) = 10d0
+    PI%parmax(37) = 8d0
 
     ! Potential growth rate of wood (gC/m2/day)
-    PI%parmin(38) = 0.1d0
-    PI%parmax(38) = 10d0
+    PI%parmin(38) = 0.05d0
+    PI%parmax(38) = 8d0
 
     ! Potential supply of water from roots (mmolH2O/m2/s) at which wood growth is limited by 50 %
-    PI%parmin(39) = 1d0
-    PI%parmax(39) = 1000d0
+    PI%parmin(39) = 0.01d0
+    PI%parmax(39) = 10d0
     ! Potential supply of water from roots (mmolH2O/m2/s) at which wood growth is prevented
-    PI%parmin(40) = 1d0
-    PI%parmax(40) = 1000d0
+    PI%parmin(40) = 0.01d0
+    PI%parmax(40) = 10d0
 
     !
     ! INITIAL VALUES DECLARED HERE

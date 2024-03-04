@@ -275,8 +275,10 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
             # if so then loop through the land areas which fall within the correct country
             country_match_loc = which(grepl(sitename,country_match) == TRUE)
             for (i in seq(1, length(country_match_loc))) {
-                 keep[which(as.vector(landsea) == country_match_loc[i])] = 1
+                 landsea[which(as.vector(landsea) == country_match_loc[i])] = -1
             }
+            landsea[which(as.vector(landsea) > 0)] = 0
+            landsea[which(as.vector(landsea) == -1)] = 1
         } else {
             # otherwise just assume we are interested in all land areas...
             landsea[landsea > 0] = 1
