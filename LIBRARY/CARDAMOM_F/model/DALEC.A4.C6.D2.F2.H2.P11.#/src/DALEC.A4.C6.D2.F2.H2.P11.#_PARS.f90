@@ -165,11 +165,11 @@ module MODEL_PARAMETERS
     PI%parmax(38) = 8d0
 
     ! Potential supply of water from roots (mmolH2O/m2/s) at which wood growth is limited by 50 %
-    PI%parmin(39) = 0.01d0
-    PI%parmax(39) = 10d0
+    PI%parmin(39) = 0.001d0
+    PI%parmax(39) = 5d0
     ! Potential supply of water from roots (mmolH2O/m2/s) at which wood growth is prevented
-    PI%parmin(40) = 0.01d0
-    PI%parmax(40) = 10d0
+    PI%parmin(40) = 0.001d0
+    PI%parmax(40) = 5d0
 
     !
     ! INITIAL VALUES DECLARED HERE

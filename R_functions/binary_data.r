@@ -42,11 +42,11 @@ obs_array_names <<- c("GPP (gC/m2/day)",
                       "Net Ecosystem Exchange of CO2 variance",
                       "Fire C emission (gC/m2day)",
                       "Fire C emission variance",
-                      "Ecosystem respiration (Ra + Rh; gC/m2/day)",
+                      "Ecosystem respiration (Ra + Rh gC/m2/day)",
                       "Ecosystem respiration (Ra + Rh) variance",
                       "Foliar stock (gC/m2)",
                       "Foliar stock variance",
-                      "Wood stock (above + below; gC/m2)",
+                      "Wood stock (above + below gC/m2)",
                       "Wood stock (above + below) variance",
                       "Fine root stock (gC/m2)",
                       "Fine root stock variance",
@@ -358,6 +358,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[22]=OBS$Clit_initial       ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
       PARPRIORS[23]=OBS$Csom_initial       ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
       PARPRIORS[35]=0.99                   ; PARPRIORUNC[35]=0.1 # labile turnover rate (/day)
+      PARPRIORS[39]=11.197440              ; PARPRIORUNC[39]=9.3*0.5 # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
       # Other priors
       OTHERPRIORS[1] = 0.54                ; OTHERPRIORUNC[1]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       # Yield:GPP Winter Wheat ATEC experiment plus He et al., (2018), doi: 10.3390/rs10030372
@@ -375,6 +376,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[22]=OBS$Clit_initial       ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
       PARPRIORS[23]=OBS$Csom_initial       ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
       PARPRIORS[35]=0.99                   ; PARPRIORUNC[35]=0.1 # labile turnover rate (/day)
+      PARPRIORS[39]=11.197440              ; PARPRIORUNC[39]=9.3*0.5 # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
       # Other priors
       OTHERPRIORS[1] = 0.54                ; OTHERPRIORUNC[1]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       # Yield:GPP Winter Wheat ATEC experiment plus He et al., (2018), doi: 10.3390/rs10030372
@@ -528,8 +530,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[31] = 0.01                 ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
       #PARPRIORS[32] = 0.25                 ; PARPRIORUNC[32] = 0.25 # Foliage + root litter combustion completeness
       PARPRIORS[33] = 0.05                 ; PARPRIORUNC[33] = 0.05 # labile:biomass at which growth limited by 50 %
-      PARPRIORS[36] = 1.0                 ; PARPRIORUNC[36] = 5 # temperature at which root growth totally suppressed (oC)
-      PARPRIORS[37] = 5.0                 ; PARPRIORUNC[37] = 5 # temperature at which wood growth totally suppressed (oC)
+      PARPRIORS[36] = 1.0                 ; PARPRIORUNC[36] = 5.0 # temperature at which root growth totally suppressed (oC)
+      PARPRIORS[37] = 5.0                 ; PARPRIORUNC[37] = 1.0 # temperature at which wood growth totally suppressed (oC)
       # Other priors
       OTHERPRIORS[1] = OBS$soilwater       ; OTHERPRIORUNC[1] = OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
       OTHERPRIORS[4] = 0.66                ; OTHERPRIORUNC[4] = 0.12 #; OTHERPRIORWEIGHT[4] = noyears # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018

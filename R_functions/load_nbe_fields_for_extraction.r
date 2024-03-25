@@ -153,6 +153,7 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
       # list all available files which we will then search
       avail_files = list.files(path_to_nbe,full.names=TRUE, pattern = "gcp2023_v3_uoe_1x1_2001b")
       if (length(avail_files) != 1) {avail_files = list.files(path_to_nbe,full.names=TRUE, pattern = "merra2_oco2_insitu_v10r_odiac_uoe")}
+      if (length(avail_files) != 1) {avail_files = list.files(path_to_nbe,full.names=TRUE, pattern = "merra2_gosat_insitu_uoe_2009_2019_full")}
       #prefix = "gcp2023_v3_uoe_1x1_2001b" # (.)* wildcard characters for unix standard c_gls*_
       # How many files do we have to work with? Hopefully just the one
       if (length(avail_files) != 1) {stop("We do not have a single GEOSCHEM_GCP NBE estimate. Correct and re-run.")}

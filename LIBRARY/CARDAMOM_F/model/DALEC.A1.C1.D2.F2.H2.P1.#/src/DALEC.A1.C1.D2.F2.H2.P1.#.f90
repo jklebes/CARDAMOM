@@ -604,7 +604,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! now load the hardcoded forest management parameters into their scenario locations
 
     ! Deforestation process functions in a sequenctial way.
-    ! Thus, the pool_loss is first determined as a function of met(n,8) and
+    ! Thus, the pool_loss is first determined as a function of met(8,n) and
     ! for fine and coarse roots whether this felling is associated with a mechanical
     ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
     ! fine and coarse roots may subsequently undergo mortality from which they do not recover

@@ -27,16 +27,16 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM")
 
 # PointsOfChange
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_AGB/infofile.RData")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_oneAGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB_NBE/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/infofile.RData")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_GEOSCHEM_NBE/infofile.RData")
 
 # Set output path for figures and tables
-out_dir = "/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/FIGURES/"
-#out_dir = "/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/FIGURES/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/FIGURES/"
+out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/FIGURES/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/RECCAP2/figures/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/InternationalScience/figures_africa/"
@@ -449,6 +449,7 @@ wood_trend = rep(NA, PROJECT$nosites)
 mean_wood = rep(NA, PROJECT$nosites)
 # Initialise variablesfor aggregate time series
 cumarea = 0
+LAIobs_model_match = array(NA,dim=c(dim(grid_output$mean_nee_gCm2day)[1],dim(grid_output$mean_nee_gCm2day)[2],nos_years))
 lai_grid = array(NA,dim=c(dim(grid_output$mean_nee_gCm2day)[1],dim(grid_output$mean_nee_gCm2day)[2],nos_years))
 lai_m2m2 = rep(0,nos_years) ; lai_lower_m2m2 = rep(0,nos_years) ; lai_upper_m2m2 = rep(0,nos_years)
 cica_ratio = rep(0, nos_years) ; cica_lower_ratio = rep(0, nos_years) ; cica_upper_ratio = rep(0, nos_years)  
@@ -593,7 +594,12 @@ for (n in seq(1, PROJECT$nosites)) {
          # Load any priors
          SoilCPrior[i_loc,j_loc] = drivers$parpriors[23] ; if (SoilCPrior[i_loc,j_loc] == -9999) {SoilCPrior[i_loc,j_loc] = NA}
          # Clear missing data from and extract observed LAI
-         drivers$obs[which(drivers$obs[,3] == -9999),3] = NA ; drivers$obs[which(drivers$obs[,4] == -9999),4] = NA
+         missing_points = which(drivers$obs[,3] == -9999 | drivers$obs[,4] == -9999)
+         drivers$obs[missing_points,3] = NA ; drivers$obs[missing_points,4] = NA
+         # Extract the model equivalents
+         tmp = grid_output$lai_m2m2[n,mid_quant,] ; tmp[missing_points] = NA
+         LAIobs_model_match[i_loc,j_loc,] = rollapply(tmp, width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)         
+         # Extract the observation equivalents
          LAIcount[i_loc,j_loc,] = rollapply(drivers$obs[,3], width = steps_per_year, by = steps_per_year, counting)
          LAIobs[i_loc,j_loc,] = rollapply(drivers$obs[,3], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)
          LAIobs_unc[i_loc,j_loc,] = rollapply(drivers$obs[,4], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)
@@ -3682,7 +3688,7 @@ png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_compare_observation.pn
 par(mfrow=c(2,2), mar=c(3,4.2,3,2), omi = c(0.35,0.4,0.1,0.1))
 # Plot LAI mean annual
 var1 = as.vector(LAIobs) # as.vector(LAIobs*array(landfilter,dim=dim(LAIobs))) ; var1 = var1[which(is.na(var1) == FALSE)]
-var2 = as.vector(lai_grid) #; var2 = var2[which(is.na(var2) == FALSE)]
+var2 = as.vector(LAIobs_model_match) #; var2 = var2[which(is.na(var2) == FALSE)]
 plot(var2 , var1, col=model_colours[1],
      pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.0, ylab="", xlab="", main="")
 mtext(expression(paste('CARDAMOM',sep="")), side = 1, cex = 2.4, padj = 1.85)
@@ -4145,15 +4151,15 @@ e[3] = ee[3] ; e[4] = ee[4]
 zrange1 = c(0,1)
 zrange2 = c(0,1)
 zrange3 = c(0,1)
-plot(var1, main="",col = colour_choices_gain, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
+plot(var1, main="",col = colour_choices_gain, range=zrange1, type="continuous", xaxt = "n", yaxt = "n", mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
 mtext(expression(paste("NBE overlap fraction",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var2, main="",col = colour_choices_gain, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+plot(var2, main="",col = colour_choices_gain, range=zrange2, type="continuous", xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
 mtext(expression(paste("GPP overlap fraction",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, main="",col = (colour_choices_gain), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+plot(var3, main="",col = (colour_choices_gain), range=zrange3, type="continuous", xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
 mtext(expression(paste("Fire overlap fraction",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
 plot(landmask, add=TRUE, lwd=0.5)
@@ -4370,7 +4376,7 @@ dev.off()
 model_flags=c("CARDAMOM")
 obs_flags=c("OCO2-MIPv10","FC/GLEAMv3.7b/MODIS","FC/MODIS/Copernicus/FluxSatv2","GFEDv4.1s / GFAS")
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_ET_GPP_Fire_timeseries_comparison_plusCI.png",sep=""), height=3800, width=2500, res=300)
-par(mfrow=c(4,1),mai=c(0.3,0.65,0.3,0.2),omi=c(0.2,0.2,0.3,0.005))
+par(mfrow=c(4,1),mai=c(0.3,0.65,0.3,0.2),omi=c(0.205,0.2,0.3,0.005))
 # Now plot NBE, annual time series TgC/yr
 var1  = obs_nbe_mean_domain_TgCyr
 var2  = cbind(cbind(c(obs_nbe_mean_domain_TgCyr),c(obs_nbe_min_domain_TgCyr)),c(obs_nbe_max_domain_TgCyr))
@@ -4384,9 +4390,9 @@ lines(var3~run_years, col=model_colours[1], lwd=3, lty = 1) ; points(var3~run_ye
 lines(var4~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var4~run_years, col=model_colours[1], pch=16)
 lines(var5~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var5~run_years, col=model_colours[1], pch=16)
 abline(0,0,col="grey", lwd=2)
-legend("topleft", legend = c(obs_flags,model_flags), col = c(obs_colours[1:4],model_colours), 
+legend("topleft", legend = c(obs_flags,model_flags), col = c(obs_colours[1:4],model_colours[1]), 
        lty = c(rep(1,length(obs_flags)),rep(1,length(model_flags))), pch=rep(NA,length(c(obs_flags,model_flags))), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
-mtext(expression(paste("Net Biome Exchange (TgC y",r^-1,")",sep="")), side=2, padj=-1.6,cex=1.5)
+mtext(expression(paste("Net Biome Exchange (TgC y",r^-1,")",sep="")), side=2, padj=-1.6,cex=1.2)
 #mtext("Year", side=1, padj=2.0,cex=1.6)
 
 # Now plot ET, annual time series PgH2O/yr
@@ -4397,14 +4403,12 @@ zrange = range(c(var1,var2,var3,var4,var5), na.rm=TRUE)
 zrange[2] = zrange[2] + 50
 plot(var3~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
       col=model_colours[1], type="l", lwd=4, ylab="", xlab="", lty=1)
-plotconfidence(var2,run_years,2,obs_colours[1])
-lines(var3~run_years, col=model_colours[2], lwd=3, lty = 1) ; points(var3~run_years, col=model_colours[2], pch=16)
-lines(var4~run_years, col=model_colours[2], lwd=3, lty = 2) ; points(var4~run_years, col=model_colours[2], pch=16)
-lines(var5~run_years, col=model_colours[2], lwd=3, lty = 2) ; points(var5~run_years, col=model_colours[2], pch=16)
+plotconfidence(var2,run_years,2,obs_colours[2])
+lines(var3~run_years, col=model_colours[1], lwd=3, lty = 1) ; points(var3~run_years, col=model_colours[1], pch=16)
+lines(var4~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var4~run_years, col=model_colours[1], pch=16)
+lines(var5~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var5~run_years, col=model_colours[1], pch=16)
 abline(0,0,col="grey", lwd=2)
-legend("topleft", legend = c(obs_flags,model_flags), col = c(obs_colours[1:3],model_colours), 
-       lty = c(rep(1,length(obs_flags)),rep(1,length(model_flags))), pch=rep(NA,length(c(obs_flags,model_flags))), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
-mtext(expression(paste("Evapotranspiration (PgH2O y",r^-1,")",sep="")), side=2, padj=-1.6,cex=1.5)
+mtext(expression(paste("Evapotranspiration (PgH2O y",r^-1,")",sep="")), side=2, padj=-1.6,cex=1.2)
 #mtext("Year", side=1, padj=2.0,cex=1.6)
 
 # Now plot GPP
@@ -4413,14 +4417,14 @@ var4  = mean_gpp_TgCyr ; var5  = gpp_lower_TgCyr ; var6  = gpp_upper_TgCyr
 zrange = range(c(var3,var4,var5,var6), na.rm=TRUE)*c(0.9,1.0)
 plot(var4~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
       col=model_colours[1], type="l", lwd = 4, ylab="", xlab="", lty = 2)
-plotconfidence(var3,run_years,2,obs_colours[2])
-lines(var4~run_years, col=model_colours[3], lwd = 4, lty = 1) ; points(var4~run_years, col=model_colours[3], pch=16)
-lines(var5~run_years, col=model_colours[3], lwd = 4, lty = 2) ; points(var5~run_years, col=model_colours[3], pch=16)
-lines(var6~run_years, col=model_colours[3], lwd = 4, lty = 2) ; points(var6~run_years, col=model_colours[3], pch=16)
+plotconfidence(var3,run_years,2,obs_colours[3])
+lines(var4~run_years, col=model_colours[1], lwd = 4, lty = 1) ; points(var4~run_years, col=model_colours[1], pch=16)
+lines(var5~run_years, col=model_colours[1], lwd = 4, lty = 2) ; points(var5~run_years, col=model_colours[1], pch=16)
+lines(var6~run_years, col=model_colours[1], lwd = 4, lty = 2) ; points(var6~run_years, col=model_colours[1], pch=16)
 #legend("bottomright", legend = c(obs_flags[-5],model_flags), col = c(obs_colours[1:4],model_colours), 
 #       lty = c(rep(1,length(obs_flags[-5])),rep(2,length(model_flags))), pch=rep(NA,length(c(obs_flags[-5],model_flags))), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
 #mtext("Year", side=1, padj=2.0,cex=1.6)
-mtext(expression(paste("Gross Primary Productivity (TgC y",r^-1,")",sep="")), side=2, padj=-1.6, cex=1.5)
+mtext(expression(paste("Gross Primary Productivity (TgC y",r^-1,")",sep="")), side=2, padj=-1.6, adj = 0.65, cex=1.2)
 
 # Now plot fire
 var3  = cbind(cbind(c(obs_fire_mean_domain_TgCyr),c(obs_fire_min_domain_TgCyr)),c(obs_fire_max_domain_TgCyr))
@@ -4428,12 +4432,12 @@ var4  = mean_fire_TgCyr  ; var5  = fire_lower_TgCyr ; var6  = fire_upper_TgCyr
 zrange = range(c(var3,var4,var5,var6), na.rm=TRUE)*c(0.9,1.1)
 plot(var4~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
       col=model_colours[1], type="l", lwd=4, lty=2, ylab="", xlab="")
-plotconfidence(var3,run_years,2,obs_colours[3])
-lines(var4~run_years, col=model_colours[4], lwd=4, lty = 1) ; points(var4~run_years, col=model_colours[4], pch=16)
-lines(var5~run_years, col=model_colours[4], lwd=4, lty = 2) ; points(var5~run_years, col=model_colours[4], pch=16)
-lines(var6~run_years, col=model_colours[4], lwd=4, lty = 2) ; points(var5~run_years, col=model_colours[4], pch=16)
+plotconfidence(var3,run_years,2,obs_colours[4])
+lines(var4~run_years, col=model_colours[1], lwd=4, lty = 1) ; points(var4~run_years, col=model_colours[1], pch=16)
+lines(var5~run_years, col=model_colours[1], lwd=4, lty = 2) ; points(var5~run_years, col=model_colours[1], pch=16)
+lines(var6~run_years, col=model_colours[1], lwd=4, lty = 2) ; points(var5~run_years, col=model_colours[1], pch=16)
 mtext("Year", side=1, padj=2.0,cex=1.6)
-mtext(expression(paste("Fire Emissions (TgC y",r^-1,")",sep="")), side=2, padj=-1.6,cex=1.5)
+mtext(expression(paste("Fire Emissions (TgC y",r^-1,")",sep="")), side=2, padj=-1.6,cex=1.2)
 dev.off()
 
 ###
@@ -6682,9 +6686,54 @@ smoothScatter(grid_output$NPP_wood_fraction[,,mid_quant]~(HarvestFraction), main
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(HarvestFraction, na.rm=TRUE)*1.0))
 dev.off()
 
+###
+## Investigation of explanatory variables on the minimum biomass resilience to fire
 
+summary(lm(as.vector(grid_output$parameters[,,28,4]) ~ as.vector(BurnedFraction) + as.vector(grid_output$mean_biomass_gCm2[,,4]) + as.vector(grid_output$mean_precipitation_kgH2Om2yr) + as.vector(grid_output$mean_vpd_Pa) + as.vector(FireFreq)))
 
+bin_radius = 0.05
+BAbins = seq(0+bin_radius,0.9-bin_radius, by = bin_radius)
+min_resilience = rep(NA, length(BAbins))
+min_biomass = rep(NA, length(BAbins))
+min_precipitation = rep(NA, length(BAbins))
+min_vpd = rep(NA, length(BAbins))
+min_fireFreq = rep(NA, length(BAbins))
 
+for (i in seq(1, length(min_resilience))) {
+     min_resilience[i] = quantile(grid_output$parameters[,,28,4][which(BurnedFraction > BAbins[i]-bin_radius & BurnedFraction <= BAbins[i] + bin_radius)], prob=c(0.025),na.rm=TRUE)
+     min_biomass[i] = mean(as.vector(grid_output$mean_biomass_gCm2[,,4][which(BurnedFraction > BAbins[i]-bin_radius & BurnedFraction <= BAbins[i] + bin_radius)]) , na.rm=TRUE)
+     min_precipitation[i] = mean(as.vector(grid_output$mean_precipitation_kgH2Om2yr[which(BurnedFraction > BAbins[i]-bin_radius & BurnedFraction <= BAbins[i] + bin_radius)]) , na.rm=TRUE)
+     min_vpd[i] = mean(as.vector(grid_output$mean_vpd_Pa[which(BurnedFraction > BAbins[i]-bin_radius & BurnedFraction <= BAbins[i] + bin_radius)]) , na.rm=TRUE)
+     min_fireFreq[i] = mean(as.vector(FireFreq[which(BurnedFraction > BAbins[i]-bin_radius & BurnedFraction <= BAbins[i] + bin_radius)]), na.rm=TRUE)  
+}
+
+# Logistic model
+logistic_model<-function(input,par_max,par_half,growth_coef) {logistic_model = par_max / (1+exp(-growth_coef*(input-par_half)))}
+chrono1 = data.frame(BA = BAbins[which(is.na(min_resilience) == FALSE)], min_resilience = min_resilience[which(is.na(min_resilience) == FALSE)])
+model1 = nls(min_resilience ~ logistic_model(BA,par_max,par_half,growth_coef), data=chrono1, 
+             start=list(par_max=max(grid_output$parameters[,,28,4],na.rm=TRUE),par_half=mean(chrono1$BA)*0.25,growth_coef=25))
+p1 = coef(model1)[1]
+p2 = coef(model1)[2]
+p3 = coef(model1)[3]
+# Linear model reduces to Burned area only
+summary(lm(min_resilience ~ BAbins))$adj.r.squared
+# But how much better is the logistic model
+summary(lm(min_resilience ~ logistic_model(BAbins,p1,p2,p3)))$adj.r.squared
+
+# Create different dataset for more extensive plotting
+BA_test = seq(0,1,length.out=50)
+min_resilience_est <- logistic_model(BA_test,p1,p2,p3)
+
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_estimating_minimum_bound_fire_resilience_parameter.png",sep=""), height = 2000, width = 3000, res = 300)
+par(mfrow=c(1,1), mar=c(4,4.5,0.3,7),omi=c(0.01,0.1,0.01,0.1))
+plot(as.vector(grid_output$parameters[,,28,4]) ~ as.vector(BurnedFraction), 
+     ylab="Fire resilience (0-1)", xlab="Mean annual BA (0-1)", 
+     cex = 1.2, cex.lab = 1.6, cex.axis = 1.6, pch=16, ylim=c(0,1), xlim=c(0,1))
+#points(min_resilience ~ BAbins, pch=16, col="blue")
+#lines(min_resilience_est ~ BA_test, col="red", lwd=3)
+#abline(lm(min_resilience ~ BAbins), lwd=3, col="orange")
+#plot(min_resilience ~ min_resilience_est) ; abline(0,1,col="red", lwd=3)
+dev.off()
 
 #> # PointsOfChange
 #> # Load the map object 

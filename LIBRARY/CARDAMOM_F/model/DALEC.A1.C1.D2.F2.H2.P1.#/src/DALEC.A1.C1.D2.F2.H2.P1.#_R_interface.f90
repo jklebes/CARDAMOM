@@ -26,7 +26,7 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
 
   implicit none
   ! declare input variables
-  integer, intent(in) :: nopars         & ! number of paremeters in vector
+  integer, intent(in) :: nopars         & ! number of parameters in vector
                         ,output_dim     & !
                         ,MTT_dim        & ! number of pools mean transit time estimates
                         ,SS_dim         & ! number of pools the steady state will be output for

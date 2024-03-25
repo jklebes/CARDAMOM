@@ -719,11 +719,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     transpiration = 0d0 ; soilevaporation = 0d0
 
     ! Generate some generic location specific variables for radiation balance
-    !call calculate_radiation_commons(lat,pars(39:44))
+    !call calculate_radiation_commons(lat,pars(40:45))
     call calculate_radiation_commons(lat)
 
     ! load ACM-GPP-ET parameters
-    NUE = 16d0           ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
+    NUE = pars(39)           ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
                          ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
     avN = 10d0**pars(11) ! foliar N
     ceff = avN*NUE

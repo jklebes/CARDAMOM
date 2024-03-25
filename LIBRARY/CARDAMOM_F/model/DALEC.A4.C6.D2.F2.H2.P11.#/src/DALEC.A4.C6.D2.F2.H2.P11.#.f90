@@ -380,6 +380,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                     ,fT_limit_fol &
                    ,fT_limit_wood &
                    ,fW_limit_wood &
+                          ,A_wood &
+                         ,Ha_wood &
+                        ,dHd_wood &
+                        ,dSd_wood &
                    ,transpiration & ! kgH2O/m2/day
                  ,soilevaporation & ! kgH2O/m2/day
                   ,wetcanopy_evap & ! kgH2O/m2/day
@@ -1000,10 +1004,26 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                fT_limit_fol = fT_limit_root
                ! Specific limitation of temperature on wood - note that p37 is assumed to be larger than p36
                if (leafT > pars(37)) then
+                   ! Estimate the minimum temperature threshold value (typically ~5oC)
+                   ! Faatchi et al., (2014), plus various referenes
                    fT_limit_wood = (leafT-pars(37)) / ((leafT-pars(37)) + pars(35))
+                   ! Calculate the baseline temperature response function
+                   ! NOTE: these are based on rice, maize, Arabidopsis (below) only. 
+                   ! No more recent mechanistic estimates could be found
+                   ! Modified Arrhenious function for temperature effect on wood growth
+                   ! Cabon et al., (2020), doi: 10.1111/nph.16456
+                   A_wood = 5.36d12 !c(5.36e12,8.045e10,3.883e8) # Scaling coefficient (K-1)
+                   Ha_wood = 87.5d3 !c(87.5e3,76.8e3,63.1e3) # Enthalpy energy of activitation (J mol-1)
+                   dHd_wood = 1.09d3 !c(1.09e3,0.933e3,1.18e3) # Enthalpy difference between activation and deactivation (J mol-1)
+                   dSd_wood = 333d3 !c(333e3,285e3,358e3) # Entropy diffference between activiation and deactivation (J mol-1 K-1)
+                   fT_limit_wood = fT_limit_wood * & 
+                                   ( ((leafT+273.15d0) * A_wood * exp(-Ha_wood/(Rcon*(leafT+273.15d0)))) / &
+                                     (1d0+exp((dHd_wood/Rcon)-(dSd_wood/(Rcon*(leafT+273.15d0))))))
+                !print*, fT_limit_wood
                    ! Specific limitation of water supply on wood
                    if (total_water_flux > pars(40)) then
                        fW_limit_wood = (total_water_flux - pars(40)) / ((total_water_flux - pars(40)) + pars(39))
+                       !print*,fW_limit_wood ,total_water_flux,pars(40) ,pars(39)
                    else 
                        fW_limit_wood = 0d0
                    end if
@@ -1031,6 +1051,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            FLUXES(n,6) = pars(4)*FLUXES(n,46)*fT_limit_root
            ! Labile to wood rate
            FLUXES(n,7) = pars(38)*FLUXES(n,46)*fT_limit_wood*fW_limit_wood
+           !print*,FLUXES(n,7),pars(38),FLUXES(n,46),fT_limit_wood,fW_limit_wood
+                       
+
            ! Seasonal labile to foliage rate 
            FLUXES(n,8) = pars(13)*FLUXES(n,46)*FLUXES(n,16) ! should this also have *fT_limit_fol ?
 
@@ -3548,7 +3571,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Determine the exponential increase below Topt
     increasing_term = exp(activation_energy * ((T_current-Tref)/(Tref * Rcon * T_current)))
-    ! Determine the decreaing term above Topt
+    ! Determine the decreasing term above Topt
     decreasing_term = (1d0 + exp((Tref*entropy_term-deactivation_energy)/(Tref*Rcon))) &
                     / (1d0 + exp((T_current*entropy_term-deactivation_energy)/(T_current*Rcon)))
     ! Combine and return

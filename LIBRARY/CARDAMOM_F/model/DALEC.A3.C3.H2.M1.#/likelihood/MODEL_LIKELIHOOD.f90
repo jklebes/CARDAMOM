@@ -566,14 +566,15 @@ module model_likelihood_module
         EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
     endif
 
-!    ! CN ratio of leaf should also be between 95CI of trait database values
-!    ! Kattge et al (2011)
-!    tmp = (pars(17)/(10d0**pars(11)))
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 43.76895d0 .or. tmp < 10.82105d0)) then
-!       EDC1=0 ; EDCD%PASSFAIL(9) = 0
-!    endif
+    ! CN ratio of leaf should also be between 95CI of trait database values
+    ! Kattge et al (2011)
+    tmp = (pars(17)/(10d0**pars(11)))
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 43.76895d0 .or. tmp < 10.82105d0)) then
+       EDC1=0 ; EDCD%PASSFAIL(9) = 0
+    endif
 
     ! could and probably should add some more
+    
   end subroutine assess_EDC1
   !
   !------------------------------------------------------------------

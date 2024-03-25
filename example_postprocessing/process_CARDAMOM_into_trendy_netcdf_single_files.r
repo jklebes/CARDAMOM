@@ -17,11 +17,12 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 # set input and output directories
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m"
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood"
-input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB"
+input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_GEOSCHEM_GOSAT_NBE"
 
 # Specify any extra information for the filename
-#output_prefix = "CARDAMOM_S3_" # follow with "_"
-output_prefix = "CARDAMOM_S2_" # follow with "_"
+output_prefix = "CARDAMOM_S3_" # follow with "_"
+#output_prefix = "CARDAMOM_S2_" # follow with "_"
 output_suffix = "" # begin with "_"
 
 ###
@@ -29,7 +30,7 @@ output_suffix = "" # begin with "_"
 
 # load needed libraries
 library(ncdf4)
-library(raster)
+library(terra)
 library(compiler)
 library(zoo)
 
