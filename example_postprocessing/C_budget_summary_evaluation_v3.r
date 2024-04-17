@@ -26,21 +26,27 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM")
 ## Load analysis
 
 # PointsOfChange
-#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
+#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_gpp_CsomPriorNCSDC3m/infofile.RData")
+load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec4_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
+#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec4_isimip3a_agb_lca_nbe_gpp_CsomPriorNCSDC3m/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_AGB/infofile.RData")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_oneAGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB_NBE/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/infofile.RData")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_GEOSCHEM_NBE/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/UK_0.0625deg_baseline/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_FAPAR/infofile.RData")
 
 # Set output path for figures and tables
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/FIGURES/"
-out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/FIGURES/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/FIGURES/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures/"
-#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/RECCAP2/figures/"
+out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/RECCAP2/figures/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/InternationalScience/figures_africa/"
 #out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/UK_0.0625deg_baseline/FIGURES/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_FAPAR/FIGURES/"
 
 #
 # Load the CARDAMOM files
@@ -126,13 +132,10 @@ fudgeit <- function(){
                      smallplot = c(0.97-0.12,1.0-0.12,0.28,0.85))
 } # end function fudgeit
 
+print("...Loading files and functions complete...")
+
 ###
 ## Do parameter correlation plots here
-
-par_tmp = array(grid_output$parameters[,,,mid_quant], dim=c(prod(dim(grid_output$parameters)[1:2]),dim(grid_output$parameters)[3]))
-filter = which(is.na(par_tmp[,1]))
-par_tmp = par_tmp[-filter,]
-par_tmp = cor(par_tmp)
 
 # In order of p1-33         
 par_labels = c("Decomp efficiency","RaGPP","GPPfol","GPProot","Leaf lifespan","Wood turnover","Fine root turnover","Litter mineralisation"
@@ -142,45 +145,54 @@ par_labels = c("Decomp efficiency","RaGPP","GPPfol","GPProot","Leaf lifespan","W
               ,"Foliage CC","Wood+root CC","Soil CC"
               ,"litter CC","log-likelihood")         
 
-colnames(par_tmp) <- par_labels
-rownames(par_tmp) <- par_labels
+if (length(par_labels) == dim(grid_output$parameters)[3]) {
 
-col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_between_pixel_parameter_correlations.png",sep=""), height = 5000, width = 5000, res = 300)
-par(mfrow=c(1,1), mar=c(0,0,0,0), omi=c(0.01,0.01,0.01,0.01))
-corrplot(par_tmp, method="color", col=col(200),  
-         type="upper", tl.cex=1.2, number.cex=0.8, cl.cex=1.2,
-         addCoef.col = "black", # Add coefficient of correlation
-         tl.col="black", tl.srt=45, #Text label color and rotation
-         # hide correlation coefficient on the principal diagonal
-         diag=FALSE 
-         )
-dev.off()
+    par_tmp = array(grid_output$parameters[,,,mid_quant], dim=c(prod(dim(grid_output$parameters)[1:2]),dim(grid_output$parameters)[3]))
+    filter = which(is.na(par_tmp[,1]))
+    par_tmp = par_tmp[-filter,]
+    par_tmp = cor(par_tmp)
 
-par_tmp = array(grid_output$parameters[,,,mid_quant], dim=c(prod(dim(grid_output$parameters)[1:2]),dim(grid_output$parameters)[3]))
-filter = which(is.na(par_tmp[,1]))
-par_tmp = par_tmp[-filter,]
-var_tmp = as.vector(grid_output$mean_nee_gCm2day[,,mid_quant])
-var_tmp = cbind(var_tmp,as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]))
-var_tmp = cbind(var_tmp,as.vector(grid_output$mean_rauto_gCm2day[,,mid_quant]))
-var_tmp = cbind(var_tmp,as.vector(grid_output$mean_rhet_gCm2day[,,mid_quant]))
-var_tmp = cbind(var_tmp,as.vector(grid_output$mean_fire_gCm2day[,,mid_quant]))
-var_tmp = var_tmp[-filter,]
-par_tmp = t(cor(var_tmp,par_tmp))
+    colnames(par_tmp) <- par_labels
+    rownames(par_tmp) <- par_labels
 
-colnames(par_tmp) <- c("NEE","GPP","Rauto","Rhet","fire")
-rownames(par_tmp) <- par_labels
+    col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
+    png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_between_pixel_parameter_correlations.png",sep=""), height = 5000, width = 5000, res = 300)
+    par(mfrow=c(1,1), mar=c(0,0,0,0), omi=c(0.01,0.01,0.01,0.01))
+    corrplot(par_tmp, method="color", col=col(200),  
+             type="upper", tl.cex=1.2, number.cex=0.8, cl.cex=1.2,
+             addCoef.col = "black", # Add coefficient of correlation
+             tl.col="black", tl.srt=45, #Text label color and rotation
+             # hide correlation coefficient on the principal diagonal
+             diag=FALSE 
+             )
+    dev.off()
 
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_between_pixel_parameter_correlations_fluxes.png",sep=""), height = 5000, width = 2000, res = 300)
-par(mfrow=c(1,1), mar=c(0,0,0,0), omi=c(0.01,0.01,0.01,0.01))
-corrplot(par_tmp, method="color", col=col(200), 
-         type="full", tl.cex=1.2, number.cex=0.8, cl.cex=1.2, cl.ratio = 0.3,
-         addCoef.col = "black", # Add coefficient of correlation
-         tl.col="black", tl.srt=45, #Text label color and rotation
-         # hide correlation coefficient on the principal diagonal
-         diag=FALSE 
-         )
-dev.off()
+    par_tmp = array(grid_output$parameters[,,,mid_quant], dim=c(prod(dim(grid_output$parameters)[1:2]),dim(grid_output$parameters)[3]))
+    filter = which(is.na(par_tmp[,1]))
+    par_tmp = par_tmp[-filter,]
+    var_tmp = as.vector(grid_output$mean_nee_gCm2day[,,mid_quant])
+    var_tmp = cbind(var_tmp,as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]))
+    var_tmp = cbind(var_tmp,as.vector(grid_output$mean_rauto_gCm2day[,,mid_quant]))
+    var_tmp = cbind(var_tmp,as.vector(grid_output$mean_rhet_gCm2day[,,mid_quant]))
+    var_tmp = cbind(var_tmp,as.vector(grid_output$mean_fire_gCm2day[,,mid_quant]))
+    var_tmp = var_tmp[-filter,]
+    par_tmp = t(cor(var_tmp,par_tmp))
+
+    colnames(par_tmp) <- c("NEE","GPP","Rauto","Rhet","fire")
+    rownames(par_tmp) <- par_labels
+
+    png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_between_pixel_parameter_correlations_fluxes.png",sep=""), height = 5000, width = 2000, res = 300)
+    par(mfrow=c(1,1), mar=c(0,0,0,0), omi=c(0.01,0.01,0.01,0.01))
+    corrplot(par_tmp, method="color", col=col(200), 
+             type="full", tl.cex=1.2, number.cex=0.8, cl.cex=1.2, cl.ratio = 0.3,
+             addCoef.col = "black", # Add coefficient of correlation
+             tl.col="black", tl.srt=45, #Text label color and rotation
+             # hide correlation coefficient on the principal diagonal
+             diag=FALSE 
+             )
+    dev.off()
+
+}
 
 ###
 ## Determine needed spatial information
@@ -264,7 +276,7 @@ rm(tmp)
 add_biomes = " "
 #add_biomes = "ssa_wwf"
 #add_biomes = "wwf_ecoregions"
-#add_biomes = "reccap2_permafrost"
+add_biomes = "reccap2_permafrost"
 if (add_biomes == "ssa_wwf") {
     # Read in shape file for boundaries
     biomes = shapefile("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/SECO/analysis/ssa_wwf_dissolve/ssa_wwf_dissolve.shp")
@@ -325,11 +337,9 @@ if (add_biomes == "ssa_wwf") {
               
     # Create raster with the target crs
     target = rast(crs = ("+init=epsg:4326"), ext = ext(biomes), resolution = res(biomes))
-    # Check whether the target and actual analyses have the same CRS
-    if (compareCRS(biomes,target) == FALSE) {
-        # Resample to correct grid
-        biomes = resample(biomes, target, method="ngb") ; gc() ; removeTmpFiles()
-    }
+    # Resample to correct grid
+    biomes = resample(biomes, target, method="near") ; gc() 
+
     # Trim the extent of the overall grid to the analysis domain
     biomes = crop(biomes,cardamom_ext) 
     # Match resolutions if they differ
@@ -340,12 +350,12 @@ if (add_biomes == "ssa_wwf") {
             # Create raster with the target resolution
             target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
             # Resample to correct grid
-            biomes = resample(biomes, target, method="bilinear") ; gc() ; removeTmpFiles()
+            biomes = resample(biomes, target, method="bilinear") ; gc() 
         } # Aggrgeate to resolution
     } # spatial_type == "grid"
 
     # Convert to polygons
-    biomes = rasterToPolygons(biomes, n=16, na.rm=TRUE, digits=12, dissolve=TRUE)
+    biomes = as.polygons(biomes, n=16, na.rm=TRUE, digits=12, aggregate=TRUE)
 
     # Overwrite the existing landmask
     landmask = biomes
@@ -5493,17 +5503,17 @@ e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_disturbance_drivers.png",sep=""), height = 1300, width = 4900, res = 300)
 par(mfrow=c(1,3), mar=c(0.5,0.4,3.0,7),omi=c(0.1,0.3,0.1,0.2))
 # Partitioning of wood turnover, median estimate
-plot(var1, range=c(0,1), xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+plot(var1, range=c(0,1), xaxt = "n", yaxt = "n", type="continuous", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 mtext(expression(paste("Deforested fraction (0-1)",sep="")), side=3, cex = 1.8, padj = 0.9)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var2, range=c(0,1), xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+plot(var2, range=c(0,1), xaxt = "n", yaxt = "n", type="continuous", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 mtext(expression(paste("Burnt fraction (0-1)",sep="")), side=3, cex = 1.8, padj = 0.9)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+plot(var3, xaxt = "n", yaxt = "n", cex.lab=2, type="continuous", cex.main=2.5, mar=NA, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
 mtext(expression(paste("No. fires per year",sep="")), side=3, cex = 1.8, padj = 0.9)

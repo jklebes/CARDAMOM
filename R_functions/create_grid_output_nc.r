@@ -43,6 +43,8 @@ create_grid_output_nc<-function(PROJECT) {
   year_dimen <- ncdim_def( "year", units="", years)
   npar_dimen <- ncdim_def( "nos_parameters", units="", 1:(max(PROJECT$model$nopars))) # NOTE: +1 is to account for the log-likelihood
   nparLL_dimen <- ncdim_def( "nos_parameters_plus_loglikelihood", units="", 1:(max(PROJECT$model$nopars)+1)) # NOTE: +1 is to account for the log-likelihood
+  nmet_dimen <- ncdim_def("nos_met_forcings", units="",1:length(met_array_names))
+  nobs_dimen <- ncdim_def("nos_obs_assimilated", units="",1:length(obs_array_names))
   scalar_dimen <- ncdim_def("scalar", units="",1) # used for any single value dimension
   readme_dimen <- ncdim_def("readme_length", units="",length(grid_output$readme)) #
   dimnchar <- ncdim_def("nchar", "", 1:100, create_dimvar=FALSE ) # Maximum number of characters used in string vector
@@ -50,7 +52,7 @@ create_grid_output_nc<-function(PROJECT) {
   # NOTE: that this order has been selected to guard against errors such as same lat / long dimension.
   available_dimen = c("long_dimen","lat_dimen","nsites_dimen","time_dimen",
                       "quantile_dimen","year_dimen","npar_dimen","nparLL_dimen",
-                      "scalar_dimen")
+                      "nmet_dimen","nobs_dimen","scalar_dimen")
 
   ## define output variable
   var0  = ncvar_def("readme", units = "-", longname = "",
@@ -151,7 +153,8 @@ create_grid_output_nc<-function(PROJECT) {
        if (length(tmp) > 0) {
            available_variables = available_variables[-tmp]
        } else {
-           print(paste("The ",remove_list[v]," variable was requested to be removed from available_variables, but could not be found.",sep=""))
+           print(paste("The ",remove_list[v],
+                       " variable was requested to be removed from available_variables, but could not be found.",sep=""))
        } # Check the desired variable actually exists
   } # Loop each variable to be removed
   # Sort remaining into alphabetical order
@@ -180,14 +183,14 @@ create_grid_output_nc<-function(PROJECT) {
                 found = FALSE ; dd = 0
                 while (found == FALSE) {
                    dd = dd + 1
+                   # Ensure we don't get stuck in a loop
+                   if (dd > length(available_dimen)) {
+                       stop(paste("Could not find valid dimension for ",available_variables[v]," and dimension ",d,sep=""))
+                   }
                    # Check whether the length of the currently proposed dimension
                    # matches that needed for the current dimension
                    if (get(available_dimen[dd])$len == tmp_dim[d]) {
                        found = TRUE
-                   }
-                   # Ensure we don't get stuck in a loop
-                   if (dd > length(available_dimen)) {
-                       stop(paste("Could not find valid dimension for ",available_variables[v]," and dimension ",d,sep=""))
                    }
                 } # Looping through available dimensions
                 # We found the correct dimension we can assign it to the list

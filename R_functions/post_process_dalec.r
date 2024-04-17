@@ -25,46 +25,75 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
           # Calculate the combined ecosystem heterotrophic respiration.
           # All models have a som pool, so start with that
           states_all$rhet_gCm2day = states_all$rhet_som_gCm2day
+          states_all$mean_rhet_gCm2day = states_all$mean_rhet_som_gCm2day
+          states_all$mean_annual_rhet_gCm2day = states_all$mean_annual_rhet_som_gCm2day
           # If the model has a litter pool (foliar + fine root) add this
           if (any(check_list == "rhet_litter_gCm2day")) {
               states_all$rhet_gCm2day = states_all$rhet_gCm2day + states_all$rhet_litter_gCm2day
+              states_all$mean_rhet_gCm2day = states_all$mean_rhet_gCm2day + states_all$mean_rhet_litter_gCm2day
+              states_all$mean_annual_rhet_gCm2day = states_all$mean_annual_rhet_gCm2day + states_all$mean_annual_rhet_litter_gCm2day
           }
           # If the model has a wood litter pool add this
           if (any(check_list == "rhet_woodlitter_gCm2day")) {
               states_all$rhet_gCm2day = states_all$rhet_gCm2day + states_all$rhet_woodlitter_gCm2day
+              states_all$mean_rhet_gCm2day = states_all$mean_rhet_gCm2day + states_all$mean_rhet_woodlitter_gCm2day
+              states_all$mean_annual_rhet_gCm2day = states_all$mean_annual_rhet_gCm2day + states_all$mean_annual_rhet_woodlitter_gCm2day
           }
       } # does rhet_dom_gCm2day exist?
   } # does rhet_gCm2day exist?
   # Combine autotrophic and heterotrophic respiration into ecosystem respiration
   states_all$reco_gCm2day = states_all$rauto_gCm2day + states_all$rhet_gCm2day
+  states_all$mean_reco_gCm2day = states_all$mean_rauto_gCm2day + states_all$mean_rhet_gCm2day
+  states_all$mean_annual_reco_gCm2day = states_all$mean_annual_rauto_gCm2day + states_all$mean_annual_rhet_gCm2day
   # Calculate the net ecosystem exchange of CO2
   states_all$nee_gCm2day = states_all$reco_gCm2day - states_all$gpp_gCm2day
+  states_all$mean_nee_gCm2day = states_all$mean_reco_gCm2day - states_all$mean_gpp_gCm2day
+  states_all$mean_annual_nee_gCm2day = states_all$mean_annual_reco_gCm2day - states_all$mean_annual_gpp_gCm2day
   # Calculate net primary productivity
   states_all$npp_gCm2day = states_all$gpp_gCm2day - states_all$rauto_gCm2day
+  states_all$mean_npp_gCm2day = states_all$mean_gpp_gCm2day - states_all$mean_rauto_gCm2day
+  states_all$mean_annual_npp_gCm2day = states_all$mean_annual_gpp_gCm2day - states_all$mean_annual_rauto_gCm2day
   # Begin calculation of net biome exchange and net biome productivity
   states_all$nbe_gCm2day = states_all$nee_gCm2day  # negative = sink
+  states_all$mean_nbe_gCm2day = states_all$mean_nee_gCm2day  # negative = sink
+  states_all$mean_annual_nbe_gCm2day = states_all$mean_annual_nee_gCm2day  # negative = sink
   states_all$nbp_gCm2day = -states_all$nee_gCm2day # positive = sink
+  states_all$mean_nbp_gCm2day = -states_all$mean_nee_gCm2day # positive = sink
+  states_all$mean_annual_nbp_gCm2day = -states_all$mean_annual_nee_gCm2day # positive = sink
   # If fire exists then update the NBE and NBP accordingly
   if (any(check_list == "fire_gCm2day")) {
       states_all$nbe_gCm2day = states_all$nbe_gCm2day + states_all$fire_gCm2day
       states_all$nbp_gCm2day = states_all$nbp_gCm2day - states_all$fire_gCm2day
+      states_all$mean_nbe_gCm2day = states_all$mean_nbe_gCm2day + states_all$mean_fire_gCm2day
+      states_all$mean_nbp_gCm2day = states_all$mean_nbp_gCm2day - states_all$mean_fire_gCm2day
+      states_all$mean_annual_nbe_gCm2day = states_all$mean_annual_nbe_gCm2day + states_all$mean_annual_fire_gCm2day
+      states_all$mean_annual_nbp_gCm2day = states_all$mean_annual_nbp_gCm2day - states_all$mean_annual_fire_gCm2day
   }
   # If a harvest flux exists update the NBP. NOTE: that this harvest flux
   # specifically accouts for C removed, there may be mortality due to harvest
   # but remains in system as residues.
   if (any(check_list == "harvest_gCm2day")) {
       states_all$nbp_gCm2day = states_all$nbp_gCm2day - states_all$harvest_gCm2day
+      states_all$mean_nbp_gCm2day = states_all$mean_nbp_gCm2day - states_all$mean_harvest_gCm2day
+      states_all$mean_annual_nbp_gCm2day = states_all$mean_annual_nbp_gCm2day - states_all$mean_annual_harvest_gCm2day
+  }
+  # In managed grassland systems (and possible, in the future others) part of the NBP is extracted via animal grazing
+  if (any(check_list == "grazing_gCm2day")) {
+      states_all$nbp_gCm2day = states_all$nbp_gCm2day - states_all$grazing_gCm2day
+      states_all$mean_nbp_gCm2day = states_all$mean_nbp_gCm2day - states_all$mean_grazing_gCm2day
+      states_all$mean_annual_nbp_gCm2day = states_all$mean_annual_nbp_gCm2day - states_all$mean_annual_grazing_gCm2day
   }
   # In some cases, e.g. crop models, the harvest variable includes just the harvested yield. But the NBP requires
   # tracking of extracted non-yield C
   if (any(check_list == "extracted_residue_gCm2day")) {
       states_all$nbp_gCm2day = states_all$nbp_gCm2day - states_all$extracted_residue_gCm2day
+      states_all$mean_nbp_gCm2day = states_all$mean_nbp_gCm2day - states_all$mean_extracted_residue_gCm2day
+      states_all$mean_annual_nbp_gCm2day = states_all$mean_annual_nbp_gCm2day - states_all$mean_annual_extracted_residue_gCm2day
   }
-  # Now calculate the mean annual carbon use efficiency (NPP:GPP) as some models do now have a parameter for this
-  # NOTE: rollapply inverts the dimensions from that wanted, hence t()
-  states_all$mean_annual_cue = t( apply(states_all$npp_gCm2day,1, rollapply_mean_annual, step = steps_per_year)
-                                / apply(states_all$gpp_gCm2day,1, rollapply_mean_annual, step = steps_per_year) )
 
+  # Now calculate the mean annual carbon use efficiency (NPP:GPP) as some models do now have a parameter for this
+  states_all$mean_annual_cue = states_all$mean_annual_npp_gCm2day / states_all$mean_annual_gpp_gCm2day
+  
   ###
   ## Post-hoc calculation of parameter correlations with key C-cycle variables
 
@@ -89,7 +118,7 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
       }
   }
   # Determine whether have have both mean transit time and allocation to wood
-  if (any(check_list == "MTT_wood_years") & any(check_list == "alloc_wood_gCm2day")) {
+  if (any(check_list == "MTT_wood_years") && any(check_list == "alloc_wood_gCm2day")) {
       # As both exist determine their correlations with parameters...
       states_all$MTT_wood_years_parameter_correlation = cor(tmp,states_all$MTT_wood_years)
       states_all$NPP_wood_gCm2day_parameter_correlation = cor(tmp,rowMeans(states_all$alloc_wood_gCm2day))
@@ -128,11 +157,12 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
 
   ## GPP (gC/m2/day)
   obs_id = 1 ; unc_id = obs_id+1
-  if (length(which(drivers$obs[,obs_id] != -9999)) > 0) {
+  if (any(drivers$obs[,obs_id] != -9999)) {
+  #if (length(which(drivers$obs[,obs_id] != -9999)) > 0) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$gpp_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)
-      for (a in seq(1, length(to_do))) {
+      for (a in 1:length(to_do)) {
            # Assign correct time step
            t = to_do[a]
            # Estimate the min / max values for the observations
@@ -155,11 +185,11 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
 
   ## LAI (m2/m2)
   obs_id = 3 ; unc_id = obs_id+1
-  if (length(which(drivers$obs[,obs_id] != -9999)) > 0) {
+  if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$lai_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)
-      for (a in seq(1, length(to_do))) {
+      for (a in 1:length(to_do)) {
            # Assign correct time step
            t = to_do[a]
            # Estimate the min / max values for the observations
@@ -182,11 +212,11 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
 
   ## NEE (gC/m2/day)
   obs_id = 5 ; unc_id = obs_id+1
-  if (length(which(drivers$obs[,obs_id] != -9999)) > 0) {
+  if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$nee_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)
-      for (a in seq(1, length(to_do))) {
+      for (a in 1:length(to_do)) {
            # Assign correct time step
            t = to_do[a]
            # Estimate the min / max values for the observations
@@ -209,11 +239,11 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
 
   ## Reco (gC/m2/day)
   obs_id = 9 ; unc_id = obs_id+1
-  if (length(which(drivers$obs[,obs_id] != -9999)) > 0) {
+  if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$reco_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)
-      for (a in seq(1, length(to_do))) {
+      for (a in 1:length(to_do)) {
            # Assign correct time step
            t = to_do[a]
            # Estimate the min / max values for the observations
@@ -238,11 +268,11 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   obs_id = 13 ; unc_id = obs_id+1
   # If there is a prior assign it to the first timestep of the observation timeseries
   if (drivers$parpriors[21] > 0) { drivers$obs[1,obs_id] = drivers$parpriors[21] ; drivers$obs[1,unc_id] = drivers$parpriorunc[21] }
-  if (length(which(drivers$obs[,obs_id] != -9999)) > 0) {
+  if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$wood_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)
-      for (a in seq(1, length(to_do))) {
+      for (a in 1:length(to_do)) {
            # Assign correct time step
            t = to_do[a]
            # Estimate the min / max values for the observations
@@ -267,11 +297,11 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   obs_id = 19 ; unc_id = obs_id+1
   # If there is a prior assign it to the first timestep of the observation timeseries
   if (drivers$parpriors[23] > 0) { drivers$obs[1,obs_id] = drivers$parpriors[23] ; drivers$obs[1,unc_id] = drivers$parpriorunc[23] }
-  if (length(which(drivers$obs[,obs_id] != -9999)) > 0) {
+  if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$soil_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)
-      for (a in seq(1, length(to_do))) {
+      for (a in 1:length(to_do)) {
            # Assign correct time step
            t = to_do[a]
            # Estimate the min / max values for the observations
@@ -294,11 +324,11 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
 
   ## ET (kgH2O/m2/day)
   obs_id = 31 ; unc_id = obs_id+1
-  if (length(which(drivers$obs[,obs_id] != -9999)) > 0) {
+  if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$et_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)
-      for (a in seq(1, length(to_do))) {
+      for (a in 1:length(to_do)) {
            # Assign correct time step
            t = to_do[a]
            # Estimate the min / max values for the observations
@@ -321,11 +351,11 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
 
   ## NBE (gC/m2/day)
   obs_id = 35 ; unc_id = obs_id+1 
-  if (length(which(drivers$obs[,obs_id] != -9999)) > 0) {
+  if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$nbe_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)
-      for (a in seq(1, length(to_do))) {
+      for (a in 1:length(to_do)) {
            # Assign correct time step
            t = to_do[a]
            # Estimate the min / max values for the observations
@@ -348,11 +378,11 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
 
   ## Fire (gC/m2/day)
   obs_id = 7 ; unc_id = obs_id+1
-  if (length(which(drivers$obs[,obs_id] != -9999)) > 0) {
+  if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$fire_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)
-      for (a in seq(1, length(to_do))) {
+      for (a in 1:length(to_do)) {
            # Assign correct time step
            t = to_do[a]
            # Estimate the min / max values for the observations

@@ -49,7 +49,7 @@ module MODEL_PARAMETERS
     PI%parmin(2) = 0.2d0
     PI%parmax(2) = 0.8d0
 
-    ! Potential rate of direct labile to foliage (gC/m2/day)
+    ! Potential rate of direct, i.e. without CDEA control labile to foliage (gC/m2/day)
     PI%parmin(3) = 0.001d0
     PI%parmax(3) = 8d0
 

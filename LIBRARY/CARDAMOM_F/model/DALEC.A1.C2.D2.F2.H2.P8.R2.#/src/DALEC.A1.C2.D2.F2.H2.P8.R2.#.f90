@@ -233,7 +233,7 @@ module CARBON_MODEL_MOD
                       canopy_height = 9d0,          & ! canopy height assumed to be 9 m
                        tower_height = canopy_height + 2d0, & ! tower (observation) height assumed to be 2 m above canopy
                            min_wind = 0.2d0,        & ! minimum wind speed at canopy top
-                       min_drythick = 0.001d0,      & ! minimum dry thickness depth (m)
+                       min_drythick = 0.01d0,       & ! minimum dry thickness depth (m)
                           min_layer = 0.03d0,       & ! minimum thickness of the second rooting layer (m)
                         soil_roughl = 0.05d0,       & ! soil roughness length (m)
                      top_soil_depth = 0.30d0,       & ! thickness of the top soil layer (m)
@@ -265,7 +265,7 @@ module CARBON_MODEL_MOD
                 minlwp_default =-1.808224d+00,  & ! minimum leaf water potential (MPa). NOTE: actual SPA = -2 MPa
       soil_iso_to_net_coef_LAI =-2.717467d+00,  & ! Coefficient relating soil isothermal net radiation to net.
 !             orig             iWUE = 1.8d-7,        & ! Intrinsic water use efficiency (gC/mmolH2O-1/m2leaf/s-1)
-                          iWUE = 1.5d-2,        & ! Intrinsic water use efficiency (umolC/mmolH2O-1/m2leaf/s-1)
+                          iWUE = 4.6875d-04,    & ! Intrinsic water use efficiency (umolC/mmolH2O-1/m2leaf/s-1)
          soil_swrad_absorption = 9.989852d-01,  & ! Fraction of SW rad absorbed by soil
          max_lai_lwrad_release = 9.516639d-01,  & ! 1-Max fraction of LW emitted from canopy to be released
         lai_half_lwrad_release = 4.693329d+00,  & ! LAI at which LW emitted from canopy to be released at 50 %
@@ -2767,7 +2767,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                                   ! enters as potential but leaves as water balance adjusted.
                                                   ! Note that this assumes a completely wet leaf surface
     ! local variables
-    integer :: i
     double precision :: a, through_fall, max_storage, max_storage_1, daily_addition, wetcanopy_evaporation &
                        ,potential_drainage_rate ,drain_rate, evap_rate, initial_canopy, co_mass_balance, dx, dz, tmp(3)
     ! local parameters
@@ -2812,28 +2811,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         if (potential_evaporation > 0d0) then
 
-            ! assume co-access to available water above max_storage by both drainage and
-            ! evaporation. Water below max_storage is accessable by evaporation only.
+            ! Assume water drainage will always occur an order magnitude above evaporation
+            ! so water above canopy capacity is drained. Water below max_storage is accessable by evaporation only.
 
-            ! Trapezium rule for approximating integral of drainage rate.
-            ! Allows estimation of the mean drainage rate between starting
-            ! point and max_storage, thus the time period appropriate for co-access can be
-            ! quantified. NOTE 1440 = minutes / day
-            ! General Formula: integral(rate) = 0.5 * h((y0 + yn) + 2(y1 + y2 + ... yn-1)
-            ! Where h id the size of the section, y0 is the maximum rate, yn is the final rate.
-            dx = (storage - max_storage)*0.5d0
-            tmp(1) = storage ; tmp(2) = max_storage ; tmp(3) = storage-dx
-            tmp = exp(a + (RefDrainCoef*tmp))
-            potential_drainage_rate = 0.5d0 * dx * ((tmp(1) + tmp(2)) + 2d0 * tmp(3)) * 1440d0
-            ! To protect against un-realistic drainage rates
-            ! due to very high rainfall rates
-            potential_drainage_rate = min(potential_drainage_rate,vlarge)
-
-            dz = storage-max_storage
-            ! limit based on available water if total demand is greater than excess
-            co_mass_balance = (dz / (potential_evaporation + potential_drainage_rate))
-            evap_rate = potential_evaporation * co_mass_balance
-            drain_rate = potential_drainage_rate * co_mass_balance
+            ! Assume drainage is all water above the maximum canopy storage (kg/m2/day)
+            drain_rate = storage - max_storage
 
             ! Estimate evaporation from remaining water (i.e. that left after
             ! initial co-access of evaporation and drainage).
@@ -2841,7 +2823,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
             ! 1) energy already spent on evaporation (the -evap_rate) and
             ! 2) linear increase in surface resistance as the leaf surface
             ! dries (i.e. the 0.5).
-            evap_rate = evap_rate + min((potential_evaporation - evap_rate) * 0.5d0, storage - evap_rate - drain_rate)
+            evap_rate = min(potential_evaporation * 0.5d0 * storage * max_storage_1, storage - drain_rate)
 
         else
 
@@ -2865,7 +2847,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         else
             ! then dew formation has occurred, if this pushes storage > max_storage add it to drainage
             drain_rate = max(0d0,(storage - evap_rate) - max_storage)
-      endif ! evap_rate > 0
+        endif ! evap_rate > 0
 
     endif ! storage > max_storage
 

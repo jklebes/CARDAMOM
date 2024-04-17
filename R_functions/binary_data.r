@@ -31,7 +31,7 @@ met_array_names <<- c("Total number of days ran (starts = 31 for January if mont
                        "21 day rolling mean of daily VPD (Pa)",
                        "Biomass removal - management type",
                        "Daily mean temperature (C)",
-                       "Wind speed (m/2)",
+                       "Wind speed (m/s)",
                        "Daily vapour pressure deficit (Pa)")
 
 obs_array_names <<- c("GPP (gC/m2/day)",
@@ -188,15 +188,15 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       MET = array(NA,dim=c(length(met$run_day),(length(met)+3)))
   }
 
-  MET[,1] = met$run_day
-  MET[,2] = met$mint  ; if (min(met$mint) < -200) {print(summary(met$mint)) ; stop('mint error in binary_data')} # Celcius
-  MET[,3] = met$maxt  ; if (min(met$maxt) < -200) {print(summary(met$maxt)) ; stop('maxt error in binary_data')} # Celcius
-  MET[,4] = met$swrad ; if (min(met$swrad) < 0) {print(summary(met$swrad)) ; stop('RAD error in binary_data')} # MJ/m2/day
-  MET[,5] = met$co2#+200 # ppm
-  MET[,6] = met$doy
-  MET[,7] = pmax(0,met$precip) # kgH2O/m2/s
-  MET[,8] = OBS$deforestation  # fraction
-  MET[,9] = OBS$burnt_area     # fraction
+  MET[,1]  = met$run_day
+  MET[,2]  = met$mint  ; if (min(met$mint) < -200) {print(summary(met$mint)) ; stop('mint error in binary_data')} # Celcius
+  MET[,3]  = met$maxt  ; if (min(met$maxt) < -200) {print(summary(met$maxt)) ; stop('maxt error in binary_data')} # Celcius
+  MET[,4]  = met$swrad ; if (min(met$swrad) < 0) {print(summary(met$swrad)) ; stop('RAD error in binary_data')} # MJ/m2/day
+  MET[,5]  = met$co2#+200 # ppm
+  MET[,6]  = met$doy
+  MET[,7]  = pmax(0,met$precip) # kgH2O/m2/s
+  MET[,8]  = OBS$deforestation  # fraction
+  MET[,9]  = OBS$burnt_area     # fraction
   MET[,10] = met$avgTmax       # C
   MET[,11] = met$photoperiod   # Seconds
   MET[,12] = met$vpd_lagged    # Pa
@@ -375,7 +375,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[21]=OBS$Cwood_initial      ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
       PARPRIORS[22]=OBS$Clit_initial       ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
       PARPRIORS[23]=OBS$Csom_initial       ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
-      PARPRIORS[35]=0.99                   ; PARPRIORUNC[35]=0.1 # labile turnover rate (/day)
+      PARPRIORS[35]=0.99                   ; PARPRIORUNC[35]=0.1 # autotrophic turnover rate (/day)
       PARPRIORS[39]=11.197440              ; PARPRIORUNC[39]=9.3*0.5 # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
       # Other priors
       OTHERPRIORS[1] = 0.54                ; OTHERPRIORUNC[1]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
@@ -514,10 +514,10 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
 #      PARPRIORS[11] = 60.0                  ; PARPRIORUNC[11]= 20.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax: derived from multiple trait values from Kattge et al., (2011)
                                                                       # Note that this prior is difference from DALEC.C1.D1.F2.P1.
                                                                       # due to the different temperature response functions used in ACM2 vs ACM 1
-      PARPRIORS[11] = 24.43                  ; PARPRIORUNC[11]= 10.4 #; PARPRIORWEIGHT[11] = 1 # Vcmax: Median of CARDAMOM analysis assimilating 4 GPP products
-#      PARPRIORS[11] = 54.165                  ; PARPRIORUNC[11]= 20.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax: Mean of reported PFT values from Oliver et al., (2022)
-#                                                                      # Note that this prior is difference from DALEC.C1.D1.F2.P1.
-#                                                                      # due to the different temperature response functions used in ACM2 vs ACM 1
+#      PARPRIORS[11] = 24.43                  ; PARPRIORUNC[11]= 10.4 #; PARPRIORWEIGHT[11] = 1 # Vcmax: Median of CARDAMOM analysis assimilating 4 GPP products
+      PARPRIORS[11] = 54.165                  ; PARPRIORUNC[11]= 20.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax: Mean of reported PFT values from Oliver et al., (2022)
+                                                                      # Note that this prior is difference from DALEC.C1.D1.F2.P1.
+                                                                      # due to the different temperature response functions used in ACM2 vs ACM 1
       PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc #; PARPRIORWEIGHT[17] = noyears
       PARPRIORS[19]=OBS$Cfol_initial       ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
       PARPRIORS[20]=OBS$Croots_initial     ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -942,6 +942,18 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
 #      OTHERPRIORS[3] = 27.295      ; OTHERPRIORUNC[3] = 11.03755 # Foliar C:N (gC/gN) prior derived from Kattge et al., (2011)
       OTHERPRIORS[4] = 0.66        ; OTHERPRIORUNC[4] = 0.12 # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
       OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
+  } else if (modelname == "DALEC.M2.#") {
+      PARPRIORS[2] = 0.54                  ; PARPRIORUNC[2] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+      PARPRIORS[10]=16.9                   ; PARPRIORUNC[10]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+      PARPRIORS[15]=OBS$lca                ; PARPRIORUNC[15]=OBS$lca_unc
+      PARPRIORS[17]=OBS$Cfol_initial       ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[17]=OBS$Cfol_initial_unc} # Cfoliar prior
+      PARPRIORS[18]=OBS$Croots_initial     ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[18]=OBS$Croots_initial_unc} # Croots prior
+      PARPRIORS[19]=OBS$Clit_initial       ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[19]=OBS$Clit_initial_unc} # Clitter prior
+      PARPRIORS[23]=OBS$Csom_initial       ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
+      # other priors
+#      OTHERPRIORS[2] = OBS$soilwater       ; OTHERPRIORUNC[2] = OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
+#      OTHERPRIORS[3] = 27.295              ; OTHERPRIORUNC[3] = 11.03755 # Foliar C:N (gC/gN) prior derived from Kattge et al., (2011)
+      # OTHERPRIORS[4] = 0.66                ; OTHERPRIORUNC[4] = 0.12 # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
   } else if (modelname == "ACM") {
 
       # For ACM_GPP_ET

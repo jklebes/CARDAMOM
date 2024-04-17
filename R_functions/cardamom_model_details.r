@@ -35,6 +35,15 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopars=array(39,dim=c(length(ctessel_pft)))
     nofluxes=array(42,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC.A3.C3.H2.M1.#",shortname="DALEC.15.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.M2.#" | modelname == "DALEC.16.") {
+    # information contains is
+    # The model name
+    # Number of met parameters
+    # Number of model parameters to be optimised
+    nopools=array(5,dim=c(length(ctessel_pft)))
+    nopars=array(34,dim=c(length(ctessel_pft)))
+    nofluxes=array(45,dim=c(length(ctessel_pft)))
+    cardamom_model_details=list(name="DALEC.M2.#",shortname="DALEC.16.",nopools=nopools,nofluxes=nofluxes,nomet=14,nopars=nopars)
   } else if (modelname == "DALEC.C1.D1.F2.P1.#" | modelname == "DALEC.2.") {
     # Information contains is
     # The model name

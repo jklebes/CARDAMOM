@@ -137,7 +137,6 @@ module MODEL_PARAMETERS
     PI%parmin(31) = (2.0d0+273.15d0) 
     PI%parmax(31) = (7.0d0+273.15d0)   ! 2,7
    
-
     ! critical photoperiod for development (hrs)
     PI%parmin(32) = 6d0 
     PI%parmax(32) = 12d0

@@ -96,7 +96,6 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
        # Strictly speaking this is a bit of a hack to account for not being able to identify the model variables only.
        # Could store non-model output variables into a different array to solve this.
        if (length(dim(grid_output[[pp]])) == 3) {
-
            # create maps
            jpeg(file=paste("grid_mean_map_",par_names[p],"_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
            par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.8), omi=c(0.2, 0.2, 0.2, 0.40))

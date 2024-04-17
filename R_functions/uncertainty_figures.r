@@ -1418,12 +1418,26 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
                       "alloc_autotrophic_gCm2day","alloc_StorageOrgan_gCm2day","foliage_to_litter_gCm2day",
                       "roots_to_litter_gCm2day","wood_to_litter_gCm2day","litter_to_som_gCm2day",
                       "rauto_maintenance_gCm2day","rauto_labile_to_foliage_gCm2day","rauto_npp_to_labile_gCm2day",
-                      "rauto_foliage_to_litter_gCm2day","rauto_wood_to_litter_gCm2day","HARVESTextracted_foliage_gCm2day", 
-                      "HARVESTextracted_wood_gCm2day","HARVESTextracted_DeadFoliage_gCm2day",
-                      "HARVESTextracted_labile_gCm2day","HARVESTlitter_foliage_gCm2day",
-                      "HARVESTlitter_wood_gCm2day","HARVESTlitter_DeadFoliage_gCm2day","HARVESTlitter_autotrophic_gCm2day",
+                      "rauto_foliage_to_litter_gCm2day","rauto_wood_to_litter_gCm2day",
+                      "FIREemiss_labile_gCm2day","FIRElitter_labile_gCm2day",
+                      "FIREemiss_foliage_gCm2day","FIRElitter_foliage_gCm2day",
+                      "FIREemiss_roots_gCm2day","FIRElitter_roots_gCm2day",
+                      "FIREemiss_wood_gCm2day","FIRElitter_wood_gCm2day",
+                      "FIREemiss_litter_gCm2day","FIRElitter_litter_gCm2day","FIREemiss_som_gCm2day",
+                      "HARVESTextracted_labile_gCm2day","HARVESTextracted_foliage_gCm2day",
+                      "HARVESTextracted_roots_gCm2day","HARVESTextracted_wood_gCm2day",
+                      "HARVESTextracted_litter_gCm2day","HARVESTextracted_som_gCm2day",
+                      "HARVESTlitter_labile_gCm2day","HARVESTlitter_foliage_gCm2day",
+                      "HARVESTlitter_roots_gCm2day","HARVESTlitter_wood_gCm2day",
+                      "HARVESTextracted_DeadFoliage_gCm2day","HARVESTlitter_DeadFoliage_gCm2day",
+                      "HARVESTextracted_autotrophic_gCm2day","HARVESTlitter_autotrophic_gCm2day",
                       "PLOUGHlitter_roots_gCm2day","autotrophic_gCm2","StorageOrgan_gCm2","DeadFoliage_gCm2",
-                      "DevelopmentStage")
+                      "DevelopmentStage","grazing_gCm2day","GRAZINGextracted_labile_gCm2day",
+                      "GRAZINGextracted_foliage_gCm2day","GRAZINGextracted_roots_gCm2day",
+                      "GRAZINGextracted_litter_gCm2day","GRAZINGextracted_som_gCm2day",
+                      "GRAZINGlitter_labile_gCm2day","GRAZINGlitter_foliage_gCm2day",
+                      "GRAZINGlitter_roots_gCm2day")
+                      
    for (p in seq(1, length(list_variables))) {
         # Check whether current variable exists
         if (exists(x = list_variables[p], where = states_all)) {

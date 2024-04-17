@@ -102,7 +102,7 @@ module CARBON_MODEL_MOD
                       canopy_height = 9d0,          & ! canopy height assumed to be 9 m
                        tower_height = canopy_height + 2d0, & ! tower (observation) height assumed to be 2 m above canopy
                            min_wind = 0.2d0,        & ! minimum wind speed at canopy top
-                       min_drythick = 0.001d0,      & ! minimum dry thickness depth (m)
+                       min_drythick = 0.01d0,       & ! minimum dry thickness depth (m)
                           min_layer = 0.03d0,       & ! minimum thickness of the third rooting layer (m)
                         soil_roughl = 0.05d0,       & ! soil roughness length (m)
                      top_soil_depth = 0.30d0,       & ! thickness of the top soil layer (m)
@@ -123,6 +123,9 @@ module CARBON_MODEL_MOD
                        Ha_Jmax = 50075.0d0,    & ! Activation energy for Jmax (J mol-1)
                        dS_Jmax = 649.250d0,    & ! Entropy term for Jmax (J mol-1)
                  Hd_Vcmax_Jmax = 200000d0,     & ! Deactivation energy for Vcmax and Jmax (J mol-1)
+                     Ha_growth = 79047.15d0,   & ! Activation energy for tissue growth (J mol-1)
+                     dS_growth = 942.6891d0,   & ! Entropy term for tissue growth (J mol-1)
+                     Hd_growth = 288034.9d0,   & ! Deactivation energy for tissue growth (J mol-1)
                ko_half_sat_25C = 157.46892d0,  & ! photorespiration O2 half sat(mmolO2/mol), achieved at 25oC
           ko_half_sat_gradient = 14.93643d0,   & ! photorespiration O2 half sat gradient
                kc_half_sat_25C = 319.58548d0,  & ! carboxylation CO2 half sat (umolCO2/mol), achieved at 25oC
@@ -138,7 +141,7 @@ module CARBON_MODEL_MOD
     canopy_iso_to_net_coef_SW = 1.480105d-02,  & ! Coefficient relating SW to the adjustment between isothermal and net LW
       canopy_iso_to_net_const = 3.753067d-03,  & ! Constant relating canopy isothermal net radiation to net
    canopy_iso_to_net_coef_LAI = 2.455582d+00,  & ! Coefficient relating LAI to the adjustment between isothermal and net LW
-                         iWUE = 1.5d-2           ! Intrinsic water use efficiency (umolC/mmolH2O-1/m2leaf/s-1)
+                         iWUE = 4.6875d-4 !1.5d-2 ! Intrinsic water use efficiency (umolC/mmolH2O-1/m2leaf/s-1)
 
   double precision :: minlwp = minlwp_default
   ! Photosynthetic Metrics
@@ -921,6 +924,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! Estimate drythick for the current step
        drythick = max(min_drythick, top_soil_depth * max(0d0,(1d0 - (soil_waterfrac(1) / field_capacity(1)))))
+       !drythick = max(min_drythick, top_soil_depth * max(0d0,(1d0 - (soil_waterfrac(1) / porosity(1)))))
        ! Soil surface (kgH2O.m-2.day-1)
        call calculate_soil_evaporation(soilevaporation)
        ! If snow present assume that soilevaporation is sublimation of soil first
@@ -1012,13 +1016,17 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                    ! No more recent mechanistic estimates could be found
                    ! Modified Arrhenious function for temperature effect on wood growth
                    ! Cabon et al., (2020), doi: 10.1111/nph.16456
-                   A_wood = 5.36d12 !c(5.36e12,8.045e10,3.883e8) # Scaling coefficient (K-1)
-                   Ha_wood = 87.5d3 !c(87.5e3,76.8e3,63.1e3) # Enthalpy energy of activitation (J mol-1)
-                   dHd_wood = 1.09d3 !c(1.09e3,0.933e3,1.18e3) # Enthalpy difference between activation and deactivation (J mol-1)
-                   dSd_wood = 333d3 !c(333e3,285e3,358e3) # Entropy diffference between activiation and deactivation (J mol-1 K-1)
-                   fT_limit_wood = fT_limit_wood * & 
-                                   ( ((leafT+273.15d0) * A_wood * exp(-Ha_wood/(Rcon*(leafT+273.15d0)))) / &
-                                     (1d0+exp((dHd_wood/Rcon)-(dSd_wood/(Rcon*(leafT+273.15d0))))))
+                   ! NOTE: that the equation and parameters from Cabon et al., (2020) have been
+                   ! modified to provide equivalent values for the existing modified_arrhenious()
+                   ! but with an adjustable reference temperature
+                   !A_wood = 5.36d12 !c(5.36e12,8.045e10,3.883e8) # Scaling coefficient (K-1)
+                   !Ha_wood = 87.5d3 !c(87.5e3,76.8e3,63.1e3) # Enthalpy energy of activitation (J mol-1)
+                   !dHd_wood = 1.09d3 !c(1.09e3,0.933e3,1.18e3) # Enthalpy difference between activation and deactivation (J mol-1)
+                   !dSd_wood = 333d3 !c(333e3,285e3,358e3) # Entropy diffference between activiation and deactivation (J mol-1 K-1)
+                   !fT_limit_wood = fT_limit_wood * & 
+                   !                ( ((leafT+273.15d0) * A_wood * exp(-Ha_wood/(Rcon*(leafT+273.15d0)))) / &
+                   !                  (1d0+exp((dHd_wood/Rcon)-(dSd_wood/(Rcon*(leafT+273.15d0))))))
+                   fT_limit_wood = fT_limit_wood * modified_arrhenious(303.15d0,Ha_growth,Hd_growth,dS_growth,leafT+freeze)                                     
                 !print*, fT_limit_wood
                    ! Specific limitation of water supply on wood
                    if (total_water_flux > pars(40)) then
@@ -1055,7 +1063,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                        
 
            ! Seasonal labile to foliage rate 
-           FLUXES(n,8) = pars(13)*FLUXES(n,46)*FLUXES(n,16) ! should this also have *fT_limit_fol ?
+           FLUXES(n,8) = pars(13)*FLUXES(n,46)*fT_limit_fol*FLUXES(n,16) ! should this also have *fT_limit_fol ?
 
            ! Check their combined daily draw is not greater than available stocks
            if (FLUXES(n,4) + FLUXES(n,6) + FLUXES(n,7) + FLUXES(n,8) > available_labile) then
@@ -1337,16 +1345,16 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Determine Vcmax at current temperature (umolC/m2/s). Included is a scaling
     ! factor from 'top leaf' to the effective canopy.
     metabolic_limited_photosynthesis = Vcmax_ref * leaf_canopy_light_scaling &
-                                     * modified_arrhenious(Ha_Vcmax,Hd_Vcmax_Jmax,dS_Vcmax,leafT+freeze)
+                                     * modified_arrhenious(298.15d0,Ha_Vcmax,Hd_Vcmax_Jmax,dS_Vcmax,leafT+freeze)
     ! Determine dark respiration (i.e. maintenance) at the current temperature
     ! as a fraction of Vcmax_ref. Most likely will be replaced by Heskel or Reich approaches.
-    dark_respiration = 0.002d0 * Vcmax_ref * airt_adj * leaf_canopy_light_scaling
-    !dark_respiration = 0.01d0 * Vcmax_ref * (2d0**((leafT - 25d0)*0.1d0)) * leaf_canopy_light_scaling
+    !dark_respiration = 0.002d0 * Vcmax_ref * airt_adj * leaf_canopy_light_scaling
+    !!dark_respiration = 0.01d0 * Vcmax_ref * (2d0**((leafT - 25d0)*0.1d0)) * leaf_canopy_light_scaling
     ! Ratio of RL25:Vcmax25 (Kumarathunge et al., 2019, doi: https://doi.org/10.1111/nph.15668, Table 1)
     ! TO BE REPLACED WITH EQUATIONS FROM TABLE 2?
     ! R2 of fit 0.22
-    !RLVratio = 0.036d0 + (-0.001d0 * meant)
-    !dark_respiration = RLVratio * Vcmax_ref * airt_adj * leaf_canopy_light_scaling
+    RLVratio = 0.036d0 + (-0.001d0 * meant)
+    dark_respiration = RLVratio * Vcmax_ref * airt_adj * leaf_canopy_light_scaling
 
     ! Possible approach to linking with canopy nitrogen
     ! Estimate the total canopy N, then scale to the "top leaf" and multiple by NUE
@@ -1369,14 +1377,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Jmax calculation in umolE/umolPAR, a key requirement for aggregating to
     ! the daily time scale is to scale by day light fraction.
     ! Jmax ~ Vcmax (Walker et al., 2017, doi: 10.1111/nph.14623, equ. 1)
-    Jmax = dayl_hours_fraction*2.787095d0*(Vcmax_ref**0.890d0) * leaf_canopy_light_scaling &
-          * modified_arrhenious(Ha_Jmax,Hd_Vcmax_Jmax,dS_Jmax,leafT+freeze)
+    !Jmax = dayl_hours_fraction*2.787095d0*(Vcmax_ref**0.890d0) * leaf_canopy_light_scaling &
+    !      * modified_arrhenious(298.15d0,Ha_Jmax,Hd_Vcmax_Jmax,dS_Jmax,leafT+freeze)
     ! Ratio of Jmax25:Vcmax25 (Kumarathunge et al., 2019, doi: https://doi.org/10.1111/nph.15668, Table 1)
     ! R2 of fit 0.66
     ! TO BE UPDATED WITH TABLE 2?
-    !JVratio = 2.9d0 + (-0.06d0 * meant)
-    !Jmax = JVratio * Vcmax_ref * leaf_canopy_light_scaling * dayl_hours_fraction &
-    !      * modified_arrhenious(Ha_Jmax,Hd_Vcmax_Jmax,dS_Jmax,leafT+freeze)
+    JVratio = 2.9d0 + (-0.06d0 * meant)
+    Jmax = JVratio * Vcmax_ref * leaf_canopy_light_scaling * dayl_hours_fraction &
+         * modified_arrhenious(298.15d0,Ha_Jmax,Hd_Vcmax_Jmax,dS_Jmax,leafT+freeze)
     ! Determine the mean per ground (i.e. canopy) area PAR absorption in umolPAR/m2/s
     PAR_m2 = seconds_per_day_1 * canopy_par_MJday * ppfd_to_par * 1d6
     ! Instantaneous approach uses a non-rectangular hyperbola solved by quadratic formula.
@@ -1763,8 +1771,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Calculate canopy evaporative fluxes (kgH2O/m2/day)
     !!!!!!!!!!
 
-    ! Calculate numerator of Penman Montheith (kgH2O.m-2.day-1)
-    ! Should this be scaled by day light seconds?
+    ! Calculate potential Penman Montheith (kgH2O.m-2.day-1)
     wetcanopy_evap = max(0d0,(((slope*canopy_radiation) + (ET_demand_coef*gb)) &
                               / (lambda*(slope+psych))) * dayl_seconds)
 
@@ -2655,28 +2662,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         if (potential_evaporation > 0d0) then
 
-            ! assume co-access to available water above max_storage by both drainage and
-            ! evaporation. Water below max_storage is accessable by evaporation only.
+            ! Assume water drainage will always occur an order magnitude above evaporation
+            ! so water above canopy capacity is drained. Water below max_storage is accessable by evaporation only.
 
-            ! Trapezium rule for approximating integral of drainage rate.
-            ! Allows estimation of the mean drainage rate between starting
-            ! point and max_storage, thus the time period appropriate for co-access can be
-            ! quantified. NOTE 1440 = minutes / day
-            ! General Formula: integral(rate) = 0.5 * h((y0 + yn) + 2(y1 + y2 + ... yn-1)
-            ! Where h id the size of the section, y0 is the maximum rate, yn is the final rate.
-            dx = (storage - max_storage)*0.5d0
-            tmp(1) = storage ; tmp(2) = max_storage ; tmp(3) = storage-dx
-            tmp = exp(a + (RefDrainCoef*tmp))
-            potential_drainage_rate = 0.5d0 * dx * ((tmp(1) + tmp(2)) + 2d0 * tmp(3)) * 1440d0
-            ! To protect against un-realistic drainage rates
-            ! due to very high rainfall rates
-            potential_drainage_rate = min(potential_drainage_rate,vlarge)
-
-            dz = storage-max_storage
-            ! limit based on available water if total demand is greater than excess
-            co_mass_balance = (dz / (potential_evaporation + potential_drainage_rate))
-            evap_rate = potential_evaporation * co_mass_balance
-            drain_rate = potential_drainage_rate * co_mass_balance
+            ! Assume drainage is all water above the maximum canopy storage (kg/m2/day)
+            drain_rate = storage - max_storage
 
             ! Estimate evaporation from remaining water (i.e. that left after
             ! initial co-access of evaporation and drainage).
@@ -2684,7 +2674,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
             ! 1) energy already spent on evaporation (the -evap_rate) and
             ! 2) linear increase in surface resistance as the leaf surface
             ! dries (i.e. the 0.5).
-            evap_rate = evap_rate + min((potential_evaporation - evap_rate) * 0.5d0, storage - evap_rate - drain_rate)
+            evap_rate = min(potential_evaporation * 0.5d0 * storage * max_storage_1, storage - drain_rate)
 
         else
 
@@ -2711,6 +2701,67 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         endif ! evap_rate > 0
 
     endif ! storage > max_storage
+
+!    if (storage > max_storage) then
+!
+!        if (potential_evaporation > 0d0) then
+! TLS: why is this not done has drain first then evap second? Integral could be used then to scale bare canopy effects for evap?
+!            ! assume co-access to available water above max_storage by both drainage and
+!            ! evaporation. Water below max_storage is accessable by evaporation only.
+!
+!            ! Trapezium rule for approximating integral of drainage rate.
+!            ! Allows estimation of the mean drainage rate between starting
+!            ! point and max_storage, thus the time period appropriate for co-access can be
+!            ! quantified. NOTE 1440 = minutes / day
+!            ! General Formula: integral(rate) = 0.5 * h((y0 + yn) + 2(y1 + y2 + ... yn-1)
+!            ! Where h id the size of the section, y0 is the maximum rate, yn is the final rate.
+!            dx = (storage - max_storage)*0.5d0
+!            tmp(1) = storage ; tmp(2) = max_storage ; tmp(3) = storage-dx
+!            tmp = exp(a + (RefDrainCoef*tmp))
+!            potential_drainage_rate = 0.5d0 * dx * ((tmp(1) + tmp(2)) + 2d0 * tmp(3)) * 1440d0
+!            ! To protect against un-realistic drainage rates
+!            ! due to very high rainfall rates
+!            potential_drainage_rate = min(potential_drainage_rate,vlarge)
+!
+!            dz = storage-max_storage
+!            ! limit based on available water if total demand is greater than excess
+!            co_mass_balance = (dz / (potential_evaporation + potential_drainage_rate))
+!            evap_rate = potential_evaporation * co_mass_balance
+!            drain_rate = potential_drainage_rate * co_mass_balance
+!
+!            ! Estimate evaporation from remaining water (i.e. that left after
+!            ! initial co-access of evaporation and drainage).
+!            ! Assume evaporation is now restricted by:
+!            ! 1) energy already spent on evaporation (the -evap_rate) and
+!            ! 2) linear increase in surface resistance as the leaf surface
+!            ! dries (i.e. the 0.5).
+!            evap_rate = evap_rate + min((potential_evaporation - evap_rate) * 0.5d0, storage - evap_rate - drain_rate)
+!
+!        else
+!
+!            ! Load dew formation to the current local evap_rate variable
+!            evap_rate = potential_evaporation
+!            ! Restrict drainage the quantity above max_storage, adding dew formation too
+!            drain_rate = (storage - evap_rate) - max_storage
+!
+!        endif
+!
+!    else
+!
+!        ! no drainage just apply evaporation / dew formation fluxes directly
+!        drain_rate = 0d0 ; evap_rate = potential_evaporation
+!        if (evap_rate > 0d0) then
+!            ! evaporation restricted by fraction of surface actually covered
+!            ! in water and integrated over period to bare leaf (i.e. the *0.5)
+!            evap_rate = evap_rate * storage * max_storage_1 * 0.5d0
+!            ! and the total amount of water
+!            evap_rate = min(evap_rate,storage)
+!        else
+!            ! then dew formation has occurred, if this pushes storage > max_storage add it to drainage
+!          drain_rate = max(0d0,(storage - evap_rate) - max_storage)
+!       endif ! evap_rate > 0
+!
+!    endif ! storage > max_storage
 
     ! update canopy storage with water flux
     storage = storage - evap_rate - drain_rate
@@ -3552,7 +3603,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !----------------------------------------------------------------------
   !
-  double precision function modified_arrhenious(activation_energy,deactivation_energy,entropy_term,T_current)
+  double precision function modified_arrhenious(Tref,activation_energy,deactivation_energy,entropy_term,T_current)
 
     ! Estimate the temperature response modifier relative to a reference value
     ! set to 298.15 K (25C).
@@ -3560,13 +3611,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     implicit none
 
     ! Arguments
-    double precision :: activation_energy, & ! Activation energy (J mol-1)
-                      deactivation_energy, & ! Deactivation energy (J mol-1)
-                             entropy_term, & ! Entropy term (J mol-1 K-1)
-                                T_current    ! current temperature (K)
+    double precision :: Tref, & ! Reference temperature (K)
+           activation_energy, & ! Activation energy (J mol-1)
+         deactivation_energy, & ! Deactivation energy (J mol-1)
+                entropy_term, & ! Entropy term (J mol-1 K-1)
+                   T_current    ! current temperature (K)
 
     ! Local variables
-    double precision, parameter :: Tref = 298.15d0
+    !double precision, parameter :: Tref = 298.15d0
     double precision :: increasing_term, decreasing_term
 
     ! Determine the exponential increase below Topt

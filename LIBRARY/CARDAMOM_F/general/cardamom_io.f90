@@ -122,7 +122,6 @@ module cardamom_io
         DATAin%nopools = 8
         DATAin%nopars = 49
         DATAin%nofluxes = 25
-        stop
     else if (DATAin%ID == 12) then
         ! ID = 12 - DALEC.C4.D1.F2.#
         DATAin%nopools = 3
@@ -145,8 +144,9 @@ module cardamom_io
         DATAin%nofluxes = 42
     else if (DATAin%ID == 16) then
         ! ID = 16 - DALEC.M2.#
-        write(*,*) "Oh dear... DALEC.M2.# ID not valid = ",DATAin%ID
-        stop
+        DATAin%nopools = 5
+        DATAin%nopars = 34
+        DATAin%nofluxes = 45
     else if (DATAin%ID == 17) then
         ! ID = 17 - DALEC.A1.H2.M2.#
         write(*,*) "Oh dear... DALEC.A1.H2.M2.# ID not valid = ",DATAin%ID
@@ -1096,15 +1096,20 @@ module cardamom_io
 
     ! load parameter max/min information
     call pars_info
+    ! ensure any loaded parameter values (from the input file) 
+    ! are within the uniform parameter bounds set in the source code
+    do i = 1, PI%npars
+       if (DATAin%parpriors(i) /= -9999) then
+           if (DATAin%parpriors(i) > PI%parmax(i) .or. DATAin%parpriors(i) < PI%parmin(i)) then
+               write(*,*)"Supplied parameter prior = ",i," is outside hardcoded uniform parameter bounds"
+               stop
+           end if
+       end if
+    end do
     ! For log-normalisation procedure, no parameter can be <=0.
     ! To facilitate easy of setting parameter ranges to real values
     ! we here instead calculate the adjustment need to ensure positive only values
     where (PI%parmin <= 0d0) PI%paradj = abs(PI%parmin) + 1d0
-
-!    ! load response surface if using the AT-DALEC model
-!    if (DATAin%ID == 3 .or. DATAin%ID == 4) then
-!       call load_emulator_parameters
-!    end if
 
     ! defining initial MHMCMC stepsize and standard deviation
     PI%parvar = 1d0 ; PI%Nparvar = 0d0

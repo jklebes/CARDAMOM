@@ -1,9 +1,9 @@
 
 subroutine rdalec9(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
                   ,met,pars &
-                  ,out_var1,out_var2,out_var3,lat &
-                  ,nopars,nomet,nofluxes,nopools,pft &
-                  ,nodays,noyears,deltat,nos_iter,soil_frac_clay_in &
+                  ,out_var1,out_var2,out_var3,out_var4,out_var5 &
+                  ,lat,nopars,nomet,nofluxes,nopools,pft &
+                  ,nodays,nos_years,deltat,nos_iter,soil_frac_clay_in &
                   ,soil_frac_sand_in)
 
   use CARBON_MODEL_MOD, only: CARBON_MODEL, itemp, ivpd, iphoto, wSWP_time,                    &
@@ -48,7 +48,7 @@ subroutine rdalec9(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
                         ,fire_dim       &
                         ,pft            & ! plant functional type
                         ,nos_iter       & !
-                        ,noyears        &
+                        ,nos_years        &
                         ,nomet          & ! number of meteorological fields
                         ,nofluxes       & ! number of model fluxes
                         ,nopools        & ! number of model pools
@@ -65,10 +65,12 @@ subroutine rdalec9(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
   ! output declaration
   double precision, intent(out), dimension(nos_iter,nodays,output_dim) :: out_var1
   double precision, intent(out), dimension(nos_iter,MTT_dim) :: out_var2  ! Mean annual MRT (years)
-  double precision, intent(out), dimension(nos_iter,SS_dim) :: out_var3   ! Steady State (gC/m2)
+  double precision, intent(out), dimension(nos_iter,SS_dim) :: out_var3  ! Steady State (gC/m2)
+  double precision, intent(out), dimension(nos_iter,output_dim) :: out_var4 ! Long term mean of out_var1
+  double precision, intent(out), dimension(nos_iter,nos_years,output_dim) :: out_var5 ! Mean annual of out_var1
 
   ! local variables
-  integer :: i, y, y_s, y_e, nos_years, steps_per_year
+  integer :: i, y, y_s, y_e, steps_per_year
   integer, dimension(nodays) :: pool_hak
   double precision, dimension(nos_iter) :: woodlitter_to_som_frac
   ! vector of ecosystem pools
@@ -105,8 +107,6 @@ subroutine rdalec9(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
   do i = 2, nodays
      deltat(i) = met(1,i)-met(1,(i-1))
   end do
-  ! number of years in analysis
-  nos_years = nint(sum(deltat)/365.25d0)
   ! number of time steps per year
   steps_per_year = nodays/nos_years
 
@@ -199,6 +199,30 @@ subroutine rdalec9(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
      ! misc
      out_var1(i,1:nodays,62) = root_depth_time          ! rooting depth (m)
 
+     !
+     ! Calculate long-term mean of out_var1
+     !
+     
+     ! Loop across each variable
+     do v = 1, output_dim
+        ! Calculate mean value
+        out_var4(i,v) = sum(out_var1(i,1:nodays,v)) / dble(nodays)
+     end do
+
+     !
+     ! Calculate the mean annual of out_var1
+     !
+
+     ! Calculate mean annual
+     s = 1 ; e = steps_per_year
+     do a = 1, nos_years
+        do v = 1, output_dim
+           out_var5(i,a,v) = sum(out_var1(i,s:e,v)) / dble(steps_per_year)
+        end do
+        ! Iterate counters
+        s = s + steps_per_year ; e = s + steps_per_year - 1
+     end do
+     
      !!!
      ! Estimate residence time information
      !!!

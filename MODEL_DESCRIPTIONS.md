@@ -31,23 +31,23 @@ M = Managed Grassland / arable crops (Table 10)
 | 12 | DALEC.C4.D1.F2.#             | DALEC_EVERGREEN_no_lit_root, S1            | Fire model updated from F1 to F2| Famiglietti et al., 2021  | Published   |
 | 13 | DALEC.C5.D1.F2.P1.#          | DALEC_CDEA_no_lit_root, S4                 | Fire model updated from F1 to F2| Famiglietti et al., 2021  | Published   |
 | 14 | DALEC.C3.M1.#                | DALEC_CROP          | Developmental arable crop model                     | Sus et al., 2010             | Published   |
-| 15 | DALEC.A3.C3.H2.M1.#          | DALEC_CROP_BUCKET   | Developmental arable crop model                     | Sus et al., 2010, T. L. Smallman             | Unpublished   |
+| 15 | DALEC.A3.C3.H2.M1.#          | DALEC_CROP_BUCKET   | Developmental arable crop model                     | Sus et al., 2010, T. L. Smallman | Unpublished |
 | 16 | DALEC.M2.#                   | DALEC_GRASS         | Managed grassland                                   | Myrgiotis et al., 2020       | Published   |
 | 17 | DALEC.A1.H2.M2.#             | DALEC_GRASS_BUCKET  | Managed grassland                                   | Myrgiotis et al., 2020       | Unpublished |
-| 18 | DALEC.A1.C1.D2.F2.H2.P2.#    | DALEC_CDEA_ACM2_BUCKET_wMRT                |                              | T. L. Smallman                | Unpublished |
-| 19 | DALEC.A1.C2.D2.F2.H2.P2.R3.# | DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT|                              | T. L. Smallman                | Unpublished |
-| 20 | DALEC.A2.C1.D2.F2.H2.P1.#    | DALEC_CDEA_ACM_FARQUHAR_BUCKET             |                              | T. L. Smallman                | Unpublished |
-| 21 | DALEC.A1.C1.D2.F2.H2.P5.#    | DALEC_CDEA_ACM2_BUCKET_LAB                 |                              | T. L. Smallman                | Unpublished |
-| 22 | DALEC.A1.C1.D2.F2.H2.P6.#    | DALEC_CDEA_ACM2_BUCKET_LAB_wMRT            |                              | T. L. Smallman                | Unpublished |
+| 18 | DALEC.A1.C1.D2.F2.H2.P2.#    | DALEC_CDEA_ACM2_BUCKET_wMRT                |                              | T. L. Smallman               | Unpublished |
+| 19 | DALEC.A1.C2.D2.F2.H2.P2.R3.# | DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT|                              | T. L. Smallman               | Unpublished |
+| 20 | DALEC.A2.C1.D2.F2.H2.P1.#    | DALEC_CDEA_ACM_FARQUHAR_BUCKET             |                              | T. L. Smallman               | Unpublished |
+| 21 | DALEC.A1.C1.D2.F2.H2.P5.#    | DALEC_CDEA_ACM2_BUCKET_LAB                 |                              | T. L. Smallman               | Unpublished |
+| 22 | DALEC.A1.C1.D2.F2.H2.P6.#    | DALEC_CDEA_ACM2_BUCKET_LAB_wMRT            |                              | T. L. Smallman               | Unpublished |
 | 23 | DALEC.A1.C2.D2.F2.H2.P7.R2.# | G5                  |                                                     | T. L. Smallman               | Unpublished |
 | 24 | DALEC.A1.C2.D2.F2.H2.P8.R2.# | G6                  |                                                     | T. L. Smallman               | Unpublished |
 | 25 | DALEC.A1.C2.D2.F2.H2.P9.R2.# | G7                  |                                                     | T. L. Smallman               | Unpublished |
 | 26 | DALEC.A1.C2.D2.F2.H2.P10.R2.#| DALEC_BUCKET_CanAGE |                                                     | T. L. Smallman               | Unpublished |
 | 27 | DALEC_1005                   | DALEC_1005          | JPL-CARDAMOM DALEC 1005                             | Famiglietti et al., 2021     | Published   |
 | 28 | DALEC_1005a                  | DALEC_1005a         | As DALEC 1005 but with code error corrections       | Famiglietti et al., 2021     | Published   |
-| 29 | <PLACE HOLDER FOR DAVID>     | NA                  | PLACE HOLDER FOR DAVID                              | D. T. Milodowski             | Unpublished   |
-| 30 | DALEC.A3.C1.D2.F2.H2.P1.#    | NA                  | As DALEC.4. plus Sellers (1985) RTM                 | T. L. Smallman               | Unpublished   |
-| 31 | DALEC.A4.C6.D2.F2.H2.P11.#   | NA                  | As DALEC.20. plus Sellers (1985) RTM, phenology changes | T. L. Smallman               | Unpublished   |
+| 29 | <PLACE HOLDER FOR DAVID>     | NA                  | PLACE HOLDER FOR DAVID                              | D. T. Milodowski             | Unpublished |
+| 30 | DALEC.A3.C1.D2.F2.H2.P1.#    | NA                  | As DALEC.4. plus Sellers (1985) RTM                 | T. L. Smallman               | Unpublished |
+| 31 | DALEC.A4.C6.D2.F2.H2.P11.#   | NA                  | As DALEC.20. plus Sellers (1985) RTM, phenology changes | T. L. Smallman           | Unpublished |
 
 #### TABLE 2. Assimilation due to photosynthetic activity sub-models
 
