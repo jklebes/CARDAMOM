@@ -148,9 +148,10 @@ module cardamom_io
         DATAin%nopars = 34
         DATAin%nofluxes = 45
     else if (DATAin%ID == 17) then
-        ! ID = 17 - DALEC.A1.H2.M2.#
-        write(*,*) "Oh dear... DALEC.A1.H2.M2.# ID not valid = ",DATAin%ID
-        stop
+        ! ID = 17 - DALEC.A3.H2.M2.#
+        DATAin%nopools = 6
+        DATAin%nopars = 37
+        DATAin%nofluxes = 51
     else if (DATAin%ID == 18) then
         ! ID = 18 - DALEC.A1.C1.D2.F2.H2.P2.#
         DATAin%nopools = 7

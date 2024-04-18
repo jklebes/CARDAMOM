@@ -163,10 +163,6 @@ module CARBON_MODEL_MOD
     integer :: f,m,n,test,gsi_lag
 
     double precision :: gsi_lai_reduction &
-                       ,foliage_frac_res  & 
-                       ,labile_frac_res   &
-                       ,roots_frac_res    &
-                       ,roots_frac_death  &
                        ,tot_abg_exp       &
                        ,fol_frac,lab_frac &
                        ,f_root,NPP                
@@ -182,7 +178,7 @@ module CARBON_MODEL_MOD
     gpppars(11) = pi
 
     ! assign acm parameters
-    constants(1)  = pars(10) 
+    constants(1)  = pars(11) 
     constants(2)  = 0.0156935d0
     constants(3)  = 4.22273d0
     constants(4)  = 208.868d0
@@ -306,7 +302,7 @@ module CARBON_MODEL_MOD
       ! Determine GSI based canopy phenology
       call gsi_phenology(nodays,n,deltat(n),gsi_lag,             &
                          met(10,n),met(11,n),met(12,n),          &
-                         pars(5),pars(11),pars(15),pars(30),     &
+                         pars(5),pars(10),pars(15),pars(30),     &
                          pars(12),pars(13),pars(14),pars(20),    & 
                          pars(21),pars(22),                      &
                          FLUXES(n,1),FLUXES(:,18),               &

@@ -75,13 +75,13 @@ module MODEL_PARAMETERS
     PI%parmin(9) = 0.01d0 
     PI%parmax(9) = 0.2d0 
 
-    ! PNUE [7, 20]
-    PI%parmin(10) = 7d0 
-    PI%parmax(10) = 25d0 
-
     ! GSI max labile turnover [1e-6, 0.2]
-    PI%parmin(11) = 0.001d0 
-    PI%parmax(11) = 0.2d0 
+    PI%parmin(10) = 0.001d0 
+    PI%parmax(10) = 0.2d0 
+
+    ! PNUE [7, 20]
+    PI%parmin(11) = 7d0 
+    PI%parmax(11) = 25d0 
 
     ! GSI min T (K) [225, 330] 
     PI%parmin(12) = 230d0 

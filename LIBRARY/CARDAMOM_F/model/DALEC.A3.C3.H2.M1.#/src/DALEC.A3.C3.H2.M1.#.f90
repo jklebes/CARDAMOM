@@ -1351,7 +1351,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! 1.37 (Jones appendix 2). Note conversion to resistance for easiler merging
     ! with stomatal conductance in acm_gpp_stage_2).
     rb_mol_1 = (aerodynamic_conductance * convert_ms1_mol_1 * gb_H2O_CO2 * &
-              leaf_canopy_wind_scaling) ** (-1d0)
+                leaf_canopy_wind_scaling) ** (-1d0)
 
     ! Arrhenious Temperature adjustments for Michaelis-Menten coefficients
     ! for CO2 (kc) and O2 (ko) and CO2 compensation point
