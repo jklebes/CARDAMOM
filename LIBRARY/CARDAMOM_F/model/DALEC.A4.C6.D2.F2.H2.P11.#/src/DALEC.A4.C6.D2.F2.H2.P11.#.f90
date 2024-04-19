@@ -1111,7 +1111,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        call calculate_update_soil_water(transpiration,soilevaporation,snowsublimation, &
                                         ((rainfall-intercepted_rainfall)*seconds_per_day) &
                                        ,FLUXES(n,29))
-                                       stop
        ! now that soil mass balance has been updated we can add the wet canopy
        ! evaporation (kgH2O.m-2.day-1)
        FLUXES(n,29) = FLUXES(n,29) + wetcanopy_evap
