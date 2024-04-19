@@ -2841,48 +2841,48 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !              NOTE: that this may bias between runoff and underflow estimation
 
     ! determine whether there is sufficient water to support evaporation
-    water_change = minval((soil_waterfrac(1:nos_root_layers)*layer_thickness(1:nos_root_layers)) &
-                         - (pot_evap_losses * days_per_step * 1d-3))
+    !water_change = minval((soil_waterfrac(1:nos_root_layers)*layer_thickness(1:nos_root_layers)) &
+    !                     - (pot_evap_losses * days_per_step * 1d-3))
 
-    if (water_change > 0) then
+    !if (water_change > 0) then
 
        ! There is enough water to support evaporation across the whole time period...
 
        ! Draw all the water required for evaporation...
        ! adjust water already committed to evaporation
        ! convert kg.m-2 (or mm) -> Mg.m-2 (or m)
-       soil_waterfrac(1:nos_root_layers) = soil_waterfrac(1:nos_root_layers) &
-                                         + ((-pot_evap_losses*days_per_step*1d-3) / layer_thickness(1:nos_root_layers))
+!       soil_waterfrac(1:nos_root_layers) = soil_waterfrac(1:nos_root_layers) &
+!                                         + ((-pot_evap_losses*days_per_step*1d-3) / layer_thickness(1:nos_root_layers))
 
-       ! Correct for dew formation; any water above porosity in the top layer is assumed runoff
-       if (soil_waterfrac(1) > porosity(1)) then
-           runoff = ((soil_waterfrac(1)-porosity(1)) * layer_thickness(1) * 1d3)
-           soil_waterfrac(1) = porosity(1)
-       endif
+!       ! Correct for dew formation; any water above porosity in the top layer is assumed runoff
+!       if (soil_waterfrac(1) > porosity(1)) then
+!           runoff = ((soil_waterfrac(1)-porosity(1)) * layer_thickness(1) * 1d3)
+!           soil_waterfrac(1) = porosity(1)
+!       endif
 
-       ! determine infiltration from rainfall (kgH2O/m2/day),
-       ! if rainfall is probably liquid / soil surface is probably not frozen
-       if (rainfall_in > 0d0) then
-           ! reset soil water change variable
-           waterchange = 0d0
-           call infiltrate(rainfall_in * days_per_step)
-           ! update soil profiles. Convert fraction into depth specific values
-           ! (rather than m3/m3) then update fluxes
-           soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
-                                             + (waterchange(1:nos_soil_layers) / layer_thickness(1:nos_soil_layers))
-           ! soil waterchange variable reset in gravitational_drainage()
-       endif ! is there any rain to infiltrate?
+!       ! determine infiltration from rainfall (kgH2O/m2/day),
+!       ! if rainfall is probably liquid / soil surface is probably not frozen
+!       if (rainfall_in > 0d0) then
+!           ! reset soil water change variable
+!           waterchange = 0d0
+!           call infiltrate(rainfall_in * days_per_step)
+!           ! update soil profiles. Convert fraction into depth specific values
+!           ! (rather than m3/m3) then update fluxes
+!           soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
+!                                             + (waterchange(1:nos_soil_layers) / layer_thickness(1:nos_soil_layers))
+!           ! soil waterchange variable reset in gravitational_drainage()
+!       endif ! is there any rain to infiltrate?
+!
+!       ! determine drainage flux between surface -> sub surface
+!       call gravitational_drainage(nint(days_per_step))
+!
+!       ! Pass information to the output ET variable
+!       corrected_ET = sum(pot_evap_losses)
+!       ! apply time step correction kgH2O/m2/step -> kgH2O/m2/day
+!       underflow = underflow * days_per_step_1
+!       runoff = runoff * days_per_step_1
 
-       ! determine drainage flux between surface -> sub surface
-       call gravitational_drainage(nint(days_per_step))
-
-       ! Pass information to the output ET variable
-       corrected_ET = sum(pot_evap_losses)
-       ! apply time step correction kgH2O/m2/step -> kgH2O/m2/day
-       underflow = underflow * days_per_step_1
-       runoff = runoff * days_per_step_1
-
-    else
+    !else
 
        ! to allow for smooth water balance integration carry this out at daily time step
        do day = 1, nint(days_per_step)
@@ -2946,7 +2946,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        underflow = underflow * days_per_step_1
        runoff = runoff * days_per_step_1
 
-    end if ! water_change > 0
+!    end if ! water_change > 0
 
     !!!!!!!!!!
     ! Update soil layer thickness

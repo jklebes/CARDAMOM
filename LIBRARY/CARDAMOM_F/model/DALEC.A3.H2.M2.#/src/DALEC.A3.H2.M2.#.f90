@@ -900,7 +900,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! evaporation (kgH2O.m-2.day-1)
        FLUXES(n,46) = FLUXES(n,46) + wetcanopy_evap
        ! store soil water content of the surface zone (mm)
-       POOLS(n+1,5) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
+       POOLS(n+1,6) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
        ! Assign all water variables to output variables (kgH2O/m2/day)
        FLUXES(n,47) =  transpiration   ! transpiration
        FLUXES(n,48) =  soilevaporation ! soil evaporation

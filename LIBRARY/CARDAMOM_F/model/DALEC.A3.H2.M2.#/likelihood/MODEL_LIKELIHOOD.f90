@@ -1110,8 +1110,8 @@ module model_likelihood_module
     return
 
   end function likelihood_p
-  !------------------------------------------------------------------
   !
+  !------------------------------------------------------------------
   !
   double precision function likelihood(npars,pars)
     use cardamom_structures, only: DATAin
@@ -1223,7 +1223,7 @@ module model_likelihood_module
 
 !    ! Evap Log-likelihood
 !    if (DATAin%nEvap > 0) then
-!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),29)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
+!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),46)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
 !                       /DATAin%Evap_unc(DATAin%evappts(1:DATAin%nEvap)))**2)
 !       likelihood = likelihood-tot_exp
 !    endif
@@ -1397,7 +1397,7 @@ module model_likelihood_module
 !    ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
 !    ! kg/m2/day)
 !    if (DATAin%otherpriors(4) > -9998) then
-!        tot_exp = sum(DATAin%M_FLUXES(:,29)) / sum(DATAin%MET(7,:) * 86400d0)
+!        tot_exp = sum(DATAin%M_FLUXES(:,46)) / sum(DATAin%MET(7,:) * 86400d0)
 !        likelihood = likelihood-((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
 !    end if
 
@@ -1533,7 +1533,7 @@ module model_likelihood_module
 
 !    ! Evap Log-likelihood
 !    if (DATAin%nEvap > 0) then
-!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),29)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
+!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),46)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
 !                       /DATAin%Evap_unc(DATAin%Evappts(1:DATAin%nEvap)))**2)
 !       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nEvap))
 !    endif
@@ -1711,7 +1711,7 @@ module model_likelihood_module
 
 !    ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation
 !    if (DATAin%otherpriors(4) > -9998) then
-!        tot_exp = sum(DATAin%M_FLUXES(:,29)) / sum(DATAin%MET(7,:) * 86400d0)
+!        tot_exp = sum(DATAin%M_FLUXES(:,46)) / sum(DATAin%MET(7,:) * 86400d0)
 !        scale_likelihood = scale_likelihood-((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
 !    end if
 
@@ -1847,7 +1847,7 @@ module model_likelihood_module
 
 !    ! Evap Log-likelihood
 !    if (DATAin%nEvap > 0) then
-!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),29)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
+!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),46)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
 !                       /DATAin%Evap_unc(DATAin%Evappts(1:DATAin%nEvap)))**2)
 !       sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nEvap)))
 !    endif
@@ -2025,7 +2025,7 @@ module model_likelihood_module
 
 !    ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation
 !    if (DATAin%otherpriors(4) > -9998) then
-!        tot_exp = sum(DATAin%M_FLUXES(:,29)) / sum(DATAin%MET(7,:) * 86400d0)
+!        tot_exp = sum(DATAin%M_FLUXES(:,46)) / sum(DATAin%MET(7,:) * 86400d0)
 !        sqrt_scale_likelihood = sqrt_scale_likelihood-((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
 !    end if
 
@@ -2161,7 +2161,7 @@ module model_likelihood_module
 
 !    ! Evap Log-likelihood
 !    if (DATAin%nEvap > 0) then
-!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),29)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
+!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),46)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
 !                       /DATAin%Evap_unc(DATAin%Evappts(1:DATAin%nEvap)))**2)
 !       log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nEvap))))
 !    endif
@@ -2347,7 +2347,7 @@ module model_likelihood_module
 
 !    ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation
 !    if (DATAin%otherpriors(4) > -9998) then
-!        tot_exp = sum(DATAin%M_FLUXES(:,29)) / sum(DATAin%MET(7,:) * 86400d0)
+!        tot_exp = sum(DATAin%M_FLUXES(:,46)) / sum(DATAin%MET(7,:) * 86400d0)
 !        log_scale_likelihood = log_scale_likelihood-((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
 !    end if
 

@@ -351,9 +351,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                           ,nodays     ! number of days in simulation
 
     double precision, intent(in) :: met(nomet,nodays) & ! met drivers
-                         ,deltat(nodays)    & ! time step in decimal days
-                         ,pars(nopars)      & ! number of parameters
-                         ,lat                 ! site latitude (degrees)
+                                   ,deltat(nodays)    & ! time step in decimal days
+                                   ,pars(nopars)      & ! number of parameters
+                                   ,lat                 ! site latitude (degrees)
 
     double precision, dimension(nodays), intent(inout) :: lai_out & ! leaf area index
                                                              ,GPP & ! Gross primary productivity
@@ -422,7 +422,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! 4 = wood   (p21)
     ! 5 = litter (p22)
     ! 6 = som    (p23)
-    ! 7 = 0-10 cm soil water content (mm) (p24)
+    ! 7 = 0-30 cm soil water content (fraction of field capacity) (p24)
 
     ! FLUXES are:
     ! 1 = GPP
@@ -3249,7 +3249,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! describes the departure of the velocity profile from just above the
     ! roughness from the intertial sublayer log law
-
 
     ! Estimate canopy drag coefficient
     sqrt_cd1_lai = sqrt(cd1 * local_lai)
