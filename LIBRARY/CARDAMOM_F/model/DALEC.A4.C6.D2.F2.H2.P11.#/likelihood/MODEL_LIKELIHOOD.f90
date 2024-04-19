@@ -456,7 +456,7 @@ module model_likelihood_module
     double precision, dimension(PI%npars), intent(in) :: PARS
 
     ! Local arguments
-    integer :: i
+    integer :: i,t
     double precision, dimension((DATAin%nodays+1),DATAin%nopools) :: local_pools
     double precision, dimension(DATAin%nodays,DATAin%nofluxes) :: local_fluxes
     double precision :: pool_error, flux_error
@@ -497,6 +497,21 @@ module model_likelihood_module
         end do
         stop
     end if
+
+!    ! Commented out to limit error messages, but useful for diagnosis
+!    do t = 1, DATAin%nodays
+!       if (sum(abs(DATAin%M_FLUXES(t,:) - local_fluxes(t,:))) > (tiny(0d0)*(DATAin%nofluxes))) then
+!           print*,"Time step of mismatch = ",i
+!           do i = 1, DATAin%nofluxes
+!               print*,"Flux counter = ",i
+!               print*,"Original run"
+!               print*,local_fluxes(t,i)
+!               print*,"Second run"
+!               print*,DATAin%M_FLUXES(t,i)
+!           end do
+!       end if
+!       stop
+!    end do
 
     ! Update the user
     print*,"Sanity check completed"

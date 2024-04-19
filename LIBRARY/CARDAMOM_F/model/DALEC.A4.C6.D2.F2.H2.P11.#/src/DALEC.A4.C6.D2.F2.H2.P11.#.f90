@@ -525,10 +525,16 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !    ! Debugging print statements
 !    print*,"carbon_model: "
 
-    ! Set some initial states
+    ! Set some initial states for the io variables
     infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0
+    ! Reset hydrology variables
     intercepted_rainfall = 0d0 ; canopy_storage = 0d0 ; snow_storage = 0d0
     transpiration = 0d0 ; soilevaporation = 0d0 ; wetcanopy_evap = 0d0 ; snowsublimation = 0d0
+    ! Reset radiation variabes
+    canopy_swrad_MJday = 0d0 ; canopy_par_MJday = 0d0 ; soil_swrad_MJday = 0d0 
+    canopy_lwrad_Wm2 = 0d0 ; soil_lwrad_Wm2 = 0d0 ; sky_lwrad_Wm2 = 0d0
+    ! Reset conductance variables
+    soil_conductance = 0d0
 
     ! Generate some generic location specific variables for radiation balance
     !call calculate_radiation_commons(lat,pars(39:44))
@@ -2738,7 +2744,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, dimension(nos_root_layers) :: avail_flux, evaporation_losses, pot_evap_losses
 
     ! set soil water exchanges
-    Esoil = 0d0 ; Esnow = 0d0 
+    Esoil = 0d0 ; Esnow = 0d0  
     underflow = 0d0 ; runoff = 0d0 ; corrected_ET = 0d0 ; evaporation_losses = 0d0 ; pot_evap_losses = 0d0
     initial_soilwater = 1d3 * sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers))
 
@@ -2764,6 +2770,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !                      due to the non-linear effects on soil surface evaporation as a result of drythick development
 
     ! to allow for smooth water balance integration carry this out at daily time step
+    ! NOTE: Should inestigate conditions where we don't need to do all the days.
+    !       For example, can we check how the various terms are changing and whether 
+    !       we can assume an average for the rest of the time step?
     do day = 1, nint(days_per_step)
 
        !!!!!!!!!!
@@ -2817,6 +2826,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! Correct for dew formation; any water above porosity in the top layer is assumed runoff
        ! NOTE: layer_thickness * 1d3 scales between m3/m3 to kg/m2
+       ! Worth investigating whether this term is actually important, dew formation in unlikely
+       ! to be large. Therefore, maybe a conditional statment and calculation unrequired
        if (soil_waterfrac(1) > porosity(1)) then
            runoff = runoff + ((soil_waterfrac(1)-porosity(1)) * layer_thickness(1) * 1d3)
            soil_waterfrac(1) = porosity(1)
@@ -2828,16 +2839,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! Determine infiltration from rainfall (kgH2O/m2/day),
        ! if rainfall is probably liquid / soil surface is probably not frozen
-       if (rainfall_in > 0d0) then
-           ! reset soil water change variable
-           waterchange = 0d0
-           call infiltrate(rainfall_in)
-           ! update soil profiles. Convert fraction into depth specific values
-           ! (rather than m3/m3) then update fluxes
-           soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
-                                             + (waterchange(1:nos_soil_layers) / layer_thickness(1:nos_soil_layers))
-           ! soil waterchange variable reset in gravitational_drainage()
-       endif ! is there any rain to infiltrate?
+       ! reset soil water change variable
+       waterchange = 0d0
+       call infiltrate(rainfall_in)
+       ! update soil profiles. Convert fraction into depth specific values
+       ! (rather than m3/m3) then update fluxes
+       soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
+                                         + (waterchange(1:nos_soil_layers) / layer_thickness(1:nos_soil_layers))
+       ! soil waterchange variable reset in gravitational_drainage()
 
        !!!!!!!!!!
        ! Gravitational drainage
@@ -2861,9 +2870,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !        Eleaf = Eleaf * balance ; Esnow = Esnow * balance
 !    end if
     balance = (corrected_ET-Eleaf) / Esoil
-    if (balance /= 1d0) then
-        if (balance < 1d0 .and. balance > 0d0) Esoil = Esoil * balance
-    end if
+    if (balance < 1d0 .and. balance > 0d0) Esoil = Esoil * balance
 
     ! Update corrected_ET with snow sublimation
     corrected_ET = corrected_ET + Esnow
@@ -3013,6 +3020,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! convert rainfall water from mm -> m (or kgH2O.m-2.day-1 -> MgH2O.m-2.day-1)
     add = rainfall_in * 1d-3
 
+    ! Loop through soil layers to drain
     do i = 1 , nos_soil_layers
 
        ! is the input of water greater than available space
