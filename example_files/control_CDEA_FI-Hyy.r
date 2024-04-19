@@ -161,7 +161,7 @@ request_cost_function_scaling = 2 # 0 = Default, no normaliation of the likeliho
 # stage  3 : Copy back results and process vectors
 # stage  4 : Do some standard figure creation (and further processing for gridded analysis)
 # stage  5 : Generic dump of RESULTS_PROCESSED files to netcdf
-stage=0
+stage=2
 repair=1 # to force (=1) re-run processed results or driver files if they already exist
 grid_override=FALSE # force site specific files to be saved and figures to be generated when in "grid" operation
 
