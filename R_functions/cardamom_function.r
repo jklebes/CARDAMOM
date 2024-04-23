@@ -194,7 +194,7 @@ cardamom <-function (projname,model,method,stage) {
 
       # output PROJECT info to R binary file
       save(PROJECT, file=PROJECTfile)
-      if (cardamom_type == "site") {print(PROJECT)}
+      #if (cardamom_type == "site") {print(PROJECT)}
       print("Project file saves as R object")
       print(paste("file path = ",PROJECTfile, sep=""))
       # return state of the operation if successful
@@ -207,7 +207,7 @@ cardamom <-function (projname,model,method,stage) {
 
       # load PROJECT file from binary file
       load(PROJECTfile)
-      if (cardamom_type == "site") {print(PROJECT)}
+      #if (cardamom_type == "site") {print(PROJECT)}
 
   } # if (stage == -1)
 

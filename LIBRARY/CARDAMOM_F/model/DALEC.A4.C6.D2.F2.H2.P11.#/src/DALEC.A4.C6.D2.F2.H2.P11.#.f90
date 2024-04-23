@@ -102,12 +102,12 @@ module CARBON_MODEL_MOD
                       canopy_height = 9d0,          & ! canopy height assumed to be 9 m
                        tower_height = canopy_height + 2d0, & ! tower (observation) height assumed to be 2 m above canopy
                            min_wind = 0.2d0,        & ! minimum wind speed at canopy top
-                       min_drythick = 0.01d0,       & ! minimum dry thickness depth (m)
+                       min_drythick = 0.01d0,       & ! minimum dry thickness depth (m) 0.01 WRF-SPA 
                           min_layer = 0.03d0,       & ! minimum thickness of the third rooting layer (m)
-                        soil_roughl = 0.05d0,       & ! soil roughness length (m)
+                        soil_roughl = 0.00085d0,    & ! soil roughness length (m), Meier et al., (2022), https://doi.org/10.5194/gmd-15-2365-2022
                      top_soil_depth = 0.30d0,       & ! thickness of the top soil layer (m)
                            min_root = 5d0,          & ! minimum root biomass (gBiomass.m-2)
-                            min_lai = 0.1d0,        & ! minimum LAI assumed for aerodynamic conductance calculations (m2/m2)
+                            min_lai = 0.01d0,       & ! minimum LAI assumed for aerodynamic conductance calculations (m2/m2)
                         min_storage = 0.1d0           ! minimum canopy water (surface) storage (mm)
 
   ! timing parameters
@@ -2077,8 +2077,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     delta_iso = (soil_iso_to_net_coef_LAI * lai) + &
                 (soil_iso_to_net_coef_SW * (soil_swrad_MJday * 1d6 * seconds_per_day_1)) + &
                  soil_iso_to_net_const
+
     ! In addition to the iso to net adjustment, SPA analysis shows that soil net never gets much below zero
-    soil_lwrad_Wm2 = max(-0.01d0,soil_lwrad_Wm2 + delta_iso)
+    !soil_lwrad_Wm2 = max(-0.1d0,soil_lwrad_Wm2 + delta_iso)
+    soil_lwrad_Wm2 = soil_lwrad_Wm2 + delta_iso
+    !print*,lai,soil_lwrad_Wm2!,delta_iso,soil_lwrad_Wm2 + delta_iso
     ! Apply linear correction to canopy isothermal->net longwave radiation
     ! balance based on absorbed shortwave radiation
     delta_iso = (canopy_iso_to_net_coef_LAI * lai) + &
@@ -2742,6 +2745,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision :: depth_change, water_change, initial_soilwater, balance, mass_check, &
                         Esoil_local, Esnow_local
     double precision, dimension(nos_root_layers) :: avail_flux, evaporation_losses, pot_evap_losses
+    !logical :: iter_soil = .true.
 
     ! set soil water exchanges
     Esoil = 0d0 ; Esnow = 0d0  
@@ -2774,14 +2778,19 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !       For example, can we check how the various terms are changing and whether 
     !       we can assume an average for the rest of the time step?
     do day = 1, nint(days_per_step)
+       ! Possible conditions for avoiding looping all days
+       ! 1) When drythick == min_drythick and rainfall_in > Esoil in first day
+       ! 2) If initially, drythick > min_drythick, but rainfall_in > Esoil, iteration can stop once drythick == min_drythick
+       ! 3) If drythick == min_drythick and rainfall_in < Esoil in first day, iteration can still be avoided if the time step multiple does not result in drythick >  min_drythick
+       ! 4) 
 
        !!!!!!!!!!
        ! Evaporative losses
        !!!!!!!!!!
 
        ! Estimate drythick for the current step
-       drythick = max(min_drythick, top_soil_depth * max(0d0,(1d0 - (soil_waterfrac(1) / field_capacity(1)))))
-       !drythick = max(min_drythick, top_soil_depth * max(0d0,(1d0 - (soil_waterfrac(1) / porosity(1)))))
+       !drythick = max(min_drythick, top_soil_depth * max(0d0,(1d0 - (soil_waterfrac(1) / field_capacity(1)))))
+       drythick = max(min_drythick, top_soil_depth * max(0d0,(1d0 - (soil_waterfrac(1) / porosity(1)))))
        ! Soil surface (kgH2O.m-2.day-1)
        call calculate_soil_evaporation(Esoil_local)
 
@@ -2813,7 +2822,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !       are drawing from the same water supply.
        avail_flux = soil_waterfrac(1:nos_root_layers) * layer_thickness(1:nos_root_layers) * 1d3
        do a = 1, nos_root_layers ! note: timed comparison between "where" and do loop supports do loop for smaller vectors
-          if (evaporation_losses(a) > avail_flux(a)) evaporation_losses(a) = avail_flux(a) * 0.999d0
+          if (evaporation_losses(a) > avail_flux(a)) evaporation_losses(a) = avail_flux(a) * 0.9999d0
        end do
        ! this will update the ET estimate outside of the function
        ! days_per_step corrections happens outside of the loop below
@@ -2854,7 +2863,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! Determine drainage flux between surface -> sub surface
        call gravitational_drainage(1)
-
+!print*,day,rainfall_in,Esoil_local,Esnow_local,runoff/dble(day),underflow/dble(day)
     end do ! days_per_step
 
     ! apply time step correction kgH2O/m2/step -> kgH2O/m2/day
@@ -2865,10 +2874,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     Esnow = Esnow * days_per_step_1
 
     ! Based on the soil mass balance corrected_ET, make assumptions to correct Eleaf and Esnow
-!    balance = corrected_ET / (Eleaf + Esnow)
-!    if (balance == balance) then
-!        Eleaf = Eleaf * balance ; Esnow = Esnow * balance
-!    end if
     balance = (corrected_ET-Eleaf) / Esoil
     if (balance < 1d0 .and. balance > 0d0) Esoil = Esoil * balance
 
@@ -3208,7 +3213,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     do i = 1, nos_soil_layers
        if (soil_frac_sand(i) < 5d0) soil_frac_sand(i) = 5d0
        if (soil_frac_clay(i) < 5d0) soil_frac_clay(i) = 5d0
-       if (soil_frac_sand(i) > 60d0) soil_frac_sand(i) = 60d0
+       !if (soil_frac_sand(i) > 60d0) soil_frac_sand(i) = 60d0
+       if (soil_frac_sand(i) > 70d0) soil_frac_sand(i) = 70d0
     end do
     ! calculate soil porosity (m3/m3)
     call soil_porosity(soil_frac_clay,soil_frac_sand)
@@ -3335,7 +3341,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! similarity theory stability correction momentum & heat are integrated
     ! through the under canopy space and canopy air space to the surface layer
     ! references are Nui & Yang 2004; Qin et al 2002
-    ! NOTE: conversion to conductance at end
+    ! NOTE: conversion to conductance at end of subroutine
 
     implicit none
 
