@@ -236,16 +236,16 @@ module CARBON_MODEL_MOD
 
   ! structural parameters
   double precision, parameter :: &
-                      canopy_height = 9d0,          & ! canopy height assumed to be 9 m
+                      canopy_height = 1d0,              & ! canopy height assumed to be 1 m for arable crops
                        tower_height = canopy_height + 2d0, & ! tower (observation) height assumed to be 2 m above canopy
-                           min_wind = 0.2d0,        & ! minimum wind speed at canopy top
-                       min_drythick = 0.01d0,       & ! minimum dry thickness depth (m) 0.01 WRF-SPA 
-                          min_layer = 0.03d0,       & ! minimum thickness of the third rooting layer (m)
-                        soil_roughl = 0.00085d0,    & ! soil roughness length (m), Meier et al., (2022), https://doi.org/10.5194/gmd-15-2365-2022
-                     top_soil_depth = 0.30d0,       & ! thickness of the top soil layer (m)
-                           min_root = 5d0,          & ! minimum root biomass (gBiomass.m-2)
-                            min_lai = 0.01d0,       & ! minimum LAI assumed for aerodynamic conductance calculations (m2/m2)
-                        min_storage = 0.1d0           ! minimum canopy water (surface) storage (mm)
+                           min_wind = 0.2d0,            & ! minimum wind speed at canopy top
+                          min_layer = 0.03d0,           & ! minimum thickness of the third rooting layer (m)
+                        soil_roughl = 0.00085d0,        & ! soil roughness length (m), Meier et al., (2022), https://doi.org/10.5194/gmd-15-2365-2022
+                       min_drythick = soil_roughl*10d0, & ! minimum dry thickness depth (m) 0.01 WRF-SPA 
+                     top_soil_depth = 0.30d0,           & ! thickness of the top soil layer (m)
+                           min_root = 5d0,              & ! minimum root biomass (gBiomass.m-2)
+                            min_lai = 0.01d0,           & ! minimum LAI assumed for aerodynamic conductance calculations (m2/m2)
+                        min_storage = 0.1d0               ! minimum canopy water (surface) storage (mm)
 
   ! timing parameters
   double precision, parameter :: &

@@ -99,16 +99,16 @@ module CARBON_MODEL_MOD
 
   ! structural parameters
   double precision, parameter :: &
-                      canopy_height = 9d0,          & ! canopy height assumed to be 9 m
+                      canopy_height = 9d0,              & ! canopy height assumed to be 9 m
                        tower_height = canopy_height + 2d0, & ! tower (observation) height assumed to be 2 m above canopy
-                           min_wind = 0.2d0,        & ! minimum wind speed at canopy top
-                       min_drythick = 0.01d0,       & ! minimum dry thickness depth (m) 0.01 WRF-SPA 
-                          min_layer = 0.03d0,       & ! minimum thickness of the third rooting layer (m)
-                        soil_roughl = 0.00085d0,    & ! soil roughness length (m), Meier et al., (2022), https://doi.org/10.5194/gmd-15-2365-2022
-                     top_soil_depth = 0.30d0,       & ! thickness of the top soil layer (m)
-                           min_root = 5d0,          & ! minimum root biomass (gBiomass.m-2)
-                            min_lai = 0.01d0,       & ! minimum LAI assumed for aerodynamic conductance calculations (m2/m2)
-                        min_storage = 0.1d0           ! minimum canopy water (surface) storage (mm)
+                           min_wind = 0.2d0,            & ! minimum wind speed at canopy top
+                          min_layer = 0.03d0,           & ! minimum thickness of the third rooting layer (m)
+                        soil_roughl = 0.00085d0,        & ! soil roughness length (m), Meier et al., (2022), https://doi.org/10.5194/gmd-15-2365-2022
+                       min_drythick = soil_roughl*10d0, & ! minimum dry thickness depth (m) 0.01 WRF-SPA 
+                     top_soil_depth = 0.30d0,           & ! thickness of the top soil layer (m)
+                           min_root = 5d0,              & ! minimum root biomass (gBiomass.m-2)
+                            min_lai = 0.01d0,           & ! minimum LAI assumed for aerodynamic conductance calculations (m2/m2)
+                        min_storage = 0.1d0               ! minimum canopy water (surface) storage (mm)
 
   ! timing parameters
   double precision, parameter :: &
@@ -826,7 +826,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     previous_depth = sum(layer_thickness(1:2))
     ! Needed to initialise soils
     call calculate_Rtot
-    ! Used to initialise soils
     call calculate_update_soil_water(transpiration,soilevaporation,snowsublimation,&
                                      0d0,FLUXES(1,29)) ! assume no evap or rainfall
     ! Reset variable used to track ratio of water supply used to meet demand
@@ -1739,35 +1738,39 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision :: canopy_radiation, & ! isothermal net radiation (W/m2)
                                       gb    ! stomatal and boundary layer conductance (m.s-1)
 
-    !!!!!!!!!!
-    ! Calculate canopy conductance (to water vapour)
-    !!!!!!!!!!
-
-    ! Combine in series stomatal conductance with boundary layer
-    gb = aerodynamic_conductance * leaf_canopy_wind_scaling
-
-    !!!!!!!!!!
-    ! Estimate energy radiation balance (W.m-2)
-    !!!!!!!!!!
-
-    ! Absorbed shortwave radiation MJ.m-2.day-1 -> J.m-2.s-1
-    canopy_radiation = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
-
-    !!!!!!!!!!
-    ! Calculate canopy evaporative fluxes (kgH2O/m2/day)
-    !!!!!!!!!!
-
-    ! Calculate potential Penman Montheith (kgH2O.m-2.day-1)
-    wetcanopy_evap = max(0d0,(((slope*canopy_radiation) + (ET_demand_coef*gb)) &
-                              / (lambda*(slope+psych))) * dayl_seconds)
-
-    ! assuming there is any rainfall, currently water on the canopy or dew formation
+    ! Assuming there is any rainfall, currently water on the canopy or dew formation
     if (rainfall > 0d0 .or. storage > 0d0) then
+
+        !!!!!!!!!!
+        ! Calculate canopy conductance (to water vapour)
+        !!!!!!!!!!
+
+        ! Combine in series stomatal conductance with boundary layer
+        gb = aerodynamic_conductance * leaf_canopy_wind_scaling
+
+        !!!!!!!!!!
+        ! Estimate energy radiation balance (W.m-2)
+        !!!!!!!!!!
+
+        ! Absorbed shortwave radiation MJ.m-2.day-1 -> J.m-2.s-1
+        canopy_radiation = canopy_lwrad_Wm2 + (canopy_swrad_MJday * 1d6 * dayl_seconds_1)
+
+        !!!!!!!!!!
+        ! Calculate canopy evaporative fluxes (kgH2O/m2/day)
+        !!!!!!!!!!
+
+        ! Calculate potential Penman Montheith (kgH2O.m-2.day-1)
+        wetcanopy_evap = max(0d0,(((slope*canopy_radiation) + (ET_demand_coef*gb)) &
+                                 / (lambda*(slope+psych))) * dayl_seconds)
+
         ! Update based on canopy water storage
         call canopy_interception_and_storage(wetcanopy_evap,storage)
+
     else
+
         ! there is no water movement possible
         intercepted_rainfall = 0d0 ; wetcanopy_evap = 0d0
+
     endif
 
   end subroutine calculate_wetcanopy_evaporation
@@ -2081,7 +2084,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! In addition to the iso to net adjustment, SPA analysis shows that soil net never gets much below zero
     !soil_lwrad_Wm2 = max(-0.1d0,soil_lwrad_Wm2 + delta_iso)
     soil_lwrad_Wm2 = soil_lwrad_Wm2 + delta_iso
-    !print*,lai,soil_lwrad_Wm2!,delta_iso,soil_lwrad_Wm2 + delta_iso
     ! Apply linear correction to canopy isothermal->net longwave radiation
     ! balance based on absorbed shortwave radiation
     delta_iso = (canopy_iso_to_net_coef_LAI * lai) + &

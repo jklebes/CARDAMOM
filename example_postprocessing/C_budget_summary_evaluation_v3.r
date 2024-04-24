@@ -175,13 +175,18 @@ if (length(par_labels) == dim(grid_output$parameters)[3]) {
     var_tmp = cbind(var_tmp,as.vector(grid_output$mean_rauto_gCm2day[,,mid_quant]))
     var_tmp = cbind(var_tmp,as.vector(grid_output$mean_rhet_gCm2day[,,mid_quant]))
     var_tmp = cbind(var_tmp,as.vector(grid_output$mean_fire_gCm2day[,,mid_quant]))
+    var_tmp = cbind(var_tmp,as.vector(grid_output$mean_lai_m2m2[,,mid_quant]))
     var_tmp = cbind(var_tmp,as.vector(grid_output$mean_ET_kgH2Om2day[,,mid_quant]))
+    var_tmp = cbind(var_tmp,as.vector(grid_output$mean_Esoil_kgH2Om2day[,,mid_quant]))
+    var_tmp = cbind(var_tmp,as.vector(grid_output$mean_Etrans_kgH2Om2day[,,mid_quant]))
+    var_tmp = cbind(var_tmp,as.vector(grid_output$mean_Ewetcanopy_kgH2Om2day[,,mid_quant]))
+    var_tmp = cbind(var_tmp,as.vector(grid_output$final_dlai_m2m2[,,mid_quant]))
     var_tmp = cbind(var_tmp,as.vector(grid_output$final_dCbiomass_gCm2[,,mid_quant]))
     var_tmp = cbind(var_tmp,as.vector(grid_output$final_dCdom_gCm2[,,mid_quant]))
     var_tmp = var_tmp[-filter,]
     par_tmp = t(cor(var_tmp,par_tmp))
 
-    colnames(par_tmp) <- c("NEE","GPP","Rauto","Rhet","fire","ET","dBIO","dDOM")
+    colnames(par_tmp) <- c("NEE","GPP","Rauto","Rhet","fire","LAI","ET","Esoil","Etrans","Ewet","dLAI","dBIO","dDOM")
     rownames(par_tmp) <- par_labels
 
     png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_between_pixel_parameter_correlations_fluxes.png",sep=""), height = 5000, width = 2000, res = 300)
