@@ -614,7 +614,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                ! than 21 days) or all available steps (if n < 21).
                m = 0 ; test = 0
                do while (test < 21)
-                  m = m+1 ; test = sum(deltat((n-m):n))
+                  m = m+1 ; test = floor(sum(deltat((n-m):n)))
                   if (m > (n-1)) then 
                       test = 21 
                   endif
@@ -964,7 +964,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! photosynthesis (gC.m-2.day-1 -> umolC/m2/s). Scaling from leaf to canopy
     ! scaled assumed to follow integral of light environment.
     metabolic_limited_photosynthesis = gC_to_umol*leaf_canopy_light_scaling*ceff*seconds_per_day_1 &
-                                     * ((leafT - Vc_minT) / ((leafT - Vc_minT) + Vc_coef))
+                                     * ((leafT - Vc_minT) / ((leafT - Vc_minT) + Vc_coef))         &
                                      * opt_max_scaling(pn_max_temp,pn_min_temp,pn_opt_temp,pn_kurtosis,leafT)
 
     !

@@ -5,70 +5,14 @@
 ## Key outcomes are how does uncertainty and estimated parameters / traits vary between.
 ###
 
-#### TO DO
-# 1) Update locations where CUE is calculated with the new CUE variable
-# 2) 
-# 3) Compare correlations between pixels, how have they changed to improve constraint on wood
-# Ensure all relative plots are restricted +/- 1 
-# Include parameter correlations check
-#orig_mean_parameter_correlation = array(NA, dim=dim(orig_grid_output$mean_lai_m2m2)[1:2])
-#alt_mean_parameter_correlation = array(NA, dim=dim(alt_grid_output$mean_lai_m2m2)[1:2])
-## This time run through and find the parameter files
-#for (n in seq(1, orig_PROJECT$nosites)) {
-#
-#     # determine the lat / long location within the grid
-#     j_loc=as.numeric(PROJECT$sites[n])/PROJECT$long_dim
-#     i_loc=as.numeric(PROJECT$sites[n])-(floor(j_loc)*PROJECT$long_dim)
-#     if(i_loc == 0) {i_loc = PROJECT$long_dim} ; j_loc=ceiling(j_loc)
-# 
-##     # Extract each sites location within the grid
-##     i_loc = grid_output$i_location[n] ; j_loc = grid_output$j_location[n]
-#        
-#     # Check that location has run
-#     if (is.na(i_loc) == FALSE & is.na(j_loc) == FALSE) {
-#              
-#         ###
-#         ## Determining Drivers and trends
-#
-#         # Read in pixel paramater information
-#         infile1 = paste(orig_PROJECT$results_processedpath,orig_PROJECT$sites[n],"_parameters.RData",sep="")   
-#         infile2 = paste(alt_PROJECT$results_processedpath,alt_PROJECT$sites[n],"_parameters.RData",sep="")   
-#         if (file.exists(infile1) & file.exists(infile2)) {
-#
-#             load(infile1)
-#             # Rearrange the parameter matrix for the correlation analysis
-#             parameters = array(parameters, dim = c(dim(parameters)[1], prod(dim(parameters)[2:3])))
-#             # Calculate the mean correlation magnitude for each pixel
-#             tmp = cor(t(parameters)) ; tmp = tmp[lower.tri(tmp) == 1] ; orig_mean_parameter_correlation[i_loc,j_loc] = mean(abs(tmp), na.rm=TRUE)
-#
-#             load(infile2)
-#             # Rearrange the parameter matrix for the correlation analysis
-#             parameters = array(parameters, dim = c(dim(parameters)[1], prod(dim(parameters)[2:3])))
-#             # Calculate the mean correlation magnitude for each pixel
-#             tmp = cor(t(parameters)) ; tmp = tmp[lower.tri(tmp) == 1] ; alt_mean_parameter_correlation[i_loc,j_loc] = mean(abs(tmp), na.rm=TRUE)
-#         } # both files exist
-#         
-#     } # Did this location run
-#} # Site loop
-#
-#par(mfrow=c(2,2))
-#image.plot(alt_mean_parameter_correlation) ; image.plot(orig_mean_parameter_correlation) 
-#image.plot(alt_mean_parameter_correlation-orig_mean_parameter_correlation) ; image.plot((orig_mean_parameter_correlation-orig_mean_parameter_correlation)/orig_mean_parameter_correlation)
-
-#summary(as.vector(alt_mean_parameter_correlation)) ; summary(as.vector(orig_mean_parameter_correlation) )
-#summary(as.vector(alt_mean_parameter_correlation-orig_mean_parameters_correlations))
-
-
 # Read library
 library(fields)
 library(compiler)
 library(RColorBrewer)
 library(plotrix)
 library(zoo)
-#library(raster)
 library(terra)
 library(abind)
-#library(maptools)
 library(ncdf4)
 
 # Set CARDAMOM directory

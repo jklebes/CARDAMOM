@@ -383,10 +383,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                     ,fT_limit_fol &
                    ,fT_limit_wood &
                    ,fW_limit_wood &
-                          ,A_wood &
-                         ,Ha_wood &
-                        ,dHd_wood &
-                        ,dSd_wood &
                    ,transpiration & ! kgH2O/m2/day
                  ,soilevaporation & ! kgH2O/m2/day
                   ,wetcanopy_evap & ! kgH2O/m2/day
@@ -1312,7 +1308,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Declare local variables
     double precision, parameter :: Vc_minT = -6.991d0, & ! Temperature at which all photosynthetic activity is shutdown
                                    Vc_coef = 0.1408d0    ! Temperature above Vc_minT that 50% limitation of cold shutdown occurs
-    double precision :: a, b, c, Jmax, PAR_m2, airt_adj, JVratio, RLVratio
+    double precision :: b, c, Jmax, PAR_m2, airt_adj, JVratio, RLVratio
 
     !
     ! Metabolic limited photosynthesis - leaf to canopy scale
@@ -1905,9 +1901,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !                                                Pr = 0.72d0, & ! Prandtl number
 !                                           Pr_coef = 1.05877d0 !1.18d0*(Pr**(0.33d0))
     ! local variables
-    double precision :: &
-              Sh_forced & ! Sherwood number under forced convection
-                    ,Re   ! Reynolds number
+    double precision :: Sh_forced ! Sherwood number under forced convection
 
     ! Sherwood number under forced convection. NOTE: 0.962 * Pr_coef = 1.018537
 !    Sh_forced = 0.962d0*Pr_coef*(sqrt((leaf_width*canopy_wind)/kinematic_viscosity))
@@ -2610,7 +2604,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                                   ! Note that this assumes a completely wet leaf surface
     ! local variables
     double precision :: a, through_fall, max_storage, max_storage_1, daily_addition, wetcanopy_evaporation &
-                       ,potential_drainage_rate ,drain_rate, evap_rate, initial_canopy, co_mass_balance, dx, dz, tmp(3)
+                       ,drain_rate, evap_rate, initial_canopy
     ! local parameters
     double precision, parameter :: CanIntFrac = -0.5d0,     & ! Coefficient scaling rainfall interception fraction with LAI
                                         clump = 0.75d0,     & ! Clumping factor (1 = uniform, 0 totally clumped)

@@ -189,7 +189,7 @@ if (length(par_labels) == dim(grid_output$parameters)[3]) {
     colnames(par_tmp) <- c("NEE","GPP","Rauto","Rhet","fire","LAI","ET","Esoil","Etrans","Ewet","dLAI","dBIO","dDOM")
     rownames(par_tmp) <- par_labels
 
-    png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_between_pixel_parameter_correlations_fluxes.png",sep=""), height = 5000, width = 2000, res = 300)
+    png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_between_pixel_parameter_correlations_fluxes.png",sep=""), height = 5000, width = 2500, res = 300)
     par(mfrow=c(1,1), mar=c(0,0,0,0), omi=c(0.01,0.01,0.01,0.01))
     corrplot(par_tmp, method="color", col=col(200), 
              type="full", tl.cex=1.2, number.cex=0.8, cl.cex=1.2, cl.ratio = 0.3,
@@ -4003,7 +4003,7 @@ dev.off()
 ## Independent evaluation plots
 
 # Are CARDAMOM models consistent with the range described by CTE NBE ensemble, FC GPP ensemble and GFED / GFAS Fire products
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_FIRE_no_stippling.png",sep=""), height = 1000, width = 4000, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_FIRE_no_stippling.png",sep=""), height = 750, width = 5000, res = 300)
 # Plot differences
 par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
 var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_nbe_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -4021,22 +4021,24 @@ e[3] = ee[3] ; e[4] = ee[4]
 zrange1 = c(-1,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
 zrange2 = c(0,max(values(var2), na.rm=TRUE))
 zrange3 = c(0,max(values(var3), na.rm=TRUE))
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5
 plot(var1, main="",col = rev(colour_choices_default), range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("NBE (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("NBE (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_gain, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_loss), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
 # Are CARDAMOM models consistent with the range described by CTE NBE ensemble, FC GPP ensemble and GFED / GFAS Fire products
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_FIRE_evaluation_stippling.png",sep=""), height = 1000, width = 4000, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_FIRE_evaluation_stippling.png",sep=""), height = 750, width = 5000, res = 300)
 # Plot differences
 par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
 var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_nbe_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -4054,25 +4056,27 @@ e[3] = ee[3] ; e[4] = ee[4]
 zrange1 = c(-1,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
 zrange2 = c(0,max(values(var2), na.rm=TRUE))
 zrange3 = c(0,max(values(var3), na.rm=TRUE))
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5
 plot(var1, main="",col = rev(colour_choices_default), range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("NBE (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("NBE (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[nbe_sig_longitude+0.5,1],grid_lat[1,nbe_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_gain, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[gpp_sig_longitude+0.5,1],grid_lat[1,gpp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_loss), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[fire_sig_longitude+0.5,1],grid_lat[1,fire_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
 # Are CARDAMOM models consistent with the range described by ET ensemble, GPP ensemble and GFED / GFAS Fire products
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_ET_GPP_FIRE_evaluation_bias_stippling.png",sep=""), height = 1000, width = 4000, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_ET_GPP_FIRE_evaluation_bias_stippling.png",sep=""), height = 750, width = 5000, res = 300)
 # Plot differences
 par(mfrow=c(1,3), mar=c(0.05,0.9,1,7.2), omi = c(0.01,0.2,0.3,0.1))
 var1 = (365.25*grid_output$mean_ET_kgH2Om2day[,,mid_quant]) - apply(obs_et_mean_kgH2Om2yr, c(1,2), mean, na.rm=TRUE)
@@ -4093,25 +4097,27 @@ e[3] = ee[3] ; e[4] = ee[4]
 zrange1 = c(-1,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
 zrange2 = c(-1,1) * max(abs(range(values(var2),na.rm=TRUE)), na.rm=TRUE)
 zrange3 = c(-1,1) * max(abs(range(values(var3),na.rm=TRUE)), na.rm=TRUE)
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5
 plot(var1, main="",col = colour_choices_sign, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("ET (kgH2O ",m^-2," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("ET (kgH2O ",m^-2," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[et_sig_longitude+0.5,1],grid_lat[1,et_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_sign, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[gpp_sig_longitude+0.5,1],grid_lat[1,gpp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_sign), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[fire_sig_longitude+0.5,1],grid_lat[1,fire_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
 # Are CARDAMOM models consistent with the range described by CTE NBE ensemble, FC GPP ensemble and GFED / GFAS Fire products
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_FIRE_evaluation_bias_stippling.png",sep=""), height = 1000, width = 4000, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_FIRE_evaluation_bias_stippling.png",sep=""), height = 750, width = 5000, res = 300)
 # Plot differences
 par(mfrow=c(1,3), mar=c(0.05,0.9,1,7.2), omi = c(0.01,0.2,0.3,0.1))
 var1 = (365.25*grid_output$mean_nbe_gCm2day[,,mid_quant]) - apply(obs_nbe_mean_gCm2yr, c(1,2), mean, na.rm=TRUE)
@@ -4132,25 +4138,27 @@ e[3] = ee[3] ; e[4] = ee[4]
 zrange1 = c(-1,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
 zrange2 = c(-1,1) * max(abs(range(values(var2),na.rm=TRUE)), na.rm=TRUE)
 zrange3 = c(-1,1) * max(abs(range(values(var3),na.rm=TRUE)), na.rm=TRUE)
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5
 plot(var1, main="",col = colour_choices_sign, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("NBE (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("NBE (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[nbe_sig_longitude+0.5,1],grid_lat[1,nbe_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_sign, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[gpp_sig_longitude+0.5,1],grid_lat[1,gpp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_sign), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[fire_sig_longitude+0.5,1],grid_lat[1,fire_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
 # Are CARDAMOM models consistent with the range described by CTE NBE ensemble, FC GPP ensemble and GFED / GFAS Fire products
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_FIRE_evaluation_fraction_overlap.png",sep=""), height = 1000, width = 4000, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_FIRE_evaluation_fraction_overlap.png",sep=""), height = 750, width = 5000, res = 300)
 # Plot differences
 par(mfrow=c(1,3), mar=c(0.05,0.9,0.9,7.2), omi = c(0.01,0.2,0.3,0.1))
 # C1
@@ -4169,22 +4177,24 @@ e[3] = ee[3] ; e[4] = ee[4]
 zrange1 = c(0,1)
 zrange2 = c(0,1)
 zrange3 = c(0,1)
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5
 plot(var1, main="",col = colour_choices_gain, range=zrange1, type="continuous", xaxt = "n", yaxt = "n", mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("NBE overlap fraction",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("NBE overlap fraction",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_gain, range=zrange2, type="continuous", xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("GPP overlap fraction",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("GPP overlap fraction",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_gain), range=zrange3, type="continuous", xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("Fire overlap fraction",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("Fire overlap fraction",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
 # Are CARDAMOM models consistent with the range described by ET ensemble, FC GPP ensemble and GFED / GFAS Fire products
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_ET_GPP_FIRE_no_stippling.png",sep=""), height = 1000, width = 4000, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_ET_GPP_FIRE_no_stippling.png",sep=""), height = 750, width = 5000, res = 300)
 # Plot differences
 par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
 var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*grid_output$mean_ET_kgH2Om2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -4202,22 +4212,24 @@ e[3] = ee[3] ; e[4] = ee[4]
 zrange1 = c(0,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
 zrange2 = c(0,max(values(var2), na.rm=TRUE))
 zrange3 = c(0,max(values(var3), na.rm=TRUE))
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5
 plot(var1, main="",col = colour_choices_gain, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("ET (kgH2O ",m^-2," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("ET (kgH2O ",m^-2," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_gain, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_loss), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
 # Are CARDAMOM models consistent with the range described by ET ensemble, FC GPP ensemble and GFED / GFAS Fire products
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_ET_GPP_FIRE_evaluation_stippling.png",sep=""), height = 1000, width = 4000, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_ET_GPP_FIRE_evaluation_stippling.png",sep=""), height = 750, width = 5000, res = 300)
 # Plot differences
 par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
 var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*grid_output$mean_ET_kgH2Om2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -4235,25 +4247,27 @@ e[3] = ee[3] ; e[4] = ee[4]
 zrange1 = c(0,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
 zrange2 = c(0,max(values(var2), na.rm=TRUE))
 zrange3 = c(0,max(values(var3), na.rm=TRUE))
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5
 plot(var1, main="",col = colour_choices_gain, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("ET (kgH2O ",m^-2," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("ET (kgH2O ",m^-2," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[et_sig_longitude+0.5,1],grid_lat[1,et_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_gain, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[gpp_sig_longitude+0.5,1],grid_lat[1,gpp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_loss), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[fire_sig_longitude+0.5,1],grid_lat[1,fire_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
 # Are CARDAMOM models consistent with the range described by ET ensemble, GPP ensemble and GFED / GFAS Fire products
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_ET_GPP_FIRE_evaluation_fraction_overlap.png",sep=""), height = 1000, width = 4000, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_ET_GPP_FIRE_evaluation_fraction_overlap.png",sep=""), height = 750, width = 5000, res = 300)
 # Plot differences
 par(mfrow=c(1,3), mar=c(0.05,0.9,0.9,7.2), omi = c(0.01,0.2,0.3,0.1))
 # C1
@@ -4272,17 +4286,19 @@ e[3] = ee[3] ; e[4] = ee[4]
 zrange1 = c(0,1)
 zrange2 = c(0,1)
 zrange3 = c(0,1)
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5
 plot(var1, main="",col = colour_choices_gain, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("ET overlap fraction",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("ET overlap fraction",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_gain, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("GPP overlap fraction",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("GPP overlap fraction",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_gain), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("Fire overlap fraction",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+mtext(expression(paste("Fire overlap fraction",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
@@ -4462,7 +4478,7 @@ dev.off()
 ## Statistical significance / trend maps for C-budget terms
 
 # Comparison of NBE, wood and soil stock change over the analysis period by model
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBP_dCwood_dCsom.png",sep=""), height = 1000, width = 3500, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBP_dCwood_dCsom.png",sep=""), height = 750, width = 5000, res = 300)
 # Plot differences
 par(mfrow=c(1,3), mar=c(0.05,1,0.05,7.0), omi = c(0.01,0.4,0.3,0.05))
 # Create raster
@@ -4487,25 +4503,27 @@ tmp = c(range(values(var1), na.rm=TRUE),range(values(var2), na.rm=TRUE))
 tmp1 = c(range(values(var3), na.rm=TRUE))
 zrange = max(abs(range(tmp, na.rm=TRUE))) * c(-1,1)
 zrange1 = max(abs(c(range(tmp1, na.rm=TRUE)))) * c(-1,1)
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5
 # C1 Mean annual NBP, dCwood, dCsom
 plot(var1, ylab="", xlab="", main="",  mar=NA, bty = "n",
      xaxt = "n", yaxt = "n", range=zrange,
      col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
 plot(landmask, add=TRUE, lwd=0.5)
 points(grid_long[nbp_sig_longitude+0.5,1],grid_lat[1,nbp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
-mtext(expression(paste("NBP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.6, padj = +0.5, adj = 0.5)
+mtext(expression(paste("NBP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(var2, ylab="", xlab="", main="",  mar=NA, bty = "n",
      xaxt = "n", yaxt = "n", range=zrange,
      col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
 plot(landmask, add=TRUE, lwd=0.5)
 points(grid_long[dCwood_sig_longitude+0.5,1],grid_lat[1,dCwood_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
-mtext(expression(paste("Wood Change (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.6, padj = +0.5, adj = 0.5)
+mtext(expression(paste("Wood Change (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(var3, ylab="", xlab="", main="",  mar=NA, bty = "n",
      xaxt = "n", yaxt = "n", range=zrange1,
      col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
 plot(landmask, add=TRUE, lwd=0.5)
 points(grid_long[dCsom_sig_longitude+0.5,1],grid_lat[1,dCsom_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
-mtext(expression(paste("Soil Change (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = 1.6, padj = +0.5, adj = 0.5)
+mtext(expression(paste("Soil Change (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 dev.off()
 
 # GPP, Rauto, Rhet trend
@@ -5432,23 +5450,24 @@ e[3] = ee[3] ; e[4] = ee[4]
 zrange1 = c(0,1)*max(abs(range(values(var1),na.rm=TRUE)))
 zrange2 = c(0,1)
 zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_MRT_SS_median.png",sep=""), height = 2700*0.5, width = 4900, res = 300)
-par(mfrow=c(1,3), mar=c(0.5,0.3,2.8,8),omi=c(0.1,0.3,0.2,0.2))
+main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_MRT_SS_median.png",sep=""), height = 750, width = 5000, res = 300)
+par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
 # Ecosystem traits, median estimates
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
-mtext("MRT Wood (years)", side=3, cex = 1.8, padj = 0.9)
+mtext("MRT Wood (years)", side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
-mtext("NPP wood (0-1)", side=3, cex = 1.8, padj = 0.9)
+mtext("NPP wood (0-1)", side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
-mtext("SS wood (MgC/ha)", side=3, cex = 1.8, padj = 0.9)
+mtext("SS wood (MgC/ha)", side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 

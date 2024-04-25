@@ -1827,7 +1827,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! photosynthesis (gC.m-2.day-1 -> umolC/m2/s). Scaling from leaf to canopy
     ! scaled assumed to follow integral of light environment.
     metabolic_limited_photosynthesis = gC_to_umol*leaf_canopy_light_scaling*ceff*seconds_per_day_1 &
-                                     * ((leafT - Vc_minT) / ((leafT - Vc_minT) + Vc_coef))    
+                                     * ((leafT - Vc_minT) / ((leafT - Vc_minT) + Vc_coef))         &
                                      * opt_max_scaling(pn_max_temp,pn_min_temp,pn_opt_temp,pn_kurtosis,leafT)
 
     !

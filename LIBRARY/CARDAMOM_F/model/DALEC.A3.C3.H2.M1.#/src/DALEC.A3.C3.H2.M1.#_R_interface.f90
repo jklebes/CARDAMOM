@@ -82,7 +82,7 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
   ! local variables
   ! vector of ecosystem pools
   character(350) :: exepath
-  integer :: i, steps_per_year
+  integer :: a, e, i, s, v, steps_per_year!, nos_years
   integer, dimension(nodays) :: pool_hak
   double precision, dimension((nodays+1),nopools) :: POOLS
   ! vector of ecosystem fluxes

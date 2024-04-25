@@ -1203,7 +1203,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Determine Vcmax at current temperature (umolC/m2/s). Included is a scaling
     ! factor from 'top leaf' to the effective canopy.
     metabolic_limited_photosynthesis = Vcmax_ref * leaf_canopy_light_scaling &
-                                     * ((leafT - Vc_minT) / ((leafT - Vc_minT) + Vc_coef))    
+                                     * ((leafT - Vc_minT) / ((leafT - Vc_minT) + Vc_coef))  &
                                      * modified_arrhenious(Ha_Vcmax,Hd_Vcmax_Jmax,dS_Vcmax,leafT+freeze)
     ! Determine dark respiration (i.e. maintenance) at the current temperature
     ! as a fraction of Vcmax_ref. Most likely will be replaced by Heskel or Reich approaches.
