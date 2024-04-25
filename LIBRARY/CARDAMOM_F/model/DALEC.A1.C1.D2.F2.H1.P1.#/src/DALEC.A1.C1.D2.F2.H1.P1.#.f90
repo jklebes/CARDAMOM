@@ -117,6 +117,8 @@ module CARBON_MODEL_MOD
 
   ! ACM-GPP-ET parameters
   double precision, parameter :: &
+                       Vc_minT = -6.991d0,      & ! Temperature at which all photosynthetic activity is shutdown
+                       Vc_coef = 0.1408d0,      & ! Temperature above Vc_minT that 50% limitation of cold shutdown occurs  
                    pn_max_temp = 6.842942d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
                    pn_min_temp = -1d+06      ,  & ! Minimum daily max temperature for photosynthesis (oC)
                    pn_opt_temp = 3.155960d+01,  & ! Optimum daily max temperature for photosynthesis (oC)
@@ -904,10 +906,6 @@ metabolic_limited_photosynthesis, &
 
     implicit none
 
-    ! Local variables
-    double precision, parameter :: Vc_minT = -6.991d0, & ! Temperature at which all photosynthetic activity is shutdown
-                                   Vc_coef = 0.1408d0    ! Temperature above Vc_minT that 50% limitation of cold shutdown occurs
-
     !
     ! Metabolic limited photosynthesis
     !
@@ -1047,7 +1045,7 @@ metabolic_limited_photosynthesis, &
     ! Calculate stomatal conductance under H2O and CO2 limitations
     !!!!!!!!!!
 
-    if (aerodynamic_conductance > vsmall .and. total_water_flux > vsmall) then
+    if (aerodynamic_conductance > vsmall .and. total_water_flux > vsmall .and. leafT > Vc_minT) then
 
         ! Determine potential water flow rate (mmolH2O.m-2.dayl-1)
         max_supply = total_water_flux * seconds_per_day
