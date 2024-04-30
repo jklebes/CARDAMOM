@@ -71,10 +71,11 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       APAR_MJm2day = output[,,9], gb_total_canopy = output[,,10],
                       CiCa = output[,,11])
   } else if (model_name == "DALEC.C3.M1.#") {
-      output_dim=45
+      output_dim = 58 ; MTT_dim = 8 ; SS_dim = 8
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       #crop_file_location=paste(PROJECT$exepath,"winter_wheat_development.csv", sep="")
-      if (parameter_type == "pft_specific") {pft_specific = 1} else {pft_specific = 0}
+      crop_type = 1 # Winter Wheat
+      wd_old = getwd() ; setwd(PROJECT$exepath)
       tmp=.Fortran( "rdalec14",output_dim=as.integer(output_dim)
                               ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
                               ,met=as.double(t(met))

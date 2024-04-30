@@ -424,23 +424,21 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                           ,nomet    & ! number of meteorological fields
                           ,nopools  & ! number of model pools
                           ,nofluxes   ! number of model fluxes
+    !f2py intent(in) :: start,finish,nodays,nopars,nomet,nopools,nofluxes  
 
     double precision, intent(in) :: deltat(nodays)    & ! time step in decimal days
                                    ,lat               & ! site latitude (degrees)
                                    ,met(nomet,nodays) & ! met drivers
                                    ,pars(nopars)        ! number of parameters
-
+    !f2py intent(in) :: deltat,lat,met,pars
     double precision, dimension(nodays), intent(inout) :: lai_out & ! leaf area index
                                                              ,GPP & ! Gross primary productivity
                                                              ,NEE   ! net ecosystem exchange of CO2
-
+    !f2py intent(inout) :: lai_out,GPP,NEE
     double precision, dimension((nodays+1),nopools), intent(inout) :: POOLS ! vector of ecosystem pools
-
+    !f2py intent(inout) :: POOLS
     double precision, dimension(nodays,nofluxes), intent(inout) :: FLUXES ! vector of ecosystem fluxes
-    
-    !f2py intent(in) :: start,finish,met,pars,deltat,nodays,lat,nopars,nomet,nopools,nofluxes  
-
-    !f2py intent(out) ::lai_out,NEE,FLUXES,POOLS,GPP    
+    !f2py intent(inout) :: FLUXES
 
     ! declare local variables
     double precision ::      infi &
