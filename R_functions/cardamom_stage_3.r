@@ -7,7 +7,7 @@
 
 # Author: T. Luke Smallman (02/05/2024)
 
-cardamom_stage_3 <-function(PROJECT) {
+cardamom_stage_3 <-function(PROJECT,PROJECTfile) {
 
    print("Stage 3 will copy files back from cluster and begin postprocessing")
    print("NOTE: this will only be effective if cluster has completed its tasks")
