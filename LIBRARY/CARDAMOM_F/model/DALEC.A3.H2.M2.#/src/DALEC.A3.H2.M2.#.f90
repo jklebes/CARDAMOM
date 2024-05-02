@@ -396,7 +396,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                      ,roots_frac_res     &
                      ,roots_frac_death                                              
 
-
   contains
   !
   !--------------------------------------------------------------------

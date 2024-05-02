@@ -825,10 +825,8 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         deforestation = read_site_specific_obs("deforestation_fraction",infile)
         if (length(deforestation) == 1 && deforestation == -9999) {
             deforestation = read_site_specific_obs("lai_loss",infile)
-            forest_management = read_site_specific_obs("Forest_mgmt_after_clearing",infile)
-        } else {
-            forest_management = read_site_specific_obs("management_type",infile)
         }
+        forest_management = read_site_specific_obs("management_type",infile)
         if (length(forest_management) == 1) {forest_management = rep(2, times = length(deforestation))}
         yield_class = -9999 #read_site_specific_obs("yield_class",infile)
         age = read_site_specific_obs("age",infile)

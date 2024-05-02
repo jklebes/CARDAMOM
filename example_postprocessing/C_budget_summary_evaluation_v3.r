@@ -3874,14 +3874,14 @@ if (length(which(is.na(WoodCobs_trend) == FALSE)) > 0) {
 
     # restricted axis version
     png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_wood_trend_CI_comparison_restricted_axes_heatmap_plus_maps.png",sep=""), 
-        height = 2400, width = 4000, res = 300)
+        height = 2000, width = 5000, res = 300)
     par(mfrow=c(2,3), mar=c(4.2,5.4,2.8,2),omi=c(0.01,0.01,0.01,0.01))
     # X~Y scatter
     yrange = c(-1,1) * quantile(abs(c(WoodCobs_trend,wood_trend)), prob=c(0.999), na.rm=TRUE) * 1e-2
     smoothScatter((WoodCobs_trend*1e-2) ~ as.vector(1e-2*wood_trend), xlim=yrange, ylim=yrange, 
          ylab = expression(paste("Obs wood trend (MgC h",a^-1,"",y^-1,")",sep="")), 
          main = " ", xlab = expression(paste("Model wood trend (MgC h",a^-1,"",y^-1,")",sep="")), 
-         pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+         pch=16, cex = 1.5, cex.main=2, cex.axis = 2.0, cex.lab=2.0,
          transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), colramp=smoothScatter_colours, nrpoints = 0,
          nbin = 1500)
     abline(0,1,col="red", lwd=3) ; abline(0,0,col="grey", lwd=2) ; abline(v = 0,col="grey", lwd=2)
@@ -3889,13 +3889,13 @@ if (length(which(is.na(WoodCobs_trend) == FALSE)) > 0) {
     yrange = c(-1,1) * quantile((WoodCobs_trend*length(run_years)), prob=c(0.999), na.rm=TRUE) * 1e-2
     plot((1e-2*WoodCobs_trend*length(run_years)) ~ as.vector(1e-2*mean_obs_wood), ylab=expression(paste("Obs total AGB change (MgC h",a^-1,")",sep="",)), 
          xlab = expression(paste("Mean obs wood stock (MgC h",a^-1,")",sep="")), 
-         ylim=yrange, xlim=c(0,max(mean_obs_wood*1e-2,na.rm=TRUE)), pch = 16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
+         ylim=yrange, xlim=c(0,max(mean_obs_wood*1e-2,na.rm=TRUE)), pch = 16, cex = 1.5, cex.main=2, cex.axis = 2.0, cex.lab=2.0)
     abline(0,0,col="grey", lwd=2)
     # Observed wood change vs CI
     plot((1e-2*WoodCobs_trend*length(run_years))  ~ as.vector(1e-2*WoodCobs_mean_CI), 
          ylab=expression(paste("Obs total AGB change (MgC h",a^-1,")",sep="",)), 
          xlab = expression(paste("Obs mean CI (MgC h",a^-1,")",sep="")), 
-         ylim=yrange, xlim=c(0,max(1e-2*WoodCobs_mean_CI, na.rm=TRUE)), pch = 16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2)
+         ylim=yrange, xlim=c(0,max(1e-2*WoodCobs_mean_CI, na.rm=TRUE)), pch = 16, cex = 1.5, cex.main=2, cex.axis = 2.0, cex.lab=2.0)
     lines(c(0:max(1e-2*WoodCobs_mean_CI, na.rm=TRUE))~c(0:max(1e-2*WoodCobs_mean_CI, na.rm=TRUE)), col="red", lwd=2)
     lines(c(0:-max(1e-2*WoodCobs_mean_CI, na.rm=TRUE))~c(0:max(1e-2*WoodCobs_mean_CI, na.rm=TRUE)), col="red", lwd=2)
     abline(0,0,col="grey", lwd=2) 
@@ -4641,49 +4641,51 @@ zrange5 = c(0,1)*max(abs(range(values(var5),na.rm=TRUE)))
 zrange6 = c(0,1)*max(abs(range(values(var6),na.rm=TRUE)))
 zrange7 = c(0,1)*max(abs(range(values(var7),na.rm=TRUE)))
 zrange8 = c(0,1)*max(abs(range(values(var8),na.rm=TRUE)))
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_C_fluxes_median_CI.png",sep=""), height = 2100, width = 5000, res = 300)
-par(mfrow=c(2,4), mar=c(0.5,0.5,2.8,7),omi=c(0.1,0.4,0.2,0.2))
+# Common variables for labels
+main_lab_cex = 1.5 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_C_fluxes_median_CI.png",sep=""), height = 1200, width = 5000, res = 300)
+par(mfrow=c(2,4), mar=c(0.5,0.5,2.0,3.5),omi=c(0.1,0.1,0.1,0.1))
 # Mean annual median estimates
-plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
+     cex.axis = 3.0, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.2),
      main = "", col=rev(colour_choices_default))
-mtext(expression(paste('NBE (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)     
+mtext(expression(paste('NBE (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
+     cex.axis = 3.0, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.2),
      main = "", col=colour_choices_gain)
-mtext(expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
+     cex.axis = 3.0, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.2),
      main = "", col=colour_choices_loss)
-mtext(expression(paste('Reco (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('Reco (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
+     cex.axis = 3.0, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.2),
      main = "", col=colour_choices_loss)
-mtext(expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 # Mean annual estimates uncertainty
-plot(var5, range=zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+plot(var5, range=zrange5, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.4,hadj=0.1), plg = list(ext=e, cex=1.2),
      main = "", col=colour_choices_CI)
-mtext(expression(paste('NBE CI (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('NBE CI (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var6, range=zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+plot(var6, range=zrange6, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.4,hadj=0.1), plg = list(ext=e, cex=1.2),
      main = "", col=colour_choices_CI)
-mtext(expression(paste('GPP CI (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('GPP CI (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var7, range=zrange7, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+plot(var7, range=zrange7, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.4,hadj=0.1), plg = list(ext=e, cex=1.2),
      main = "", col=colour_choices_CI)
-mtext(expression(paste('Reco CI (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('Reco CI (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-plot(var8, range=zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+plot(var8, range=zrange8, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.4,hadj=0.1), plg = list(ext=e, cex=1.2),
      main = "", col=colour_choices_CI)
-mtext(expression(paste('Fire CI (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('Fire CI (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
@@ -4720,22 +4722,22 @@ par(mfrow=c(2,2), mar=c(0.5,0.5,2.8,7),omi=c(0.1,0.4,0.12,0.2))
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, mar=NA, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_default))
-mtext(expression(paste('NBE (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('NBE (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, mar=NA, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
-mtext(expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, mar=NA, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
-mtext(expression(paste('Reco (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('Reco (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, mar=NA, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
-mtext(expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
@@ -4793,28 +4795,30 @@ zrange1 = c(-1,1)*max(abs(range(values(var1),na.rm=TRUE)))
 zrange2 = c(0,1)*max(abs(range(values(var2),na.rm=TRUE)))
 zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
 zrange4 = c(0,1)*max(abs(range(values(var4),na.rm=TRUE)))
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_C_fluxes_median.png",sep=""), height = 2100*0.5, width = 5000, res = 300)
-par(mfrow=c(1,4), mar=c(0.5,0.5,2.8,7),omi=c(0.1,0.4,0.2,0.2))
+# Common variables for labels
+main_lab_cex = 1.5 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_C_fluxes_median.png",sep=""), height = 600, width = 5000, res = 300)
+par(mfrow=c(1,4), mar=c(0.5,0.5,2.0,3.5),omi=c(0.1,0.1,0.1,0.1))
 # Mean annual median estimates
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.8, axes = FALSE, pax=list(cex.axis=2.2,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=rev(colour_choices_default))
-mtext(expression(paste('NBE (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('NBE (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.8, axes = FALSE, pax=list(cex.axis=2.2,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
-mtext(expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.8, axes = FALSE, pax=list(cex.axis=2.2,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
-mtext(expression(paste('Reco (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('Reco (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.8, axes = FALSE, pax=list(cex.axis=2.2,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_loss)
-mtext(expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
@@ -5053,8 +5057,8 @@ zrange1 = c(0,1)*max(abs(range(values(var1),na.rm=TRUE)))
 zrange2 = c(0,1)*max(abs(range(values(var2),na.rm=TRUE)))
 zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
 zrange4 = c(0,1)*max(abs(range(values(var4),na.rm=TRUE)))
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_mean_wood_som_stock_woodMRT_somMRT_fire_correlation_median.png",sep=""), height = 1600, width = 3000, res = 300)
-par(mfrow=c(2,3), mar=c(4.0,3.0,1,1.0),omi=c(0.01,0.10,0.10,0.35))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_mean_wood_som_stock_woodMRT_somMRT_fire_correlation_median.png",sep=""), height = 1600, width = 4000, res = 300)
+par(mfrow=c(2,3), mar=c(3.2,3.0,0.5,1.0),omi=c(0.01,0.10,0.10,0.35))
 # Correlation between Wood MRT and fire
 plot(as.vector(grid_output$MTT_wood_years[,,mid_quant]) ~ as.vector(BurnedFraction), pch=16,
      cex.axis = 1.5, cex.lab = 1.5, cex = 1.2, xlab="", ylab="")
@@ -5063,28 +5067,28 @@ mtext(side = 2, text = "Wood MRT (years)", cex = 1.0, padj = -2.50)
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, mar=NA, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
-mtext(expression(paste("Wood (MgC h",a^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste("Wood (MgC h",a^-1,")",sep="")), side=3, cex = 1.6, padj = 0.9)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, mar=NA, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
-mtext(expression(paste("Soil (MgC h",a^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste("Soil (MgC h",a^-1,")",sep="")), side=3, cex = 1.6, padj = 0.9)
 plot(landmask, add=TRUE, lwd=0.5)
 # Correlation between Soil MRT and fire
 plot(as.vector(grid_output$MTT_som_years[,,mid_quant]) ~ as.vector(BurnedFraction), pch=16,
      cex.axis = 1.5, cex.lab = 1.5, cex = 1.2, xlab="", ylab="")
-mtext(side = 1, text = "Annual burnt Fraction", cex = 1.0, padj = 0.5, adj = 0.5)
+mtext(side = 1, text = "Annual burnt Fraction", cex = 1.0, padj = 2.2, adj = 0.5)
 mtext(side = 2, text = "Soil MRT (years)", cex = 1.0, padj = -2.50)
 # MRTs for wood and soil
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, mar=NA, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
-mtext(expression(paste("Wood MRT(years)",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste("Wood MRT(years)",sep="")), side=3, cex = 1.6, padj = 0.9)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, mar=NA, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
      main = "", col=colour_choices_gain)
-mtext(expression(paste("Soil MRT (years)",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste("Soil MRT (years)",sep="")), side=3, cex = 1.6, padj = 0.9)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 

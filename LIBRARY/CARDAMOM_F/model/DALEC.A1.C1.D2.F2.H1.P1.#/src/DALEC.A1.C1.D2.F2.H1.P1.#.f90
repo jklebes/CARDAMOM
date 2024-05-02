@@ -119,10 +119,10 @@ module CARBON_MODEL_MOD
   double precision, parameter :: &
                        Vc_minT = -6.991d0,      & ! Temperature at which all photosynthetic activity is shutdown
                        Vc_coef = 0.1408d0,      & ! Temperature above Vc_minT that 50% limitation of cold shutdown occurs  
-                   pn_max_temp = 6.842942d+01,  & ! Maximum daily max temperature for photosynthesis (oC)
-                   pn_min_temp = -1d+06      ,  & ! Minimum daily max temperature for photosynthesis (oC)
-                   pn_opt_temp = 3.155960d+01,  & ! Optimum daily max temperature for photosynthesis (oC)
-                   pn_kurtosis = 1.889026d-01,  & ! Kurtosis of photosynthesis temperature response
+                   pn_max_temp = 85.16952d0,   & ! Maximum daily max temperature for photosynthesis (oC)
+                   pn_min_temp = -1d+06,       & ! Minimum daily max temperature for photosynthesis (oC)
+                   pn_opt_temp = 33d0,         & ! Optimum daily max temperature for photosynthesis (oC)
+                   pn_kurtosis = 0.3849025d0,  & ! Kurtosis of photosynthesis temperature response
 !bespoke                   pn_max_temp = 59d0,          & ! Maximum daily max temperature for photosynthesis (oC)
 !                   pn_min_temp = -4d0,          & ! Minimum daily max temperature for photosynthesis (oC)
 !                   pn_opt_temp = 30d0,          & ! Optimum daily max temperature for photosynthesis (oC)
