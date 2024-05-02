@@ -101,7 +101,7 @@ cardamom <-function (projname,model,method,stage) {
   if (stage == 3) {
 
       # Carry out stage 3 processes
-      dummy = cardamom_stage_3(PROJECT)
+      dummy = cardamom_stage_3(PROJECT,PROJECTfile)
       # report to the user
       return(dummy)
 

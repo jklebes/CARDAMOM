@@ -18,7 +18,7 @@ cardamom_stage_2 <-function(PROJECT) {
           submit_processes_to_local_machine(PROJECT)
       }
       # report to the user
-      return(paste("CARDAMOM Report: ",stage," completed", sep=""))
+      return(paste("CARDAMOM Report: 2 completed", sep=""))
 
 } # end function cardamom_stage_2
 
