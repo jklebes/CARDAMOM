@@ -90,25 +90,25 @@ check_control_file_defaults<-function() {
 
   ## Check for obvious combination errors
   # Forcings datasets
-  if (met_source != "site_specific" & path_to_met_source == " ")                 {stop(paste("specified 'met_source' and 'path_to_met_source' incompatible"))}
-  if (burnt_area_source != "site_specific" & path_to_burnt_area == " ")          {stop(paste("specified 'burnt_area_source' and 'path_to_burnt_area' incompatible"))}
-  if (deforestation_source != "site_specific" & path_to_forestry == " ")         {stop(paste("specified 'deforestation_source' and 'path_to_forestry' incompatible"))}
-  if (sand_clay_source != "site_specific" & path_to_sand_clay == " ")            {stop(paste("specified 'sand_clay_source' and 'path_to_sand_clay' incompatible"))}
+  if (met_source != "site_specific" & path_to_met_source == " ")                                       {stop(paste("specified 'met_source' and 'path_to_met_source' incompatible"))}
+  if (burnt_area_source != "site_specific" & burnt_area_source != " " & path_to_burnt_area == " ")     {stop(paste("specified 'burnt_area_source' and 'path_to_burnt_area' incompatible"))}
+  if (deforestation_source != "site_specific" & deforestation_source != " " & path_to_forestry == " ") {stop(paste("specified 'deforestation_source' and 'path_to_forestry' incompatible"))}
+  if (sand_clay_source != "site_specific" & sand_clay_source != " " & path_to_sand_clay == " ")        {stop(paste("specified 'sand_clay_source' and 'path_to_sand_clay' incompatible"))}
   # Assimilated datasets, note these only consider those attached to gridded datasets
-  if (lai_source != "site_specific" & path_to_lai == " ")                        {stop(paste("specified 'lai_source' and 'path_to_lai' incompatible"))}
-  if (fapar_source != "site_specific" & path_to_fapar == " ")                    {stop(paste("specified 'fapar_source' and 'path_to_fapar' incompatible"))}
-  if (crop_management_source != "site_specific" & path_to_crop_management == " "){stop(paste("specified 'crop_management_source' and 'path_to_crop_management' incompatible"))}
-  if (Csom_source != "site_specific" & path_to_Csom == " ")                      {stop(paste("specified 'Csom_source' and 'path_to_Csom' incompatible"))}
-  if (Cwood_inc_source != "site_specific" & path_to_Cwood_inc == " ")            {stop(paste("specified 'Cwood_inc_source' and 'path_to_Cwood_inc' incompatible"))}
-  if (Cwood_mortality_source != "site_specific" & path_to_Cwood_mortality == " "){stop(paste("specified 'Cwood_mortality_source' and 'path_to_Cwood_mortality' incompatible"))}
-  if (Cwood_stock_source != "site_specific" & path_to_Cwood == " ")              {stop(paste("specified 'Cwood_stock_source' and 'path_to_Cwood' incompatible"))}
-  if (Cwood_initial_source != "site_specific" & path_to_Cwood_initial == " ")    {stop(paste("specified 'Cwood_initial_source' and 'path_to_Cwood_initial' incompatible"))}
-  if (Cwood_potential_source != "site_specific" & path_to_Cwood_potential == " "){stop(paste("specified 'Cwood_potential_source' and 'path_to_Cwood_potential' incompatible"))}
-  if (soilwater_initial_source != "site_specific" & path_to_gleam == " ")        {stop(paste("specified 'soilwater_initial_source' and 'path_to_gleam' incompatible"))}
-  if (nbe_source != "site_specific" & path_to_nbe == " ")                        {stop(paste("specified 'nbe_source' and 'path_to_nbe' incompatible"))}
-  if (GPP_source != "site_specific" & path_to_gpp == " ")                        {stop(paste("specified 'GPP_source' and 'path_to_gpp' incompatible"))}
-  if (fire_source != "site_specific" & path_to_fire == " ")                      {stop(paste("specified 'fire_source' and 'path_to_fire' incompatible"))}
-  if (lca_source != "site_specific" & path_to_lca == " ")                        {stop(paste("specified 'fire_source' and 'path_to_lca' incompatible"))}
+  if (lai_source != "site_specific" & lai_source != " " & path_to_lai == " ")                                    {stop(paste("specified 'lai_source' and 'path_to_lai' incompatible"))}
+  if (fapar_source != "site_specific" & fapar_source != " " & path_to_fapar == " ")                              {stop(paste("specified 'fapar_source' and 'path_to_fapar' incompatible"))}
+  if (crop_management_source != "site_specific" & crop_management_source != " " & path_to_crop_management == " "){stop(paste("specified 'crop_management_source' and 'path_to_crop_management' incompatible"))}
+  if (Csom_source != "site_specific" & Csom_source != " " & path_to_Csom == " ")                                 {stop(paste("specified 'Csom_source' and 'path_to_Csom' incompatible"))}
+  if (Cwood_inc_source != "site_specific" & Cwood_inc_source != " " & path_to_Cwood_inc == " ")                  {stop(paste("specified 'Cwood_inc_source' and 'path_to_Cwood_inc' incompatible"))}
+  if (Cwood_mortality_source != "site_specific" & Cwood_mortality_source != " " & path_to_Cwood_mortality == " "){stop(paste("specified 'Cwood_mortality_source' and 'path_to_Cwood_mortality' incompatible"))}
+  if (Cwood_stock_source != "site_specific" & Cwood_stock_source != " " & path_to_Cwood == " ")                  {stop(paste("specified 'Cwood_stock_source' and 'path_to_Cwood' incompatible"))}
+  if (Cwood_initial_source != "site_specific" & Cwood_initial_source != " " & path_to_Cwood_initial == " ")      {stop(paste("specified 'Cwood_initial_source' and 'path_to_Cwood_initial' incompatible"))}
+  if (Cwood_potential_source != "site_specific" & Cwood_potential_source != " " & path_to_Cwood_potential == " "){stop(paste("specified 'Cwood_potential_source' and 'path_to_Cwood_potential' incompatible"))}
+  if (soilwater_initial_source != "site_specific" & soilwater_initial_source != " " & path_to_gleam == " ")      {stop(paste("specified 'soilwater_initial_source' and 'path_to_gleam' incompatible"))}
+  if (nbe_source != "site_specific" & nbe_source != " " & path_to_nbe == " ")                                    {stop(paste("specified 'nbe_source' and 'path_to_nbe' incompatible"))}
+  if (GPP_source != "site_specific" & GPP_source != " " & path_to_gpp == " ")                                    {stop(paste("specified 'GPP_source' and 'path_to_gpp' incompatible"))}
+  if (fire_source != "site_specific" & fire_source != " " & path_to_fire == " ")                                 {stop(paste("specified 'fire_source' and 'path_to_fire' incompatible"))}
+  if (lca_source != "site_specific" & lca_source != " " & path_to_lca == " ")                                    {stop(paste("specified 'fire_source' and 'path_to_lca' incompatible"))}
 
   # NOTE: current assimilated variables which have currently only been done on site scale, without gridded datasets
 #  if (exists("Evap_source") == FALSE)                   {Evap_source <<- " "}
