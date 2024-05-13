@@ -2593,16 +2593,13 @@ if (is.na(biome_names[1])) {
 }
 dev.off()
 
-# Combine some well known ecosystem traits with the cluster maps
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_LCA_CUE_wNPP_wMRT_clusters.png",sep=""), height = 2700, width = 4900, res = 300)
 # Plot differences
-par(mfrow=c(2,3), mar=c(0.6,0.4,2.9,7),omi=c(0.1,0.4,0.18,0.2))
 var1 = grid_output$parameters[,,17,mid_quant]*landfilter
 var2 = (1-(grid_output$mean_rauto_gCm2day[,,mid_quant] / grid_output$mean_gpp_gCm2day[,,mid_quant]))*landfilter
 var3 = grid_output$clusters*landfilter
 var4 = (grid_output$mean_alloc_wood_gCm2day[,,mid_quant])*landfilter*365.25*1e-2
 var5 = grid_output$MTT_wood_years[,,mid_quant]*landfilter
-var5[which(var5 > 60)] = 60 ; print("Not that MRT in plot *LCA_CUE_wNPP_wMRT_clusters is capped at 60 years")
+var5[which(var5 > 100)] = 100 ; print("Not that MRT in plot *LCA_CUE_wNPP_wMRT_clusters is capped at 100 years")
 var6 = (grid_output$mean_SurfWater_kgH2Om2[,,mid_quant])*landfilter
 var1 = rast(vals = t(var1[,dim(var1)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var2 = rast(vals = t(var2[,dim(var2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -2624,29 +2621,34 @@ zrange3 = c(1,max(values(var3), na.rm=TRUE))
 zrange4 = c(0,max(values(var4),na.rm=TRUE))
 zrange5 = c(0,max(values(var5),na.rm=TRUE))
 zrange6 = range(values(var6),na.rm=TRUE)
+# Combine some well known ecosystem traits with the cluster maps
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_LCA_CUE_wNPP_wMRT_clusters.png",sep=""), height = 1500, width = 5000, res = 300)
+# Set common plotting variables
+main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+par(mfrow=c(2,3), mar=c(0.5,0.2,2.5,5),omi=c(0.01,0.3,0.01,0.01))
 plot(var1, main="",col = colour_choices_gain, range=zrange1, type="continuous", xaxt = "n", yaxt = "n", mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("LCA (gC ",m^-2,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("LCA (gC ",m^-2,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_default, range=zrange2, type="continuous", xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("CUE (0-1)",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("CUE (0-1)",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = c_colours, range=zrange3, xaxt = "n", type="continuous", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("Parameter derived clusters",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("Parameter derived clusters",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var4, main="",col = colour_choices_gain, range=zrange4, xaxt = "n", type="continuous", yaxt = "n", mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("Wood NPP (MgC h",a^-1,y^-1,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("Wood NPP (MgC h",a^-1,y^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var5, main="",col = colour_choices_gain, range=zrange5, xaxt = "n", type="continuous", yaxt = "n", mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("Wood MRT (years)",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("Wood MRT (years)",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var6, main="",col = colour_choices_gain, range=zrange6, type="continuous", xaxt = "n", yaxt = "n", mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("Mean surface water (0-30cm; kg ",m^-2,")",sep="")), side = 3, cex = 1.8, padj = -0.1, adj = 0.5)
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("Mean surface water (0-30cm; kg ",m^-2,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
@@ -2709,8 +2711,8 @@ for (c in seq(1, grid_output$nos_clusters)) {
 
 # Generate some plots
 
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_posterior_prior_reductions.png",sep=""), height = 2000, width = 3000, res = 300)
-par(mfrow=c(1,1), mar=c(0.01,1.5,0.3,7),omi=c(0.01,0.1,0.01,0.1))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_posterior_prior_reductions.png",sep=""), height = 2500, width = 5000, res = 300)
+par(mfrow=c(1,1), mar=c(0.01,1.0,1.0,7),omi=c(0.1,0.1,0.1,0.1))
 tmp = area
 var1 = apply(1-posterior_prior,c(1,2),mean,na.rm=TRUE)
 var1 = rast(vals = t(var1[,dim(var1)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -2718,11 +2720,12 @@ var1 = rast(vals = t(var1[,dim(var1)[2]:1]), ext = ext(cardamom_ext), crs = crs(
 ee = ext(var1) ; e = rep(NA, 4)
 e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
 e[3] = ee[3] ; e[4] = ee[4]
-plot(var1, main="", range=c(0,1), col=colour_choices_default, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
-     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+plot(var1, main="", range=c(0,1), col=colour_choices_gain, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
+     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.5))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(expression('Mean posterior reduction (0-1)'), side = 2, cex = 1.6, padj = -0.25, adj = 0.5)
+mtext(expression('Mean posterior reduction (0-1)'), side = 3, cex = 2.0, padj = 0.75, adj = 0.5)
 dev.off()
+
 } # skip_cluster
 
 ###
@@ -2743,10 +2746,6 @@ print("===Assimilated ET overlap (0-1)===")
 print(summary(as.vector(landfilter*grid_output$et_assim_data_overlap_fraction)))
 print("===Assimilate fire overlap (0-1)===")
 print(summary(as.vector(landfilter*grid_output$fire_assim_data_overlap_fraction)))
-# Are CARDAMOM models consistent with their assimilated observations
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_assimilated_observations_fraction_overlap.png",sep=""), height = 2700, width = 4900, res = 300)
-# Plot differences
-par(mfrow=c(3,3), mar=c(0.6,0.4,2.9,7),omi=c(0.1,0.4,0.18,0.2))
 # Convert to raster
 var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*grid_output$lai_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var2 = rast(vals = t(landfilter[,dim(area)[2]:1]*grid_output$gpp_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -2770,34 +2769,40 @@ zrange4 = c(0,1)
 zrange5 = c(0,1)
 zrange6 = c(0,1)
 zrange7 = c(0,1)
+# Are CARDAMOM models consistent with their assimilated observations
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_assimilated_observations_fraction_overlap.png",sep=""), height = 2600, width = 5000, res = 300)
+# Define some common plotting variables
+main_lab_cex = 1.7 ; main_lab_padj = +0.05 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+# Plot differences
+par(mfrow=c(3,3), mar=c(0.6,0.4,2.9,7),omi=c(0.1,0.1,0.1,0.1))
 # Begin plotting
 plot(var1, main="",col = colour_choices_gain, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("Assimilated LAI overlap (0-1)",sep="")), side = 3, cex = 1.8, padj = +0.05, adj = 0.5)
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("Assimilated LAI overlap (0-1)",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_gain, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("Assimilated GPP overlap (0-1)",sep="")), side = 3, cex = 1.8, padj = +0.05, adj = 0.5)
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("Assimilated GPP overlap (0-1)",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_gain), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("Assimilated wood overlap (0-1)",sep="")), side = 3, cex = 1.8, padj = +0.05, adj = 0.5)
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("Assimilated wood overlap (0-1)",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var4, main="",col = (colour_choices_gain), range=zrange4, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("Assimilated NBE overlap (0-1)",sep="")), side = 3, cex = 1.8, padj = +0.05, adj = 0.5)
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("Assimilated NBE overlap (0-1)",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var5, main="",col = (colour_choices_gain), range=zrange5, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("Assimilated NEE overlap (0-1)",sep="")), side = 3, cex = 1.8, padj = +0.05, adj = 0.5)
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("Assimilated NEE overlap (0-1)",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var6, main="",col = (colour_choices_gain), range=zrange6, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("Assimilated ET overlap (0-1)",sep="")), side = 3, cex = 1.8, padj = +0.05, adj = 0.5)
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("Assimilated ET overlap (0-1)",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var7, main="",col = (colour_choices_gain), range=zrange7, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
-mtext(expression(paste("Assimilated Fire overlap (0-1)",sep="")), side = 3, cex = 1.8, padj = +0.05, adj = 0.5)
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("Assimilated Fire overlap (0-1)",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
@@ -3677,27 +3682,27 @@ zrange2 = c(0,1)*max(abs(range(values(var2),na.rm=TRUE)))
 zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
 zrange4 = c(0,1)*max(abs(range(values(var4),na.rm=TRUE)))
 # Specify any common size variables
-main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_mean_meteorology.png",sep=""), height = 2000, width = 5000, res = 300)
 par(mfrow=c(2,2), mar=c(0.05,0.9,1.3,6.0), omi = c(0.01,0.2,0.2,0.1))
 # Mean annual median estimates
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=1.9, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
-     main = "", col=(colour_choices_loss))
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=rev(colour_choices_default))
 mtext(expression(paste('Air temperature (C)',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=1.9, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
 mtext(expression(paste('Precipitation (mm ',y^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=1.9, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
 mtext(expression(paste('VPD (kPa)',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=1.9, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
 mtext(expression(paste('SW Radiation (MJ ',m^-2,d^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
@@ -3740,7 +3745,7 @@ abline(0,1, col="grey", lwd=3)
 dev.off()
 
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_observed_modelled_wood_timeseries.png",sep=""), height = 2000, width = 3500, res = 300)
-par(mfrow=c(1,1), mar=c(4.2,4.7,2.8,2),omi=c(0.01,0.01,0.01,0.01))
+par(mfrow=c(1,1), mar=c(3.8,4.9,1.5,2),omi=c(0.01,0.01,0.01,0.01))
 ## Plot modelled\ median and CI timeseries with corresponding observation and uncertainty, if available
 var1 = NA ; var2 = NA ; var3 = NA ; var4 = NA ; var5 = NA
 # Modelled wood
@@ -3752,16 +3757,16 @@ var5 = apply(WoodCobs_CI**2*array(grid_output$land_fraction*landfilter*area,dim=
 var5 = sqrt(rollapply(var5, FUN = mean, by = 12, width = 12, na.rm=TRUE)*1e-12)
 # Begin plotting
 zrange = range(c(var1,var2,var3,var4,var5), na.rm=TRUE)*c(0.9,1.1)
-plot(var1~run_years, ylim=zrange, ylab="", xlab="", pch=16, cex.lab=2.3, cex.axis = 2.2, cex=2, col="white")
-mtext(expression(paste('Year',sep="")), side = 1, cex = 2.4, padj = 1.85)
-mtext(expression(paste('Wood stocks (TgC)',sep="")), side = 2, cex = 2.4, padj = -1.3)
+plot(var1~run_years, ylim=zrange, ylab="", xlab="", pch=16, cex.lab=2.0, cex.axis = 2.0, cex=2, col="white")
+mtext(expression(paste('Year',sep="")), side = 1, cex = 2.0, padj = 2.0)
+mtext(expression(paste('Wood stocks (TgC)',sep="")), side = 2, cex = 2.0, padj = -1.7)
 plotconfidence(t(rbind(var1,var2,var3)),run_years,2,model_colours[1])
 if (length(which(is.na(var4) == FALSE)) > 0) {
-    plotCI(x = run_years, y = var4, uiw = var5, main="", cex.lab=2.4, cex.main=2, cex.axis=2.4, ylim=zrange,
+    plotCI(x = run_years, y = var4, uiw = var5, main="", cex.lab=2.0, cex.main=2, cex.axis=2.0, ylim=zrange,
            col="black", lwd=4, ylab="", xlab="", add=TRUE)
 }
 legend("topleft", legend = c("Obs","CARDAMOM"), col = c("black",model_colours[1]), lty = c(1,1), pch=c(NA,NA), 
-        horiz = FALSE, bty = "n", cex=2.1, lwd=3, ncol = 2)
+        horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
 dev.off()
 
 # Domain wide NBE (yaxis) model (xaxis), include independent estimates
@@ -3965,8 +3970,8 @@ if (length(which(is.na(WoodCobs_trend) == FALSE)) > 0) {
 
 } # multiple wood stocks available for trend analysis?
 
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Csom_prior.png",sep=""), height = 2000, width = 3000, res = 300)
-par(mfrow=c(1,1), mar=c(0.01,1.5,0.3,7),omi=c(0.01,0.1,0.01,0.1))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Csom_prior.png",sep=""), height = 2500, width = 5000, res = 300)
+par(mfrow=c(1,1), mar=c(0.01,1.0,1.0,7),omi=c(0.1,0.1,0.1,0.1))
 tmp = area
 var1 = rast(vals = t(SoilCPrior[,dim(SoilCPrior)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var1 = var1 * 1e-2 # Convert gC/m2 to MgC/ha
@@ -3979,13 +3984,13 @@ ee = ext(var1) ; e = rep(NA, 4)
 e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
 e[3] = ee[3] ; e[4] = ee[4]
 plot(var1, main="", range=zrange, col=colour_choices_gain, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
-     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.5))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(expression('Soil C prior (MgC ha)'), side = 2, cex = 1.6, padj = -0.25, adj = 0.5)
+mtext(expression('Soil C prior (MgC ha)'), side = 3, cex = 2.0, padj = 0.75, adj = 0.5)
 dev.off()
 
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_mean_wSWP.png",sep=""), height = 2000, width = 3000, res = 300)
-par(mfrow=c(1,1), mar=c(0.01,1.5,0.3,7),omi=c(0.01,0.1,0.01,0.1))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_mean_wSWP.png",sep=""), height = 2500, width = 5000, res = 300)
+par(mfrow=c(1,1), mar=c(0.01,1.0,1.0,7),omi=c(0.1,0.1,0.1,0.1))
 tmp = area
 var1 = rast(vals = t(grid_output$mean_wSWP_MPa[,dim(grid_output$mean_wSWP_MPa)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 zrange = c(quantile(as.vector(var1), prob=c(0.01), na.rm=TRUE),0)
@@ -3996,9 +4001,9 @@ ee = ext(var1) ; e = rep(NA, 4)
 e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
 e[3] = ee[3] ; e[4] = ee[4]
 plot(var1, main="", range=zrange, col=colour_choices_gain, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
-     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+     cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.5))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(expression('Mean wSWP (MPa)'), side = 2, cex = 1.6, padj = -0.25, adj = 0.5)
+mtext(expression('Mean wSWP (MPa)'), side = 3, cex = 2.0, padj = 0.75, adj = 0.5)
 dev.off()
 
 ###
@@ -4024,17 +4029,17 @@ zrange1 = c(-1,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
 zrange2 = c(0,max(values(var2), na.rm=TRUE))
 zrange3 = c(0,max(values(var3), na.rm=TRUE))
 # Specify any common size variables
-main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 plot(var1, main="",col = rev(colour_choices_default), range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("NBE (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_gain, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_loss), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -4042,7 +4047,6 @@ dev.off()
 # Are CARDAMOM models consistent with the range described by CTE NBE ensemble, FC GPP ensemble and GFED / GFAS Fire products
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_FIRE_evaluation_stippling.png",sep=""), height = 750, width = 5000, res = 300)
 # Plot differences
-par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
 var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_nbe_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var2 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_gpp_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var3 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_fire_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -4059,19 +4063,20 @@ zrange1 = c(-1,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
 zrange2 = c(0,max(values(var2), na.rm=TRUE))
 zrange3 = c(0,max(values(var3), na.rm=TRUE))
 # Specify any common size variables
-main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
 plot(var1, main="",col = rev(colour_choices_default), range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("NBE (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[nbe_sig_longitude+0.5,1],grid_lat[1,nbe_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_gain, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[gpp_sig_longitude+0.5,1],grid_lat[1,gpp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_loss), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[fire_sig_longitude+0.5,1],grid_lat[1,fire_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
@@ -4100,19 +4105,19 @@ zrange1 = c(-1,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
 zrange2 = c(-1,1) * max(abs(range(values(var2),na.rm=TRUE)), na.rm=TRUE)
 zrange3 = c(-1,1) * max(abs(range(values(var3),na.rm=TRUE)), na.rm=TRUE)
 # Specify any common size variables
-main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 plot(var1, main="",col = colour_choices_sign, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("ET (kgH2O ",m^-2," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[et_sig_longitude+0.5,1],grid_lat[1,et_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_sign, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[gpp_sig_longitude+0.5,1],grid_lat[1,gpp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_sign), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[fire_sig_longitude+0.5,1],grid_lat[1,fire_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
@@ -4141,19 +4146,19 @@ zrange1 = c(-1,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
 zrange2 = c(-1,1) * max(abs(range(values(var2),na.rm=TRUE)), na.rm=TRUE)
 zrange3 = c(-1,1) * max(abs(range(values(var3),na.rm=TRUE)), na.rm=TRUE)
 # Specify any common size variables
-main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 plot(var1, main="",col = colour_choices_sign, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("NBE (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[nbe_sig_longitude+0.5,1],grid_lat[1,nbe_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_sign, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[gpp_sig_longitude+0.5,1],grid_lat[1,gpp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_sign), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[fire_sig_longitude+0.5,1],grid_lat[1,fire_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
@@ -4180,17 +4185,17 @@ zrange1 = c(0,1)
 zrange2 = c(0,1)
 zrange3 = c(0,1)
 # Specify any common size variables
-main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 plot(var1, main="",col = colour_choices_gain, range=zrange1, type="continuous", xaxt = "n", yaxt = "n", mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("NBE overlap fraction",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_gain, range=zrange2, type="continuous", xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("GPP overlap fraction",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_gain), range=zrange3, type="continuous", xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("Fire overlap fraction",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -4215,17 +4220,17 @@ zrange1 = c(0,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
 zrange2 = c(0,max(values(var2), na.rm=TRUE))
 zrange3 = c(0,max(values(var3), na.rm=TRUE))
 # Specify any common size variables
-main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 plot(var1, main="",col = colour_choices_gain, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("ET (kgH2O ",m^-2," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_gain, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_loss), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -4250,19 +4255,19 @@ zrange1 = c(0,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
 zrange2 = c(0,max(values(var2), na.rm=TRUE))
 zrange3 = c(0,max(values(var3), na.rm=TRUE))
 # Specify any common size variables
-main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 plot(var1, main="",col = colour_choices_gain, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("ET (kgH2O ",m^-2," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[et_sig_longitude+0.5,1],grid_lat[1,et_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_gain, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[gpp_sig_longitude+0.5,1],grid_lat[1,gpp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_loss), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 points(grid_long[fire_sig_longitude+0.5,1],grid_lat[1,fire_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
@@ -4289,17 +4294,17 @@ zrange1 = c(0,1)
 zrange2 = c(0,1)
 zrange3 = c(0,1)
 # Specify any common size variables
-main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 plot(var1, main="",col = colour_choices_gain, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("ET overlap fraction",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_gain, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("GPP overlap fraction",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_gain), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("Fire overlap fraction",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -4506,32 +4511,32 @@ tmp1 = c(range(values(var3), na.rm=TRUE))
 zrange = max(abs(range(tmp, na.rm=TRUE))) * c(-1,1)
 zrange1 = max(abs(c(range(tmp1, na.rm=TRUE)))) * c(-1,1)
 # Specify any common size variables
-main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5
+main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 # C1 Mean annual NBP, dCwood, dCsom
 plot(var1, ylab="", xlab="", main="",  mar=NA, bty = "n",
      xaxt = "n", yaxt = "n", range=zrange,
-     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 plot(landmask, add=TRUE, lwd=0.5)
 points(grid_long[nbp_sig_longitude+0.5,1],grid_lat[1,nbp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 mtext(expression(paste("NBP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(var2, ylab="", xlab="", main="",  mar=NA, bty = "n",
      xaxt = "n", yaxt = "n", range=zrange,
-     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 plot(landmask, add=TRUE, lwd=0.5)
 points(grid_long[dCwood_sig_longitude+0.5,1],grid_lat[1,dCwood_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 mtext(expression(paste("Wood Change (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(var3, ylab="", xlab="", main="",  mar=NA, bty = "n",
      xaxt = "n", yaxt = "n", range=zrange1,
-     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 plot(landmask, add=TRUE, lwd=0.5)
 points(grid_long[dCsom_sig_longitude+0.5,1],grid_lat[1,dCsom_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
 mtext(expression(paste("Soil Change (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 dev.off()
 
 # GPP, Rauto, Rhet trend
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_GPP_Rauto_Rhet_LAI_trend.png",sep=""), height = 2800, width = 3300, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_GPP_Rauto_Rhet_LAI_trend.png",sep=""), height = 2000, width = 5000, res = 300)
 # Plot differences
-par(mfrow=c(2,2), mar=c(0.1,0.1,1.0,8),omi=c(0.05,0.1,0.2,0.15))
+par(mfrow=c(2,2), mar=c(0.05,0.9,1.3,6.0), omi = c(0.01,0.2,0.2,0.1))
 # C1 - GPP. Rauto, Rhet and LAI trends
 var1 = rast(vals = t(1e-2*gpp_trend[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var2 = rast(vals = t(1e-2*rauto_trend[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -4554,27 +4559,29 @@ zrange1 = max(abs(quantile(values(var16), prob = c(0.001,0.999), na.rm=TRUE))) *
 #var1[var1 < zrange[1]] = zrange[1] ; var1[var1 > zrange[2]] = zrange[2]
 #var2[var2 < zrange[1]] = zrange[1] ; var2[var2 > zrange[2]] = zrange[2]
 #var3[var3 < zrange[1]] = zrange[1] ; var3[var3 > zrange[2]] = zrange[2]
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 # C1 GPP, Rauto, Rhet trend (MgC/ha/yr2)
 plot(var1, ylab="", xlab="", main="", mar=NA, bty = "n",
      xaxt = "n", yaxt = "n", range=zrange,
-     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(expression(paste('GPP Trend (MgC h',a^-1,'y',r^-2,')',sep="")), cex=1.8, padj = +0.25)
+mtext(expression(paste('GPP Trend (MgC h',a^-1,'y',r^-2,')',sep="")), cex=main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(var2, ylab="", xlab="", main="",  mar=NA, bty = "n",
      xaxt = "n", yaxt = "n", range=zrange,
-     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(expression(paste(R[auto],' Trend (MgC h',a^-1,'y',r^-2,')',sep="")), cex=1.8, padj = +0.25)
+mtext(expression(paste(R[auto],' Trend (MgC h',a^-1,'y',r^-2,')',sep="")), cex=main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(var3, ylab="", xlab="", main="",  mar=NA, bty = "n",
            xaxt = "n", yaxt = "n", range=zrange,
-           col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+           col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(expression(paste(R[het],' Trend (MgC h',a^-1,'y',r^-2,')',sep="")), cex=1.8, padj = +0.25)
+mtext(expression(paste(R[het],' Trend (MgC h',a^-1,'y',r^-2,')',sep="")), cex=main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(var16, ylab="", xlab="", main="",  mar=NA, bty = "n",
      xaxt = "n", yaxt = "n", range=zrange1,
-     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0))
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(expression(paste('LAI Trend (',m^2,'',m^-2,' y',r^-2,')',sep="")), cex=1.8, padj = +0.25)
+mtext(expression(paste('LAI Trend (',m^2,'',m^-2,' y',r^-2,')',sep="")), cex=main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 dev.off()
 
 ###
@@ -4642,48 +4649,48 @@ zrange6 = c(0,1)*max(abs(range(values(var6),na.rm=TRUE)))
 zrange7 = c(0,1)*max(abs(range(values(var7),na.rm=TRUE)))
 zrange8 = c(0,1)*max(abs(range(values(var8),na.rm=TRUE)))
 # Common variables for labels
-main_lab_cex = 1.5 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5
+main_lab_cex = 1.5 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_C_fluxes_median_CI.png",sep=""), height = 1200, width = 5000, res = 300)
 par(mfrow=c(2,4), mar=c(0.5,0.5,2.0,3.5),omi=c(0.1,0.1,0.1,0.1))
 # Mean annual median estimates
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 3.0, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.2),
+     cex.axis = 3.0, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_default))
 mtext(expression(paste('NBE (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 3.0, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.2),
+     cex.axis = 3.0, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
 mtext(expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 3.0, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.2),
+     cex.axis = 3.0, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
 mtext(expression(paste('Reco (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 3.0, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.2),
+     cex.axis = 3.0, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
 mtext(expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 # Mean annual estimates uncertainty
 plot(var5, range=zrange5, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.4,hadj=0.1), plg = list(ext=e, cex=1.2),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.4,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 mtext(expression(paste('NBE CI (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var6, range=zrange6, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.4,hadj=0.1), plg = list(ext=e, cex=1.2),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.4,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 mtext(expression(paste('GPP CI (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var7, range=zrange7, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.4,hadj=0.1), plg = list(ext=e, cex=1.2),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.4,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 mtext(expression(paste('Reco CI (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var8, range=zrange8, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.4,hadj=0.1), plg = list(ext=e, cex=1.2),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.4,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 mtext(expression(paste('Fire CI (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
@@ -4716,26 +4723,28 @@ zrange1 = c(-1,1)*max(abs(range(values(var1),na.rm=TRUE)))
 zrange2 = c(0,1)*max(abs(range(c(values(var2),values(var3)),na.rm=TRUE)))
 zrange3 = zrange2 #c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
 zrange4 = c(0,1)*max(abs(range(values(var4),na.rm=TRUE)))
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_C_fluxes_median_v2.png",sep=""), height = 2100, width = 5000*0.55, res = 300)
-par(mfrow=c(2,2), mar=c(0.5,0.5,2.8,7),omi=c(0.1,0.4,0.12,0.2))
+# Common variables for labels
+main_lab_cex = 1.5 ; main_lab_padj = -0.25 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_C_fluxes_median_v2.png",sep=""), height = 2100, width = 5000, res = 300)
+par(mfrow=c(2,2), mar=c(0.65,0.65,2.5,3.5),omi=c(0.1,0.1,0.1,0.1))
 # Mean annual median estimates
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_default))
 mtext(expression(paste('NBE (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
 mtext(expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
 mtext(expression(paste('Reco (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
 mtext(expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
@@ -4796,27 +4805,27 @@ zrange2 = c(0,1)*max(abs(range(values(var2),na.rm=TRUE)))
 zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
 zrange4 = c(0,1)*max(abs(range(values(var4),na.rm=TRUE)))
 # Common variables for labels
-main_lab_cex = 1.5 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5
+main_lab_cex = 1.5 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_C_fluxes_median.png",sep=""), height = 600, width = 5000, res = 300)
 par(mfrow=c(1,4), mar=c(0.5,0.5,2.0,3.5),omi=c(0.1,0.1,0.1,0.1))
 # Mean annual median estimates
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.8, axes = FALSE, pax=list(cex.axis=2.2,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.8, axes = FALSE, pax=list(cex.axis=2.2,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_default))
 mtext(expression(paste('NBE (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.8, axes = FALSE, pax=list(cex.axis=2.2,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.8, axes = FALSE, pax=list(cex.axis=2.2,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
 mtext(expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.8, axes = FALSE, pax=list(cex.axis=2.2,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.8, axes = FALSE, pax=list(cex.axis=2.2,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
 mtext(expression(paste('Reco (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.8, axes = FALSE, pax=list(cex.axis=2.2,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.8, axes = FALSE, pax=list(cex.axis=2.2,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
 mtext(expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
@@ -4866,49 +4875,51 @@ zrange5 = c(0,1)*max(abs(range(c(values(var5),values(var6),values(var7),values(v
 zrange6 = zrange5
 zrange7 = zrange5
 zrange8 = zrange5
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_C_fluxes_median_CI_axis_matched.png",sep=""), height = 2100, width = 5000, res = 300)
-par(mfrow=c(2,4), mar=c(0.5,0.5,2.8,7),omi=c(0.1,0.4,0.2,0.2))
+# Common variables for labels
+main_lab_cex = 1.5 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_C_fluxes_median_CI_axis_matched.png",sep=""), height = 1200, width = 5000, res = 300)
+par(mfrow=c(2,4), mar=c(0.5,0.5,2.0,3.5),omi=c(0.1,0.1,0.1,0.1))
 # Mean annual median estimates
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_default))
-mtext(expression(paste('NBE (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('NBE (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
-mtext(expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('GPP (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
-mtext(expression(paste('Reco (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('Reco (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
-mtext(expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 # Mean annual estimates uncertainty
 plot(var5, range=zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
-mtext(expression(paste('NBE CI (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('NBE CI (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var6, range=zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
-mtext(expression(paste('GPP CI (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('GPP CI (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var7, range=zrange7, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
-mtext(expression(paste('Reco CI (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('Reco CI (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var8, range=zrange8, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
-mtext(expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste('Fire (MgC h',a^-1,' y',r^-1,')',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
@@ -4951,39 +4962,40 @@ zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
 zrange4 = c(0,1)*max(abs(range(c(values(var4),values(var5),values(var6)),na.rm=TRUE)))
 zrange5 = zrange4
 zrange6 = zrange4
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Final_stock_median_CI.png",sep=""), height = 2700, width = 4900, res = 300)
-par(mfrow=c(2,3), mar=c(0.6,0.4,2.9,7),omi=c(0.1,0.4,0.18,0.2))
+main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Final_stock_median_CI.png",sep=""), height = 1500, width = 5000, res = 300)
+par(mfrow=c(2,3), mar=c(0.5,0.2,2.5,5),omi=c(0.01,0.3,0.01,0.01))
 # Final C stocks, median estimate
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
-mtext(expression(paste("Total (MgC h",a^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste("Total (MgC h",a^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
-mtext(expression(paste("Biomass (MgC h",a^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste("Biomass (MgC h",a^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
-mtext(expression(paste("DOM (MgC h",a^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste("DOM (MgC h",a^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 # Final C stocks, confidence interval
 plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
-mtext(expression(paste("Total CI (MgC h",a^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste("Total CI (MgC h",a^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var5, range=zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
-mtext(expression(paste("Biomass CI (MgC h",a^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste("Biomass CI (MgC h",a^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var6, range=zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
-mtext(expression(paste("DOM CI (MgC h",a^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste("DOM CI (MgC h",a^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
@@ -5010,23 +5022,25 @@ e[3] = ee[3] ; e[4] = ee[4]
 zrange1 = c(0,1)*max(abs(range(values(var1),na.rm=TRUE)))
 zrange2 = c(0,1)*max(abs(range(values(var2),na.rm=TRUE)))
 zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Final_stock_median.png",sep=""), height = 2700*0.5, width = 4900, res = 300)
-par(mfrow=c(1,3), mar=c(0.6,0.4,2.9,7),omi=c(0.1,0.4,0.18,0.2))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Final_stock_median.png",sep=""), height = 750, width = 5000, res = 300)
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
 # Final C stocks, median estimate
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
-mtext(expression(paste("Total (MgC h",a^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste("Total (MgC h",a^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
-mtext(expression(paste("Biomass (MgC h",a^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste("Biomass (MgC h",a^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
-mtext(expression(paste("DOM (MgC h",a^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste("DOM (MgC h",a^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
@@ -5057,7 +5071,9 @@ zrange1 = c(0,1)*max(abs(range(values(var1),na.rm=TRUE)))
 zrange2 = c(0,1)*max(abs(range(values(var2),na.rm=TRUE)))
 zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
 zrange4 = c(0,1)*max(abs(range(values(var4),na.rm=TRUE)))
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_mean_wood_som_stock_woodMRT_somMRT_fire_correlation_median.png",sep=""), height = 1600, width = 4000, res = 300)
+# Set common plotting variables
+main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_mean_wood_som_stock_woodMRT_somMRT_fire_correlation_median.png",sep=""), height = 1500, width = 5000, res = 300)
 par(mfrow=c(2,3), mar=c(3.2,3.0,0.5,1.0),omi=c(0.01,0.10,0.10,0.35))
 # Correlation between Wood MRT and fire
 plot(as.vector(grid_output$MTT_wood_years[,,mid_quant]) ~ as.vector(BurnedFraction), pch=16,
@@ -5065,14 +5081,14 @@ plot(as.vector(grid_output$MTT_wood_years[,,mid_quant]) ~ as.vector(BurnedFracti
 mtext(side = 2, text = "Wood MRT (years)", cex = 1.0, padj = -2.50)
 # Mean C stocks, median estimate
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
-mtext(expression(paste("Wood (MgC h",a^-1,")",sep="")), side=3, cex = 1.6, padj = 0.9)
+mtext(expression(paste("Wood (MgC h",a^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
-mtext(expression(paste("Soil (MgC h",a^-1,")",sep="")), side=3, cex = 1.6, padj = 0.9)
+mtext(expression(paste("Soil (MgC h",a^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 # Correlation between Soil MRT and fire
 plot(as.vector(grid_output$MTT_som_years[,,mid_quant]) ~ as.vector(BurnedFraction), pch=16,
@@ -5081,14 +5097,14 @@ mtext(side = 1, text = "Annual burnt Fraction", cex = 1.0, padj = 2.2, adj = 0.5
 mtext(side = 2, text = "Soil MRT (years)", cex = 1.0, padj = -2.50)
 # MRTs for wood and soil
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
-mtext(expression(paste("Wood MRT(years)",sep="")), side=3, cex = 1.6, padj = 0.9)
+mtext(expression(paste("Wood MRT(years)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.0, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
-mtext(expression(paste("Soil MRT (years)",sep="")), side=3, cex = 1.6, padj = 0.9)
+mtext(expression(paste("Soil MRT (years)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
@@ -5128,39 +5144,40 @@ zrange3 = c(-1,1)*max(abs(range(values(var3),na.rm=TRUE)))
 zrange4 = c(0,1)*max(abs(range(c(values(var4),values(var5),values(var6)),na.rm=TRUE)))
 zrange5 = zrange4
 zrange6 = zrange4
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Final_stock_change_median_CI.png",sep=""), height = 2700, width = 4900, res = 300)
-par(mfrow=c(2,3), mar=c(0.5,0.4,2.8,7),omi=c(0.1,0.4,0.2,0.2))
+main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Final_stock_change_median_CI.png",sep=""), height = 1500, width = 5000, res = 300)
+par(mfrow=c(2,3), mar=c(0.5,0.2,2.5,5),omi=c(0.01,0.3,0.01,0.01))
 # Final stock changes, median estimates
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_default))
-mtext(expression(paste(Delta,"Total (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste(Delta,"Total (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_default))
-mtext(expression(paste(Delta,"Biomass (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste(Delta,"Biomass (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_default))
-mtext(expression(paste(Delta,"DOM (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste(Delta,"DOM (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 # Final stock changes, confidence interval
 plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
-mtext(expression(paste(Delta,"Total CI (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste(Delta,"Total CI (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var5, range=zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
-mtext(expression(paste(Delta,"Biomass CI (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste(Delta,"Biomass CI (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var6, range=zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
-mtext(expression(paste(Delta,"DOM CI (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste(Delta,"DOM CI (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
@@ -5200,38 +5217,38 @@ zrange3 = zrange1
 zrange4 = zrange1
 zrange5 = zrange1
 zrange6 = zrange1
-main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5
+main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_litter_fluxes.png",sep=""), height = 1500, width = 5000, res = 300)
 par(mfrow=c(2,3), mar=c(0.5,0.2,2.5,5),omi=c(0.01,0.3,0.01,0.01))
 # Median NPP fluxes to plant tissues
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_gain))
 mtext(expression(paste("Foliar NPP (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_gain))
 mtext(expression(paste("Root NPP (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_gain))
 mtext(expression(paste("Wood NPP (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 # Median litter fluxes from plant tissues
 plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
 mtext(expression(paste("Foliar litter (MgC h",a^-1,"y",r^-1,")",sep="")), cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var5, range=zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
 mtext(expression(paste("Root litter (MgC h",a^-1,"y",r^-1,")",sep="")), cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var6, range=zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
 mtext(expression(paste("Wood litter (MgC h",a^-1,"y",r^-1,")",sep="")), cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
@@ -5273,39 +5290,41 @@ zrange3 = zrange1
 zrange4 = c(0,1)*max(range(c(values(var4),values(var5),values(var6)),na.rm=TRUE))
 zrange5 = zrange4
 zrange6 = zrange4
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Fire_emission_litter_fluxes.png",sep=""), height = 2700, width = 4900, res = 300)
-par(mfrow=c(2,3), mar=c(0.5,0.4,2.8,7),omi=c(0.1,0.4,0.2,0.2))
+# Set common plotting variables
+main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Fire_emission_litter_fluxes.png",sep=""), height = 1500, width = 5000, res = 300)
+par(mfrow=c(2,3), mar=c(0.5,0.2,2.5,5),omi=c(0.01,0.3,0.01,0.01))
 # Median NPP fluxes to plant tissues
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_loss))
-mtext(expression(paste("Foliar fire emission (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste("Foliar fire emission (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_loss))
-mtext(expression(paste("Root fire emission (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste("Root fire emission (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_loss))
-mtext(expression(paste("Wood fire emission (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste("Wood fire emission (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 # Median litter fluxes from plant tissues
 plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
-mtext(expression(paste("Foliar fire litter (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste("Foliar fire litter (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var5, range=zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
-mtext(expression(paste("Root fire litter (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste("Root fire litter (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var6, range=zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
-mtext(expression(paste("Wood fire litter (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste("Wood fire litter (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
@@ -5332,23 +5351,25 @@ e[3] = ee[3] ; e[4] = ee[4]
 zrange1 = c(-1,1)*max(abs(range(values(var1),na.rm=TRUE)))
 zrange2 = c(-1,1)*max(abs(range(values(var2),na.rm=TRUE)))
 zrange3 = c(-1,1)*max(abs(range(values(var3),na.rm=TRUE)))
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Final_stock_change_median.png",sep=""), height = 2700*0.5, width = 4900, res = 300)
-par(mfrow=c(1,3), mar=c(0.5,0.4,2.8,7),omi=c(0.1,0.4,0.2,0.2))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Final_stock_change_median.png",sep=""), height = 750, width = 5000, res = 300)
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
 # Final stock changes, median estimates
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_default))
-mtext(expression(paste(Delta,"Total (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste(Delta,"Total (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_default))
-mtext(expression(paste(Delta,"Biomass (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste(Delta,"Biomass (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_default))
-mtext(expression(paste(Delta,"DOM (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = 1.8, padj = 0.9)
+mtext(expression(paste(Delta,"DOM (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
@@ -5357,7 +5378,7 @@ dev.off()
 
 # Traits
 # Assign variables
-wood_mrt_limit = 60
+wood_mrt_limit = 100
 print(paste("Wood MRT plotting range has been limited to ",wood_mrt_limit," years",sep=""))
 var1 = pmin(wood_mrt_limit,grid_output$MTT_wood_years[,,mid_quant])
 var1 = array(var1, dim = dim(grid_output$MTT_wood_years)[1:2])
@@ -5395,46 +5416,46 @@ zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
 zrange4 = c(0,1)*max(abs(range(values(var4),na.rm=TRUE)))
 zrange5 = c(0,1)
 zrange6 = c(0,1)*max(abs(range(values(var6),na.rm=TRUE)))
-main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5
+main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_MRT_SS_median_CI.png",sep=""), height = 1500, width = 5000, res = 300)
 par(mfrow=c(2,3), mar=c(0.5,0.2,2.5,5),omi=c(0.01,0.3,0.01,0.01))
 # Ecosystem traits, median estimates
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
 mtext("MRT Wood (years)", side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
 mtext("NPP wood (0-1)", side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
 mtext("SS wood (MgC/ha)", side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 # Ecosystem traits, confidence intervals
 plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
-     main = "", col=colour_choices_gain)
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=colour_choices_CI)
 mtext("MRT Wood CI (years)", side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var5, range=zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
-     main = "", col=colour_choices_gain)
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=colour_choices_CI)
 mtext("NPP wood CI (0-1)", side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var6, range=zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
-     main = "", col=colour_choices_gain)
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=colour_choices_CI)
 mtext("SS wood CI (MgC/ha)", side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
 # Traits
 # Assign variables
-wood_mrt_limit = 60
+wood_mrt_limit = 100
 print(paste("Wood MRT plotting range has been limited to ",wood_mrt_limit," years",sep=""))
 var1 = pmin(wood_mrt_limit,grid_output$MTT_wood_years[,,mid_quant])
 var1 = array(var1, dim = dim(grid_output$MTT_wood_years)[1:2])
@@ -5459,22 +5480,22 @@ e[3] = ee[3] ; e[4] = ee[4]
 zrange1 = c(0,1)*max(abs(range(values(var1),na.rm=TRUE)))
 zrange2 = c(0,1)
 zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
-main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5
+main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_MRT_SS_median.png",sep=""), height = 750, width = 5000, res = 300)
 par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
 # Ecosystem traits, median estimates
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
 mtext("MRT Wood (years)", side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
 mtext("NPP wood (0-1)", side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
 mtext("SS wood (MgC/ha)", side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
@@ -5507,21 +5528,21 @@ e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 
 e[3] = ee[3] ; e[4] = ee[4]
 # specify ranges
 zrange1 = c(0,1)
-main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5
+main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Wood_turnover_contribution.png",sep=""), height = 750, width = 4500, res = 300)
 par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
 # Partitioning of wood turnover, median estimate
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", type="continuous", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
 mtext("Natural MRT comp (0-1)", side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=zrange1, xaxt = "n", yaxt = "n", type="continuous", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
 mtext("Fire MRT comp (0-1)", side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-legend_args = list(ext=e, cex=1.0) ; if (length(unlist(unique(var3))) == 1) {legend_args = list(cex=1.0)}
+legend_args = list(ext=e, cex=legend_cex) ; if (length(unlist(unique(var3))) == 1) {legend_args = list(cex=1.0)}
 plot(var3, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = legend_args,
      main = "", col=colour_choices_loss)
@@ -5537,22 +5558,22 @@ var3 = rast(vals = t((FireFreq)[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs 
 ee = ext(var1) ; e = rep(NA, 4)
 e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
 e[3] = ee[3] ; e[4] = ee[4]
-main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_disturbance_drivers.png",sep=""), height = 750, width = 4500, res = 300)
 par(mfrow=c(1,3), mar=c(0.1,0.1,1,2), omi = c(0.015,0.1,0.3,0.1))
 # Partitioning of wood turnover, median estimate
 plot(var1, range=c(0,1), xaxt = "n", yaxt = "n", type="continuous", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
 mtext(expression(paste("Deforested fraction (0-1)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, range=c(0,1), xaxt = "n", yaxt = "n", type="continuous", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
 mtext(expression(paste("Burnt fraction (0-1)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, xaxt = "n", yaxt = "n", cex.lab=2, type="continuous", cex.main=2.5, mar=NA, bty = "n",
-     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=1.0),
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
 mtext(expression(paste("No. fires per year",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)

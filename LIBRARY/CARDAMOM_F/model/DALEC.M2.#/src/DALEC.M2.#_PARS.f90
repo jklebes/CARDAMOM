@@ -139,7 +139,7 @@ module MODEL_PARAMETERS
 
     ! GSI growing stage/step [0.50, 1.5]
     PI%parmin(25) = 0.5d0 
-    PI%parmax(25) = 3.0d0 
+    PI%parmax(25) = 1.5d0 
 
     ! Initial GSI [1.0, 2.0]
     PI%parmin(26) = 1.0d0 
@@ -159,9 +159,9 @@ module MODEL_PARAMETERS
     PI%parmin(29) = 0.25d0 
     PI%parmax(29) = 0.75d0 
 
-    ! critical GPP for LAI growth [1e-10, 0.30]
+    ! critical relative GPP increase for given LAI growth [1e-10, 0.30]
     PI%parmin(30) = 0.00001d0 
-    PI%parmax(30) = 0.5d0 
+    PI%parmax(30) = 0.3d0 
 
     ! livestock demand in DM (1-3% of animal weight) 
     PI%parmin(31) = 0.015d0 

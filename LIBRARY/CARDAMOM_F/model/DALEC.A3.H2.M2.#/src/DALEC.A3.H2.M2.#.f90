@@ -912,23 +912,38 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                              FLUXES(n,28),FLUXES(n,29),FLUXES(n,30), &
                              n,nodays,deltat(n), & 
                              pars(28),pars(33))
-      end if
+      else 
 
-      ! GRAZING 
-      ! ------------------------------------------------------------------------------------------------------------- ! 
+          ! GRAZING 
+          ! ------------------------------------------------------------------------------------------------------------- ! 
 
-      ! Determine whether there is any remaining losses to occur given GSI driven foliar loss
-      gsi_lai_reduction = FLUXES(n,9) * deltat(n) * pars(15)
-      if (met(8,n)-gsi_lai_reduction > 0d0) then
-          call grass_grazing(POOLS(n+1,1),POOLS(n+1,2),POOLS(n+1,3), & 
-                             POOLS(n+1,4),POOLS(n+1,5),met(6,n),met(8,n)-gsi_lai_reduction, &
-                             FLUXES(n,19),FLUXES(n,20),FLUXES(n,21), &
-                             FLUXES(:,22),FLUXES(:,23),FLUXES(n,31),FLUXES(n,32), &
-                             FLUXES(n,33),FLUXES(n,34),FLUXES(n,35),FLUXES(n,36), &
-                             n,nodays,deltat(n), & 
-                             pars(15),pars(27),pars(32),pars(34))
-      end if                      
+          ! Determine whether there is any remaining losses to occur given GSI driven foliar loss
+          !gsi_lai_reduction = FLUXES(n,9) * deltat(n) * pars(15)
+          !if (met(8,n)-gsi_lai_reduction > 0d0) then
+          !    call grass_grazing(POOLS(n+1,1),POOLS(n+1,2),POOLS(n+1,3), & 
+          !                       POOLS(n+1,4),POOLS(n+1,5),met(6,n),met(8,n)-gsi_lai_reduction, &
+          !                       FLUXES(n,19),FLUXES(n,20),FLUXES(n,21), &
+          !                       FLUXES(:,22),FLUXES(:,23),FLUXES(n,31),FLUXES(n,32), &
+          !                       FLUXES(n,33),FLUXES(n,34),FLUXES(n,35),FLUXES(n,36), &
+          !                       n,nodays,deltat(n), & 
+          !                       pars(15),pars(27),pars(32),pars(34))
+          !end if                      
 
+          ! Estimate LAI change for the next time step...
+          gsi_lai_reduction = met(8,n) - ((POOLS(n,2)-POOLS(n+1,2)) * pars(15))
+          ! ...if LAI has increased but the driver suggests a loss 
+          !    or which is greater than already simulated consider grazing
+          if (gsi_lai_reduction > 0d0) then
+              call grass_grazing(POOLS(n+1,1),POOLS(n+1,2),POOLS(n+1,3), & 
+                                 POOLS(n+1,4),POOLS(n+1,5),met(6,n),gsi_lai_reduction, &
+                                 FLUXES(n,19),FLUXES(n,20),FLUXES(n,21), &
+                                 FLUXES(:,22),FLUXES(:,23),FLUXES(n,31),FLUXES(n,32), &
+                                 FLUXES(n,33),FLUXES(n,34),FLUXES(n,35),FLUXES(n,36), &
+                                 n,nodays,deltat(n), & 
+                                 pars(15),pars(27),pars(32),pars(34))
+          end if                      
+      end if 
+      
     end do ! nodays loop
 
   end subroutine CARBON_MODEL
@@ -2663,6 +2678,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                            min_grazing_removal_threshold)
   
     !! Determine whether grazing has occured and the resulting impacts on the C-cycle
+    !! Livestock units (LU) per hectare following the assumptions that:
+    !! (1) one cattle is 1 LU and one sheep is 0.11 LU, (2) 1 LU weighs 650 kg, 
+    !! (3) an animal demands ≈ 2.5 % (p31) of its weight in the form grass dry matter (DM) when grazing, 
+    !! and (4) 47.5 % of DM consists of C (Vertès et al., 2018). 
+    !! This default assumption equates to 1 LSU / ha / day requring ~0.77 gC/m2/day.
     
     implicit none
     

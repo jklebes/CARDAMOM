@@ -513,7 +513,7 @@ module model_likelihood_module
     use cardamom_structures, only: DATAin
 
     ! subroutine assessed the current parameter sets for passing ecological and
-    ! steady state contraints (Bloom et al., 2014).
+    ! steady state contraints (Bloom & Williams 2015).
 
     implicit none
 
@@ -577,34 +577,40 @@ module model_likelihood_module
          EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
     end if
 
+    ! Minimum temperature threshold should not be significantly greater the minimum observed temperature
+    ! NOTE: units of met(10:) is C while p12,p13 at K. The adjustment includes -5C reduction
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(12) > minval(DATAin%MET(10,:))+268.15d0)) then
+         EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
+    end if
+
     ! Photoperiod minimum cannot be substantially less than the observed minimum day length
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(14) < minval(DATAin%MET(11,:))-14400d0)) then
-         EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
+         EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     end if
     ! Photoperiod maximum cannot be greater than the observed maximum day length
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(20) > maxval(DATAin%MET(11,:)))) then
-         EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
+         EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
     end if
 
     ! VPD at which stress in at maximum should be no larger than max(VPDlag21) +
     ! 1500 Pa from the max VPD tolerated parameter
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(22) > maxval(DATAin%MET(12,:))+1500d0)) then
-         EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
+         EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
     end if
 
     ! Rhet from litter should be faster than Rhet from som
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(8) > pars(7) ) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
     endif
 
     ! Turnover of litter towards som (pars(1)) should be faster than turnover of som (pars(8))
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(8) > pars(1) ) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
     endif
 
     ! root turnover (pars(6)) should be greater than som turnover (pars(8)) at mean temperature
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(8)*temp_response) > pars(6)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
     endif
 
     ! IMPLICIT Combustion completeness for foliage should be greater than soil
@@ -706,7 +712,7 @@ module model_likelihood_module
     ! Ensure ratio between Cfoliar and Croot is less than 5
     if ((EDC2 == 1 .or. DIAG == 1) .and. &
         (mean_pools(2) > (mean_pools(3)*5d0) .or. (mean_pools(2)*5d0) < mean_pools(3)) ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
     end if
 
     ! We would not expect that the mean labile stock is greater than
@@ -721,18 +727,18 @@ module model_likelihood_module
     lab_ratio = M_POOLS(1:nodays,1) / (M_POOLS(1:nodays,1) + M_POOLS(1:nodays,2) + M_POOLS(1:nodays,3))
     if (EDC2 == 1 .or. DIAG == 1) then
         if (maxval(lab_ratio) > 0.125d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
         endif
     endif ! EDC2 == 1 .or. DIAG == 1
     if (EDC2 == 1 .or. DIAG == 1) then
         if (sum(lab_ratio)/dble(nodays) > 0.08d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
         endif
     endif ! EDC2 == 1 .or. DIAG == 1
     
     ! GSI model should reach above 0.5 at least once during the analysis
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,18)) < 0.5d0) then 
-        EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
     end if ! EDC2 == 1 .or. DIAG == 1
     
     ! First calculate total flux for the simulation period
@@ -773,7 +779,7 @@ module model_likelihood_module
         n = 1
         ! Restrict mean rates of increase
         if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(15+n-1) = 0
         end if
         ! Restrict exponential behaviour at initialisation
         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
@@ -785,7 +791,7 @@ module model_likelihood_module
         n = 3
         ! Restrict mean rates of increase
         if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(15+n-1) = 0
         end if
         ! Restrict exponential behaviour at initialisation
         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
@@ -797,7 +803,7 @@ module model_likelihood_module
         do n = 4, 5
            ! Restrict rates of increase
            if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+               EDC2 = 0d0 ; EDCD%PASSFAIL(15+n-1) = 0
            end if
            ! Restrict exponential behaviour at initialisation
            if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &

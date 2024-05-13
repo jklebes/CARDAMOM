@@ -47,7 +47,7 @@ module MODEL_PARAMETERS
     PI%parmin(2) = 0.20d0 
     PI%parmax(2) = 0.80d0 
 
-    ! GSI sens leaf growth [1.0, 1.025]
+    ! GSI sens labile turnover [1.0, 1.025]
     PI%parmin(3) = 0.75d0 
     PI%parmax(3) = 1.5d0 
 
@@ -60,7 +60,7 @@ module MODEL_PARAMETERS
     PI%parmax(5) = 0.02d0 
 
     ! TOR roots [0.0001, 0.01]
-    PI%parmin(6) = 0.001d0 
+    PI%parmin(6) = 0.001825234d0 !0.001d0 
     PI%parmax(6) = 0.1d0 
 
     ! TOR litter [0.0001, 0.01]
@@ -137,12 +137,12 @@ module MODEL_PARAMETERS
     PI%parmax(23) = 250000d0 !90000d0
 
     ! GSI sens for leaf senescenece [0.96, 1.00]
-    PI%parmin(24) = 0.96d0 
+    PI%parmin(24) = 0.98d0 ! 0.96d0 
     PI%parmax(24) = 1.0d0 
 
     ! GSI growing stage/step [0.50, 1.5]
     PI%parmin(25) = 0.5d0 
-    PI%parmax(25) = 3.0d0 
+    PI%parmax(25) = 1.5d0 
 
     ! Initial GSI [1.0, 2.0]
     PI%parmin(26) = 1.0d0 
@@ -162,9 +162,9 @@ module MODEL_PARAMETERS
     PI%parmin(29) = 0.25d0 
     PI%parmax(29) = 0.75d0 
 
-    ! critical GPP for LAI growth [1e-10, 0.30]
+    ! critical relative GPP increase for given LAI growth [1e-10, 0.30]
     PI%parmin(30) = 0.00001d0 
-    PI%parmax(30) = 0.5d0 
+    PI%parmax(30) = 0.3d0 
 
     ! livestock demand in DM (1-3% of animal weight) 
     PI%parmin(31) = 0.015d0 
