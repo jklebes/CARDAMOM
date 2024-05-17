@@ -41,11 +41,13 @@ module MODEL_PARAMETERS
     ! declare parameters
     !
 
-    ! Decomposition litter -> som (day-1)
+    ! Decomposition of litter to som (fraction / day-1)
+    ! Note is modified by exponential temperature function (p10)
     PI%parmin(1) = 0.00001d0
     PI%parmax(1) = 0.01d0
 
-    ! Fraction of GPP respired as autotrophic
+    ! Fraction of GPP respired as autotrophic (Ra:GPP),
+    ! i.e. 1-CUE
     PI%parmin(2) = 0.2d0
     PI%parmax(2) = 0.8d0
 

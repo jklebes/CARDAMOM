@@ -572,45 +572,58 @@ module model_likelihood_module
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(20) < pars(14))) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
     end if
-    ! VPD - may not be needed
+    ! VPD 
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(22) < pars(21))) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
     end if
 
     ! Minimum temperature threshold should not be significantly greater the minimum observed temperature
-    ! NOTE: units of met(10:) is C while p12,p13 at K. The adjustment includes -5C reduction
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(12) > minval(DATAin%MET(10,:))+268.15d0)) then
+    ! NOTE: units of met(10,:) is C while p12,p13 at K. The adjustment includes +5C buffer
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(12) > minval(DATAin%MET(10,:))+278.15d0)) then
+!         EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
+!    end if
+    ! Minium temperature threshold cannot be greater than maximum observed value
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(12) > maxval(DATAin%MET(10,:))+273.15d0)) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
     end if
-
-    ! Photoperiod minimum cannot be substantially less than the observed minimum day length
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(14) < minval(DATAin%MET(11,:))-14400d0)) then
+    ! Minimum temperature threshold should not be significantly less than the minimum observed temperature
+    ! NOTE: units of met(10:) is C while p12,p13 at K. The adjustment includes -20C reduction
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(12) < minval(DATAin%MET(10,:))+253.15d0)) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     end if
-    ! Photoperiod maximum cannot be greater than the observed maximum day length
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(20) > maxval(DATAin%MET(11,:)))) then
+
+    ! Photoperiod minimum cannot be substantially less (e.g. 4 hours = 14400s) 
+    ! than the observed minimum day length
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(14) < minval(DATAin%MET(11,:))-14400d0)) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
     end if
-
-    ! VPD at which stress in at maximum should be no larger than max(VPDlag21) +
-    ! 1500 Pa from the max VPD tolerated parameter
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(22) > maxval(DATAin%MET(12,:))+1500d0)) then
+    ! Photoperiod minimum cannot be greater than the observed maximum day length
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(14) > maxval(DATAin%MET(11,:)))) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
+    end if
+    ! Photoperiod maximum should be greater than the observed minimum day length
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(20) < minval(DATAin%MET(11,:))+1d0)) then
+         EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
+    end if
+
+    ! VPD at which stress in at maximum cannot less than the minimum observed value
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(22) < minval(DATAin%MET(12,:)))) then
+         EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
     end if
 
     ! Rhet from litter should be faster than Rhet from som
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(8) > pars(7) ) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
     endif
 
     ! Turnover of litter towards som (pars(1)) should be faster than turnover of som (pars(8))
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(8) > pars(1) ) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
     endif
 
     ! root turnover (pars(6)) should be greater than som turnover (pars(8)) at mean temperature
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(8)*temp_response) > pars(6)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
     endif
 
     ! IMPLICIT Combustion completeness for foliage should be greater than soil
@@ -712,7 +725,7 @@ module model_likelihood_module
     ! Ensure ratio between Cfoliar and Croot is less than 5
     if ((EDC2 == 1 .or. DIAG == 1) .and. &
         (mean_pools(2) > (mean_pools(3)*5d0) .or. (mean_pools(2)*5d0) < mean_pools(3)) ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
     end if
 
     ! We would not expect that the mean labile stock is greater than
@@ -724,22 +737,29 @@ module model_likelihood_module
     ! Wurth et al (2005) Oecologia, Clab 8 % of living biomass (DM) in tropical forest
     ! Richardson et al (2013), New Phytologist, Clab 2.24 +/- 0.44 % in temperate (max = 4.2 %)
     ! Estimate the labile ratio, also used below
-    lab_ratio = M_POOLS(1:nodays,1) / (M_POOLS(1:nodays,1) + M_POOLS(1:nodays,2) + M_POOLS(1:nodays,3))
-    if (EDC2 == 1 .or. DIAG == 1) then
-        if (maxval(lab_ratio) > 0.125d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
-        endif
-    endif ! EDC2 == 1 .or. DIAG == 1
-    if (EDC2 == 1 .or. DIAG == 1) then
-        if (sum(lab_ratio)/dble(nodays) > 0.08d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
-        endif
-    endif ! EDC2 == 1 .or. DIAG == 1
-    
+!    lab_ratio = M_POOLS(1:nodays,1) / (M_POOLS(1:nodays,1) + M_POOLS(1:nodays,2) + M_POOLS(1:nodays,3))
+!    if (EDC2 == 1 .or. DIAG == 1) then
+!        if (maxval(lab_ratio) > 0.125d0) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
+!        endif
+!    endif ! EDC2 == 1 .or. DIAG == 1
+!    if (EDC2 == 1 .or. DIAG == 1) then
+!        if (sum(lab_ratio)/dble(nodays) > 0.08d0) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
+!        endif
+!    endif ! EDC2 == 1 .or. DIAG == 1
+
+    ! The GSI linked, i.e. natural, MTT of foliage should still act in the background 
+    ! and have a residence time of < 2 years. Probably should be closer to 2-3 year, but we are being cautious
+    ! NOTE that 9.12616929d-4 is the mean daily fractional equvalent of 3 years MTT
+    !if ((EDC2 == 1 .or. DIAG == 1) .and. (sum(M_FLUXES(:,9)/M_POOLS(:,2))/dble(nodays)) < 9.12616929d-4) then 
+    !    EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
+    !end if ! EDC2 == 1 .or. DIAG == 1
+
     ! GSI model should reach above 0.5 at least once during the analysis
-    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,18)) < 0.5d0) then 
-        EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
-    end if ! EDC2 == 1 .or. DIAG == 1
+    !if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,18)) < 0.5d0) then 
+    !    EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
+    !end if ! EDC2 == 1 .or. DIAG == 1
     
     ! First calculate total flux for the simulation period
     io_start = (steps_per_year*2) + 1 ; io_finish = nodays

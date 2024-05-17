@@ -292,7 +292,7 @@ module CARBON_MODEL_MOD
           ! allocation to roots 
           FLUXES(n,6) = (FLUXES(n,1) - FLUXES(n,3)) * f_root
           ! allocation of ABG C to leaves
-          FLUXES(n,4) = (FLUXES(n,1) - FLUXES(n,3) - FLUXES(n,6)) * (1d0 - (pars(29)*(lai_out(n)/6d0)))
+          FLUXES(n,4) = (FLUXES(n,1) - FLUXES(n,3) - FLUXES(n,6)) * (1d0 - (pars(29)*min(1d0,lai_out(n)/6d0)))
           ! allocation of ABG C to labile/stem using pars(29)
           ! Ostrem.et.al.2013 (10.1080/09064710.2013.819440)            
           FLUXES(n,5) = FLUXES(n,1) - FLUXES(n,3) - FLUXES(n,6) - FLUXES(n,4)
@@ -350,28 +350,49 @@ module CARBON_MODEL_MOD
       ! ------------------------------------------------------------------------------------------------------------- ! 
 
       if (met(8,n) == -1d0) then
-          call grass_cutting(POOLS(n+1,1),POOLS(n+1,2),POOLS(n+1,3), & 
+          ! Estimate labile stored above ground assuming uniform distribution across biomass
+          labile_ratio = POOLS(n+1,2) / (POOLS(n+1,2)+POOLS(n+1,3))
+          call grass_cutting(labile_ratio,POOLS(n+1,1),POOLS(n+1,2),POOLS(n+1,3), & 
                              POOLS(n+1,4),POOLS(n+1,5),met(6,n),met(8,n), &
                              FLUXES(:,22),FLUXES(n,25),FLUXES(n,26),FLUXES(n,27), &
                              FLUXES(n,28),FLUXES(n,29),FLUXES(n,30), &
                              n,nodays,deltat(n), & 
                              pars(28),pars(33))
-      end if
+      else 
 
-      ! GRAZING 
-      ! ------------------------------------------------------------------------------------------------------------- ! 
+          ! GRAZING 
+          ! ------------------------------------------------------------------------------------------------------------- ! 
 
-      ! Determine whether there is any remaining losses to occur given GSI driven foliar loss
-      gsi_lai_reduction = FLUXES(n,9) * deltat(n) * pars(15)
-      if (met(8,n)-gsi_lai_reduction > 0d0) then
-          call grass_grazing(POOLS(n+1,1),POOLS(n+1,2),POOLS(n+1,3), & 
-                             POOLS(n+1,4),POOLS(n+1,5),met(6,n),met(8,n)-gsi_lai_reduction, &
-                             FLUXES(n,19),FLUXES(n,20),FLUXES(n,21), &
-                             FLUXES(:,22),FLUXES(:,23),FLUXES(n,31),FLUXES(n,32), &
-                             FLUXES(n,33),FLUXES(n,34),FLUXES(n,35),FLUXES(n,36), &
-                             n,nodays,deltat(n), & 
-                             pars(15),pars(27),pars(32),pars(34))
-      end if                      
+          ! Determine whether there is any remaining losses to occur given GSI driven foliar loss
+          !gsi_lai_reduction = (FLUXES(n,9) * deltat(n)) / pars(15)
+          !if (met(8,n)-gsi_lai_reduction > 0d0) then
+          !    ! Estimate labile stored above ground assuming uniform distribution across biomass
+          !    labile_ratio = POOLS(n+1,2) / (POOLS(n+1,2)+POOLS(n+1,3))
+          !    call grass_grazing(POOLS(n+1,1),POOLS(n+1,2),POOLS(n+1,3), & 
+          !                       POOLS(n+1,4),POOLS(n+1,5),met(6,n),met(8,n)-gsi_lai_reduction, &
+          !                       FLUXES(n,19),FLUXES(n,20),FLUXES(n,21), &
+          !                       FLUXES(:,22),FLUXES(:,23),FLUXES(n,31),FLUXES(n,32), &
+          !                       FLUXES(n,33),FLUXES(n,34),FLUXES(n,35),FLUXES(n,36), &
+          !                       n,nodays,deltat(n), & 
+          !                       pars(15),pars(27),pars(32),pars(34))
+          !end if                      
+
+          ! Estimate LAI change for the next time step...
+          gsi_lai_reduction = met(8,n) - ((POOLS(n,2)-POOLS(n+1,2)) / pars(15))
+          ! ...if LAI has increased but the driver suggests a loss 
+          !    or which is greater than already simulated consider grazing
+          if (gsi_lai_reduction > 0d0) then
+              ! Estimate labile stored above ground assuming uniform distribution across biomass
+              labile_ratio = POOLS(n+1,2) / (POOLS(n+1,2)+POOLS(n+1,3))
+              call grass_grazing(labile_ratio,POOLS(n+1,1),POOLS(n+1,2),POOLS(n+1,3),  & 
+                                 POOLS(n+1,4),POOLS(n+1,5),met(6,n),gsi_lai_reduction, &
+                                 FLUXES(n,19),FLUXES(n,20),FLUXES(n,21), &
+                                 FLUXES(:,22),FLUXES(:,23),FLUXES(n,31),FLUXES(n,32), &
+                                 FLUXES(n,33),FLUXES(n,34),FLUXES(n,35),FLUXES(n,36), &
+                                 n,nodays,deltat(n), & 
+                                 pars(15),pars(27),pars(32),pars(34))
+          end if                      
+      end if 
 
     end do ! nodays loop
 
@@ -514,7 +535,7 @@ module CARBON_MODEL_MOD
           .and. sum(harvest(max(1,timestep-four_week_lag):timestep)) == 0d0 ) then
                   
         ! direct C losses
-        labile_loss  = labile * post_cutting_labile_loss
+        labile_loss  = labile * 0.95d0 * post_cutting_labile_loss
         foliar_loss  = foliage * 0.95d0 ! 95% of leaves lost after cutting probably 99% lost in reality 
         roots_loss   = 0d0 ! POOLS(n+1,3) * roots_frac_death ! allocation to roots will be reduced due to reduced LAI 
 
@@ -559,9 +580,9 @@ module CARBON_MODEL_MOD
   !
   !------------------------------------------------------------------
   !
-  subroutine grass_grazing(labile,foliage,roots,litter,som,doy,lai_reduction,       &
-                           animal_manure_to_soil,animal_respiration,animal_methane, &
-                           harvest,grazing,GRAZINGextracted_labile,                 & 
+  subroutine grass_grazing(labile_ratio,labile,foliage,roots,litter,som,doy,        &
+                           lai_reduction,animal_manure_to_soil,animal_respiration,  &
+                           animal_methane,harvest,grazing,GRAZINGextracted_labile,  & 
                            GRAZINGextracted_foliage,GRAZINGextracted_roots,         &
                            GRAZINGlitter_labile,GRAZINGlitter_foliage,              &
                            GRAZINGlitter_roots,                                     &
@@ -575,13 +596,14 @@ module CARBON_MODEL_MOD
     !! (3) an animal demands ≈ 2.5 % (p31) of its weight in the form grass dry matter (DM) when grazing, 
     !! and (4) 47.5 % of DM consists of C (Vertès et al., 2018). 
     !! This default assumption equates to 1 LSU / ha / day requring ~0.77 gC/m2/day.
-
+    
     implicit none
     
     ! Arguments
     integer, intent(in) :: timestep, nodays
     double precision, intent(in) :: doy, &
                             step_length, &
+                           labile_ratio, &
                           lai_reduction, &
                                     lca, &
                       grazing_threshold, &
@@ -607,7 +629,8 @@ module CARBON_MODEL_MOD
                                                           grazing
 
     ! Local variables
-    double precision :: labile_loss    & 
+    double precision :: fraction_loss  &
+                       ,labile_loss    & 
                        ,foliar_loss    &
                        ,roots_loss     &
                        ,labile_residue &
@@ -618,31 +641,41 @@ module CARBON_MODEL_MOD
     ! 1) An LAI reduction is specified
     ! 2) Labile+leaf C > grazing threshold 
     ! 3) No cutting in the last 2 weeks
-    if (labile+foliage >= grazing_threshold .and. & 
+    if ((labile*labile_ratio)+foliage >= grazing_threshold .and. & 
         sum(harvest(max(1,timestep-two_week_lag):timestep)) == 0d0) then
-           
-        ! direct C losses
-        labile_loss  = labile * post_grazing_labile_loss
-        foliar_loss  = max(0d0,(lai_reduction * lca) - labile_loss)  
-        roots_loss   = 0d0 ! POOLS(n+1,3) * roots_frac_death
 
-        ! fraction of harvest wasted 
+        !   
+        ! direct C losses
+        !
+
+        ! Determine the fraction of foliage being removed by the lai reduction
+        fraction_loss = (lai_reduction * lca) / foliage
+        ! Assume that a fraction of labile is also storged proportionally within the leaf / above ground
+        labile_loss  = labile * labile_ratio * fraction_loss * post_grazing_labile_loss
+        ! Apply fractional loss to foliage
+        foliar_loss  = foliage * fraction_loss
+        roots_loss   = 0d0 ! POOLS(n+1,3) * roots_frac_death
+!        labile_loss  = labile * post_grazing_labile_loss
+!        foliar_loss  = max(0d0,(lai_reduction * lca) - labile_loss)  
+!        roots_loss   = 0d0 ! POOLS(n+1,3) * roots_frac_death
+
+        ! fraction of grazing lost as residue (messy eaters)
         labile_residue = labile_loss * labile_frac_res
         foliar_residue = foliar_loss * foliage_frac_res
-        roots_residue = roots_loss * roots_frac_res
+        roots_residue  = roots_loss * roots_frac_res
 
         ! extracted C via grazing: if remaining AGB > pre-grazing limit DM & grazed biomass > pars(34) gC/m2/step
-        if ( (labile+foliage)-foliar_loss-labile_loss >= grazing_threshold .and. & 
+        if ( (((labile*labile_ratio)+foliage)-(foliar_loss+labile_loss)) >= grazing_threshold .and. & 
                (foliar_loss+labile_loss) >= min_grazing_removal_threshold*step_length ) then
 
             ! Assign to output the biomass extracted due to cutting
-            GRAZINGextracted_labile = (labile_loss-labile_residue) / step_length
+            GRAZINGextracted_labile  = (labile_loss-labile_residue) / step_length
             GRAZINGextracted_foliage = (foliar_loss-foliar_residue) / step_length
-            GRAZINGextracted_roots = (roots_loss -roots_residue) / step_length
+            GRAZINGextracted_roots   = (roots_loss -roots_residue) / step_length
             ! Assign the output the biomass entering litter due to cutting
-            GRAZINGlitter_labile = labile_residue / step_length
+            GRAZINGlitter_labile  = labile_residue / step_length
             GRAZINGlitter_foliage = foliar_residue / step_length
-            GRAZINGlitter_roots = roots_residue / step_length
+            GRAZINGlitter_roots   = roots_residue / step_length
 
             ! Combine to total extracted based on grazing
             grazing(timestep) = GRAZINGextracted_labile  + &
@@ -667,18 +700,30 @@ module CARBON_MODEL_MOD
                                        GRAZINGlitter_foliage+GRAZINGlitter_roots) * step_length))
             som     = max(0d0,som)
 
-        endif 
+        else if (foliar_loss+labile_loss >= min_grazing_removal_threshold*step_length) then
 
-        ! Determine whether to graze, assuming grazing criterior above was not met 
-        ! extracted C via grazing: if not done above & postgraze AGB < pre-grazing AGB 
-        if ( (grazing(timestep) == 0d0) .and. & 
-             ((labile+foliage)-foliar_loss-labile_loss) <= grazing_threshold ) then
-              
-            ! Bulk C losses
-            labile_loss  = labile * post_grazing_labile_loss
-            foliar_loss  = foliage - grazing_threshold - (labile - labile_loss)
-            !foliar_loss  = foliage - (grazing_threshold - labile_loss)
-            roots_loss   = 0d0 ! roots * roots_frac_death
+            ! If losses are > than min grazing removal threshold, then it is implicit that 
+            ! the remaining labile+foliage was below the critical above ground threshold.
+            ! Therefore, we will attempt to determine whether removals required to reach the minimum 
+            ! grazing threshold (which is also the minimum which must remain afterwards).
+
+            ! 
+            ! Direct C losses
+            !
+
+            ! Determine the adjustment to the existing loss terms, to ensure mass balance with the grazing_threshold value
+            fraction_loss = (((labile*labile_ratio) + foliage) - grazing_threshold) / (labile_loss + foliar_loss)
+            ! Adjust the existing labile loss based on adjustment fraction
+            labile_loss  = labile_loss * fraction_loss
+            ! Apply fractional loss to foliage
+            foliar_loss  = foliar_loss * fraction_loss
+            roots_loss   = 0d0 ! POOLS(n+1,3) * roots_frac_death
+
+            !! Determine losses which result in remaining biomass to be the grazing_threshold value
+            !labile_loss  = labile * post_grazing_labile_loss
+            !foliar_loss  = foliage - (grazing_threshold - (labile - labile_loss))
+            !!foliar_loss  = foliage - (grazing_threshold - labile_loss)
+            !roots_loss   = 0d0 ! roots * roots_frac_death
 
             ! fraction of harvest wasted 
             labile_residue = labile_loss * labile_frac_res
@@ -686,38 +731,41 @@ module CARBON_MODEL_MOD
             roots_residue = roots_loss * roots_frac_res
 
             ! proceed if simulating this grazing will remove > ~0.5 gCm-2 from AGB
-            if ((foliar_loss+labile_loss) >= min_grazing_removal_threshold) then
-
-                ! Assign to output the biomass extracted due to cutting
-                GRAZINGextracted_labile  = (labile_loss-labile_residue) / step_length
-                GRAZINGextracted_foliage = (foliar_loss-foliar_residue) / step_length
-                GRAZINGextracted_roots   = (roots_loss -roots_residue) / step_length
-                ! Assign the output the biomass entering litter due to cutting
-                GRAZINGlitter_labile  = labile_residue / step_length
-                GRAZINGlitter_foliage = foliar_residue / step_length
-                GRAZINGlitter_roots   = roots_residue / step_length
-
-                ! Combine to total extracted based on grazing
-                grazing(timestep) = GRAZINGextracted_labile + &
-                                    GRAZINGextracted_foliage + &
-                                    GRAZINGextracted_roots
-
-                ! animal manure-C production (gC/m2)
-                animal_manure_to_soil = (grazing(timestep) * 0.32d0) / step_length
-                ! animal respiration CO2-C (gC/m2)
-                animal_respiration = (grazing(timestep) * 0.54d0) / step_length
-                ! animal CH4-C (gC/m2)
-                animal_methane = (grazing(timestep) * 0.04d0) / step_length                
-
-                ! update pools 
-                labile  = max(0d0,labile-labile_loss)
-                foliage = max(0d0,foliage-foliar_loss)
-                roots   = max(0d0,roots-roots_loss)
-                litter  = max(0d0,litter+((animal_manure_to_soil+GRAZINGlitter_labile + &
-                                           GRAZINGlitter_foliage+GRAZINGlitter_roots) * step_length))
-                som     = max(0d0,som)
-
-            endif ! carry out grazing?
+! TLS: Commented out due to greater agreement with the grazing density information at North Wyke
+! That is not to say there isn't some utility in a 2nd chance component in the future when we have more 
+! diverse datasets available.
+!            if ((foliar_loss+labile_loss) >= min_grazing_removal_threshold*step_length) then
+!
+!                ! Assign to output the biomass extracted due to cutting
+!                GRAZINGextracted_labile  = (labile_loss-labile_residue) / step_length
+!                GRAZINGextracted_foliage = (foliar_loss-foliar_residue) / step_length
+!                GRAZINGextracted_roots   = (roots_loss -roots_residue) / step_length
+!                ! Assign the output the biomass entering litter due to cutting
+!                GRAZINGlitter_labile  = labile_residue / step_length
+!                GRAZINGlitter_foliage = foliar_residue / step_length
+!                GRAZINGlitter_roots   = roots_residue / step_length
+!
+!                ! Combine to total extracted based on grazing
+!                grazing(timestep) = GRAZINGextracted_labile + &
+!                                    GRAZINGextracted_foliage + &
+!                                    GRAZINGextracted_roots
+!
+!                ! animal manure-C production (gC/m2)
+!                animal_manure_to_soil = (grazing(timestep) * 0.32d0) / step_length
+!                ! animal respiration CO2-C (gC/m2)
+!                animal_respiration = (grazing(timestep) * 0.54d0) / step_length
+!                ! animal CH4-C (gC/m2)
+!                animal_methane = (grazing(timestep) * 0.04d0) / step_length                
+!
+!                ! update pools 
+!                labile  = max(0d0,labile-labile_loss)
+!                foliage = max(0d0,foliage-foliar_loss)
+!                roots   = max(0d0,roots-roots_loss)
+!                litter  = max(0d0,litter+((animal_manure_to_soil+GRAZINGlitter_labile + &
+!                                           GRAZINGlitter_foliage+GRAZINGlitter_roots) * step_length))
+!                som     = max(0d0,som)
+!
+!            endif ! carry out grazing?
 
         endif ! Is grazing plausible
 

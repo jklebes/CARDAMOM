@@ -33,7 +33,7 @@ M = Managed Grassland / arable crops (Table 10)
 | 14 | DALEC.C3.M1.#                | DALEC_CROP          | Developmental arable crop model                     | Sus et al., 2010             | Published   |
 | 15 | DALEC.A3.C3.H2.M1.#          | DALEC_CROP_BUCKET   | Developmental arable crop model                     | Sus et al., 2010, T. L. Smallman | Unpublished |
 | 16 | DALEC.M2.#                   | DALEC_GRASS         | Managed grassland                                   | Myrgiotis et al., 2020       | Published   |
-| 17 | DALEC.A1.H2.M2.#             | DALEC_GRASS_BUCKET  | Managed grassland                                   | Myrgiotis et al., 2020       | Unpublished |
+| 17 | DALEC.A3.H2.M2.#             | DALEC_GRASS_BUCKET  | Managed grassland                                   | Myrgiotis et al., 2020       | Unpublished |
 | 18 | DALEC.A1.C1.D2.F2.H2.P2.#    | DALEC_CDEA_ACM2_BUCKET_wMRT                |                              | T. L. Smallman               | Unpublished |
 | 19 | DALEC.A1.C2.D2.F2.H2.P2.R3.# | DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT|                              | T. L. Smallman               | Unpublished |
 | 20 | DALEC.A2.C1.D2.F2.H2.P1.#    | DALEC_CDEA_ACM_FARQUHAR_BUCKET             |                              | T. L. Smallman               | Unpublished |
