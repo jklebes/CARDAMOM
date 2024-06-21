@@ -946,7 +946,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   } else if (modelname == "DALEC.M2.#") {
       PARPRIORS[2] = 0.54                  ; PARPRIORUNC[2] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       PARPRIORS[10]=16.9                   ; PARPRIORUNC[10]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
-      PARPRIORS[15]=OBS$lca                ; PARPRIORUNC[15]=OBS$lca_unc
+      #PARPRIORS[15]=OBS$lca                ; PARPRIORUNC[15]=OBS$lca_unc
+      PARPRIORS[15]=32                     ; PARPRIORUNC[15]=13
       PARPRIORS[17]=OBS$Cfol_initial       ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[17]=OBS$Cfol_initial_unc} # Cfoliar prior
       PARPRIORS[18]=OBS$Croots_initial     ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[18]=OBS$Croots_initial_unc} # Croots prior
       PARPRIORS[19]=OBS$Clit_initial       ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[19]=OBS$Clit_initial_unc} # Clitter prior
@@ -954,13 +955,13 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       # other priors
 #      OTHERPRIORS[2] = OBS$soilwater       ; OTHERPRIORUNC[2] = OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
 #      OTHERPRIORS[3] = 27.295              ; OTHERPRIORUNC[3] = 11.03755 # Foliar C:N (gC/gN) prior derived from Kattge et al., (2011)
-      # OTHERPRIORS[4] = 0.66                ; OTHERPRIORUNC[4] = 0.12 # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
   } else if (modelname == "DALEC.A3.H2.M2.#") {
       PARPRIORS[2] = 0.54                  ; PARPRIORUNC[2] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       PARPRIORS[11]=21.1491                ; PARPRIORUNC[11]=8.534234 #; PARPRIORWEIGHT[11] = 1 # Ceff: derived from multiple trait values from Kattge et al., (2011)
                                                                       # Note that this prior is difference from DALEC.C1.D1.F2.P1.
                                                                       # due to the different temperature response functions used in ACM2 vs ACM 1
-      PARPRIORS[15]=OBS$lca                ; PARPRIORUNC[15]=OBS$lca_unc
+      #PARPRIORS[15]=OBS$lca                ; PARPRIORUNC[15]=OBS$lca_unc
+      PARPRIORS[15]=32                     ; PARPRIORUNC[15]=13
       PARPRIORS[17]=OBS$Cfol_initial       ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[17]=OBS$Cfol_initial_unc} # Cfoliar prior
       PARPRIORS[18]=OBS$Croots_initial     ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[18]=OBS$Croots_initial_unc} # Croots prior
       PARPRIORS[19]=OBS$Clit_initial       ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[19]=OBS$Clit_initial_unc} # Clitter prior

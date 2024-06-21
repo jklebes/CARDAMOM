@@ -34,7 +34,7 @@ numWorkers = 6 # number of cores to assign to parallel job
 
 ## Model - which DALEC 
 # see "MODEL_DESCRIPTIONS.md" for available models
-model="DALEC.31."
+model="DALEC.4."
 pft_specific_parameters=FALSE # impacts crop model only
 
 ## MDF method

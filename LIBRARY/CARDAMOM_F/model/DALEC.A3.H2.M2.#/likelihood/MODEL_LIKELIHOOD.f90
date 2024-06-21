@@ -591,39 +591,44 @@ module model_likelihood_module
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(12) < minval(DATAin%MET(10,:))+253.15d0)) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     end if
+    ! Maximum temperature threshold should not be significantly greater than the maximum observed temperature
+    ! NOTE: units of met(10:) is C while p12,p13 at K. The adjustment includes +10C reduction
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(13) > minval(DATAin%MET(10,:))+283.15d0)) then
+         EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
+    end if
 
     ! Photoperiod minimum cannot be substantially less (e.g. 4 hours = 14400s) 
     ! than the observed minimum day length
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(14) < minval(DATAin%MET(11,:))-14400d0)) then
-         EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
+         EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
     end if
     ! Photoperiod minimum cannot be greater than the observed maximum day length
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(14) > maxval(DATAin%MET(11,:)))) then
-         EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
+         EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
     end if
     ! Photoperiod maximum should be greater than the observed minimum day length
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(20) < minval(DATAin%MET(11,:))+1d0)) then
-         EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
+         EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
     end if
 
     ! VPD at which stress in at maximum cannot less than the minimum observed value
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(22) < minval(DATAin%MET(12,:)))) then
-         EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
+         EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
     end if
 
     ! Rhet from litter should be faster than Rhet from som
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(8) > pars(7) ) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
     endif
 
     ! Turnover of litter towards som (pars(1)) should be faster than turnover of som (pars(8))
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(8) > pars(1) ) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
     endif
 
     ! root turnover (pars(6)) should be greater than som turnover (pars(8)) at mean temperature
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(8)*temp_response) > pars(6)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(13) = 0
     endif
 
     ! IMPLICIT Combustion completeness for foliage should be greater than soil
@@ -725,7 +730,7 @@ module model_likelihood_module
     ! Ensure ratio between Cfoliar and Croot is less than 5
     if ((EDC2 == 1 .or. DIAG == 1) .and. &
         (mean_pools(2) > (mean_pools(3)*5d0) .or. (mean_pools(2)*5d0) < mean_pools(3)) ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
     end if
 
     ! We would not expect that the mean labile stock is greater than

@@ -118,7 +118,7 @@ module MODEL_PARAMETERS
 
     ! initial litter pool size [1, 10000]
     PI%parmin(19) = 1d0 
-    PI%parmax(19) = 10000d0 
+    PI%parmax(19) = 1000d0 
 
     ! GSI max photoperiod (sec) [3600, 64800]
     PI%parmin(20) = 3600d0 
@@ -129,7 +129,7 @@ module MODEL_PARAMETERS
     PI%parmax(21) = 5500d0 
 
     ! GSI max VPD (Pa) [1, 5500]
-    PI%parmin(22) = 1d0 
+    PI%parmin(22) = 500d0 
     PI%parmax(22) = 5500d0 
 
     ! initial SOM pool size [5000, 10000] (UK) 19000, 21000
@@ -194,7 +194,7 @@ module MODEL_PARAMETERS
 
     ! BUCKET - coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 %
     ! of max depth
-    PI%parmin(36) = 10d0
+    PI%parmin(36) = 50d0
     PI%parmax(36) = 250d0 !500d0
 
     ! BUCKET - maximum rooting depth

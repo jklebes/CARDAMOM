@@ -624,11 +624,11 @@ module model_likelihood_module
 
     ! set initial value
     fauto = sum(M_FLUXES(:,3)) / sum(M_FLUXES(:,1))
-    ffol = sum(M_FLUXES(:,4)) / (sum(M_FLUXES(:,1))*fauto)
-    flab = sum(M_FLUXES(:,5)) / (sum(M_FLUXES(:,1))*fauto)
-    froot = sum(M_FLUXES(:,6)) / (sum(M_FLUXES(:,1))*fauto)
-    fwood = sum(M_FLUXES(:,7)) / (sum(M_FLUXES(:,1))*fauto)
-    fsom = fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(10))
+    ffol = sum(M_FLUXES(:,4)) / sum(M_FLUXES(:,1))
+    flab = sum(M_FLUXES(:,5)) / sum(M_FLUXES(:,1))
+    froot = sum(M_FLUXES(:,6)) / sum(M_FLUXES(:,1))
+    fwood = sum(M_FLUXES(:,7)) / sum(M_FLUXES(:,1))
+    fsom = fwood+(froot+flab+ffol)*pars(1)       
     flit = (froot+flab+ffol)
 
     ! initial value

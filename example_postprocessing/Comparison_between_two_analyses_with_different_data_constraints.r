@@ -1244,7 +1244,7 @@ plot(var2, range=c(0,1), col=colour_choices_gain,  bty = "n",
      main="")
 mtext(alt_name, side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-xrange = c(-1,1) * max(abs(range(values(var3), na.rm=TRUE)), na.rm=TRUE)
+xrange = c(-1,1) * max(abs(quantile(values(var3), prob=c(0.01,0.99), na.rm=TRUE)), na.rm=TRUE)
 plot(var3, main="", range=xrange, col=colour_choices_sign,  bty = "n",
      cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 plot(landmask, add=TRUE, lwd=0.5)
@@ -2018,7 +2018,10 @@ mtext(expression(paste('Year',sep="")), side = 1, cex = 2.4, padj = 1.85)
 mtext(expression(paste('Analysis-wide LAI (',m^2,'/',m^2,')',sep="")), side = 2, cex = 2.4, padj = -1.05)
 abline(0,1, col="grey", lwd=3)
 # Now plot initial soil
-plot(as.vector(1e-2*SoilCPrior) ~ as.vector(1e-2*orig_grid_output$parameters[,,23,mid_quant]) , pch=1, cex = 1.6, cex.lab=2.4, cex.axis = 2.4, cex.main=2.0, ylab="", xlab="", main="", col=model_colours[1])
+axis_ranges = range(c(as.vector(1e-2*SoilCPrior),as.vector(1e-2*orig_grid_output$parameters[,,23,mid_quant])), na.rm=TRUE) # define common axis ranges
+axis_ranges[1] = max(0,axis_ranges[1])
+plot(as.vector(1e-2*SoilCPrior) ~ as.vector(1e-2*orig_grid_output$parameters[,,23,mid_quant]) , pch=1, cex = 1.6, 
+     cex.lab=2.4, cex.axis = 2.4, cex.main=2.0, ylab="", xlab="", main="", col=model_colours[1], xlim=axis_ranges, ylim = axis_ranges)
 points(as.vector(1e-2*SoilCPrior) ~ as.vector(1e-2*alt_grid_output$parameters[,,23,mid_quant]), pch=1, cex = 1.6, col=model_colours[2])
 mtext(expression(paste('CARDAMOM',sep="")), side = 1, cex = 2.4, padj = 1.85)
 mtext(expression(paste('Initial soil C (MgC h',a^-1,')',sep="")), side = 2, cex = 2.4, padj = -1.00)
@@ -3830,7 +3833,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_gain)
 mtext(expression(paste("Total (MgC h",a^-1,")", sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex = 1.6, padj = -0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
@@ -3846,7 +3849,7 @@ plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(alt_name, side=2, cex=1.6, padj = -0.5)
+mtext(alt_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
@@ -3860,7 +3863,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj) 
+mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj+0.05) 
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_sign)
@@ -3931,7 +3934,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_default)
 mtext(expression(paste(Delta,"Total (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_default)
@@ -3947,7 +3950,7 @@ plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_default)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(alt_name, side=2,cex=2.0, padj=-0.5)
+mtext(alt_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_default)
@@ -3961,7 +3964,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj) 
+mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj+0.05) 
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_sign)
@@ -4035,7 +4038,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_CI)
 mtext(expression(paste("Total CI (MgC h",a^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -4051,7 +4054,7 @@ plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(alt_name, side=2,cex=2.0, padj=-0.5)
+mtext(alt_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -4065,7 +4068,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj) 
+mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj+0.05) 
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
@@ -4139,7 +4142,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_CI)
 mtext(expression(paste(Delta,"Total CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -4317,7 +4320,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_gain)
 mtext(expression(paste("Total (MgC h",a^-1,")", sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj = -0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
@@ -4333,7 +4336,7 @@ plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(alt_name, side=2, cex=1.6, padj = -0.5)
+mtext(alt_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
@@ -4347,7 +4350,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Difference",sep=""), side=2, cex=1.6, padj = -0.5)
+mtext(paste("Difference",sep=""), side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_sign)
@@ -4415,7 +4418,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_default)
 mtext(expression(paste(Delta,"Total (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_default)
@@ -4431,7 +4434,7 @@ plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_default)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(alt_name, side=2,cex=2.0, padj=-0.5)
+mtext(alt_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_default)
@@ -4445,7 +4448,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
+mtext(paste("Difference",sep=""), side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_sign)
@@ -4597,7 +4600,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_CI)
 mtext(expression(paste("Total CI (MgC h",a^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -4613,7 +4616,7 @@ plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(alt_name, side=2,cex=2.0, padj=-0.5)
+mtext(alt_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -4627,7 +4630,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
+mtext(paste("Difference",sep=""), side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
@@ -4710,7 +4713,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_CI)
 mtext(expression(paste("Total CI:Median",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -4726,7 +4729,7 @@ plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(alt_name, side=2,cex=2.0, padj=-0.5)
+mtext(alt_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -4740,7 +4743,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
+mtext(paste("Difference",sep=""), side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
@@ -4811,7 +4814,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_CI)
 mtext(expression(paste(Delta,"Total CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -4827,7 +4830,7 @@ plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(alt_name, side=2,cex=2.0, padj=-0.5)
+mtext(alt_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -4841,7 +4844,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
+mtext(paste("Difference",sep=""), side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
@@ -4924,7 +4927,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_CI)
 mtext(expression(paste(Delta,"Total CI (MgC h",a^-1,"y",r^-1,")", sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -4940,7 +4943,7 @@ plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(alt_name, side=2,cex=2.0, padj=-0.5)
+mtext(alt_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -4954,7 +4957,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
+mtext(paste("Difference",sep=""), side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
@@ -5030,7 +5033,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_gain)
 mtext(expression(paste("MRT wood (years)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
@@ -5083,7 +5086,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_gain)
 mtext(expression(paste("MRT wood (years)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
@@ -5344,7 +5347,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_CI)
 mtext(expression(paste("MRT wood CI (years)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -5401,7 +5404,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_CI)
 mtext(expression(paste("MRT wood CI (years)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)                  
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -5518,7 +5521,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_CI)
 mtext(expression(paste("MRT wood CI:Median",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)                  
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -5735,7 +5738,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_CI)
 mtext(expression(paste("MRT wood CI (years)", sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)       
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -6020,7 +6023,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_gain)
 mtext(expression(paste("NPP foliar (0-1)", sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)       
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
@@ -6073,7 +6076,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_gain)
 mtext(expression(paste("NPP foliar (0-1)", sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)       
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
@@ -6111,7 +6114,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
+mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj+0.05)       
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
@@ -6179,7 +6182,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_gain)
 mtext(expression(paste("NPP foliar (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)       
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
@@ -6232,7 +6235,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_gain)
 mtext(expression(paste("NPP foliar (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)       
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
@@ -6266,7 +6269,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
+mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj+0.05)       
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
@@ -6335,7 +6338,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_CI)
 mtext(expression(paste("NPP foliar CI (0-1)", sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)       
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -6392,7 +6395,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2,  bty = "n",
      main = "", col=colour_choices_CI)
 mtext(expression(paste("NPP foliar CI (0-1)", sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)       
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -6614,7 +6617,7 @@ plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      main = "", col=colour_choices_CI)
 mtext(expression(paste("NPP foliar CI (MgC h",a^-1,y^-1,")", sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)       
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(orig_name, side=2, cex=1.6, padj=-0.5)
+mtext(orig_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
