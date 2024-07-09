@@ -40,7 +40,7 @@ obs_array_names <<- c("GPP (gC/m2/day)",
                       "Leaf area index variance",
                       "Net Ecosystem Exchange of CO2 (gC/m2/day)",
                       "Net Ecosystem Exchange of CO2 variance",
-                      "Fire C emission (gC/m2day)",
+                      "Fire C emission (gC/m2/day)",
                       "Fire C emission variance",
                       "Ecosystem respiration (Ra + Rh gC/m2/day)",
                       "Ecosystem respiration (Ra + Rh) variance",
@@ -346,11 +346,10 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       # Other priors
       OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
   } else if (modelname == "DALEC.C3.M1.#") {
-      PARPRIORS[11]=8.45                   ; PARPRIORUNC[11]=3.7510735 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+      PARPRIORS[11]=11.197440              ; PARPRIORUNC[11]=9.3 # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution      
       PARPRIORS[13]=0.21875                ; PARPRIORUNC[13]=0.01 # Respiratory costs of labile transfer
       PARPRIORS[12]=OBS$planting_doy       ; PARPRIORUNC[12]=OBS$planting_doy_unc
       PARPRIORS[15]=OBS$harvest_doy        ; PARPRIORUNC[15]=OBS$harvest_doy_unc
-      #PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc
       PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc
       PARPRIORS[19]=OBS$Cfol_initial       ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
       PARPRIORS[20]=OBS$Croots_initial     ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
@@ -364,9 +363,9 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       OTHERPRIORS[1] = 0.54                ; OTHERPRIORUNC[1]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       # Yield:GPP Winter Wheat ATEC experiment plus He et al., (2018), doi: 10.3390/rs10030372
       # Values from He et al., Spring Wheat 0.24, Barley 0.42, Duram Wheat 0.22, Alfalfa 0.55, Pea 0.28, Maize 0.44
-      OTHERPRIORS[8] = 0.38                ; OTHERPRIORUNC[8]=0.087 ; OTHERPRIORWEIGHT[8] = noyears 
+      #OTHERPRIORS[8] = 0.38                ; OTHERPRIORUNC[8]=0.087 ; OTHERPRIORWEIGHT[8] = noyears 
   } else if (modelname == "DALEC.A3.C3.H2.M1.#") {
-      PARPRIORS[11]=0.2764618              ; PARPRIORUNC[11]=0.2014871 # log10 avg foliar N (gN.m-2)
+      PARPRIORS[11]=11.197440              ; PARPRIORUNC[11]=9.3 # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution      
       PARPRIORS[13]=0.21875                ; PARPRIORUNC[13]=0.01 # Respiratory costs of labile transfer
       PARPRIORS[12]=OBS$planting_doy       ; PARPRIORUNC[12]=OBS$planting_doy_unc
       PARPRIORS[15]=OBS$harvest_doy        ; PARPRIORUNC[15]=OBS$harvest_doy_unc
@@ -377,12 +376,13 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[22]=OBS$Clit_initial       ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
       PARPRIORS[23]=OBS$Csom_initial       ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
       PARPRIORS[35]=0.99                   ; PARPRIORUNC[35]=0.1 # autotrophic turnover rate (/day)
-      PARPRIORS[39]=11.197440              ; PARPRIORUNC[39]=9.3*0.5 # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
+      PARPRIORS[39]=4.088                  ; PARPRIORUNC[39]=0.6052851 # Constant for canopy N dilution model (gN/m2leaf)
+      PARPRIORS[40]=-0.0252                ; PARPRIORUNC[40]=0.00092   # Coefficient relating foliar C to N dilution
       # Other priors
       OTHERPRIORS[1] = 0.54                ; OTHERPRIORUNC[1]=0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       # Yield:GPP Winter Wheat ATEC experiment plus He et al., (2018), doi: 10.3390/rs10030372
       # Values from He et al., Spring Wheat 0.24, Barley 0.42, Duram Wheat 0.22, Alfalfa 0.55, Pea 0.28, Maize 0.44
-      OTHERPRIORS[8] = 0.38                ; OTHERPRIORUNC[8]=0.087 ; OTHERPRIORWEIGHT[8] = noyears 
+      #OTHERPRIORS[8] = 0.38                ; OTHERPRIORUNC[8]=0.087 ; OTHERPRIORWEIGHT[8] = noyears 
   } else if (modelname == "DALEC_1005") {
       PARPRIORS[2] =0.54                   ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
       PARPRIORS[11]=16.9                   ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)

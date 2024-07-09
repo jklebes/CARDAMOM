@@ -140,7 +140,7 @@ module cardamom_io
     else if (DATAin%ID == 15) then
         ! ID = 15 - DALEC.A3.C3.H2.M1.# i.e. the CROP model
         DATAin%nopools = 10
-        DATAin%nopars = 39
+        DATAin%nopars = 40
         DATAin%nofluxes = 42
     else if (DATAin%ID == 16) then
         ! ID = 16 - DALEC.M2.#

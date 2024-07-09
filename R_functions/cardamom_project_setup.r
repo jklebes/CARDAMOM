@@ -12,6 +12,7 @@ cardamom_project_setup <- function (paths,PROJECT) {
   typepath=paste(paths$cardamom_output,"/",PROJECT$type,"/",sep="")
   localpath=paste(paths$cardamom_output,"/",PROJECT$type,"/",PROJECT$name,"/",sep="")
   datapath=paste(localpath,"DATA/",sep="")
+  oestreampath=paste(localpath,"OUTPUT_ERROR_STREAM/",sep="/")  
   resultspath=paste(localpath,"RESULTS/",sep="")
   results_processedpath=paste(localpath,"RESULTS_PROCESSED/",sep="")
   figpath=paste(localpath,"FIGURES/",sep="")
@@ -27,6 +28,7 @@ cardamom_project_setup <- function (paths,PROJECT) {
   if (dir.exists(typepath) == FALSE ){system(paste("mkdir ",typepath,sep=""))}
   if (dir.exists(localpath) == FALSE ){system(paste("mkdir ",localpath,sep=""))}
   if (dir.exists(datapath) == FALSE ){system(paste("mkdir ",datapath,sep=""))}
+  if (dir.exists(oestreampath) == FALSE ){system(paste("mkdir ",oestreampath,sep=""))}
   if (dir.exists(resultspath) == FALSE ){system(paste("mkdir ",resultspath,sep=""))}
   if (dir.exists(results_processedpath) == FALSE ){system(paste("mkdir ",results_processedpath,sep=""))}
   if (dir.exists(figpath) == FALSE ){system(paste("mkdir ",figpath,sep=""))}
@@ -107,6 +109,9 @@ cardamom_project_setup <- function (paths,PROJECT) {
 
   # If so then so something
   if (use_eddie == TRUE) {
+
+      ## Use of remote server (Eddie) has been chosen
+
       use_eddie = TRUE
 
       # Do we already know how long to run for on server?
@@ -123,139 +128,146 @@ cardamom_project_setup <- function (paths,PROJECT) {
       # do we want an email to notify you of eddie works
       email=""#readline("Enter your email address for remote server notification (if you want)")
   } else {
+
+      ## Use of local machine has been selected
+
       use_eddie = FALSE
       chain_runtime = 48
+      if (request_use_local_slurm) {
+          chain_runtime = request_runtime
+      }
   }
 
   # do I compile on eddie?
   if (use_eddie) {
-    # are we using eddie or not
-    eddiepath=paste(paths$cardamom_ecdf,project_type,PROJECT$name,sep="/")
-    ecdf_source=paste(paths$cardamom_ecdf,"LIBRARY/",sep="/")
-    # declare the eddie specific paths
-    edatapath=paste(eddiepath,"DATA/",sep="/")
-    eresultspath=paste(eddiepath,"RESULTS/",sep="/")
-    eoestreampath=paste(eddiepath,"OUTPUT_ERROR_STREAM/",sep="/")
-    eexepath=paste(eddiepath,"EXECUTABLES/",sep="/")
+      # are we using eddie or not
+      eddiepath=paste(paths$cardamom_ecdf,project_type,PROJECT$name,sep="/")
+      ecdf_source=paste(paths$cardamom_ecdf,"LIBRARY/",sep="/")
+      # declare the eddie specific paths
+      edatapath=paste(eddiepath,"DATA/",sep="/")
+      eresultspath=paste(eddiepath,"RESULTS/",sep="/")
+      eoestreampath=paste(eddiepath,"OUTPUT_ERROR_STREAM/",sep="/")
+      eexepath=paste(eddiepath,"EXECUTABLES/",sep="/")
 
-    # check current host address
-    #home_computer=Sys.info()["nodename"]
+      # check current host address
+      #home_computer=Sys.info()["nodename"]
 
-    # generate cardamom submit scripts
-    #	  generate_eddie_submit_script(paths)
+      # generate cardamom submit scripts
+      #	  generate_eddie_submit_script(paths)
 
-    # create directories on eddie and copy some important shell scripts
-    commands=c(paste("mkdir ",paths$cardamom_ecdf,sep="")
-              ,paste("mkdir ",ecdf_source,sep="")
-              ,paste("mkdir ",paths$cardamom_ecdf,"/",project_type,sep="")
-              ,paste("mkdir ",paths$cardamom_ecdf,"/",project_type,"/",PROJECT$name,sep="")
-              ,paste("mkdir ",edatapath,sep="")
-              ,paste("mkdir ",eresultspath,sep="")
-              ,paste("mkdir ",eoestreampath,sep="")
-              ,paste("mkdir ",eexepath,sep="")
-              ,paste("scp ",username,"@",home_computer,":",paths$cardamom,"/R_functions/CARDAMOM_ECDF_SUBMIT_BUNDLES.sh ",eexepath,sep="")
-              ,paste("chmod +x ",eexepath,"/CARDAMOM_ECDF_SUBMIT_BUNDLES.sh",sep=""))
+      # create directories on eddie and copy some important shell scripts
+      commands=c(paste("mkdir ",paths$cardamom_ecdf,sep="")
+                ,paste("mkdir ",ecdf_source,sep="")
+                ,paste("mkdir ",paths$cardamom_ecdf,"/",project_type,sep="")
+                ,paste("mkdir ",paths$cardamom_ecdf,"/",project_type,"/",PROJECT$name,sep="")
+                ,paste("mkdir ",edatapath,sep="")
+                ,paste("mkdir ",eresultspath,sep="")
+                ,paste("mkdir ",eoestreampath,sep="")
+                ,paste("mkdir ",eexepath,sep="")
+                ,paste("scp ",username,"@",home_computer,":",paths$cardamom,"/R_functions/CARDAMOM_ECDF_SUBMIT_BUNDLES.sh ",eexepath,sep="")
+                ,paste("chmod +x ",eexepath,"/CARDAMOM_ECDF_SUBMIT_BUNDLES.sh",sep=""))
 
-    # Have we been given this information already?
-    if (exists("request_compile_server")) {
-        comline = request_compile_server
-    } else {
-        comline = readline("Copy and compile any source code updates to Eddie (TRUE/FALSE)?")
-    }
-    if (comline) {
-        print("Backup source code currently on eddie first")
-        print("Then copying source code to eddie")
-        print("Finally compile source code on eddie")
-        if (project_src == "C") {
-            commands = append(commands,c(paste("mv ",ecdf_source,"CARDAMOM_C ",ecdf_source,"CARDAMOM_C_BKP",sep="")
-                             ,paste("scp -r ",username,"@",home_computer,":",paths$cardamom,"LIBRARY/CARDAMOM_C ",ecdf_source,sep="")
-                             ,paste("gcc ",ecdf_source,"CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/DALEC_CDEA_TEMPLATE.c -o ",ecdf_source,
-                                    "CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/a.out -lm",sep="")
-                             ,paste("cp ",ecdf_source,"CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/a.out ",eexepath,"/",exe,sep="")))
-        } else if (project_src == "Fortran") {
-            # compiler options
-            compiler_options=""#"-xhost -ipo -no-ftz"
-            if (timing) {compiler_options=paste(compiler_options," -pg",sep="")}
-            if (debug) {compiler_options=paste(compiler_options," -debug -backtrace",sep="")}
-            commands=append(commands,c(paste("rm -r ",ecdf_source,"CARDAMOM_F_BKP",sep="")
-                       ,paste("mv ",ecdf_source,"CARDAMOM_F ",ecdf_source,"CARDAMOM_F_BKP",sep="")
-                       ,paste("scp -r ",username,"@",home_computer,":",paths$cardamom,"LIBRARY/CARDAMOM_F ",ecdf_source,sep="")
-                       ,paste("cd ",ecdf_source,"CARDAMOM_F/executable",sep="")
-                       ,paste("rm cardamom.exe") # depends on working directory "executable"
-                       ,paste("rm *.mod")        # depends on working directory "executable"
-                       ,paste(compiler," -O2 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
-                              " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_StressTests.f90",
-                              " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
-                              " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep="")
-                       ,paste("cp ",ecdf_source,"CARDAMOM_F/executable/cardamom.exe ",eexepath,"/",exe,sep="")))
-            # If a crop model the copy the crop development files into place too
-            if (modelname == "DALEC.A3.C3.H2.M1.#" | modelname == "DALEC.C3.M1.#") {
-                commands=append(commands,paste("cp ",ecdf_source,"CARDAMOM_F/model/",modelname,"/src/winter_wheat_development.csv ",eexepath,"/",sep=""))
-                system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/",modelname,"/src/winter_wheat_development.csv ",exepath,"/",sep=""))
-            } #
+      # Have we been given this information already?
+      if (exists("request_compile_server")) {
+          comline = request_compile_server
+      } else {
+          comline = readline("Copy and compile any source code updates to Eddie (TRUE/FALSE)?")
+      }
+      if (comline) {
+          print("Backup source code currently on eddie first")
+          print("Then copying source code to eddie")
+          print("Finally compile source code on eddie")
+          if (project_src == "C") {
+              commands = append(commands,c(paste("mv ",ecdf_source,"CARDAMOM_C ",ecdf_source,"CARDAMOM_C_BKP",sep="")
+                               ,paste("scp -r ",username,"@",home_computer,":",paths$cardamom,"LIBRARY/CARDAMOM_C ",ecdf_source,sep="")
+                               ,paste("gcc ",ecdf_source,"CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/DALEC_CDEA_TEMPLATE.c -o ",ecdf_source,
+                                      "CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/a.out -lm",sep="")
+                               ,paste("cp ",ecdf_source,"CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/a.out ",eexepath,"/",exe,sep="")))
+          } else if (project_src == "Fortran") {
+              # compiler options
+              compiler_options=""#"-xhost -ipo -no-ftz"
+              if (timing) {compiler_options=paste(compiler_options," -pg",sep="")}
+              if (debug) {compiler_options=paste(compiler_options," -debug -backtrace",sep="")}
+              commands=append(commands,c(paste("rm -r ",ecdf_source,"CARDAMOM_F_BKP",sep="")
+                                        ,paste("mv ",ecdf_source,"CARDAMOM_F ",ecdf_source,"CARDAMOM_F_BKP",sep="")
+                                        ,paste("scp -r ",username,"@",home_computer,":",paths$cardamom,"LIBRARY/CARDAMOM_F ",ecdf_source,sep="")
+                                        ,paste("cd ",ecdf_source,"CARDAMOM_F/executable",sep="")
+                                        ,paste("rm cardamom.exe") # depends on working directory "executable"
+                                        ,paste("rm *.mod")        # depends on working directory "executable"
+                                        ,paste(compiler," -O2 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
+                                               " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_StressTests.f90",
+                                               " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
+                                               " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep="")
+                                        ,paste("cp ",ecdf_source,"CARDAMOM_F/executable/cardamom.exe ",eexepath,"/",exe,sep="")))
+              # If a crop model the copy the crop development files into place too
+              if (modelname == "DALEC.A3.C3.H2.M1.#" | modelname == "DALEC.C3.M1.#") {
+                  commands=append(commands,paste("cp ",ecdf_source,"CARDAMOM_F/model/",modelname,"/src/winter_wheat_development.csv ",eexepath,"/",sep=""))
+                  system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/",modelname,"/src/winter_wheat_development.csv ",exepath,"/",sep=""))
+              } #
 
-        } else {
-          stop('Source code language has not been specified')
+          } else {
+            stop('Source code language has not been specified')
 
-        } # Language choice
+          } # Language choice
 
-    } # Compile on remote server
+      } # Compile on remote server
 
-    # issue commands to eddie
-    #print(commands)
-    ecdf_execute(commands,PROJECT$paths$cardamom_cluster)
+      # issue commands to eddie
+      #print(commands)
+      ecdf_execute(commands,PROJECT$paths$cardamom_cluster)
 
-  }
+  } # on eddie
+
   # then compile locally
   comline="y"
   if (comline == "y") {
-    print("Finally compile source code locally")
-    if (project_src == "C") {
-        system(paste("gcc ",paths$cardamom,"LIBRARY/CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/DALEC_CDEA_TEMPLATE.c -o ",
-                     paths$cardamom,"LIBRARY/CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/a.out -lm",sep=""))
-        system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/a.out ",exepath,"/",exe,sep=""))
-    } else if (project_src == "Fortran") {
+      print("Finally compile source code locally")
+      if (project_src == "C") {
+          system(paste("gcc ",paths$cardamom,"LIBRARY/CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/DALEC_CDEA_TEMPLATE.c -o ",
+                       paths$cardamom,"LIBRARY/CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/a.out -lm",sep=""))
+          system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/a.out ",exepath,"/",exe,sep=""))
+      } else if (project_src == "Fortran") {
 
-        # store current working directory so that we can leave it briefly but return later
-        cwd=getwd()
-        # Move to the directory containing the source ode
-        setwd(paste(paths$cardamom,"LIBRARY/CARDAMOM_F/executable/",sep=""))
-        # Remove the evidence of the previuos compilation
-        system("rm *.mod") # depends on being in executable directory
+          # store current working directory so that we can leave it briefly but return later
+          cwd=getwd()
+          # Move to the directory containing the source ode
+          setwd(paste(paths$cardamom,"LIBRARY/CARDAMOM_F/executable/",sep=""))
+          # Remove the evidence of the previuos compilation
+          system("rm *.mod") # depends on being in executable directory
 
-        if (request_compile_server == FALSE | request_compile_local == TRUE) {
-            # compiler options
-            compiler_options=""#"-xhost -ipo -no-ftz"
-            if (timing) {compiler_options=paste(compiler_options," -pg",sep="")}
-            if (debug) {compiler_options=paste(compiler_options," -debug -traceback",sep="")}
-            # if executables are present either in source library or in project folder remove them
-            #if (file.exists(paste(paths$cardamom,"LIBRARY/CARDAMOM_F/executable/cardamom.exe",sep=""))) { system(paste("rm cardamom.exe")) }
-            if (file.exists(paste(exepath,"/",exe,sep=""))) {system(paste("rm ",exepath,"/",exe,sep=""))}
-            # issue compile commands
-            system(paste(compiler," -O2 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
-                         " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_StressTests.f90",
-                         " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
-                         " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep=""))
-#            print(paste(compiler," -O2 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
-#                         " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_StressTests.f90",
-#                         " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
-#                         " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep=""))
-            system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/executable/cardamom.exe ",exepath,"/",exe,sep=""))
-        } # compile executable on local machine too?
+          if (request_compile_server == FALSE | request_compile_local == TRUE) {
+              # compiler options
+              compiler_options=""#"-xhost -ipo -no-ftz"
+              if (timing) {compiler_options=paste(compiler_options," -pg",sep="")}
+              if (debug) {compiler_options=paste(compiler_options," -debug -traceback",sep="")}
+              # if executables are present either in source library or in project folder remove them
+              #if (file.exists(paste(paths$cardamom,"LIBRARY/CARDAMOM_F/executable/cardamom.exe",sep=""))) { system(paste("rm cardamom.exe")) }
+              if (file.exists(paste(exepath,"/",exe,sep=""))) {system(paste("rm ",exepath,"/",exe,sep=""))}
+              # issue compile commands
+              system(paste(compiler," -O2 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
+                           " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_StressTests.f90",
+                           " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
+                           " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep=""))
+#              print(paste(compiler," -O2 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
+#                           " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_StressTests.f90",
+#                           " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
+#                           " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep=""))
+              system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/executable/cardamom.exe ",exepath,"/",exe,sep=""))
+          } # compile executable on local machine too?
 
-        # Generate the shared library needed later by R
-        #print(paste("gfortran -fcheck=all -O2 -shared ../model/",modelname,"/src/",modelname,".f90 ",
-        #             "../model/",modelname,"/src/",modelname,"_R_interface.f90 ","-o dalec.so -fPIC",sep=""))
-        system(paste("gfortran -fcheck=all -O2 -shared ../model/",modelname,"/src/",modelname,".f90 ",
-                     "../model/",modelname,"/src/",modelname,"_R_interface.f90 ","-o dalec.so -fPIC",sep=""))
-        system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/executable/dalec.so ",exepath,"/dalec.so",sep=""))
-        # Copy crop development file into position
-        if (modelname == "DALEC.A3.C3.H2.M1.#" | modelname == "DALEC.C3.M1.#") {
-             system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/",modelname,"/src/winter_wheat_development.csv ",exepath,"/",sep=""))
-        } #
+          # Generate the shared library needed later by R
+          #print(paste("gfortran -fcheck=all -O2 -shared ../model/",modelname,"/src/",modelname,".f90 ",
+          #             "../model/",modelname,"/src/",modelname,"_R_interface.f90 ","-o dalec.so -fPIC",sep=""))
+          system(paste("gfortran -fcheck=all -O2 -shared ../model/",modelname,"/src/",modelname,".f90 ",
+                       "../model/",modelname,"/src/",modelname,"_R_interface.f90 ","-o dalec.so -fPIC",sep=""))
+          system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/executable/dalec.so ",exepath,"/dalec.so",sep=""))
+          # Copy crop development file into position
+          if (modelname == "DALEC.A3.C3.H2.M1.#" | modelname == "DALEC.C3.M1.#") {
+               system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/",modelname,"/src/winter_wheat_development.csv ",exepath,"/",sep=""))
+          } #
 
-        # return to original working directory
-        setwd(cwd)
+          # return to original working directory
+          setwd(cwd)
 
     } else {
 
@@ -267,8 +279,10 @@ cardamom_project_setup <- function (paths,PROJECT) {
 
   # prepare output
   PROJECT$ecdf=use_eddie
+  PROJECT$request_use_local_slurm=request_use_local_slurm
   PROJECT$localpath=localpath
   PROJECT$datapath=datapath
+  PROJECT$oestreampath=oestreampath
   PROJECT$resultspath=resultspath
   PROJECT$results_processedpath=results_processedpath
   PROJECT$figpath=figpath

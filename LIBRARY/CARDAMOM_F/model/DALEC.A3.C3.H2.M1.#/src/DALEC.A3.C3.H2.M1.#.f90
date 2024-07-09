@@ -733,9 +733,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     call calculate_radiation_commons(lat)
 
     ! load ACM-GPP-ET parameters
-    NUE = pars(39)           ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
+    NUE = pars(11)       ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
                          ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
-    avN = 10d0**pars(11) ! foliar N
+    avN = pars(39) ! foliar N, initial value
     ceff = avN*NUE
 
     ! plus ones being calibrated
@@ -916,6 +916,21 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       ! states needed for module variables
       lai_out(n) = POOLS(n,2)/LCA
       lai = lai_out(n) ! leaf area index (m2/m2)
+
+      ! DS < 0.15 corresponds to the growth stage at beginning of the UK recommended period of      
+      ! N fertiliser application for winter wheat (Zodocks growth stage 20) - the early tillering stage (typically mid-march to April)
+      if (DS < 0.469d0) then                          
+          avN = pars(39)                     
+      else if (DS >= 0.469d0 .and. DS <= 1.293d0) then
+          ! NOTE: The slope_n parameter can be included in the MDF optimisation. 
+          !       The value for this parameter has also been observed to be around -0.02.
+          avN = max(0.1d0,(pars(40)*POOLS(n,2)) + pars(39))
+      else
+          ! Set LNA to 0.1 after anthesis (Zodocks growth stage 75)  
+          avN = 0.1d0                              
+      end if
+      ! Update to canopy efficiency (gC/m2leaf/day)
+      ceff = avN * NUE
 
       ! Calculate solar declination for the current time step
       declination = calculate_declination(doy)

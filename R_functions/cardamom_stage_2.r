@@ -14,8 +14,12 @@ cardamom_stage_2 <-function(PROJECT) {
           # submit files to eddie
           submit_processes_to_cluster(PROJECT)
       } else {
-          # submit to local machine
-          submit_processes_to_local_machine(PROJECT)
+          if (PROJECT$request_use_local_slurm) {
+              submit_processes_to_local_slurm_machine(PROJECT)
+          } else {
+              # submit to local machine
+              submit_processes_to_local_machine(PROJECT)
+          }
       }
       # report to the user
       return(paste("CARDAMOM Report: 2 completed", sep=""))

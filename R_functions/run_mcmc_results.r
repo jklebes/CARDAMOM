@@ -847,6 +847,9 @@ define_grid_output<-cmpfun(define_grid_output)
 
 run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
 
+  # Update the user 
+  if (use_parallel == FALSE) {print(paste("Site = ",PROJECT_in$sites[n]," ",n," of ",PROJECT_in$nosites," ",Sys.time(),sep=""))}
+
   # Define the output file names
   outfile_site         = paste(PROJECT$results_processedpath,PROJECT$sites[n],".RData",sep="")
   outfile_parameters   = paste(PROJECT$results_processedpath,PROJECT$sites[n],"_parameters.RData",sep="")

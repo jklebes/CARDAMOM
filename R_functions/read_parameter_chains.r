@@ -143,7 +143,6 @@ read_parameter_chains<- function(PROJECT_in,n) {
   pfile=paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_",c(1:PROJECT_in$nochains),"_PARS",sep="")
   # Find and remove any files which have no data in them
   is_it = file.size(pfile) ; is_it = which(is_it > 0) ; pfile = pfile[is_it]
-
   # just in case
   if (length(pfile) < 1) {return(-9999)}
 
@@ -159,7 +158,7 @@ read_parameter_chains<- function(PROJECT_in,n) {
   # which site are we on now
   if (use_parallel == FALSE) {
       print("Beginning parameter extraction and chain merge")
-      print(paste("Site = ",PROJECT_in$sites[n]," ",n," of ",PROJECT_in$nosites," ",Sys.time(),sep=""))
+      #print(paste("Site = ",PROJECT_in$sites[n]," ",n," of ",PROJECT_in$nosites," ",Sys.time(),sep=""))
   }
 
   # create error flag, initial value zero

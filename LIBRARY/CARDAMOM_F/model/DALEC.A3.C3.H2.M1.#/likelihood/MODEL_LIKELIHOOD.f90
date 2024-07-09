@@ -566,12 +566,12 @@ module model_likelihood_module
         EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
     endif
 
-    ! CN ratio of leaf should also be between 95CI of trait database values
-    ! Kattge et al (2011)
-    tmp = (pars(17)/(10d0**pars(11)))
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 43.76895d0 .or. tmp < 10.82105d0)) then
-       EDC1=0 ; EDCD%PASSFAIL(9) = 0
-    endif
+!    ! CN ratio of leaf should also be between 95CI of trait database values
+!    ! Kattge et al (2011)
+!    tmp = (pars(17)/(10d0**pars(11)))
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 43.76895d0 .or. tmp < 10.82105d0)) then
+!       EDC1=0 ; EDCD%PASSFAIL(9) = 0
+!    endif
 
     ! could and probably should add some more
     
@@ -671,45 +671,45 @@ module model_likelihood_module
     !  work out how many completed years there are in the system
     no_years=int(nint(sum(deltat)/365.25d0))
 
-    ! only do this for the Csom pool
-    do n = 1, 1 !nopools
-       if (EDC2 == 1 .or. DIAG == 1) then
-          decay_coef=expdecay2(M_POOLS(1:(nodays+1),6),deltat,nodays+1)
-          ! next assess the decay coefficient for meetings the EDC criterion
-          if (abs(-log(2d0)/decay_coef) < (365.25d0*dble(no_years)) .and. decay_coef < 0d0 ) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
-          end if ! EDC conditions
-       end if ! EDC .or. DIAG condition
-    end do ! pools loop
+!    ! only do this for the Csom pool
+!    do n = 1, 1 !nopools
+!       if (EDC2 == 1 .or. DIAG == 1) then
+!          decay_coef=expdecay2(M_POOLS(1:(nodays+1),6),deltat,nodays+1)
+!          ! next assess the decay coefficient for meetings the EDC criterion
+!          if (abs(-log(2d0)/decay_coef) < (365.25d0*dble(no_years)) .and. decay_coef < 0d0 ) then
+!             EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
+!          end if ! EDC conditions
+!       end if ! EDC .or. DIAG condition
+!    end do ! pools loop
 
     ! EDC 14
     ! assesses the exponential decay/growth of the Clit pool
 
-    ! only do this for the Clit pool
-    do n = 1, 1 !nopools
-       if (EDC2 == 1 .or. DIAG == 1) then
-          decay_coef=expdecay2(M_POOLS(1:(nodays+1),5),deltat,nodays+1)
-          ! next assess the decay coefficient for meetings the EDC criterion
-          if (abs(-log(2d0)/decay_coef) < (365.25d0*dble(no_years)) .and. decay_coef < 0d0 ) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
-          end if ! EDC conditions
-       end if ! EDC .or. DIAG condition
-    end do ! pools loop
+!    ! only do this for the Clit pool
+!    do n = 1, 1 !nopools
+!       if (EDC2 == 1 .or. DIAG == 1) then
+!          decay_coef=expdecay2(M_POOLS(1:(nodays+1),5),deltat,nodays+1)
+!          ! next assess the decay coefficient for meetings the EDC criterion
+!          if (abs(-log(2d0)/decay_coef) < (365.25d0*dble(no_years)) .and. decay_coef < 0d0 ) then
+!             EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
+!          end if ! EDC conditions
+!       end if ! EDC .or. DIAG condition
+!    end do ! pools loop
 
     ! we know that the crop model should produce some yield - therefore we
     ! reject parameter sets which generate no yield ever!
-    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(1:nodays,21)) < (1d0*dble(no_years)) ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
-    endif
+    !if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(1:nodays,21)) < (1d0*dble(no_years)) ) then
+    !    EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
+    !endif
     !! Total hack to enforce a massive yield and find out what the parameters do
     !if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,21)) < 300d0 ) then
     !  EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
     !endif
 
     ! We should assume all crops get somewhere close to maturity (2.0)
-    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(DS_time) < 1.9) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
-    endif
+    !if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(DS_time) < 1.9) then
+    !    EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
+    !endif
 
     !
     ! EDCs done, below are additional fault detection conditions

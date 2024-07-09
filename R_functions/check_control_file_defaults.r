@@ -80,13 +80,15 @@ check_control_file_defaults<-function() {
   if (exists("request_nos_chains") == FALSE)            {request_nos_chains <<- 3}
   if (exists("request_nos_samples") == FALSE)           {request_nos_samples <<- 10e6}
   if (exists("request_nos_subsamples") == FALSE)        {request_nos_subsamples <<- 1e3}
-  if (exists("request_use_server") == FALSE)            {request_use_server <<- FALSE}
-  if (exists("request_runtime") == FALSE)               {request_runtime <<- 48}
-  if (exists("request_compile_server") == FALSE)        {request_compile_server <<- FALSE}
-  if (exists("request_compile_local") == FALSE)         {request_compile_local <<- TRUE}
   if (exists("request_use_EDCs") == FALSE)              {request_use_EDCs <<- TRUE}
   if (exists("request_extended_mcmc") == FALSE)         {request_extended_mcmc <<- 10e6}
   if (exists("request_cost_function_scaling") == FALSE) {request_cost_function_scaling <<- 0}
+  # Computer options
+  if (exists("request_use_server") == FALSE)            {request_use_server <<- FALSE}
+  if (exists("request_use_local_slurm") == FALSE)       {request_use_local_slurm <<- FALSE} 
+  if (exists("request_runtime") == FALSE)               {request_runtime <<- 48}
+  if (exists("request_compile_server") == FALSE)        {request_compile_server <<- FALSE}
+  if (exists("request_compile_local") == FALSE)         {request_compile_local <<- TRUE}
 
   ## Check for obvious combination errors
   # Forcings datasets

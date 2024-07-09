@@ -7,7 +7,7 @@
 # ecdf-systems-team@lists.ed.ac.uk     #
 # Specific modifications made by       #
 # A. A. Bloom (UoE, now at JPL)        #
-# T. L. Smallman (UoE)
+# T. L. Smallman (UoE)                 #
 #                                      #
 ########################################
 
@@ -23,13 +23,9 @@
 
 module load intel
 
-#THIS SCRIPT MUST BE ACCOMPANIED BY CARDAMOM_ECDF_EXECUTABLES_LIST.txt IN THE SAME DIRECTORY
+# THIS SCRIPT MUST BE ACCOMPANIED BY CARDAMOM_ECDF_EXECUTABLES_LIST.txt IN THE SAME DIRECTORY
 # arguments are start and end lines!
 
-#for line_number in $(seq $2 1 $3)
-#do
-#task=$( cat $1CARDAMOM_ECDF_EXECUTABLES_LIST.txt | sed ${line_number}\!d )
 task=$( cat $1CARDAMOM_ECDF_EXECUTABLES_LIST.txt | sed $SGE_TASK_ID\!d )
 command ${task}
 
-#done

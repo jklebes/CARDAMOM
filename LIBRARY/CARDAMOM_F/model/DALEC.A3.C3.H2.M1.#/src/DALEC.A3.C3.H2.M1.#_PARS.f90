@@ -83,8 +83,11 @@ module MODEL_PARAMETERS
     PI%parmax(10) = 9.126169d-05   !   30 years at 0oC !0.0001368926d0 !   20 years at 0oC
 
     ! log10 avg foliar N (gN.m-2)
-    PI%parmin(11) = -0.0001d0 !-0.2218487d0 
-    PI%parmax(11) = 0.6382028d0
+    !PI%parmin(11) = -0.0001d0 !-0.2218487d0 
+    !PI%parmax(11) = 0.6382028d0
+    ! Photosynthetic nitrogen use efficiency (gC/gN/m2/day)
+    PI%parmin(11) = 1d0
+    PI%parmax(11) = 40d0
 
     ! sow day
     PI%parmin(12) = 365.25d0 !100d0 
@@ -110,7 +113,7 @@ module MODEL_PARAMETERS
     PI%parmax(16) = 365.25d0*4d0
 
     ! LMA
-    PI%parmin(17) = 10d0 
+    PI%parmin(17) = 20d0 
     PI%parmax(17) = 100d0
   
     !
@@ -159,9 +162,12 @@ module MODEL_PARAMETERS
     PI%parmin(37) = 0.5d0
     PI%parmax(37) = 5d0 !20.0
 
-    ! Photosynthetic nitrogen use efficiency (gC/gN/m2/day)
-    PI%parmin(39) = 1d0
-    PI%parmax(39) = 40d0
+    ! Intercept value for canopy N (gN/m2) dilution model
+    PI%parmin(39) = 2.5d0
+    PI%parmax(39) = 6.0d0 ! 5.5d0
+    ! Coefficient relating crop development stage to N dilution
+    PI%parmin(40) = -0.04d0
+    PI%parmax(40) = -0.005d0
 
 !    ! Canopy NIR reflectance
 !    PI%parmin(40) = 0.05d0
