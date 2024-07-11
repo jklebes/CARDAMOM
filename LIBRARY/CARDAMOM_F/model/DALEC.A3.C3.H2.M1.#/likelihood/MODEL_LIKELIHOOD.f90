@@ -707,9 +707,9 @@ module model_likelihood_module
     !endif
 
     ! We should assume all crops get somewhere close to maturity (2.0)
-    !if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(DS_time) < 1.9) then
-    !    EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
-    !endif
+    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(DS_time) < 1.9) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
+    endif
 
     !
     ! EDCs done, below are additional fault detection conditions

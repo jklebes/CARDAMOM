@@ -89,7 +89,7 @@ submit_processes_to_local_slurm_machine<-function (PROJECT_in) {
     write(    c("#SBATCH --ntasks=1"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
     write(    c("#SBATCH --cpus-per-task=1"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
     write(    c("#SBATCH --mem=1G "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
-    write(    c(paste("#SBATCH --output=",PROJECT_in$oestreampath,"/slurm-%A_%a.out ",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+    write(    c(paste('#SBATCH --output="',PROJECT_in$oestreampath,'/slurm-%A_%a.out"',sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
     write(    c(paste("#SBATCH --time=",as.numeric(PROJECT_in$chain_runtime),":00:00",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
     write(    c(paste("#SBATCH --array=1-",PROJECT_in$nosites*PROJECT_in$nochains,sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
     write(    c(" "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)

@@ -212,6 +212,7 @@ module CARBON_MODEL_MOD
                               canopy_lwrad_Wm2, & ! canopy absorbed longwave radiation (W.m-2)
                                 soil_lwrad_Wm2, & ! soil absorbed longwave radiation (W.m-2)
                                  sky_lwrad_Wm2, & ! sky absorbed longwave radiation (W.m-2)
+                 radiative_thermal_conductance, & ! Thermal 'conductance' due to radiance (m.s-1)
                           stomatal_conductance, & ! Canopy scale stomatal conductance at canopy top (mmolH2O.m-2.s-1)
                          potential_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
                            minimum_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
@@ -2022,8 +2023,51 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     canopy_lwrad_Wm2 = (lwrad*Vc*dT) - (Vc*dT*2d0*longwave_release_canopy) + (Vc*dT*longwave_release_soil)
     ! Diffuse longwave absorbed by the soil
     soil_lwrad_Wm2 = (lwrad*(1d0-(Vc*dT))) + (Vc*dT*longwave_release_canopy) - longwave_release_soil
+    ! Determine the radiative heat conductance term (m/s)
+    radiative_thermal_conductance = ((4d0 * emiss_boltz * canopy_temperature**3) / (air_density_kg * cpair)) * dT * Vc
 
   end subroutine calculate_longwave_isothermal
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine calculate_steady_state_canopy_temperature(diffT)
+
+    implicit none
+
+    ! Estimate the canopy scale temperature following a modified version of 
+    ! Jones Plants and Microclimate, p225, 3rd edition, 2024, equ. 9
+
+    ! arguments
+    double precision, intent(out) :: diffT
+
+    ! local variables
+    double precision :: warming_term, cooling_term, &
+                        total_thermal_resistance, &
+                        total_water_resistance, &
+                        isothermal_net
+
+    ! Determine the combined (aerodynamic + stomatal) resistance ot water tranfer at canopy scale
+    ! Note; 1) Change units of stomatal conductance (mmolH2O.m-2.s-1 -> m.s-1), assumed for sea surface 
+    ! pressure only. 2) Scale aerodynamic conductance to canopy scale
+    total_water_resistance = ((aerodynamic_conductance * leaf_canopy_wind_scaling) + &
+                              (stomatal_conductance / convert_ms1_mmol_1)) ** (-1d0)
+    ! Determine the combined (radiative + sensible) resistance to heat transfer at canopy scale
+    ! Note the *0.93 converts the aerodynamic condictance from water vapour to heat
+    total_thermal_resistance = (radiative_thermal_conductance + (aerodynamic_conductance * 0.93))**(-1d0)
+    ! Calculate multi-use product of 
+    isothermal_net = ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2)
+
+    ! Determine the warming term
+    warming_term = (total_thermal_resistance * total_water_resistance * psych * isothermal_net) &
+                 / (air_density_kg * cpair * ((psych*total_water_resistance) + (slope * total_thermal_resistance)))
+    ! Determine the cooling term
+    cooling_term = (total_thermal_resistance * vpd_kPa) &
+                 / ((psych*total_water_resistance) + (slope * total_thermal_resistance))
+
+    ! Determine Tleaf-Tair
+    diffT = warming_term - cooling_term
+
+  end subroutine calculate_steady_state_canopy_temperature
   !
   !------------------------------------------------------------------
   !

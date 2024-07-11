@@ -332,9 +332,9 @@ module CARBON_MODEL_MOD
                                canopy_lwrad_Wm2, & ! canopy absorbed longwave radiation (W.m-2)
                                  soil_lwrad_Wm2, & ! soil absorbed longwave radiation (W.m-2)
                                   sky_lwrad_Wm2, & ! sky absorbed longwave radiation (W.m-2)
-                          stomatal_conductance, & ! stomatal conductance (mmolH2O.m-2ground.s-1)
-                         potential_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
-                           minimum_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
+                           stomatal_conductance, & ! stomatal conductance (mmolH2O.m-2ground.s-1)
+                          potential_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
+                            minimum_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
                         aerodynamic_conductance, & ! bulk surface layer conductance (m.s-1)
                                soil_conductance, & ! soil surface conductance (m.s-1)
                               convert_ms1_mol_1, & ! Conversion ratio for m.s-1 -> mol.m-2.s-1
@@ -921,13 +921,16 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       ! N fertiliser application for winter wheat (Zodocks growth stage 20) - the early tillering stage (typically mid-march to April)
       if (DS < 0.469d0) then                          
           avN = pars(39)                     
-      else if (DS >= 0.469d0 .and. DS <= 1.293d0) then
+      else! if (DS >= 0.469d0 .and. DS <= 1.293d0) then
           ! NOTE: The slope_n parameter can be included in the MDF optimisation. 
           !       The value for this parameter has also been observed to be around -0.02.
-          avN = max(0.1d0,(pars(40)*POOLS(n,2)) + pars(39))
-      else
-          ! Set LNA to 0.1 after anthesis (Zodocks growth stage 75)  
-          avN = 0.1d0                              
+          ! NOTE: Modified to only allow the dilution equation to dilute not enrich N content.
+          !       This is to attempt to get around the N-dilultion model increasing N content 
+          !       during senescence which is unrealistic. 
+          avN = max(0.1d0,min(avN,(pars(40)*(POOLS(n,2)+POOLS(n,10))) + pars(39)))
+!      else
+!          ! Set LNA to 0.1 after anthesis (Zodocks growth stage 75)  
+!          avN = 0.1d0                              
       end if
       ! Update to canopy efficiency (gC/m2leaf/day)
       ceff = avN * NUE
@@ -1033,7 +1036,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       ! Store the canopy level stomatal conductance (mmolH2O/m2ground/s)
       gs_total_canopy(n) = stomatal_conductance
 
-      ! Note that soil mass balance will be calculated after phenology
+      
       ! adjustments
 
       ! Reset output variable
