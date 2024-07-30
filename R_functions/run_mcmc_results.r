@@ -93,6 +93,8 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
           # Generic dump of the whole driver$met and drivers$obs arrays
           grid_output$met_array_averages = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(met_array_names)))
           grid_output$obs_array_averages = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(obs_array_names)))
+          grid_output$met_array_annual_averages = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_years,length(met_array_names)))
+          grid_output$obs_array_annual_averages = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_years,length(obs_array_names)))
 
           # Net primary production allocation fractions
           if (any(check_list == "NPP_foliage_fraction") == TRUE) {grid_output$NPP_foliage_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
@@ -802,6 +804,30 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
           # If the combined correlation between wood MTT and wood allocation has been calculated
           if (any(check_list == "MTT_wood_years_to_NPP_wood_gCm2day_correlation") == TRUE) {
               grid_output$MTT_wood_years_to_NPP_wood_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$MTT_wood_years_to_NPP_wood_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$MTT_wood_years_to_NPP_wood_fraction_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              # ...against key other observables
+              grid_output$NPP_wood_gCm2day_to_GPP_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$NPP_wood_gCm2day_to_NEE_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$NPP_wood_gCm2day_to_Rauto_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$NPP_wood_gCm2day_to_Rhet_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$NPP_wood_gCm2day_to_wood_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$NPP_wood_gCm2day_to_som_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$NPP_wood_gCm2day_to_lai_m2m2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$NPP_wood_gCm2day_to_GPP_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$NPP_wood_gCm2day_to_NEE_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$NPP_wood_gCm2day_to_Rauto_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$NPP_wood_gCm2day_to_Rhet_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$NPP_wood_gCm2day_to_wood_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$NPP_wood_gCm2day_to_som_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$NPP_wood_gCm2day_to_lai_m2m2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$MTT_wood_years_to_GPP_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$MTT_wood_years_to_NEE_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$MTT_wood_years_to_Rauto_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$MTT_wood_years_to_Rhet_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$MTT_wood_years_to_wood_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$MTT_wood_years_to_som_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$MTT_wood_years_to_lai_m2m2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
           }
           # Quantify the mean absolute magnitude of correlations between parameters
           grid_output$absolute_mean_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
@@ -848,7 +874,7 @@ define_grid_output<-cmpfun(define_grid_output)
 run_each_site<-function(n,PROJECT,stage,repair,grid_override) {
 
   # Update the user 
-  if (use_parallel == FALSE) {print(paste("Site = ",PROJECT_in$sites[n]," ",n," of ",PROJECT_in$nosites," ",Sys.time(),sep=""))}
+  if (use_parallel == FALSE) {print(paste("Site = ",PROJECT$sites[n]," ",n," of ",PROJECT$nosites," ",Sys.time(),sep=""))}
 
   # Define the output file names
   outfile_site         = paste(PROJECT$results_processedpath,PROJECT$sites[n],".RData",sep="")
@@ -1014,7 +1040,7 @@ run_mcmc_results <- function (PROJECT,stage,repair,grid_override) {
            if (file.exists(outfile_stocks[n]) == FALSE) {
                keep_list=append(keep_list,n)
            } else {
-               existing_list = append(existing_list,n) ; existing_files[n] = outfile_stocks
+               existing_list = append(existing_list,n) ; existing_files[n] = outfile_stocks[n]
            }
       }
       # filter out the sites we already have then

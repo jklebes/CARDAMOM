@@ -91,26 +91,22 @@ module MODEL_PARAMETERS
 
     ! sow day
     PI%parmin(12) = 365.25d0 !100d0 
-    PI%parmax(12) = 4d0*365.25d0
-
-    ! Respiratory cost of labile transfer (per gC.m-2 labile)
-    ! Nominal assumption here is 21 %, i.e. this is otherwise 
-    ! referred to as the growth respiration
-    PI%parmin(13) = 0.18d0 
-    PI%parmax(13) = 0.25d0
+    PI%parmax(12) = 2d0*365.25d0
 
     ! phenological heat units required for emergence
-    PI%parmin(14) = 100d0 
-    PI%parmax(14) = 150d0
+    PI%parmin(13) = 100d0 
+    PI%parmax(13) = 150d0
 
-    ! harvest day
-    PI%parmin(15) = 365.25d0     !15d0 
-    PI%parmax(15) = 4d0*365.25d0 !365d0
+    ! Growing season length, i.e. harvest date is sowing + this value
+    PI%parmin(14) = 90d0
+    PI%parmax(14) = 365d0
 
-    ! plough day
-    ! NOT CURRENTLY IN USE
-    PI%parmin(16) = 365.25d0 
-    PI%parmax(16) = 365.25d0*4d0
+    ! Intercept value for canopy N (gN/m2) dilution model
+    PI%parmin(15) = 2.5d0
+    PI%parmax(15) = 7.0d0 ! 5.5d0
+    ! Coefficient relating crop development stage to N dilution
+    PI%parmin(16) = -0.04d0
+    PI%parmax(16) = -0.005d0
 
     ! LMA
     PI%parmin(17) = 20d0 
@@ -161,13 +157,6 @@ module MODEL_PARAMETERS
     ! BUCKET - maximum rooting depth
     PI%parmin(37) = 0.5d0
     PI%parmax(37) = 5d0 !20.0
-
-    ! Intercept value for canopy N (gN/m2) dilution model
-    PI%parmin(39) = 2.5d0
-    PI%parmax(39) = 6.0d0 ! 5.5d0
-    ! Coefficient relating crop development stage to N dilution
-    PI%parmin(40) = -0.04d0
-    PI%parmax(40) = -0.005d0
 
 !    ! Canopy NIR reflectance
 !    PI%parmin(40) = 0.05d0

@@ -293,10 +293,21 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   site_output$parameters_converged[which(converged == "PASS")] = 1
 
   # Generic dump of the whole driver$met and drivers$obs arrays
+  # Long term averages
   site_output$met_array_averages = apply(drivers$met,2,mean,na.rm = na_flag) 
   filter = which(drivers$obs == -9999) ; drivers$obs[filter] = NA
   site_output$obs_array_averages = apply(drivers$obs,2,mean,na.rm = na_flag) 
   drivers$obs[filter] = -9999
+  # Annual averages
+  site_output$met_array_annual_averages = array(NA, dim=c(nos_years,dim(drivers$met)[2]))
+  site_output$obs_array_annual_averages = array(NA, dim=c(nos_years,dim(drivers$obs)[2]))
+  for (y in seq(1, nos_years)) {
+       s = ((y-1) * steps_per_year) + 1 ; f = y * steps_per_year
+       site_output$met_array_annual_averages[y,] = apply(drivers$met[s:f,],2,mean,na.rm = na_flag) 
+       filter = which(drivers$obs[s:f,] == -9999) ; drivers$obs[s:f,][filter] = NA
+       site_output$obs_array_annual_averages[y,] = apply(drivers$obs[s:f,],2,mean,na.rm = na_flag) 
+       drivers$obs[s:f,][filter] = -9999  
+  }
 
   # Mean meteorological conditions
   site_output$mean_temperature_C = mean((drivers$met[,3]+drivers$met[,2])*0.5)
@@ -1461,6 +1472,29 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   # If the correlation between wood MTT and wood allocation have been determined
   if (any(check_list == "MTT_wood_years_to_NPP_wood_gCm2day_correlation")) {
       site_output$MTT_wood_years_to_NPP_wood_gCm2day_correlation = states_all$MTT_wood_years_to_NPP_wood_gCm2day_correlation
+      site_output$MTT_wood_years_to_NPP_wood_fraction_correlation = states_all$MTT_wood_years_to_NPP_wood_fraction_correlation
+      # ...against key other observables
+      site_output$NPP_wood_gCm2day_to_GPP_gCm2day_correlation = states_all$NPP_wood_gCm2day_to_GPP_gCm2day_correlation
+      site_output$NPP_wood_gCm2day_to_NEE_gCm2day_correlation = states_all$NPP_wood_gCm2day_to_NEE_gCm2day_correlation
+      site_output$NPP_wood_gCm2day_to_Rauto_gCm2day_correlation = states_all$NPP_wood_gCm2day_to_Rauto_gCm2day_correlation
+      site_output$NPP_wood_gCm2day_to_Rhet_gCm2day_correlation = states_all$NPP_wood_gCm2day_to_Rhet_gCm2day_correlation
+      site_output$NPP_wood_gCm2day_to_wood_gCm2_correlation = states_all$NPP_wood_gCm2day_to_wood_gCm2_correlation
+      site_output$NPP_wood_gCm2day_to_som_gCm2_correlation = states_all$NPP_wood_gCm2day_to_som_gCm2_correlation
+      site_output$NPP_wood_gCm2day_to_lai_m2m2_correlation = states_all$NPP_wood_gCm2day_to_lai_m2m2_correlation            
+      site_output$NPP_wood_fraction_to_GPP_gCm2day_correlation = states_all$NPP_wood_fraction_to_GPP_gCm2day_correlation
+      site_output$NPP_wood_fraction_to_NEE_gCm2day_correlation = states_all$NPP_wood_fraction_to_NEE_gCm2day_correlation
+      site_output$NPP_wood_fraction_to_Rauto_gCm2day_correlation = states_all$NPP_wood_fraction_to_Rauto_gCm2day_correlation
+      site_output$NPP_wood_fraction_to_Rhet_gCm2day_correlation = states_all$NPP_wood_fraction_to_Rhet_gCm2day_correlation
+      site_output$NPP_wood_fraction_to_wood_gCm2_correlation = states_all$NPP_wood_fraction_to_wood_gCm2_correlation
+      site_output$NPP_wood_fraction_to_som_gCm2_correlation = states_all$NPP_wood_fraction_to_som_gCm2_correlation
+      site_output$NPP_wood_fraction_to_lai_m2m2_correlation = states_all$NPP_wood_fraction_to_lai_m2m2_correlation            
+      site_output$MTT_wood_years_to_GPP_gCm2day_correlation = states_all$MTT_wood_years_to_GPP_gCm2day_correlation
+      site_output$MTT_wood_years_to_NEE_gCm2day_correlation = states_all$MTT_wood_years_to_NEE_gCm2day_correlation
+      site_output$MTT_wood_years_to_Rauto_gCm2day_correlation = states_all$MTT_wood_years_to_Rauto_gCm2day_correlation 
+      site_output$MTT_wood_years_to_Rhet_gCm2day_correlation = states_all$MTT_wood_years_to_Rhet_gCm2day_correlation
+      site_output$MTT_wood_years_to_wood_gCm2_correlation = states_all$MTT_wood_years_to_wood_gCm2_correlation
+      site_output$MTT_wood_years_to_som_gCm2_correlation = states_all$MTT_wood_years_to_som_gCm2_correlation
+      site_output$MTT_wood_years_to_lai_m2m2_correlation = states_all$MTT_wood_years_to_lai_m2m2_correlation
   }
 
   # save to pixel specific file for the moment... in "run_mcmc_results" these will be combined into a single grid

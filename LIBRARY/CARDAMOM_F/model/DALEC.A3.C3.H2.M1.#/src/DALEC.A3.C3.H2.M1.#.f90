@@ -490,7 +490,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                        turnover_rate_stem, & ! same for stem
                      turnover_rate_labile, & ! same for labile
                   turnover_rate_resp_auto, & ! same for autotrophic C pool
-                   resp_cost_labile_trans, & ! labile lost to respiration per gC labile to GPP
                mineralisation_rate_litter, & ! mineralisation rate of litter
         mineralisation_rate_soilOrgMatter, & ! mineralisation rate of SOM
                                     PHUem, & ! emergance value for phenological heat units
@@ -561,19 +560,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   ! some hardcoded crop parameters
   !
 
-  ! defines Q10 = 2 in exponential temperature response for heterotrophic
-  ! respiration
-  double precision, parameter :: resp_rate_temp_coeff = 0.0693d0
-  ! residue fraction of leaves left post harvest
-  double precision, parameter :: lv_res = 0.1d0
-  ! residue fraction of stem left post harvest
-  double precision, parameter :: st_res = 0.1d0
-  ! LAI above which self shading turnover occurs
-  double precision, parameter :: LAICR = 4d0
-  !double precision, parameter :: LAICR = 5d0
-  ! allocation to storage organ relative to GPP
-  double precision, parameter :: rel_gso_max = 0.35d0
-  !double precision, parameter :: rel_gso_max = 0.45d0
+  double precision, parameter :: resp_rate_temp_coeff = 0.0693d0, & ! defines Q10 = 2 in exponential temperature response for heterotrophic respiration
+                                               lv_res = 0.1d0,    & ! residue fraction of leaves left post harvest
+                                               st_res = 0.1d0,    & ! residue fraction of stem left post harvest 
+                                                LAICR = 4d0,      & ! LAI above which self shading turnover occurs
+                                          rel_gso_max = 0.35d0,   & ! allocation to storage organ relative to GPP
+                               resp_cost_labile_trans = 0.21875d0   ! labile lost to respiration per gC labile to GPP
 
   save
 
@@ -735,7 +727,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! load ACM-GPP-ET parameters
     NUE = pars(11)       ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
                          ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
-    avN = pars(39) ! foliar N, initial value
+    avN = pars(15) ! foliar N, initial value
     ceff = avN*NUE
 
     ! plus ones being calibrated
@@ -753,10 +745,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     mineralisation_rate_litter        = pars(9)  ! mineralisation rate litter (day)
     mineralisation_rate_soilOrgMatter = pars(10) ! mineralisation rate som (day)
     sow_day                           = nint(mod(pars(12),365.25d0)) ! sow day (doy)
-    resp_cost_labile_trans            = pars(13) ! labile lost to respiration per gC labile to GPP
     PHUem                             = pars(14) ! phenological heat units required for emergence
-    harvest_day                       = nint(mod(pars(15),365.25d0)) ! nint(mod(pars(15),365.25)) ! harvest day (doy)
-    plough_day                        = nint(mod(pars(12)-2d0,365.25d0)) ! nint(mod(pars(16),365.25)) ! plough day (doy)
+    harvest_day                       = nint(mod(sow_day + pars(14),365.25d0)) !nint(mod(pars(14),365.25d0)) ! nint(mod(pars(14),365.25)) ! harvest day (doy)
+    plough_day                        = nint(mod(pars(12)-2d0,365.25d0)) ! plough day (doy)
     LCA                               = pars(17) ! leaf mass area (gC.m-2)
     tmin                              = pars(26)-273.15d0 ! min temperature for development
     tmax                              = pars(27)-273.15d0 ! max temperature for development
@@ -920,14 +911,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       ! DS < 0.15 corresponds to the growth stage at beginning of the UK recommended period of      
       ! N fertiliser application for winter wheat (Zodocks growth stage 20) - the early tillering stage (typically mid-march to April)
       if (DS < 0.469d0) then                          
-          avN = pars(39)                     
+          avN = pars(15)                     
       else! if (DS >= 0.469d0 .and. DS <= 1.293d0) then
           ! NOTE: The slope_n parameter can be included in the MDF optimisation. 
           !       The value for this parameter has also been observed to be around -0.02.
           ! NOTE: Modified to only allow the dilution equation to dilute not enrich N content.
           !       This is to attempt to get around the N-dilultion model increasing N content 
           !       during senescence which is unrealistic. 
-          avN = max(0.1d0,min(avN,(pars(40)*(POOLS(n,2)+POOLS(n,10))) + pars(39)))
+          avN = max(0.1d0,min(avN,(pars(16)*(POOLS(n,2)+POOLS(n,10))) + pars(15)))
 !      else
 !          ! Set LNA to 0.1 after anthesis (Zodocks growth stage 75)  
 !          avN = 0.1d0                              
@@ -1764,7 +1755,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Estimate potential soil evaporation flux (kgH2O.m-2.day-1)
     soilevap = ( ((slope*soil_radiation) + (air_density_kg*cpair*esurf*soil_conductance)) &
-               / (lambda*(slope+(psych*(soil_conductance/gws)))) ) * dayl_seconds
+               / (lambda*(slope+(psych*(1d0+soil_conductance/gws)))) ) * dayl_seconds
 
     return
 

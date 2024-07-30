@@ -30,11 +30,11 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec4_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec4_isimip3a_agb_lca_nbe_gpp_CsomPriorNCSDC3m/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
-#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_AGB/infofile.RData")
+load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_AGB/infofile.RData")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_oneAGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB_NBE/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/infofile.RData")
-#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_GEOSCHEM_NBE/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/infofile.RData")
+#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_GEOSCHEM_GOSAT_NBE/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/UK_0.0625deg_baseline/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_FAPAR/infofile.RData")
 
@@ -48,6 +48,9 @@ out_dir = PROJECT$figpath
 #out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/UK_0.0625deg_baseline/FIGURES/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_FAPAR/FIGURES/"
+
+### Print screen to file for later review
+sink(file = paste(out_dir,"C_budget_summary_",PROJECT$name,"_",Sys.Date(),".txt",sep=""))
 
 #
 # Load the CARDAMOM files
@@ -3648,9 +3651,11 @@ print(paste("dCwood sig  = ",round((length(dCwood_sig_latitude) / nos_site_inc)*
 print(paste("dCsom sig  = ",round((length(dCsom_sig_latitude) / nos_site_inc)*100, digits=3)," %",sep=""))
 
 # Statisical correlation between NBP and wood change
-print(paste("NBP ~ dCwood R2 = ",round(summary(lm(as.vector(-grid_output$mean_nbe_gCm2[,,mid_quant]) ~ as.vector(grid_output$final_dCwood_gCm2[,,mid_quant])))$adj.r.squared,digits=3),sep=""))
+print(paste("NBP ~ dCwood R2 = ",round(summary(lm(as.vector(grid_output$mean_nbp_gCm2[,,mid_quant]) ~ as.vector(grid_output$final_dCwood_gCm2[,,mid_quant])))$adj.r.squared,digits=3),sep=""))
 # Statisical correlation between NBE and som change
-print(paste("NBP ~ dCsom R2  = ",round(summary(lm(as.vector(-grid_output$mean_nbe_gCm2[,,mid_quant]) ~ as.vector(grid_output$final_dCsom_gCm2[,,mid_quant])))$adj.r.squared,digits=3),sep=""))
+print(paste("NBP ~ dCsom R2  = ",round(summary(lm(as.vector(grid_output$mean_nbp_gCm2[,,mid_quant]) ~ as.vector(grid_output$final_dCsom_gCm2[,,mid_quant])))$adj.r.squared,digits=3),sep=""))
+# Statisical correlation between wood and som changes
+print(paste("dCwood ~ dCsom R2  = ",round(summary(lm(as.vector(grid_output$final_dCwood_gCm2[,,mid_quant]) ~ as.vector(grid_output$final_dCsom_gCm2[,,mid_quant])))$adj.r.squared,digits=3),sep=""))
 
 ###
 ## Plot Observations
@@ -6823,3 +6828,7 @@ dev.off()
 #> strsplit(class_names,":")
 
 ## Write loop of what should be plotted...
+
+###
+## Stop writing screen prints to file
+sink()

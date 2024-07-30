@@ -30,11 +30,11 @@ home_computer="ssh.geos.ed.ac.uk"
 
 ## use parallel functions?
 use_parallel = TRUE
-numWorkers = 6 # number of cores to assign to parallel job
+numWorkers = 14 # number of cores to assign to parallel job
 
 ## Model - which DALEC 
 # see "MODEL_DESCRIPTIONS.md" for available models
-model="DALEC.4."
+model="DALEC.31."
 pft_specific_parameters=FALSE # impacts crop model only
 
 ## MDF method
@@ -139,7 +139,7 @@ select_country = FALSE # If gridded run and path_to_landsea = "default",
 ## Define the project setup
 # NOTE: if these are not set CARDAMOM will ask you for them
 request_nos_chains = 3        # Number of chains CARDAMOM should run for each location
-request_nos_samples = 100e6   # Total number of parameter samples / iterations to be explored
+request_nos_samples = 10e6   # Total number of parameter samples / iterations to be explored
 request_nos_subsamples = 1e3  # Number of parameter sets to be sub-sampled from the chain
 request_use_server = FALSE    # Use remote server? Currently coded for UoE Eddie.
 request_runtime = 48          # How many hours of compute to request per job. Only applied for running on remote server

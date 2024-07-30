@@ -1436,7 +1436,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
                       "GRAZINGextracted_foliage_gCm2day","GRAZINGextracted_roots_gCm2day",
                       "GRAZINGextracted_litter_gCm2day","GRAZINGextracted_som_gCm2day",
                       "GRAZINGlitter_labile_gCm2day","GRAZINGlitter_foliage_gCm2day",
-                      "GRAZINGlitter_roots_gCm2day")
+                      "GRAZINGlitter_roots_gCm2day","leaf_temperature_celcius","soil_temperature_celcius")
                       
    for (p in seq(1, length(list_variables))) {
         # Check whether current variable exists

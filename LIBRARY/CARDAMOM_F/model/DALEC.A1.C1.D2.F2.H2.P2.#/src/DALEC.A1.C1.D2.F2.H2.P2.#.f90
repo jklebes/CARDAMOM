@@ -1596,7 +1596,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Estimate potential soil evaporation flux (kgH2O.m-2.day-1)
     soilevap = ( ((slope*soil_radiation) + (air_density_kg*cpair*esurf*soil_conductance)) &
-               / (lambda*(slope+(psych*(soil_conductance/gws)))) ) * dayl_seconds
+               / (lambda*(slope+(psych*(1d0+soil_conductance/gws)))) ) * dayl_seconds
 
     return
 

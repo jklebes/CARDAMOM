@@ -568,6 +568,7 @@ module model_likelihood_module
 
 !    ! CN ratio of leaf should also be between 95CI of trait database values
 !    ! Kattge et al (2011)
+!    ! NOTE current formulation not valid due to canopy N now being dynamics with the N~dilution model
 !    tmp = (pars(17)/(10d0**pars(11)))
 !    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 43.76895d0 .or. tmp < 10.82105d0)) then
 !       EDC1=0 ; EDCD%PASSFAIL(9) = 0
@@ -1248,11 +1249,12 @@ module model_likelihood_module
     end if
 
     ! Leaf C:N is derived from multiple parameters
-    if (DATAin%otherpriors(3) > -9998) then
-        tot_exp = pars(17) / (10d0**pars(11))
-        tot_exp =  DATAin%otherpriorweight(3) * ((tot_exp-DATAin%otherpriors(3))/DATAin%otherpriorunc(3))**2
-        likelihood = likelihood-tot_exp
-    end if
+    ! NOTE current formulation not valid due to the inclusion of the N~dilution model
+!    if (DATAin%otherpriors(3) > -9998) then
+!        tot_exp = pars(17) / (10d0**pars(11))
+!        tot_exp =  DATAin%otherpriorweight(3) * ((tot_exp-DATAin%otherpriors(3))/DATAin%otherpriorunc(3))**2
+!        likelihood = likelihood-tot_exp
+!    end if
 
     ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
     ! kg/m2/day)
@@ -1539,11 +1541,12 @@ module model_likelihood_module
     end if
 
     ! Leaf C:N is derived from multiple parameters
-    if (DATAin%otherpriors(3) > -9998) then
-        tot_exp = pars(17) / (10d0**pars(11))
-        tot_exp =  DATAin%otherpriorweight(3) * ((tot_exp-DATAin%otherpriors(3))/DATAin%otherpriorunc(3))**2
-        scale_likelihood = scale_likelihood-tot_exp
-    end if
+    ! NOTE current formulation not valid due to the inclusion of the N~dilution model
+!    if (DATAin%otherpriors(3) > -9998) then
+!        tot_exp = pars(17) / (10d0**pars(11))
+!        tot_exp =  DATAin%otherpriorweight(3) * ((tot_exp-DATAin%otherpriors(3))/DATAin%otherpriorunc(3))**2
+!        scale_likelihood = scale_likelihood-tot_exp
+!    end if
 
     ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
     ! kg/m2/day)
@@ -1830,11 +1833,12 @@ module model_likelihood_module
     end if
 
     ! Leaf C:N is derived from multiple parameters
-    if (DATAin%otherpriors(3) > -9998) then
-        tot_exp = pars(17) / (10d0**pars(11))
-        tot_exp =  DATAin%otherpriorweight(3) * ((tot_exp-DATAin%otherpriors(3))/DATAin%otherpriorunc(3))**2
-        sqrt_scale_likelihood = sqrt_scale_likelihood-tot_exp
-    end if
+    ! NOTE current formulation not valid due to the inclusion of the N~dilution model
+!    if (DATAin%otherpriors(3) > -9998) then
+!        tot_exp = pars(17) / (10d0**pars(11))
+!        tot_exp =  DATAin%otherpriorweight(3) * ((tot_exp-DATAin%otherpriors(3))/DATAin%otherpriorunc(3))**2
+!        sqrt_scale_likelihood = sqrt_scale_likelihood-tot_exp
+!    end if
 
     ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
     ! kg/m2/day)
@@ -2121,11 +2125,12 @@ module model_likelihood_module
     end if
 
     ! Leaf C:N is derived from multiple parameters
-    if (DATAin%otherpriors(3) > -9998) then
-        tot_exp = pars(17) / (10d0**pars(11))
-        tot_exp =  DATAin%otherpriorweight(3) * ((tot_exp-DATAin%otherpriors(3))/DATAin%otherpriorunc(3))**2
-        log_scale_likelihood = log_scale_likelihood-tot_exp
-    end if
+    ! NOTE current formulation not valid due to the inclusion of the N~dilution model
+!    if (DATAin%otherpriors(3) > -9998) then
+!        tot_exp = pars(17) / (10d0**pars(11))
+!        tot_exp =  DATAin%otherpriorweight(3) * ((tot_exp-DATAin%otherpriors(3))/DATAin%otherpriorunc(3))**2
+!        log_scale_likelihood = log_scale_likelihood-tot_exp
+!    end if
 
     ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
     ! kg/m2/day)

@@ -79,7 +79,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ## Get some LAI information (m2/m2)
     ###
 
-    if (lai_source == "MODIS" | lai_source == "COPERNICUS") {
+    if (lai_source == "MODIS" | lai_source == "COPERNICUS" | lai_source == "Gridded") {
 
         # Extract lai and uncertainty information
         # NOTE: assume default uncertainty (+/- scale)
@@ -249,7 +249,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         #harvest_doy = 208 ; harvest_doy_unc = 15 # days
         planting_doy = -9999 ; planting_doy_unc = -9999 # days
         harvest_doy = -9999  ; harvest_doy_unc = -9999 # days # note +365.25 to account for the parameter range
-        #harvest_doy = 244+365.25  ; harvest_doy_unc = 10 # days # note +365.25 to account for the parameter range
+        #harvest_doy = 244+365.25  ; harvest_doy_unc = 14 # days # note +365.25 to account for the parameter range
     }
 
     ###

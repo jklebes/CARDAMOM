@@ -11,7 +11,7 @@ subroutine rdalec31(output_dim,MTT_dim,SS_dim &
                              ,gs_demand_supply_ratio, cica_time &
                              ,gs_total_canopy, gb_total_canopy &
                              ,canopy_par_MJday_time, root_depth_time &
-                             ,snow_storage_time
+                             ,snow_storage_time, leafT_time, soilT_time
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -165,6 +165,8 @@ subroutine rdalec31(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,57) = cica_time                   ! ratio of leaf internal to external CO2
      ! misc
      out_var1(i,1:nodays,58) = root_depth_time             ! rooting depth (m)
+     out_var1(i,1:nodays,59) = leafT_time                  ! day time mean canopy temperature (oC)
+     out_var1(i,1:nodays,60) = soilT_time                  ! day time mean soil temperature (oC)
 
      !
      ! Calculate long-term mean of out_var1

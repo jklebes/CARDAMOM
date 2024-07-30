@@ -24,6 +24,8 @@ module CARBON_MODEL_MOD
   ! explicit publics
   public :: CARBON_MODEL     &
            ,layer_thickness  &
+           ,leafT_time       &
+           ,soilT_time       &
            ,wSWP_time        &
            ,rSWP_time        &
            ,cica_time        &
@@ -205,14 +207,17 @@ module CARBON_MODEL_MOD
                                   displacement, & ! zero plane displacement (m)
                                     max_supply, & ! maximum water supply (mmolH2O/m2/day)
                                          meant, & ! mean air temperature (oC)
-                                         leafT, & ! canopy day time temperature temperature (oC)
+                                         leafT, & ! day time canopy temperature (oC)
+                                         soilT, & ! day time soil temperature (oC)
+                                          dayT, & ! day time air temperature temperature estimate (oC)
                             canopy_swrad_MJday, & ! canopy_absorbed shortwave radiation (MJ.m-2.day-1)
                               canopy_par_MJday, & ! canopy_absorbed PAR radiation (MJ.m-2.day-1)
                               soil_swrad_MJday, & ! soil absorbed shortwave radiation (MJ.m-2.day-1)
                               canopy_lwrad_Wm2, & ! canopy absorbed longwave radiation (W.m-2)
                                 soil_lwrad_Wm2, & ! soil absorbed longwave radiation (W.m-2)
                                  sky_lwrad_Wm2, & ! sky absorbed longwave radiation (W.m-2)
-                 radiative_thermal_conductance, & ! Thermal 'conductance' due to radiance (m.s-1)
+          canopy_radiative_thermal_conductance, & ! Thermal 'conductance' due to radiance (m.s-1)
+            soil_radiative_thermal_conductance, & ! Thermal 'conductance' due to radiance (m.s-1)
                           stomatal_conductance, & ! Canopy scale stomatal conductance at canopy top (mmolH2O.m-2.s-1)
                          potential_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
                            minimum_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
@@ -320,6 +325,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                           daylength_hours, &
                                         daylength_seconds, &
                                       daylength_seconds_1, &
+                                               leafT_time, &
+                                               soilT_time, &
                                             rainfall_time, &
                                                 cica_time, & ! Internal vs ambient CO2 concentrations
                                           root_depth_time, &
@@ -561,7 +568,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         allocate(deltat_1(nodays),wSWP_time(nodays),rSWP_time(nodays),gs_demand_supply_ratio(nodays), &
                  gs_total_canopy(nodays),gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
                  daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
-                 rainfall_time(nodays),cica_time(nodays),root_depth_time(nodays),snow_storage_time(nodays))
+                 rainfall_time(nodays),cica_time(nodays),root_depth_time(nodays),snow_storage_time(nodays), &
+                 leafT_time(nodays),soilT_time(nodays))
 
         !
         ! Timing variables which are needed first
@@ -805,12 +813,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     wind_spd = met(15,1) ! wind speed (m/s)
     vpd_kPa = met(16,1)*1d-3 ! vapour pressure deficit (Pa->kPa)
     leafT = (maxt*0.75d0) + (mint*0.25d0)   ! initial day time canopy temperature (oC)
+    soilT = leafT ! initially assume that the soil and canopy temperature are the same
+    dayT = leafT ! initially assume that the air and canopy temperature are the same
     seconds_per_step = deltat(1) * seconds_per_day
     days_per_step =  deltat(1)
     days_per_step_1 =  deltat_1(1)
 
     ! calculate some temperature dependent meteorologial properties
-    call meteorological_constants(leafT,leafT+freeze,vpd_kPa)
+    call meteorological_constants(dayT,dayT+freeze,vpd_kPa)
 
     ! Initialise root reach based on initial coarse root biomass
     fine_root_biomass = max(min_root,POOLS(1,3)*2d0)
@@ -848,6 +858,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        rainfall = rainfall_time(n)
        meant = (mint + maxt) * 0.5d0 ! mean air temperature (oC)
        leafT = (meant + maxt) * 0.5d0 ! estimate mean daytime air temperature (oC)
+       soilT = leafT ! initially, assume soil and canopy temperature are the same
+       dayT = leafT ! Initially, assume day time canopy and air temperatures are the same
        wind_spd = met(15,n) ! wind speed (m/s)
        vpd_kPa = met(16,n)*1d-3  ! Vapour pressure deficit (Pa -> kPa)
 
@@ -906,7 +918,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !!!!!!!!!!
 
        ! calculate some temperature dependent meteorologial properties
-       call meteorological_constants(leafT,leafT+freeze,vpd_kPa)
+       call meteorological_constants(dayT,dayT+freeze,vpd_kPa)
        ! pass variables from memory objects
        convert_ms1_mmol_1 = convert_ms1_mol_1 * 1d3
        ! calculate aerodynamic using consistent approach with SPA
@@ -921,19 +933,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        call calculate_radiation_balance
        canopy_par_MJday_time(n) = canopy_par_MJday
+       ! Update steady state soil temperature
+       call calculate_soil_temperature_update(tmp)
+       soilT = soilT + tmp
+       soilT_time(n) = soilT
 
        !!!!!!!!!!
        ! Calculate physically constrained evaporation and
        ! soil water potential and total hydraulic resistance
        !!!!!!!!!!
-
-       ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
-       if (lai > 0d0) then ! is this conditional needed?
-           call calculate_wetcanopy_evaporation(wetcanopy_evap,canopy_storage)
-       else
-           ! reset pools
-           intercepted_rainfall = 0d0 ; canopy_storage = 0d0 ; wetcanopy_evap = 0d0
-       endif
 
        ! calculate the minimum soil & root hydraulic resistance based on total
        ! fine root mass ! *2*2 => *RS*C->Bio
@@ -951,6 +959,16 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                  / (potential_conductance - minimum_conductance)
        ! Store the canopy level stomatal conductance (mmolH2O/m2ground/s)
        gs_total_canopy(n) = stomatal_conductance
+       ! Store day time mean canopy temperature (oC)
+       leafT_time(n) = leafT
+
+       ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
+       if (lai > 0d0) then ! is this conditional needed?
+           call calculate_wetcanopy_evaporation(wetcanopy_evap,canopy_storage)
+       else
+           ! reset pools
+           intercepted_rainfall = 0d0 ; canopy_storage = 0d0 ; wetcanopy_evap = 0d0
+       endif
 
        ! Note that soil mass balance will be calculated after phenology
        ! adjustments
@@ -1510,9 +1528,22 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! arguments
     double precision, intent(in) :: gs_in
 
+    ! local variables
+    double precision :: Tdiff
+
     !!!!!!!!!!
     ! Optimise intrinsic water use efficiency
     !!!!!!!!!!
+
+    ! Estimate canopy temperature in the presence of evaporation
+    ! NOTE: that if this is placed in line with the iterative the include 
+    ! impacts of temperature on physiology, then acm_gpp_stage_1 must also 
+    ! now be calculated every iteration.
+    call calculate_canopy_temperature_update(gs_in,Tdiff)
+    ! Update leafT
+    leafT = dayT + Tdiff
+    ! Calculate stage one acm, temperature and light limitation
+    call acm_gpp_stage_1    
 
     ! Determine impact of gs increment on pd and how far we are from iWUE
     find_gs_iWUE = iWUE_step - (acm_gpp_stage_2(gs_in + delta_gs) - acm_gpp_stage_2(gs_in))
@@ -1533,7 +1564,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     implicit none
 
     ! local variables
-    double precision :: denom, iWUE_upper!, iWUE_lower
+    double precision :: Tdiff, denom, iWUE_upper!, iWUE_lower
     double precision, parameter :: max_gs = 1000d0, &  ! mmolH2O.m-2.s-1 (leaf area)
                                    min_gs = 0.01d0, &  ! mmolH2O.m-2.s-1 (leaf area)
                                    tol_gs = 0.01d0     ! mmolH2O.m-2.s-1 (leaf area)
@@ -1576,7 +1607,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         iWUE_step = iWUE * leaf_canopy_light_scaling ! umolC/mmolH2Ogs/s
         ! Calculate stage one acm, temperature and light limitation which
         ! are independent of stomatal conductance effects
-        call acm_gpp_stage_1
+        !call acm_gpp_stage_1
 
         ! Intrinsic WUE optimisation
         ! Check that the water restricted water range brackets the root solution for the bisection
@@ -1596,6 +1627,17 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                           find_gs_iWUE,minimum_conductance,potential_conductance,tol_gs,iWUE_step*0.10d0)
         end if
 
+        ! Estimate canopy temperature in the presence of evaporation
+        ! NOTE: that if this is placed in line with the iterative the include 
+        ! impacts of temperature on physiology, then acm_gpp_stage_1 must also 
+        ! now be calculated every iteration.
+        call calculate_canopy_temperature_update(stomatal_conductance,Tdiff)
+        ! Update the isothermal net radiation to net radiation.
+        canopy_lwrad_Wm2 = canopy_lwrad_Wm2 - (Tdiff * emiss_boltz * dayT**(-3d0))
+        ! Update the leaf temperature variable, 
+        ! assumed previously to be the air temperature proxy.
+        leafT = dayT + Tdiff
+
     else
 
         ! if no LAI then there can be no stomatal conductance
@@ -1603,9 +1645,16 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         stomatal_conductance = vsmall
         ! set minimum (computer) precision level flow
         max_supply = vsmall
+        ! Estimate canopy temperature in the absence of evaporation
+        call calculate_canopy_temperature_update_noET(Tdiff)
+        ! Update the isothermal net radiation to net radiation.
+        canopy_lwrad_Wm2 = canopy_lwrad_Wm2 - (Tdiff * emiss_boltz * dayT**(-3d0))
+        ! Update the leaf temperature variable, 
+        ! assumed previously to be the air temperature proxy.
+        leafT = dayT + Tdiff
 
     endif ! if aerodynamic conductance > vsmall
-
+!print*,Tdiff
   end subroutine calculate_stomatal_conductance
   !
   !------------------------------------------------------------------
@@ -1793,7 +1842,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                               ,gws   ! water vapour conductance through soil air space (m.s-1)
 
     ! oC -> K for local temperature value
-    local_temp = maxt + freeze
+    local_temp = soilT + freeze
 
     !!!!!!!!!!
     ! Estimate energy radiation balance (W.m-2)
@@ -1820,7 +1869,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Estimate potential soil evaporation flux (kgH2O.m-2.day-1)
     soilevap = ( ((slope*soil_radiation) + (air_density_kg*cpair*esurf*soil_conductance)) &
-               / (lambda*(slope+(psych*(soil_conductance/gws)))) ) * dayl_seconds
+               / (lambda*(slope+(psych*(1d0+soil_conductance/gws)))) ) * dayl_seconds
 
     return
 
@@ -2023,51 +2072,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     canopy_lwrad_Wm2 = (lwrad*Vc*dT) - (Vc*dT*2d0*longwave_release_canopy) + (Vc*dT*longwave_release_soil)
     ! Diffuse longwave absorbed by the soil
     soil_lwrad_Wm2 = (lwrad*(1d0-(Vc*dT))) + (Vc*dT*longwave_release_canopy) - longwave_release_soil
-    ! Determine the radiative heat conductance term (m/s)
-    radiative_thermal_conductance = ((4d0 * emiss_boltz * canopy_temperature**3) / (air_density_kg * cpair)) * dT * Vc
+    ! Determine the radiative heat conductance term of the canopy (m/s)
+    canopy_radiative_thermal_conductance = ((4d0 * emiss_boltz * canopy_temperature**3) / (air_density_kg * cpair)) * dT * Vc
+    ! Determine the radiative heat conductance term of the canopy (m/s)
+    soil_radiative_thermal_conductance = ((4d0 * emiss_boltz * canopy_temperature**3) / (air_density_kg * cpair)) 
 
   end subroutine calculate_longwave_isothermal
-  !
-  !------------------------------------------------------------------
-  !
-  subroutine calculate_steady_state_canopy_temperature(diffT)
-
-    implicit none
-
-    ! Estimate the canopy scale temperature following a modified version of 
-    ! Jones Plants and Microclimate, p225, 3rd edition, 2024, equ. 9
-
-    ! arguments
-    double precision, intent(out) :: diffT
-
-    ! local variables
-    double precision :: warming_term, cooling_term, &
-                        total_thermal_resistance, &
-                        total_water_resistance, &
-                        isothermal_net
-
-    ! Determine the combined (aerodynamic + stomatal) resistance ot water tranfer at canopy scale
-    ! Note; 1) Change units of stomatal conductance (mmolH2O.m-2.s-1 -> m.s-1), assumed for sea surface 
-    ! pressure only. 2) Scale aerodynamic conductance to canopy scale
-    total_water_resistance = ((aerodynamic_conductance * leaf_canopy_wind_scaling) + &
-                              (stomatal_conductance / convert_ms1_mmol_1)) ** (-1d0)
-    ! Determine the combined (radiative + sensible) resistance to heat transfer at canopy scale
-    ! Note the *0.93 converts the aerodynamic condictance from water vapour to heat
-    total_thermal_resistance = (radiative_thermal_conductance + (aerodynamic_conductance * 0.93))**(-1d0)
-    ! Calculate multi-use product of 
-    isothermal_net = ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2)
-
-    ! Determine the warming term
-    warming_term = (total_thermal_resistance * total_water_resistance * psych * isothermal_net) &
-                 / (air_density_kg * cpair * ((psych*total_water_resistance) + (slope * total_thermal_resistance)))
-    ! Determine the cooling term
-    cooling_term = (total_thermal_resistance * vpd_kPa) &
-                 / ((psych*total_water_resistance) + (slope * total_thermal_resistance))
-
-    ! Determine Tleaf-Tair
-    diffT = warming_term - cooling_term
-
-  end subroutine calculate_steady_state_canopy_temperature
   !
   !------------------------------------------------------------------
   !
@@ -2112,22 +2122,22 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Estimate shortwave radiation balance
     call calculate_shortwave_balance
     ! Estimate isothermal long wave radiation balance
-    call calculate_longwave_isothermal(meant,meant)
-    ! Apply linear correction to soil surface isothermal->net longwave radiation
-    ! balance based on absorbed shortwave radiation
-    delta_iso = (soil_iso_to_net_coef_LAI * lai) + &
-                (soil_iso_to_net_coef_SW * (soil_swrad_MJday * 1d6 * seconds_per_day_1)) + &
-                 soil_iso_to_net_const
-
-    ! In addition to the iso to net adjustment, SPA analysis shows that soil net never gets much below zero
-    !soil_lwrad_Wm2 = max(-0.1d0,soil_lwrad_Wm2 + delta_iso)
-    soil_lwrad_Wm2 = soil_lwrad_Wm2 + delta_iso
-    ! Apply linear correction to canopy isothermal->net longwave radiation
-    ! balance based on absorbed shortwave radiation
-    delta_iso = (canopy_iso_to_net_coef_LAI * lai) + &
-                (canopy_iso_to_net_coef_SW * (canopy_swrad_MJday * 1d6 * seconds_per_day_1)) + &
-                canopy_iso_to_net_const
-    canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + delta_iso
+    call calculate_longwave_isothermal(leafT,soilT)
+!    ! Apply linear correction to soil surface isothermal->net longwave radiation
+!    ! balance based on absorbed shortwave radiation
+!    delta_iso = (soil_iso_to_net_coef_LAI * lai) + &
+!                (soil_iso_to_net_coef_SW * (soil_swrad_MJday * 1d6 * seconds_per_day_1)) + &
+!                 soil_iso_to_net_const
+!
+!    ! In addition to the iso to net adjustment, SPA analysis shows that soil net never gets much below zero
+!    !soil_lwrad_Wm2 = max(-0.1d0,soil_lwrad_Wm2 + delta_iso)
+!    soil_lwrad_Wm2 = soil_lwrad_Wm2 + delta_iso
+!    ! Apply linear correction to canopy isothermal->net longwave radiation
+!    ! balance based on absorbed shortwave radiation
+!    delta_iso = (canopy_iso_to_net_coef_LAI * lai) + &
+!                (canopy_iso_to_net_coef_SW * (canopy_swrad_MJday * 1d6 * seconds_per_day_1)) + &
+!                canopy_iso_to_net_const
+!    canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + delta_iso
 
   end subroutine calculate_radiation_balance
   !
@@ -2288,6 +2298,179 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !   endif
 
   end subroutine calculate_shortwave_balance
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine calculate_canopy_temperature_update(stomatal_conductance_in,Tdiff)
+
+    implicit none
+
+    ! Estimate the canopy scale temperature following a modified version of 
+    ! Jones Plants and Microclimate, p225, 3rd edition, 2024, equ. 9.6
+    ! This equation assumes cooling via both thermal conductance, radiance and evaporation.
+    ! The evaporation component is based on canopy scale approximation of the Penman-Monteith model.
+    ! Function intended for use within the iterative process to solve for stomatal conductance
+    ! and the influence of canopy temperature on photosynthesis
+
+    ! NOTE: this function should ONLY be used if the proposed stomatal conductance is greater than the vsmall
+    ! variable. This is to guard against the creation of infinite resistance. In such circumstances the 
+    ! thermal only version of this model should be used calculate_canopy_temperature_update_noET()
+
+    ! arguments
+    double precision, intent(in) :: stomatal_conductance_in ! canopy scale stomatal conductance (mmolH2O/m2/s)
+    double precision, intent(out) :: Tdiff ! difference in temperature between Tleaf - Tair (K)
+    ! local variables
+    double precision :: warming_term, cooling_term, &
+                        total_thermal_resistance, &
+                        total_water_resistance, &
+                        isothermal_net
+
+    ! Determine the combined (aerodynamic + stomatal) resistance to water tranfer at canopy scale
+    ! Note; 1) Change units of stomatal conductance (mmolH2O.m-2.s-1 -> m.s-1), assumed for sea surface 
+    ! pressure only. 2) Scale aerodynamic conductance to canopy scale
+    total_water_resistance = ((2d0 * aerodynamic_conductance * leaf_canopy_wind_scaling)**(-1d0) + &
+                              (stomatal_conductance_in / convert_ms1_mmol_1) ** (-1d0))
+    ! Determine the combined (radiative + sensible) resistance to heat transfer at canopy scale
+    ! Note the *0.93 converts the aerodynamic condictance from water vapour to heat
+    total_thermal_resistance = (canopy_radiative_thermal_conductance + (2d0 * aerodynamic_conductance * 0.93d0))**(-1d0)
+    ! Calculate multi-use product of 
+    isothermal_net = ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2)
+
+    ! Determine the warming term
+    warming_term = (total_thermal_resistance * total_water_resistance * psych * isothermal_net) &
+                 / (air_density_kg * cpair * ((psych*total_water_resistance) + (slope * total_thermal_resistance)))
+    ! Determine the cooling term
+    cooling_term = (total_thermal_resistance * vpd_kPa) &
+                 / ((psych*total_water_resistance) + (slope * total_thermal_resistance))
+
+    ! Determine Tleaf-Tair
+    Tdiff = warming_term - cooling_term
+
+    ! Return function
+    return
+
+!print*,Tdiff,dayT,isothermal_net,total_water_resistance,stomatal_conductance 
+
+  end subroutine calculate_canopy_temperature_update
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine calculate_canopy_temperature_update_noET(Tdiff)
+
+    implicit none
+
+    ! Estimate the canopy scale temperature following a modified version of 
+    ! Jones Plants and Microclimate, p225, 3rd edition, 2024, equ. 9.7
+    ! This equation assumes cooling via thermal conductance and radiance, but no evaporation.
+    ! Function intended for use when stomatal conductance has been estimated to be very small
+    ! or zero such that the stomatal resistance tends towards infinity.
+
+    ! NOTE: this function should ONLY be used if the proposed stomatal conductance is equal to or less
+    ! than the vsmall variable. This is to guard against the creation of infinite resistance. In such 
+    ! circumstances whent stomatal conductance is greater than vsmall then the fill version of this 
+    ! model should be used calculate_canopy_temperature_update()
+
+    ! arguments
+    double precision, intent(out) :: Tdiff ! difference in temperature between Tleaf - Tair (K)
+    ! local variables
+    double precision :: warming_term, cooling_term, &
+                        total_thermal_resistance, &
+                        total_water_resistance, &
+                        isothermal_net
+
+    ! Determine the combined (radiative + sensible) resistance to heat transfer at canopy scale
+    ! Note the *0.93 converts the aerodynamic condictance from water vapour to heat
+    total_thermal_resistance = (canopy_radiative_thermal_conductance + (aerodynamic_conductance * 0.93d0))**(-1d0)
+    ! Calculate multi-use product of 
+    isothermal_net = ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2)
+
+    ! Reduced thermal exchange based temperature...
+    ! Determine Tleaf-Tair
+    Tdiff = (isothermal_net * total_thermal_resistance) &
+          / (air_density_kg * cpair)
+
+    ! After calculation the following can be used to update the canopy net radiation balance
+    ! by adjusting the canopy absorbed longwave. Note currently not coding to update the overall 
+    ! ecosystem level radiation balance as a result. Here we assume that at this point leafT is 
+    ! equal to the estimate of day time air temperature
+    !net_radiation = isothermal_net - (Tdiff*4d0*emiss_boltz*leafT**(-3d0))
+
+    ! Return function
+    return
+
+!print*,Tdiff,dayT,isothermal_net 
+
+  end subroutine calculate_canopy_temperature_update_noET
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine calculate_soil_temperature_update(Tdiff)
+
+    implicit none
+
+    ! Estimate the soil temperature following a modified version of 
+    ! Jones Plants and Microclimate, p225, 3rd edition, 2024, equ. 9.6
+    ! This equation assumes cooling via both thermal conductance, radiance and evaporation.
+    ! The evaporation component is based on canopy scale approximation of the Penman-Monteith model.
+
+    ! NOTE: this subroutine neglects ground heat, assuming than on daily or longer time scales that 
+    !      the impact of ground heat / soil thermal capacitance is minor relative to the large scale climatic behaviour
+
+! UNTESTED!!!! lacks soil ground heat flux which should add a buffering to the exchange   
+
+    ! arguments
+    !double precision, intent(in) :: gws    ! soil conductance to water vapour (m/s)
+    double precision, intent(out) :: Tdiff ! difference in temperature between Tleaf - Tair (K)
+    ! local variables
+    double precision :: warming_term, cooling_term, &
+                        total_thermal_resistance, &
+                        total_water_resistance, &
+                        isothermal_net,         &
+                        esat, air_pressure, gws, esurf
+
+    !!!!!!!!!!
+    ! Calculate soil evaporative fluxes (kgH2O/m2/day)
+    !!!!!!!!!!
+
+    ! calculate saturated vapour pressure (kPa), function of temperature.
+    esat = 0.1d0 * exp( 1.80956664d0 + ( 17.2693882d0 * soilT - 4717.306081d0 ) / ( soilT + freeze - 35.86d0 ) )
+    air_vapour_pressure = esat - vpd_kPa
+
+    ! Soil conductance to water vapour diffusion (m s-1)...
+    gws = porosity(1) * water_vapour_diffusion / (tortuosity*drythick)
+
+    ! vapour pressure in soil airspace (kPa), dependent on soil water potential
+    ! - Jones p.110. partial_molar_vol_water. Less vapour pressure of the air to
+    ! estimate the deficit between soil and canopy air spaces
+    esurf = (esat * exp( 1d6 * SWP(1) * partial_molar_vol_water / (Rcon * (soilT + freeze)) )) - air_vapour_pressure
+
+    ! Determine the combined (aerodynamic + stomatal) resistance to water tranfer at canopy scale
+    ! Note; 1) Change units of stomatal conductance (mmolH2O.m-2.s-1 -> m.s-1), assumed for sea surface 
+    ! pressure only. 2) Scale aerodynamic conductance to canopy scale
+    total_water_resistance = soil_conductance**(-1d0) + gws ** (-1d0)
+    ! Determine the combined (radiative + sensible) resistance to heat transfer at canopy scale
+    ! Note: unlike for the canopy, we neglect the *0.93 converting between conductance for heat and water, 
+    !       i.e. we assume that they are equal.
+    total_thermal_resistance = (soil_radiative_thermal_conductance + soil_conductance)**(-1d0)
+    ! Calculate multi-use product of 
+    isothermal_net = soil_lwrad_Wm2 + (soil_swrad_MJday * 1d6 * dayl_seconds_1)
+
+    ! Determine the warming term
+    warming_term = (total_thermal_resistance * total_water_resistance * psych * isothermal_net) &
+                 / (air_density_kg * cpair * ((psych*total_water_resistance) + (slope * total_thermal_resistance)))
+    ! Determine the cooling term
+    cooling_term = (total_thermal_resistance * esurf) &
+                 / ((psych*total_water_resistance) + (slope * total_thermal_resistance))
+
+    ! Determine Tleaf-Tair
+    Tdiff = warming_term - cooling_term
+
+    ! Return function
+    return
+
+!print*,Tdiff,dayT,isothermal_net,total_water_resistance,stomatal_conductance 
+
+  end subroutine calculate_soil_temperature_update
   !
   !-----------------------------------------------------------------
   !
@@ -3377,11 +3560,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   subroutine calculate_soil_conductance(lm,local_lai)
 
-    ! proceedsure to solve for soil surface resistance based on Monin-Obukov
+    ! Proceedsure to solve for soil surface resistance based on Monin-Obukov
     ! similarity theory stability correction momentum & heat are integrated
     ! through the under canopy space and canopy air space to the surface layer
     ! references are Nui & Yang 2004; Qin et al 2002
-    ! NOTE: conversion to conductance at end of subroutine
+    ! NOTE: conversion to conductance at end of subroutine and conductance for heat 
+    !       and water vapour are assumed to be equal
 
     implicit none
 

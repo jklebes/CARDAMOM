@@ -20,7 +20,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
 
     } else {
 
-        if (met_source == "trendy_v9" | met_source == "trendy_v11" | met_source == "trendy_v12") {
+        if (met_source == "trendy_v9" | met_source == "trendy_v11" | met_source == "trendy_v12" | met_source == "trendy_v13") {
 
             # declare variable ids needed to select files / infile variables
             varid = c("dswrf","tmx","pre","vpd","tmn","wsp")
@@ -299,7 +299,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         #
 
         # convert Trendy air temperature of oC to K
-        if (met_source == "trendy_v9" | met_source == "trendy_v11" | met_source == "trendy_v12") {
+        if (met_source == "trendy_v9" | met_source == "trendy_v11" | met_source == "trendy_v12" | met_source == "trendy_v13") {
             maxt_out = maxt_out + 273.15
             mint_out = mint_out + 273.15
         }

@@ -20,10 +20,9 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
 
       # timing information on the number of day in a month
       month_days = rep(31,length.out=12)
-      month_days[2] = 28 ; month_days[c(4,6,9,11)] = 30
+      month_days[2] = 28 ; month_days[c(4,6,9,11)] = 30 
 
       lat_done = FALSE ; missing_years = 0 ; keepers = 0 ; yrs = 1 ; doy_out = 0
-
       # Loop through all the analyses years and check whether files exist for it
       for (yr in seq(1, length(years_to_load))) {
            # create the prefix for the observation file files we will want for a given year

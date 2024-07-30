@@ -76,6 +76,9 @@ alt_name = "Repeat" # used in labelling figures
 # Tidy
 rm(PROJECT,grid_output)
 
+### Print screen to file for later review
+sink(file = paste(out_dir,"Comparison_between_two_analysis_",orig_PROJECT$name,"_",Sys.Date(),".txt",sep=""))
+
 ###
 ## Determine needed spatial and temporal information
 
@@ -1251,6 +1254,7 @@ plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 dev.off()
 
+##TLS: DUPLICATE THIS PLOT FOR ADDITIONAL VARIBLES
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_MTTwood_years_to_NPPwood_gCm2day_correlation",outsuffix,".png",sep=""), height = 750, width = 4000, res = 300)
 # Specify any common size variables
 main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.6
@@ -8123,4 +8127,7 @@ print(paste("Mean relative (-1-1) difference in fireMRT comp (",alt_name,"-",ori
 print(paste("Mean relative (-1-1) difference in harvestMRT comp (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
+###
+## end print to specific file
 
+sink()

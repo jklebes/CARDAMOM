@@ -3637,7 +3637,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
   } else if (model_name == "DALEC.A4.C6.D2.F2.H2.P11.#") {
-      output_dim = 58 ; MTT_dim = 6 ; SS_dim = 6
+      output_dim = 60 ; MTT_dim = 6 ; SS_dim = 6
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec31",output_dim=as.integer(output_dim)
                               ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
@@ -3847,6 +3847,12 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       RootDepth_m = output[,,58],
                       mean_RootDepth_m = output_mean[,58],
                       mean_annual_RootDepth_m = output_annual[,,58],
+                      leaf_temperature_celcius = output[,,59],
+                      mean_leaf_temperature_celcius = output_mean[,59],
+                      mean_annual_leaf_temperature_celcius = output_annual[,,59],                      
+                      soil_temperature_celcius = output[,,60],
+                      mean_soil_temperature_celcius = output_mean[,60],
+                      mean_annual_soil_temperature_celcius = output_annual[,,60],   
                       ## Aggregated variables
                       # Mean Transit times
                       MTT_labile_years = MTT_years[,1],
